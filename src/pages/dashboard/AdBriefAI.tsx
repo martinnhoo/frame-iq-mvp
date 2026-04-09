@@ -1484,7 +1484,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
     try {
       const days = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / 86400000) + 1;
       const period = days <= 7 ? "7d" : days <= 14 ? "14d" : days <= 30 ? "30d" : days <= 60 ? "60d" : "90d";
-      const selectedAccId = localStorage.getItem(`meta_sel_${selectedPersona.id}`) || undefined;
+      const selectedAccId = storage.get(`meta_sel_${selectedPersona.id}`, "") || undefined;
       const { data: r, error: e } = await (supabase.functions.invoke as any)("live-metrics", {
         body: { user_id: user.id, persona_id: selectedPersona.id, period,
           date_from: fmtAI(dateRange.from), date_to: fmtAI(dateRange.to),
@@ -1736,7 +1736,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           {/* Account switcher — click to switch ad account */}
           {accName && (() => {
             const pid = selectedPersona?.id;
-            const rawAccounts = pid ? localStorage.getItem(`meta_accounts_${pid}`) : null;
+            const rawAccounts = pid ? storage.get(`meta_accounts_${pid}`, "") : "";
             const accounts: any[] = (() => {
               if (!rawAccounts) return [];
               try {
@@ -1746,7 +1746,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                 return [];
               }
             })();
-            const selId = pid ? (localStorage.getItem(`meta_sel_${pid}`) || "") : "";
+            const selId = pid ? storage.get(`meta_sel_${pid}`, "") : "";
             if (accounts.length <= 1) {
               return <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: 8 }}>· {accName}</span>;
             }
@@ -1770,7 +1770,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                     return (
                       <button key={acc.id} onClick={async () => {
                         if (pid) {
-                          localStorage.setItem(`meta_sel_${pid}`, acc.id);
+                          storage.set(`meta_sel_${pid}`, acc.id);
                           // Update DB via adbrief-ai-chat service_role — so live-metrics picks up the change
                           supabase.functions.invoke("adbrief-ai-chat", {
                             body: { update_selected_account: true, user_id: user.id, persona_id: pid, account_id: acc.id }
@@ -2211,7 +2211,7 @@ export default function AdBriefAI() {
   const [activeSkillId, setActiveSkillId] = useState<string|null>(() => {
     if (!selectedPersona?.id) return null;
     try {
-      return localStorage.getItem(`adbrief_skill_${selectedPersona?.id}`) || null;
+      return storage.get(`adbrief_skill_${selectedPersona?.id}`, "") || null;
     } catch {
       return null;
     }
@@ -2316,7 +2316,7 @@ export default function AdBriefAI() {
       onboardingSessionDone.current = false; // new persona = check onboarding again
       // Load skill for new persona using the current persona id in scope
       const skillStorageKey = `adbrief_skill_${newId}`;
-      const savedSkill = localStorage.getItem(skillStorageKey) || null;
+      const savedSkill = storage.get(skillStorageKey, "") || null;
       setActiveSkillId(savedSkill);
       setContextReady(false);
       setConnections([]);
@@ -2341,7 +2341,7 @@ export default function AdBriefAI() {
       // Save ad_accounts list to localStorage for account switcher in LivePanel
       const metaConn = scoped.find((c: any) => c.platform === "meta");
       if (metaConn?.ad_accounts?.length) {
-        localStorage.setItem(`meta_accounts_${pid}`, JSON.stringify(metaConn.ad_accounts));
+        storage.setJSON(`meta_accounts_${pid}`, metaConn.ad_accounts);
       }
     }).catch(() => setConnections([]));
   }, [user?.id, selectedPersona?.id]);
@@ -3492,7 +3492,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         invokeBody.image_base64 = pendingImage.base64;
         invokeBody.image_media_type = pendingImage.mediaType || "image/jpeg";
       }
-      const selectedAccId2 = selectedPersona?.id ? (localStorage.getItem(`meta_sel_${selectedPersona.id}`) || undefined) : undefined;
+      const selectedAccId2 = selectedPersona?.id ? (storage.get(`meta_sel_${selectedPersona.id}`, "") || undefined) : undefined;
       if(selectedAccId2) invokeBody.account_id = selectedAccId2;
       const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:invokeBody});
 
@@ -4558,8 +4558,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   onSelect={(id) => {
                     setActiveSkillId(id);
                     if (selectedPersona?.id) {
-                      if (id) localStorage.setItem(`adbrief_skill_${selectedPersona.id}`, id);
-                      else localStorage.removeItem(`adbrief_skill_${selectedPersona.id}`);
+                      if (id) storage.set(`adbrief_skill_${selectedPersona.id}`, id);
+                      else storage.remove(`adbrief_skill_${selectedPersona.id}`);
                     }
                   }}
                 />
