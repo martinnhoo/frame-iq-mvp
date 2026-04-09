@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Upload, Loader2, Lock, ArrowRight } from "lucide-react";
+import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -42,6 +42,7 @@ const T: Record<Lang, {
   unlock_cta: string; signup_cta: string; signup_sub: string;
   rate_limit: string; error: string; drag_text: string;
   or_text: string; formats: string;
+  positive_title: string; improve_title: string; unlock_card: string;
 }> = {
   pt: {
     hero: "Nota do seu anúncio\nem 10 segundos",
@@ -67,6 +68,9 @@ const T: Record<Lang, {
     drag_text: "Arraste ou clique",
     or_text: "ou",
     formats: "PNG, JPG, WEBP — até 10MB",
+    positive_title: "O que funciona",
+    improve_title: "O que melhorar",
+    unlock_card: "Desbloquear análise",
   },
   es: {
     hero: "Nota de tu anuncio\nen 10 segundos",
@@ -92,6 +96,9 @@ const T: Record<Lang, {
     drag_text: "Arrastra o haz clic",
     or_text: "o",
     formats: "PNG, JPG, WEBP — hasta 10MB",
+    positive_title: "Lo que funciona",
+    improve_title: "Qué mejorar",
+    unlock_card: "Desbloquear análisis",
   },
   en: {
     hero: "Rate your ad\nin 10 seconds",
@@ -117,6 +124,9 @@ const T: Record<Lang, {
     drag_text: "Drag or click",
     or_text: "or",
     formats: "PNG, JPG, WEBP — up to 10MB",
+    positive_title: "What works",
+    improve_title: "What to improve",
+    unlock_card: "Unlock analysis",
   },
 };
 
@@ -135,9 +145,12 @@ interface AnalysisResult {
 /* ── Inline keyframes ──────────────────────────────────────────────────── */
 const KEYFRAMES = `
 @keyframes demoFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes demoFadeUp2{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes scanLine{0%{top:10%;opacity:0}20%{opacity:1}80%{opacity:1}100%{top:85%;opacity:0}}
 @keyframes orbFloat{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.12)}}
+@keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(14,165,233,0.15)}50%{box-shadow:0 0 0 8px rgba(14,165,233,0)}}
+@keyframes glassShine{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @property --beam-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes beamSpin{to{--beam-angle:360deg}}
 `;
@@ -259,23 +272,6 @@ export default function Demo() {
 
         {/* ── Hero ── */}
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          {/* Eyebrow badge */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "6px 16px", borderRadius: 100,
-            background: C.greenSoft,
-            border: "1px solid rgba(52,211,153,0.15)",
-            marginBottom: 28,
-          }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.green, flexShrink: 0, boxShadow: "0 0 8px rgba(52,211,153,0.5)" }} />
-            <span style={{
-              fontFamily: BODY, fontSize: 11, fontWeight: 600,
-              color: "rgba(52,211,153,0.85)", letterSpacing: "0.04em",
-            }}>
-              {lang === "pt" ? "100% grátis · sem login" : lang === "es" ? "100% gratis · sin login" : "100% free · no login"}
-            </span>
-          </div>
-
           {/* Headline */}
           <h1 style={{
             fontFamily: BODY, fontWeight: 800,
@@ -391,8 +387,8 @@ export default function Demo() {
               {dragOver ? t.drop : t.drag_text}
             </p>
             <p style={{
-              fontFamily: MONO, fontSize: 12, fontWeight: 400,
-              color: C.textMuted, letterSpacing: "0.02em",
+              fontFamily: BODY, fontSize: 12, fontWeight: 400,
+              color: C.textMuted, letterSpacing: "-0.01em",
             }}>
               {t.formats}
             </p>
@@ -445,90 +441,251 @@ export default function Demo() {
         {phase === "result" && result && (
           <div style={{ animation: "demoFadeUp 0.4s ease-out" }}>
 
-            {/* ── Score + Image row ── */}
-            <div style={{ display: "flex", gap: 20, marginBottom: 24, alignItems: "center", flexWrap: "wrap" }}>
+            {/* ── Score header: image + score + verdict ── */}
+            <div style={{
+              display: "flex", gap: 20, alignItems: "center",
+              marginBottom: 28, flexWrap: "wrap",
+            }}>
               {preview && (
-                <img src={preview} alt="Ad" style={{
-                  width: 100, height: 100, borderRadius: 12,
-                  border: `1px solid ${C.border}`,
-                  objectFit: "cover", flexShrink: 0,
-                }} />
+                <div style={{ position: "relative", flexShrink: 0 }}>
+                  <img src={preview} alt="Ad" style={{
+                    width: 88, height: 88, borderRadius: 14,
+                    border: `1px solid ${C.border}`,
+                    objectFit: "cover",
+                  }} />
+                  {/* Score badge on image */}
+                  <div style={{
+                    position: "absolute", bottom: -8, right: -8,
+                    width: 36, height: 36, borderRadius: 10,
+                    background: scoreBg(result.score),
+                    border: `2px solid ${C.bg}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <span style={{
+                      fontFamily: BODY, fontSize: 14, fontWeight: 800,
+                      color: scoreColor(result.score),
+                    }}>
+                      {result.score}
+                    </span>
+                  </div>
+                </div>
               )}
-              <div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
                   <span style={{
-                    fontFamily: BODY, fontSize: 40, fontWeight: 800,
+                    fontFamily: BODY, fontSize: 28, fontWeight: 800,
                     color: scoreColor(result.score),
                     letterSpacing: "-0.04em", lineHeight: 1,
                   }}>
                     {result.score}
                   </span>
-                  <span style={{ fontFamily: BODY, fontSize: 14, fontWeight: 500, color: C.textMuted }}>/10</span>
+                  <span style={{ fontFamily: BODY, fontSize: 13, fontWeight: 500, color: C.textMuted }}>/10</span>
                 </div>
-                <span style={{
+                <p style={{
                   fontFamily: BODY, fontSize: 13, fontWeight: 600,
-                  color: scoreColor(result.score), opacity: 0.8,
+                  color: scoreColor(result.score), opacity: 0.85,
                 }}>
                   {result.verdict}
-                </span>
+                </p>
               </div>
             </div>
 
-            {/* ── Hook (visible teaser) ── */}
-            <div style={{ marginBottom: 20 }}>
-              <p style={{
-                fontFamily: BODY, fontSize: 11, fontWeight: 600,
-                color: C.textMuted, textTransform: "uppercase",
-                letterSpacing: "0.08em", marginBottom: 8,
-              }}>
-                {t.hook}
-              </p>
-              <p style={{
-                fontFamily: BODY, fontSize: 14, fontWeight: 400,
-                color: C.textSoft, lineHeight: 1.6,
-              }}>
-                {result.hook}
-              </p>
-            </div>
+            {/* ── Two-card layout ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-            {/* ── Divider ── */}
-            <div style={{ height: 1, background: C.border, marginBottom: 20 }} />
-
-            {/* ── Locked → Signup funnel OR full results ── */}
-            {!result.full ? (
-              <div style={{ textAlign: "center", padding: "20px 0" }}>
-                {/* Blurred locked items */}
-                <div style={{ position: "relative", marginBottom: 28 }}>
-                  {[t.message_label, t.cta_label, t.actions_label].map((label) => (
-                    <div key={label} style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      padding: "10px 0", borderBottom: `1px solid ${C.border}`,
-                      filter: "blur(4px)", userSelect: "none",
-                    }}>
-                      <span style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", width: 70 }}>{label}</span>
-                      <span style={{ fontFamily: BODY, fontSize: 13, color: C.textMuted }}>Lorem ipsum dolor sit amet consectetur...</span>
-                    </div>
-                  ))}
-                  {/* Overlay */}
+              {/* Card 1: Positives (always visible) */}
+              <div style={{
+                borderRadius: 18, padding: "22px 24px",
+                background: "rgba(52,211,153,0.04)",
+                border: "1px solid rgba(52,211,153,0.1)",
+                backdropFilter: "blur(12px)",
+                animation: "demoFadeUp2 0.5s ease-out",
+              }}>
+                {/* Card header */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  marginBottom: 14,
+                }}>
                   <div style={{
-                    position: "absolute", inset: 0,
+                    width: 28, height: 28, borderRadius: 8,
+                    background: C.greenSoft,
                     display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
                   }}>
-                    <Lock size={16} color={C.textMuted} style={{ opacity: 0.5 }} />
+                    <CheckCircle2 size={14} color={C.green} strokeWidth={2.5} />
                   </div>
+                  <span style={{
+                    fontFamily: BODY, fontSize: 13, fontWeight: 700,
+                    color: C.green, letterSpacing: "-0.01em",
+                  }}>
+                    {t.positive_title}
+                  </span>
                 </div>
 
-                {/* Soft CTA — signup, not payment */}
+                {/* Hook content */}
                 <p style={{
-                  fontFamily: BODY, fontSize: 15, fontWeight: 700,
-                  color: C.text, marginBottom: 8, letterSpacing: "-0.02em",
+                  fontFamily: BODY, fontSize: 14, fontWeight: 400,
+                  color: C.textSoft, lineHeight: 1.65,
                 }}>
-                  {t.locked_title}
+                  {result.hook}
                 </p>
-                <p style={{
-                  fontFamily: BODY, fontSize: 13, fontWeight: 400,
-                  color: C.textMuted, marginBottom: 24, lineHeight: 1.5,
+              </div>
+
+              {/* Card 2: Improvements — locked or full */}
+              {!result.full ? (
+                <div
+                  onClick={() => navigate("/signup")}
+                  style={{
+                    position: "relative", borderRadius: 18,
+                    padding: "22px 24px",
+                    background: "rgba(14,165,233,0.03)",
+                    border: "1px solid rgba(14,165,233,0.08)",
+                    backdropFilter: "blur(12px)",
+                    cursor: "pointer",
+                    transition: "all 0.25s cubic-bezier(0.16,1,0.3,1)",
+                    overflow: "hidden",
+                    animation: "demoFadeUp2 0.6s ease-out",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)";
+                    e.currentTarget.style.background = "rgba(14,165,233,0.05)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = "rgba(14,165,233,0.08)";
+                    e.currentTarget.style.background = "rgba(14,165,233,0.03)";
+                  }}
+                >
+                  {/* Card header */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    marginBottom: 14,
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8,
+                      background: C.accentSoft,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      <AlertTriangle size={13} color={C.accent} strokeWidth={2.5} />
+                    </div>
+                    <span style={{
+                      fontFamily: BODY, fontSize: 13, fontWeight: 700,
+                      color: C.accent, letterSpacing: "-0.01em",
+                    }}>
+                      {t.improve_title}
+                    </span>
+                  </div>
+
+                  {/* Blurred placeholder content */}
+                  <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }}>
+                    <div style={{ height: 14, width: "90%", borderRadius: 6, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
+                    <div style={{ height: 14, width: "75%", borderRadius: 6, background: "rgba(255,255,255,0.04)", marginBottom: 10 }} />
+                    <div style={{ height: 14, width: "82%", borderRadius: 6, background: "rgba(255,255,255,0.05)", marginBottom: 10 }} />
+                    <div style={{ height: 14, width: "60%", borderRadius: 6, background: "rgba(255,255,255,0.03)" }} />
+                  </div>
+
+                  {/* Lock overlay */}
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center",
+                    paddingTop: 24,
+                  }}>
+                    {/* Lock circle with pulse */}
+                    <div style={{
+                      width: 48, height: 48, borderRadius: 14,
+                      background: "rgba(14,165,233,0.08)",
+                      border: "1px solid rgba(14,165,233,0.15)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      marginBottom: 12,
+                      animation: "lockPulse 2.5s ease-in-out infinite",
+                    }}>
+                      <Lock size={18} color={C.accent} strokeWidth={2} />
+                    </div>
+                    <span style={{
+                      fontFamily: BODY, fontSize: 13, fontWeight: 700,
+                      color: C.text, letterSpacing: "-0.01em", marginBottom: 4,
+                    }}>
+                      {t.unlock_card}
+                    </span>
+                    <span style={{
+                      fontFamily: BODY, fontSize: 11, fontWeight: 400,
+                      color: C.textMuted,
+                    }}>
+                      {t.signup_sub}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  borderRadius: 18, padding: "22px 24px",
+                  background: "rgba(14,165,233,0.03)",
+                  border: "1px solid rgba(14,165,233,0.08)",
+                  backdropFilter: "blur(12px)",
+                  animation: "demoFadeUp2 0.6s ease-out",
                 }}>
+                  {/* Card header */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    marginBottom: 16,
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8,
+                      background: C.accentSoft,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      <AlertTriangle size={13} color={C.accent} strokeWidth={2.5} />
+                    </div>
+                    <span style={{
+                      fontFamily: BODY, fontSize: 13, fontWeight: 700,
+                      color: C.accent, letterSpacing: "-0.01em",
+                    }}>
+                      {t.improve_title}
+                    </span>
+                  </div>
+
+                  {/* Message */}
+                  <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.65, marginBottom: 16 }}>
+                    {result.message}
+                  </p>
+
+                  {/* CTA feedback */}
+                  {result.cta && (
+                    <div style={{ marginBottom: 16 }}>
+                      <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                        CTA
+                      </p>
+                      <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.6 }}>
+                        {result.cta}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {result.actions && result.actions.length > 0 && (
+                    <div>
+                      <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+                        {t.actions_label}
+                      </p>
+                      {result.actions.map((action, i) => (
+                        <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-start" }}>
+                          <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: C.accent, marginTop: 2, flexShrink: 0 }}>{i + 1}</span>
+                          <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.55 }}>
+                            {action}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ── Bottom CTA (only when unlocked) ── */}
+            {result.full && (
+              <div style={{ textAlign: "center", paddingTop: 20, marginTop: 20, borderTop: `1px solid ${C.border}` }}>
+                <p style={{ fontFamily: BODY, fontSize: 13, fontWeight: 400, color: C.textMuted, marginBottom: 14 }}>
                   {t.signup_sub}
                 </p>
                 <button
@@ -547,74 +704,13 @@ export default function Demo() {
                   {t.signup_cta} <ArrowRight size={14} />
                 </button>
               </div>
-            ) : (
-              <>
-                {/* Message */}
-                <div style={{ marginBottom: 16 }}>
-                  <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-                    {t.message_label}
-                  </p>
-                  <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.6 }}>
-                    {result.message}
-                  </p>
-                </div>
-
-                {/* CTA */}
-                <div style={{ marginBottom: 16 }}>
-                  <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-                    {t.cta_label}
-                  </p>
-                  <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.6 }}>
-                    {result.cta}
-                  </p>
-                </div>
-
-                {/* Actions */}
-                <div style={{ marginBottom: 24 }}>
-                  <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
-                    {t.actions_label}
-                  </p>
-                  {result.actions?.map((action, i) => (
-                    <div key={i} style={{
-                      display: "flex", gap: 10, marginBottom: 10, alignItems: "flex-start",
-                    }}>
-                      <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: C.textMuted, marginTop: 2, flexShrink: 0 }}>{i + 1}.</span>
-                      <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.55 }}>
-                        {action}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Signup CTA */}
-                <div style={{ textAlign: "center", paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-                  <p style={{ fontFamily: BODY, fontSize: 13, fontWeight: 400, color: C.textMuted, marginBottom: 16 }}>
-                    {t.signup_sub}
-                  </p>
-                  <button
-                    onClick={() => navigate("/signup")}
-                    style={{
-                      fontFamily: BODY, fontSize: 14, fontWeight: 700,
-                      padding: "13px 32px", borderRadius: 12,
-                      background: C.text, color: C.bg,
-                      border: "none", cursor: "pointer",
-                      display: "inline-flex", alignItems: "center", gap: 8,
-                      transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(255,255,255,0.08)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
-                  >
-                    {t.signup_cta} <ArrowRight size={14} />
-                  </button>
-                </div>
-              </>
             )}
 
             {/* Try another */}
             <button
               onClick={() => { setPhase("upload"); setResult(null); setPreview(null); setEmail(""); }}
               style={{
-                display: "block", margin: "24px auto 0",
+                display: "block", margin: "20px auto 0",
                 fontFamily: BODY, fontSize: 13, fontWeight: 500,
                 color: C.textMuted, background: "none", border: "none",
                 cursor: "pointer", padding: "8px 16px", borderRadius: 8,
