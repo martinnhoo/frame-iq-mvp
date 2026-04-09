@@ -3590,7 +3590,7 @@ export default function IndexNew() {
   }, []);
 
   // Premium effects
-  useScrollReveal();
+  useScrollReveal(ready);
   usePremiumCards();
 
   const t = T[lang];
