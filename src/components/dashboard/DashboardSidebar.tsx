@@ -1,5 +1,5 @@
 // DashboardSidebar v9 — redesign: flat, consistente, hierarquia clara
-import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, Clapperboard, FileText, ScanEye, ScanLine, Brain } from "lucide-react";
+import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, Clapperboard, FileText, ScanEye, ScanLine, Brain, Gift } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -379,6 +379,11 @@ export function DashboardSidebar({
         {/* Footer */}
         <div style={{ flexShrink: 0 }}>
           <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 0 4px" }} />
+
+          {/* Referral link */}
+          <NavTool url="/dashboard/referral"
+            label={pt ? "Indicações" : es ? "Referidos" : "Referrals"}
+            icon={Gift} isActive={isAt("/dashboard/referral")} onClose={onClose} />
 
           {plan === "free" && !isLifetime && (
             <button onClick={() => setUpgradeOpen(true)}

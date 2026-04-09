@@ -61,6 +61,7 @@ const OAuthCallback    = lazy(() => import("./pages/dashboard/OAuthCallback"));
 const LoopImportPage   = lazy(() => import("./pages/dashboard/LoopImportPage"));
 const LoopSettingsPage = lazy(() => import("./pages/dashboard/LoopSettingsPage"));
 const LoopGuidePage    = lazy(() => import("./pages/dashboard/LoopGuidePage"));
+const ReferralPage     = lazy(() => import("./pages/dashboard/ReferralPage"));
 
 // SEO pages — lazily loaded, rarely visited from landing
 const ToolsIndex    = lazy(() => import("@/pages/seo/ToolsIndex"));
@@ -159,6 +160,7 @@ const App = () => (
                 <Route path="loop/settings" element={<LoopSettingsPage />} />
                 <Route path="loop/ai" element={<Navigate to="/dashboard/ai" replace />} />
                 <Route path="loop/guide" element={<LoopGuidePage />} />
+                <Route path="referral" element={<ReferralPage />} />
                 <Route path="*" element={<Navigate to="/dashboard/ai" replace />} />
               </Route>
 

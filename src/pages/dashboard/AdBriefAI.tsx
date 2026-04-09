@@ -22,6 +22,7 @@ import {
 import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Inter', sans-serif";
 
@@ -4914,6 +4915,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       {showUpgradeWall&&<UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>}
       {showDashboardLimit&&<DashboardLimitPopup lang={lang} plan={profile?.plan} onClose={()=>setShowDashboardLimit(false)}/>}
+      <ReferralNudge messageCount={messages.filter(m=>m.role==="user").length}/>
     </div>
   );
 }
