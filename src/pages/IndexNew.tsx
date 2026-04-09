@@ -2992,7 +2992,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
     <Section id="for" bg="default">
       <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "55%", background: "radial-gradient(ellipse at 90% 0%, rgba(99,102,241,0.06) 0%, transparent 55%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 20 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
@@ -3057,7 +3057,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
   return (
     <Section bg="dark">
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
-        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", marginBottom: 52, textAlign: "center" }}>
+        <div className="scroll-reveal" style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", marginBottom: 52, textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(39,175,225,0.15)", border: "1px solid rgba(39,175,225,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -3077,9 +3077,9 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="telegram-grid">
+        <div className="scroll-reveal scroll-reveal-delay-1 telegram-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
           {items.map((item, i) => (
-            <div key={i} style={{ padding: "22px 24px", borderRadius: 16, background: "rgba(39,175,225,0.04)", border: "1px solid rgba(39,175,225,0.12)", display: "flex", gap: 16, alignItems: "flex-start" }}>
+            <div key={i} className="premium-card" style={{ padding: "22px 24px", borderRadius: 16, background: "rgba(39,175,225,0.04)", border: "1px solid rgba(39,175,225,0.12)", display: "flex", gap: 16, alignItems: "flex-start" }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(39,175,225,0.15)", border: "1px solid rgba(39,175,225,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
               <div>
                 <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#e2f4ff", margin: "0 0 5px", letterSpacing: "-0.01em" }}>{item.title}</p>
