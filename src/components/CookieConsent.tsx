@@ -24,7 +24,7 @@ const CookieConsent = () => {
       <div className="max-w-3xl mx-auto rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
         style={{ background: 'rgba(15,15,15,0.95)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(20px)', boxShadow: '0 -10px 40px rgba(0,0,0,0.5)' }}>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground mb-1">🍪 We use cookies</p>
+          <p className="text-sm font-semibold text-foreground mb-1">We use cookies</p>
           <p className="text-xs text-muted-foreground leading-relaxed">
             We use essential cookies to ensure the website functions properly, and analytics cookies to understand how you interact with it.
           </p>

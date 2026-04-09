@@ -432,15 +432,48 @@ async function detectLang(): Promise<Lang> {
   }
 }
 
+// ─── Scroll Reveal Hook ───────────────────────────────────────────────────────
+function useScrollReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll('.scroll-reveal');
+    if (!els.length) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+}
+
+// ─── Premium Card Mouse Track ─────────────────────────────────────────────────
+function usePremiumCards() {
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const cards = document.querySelectorAll('.premium-card');
+      cards.forEach(card => {
+        const rect = (card as HTMLElement).getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        (card as HTMLElement).style.setProperty('--mouse-x', `${x}%`);
+        (card as HTMLElement).style.setProperty('--mouse-y', `${y}%`);
+      });
+    };
+    window.addEventListener('mousemove', handler, { passive: true });
+    return () => window.removeEventListener('mousemove', handler);
+  }, []);
+}
+
 // ─── Animated Counter ─────────────────────────────────────────────────────────
 function AnimatedStat({ value, label }: { value: string; label: string }) {
   const ref = useRef(null);
-  const isInView = true;
   return (
     <div ref={ref} style={{ textAlign: "center" }}>
-      <div
-        style={{ opacity: 1 }}
-      >
+      <div style={{ opacity: 1 }}>
         <span style={{ fontFamily: F, fontSize: "clamp(28px,4vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", background: "linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.5))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{value}</span>
         <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.72)", marginTop: 6, letterSpacing: "0.02em" }}>{label}</p>
       </div>
@@ -450,7 +483,6 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
-  // Neutro: #06080e · Conversão (pricing): #070d1a
   const bgMap: Record<string, string> = {
     default: "#070d1a",
     subtle:  "#070d1a",
@@ -466,7 +498,7 @@ function Section({ children, id, className = "", noPadding = false, bg = "defaul
   return (
     <section
       id={id}
-      className={className}
+      className={`section-divider noise-overlay ${className}`}
       style={noPadding
         ? { background: bgMap[bg], borderTop: borderMap[bg] }
         : { padding: "clamp(56px,7vw,80px) clamp(20px,4vw,40px)", background: bgMap[bg], borderTop: borderMap[bg], position: "relative" as const, overflow: "hidden" }
@@ -2129,18 +2161,18 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
   const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cargo hasta el 4º día · Cancela cuando quieras' : '3 days free · No charge until day 4 · Cancel anytime';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%', position: 'relative' as const }}>
       {/* Eyebrow */}
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content' }}>
+      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content', padding: '6px 14px', borderRadius: 20, background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.2)' }}>
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px #0ea5e9' }} />
-        <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#0ea5e9' }}>
+        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#38bdf8' }}>
           {lang === 'pt' ? 'IA conectada na sua conta' : lang === 'es' ? 'IA conectada en tu cuenta' : 'AI connected to your account'}
         </span>
       </div>
 
-      {/* Headline — massive, bold */}
+      {/* Headline — massive, bold, with glow */}
       <h1 style={{
-        fontFamily: F, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05,
+        fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.05,
         margin: '0 0 20px', color: '#fff',
         fontSize: 'clamp(42px, 4.8vw, 68px)',
       }}>
@@ -2148,11 +2180,10 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         <br />
         {line2}
         <br />
-        <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>{line3prefix}</span>
-        <span style={{
-          background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 60%, #7dd3fc 100%)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+        <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>{line3prefix}</span>
+        <span className="hero-text-shimmer" style={{
           display: 'inline-block',
+          fontWeight: 800,
           opacity: fade ? 1 : 0,
           transform: fade ? 'translateY(0)' : 'translateY(6px)',
           transition: 'opacity 0.22s ease, transform 0.22s ease',
@@ -2272,9 +2303,17 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
 
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: 'radial-gradient(ellipse 70% 50% at 55% 35%, rgba(14,165,233,0.08) 0%, transparent 60%), #070d1a' }}>
+    <section className="hero-main-section noise-overlay" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#070d1a' }}>
 
-      {/* Subtle radial glow — violet, not green */}
+      {/* Grid pattern background */}
+      <div className="grid-pattern" style={{ position: 'absolute', inset: 0, opacity: 0.5, pointerEvents: 'none' }} />
+
+      {/* Animated glow orbs */}
+      <div className="hero-glow-orb" style={{ left: '20%', top: '30%', width: 600, height: 600, background: 'rgba(14,165,233,0.12)' }} />
+      <div className="hero-glow-orb" style={{ right: '10%', top: '50%', width: 400, height: 400, background: 'rgba(99,102,241,0.08)', animationDelay: '3s' }} />
+      <div className="hero-glow-orb" style={{ left: '60%', bottom: '10%', width: 300, height: 300, background: 'rgba(6,182,212,0.06)', animationDelay: '1.5s' }} />
+
+      {/* Subtle radial glow */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(14,165,233,0.14) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
 
       {/* Grid */}
@@ -3544,6 +3583,10 @@ export default function IndexNew() {
   useEffect(() => {
     detectLang().then(l => { setLang(l); setReady(true); });
   }, []);
+
+  // Premium effects
+  useScrollReveal();
+  usePremiumCards();
 
   const t = T[lang];
   const handleCTA = () => {
