@@ -2462,29 +2462,37 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   // ── Onboarding: save answers to personas.result and complete ──────────────
   const completeOnboarding = React.useCallback(async (answers: Record<string,string>) => {
     if (!selectedPersona?.id || !user?.id) return;
-    const existing = (selectedPersona?.result as any) || {};
-    const updated = {
-      ...existing,
-      niche: answers.niche || existing.niche,
-      product: answers.product || existing.product,
-      objective: answers.objective || existing.objective,
-      market: answers.market || existing.market,
-      avg_ticket: answers.avg_ticket || existing.avg_ticket,
-      maturity: answers.maturity || existing.maturity,
-      onboarding_completed: true,
-    };
-    try {
-      await (supabase as any).from("personas")
-        .update({ result: updated })
-        .eq("id", selectedPersona.id)
-        .eq("user_id", user.id);
-      setCompletedAnswers(answers);
-      setShowOnboardingWelcome(true);
-      // Keep proactiveFired = true so the proactive greeting doesn't override the welcome screen
-    } catch(e) { console.error("[onboarding save]", e); }
+    // Mark done immediately — don't wait for DB
     onboardingSessionDone.current = true;
     setOnboardingStep(-1);
-  }, [selectedPersona?.id, selectedPersona?.result, user?.id]);
+    try { sessionStorage.setItem(`adbrief_onb_skip_${selectedPersona.id}`, "1"); } catch {}
+
+    // Fetch fresh result from DB — selectedPersona.result from localStorage may be null/stale
+    try {
+      const { data: freshData } = await (supabase as any)
+        .from("personas").select("result")
+        .eq("id", selectedPersona.id).eq("user_id", user.id).single();
+      const existing = (freshData?.result as any) || {};
+      const updated = {
+        ...existing,
+        ...(answers.niche      ? { niche: answers.niche }          : {}),
+        ...(answers.product    ? { product: answers.product }      : {}),
+        ...(answers.objective  ? { objective: answers.objective }  : {}),
+        ...(answers.market     ? { market: answers.market }        : {}),
+        ...(answers.avg_ticket ? { avg_ticket: answers.avg_ticket }: {}),
+        ...(answers.maturity   ? { maturity: answers.maturity }    : {}),
+        onboarding_completed: true,
+      };
+      const { error } = await (supabase as any).from("personas")
+        .update({ result: updated })
+        .eq("id", selectedPersona.id).eq("user_id", user.id);
+      if (error) console.error("[onboarding save]", error);
+      else {
+        setCompletedAnswers(answers);
+        setShowOnboardingWelcome(true);
+      }
+    } catch(e) { console.error("[onboarding save]", e); }
+  }, [selectedPersona?.id, user?.id]);
 
   const triggerProactiveGreeting = async (snapshot: any, hasMetaConn?: boolean, hasGoogleConn?: boolean) => {
     if (proactiveFired.current) return;
