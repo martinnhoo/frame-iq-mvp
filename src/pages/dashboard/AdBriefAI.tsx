@@ -3997,16 +3997,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       (b as any)._pendingTool?null:
                       <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} onSend={send} accountCtx={{product:(profile as any)?.product||selectedPersona?.name,niche:(profile as any)?.industry||(profile as any)?.niche,market:(profile as any)?.market||(lang==="pt"?"BR":lang==="es"?"MX":"US"),platform:connections.includes("meta")?"Meta":undefined}} stream={isLatest}/>
                     )}
-                    {/* Cursor piscando — só na última mensagem, desaparece após 3s */}
                     {isLatest && (
                       <span style={{
-                        display:"inline-block", width:2, height:14,
-                        background:"rgba(14,165,233,0.7)", borderRadius:1,
-                        marginLeft:2, verticalAlign:"middle",
-                        animation:"cursorBlink 0.9s step-end infinite, fadeUp 0.1s ease-out both",
-                        animationDelay:"0s, 0s",
-                        // Auto-hide after 3s via opacity transition
-                        opacity:1,
+                        display:"inline-block", width:2.5, height:16,
+                        background:"#0ea5e9", borderRadius:2,
+                        marginLeft:3, verticalAlign:"middle",
+                        boxShadow:"0 0 8px rgba(14,165,233,0.5), 0 0 2px rgba(14,165,233,0.8)",
                       }} className="stream-cursor"/>
                     )}
                   </div>
