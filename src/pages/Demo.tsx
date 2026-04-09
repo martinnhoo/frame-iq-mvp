@@ -173,7 +173,24 @@ export default function Demo() {
   const [unlocking, setUnlocking] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
 
-  /* ── Business logic (unchanged) ──────────────────────────────────────── */
+  /* ── Compress image to max 1MB JPEG for reliable transfer ────────────── */
+  const compressImage = (file: File, maxW = 1200, quality = 0.7): Promise<{ base64: string; mediaType: string }> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxW / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve({ base64: dataUrl.split(",")[1], mediaType: "image/jpeg" });
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = URL.createObjectURL(file);
+    });
+
+  /* ── Business logic ──────────────────────────────────────────────────── */
   const analyze = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) { toast.error("File too large. Max 10MB."); return; }
     if (!file.type.startsWith("image/"))  { toast.error("Please upload an image file."); return; }
@@ -184,17 +201,14 @@ export default function Demo() {
     setPhase("analyzing");
 
     try {
-      const arrayBuf = await file.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuf);
-      let binary = "";
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      const base64 = btoa(binary);
+      const { base64, mediaType } = await compressImage(file);
 
       const { data, error } = await supabase.functions.invoke("analyze-demo", {
-        body: { image_base64: base64, media_type: file.type || "image/jpeg", lang },
+        body: { image_base64: base64, media_type: mediaType, lang },
       });
       if (error) throw error;
       if (data?.error === "rate_limited") { setRateLimited(true); setPhase("upload"); return; }
+      if (data?.error) throw new Error(data.error);
       setResult(data as AnalysisResult);
       setPhase("result");
     } catch (e) {
