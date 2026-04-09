@@ -433,21 +433,25 @@ async function detectLang(): Promise<Lang> {
 }
 
 // ─── Scroll Reveal Hook ───────────────────────────────────────────────────────
-function useScrollReveal() {
+function useScrollReveal(ready: boolean) {
   useEffect(() => {
-    const els = document.querySelectorAll('.scroll-reveal');
-    if (!els.length) return;
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('revealed');
-          obs.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-    els.forEach(el => obs.observe(el));
-    return () => obs.disconnect();
-  }, []);
+    if (!ready) return;
+    const timer = setTimeout(() => {
+      const els = document.querySelectorAll('.scroll-reveal');
+      if (!els.length) return;
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('revealed');
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      els.forEach(el => obs.observe(el));
+      return () => obs.disconnect();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [ready]);
 }
 
 // ─── Premium Card Mouse Track ─────────────────────────────────────────────────
@@ -3586,7 +3590,7 @@ export default function IndexNew() {
   }, []);
 
   // Premium effects
-  useScrollReveal();
+  useScrollReveal(ready);
   usePremiumCards();
 
   const t = T[lang];
