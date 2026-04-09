@@ -661,9 +661,9 @@ export default function DashboardLayout() {
           <button
             onClick={() => setProfileOpen(o => !o)}
             title="Profile"
-            style={{ width: 32, height: 32, minWidth: 32, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: profile?.avatar_url ? "transparent" : "linear-gradient(135deg,#0ea5e9,#6366f1)", border: profileOpen ? "2px solid rgba(14,165,233,0.6)" : "2px solid transparent", cursor: "pointer", color: "#fff", overflow: "hidden", padding: 0, transition: "border-color 0.15s" }}>
+            style={{ width: 32, height: 32, minWidth: 32, minHeight: 32, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: profile?.avatar_url ? "transparent" : "linear-gradient(135deg,#0ea5e9,#6366f1)", border: profileOpen ? "2px solid rgba(14,165,233,0.6)" : "2px solid transparent", cursor: "pointer", color: "#fff", overflow: "hidden", padding: 0, transition: "border-color 0.15s", boxSizing: "border-box", aspectRatio: "1/1" }}>
             {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", borderRadius: "50%" }} />
+              ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", borderRadius: "50%", aspectRatio: "1/1" }} />
               : <span style={{ fontSize: 13, fontWeight: 700, lineHeight: 1 }}>{profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}</span>}
           </button>
 
