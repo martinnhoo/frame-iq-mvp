@@ -1224,6 +1224,9 @@ export type Database = {
           plan_started_at: string | null
           preferred_language: string | null
           preferred_market: string | null
+          referral_bonus_analyses: number | null
+          referral_code: string | null
+          referred_by: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_status: string | null
@@ -1247,6 +1250,9 @@ export type Database = {
           plan_started_at?: string | null
           preferred_language?: string | null
           preferred_market?: string | null
+          referral_bonus_analyses?: number | null
+          referral_code?: string | null
+          referred_by?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
@@ -1270,13 +1276,63 @@ export type Database = {
           plan_started_at?: string | null
           preferred_language?: string | null
           preferred_market?: string | null
+          referral_bonus_analyses?: number | null
+          referral_code?: string | null
+          referred_by?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
           trial_end?: string | null
           usage_alert_flags?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_claims: {
+        Row: {
+          bonus_granted: number | null
+          created_at: string | null
+          id: string
+          referee_id: string
+          referrer_id: string
+        }
+        Insert: {
+          bonus_granted?: number | null
+          created_at?: string | null
+          id?: string
+          referee_id: string
+          referrer_id: string
+        }
+        Update: {
+          bonus_granted?: number | null
+          created_at?: string | null
+          id?: string
+          referee_id?: string
+          referrer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_claims_referee_id_fkey"
+            columns: ["referee_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_claims_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       signup_rate_limits: {
         Row: {
@@ -1812,6 +1868,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      generate_referral_code: { Args: never; Returns: string }
       increment_chat_usage: {
         Args: {
           p_daily_cap: number
