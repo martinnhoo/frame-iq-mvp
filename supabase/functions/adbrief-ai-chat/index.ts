@@ -2134,6 +2134,8 @@ PROIBIDO:
       body: JSON.stringify({
         // Smart model routing: Sonnet for rich-context responses, Haiku for simple ones
         model: (() => {
+          // Always use Sonnet for image analysis (vision)
+          if (body.image_base64) return "claude-sonnet-4-20250514";
           const richCtx =
             (typeof context === "string" && context.length > 200) ||
             systemPrompt.includes("PADRÕES VENCEDORES") ||
