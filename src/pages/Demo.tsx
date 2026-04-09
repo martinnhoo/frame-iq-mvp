@@ -7,7 +7,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const F = "'Inter', system-ui, sans-serif";
+const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Inter', sans-serif";
 
 type Lang = "pt" | "es" | "en";

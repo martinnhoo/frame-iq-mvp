@@ -14,11 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "system-ui", "sans-serif"],
-        display: ["Inter", "system-ui", "sans-serif"],
-        body: ["Inter", "system-ui", "sans-serif"],
+        display: ["Syne", "system-ui", "sans-serif"],
+        body: ["Outfit", "system-ui", "sans-serif"],
         mono: ["DM Mono", "Fira Code", "monospace"],
-        logo: ["Syne", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

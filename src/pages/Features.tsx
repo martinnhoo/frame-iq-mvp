@@ -3,7 +3,7 @@ import { Logo } from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { ArrowRight, Check } from "lucide-react";
 
-const j = { fontFamily: "'Inter', system-ui, sans-serif" };
+const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
 const FEATURES = [
   {

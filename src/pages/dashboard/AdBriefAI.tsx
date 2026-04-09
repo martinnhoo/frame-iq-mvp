@@ -23,7 +23,7 @@ import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
-const F = "'Inter', system-ui, sans-serif";
+const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Inter', sans-serif";
 
 // ── ABAvatar — logo real do adbrief (PNG asset) ───────────────────────────────
@@ -532,7 +532,7 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   const nodes: React.ReactNode[] = [];
   let listBuffer: { text: string; ordered: boolean; num?: number }[] = [];
   let orderedCounter = 0;
-  const F = "'Inter', system-ui, sans-serif";
+  const F = "'Plus Jakarta Sans', sans-serif";
   const MONO = "'DM Mono',monospace";
 
   // Word-level stagger for streaming effect — Claude-like smooth token reveal
@@ -969,7 +969,7 @@ function CreativeCheckCard({ block }: { block: any }) {
 function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void;onSend?:(msg:string)=>void;accountCtx?:{product?:string;niche?:string;market?:string;platform?:string};stream?:boolean}) {
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const [scriptLoadingIdx,setScriptLoadingIdx]=useState<number|null>(null);
-  const F="'Inter', system-ui, sans-serif";
+  const F="'Plus Jakarta Sans', sans-serif";
   const M="'Inter',sans-serif";
   const MONO="'DM Mono',monospace";
 
@@ -1095,7 +1095,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
 
 // ── Proactive Block — first message from the AI when chat opens ──────────────
 const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend, connections, personaName }: { block: Block; lang: string; onSend: (s: string) => void; connections?: string[]; personaName?: string }) {
-  const F = "'Inter', system-ui, sans-serif";
+  const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
 
   const hasMeta = connections?.includes("meta");
@@ -1158,7 +1158,7 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
       )}
 
       {/* Message body */}
-      <p style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 14.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.75, margin: "0 0 24px", letterSpacing: "-0.01em", maxWidth: 520 }}>
+      <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.75, margin: "0 0 24px", letterSpacing: "-0.01em", maxWidth: 520 }}>
         {/* Strip spend/CTR from content since we showed them as cards */}
         {hasRealData
           ? content.replace(/—\s*R\$[\d,]+\s*(gastos|spent).*?(?=\.\s|$)/i, "—").replace(/—\s*\$[\d,]+\s*(spent|gastos).*?(?=\.\s|$)/i, "—").replace(/CTR\s(?:médio|avg|promedio)\s[\d,.]+%/i, "").replace(/,\s*,/g, ",").replace(/—\s*\./g, ".").trim()
@@ -1169,7 +1169,7 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
       <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8 }}>
         {actions.map((label, i) => (
           <button key={i} onClick={() => onSend(label)}
-            style={{ padding: "7px 16px", borderRadius: 99, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.60)", transition: "all 0.15s", whiteSpace: "nowrap" as const, letterSpacing: "-0.01em" }}
+            style={{ padding: "7px 16px", borderRadius: 99, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.60)", transition: "all 0.15s", whiteSpace: "nowrap" as const, letterSpacing: "-0.01em" }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.08)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.22)"; e.currentTarget.style.color = "rgba(255,255,255,0.90)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "rgba(255,255,255,0.60)"; }}>
             {label}
@@ -1182,7 +1182,7 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
 
 // ── Dashboard Offer Block ─────────────────────────────────────────────────────
 function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { block: Block; lang: string; onConfirm: (msg: string) => void; onSilentConfirm?: (msg: string) => void }) {
-  const F = "'Inter', system-ui, sans-serif";
+  const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
   const [loading, setLoading] = useState(false);
 
@@ -1230,7 +1230,7 @@ function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { bloc
 
 // ── Dashboard Limit Popup ─────────────────────────────────────────────────────
 function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: string; onClose: () => void }) {
-  const F = "'Inter', system-ui, sans-serif";
+  const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Inter', sans-serif";
   const navigate = useNavigate();
 
@@ -1316,16 +1316,16 @@ function Kpi({ label, value, sub, trend, spark, color = "#0ea5e9", warn = false 
       display: "flex", flexDirection: "column", gap: 6,
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize: 10, fontWeight: 600,
+        <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize: 10, fontWeight: 600,
           color: "rgba(255,255,255,0.28)", letterSpacing: "0.09em", textTransform: "uppercase" as const }}>{label}</span>
         {spark && spark.length >= 2 && <Spark d={spark} c={warn ? "#fb7185" : color} w={48} h={24}/>}
       </div>
-      <div style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize: 24, fontWeight: 700,
+      <div style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize: 24, fontWeight: 700,
         color: vc, letterSpacing: "-0.035em", lineHeight: 1 }}>{value}</div>
       {sub && (
         <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
           {trendIcon && <span style={{ fontSize: 10, color: sc, lineHeight: 1 }}>{trendIcon}</span>}
-          <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize: 11, fontWeight: 500, color: sc }}>{sub}</span>
+          <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 500, color: sc }}>{sub}</span>
         </div>
       )}
     </div>
@@ -1396,10 +1396,10 @@ function Alert({ a, ask }: { a: { t: "warn" | "ok" | "info"; title: string; deta
       transition: "opacity 0.12s",
     }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize: 12, fontWeight: 700, color: accent, display: "block" }}>{a.title}</span>
-        <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", display: "block", marginTop: 1 }}>{a.detail}</span>
+        <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: accent, display: "block" }}>{a.title}</span>
+        <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", display: "block", marginTop: 1 }}>{a.detail}</span>
       </div>
-      <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize: 11, color: accent, opacity: 0.7, flexShrink: 0, whiteSpace: "nowrap" }}>Perguntar →</span>
+      <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize: 11, color: accent, opacity: 0.7, flexShrink: 0, whiteSpace: "nowrap" }}>Perguntar →</span>
     </div>
   );
 }
@@ -1626,7 +1626,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               boxShadow: isLive ? "0 0 6px rgba(14,165,233,0.8), 0 0 12px rgba(14,165,233,0.4)" : "none",
               animation: isLive ? "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite" : "none",
             }}/>
-            <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize:10, fontWeight:600,
+            <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600,
               letterSpacing:"0.06em", textTransform:"uppercase" as const,
               color: isLive ? "rgba(14,165,233,0.8)" : fail ? "rgba(248,113,133,0.7)" : "rgba(255,255,255,0.3)" }}>
               {busy ? "···" : fail ? "err" : "live"}
@@ -1647,11 +1647,11 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                 background: item.warn ? "rgba(248,113,133,0.08)" : "rgba(255,255,255,0.04)",
                 border: `1px solid ${item.warn ? "rgba(248,113,133,0.15)" : "rgba(255,255,255,0.07)"}`,
               }}>
-                <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize:10, fontWeight:500,
+                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:500,
                   color:"rgba(255,255,255,0.28)", letterSpacing:"0.05em", textTransform:"uppercase" as const }}>
                   {item.lbl}
                 </span>
-                <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize:12, fontWeight:700,
+                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:12, fontWeight:700,
                   color: item.warn ? "#fb7185" : "rgba(255,255,255,0.88)", letterSpacing:"-0.02em" }}>
                   {item.val}
                 </span>
@@ -1669,7 +1669,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               <div style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:7,
                 background:"rgba(248,113,133,0.1)", border:"1px solid rgba(248,113,133,0.2)", flexShrink:0 }}>
                 <span style={{ fontSize:10, color:"#fb7185" }}>⚠</span>
-                <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize:10, fontWeight:600, color:"rgba(248,113,133,0.9)", letterSpacing:"0.03em" }}>
+                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600, color:"rgba(248,113,133,0.9)", letterSpacing:"0.03em" }}>
                   {warnCount} {lang==="pt"?"alerta":"alert"}{warnCount > 1 ? "s" : ""}
                 </span>
               </div>
@@ -1680,7 +1680,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               <div style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:7,
                 background:"rgba(34,211,238,0.07)", border:"1px solid rgba(34,211,238,0.15)", flexShrink:0 }}>
                 <span style={{ fontSize:10, color:"#22d3ee" }}>↑</span>
-                <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize:10, fontWeight:600, color:"rgba(34,211,238,0.8)", letterSpacing:"0.03em" }}>
+                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600, color:"rgba(34,211,238,0.8)", letterSpacing:"0.03em" }}>
                   {scaleCount} {lang==="pt"?"escalar":lang==="es"?"escalar":"scale"}
                 </span>
               </div>
@@ -1700,7 +1700,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
         {/* Error state */}
         {fail && !busy && (
-          <span style={{ fontFamily:"'Inter', system-ui, sans-serif", fontSize:11, color:"rgba(248,113,133,0.6)", flex:1 }}>
+          <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:11, color:"rgba(248,113,133,0.6)", flex:1 }}>
             {lang==="pt"?"falha ao carregar":lang==="es"?"error al cargar":"failed to load"}
           </span>
         )}
@@ -3956,12 +3956,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       })()}
                     </p>
                     {alert.ad_name && (
-                      <p style={{margin:"0 0 2px",fontSize:13,fontWeight:600,color:"#eef0f6",fontFamily:"'Inter', system-ui, sans-serif"}}>
+                      <p style={{margin:"0 0 2px",fontSize:13,fontWeight:600,color:"#eef0f6",fontFamily:"'Plus Jakarta Sans', sans-serif"}}>
                         {alert.ad_name}
                         {alert.campaign_name && <span style={{fontWeight:400,color:"rgba(238,240,246,0.4)",fontSize:12}}> · {alert.campaign_name}</span>}
                       </p>
                     )}
-                    <p style={{margin:0,fontSize:12,color:"rgba(238,240,246,0.65)",lineHeight:1.5,fontFamily:"'Inter', system-ui, sans-serif"}}>
+                    <p style={{margin:0,fontSize:12,color:"rgba(238,240,246,0.65)",lineHeight:1.5,fontFamily:"'Plus Jakarta Sans', sans-serif"}}>
                       {alert.detail}
                     </p>
                     <p style={{margin:"4px 0 0",fontSize:12,color:"rgba(238,240,246,0.3)",fontFamily:"'DM Mono',monospace"}}>
@@ -4319,7 +4319,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         {hasOlderMessages && (
           <div style={{maxWidth:720,width:"100%",margin:"0 auto 8px",padding:"0 clamp(12px,4vw,28px)",boxSizing:"border-box" as const}}>
             <button onClick={()=>setVisibleCount(c=>c+MSG_PAGE)}
-              style={{width:"100%",padding:"8px 0",background:"var(--bg-surface)",border:"1px solid var(--border-subtle)",borderRadius:10,color:"var(--text-muted)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter', system-ui, sans-serif",transition:"all 0.15s"}}
+              style={{width:"100%",padding:"8px 0",background:"var(--bg-surface)",border:"1px solid var(--border-subtle)",borderRadius:10,color:"var(--text-muted)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans', sans-serif",transition:"all 0.15s"}}
               onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="var(--border-default)"}}
               onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor="var(--border-subtle)"}}>
               ↑ Ver {Math.min(MSG_PAGE, messages.length - visibleCount)} mensagens anteriores
@@ -4384,7 +4384,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <div style={{width:26,height:26,borderRadius:8,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.22)"}}>
                       <ABAvatar size={26}/>
                     </div>
-                    <span style={{fontFamily:"'Inter', system-ui, sans-serif",fontSize:12,fontWeight:600,color:"rgba(14,165,233,0.7)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
+                    <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:12,fontWeight:600,color:"rgba(14,165,233,0.7)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
                   </div>
                 )}
                 {/* Blocks — card da IA */}
@@ -4604,7 +4604,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   border:`1px solid ${activeSkill ? activeSkill.color + "50" : "var(--border-default)"}`,
                   color: activeSkill ? activeSkill.color : "rgba(255,255,255,0.5)",
                   fontSize:12, fontWeight: activeSkill ? 600 : 400, cursor:"pointer",
-                  fontFamily:"'Inter', system-ui, sans-serif",
+                  fontFamily:"'Plus Jakarta Sans', sans-serif",
                   letterSpacing:"-0.01em",
                   transition:"background 0.15s, border-color 0.15s, color 0.15s",
                 }}
@@ -4648,7 +4648,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       border:`1px solid ${isOn ? "transparent" : "var(--border-default)"}`,
                       color: isOn ? "#000" : "rgba(255,255,255,0.65)",
                       fontSize:12,fontWeight:500,cursor:"pointer",
-                      fontFamily:"'Inter', system-ui, sans-serif",
+                      fontFamily:"'Plus Jakarta Sans', sans-serif",
                       letterSpacing:"-0.01em",
                       transition:"background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s",
                       boxShadow: isOn ? `0 0 12px ${tool.color}50` : "0 0 0px transparent",
@@ -4679,19 +4679,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <div style={{height:"100%",borderRadius:99,width:`${pct}%`,background:barColor,transition:"width 0.4s"}}/>
                   </div>
                   {/* count */}
-                  <span style={{fontSize:11,color:textColor,fontFamily:"'Inter', system-ui, sans-serif",fontVariantNumeric:"tabular-nums"}}>
+                  <span style={{fontSize:11,color:textColor,fontFamily:"'Plus Jakarta Sans', sans-serif",fontVariantNumeric:"tabular-nums"}}>
                     {used}/{cap}
                   </span>
                   {/* timer quando locked */}
                   {isLocked&&countdown&&(
-                    <span style={{fontSize:11,color:"rgba(255,255,255,0.18)",fontFamily:"'Inter', system-ui, sans-serif",fontVariantNumeric:"tabular-nums"}}>
+                    <span style={{fontSize:11,color:"rgba(255,255,255,0.18)",fontFamily:"'Plus Jakarta Sans', sans-serif",fontVariantNumeric:"tabular-nums"}}>
                       {countdown}
                     </span>
                   )}
                   {/* soft nudge — aparece quando 80%+ mas ainda não locked */}
                   {!isLocked&&pct>=80&&(
                     <button onClick={()=>setShowUpgradeWall(true)} style={{
-                      fontSize:11,fontFamily:"'Inter', system-ui, sans-serif",fontWeight:600,
+                      fontSize:11,fontFamily:"'Plus Jakarta Sans', sans-serif",fontWeight:600,
                       padding:"4px 10px",borderRadius:8,
                       border:"1px solid rgba(245,158,11,0.2)",
                       background:"rgba(245,158,11,0.06)",color:"rgba(245,158,11,0.7)",
@@ -4705,7 +4705,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   {/* upgrade — hard lock button */}
                   {isLocked&&(
                     <button onClick={()=>setShowUpgradeWall(true)} style={{
-                      fontSize:13,fontFamily:"'Inter', system-ui, sans-serif",fontWeight:700,
+                      fontSize:13,fontFamily:"'Plus Jakarta Sans', sans-serif",fontWeight:700,
                       padding:"6px 16px",borderRadius:12,border:"none",
                       background:"#0ea5e9",color:"#fff",cursor:"pointer",
                       boxShadow:"0 0 32px rgba(14,165,233,0.25)",

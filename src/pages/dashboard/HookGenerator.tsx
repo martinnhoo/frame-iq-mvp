@@ -54,7 +54,7 @@ const STRENGTH_CONFIG: Record<string, { color: string; label: string; bar: strin
   low:    { color: "text-red-400",    label: "Baixo",   bar: "bg-red-400" },
 };
 
-const syne = { fontFamily: "'Inter', system-ui, sans-serif" } as const;
+const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
 
 const HOOK_CAPS: Record<string, number> = {
   free: 3, maker: 5, pro: 8, studio: 10, creator: 5, starter: 8, scale: 10,

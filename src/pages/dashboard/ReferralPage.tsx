@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 interface DashCtx { user: any; profile: any; [k: string]: any }
 
-const F = "'Inter', system-ui, sans-serif";
+const F = "'Plus Jakarta Sans', sans-serif";
 
 const t = {
   en: {

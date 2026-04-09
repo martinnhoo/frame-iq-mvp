@@ -528,7 +528,7 @@ export default function PerformanceDashboard() {
             {([["metrics",language==="pt"?"Métricas":language==="es"?"Métricas":"Metrics"],["ads",language==="pt"?"Ads":"Ads"]] as const).map(([tab,label])=>(
               <button key={tab} onClick={()=>setActiveTab(tab)}
                 style={{padding:"6px 18px",borderRadius:7,cursor:"pointer",
-                  fontFamily:"'Inter', system-ui, sans-serif",fontSize:13,fontWeight:activeTab===tab?700:500,
+                  fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:13,fontWeight:activeTab===tab?700:500,
                   background:activeTab===tab?"linear-gradient(135deg,rgba(14,165,233,0.20),rgba(6,182,212,0.12))":"transparent",
                   color:activeTab===tab?"#f0f2f8":"rgba(255,255,255,0.45)",
                   border:activeTab===tab?"1px solid rgba(14,165,233,0.28)":"1px solid transparent",
