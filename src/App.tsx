@@ -31,6 +31,7 @@ const Privacy      = lazy(() => import("./pages/Privacy"));
 const Refund       = lazy(() => import("./pages/Refund"));
 const Careers      = lazy(() => import("./pages/Careers"));
 const Pricing      = lazy(() => import("./pages/Pricing"));
+const Demo         = lazy(() => import("./pages/Demo"));
 
 // Dashboard — largest chunk, never loaded on landing page
 const DashboardLayout  = lazy(() => import("./components/dashboard/DashboardLayout"));
@@ -116,6 +117,7 @@ const App = () => (
               <Route path="/faq" element={<FAQ />} />
               <Route path="/levels" element={<Levels />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/demo" element={<Demo />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/refund" element={<Refund />} />

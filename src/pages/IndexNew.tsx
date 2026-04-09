@@ -115,7 +115,7 @@ const T: Record<Lang, Record<string, string>> = {
     hero_badge: "AI CONNECTED TO YOUR AD ACCOUNT",
     hero_h1: "Chat with your ads.\nGet real answers.",
     hero_sub: "Connect Meta Ads. Reads your real data. Answers like a senior analyst who knows every campaign, creative, and metric.",
-    hero_cta: "Try free for 3 days", hero_see: "See it in action",
+    hero_cta: "Try free for 3 days", hero_see: "Analyze an ad free",
     hero_fine: "3-day free trial · No charge for 72h · Cancel anytime",
     stat_1: "30s", stat_1_label: "To connect Meta Ads",
     stat_2: "90 days", stat_2_label: "Of real data analyzed",
@@ -191,7 +191,7 @@ const T: Record<Lang, Record<string, string>> = {
     hero_badge: "IA CONECTADA NA SUA CONTA DE ANÚNCIOS",
     hero_h1: "Converse com\nseus anúncios.",
     hero_sub: "Conecta em Meta Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha, criativo e métrica.",
-    hero_cta: "Testar grátis por 3 dias", hero_see: "Ver na prática",
+    hero_cta: "Testar grátis por 3 dias", hero_see: "Analisar um anúncio grátis",
     hero_fine: "3 dias grátis · Sem cobrança por 72h · Cancele quando quiser",
     stat_1: "30s", stat_1_label: "Para conectar o Meta Ads",
     stat_2: "90 dias", stat_2_label: "De dados reais analisados",
@@ -267,7 +267,7 @@ const T: Record<Lang, Record<string, string>> = {
     hero_badge: "LA IA QUE CONOCE TU CUENTA DE ANUNCIOS",
     hero_h1: "Habla con tus anuncios.\nLa IA te responde.",
     hero_sub: "Conecta Meta Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
-    hero_cta: "Probar gratis 3 días", hero_see: "Verlo en acción",
+    hero_cta: "Probar gratis 3 días", hero_see: "Analizar un anuncio gratis",
     hero_fine: "3 días gratis · Sin cobro por 72h · Cancela cuando quieras",
     stat_1: "30s", stat_1_label: "Para conectar Meta Ads",
     stat_2: "90 días", stat_2_label: "De datos reales analizados",
@@ -2217,11 +2217,11 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
           variant="primary"
         />
         <button
-          onClick={() => document.querySelector('#how')?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => window.location.href = '/demo'}
           style={{ fontFamily: F, fontSize: 13, fontWeight: 500, padding: '14px 20px', borderRadius: 12, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.15s' }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.25)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.1)'; }}>
-          {lang === 'pt' ? 'Ver como funciona' : lang === 'es' ? 'Ver cómo funciona' : 'See how it works'}
+          {t.hero_see}
         </button>
       </div>
 
