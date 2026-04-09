@@ -13,7 +13,7 @@ import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
   Send, Loader2, RotateCcw,
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
-  Zap, Clapperboard, ScanEye, LayoutDashboard, X,
+  Zap, Clapperboard, ScanEye, LayoutDashboard, X, Sparkles, Target,
   TrendingUp, TrendingDown, BarChart2, BarChart3,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Calendar,
 } from "lucide-react";
@@ -168,16 +168,20 @@ Você está no modo Growth Hacker. Ao analisar dados:
 
 const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string}>> = {
   en: [
-    { icon: Zap,            label: "Gen hooks",      action: "hooks",      color: "#06b6d4" },
-    { icon: Clapperboard,   label: "Write script",   action: "script",     color: "#34d399" },
-    { icon: ScanEye,        label: "Competitors",     action: "competitor", color: "#a78bfa" },
-    { icon: LayoutDashboard,label: "Dashboard",      action: "dashboard",  color: "#0ea5e9" },
+    { icon: Zap,            label: "Gen hooks",        action: "hooks",        color: "#06b6d4" },
+    { icon: Clapperboard,   label: "Write script",     action: "script",       color: "#34d399" },
+    { icon: ScanEye,        label: "Competitors",       action: "competitor",   color: "#a78bfa" },
+    { icon: LayoutDashboard,label: "Report",            action: "report",       color: "#0ea5e9" },
+    { icon: Target,         label: "Campaign plan",    action: "campaign_plan",color: "#f59e0b" },
+    { icon: BarChart2,      label: "Analyze creative", action: "analyze_ad",   color: "#10b981" },
   ],
   pt: [
-    { icon: Zap,            label: "Gerar hooks",        action: "hooks",      color: "#06b6d4" },
-    { icon: Clapperboard,   label: "Escrever roteiro",   action: "script",     color: "#34d399" },
-    { icon: ScanEye,        label: "Concorrentes",        action: "competitor", color: "#a78bfa" },
-    { icon: LayoutDashboard,label: "Dashboard",          action: "dashboard",  color: "#0ea5e9" },
+    { icon: Zap,            label: "Gerar hooks",        action: "hooks",        color: "#06b6d4" },
+    { icon: Clapperboard,   label: "Escrever roteiro",   action: "script",       color: "#34d399" },
+    { icon: ScanEye,        label: "Concorrentes",        action: "competitor",   color: "#a78bfa" },
+    { icon: LayoutDashboard,label: "Relatório",           action: "report",       color: "#0ea5e9" },
+    { icon: Target,         label: "Plano de campanha",  action: "campaign_plan",color: "#f59e0b" },
+    { icon: BarChart2,      label: "Analisar criativo",  action: "analyze_ad",   color: "#10b981" },
   ],
   es: [
     { icon: Zap,            label: "Generar hooks",     action: "hooks",      color: "#06b6d4" },
@@ -2651,6 +2655,23 @@ Before generating any creative output, identify what the user actually needs:
 - "como devia ser o anúncio" + context of marketplace/static → static advice, plain text
 - "quero fazer um vídeo" / "roteiro" / "script" → video script
 - "gerar hooks" / "hooks para X" / "me dá hooks" → video hooks block type
+- "[REPORT]" → performance report with sections: RESUMO (total spend/CTR/ROAS), WINNERS (top 3 creatives), LOSERS (bottom 3), TENDÊNCIA (weekly trend ↑↓), PRÓXIMOS PASSOS (3 bullet actions). Use actual account data.
+- "[ANALYZE_AD]" → analyze the described or uploaded creative. Output format:
+
+**SCORE: X/10** · Veredito: ESCALAR / TESTAR / PAUSAR
+
+HOOK: X/10 — [what works or doesn't in the first 3 seconds]
+CTA: [evaluation of the call-to-action]
+CLAREZA: [visual hierarchy, readability]
+FIT: [audience alignment]
+
+3 AÇÕES:
+• [Specific action 1]
+• [Specific action 2]
+• [Specific action 3]
+
+- "[CAMPAIGN_PLAN]" → structured campaign plan: OBJETIVO, ORÇAMENTO (allocation %), AUDIÊNCIAS (3 segments), CRIATIVOS (formats needed), CRONOGRAMA (phases), KPIs (specific targets)
+- "[DRAFT_CONTENT]" → generate 3 copy variations for the specified format, each with: headline, body copy, CTA. Label each variation (Variação 1/2/3)
 - "quero impulsionar esse post" / "turbinar" / "boost" → boost strategy, plain text
 - "meu CTR caiu" → diagnose fatigue, then suggest next step
 - "benchmark de mercado" → data, not creative
@@ -3239,6 +3260,25 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     // If image attached in chat, prepend context note
     // Capture image before clearing
     const pendingImage = (chatImage && !text) ? chatImage : null;
+
+    // ── Slash command detection ────────────────────────────────────────────────
+    const slashMap: Record<string, string> = {
+      "/relatorio":       "[REPORT] Gera um relatório de performance completo: gasto, CTR, ROAS, winners, losers, evolução semanal e próximos passos.",
+      "/report":          "[REPORT] Generate a complete performance report: spend, CTR, ROAS, winners, losers, weekly trend and next steps.",
+      "/plano":           "[CAMPAIGN_PLAN] Vou criar um plano de campanha. Me diga: produto, objetivo, orçamento e mercado.",
+      "/campaign-plan":   "[CAMPAIGN_PLAN] I'll create a campaign plan. Tell me: product, objective, budget and market.",
+      "/analise-criativo":"[ANALYZE_AD] Pronto para analisar um criativo. Manda a imagem ou descreve o anúncio (com CTR atual se tiver). Vou dar: score do hook, CTA, clareza visual, fit, veredito (Escalar/Testar/Pausar) e 3 ações.",
+      "/analyze-ad":      "[ANALYZE_AD] Ready to analyze a creative. Send the image or describe the ad. I'll give: hook score, CTA, visual clarity, fit, verdict (Scale/Test/Pause) and 3 actions.",
+      "/concorrentes":    "[COMPETITOR] Analisa a estratégia criativa da concorrência. Me diz o nicho/marca a analisar.",
+      "/draft":           "[DRAFT_CONTENT] Vou criar variações de copy. Descreve o produto, formato (stories/feed/video) e objetivo.",
+      "/draft-content":   "[DRAFT_CONTENT] I'll create copy variations. Describe the product, format and objective.",
+    };
+    const slashKey = Object.keys(slashMap).find(k => msg.trim().toLowerCase().startsWith(k));
+    if (slashKey) {
+      const rest = msg.trim().slice(slashKey.length).trim();
+      msg = slashMap[slashKey] + (rest ? " " + rest : "");
+    }
+
     // Store clean user message for display BEFORE modifying msg for AI
     const cleanUserMsg = msg;
     if(pendingImage) {
@@ -3749,7 +3789,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       if (user?.id && selectedPersona?.id && !pendingImage) {
         const lastUserMsg = msg || "";
         const isFactual = /(vendi|comprei|mudei|trabalho com|meu produto|minha conta|tenho|não tenho|agora|decidi|parei|comecei|meu preço|meu cliente|meu mercado|meu público|minha meta|meu objetivo|meu nicho)/i.test(lastUserMsg);
-        const isTool = /\[DASHBOARD\]|\[HOOKS\]|\[ROTEIRO\]/i.test(lastUserMsg);
+        const isTool = /\[DASHBOARD\]|\[HOOKS\]|\[ROTEIRO\]|\[REPORT\]|\[CAMPAIGN_PLAN\]|\[ANALYZE_AD\]/i.test(lastUserMsg);
         if (isFactual && !isTool && lastUserMsg.length > 15) {
           extractAndSaveMemory(lastUserMsg, user.id, selectedPersona.id, lang);
         }
@@ -4541,11 +4581,23 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 return (
                   <button key={tool.action} className={isOn?"tool-pill tool-pill-on":"tool-pill"}
                     onClick={()=>{
-                      if(tool.action==="dashboard"){
-                        if(!isOn){
-                          const defMsg=lang==="pt"?"[DASHBOARD] Mostrar resumo da conta — campanhas, ROAS e criativos ativos":lang==="es"?"[DASHBOARD] Mostrar resumen de la cuenta":"[DASHBOARD] Show account summary — campaigns, ROAS and active creatives";
-                          send(defMsg);
-                        }
+                      // One-shot tools — send message and don't toggle
+                      const oneShot: Record<string,string> = {
+                        dashboard: lang==="pt"
+                          ? "[DASHBOARD] Mostrar resumo da conta — campanhas, ROAS e criativos ativos"
+                          : "[DASHBOARD] Show account summary — campaigns, ROAS and active creatives",
+                        report: lang==="pt"
+                          ? "[REPORT] Gera um relatório de performance completo: gasto, CTR, ROAS, winners, losers, evolução semanal e próximos passos. Formato claro com seções, números destacados e ações em bullet."
+                          : "[REPORT] Generate a complete performance report: spend, CTR, ROAS, winners, losers, weekly trend and next steps.",
+                        campaign_plan: lang==="pt"
+                          ? "[CAMPAIGN_PLAN] Vou criar um plano de campanha. Me diga: produto, objetivo (leads/vendas/tráfego), orçamento e mercado."
+                          : "[CAMPAIGN_PLAN] I'll create a campaign plan. Tell me: product, objective, budget and market.",
+                        analyze_ad: lang==="pt"
+                          ? "[ANALYZE_AD] Pronto para analisar um criativo. Manda a imagem ou descreve o anúncio (com CTR atual se tiver). Vou dar: score do hook, CTA, clareza visual, fit com audiência, veredito (Escalar/Testar/Pausar) e 3 ações."
+                          : "[ANALYZE_AD] Ready to analyze a creative. Send the image or describe the ad. I'll give: hook score, CTA, visual clarity, fit, verdict (Scale/Test/Pause) and 3 actions.",
+                      };
+                      if(oneShot[tool.action]){
+                        if(!isOn) send(oneShot[tool.action]);
                         return;
                       }
                       setActiveTool(isOn?null:tool.action);
