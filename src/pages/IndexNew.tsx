@@ -10,11 +10,11 @@ import { Logo } from "@/components/Logo";
 import { Helmet } from "react-helmet-async";
 
 const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
-const BG = "#070d1a";
-const CARD_BG = "rgba(255,255,255,0.12)";
-const CARD_BORDER = "rgba(255,255,255,0.1)";
-const TEXT_MUTED = "rgba(255,255,255,0.62)";
-const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+const BG = "#050508";
+const CARD_BG = "rgba(255,255,255,0.04)";
+const CARD_BORDER = "rgba(255,255,255,0.07)";
+const TEXT_MUTED = "rgba(255,255,255,0.55)";
+const F = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 // ─── CTA Button ──────────────────────────────────────────────────────────────
 function CTAButton({
@@ -44,13 +44,13 @@ function CTAButton({
   };
 
   const variants: Record<string, React.CSSProperties> = {
-    primary: { background: "#0ea5e9", color: "#fff", boxShadow: "0 0 32px rgba(14,165,233,0.25)" },
+    primary: { background: "#fff", color: "#000", boxShadow: "0 0 32px rgba(255,255,255,0.08)" },
     ghost:   { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.09)" },
     white:   { background: "#fff", color: "#000" },
   };
 
   const hoverStyle = {
-    primary: { transform: "translateY(-2px)", boxShadow: "0 0 40px rgba(14,165,233,0.45)" },
+    primary: { transform: "translateY(-2px)", boxShadow: "0 0 40px rgba(255,255,255,0.15)" },
     ghost:   { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" },
     white:   { opacity: "0.88" },
   };
@@ -488,10 +488,10 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
-    default: "#070d1a",
-    subtle:  "#070d1a",
-    dark:    "#070d1a",
-    accent:  "#070d1a",
+    default: "#050508",
+    subtle:  "#050508",
+    dark:    "#050508",
+    accent:  "#050508",
   };
   const borderMap: Record<string, string> = {
     default: "1px solid rgba(255,255,255,0.04)",
@@ -2176,9 +2176,9 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
 
       {/* Headline — massive, bold, with glow */}
       <h1 style={{
-        fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.05,
-        margin: '0 0 20px', color: '#fff',
-        fontSize: 'clamp(42px, 4.8vw, 68px)',
+        fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.02,
+        margin: '0 0 24px', color: '#fff',
+        fontSize: 'clamp(42px, 5vw, 72px)',
       }}>
         {line1}
         <br />
@@ -2672,7 +2672,7 @@ function SocialProofStrip({ lang }: { lang: Lang }) {
 
   return (
     <div style={{
-      background: "#070d1a",
+      background: "#050508",
       borderTop: "1px solid rgba(255,255,255,0.06)",
       borderBottom: "1px solid rgba(255,255,255,0.06)",
       padding: "0 clamp(20px,5vw,80px)",
@@ -2839,7 +2839,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       position: "relative",
       padding: "96px 24px",
       overflow: "hidden",
-      background: "#070d1a",
+      background: "#050508",
       borderTop: "1px solid rgba(255,255,255,0.04)",
     }}>
       {/* Overlay sutil apenas — sem mudar cor de fundo */}
