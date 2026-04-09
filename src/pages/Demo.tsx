@@ -184,10 +184,15 @@ export default function Demo() {
     setPhase("analyzing");
 
     try {
-      const fd = new FormData();
-      fd.append("image", file);
-      fd.append("lang", lang);
-      const { data, error } = await supabase.functions.invoke("analyze-demo", { body: fd });
+      const arrayBuf = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuf);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
+
+      const { data, error } = await supabase.functions.invoke("analyze-demo", {
+        body: { image_base64: base64, media_type: file.type || "image/jpeg", lang },
+      });
       if (error) throw error;
       if (data?.error === "rate_limited") { setRateLimited(true); setPhase("upload"); return; }
       setResult(data as AnalysisResult);
@@ -203,12 +208,16 @@ export default function Demo() {
     if (!email || !email.includes("@")) return;
     setUnlocking(true);
     try {
-      const fd = new FormData();
       const blob = await (await fetch(preview!)).blob();
-      fd.append("image", blob, "ad.jpg");
-      fd.append("email", email);
-      fd.append("lang", lang);
-      const { data, error } = await supabase.functions.invoke("analyze-demo", { body: fd });
+      const arrayBuf = await blob.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuf);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
+
+      const { data, error } = await supabase.functions.invoke("analyze-demo", {
+        body: { image_base64: base64, media_type: blob.type || "image/jpeg", lang, email },
+      });
       if (error) throw error;
       setResult(data as AnalysisResult);
     } catch { toast.error(t.error); }
