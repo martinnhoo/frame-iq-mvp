@@ -2144,6 +2144,8 @@ PROIBIDO:
         })(),
         max_tokens: (() => {
           const msg = message.toLowerCase().trim();
+          // Image analysis needs full output
+          if (body.image_base64) return 2500;
           // Simple queries: greetings, short questions
           if (msg.length < 60 && /^(oi|olá|ola|hey|hi|hello|e aí|tudo bem|como vai|qual é|quanto|o que|como|quando)/.test(msg)) return 800;
           // Tool requests need full output
