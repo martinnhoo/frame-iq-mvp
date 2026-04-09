@@ -2299,7 +2299,7 @@ export default function AdBriefAI() {
       proactiveFired.current = false;
       onboardingSessionDone.current = false; // new persona = check onboarding again
       // Load skill for new persona
-      const savedSkill = localStorage.getItem(`adbrief_skill_${pid}`) || null;
+      const savedSkill = localStorage.getItem(`adbrief_skill_${newId}`) || null;
       setActiveSkillId(savedSkill);
       setContextReady(false);
       setConnections([]);
