@@ -180,14 +180,7 @@ export default function Diagnostico() {
                 onMouseEnter={e => e.currentTarget.style.borderColor = C.borderHov}
                 onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
               >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: ic.bg,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  marginBottom: 14,
-                }}>
-                  <ic.Icon size={17} color={ic.color} strokeWidth={2.2} />
-                </div>
+                <ic.Icon size={18} color={ic.color} strokeWidth={1.8} style={{ marginBottom: 14 }} />
                 <p style={{
                   fontFamily: BODY, fontSize: 14, fontWeight: 700,
                   color: C.text, marginBottom: 6, letterSpacing: "-0.02em",

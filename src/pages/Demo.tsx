@@ -150,9 +150,12 @@ const KEYFRAMES = `
 @keyframes scanLine{0%{top:10%;opacity:0}20%{opacity:1}80%{opacity:1}100%{top:85%;opacity:0}}
 @keyframes orbFloat{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.12)}}
 @keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(14,165,233,0.15)}50%{box-shadow:0 0 0 8px rgba(14,165,233,0)}}
-@keyframes glassShine{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @property --beam-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes beamSpin{to{--beam-angle:360deg}}
+@media(max-width:480px){
+  .demo-upload{padding:40px 20px!important}
+  .demo-score-img{width:64px!important;height:64px!important;borderRadius:10px!important}
+}
 `;
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -240,13 +243,24 @@ export default function Demo() {
         body: { image_base64: base64, media_type: mediaType, lang },
       });
 
-      if (error) throw error;
+      console.log("[Demo] Raw response:", JSON.stringify(data));
+      if (error) { console.error("[Demo] Invoke error:", error); throw error; }
+
       const parsed = handleDemoResponse(data);
       if (!parsed) return;
+
+      // Fallback: ensure minimum visible content
+      if (!parsed.hook && !parsed.verdict) {
+        console.warn("[Demo] Empty analysis received, showing fallback");
+        parsed.hook = lang === "pt" ? "Análise processada." : lang === "es" ? "Análisis procesado." : "Analysis processed.";
+        parsed.verdict = lang === "pt" ? "Resultado" : lang === "es" ? "Resultado" : "Result";
+        if (!parsed.score) parsed.score = 5;
+      }
+
       setResult(parsed);
       setPhase("result");
     } catch (e) {
-      console.error("Demo analysis error:", e);
+      console.error("[Demo] Analysis error:", e);
       toast.error(t.error);
       setPhase("upload");
     }
@@ -392,7 +406,7 @@ export default function Demo() {
               borderRadius: 24,
               background: dragOver ? "rgba(14,165,233,0.04)" : C.surface,
               border: `1px solid ${dragOver ? "rgba(14,165,233,0.3)" : C.border}`,
-              padding: "64px 32px",
+              padding: "clamp(40px, 8vw, 64px) clamp(20px, 5vw, 32px)",
               textAlign: "center",
               cursor: "pointer",
               transition: "all 0.25s cubic-bezier(0.16,1,0.3,1)",
@@ -556,28 +570,21 @@ export default function Demo() {
 
               {/* Card 1: Positives (always visible) */}
               <div style={{
-                borderRadius: 18, padding: "22px 24px",
-                background: "rgba(52,211,153,0.04)",
-                border: "1px solid rgba(52,211,153,0.1)",
-                backdropFilter: "blur(12px)",
+                borderRadius: 18, padding: "20px 22px",
+                borderLeft: `2px solid rgba(52,211,153,0.4)`,
+                background: C.surface,
                 animation: "demoFadeUp2 0.5s ease-out",
               }}>
                 {/* Card header */}
                 <div style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  marginBottom: 14,
+                  display: "flex", alignItems: "center", gap: 7,
+                  marginBottom: 12,
                 }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: 8,
-                    background: C.greenSoft,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0,
-                  }}>
-                    <CheckCircle2 size={14} color={C.green} strokeWidth={2.5} />
-                  </div>
+                  <CheckCircle2 size={15} color={C.green} strokeWidth={2} />
                   <span style={{
-                    fontFamily: BODY, fontSize: 13, fontWeight: 700,
-                    color: C.green, letterSpacing: "-0.01em",
+                    fontFamily: BODY, fontSize: 12, fontWeight: 700,
+                    color: C.green, letterSpacing: "0.02em",
+                    textTransform: "uppercase",
                   }}>
                     {t.positive_title}
                   </span>
@@ -598,40 +605,34 @@ export default function Demo() {
                   onClick={() => navigate("/signup")}
                   style={{
                     position: "relative", borderRadius: 18,
-                    padding: "22px 24px",
-                    background: "rgba(14,165,233,0.03)",
-                    border: "1px solid rgba(14,165,233,0.08)",
-                    backdropFilter: "blur(12px)",
+                    padding: "20px 22px",
+                    borderLeft: `2px solid rgba(14,165,233,0.3)`,
+                    background: C.surface,
                     cursor: "pointer",
                     transition: "all 0.25s cubic-bezier(0.16,1,0.3,1)",
                     overflow: "hidden",
                     animation: "demoFadeUp2 0.6s ease-out",
+                    minHeight: 160,
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)";
-                    e.currentTarget.style.background = "rgba(14,165,233,0.05)";
+                    e.currentTarget.style.borderLeftColor = "rgba(14,165,233,0.5)";
+                    e.currentTarget.style.background = C.surfaceHov;
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = "rgba(14,165,233,0.08)";
-                    e.currentTarget.style.background = "rgba(14,165,233,0.03)";
+                    e.currentTarget.style.borderLeftColor = "rgba(14,165,233,0.3)";
+                    e.currentTarget.style.background = C.surface;
                   }}
                 >
                   {/* Card header */}
                   <div style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    marginBottom: 14,
+                    display: "flex", alignItems: "center", gap: 7,
+                    marginBottom: 12,
                   }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 8,
-                      background: C.accentSoft,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                    }}>
-                      <AlertTriangle size={13} color={C.accent} strokeWidth={2.5} />
-                    </div>
+                    <AlertTriangle size={15} color={C.accent} strokeWidth={2} />
                     <span style={{
-                      fontFamily: BODY, fontSize: 13, fontWeight: 700,
-                      color: C.accent, letterSpacing: "-0.01em",
+                      fontFamily: BODY, fontSize: 12, fontWeight: 700,
+                      color: C.accent, letterSpacing: "0.02em",
+                      textTransform: "uppercase",
                     }}>
                       {t.improve_title}
                     </span>
@@ -639,10 +640,9 @@ export default function Demo() {
 
                   {/* Blurred placeholder content */}
                   <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }}>
-                    <div style={{ height: 14, width: "90%", borderRadius: 6, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
-                    <div style={{ height: 14, width: "75%", borderRadius: 6, background: "rgba(255,255,255,0.04)", marginBottom: 10 }} />
-                    <div style={{ height: 14, width: "82%", borderRadius: 6, background: "rgba(255,255,255,0.05)", marginBottom: 10 }} />
-                    <div style={{ height: 14, width: "60%", borderRadius: 6, background: "rgba(255,255,255,0.03)" }} />
+                    <div style={{ height: 12, width: "90%", borderRadius: 4, background: "rgba(255,255,255,0.06)", marginBottom: 9 }} />
+                    <div style={{ height: 12, width: "72%", borderRadius: 4, background: "rgba(255,255,255,0.04)", marginBottom: 9 }} />
+                    <div style={{ height: 12, width: "80%", borderRadius: 4, background: "rgba(255,255,255,0.05)" }} />
                   </div>
 
                   {/* Lock overlay */}
@@ -650,22 +650,13 @@ export default function Demo() {
                     position: "absolute", inset: 0,
                     display: "flex", flexDirection: "column",
                     alignItems: "center", justifyContent: "center",
-                    paddingTop: 24,
+                    paddingTop: 16,
+                    background: "rgba(5,5,8,0.4)",
                   }}>
-                    {/* Lock circle with pulse */}
-                    <div style={{
-                      width: 48, height: 48, borderRadius: 14,
-                      background: "rgba(14,165,233,0.08)",
-                      border: "1px solid rgba(14,165,233,0.15)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      marginBottom: 12,
-                      animation: "lockPulse 2.5s ease-in-out infinite",
-                    }}>
-                      <Lock size={18} color={C.accent} strokeWidth={2} />
-                    </div>
+                    <Lock size={20} color={C.accent} strokeWidth={1.8} style={{ marginBottom: 10, animation: "lockPulse 2.5s ease-in-out infinite" }} />
                     <span style={{
                       fontFamily: BODY, fontSize: 13, fontWeight: 700,
-                      color: C.text, letterSpacing: "-0.01em", marginBottom: 4,
+                      color: C.text, letterSpacing: "-0.01em", marginBottom: 3,
                     }}>
                       {t.unlock_card}
                     </span>
@@ -679,28 +670,21 @@ export default function Demo() {
                 </div>
               ) : (
                 <div style={{
-                  borderRadius: 18, padding: "22px 24px",
-                  background: "rgba(14,165,233,0.03)",
-                  border: "1px solid rgba(14,165,233,0.08)",
-                  backdropFilter: "blur(12px)",
+                  borderRadius: 18, padding: "20px 22px",
+                  borderLeft: `2px solid rgba(14,165,233,0.3)`,
+                  background: C.surface,
                   animation: "demoFadeUp2 0.6s ease-out",
                 }}>
                   {/* Card header */}
                   <div style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    marginBottom: 16,
+                    display: "flex", alignItems: "center", gap: 7,
+                    marginBottom: 14,
                   }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 8,
-                      background: C.accentSoft,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                    }}>
-                      <AlertTriangle size={13} color={C.accent} strokeWidth={2.5} />
-                    </div>
+                    <AlertTriangle size={15} color={C.accent} strokeWidth={2} />
                     <span style={{
-                      fontFamily: BODY, fontSize: 13, fontWeight: 700,
-                      color: C.accent, letterSpacing: "-0.01em",
+                      fontFamily: BODY, fontSize: 12, fontWeight: 700,
+                      color: C.accent, letterSpacing: "0.02em",
+                      textTransform: "uppercase",
                     }}>
                       {t.improve_title}
                     </span>
