@@ -1901,6 +1901,54 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// BACKGROUND MEMORY EXTRACTION — fire & forget, never blocks UI
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function extractAndSaveMemory(
+  userMessage: string,
+  userId: string,
+  personaId: string,
+  lang: string
+) {
+  try {
+    // Use Anthropic API directly — lightweight haiku call
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 400,
+        system: `You extract factual memories from user messages in a marketing/advertising context.
+Return ONLY a JSON array (no markdown) of facts worth remembering for future AI conversations.
+Each fact: { "text": "concise fact in same language as input", "type": "context"|"preference"|"decision", "importance": 1-5 }
+Examples of good facts: "vendeu o Ford Fiesta", "decidiu focar em carros acima de R$25k", "público é comprador pessoa física"
+Return [] if no relevant facts found. Max 3 facts per call.`,
+        messages: [{ role: "user", content: `Extract factual memories from: "${userMessage}"` }],
+      }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const text = data?.content?.[0]?.text || "[]";
+    let facts: Array<{ text: string; type: string; importance: number }> = [];
+    try { facts = JSON.parse(text.replace(/```json|```/g, "").trim()); } catch { return; }
+    if (!Array.isArray(facts) || facts.length === 0) return;
+
+    // Save to chat_memory table
+    const rows = facts.map(f => ({
+      user_id: userId,
+      persona_id: personaId,
+      memory_text: f.text,
+      memory_type: f.type || "context",
+      importance: Math.min(5, Math.max(1, f.importance || 3)),
+    }));
+
+    await (supabase as any).from("chat_memory").insert(rows);
+  } catch {
+    // Silent fail — never break the chat
+  }
+}
+
 export default function AdBriefAI() {
   usePageTitle("IA Chat");
   const {user,profile,selectedPersona,setSelectedPersona}=useOutletContext<DashboardContext>();
@@ -2130,7 +2178,7 @@ export default function AdBriefAI() {
     const pid=selectedPersona?.id||null;
     (async()=>{
       try{
-      const[analysesRes,patternsRes,personaRes,entriesRes,snapRes]=await Promise.all([
+      const[analysesRes,patternsRes,personaRes,entriesRes,snapRes,memoriesRes]=await Promise.all([
         (pid ? (supabase as any).from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).eq("persona_id",pid) : (supabase as any).from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).is("persona_id",null)).order("created_at",{ascending:false}).limit(50),
         // learned_patterns: filter server-side by persona_id to prevent cross-account leakage
         (pid
@@ -2152,6 +2200,11 @@ export default function AdBriefAI() {
           ? (supabase as any).from("daily_snapshots").select("date,total_spend,avg_ctr,avg_roas,winners_count,losers_count,active_ads,ai_insight,persona_id").eq("user_id",user.id).eq("persona_id",pid)
           : (supabase as any).from("daily_snapshots").select("date,total_spend,avg_ctr,avg_roas,winners_count,losers_count,active_ads,ai_insight,persona_id").eq("user_id",user.id).is("persona_id",null)
         ).order("date",{ascending:false}).limit(14),
+        // chat_memory: factual notes extracted from past conversations
+        (pid
+          ? (supabase as any).from("chat_memory").select("memory_text,memory_type,importance").eq("user_id",user.id).eq("persona_id",pid)
+          : (supabase as any).from("chat_memory").select("memory_text,memory_type,importance").eq("user_id",user.id).is("persona_id",null)
+        ).order("importance",{ascending:false}).limit(20),
       ]);
       const analyses=(analysesRes.data||[]).map((a:any)=>{const r=a.result as any||{};return`[${a.id.slice(0,8)}] ${a.title||"Untitled"} | score:${r.hook_score??""} | type:${r.hook_type??""} | market:${r.market_guess??""} | strength:${a.hook_strength??""} | date:${a.created_at?.slice(0,10)}`;}).join("\n");
       const patterns=((patternsRes.data||[]) as any[]).map((p:any)=>`${p.is_winner?"✓":"✗"} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
@@ -2162,6 +2215,10 @@ export default function AdBriefAI() {
       const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
       // Recent snapshots — already filtered server-side
       const snaps=(snapRes.data||[]) as any[];
+      const memories=(memoriesRes.data||[]) as any[];
+      const memoriesStr = memories.length
+        ? memories.map((m:any) => `[${m.memory_type}] ${m.memory_text}`).join("\n")
+        : "";
       const snapSummary=snaps.length?snaps.map((s:any)=>`${s.date}: spend=R$${s.total_spend?.toFixed(0)} CTR=${(s.avg_ctr*100)?.toFixed(2)}% ads=${s.active_ads} winners=${s.winners_count}${s.ai_insight?" | insight:"+s.ai_insight.slice(0,80):""}`).join("\n"):lang==="pt"?"Sem histórico ainda":"No snapshot data yet";
       const lastSnap=snaps[0];
       const perfSummary=lastSnap?`R$${lastSnap.total_spend?.toFixed(0)} spent last period, ${(lastSnap.avg_ctr*100)?.toFixed(2)}% CTR, ${lastSnap.active_ads} active ads, ${lastSnap.winners_count} winners, ${lastSnap.losers_count} underperformers. AI insight: ${lastSnap.ai_insight||"n/a"}`:lang==="pt"?"Sem dados de performance ainda":"No performance data yet";
@@ -2425,6 +2482,9 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
         ``,
         `=== ANALYSES (${(analysesRes.data || []).length} total) ===`,
         analyses || "None",
+        ``,
+        `=== MEMÓRIAS DA CONVERSA ===`,
+        memoriesStr || "Sem memórias registradas ainda.",
         ``,
         `=== LEARNED PATTERNS ===`,
         patternNote || patterns || "None",
@@ -3466,6 +3526,18 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       setStreamingMsgId(aid);
       if(streamTimerRef.current) clearTimeout(streamTimerRef.current);
       streamTimerRef.current=setTimeout(()=>setStreamingMsgId(null),3500);
+
+
+      // ── Background memory extraction (fire & forget) ──────────────────────
+      // Only run if user message seems factual (not just a question or tool req)
+      if (user?.id && selectedPersona?.id && !pendingImage) {
+        const lastUserMsg = msg || "";
+        const isFactual = /(vendi|comprei|mudei|trabalho com|meu produto|minha conta|tenho|não tenho|agora|decidi|parei|comecei|meu preço|meu cliente|meu mercado|meu público|minha meta|meu objetivo|meu nicho)/i.test(lastUserMsg);
+        const isTool = /\[DASHBOARD\]|\[HOOKS\]|\[ROTEIRO\]/i.test(lastUserMsg);
+        if (isFactual && !isTool && lastUserMsg.length > 15) {
+          extractAndSaveMemory(lastUserMsg, user.id, selectedPersona.id, lang);
+        }
+      }
       // Increment free usage count locally after successful send
       if(profile?.plan==="free"||!profile?.plan){
         setFreeUsage(prev=>prev?{...prev,count:Math.min(3,prev.count+1)}:{count:1,lastReset:new Date().toISOString().slice(0,10)});
