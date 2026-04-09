@@ -791,7 +791,7 @@ export default function PreflightCheck() {
 
           {/* Run button */}
           <div className="px-4 pb-4">
-            <button onClick={run} disabled={loading || (inputMode === "script" ? !script.trim() : !videoFile)}
+            <button onClick={run} disabled={loading || (inputMode === "script" ? !script.trim() : inputMode === "video" ? !videoFile : (!staticHeadline.trim() && !staticBody.trim()))}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
               style={{ ...syne, background: "linear-gradient(135deg, #fbbf24, #f59e0b)", color: "#000" }}>
               {loading
