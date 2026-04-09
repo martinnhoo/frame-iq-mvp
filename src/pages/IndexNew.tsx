@@ -3688,52 +3688,61 @@ export default function IndexNew() {
 
             /* ── HERO — tela cheia, conteúdo empilhado ── */
             .hero-main-section{
-              min-height:100svh!important;
-              padding:72px 24px 40px!important;
+              min-height:auto!important;
+              padding:80px 20px 32px!important;
               align-items:flex-start!important;
               overflow:hidden!important;
             }
+            .hero-grid{
+              grid-template-columns:1fr!important;
+              gap:32px!important;
+            }
             h1,.hero-h1{
-              font-size:clamp(34px,9vw,46px)!important;
-              line-height:1.05!important;
+              font-size:clamp(32px,8.5vw,42px)!important;
+              line-height:1.08!important;
               letter-spacing:-0.04em!important;
               white-space:normal!important;
-              margin-bottom:16px!important;
+              margin-bottom:14px!important;
+              text-align:left!important;
             }
             .hero-sub-p{
               font-size:15px!important;
-              line-height:1.6!important;
+              line-height:1.55!important;
               white-space:normal!important;
               max-width:100%!important;
-              margin-bottom:24px!important;
+              margin-bottom:20px!important;
             }
-            /* CTAs: empilhados, full width, generosos */
+            /* CTAs: empilhados, full width */
             .hero-cta-row{
               flex-direction:column!important;
               align-items:stretch!important;
               gap:10px!important;
-              margin-bottom:20px!important;
+              margin-bottom:16px!important;
             }
             .hero-cta-row > *{
               width:100%!important;
-              min-height:52px!important;
+              min-height:50px!important;
               justify-content:center!important;
-              font-size:16px!important;
+              font-size:15px!important;
             }
-            /* DemoTabs: sem padding extra, full width */
+            /* DemoTabs: full width, no overflow */
             .hero-demo-col{
               padding:0!important;
               width:100%!important;
               min-width:0!important;
               overflow:hidden!important;
+              max-width:100vw!important;
+            }
+            .hero-demo-col > *{
+              max-width:100%!important;
             }
 
-            /* ── SOCIAL PROOF — 2 cols bem definidas ── */
+            /* ── SOCIAL PROOF — single col on small ── */
             .spstrip-grid{
               grid-template-columns:1fr 1fr!important;
             }
             .spstrip-grid>div{
-              padding:24px 16px!important;
+              padding:20px 14px!important;
               border-right:none!important;
             }
             .spstrip-grid>div:nth-child(odd){
@@ -3744,25 +3753,25 @@ export default function IndexNew() {
               border-top:1px solid rgba(255,255,255,0.06)!important;
             }
 
-            /* ── SECTIONS — padding por tela, não por pixel ── */
+            /* ── SECTIONS — consistent mobile padding ── */
             section{
-              padding-left:24px!important;
-              padding-right:24px!important;
-              padding-top:64px!important;
-              padding-bottom:64px!important;
+              padding-left:20px!important;
+              padding-right:20px!important;
+              padding-top:56px!important;
+              padding-bottom:56px!important;
             }
 
             /* ── PAIN ── */
-            .pain-grid{grid-template-columns:1fr!important;gap:0!important}
+            .pain-grid{grid-template-columns:1fr!important;gap:20px!important}
             .pain-col-left,.pain-col-right{padding:0!important}
 
             /* ── HOW IT WORKS ── */
-            .how-grid{grid-template-columns:1fr!important;gap:16px!important}
+            .how-grid{grid-template-columns:1fr!important;gap:14px!important}
 
             /* ── FEATURE TABS ── */
             .feature-tabs-grid{
               grid-template-columns:1fr!important;
-              gap:32px!important;
+              gap:24px!important;
             }
 
             /* ── FOR WHO ── */
@@ -3773,68 +3782,73 @@ export default function IndexNew() {
               scrollbar-width:none!important;
               justify-content:flex-start!important;
               width:100%!important;
-              gap:8px!important;
+              gap:6px!important;
               padding-bottom:4px!important;
             }
             .for-who-tabs::-webkit-scrollbar{display:none!important}
-            .for-who-grid{grid-template-columns:1fr!important}
-            .for-who-card{padding:20px 18px!important}
+            .for-who-grid{grid-template-columns:1fr!important;gap:14px!important}
+            .for-who-card{padding:20px 16px!important}
 
             /* ── TOOLS ── */
             .tools-bento{grid-template-columns:1fr!important}
             .tools-list{display:none!important}
-            .tools-io-grid{grid-template-columns:1fr!important;gap:12px!important}
+            .tools-io-grid{grid-template-columns:1fr!important;gap:10px!important}
 
             /* ── TELEGRAM ── */
-            .telegram-grid{grid-template-columns:1fr!important;gap:16px!important}
+            .telegram-grid{grid-template-columns:1fr!important;gap:12px!important}
 
-            /* ── PRICING — card único centrado ── */
+            /* ── PRICING — stacked cards ── */
             .pricing-grid{
               grid-template-columns:1fr!important;
-              gap:16px!important;
+              gap:14px!important;
               max-width:100%!important;
             }
 
             /* ── FAQ ── */
-            .faq-item{padding:20px 0!important}
+            .faq-item{padding:18px 0!important}
 
             /* ── FINAL CTA ── */
             .trust-badges{
               flex-direction:column!important;
-              align-items:flex-start!important;
-              gap:12px!important;
+              align-items:center!important;
+              gap:10px!important;
             }
 
             /* ── FOOTER ── */
-            .footer-inner{flex-direction:column!important;gap:40px!important}
-            .footer-links{gap:32px!important;flex-wrap:wrap!important}
+            .footer-inner{flex-direction:column!important;gap:32px!important}
+            .footer-links{gap:28px!important;flex-wrap:wrap!important}
             .footer-bottom{
               flex-direction:column!important;
               align-items:flex-start!important;
-              gap:8px!important;
-              font-size:12px!important;
+              gap:6px!important;
+            }
+
+            /* ── Glow orbs — smaller on mobile ── */
+            .hero-glow-orb{
+              width:200px!important;
+              height:200px!important;
             }
           }
 
-          /* ── 480px — telas menores, mais compacto ── */
+          /* ── 480px — smaller screens ── */
           @media(max-width:480px){
-            h1,.hero-h1{font-size:clamp(30px,8.5vw,40px)!important}
-            .hero-main-section{padding:68px 20px 32px!important}
-            section{padding-left:20px!important;padding-right:20px!important;padding-top:56px!important;padding-bottom:56px!important}
+            h1,.hero-h1{font-size:clamp(28px,8vw,36px)!important}
+            .hero-main-section{padding:72px 16px 28px!important}
+            section{padding-left:16px!important;padding-right:16px!important;padding-top:48px!important;padding-bottom:48px!important}
             .spstrip-grid{grid-template-columns:1fr!important}
             .spstrip-grid>div{
               border-right:none!important;
               border-top:1px solid rgba(255,255,255,0.06)!important;
-              padding:20px!important;
+              padding:18px 12px!important;
             }
             .spstrip-grid>div:first-child{border-top:none!important}
           }
 
           /* ── 390px — iPhone SE / Mini ── */
           @media(max-width:390px){
-            .hero-main-section{padding:64px 16px 28px!important}
-            section{padding-left:16px!important;padding-right:16px!important}
-            h1,.hero-h1{font-size:clamp(28px,8vw,36px)!important}
+            .hero-main-section{padding:64px 14px 24px!important}
+            section{padding-left:14px!important;padding-right:14px!important}
+            h1,.hero-h1{font-size:clamp(26px,7.5vw,34px)!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
