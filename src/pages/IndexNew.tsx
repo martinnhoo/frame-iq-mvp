@@ -785,11 +785,11 @@ function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Re
 // ─── Demo conversations data ──────────────────────────────────────────────────
 // ─── Industries for demo ──────────────────────────────────────────────────────
 const INDUSTRIES_DEMO = [
-  { id: "fitness",  emoji: "💪", label: { pt: "Meta · Fitness",   es: "Meta · Fitness",   en: "Meta · Fitness"   }, color: "#0ea5e9", initial: "F" },
-  { id: "clinica",  emoji: "🏥", label: { pt: "Meta · Clínica", es: "Meta · Clínica", en: "Meta · Clinic"  }, color: "#60a5fa", initial: "C" },
-  { id: "ecomm",    emoji: "🛍️", label: { pt: "Meta · E-comm",    es: "Meta · E-comm",    en: "Meta · E-comm"    }, color: "#0ea5e9", initial: "L" },
-  { id: "igaming",  emoji: "🎰", label: { pt: "Meta · iGaming",   es: "Meta · iGaming",   en: "Meta · iGaming"   }, color: "#a78bfa", initial: "E" },
-  { id: "saas",     emoji: "⚡", label: { pt: "Meta · SaaS",      es: "Meta · SaaS",      en: "Meta · SaaS"      }, color: "#fbbf24", initial: "S" },
+  { id: "fitness",  label: { pt: "Meta · Fitness",   es: "Meta · Fitness",   en: "Meta · Fitness"   }, color: "#0ea5e9", initial: "F" },
+  { id: "clinica",  label: { pt: "Meta · Clínica", es: "Meta · Clínica", en: "Meta · Clinic"  }, color: "#60a5fa", initial: "C" },
+  { id: "ecomm",    label: { pt: "Meta · E-comm",    es: "Meta · E-comm",    en: "Meta · E-comm"    }, color: "#0ea5e9", initial: "L" },
+  { id: "igaming",  label: { pt: "Meta · iGaming",   es: "Meta · iGaming",   en: "Meta · iGaming"   }, color: "#a78bfa", initial: "E" },
+  { id: "saas",     label: { pt: "Meta · SaaS",      es: "Meta · SaaS",      en: "Meta · SaaS"      }, color: "#fbbf24", initial: "S" },
 ];
 
 const INDUSTRY_ACCOUNTS: Record<string, Record<Lang, { name: string; meta: string; campaigns: string }>> = {
@@ -2344,7 +2344,6 @@ const featureTabsData = [
   {
     id: "diagnostico",
     label: "Diagnóstico",
-    emoji: "🔍",
     headline: "Sabe por que o ROAS caiu antes de você perceber.",
     sub: "Você pergunta. A IA cruza CTR, frequência e CPM da sua conta real e entrega a causa — não um palpite.",
     proof: "ROAS 5.1x → 4.2x identificado em 30s",
@@ -2354,7 +2353,6 @@ const featureTabsData = [
   {
     id: "criativos",
     label: "Criativos",
-    emoji: "🎯",
     headline: "Para de gastar budget em criativo morto.",
     sub: "A IA lista o que pausar e o que escalar — com CTR, frequência e ROAS de cada um. Decisão em segundos.",
     proof: "Budget liberado pro ROAS 5.8x automaticamente",
@@ -2364,7 +2362,6 @@ const featureTabsData = [
   {
     id: "performance",
     label: "Performance",
-    emoji: "📈",
     headline: "90 dias de dados, uma tela só.",
     sub: "Spend, CPC, CTR e tendência real da sua conta — sem exportar planilha, sem montar dashboard no achismo.",
     proof: "R$47.832 · CTR 3.87% · 2.4M impressões",
@@ -2374,7 +2371,6 @@ const featureTabsData = [
   {
     id: "hooks",
     label: "Hooks",
-    emoji: "⚡",
     headline: "Hooks com CTR estimado antes de gravar.",
     sub: "A IA lê o que já funcionou na sua conta e gera hooks por tipo — urgência, prova social, curiosidade — com projeção de CTR.",
     proof: "Baseado em Reels_v3 · CTR 5.1% · ROAS 5.8x",
@@ -2384,7 +2380,6 @@ const featureTabsData = [
   {
     id: "diario",
     label: "Diário",
-    emoji: "📋",
     headline: "Cada anúncio com um veredicto claro.",
     sub: "Vencedor, Ativo, Saturando ou Pausar. Sem ter que abrir o Ads Manager pra entender o que tá acontecendo.",
     proof: "87% taxa de acerto · R$198.340 retorno estimado",
@@ -2429,7 +2424,7 @@ function FeatureTabs() {
         <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 52, flexWrap: "wrap" as const }}>
           {featureTabsData.map((t, i) => (
             <button key={t.id} onClick={() => handleTab(i)} style={{ padding: "9px 20px", borderRadius: 100, border: i === active ? "1px solid #0da2e7" : "1px solid rgba(255,255,255,0.1)", background: i === active ? "rgba(13,162,231,0.12)" : "transparent", color: i === active ? "#0da2e7" : "rgba(255,255,255,0.45)", fontSize: 14, fontWeight: i === active ? 600 : 400, cursor: "pointer", transition: "all 0.2s ease", whiteSpace: "nowrap" as const }}>
-              {t.emoji} {t.label}
+              {t.label}
             </button>
           ))}
         </div>
@@ -2989,9 +2984,9 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string, string>; ctaLoading?: boolean }) {
   const [active, setActive] = useState(0);
   const profiles = [
-    { emoji: "🏢", label: t.for_tab0, color: "#0ea5e9", headline: t.for_h0, desc: t.for_d0, points: [t.for_p0_0, t.for_p0_1, t.for_p0_2, t.for_p0_3] },
-    { emoji: "📈", label: t.for_tab1, color: "#38bdf8", headline: t.for_h1, desc: t.for_d1, points: [t.for_p1_0, t.for_p1_1, t.for_p1_2, t.for_p1_3] },
-    { emoji: "⚡", label: t.for_tab2, color: "#a78bfa", headline: t.for_h2b, desc: t.for_d2, points: [t.for_p2_0, t.for_p2_1, t.for_p2_2, t.for_p2_3] },
+    { label: t.for_tab0, color: "#0ea5e9", headline: t.for_h0, desc: t.for_d0, points: [t.for_p0_0, t.for_p0_1, t.for_p0_2, t.for_p0_3] },
+    { label: t.for_tab1, color: "#38bdf8", headline: t.for_h1, desc: t.for_d1, points: [t.for_p1_0, t.for_p1_1, t.for_p1_2, t.for_p1_3] },
+    { label: t.for_tab2, color: "#a78bfa", headline: t.for_h2b, desc: t.for_d2, points: [t.for_p2_0, t.for_p2_1, t.for_p2_2, t.for_p2_3] },
   ];
   const p = profiles[active];
   return (
@@ -3018,7 +3013,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
           <div key={active}
             className="for-who-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
             <div className="for-who-card" style={{ padding: "32px 28px", borderRadius: 20, background: `linear-gradient(135deg, ${p.color}07 0%, rgba(255,255,255,0.02) 100%)`, border: `1px solid ${p.color}18` }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 20 }}>{p.emoji}</div>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 20 }}><Target size={18} color={p.color} /></div>
               <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 10, color: "#fff" }}>{p.headline}</h3>
               <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 24 }}>{p.desc}</p>
               <CTAButton onClick={onCTA} loading={ctaLoading} label={t.for_cta} size="sm" variant="white" icon={<ArrowRight size={14} />} />
@@ -3872,7 +3867,7 @@ export default function IndexNew() {
       <Nav onCTA={handleCTA} t={t} lang={lang} setLang={setLang} ctaLoading={ctaLoading} />
       <ImmersiveHero onCTA={handleCTA} t={t} lang={lang} ctaLoading={ctaLoading} />
       <SocialProofStrip lang={lang} />
-      <PainSection onCTA={handleCTA} lang={lang} ctaLoading={ctaLoading} />
+      {/* PainSection removed */}
       <HowItWorks t={t} lang={lang} />
       {/* FeatureTabs removed */}
       <Tools t={t} lang={lang} />
