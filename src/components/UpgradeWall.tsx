@@ -40,9 +40,9 @@ const HEADLINE: Record<string, Record<string, string>> = {
 
 const SUBLINE: Record<string, Record<string, string>> = {
   chat: {
-    pt: "Você usou suas 3 mensagens gratuitas. Continue com a IA conectada na sua conta real.",
-    es: "Usaste tus 3 mensajes gratuitos. Continúa con la IA conectada a tu cuenta real.",
-    en: "You've used your 3 free messages. Keep going with the AI connected to your real account.",
+    pt: "Você usou suas 5 mensagens gratuitas. Continue com a IA conectada na sua conta real.",
+    es: "Usaste tus 5 mensajes gratuitos. Continúa con la IA conectada a tu cuenta real.",
+    en: "You've used your 5 free messages. Keep going with the AI connected to your real account.",
   },
   tool: {
     pt: "Desbloqueie todas as ferramentas — Hook Generator, Roteiro, Tradução, Check Criativo, Templates e mais.",

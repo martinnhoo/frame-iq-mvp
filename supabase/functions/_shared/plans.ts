@@ -36,7 +36,7 @@ export function getEffectivePlan(dbPlan: string | null | undefined, email: strin
 /** Per-plan limits. -1 = unlimited */
 export const PLAN_LIMITS = {
   // Monthly AI chat messages (daily cap)
-  daily_messages:    { free: 3,   maker: 50,  pro: 200,  studio: -1 },
+  daily_messages:    { free: 5,   maker: 50,  pro: 200,  studio: -1 },
   // Monthly translations
   translations:      { free: 10,  maker: 100, pro: 500,  studio: -1 },
   // Monthly hook generations
@@ -59,7 +59,7 @@ export const PLAN_LIMITS = {
  * Prevents full 3-day trial abuse while still delivering real value.
  */
 export const TRIAL_LIMITS = {
-  daily_messages:    { free: 3,   maker: 20,  pro: 80,   studio: -1 },
+  daily_messages:    { free: 5,   maker: 20,  pro: 80,   studio: -1 },
   translations:      { free: 10,  maker: 40,  pro: 200,  studio: -1 },
   hooks:             { free: 5,   maker: 40,  pro: 200,  studio: -1 },
   scripts:           { free: 3,   maker: 20,  pro: 80,   studio: -1 },

@@ -75,7 +75,7 @@ const LANGUAGES = [
 ];
 
 const PLAN_INFO: Record<string, { label: string; color: string; desc: string; price: string }> = {
-  free:    { label: "Free",    color: "#9ca3af", desc: "3 mensagens grátis · conecte Meta Ads",        price: "$0" },
+  free:    { label: "Free",    color: "#9ca3af", desc: "5 mensagens grátis · todas as tools · conecte Meta Ads", price: "$0" },
   maker:   { label: "Maker",   color: "#60a5fa", desc: "50 mensagens/dia · 1 conta · ferramentas básicas", price: "$19/mo" },
   pro:     { label: "Pro",     color: "#0ea5e9", desc: "200 mensagens/dia · 3 contas · todas as tools",   price: "$49/mo" },
   studio:  { label: "Studio",  color: "#a78bfa", desc: "Mensagens ilimitadas · contas ilimitadas · agência", price: "$149/mo" },
@@ -531,7 +531,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             const isMaker = currentPlan === "maker";
 
             const FEATURES: Record<string, { icon: string; label: string }[]> = {
-              free:   [{ icon:"💬", label: language==="pt"?"3 mensagens IA/dia":"3 AI messages/day" }, { icon:"🔗", label: language==="pt"?"Conectar conta de anúncios":"Connect Meta Ads or Google Ads" }],
+              free:   [{ icon:"💬", label: language==="pt"?"5 mensagens IA/dia":"5 AI messages/day" }, { icon:"🛠️", label: language==="pt"?"Todas as tools (com limites)":"All tools (limited usage)" }, { icon:"🔗", label: language==="pt"?"Conectar conta de anúncios":"Connect Meta Ads or Google Ads" }],
               maker:  [{ icon:"💬", label: language==="pt"?"50 mensagens IA/dia":"50 AI messages/day" }, { icon:"🔗", label: language==="pt"?"1 conta de anúncios":"1 ad account" }, { icon:"🛠️", label: language==="pt"?"Ferramentas básicas":"Basic tools" }],
               pro:    [{ icon:"💬", label: language==="pt"?"200 mensagens IA/dia":"200 AI messages/day" }, { icon:"🔗", label: language==="pt"?"3 contas de anúncios":"3 ad accounts" }, { icon:"⚡", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"🌍", label: language==="pt"?"Multi-mercado":"Multi-market" }, { icon:"📊", label: language==="pt"?"Dashboards avançados":"Advanced dashboards" }],
               studio: [{ icon:"∞", label: language==="pt"?"Mensagens ilimitadas":"Unlimited messages" }, { icon:"🔗", label: language==="pt"?"Contas ilimitadas":"Unlimited accounts" }, { icon:"⚡", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"🏢", label: language==="pt"?"Workspace agência":"Agency workspace" }, { icon:"🚀", label: language==="pt"?"Prioridade máxima":"Maximum priority" }],
@@ -541,7 +541,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             const features = FEATURES[planKey] || FEATURES.free;
 
             const NEXT_PLAN: Record<string, { key: string; label: string; price: string; pitch: string }> = {
-              free:   { key: "maker",  label: "Maker",  price: "$19/mo", pitch: language==="pt"?"Desbloqueie mais mensagens e ferramentas de criativo":"Unlock more messages and creative tools" },
+              free:   { key: "maker",  label: "Maker",  price: "$19/mo", pitch: language==="pt"?"50 mensagens/dia e uso ilimitado das tools":"50 messages/day and unlimited tool usage" },
               maker:  { key: "pro",    label: "Pro",    price: "$49/mo", pitch: language==="pt"?"3 contas, todas as tools, multi-mercado — tudo desbloqueado":"3 accounts, all tools, multi-market" },
               pro:    { key: "studio", label: "Studio", price: "$149/mo", pitch: language==="pt"?"Ilimitado. Para agências e times que produzem todos os dias":"Unlimited. For agencies that produce every day" },
             };

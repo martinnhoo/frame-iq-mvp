@@ -17,38 +17,20 @@ const T: Record<string, any> = {
     skip: "Pular",
     continue: "Continuar →",
     back: "Voltar",
-    s1_tag: "PASSO 1 DE 3",
+    s1_tag: "PASSO 1 DE 2",
     s1_title: "Como a IA deve\nte chamar?",
     s1_sub: "E em qual setor você atua? A IA usa isso para personalizar o tom, o vocabulário e as recomendações em cada resposta.",
     s1_name_label: "Seu nome",
     s1_name_ph: "Ex: Carla",
     s1_niche_label: "Seu setor principal",
+    s1_value_prop: "A IA lê ROAS, CTR, CPM em tempo real e diz o que pausar, escalar e testar.",
     s1_terms: "Concordo com os",
     s1_terms_and: "e a",
     s1_terms_link: "Termos de Uso",
     s1_privacy_link: "Política de Privacidade",
-    s2_tag: "PASSO 2 DE 3",
-    s2_title: "Não é um chatbot.\nÉ o gestor sênior\nda sua conta.",
-    s2_sub: "A diferença entre uma IA genérica e uma que realmente conhece seus dados:",
-    s2_generic_label: "IA genérica",
-    s2_generic: '"Tente testar novos criativos e ajustar seu público-alvo para melhorar os resultados..."',
-    s2_adbrief_label: "AdBrief conectado",
-    s2_adbrief: '"Creative_042 com CTR 0.8% — 3× abaixo do histórico. CPM subiu 38% essa semana. Pause agora antes de queimar mais verba."',
-    s2_reads_label: "O que a IA lê em tempo real:",
-    s2_items: [
-      { icon: "📊", text: "ROAS, CTR, CPM e CPA de cada anúncio" },
-      { icon: "📈", text: "Histórico de 90 dias da sua conta" },
-      { icon: "🧠", text: "Padrões de criativos vencedores e perdedores" },
-      { icon: "💸", text: "Onde a verba está sendo desperdiçada agora" },
-    ],
-    s2_extras_label: "Além disso:",
-    s2_extras: [
-      "Hooks, roteiros e briefs no seu nicho",
-      "Análise de anúncios de concorrentes",
-      "Trends culturais do Brasil em tempo real",
-    ],
-    s2_note: "Você organiza tudo por contas — uma conta por cliente ou marca. Vamos criar a primeira agora.",
-    s3_tag: "PASSO 3 DE 3",
+    s3_tag: "PASSO 2 DE 2",
+    s3_urgency_title: "Conecte agora e desbloqueie:",
+    s3_urgency_items: ["Alertas quando ROAS cair abaixo do esperado", "Diagnóstico automático de criativos fadigados", "Recomendações baseadas nos seus dados reais"],
     s3_title: "Crie sua\nprimeira conta.",
     s3_sub: "Uma conta = um cliente ou marca. Cada conta tem seus próprios dados e conexões. Você pode criar quantas quiser depois.",
     s3_name_label: "Nome da conta",
@@ -70,38 +52,20 @@ const T: Record<string, any> = {
     skip: "Skip",
     continue: "Continue →",
     back: "Back",
-    s1_tag: "STEP 1 OF 3",
+    s1_tag: "STEP 1 OF 2",
     s1_title: "What should the AI\ncall you?",
     s1_sub: "And what sector do you work in? The AI uses this to personalize the tone, vocabulary and recommendations in every response.",
     s1_name_label: "Your name",
     s1_name_ph: "e.g. James",
     s1_niche_label: "Your main sector",
+    s1_value_prop: "The AI reads ROAS, CTR, CPM in real time and tells you what to pause, scale and test.",
     s1_terms: "I agree to the",
     s1_terms_and: "and",
     s1_terms_link: "Terms of Service",
     s1_privacy_link: "Privacy Policy",
-    s2_tag: "STEP 2 OF 3",
-    s2_title: "Not a chatbot.\nThe senior manager\nof your account.",
-    s2_sub: "The difference between a generic AI and one that truly knows your data:",
-    s2_generic_label: "Generic AI",
-    s2_generic: '"Try testing new creatives and adjusting your target audience to improve results..."',
-    s2_adbrief_label: "AdBrief connected",
-    s2_adbrief: '"Creative_042 at 0.8% CTR — 3× below average. CPM spiked 38% this week. Pause it now before burning more budget."',
-    s2_reads_label: "What the AI reads in real time:",
-    s2_items: [
-      { icon: "📊", text: "ROAS, CTR, CPM and CPA per ad" },
-      { icon: "📈", text: "90-day history of your account" },
-      { icon: "🧠", text: "Winning and losing creative patterns" },
-      { icon: "💸", text: "Where budget is being wasted right now" },
-    ],
-    s2_extras_label: "It also:",
-    s2_extras: [
-      "Hooks, scripts and briefs for your niche",
-      "Competitor ad analysis",
-      "Real-time cultural trends",
-    ],
-    s2_note: "You organize everything by accounts — one per client or brand. Let's create the first one now.",
-    s3_tag: "STEP 3 OF 3",
+    s3_tag: "STEP 2 OF 2",
+    s3_urgency_title: "Connect now and unlock:",
+    s3_urgency_items: ["Alerts when ROAS drops below expected", "Automatic fatigued creative diagnosis", "Recommendations based on your real data"],
     s3_title: "Create your\nfirst account.",
     s3_sub: "One account = one client or brand. Each has its own data and connections. You can create as many as you want later.",
     s3_name_label: "Account name",
@@ -123,38 +87,20 @@ const T: Record<string, any> = {
     skip: "Saltar",
     continue: "Continuar →",
     back: "Volver",
-    s1_tag: "PASO 1 DE 3",
+    s1_tag: "PASO 1 DE 2",
     s1_title: "¿Cómo debe\nllamarte la IA?",
     s1_sub: "¿Y en qué sector trabajas? La IA usa esto para personalizar el tono, vocabulario y recomendaciones en cada respuesta.",
     s1_name_label: "Tu nombre",
     s1_name_ph: "Ej: Miguel",
     s1_niche_label: "Tu sector principal",
+    s1_value_prop: "La IA lee ROAS, CTR, CPM en tiempo real y te dice qué pausar, escalar y probar.",
     s1_terms: "Acepto los",
     s1_terms_and: "y la",
     s1_terms_link: "Términos de Uso",
     s1_privacy_link: "Política de Privacidad",
-    s2_tag: "PASO 2 DE 3",
-    s2_title: "No es un chatbot.\nEl gestor senior\nde tu cuenta.",
-    s2_sub: "La diferencia entre una IA genérica y una que realmente conoce tus datos:",
-    s2_generic_label: "IA genérica",
-    s2_generic: '"Intenta probar nuevos creativos y ajustar tu audiencia para mejorar los resultados..."',
-    s2_adbrief_label: "AdBrief conectado",
-    s2_adbrief: '"Creative_042 con CTR 0.8% — 3× bajo el promedio. CPM subió 38% esta semana. Paúsalo antes de quemar más presupuesto."',
-    s2_reads_label: "Lo que la IA lee en tiempo real:",
-    s2_items: [
-      { icon: "📊", text: "ROAS, CTR, CPM y CPA por anuncio" },
-      { icon: "📈", text: "Historial de 90 días de tu cuenta" },
-      { icon: "🧠", text: "Patrones ganadores y perdedores" },
-      { icon: "💸", text: "Dónde se desperdicia el presupuesto ahora" },
-    ],
-    s2_extras_label: "Además:",
-    s2_extras: [
-      "Hooks, guiones y briefs para tu nicho",
-      "Análisis de anuncios de competidores",
-      "Tendencias culturales en tiempo real",
-    ],
-    s2_note: "Organizas todo por cuentas — una por cliente o marca. Vamos a crear la primera ahora.",
-    s3_tag: "PASO 3 DE 3",
+    s3_tag: "PASO 2 DE 2",
+    s3_urgency_title: "Conecta ahora y desbloquea:",
+    s3_urgency_items: ["Alertas cuando el ROAS caiga", "Diagnóstico automático de creativos fatigados", "Recomendaciones basadas en tus datos reales"],
     s3_title: "Crea tu\nprimera cuenta.",
     s3_sub: "Una cuenta = un cliente o marca. Cada una tiene sus propios datos y conexiones. Puedes crear todas las que quieras después.",
     s3_name_label: "Nombre de la cuenta",
@@ -196,7 +142,7 @@ export default function Onboarding() {
   const lang = (["pt","en","es"].includes(globalLang) ? globalLang : "en") as "pt"|"en"|"es";
   const t = T[lang];
 
-  const [step, setStep]             = useState<1|2|3>(1);
+  const [step, setStep]             = useState<1|2>(1);
   const [connecting, setConnecting] = useState<"meta"|null>(null);
   const [name, setName]             = useState("");
   const [niche, setNiche]           = useState("");
@@ -204,19 +150,12 @@ export default function Onboarding() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [accountDesc, setAccountDesc] = useState("");
-  const [revealed, setRevealed]     = useState(false);
   const nameRef        = useRef<HTMLInputElement>(null);
   const accountNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (step !== 2) { setRevealed(false); return; }
-    const tid = setTimeout(() => setRevealed(true), 600);
-    return () => clearTimeout(tid);
-  }, [step]);
-
-  useEffect(() => {
     if (step === 1) setTimeout(() => nameRef.current?.focus(), 400);
-    if (step === 3) setTimeout(() => accountNameRef.current?.focus(), 400);
+    if (step === 2) setTimeout(() => accountNameRef.current?.focus(), 400);
   }, [step]);
 
   const getSession = async () => {
@@ -325,9 +264,9 @@ export default function Onboarding() {
       const session = await getSession();
       if (session) {
         await saveUserProfile(session);
-        // Always create first account when skipping step 3, even without accountName
+        // Always create first account when skipping step 2, even without accountName
         // createFirstAccount has fallback to name/niche if accountName is empty
-        if (step === 3) {
+        if (step === 2) {
           if (!accountName.trim()) {
             // Use name from step 1 as fallback account name
             setAccountName(name.trim().split(" ")[0] || "Minha conta");
@@ -381,7 +320,7 @@ export default function Onboarding() {
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           {/* Step dots */}
           <div style={{ display: "flex", gap: 6 }}>
-            {([1,2,3] as const).map(n => (
+            {([1,2] as const).map(n => (
               <div key={n} style={{ height: 6, borderRadius: 3, width: step === n ? 28 : 8, background: step === n ? BLUE : step > n ? "rgba(14,165,233,0.5)" : "rgba(255,255,255,0.15)", transition: "all 0.35s ease" }} />
             ))}
           </div>
@@ -395,7 +334,7 @@ export default function Onboarding() {
 
       {/* Progress bar */}
       <div style={{ position: "relative", zIndex: 10, height: 2, background: "rgba(255,255,255,0.06)", margin: "0 32px", borderRadius: 2, overflow: "hidden", flexShrink: 0 }}>
-        <div style={{ height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${BLUE}, ${CYAN})`, width: `${((step - 1) / 2) * 100}%`, transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)" }} />
+        <div style={{ height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${BLUE}, ${CYAN})`, width: `${((step - 1) / 1) * 100}%`, transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)" }} />
       </div>
 
       {/* ── Content ── */}
@@ -475,6 +414,12 @@ export default function Onboarding() {
                   )}
                 </div>
 
+                {/* Mini value prop */}
+                <div style={{ padding: "14px 16px", borderRadius: 14, marginBottom: 20, background: "rgba(14,165,233,0.07)", border: "1.5px solid rgba(14,165,233,0.18)", display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>🧠</span>
+                  <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.55, margin: 0 }}>{t.s1_value_prop}</p>
+                </div>
+
                 {/* Terms */}
                 <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer", marginBottom: 28 }}
                   onClick={() => setAcceptedTerms(!acceptedTerms)}>
@@ -506,77 +451,6 @@ export default function Onboarding() {
 
             {/* ── STEP 2 ── */}
             {step === 2 && (
-              <div>
-                <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: BLUE, letterSpacing: "0.16em", marginBottom: 16, textTransform: "uppercase" as const }}>
-                  {t.s2_tag}
-                </p>
-                <h1 style={{ fontSize: "clamp(32px,5vw,44px)", fontWeight: 800, color: "#fff", margin: "0 0 14px", lineHeight: 1.1, letterSpacing: "-0.04em", whiteSpace: "pre-line" as const }}>
-                  {t.s2_title}
-                </h1>
-                <p style={{ fontFamily: M, fontSize: 15, color: "rgba(255,255,255,0.6)", margin: "0 0 24px", lineHeight: 1.6 }}>
-                  {t.s2_sub}
-                </p>
-
-                {/* Before / After */}
-                <div className="compare-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-                  <div style={{ padding: "16px", borderRadius: 16, background: "rgba(248,113,113,0.07)", border: "2px solid rgba(248,113,113,0.2)" }}>
-                    <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "#f87171", letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const }}>{t.s2_generic_label}</p>
-                    <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: 0, fontStyle: "italic" as const }}>{t.s2_generic}</p>
-                  </div>
-                  <div style={{ padding: "16px", borderRadius: 16, border: "2px solid", background: revealed ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)", borderColor: revealed ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.10)", transition: "background 0.5s, border-color 0.5s" }}>
-                    <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", margin: "0 0 10px", textTransform: "uppercase" as const, color: revealed ? BLUE : "rgba(255,255,255,0.25)", transition: "color 0.3s" }}>
-                      {t.s2_adbrief_label}
-                    </p>
-                    <p style={{ fontFamily: M, fontSize: 12, lineHeight: 1.6, margin: 0, color: revealed ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.15)", transition: "color 0.5s" }}>
-                      {revealed ? t.s2_adbrief : "..."}
-                    </p>
-                  </div>
-                </div>
-
-                {/* O que a IA lê */}
-                <div style={{ padding: "18px", borderRadius: 16, background: "rgba(255,255,255,0.04)", border: "2px solid rgba(255,255,255,0.10)", marginBottom: 12 }}>
-                  <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", margin: "0 0 14px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{t.s2_reads_label}</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
-                    {t.s2_items.map((item: any, i: number) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, opacity: revealed ? 1 : i === 0 ? 0.4 : 0.15, transition: `opacity 0.4s ${i * 0.08}s` }}>
-                        <span style={{ fontSize: 16, width: 24, textAlign: "center", flexShrink: 0 }}>{item.icon}</span>
-                        <span style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.88)" }}>{item.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 14 }}>
-                    <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", margin: "0 0 10px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>{t.s2_extras_label}</p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                      {t.s2_extras.map((extra: string, i: number) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, opacity: revealed ? 1 : 0.15, transition: `opacity 0.4s ${(i + 4) * 0.08}s` }}>
-                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: CYAN, flexShrink: 0 }} />
-                          <span style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.65)" }}>{extra}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Nota workspace */}
-                <div style={{ padding: "14px 16px", borderRadius: 14, marginBottom: 28, background: "rgba(14,165,233,0.07)", border: "2px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>💡</span>
-                  <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, margin: 0 }}>{t.s2_note}</p>
-                </div>
-
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button onClick={() => setStep(1)} style={{ padding: "14px 22px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "2px solid rgba(255,255,255,0.12)", cursor: "pointer", color: "rgba(255,255,255,0.55)", fontSize: 14, fontFamily: F, fontWeight: 600 }}>
-                    {t.back}
-                  </button>
-                  <button onClick={() => setStep(3)}
-                    style={{ flex: 1, padding: "14px 0", borderRadius: 14, background: "#fff", border: "none", cursor: "pointer", color: "#000", fontSize: 15, fontWeight: 700, fontFamily: F, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                    {t.continue}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 3 ── */}
-            {step === 3 && (
               <div>
                 <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: BLUE, letterSpacing: "0.16em", marginBottom: 16, textTransform: "uppercase" as const }}>
                   {t.s3_tag}
@@ -619,6 +493,19 @@ export default function Onboarding() {
                         <span style={{ fontFamily: M, fontSize: 12, color: "rgba(14,165,233,0.9)", fontWeight: 600 }}>{s}</span>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Urgency items */}
+                  <div style={{ marginBottom: 16 }}>
+                    <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "rgba(52,211,153,0.9)", letterSpacing: "0.08em", margin: "0 0 10px", textTransform: "uppercase" as const }}>{t.s3_urgency_title}</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {t.s3_urgency_items.map((item: string, i: number) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
+                          <span style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>{item}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Meta */}

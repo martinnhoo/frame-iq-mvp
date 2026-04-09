@@ -2271,7 +2271,7 @@ export default function AdBriefAI() {
 
   // ── Countdown timer: time until midnight (daily reset) ──
   useEffect(()=>{
-    if(!freeUsage||freeUsage.count<3) return;
+    if(!freeUsage||freeUsage.count<5) return;
     const tick=()=>{
       const now=new Date();
       const midnight=new Date(now);
@@ -3810,7 +3810,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       }
       // Increment free usage count locally after successful send
       if(profile?.plan==="free"||!profile?.plan){
-        setFreeUsage(prev=>prev?{...prev,count:Math.min(3,prev.count+1)}:{count:1,lastReset:new Date().toISOString().slice(0,10)});
+        setFreeUsage(prev=>prev?{...prev,count:Math.min(5,prev.count+1)}:{count:1,lastReset:new Date().toISOString().slice(0,10)});
       }
     }catch(e:any){
       const eid=Date.now()+1;
@@ -4639,7 +4639,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             {/* Usage — barra + count, funciona pra qualquer plano */}
             {freeUsage!==null&&(()=>{
               const planKey = profile?.plan||"free";
-              const CAPS: Record<string,number> = {free:3,maker:50,pro:200,studio:500};
+              const CAPS: Record<string,number> = {free:5,maker:50,pro:200,studio:500};
               const cap = CAPS[planKey]??3;
               if(cap>=500) return null; // studio — sem limite, esconde
               const used = freeUsage?.count??0;
@@ -4663,7 +4663,21 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       {countdown}
                     </span>
                   )}
-                  {/* upgrade — mesmo estilo do botão da landing */}
+                  {/* soft nudge — aparece quando 80%+ mas ainda não locked */}
+                  {!isLocked&&pct>=80&&(
+                    <button onClick={()=>setShowUpgradeWall(true)} style={{
+                      fontSize:11,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:600,
+                      padding:"4px 10px",borderRadius:8,
+                      border:"1px solid rgba(245,158,11,0.2)",
+                      background:"rgba(245,158,11,0.06)",color:"rgba(245,158,11,0.7)",
+                      cursor:"pointer",whiteSpace:"nowrap",letterSpacing:"-0.01em",
+                      transition:"all 0.15s",
+                    }}
+                    onMouseEnter={e=>{const el=e.currentTarget;el.style.background="rgba(245,158,11,0.12)";el.style.borderColor="rgba(245,158,11,0.35)";}}
+                    onMouseLeave={e=>{const el=e.currentTarget;el.style.background="rgba(245,158,11,0.06)";el.style.borderColor="rgba(245,158,11,0.2)";}}
+                    >{lang==="pt"?"Quase no limite — upgrade":"Almost at limit — upgrade"}</button>
+                  )}
+                  {/* upgrade — hard lock button */}
                   {isLocked&&(
                     <button onClick={()=>setShowUpgradeWall(true)} style={{
                       fontSize:13,fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:700,
@@ -4772,7 +4786,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 <button onClick={()=>{
                   const isFree=(profile?.plan==="free"||!profile?.plan);
                   const used=freeUsage?.count??0;
-                  if(isFree&&used>=3){setShowUpgradeWall(true);return;}
+                  if(isFree&&used>=5){setShowUpgradeWall(true);return;}
                   send();
                 }} disabled={!input.trim()||loading||!contextReady}
                   style={{

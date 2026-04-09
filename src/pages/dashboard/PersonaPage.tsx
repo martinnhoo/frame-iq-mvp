@@ -1359,31 +1359,6 @@ export default function PersonaPage() {
     );
   }
 
-  // Free users can VIEW persona page but not create personas — they see an upsell
-  const plan = ctx.profile?.plan || "free";
-  const isFreeUser = !plan || plan === "free";
-  if (isFreeUser) {
-    const F = "'Plus Jakarta Sans', sans-serif";
-    const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", padding: 32, fontFamily: F }}>
-        <div style={{ maxWidth: 420, textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 20 }}>🎯</div>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10, letterSpacing: "-0.03em" }}>
-            Personas are a paid feature
-          </h2>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.65, marginBottom: 24 }}>
-            Personas let you organize campaigns by client, brand or market — and give AdBrief the context it needs to give you relevant, precise answers.
-          </p>
-          <button onClick={() => navigate("/pricing")}
-            style={{ padding: "12px 28px", borderRadius: 12, background: BRAND, color: "#000", fontSize: 14, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: F }}>
-            Upgrade to create personas →
-          </button>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 12 }}>3-day free trial on any plan</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Free users now get limited access (1 persona) — backend enforces the cap
   return <PersonaPageInner ctx={ctx} />;
 }

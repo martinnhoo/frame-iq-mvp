@@ -173,7 +173,7 @@ const SettingsPage = () => {
               <p className="font-medium text-foreground capitalize">{profile?.plan} Plan</p>
               <p className="text-sm text-muted-foreground">
                 {profile?.plan === "free"
-                  ? "Acesso limitado. Faça upgrade para liberar todas as ferramentas."
+                  ? "5 mensagens/dia · Todas as tools com limites · Faça upgrade para uso ilimitado."
                   : profile?.plan === "maker"
                   ? "50 AI messages/day · 1 ad account · All tools."
                   : profile?.plan === "pro"

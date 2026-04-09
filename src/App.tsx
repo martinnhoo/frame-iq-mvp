@@ -30,6 +30,7 @@ const Terms        = lazy(() => import("./pages/Terms"));
 const Privacy      = lazy(() => import("./pages/Privacy"));
 const Refund       = lazy(() => import("./pages/Refund"));
 const Careers      = lazy(() => import("./pages/Careers"));
+const Pricing      = lazy(() => import("./pages/Pricing"));
 
 // Dashboard — largest chunk, never loaded on landing page
 const DashboardLayout  = lazy(() => import("./components/dashboard/DashboardLayout"));
@@ -114,7 +115,7 @@ const App = () => (
               <Route path="/book-demo" element={<BookDemo />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/levels" element={<Levels />} />
-              <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/refund" element={<Refund />} />
