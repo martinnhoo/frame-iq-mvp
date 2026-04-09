@@ -8,7 +8,7 @@ import { Upload, Zap, Copy, Check, AlertCircle, Target, Crosshair, X, Film } fro
 import { toast } from "sonner";
 
 const F = {fontFamily:"'Plus Jakarta Sans', sans-serif"} as const;
-const M = {fontFamily:"'Inter', sans-serif"} as const;
+const M = {fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"} as const;
 
 interface Result {
   industry: string; market: string;

@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return (
       <div style={{
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        minHeight: "60vh", padding: "40px 24px", fontFamily: "'Inter', sans-serif", textAlign: "center",
+        minHeight: "60vh", padding: "40px 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", textAlign: "center",
       }}>
         <div style={{
           width: 48, height: 48, borderRadius: 14, background: "rgba(239,68,68,0.1)",

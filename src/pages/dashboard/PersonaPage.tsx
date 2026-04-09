@@ -25,7 +25,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
   const [changingAccount, setChangingAccount] = useState<string | null>(null);
   const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null);
 
-  const F = "'Inter', sans-serif";
+  const F = "'Plus Jakarta Sans', system-ui, sans-serif";
 
   const loadConnections = async () => {
     if (!personaId) { setLoading(false); return; }
@@ -1028,7 +1028,7 @@ CTA: ${persona.cta_style}`;
     );
 
   // ── LIST VIEW ──
-  const F_COMP = "'Inter', sans-serif";
+  const F_COMP = "'Plus Jakarta Sans', system-ui, sans-serif";
   const INDUSTRIES = ["E-commerce","iGaming / Betting","SaaS / Software","Health & Wellness","Finance / Fintech","Education","Real Estate","Fashion / Apparel","Food & Beverage","Beauty & Cosmetics","Travel & Tourism","Fitness","Entertainment","Marketing / Agency","Consulting","Legal","Automotive","Non-profit","Media / Publishing","Crypto / Web3","Other"];
 
   if (view === "list")

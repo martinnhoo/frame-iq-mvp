@@ -311,7 +311,7 @@ export default function DashboardLayout() {
               <span style={{ fontSize: 36, fontWeight: 700, color: "#eef0f6", letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>ad</span>
               <span style={{ fontSize: 36, fontWeight: 900, background: "linear-gradient(135deg, #38bdf8, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.04em", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>brief</span>
             </div>
-            <p style={{ fontSize: 12, color: "rgba(238,240,246,0.30)", letterSpacing: "0.16em", textTransform: "uppercase", margin: 0, fontFamily: "'Inter', sans-serif" }}>
+            <p style={{ fontSize: 12, color: "rgba(238,240,246,0.30)", letterSpacing: "0.16em", textTransform: "uppercase", margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
               {dt("ov_loading")}
             </p>
           </div>
@@ -577,10 +577,10 @@ export default function DashboardLayout() {
                 }
               </span>
               {/* Name — mobile shows "Contas", desktop shows full name */}
-              <span className="hidden lg:block" style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span className="hidden lg:block" style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {selectedPersona ? selectedPersona.name : (language === "pt" ? "Selecionar conta" : language === "es" ? "Seleccionar" : "Select account")}
               </span>
-              <span className="lg:hidden" style={{ fontSize: 12, fontWeight: 600, color: selectedPersona ? "#e2f4ff" : "rgba(255,255,255,0.5)", fontFamily: "'Inter', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "min(120px, calc(100vw - 160px))", display: "inline-block" }}>
+              <span className="lg:hidden" style={{ fontSize: 12, fontWeight: 600, color: selectedPersona ? "#e2f4ff" : "rgba(255,255,255,0.5)", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "min(120px, calc(100vw - 160px))", display: "inline-block" }}>
                 {selectedPersona ? selectedPersona.name : (language === "pt" ? "Contas" : language === "es" ? "Cuentas" : "Accounts")}
               </span>
               <ChevronDown className="h-3 w-3" style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />
@@ -596,17 +596,17 @@ export default function DashboardLayout() {
                 boxShadow: "0 16px 48px rgba(0,0,0,0.7)",
               }}>
                 <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif" }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                     {language === "pt" ? "Conta ativa" : language === "es" ? "Cuenta activa" : "Active account"}
                   </p>
                 </div>
                 {savedPersonas.length === 0 ? (
                   <div style={{ padding: "16px 14px", textAlign: "center" }}>
-                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Inter', sans-serif" }}>
+                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                       {language === "pt" ? "Nenhuma conta ainda" : "No accounts yet"}
                     </p>
                     <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
-                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer", fontSize: 12, fontFamily: "'Inter', sans-serif", margin: "0 auto" }}>
+                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer", fontSize: 12, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", margin: "0 auto" }}>
                       <Sparkles className="h-3 w-3" /> {language === "pt" ? "Criar conta" : "Add account"}
                     </button>
                   </div>
@@ -621,15 +621,15 @@ export default function DashboardLayout() {
                           {p.logo_url ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (p.name?.charAt(0)?.toUpperCase() || "A")}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 500, color: "#e8e8f0", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
-                          {p.website && <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.website}</p>}
+                          <p style={{ fontSize: 13, fontWeight: 500, color: "#e8e8f0", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
+                          {p.website && <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.website}</p>}
                         </div>
                         {selectedPersona?.id === p.id && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0 }} />}
                       </button>
                     ))}
                     <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", padding: "7px 9px 4px", marginTop: 3 }}>
                       <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
-                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.38)", background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", padding: "3px 0" }}
+                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.38)", background: "none", border: "none", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", padding: "3px 0" }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.38)"; }}>
                         <Sparkles className="h-3 w-3" /> {language === "pt" ? "Gerenciar contas" : "Manage accounts"}
@@ -787,14 +787,14 @@ export default function DashboardLayout() {
                 <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
                   AdBrief Alerts
                 </p>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.35)", margin: 0 }}>
                   @AdBriefAlertsBot
                 </p>
               </div>
               {telegramConn && (
                 <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)" }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399" }} />
-                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "#34d399", fontWeight: 600 }}>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "#34d399", fontWeight: 600 }}>
                     {language === "pt" ? "Ativo" : language === "es" ? "Activo" : "Active"}
                   </span>
                 </div>
@@ -808,7 +808,7 @@ export default function DashboardLayout() {
               {telegramConn ? (
                 /* Connected state */
                 <div>
-                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 16px", lineHeight: 1.6 }}>
+                  <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 16px", lineHeight: 1.6 }}>
                     {telegramConn.telegram_username ? `@${telegramConn.telegram_username}` : (language === "pt" ? "Conta conectada" : "Account connected")}
                     {" — "}
                     {language === "pt" ? "Recebendo alertas e comandos." : language === "es" ? "Recibiendo alertas y comandos." : "Receiving alerts and commands."}
@@ -819,21 +819,21 @@ export default function DashboardLayout() {
                       language === "pt" ? "⚡ /pausar [criativo] com confirmação" : language === "es" ? "⚡ /pausar [creativo] con confirmación" : "⚡ /pause [creative] with confirmation",
                       language === "pt" ? "📊 /status — resumo da conta" : language === "es" ? "📊 /status — resumen de cuenta" : "📊 /status — account summary",
                     ].map((item, i) => (
-                      <p key={i} style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>{item}</p>
+                      <p key={i} style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>{item}</p>
                     ))}
                   </div>
                   <button onClick={async () => {
                     await (supabase as any).from("telegram_connections").update({ active: false }).eq("user_id", user?.id);
                     setTelegramConn(null);
                     setTelegramPairingLink(null);
-                  }} style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(248,113,113,0.7)", background: "none", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}>
+                  }} style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(248,113,113,0.7)", background: "none", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}>
                     {language === "pt" ? "Desconectar" : language === "es" ? "Desconectar" : "Disconnect"}
                   </button>
                 </div>
               ) : telegramPairingLink ? (
                 /* Link generated */
                 <div>
-                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 14px", lineHeight: 1.6 }}>
+                  <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 14px", lineHeight: 1.6 }}>
                     {language === "pt" ? "Clique no botão abaixo para abrir o bot e toque /start:" : language === "es" ? "Haz clic en el botón para abrir el bot y toca /start:" : "Click the button below to open the bot and tap /start:"}
                   </p>
                   <a href={telegramPairingLink} target="_blank" rel="noreferrer"
@@ -842,7 +842,7 @@ export default function DashboardLayout() {
                     {language === "pt" ? "Abrir @AdBriefAlertsBot" : language === "es" ? "Abrir @AdBriefAlertsBot" : "Open @AdBriefAlertsBot"}
                   </a>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
-                    <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.2)", margin: 0 }}>
+                    <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.2)", margin: 0 }}>
                       {language === "pt" ? "Expira em 10 minutos" : language === "es" ? "Expira en 10 minutos" : "Expires in 10 minutes"}
                     </p>
                     <button
@@ -852,7 +852,7 @@ export default function DashboardLayout() {
                         if (btn) { btn.textContent = language === "pt" ? "Copiado ✓" : language === "es" ? "Copiado ✓" : "Copied ✓"; setTimeout(() => { if (btn) btn.textContent = language === "pt" ? "Copiar link" : language === "es" ? "Copiar enlace" : "Copy link"; }, 2000); }
                       }}
                       id="tg-copy-btn"
-                      style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
+                      style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}>
                       {language === "pt" ? "Copiar link" : language === "es" ? "Copiar enlace" : "Copy link"}
@@ -862,7 +862,7 @@ export default function DashboardLayout() {
               ) : (
                 /* Not connected */
                 <div>
-                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", margin: "0 0 16px", lineHeight: 1.7 }}>
+                  <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", margin: "0 0 16px", lineHeight: 1.7 }}>
                     {language === "pt"
                       ? "Receba alertas críticos da sua conta de anúncios no Telegram e execute comandos direto por lá."
                       : language === "es"
@@ -877,7 +877,7 @@ export default function DashboardLayout() {
                     ].map((item, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                         <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
-                        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>{item.text}</p>
+                        <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>{item.text}</p>
                       </div>
                     ))}
                   </div>

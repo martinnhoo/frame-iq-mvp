@@ -5,7 +5,7 @@ import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_LANDING_PAGES, SEO_PLATFORMS, SEO_INDUSTRIES } from "@/data/seoData";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
+const m = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" };
 
 // Placeholder ad cards — will be replaced with real ads as library grows
 const PLACEHOLDER_ADS = Array.from({ length: 12 }, (_, i) => ({

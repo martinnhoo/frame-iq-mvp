@@ -5,7 +5,7 @@ import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_HOOKS } from "@/data/seoData";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
+const m = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" };
 
 const HOOK_EXAMPLES: Record<string, { score: number; text: string; platform: string; industry: string }[]> = {
   "curiosity": [

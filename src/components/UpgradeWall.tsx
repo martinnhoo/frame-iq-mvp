@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Inter', sans-serif";
+const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 const PRICE_IDS: Record<string, string> = {
   maker:  "price_1T9sd1Dr9So14XztT3Mqddch",

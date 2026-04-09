@@ -4,7 +4,7 @@ import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_TOOLS } from "@/data/seoData";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
+const m = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" };
 const typeColor: Record<string, string> = { generator: "#fb923c", analyzer: "#22d3ee", calculator: "#34d399" };
 
 export default function ToolPage() {

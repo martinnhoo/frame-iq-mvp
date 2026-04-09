@@ -217,7 +217,7 @@ const SettingsPage = () => {
               <button key={code} onClick={() => setLanguage(code)}
                 style={{
                   padding: "7px 16px", borderRadius: 8, cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: language === code ? 600 : 400,
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, fontWeight: language === code ? 600 : 400,
                   background: language === code ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.04)",
                   border: `1px solid ${language === code ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.1)"}`,
                   color: language === code ? "#0ea5e9" : "rgba(255,255,255,0.55)",
@@ -258,8 +258,8 @@ const SettingsPage = () => {
                     border: `1px solid ${aiTone === val ? "rgba(14,165,233,0.3)" : "rgba(255,255,255,0.08)"}`,
                     transition: "all 0.15s",
                   }}>
-                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600, color: aiTone === val ? "#0ea5e9" : "rgba(255,255,255,0.7)", margin: "0 0 3px" }}>{label}</p>
-                  <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.4 }}>{sub}</p>
+                  <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 600, color: aiTone === val ? "#0ea5e9" : "rgba(255,255,255,0.7)", margin: "0 0 3px" }}>{label}</p>
+                  <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)", margin: 0, lineHeight: 1.4 }}>{sub}</p>
                 </button>
               ))}
             </div>

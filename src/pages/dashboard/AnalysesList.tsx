@@ -12,7 +12,7 @@ interface Analysis {
   video_url: string | null; result: Record<string, unknown> | null; hook_strength: string | null;
 }
 
-const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+const F = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 const STATUS_LABELS: Record<string, Record<string, string>> = {
   pending:   { en: "Processing", pt: "Processando",  es: "Procesando"  },

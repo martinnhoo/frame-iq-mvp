@@ -5,7 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Eye, EyeOff, CheckCircle, ShieldAlert, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Inter', sans-serif";
+const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 // ── Logo ─────────────────────────────────────────────────────────────────────
 function Logo() {

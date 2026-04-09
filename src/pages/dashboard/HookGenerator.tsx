@@ -210,8 +210,8 @@ export default function HookGenerator() {
           <h1 className="text-xl font-bold text-white" style={syne}>{dt("hg_title")}</h1>
           <p className="text-xs text-white/50 mt-0.5">{language === "pt" ? "Hooks gerados por IA com score de performance previsto" : language === "es" ? "Hooks generados por IA con puntaje de rendimiento previsto" : "AI-generated hooks with predicted performance scores — ready to test"}</p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 5, padding: "3px 10px", borderRadius: 99, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.15)" }}>
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 700, color: "#0ea5e9" }}>{hookCount} hooks</span>
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.28)", textTransform: "capitalize" }}>· {plan}</span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, fontWeight: 700, color: "#0ea5e9" }}>{hookCount} hooks</span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.28)", textTransform: "capitalize" }}>· {plan}</span>
           </div>
         </div>
       </div>
@@ -382,11 +382,11 @@ export default function HookGenerator() {
                     <div className="border-t border-white/[0.05] px-4 pb-4 pt-3 space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="rounded-xl bg-white/[0.07] border border-white/[0.05] p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Inter', sans-serif" }}>{language === "pt" ? "Por que funciona" : language === "es" ? "Por qué funciona" : "Why it works"}</p>
+                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{language === "pt" ? "Por que funciona" : language === "es" ? "Por qué funciona" : "Why it works"}</p>
                           <p className="text-xs text-white/50 leading-relaxed">{hook.why}</p>
                         </div>
                         <div className="rounded-xl bg-white/[0.07] border border-white/[0.05] p-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Inter', sans-serif" }}>{language === "pt" ? "Sugestão de CTA" : language === "es" ? "Sugerencia de CTA" : "CTA suggestion"}</p>
+                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1.5" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{language === "pt" ? "Sugestão de CTA" : language === "es" ? "Sugerencia de CTA" : "CTA suggestion"}</p>
                           <p className="text-xs text-white/50 leading-relaxed">{hook.cta_suggestion}</p>
                         </div>
                       </div>

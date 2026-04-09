@@ -416,7 +416,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   if (!open) return null;
 
   const F = "'Plus Jakarta Sans', sans-serif";
-  const M = "'Inter', sans-serif";
+  const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
   const TABS_NEW = [
     { id: "profile",      label: language === "pt" ? "Perfil"        : language === "es" ? "Perfil"        : "Profile",      icon: User },

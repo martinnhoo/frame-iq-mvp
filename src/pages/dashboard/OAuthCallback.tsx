@@ -9,7 +9,7 @@ const PLATFORM_CONFIG: Record<string, { name: string; color: string; fn: string 
   google: { name: "Google Ads", color: "#34d399", fn: "google-oauth"  },
 };
 
-const F = "'Inter', sans-serif";
+const F = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 export default function OAuthCallback() {
   const navigate = useNavigate();

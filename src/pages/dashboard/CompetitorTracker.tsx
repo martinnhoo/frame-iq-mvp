@@ -17,7 +17,7 @@ const MARKETS = [
 const PLATFORMS = ["Meta", "TikTok", "YouTube", "Both"];
 
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Inter', sans-serif";
+const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 interface Competitor {
   id: string;

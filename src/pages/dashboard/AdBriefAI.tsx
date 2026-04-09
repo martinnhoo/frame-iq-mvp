@@ -24,7 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Inter', sans-serif";
+const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 // ── ABAvatar — logo real do adbrief (PNG asset) ───────────────────────────────
 function ABAvatar({ size = 28 }: { size?: number }) {
@@ -970,7 +970,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const [scriptLoadingIdx,setScriptLoadingIdx]=useState<number|null>(null);
   const F="'Plus Jakarta Sans', sans-serif";
-  const M="'Inter',sans-serif";
+  const M="'Plus Jakarta Sans', system-ui, sans-serif";
   const MONO="'DM Mono',monospace";
 
   const copyItem=(text:string,idx:number)=>{
@@ -1096,7 +1096,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
 // ── Proactive Block — first message from the AI when chat opens ──────────────
 const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend, connections, personaName }: { block: Block; lang: string; onSend: (s: string) => void; connections?: string[]; personaName?: string }) {
   const F = "'Plus Jakarta Sans', sans-serif";
-  const M = "'Inter', sans-serif";
+  const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
   const hasMeta = connections?.includes("meta");
   const hasGoogle = false; // disabled
@@ -1183,7 +1183,7 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
 // ── Dashboard Offer Block ─────────────────────────────────────────────────────
 function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { block: Block; lang: string; onConfirm: (msg: string) => void; onSilentConfirm?: (msg: string) => void }) {
   const F = "'Plus Jakarta Sans', sans-serif";
-  const M = "'Inter', sans-serif";
+  const M = "'Plus Jakarta Sans', system-ui, sans-serif";
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = () => {
@@ -1231,7 +1231,7 @@ function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { bloc
 // ── Dashboard Limit Popup ─────────────────────────────────────────────────────
 function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: string; onClose: () => void }) {
   const F = "'Plus Jakarta Sans', sans-serif";
-  const M = "'Inter', sans-serif";
+  const M = "'Plus Jakarta Sans', system-ui, sans-serif";
   const navigate = useNavigate();
 
   const msgs: Record<string, { title: string; sub: string; cta: string }> = {
@@ -1264,7 +1264,7 @@ function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: str
 // Design: editorial dark refinado — Inter, cards com proporção correta
 
 
-const I = { fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif" };
+const I = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" };
 const MONO = { fontFamily: "'SF Mono','Fira Code',ui-monospace,monospace" };
 
 // ── Tiny sparkline ────────────────────────────────────────────────────────────
@@ -4534,7 +4534,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     if(e.key==="Escape"){setShowGoalInput(false);}
                   }}
                   onBlur={e=>saveGoal(e.target.value.trim())}
-                  style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(14,165,233,0.35)",borderRadius:8,padding:"5px 12px",color:"#f0f2f8",fontSize:12,outline:"none",fontFamily:"'Inter',sans-serif",caretColor:"#0ea5e9"}}
+                  style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(14,165,233,0.35)",borderRadius:8,padding:"5px 12px",color:"#f0f2f8",fontSize:12,outline:"none",fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",caretColor:"#0ea5e9"}}
                 />
                 <button onClick={()=>setShowGoalInput(false)} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:16,lineHeight:1,padding:"0 4px"}}>×</button>
               </div>
@@ -4543,10 +4543,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 onClick={()=>setShowGoalInput(true)}
                 style={{display:"flex",alignItems:"center",gap:5,marginBottom:8,background:"none",border:"none",cursor:"pointer",padding:0,maxWidth:"100%"}}
               >
-                <span style={{fontSize:11,color:"rgba(255,255,255,0.18)",fontFamily:"'Inter',sans-serif",letterSpacing:"0.04em",textTransform:"uppercase" as const}}>
+                <span style={{fontSize:11,color:"rgba(255,255,255,0.18)",fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",letterSpacing:"0.04em",textTransform:"uppercase" as const}}>
                   {lang==="pt"?"objetivo":lang==="es"?"objetivo":"goal"}
                 </span>
-                <span style={{fontSize:12,color:sessionGoal?"rgba(14,165,233,0.7)":"rgba(255,255,255,0.22)",fontFamily:"'Inter',sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" as const,maxWidth:400}}>
+                <span style={{fontSize:12,color:sessionGoal?"rgba(14,165,233,0.7)":"rgba(255,255,255,0.22)",fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" as const,maxWidth:400}}>
                   {sessionGoal || (lang==="pt"?"definir foco desta semana →":lang==="es"?"definir foco esta semana →":"set this week's focus →")}
                 </span>
               </button>
@@ -4563,7 +4563,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   border:`1px solid ${activeSkill.color}35`,
                   color:activeSkill.color,
                   fontSize:11, fontWeight:600,
-                  fontFamily:"'Inter',sans-serif",
+                  fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",
                   transition:"all .15s",
                   marginBottom:6,
                 }}

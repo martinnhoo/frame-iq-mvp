@@ -54,7 +54,7 @@ export default function ToolGate({ children }: ToolGateProps) {
         }}>
           <Zap size={13} color="#0ea5e9" style={{ flexShrink: 0 }} />
           <span style={{
-            fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)",
+            fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)",
             lineHeight: 1.5, flex: 1, minWidth: 200,
           }}>
             {NUDGE.banner[lang]}

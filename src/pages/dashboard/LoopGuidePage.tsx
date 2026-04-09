@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Upload, Brain, TrendingUp, Target, RefreshCw, ChevronRight, CheckCircle2, AlertCircle } from "lucide-react";
 
 const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
+const m = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" } as const;
 
 const STEPS = [
   {

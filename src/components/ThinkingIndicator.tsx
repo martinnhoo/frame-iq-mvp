@@ -36,7 +36,7 @@ const THINKING_STEPS: Record<string, string[]> = {
   ],
 };
 
-const F = "'Inter', sans-serif";
+const F = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 export function ThinkingIndicator({ lang = "pt", variant = "chat", label }: Props) {
   const [phase, setPhase] = useState(0);

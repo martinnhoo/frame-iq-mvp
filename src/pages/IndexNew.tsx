@@ -2871,7 +2871,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
           <div className="pain-col-left" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(239,68,68,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(239,68,68,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
                 {lang === "pt" ? "Sem AdBrief" : lang === "es" ? "Sin AdBrief" : "Without AdBrief"}
               </span>
             </div>
@@ -2910,7 +2910,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
           <div className="pain-col-right" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.18)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", display: "inline-block", boxShadow: "0 0 6px #0ea5e9" }} />
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(14,165,233,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(14,165,233,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
                 {lang === "pt" ? "Com AdBrief" : lang === "es" ? "Con AdBrief" : "With AdBrief"}
               </span>
             </div>
@@ -3315,7 +3315,7 @@ function FAQ({ t }: { t: Record<string, string> }) {
 // ── MobileDemoSection — chat simulation, only shown on mobile ────────────────
 function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
   const F = "'Plus Jakarta Sans', sans-serif";
-  const M = "'Inter', sans-serif";
+  const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
   const messages = {
     pt: [
@@ -3498,7 +3498,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
         </div>
 
         <h2 className="hero-text-shimmer" style={{ fontFamily: F, fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line" }}>{t.final_h2}</h2>
-        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, color: "rgba(255,255,255,0.5)", marginBottom: 44, lineHeight: 1.65, maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>{t.final_sub}</p>
+        <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 16, color: "rgba(255,255,255,0.5)", marginBottom: 44, lineHeight: 1.65, maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>{t.final_sub}</p>
 
         <CTAButton
           onClick={onCTA}
@@ -3509,14 +3509,14 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
           icon={<ArrowRight size={17} />}
         />
 
-        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.22)", marginTop: 20, lineHeight: 1.6 }}>{t.final_fine}</p>
+        <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.22)", marginTop: 20, lineHeight: 1.6 }}>{t.final_fine}</p>
 
         {/* Trust badges */}
         <div className="trust-badges" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 36, flexWrap: "wrap" as const }}>
           {[t.trust_1, t.trust_2, t.trust_3].map((item, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: "#34d399", fontSize: 13 }}>✓</span>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{item}</span>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{item}</span>
             </div>
           ))}
         </div>
@@ -3534,12 +3534,12 @@ function Footer({ t }: { t: Record<string, string> }) {
           {/* Brand */}
           <div style={{ maxWidth: 260 }}>
             <Logo size="lg" />
-            <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.65, marginTop: 12 }}>
+            <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.65, marginTop: 12 }}>
               {t.footer_tagline}
             </p>
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               {["Meta Ads"].map(p => (
-                <span key={p} style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "3px 8px" }}>{p}</span>
+                <span key={p} style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "3px 8px" }}>{p}</span>
               ))}
             </div>
           </div>
@@ -3548,7 +3548,7 @@ function Footer({ t }: { t: Record<string, string> }) {
             <div>
               <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_product}</p>
               {([[t.footer_pricing, "/pricing"], [t.footer_how, "#how"], [t.footer_for, "#for"], [t.footer_tools, "/tools"]] as [string, string][]).map(([l, h]) => (
-                <a key={h} href={h} style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
+                <a key={h} href={h} style={{ display: "block", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                   onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
                 >{l}</a>
@@ -3557,7 +3557,7 @@ function Footer({ t }: { t: Record<string, string> }) {
             <div>
               <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t.footer_legal}</p>
               {([[t.footer_privacy, "/privacy"], [t.footer_terms, "/terms"], [t.footer_faq, "/faq"]] as [string, string][]).map(([l, h]) => (
-                <a key={h} href={h} style={{ display: "block", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
+                <a key={h} href={h} style={{ display: "block", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)", textDecoration: "none", marginBottom: 8, transition: "color 0.15s" }}
                   onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
                   onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
                 >{l}</a>
@@ -3567,8 +3567,8 @@ function Footer({ t }: { t: Record<string, string> }) {
         </div>
         {/* Bottom bar */}
         <div className="footer-bottom" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" as const, gap: 12 }}>
-          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.15)" }}>{t.footer_copy}</p>
-          <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.12)" }}>{t.footer_built}</p>
+          <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.15)" }}>{t.footer_copy}</p>
+          <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.12)" }}>{t.footer_built}</p>
         </div>
       </div>
     </footer>

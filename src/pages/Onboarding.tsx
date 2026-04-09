@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Inter', sans-serif";
+const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 const BLUE = "#0ea5e9";
 const CYAN = "#06b6d4";
 
