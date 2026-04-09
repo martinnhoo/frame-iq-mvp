@@ -2314,9 +2314,10 @@ export default function AdBriefAI() {
       // Reset context so greeting fires for this account
       proactiveFired.current = false;
       onboardingSessionDone.current = false; // new persona = check onboarding again
-      // Load skill for new persona using the current persona id in scope
-      const skillStorageKey = `adbrief_skill_${newId}`;
-      const savedSkill = storage.get(skillStorageKey, "") || null;
+      // Load skill for the newly selected persona only
+      const savedSkill = newId
+        ? storage.get(`adbrief_skill_${newId}`, "") || null
+        : null;
       setActiveSkillId(savedSkill);
       setContextReady(false);
       setConnections([]);
