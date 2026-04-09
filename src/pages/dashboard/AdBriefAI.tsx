@@ -79,7 +79,7 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
 
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text"|"trend_chart"|"limit_warning";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text"|"trend_chart"|"limit_warning"|"creative_check";
   remaining?: number;
   original_message?: string;
   title: string; content?: string; items?: string[];
@@ -567,8 +567,180 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   return nodes;
 }
 
-// ── Block card ────────────────────────────────────────────────────────────────
-const BlockCard = React.memo(function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void;onSend?:(msg:string)=>void;accountCtx?:{product?:string;niche?:string;market?:string;platform?:string};stream?:boolean}) {
+// ─────────────────────────────────────────────────────────────────────────────
+// CREATIVE CHECK CARD — inline in chat
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+const CC_VERDICT = {
+  READY:   { color: "#10b981", bg: "rgba(16,185,129,0.1)",  border: "rgba(16,185,129,0.22)", label: "Aprovado" },
+  REVIEW:  { color: "#f59e0b", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.22)", label: "Revisar"  },
+  BLOCKED: { color: "#ef4444", bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.22)",  label: "Bloqueado"},
+};
+const CC_METRIC_COLORS: Record<string,string> = { green:"#10b981", amber:"#f59e0b", red:"#ef4444", blue:"#0da2e7" };
+
+function getCCMetrics(raw: any) {
+  const m: Array<{label:string;value:string;delta?:string;color:"green"|"amber"|"red"|"blue"}> = [];
+  if (raw.hook_analysis?.score !== undefined) {
+    const s = raw.hook_analysis.score;
+    m.push({ label:"Hook", value:`${s}/10`, color: s>=7?"green":s>=5?"amber":"red" });
+  }
+  if (raw.estimated_hook_score !== undefined) {
+    const hs = raw.estimated_hook_score;
+    m.push({ label:"Hook Rate", value:`${hs}%`, delta: hs>=35?"acima da média":hs>=20?"na média":"abaixo da média", color: hs>=35?"green":hs>=20?"amber":"red" });
+  }
+  if (raw.compliance?.length > 0) {
+    const blocked = raw.compliance.some((c:any)=>["FLAG","BLOCKED","CRITICAL"].includes(c.status));
+    const clear   = raw.compliance.every((c:any)=>c.status==="CLEAR");
+    m.push({ label:"Compliance", value: blocked?"⚠ Risco":clear?"✓ Ok":"Revisar", color: blocked?"red":clear?"green":"amber" });
+  }
+  return m;
+}
+
+function renderCCDiagnosis(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      const inner = part.slice(2,-2);
+      const isRisk = /risco|bloqueado|problem|erro|evite|cuidado/i.test(inner);
+      const isOk   = /forte|correto|aprovado|excelente|funciona/i.test(inner);
+      return <strong key={i} style={{ color: isRisk?"#f59e0b":isOk?"#10b981":"#0da2e7", fontWeight:700 }}>{inner}</strong>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
+function CreativeCheckCard({ block }: { block: any }) {
+  const raw = block._ccData || {};
+  const vc = CC_VERDICT[(raw.verdict as keyof typeof CC_VERDICT)] || CC_VERDICT.REVIEW;
+  const metrics = getCCMetrics(raw);
+  const F = "Inter,-apple-system,sans-serif";
+  const M = { fontFamily:"'DM Mono',monospace" };
+
+  // Build diagnosis from hook + cta + first compliance issue
+  const diagParts: string[] = [];
+  if (raw.hook_analysis?.detail) diagParts.push(raw.hook_analysis.detail);
+  if (raw.cta_check?.detail) diagParts.push(raw.cta_check.detail);
+  const issue = raw.compliance?.find((c:any)=>c.status!=="CLEAR");
+  if (issue) diagParts.push(issue.detail);
+  const diagnosis = diagParts.filter(Boolean).join(" ") || raw.verdict_reason || "";
+
+  const fixes    = raw.top_fixes    || [];
+  const strengths= raw.strengths    || [];
+  const spelling = raw.language_check?.issues || [];
+
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: 16, padding: "18px 20px", marginTop: 4,
+      fontFamily: F,
+    }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: 16 }}>
+        <span style={{
+          display:"inline-flex", alignItems:"center", gap:4,
+          padding:"2px 9px", borderRadius:5, fontSize:10, fontWeight:700,
+          letterSpacing:"0.08em", textTransform:"uppercase" as const, marginBottom:8,
+          background:vc.bg, border:`1px solid ${vc.border}`, color:vc.color,
+        }}>
+          {raw.verdict==="READY" && "✓ "}
+          {raw.verdict==="REVIEW" && "△ "}
+          {raw.verdict==="BLOCKED" && "✕ "}
+          {vc.label}
+        </span>
+        <p style={{ margin:0, fontSize:16, fontWeight:700, color:"#f0f2f8", letterSpacing:"-0.025em", lineHeight:1.35 }}>
+          {raw.verdict_reason || "Análise do criativo"}
+        </p>
+        {block._fileName && (
+          <p style={{ margin:"4px 0 0", fontSize:11, color:"rgba(255,255,255,0.22)", ...M }}>
+            {block._fileName}
+          </p>
+        )}
+      </div>
+
+      {/* Metrics */}
+      {metrics.length > 0 && (
+        <div style={{
+          display:"grid", gridTemplateColumns:`repeat(${metrics.length},1fr)`,
+          marginBottom:16, paddingBottom:16,
+          borderBottom:"1px solid rgba(255,255,255,0.06)",
+        }}>
+          {metrics.map((m,i) => (
+            <div key={i} style={{ paddingLeft: i>0?16:0, borderLeft: i>0?"1px solid rgba(255,255,255,0.06)":"none" }}>
+              <p style={{ margin:0, fontSize:9.5, fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase" as const, color:"rgba(255,255,255,0.28)" }}>
+                {m.label}
+              </p>
+              <p style={{ margin:"4px 0 0", fontSize:24, fontWeight:800, color:CC_METRIC_COLORS[m.color], letterSpacing:"-0.04em", lineHeight:1 }}>
+                {m.value}
+              </p>
+              {m.delta && <p style={{ margin:"2px 0 0", fontSize:10, color:"rgba(255,255,255,0.25)", ...M }}>{m.delta}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Diagnosis */}
+      {diagnosis && (
+        <div style={{ marginBottom:16, paddingBottom:16, borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+          <p style={{ margin:0, fontSize:13, lineHeight:1.75, color:"rgba(255,255,255,0.65)" }}>
+            {renderCCDiagnosis(diagnosis)}
+          </p>
+        </div>
+      )}
+
+      {/* Spelling */}
+      {spelling.length > 0 && (
+        <div style={{ marginBottom:16, paddingBottom:16, borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+          <p style={{ margin:"0 0 8px", fontSize:11.5, fontWeight:600, color:"rgba(255,255,255,0.35)" }}>
+            Erros de escrita
+          </p>
+          <div style={{ display:"flex", flexWrap:"wrap" as const, gap:"5px 12px" }}>
+            {spelling.map((s:any,i:number) => (
+              <span key={i} style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:12 }}>
+                <span style={{ color:"#ef4444", textDecoration:"line-through", ...M }}>{s.found}</span>
+                <span style={{ color:"rgba(255,255,255,0.2)", fontSize:10 }}>→</span>
+                <span style={{ color:"#10b981", ...M }}>{s.fix}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fixes + Strengths */}
+      <div style={{
+        display:"grid",
+        gridTemplateColumns: fixes.length>0&&strengths.length>0?"1fr 1fr":"1fr",
+        gap:20,
+      }}>
+        {fixes.length > 0 && (
+          <div>
+            <p style={{ margin:"0 0 10px", fontSize:11.5, fontWeight:600, color:"rgba(255,255,255,0.35)" }}>Ajustar</p>
+            {fixes.map((fix:string,i:number) => (
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, marginBottom:i<fixes.length-1?8:0 }}>
+                <div style={{ width:4, height:4, borderRadius:"50%", background:"#0da2e7", marginTop:8, flexShrink:0 }} />
+                <span style={{ fontSize:12.5, color:"rgba(255,255,255,0.62)", lineHeight:1.65 }}>{fix}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {strengths.length > 0 && (
+          <div>
+            <p style={{ margin:"0 0 10px", fontSize:11.5, fontWeight:600, color:"rgba(255,255,255,0.35)" }}>Funcionando</p>
+            {strengths.map((s:string,i:number) => (
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, marginBottom:i<strengths.length-1?8:0 }}>
+                <div style={{ width:4, height:4, borderRadius:"50%", background:"#10b981", marginTop:8, flexShrink:0 }} />
+                <span style={{ fontSize:12.5, color:"rgba(255,255,255,0.62)", lineHeight:1.65 }}>{s}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+    </div>
+  );
+}
+
+function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void;onSend?:(msg:string)=>void;accountCtx?:{product?:string;niche?:string;market?:string;platform?:string};stream?:boolean}) {
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const [scriptLoadingIdx,setScriptLoadingIdx]=useState<number|null>(null);
   const F="'Plus Jakarta Sans',sans-serif";
@@ -593,6 +765,7 @@ const BlockCard = React.memo(function BlockCard({block,lang,onNavigate,onSend,ac
   };
 
   // ── NAVIGATE ──
+  if(block.type==="creative_check") return <CreativeCheckCard block={block} />;
   if(block.type==="navigate") return(
     <div style={{margin:"4px 0 8px"}}>
       {block.content&&<p style={{fontFamily:M,fontSize:13.5,color:"rgba(255,255,255,0.55)",lineHeight:1.65,marginBottom:10}}>{block.content}</p>}
@@ -690,7 +863,7 @@ const BlockCard = React.memo(function BlockCard({block,lang,onNavigate,onSend,ac
       )}
     </div>
   );
-});
+}
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -2774,12 +2947,28 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     // Store clean user message for display BEFORE modifying msg for AI
     const cleanUserMsg = msg;
     if(pendingImage) {
-      const imgNote = lang==="pt"
-        ? `[CRIATIVO ESTÁTICO PARA ANÁLISE: ${pendingImage.name}]
-`
-        : `[STATIC CREATIVE FOR ANALYSIS: ${pendingImage.name}]
-`;
-      msg = imgNote + (msg || (lang==="pt"?"Analise este criativo estático e dê feedback detalhado sobre headline, CTA, hierarquia visual e potencial de conversão":lang==="es"?"Analiza este creativo estático y da retroalimentación detallada":"Analyze this static creative and give detailed feedback on headline, CTA, visual hierarchy and conversion potential"));
+      const userIntent = msg || (lang==="pt"?"Analise este criativo":lang==="es"?"Analiza este creativo":"Analyze this creative");
+      const platformCtx = connections.includes("meta") ? "Meta Ads (Facebook/Instagram)" : "Meta Ads";
+      const marketCtx = (selectedPersona?.result as any)?.market || (lang==="pt"?"BR":lang==="es"?"MX":"US");
+      msg = `[CREATIVE_CHECK_REQUEST]
+File: ${pendingImage.name}
+User note: ${userIntent}
+Platform context: ${platformCtx}
+Market: ${marketCtx}
+
+Analyze this creative image and return ONLY a JSON object (no markdown, no text before/after):
+{
+  "verdict": "READY"|"REVIEW"|"BLOCKED",
+  "verdict_reason": "diagnostic headline max 12 words",
+  "hook_analysis": { "score": 1-10, "detail": "2 sentences max — be specific, not generic" },
+  "estimated_hook_score": 0-100,
+  "compliance": [{ "rule": "rule name", "status": "CLEAR"|"FLAG"|"BLOCKED", "detail": "one sentence" }],
+  "cta_check": { "detail": "one sentence about CTA strength" },
+  "top_fixes": ["fix 1","fix 2","fix 3"],
+  "strengths": ["strength 1","strength 2"],
+  "language_check": { "issues": [{ "found": "wrong text", "fix": "correct text" }] }
+}
+IMPORTANT: If unsure about a specific product model/price existing — say "pode ser que X não exista exatamente assim — vale verificar" rather than stating it definitively.`;
       setChatImage(null);
     }
     if(!msg||loading)return;
@@ -2967,6 +3156,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .replace(/#+\s/g,"").replace(/^\d+\.\s/gm,"").replace(/^[-*]\s/gm,"").trim();
 
       let blocks:Block[]=Array.isArray(data.blocks)?data.blocks:[{type:"insight",title:"Response",content:String(data.blocks)}];
+      // Detect creative check response — blocks[0] has verdict field directly
+      if(pendingImage && blocks.length > 0 && (blocks[0] as any).verdict) {
+        const ccData = blocks[0] as any;
+        blocks = [{ type: "creative_check" as any, title: ccData.verdict_reason || "Análise do criativo", content: "", _ccData: ccData, _fileName: pendingImage.name }];
+      }
       const isDashReq=msg.includes("[DASHBOARD]")||msg.toLowerCase().includes("dashboard");
       // Detect trend/evolution requests — auto-inject sparkline from snapshots
       const isTrendReq = /roas.*tempo|ctr.*tempo|evolu|tendên|trend|histórico.*performance|30.*dias|semanas?.*performance|performance.*semana|como.*está.*indo/i.test(msg);
