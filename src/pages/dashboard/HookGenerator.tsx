@@ -91,8 +91,9 @@ export default function HookGenerator() {
     if (selectedPersona?.name && !product) {
       setProduct(selectedPersona.name);
     }
-    // Pre-fill niche from ai_profile or persona industry
-    const industryVal = aiProfile?.industry || (selectedPersona as any)?.industry || (selectedPersona as any)?.result?.industry || "";
+    // Pre-fill niche from persona result first, then ai_profile as fallback
+    const personaNiche = (selectedPersona as any)?.result?.niche || (selectedPersona as any)?.result?.industry || "";
+    const industryVal = personaNiche || aiProfile?.industry || (selectedPersona as any)?.industry || "";
     if (industryVal && !niche) setNiche(industryVal);
     // Pre-fill market
     const valid = ["BR","MX","US","IN","AR","CO","ES","UK","FR","DE","GLOBAL"];

@@ -448,7 +448,7 @@ export default function PerformanceDashboard() {
     return filtered;
   },[activeMetrics, activePlatform]);
 
-  const d = data?.meta; // google disabled
+  const d = hasMeta ? data?.meta : null; // only use meta data if no error
 
   const sparkData = useMemo(()=>{
     const daily=d?.daily||[];
