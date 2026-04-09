@@ -3159,7 +3159,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       // Detect creative check response — blocks[0] has verdict field directly
       if(pendingImage && blocks.length > 0 && (blocks[0] as any).verdict) {
         const ccData = blocks[0] as any;
-        blocks = [{ type: "creative_check" as any, title: ccData.verdict_reason || "Análise do criativo", content: "", _ccData: ccData, _fileName: pendingImage.name }];
+        blocks = [{ type: "creative_check" as any, title: ccData.verdict_reason || "Análise do criativo", content: "" } as any];
+        (blocks[0] as any)._ccData = ccData;
+        (blocks[0] as any)._fileName = pendingImage.name;
       }
       const isDashReq=msg.includes("[DASHBOARD]")||msg.toLowerCase().includes("dashboard");
       // Detect trend/evolution requests — auto-inject sparkline from snapshots
