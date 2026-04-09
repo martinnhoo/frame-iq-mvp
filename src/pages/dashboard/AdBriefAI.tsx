@@ -1737,7 +1737,15 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           {accName && (() => {
             const pid = selectedPersona?.id;
             const rawAccounts = pid ? localStorage.getItem(`meta_accounts_${pid}`) : null;
-            const accounts: any[] = rawAccounts ? JSON.parse(rawAccounts) : [];
+            const accounts: any[] = (() => {
+              if (!rawAccounts) return [];
+              try {
+                const parsed = JSON.parse(rawAccounts);
+                return Array.isArray(parsed) ? parsed : [];
+              } catch {
+                return [];
+              }
+            })();
             const selId = pid ? (localStorage.getItem(`meta_sel_${pid}`) || "") : "";
             if (accounts.length <= 1) {
               return <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: 8 }}>· {accName}</span>;
@@ -2202,7 +2210,11 @@ export default function AdBriefAI() {
   // Active skill — persisted per persona in localStorage
   const [activeSkillId, setActiveSkillId] = useState<string|null>(() => {
     if (!selectedPersona?.id) return null;
-    return localStorage.getItem(`adbrief_skill_${selectedPersona?.id}`) || null;
+    try {
+      return localStorage.getItem(`adbrief_skill_${selectedPersona?.id}`) || null;
+    } catch {
+      return null;
+    }
   });
   const activeSkill = SKILLS.find(s => s.id === activeSkillId) || null;
   const [showSkills, setShowSkills] = useState(false);
