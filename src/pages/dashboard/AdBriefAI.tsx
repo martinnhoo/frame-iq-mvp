@@ -2175,13 +2175,15 @@ export default function AdBriefAI() {
   const SK=`adbrief_chat_v1_${selectedPersona?.id||"default"}`;
 
   const [messages,setMessages]=useState<AIMessage[]>(()=>{
+    if (!selectedPersona?.id) return [];
     try {
       const saved = storage.getJSON(SK, []);
-      // Sanitize — strip trend_chart blocks (can't serialize SVG state properly)
-      return saved.map((m: any) => ({
+      const sanitized = saved.map((m: any) => ({
         ...m,
         blocks: (m.blocks||[]).filter((b: any) => b.type !== "trend_chart")
       }));
+      const hasUserHistory = sanitized.some((m: any) => m?.role === "user" && String(m?.userText || "").trim().length > 0);
+      return hasUserHistory ? sanitized : [];
     } catch { return []; }
   });
   const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
@@ -2295,11 +2297,17 @@ export default function AdBriefAI() {
       // Load this account's saved history from localStorage
       const newSK = `adbrief_chat_v1_${newId||"default"}`;
       try {
-        const saved = storage.getJSON(newSK, []);
-        setMessages(saved.map((m: any) => ({
-          ...m,
-          blocks: (m.blocks||[]).filter((b: any) => b.type !== "trend_chart")
-        })));
+        if (!newId) {
+          setMessages([]);
+        } else {
+          const saved = storage.getJSON(newSK, []);
+          const sanitized = saved.map((m: any) => ({
+            ...m,
+            blocks: (m.blocks||[]).filter((b: any) => b.type !== "trend_chart")
+          }));
+          const hasUserHistory = sanitized.some((m: any) => m?.role === "user" && String(m?.userText || "").trim().length > 0);
+          setMessages(hasUserHistory ? sanitized : []);
+        }
       } catch { setMessages([]); }
       // Reload session goal for this account
       const goalKey = `adbrief_goal_${newId||"default"}`;
@@ -2311,7 +2319,9 @@ export default function AdBriefAI() {
           setSessionGoal("");
         }
       } catch { setSessionGoal(""); }
-      // Reset context so greeting fires for this account
+      // Reset account-specific UI state
+      setShowOnboardingWelcome(false);
+      setOnboardingStep(null);
       proactiveFired.current = false;
       onboardingSessionDone.current = false; // new persona = check onboarding again
       // Load skill for the newly selected persona only
@@ -2321,7 +2331,7 @@ export default function AdBriefAI() {
       setActiveSkillId(savedSkill);
       setContextReady(false);
       setConnections([]);
-      setGreetingKey(k => k + 1);
+      if (newId) setGreetingKey(k => k + 1);
     }
     prevPersonaId.current = newId;
   },[selectedPersona?.id]);
@@ -2367,7 +2377,7 @@ export default function AdBriefAI() {
   useEffect(()=>{
     if(!contextReady || proactiveFired.current) return;
     if(!lang) return;
-    if(!user?.id) return;
+    if(!user?.id || !selectedPersona?.id) return;
     // Wait a tick to let connections settle
     const timer = setTimeout(()=>{
       const pid = selectedPersona?.id || null;
@@ -2407,7 +2417,11 @@ export default function AdBriefAI() {
 
   // Load context — scoped to active account, re-runs when account changes
   useEffect(()=>{
-    if(!user?.id)return;
+    if(!user?.id || !selectedPersona?.id){
+      setContext("");
+      setContextReady(false);
+      return;
+    }
     const pid=selectedPersona?.id||null;
     (async()=>{
       try{
@@ -2758,23 +2772,31 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
 
   useEffect(()=>{
     try{
-      // Strip _autoExec from saved messages to prevent re-firing on reload
-      const toSave=messages.slice(-30).map(m=>({
-        ...m,
-        blocks:m.blocks?.map(b=>(b as any)._autoExec
-          ? {...b,type:"insight" as const, _autoExec:undefined}
-          : b
-        )
-      }));
-      storage.setJSON(SK, toSave);
+      if (!selectedPersona?.id) {
+        storage.remove(SK);
+      } else {
+        // Strip _autoExec from saved messages to prevent re-firing on reload
+        const toSave=messages.slice(-30).map(m=>({
+          ...m,
+          blocks:m.blocks?.map(b=>(b as any)._autoExec
+            ? {...b,type:"insight" as const, _autoExec:undefined}
+            : b
+          )
+        }));
+        const hasUserHistory = toSave.some((m:any)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
+        if (hasUserHistory) storage.setJSON(SK, toSave);
+        else storage.remove(SK);
+      }
     }catch{}
 
     // ── Supabase persistence for paid users (Maker/Pro/Studio) ──────────────
     // Runs debounced — saves last message only when messages array settles
     const isPaid = profile?.plan && profile.plan !== "free";
-    if(!isPaid || !user?.id || messages.length === 0) return;
+    if(!isPaid || !user?.id || !selectedPersona?.id || messages.length === 0) return;
     const last = messages[messages.length - 1];
     if(!last || (last as any)._synced) return; // already saved
+    const hasUserHistory = messages.some((m:any)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
+    if(!hasUserHistory && last.role === "assistant") return;
     const pid = selectedPersona?.id || null;
     const payload = {
       user_id: user.id,
@@ -2792,7 +2814,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   // ── Load Supabase history for paid users when account changes ─────────────
   useEffect(()=>{
     const isPaid = profile?.plan && profile.plan !== "free";
-    if(!isPaid || !user?.id) return;
+    if(!isPaid || !user?.id || !selectedPersona?.id) return;
     const pid = selectedPersona?.id || null;
     const localHasData = (() => { try { return storage.getJSON(SK, []).length > 0; } catch { return false; } })();
     if(localHasData) return; // local data takes priority — already loaded
@@ -2813,6 +2835,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
           blocks: (r.content?.blocks||[]).filter((b:any) => b.type !== "trend_chart"),
           _synced: true,
         }));
+        const hasUserHistory = restored.some((m:any)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
+        if(!hasUserHistory) return;
         // Only restore if still no local data (avoid race with proactive greeting)
         const stillEmpty = (() => { try { return storage.getJSON(SK, []).length === 0; } catch { return true; } })();
         if(stillEmpty && restored.length > 0) {
@@ -4772,9 +4796,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     setMessages([]);
                     storage.remove(SK);
                     executedTools.current.clear();
-                    proactiveFired.current=false;
+                    onboardingSessionDone.current = true;
+                    setShowOnboardingWelcome(false);
+                    setOnboardingStep(-1);
                     setVisibleCount(MSG_PAGE);
-                    setGreetingKey(k=>k+1);
                   }}
                     title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
                     style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.22)"}}
