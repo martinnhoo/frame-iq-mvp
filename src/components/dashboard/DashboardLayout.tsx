@@ -14,7 +14,7 @@ import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import { UserProfilePanel } from "@/components/dashboard/UserProfilePanel";
-import GamificationWidgets from "@/components/dashboard/GamificationWidgets";
+
 
 export interface ActivePersona {
   id: string;
@@ -175,31 +175,6 @@ export default function DashboardLayout() {
         }
 
         setProfile(profileData);
-
-        // ── Track login streak ──────────────────────────────────────────
-        // Fire-and-forget: update last_login_at + compute streak
-        (async () => {
-          try {
-            const today = new Date().toISOString().slice(0, 10);
-            const lastLogin = (profileData as any).last_login_at;
-            const lastDay = lastLogin ? new Date(lastLogin).toISOString().slice(0, 10) : null;
-            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-            let newStreak = (profileData as any).login_streak || 0;
-            if (lastDay === today) {
-              // already logged in today, no update
-            } else if (lastDay === yesterday) {
-              newStreak += 1;
-            } else {
-              newStreak = 1; // streak reset
-            }
-            if (lastDay !== today) {
-              await supabase.from("profiles").update({
-                last_login_at: new Date().toISOString(),
-                login_streak: newStreak,
-              } as any).eq("id", session.user.id);
-            }
-          } catch {}
-        })();
 
         // Sync user's preferred language from profile (without overriding explicit localStorage choice)
         if (profileData.preferred_language) {
@@ -721,21 +696,7 @@ export default function DashboardLayout() {
           </div>
         )}
 
-        {/* Gamification bar — levels, streak, weekly delta */}
-        {user && profile && (
-          <div className="mx-4 mt-3">
-            <GamificationWidgets
-              userId={user.id}
-              dt={dt}
-              totalActions={
-                (usageDetails?.analyses?.used || 0) +
-                (usageDetails?.boards?.used || 0) +
-                (usageDetails?.translations?.used || 0) +
-                ((profile as any)?.total_actions || 0)
-              }
-            />
-          </div>
-        )}
+
 
         <main className="flex-1 dashboard-main" style={{ background: "var(--bg-main)", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
           <div
