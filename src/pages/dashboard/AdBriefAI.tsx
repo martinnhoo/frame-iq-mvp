@@ -2970,22 +2970,68 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       msg = `[CREATIVE_CHECK_REQUEST]
 File: ${pendingImage.name}
 User note: ${userIntent}
-Platform context: ${platformCtx}
+Platform: ${platformCtx}
 Market: ${marketCtx}
 
-Analyze this creative image and return ONLY a JSON object (no markdown, no text before/after):
+You are a senior performance creative strategist. Analyze this static ad image using the EXACT rubric below. Apply every rule mechanically — do not invent criteria outside this list.
+
+═══════════════════════════════════════
+SCORING RUBRIC
+═══════════════════════════════════════
+
+HOOK SCORE (1–10) — evaluate only what is visible in the image:
+10 = Specific number + clear pain/desire + stops scroll immediately
+7–9 = Clear benefit, specific, but missing one element (urgency or specificity)
+5–6 = Generic benefit without specificity or differentiator  
+3–4 = Weak or unclear — audience won't know what is being offered in 3 seconds
+1–2 = No discernible headline or hook
+
+HOOK RATE ESTIMATE (0–100%) — based on format benchmark data:
+Static Feed: baseline 15–25%. Apply multipliers:
+  +15% if strong specific number (price, % off, quantity)
+  +10% if faces/people in image
+  +8% if clear urgency indicator (countdown, "últimas unidades", deadline)
+  +5% if product clearly visible and well-lit
+  –10% if text overlay >30% of image
+  –8% if generic CTA like "Saiba mais", "Clique aqui"
+  –5% if background too busy or low contrast
+
+COMPLIANCE RULES — check ONLY these, in this order:
+1. text_overlay: Meta policy — text should not dominate the image (>30% area). STATUS: CLEAR if <30%, FLAG if 30–50%, BLOCKED if >50%
+2. health_claims: Contains words like "emagrece", "cura", "trata", "elimina gordura", "perde peso garantido" without medical substantiation. FLAG if present without disclaimer.
+3. financial_guarantees: Contains "garantido", "sem risco", "100% de retorno", "lucro garantido". FLAG if present.
+4. superlatives_unproven: "melhor do Brasil", "número 1", "único", "mais barato" without proof. FLAG if present.
+5. sensitive_content: Alcohol, gambling, tobacco, adult content, weapons, drugs. BLOCKED if present and platform does not allow.
+6. misleading_price: Price shown but asterisk or "a partir de" hidden or missing. FLAG if price shown without full conditions.
+7. before_after_body: Before/after images of human bodies. BLOCKED for Meta, FLAG for others.
+
+DO NOT FLAG: product names, brand names, whether a product model exists, personal opinions about quality, price judgments, aesthetics.
+
+VERDICT logic:
+READY = hook ≥7 AND all compliance CLEAR AND no major CTA issues
+BLOCKED = any compliance status is BLOCKED
+REVIEW = anything else
+
+WRITING ERRORS — check ONLY:
+- Accents: GRÁTIS not GRATIS, É not E, etc.
+- Obvious typos visible in the image
+- Do NOT flag brand names, product names, or model numbers
+
+═══════════════════════════════════════
+Return ONLY this JSON (no markdown, no other text):
 {
   "verdict": "READY"|"REVIEW"|"BLOCKED",
-  "verdict_reason": "diagnostic headline max 12 words",
-  "hook_analysis": { "score": 1-10, "detail": "2 sentences max — be specific, not generic" },
+  "verdict_reason": "one diagnostic sentence max 12 words",
+  "hook_analysis": { "score": 1-10, "detail": "what specifically makes the hook strong or weak — 2 sentences" },
   "estimated_hook_score": 0-100,
-  "compliance": [{ "rule": "rule name", "status": "CLEAR"|"FLAG"|"BLOCKED", "detail": "one sentence" }],
-  "cta_check": { "detail": "one sentence about CTA strength" },
-  "top_fixes": ["fix 1","fix 2","fix 3"],
-  "strengths": ["strength 1","strength 2"],
-  "language_check": { "issues": [{ "found": "wrong text", "fix": "correct text" }] }
-}
-IMPORTANT: If unsure about a specific product model/price existing — say "pode ser que X não exista exatamente assim — vale verificar" rather than stating it definitively.`;
+  "compliance": [
+    { "rule": "rule_id_from_list", "status": "CLEAR"|"FLAG"|"BLOCKED", "detail": "quote the exact text that triggered this or confirm it was not found" }
+  ],
+  "cta_check": { "detail": "evaluate the CTA button/text: is it specific, urgent, clear?" },
+  "top_fixes": ["specific fix 1", "specific fix 2", "specific fix 3"],
+  "strengths": ["specific strength 1", "specific strength 2"],
+  "language_check": { "issues": [{ "found": "wrong spelling visible in image", "fix": "correct spelling" }] }
+}`;
       setChatImage(null);
     }
     if(!msg||loading)return;

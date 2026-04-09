@@ -584,25 +584,47 @@ export default function PreflightCheck() {
             user_language: lang,
             image_base64: base64,
             image_media_type: fileInfo.file.type || "image/jpeg",
-            message: `Analyze this static ad creative. Platform: ${platformsStr}. Market: ${market}.
+            message: `You are a senior performance creative strategist. Analyze this static ad image using the EXACT rubric below.
 
-IMPORTANT RULES:
-- Be specific but not aggressive about uncertain claims
-- If a product model, price, or factual detail MIGHT be wrong but you are not 100% sure, use hedged language: "pode ser que X não exista exatamente assim — vale verificar" NOT "X não existe"
-- Only flag spelling/grammar errors you are certain about
-- Focus on actionable creative feedback: visual hierarchy, CTA clarity, text overlay, headline strength
+Platform: ${platformsStr}
+Market: ${market}
 
-Return ONLY a JSON object (no markdown, no extra text) with this exact structure:
+HOOK SCORE (1–10):
+10 = Specific number + clear pain/desire + scroll-stopper
+7–9 = Clear benefit, specific, missing one element
+5–6 = Generic benefit, no specificity or differentiator
+3–4 = Unclear offer in 3 seconds
+1–2 = No discernible headline
+
+HOOK RATE ESTIMATE (baseline Feed static: 15–25%):
++15% specific number/price, +10% faces, +8% urgency indicator, +5% clear product
+–10% text >30% area, –8% generic CTA, –5% busy background/low contrast
+
+COMPLIANCE — check ONLY these rules:
+text_overlay: Meta: text should not dominate. CLEAR <30%, FLAG 30–50%, BLOCKED >50%
+health_claims: emagrece/cura/elimina gordura/perde peso without disclaimer → FLAG
+financial_guarantees: "garantido"/"lucro garantido"/"sem risco" → FLAG
+superlatives_unproven: "melhor do Brasil"/"número 1"/"único" without proof → FLAG
+sensitive_content: alcohol/gambling/tobacco/weapons/drugs on restricted platform → BLOCKED
+misleading_price: price shown without full conditions → FLAG
+before_after_body: human body before/after → BLOCKED on Meta, FLAG elsewhere
+DO NOT FLAG: brand names, product names, model numbers, opinions about product quality
+
+WRITING ERRORS: only flag visible accent/spelling errors (GRÁTIS not GRATIS). Do NOT flag brand names or product model numbers.
+
+VERDICT: READY if hook≥7 AND all compliance CLEAR. BLOCKED if any BLOCKED. Otherwise REVIEW.
+
+Return ONLY this JSON (no markdown):
 {
   "verdict": "READY"|"REVIEW"|"BLOCKED",
-  "verdict_reason": "one sentence diagnostic headline max 12 words",
-  "hook_analysis": { "score": 1-10, "detail": "2 sentences max" },
+  "verdict_reason": "one diagnostic sentence max 12 words",
+  "hook_analysis": { "score": 1-10, "detail": "what specifically makes hook strong or weak — 2 sentences" },
   "estimated_hook_score": 0-100,
-  "compliance": [{ "rule": "rule name", "status": "CLEAR"|"FLAG"|"BLOCKED", "detail": "one sentence" }],
-  "cta_check": { "detail": "one sentence about the CTA" },
-  "top_fixes": ["fix 1","fix 2","fix 3"],
-  "strengths": ["strength 1","strength 2"],
-  "language_check": { "issues": [{ "found": "wrong word", "fix": "correct word" }] }
+  "compliance": [{ "rule": "rule_id", "status": "CLEAR"|"FLAG"|"BLOCKED", "detail": "quote exact trigger text or confirm not found" }],
+  "cta_check": { "detail": "evaluate CTA specificity, urgency, clarity" },
+  "top_fixes": ["specific fix 1","specific fix 2","specific fix 3"],
+  "strengths": ["specific strength 1","specific strength 2"],
+  "language_check": { "issues": [{ "found": "wrong spelling in image", "fix": "correct" }] }
 }`,
             context: `=== ACTIVE ACCOUNT ===
 ${selectedPersona?.name || "Unknown"}
