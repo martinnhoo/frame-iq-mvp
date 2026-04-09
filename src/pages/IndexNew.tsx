@@ -483,7 +483,6 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
-  // Neutro: #06080e · Conversão (pricing): #070d1a
   const bgMap: Record<string, string> = {
     default: "#070d1a",
     subtle:  "#070d1a",
@@ -499,7 +498,7 @@ function Section({ children, id, className = "", noPadding = false, bg = "defaul
   return (
     <section
       id={id}
-      className={className}
+      className={`section-divider noise-overlay ${className}`}
       style={noPadding
         ? { background: bgMap[bg], borderTop: borderMap[bg] }
         : { padding: "clamp(56px,7vw,80px) clamp(20px,4vw,40px)", background: bgMap[bg], borderTop: borderMap[bg], position: "relative" as const, overflow: "hidden" }
