@@ -3654,7 +3654,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       lineHeight:1.65,
                       ...m,
                     }}>
-                      {msg.userText}
+                      {(msg.userText||"").replace(/^\[(?:CRIATIVO ESTÁTICO PARA ANÁLISE|STATIC CREATIVE FOR ANALYSIS|SCRIPT|HOOKS|COMPETITOR):[^\]]*\]\s*/i, "").trim() || msg.userText}
                     </div>
                   </div>
                   {/* Ações no hover */}
