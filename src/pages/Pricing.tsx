@@ -23,9 +23,8 @@ const Pricing = () => {
   const [annual, setAnnual] = useState(false);
 
   const monthlyPrices = { maker: 19, pro: 49, studio: 149 };
-  const prices = annual
-    ? { maker: 15, pro: 39, studio: 119 }
-    : monthlyPrices;
+  // Annual totals from Stripe: $182, $470.40, $1428
+  const annualTotals = { maker: 182, pro: 470, studio: 1428 };
 
   const handleUpgrade = async (planKey: string) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -80,8 +79,8 @@ const Pricing = () => {
     },
     {
       name: "Maker",
-      price: `$${prices.maker}`,
-      period: annual ? "/mo (billed annually)" : "/mo",
+      price: annual ? `$${annualTotals.maker}` : `$${monthlyPrices.maker}`,
+      period: annual ? "/year" : "/mo",
       description: "For freelancers and solo buyers.",
       features: [
         { text: "50 AI messages / day", included: true },
@@ -98,8 +97,8 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      price: `$${prices.pro}`,
-      period: annual ? "/mo (billed annually)" : "/mo",
+      price: annual ? `$${annualTotals.pro}` : `$${monthlyPrices.pro}`,
+      period: annual ? "/year" : "/mo",
       description: "For small agencies and performance teams.",
       features: [
         { text: "200 AI messages / day", included: true },
@@ -117,8 +116,8 @@ const Pricing = () => {
     },
     {
       name: "Studio",
-      price: `$${prices.studio}`,
-      period: annual ? "/mo (billed annually)" : "/mo",
+      price: annual ? `$${annualTotals.studio}` : `$${monthlyPrices.studio}`,
+      period: annual ? "/year" : "/mo",
       description: "For agencies managing multiple clients.",
       features: [
         { text: "Unlimited AI messages", included: true },
