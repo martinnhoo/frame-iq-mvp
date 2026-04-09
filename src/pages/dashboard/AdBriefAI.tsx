@@ -420,10 +420,10 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   const F = "'Plus Jakarta Sans',sans-serif";
   const MONO = "'DM Mono',monospace";
 
-  // Word-level stagger for streaming effect
+  // Word-level stagger for streaming effect — Claude-like smooth token reveal
   let globalWordIdx = 0;
-  const WORD_DELAY = stream ? 0.018 : 0; // 18ms per word for streaming
-  const WORD_DUR = stream ? 0.25 : 0;
+  const WORD_DELAY = stream ? 0.022 : 0; // 22ms per word
+  const WORD_DUR = stream ? 0.12 : 0;
 
   // Inline formatting — bold, code, italic — now with per-word animation
   const inlineFormat = (str: string): React.ReactNode => {
@@ -1957,6 +1957,8 @@ export default function AdBriefAI() {
     setShowGoalInput(false);
   };
   const [loading,setLoading]=useState(false);
+  const [streamingMsgId,setStreamingMsgId]=useState<number|null>(null);
+  const streamTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [contextReady,setContextReady]=useState(false);
   const [context,setContext]=useState("");
   const [connections,setConnections]=useState<string[]>([]);
@@ -3460,6 +3462,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       const aid=Date.now()+1;
       setMessages(prev=>[...prev,{role:"assistant",blocks,ts:aid,id:aid}]);
+      // Trigger streaming effect for this message
+      setStreamingMsgId(aid);
+      if(streamTimerRef.current) clearTimeout(streamTimerRef.current);
+      streamTimerRef.current=setTimeout(()=>setStreamingMsgId(null),3500);
       // Increment free usage count locally after successful send
       if(profile?.plan==="free"||!profile?.plan){
         setFreeUsage(prev=>prev?{...prev,count:Math.min(3,prev.count+1)}:{count:1,lastReset:new Date().toISOString().slice(0,10)});
@@ -3955,7 +3961,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
         {visibleMessages.length > 0 && <div style={{height:8,flexShrink:0}}/>}
         {visibleMessages.map((msg, mi)=>{
-          const isLatest = mi === visibleMessages.length - 1 && msg.role === "assistant";
+          const isLatest = msg.role === "assistant" && msg.id === streamingMsgId;
           return (
           <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 14px",padding:"0 clamp(12px,4vw,28px)",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
@@ -4393,9 +4399,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes cursorBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
         @keyframes cursorFade{0%,85%{opacity:1}100%{opacity:0}}
-        .stream-cursor{animation:cursorBlink 0.6s step-end 6, cursorFade 4s linear 1 forwards!important;}
-        @keyframes wordReveal{from{opacity:0;filter:blur(4px);transform:translateY(2px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
-        @keyframes blockSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .stream-cursor{animation:cursorBlink 0.53s step-end infinite, cursorFadeOut 3.5s linear 1 forwards!important;}
+        @keyframes cursorFadeOut{0%,80%{opacity:1}100%{opacity:0;display:none}}
+        @keyframes wordReveal{from{opacity:0}to{opacity:1}}
+        @keyframes blockSlideIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes typeIn{from{opacity:0;transform:translateY(3px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes lp-glow{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.75)}}
         @keyframes lp-spin{to{transform:rotate(360deg)}}
