@@ -6,35 +6,35 @@
 
 @layer base {
   :root {
-    /* ── AdBrief v2 Design System ── */
-    --background: 224 22% 8%;        /* #0e1118 */
-    --foreground: 220 30% 96%;       /* #eef0f6 */
+    /* ── AdBrief v2 Design System (shadcn-admin inspired) ── */
+    --background: 224 24% 7%;        /* deeper, richer base */
+    --foreground: 220 30% 97%;       /* slightly brighter text */
 
-    --card: 224 22% 11%;             /* #181e2d */
-    --card-foreground: 220 30% 96%;
+    --card: 224 24% 10%;             /* more contrast from bg */
+    --card-foreground: 220 30% 97%;
 
-    --popover: 224 20% 13%;          /* #1d2438 */
-    --popover-foreground: 220 30% 96%;
+    --popover: 224 22% 12%;
+    --popover-foreground: 220 30% 97%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 224 24% 7%;
 
-    --secondary: 220 15% 55%;
-    --secondary-foreground: 220 30% 96%;
+    --secondary: 224 18% 18%;
+    --secondary-foreground: 220 20% 85%;
 
-    --muted: 224 20% 16%;
-    --muted-foreground: 220 15% 55%;
+    --muted: 224 18% 15%;
+    --muted-foreground: 220 12% 52%;
 
-    --accent: 199 89% 48%;           /* #0ea5e9 */
+    --accent: 199 89% 48%;           /* #0ea5e9 — keep brand sky */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 224 18% 22%;           /* rgba(255,255,255,0.10) equivalent */
-    --input: 224 20% 16%;
+    --border: 224 16% 20%;
+    --input: 224 18% 18%;
     --ring: 199 89% 48%;
-    --radius: 0.75rem;               /* 12px base radius */
+    --radius: 0.625rem;              /* 10px — shadcn-admin default */
 
     /* Brand tokens */
     --accent-sky: #0ea5e9;
@@ -255,8 +255,9 @@ h1, h2, h3, h4, h5, h6 {
 /* ── Focus ring ──────────────────────────────────────────────────────────────── */
 
 *:focus-visible {
-  outline: 2px solid rgba(14,165,233,0.6);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.35);
+  border-radius: inherit;
 }
 
 .font-mono,
