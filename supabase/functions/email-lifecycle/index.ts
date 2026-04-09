@@ -266,7 +266,7 @@ Deno.serve(async (req) => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
     const { data: profiles, error: pErr } = await supabase
       .from("profiles")
-      .select("id, plan, language, created_at, full_name, email_lifecycle_sent")
+      .select("id, plan, preferred_language, created_at, name, email_lifecycle_sent")
       .or("plan.eq.free,plan.is.null")
       .gte("created_at", thirtyDaysAgo);
 
