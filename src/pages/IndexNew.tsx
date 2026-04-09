@@ -3488,7 +3488,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
       {/* Center radial */}
       <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
 
-      <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
+      <div className="scroll-reveal" style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
         {/* Label — mesmo padrão de "O PROBLEMA" */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
@@ -3496,7 +3496,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
         </div>
 
-        <h2 style={{ fontFamily: F, fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line", color: "#fff" }}>{t.final_h2}</h2>
+        <h2 className="hero-text-shimmer" style={{ fontFamily: F, fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line" }}>{t.final_h2}</h2>
         <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, color: "rgba(255,255,255,0.5)", marginBottom: 44, lineHeight: 1.65, maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>{t.final_sub}</p>
 
         <CTAButton
