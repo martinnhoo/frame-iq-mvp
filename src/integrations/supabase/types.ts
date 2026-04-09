@@ -1181,6 +1181,7 @@ export type Database = {
           dashboard_count: number | null
           dashboard_reset_date: string | null
           email: string | null
+          email_lifecycle_sent: Json | null
           id: string
           last_ai_action_at: string | null
           name: string | null
@@ -1203,6 +1204,7 @@ export type Database = {
           dashboard_count?: number | null
           dashboard_reset_date?: string | null
           email?: string | null
+          email_lifecycle_sent?: Json | null
           id: string
           last_ai_action_at?: string | null
           name?: string | null
@@ -1225,6 +1227,7 @@ export type Database = {
           dashboard_count?: number | null
           dashboard_reset_date?: string | null
           email?: string | null
+          email_lifecycle_sent?: Json | null
           id?: string
           last_ai_action_at?: string | null
           name?: string | null
