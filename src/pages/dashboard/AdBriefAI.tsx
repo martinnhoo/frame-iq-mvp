@@ -409,7 +409,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   );
 }
 
-// ── renderMarkdown — typing animation + tipografia hierárquica ───────────────
+// ── renderMarkdown — premium word-by-word streaming like ChatGPT/Claude ──────
 function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   if (!text || typeof text !== "string") return [];
   const normalized = text.replace(/\\n\\n/g, "\n\n").replace(/\\n/g, "\n");
@@ -420,11 +420,12 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   const F = "'Plus Jakarta Sans',sans-serif";
   const MONO = "'DM Mono',monospace";
 
-  // Stagger por nó — simula o cursor avançando bloco a bloco
-  const stagger = stream ? 0.09 : 0.045;
-  const typeDur = stream ? "0.35s" : "0.2s";
+  // Word-level stagger for streaming effect
+  let globalWordIdx = 0;
+  const WORD_DELAY = stream ? 0.018 : 0; // 18ms per word for streaming
+  const WORD_DUR = stream ? 0.25 : 0;
 
-  // Inline formatting — bold, code, italic
+  // Inline formatting — bold, code, italic — now with per-word animation
   const inlineFormat = (str: string): React.ReactNode => {
     const parts: React.ReactNode[] = [];
     let remaining = str;
@@ -440,42 +441,58 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       ];
       const minIdx = earliest.indexOf(Math.min(...earliest));
       if (minIdx === 0 && boldMatch) {
-        if (boldMatch[1])  parts.push(<span key={idx++}>{boldMatch[1]}</span>);
-        parts.push(<strong key={idx++} style={{ fontWeight: 600, color: "rgba(255,255,255,0.97)", letterSpacing: "-0.01em" }}>{boldMatch[2]}</strong>);
+        if (boldMatch[1])  parts.push(wrapWords(boldMatch[1], idx++, {}));
+        parts.push(wrapWords(boldMatch[2], idx++, { fontWeight: 600, color: "rgba(255,255,255,0.97)", letterSpacing: "-0.01em" }, true));
         remaining = boldMatch[3];
       } else if (minIdx === 1 && italicMatch) {
-        if (italicMatch[1]) parts.push(<span key={idx++}>{italicMatch[1]}</span>);
-        parts.push(<em key={idx++} style={{ fontStyle: "italic", color: "rgba(255,255,255,0.7)" }}>{italicMatch[2]}</em>);
+        if (italicMatch[1]) parts.push(wrapWords(italicMatch[1], idx++, {}));
+        parts.push(wrapWords(italicMatch[2], idx++, { fontStyle: "italic" as const, color: "rgba(255,255,255,0.7)" }));
         remaining = italicMatch[3];
       } else if (minIdx === 2 && codeMatch) {
-        if (codeMatch[1]) parts.push(<span key={idx++}>{codeMatch[1]}</span>);
-        parts.push(<code key={idx++} style={{ fontFamily: MONO, fontSize: "0.85em", background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.18)", borderRadius: 4, padding: "1px 6px", color: "#67e8f9" }}>{codeMatch[2]}</code>);
+        if (codeMatch[1]) parts.push(wrapWords(codeMatch[1], idx++, {}));
+        parts.push(<code key={idx++} style={{ fontFamily: MONO, fontSize: "0.85em", background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.18)", borderRadius: 4, padding: "1px 6px", color: "#67e8f9", animation: stream ? `wordReveal ${WORD_DUR}s ease-out ${(globalWordIdx++) * WORD_DELAY}s both` : undefined }}>{codeMatch[2]}</code>);
         remaining = codeMatch[3];
       } else {
-        parts.push(<span key={idx++}>{remaining}</span>);
+        parts.push(wrapWords(remaining, idx++, {}));
         break;
       }
     }
     return parts.length === 1 ? parts[0] : <>{parts}</>;
   };
 
-  const animStyle = (i: number): React.CSSProperties => stream ? {
-    // Typing: aparece palavra a palavra via clip-path expandindo da esquerda
-    animation: `typeIn ${typeDur} cubic-bezier(0.16,1,0.3,1) both`,
-    animationDelay: `${i * stagger}s`,
+  // Wrap text into individually animated words
+  function wrapWords(text: string, key: number, style: React.CSSProperties, bold = false): React.ReactNode {
+    if (!stream) {
+      return bold ? <strong key={key} style={style}>{text}</strong> : <span key={key} style={style}>{text}</span>;
+    }
+    const words = text.split(/(\s+)/);
+    const Tag = bold ? "strong" : "span";
+    return (
+      <Tag key={key} style={style}>
+        {words.map((w, wi) => {
+          if (/^\s+$/.test(w)) return w; // preserve whitespace as-is
+          const delay = (globalWordIdx++) * WORD_DELAY;
+          return <span key={wi} style={{ display: "inline", animation: `wordReveal ${WORD_DUR}s ease-out ${delay}s both` }}>{w}</span>;
+        })}
+      </Tag>
+    );
+  }
+
+  const blockAnim = (i: number): React.CSSProperties => stream ? {
+    animation: `blockSlideIn 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(i * 0.08, 0.4)}s both`,
   } : {
-    animation: `fadeUp ${typeDur} ease-out both`,
-    animationDelay: `${i * stagger}s`,
+    animation: `fadeUp 0.2s ease-out ${i * 0.04}s both`,
   };
 
   const flushList = (key: string) => {
     if (listBuffer.length === 0) return;
     const items = [...listBuffer];
     const isOrdered = items[0]?.ordered;
+    const listIdx = nodes.length;
     nodes.push(
-      <div key={key} style={{ margin: "6px 0 12px", display: "flex", flexDirection: "column", gap: 5 }}>
+      <div key={key} style={{ margin: "6px 0 12px", display: "flex", flexDirection: "column", gap: 5, ...blockAnim(listIdx) }}>
         {items.map((item, i) => (
-          <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", ...animStyle(nodes.length + i * 0.3) }}>
+          <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             {isOrdered
               ? <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: "rgba(14,165,233,0.6)", flexShrink: 0, minWidth: 18, marginTop: 3, letterSpacing: "0.02em" }}>{item.num}.</span>
               : <span style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(14,165,233,0.7)", flexShrink: 0, marginTop: 8 }} />
@@ -494,43 +511,43 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   lines.forEach((line, i) => {
     const trimmed = line.trim();
 
-    // H1 — # título principal
+    // H1
     if (/^#\s/.test(trimmed)) {
       flushList(`fl-${i}`);
       nodes.push(
-        <p key={i} style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.03em", margin: "20px 0 6px", lineHeight: 1.2, ...animStyle(nodes.length) }}>
+        <p key={i} style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.03em", margin: "20px 0 6px", lineHeight: 1.2, ...blockAnim(nodes.length) }}>
           {inlineFormat(trimmed.replace(/^#\s/, ""))}
         </p>
       );
       return;
     }
 
-    // H2 — ## subtítulo
+    // H2
     if (/^##\s/.test(trimmed)) {
       flushList(`fl-${i}`);
       nodes.push(
-        <p key={i} style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,0.95)", letterSpacing: "-0.025em", margin: "16px 0 5px", lineHeight: 1.3, ...animStyle(nodes.length) }}>
+        <p key={i} style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,0.95)", letterSpacing: "-0.025em", margin: "16px 0 5px", lineHeight: 1.3, ...blockAnim(nodes.length) }}>
           {inlineFormat(trimmed.replace(/^##\s/, ""))}
         </p>
       );
       return;
     }
 
-    // H3 — ### label de seção
+    // H3
     if (/^###\s/.test(trimmed)) {
       flushList(`fl-${i}`);
       nodes.push(
-        <p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.7)", letterSpacing: "0.09em", textTransform: "uppercase", margin: "14px 0 4px", ...animStyle(nodes.length) }}>
+        <p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.7)", letterSpacing: "0.09em", textTransform: "uppercase", margin: "14px 0 4px", ...blockAnim(nodes.length) }}>
           {trimmed.replace(/^###\s/, "")}
         </p>
       );
       return;
     }
 
-    // Horizontal rule ---
+    // HR
     if (/^---+$/.test(trimmed)) {
       flushList(`fl-${i}`);
-      nodes.push(<div key={i} style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "12px 0", ...animStyle(nodes.length) }} />);
+      nodes.push(<div key={i} style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "12px 0", ...blockAnim(nodes.length) }} />);
       return;
     }
 
@@ -557,7 +574,7 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
     // Paragraph
     flushList(`fl-${i}`);
     nodes.push(
-      <p key={i} style={{ fontFamily: F, fontSize: 14.5, color: "rgba(235,240,248,0.88)", lineHeight: 1.75, margin: "0 0 10px", letterSpacing: "-0.01em", ...animStyle(nodes.length) }}>
+      <p key={i} style={{ fontFamily: F, fontSize: 14.5, color: "rgba(235,240,248,0.88)", lineHeight: 1.75, margin: "0 0 10px", letterSpacing: "-0.01em", ...blockAnim(nodes.length) }}>
         {inlineFormat(trimmed)}
       </p>
     );
