@@ -270,7 +270,7 @@ Deno.serve(async (req) => {
       .or("plan.eq.free,plan.is.null")
       .gte("created_at", thirtyDaysAgo);
 
-    if (pErr) throw pErr;
+    if (pErr) throw new Error(JSON.stringify(pErr));
     if (!profiles?.length) {
       log("No eligible users found");
       return new Response(JSON.stringify({ sent: 0 }), {
