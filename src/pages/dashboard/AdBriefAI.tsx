@@ -1743,6 +1743,8 @@ export default function AdBriefAI() {
   const [onboardingStep,setOnboardingStep]=useState<number|null>(null); // null=not started, -1=done/skipped, 0..N=step
   const [onboardingAnswers,setOnboardingAnswers]=useState<Record<string,string>>({});
   const onboardingSessionDone = React.useRef(false); // true once done/skipped this session
+  const [onboardingFreeText, setOnboardingFreeText] = React.useState(""); // custom "Outro" input
+  const [onboardingFreeTextMode, setOnboardingFreeTextMode] = React.useState(false); // showing free text input
   const [chatImage,setChatImage]=useState<{base64:string;name:string;preview:string;mediaType:string}|null>(null);
   const [chatDragOver,setChatDragOver]=useState(false);
   const [showOnboardingWelcome,setShowOnboardingWelcome]=useState(false);
@@ -3399,8 +3401,34 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           const F = "Inter,-apple-system,sans-serif";
           const accentColor = "#0da2e7";
 
+          // Detect "Outro/Other" options that need free text input
+          const isOtherOpt = (opt: string) =>
+            /^outro|^other|^otro|^outro país|^autre/i.test(opt.trim());
+
           const handleOpt = (opt: string) => {
+            if (isOtherOpt(opt)) {
+              // Show free text input instead of advancing
+              setOnboardingFreeTextMode(true);
+              setOnboardingFreeText("");
+              return;
+            }
+            setOnboardingFreeTextMode(false);
+            setOnboardingFreeText("");
             const newAnswers = { ...onboardingAnswers, [step.key]: opt };
+            setOnboardingAnswers(newAnswers);
+            if (onboardingStep < totalSteps - 1) {
+              setOnboardingStep(onboardingStep + 1);
+            } else {
+              completeOnboarding(newAnswers);
+            }
+          };
+
+          const handleFreeTextConfirm = () => {
+            const val = onboardingFreeText.trim();
+            if (!val) return;
+            setOnboardingFreeTextMode(false);
+            setOnboardingFreeText("");
+            const newAnswers = { ...onboardingAnswers, [step.key]: val };
             setOnboardingAnswers(newAnswers);
             if (onboardingStep < totalSteps - 1) {
               setOnboardingStep(onboardingStep + 1);
@@ -3432,27 +3460,60 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {step.q}
               </p>
 
-              {/* Options */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {step.opts.map((opt, i) => (
-                  <button key={i} onClick={() => handleOpt(opt)}
-                    style={{ fontFamily: F, display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", textAlign: "left", transition: "all 0.12s", width: "100%", color: "rgba(255,255,255,0.75)", fontSize: 14 }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `rgba(13,162,231,0.08)`; (e.currentTarget as HTMLElement).style.borderColor = `rgba(13,162,231,0.25)`; (e.currentTarget as HTMLElement).style.color = "#f0f2f8"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)"; }}
-                  >
-                    <div style={{ width: 20, height: 20, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>{String.fromCharCode(65 + i)}</span>
-                    </div>
-                    {opt}
-                  </button>
-                ))}
-              </div>
+              {/* Options or Free Text Input */}
+              {onboardingFreeTextMode ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.4)", margin: 0 }}>
+                    {pt ? "Digite sua resposta:" : es ? "Escribe tu respuesta:" : "Type your answer:"}
+                  </p>
+                  <input
+                    autoFocus
+                    value={onboardingFreeText}
+                    onChange={e => setOnboardingFreeText(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") handleFreeTextConfirm(); if (e.key === "Escape") { setOnboardingFreeTextMode(false); setOnboardingFreeText(""); }}}
+                    placeholder={pt ? "Ex: SaaS, Saúde, Moda..." : es ? "Ej: SaaS, Salud, Moda..." : "E.g.: SaaS, Health, Fashion..."}
+                    style={{ fontFamily: F, width: "100%", padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(13,162,231,0.35)", color: "#f0f2f8", fontSize: 14, outline: "none", boxSizing: "border-box" as const }}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={handleFreeTextConfirm} disabled={!onboardingFreeText.trim()}
+                      style={{ fontFamily: F, flex: 1, padding: "11px 16px", borderRadius: 10, background: onboardingFreeText.trim() ? "#0da2e7" : "rgba(255,255,255,0.05)", border: "none", color: onboardingFreeText.trim() ? "#fff" : "rgba(255,255,255,0.25)", fontSize: 14, fontWeight: 600, cursor: onboardingFreeText.trim() ? "pointer" : "not-allowed", transition: "all 0.12s" }}>
+                      {pt ? "Confirmar →" : es ? "Confirmar →" : "Confirm →"}
+                    </button>
+                    <button onClick={() => { setOnboardingFreeTextMode(false); setOnboardingFreeText(""); }}
+                      style={{ fontFamily: F, padding: "11px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer" }}>
+                      ←
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {step.opts.map((opt, i) => (
+                    <button key={i} onClick={() => handleOpt(opt)}
+                      style={{ fontFamily: F, display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", textAlign: "left", transition: "all 0.12s", width: "100%", color: "rgba(255,255,255,0.75)", fontSize: 14 }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `rgba(13,162,231,0.08)`; (e.currentTarget as HTMLElement).style.borderColor = `rgba(13,162,231,0.25)`; (e.currentTarget as HTMLElement).style.color = "#f0f2f8"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)"; }}
+                    >
+                      <div style={{ width: 20, height: 20, borderRadius: "50%", border: isOtherOpt(opt) ? "1.5px solid rgba(13,162,231,0.3)" : "1.5px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ fontSize: 10, color: isOtherOpt(opt) ? "rgba(13,162,231,0.7)" : "rgba(255,255,255,0.4)", fontWeight: 600 }}>{String.fromCharCode(65 + i)}</span>
+                      </div>
+                      <span style={{ flex: 1 }}>{opt}</span>
+                      {isOtherOpt(opt) && (
+                        <span style={{ fontSize: 11, color: "rgba(13,162,231,0.5)", fontFamily: "monospace" }}>
+                          {pt ? "escrever..." : es ? "escribir..." : "type..."}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Skip */}
-              <button onClick={() => { onboardingSessionDone.current = true; try { sessionStorage.setItem(`adbrief_onb_skip_${selectedPersona?.id}`, "1"); } catch {} completeOnboarding(onboardingAnswers); }}
-                style={{ fontFamily: F, marginTop: 16, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", fontSize: 12, padding: "4px 0", display: "block" }}>
-                {pt ? "Pular configuração" : es ? "Omitir configuración" : "Skip setup"}
-              </button>
+              {!onboardingFreeTextMode && (
+                <button onClick={() => { onboardingSessionDone.current = true; try { sessionStorage.setItem(`adbrief_onb_skip_${selectedPersona?.id}`, "1"); } catch {} completeOnboarding(onboardingAnswers); }}
+                  style={{ fontFamily: F, marginTop: 16, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", fontSize: 12, padding: "4px 0", display: "block" }}>
+                  {pt ? "Pular configuração" : es ? "Omitir configuración" : "Skip setup"}
+                </button>
+              )}
             </div>
           );
         })()}
