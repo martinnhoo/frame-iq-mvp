@@ -86,7 +86,7 @@ export function SeoLayout({ title, description, canonical, ogImage, children, no
         {ogImage && <meta name="twitter:image" content={ogImage} />}
       </Helmet>
 
-      <div style={{ minHeight: "100vh", background: "#060608", color: "#f0f0f5", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <div style={{ minHeight: "100vh", background: "#060608", color: "#f0f0f5", fontFamily: "'Inter', system-ui, sans-serif" }}>
 
         {/* ── NAV ── */}
         <nav style={{

@@ -10,7 +10,7 @@ interface SeoCTAProps {
   context?: "tool" | "guide" | "compare" | "market" | "default";
 }
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const j = { fontFamily: "'Inter', system-ui, sans-serif" };
 
 const CTX: Record<string, { headline: string; sub: string; primaryLabel: string }> = {
   tool:    { headline: "Try it free for 3 days", sub: "Create an account and use this tool instantly. 3-day free trial on any plan.", primaryLabel: "Start free trial" },

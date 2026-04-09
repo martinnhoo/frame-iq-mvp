@@ -5,7 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { X, Pause, Percent, AlertTriangle, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-const F = "'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', system-ui, sans-serif";
 
 interface Props {
   open: boolean;

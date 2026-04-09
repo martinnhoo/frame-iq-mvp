@@ -38,7 +38,7 @@ const PLANS: Record<string, { label: string; color: string }> = {
   scale:   { label: "Studio", color: "rgba(167,139,250,0.65)" },
 };
 
-const F = "'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', system-ui, sans-serif";
 const BLUE = "#0ea5e9";
 
 const SB_AVATAR_PALETTE = [

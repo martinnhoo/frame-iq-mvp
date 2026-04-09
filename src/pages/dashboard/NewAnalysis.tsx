@@ -118,7 +118,7 @@ function detectMarketFromPersona(style: string): string {
   return "US";
 }
 
-const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
+const syne = { fontFamily: "'Inter', system-ui, sans-serif" } as const;
 
 const NewAnalysis = () => {
   const { user, refreshUsage, selectedPersona } = useOutletContext<DashboardContext>();

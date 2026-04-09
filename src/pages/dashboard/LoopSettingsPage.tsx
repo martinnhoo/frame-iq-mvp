@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as const;
+const j = { fontFamily: "'Inter', system-ui, sans-serif" } as const;
+const m = { fontFamily: "'Inter', 'Inter', system-ui, sans-serif" } as const;
 
 interface NomenclatureField {
   position: number;

@@ -415,7 +415,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
   if (!open) return null;
 
-  const F = "'Plus Jakarta Sans', sans-serif";
+  const F = "'Inter', system-ui, sans-serif";
   const M = "'Inter', sans-serif";
 
   const TABS_NEW = [
@@ -710,7 +710,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                             { val: String(s0.active_ads||0), label: language === "pt" ? "Ads ativos" : "Active ads", color: "#eef0f6" },
                           ].map((item, i) => (
                             <div key={i} style={{ textAlign: "center" as const }}>
-                              <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 18, fontWeight: 900, color: item.color, margin: 0 }}>{item.val}</p>
+                              <p style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 18, fontWeight: 900, color: item.color, margin: 0 }}>{item.val}</p>
                               <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.35)", margin: "2px 0 0" }}>{item.label}</p>
                               {(item as any).extra && <p style={{ fontFamily: M, fontSize: 12, color: (item as any).extraColor, margin: "1px 0 0" }}>{(item as any).extra}</p>}
                             </div>
@@ -881,7 +881,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                         <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
                         </div>
-                        <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 13, fontWeight: 600, color: "rgba(238,240,246,0.35)", margin: "0 0 6px" }}>
+                        <p style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 13, fontWeight: 600, color: "rgba(238,240,246,0.35)", margin: "0 0 6px" }}>
                           {language === "pt" ? "Sem dados para esta conta ainda" : language === "es" ? "Sin datos para esta cuenta aún" : "No data for this account yet"}
                         </p>
                         <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.22)", margin: 0, lineHeight: 1.55 }}>

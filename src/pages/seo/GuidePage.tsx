@@ -3,8 +3,8 @@ import { SeoLayout } from "@/components/seo/SeoLayout";
 import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_GUIDES } from "@/data/seoData";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
+const j = { fontFamily: "'Inter', system-ui, sans-serif" };
+const m = { fontFamily: "'Inter', 'Inter', system-ui, sans-serif" };
 
 export default function GuidePage() {
   const { slug } = useParams<{ slug: string }>();

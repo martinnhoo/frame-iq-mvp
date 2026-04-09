@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
+const j = { fontFamily: "'Inter', system-ui, sans-serif" } as React.CSSProperties;
+const m = { fontFamily: "'Inter', 'Inter', system-ui, sans-serif" } as React.CSSProperties;
 
 interface FAQ { q: string; a: string; }
 interface SeoLandingPageProps {

@@ -4,7 +4,7 @@ import { X, Zap, Loader2, Check, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const F = "'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', system-ui, sans-serif";
 const M = "'Inter', sans-serif";
 
 const PRICE_IDS: Record<string, string> = {

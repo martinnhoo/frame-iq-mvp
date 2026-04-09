@@ -4,8 +4,8 @@ import { SeoLayout } from "@/components/seo/SeoLayout";
 import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_LANDING_PAGES, SEO_PLATFORMS, SEO_INDUSTRIES } from "@/data/seoData";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
+const j = { fontFamily: "'Inter', system-ui, sans-serif" };
+const m = { fontFamily: "'Inter', 'Inter', system-ui, sans-serif" };
 
 // Placeholder ad cards — will be replaced with real ads as library grows
 const PLACEHOLDER_ADS = Array.from({ length: 12 }, (_, i) => ({
@@ -170,7 +170,7 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
 
   return (
     <div>
-      {title && <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 22, fontWeight: 700, marginBottom: 20 }}>{title}</h2>}
+      {title && <h2 style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 22, fontWeight: 700, marginBottom: 20 }}>{title}</h2>}
 
       {/* Coming soon state + locked cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 14 }}>
@@ -188,7 +188,7 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
               {/* Lock overlay */}
               <div style={{ position: "absolute", inset: 0, background: "rgba(6,6,8,0.5)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <button onClick={() => navigate("/signup")}
-                  style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", padding: "8px 18px", borderRadius: 999, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
+                  style={{ fontFamily: "'Inter', system-ui, sans-serif", padding: "8px 18px", borderRadius: 999, fontSize: 12, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
                   View analysis →
                 </button>
               </div>
@@ -207,11 +207,11 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
 
       {/* "Submit your ad" nudge */}
       <div style={{ marginTop: 24, textAlign: "center", padding: "20px", borderRadius: 16, border: "1px dashed rgba(255,255,255,0.1)" }}>
-        <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>
+        <p style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 14, color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>
           Want your winning ad featured here?
         </p>
         <button onClick={() => navigate("/signup")}
-          style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer" }}>
+          style={{ fontFamily: "'Inter', system-ui, sans-serif", padding: "8px 18px", borderRadius: 20, fontSize: 13, fontWeight: 600, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer" }}>
           Submit an ad →
         </button>
       </div>

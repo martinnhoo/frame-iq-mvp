@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, X } from "lucide-react";
 
 const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
+const j = { fontFamily: "'Inter', system-ui, sans-serif" } as React.CSSProperties;
 
 const PLANS = [
   { name: "Maker", price: "$19", desc: "/mo", features: ["1 ad account connected", "Unlimited AI chat", "1 conta de anúncios", "AI memory up to 20 analyses"], action: "/signup?plan=maker", highlight: false },

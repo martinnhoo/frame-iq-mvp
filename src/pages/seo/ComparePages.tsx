@@ -4,8 +4,8 @@ import { SeoCTA } from "@/components/seo/SeoCTA";
 import { SEO_COMPARISONS } from "@/data/seoData";
 import { findCompareBySlug } from "@/data/seoData";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" };
+const j = { fontFamily: "'Inter', system-ui, sans-serif" };
+const m = { fontFamily: "'Inter', 'Inter', system-ui, sans-serif" };
 
 export function CompareIndex() {
   const navigate = useNavigate();

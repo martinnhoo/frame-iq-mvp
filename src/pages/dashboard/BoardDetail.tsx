@@ -501,7 +501,7 @@ const BoardDetail = () => {
                       </div>
                       {exp && (
                         <div className="border-t border-white/[0.05] px-4 pb-4 pt-3">
-                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2" style={{fontFamily:"'Inter', 'Plus Jakarta Sans', sans-serif"}}>Full script</p>
+                          <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2" style={{fontFamily:"'Inter', 'Inter', system-ui, sans-serif"}}>Full script</p>
                           <p className="text-xs text-white/50 leading-relaxed whitespace-pre-wrap">{v.script_rewrite}</p>
                         </div>
                       )}

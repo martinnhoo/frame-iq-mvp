@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, ChevronDown, ChevronUp, Layers, LayoutList } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const F = "'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', system-ui, sans-serif";
 const M = "'DM Mono', monospace";
 
 const T = {

@@ -6,7 +6,7 @@ import { Brain, TrendingUp, MessageSquare, Zap, Star, Trash2, RefreshCw, Chevron
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 
-const F = "'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', system-ui, sans-serif";
 const M = "'DM Mono', monospace";
 
 // ── Types ─────────────────────────────────────────────────────────────────────

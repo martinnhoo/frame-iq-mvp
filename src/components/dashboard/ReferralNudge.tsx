@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Gift, X } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const F = "'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', system-ui, sans-serif";
 const STORAGE_KEY = "adbrief_referral_nudge_dismissed";
 
 const texts = {

@@ -1,6 +1,6 @@
 // ── Design tokens ─────────────────────────────────────────────────────────────
 export const FONTS = {
-  sans:  "'Plus Jakarta Sans', sans-serif",
+  sans:  "'Inter', system-ui, sans-serif",
   body:  "'Inter', sans-serif",
   mono:  "'DM Mono', monospace",
 } as const;

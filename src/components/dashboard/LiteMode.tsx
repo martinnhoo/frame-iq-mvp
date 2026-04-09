@@ -9,8 +9,8 @@ import {
 import type { Profile } from "./DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
-const m = { fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" } as React.CSSProperties;
+const j = { fontFamily: "'Inter', system-ui, sans-serif" } as React.CSSProperties;
+const m = { fontFamily: "'Inter', 'Inter', system-ui, sans-serif" } as React.CSSProperties;
 
 interface LiteModeProps {
   profile: Profile | null;

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Eye, EyeOff, CheckCircle, ShieldAlert, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 
-const F = "'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', system-ui, sans-serif";
 const M = "'Inter', sans-serif";
 
 // ── Logo ─────────────────────────────────────────────────────────────────────

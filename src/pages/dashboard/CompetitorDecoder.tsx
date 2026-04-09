@@ -7,7 +7,7 @@ import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { Upload, Zap, Copy, Check, AlertCircle, Target, Crosshair, X, Film } from "lucide-react";
 import { toast } from "sonner";
 
-const F = {fontFamily:"'Plus Jakarta Sans', sans-serif"} as const;
+const F = {fontFamily:"'Inter', system-ui, sans-serif"} as const;
 const M = {fontFamily:"'Inter', sans-serif"} as const;
 
 interface Result {

@@ -39,7 +39,7 @@ export class SectionBoundary extends Component<Props, State> {
           background: "rgba(239,68,68,0.06)",
           border: "1px solid rgba(239,68,68,0.18)",
         }}>
-          <span style={{ fontSize: 12, color: "#f87171", flex: 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <span style={{ fontSize: 12, color: "#f87171", flex: 1, fontFamily: "'Inter', system-ui, sans-serif" }}>
             Erro em {label} — <button onClick={this.reset}
               style={{ background: "none", border: "none", color: "#38bdf8", cursor: "pointer", fontSize: 12, padding: 0, textDecoration: "underline" }}>
               tentar novamente
@@ -61,10 +61,10 @@ export class SectionBoundary extends Component<Props, State> {
         }}>
           <span style={{ fontSize: 20 }}>⚠</span>
         </div>
-        <p style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'Inter', system-ui, sans-serif" }}>
           Erro em {label}
         </p>
-        <p style={{ margin: "0 0 20px", fontSize: 13, color: "var(--text-muted)", maxWidth: 320, lineHeight: 1.6, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p style={{ margin: "0 0 20px", fontSize: 13, color: "var(--text-muted)", maxWidth: 320, lineHeight: 1.6, fontFamily: "'Inter', system-ui, sans-serif" }}>
           Algo inesperado aconteceu neste módulo. Os outros continuam funcionando normalmente.
         </p>
         <button onClick={this.reset} style={{
@@ -72,7 +72,7 @@ export class SectionBoundary extends Component<Props, State> {
           padding: "8px 16px", borderRadius: 8, cursor: "pointer",
           background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.25)",
           color: "#38bdf8", fontSize: 13, fontWeight: 600,
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontFamily: "'Inter', system-ui, sans-serif",
         }}>
           <RefreshCw size={13} /> Tentar novamente
         </button>

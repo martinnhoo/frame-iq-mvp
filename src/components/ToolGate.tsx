@@ -62,7 +62,7 @@ export default function ToolGate({ children }: ToolGateProps) {
           <button
             onClick={() => navigate("/pricing")}
             style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11, fontWeight: 700,
+              fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, fontWeight: 700,
               padding: "5px 12px", borderRadius: 7,
               background: "rgba(14,165,233,0.12)", color: "#0ea5e9",
               border: "1px solid rgba(14,165,233,0.25)", cursor: "pointer",
