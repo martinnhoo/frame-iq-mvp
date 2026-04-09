@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /* ── Typography tokens ─────────────────────────────────────────────────── */
-const DISPLAY = "'Syne', 'Plus Jakarta Sans', system-ui, sans-serif";
 const BODY    = "'Plus Jakarta Sans', system-ui, sans-serif";
 const MONO    = "'DM Mono', 'SF Mono', monospace";
 
@@ -45,77 +44,77 @@ const T: Record<Lang, {
   or_text: string; formats: string;
 }> = {
   pt: {
-    hero: "Analise seu anúncio\nem 10 segundos.",
-    sub: "Upload do criativo — a IA avalia hook, mensagem, CTA e dá nota de 1 a 10.",
+    hero: "Nota do seu anúncio\nem 10 segundos",
+    sub: "IA analisa hook, copy e CTA. Nota de 1 a 10.",
     upload_cta: "Upload do criativo",
     uploading: "Enviando...",
-    analyzing: "Analisando criativo",
+    analyzing: "Analisando",
     drop: "Solte aqui",
     score: "Score",
     verdict: "Veredicto",
-    hook: "Hook Visual",
+    hook: "Hook",
     message_label: "Mensagem",
-    cta_label: "Call-to-Action",
-    actions_label: "Top 3 Ações",
-    locked_title: "Quer a análise completa?",
-    locked_sub: "Deixe seu email para desbloquear mensagem, CTA e as 3 ações.",
+    cta_label: "CTA",
+    actions_label: "Ações",
+    locked_title: "Análise completa",
+    locked_sub: "Email para desbloquear mensagem, CTA e ações.",
     email_placeholder: "seu@email.com",
     unlock_cta: "Desbloquear",
-    signup_cta: "Criar conta grátis",
-    signup_sub: "3 dias grátis · Todas as ferramentas · Sem cartão",
-    rate_limit: "Limite atingido. Crie uma conta grátis para continuar.",
-    error: "Erro ao analisar. Tente novamente.",
-    drag_text: "Arraste ou clique para upload",
+    signup_cta: "Começar grátis",
+    signup_sub: "3 dias grátis · sem cartão",
+    rate_limit: "Limite atingido. Crie uma conta para continuar.",
+    error: "Erro. Tente novamente.",
+    drag_text: "Arraste ou clique",
     or_text: "ou",
     formats: "PNG, JPG, WEBP — até 10MB",
   },
   es: {
-    hero: "Analiza tu anuncio\nen 10 segundos.",
-    sub: "Sube un creativo — la IA evalúa hook, mensaje, CTA y da nota de 1 a 10.",
+    hero: "Nota de tu anuncio\nen 10 segundos",
+    sub: "IA analiza hook, copy y CTA. Nota de 1 a 10.",
     upload_cta: "Subir creativo",
     uploading: "Subiendo...",
-    analyzing: "Analizando creativo",
+    analyzing: "Analizando",
     drop: "Suelta aquí",
     score: "Score",
     verdict: "Veredicto",
-    hook: "Hook Visual",
+    hook: "Hook",
     message_label: "Mensaje",
-    cta_label: "Call-to-Action",
-    actions_label: "Top 3 Acciones",
-    locked_title: "¿Quieres el análisis completo?",
-    locked_sub: "Deja tu email para desbloquear mensaje, CTA y las 3 acciones.",
+    cta_label: "CTA",
+    actions_label: "Acciones",
+    locked_title: "Análisis completo",
+    locked_sub: "Email para desbloquear mensaje, CTA y acciones.",
     email_placeholder: "tu@email.com",
     unlock_cta: "Desbloquear",
-    signup_cta: "Crear cuenta gratis",
-    signup_sub: "3 días gratis · Todas las herramientas · Sin tarjeta",
-    rate_limit: "Límite alcanzado. Crea una cuenta gratis para continuar.",
-    error: "Error al analizar. Intenta de nuevo.",
-    drag_text: "Arrastra o haz clic para subir",
+    signup_cta: "Comenzar gratis",
+    signup_sub: "3 días gratis · sin tarjeta",
+    rate_limit: "Límite alcanzado. Crea una cuenta para continuar.",
+    error: "Error. Intenta de nuevo.",
+    drag_text: "Arrastra o haz clic",
     or_text: "o",
     formats: "PNG, JPG, WEBP — hasta 10MB",
   },
   en: {
-    hero: "Analyze your ad\nin 10 seconds.",
-    sub: "Upload a creative — the AI evaluates hook, message, CTA and rates 1 to 10.",
+    hero: "Rate your ad\nin 10 seconds",
+    sub: "AI analyzes hook, copy and CTA. Score from 1 to 10.",
     upload_cta: "Upload creative",
     uploading: "Uploading...",
-    analyzing: "Analyzing creative",
+    analyzing: "Analyzing",
     drop: "Drop here",
     score: "Score",
     verdict: "Verdict",
-    hook: "Visual Hook",
+    hook: "Hook",
     message_label: "Message",
-    cta_label: "Call-to-Action",
-    actions_label: "Top 3 Actions",
-    locked_title: "Want the full analysis?",
-    locked_sub: "Enter your email to unlock message, CTA and 3 actions.",
+    cta_label: "CTA",
+    actions_label: "Actions",
+    locked_title: "Full analysis",
+    locked_sub: "Email to unlock message, CTA and actions.",
     email_placeholder: "your@email.com",
     unlock_cta: "Unlock",
-    signup_cta: "Create free account",
-    signup_sub: "3 days free · All tools · No card",
-    rate_limit: "Daily limit reached. Sign up free to keep going.",
-    error: "Analysis failed. Try again.",
-    drag_text: "Drag or click to upload",
+    signup_cta: "Start free",
+    signup_sub: "3 days free · no card",
+    rate_limit: "Limit reached. Sign up to continue.",
+    error: "Error. Try again.",
+    drag_text: "Drag or click",
     or_text: "or",
     formats: "PNG, JPG, WEBP — up to 10MB",
   },
@@ -135,13 +134,13 @@ interface AnalysisResult {
 
 /* ── Inline keyframes ──────────────────────────────────────────────────── */
 const KEYFRAMES = `
-@keyframes demoSpin{0%{--demo-angle:0deg}100%{--demo-angle:360deg}}
-@property --demo-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes demoPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
 @keyframes demoProgress{0%{width:5%}50%{width:75%}100%{width:92%}}
 @keyframes demoFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes demoShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
-@keyframes orbFloat{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.15)}}
+@keyframes orbFloat{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.12)}}
+@property --beam-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
+@keyframes beamSpin{to{--beam-angle:360deg}}
 `;
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -280,10 +279,10 @@ export default function Demo() {
 
           {/* Headline */}
           <h1 style={{
-            fontFamily: DISPLAY, fontWeight: 800,
-            fontSize: "clamp(32px, 7vw, 48px)",
-            letterSpacing: "-0.035em", lineHeight: 1.05,
-            color: C.text, marginBottom: 18,
+            fontFamily: BODY, fontWeight: 800,
+            fontSize: "clamp(28px, 6vw, 40px)",
+            letterSpacing: "-0.035em", lineHeight: 1.1,
+            color: C.text, marginBottom: 14,
             whiteSpace: "pre-line",
           }}>
             {t.hero}
@@ -291,9 +290,9 @@ export default function Demo() {
 
           {/* Sub */}
           <p style={{
-            fontFamily: BODY, fontSize: "clamp(14px, 1.1vw, 16px)",
-            fontWeight: 400, color: C.textSoft,
-            lineHeight: 1.6, maxWidth: 400, margin: "0 auto",
+            fontFamily: BODY, fontSize: 14,
+            fontWeight: 400, color: C.textMuted,
+            lineHeight: 1.5, maxWidth: 340, margin: "0 auto",
             letterSpacing: "-0.01em",
           }}>
             {t.sub}
@@ -356,14 +355,18 @@ export default function Demo() {
               }
             }}
           >
-            {/* Inner glow on drag */}
-            {dragOver && (
-              <div style={{
-                position: "absolute", inset: 0, borderRadius: 24,
-                background: "radial-gradient(circle at center, rgba(14,165,233,0.08) 0%, transparent 70%)",
-                pointerEvents: "none",
-              }} />
-            )}
+            {/* Border beam — rotating highlight on idle, glow on drag */}
+            <div style={{
+              position: "absolute", inset: -1, borderRadius: 25, padding: 1,
+              background: dragOver
+                ? "rgba(14,165,233,0.3)"
+                : `conic-gradient(from var(--beam-angle), transparent 0%, transparent 75%, rgba(14,165,233,0.2) 85%, transparent 95%)`,
+              animation: dragOver ? "none" : "beamSpin 4s linear infinite",
+              WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude" as any,
+              pointerEvents: "none",
+            }} />
 
             <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
 
@@ -467,16 +470,16 @@ export default function Demo() {
               )}
               <div style={{ flex: 1, minWidth: 180 }}>
                 {/* Score number */}
-                <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 10 }}>
                   <span style={{
-                    fontFamily: DISPLAY, fontSize: 52, fontWeight: 800,
+                    fontFamily: BODY, fontSize: 44, fontWeight: 800,
                     color: scoreColor(result.score),
                     letterSpacing: "-0.04em", lineHeight: 1,
                   }}>
                     {result.score}
                   </span>
                   <span style={{
-                    fontFamily: MONO, fontSize: 16, fontWeight: 400,
+                    fontFamily: BODY, fontSize: 15, fontWeight: 500,
                     color: C.textMuted,
                   }}>/10</span>
                 </div>
@@ -524,7 +527,7 @@ export default function Demo() {
                 {/* Email gate */}
                 <div style={{ marginTop: 24, textAlign: "center" }}>
                   <p style={{
-                    fontFamily: DISPLAY, fontSize: 17, fontWeight: 700,
+                    fontFamily: BODY, fontSize: 15, fontWeight: 700,
                     color: C.text, marginBottom: 6, letterSpacing: "-0.02em",
                   }}>
                     {t.locked_title}
