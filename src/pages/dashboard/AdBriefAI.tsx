@@ -1957,6 +1957,8 @@ export default function AdBriefAI() {
     setShowGoalInput(false);
   };
   const [loading,setLoading]=useState(false);
+  const [streamingMsgId,setStreamingMsgId]=useState<number|null>(null);
+  const streamTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [contextReady,setContextReady]=useState(false);
   const [context,setContext]=useState("");
   const [connections,setConnections]=useState<string[]>([]);
