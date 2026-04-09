@@ -820,6 +820,39 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_leads: {
+        Row: {
+          analysis_result: Json | null
+          analysis_score: number | null
+          converted: boolean | null
+          created_at: string | null
+          email: string | null
+          id: string
+          ip_address: string | null
+          lang: string | null
+        }
+        Insert: {
+          analysis_result?: Json | null
+          analysis_score?: number | null
+          converted?: boolean | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          lang?: string | null
+        }
+        Update: {
+          analysis_result?: Json | null
+          analysis_score?: number | null
+          converted?: boolean | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          lang?: string | null
+        }
+        Relationships: []
+      }
       demo_requests: {
         Row: {
           company: string
