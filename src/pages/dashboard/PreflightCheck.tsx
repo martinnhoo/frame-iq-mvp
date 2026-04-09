@@ -160,10 +160,10 @@ const VERDICT_CFG = {
 };
 
 const METRIC_COLORS = {
-  green: { value: "#10b981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.16)" },
-  amber: { value: "#f59e0b", bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.16)" },
-  red:   { value: "#ef4444", bg: "rgba(239,68,68,0.08)",   border: "rgba(239,68,68,0.16)"  },
-  blue:  { value: "#0da2e7", bg: "rgba(13,162,231,0.08)",  border: "rgba(13,162,231,0.16)" },
+  green: "#10b981",
+  amber: "#f59e0b",
+  red:   "#ef4444",
+  blue:  "#0da2e7",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -287,146 +287,146 @@ function ResultCard({ result, onReset }: { result: CheckResult; onReset: () => v
   const [visible, setVisible] = useState(false);
   useEffect(() => { const t = setTimeout(() => setVisible(true), 40); return () => clearTimeout(t); }, []);
   const vc = VERDICT_CFG[result.verdict];
-  const mono = { fontFamily: "'DM Mono',monospace" };
+  const F = "Inter,-apple-system,sans-serif";
+  const M = { fontFamily: "'DM Mono',monospace" };
 
   return (
     <div style={{
       opacity: visible ? 1 : 0,
-      transform: visible ? "translateY(0)" : "translateY(20px)",
-      transition: "all 0.45s cubic-bezier(0.34,1.1,0.64,1)",
+      transform: visible ? "translateY(0)" : "translateY(18px)",
+      transition: "all 0.4s cubic-bezier(0.34,1.1,0.64,1)",
     }}>
 
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 12 }}>
+      {/* ── Header ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 22, gap: 12 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: 5,
-              padding: "3px 10px", borderRadius: 20, fontSize: 10.5, fontWeight: 700,
-              letterSpacing: "0.07em", textTransform: "uppercase" as const,
-              background: vc.bg, border: `1px solid ${vc.border}`, color: vc.color,
-            }}>
-              {result.verdict === "READY"   && <Check size={9} />}
-              {result.verdict === "REVIEW"  && <AlertTriangle size={9} />}
-              {result.verdict === "BLOCKED" && <X size={9} />}
-              {vc.label}
-            </span>
-          </div>
-          <h2 style={{ fontSize: 19, fontWeight: 700, color: "#f0f2f8", letterSpacing: "-0.03em", lineHeight: 1.35, margin: 0 }}>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            padding: "2px 9px", borderRadius: 5, fontSize: 10, fontWeight: 700,
+            letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 8,
+            background: vc.bg, border: `1px solid ${vc.border}`, color: vc.color,
+            fontFamily: F,
+          }}>
+            {result.verdict === "READY"   && <Check size={8} />}
+            {result.verdict === "REVIEW"  && <AlertTriangle size={8} />}
+            {result.verdict === "BLOCKED" && <X size={8} />}
+            {vc.label}
+          </span>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: "#f0f2f8", letterSpacing: "-0.025em", lineHeight: 1.35, margin: 0, fontFamily: F }}>
             {result.headline}
           </h2>
-          <p style={{ marginTop: 5, fontSize: 11.5, color: "rgba(255,255,255,0.28)", ...mono }}>
+          <p style={{ marginTop: 5, fontSize: 11, color: "rgba(255,255,255,0.25)", ...M }}>
             {result.subline}
           </p>
         </div>
         <button onClick={onReset} title="Nova análise"
-          style={{ width: 32, height: 32, borderRadius: 9, cursor: "pointer", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}
-          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = "#fff"; el.style.borderColor = "rgba(255,255,255,0.18)"; }}
-          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = "rgba(255,255,255,0.3)"; el.style.borderColor = "rgba(255,255,255,0.07)"; }}
+          style={{ width: 30, height: 30, borderRadius: 8, cursor: "pointer", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}
+          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = "#fff"; el.style.borderColor = "rgba(255,255,255,0.15)"; }}
+          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = "rgba(255,255,255,0.25)"; el.style.borderColor = "rgba(255,255,255,0.07)"; }}
         >
-          <RotateCcw size={12} />
+          <RotateCcw size={11} />
         </button>
       </div>
 
-      {/* Metrics */}
+      {/* ── Metrics row — no boxes, just numbers ── */}
       {result.metrics.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${result.metrics.length}, 1fr)`, gap: 9, marginBottom: 18 }}>
-          {result.metrics.map((m, i) => {
-            const mc = METRIC_COLORS[m.color];
-            return (
-              <div key={i} style={{
-                padding: "13px 15px", borderRadius: 12,
-                background: mc.bg, border: `1px solid ${mc.border}`,
-                animation: `slideUp 0.3s cubic-bezier(0.34,1.1,0.64,1) ${i * 55}ms both`,
-              }}>
-                <p style={{ margin: 0, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.32)", ...mono }}>
-                  {m.label}
+        <div style={{
+          display: "grid", gridTemplateColumns: `repeat(${result.metrics.length}, 1fr)`,
+          marginBottom: 22, paddingBottom: 20,
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          animation: "slideUp 0.3s cubic-bezier(0.34,1.1,0.64,1) 40ms both",
+        }}>
+          {result.metrics.map((m, i) => (
+            <div key={i} style={{
+              padding: "0 0 0 16px",
+              borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
+              animation: `slideUp 0.28s cubic-bezier(0.34,1.1,0.64,1) ${i * 50}ms both`,
+            }}>
+              <p style={{ margin: 0, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.28)", fontFamily: F }}>
+                {m.label}
+              </p>
+              <p style={{ margin: "5px 0 0", fontSize: 26, fontWeight: 800, color: METRIC_COLORS[m.color], letterSpacing: "-0.04em", lineHeight: 1, fontFamily: F }}>
+                {m.value}
+              </p>
+              {m.delta && (
+                <p style={{ margin: "3px 0 0", fontSize: 10, color: "rgba(255,255,255,0.25)", ...M }}>
+                  {m.delta}
                 </p>
-                <p style={{ margin: "5px 0 0", fontSize: 24, fontWeight: 800, color: mc.value, letterSpacing: "-0.04em", lineHeight: 1 }}>
-                  {m.value}
-                </p>
-                {m.delta && (
-                  <p style={{ margin: "3px 0 0", fontSize: 10.5, color: "rgba(255,255,255,0.28)", ...mono }}>
-                    {m.delta}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+              )}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Diagnosis */}
+      {/* ── Diagnosis — pure prose, no box ── */}
       <div style={{
-        padding: "15px 17px", borderRadius: 12,
-        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
-        marginBottom: 14,
-        animation: "slideUp 0.35s cubic-bezier(0.34,1.1,0.64,1) 100ms both",
+        marginBottom: 20, paddingBottom: 20,
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        animation: "slideUp 0.32s cubic-bezier(0.34,1.1,0.64,1) 90ms both",
       }}>
-        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.7, color: "rgba(255,255,255,0.72)" }}>
+        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.75, color: "rgba(255,255,255,0.65)", fontFamily: F }}>
           {renderDiagnosis(result.diagnosis)}
         </p>
       </div>
 
-      {/* Spelling errors */}
+      {/* ── Spelling errors — inline, no colored box ── */}
       {result.spelling_issues && result.spelling_issues.length > 0 && (
         <div style={{
-          padding: "12px 16px", borderRadius: 12,
-          background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.14)",
-          marginBottom: 14,
-          animation: "slideUp 0.35s cubic-bezier(0.34,1.1,0.64,1) 130ms both",
+          marginBottom: 20, paddingBottom: 20,
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          animation: "slideUp 0.32s cubic-bezier(0.34,1.1,0.64,1) 120ms both",
         }}>
-          <p style={{ margin: "0 0 9px", fontSize: 9.5, fontWeight: 700, letterSpacing: "0.1em", color: "#ef4444", textTransform: "uppercase" as const, ...mono }}>
+          <p style={{ margin: "0 0 10px", fontSize: 11.5, fontWeight: 600, color: "rgba(255,255,255,0.4)", fontFamily: F }}>
             Erros de escrita
           </p>
-          {result.spelling_issues.map((s, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: i < (result.spelling_issues?.length || 0) - 1 ? 5 : 0 }}>
-              <span style={{ fontSize: 12.5, color: "#ef4444", textDecoration: "line-through", ...mono }}>{s.found}</span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>→</span>
-              <span style={{ fontSize: 12.5, color: "#10b981", ...mono }}>{s.fix}</span>
-            </div>
-          ))}
+          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px 14px" }}>
+            {result.spelling_issues.map((s, i) => (
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12.5 }}>
+                <span style={{ color: "#ef4444", textDecoration: "line-through", ...M }}>{s.found}</span>
+                <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>→</span>
+                <span style={{ color: "#10b981", ...M }}>{s.fix}</span>
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* What to fix */}
-      {result.fixes.length > 0 && (
-        <div style={{
-          padding: "15px 17px", borderRadius: 12,
-          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
-          marginBottom: 14,
-          animation: "slideUp 0.35s cubic-bezier(0.34,1.1,0.64,1) 160ms both",
-        }}>
-          <p style={{ margin: "0 0 10px", fontSize: 9.5, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase" as const, ...mono }}>
-            O que ajustar
-          </p>
-          {result.fixes.map((fix, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: i < result.fixes.length - 1 ? 8 : 0 }}>
-              <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#0da2e7", marginTop: 8, flexShrink: 0 }} />
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.68)", lineHeight: 1.6 }}>{fix}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* ── Fixes + Strengths side by side when both exist, stacked otherwise ── */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: result.fixes.length > 0 && result.strengths.length > 0 ? "1fr 1fr" : "1fr",
+        gap: 24,
+        animation: "slideUp 0.32s cubic-bezier(0.34,1.1,0.64,1) 150ms both",
+      }}>
+        {result.fixes.length > 0 && (
+          <div>
+            <p style={{ margin: "0 0 12px", fontSize: 11.5, fontWeight: 600, color: "rgba(255,255,255,0.4)", fontFamily: F }}>
+              Ajustar
+            </p>
+            {result.fixes.map((fix, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: i < result.fixes.length - 1 ? 9 : 0 }}>
+                <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#0da2e7", marginTop: 9, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.65, fontFamily: F }}>{fix}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
-      {/* Strengths */}
-      {result.strengths.length > 0 && (
-        <div style={{
-          padding: "15px 17px", borderRadius: 12,
-          background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.11)",
-          animation: "slideUp 0.35s cubic-bezier(0.34,1.1,0.64,1) 190ms both",
-        }}>
-          <p style={{ margin: "0 0 10px", fontSize: 9.5, fontWeight: 700, letterSpacing: "0.1em", color: "#10b981", textTransform: "uppercase" as const, ...mono }}>
-            O que está funcionando
-          </p>
-          {result.strengths.map((s, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: i < result.strengths.length - 1 ? 8 : 0 }}>
-              <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#10b981", marginTop: 8, flexShrink: 0 }} />
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.68)", lineHeight: 1.6 }}>{s}</span>
-            </div>
-          ))}
-        </div>
-      )}
+        {result.strengths.length > 0 && (
+          <div>
+            <p style={{ margin: "0 0 12px", fontSize: 11.5, fontWeight: 600, color: "rgba(255,255,255,0.4)", fontFamily: F }}>
+              Funcionando
+            </p>
+            {result.strengths.map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: i < result.strengths.length - 1 ? 9 : 0 }}>
+                <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#10b981", marginTop: 9, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.65, fontFamily: F }}>{s}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
@@ -585,16 +585,23 @@ export default function PreflightCheck() {
             image_base64: base64,
             image_media_type: fileInfo.file.type || "image/jpeg",
             message: `Analyze this static ad creative. Platform: ${platformsStr}. Market: ${market}.
-Return a JSON object (no markdown) with:
+
+IMPORTANT RULES:
+- Be specific but not aggressive about uncertain claims
+- If a product model, price, or factual detail MIGHT be wrong but you are not 100% sure, use hedged language: "pode ser que X não exista exatamente assim — vale verificar" NOT "X não existe"
+- Only flag spelling/grammar errors you are certain about
+- Focus on actionable creative feedback: visual hierarchy, CTA clarity, text overlay, headline strength
+
+Return ONLY a JSON object (no markdown, no extra text) with this exact structure:
 {
   "verdict": "READY"|"REVIEW"|"BLOCKED",
-  "verdict_reason": "one sentence diagnostic headline",
-  "hook_analysis": { "score": 1-10, "detail": "text" },
+  "verdict_reason": "one sentence diagnostic headline max 12 words",
+  "hook_analysis": { "score": 1-10, "detail": "2 sentences max" },
   "estimated_hook_score": 0-100,
-  "compliance": [{ "rule": "name", "status": "CLEAR"|"FLAG"|"BLOCKED", "detail": "text" }],
-  "cta_check": { "detail": "text" },
-  "top_fixes": ["fix1","fix2","fix3"],
-  "strengths": ["strength1","strength2"],
+  "compliance": [{ "rule": "rule name", "status": "CLEAR"|"FLAG"|"BLOCKED", "detail": "one sentence" }],
+  "cta_check": { "detail": "one sentence about the CTA" },
+  "top_fixes": ["fix 1","fix 2","fix 3"],
+  "strengths": ["strength 1","strength 2"],
   "language_check": { "issues": [{ "found": "wrong word", "fix": "correct word" }] }
 }`,
             context: `=== ACTIVE ACCOUNT ===
