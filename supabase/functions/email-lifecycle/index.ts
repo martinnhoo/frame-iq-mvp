@@ -266,11 +266,11 @@ Deno.serve(async (req) => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
     const { data: profiles, error: pErr } = await supabase
       .from("profiles")
-      .select("id, plan, language, created_at, full_name, email_lifecycle_sent")
+      .select("id, plan, preferred_language, created_at, name, email_lifecycle_sent")
       .or("plan.eq.free,plan.is.null")
       .gte("created_at", thirtyDaysAgo);
 
-    if (pErr) throw pErr;
+    if (pErr) throw new Error(JSON.stringify(pErr));
     if (!profiles?.length) {
       log("No eligible users found");
       return new Response(JSON.stringify({ sent: 0 }), {
@@ -295,13 +295,13 @@ Deno.serve(async (req) => {
 
         // Check if user has Meta connection
         const { count: metaCount } = await supabase
-          .from("ad_connections")
+          .from("platform_connections")
           .select("*", { count: "exact", head: true })
           .eq("user_id", profile.id)
           .eq("platform", "meta");
         const hasMetaConnection = (metaCount ?? 0) > 0;
 
-        const lang = detectLang(profile.language);
+        const lang = detectLang(profile.preferred_language);
 
         // Find the right step for this user
         for (const step of STEPS) {
@@ -347,7 +347,7 @@ Deno.serve(async (req) => {
           const email = authData?.user?.email;
           if (!email) continue;
 
-          const firstName = (profile.full_name || authData?.user?.user_metadata?.full_name || "")
+          const firstName = (profile.name || authData?.user?.user_metadata?.full_name || "")
             .split(" ")[0] || "";
 
           const html = buildHtml(tmpl, firstName);

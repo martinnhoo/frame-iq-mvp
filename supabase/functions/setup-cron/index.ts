@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     { name: 'adbrief-weekly-report',       cron: '0 12 * * 0',   fn: 'weekly-report',           body: '{}' },
     { name: 'adbrief-trend-watch',         cron: '0 */2 * * *',  fn: 'trend-watcher',           body: '{"mode":"auto","geo":"BR"}' },
     { name: 'adbrief-critical-alerts',     cron: '0 */6 * * *',  fn: 'check-critical-alerts',   body: '{}' },
+    { name: 'adbrief-email-lifecycle',     cron: '0 10 * * *',   fn: 'email-lifecycle',         body: '{}' },
   ];
 
   const results: any[] = [];
