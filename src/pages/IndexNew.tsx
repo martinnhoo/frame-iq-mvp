@@ -3689,7 +3689,7 @@ export default function IndexNew() {
             /* ── HERO — tela cheia, conteúdo empilhado ── */
             .hero-main-section{
               min-height:auto!important;
-              padding:80px 20px 32px!important;
+              padding:56px 20px 32px!important;
               align-items:flex-start!important;
               overflow:hidden!important;
             }
@@ -3698,8 +3698,8 @@ export default function IndexNew() {
               gap:32px!important;
             }
             h1,.hero-h1{
-              font-size:clamp(32px,8.5vw,42px)!important;
-              line-height:1.08!important;
+              font-size:clamp(38px,10vw,52px)!important;
+              line-height:1.1!important;
               letter-spacing:-0.04em!important;
               white-space:normal!important;
               margin-bottom:14px!important;
@@ -3832,8 +3832,8 @@ export default function IndexNew() {
 
           /* ── 480px — smaller screens ── */
           @media(max-width:480px){
-            h1,.hero-h1{font-size:clamp(28px,8vw,36px)!important}
-            .hero-main-section{padding:72px 16px 28px!important}
+            h1,.hero-h1{font-size:clamp(34px,9vw,44px)!important}
+            .hero-main-section{padding:48px 16px 28px!important}
             section{padding-left:16px!important;padding-right:16px!important;padding-top:48px!important;padding-bottom:48px!important}
             .spstrip-grid{grid-template-columns:1fr!important}
             .spstrip-grid>div{
@@ -3846,9 +3846,9 @@ export default function IndexNew() {
 
           /* ── 390px — iPhone SE / Mini ── */
           @media(max-width:390px){
-            .hero-main-section{padding:64px 14px 24px!important}
+            .hero-main-section{padding:44px 14px 24px!important}
             section{padding-left:14px!important;padding-right:14px!important}
-            h1,.hero-h1{font-size:clamp(26px,7.5vw,34px)!important}
+            h1,.hero-h1{font-size:clamp(30px,8.5vw,40px)!important}
           }
         `}</style>
         <script type="application/ld+json">{JSON.stringify({
