@@ -420,10 +420,10 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   const F = "'Plus Jakarta Sans',sans-serif";
   const MONO = "'DM Mono',monospace";
 
-  // Word-level stagger for streaming effect
+  // Word-level stagger for streaming effect — Claude-like smooth token reveal
   let globalWordIdx = 0;
-  const WORD_DELAY = stream ? 0.018 : 0; // 18ms per word for streaming
-  const WORD_DUR = stream ? 0.25 : 0;
+  const WORD_DELAY = stream ? 0.022 : 0; // 22ms per word
+  const WORD_DUR = stream ? 0.12 : 0;
 
   // Inline formatting — bold, code, italic — now with per-word animation
   const inlineFormat = (str: string): React.ReactNode => {
