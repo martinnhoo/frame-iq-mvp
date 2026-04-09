@@ -177,6 +177,8 @@ export default function Demo() {
   const compressImage = (file: File, maxW = 1200, quality = 0.7): Promise<{ base64: string; mediaType: string }> =>
     new Promise((resolve, reject) => {
       const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
       img.onload = () => {
         const scale = Math.min(1, maxW / Math.max(img.width, img.height));
         const canvas = document.createElement("canvas");
@@ -184,11 +186,42 @@ export default function Demo() {
         canvas.height = Math.round(img.height * scale);
         canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        URL.revokeObjectURL(objectUrl);
         resolve({ base64: dataUrl.split(",")[1], mediaType: "image/jpeg" });
       };
-      img.onerror = () => reject(new Error("Failed to load image"));
-      img.src = URL.createObjectURL(file);
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Failed to load image"));
+      };
+
+      img.src = objectUrl;
     });
+
+  const handleDemoResponse = (payload: unknown) => {
+    const response = payload as {
+      ok?: boolean;
+      error?: string;
+      full?: boolean;
+      score?: number;
+      verdict?: string;
+      hook?: string;
+      message?: string;
+      cta?: string;
+      actions?: string[];
+    } | null;
+
+    if (!response) throw new Error("empty_response");
+    if (response.error === "rate_limited") {
+      setRateLimited(true);
+      setPhase("upload");
+      return null;
+    }
+    if (response.ok === false || response.error) {
+      throw new Error(response.error || "analysis_failed");
+    }
+    return response as AnalysisResult;
+  };
 
   /* ── Business logic ──────────────────────────────────────────────────── */
   const analyze = async (file: File) => {
@@ -199,17 +232,18 @@ export default function Demo() {
     reader.onload = () => setPreview(reader.result as string);
     reader.readAsDataURL(file);
     setPhase("analyzing");
+    setRateLimited(false);
 
     try {
       const { base64, mediaType } = await compressImage(file);
-
       const { data, error } = await supabase.functions.invoke("analyze-demo", {
         body: { image_base64: base64, media_type: mediaType, lang },
       });
+
       if (error) throw error;
-      if (data?.error === "rate_limited") { setRateLimited(true); setPhase("upload"); return; }
-      if (data?.error) throw new Error(data.error);
-      setResult(data as AnalysisResult);
+      const parsed = handleDemoResponse(data);
+      if (!parsed) return;
+      setResult(parsed);
       setPhase("result");
     } catch (e) {
       console.error("Demo analysis error:", e);
@@ -219,23 +253,27 @@ export default function Demo() {
   };
 
   const unlockFull = async () => {
-    if (!email || !email.includes("@")) return;
+    if (!email || !email.includes("@") || !preview) return;
     setUnlocking(true);
-    try {
-      const blob = await (await fetch(preview!)).blob();
-      const arrayBuf = await blob.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuf);
-      let binary = "";
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      const base64 = btoa(binary);
 
+    try {
+      const blob = await (await fetch(preview)).blob();
+      const imageFile = new File([blob], "demo-upload.jpg", { type: blob.type || "image/jpeg" });
+      const { base64, mediaType } = await compressImage(imageFile);
       const { data, error } = await supabase.functions.invoke("analyze-demo", {
-        body: { image_base64: base64, media_type: blob.type || "image/jpeg", lang, email },
+        body: { image_base64: base64, media_type: mediaType, lang, email },
       });
+
       if (error) throw error;
-      setResult(data as AnalysisResult);
-    } catch { toast.error(t.error); }
-    finally { setUnlocking(false); }
+      const parsed = handleDemoResponse(data);
+      if (!parsed) return;
+      setResult(parsed);
+    } catch (e) {
+      console.error("Demo unlock error:", e);
+      toast.error(t.error);
+    } finally {
+      setUnlocking(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) analyze(f); };
