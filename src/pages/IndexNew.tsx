@@ -2184,15 +2184,17 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         <br />
         {line2}
         <br />
-        <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>{line3prefix}</span>
-        <span className="hero-text-shimmer" style={{
-          display: 'inline-block',
-          fontWeight: 800,
-          opacity: fade ? 1 : 0,
-          transform: fade ? 'translateY(0)' : 'translateY(6px)',
-          transition: 'opacity 0.22s ease, transform 0.22s ease',
-        }}>
-          {verbs[verbIdx]}
+        <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>{line3prefix}</span>
+          <span className="hero-text-shimmer" style={{
+            display: 'inline-block',
+            fontWeight: 800,
+            opacity: fade ? 1 : 0,
+            transform: fade ? 'translateY(0)' : 'translateY(6px)',
+            transition: 'opacity 0.22s ease, transform 0.22s ease',
+          }}>
+            {verbs[verbIdx]}
+          </span>
         </span>
       </h1>
 
