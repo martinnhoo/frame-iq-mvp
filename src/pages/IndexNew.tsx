@@ -3585,6 +3585,10 @@ export default function IndexNew() {
     detectLang().then(l => { setLang(l); setReady(true); });
   }, []);
 
+  // Premium effects
+  useScrollReveal();
+  usePremiumCards();
+
   const t = T[lang];
   const handleCTA = () => {
     if (ctaLoading) return;
