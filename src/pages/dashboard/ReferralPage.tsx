@@ -101,7 +101,7 @@ export default function ReferralPage() {
   const lang = (language === "pt" || language === "es" ? language : "en") as keyof typeof t;
   const tx = t[lang];
 
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(ctx.profile?.referral_code || "");
   const [totalRefs, setTotalRefs] = useState(0);
   const [bonusAnalyses, setBonusAnalyses] = useState(0);
   const [alreadyReferred, setAlreadyReferred] = useState(false);
