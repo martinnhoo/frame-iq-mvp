@@ -2415,7 +2415,7 @@ function FeatureTabs() {
     <section style={{ background: "#0d1117", padding: "96px 0", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(13,162,231,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(13,162,231,0.03) 1px, transparent 1px)", backgroundSize: "60px 60px", pointerEvents: "none" }} />
       <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 24px", position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
+        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
           <p style={{ color: "#0da2e7", fontFamily: "monospace", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase" as const, marginBottom: 16 }}>conta real · dados reais</p>
           <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#fff", margin: "0 0 16px", lineHeight: 1.15, letterSpacing: "-0.02em" }}>O que você ganha usando o AdBrief</h2>
           <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 17, maxWidth: 480, margin: "0 auto", lineHeight: 1.5 }}>Resultados reais de gestores com conta conectada.</p>
@@ -2441,7 +2441,7 @@ function FeatureTabs() {
           </div>
           <div style={{ position: "relative" }}>
             <div style={{ position: "absolute", inset: -20, background: "radial-gradient(ellipse at center, rgba(13,162,231,0.08) 0%, transparent 70%)", borderRadius: 20, pointerEvents: "none" }} />
-            <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid hsl(224,22%,20%)", boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}>
+            <div className="gradient-border-animated" style={{ position: "relative", borderRadius: 12, overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}>
               <div style={{ background: "hsl(224,18%,10%)", borderBottom: "1px solid hsl(224,20%,16%)", padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ display: "flex", gap: 6 }}>
                   {["#ff5f57","#ffbd2e","#28c840"].map(c => (<div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />))}
@@ -2520,13 +2520,13 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
       <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "80%", height: 1, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.08), transparent)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 1060, margin: "0 auto", position: "relative" }}>
 
-        <div style={{ textAlign: "center", marginBottom: 44 }}>
+        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(14,165,233,0.65)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3.6vw,40px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "10px 0 8px", color: "#fff" }}>{t.tools_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 14.5, color: "rgba(255,255,255,0.42)", maxWidth: 380, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 16, alignItems: "start" }} className="tools-bento">
+        <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 16, alignItems: "start" }} className="tools-bento scroll-reveal scroll-reveal-delay-1">
 
           {/* Left nav */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -2850,7 +2850,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
 
         {/* Label */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 20 }}>
+        <div className="scroll-reveal" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 20 }}>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
           <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(255,255,255,0.3)", textTransform: "uppercase" as const, margin: 0 }}>
             {c.label}
@@ -2859,12 +2859,12 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         </div>
 
         {/* Title */}
-        <h2 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(24px,3.5vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, textAlign: "center", color: "#fff", whiteSpace: "pre-line" as const, marginBottom: 48 }}>
+        <h2 className="scroll-reveal scroll-reveal-delay-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(24px,3.5vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, textAlign: "center", color: "#fff", whiteSpace: "pre-line" as const, marginBottom: 48 }}>
           {c.title}
         </h2>
 
         {/* 2-column grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "clamp(16px,2.5vw,40px)", alignItems: "center" }} className="pain-grid">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "clamp(16px,2.5vw,40px)", alignItems: "center" }} className="pain-grid scroll-reveal scroll-reveal-delay-2">
 
           {/* PAINS column */}
           <div className="pain-col-left" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -2954,14 +2954,14 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
       <div style={{ position: "absolute", top: "-10%", left: "-5%", width: "50%", height: "70%", background: "radial-gradient(ellipse at 20% 30%, rgba(14,165,233,0.06) 0%, transparent 60%)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: 0, right: 0, width: "40%", height: "50%", background: "radial-gradient(ellipse at 80% 80%, rgba(14,165,233,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
+        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.how_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.how_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 400, margin: "0 auto" }}>{t.how_sub}</p>
         </div>
-        <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        <div className="how-grid scroll-reveal scroll-reveal-delay-1" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {steps.map((step, i) => (
-            <div key={i} style={{ padding: "32px 28px", borderRadius: 20, background: "rgba(255,255,255,0.05)", border: `1px solid ${step.color}22`, position: "relative", overflow: "hidden", transition: "border-color 0.2s, background 0.2s, transform 0.2s", display: "flex", flexDirection: "column", boxShadow: `0 0 40px ${step.color}08` }}
+            <div key={i} className="premium-card" style={{ padding: "32px 28px", borderRadius: 20, background: "rgba(255,255,255,0.05)", border: `1px solid ${step.color}22`, position: "relative", overflow: "hidden", transition: "border-color 0.2s, background 0.2s, transform 0.2s", display: "flex", flexDirection: "column", boxShadow: `0 0 40px ${step.color}08` }}
               onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${step.color}30`; el.style.background = 'rgba(255,255,255,0.06)'; }}
               onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.background = 'rgba(255,255,255,0.04)'; }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: "rgba(255,255,255,0.55)" }}>{step.icon}</div>
@@ -2992,7 +2992,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
     <Section id="for" bg="default">
       <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "55%", background: "radial-gradient(ellipse at 90% 0%, rgba(99,102,241,0.06) 0%, transparent 55%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 20 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
@@ -3057,7 +3057,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
   return (
     <Section bg="dark">
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
-        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", marginBottom: 52, textAlign: "center" }}>
+        <div className="scroll-reveal" style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", marginBottom: 52, textAlign: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(39,175,225,0.15)", border: "1px solid rgba(39,175,225,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -3077,9 +3077,9 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }} className="telegram-grid">
+        <div className="scroll-reveal scroll-reveal-delay-1 telegram-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
           {items.map((item, i) => (
-            <div key={i} style={{ padding: "22px 24px", borderRadius: 16, background: "rgba(39,175,225,0.04)", border: "1px solid rgba(39,175,225,0.12)", display: "flex", gap: 16, alignItems: "flex-start" }}>
+            <div key={i} className="premium-card" style={{ padding: "22px 24px", borderRadius: 16, background: "rgba(39,175,225,0.04)", border: "1px solid rgba(39,175,225,0.12)", display: "flex", gap: 16, alignItems: "flex-start" }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(39,175,225,0.15)", border: "1px solid rgba(39,175,225,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{item.icon}</div>
               <div>
                 <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#e2f4ff", margin: "0 0 5px", letterSpacing: "-0.01em" }}>{item.title}</p>
@@ -3192,7 +3192,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
       {/* Glow no topo do pricing — overlay interno */}
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 280, background: "radial-gradient(ellipse 60% 100% at 50% 0%, rgba(14,165,233,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.pricing_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(24px,2.8vw,38px)", fontWeight: 800, letterSpacing: "-0.03em", margin: "10px 0 10px", color: "#fff" }}>{t.pricing_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 420, margin: "0 auto 24px" }}>{t.pricing_sub}</p>
@@ -3211,9 +3211,9 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
             <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: annual ? "rgba(52,211,153,0.15)" : "rgba(52,211,153,0.06)", color: annual ? "#34d399" : "rgba(52,211,153,0.5)", border: "1px solid rgba(52,211,153,0.2)", transition: "all 0.2s" }}>{lang === "pt" ? "Economize 20%" : lang === "es" ? "Ahorra 20%" : "Save 20%"}</span>
           </div>
         </div>
-        <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+        <div className="pricing-grid scroll-reveal scroll-reveal-delay-1" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           {plans.map((plan, i) => (
-            <div key={i} style={{
+            <div key={i} className={`premium-card ${plan.highlight ? 'pricing-highlight' : ''}`} style={{
               padding: "28px 24px", borderRadius: 18,
               background: plan.highlight
                 ? "linear-gradient(135deg, rgba(14,165,233,0.10) 0%, rgba(99,102,241,0.08) 100%)"
@@ -3225,6 +3225,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
               transform: plan.highlight ? "scale(1.03)" : "scale(1)",
               zIndex: plan.highlight ? 2 : 1,
               boxShadow: plan.highlight ? "0 0 40px rgba(14,165,233,0.12), 0 24px 48px rgba(0,0,0,0.3)" : "none",
+              overflow: "visible",
             }}>
               {plan.badge && (
                 <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", borderRadius: 6, padding: "4px 14px", whiteSpace: "nowrap" as const, boxShadow: "0 0 16px rgba(14,165,233,0.4)" }}>
@@ -3281,11 +3282,11 @@ function FAQ({ t }: { t: Record<string, string> }) {
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "60%", height: "40%", background: "radial-gradient(ellipse at 50% 0%, rgba(14,165,233,0.03) 0%, transparent 65%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}>
-        <div style={{ textAlign: "center", marginBottom: 44 }}>
+        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.faq_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "14px 0 0", color: "#fff" }}>{t.faq_h2}</h2>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div className="scroll-reveal scroll-reveal-delay-1" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {items.map((item, i) => (
             <div key={i} style={{ borderRadius: 14, background: open === i ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${open === i ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.08)"}`, overflow: "hidden", transition: "all 0.2s" }}>
               <button onClick={() => setOpen(open === i ? null : i)} style={{ width: "100%", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", gap: 14, textAlign: "left" }}>
@@ -3487,7 +3488,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
       {/* Center radial */}
       <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
 
-      <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
+      <div className="scroll-reveal" style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
         {/* Label — mesmo padrão de "O PROBLEMA" */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
@@ -3495,7 +3496,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
         </div>
 
-        <h2 style={{ fontFamily: F, fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line", color: "#fff" }}>{t.final_h2}</h2>
+        <h2 className="hero-text-shimmer" style={{ fontFamily: F, fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line" }}>{t.final_h2}</h2>
         <p style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, color: "rgba(255,255,255,0.5)", marginBottom: 44, lineHeight: 1.65, maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>{t.final_sub}</p>
 
         <CTAButton
