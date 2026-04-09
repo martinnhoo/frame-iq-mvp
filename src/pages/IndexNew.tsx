@@ -2162,18 +2162,18 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
   const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cargo hasta el 4º día · Cancela cuando quieras' : '3 days free · No charge until day 4 · Cancel anytime';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%', position: 'relative' as const }}>
       {/* Eyebrow */}
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content' }}>
+      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content', padding: '6px 14px', borderRadius: 20, background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.2)' }}>
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px #0ea5e9' }} />
-        <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#0ea5e9' }}>
+        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#38bdf8' }}>
           {lang === 'pt' ? 'IA conectada na sua conta' : lang === 'es' ? 'IA conectada en tu cuenta' : 'AI connected to your account'}
         </span>
       </div>
 
-      {/* Headline — massive, bold */}
+      {/* Headline — massive, bold, with glow */}
       <h1 style={{
-        fontFamily: F, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05,
+        fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.05,
         margin: '0 0 20px', color: '#fff',
         fontSize: 'clamp(42px, 4.8vw, 68px)',
       }}>
@@ -2181,11 +2181,10 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         <br />
         {line2}
         <br />
-        <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>{line3prefix}</span>
-        <span style={{
-          background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 60%, #7dd3fc 100%)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+        <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>{line3prefix}</span>
+        <span className="hero-text-shimmer" style={{
           display: 'inline-block',
+          fontWeight: 800,
           opacity: fade ? 1 : 0,
           transform: fade ? 'translateY(0)' : 'translateY(6px)',
           transition: 'opacity 0.22s ease, transform 0.22s ease',
