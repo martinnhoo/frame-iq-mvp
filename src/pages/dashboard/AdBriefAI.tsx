@@ -3462,6 +3462,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       const aid=Date.now()+1;
       setMessages(prev=>[...prev,{role:"assistant",blocks,ts:aid,id:aid}]);
+      // Trigger streaming effect for this message
+      setStreamingMsgId(aid);
+      if(streamTimerRef.current) clearTimeout(streamTimerRef.current);
+      streamTimerRef.current=setTimeout(()=>setStreamingMsgId(null),3500);
       // Increment free usage count locally after successful send
       if(profile?.plan==="free"||!profile?.plan){
         setFreeUsage(prev=>prev?{...prev,count:Math.min(3,prev.count+1)}:{count:1,lastReset:new Date().toISOString().slice(0,10)});
