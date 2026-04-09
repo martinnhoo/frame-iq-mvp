@@ -14,6 +14,7 @@ import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import { UserProfilePanel } from "@/components/dashboard/UserProfilePanel";
+import GamificationWidgets from "@/components/dashboard/GamificationWidgets";
 
 export interface ActivePersona {
   id: string;
@@ -717,6 +718,22 @@ export default function DashboardLayout() {
             }}>
             <AlertCircle className="h-4 w-4 shrink-0" />
             {language === "pt" ? "Pagamento falhou — clique aqui para atualizar seu método de pagamento." : language === "es" ? "Pago fallido — haz clic aquí para actualizar tu método de pago." : "Payment failed — click here to update your payment method."}
+          </div>
+        )}
+
+        {/* Gamification bar — levels, streak, weekly delta */}
+        {user && profile && (
+          <div className="mx-4 mt-3">
+            <GamificationWidgets
+              userId={user.id}
+              dt={dt}
+              totalActions={
+                (usageDetails?.analyses?.used || 0) +
+                (usageDetails?.boards?.used || 0) +
+                (usageDetails?.translations?.used || 0) +
+                ((profile as any)?.total_actions || 0)
+              }
+            />
           </div>
         )}
 
