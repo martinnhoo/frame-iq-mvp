@@ -347,7 +347,7 @@ Deno.serve(async (req) => {
           const email = authData?.user?.email;
           if (!email) continue;
 
-          const firstName = (profile.full_name || authData?.user?.user_metadata?.full_name || "")
+          const firstName = (profile.name || authData?.user?.user_metadata?.full_name || "")
             .split(" ")[0] || "";
 
           const html = buildHtml(tmpl, firstName);
