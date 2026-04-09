@@ -2304,9 +2304,17 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
 
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: 'radial-gradient(ellipse 70% 50% at 55% 35%, rgba(14,165,233,0.08) 0%, transparent 60%), #070d1a' }}>
+    <section className="hero-main-section noise-overlay" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#070d1a' }}>
 
-      {/* Subtle radial glow — violet, not green */}
+      {/* Grid pattern background */}
+      <div className="grid-pattern" style={{ position: 'absolute', inset: 0, opacity: 0.5, pointerEvents: 'none' }} />
+
+      {/* Animated glow orbs */}
+      <div className="hero-glow-orb" style={{ left: '20%', top: '30%', width: 600, height: 600, background: 'rgba(14,165,233,0.12)' }} />
+      <div className="hero-glow-orb" style={{ right: '10%', top: '50%', width: 400, height: 400, background: 'rgba(99,102,241,0.08)', animationDelay: '3s' }} />
+      <div className="hero-glow-orb" style={{ left: '60%', bottom: '10%', width: 300, height: 300, background: 'rgba(6,182,212,0.06)', animationDelay: '1.5s' }} />
+
+      {/* Subtle radial glow */}
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(14,165,233,0.14) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
 
       {/* Grid */}
