@@ -577,7 +577,7 @@ export default function PreflightCheck() {
                 onBlur={e => { (e.currentTarget as HTMLTextAreaElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
               />
             </div>
-          ) : (
+          ) : inputMode === "video" ? (
             /* Video mode */
             <div className="p-4">
               {videoFile ? (
@@ -619,7 +619,7 @@ export default function PreflightCheck() {
                 Requires OPENAI_API_KEY for Whisper transcription
               </p>
             </div>
-          )}
+          ) : null}
 
           {inputMode === "static" && (
             <div className="p-4 space-y-3">
