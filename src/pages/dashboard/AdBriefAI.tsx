@@ -4121,14 +4121,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       (b as any)._pendingTool?null:
                       <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} onSend={send} accountCtx={{product:(profile as any)?.product||selectedPersona?.name,niche:(profile as any)?.industry||(profile as any)?.niche,market:(profile as any)?.market||(lang==="pt"?"BR":lang==="es"?"MX":"US"),platform:connections.includes("meta")?"Meta":undefined}} stream={isLatest}/>
                     )}
-                    {isLatest && (
-                      <span style={{
-                        display:"inline-block", width:2.5, height:16,
-                        background:"#0ea5e9", borderRadius:2,
-                        marginLeft:3, verticalAlign:"middle",
-                        boxShadow:"0 0 8px rgba(14,165,233,0.5), 0 0 2px rgba(14,165,233,0.8)",
-                      }} className="stream-cursor"/>
-                    )}
                   </div>
                 ) : (
                   /* Proactive — sem card, renderiza direto */
@@ -4469,10 +4461,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes bubbleIn{from{opacity:0;transform:translateX(10px) scale(0.95)}to{opacity:1;transform:translateX(0) scale(1)}}
         @keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(0.995)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes cursorBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
-        @keyframes cursorFade{0%,85%{opacity:1}100%{opacity:0}}
-        .stream-cursor{animation:cursorBlink 0.53s step-end infinite, cursorFadeOut 3.5s linear 1 forwards!important;}
-        @keyframes cursorFadeOut{0%,80%{opacity:1}100%{opacity:0;display:none}}
         @keyframes wordReveal{from{opacity:0}to{opacity:1}}
         @keyframes blockSlideIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes typeIn{from{opacity:0;transform:translateY(3px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}}
