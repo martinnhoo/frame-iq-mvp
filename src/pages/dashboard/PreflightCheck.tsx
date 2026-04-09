@@ -477,7 +477,7 @@ function buildDiagnosis(raw: any): string {
 
 export default function PreflightCheck() {
   const { selectedPersona, user } = useOutletContext<DashboardContext>();
-  const { lang } = useLanguage();
+  const { language: lang } = useLanguage();
 
   const [pageState, setPageState] = useState<PageState>("idle");
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null);
@@ -661,9 +661,10 @@ Platform: ${platformsStr}`,
       `}</style>
 
       <PersonaWarningModal
-        isOpen={showPersonaWarning}
+        open={showPersonaWarning}
         onClose={() => { setShowPersonaWarning(false); setPendingRun(false); }}
-        onConfirm={() => { setShowPersonaWarning(false); analyze(); }}
+        onContinue={() => { setShowPersonaWarning(false); analyze(); }}
+        toolName="preflight"
       />
 
       <div style={{ minHeight: "100vh", background: "#080a0f", fontFamily: "Inter,-apple-system,sans-serif" }}>
