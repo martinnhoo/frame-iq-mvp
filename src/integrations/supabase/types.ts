@@ -1209,17 +1209,25 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          cancel_feedback: string | null
+          cancel_reason: string | null
           created_at: string
           current_period_end: string | null
           dashboard_count: number | null
           dashboard_reset_date: string | null
           email: string | null
           email_lifecycle_sent: Json | null
+          health_risk_flagged: boolean | null
+          health_score: number | null
+          health_updated_at: string | null
           id: string
           last_ai_action_at: string | null
+          last_login_at: string | null
+          login_streak: number | null
           name: string | null
           onboarding_completed: boolean | null
           onboarding_data: Json | null
+          pause_until: string | null
           plan: string
           plan_started_at: string | null
           preferred_language: string | null
@@ -1230,22 +1238,31 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_status: string | null
+          total_actions: number | null
           trial_end: string | null
           usage_alert_flags: Json | null
         }
         Insert: {
           avatar_url?: string | null
+          cancel_feedback?: string | null
+          cancel_reason?: string | null
           created_at?: string
           current_period_end?: string | null
           dashboard_count?: number | null
           dashboard_reset_date?: string | null
           email?: string | null
           email_lifecycle_sent?: Json | null
+          health_risk_flagged?: boolean | null
+          health_score?: number | null
+          health_updated_at?: string | null
           id: string
           last_ai_action_at?: string | null
+          last_login_at?: string | null
+          login_streak?: number | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_data?: Json | null
+          pause_until?: string | null
           plan?: string
           plan_started_at?: string | null
           preferred_language?: string | null
@@ -1256,22 +1273,31 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
+          total_actions?: number | null
           trial_end?: string | null
           usage_alert_flags?: Json | null
         }
         Update: {
           avatar_url?: string | null
+          cancel_feedback?: string | null
+          cancel_reason?: string | null
           created_at?: string
           current_period_end?: string | null
           dashboard_count?: number | null
           dashboard_reset_date?: string | null
           email?: string | null
           email_lifecycle_sent?: Json | null
+          health_risk_flagged?: boolean | null
+          health_score?: number | null
+          health_updated_at?: string | null
           id?: string
           last_ai_action_at?: string | null
+          last_login_at?: string | null
+          login_streak?: number | null
           name?: string | null
           onboarding_completed?: boolean | null
           onboarding_data?: Json | null
+          pause_until?: string | null
           plan?: string
           plan_started_at?: string | null
           preferred_language?: string | null
@@ -1282,6 +1308,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
+          total_actions?: number | null
           trial_end?: string | null
           usage_alert_flags?: Json | null
         }
