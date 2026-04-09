@@ -606,14 +606,25 @@ Platform: ${platformsStr}`,
         });
         if (chatError) throw chatError;
         // Parse response from chat blocks
+        // adbrief-ai-chat returns the JSON as blocks[0] directly (not wrapped in text block)
         const blocks = chatData?.blocks || chatData?.response?.blocks || [];
-        const textBlock = blocks.find((b: any) => b.type === "text");
-        const rawText = textBlock?.content || chatData?.content || "{}";
-        try {
-          rawData = JSON.parse(rawText.replace(/```json|```/g, "").trim());
-        } catch {
-          // Fallback: build minimal result from text
-          rawData = { verdict: "REVIEW", verdict_reason: rawText.slice(0, 120), top_fixes: [], strengths: [] };
+        const firstBlock = blocks[0];
+
+        if (firstBlock?.verdict) {
+          // Direct JSON object as first block (normal case)
+          rawData = firstBlock;
+        } else if (typeof firstBlock?.content === "string") {
+          // Text block with JSON string inside
+          try {
+            rawData = JSON.parse(firstBlock.content.replace(/```json|```/g, "").trim());
+          } catch {
+            rawData = { verdict: "REVIEW", verdict_reason: firstBlock.content.slice(0, 120), top_fixes: [], strengths: [] };
+          }
+        } else if (chatData?.verdict) {
+          // Flat response
+          rawData = chatData;
+        } else {
+          rawData = { verdict: "REVIEW", verdict_reason: "Análise concluída.", top_fixes: [], strengths: [] };
         }
       }
 
