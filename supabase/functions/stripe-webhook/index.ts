@@ -151,7 +151,22 @@ Deno.serve(async (req) => {
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        logStep("Payment failed", { customerId: invoice.customer, invoiceId: invoice.id });
+        const failedCustomerId = invoice.customer as string;
+        logStep("Payment failed", { customerId: failedCustomerId, invoiceId: invoice.id });
+
+        // Flag user as past_due for recovery flow
+        const { data: failedProfiles } = await supabase
+          .from("profiles")
+          .select("id, email")
+          .eq("stripe_customer_id", failedCustomerId)
+          .limit(1);
+
+        if (failedProfiles && failedProfiles.length > 0) {
+          await supabase.from("profiles").update({
+            subscription_status: "past_due",
+          } as any).eq("id", failedProfiles[0].id);
+          logStep("User flagged past_due", { userId: failedProfiles[0].id, email: failedProfiles[0].email });
+        }
         break;
       }
 

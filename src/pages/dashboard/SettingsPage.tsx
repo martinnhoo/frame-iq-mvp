@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, LogOut, Shield, Brain } from "lucide-react";
+import { Loader2, LogOut, Shield, Brain, XCircle } from "lucide-react";
+import { CancelModal } from "@/components/dashboard/CancelModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const SettingsPage = () => {
@@ -21,6 +22,7 @@ const SettingsPage = () => {
   const [name, setName] = useState(profile?.name || "");
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const [aiTone, setAiTone] = useState<"direto" | "didático" | "técnico">(() => {
     return storage.get("adbrief_ai_tone", "direto") as any
   });
@@ -190,9 +192,15 @@ const SettingsPage = () => {
               {t("upgrade")}
             </Button>
           ) : (
-            <Button variant="outline" className="border-border" onClick={handleBillingPortal} disabled={portalLoading}>
-              {portalLoading ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Loading...</> : t("billing")}
-            </Button>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" className="border-border" onClick={handleBillingPortal} disabled={portalLoading}>
+                {portalLoading ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Loading...</> : t("billing")}
+              </Button>
+              <Button variant="outline" className="border-border text-red-400 hover:text-red-300 hover:border-red-400/30" onClick={() => setCancelOpen(true)}>
+                <XCircle className="h-3.5 w-3.5 mr-2" />
+                {lang === "pt" ? "Cancelar plano" : lang === "es" ? "Cancelar plan" : "Cancel plan"}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -344,6 +352,8 @@ const SettingsPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      <CancelModal open={cancelOpen} onClose={() => setCancelOpen(false)} plan={profile?.plan || "free"} />
     </div>
   );
 };

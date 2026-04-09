@@ -175,6 +175,31 @@ export default function DashboardLayout() {
 
         setProfile(profileData);
 
+        // ── Track login streak ──────────────────────────────────────────
+        // Fire-and-forget: update last_login_at + compute streak
+        (async () => {
+          try {
+            const today = new Date().toISOString().slice(0, 10);
+            const lastLogin = (profileData as any).last_login_at;
+            const lastDay = lastLogin ? new Date(lastLogin).toISOString().slice(0, 10) : null;
+            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+            let newStreak = (profileData as any).login_streak || 0;
+            if (lastDay === today) {
+              // already logged in today, no update
+            } else if (lastDay === yesterday) {
+              newStreak += 1;
+            } else {
+              newStreak = 1; // streak reset
+            }
+            if (lastDay !== today) {
+              await supabase.from("profiles").update({
+                last_login_at: new Date().toISOString(),
+                login_streak: newStreak,
+              } as any).eq("id", session.user.id);
+            }
+          } catch {}
+        })();
+
         // Sync user's preferred language from profile (without overriding explicit localStorage choice)
         if (profileData.preferred_language) {
           const localLang = storage.get("adbrief_language");
@@ -680,6 +705,18 @@ export default function DashboardLayout() {
           <div className="mx-4 mt-3 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
             <AlertCircle className="h-4 w-4 shrink-0" />
             {dt("ov_limit_reached")}
+          </div>
+        )}
+        {(profile as any)?.subscription_status === "past_due" && (
+          <div className="mx-4 mt-3 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm cursor-pointer"
+            onClick={async () => {
+              try {
+                const { data } = await supabase.functions.invoke("customer-portal");
+                if (data?.url) window.location.href = data.url;
+              } catch {}
+            }}>
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {language === "pt" ? "Pagamento falhou — clique aqui para atualizar seu método de pagamento." : language === "es" ? "Pago fallido — haz clic aquí para actualizar tu método de pago." : "Payment failed — click here to update your payment method."}
           </div>
         )}
 
