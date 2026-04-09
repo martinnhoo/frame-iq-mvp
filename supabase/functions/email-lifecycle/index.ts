@@ -301,7 +301,7 @@ Deno.serve(async (req) => {
           .eq("platform", "meta");
         const hasMetaConnection = (metaCount ?? 0) > 0;
 
-        const lang = detectLang(profile.language);
+        const lang = detectLang(profile.preferred_language);
 
         // Find the right step for this user
         for (const step of STEPS) {
