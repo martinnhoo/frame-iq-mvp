@@ -64,7 +64,7 @@ const MARKETS = [
   { code: "GB", flag: "🇬🇧", name: "UK" },
   { code: "ES", flag: "🇪🇸", name: "Spain" },
   { code: "AR", flag: "🇦🇷", name: "Argentina" },
-  { code: "GLOBAL", flag: "🌍", name: "Global" },
+  { code: "GLOBAL", flag: "", name: "Global" },
 ];
 
 const LANGUAGES = [
@@ -190,7 +190,7 @@ function PersonaDetailView({
 
       {/* Avatar + Name */}
       <div className="flex flex-col items-center gap-3 py-4">
-        <Persona3DAvatar emoji={draft.avatar_emoji || "👤"} name={draft.name} gender={draft.gender || ""} size="lg" />
+        <Persona3DAvatar emoji={draft.avatar_emoji || ""} name={draft.name} gender={draft.gender || ""} size="lg" />
         {editing ? (
           <input value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))}
             className="text-center text-lg font-bold text-white bg-transparent border-b border-white/20 outline-none" />
@@ -531,10 +531,10 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             const isMaker = currentPlan === "maker";
 
             const FEATURES: Record<string, { icon: string; label: string }[]> = {
-              free:   [{ icon:"💬", label: language==="pt"?"5 mensagens IA/dia":"5 AI messages/day" }, { icon:"🛠️", label: language==="pt"?"Todas as tools (com limites)":"All tools (limited usage)" }, { icon:"🔗", label: language==="pt"?"Conectar conta de anúncios":"Connect Meta Ads or Google Ads" }],
-              maker:  [{ icon:"💬", label: language==="pt"?"50 mensagens IA/dia":"50 AI messages/day" }, { icon:"🔗", label: language==="pt"?"1 conta de anúncios":"1 ad account" }, { icon:"🛠️", label: language==="pt"?"Ferramentas básicas":"Basic tools" }],
-              pro:    [{ icon:"💬", label: language==="pt"?"200 mensagens IA/dia":"200 AI messages/day" }, { icon:"🔗", label: language==="pt"?"3 contas de anúncios":"3 ad accounts" }, { icon:"⚡", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"🌍", label: language==="pt"?"Multi-mercado":"Multi-market" }, { icon:"📊", label: language==="pt"?"Dashboards avançados":"Advanced dashboards" }],
-              studio: [{ icon:"∞", label: language==="pt"?"Mensagens ilimitadas":"Unlimited messages" }, { icon:"🔗", label: language==="pt"?"Contas ilimitadas":"Unlimited accounts" }, { icon:"⚡", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"🏢", label: language==="pt"?"Workspace agência":"Agency workspace" }, { icon:"🚀", label: language==="pt"?"Prioridade máxima":"Maximum priority" }],
+              free:   [{ icon:"", label: language==="pt"?"5 mensagens IA/dia":"5 AI messages/day" }, { icon:"", label: language==="pt"?"Todas as tools (com limites)":"All tools (limited usage)" }, { icon:"", label: language==="pt"?"Conectar conta de anúncios":"Connect Meta Ads or Google Ads" }],
+              maker:  [{ icon:"", label: language==="pt"?"50 mensagens IA/dia":"50 AI messages/day" }, { icon:"", label: language==="pt"?"1 conta de anúncios":"1 ad account" }, { icon:"", label: language==="pt"?"Ferramentas básicas":"Basic tools" }],
+              pro:    [{ icon:"", label: language==="pt"?"200 mensagens IA/dia":"200 AI messages/day" }, { icon:"", label: language==="pt"?"3 contas de anúncios":"3 ad accounts" }, { icon:"", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"", label: language==="pt"?"Multi-mercado":"Multi-market" }, { icon:"", label: language==="pt"?"Dashboards avançados":"Advanced dashboards" }],
+              studio: [{ icon:"∞", label: language==="pt"?"Mensagens ilimitadas":"Unlimited messages" }, { icon:"", label: language==="pt"?"Contas ilimitadas":"Unlimited accounts" }, { icon:"", label: language==="pt"?"Todas as ferramentas":"All tools" }, { icon:"", label: language==="pt"?"Workspace agência":"Agency workspace" }, { icon:"", label: language==="pt"?"Prioridade máxima":"Maximum priority" }],
             };
 
             const planKey = ["maker","pro","studio"].includes(currentPlan) ? currentPlan : (["creator"].includes(currentPlan) ? "maker" : ["starter"].includes(currentPlan) ? "pro" : ["scale"].includes(currentPlan) ? "studio" : "free");
@@ -599,7 +599,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           } catch {}
                           setTelegramLoading(false);
                         }} style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.3)", color: "#0ea5e9", fontSize: 12, fontWeight: 700, fontFamily: M, cursor: telegramLoading ? "not-allowed" : "pointer" }}>
-                          {telegramLoading ? "..." : "✈️ Conectar Telegram"}
+                          {telegramLoading ? "..." : "Conectar Telegram"}
                         </button>
                       </div>
                     )}
@@ -617,7 +617,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                   </div>
                   {(isPro || isStudio) && (
                     <p style={{ fontFamily: M, fontSize: 12, color: "#34d399", fontWeight: 600, marginBottom: 10 }}>
-                      {isStudio ? "🏆 " : "⭐ "}{language==="pt" ? (isStudio?"Você está no topo! Máximo poder da IA.":"Ótima escolha! Você tem acesso a tudo.") : (isStudio?"You're at the top! Maximum AI power.":"Great choice! You have access to everything.")}
+                      {isStudio ? " " : " "}{language==="pt" ? (isStudio?"Você está no topo! Máximo poder da IA.":"Ótima escolha! Você tem acesso a tudo.") : (isStudio?"You're at the top! Maximum AI power.":"Great choice! You have access to everything.")}
                     </p>
                   )}
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -722,13 +722,13 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                               <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "#34d399", margin: 0 }}>↑ {s0.winners_count} {language === "pt" ? "escalar" : "scale"}</p>
                             </div>}
                             {s0.losers_count > 0 && <div style={{ flex: 1, padding: "6px 8px", borderRadius: 7, background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.18)", textAlign: "center" as const }}>
-                              <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "#f87171", margin: 0 }}>⏸ {s0.losers_count} {language === "pt" ? "pausar" : "pause"}</p>
+                              <p style={{ fontFamily: M, fontSize: 12, fontWeight: 700, color: "#f87171", margin: 0 }}> {s0.losers_count} {language === "pt" ? "pausar" : "pause"}</p>
                             </div>}
                           </div>
                         )}
                         {s0.ai_insight && (
                           <div style={{ padding: "8px 14px 12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                            <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.60)", lineHeight: 1.55, margin: 0 }}>💡 {s0.ai_insight}</p>
+                            <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.60)", lineHeight: 1.55, margin: 0 }}> {s0.ai_insight}</p>
                           </div>
                         )}
                         {intel.snaps.length > 1 && (
@@ -829,7 +829,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                             <div key={i} style={{ padding: "9px 10px", borderRadius: 8, marginBottom: 3, background: "rgba(255,255,255,0.025)", display: "flex", gap: 8, alignItems: "flex-start" }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <p style={{ fontFamily: M, fontSize: 12, fontWeight: 600, color: p.is_winner ? "#34d399" : "rgba(238,240,246,0.55)", margin: 0 }}>
-                                  {p.is_winner ? "✓ " : ""}{translatePatternKey(p.pattern_key)}
+                                  {p.is_winner ? " " : ""}{translatePatternKey(p.pattern_key)}
                                 </p>
                                 {p.insight_text && <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.38)", margin: "2px 0 0", lineHeight: 1.4 }}>{p.insight_text.slice(0, 75)}</p>}
                                 <div style={{ display: "flex", gap: 7, marginTop: 3 }}>

@@ -6,7 +6,7 @@ const m = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" } as const;
 
 const LEVELS = [
   {
-    n: 1, icon: "👁️", name: "Observer", min: 0, color: "#94a3b8",
+    n: 1, icon: "", name: "Observer", min: 0, color: "#94a3b8",
     desc: "You just arrived. The tools are open. Start exploring.",
     tasks: [
       "Run your first hook analysis",
@@ -15,7 +15,7 @@ const LEVELS = [
     ],
   },
   {
-    n: 2, icon: "🔍", name: "Analyst", min: 5, color: "#60a5fa",
+    n: 2, icon: "", name: "Analyst", min: 5, color: "#60a5fa",
     desc: "You've started scoring your work. You're building signal.",
     tasks: [
       "Complete 5 analyses or boards",
@@ -24,7 +24,7 @@ const LEVELS = [
     ],
   },
   {
-    n: 3, icon: "🎯", name: "Strategist", min: 20, color: "#0ea5e9",
+    n: 3, icon: "", name: "Strategist", min: 20, color: "#0ea5e9",
     desc: "You think in systems. Your data starts shaping your briefs.",
     tasks: [
       "Reach 20 total actions across all tools",
@@ -34,7 +34,7 @@ const LEVELS = [
     ],
   },
   {
-    n: 4, icon: "🎬", name: "Producer", min: 50, color: "#06b6d4",
+    n: 4, icon: "", name: "Producer", min: 50, color: "#06b6d4",
     desc: "You're running at volume. The loop is feeding itself.",
     tasks: [
       "Reach 50 total actions",
@@ -44,7 +44,7 @@ const LEVELS = [
     ],
   },
   {
-    n: 5, icon: "👑", name: "Director", min: 100, color: "#fbbf24",
+    n: 5, icon: "", name: "Director", min: 100, color: "#fbbf24",
     desc: "You run creative like a system, not a gut feeling. The AI knows your account.",
     tasks: [
       "Reach 100 total actions",

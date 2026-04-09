@@ -98,7 +98,7 @@ export default function PersonaGateModal({ open, onClose, intent = "generic" }: 
                 <div className="text-center space-y-2">
                   <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-2"
                     style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(236,72,153,0.15))", border: "1px solid rgba(14,165,233,0.3)" }}>
-                    <span className="text-2xl">🎯</span>
+                    <span className="text-2xl"></span>
                   </div>
                   <h2 className="text-xl font-extrabold text-white" style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.03em" }}>
                     Ative uma persona primeiro

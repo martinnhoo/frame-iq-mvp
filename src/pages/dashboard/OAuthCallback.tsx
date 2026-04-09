@@ -96,7 +96,7 @@ export default function OAuthCallback() {
           const dest = `/dashboard/accounts?connected=${platform || ""}`;
           const savedId = data?.saved_id;
           setMessage(platform === "google"
-            ? `Google Ads conectado${savedId ? " ✓" : ""}. Vá em Contas → Google Ads → insira seu Customer ID.`
+            ? `Google Ads conectado${savedId ? " " : ""}. Vá em Contas → Google Ads → insira seu Customer ID.`
             : `${pl.name} connected.`);
           setTimeout(() => navigate(dest), 2500);
           return;

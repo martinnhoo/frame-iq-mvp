@@ -24,7 +24,7 @@ const getFunnelStages = (dt: (key: any) => string) => [
 ];
 
 const MARKETS = [
-  { code: "ANY", flag: "🌍", name: "Global" },
+  { code: "ANY", flag: "", name: "Global" },
   { code: "US", flag: "🇺🇸", name: "United States" },
   { code: "BR", flag: "🇧🇷", name: "Brazil" },
   { code: "MX", flag: "🇲🇽", name: "Mexico" },

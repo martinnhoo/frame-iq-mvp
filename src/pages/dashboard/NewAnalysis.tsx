@@ -463,7 +463,7 @@ const NewAnalysis = () => {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-white text-sm truncate">{file.name}</p>
                     <p className="text-xs mt-0.5" style={{ color: needsExtraction(file) ? "#fbbf24" : "rgba(255,255,255,0.3)" }}>
-                      {(file.size / (1024 * 1024)).toFixed(1)} MB{needsExtraction(file) && " · ⚡ Audio will be extracted automatically"}
+                      {(file.size / (1024 * 1024)).toFixed(1)} MB{needsExtraction(file) && " ·  Audio will be extracted automatically"}
                     </p>
                   </div>
                   <button onClick={e => { e.stopPropagation(); setFile(null); }} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/50 hover:text-red-400 hover:bg-red-400/10 transition-all">
@@ -502,7 +502,7 @@ const NewAnalysis = () => {
 
             {!selectedPersona && (
               <p className="text-center text-[11px] text-white/45 -mt-1">
-                💡{" "}
+                {" "}
                 <button onClick={() => setShowPersonaGate(true)} className="text-sky-400/70 hover:text-sky-400 underline transition-colors">
                   Ative uma persona
                 </button>{" "}

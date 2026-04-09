@@ -59,7 +59,7 @@ export class SectionBoundary extends Component<Props, State> {
           background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
           display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16,
         }}>
-          <span style={{ fontSize: 20 }}>⚠</span>
+          <span style={{ fontSize: 20 }}></span>
         </div>
         <p style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           Erro em {label}

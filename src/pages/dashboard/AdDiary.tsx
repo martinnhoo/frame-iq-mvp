@@ -522,7 +522,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
           {(campaignFilter !== "all" || platformFilter !== "all") && (
             <button onClick={() => { setCampaignFilter("all"); setPlatformFilter("all"); }}
               style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid var(--border-subtle)", background: "transparent", color: "var(--text-muted)", fontSize: 12, fontFamily: F, cursor: "pointer" }}>
-              ✕ Limpar filtros
+               Limpar filtros
             </button>
           )}
         </div>
@@ -531,8 +531,8 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       {/* Loading */}
       {syncError && (
         <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 14px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, marginBottom:12 }}>
-          <span style={{ fontSize:12, color:"#f87171", flex:1 }}>⚠ {syncError}</span>
-          <button onClick={()=>setSyncError(null)} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.3)", cursor:"pointer", fontSize:14, padding:0 }}>✕</button>
+          <span style={{ fontSize:12, color:"#f87171", flex:1 }}> {syncError}</span>
+          <button onClick={()=>setSyncError(null)} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.3)", cursor:"pointer", fontSize:14, padding:0 }}></button>
         </div>
       )}
 

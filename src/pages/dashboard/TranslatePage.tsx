@@ -30,11 +30,11 @@ const LANGUAGES = [
 ];
 
 const TONES = [
-  { id: "Aggressive / Urgent", label: "🔥 Urgent" },
-  { id: "Conversational",      label: "💬 Casual" },
-  { id: "Professional",        label: "💼 Pro" },
-  { id: "Playful",             label: "✨ Playful" },
-  { id: "Emotional",           label: "❤️ Emotional" },
+  { id: "Aggressive / Urgent", label: "Urgent" },
+  { id: "Conversational",      label: "Casual" },
+  { id: "Professional",        label: "Pro" },
+  { id: "Playful",             label: "Playful" },
+  { id: "Emotional",           label: "Emotional" },
 ];
 
 const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
@@ -309,7 +309,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
               <p className="text-xs mt-0.5" style={{ color: needsExtraction(file) ? "#fbbf24" : "rgba(255,255,255,0.4)" }}>
                 {(file.size / 1024 / 1024).toFixed(1)} MB
                 {needsExtraction(file)
-                  ? " · ⚡ Audio will be extracted automatically"
+                  ? " ·  Audio will be extracted automatically"
                   : " · Click to replace"}
               </p>
             </div>
@@ -327,7 +327,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
             <p className="text-white font-bold text-base mb-1" style={syne}>Drop your video here</p>
             <p className="text-white/40 text-sm">or click to browse · MP4, MOV, AVI, MP3, WAV</p>
             <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
-              {["🎬 TikTok", "📱 Reels", "▶️ YouTube", "📣 Voiceover"].map(t => (
+              {["TikTok", "Reels", "YouTube", "Voiceover"].map(t => (
                 <span key={t} className="text-xs text-white/40 px-2 py-1 rounded-lg" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>{t}</span>
               ))}
             </div>
@@ -472,7 +472,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
       const rawResults = data?.multi ?? [{ lang: targetLangs[0], translated_text: data?.translated_text, cultural_adaptation: data?.cultural_adaptation }];
       setResults(rawResults.map((r: { lang: string; translated_text: string; cultural_adaptation: string }) => {
         const l = LANGUAGES.find(ll => ll.code === r.lang);
-        return { lang: r.lang, flag: l?.flag || "🌍", langName: l?.name || r.lang, market: l?.market || "", translated_text: r.translated_text, cultural_adaptation: r.cultural_adaptation, copied: false };
+        return { lang: r.lang, flag: l?.flag || "", langName: l?.name || r.lang, market: l?.market || "", translated_text: r.translated_text, cultural_adaptation: r.cultural_adaptation, copied: false };
       }));
     } catch (err: unknown) {
       toast.error(`Failed: ${err instanceof Error ? err.message : String(err)}`);

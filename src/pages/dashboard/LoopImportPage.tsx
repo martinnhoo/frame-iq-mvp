@@ -288,8 +288,8 @@ export default function LoopImportPage() {
             <span style={{ ...j, fontSize: 14, fontWeight: 800, color: "#fff" }}>Import Complete</span>
           </div>
           <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
-            <span style={{ ...m, fontSize: 12, color: "#34d399" }}>✓ {results.parsed} parsed</span>
-            {results.skipped > 0 && <span style={{ ...m, fontSize: 12, color: "#fbbf24" }}>⚠ {results.skipped} skipped</span>}
+            <span style={{ ...m, fontSize: 12, color: "#34d399" }}> {results.parsed} parsed</span>
+            {results.skipped > 0 && <span style={{ ...m, fontSize: 12, color: "#fbbf24" }}> {results.skipped} skipped</span>}
           </div>
           <Button onClick={() => navigate("/dashboard/ai")} className="gap-2"
             style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>

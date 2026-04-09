@@ -40,7 +40,7 @@ export default function PlanWall({ onClose, feature }: PlanWallProps) {
             Every plan includes a <strong style={{ color: "rgba(255,255,255,0.7)" }}>3-day free trial</strong>. No charge until it's over. Cancel anytime.
           </p>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, padding: "7px 14px", borderRadius: 9, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.15)" }}>
-            <span style={{ fontSize: 13 }}>💳</span>
+            <span style={{ fontSize: 13 }}></span>
             <span style={{ ...j, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Card required · <strong style={{ color: "#fff" }}>No charge for 72 hours (3 days)</strong></span>
           </div>
         </div>

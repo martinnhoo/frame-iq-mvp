@@ -682,21 +682,21 @@ const TOOLS_DATA: ToolDef[] = [
       pt: [
         '🇧🇷 ORIGINAL  "Pediu e chegou em 30 minutos. Sem sair de casa."',
         '🇮🇳 ADAPTADO  "Ordered and delivered in 30 minutes. No stepping out."',
-        'CTA  "Peça agora" → "Order now" · senso de imediatismo preservado',
+        'CTA  "Peça agora" → "Order now"senso de imediatismo preservado',
         'NOTA  Evitado "fast food" — conotação negativa na Índia urbana',
         'TOM  Informal brasileiro → inglês indiano informal (Hinglish-friendly)',
       ],
       es: [
         '🇧🇷 ORIGINAL  "Pediu e chegou em 30 minutos. Sem sair de casa."',
         '🇮🇳 ADAPTADO  "Ordered and delivered in 30 minutes. No stepping out."',
-        'CTA  "Pide ahora" → "Order now" · sentido de inmediatismo preservado',
+        'CTA  "Pide ahora" → "Order now"sentido de inmediatismo preservado',
         'NOTA  Evitado "fast food" — connotación negativa en la India urbana',
         'TONO  Informal brasileño → inglés indiano informal (Hinglish-friendly)',
       ],
       en: [
         '🇧🇷 ORIGINAL  "Pediu e chegou em 30 minutos. Sem sair de casa."',
         '🇮🇳 ADAPTED   "Ordered and delivered in 30 minutes. No stepping out."',
-        'CTA  "Peça agora" → "Order now" · immediacy preserved',
+        'CTA  "Peça agora" → "Order now"immediacy preserved',
         'NOTE  Avoided "fast food" — negative connotation in urban India',
         'TONE  Brazilian informal → Indian English informal (Hinglish-friendly)',
       ],
@@ -712,22 +712,22 @@ const TOOLS_DATA: ToolDef[] = [
     badge:   { pt: "Dados em tempo real", es: "Datos en tiempo real", en: "Real-time data" },
     output:  {
       pt: [
-        "⚠️  CPM subiu 58% em BR-F-25-45 — Black Friday de concorrente entrou em leilão.",
-        "🔴  Campanha de prospecting com frequência 5.2x — público esgotado. Pause agora.",
-        "✅  Campanha de remarketing com ROAS 6.1x e freq. 1.4x — ainda muito espaço.",
-        "💡  Realoque R$300/dia de prospecting para remarketing. Custo por compra cai ~40%."
+        "  CPM subiu 58% em BR-F-25-45 — Black Friday de concorrente entrou em leilão.",
+        "  Campanha de prospecting com frequência 5.2x — público esgotado. Pause agora.",
+        "  Campanha de remarketing com ROAS 6.1x e freq. 1.4x — ainda muito espaço.",
+        "  Realoque R$300/dia de prospecting para remarketing. Custo por compra cai ~40%."
       ],
       es: [
-        "⚠️  CPM subió 58% en MX-F-25-45 — Black Friday de competidor entró a subasta.",
-        "🔴  Campaña de prospecting con frecuencia 5.2x — público agotado. Pausa ahora.",
-        "✅  Campaña de remarketing con ROAS 6.1x y freq. 1.4x — todavía mucho espacio.",
-        "💡  Reasigna $300/día de prospecting a remarketing. CPA cae ~40%."
+        "  CPM subió 58% en MX-F-25-45 — Black Friday de competidor entró a subasta.",
+        "  Campaña de prospecting con frecuencia 5.2x — público agotado. Pausa ahora.",
+        "  Campaña de remarketing con ROAS 6.1x y freq. 1.4x — todavía mucho espacio.",
+        "  Reasigna $300/día de prospecting a remarketing. CPA cae ~40%."
       ],
       en: [
-        "⚠️  CPM up 58% in US-F-25-45 — competitor's Black Friday entered auction.",
-        "🔴  Prospecting campaign at 5.2x frequency — audience exhausted. Pause now.",
-        "✅  Remarketing campaign at 6.1x ROAS, 1.4x freq — still lots of room.",
-        "💡  Reallocate $300/day from prospecting to remarketing. CPA drops ~40%."
+        "  CPM up 58% in US-F-25-45 — competitor's Black Friday entered auction.",
+        "  Prospecting campaign at 5.2x frequency — audience exhausted. Pause now.",
+        "  Remarketing campaign at 6.1x ROAS, 1.4x freq — still lots of room.",
+        "  Reallocate $300/day from prospecting to remarketing. CPA drops ~40%."
       ],
     },
   },
@@ -1514,7 +1514,7 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
 }) {
   const [open, setOpen] = React.useState(false);
   const sugLabel = lang === 'pt' ? 'sugestões' : lang === 'es' ? 'sugerencias' : 'suggestions';
-  const icons = ['📉','⚡','✍️'];
+  const icons = ['','',''];
   const activeQ = qa[qi];
   const isLive = phase === 'typing' || phase === 'thinking' || phase === 'streaming';
 
@@ -2093,7 +2093,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
 
               {/* Action line */}
               <div style={{ marginTop:12, padding:'9px 13px', borderRadius:8, background:'rgba(14,165,233,0.08)', border:'1px solid rgba(14,165,233,0.18)', display:'flex', alignItems:'center', gap:8 }}>
-                <span style={{ fontSize:12, flexShrink:0 }}>⚡</span>
+                <span style={{ fontSize:12, flexShrink:0 }}></span>
                 <p style={{ fontFamily:F, fontSize:12.5, color:'#7dd3fc', fontWeight:600, lineHeight:1.4, margin:0 }}>{scene.action}</p>
               </div>
             </div>
@@ -2780,17 +2780,17 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       label: "O PROBLEMA",
       title: "Gestores de tráfego\nperdendo horas todo dia.",
       pains: [
-        { icon: "⏳", text: "Você monta relatórios manualmente toda semana" },
-        { icon: "📊", text: "Dados em 5 ferramentas diferentes que não se conversam" },
-        { icon: "❓", text: "Você não sabe qual criativo pausar e qual escalar hoje" },
-        { icon: "🔥", text: "Descobre fadiga criativa tarde demais — depois de queimar verba" },
+        { icon: "", text: "Você monta relatórios manualmente toda semana" },
+        { icon: "", text: "Dados em 5 ferramentas diferentes que não se conversam" },
+        { icon: "", text: "Você não sabe qual criativo pausar e qual escalar hoje" },
+        { icon: "", text: "Descobre fadiga criativa tarde demais — depois de queimar verba" },
       ],
       divider: "AdBrief resolve isso.",
       solutions: [
-        { icon: "⚡", text: "Responde qualquer pergunta sobre sua conta em segundos" },
-        { icon: "🎯", text: "Diagnóstico instantâneo de cada criativo ativo na conta" },
-        { icon: "✍️", text: "Gera hooks e roteiros dos seus anúncios vencedores" },
-        { icon: "🔔", text: "Alertas proativos no Telegram antes de queimar verba" },
+        { icon: "", text: "Responde qualquer pergunta sobre sua conta em segundos" },
+        { icon: "", text: "Diagnóstico instantâneo de cada criativo ativo na conta" },
+        { icon: "", text: "Gera hooks e roteiros dos seus anúncios vencedores" },
+        { icon: "", text: "Alertas proativos no Telegram antes de queimar verba" },
       ],
       cta: "Começar grátis",
     },
@@ -2798,17 +2798,17 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       label: "EL PROBLEMA",
       title: "Los gestores pierden horas\nanalizando datos.",
       pains: [
-        { icon: "⏳", text: "Construyes reportes manualmente cada semana" },
-        { icon: "📊", text: "Datos en 5 herramientas distintas que no se comunican" },
-        { icon: "❓", text: "No sabes exactamente qué pausar y qué escalar ahora" },
-        { icon: "🔥", text: "Descubres la fatiga creativa tarde — después de quemar presupuesto" },
+        { icon: "", text: "Construyes reportes manualmente cada semana" },
+        { icon: "", text: "Datos en 5 herramientas distintas que no se comunican" },
+        { icon: "", text: "No sabes exactamente qué pausar y qué escalar ahora" },
+        { icon: "", text: "Descubres la fatiga creativa tarde — después de quemar presupuesto" },
       ],
       divider: "AdBrief lo resuelve.",
       solutions: [
-        { icon: "⚡", text: "Responde cualquier pregunta sobre tu cuenta en segundos" },
-        { icon: "🎯", text: "Te dice exactamente qué pausar y qué escalar ahora" },
-        { icon: "✍️", text: "Genera hooks y guiones de tus anuncios ganadores" },
-        { icon: "🔔", text: "Alertas proactivas en Telegram antes de quemar presupuesto" },
+        { icon: "", text: "Responde cualquier pregunta sobre tu cuenta en segundos" },
+        { icon: "", text: "Te dice exactamente qué pausar y qué escalar ahora" },
+        { icon: "", text: "Genera hooks y guiones de tus anuncios ganadores" },
+        { icon: "", text: "Alertas proactivas en Telegram antes de quemar presupuesto" },
       ],
       cta: "Comenzar gratis",
     },
@@ -2816,17 +2816,17 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       label: "THE PROBLEM",
       title: "Media buyers waste hours\nanalyzing data.",
       pains: [
-        { icon: "⏳", text: "You build reports manually every single week" },
-        { icon: "📊", text: "Data across 5 different tools, none of them talk to each other" },
-        { icon: "❓", text: "You don't know exactly what to pause and what to scale right now" },
-        { icon: "🔥", text: "You discover creative fatigue too late — after burning budget" },
+        { icon: "", text: "You build reports manually every single week" },
+        { icon: "", text: "Data across 5 different tools, none of them talk to each other" },
+        { icon: "", text: "You don't know exactly what to pause and what to scale right now" },
+        { icon: "", text: "You discover creative fatigue too late — after burning budget" },
       ],
       divider: "AdBrief fixes that.",
       solutions: [
-        { icon: "⚡", text: "Answers any question about your account in seconds" },
-        { icon: "🎯", text: "Tells you exactly what to pause and what to scale now" },
-        { icon: "✍️", text: "Generates hooks and scripts from your winning ads" },
-        { icon: "🔔", text: "Proactive Telegram alerts before you burn budget" },
+        { icon: "", text: "Answers any question about your account in seconds" },
+        { icon: "", text: "Tells you exactly what to pause and what to scale now" },
+        { icon: "", text: "Generates hooks and scripts from your winning ads" },
+        { icon: "", text: "Proactive Telegram alerts before you burn budget" },
       ],
       cta: "Start for free",
     },
@@ -3039,20 +3039,20 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
 // ─── Telegram Differentiator ──────────────────────────────────────────────────
 function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   const items = lang === "pt" ? [
-    { icon: "⚠️", title: "Alertas críticos automáticos", desc: "CTR caiu? CPM explodiu? Você recebe no Telegram antes de perder mais." },
-    { icon: "⏸️", title: "Pause anúncios pelo bot", desc: "/pausar [nome] — pede confirmação e executa via Meta API. Registrado no AdBrief." },
-    { icon: "📊", title: "Resumo diário", desc: "/status — spend, CTR, winners e losers. Tudo em uma mensagem." },
-    { icon: "🧠", title: "A IA aprende com cada ação", desc: "Criativos pausados, alertas dispensados — tudo vira contexto para as próximas respostas." },
+    { icon: "", title: "Alertas críticos automáticos", desc: "CTR caiu? CPM explodiu? Você recebe no Telegram antes de perder mais." },
+    { icon: "", title: "Pause anúncios pelo bot", desc: "/pausar [nome] — pede confirmação e executa via Meta API. Registrado no AdBrief." },
+    { icon: "", title: "Resumo diário", desc: "/status — spend, CTR, winners e losers. Tudo em uma mensagem." },
+    { icon: "", title: "A IA aprende com cada ação", desc: "Criativos pausados, alertas dispensados — tudo vira contexto para as próximas respostas." },
   ] : lang === "es" ? [
-    { icon: "⚠️", title: "Alertas críticos automáticos", desc: "¿CTR cayó? ¿CPM explotó? Lo recibes en Telegram antes de perder más." },
-    { icon: "⏸️", title: "Pausa anuncios desde el bot", desc: "/pausar [nombre] — pide confirmación y ejecuta vía Meta API. Registrado en AdBrief." },
-    { icon: "📊", title: "Resumen diario", desc: "/status — spend, CTR, ganadores y perdedores. Todo en un mensaje." },
-    { icon: "🧠", title: "La IA aprende con cada acción", desc: "Creativos pausados, alertas ignorados — todo se convierte en contexto para las próximas respuestas." },
+    { icon: "", title: "Alertas críticos automáticos", desc: "¿CTR cayó? ¿CPM explotó? Lo recibes en Telegram antes de perder más." },
+    { icon: "", title: "Pausa anuncios desde el bot", desc: "/pausar [nombre] — pide confirmación y ejecuta vía Meta API. Registrado en AdBrief." },
+    { icon: "", title: "Resumen diario", desc: "/status — spend, CTR, ganadores y perdedores. Todo en un mensaje." },
+    { icon: "", title: "La IA aprende con cada acción", desc: "Creativos pausados, alertas ignorados — todo se convierte en contexto para las próximas respuestas." },
   ] : [
-    { icon: "⚠️", title: "Automatic critical alerts", desc: "CTR dropped? CPM spiked? You get it on Telegram before losing more." },
-    { icon: "⏸️", title: "Pause ads from the bot", desc: "/pause [name] — asks confirmation, executes via Meta API. Logged in AdBrief." },
-    { icon: "📊", title: "Daily summary", desc: "/status — spend, CTR, winners and losers. Everything in one message." },
-    { icon: "🧠", title: "AI learns from every action", desc: "Paused creatives, dismissed alerts — all becomes context for the next response." },
+    { icon: "", title: "Automatic critical alerts", desc: "CTR dropped? CPM spiked? You get it on Telegram before losing more." },
+    { icon: "", title: "Pause ads from the bot", desc: "/pause [name] — asks confirmation, executes via Meta API. Logged in AdBrief." },
+    { icon: "", title: "Daily summary", desc: "/status — spend, CTR, winners and losers. Everything in one message." },
+    { icon: "", title: "AI learns from every action", desc: "Paused creatives, dismissed alerts — all becomes context for the next response." },
   ];
 
   return (
@@ -3112,7 +3112,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 </div>
                 <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#0f1e2e" }}>
                   <p style={{ fontFamily: F, fontSize: 12, color: "#27AEE1", fontWeight: 700, margin: "0 0 4px" }}>
-                    {lang === "pt" ? "⚠️ Alerta AdBrief" : lang === "es" ? "⚠️ Alerta AdBrief" : "⚠️ AdBrief Alert"}
+                    {lang === "pt" ? "Alerta AdBrief" : lang === "es" ? "Alerta AdBrief" : "AdBrief Alert"}
                   </p>
                   <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.55 }}>
                     <strong style={{ color: "#fff" }}>Creative_042</strong>{" "}
@@ -3140,10 +3140,10 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: "14px 14px 14px 2px", background: "#0f1e2e" }}>
                   <p style={{ fontFamily: F, fontSize: 12.5, color: "rgba(255,255,255,0.9)", margin: 0, lineHeight: 1.55 }}>
                     {lang === "pt"
-                      ? <>✅ <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> via Meta API.<br/>Registrado no AdBrief às 14:32.<br/><span style={{ color: "#34d399", fontSize: 13 }}>Economia estimada: R$180/dia</span></>
+                      ? <> <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> via Meta API.<br/>Registrado no AdBrief às 14:32.<br/><span style={{ color: "#34d399", fontSize: 13 }}>Economia estimada: R$180/dia</span></>
                       : lang === "es"
-                      ? <>✅ <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> vía Meta API.<br/>Registrado en AdBrief a las 14:32.<br/><span style={{ color: "#34d399", fontSize: 13 }}>Ahorro estimado: $180/día</span></>
-                      : <>✅ <strong style={{ color: "#fff" }}>Creative_042 paused</strong> via Meta API.<br/>Logged in AdBrief at 2:32 PM.<br/><span style={{ color: "#34d399", fontSize: 13 }}>Estimated savings: $180/day</span></>}
+                      ? <> <strong style={{ color: "#fff" }}>Creative_042 pausado</strong> vía Meta API.<br/>Registrado en AdBrief a las 14:32.<br/><span style={{ color: "#34d399", fontSize: 13 }}>Ahorro estimado: $180/día</span></>
+                      : <> <strong style={{ color: "#fff" }}>Creative_042 paused</strong> via Meta API.<br/>Logged in AdBrief at 2:32 PM.<br/><span style={{ color: "#34d399", fontSize: 13 }}>Estimated savings: $180/day</span></>}
                   </p>
                 </div>
               </div>
@@ -3515,7 +3515,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
         <div className="trust-badges" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 36, flexWrap: "wrap" as const }}>
           {[t.trust_1, t.trust_2, t.trust_3].map((item, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ color: "#34d399", fontSize: 13 }}>✓</span>
+              <span style={{ color: "#34d399", fontSize: 13 }}></span>
               <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{item}</span>
             </div>
           ))}

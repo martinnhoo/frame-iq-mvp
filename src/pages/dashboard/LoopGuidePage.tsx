@@ -35,8 +35,8 @@ const STEPS = [
     how: "Patterns show on the Performance Loop page. Each pattern has CTR, ROAS, sample size, and confidence score. Higher confidence = more reliable.",
     tip: "Focus on patterns with 5+ samples and 70%+ confidence. Patterns with 1-2 samples are early signals — useful but not conclusive.",
     sim: [
-      "✓ WIN: Editor:AL + Market:MX + Format:UGC | CTR 2.41% | ROAS 3.2x | 12 samples | 84% confidence",
-      "✗ LOSE: Format:VSL + Market:BR + Hook:fear | CTR 0.43% | 8 samples | 71% confidence",
+      "WIN: Editor:AL + Market:MX + Format:UGC | CTR 2.41% | ROAS 3.2x | 12 samples | 84% confidence",
+      "LOSE: Format:VSL + Market:BR + Hook:fear | CTR 0.43% | 8 samples | 71% confidence",
     ],
   },
   {
@@ -49,7 +49,7 @@ const STEPS = [
       "Q: Which editor should I assign to the next iGaming batch?",
       "→ Pattern: AL has 23% higher CTR on iGaming vs team avg. Assign AL.",
       "Q: Write 3 hooks for cold traffic in Brazil",
-      "→ ⚡ Hook: 'Você sabia que 90% das pessoas não sabe disso...' [curiosity, BR market, cold]",
+      "→  Hook: 'Você sabia que 90% das pessoas não sabe disso...' [curiosity, BR market, cold]",
     ],
   },
   {
@@ -139,7 +139,7 @@ export default function LoopGuidePage() {
                 </p>
                 {/* Tip */}
                 <div style={{ display: "flex", gap: 8, padding: "8px 12px", borderRadius: 10, background: `${step.color}08`, border: `1px solid ${step.color}18`, marginBottom: 10 }}>
-                  <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>💡</span>
+                  <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}></span>
                   <p style={{ ...m, fontSize: 12, color: `${step.color}cc`, lineHeight: 1.6 }}>{step.tip}</p>
                 </div>
                 {/* Simulation */}

@@ -370,7 +370,7 @@ function SuggestedTemplates({ persona, dt, language, navigate }: {
               className="group flex flex-col gap-2 p-3 rounded-xl text-left transition-all hover:scale-[1.02]"
               style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <div className="flex items-center gap-2">
-                <span className="text-base">{catMeta?.emoji || "📄"}</span>
+                <span className="text-base">{catMeta?.emoji || ""}</span>
                 <span className="text-xs font-semibold text-white/80 flex-1 truncate">{name}</span>
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full text-white/45"
                   style={{ background: "rgba(255,255,255,0.05)" }}>{tpl.duration}s</span>
@@ -567,10 +567,10 @@ function PersonaDetailEditable({
       {/* Grid */}
       <div className="grid sm:grid-cols-2 gap-4">
         {[
-          { title: `😤 ${dt("pe_pain_points")}`, items: draft.pains, color: "text-red-400", field: "pains" as keyof PersonaResult },
-          { title: `✨ ${dt("pe_desires")}`, items: draft.desires, color: "text-yellow-400", field: "desires" as keyof PersonaResult },
-          { title: `🚧 ${dt("pe_objections")}`, items: draft.objections, color: "text-orange-400", field: "objections" as keyof PersonaResult },
-          { title: `⚡ ${dt("pe_triggers")}`, items: draft.triggers, color: "text-green-400", field: "triggers" as keyof PersonaResult },
+          { title: ` ${dt("pe_pain_points")}`, items: draft.pains, color: "text-red-400", field: "pains" as keyof PersonaResult },
+          { title: ` ${dt("pe_desires")}`, items: draft.desires, color: "text-yellow-400", field: "desires" as keyof PersonaResult },
+          { title: ` ${dt("pe_objections")}`, items: draft.objections, color: "text-orange-400", field: "objections" as keyof PersonaResult },
+          { title: ` ${dt("pe_triggers")}`, items: draft.triggers, color: "text-green-400", field: "triggers" as keyof PersonaResult },
         ].map(({ title, items, color, field }, idx) => (
           <div key={title}
             className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-5">
@@ -620,7 +620,7 @@ function PersonaDetailEditable({
       {(draft.media_habits?.length > 0 || editing) && (
         <div
           className="rounded-2xl border border-white/[0.15] bg-white/[0.06] p-5">
-          <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400">📺 {dt("pe_media_habits")}</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-cyan-400"> {dt("pe_media_habits")}</h3>
           <EditableListField field="media_habits" items={draft.media_habits} color="text-cyan-400" editing={editing} onChange={handleListChange} />
         </div>
       )}
@@ -633,7 +633,7 @@ function PersonaDetailEditable({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <span>🎨</span> {dt("pe_brand_kit")}
+              <span></span> {dt("pe_brand_kit")}
             </h3>
             <p className="text-[11px] text-white/50 mt-0.5">
               {dt("pe_brand_kit_desc")}
@@ -679,7 +679,7 @@ function PersonaDetailEditable({
             <div className="flex flex-col items-center gap-2">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
                 style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.2)" }}>
-                📦
+                
               </div>
               <div>
                 <p className="text-sm font-semibold text-white/70">{dt("pe_brand_upload_cta")}</p>
@@ -800,19 +800,19 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
     {
       id: "gender", q: dt("pe_q_gender"), sub: "", type: "single",
       options: [
-        { value: "male", label: dt("pe_opt_male"), emoji: "👨" },
-        { value: "female", label: dt("pe_opt_female"), emoji: "👩" },
-        { value: "both", label: dt("pe_opt_both"), emoji: "👥" },
+        { value: "male", label: dt("pe_opt_male"), emoji: "" },
+        { value: "female", label: dt("pe_opt_female"), emoji: "" },
+        { value: "both", label: dt("pe_opt_both"), emoji: "" },
       ],
     },
     { id: "age", q: dt("pe_q_age"), sub: "", type: "range" },
     {
       id: "income", q: dt("pe_q_income"), sub: "", type: "single",
       options: [
-        { value: "low", label: dt("pe_opt_low"), emoji: "💵" },
-        { value: "mid", label: dt("pe_opt_mid"), emoji: "💰" },
-        { value: "high", label: dt("pe_opt_high"), emoji: "💎" },
-        { value: "mixed", label: dt("pe_opt_mixed"), emoji: "🎯" },
+        { value: "low", label: dt("pe_opt_low"), emoji: "" },
+        { value: "mid", label: dt("pe_opt_mid"), emoji: "" },
+        { value: "high", label: dt("pe_opt_high"), emoji: "" },
+        { value: "mixed", label: dt("pe_opt_mixed"), emoji: "" },
       ],
     },
     {
@@ -821,16 +821,16 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
         { value: "BR", label: "Brazil", emoji: "🇧🇷" },
         { value: "US", label: "United States", emoji: "🇺🇸" },
         { value: "MX", label: "Mexico", emoji: "🇲🇽" },
-        { value: "GLOBAL", label: "Global", emoji: "🌍" },
+        { value: "GLOBAL", label: "Global", emoji: "" },
       ],
     },
     {
       id: "platform", q: dt("pe_q_platform"), sub: "", type: "single",
       options: [
-        { value: "tiktok", label: "TikTok", emoji: "📱" },
-        { value: "meta", label: "Meta / IG", emoji: "📸" },
-        { value: "youtube", label: "YouTube", emoji: "▶️" },
-        { value: "google", label: "Google UAC", emoji: "🔍" },
+        { value: "tiktok", label: "TikTok", emoji: "" },
+        { value: "meta", label: "Meta / IG", emoji: "" },
+        { value: "youtube", label: "YouTube", emoji: "" },
+        { value: "google", label: "Google UAC", emoji: "" },
       ],
     },
     {
@@ -986,7 +986,7 @@ CTA: ${persona.cta_style}`;
     hook_angles:    toArr(r?.hook_angles),
     language_style: r?.language_style || "",
     cta_style:      r?.cta_style      || "",
-    avatar_emoji:   r?.avatar_emoji   || "👤",
+    avatar_emoji:   r?.avatar_emoji   || "",
   });
 
   const openPersona = (p: SavedPersona) => {
@@ -1141,7 +1141,7 @@ CTA: ${persona.cta_style}`;
 
                   {globalPersona?.id === p.id ? (
                     <div className="mt-3 px-3 py-1 rounded-full text-[10px] font-semibold" style={{ background: "rgba(14,165,233,0.15)", color: "#0ea5e9" }}>
-                      ✓ {dt("pe_active")}
+                       {dt("pe_active")}
                     </div>
                   ) : (
                     <button

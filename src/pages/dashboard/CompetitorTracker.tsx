@@ -11,7 +11,7 @@ const MARKETS = [
   { value: "IN", flag: "🇮🇳", label: "India" },
   { value: "US", flag: "🇺🇸", label: "United States" },
   { value: "GB", flag: "🇬🇧", label: "United Kingdom" },
-  { value: "GLOBAL", flag: "🌐", label: "Global" },
+  { value: "GLOBAL", flag: "", label: "Global" },
 ];
 
 const PLATFORMS = ["Meta", "TikTok", "YouTube", "Both"];

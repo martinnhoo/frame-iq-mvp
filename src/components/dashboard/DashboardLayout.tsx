@@ -236,17 +236,17 @@ export default function DashboardLayout() {
       const WELCOME_POPUPS: Record<string, { key: string; title: string; body: string }> = {
         "victoriafnogueira@hotmail.com": {
           key: "vika_welcome_shown",
-          title: "Bem-vinda, Vika! 💜",
+          title: "Bem-vinda, Vika! ",
           body: "Sua conta está ativa com acesso vitalício gratuito. Todos os recursos do AdBrief são seus — sem limites, sem cobranças, para sempre.",
         },
         "isadoradblima@gmail.com": {
           key: "isadora_welcome_shown",
-          title: "hehe, acesso vitalício pra você, Isadorinha 🎊",
-          body: "Sua conta agora tem acesso vitalício gratuito e ilimitado! Tudo liberado, pra sempre. Usa e abusa de todas as ferramentas — você merece! 💜✨",
+          title: "hehe, acesso vitalício pra você, Isadorinha ",
+          body: "Sua conta agora tem acesso vitalício gratuito e ilimitado! Tudo liberado, pra sempre. Usa e abusa de todas as ferramentas — você merece! ",
         },
         "denis.magalhaes10@gmail.com": {
           key: "denis_welcome_shown",
-          title: "Parabéns, você é gay! 🎉",
+          title: "Parabéns, você é gay! ",
           body: "Sua conta agora tem acesso vitalício ao AdBrief Studio. Todos os recursos liberados, pra sempre!",
         },
       };
@@ -736,7 +736,7 @@ export default function DashboardLayout() {
                 }} />
             ))}
             <div className="relative p-8 text-center space-y-4">
-              <div className="text-6xl" style={{ animation: "modalIn 0.5s cubic-bezier(.23,1,.32,1) 0.2s both" }}>🎉</div>
+              <div className="text-6xl" style={{ animation: "modalIn 0.5s cubic-bezier(.23,1,.32,1) 0.2s both" }}></div>
               <h2 className="text-xl font-bold text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 {welcomeMsg.title}
               </h2>
@@ -744,7 +744,7 @@ export default function DashboardLayout() {
                 {welcomeMsg.body}
               </p>
               <p className="text-xs text-white/50">
-                Aproveite cada ferramenta, crie sem medo, e brilhe! ✨
+                Aproveite cada ferramenta, crie sem medo, e brilhe! 
               </p>
               <button onClick={() => setVikaPopup(false)}
                 className="mt-2 px-6 py-2.5 rounded-xl text-sm font-bold text-black transition-all hover:scale-105"
@@ -815,9 +815,9 @@ export default function DashboardLayout() {
                   </p>
                   <div style={{ display: "flex", flexDirection: "column" as const, gap: 8, marginBottom: 18 }}>
                     {[
-                      language === "pt" ? "⚠️ Alertas críticos da conta" : language === "es" ? "⚠️ Alertas críticos de la cuenta" : "⚠️ Critical account alerts",
-                      language === "pt" ? "⚡ /pausar [criativo] com confirmação" : language === "es" ? "⚡ /pausar [creativo] con confirmación" : "⚡ /pause [creative] with confirmation",
-                      language === "pt" ? "📊 /status — resumo da conta" : language === "es" ? "📊 /status — resumen de cuenta" : "📊 /status — account summary",
+                      language === "pt" ? "Alertas críticos da conta" : language === "es" ? "Alertas críticos de la cuenta" : "Critical account alerts",
+                      language === "pt" ? " /pausar [criativo] com confirmação" : language === "es" ? " /pausar [creativo] con confirmación" : " /pause [creative] with confirmation",
+                      language === "pt" ? " /status — resumo da conta" : language === "es" ? " /status — resumen de cuenta" : " /status — account summary",
                     ].map((item, i) => (
                       <p key={i} style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>{item}</p>
                     ))}
@@ -849,7 +849,7 @@ export default function DashboardLayout() {
                       onClick={() => {
                         navigator.clipboard.writeText(telegramPairingLink || "");
                         const btn = document.getElementById("tg-copy-btn");
-                        if (btn) { btn.textContent = language === "pt" ? "Copiado ✓" : language === "es" ? "Copiado ✓" : "Copied ✓"; setTimeout(() => { if (btn) btn.textContent = language === "pt" ? "Copiar link" : language === "es" ? "Copiar enlace" : "Copy link"; }, 2000); }
+                        if (btn) { btn.textContent = language === "pt" ? "Copiado " : language === "es" ? "Copiado " : "Copied "; setTimeout(() => { if (btn) btn.textContent = language === "pt" ? "Copiar link" : language === "es" ? "Copiar enlace" : "Copy link"; }, 2000); }
                       }}
                       id="tg-copy-btn"
                       style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
@@ -871,9 +871,9 @@ export default function DashboardLayout() {
                   </p>
                   <div style={{ display: "flex", flexDirection: "column" as const, gap: 7, marginBottom: 20 }}>
                     {[
-                      { icon: "⚠️", text: language === "pt" ? "Alerta quando CTR cair ou CPM explodir" : language === "es" ? "Alerta cuando CTR baje o CPM explote" : "Alert when CTR drops or CPM spikes" },
-                      { icon: "⏸️", text: language === "pt" ? "Pause anúncios com 1 toque e confirmação" : language === "es" ? "Pausa anuncios con 1 toque y confirmación" : "Pause ads with 1 tap and confirmation" },
-                      { icon: "📊", text: language === "pt" ? "Resumo diário da performance" : language === "es" ? "Resumen diario de performance" : "Daily performance summary" },
+                      { icon: "", text: language === "pt" ? "Alerta quando CTR cair ou CPM explodir" : language === "es" ? "Alerta cuando CTR baje o CPM explote" : "Alert when CTR drops or CPM spikes" },
+                      { icon: "", text: language === "pt" ? "Pause anúncios com 1 toque e confirmação" : language === "es" ? "Pausa anuncios con 1 toque y confirmación" : "Pause ads with 1 tap and confirmation" },
+                      { icon: "", text: language === "pt" ? "Resumo diário da performance" : language === "es" ? "Resumen diario de performance" : "Daily performance summary" },
                     ].map((item, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                         <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>

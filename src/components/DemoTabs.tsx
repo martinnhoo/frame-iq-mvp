@@ -114,7 +114,7 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
           }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#fff"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
-          >✕</button>
+          ></button>
 
           <button onClick={e => { e.stopPropagation(); goTo((idx - 1 + ITEMS.length) % ITEMS.length); }} style={{
             position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)",

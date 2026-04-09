@@ -31,7 +31,7 @@ const MARKETS = [
   { value: "MX", label: "🇲🇽 México" },
   { value: "US", label: "🇺🇸 EUA" },
   { value: "IN", label: "🇮🇳 Índia" },
-  { value: "GLOBAL", label: "🌍 Global" },
+  { value: "GLOBAL", label: "Global" },
 ];
 
 const HOOK_TYPE_COLORS: Record<string, string> = {
@@ -177,7 +177,7 @@ export default function HookGenerator() {
   const sendFeedback = async (hook: Hook, idx: number, vote: "up" | "down") => {
     if (feedback[idx]) return; // already voted
     setFeedback(prev => ({ ...prev, [idx]: vote }));
-    toast.success(vote === "up" ? "Got it — more like this 👍" : "Noted — fewer of this type 👎");
+    toast.success(vote === "up" ? "Got it — more like this " : "Noted — fewer of this type ");
     // Save to creative_memory so update-ai-profile can learn from it
     if (user?.id) {
       try {
@@ -404,7 +404,7 @@ export default function HookGenerator() {
 
       {!loading && hooks.length === 0 && (
         <div className="rounded-2xl border border-dashed border-white/[0.13] py-16 text-center space-y-3">
-          <div className="text-4xl">⚡</div>
+          <div className="text-4xl"></div>
           <p className="text-white/50 text-sm font-medium">{language === "pt" ? "Descreva seu produto e clique em gerar" : language === "es" ? "Describe tu producto y haz clic en generar" : "Describe your product and hit generate"}</p>
           <p className="text-white/15 text-xs">{language === "pt" ? "A IA gera hooks com scores previstos, análise psicológica e sugestões de CTA" : language === "es" ? "La IA genera hooks con puntajes previstos, análisis psicológico y sugerencias de CTA" : "AI generates hooks with predicted scores, psychological breakdown, and CTA suggestions"}</p>
         </div>

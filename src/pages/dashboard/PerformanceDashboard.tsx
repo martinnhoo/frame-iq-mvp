@@ -82,7 +82,7 @@ const Sparkline = React.memo(function Sparkline({ data, color }: { data: number[
     const y=range===0 ? h/2 : h-((v-min)/range)*h;
     return `${x},${y}`;
   });
-  const path=`M ${pts.join(" L ")}`;
+  const path=`M ${pts.join("L ")}`;
   const area=`M 0,${h} L ${path.slice(2)} L ${w},${h} Z`;
   return (
     <svg width={w} height={h} viewBox={`${vx} ${vy} ${vw} ${vh}`} style={{overflow:"visible",display:"block"}}>
@@ -381,7 +381,7 @@ const AdRow = React.memo(function AdRow({ ad, rank }: { ad:any; rank:number }) {
       </div>
       <div style={{width:COL.status,textAlign:"right",flexShrink:0}}>
         {isWinner&&<span style={{fontSize:12,fontWeight:700,color:GREEN,background:"rgba(34,197,94,0.1)",borderRadius:6,padding:"3px 8px"}}>↑ Escalar</span>}
-        {isPauser&&<span style={{fontSize:12,fontWeight:700,color:RED,background:"rgba(239,68,68,0.1)",borderRadius:6,padding:"3px 8px"}}>⏸ Pausar</span>}
+        {isPauser&&<span style={{fontSize:12,fontWeight:700,color:RED,background:"rgba(239,68,68,0.1)",borderRadius:6,padding:"3px 8px"}}> Pausar</span>}
         {!isWinner&&!isPauser&&<span style={{fontSize:12,color:MT}}>—</span>}
       </div>
     </div>

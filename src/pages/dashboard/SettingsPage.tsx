@@ -86,7 +86,7 @@ const SettingsPage = () => {
       if (error) throw error;
       // Save AI tone preference to localStorage
       storage.set("adbrief_ai_tone", aiTone)
-      toast.success(t("save") + " ✓");
+      toast.success(t("save") + " ");
     } catch {
       toast.error("Falha ao atualizar perfil");
     } finally {

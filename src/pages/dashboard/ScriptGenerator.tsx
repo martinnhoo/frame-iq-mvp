@@ -196,14 +196,14 @@ export default function ScriptGenerator() {
             <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder={language === "pt" ? "ex: 50% de desconto no primeiro mês, Trial grátis" : language === "es" ? "ej: 50% descuento primer mes, Prueba gratis" : "e.g. 50% off first month, Free trial"} />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Público-alvo" : language === "es" ? "Audiencia objetivo" : "Target Audience"} {personaApplied ? "✓" : "(optional)"}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Público-alvo" : language === "es" ? "Audiencia objetivo" : "Target Audience"} {personaApplied ? "" : "(optional)"}</label>
             <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder={language === "pt" ? "ex: Homens 25-35, jogadores, entusiastas de fitness" : language === "es" ? "ej: Hombres 25-35, jugadores, entusiastas de fitness" : "e.g. Men 25-35, gamers, fitness enthusiasts"} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Formato" : language === "es" ? "Formato" : "Format"} {personaApplied ? "✓" : ""}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Formato" : language === "es" ? "Formato" : "Format"} {personaApplied ? "" : ""}</label>
             <Select value={format} onValueChange={setFormat}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -216,7 +216,7 @@ export default function ScriptGenerator() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Mercado" : language === "es" ? "Mercado" : "Market"} {personaApplied ? "✓" : ""}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Mercado" : language === "es" ? "Mercado" : "Market"} {personaApplied ? "" : ""}</label>
             <Select value={market} onValueChange={setMarket}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -224,7 +224,7 @@ export default function ScriptGenerator() {
                 <SelectItem value="BR">🇧🇷 Brazil</SelectItem>
                 <SelectItem value="MX">🇲🇽 Mexico</SelectItem>
                 <SelectItem value="IN">🇮🇳 India</SelectItem>
-                <SelectItem value="GLOBAL">🌍 Global</SelectItem>
+                <SelectItem value="GLOBAL"> Global</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -240,13 +240,13 @@ export default function ScriptGenerator() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Ângulo" : language === "es" ? "Ángulo" : "Angle"} {personaApplied ? "✓" : ""}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Ângulo" : language === "es" ? "Ángulo" : "Angle"} {personaApplied ? "" : ""}</label>
             <Input value={angle} onChange={e => setAngle(e.target.value)} placeholder={language === "pt" ? "ex: FOMO, curiosidade, prova social" : language === "es" ? "ej: FOMO, curiosidad, prueba social" : "e.g. FOMO, curiosity, social proof"} />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Contexto extra" : language === "es" ? "Contexto extra" : "Extra Context"} {personaApplied ? "✓ (persona enriched)" : "(optional)"}</label>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>{language === "pt" ? "Contexto extra" : language === "es" ? "Contexto extra" : "Extra Context"} {personaApplied ? " (persona enriched)" : "(optional)"}</label>
           <Textarea placeholder={language === "pt" ? "Regras de compliance, diretrizes da marca, mensagens específicas..." : language === "es" ? "Reglas de cumplimiento, directrices de marca..." : "Compliance rules, brand guidelines, specific messaging..."} value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
@@ -296,7 +296,7 @@ export default function ScriptGenerator() {
               )}
 
               {s.notes && (
-                <p className="text-xs text-muted-foreground/60 italic pt-1 border-t border-border/30" style={mono}>📝 {s.notes}</p>
+                <p className="text-xs text-muted-foreground/60 italic pt-1 border-t border-border/30" style={mono}> {s.notes}</p>
               )}
 
               <div className="flex gap-2 flex-wrap">

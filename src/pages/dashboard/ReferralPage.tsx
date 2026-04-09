@@ -342,7 +342,7 @@ export default function ReferralPage() {
         ) : (
           <div>
             {leaderboard.map((entry) => {
-              const medal = entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : null;
+              const medal = entry.rank === 1 ? "" : entry.rank === 2 ? "" : entry.rank === 3 ? "" : null;
               return (
                 <div key={entry.rank} style={{
                   display: "flex", alignItems: "center", gap: 12, padding: "12px 20px",

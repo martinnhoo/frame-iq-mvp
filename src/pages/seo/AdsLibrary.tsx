@@ -179,7 +179,7 @@ function AdsLibraryGrid({ title, filter }: { title: string; filter?: string | nu
             style={{ background: "#090910", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, overflow: "hidden", position: "relative" }}>
             {/* Thumbnail placeholder */}
             <div style={{ height: 140, background: `linear-gradient(135deg, rgba(14,165,233,0.08), rgba(6,182,212,0.05))`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-              <span style={{ fontSize: 32, opacity: 0.3 }}>🎬</span>
+              <span style={{ fontSize: 32, opacity: 0.3 }}></span>
               {/* Hook score badge */}
               <div style={{ position: "absolute", top: 10, left: 10, padding: "4px 10px", borderRadius: 20, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, fontWeight: 700, color: scoreColor(ad.hookScore) }}>{ad.hookScore}</span>

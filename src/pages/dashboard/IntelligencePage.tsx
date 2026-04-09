@@ -44,7 +44,7 @@ function MemoryRow({ m, lang, deleting, onDelete }: {
             {label}
           </span>
           <span style={{ fontFamily:M, fontSize:10, color:"rgba(255,255,255,0.2)" }}>
-            {"★".repeat(Math.min(m.importance, 5))}
+            {"".repeat(Math.min(m.importance, 5))}
           </span>
         </div>
         <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.55, margin:0,
@@ -81,7 +81,7 @@ function PatternRow({ p, showLess, showMore }: { p: Pattern; showLess:string; sh
     <div style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 12px", borderRadius:10,
       background: p.is_winner ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
       border:`1px solid ${p.is_winner ? "rgba(52,211,153,0.14)" : "rgba(255,255,255,0.07)"}` }}>
-      <span style={{ fontSize:13, flexShrink:0, marginTop:1 }}>{p.is_winner ? "✅" : "⚠️"}</span>
+      <span style={{ fontSize:13, flexShrink:0, marginTop:1 }}>{p.is_winner ? "" : ""}</span>
       <div style={{ flex:1, minWidth:0 }}>
         <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.5, margin:0,
           ...(isLong && !exp ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" as const } : {}) }}>
@@ -215,9 +215,9 @@ export default function IntelligencePage() {
                      : isES ? "De lo que funcionó en las campañas conectadas"
                      : "From what worked in connected campaigns",
     examples:    isPT ? "Respostas aprovadas" : isES ? "Respuestas aprobadas" : "Approved responses",
-    ex_sub:      isPT ? "Quando você curte 👍 uma resposta, salvo o estilo"
-                     : isES ? "Cuando das 👍 a una respuesta, guardo el estilo"
-                     : "When you 👍 a response, I save the style",
+    ex_sub:      isPT ? "Quando você curte  uma resposta, salvo o estilo"
+                     : isES ? "Cuando das  a una respuesta, guardo el estilo"
+                     : "When you  a response, I save the style",
     actions:     isPT ? "Ações executadas" : isES ? "Acciones ejecutadas" : "Actions executed",
     act_sub:     isPT ? "Pausas e escaladas feitas via IA com sua confirmação"
                      : isES ? "Pausas y escalados hechos via IA con tu confirmación"
@@ -225,16 +225,16 @@ export default function IntelligencePage() {
     empty:       isPT ? "Ainda sem inteligência acumulada"
                      : isES ? "Aún sin inteligencia acumulada"
                      : "No intelligence accumulated yet",
-    empty_sub:   isPT ? "Converse com a IA sobre esta conta e curta (👍) as respostas que gostar."
-                     : isES ? "Conversa con la IA sobre esta cuenta y dale 👍 a las respuestas que te gusten."
-                     : "Chat with the AI about this account and 👍 responses you like.",
+    empty_sub:   isPT ? "Converse com a IA sobre esta conta e curta () as respostas que gostar."
+                     : isES ? "Conversa con la IA sobre esta cuenta y dale  a las respuestas que te gusten."
+                     : "Chat with the AI about this account and  responses you like.",
     open_chat:   isPT ? "Abrir IA Chat" : isES ? "Abrir IA Chat" : "Open AI Chat",
     no_patterns: isPT ? "Nenhum padrão ainda — conecte Meta Ads"
                      : isES ? "Sin patrones aún — conecta Meta Ads"
                      : "No patterns yet — connect Meta Ads",
-    no_examples: isPT ? "Nenhum exemplo — curta 👍 respostas no chat"
-                     : isES ? "Sin ejemplos — da 👍 a respuestas en el chat"
-                     : "No examples — 👍 responses in chat",
+    no_examples: isPT ? "Nenhum exemplo — curta  respostas no chat"
+                     : isES ? "Sin ejemplos — da  a respuestas en el chat"
+                     : "No examples —  responses in chat",
     no_actions:  isPT ? "Nenhuma ação ainda"
                      : isES ? "Sin acciones aún"
                      : "No actions yet",

@@ -121,16 +121,16 @@ const T: Record<string, any> = {
 };
 
 const NICHES = [
-  { value: "igaming",   label: "iGaming",     icon: "🎰", color: "#f59e0b" },
-  { value: "ecommerce", label: "E-commerce",  icon: "🛒", color: "#06b6d4" },
-  { value: "fitness",   label: "Fitness",      icon: "💪", color: "#34d399" },
-  { value: "saas",      label: "SaaS / Tech",  icon: "⚡", color: "#8b5cf6" },
-  { value: "finance",   label: "Finanças",     icon: "💰", color: "#0ea5e9" },
-  { value: "beauty",    label: "Beleza",       icon: "✨", color: "#f472b6" },
-  { value: "education", label: "Educação",     icon: "📚", color: "#a78bfa" },
-  { value: "food",      label: "Food & Resto", icon: "🍔", color: "#fb923c" },
-  { value: "health",    label: "Saúde",        icon: "🏥", color: "#4ade80" },
-  { value: "other",     label: "Outro",        icon: "🔮", color: "#94a3b8" },
+  { value: "igaming",   label: "iGaming",     icon: "", color: "#f59e0b" },
+  { value: "ecommerce", label: "E-commerce",  icon: "", color: "#06b6d4" },
+  { value: "fitness",   label: "Fitness",      icon: "", color: "#34d399" },
+  { value: "saas",      label: "SaaS / Tech",  icon: "", color: "#8b5cf6" },
+  { value: "finance",   label: "Finanças",     icon: "", color: "#0ea5e9" },
+  { value: "beauty",    label: "Beleza",       icon: "", color: "#f472b6" },
+  { value: "education", label: "Educação",     icon: "", color: "#a78bfa" },
+  { value: "food",      label: "Food & Resto", icon: "", color: "#fb923c" },
+  { value: "health",    label: "Saúde",        icon: "", color: "#4ade80" },
+  { value: "other",     label: "Outro",        icon: "", color: "#94a3b8" },
 ];
 
 export default function Onboarding() {
@@ -416,7 +416,7 @@ export default function Onboarding() {
 
                 {/* Mini value prop */}
                 <div style={{ padding: "14px 16px", borderRadius: 14, marginBottom: 20, background: "rgba(14,165,233,0.07)", border: "1.5px solid rgba(14,165,233,0.18)", display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>🧠</span>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}></span>
                   <p style={{ fontFamily: M, fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.55, margin: 0 }}>{t.s1_value_prop}</p>
                 </div>
 

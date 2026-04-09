@@ -299,7 +299,7 @@ export default function CompetitorDecoder() {
           </div>
           {/* Quick country filters */}
           <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" as const }}>
-            {[{ code: "BR", flag: "🇧🇷", label: "Brasil" }, { code: "MX", flag: "🇲🇽", label: "México" }, { code: "IN", flag: "🇮🇳", label: "India" }, { code: "US", flag: "🇺🇸", label: "US" }, { code: "ALL", flag: "🌍", label: "Global" }].map(c => (
+            {[{ code: "BR", flag: "🇧🇷", label: "Brasil" }, { code: "MX", flag: "🇲🇽", label: "México" }, { code: "IN", flag: "🇮🇳", label: "India" }, { code: "US", flag: "🇺🇸", label: "US" }, { code: "ALL", flag: "", label: "Global" }].map(c => (
               <button key={c.code}
                 onClick={() => { if (brandQuery.trim()) window.open(`https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${c.code === "ALL" ? "ALL" : c.code}&q=${encodeURIComponent(brandQuery.trim())}&search_type=keyword_unordered`, "_blank", "noopener,noreferrer"); }}
                 disabled={!brandQuery.trim()}
@@ -312,7 +312,7 @@ export default function CompetitorDecoder() {
           </div>
           <div style={{ padding: "11px 14px", borderRadius: 9, background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.14)" }}>
             <p style={{ ...M, fontSize: 12, color: "rgba(238,240,246,0.5)", margin: 0, lineHeight: 1.6 }}>
-              💡 {t.brand_tip}
+               {t.brand_tip}
             </p>
           </div>
         </div>
@@ -468,7 +468,7 @@ ${t.link_placeholder}`} rows={5}
 
       {!loading && !result && (
         <div style={{ borderRadius: 12, border: "1px dashed rgba(255,255,255,0.08)", padding: "40px 20px", textAlign: "center" as const }}>
-          <div style={{ fontSize: 26, marginBottom: 10 }}>🎯</div>
+          <div style={{ fontSize: 26, marginBottom: 10 }}></div>
           <p style={{ ...F, fontSize: 14, fontWeight: 700, color: "rgba(238,240,246,0.35)", margin: "0 0 5px" }}>{t.empty}</p>
           <p style={{ ...M, fontSize: 12, color: "rgba(238,240,246,0.18)", margin: 0 }}>{t.empty_sub}</p>
         </div>

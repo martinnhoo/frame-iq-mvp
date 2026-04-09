@@ -184,7 +184,7 @@ export default function CreativeLoopPage() {
 
       {/* ── Coming soon banner — subtle ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)", marginBottom: 24, width: "fit-content" }}>
-        <span style={{ fontSize: 12 }}>⚡</span>
+        <span style={{ fontSize: 12 }}></span>
         <span style={{ ...m, fontSize: 12, fontWeight: 600, color: "rgba(251,191,36,0.65)", letterSpacing: "0.06em" }}>Coming soon: direct Meta Ads connection</span>
       </div>
 

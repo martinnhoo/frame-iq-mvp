@@ -78,7 +78,7 @@ export default function ToolPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {tool.useCases.map(uc => (
               <div key={uc} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}>✓</span>
+                <span style={{ color: accent, flexShrink: 0, marginTop: 1 }}></span>
                 <p style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>{uc}</p>
               </div>
             ))}

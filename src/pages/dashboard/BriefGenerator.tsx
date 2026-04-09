@@ -155,7 +155,7 @@ export default function BriefGenerator() {
             <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder="ex: 50% off, trial grátis, tempo limitado" />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Target Audience {personaApplied ? "✓" : "(optional)"}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Target Audience {personaApplied ? "" : "(optional)"}</label>
             <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder="ex: Mulheres 25-34, entusiastas fitness" />
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function BriefGenerator() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Market {personaApplied ? "✓" : ""}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Market {personaApplied ? "" : ""}</label>
             <Select value={market} onValueChange={setMarket}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -183,7 +183,7 @@ export default function BriefGenerator() {
                 <SelectItem value="BR">🇧🇷 Brazil</SelectItem>
                 <SelectItem value="MX">🇲🇽 Mexico</SelectItem>
                 <SelectItem value="IN">🇮🇳 India</SelectItem>
-                <SelectItem value="GLOBAL">🌍 Global</SelectItem>
+                <SelectItem value="GLOBAL"> Global</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -194,7 +194,7 @@ export default function BriefGenerator() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Extra Context {personaApplied ? "✓ (persona enriched)" : "(optional)"}</label>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Extra Context {personaApplied ? " (persona enriched)" : "(optional)"}</label>
           <Textarea placeholder="Diretrizes de marca, compliance, aprendizados de campanhas anteriores..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
@@ -318,13 +318,13 @@ export default function BriefGenerator() {
                 <AlertTriangle className="h-4 w-4" style={{ color: "#f87171" }} />
                 <span className="text-sm font-bold text-foreground" style={syne}>Do NOT</span>
               </div>
-              <ul className="space-y-0.5">{b.do_not?.map((d: string, i: number) => <li key={i} className="text-sm text-muted-foreground" style={mono}>✕ {d}</li>)}</ul>
+              <ul className="space-y-0.5">{b.do_not?.map((d: string, i: number) => <li key={i} className="text-sm text-muted-foreground" style={mono}> {d}</li>)}</ul>
             </div>
           </div>
 
           {b.compliance_notes && (
             <div className="rounded-xl border border-border/50 p-4 text-xs text-muted-foreground/60" style={{ ...mono, background: "rgba(255,255,255,0.02)" }}>
-              ⚖️ {b.compliance_notes}
+               {b.compliance_notes}
             </div>
           )}
 

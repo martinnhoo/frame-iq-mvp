@@ -151,7 +151,7 @@ const Contact = () => {
                   className="w-12 h-12 rounded-xl flex items-center justify-center"
                   style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)' }}
                 >
-                  <span className="text-xl">✉️</span>
+                  <span className="text-xl"></span>
                 </div>
                 <div className="text-left">
                   <div className="text-sm text-secondary">Email</div>

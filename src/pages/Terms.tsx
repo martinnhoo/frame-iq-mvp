@@ -80,7 +80,7 @@ const Terms = () => (
         <p>Our total liability for any claim arising from the Service shall not exceed the amount you paid us in the 12 months preceding the claim.</p>
 
         <h2 className="text-lg font-semibold text-foreground">14. Disclaimer of Warranties</h2>
-        <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. AI-generated content is for informational purposes and should not be considered professional advice.</p>
+        <p>THE SERVICE IS PROVIDED "AS IS"AND "AS AVAILABLE"WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. AI-generated content is for informational purposes and should not be considered professional advice.</p>
 
         <h2 className="text-lg font-semibold text-foreground">15. Service Availability</h2>
         <p>We strive for 99.9% uptime but do not guarantee uninterrupted access. We may perform maintenance or updates that temporarily affect availability.</p>

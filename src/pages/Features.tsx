@@ -7,7 +7,7 @@ const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 
 const FEATURES = [
   {
-    icon: "🎬", accent: "#0ea5e9",
+    icon: "", accent: "#0ea5e9",
     tag: "Core",
     title: "Ad Analysis",
     headline: "Know exactly why your ad is burning budget — in 60 seconds.",
@@ -17,7 +17,7 @@ const FEATURES = [
     cta: "Analyze your first ad free",
   },
   {
-    icon: "⚡", accent: "#fb923c",
+    icon: "", accent: "#fb923c",
     tag: "AI",
     title: "Hook Generator",
     headline: "Test 10 hook angles before committing a dollar to production.",
@@ -27,7 +27,7 @@ const FEATURES = [
     cta: "Generate hooks free",
   },
   {
-    icon: "📋", accent: "#60a5fa",
+    icon: "", accent: "#60a5fa",
     tag: "Production",
     title: "Brief Generator",
     headline: "Brief your editor in 30 seconds. Zero revision rounds.",
@@ -37,7 +37,7 @@ const FEATURES = [
     cta: "Create a brief",
   },
   {
-    icon: "🧠", accent: "#34d399",
+    icon: "", accent: "#34d399",
     tag: "Intelligence",
     title: "AdBrief AI",
     headline: "Ask your AI what's wasting budget and what to produce next.",
@@ -47,7 +47,7 @@ const FEATURES = [
     cta: "Ask AdBrief AI",
   },
   {
-    icon: "🔍", accent: "#a78bfa",
+    icon: "", accent: "#a78bfa",
     tag: "Intelligence",
     title: "Creative Performance Loop",
     headline: "Import your Meta data. Let the AI find your winning patterns.",
@@ -57,7 +57,7 @@ const FEATURES = [
     cta: "Start the loop",
   },
   {
-    icon: "✈️", accent: "#fbbf24",
+    icon: "", accent: "#fbbf24",
     tag: "Quality",
     title: "Pre-flight Check",
     headline: "Score any ad before it goes live. Catch problems before you spend.",
@@ -67,7 +67,7 @@ const FEATURES = [
     cta: "Run a pre-flight",
   },
   {
-    icon: "📝", accent: "#0ea5e9",
+    icon: "", accent: "#0ea5e9",
     tag: "Production",
     title: "Script Generator",
     headline: "Full ad scripts calibrated to what's working in your account.",
@@ -77,7 +77,7 @@ const FEATURES = [
     cta: "Generate a script",
   },
   {
-    icon: "🌎", accent: "#34d399",
+    icon: "", accent: "#34d399",
     tag: "Scale",
     title: "Translation & Localization",
     headline: "Take your winning creative to a new market. Not just translated — localized.",

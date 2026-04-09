@@ -136,7 +136,7 @@ const Signup = () => {
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               {planParam && (
                 <div style={{ marginBottom: 16, padding: '8px 16px', borderRadius: 10, background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)', color: '#38bdf8', fontSize: 13, fontWeight: 600, display: 'inline-block' }}>
-                  🎯 Starting with <span style={{ textTransform: 'capitalize' }}>{planParam}</span> plan
+                   Starting with <span style={{ textTransform: 'capitalize' }}>{planParam}</span> plan
                 </div>
               )}
               <h1 style={{ fontSize: 24, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', margin: '0 0 8px' }}>{t("auth_signup_title")}</h1>

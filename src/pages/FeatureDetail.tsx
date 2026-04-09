@@ -152,7 +152,7 @@ const VideoAnalysisDemo = () => (
     </div>
 
     <div className="flex flex-wrap gap-2">
-      {['🌐 EN', '⏱ 0:30', '📍 Global', '👟 Sports', '🏃 Athletes 18-35'].map(b => (
+      {[' EN', ' 0:30', ' Global', ' Sports', ' Athletes 18-35'].map(b => (
         <span key={b} style={{ background: '#141414', border: '1px solid #222', borderRadius: '6px', padding: '6px 10px', fontSize: '11px', color: '#888' }}>{b}</span>
       ))}
     </div>
@@ -196,14 +196,14 @@ const BoardGenerationDemo = () => {
             <div className="flex-1 min-w-0">
               <p style={{ color: '#e5e5e5', fontSize: '13px', lineHeight: 1.5 }}>{scene.desc}</p>
               <p style={{ color: '#0ea5e9', fontSize: '12px', fontFamily: '"DM Mono", monospace', marginTop: 4 }}>{scene.vo}</p>
-              <p style={{ color: '#555', fontSize: '11px', marginTop: 4, fontStyle: 'italic' }}>📝 {scene.note}</p>
+              <p style={{ color: '#555', fontSize: '11px', marginTop: 4, fontStyle: 'italic' }}> {scene.note}</p>
             </div>
           </div>
         ))}
       </div>
 
       <div className="flex gap-2 mt-4">
-        {['📱 9:16 Vertical', '💰 Fintech', '🎯 App Install'].map(b => (
+        {[' 9:16 Vertical', ' Fintech', ' App Install'].map(b => (
           <span key={b} style={{ background: '#141414', border: '1px solid #222', borderRadius: '6px', padding: '6px 10px', fontSize: '11px', color: '#888' }}>{b}</span>
         ))}
       </div>
@@ -266,7 +266,7 @@ const AutoTranslationDemo = () => (
     </div>
 
     <div className="flex flex-wrap gap-2">
-      {['🌐 PT-BR → EN', '⏱ 0:22', '📍 BR Market', '🎮 iGaming', '⚽ Sports 21-45'].map(b => (
+      {[' PT-BR → EN', ' 0:22', ' BR Market', ' iGaming', ' Sports 21-45'].map(b => (
         <span key={b} style={{ background: '#141414', border: '1px solid #222', borderRadius: '6px', padding: '6px 10px', fontSize: '11px', color: '#888' }}>{b}</span>
       ))}
     </div>
@@ -336,7 +336,7 @@ const CreativeIntelligenceDemo = () => {
 
       {/* Key insight */}
       <div className="p-3 rounded-xl" style={{ background: 'rgba(249, 115, 22, 0.05)', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
-        <div style={{ color: '#f97316', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px', fontWeight: 600 }}>💡 Key Insight</div>
+        <div style={{ color: '#f97316', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px', fontWeight: 600 }}> Key Insight</div>
         <p style={{ color: '#ccc', fontSize: '13px', lineHeight: 1.6 }}>
           Curiosity gap hooks grew 15% this week in Beauty. Competitors shifting from Social Proof to Curiosity — recommend testing 3 new curiosity hooks with your top UGC creators.
         </p>
@@ -419,7 +419,7 @@ const AIVideoGenerationDemo = () => {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {['🌐 EN', '⏱ 0:24', '📍 Global', '👕 Fashion', '💪 Fitness 18-30'].map(b => (
+        {[' EN', ' 0:24', ' Global', ' Fashion', ' Fitness 18-30'].map(b => (
           <span key={b} style={{ background: '#141414', border: '1px solid #222', borderRadius: '6px', padding: '6px 10px', fontSize: '11px', color: '#888' }}>{b}</span>
         ))}
       </div>
@@ -482,7 +482,7 @@ const APIAccessDemo = () => (
     </div>
 
     <div className="flex flex-wrap gap-2">
-      {['🔗 REST API', '📊 Batch 24', '📍 Multi-market', '🎰 iGaming', '📈 Analytics'].map(b => (
+      {[' REST API', ' Batch 24', ' Multi-market', ' iGaming', ' Analytics'].map(b => (
         <span key={b} style={{ background: '#141414', border: '1px solid #222', borderRadius: '6px', padding: '6px 10px', fontSize: '11px', color: '#888' }}>{b}</span>
       ))}
     </div>
@@ -574,7 +574,7 @@ const FeatureDetail = () => {
             <div className="grid md:grid-cols-2 gap-4 mb-16">
               {feature.details.map((detail, i) => (
                 <div key={i} className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(139, 92, 246, 0.03)', border: '1px solid rgba(139, 92, 246, 0.1)' }}>
-                  <span className="text-sky-400 mt-0.5">✓</span>
+                  <span className="text-sky-400 mt-0.5"></span>
                   <span className="text-sm text-secondary leading-relaxed">{detail}</span>
                 </div>
               ))}
@@ -594,7 +594,7 @@ const FeatureDetail = () => {
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28c840' }} />
                 </div>
                 <div className="flex-1 text-center mx-12" style={{ background: '#0a0a0a', borderRadius: '8px', padding: '6px 16px', fontSize: '12px', color: '#666', fontFamily: '"DM Mono", monospace', border: '1px solid #222' }}>
-                  <span style={{ color: '#4ade80' }}>🔒</span> app.adbrief.pro
+                  <span style={{ color: '#4ade80' }}></span> app.adbrief.pro
                 </div>
                 <div className="w-16" />
               </div>

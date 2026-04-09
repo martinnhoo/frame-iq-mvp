@@ -41,7 +41,7 @@ export default function SeoLandingPage({ metaTitle, metaDescription, canonical, 
             <h2 style={{ ...j, fontSize: 22, fontWeight: 700, marginBottom: 16 }}>What you can do with it</h2>
             {useCases.map(uc => (
               <div key={uc} style={{ display: "flex", gap: 12, marginBottom: 10 }}>
-                <span style={{ color: accentColor, flexShrink: 0 }}>✓</span>
+                <span style={{ color: accentColor, flexShrink: 0 }}></span>
                 <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{uc}</p>
               </div>
             ))}

@@ -1621,42 +1621,42 @@ MONTHLY REVIEW: What to check every 30 days to rebalance allocation.`),
 
 
 export const CAT_META: Record<string, { label: string; color: string; emoji: string }> = {
-  ugc:        { label: "UGC",          color: "text-violet-400 bg-violet-400/10 border-violet-400/25",  emoji: "📱" },
-  testimonial:{ label: "Testimonial",  color: "text-green-400 bg-green-400/10 border-green-400/25",     emoji: "⭐" },
-  promo:      { label: "Promo",        color: "text-orange-400 bg-orange-400/10 border-orange-400/25",  emoji: "🔥" },
-  tutorial:   { label: "Tutorial",     color: "text-blue-400 bg-blue-400/10 border-blue-400/25",        emoji: "🎓" },
-  hook:       { label: "Hook",         color: "text-red-400 bg-red-400/10 border-red-400/25",           emoji: "🎣" },
-  product:    { label: "Product",      color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/25",        emoji: "📦" },
-  story:      { label: "Story",        color: "text-amber-400 bg-amber-400/10 border-amber-400/25",     emoji: "📖" },
-  react:      { label: "React",        color: "text-pink-400 bg-pink-400/10 border-pink-400/25",        emoji: "😂" },
-  app:        { label: "App",          color: "text-lime-400 bg-lime-400/10 border-lime-400/25",        emoji: "📲" },
-  b2b:        { label: "B2B",          color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/25",  emoji: "🏢" },
-  seasonal:   { label: "Seasonal",     color: "text-teal-400 bg-teal-400/10 border-teal-400/25",        emoji: "🗓️" },
-  ecommerce:  { label: "E-commerce",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/25", emoji: "🛒" },
-  finance:    { label: "Finance",      color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/25",emoji: "💰" },
-  health:     { label: "Health",       color: "text-rose-400 bg-rose-400/10 border-rose-400/25",        emoji: "💊" },
-  beauty:     { label: "Beauty",       color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/25",emoji: "💄" },
-  food:       { label: "Food",         color: "text-orange-300 bg-orange-300/10 border-orange-300/25",  emoji: "🍔" },
-  gaming:     { label: "Gaming",       color: "text-sky-400 bg-sky-400/10 border-sky-400/25",  emoji: "🎮" },
-  real_estate:{ label: "Real Estate",  color: "text-sky-400 bg-sky-400/10 border-sky-400/25",           emoji: "🏠" },
-  education:  { label: "Education",    color: "text-blue-300 bg-blue-300/10 border-blue-300/25",        emoji: "📚" },
-  travel:     { label: "Travel",       color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/25",        emoji: "✈️" },
-  igaming:    { label: "iGaming",      color: "text-purple-300 bg-sky-300/10 border-sky-300/25",  emoji: "🎰" },
-  fintech:    { label: "Fintech",      color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/25",emoji: "💳" },
-  saas:       { label: "SaaS",         color: "text-blue-400 bg-blue-400/10 border-blue-400/25",        emoji: "☁️" },
-  fitness:    { label: "Fitness",      color: "text-green-400 bg-green-400/10 border-green-400/25",     emoji: "💪" },
-  fashion:    { label: "Fashion",      color: "text-pink-300 bg-pink-300/10 border-pink-300/25",        emoji: "👗" },
-  automotive: { label: "Automotive",   color: "text-zinc-400 bg-zinc-400/10 border-zinc-400/25",        emoji: "🚗" },
+  ugc:        { label: "UGC",          color: "text-violet-400 bg-violet-400/10 border-violet-400/25",  emoji: "" },
+  testimonial:{ label: "Testimonial",  color: "text-green-400 bg-green-400/10 border-green-400/25",     emoji: "" },
+  promo:      { label: "Promo",        color: "text-orange-400 bg-orange-400/10 border-orange-400/25",  emoji: "" },
+  tutorial:   { label: "Tutorial",     color: "text-blue-400 bg-blue-400/10 border-blue-400/25",        emoji: "" },
+  hook:       { label: "Hook",         color: "text-red-400 bg-red-400/10 border-red-400/25",           emoji: "" },
+  product:    { label: "Product",      color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/25",        emoji: "" },
+  story:      { label: "Story",        color: "text-amber-400 bg-amber-400/10 border-amber-400/25",     emoji: "" },
+  react:      { label: "React",        color: "text-pink-400 bg-pink-400/10 border-pink-400/25",        emoji: "" },
+  app:        { label: "App",          color: "text-lime-400 bg-lime-400/10 border-lime-400/25",        emoji: "" },
+  b2b:        { label: "B2B",          color: "text-indigo-400 bg-indigo-400/10 border-indigo-400/25",  emoji: "" },
+  seasonal:   { label: "Seasonal",     color: "text-teal-400 bg-teal-400/10 border-teal-400/25",        emoji: "" },
+  ecommerce:  { label: "E-commerce",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/25", emoji: "" },
+  finance:    { label: "Finance",      color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/25",emoji: "" },
+  health:     { label: "Health",       color: "text-rose-400 bg-rose-400/10 border-rose-400/25",        emoji: "" },
+  beauty:     { label: "Beauty",       color: "text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/25",emoji: "" },
+  food:       { label: "Food",         color: "text-orange-300 bg-orange-300/10 border-orange-300/25",  emoji: "" },
+  gaming:     { label: "Gaming",       color: "text-sky-400 bg-sky-400/10 border-sky-400/25",  emoji: "" },
+  real_estate:{ label: "Real Estate",  color: "text-sky-400 bg-sky-400/10 border-sky-400/25",           emoji: "" },
+  education:  { label: "Education",    color: "text-blue-300 bg-blue-300/10 border-blue-300/25",        emoji: "" },
+  travel:     { label: "Travel",       color: "text-cyan-300 bg-cyan-300/10 border-cyan-300/25",        emoji: "" },
+  igaming:    { label: "iGaming",      color: "text-purple-300 bg-sky-300/10 border-sky-300/25",  emoji: "" },
+  fintech:    { label: "Fintech",      color: "text-emerald-300 bg-emerald-300/10 border-emerald-300/25",emoji: "" },
+  saas:       { label: "SaaS",         color: "text-blue-400 bg-blue-400/10 border-blue-400/25",        emoji: "" },
+  fitness:    { label: "Fitness",      color: "text-green-400 bg-green-400/10 border-green-400/25",     emoji: "" },
+  fashion:    { label: "Fashion",      color: "text-pink-300 bg-pink-300/10 border-pink-300/25",        emoji: "" },
+  automotive: { label: "Automotive",   color: "text-zinc-400 bg-zinc-400/10 border-zinc-400/25",        emoji: "" },
   crypto:     { label: "Crypto",       color: "text-yellow-300 bg-yellow-300/10 border-yellow-300/25",  emoji: "₿" },
-  insurance:  { label: "Insurance",    color: "text-slate-400 bg-slate-400/10 border-slate-400/25",     emoji: "🛡️" },
-  hr:         { label: "HR",           color: "text-violet-300 bg-violet-300/10 border-violet-300/25",  emoji: "👥" },
-  ngo:        { label: "NGO",          color: "text-rose-300 bg-rose-300/10 border-rose-300/25",        emoji: "❤️" },
-  pet:        { label: "Pet",          color: "text-amber-300 bg-amber-300/10 border-amber-300/25",     emoji: "🐾" },
-  analysis:   { label: "Analysis",     color: "text-violet-300 bg-violet-300/10 border-violet-300/25",  emoji: "📊" },
+  insurance:  { label: "Insurance",    color: "text-slate-400 bg-slate-400/10 border-slate-400/25",     emoji: "" },
+  hr:         { label: "HR",           color: "text-violet-300 bg-violet-300/10 border-violet-300/25",  emoji: "" },
+  ngo:        { label: "NGO",          color: "text-rose-300 bg-rose-300/10 border-rose-300/25",        emoji: "" },
+  pet:        { label: "Pet",          color: "text-amber-300 bg-amber-300/10 border-amber-300/25",     emoji: "" },
+  analysis:   { label: "Analysis",     color: "text-violet-300 bg-violet-300/10 border-violet-300/25",  emoji: "" },
 };
 
 const CATEGORIES: Array<{ value: Category; label: string; emoji: string }> = [
-  { value: "all", label: "All", emoji: "🌐" },
+  { value: "all", label: "All", emoji: "" },
   ...Object.entries(CAT_META).map(([k, v]) => ({ value: k as Category, label: v.label, emoji: v.emoji })),
 ];
 
@@ -1843,7 +1843,7 @@ const TemplatesPage = () => {
       {/* Grid */}
       {paginated.length === 0 ? (
         <div className="text-center py-16 text-white/40">
-          <p className="text-4xl mb-3">🔍</p>
+          <p className="text-4xl mb-3"></p>
           <p className="font-medium">{ot("tp_no_match")}</p>
         </div>
       ) : (
@@ -1865,7 +1865,7 @@ const TemplatesPage = () => {
                       </span>
                       {(usageCounts[template.id] || 0) >= 3 && (
                         <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)", letterSpacing: "0.06em" }}>
-                          🔥 POPULAR
+                           POPULAR
                         </span>
                       )}
                     </div>
@@ -1975,7 +1975,7 @@ const TemplatesPage = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-purple-900/25 to-pink-900/20 pointer-events-none" />
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-3.5 justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white">{(language !== "en" ? getUpgradeCTA("unlock", language) : null) || "Unlock all"} {TEMPLATES.length} {(language !== "en" ? getUpgradeCTA("templates", language) : null) || "templates"} ⚡</p>
+              <p className="text-sm font-bold text-white">{(language !== "en" ? getUpgradeCTA("unlock", language) : null) || "Unlock all"} {TEMPLATES.length} {(language !== "en" ? getUpgradeCTA("templates", language) : null) || "templates"} </p>
               <p className="text-xs text-white/55">{(language !== "en" ? getUpgradeCTA("plan_desc", language) : null) || "Studio plan · 30 analyses · 30 boards · unlimited hooks"}</p>
             </div>
             <button

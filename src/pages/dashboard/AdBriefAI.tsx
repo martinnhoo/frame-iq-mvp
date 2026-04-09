@@ -73,7 +73,7 @@ const SKILLS: Skill[] = [
   {
     id: "media_buyer",
     name: "Media Buyer",
-    icon: "💰",
+    icon: "",
     color: "#0da2e7",
     desc: {
       pt: "Lances, orçamento, frequência e estrutura de campanha",
@@ -92,7 +92,7 @@ Você está no modo Media Buyer especialista. Ao analisar dados:
   {
     id: "creative_director",
     name: "Creative Director",
-    icon: "🎬",
+    icon: "",
     color: "#a855f7",
     desc: {
       pt: "Hooks, storytelling, scroll-stop e direção criativa",
@@ -111,7 +111,7 @@ Você está no modo Creative Director. Ao analisar dados:
   {
     id: "copywriter",
     name: "Copywriter DR",
-    icon: "✍️",
+    icon: "",
     color: "#10b981",
     desc: {
       pt: "Copy de alta conversão, PAS/AIDA, scripts e CTAs irresistíveis",
@@ -130,7 +130,7 @@ Você está no modo Copywriter de Resposta Direta. Ao escrever ou analisar:
   {
     id: "analyst",
     name: "Analista",
-    icon: "📊",
+    icon: "",
     color: "#f59e0b",
     desc: {
       pt: "Padrões estatísticos, correlações, testes A/B e tendências",
@@ -149,7 +149,7 @@ Você está no modo Analista de Performance. Ao analisar dados:
   {
     id: "growth",
     name: "Growth",
-    icon: "🚀",
+    icon: "",
     color: "#ef4444",
     desc: {
       pt: "Ampliar winners, lookalikes, escala rápida e velocidade de execução",
@@ -226,21 +226,21 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
 
   const config: Record<string, any> = {
     hooks: {
-      icon: "⚡", color: "#06b6d4",
+      icon: "", color: "#06b6d4",
       title: { en: "Generate Hooks", pt: "Gerar Hooks", es: "Generar Hooks" },
       placeholder: { en: "Describe product, angle, or paste context…", pt: "Descreva o produto, ângulo, ou cole o contexto…", es: "Describe el producto, ángulo, o pega el contexto…" },
       cta: { en: "Generate 5 hooks →", pt: "Gerar 5 hooks →", es: "Generar 5 hooks →" },
       buildMsg: (v: string, p: string, t: string) => `[HOOKS] Generate 5 high-converting ${t} ad hooks. Product: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Platform: ${accountCtx?.platform||p}. Tone: ${t}. Context: "${v}". Format: [N]. [Hook]. Label hook type. Use account patterns if available.`,
     },
     script: {
-      icon: "✍️", color: "#34d399",
+      icon: "", color: "#34d399",
       title: { en: "Write Script", pt: "Escrever Roteiro", es: "Escribir Guión" },
       placeholder: { en: "What's the ad about? Paste brief or context…", pt: "Sobre o que é o anúncio? Cole o brief ou contexto…", es: "¿De qué trata el anuncio? Pega el brief o contexto…" },
       cta: { en: "Write script →", pt: "Escrever roteiro →", es: "Escribir guión →" },
       buildMsg: (v: string, p: string, t: string) => `[SCRIPT] Write a complete ${t} video ad script. Product: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Platform: ${accountCtx?.platform||p}. Context: "${v}". Format: VO | ON-SCREEN | VISUAL. Hook in first 3s.`,
     },
     competitor: {
-      icon: "🔍", color: "#a78bfa",
+      icon: "", color: "#a78bfa",
       title: { en: "Competitors Analysis", pt: "Análise de Concorrentes", es: "Análisis de Competidores" },
       placeholder: { en: "Paste competitor URL, describe their ad, or enter brand name…", pt: "Cole URL do concorrente, descreva o criativo, ou escreva a marca…", es: "Pega URL del competidor, describe su anuncio, o escribe la marca…" },
       cta: { en: "Analyze →", pt: "Analisar →", es: "Analizar →" },
@@ -449,19 +449,19 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   const L: Record<string,Record<string,string>> = {
     en:{
       sure:"Are you sure you want to proceed with the action:",
-      confirm:lang==="es"?"Sí, continuar":"Sim, continuar",cancel:lang==="es"?"Cancelar":"Cancelar",running:lang==="es"?"Ejecutando...":"Executando...",done:lang==="es"?"Listo ✓":"Pronto ✓",
+      confirm:lang==="es"?"Sí, continuar":"Sim, continuar",cancel:lang==="es"?"Cancelar":"Cancelar",running:lang==="es"?"Ejecutando...":"Executando...",done:lang==="es"?"Listo ":"Pronto ",
       pause:lang==="es"?"Pausar":"Pausar",enable:lang==="es"?"Activar":"Ativar",update_budget:lang==="es"?"Actualizar budget":"Atualizar budget",publish:lang==="es"?"Publicar":"Publicar",duplicate:lang==="es"?"Duplicar":"Duplicar",
       warning:"This action will be logged and cannot be undone.",
     },
     pt:{
       sure:"Tem certeza que deseja prosseguir com a ação:",
-      confirm:"Sim, prosseguir",cancel:"Cancelar",running:"Executando...",done:"Concluído ✓",
+      confirm:"Sim, prosseguir",cancel:"Cancelar",running:"Executando...",done:"Concluído ",
       pause:"Pausar",enable:"Ativar",update_budget:"Atualizar orçamento",publish:"Publicar",duplicate:"Duplicar",
       warning:"Esta ação será registrada e não pode ser desfeita.",
     },
     es:{
       sure:"¿Estás seguro de que deseas proceder con la acción:",
-      confirm:"Sí, proceder",cancel:"Cancelar",running:"Ejecutando...",done:"Completado ✓",
+      confirm:"Sí, proceder",cancel:"Cancelar",running:"Ejecutando...",done:"Completado ",
       pause:"Pausar",enable:"Activar",update_budget:"Actualizar presupuesto",publish:"Publicar",duplicate:"Duplicar",
       warning:"Esta acción quedará registrada y no se puede deshacer.",
     },
@@ -469,13 +469,13 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   const t=L[lang]||L.en;
   const actionLabel=t[block.meta_action as string]||block.meta_action||"Execute";
   const target=block.target_name||block.target_id||"";
-  const icons: Record<string,string>={pause:"⏸",enable:"▶",update_budget:"💰",publish:"🚀",duplicate:"📋"};
-  const icon=icons[block.meta_action||""]||"⚡";
+  const icons: Record<string,string>={pause:"",enable:"",update_budget:"",publish:"",duplicate:""};
+  const icon=icons[block.meta_action||""]||"";
 
   if(state==="done") return(
     <div style={{borderRadius:14,border:"1px solid rgba(52,211,153,0.25)",background:"rgba(52,211,153,0.06)",padding:"14px 16px",marginBottom:10}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-        <span style={{fontSize:16}}>✅</span>
+        <span style={{fontSize:16}}></span>
         <p style={{...j,fontSize:13,fontWeight:700,color:"#34d399",margin:0}}>{t.done}</p>
       </div>
       <p style={{...m,fontSize:12,color:"rgba(52,211,153,0.7)",margin:0}}>{result}</p>
@@ -502,7 +502,7 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
       </div>
       {/* Warning */}
       <div style={{padding:"8px 16px",background:"rgba(251,146,60,0.06)",borderBottom:"1px solid rgba(251,146,60,0.08)"}}>
-        <p style={{...m,fontSize:12,color:"rgba(251,146,60,0.6)",margin:0}}>⚠️ {t.warning}</p>
+        <p style={{...m,fontSize:12,color:"rgba(251,146,60,0.6)",margin:0}}> {t.warning}</p>
       </div>
       {/* Buttons */}
       <div style={{padding:"16px",display:"flex",gap:8}}>
@@ -818,7 +818,7 @@ function getCCMetrics(raw: any) {
   if (raw.compliance?.length > 0) {
     const blocked = raw.compliance.some((c:any)=>["FLAG","BLOCKED","CRITICAL"].includes(c.status));
     const clear   = raw.compliance.every((c:any)=>c.status==="CLEAR");
-    m.push({ label:"Compliance", value: blocked?"⚠ Risco":clear?"✓ Ok":"Revisar", color: blocked?"red":clear?"green":"amber" });
+    m.push({ label:"Compliance", value: blocked?"Risco":clear?"Ok":"Revisar", color: blocked?"red":clear?"green":"amber" });
   }
   return m;
 }
@@ -869,9 +869,9 @@ function CreativeCheckCard({ block }: { block: any }) {
           letterSpacing:"0.08em", textTransform:"uppercase" as const, marginBottom:8,
           background:vc.bg, border:`1px solid ${vc.border}`, color:vc.color,
         }}>
-          {raw.verdict==="READY" && "✓ "}
+          {raw.verdict==="READY" && " "}
           {raw.verdict==="REVIEW" && "△ "}
-          {raw.verdict==="BLOCKED" && "✕ "}
+          {raw.verdict==="BLOCKED" && " "}
           {vc.label}
         </span>
         <p style={{ margin:0, fontSize:16, fontWeight:700, color:"#f0f2f8", letterSpacing:"-0.025em", lineHeight:1.35 }}>
@@ -1007,7 +1007,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
   // ── WARNING — linha colorida discreta, sem caixa ──
   if(block.type==="warning") return(
     <div style={{display:"flex",alignItems:"flex-start",gap:8,margin:"2px 0 8px",padding:"12px 14px 12px 16px",borderRadius:8,background:"rgba(251,191,36,0.05)",borderLeft:"3px solid rgba(251,191,36,0.4)"}}>
-      <span style={{fontSize:13,flexShrink:0,marginTop:1,lineHeight:1}}>⚠</span>
+      <span style={{fontSize:13,flexShrink:0,marginTop:1,lineHeight:1}}></span>
       <div className="msg-body" style={{fontSize:13.5,lineHeight:1.65,margin:0,flex:1}}>
         {renderMarkdown(block.content||block.title||"", stream)}
       </div>
@@ -1209,13 +1209,13 @@ function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { bloc
   return (
     <div style={{ borderRadius: 14, border: "1px solid rgba(14,165,233,0.25)", background: "rgba(14,165,233,0.05)", padding: "16px", marginBottom: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 16 }}>📊</span>
+        <span style={{ fontSize: 16 }}></span>
         <p style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#eef0f6", margin: 0 }}>{block.title}</p>
       </div>
       <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.65)", lineHeight: 1.65, margin: "0 0 14px" }}>{block.content}</p>
       {typeof block.remaining === "number" && block.remaining <= 3 && (
         <p style={{ fontFamily: M, fontSize: 12, color: block.remaining === 0 ? "#f87171" : "#fbbf24", marginBottom: 12 }}>
-          {block.remaining === 0 ? "⚠️ " : "⚡ "}{block.remaining} {t.remaining}
+          {block.remaining === 0 ? " " : " "}{block.remaining} {t.remaining}
         </p>
       )}
       <div style={{ display: "flex", gap: 8 }}>
@@ -1245,7 +1245,7 @@ function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: str
     <>
       <div role="button" aria-label="Close" tabIndex={0} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 500 }} onClick={onClose} onKeyDown={e => e.key === "Escape" && onClose()} />
       <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: 360, background: "#131720", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 20, padding: "28px 24px", boxShadow: "0 24px 80px rgba(0,0,0,0.7)" }}>
-        <div style={{ fontSize: 36, marginBottom: 14, textAlign: "center" }}>📊</div>
+        <div style={{ fontSize: 36, marginBottom: 14, textAlign: "center" }}></div>
         <p style={{ fontFamily: F, fontSize: 16, fontWeight: 800, color: "#eef0f6", textAlign: "center", margin: "0 0 10px" }}>{m.title}</p>
         <p style={{ fontFamily: M, fontSize: 13, color: "rgba(238,240,246,0.55)", lineHeight: 1.65, textAlign: "center", margin: "0 0 22px" }}>{m.sub}</p>
         <button onClick={() => { navigate("/dashboard/ai"); onClose(); setTimeout(() => navigate("/pricing"), 50); }}
@@ -1668,7 +1668,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             {warnCount > 0 && (
               <div style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:7,
                 background:"rgba(248,113,133,0.1)", border:"1px solid rgba(248,113,133,0.2)", flexShrink:0 }}>
-                <span style={{ fontSize:10, color:"#fb7185" }}>⚠</span>
+                <span style={{ fontSize:10, color:"#fb7185" }}></span>
                 <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600, color:"rgba(248,113,133,0.9)", letterSpacing:"0.03em" }}>
                   {warnCount} {lang==="pt"?"alerta":"alert"}{warnCount > 1 ? "s" : ""}
                 </span>
@@ -2455,7 +2455,7 @@ export default function AdBriefAI() {
         ).order("importance",{ascending:false}).limit(20),
       ]);
       const analyses=(analysesRes.data||[]).map((a:any)=>{const r=a.result as any||{};return`[${a.id.slice(0,8)}] ${a.title||"Untitled"} | score:${r.hook_score??""} | type:${r.hook_type??""} | market:${r.market_guess??""} | strength:${a.hook_strength??""} | date:${a.created_at?.slice(0,10)}`;}).join("\n");
-      const patterns=((patternsRes.data||[]) as any[]).map((p:any)=>`${p.is_winner?"✓":"✗"} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
+      const patterns=((patternsRes.data||[]) as any[]).map((p:any)=>`${p.is_winner?"":""} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
       const persona=(()=>{if(!personaRes.data)return"No active persona";const r=personaRes.data.result as any||{};return`Name:${personaRes.data.name}|Age:${r.age_range}|Pain:${(r.pain_points||[]).slice(0,3).join(",")}|Platforms:${(r.platforms||[]).join("+")}`})();
       const entries=(entriesRes.data||[]) as any[];
       const byEd: Record<string,{ctr:number[],roas:number[],n:number}>={};
@@ -2707,12 +2707,12 @@ FIT: [audience alignment]
 When in doubt about format → ask ONE clarifying question. Don't default to video hooks.
 
 HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
-  ✓ User explicitly says "gera hooks", "me dá hooks", "hook options", "variações de hook"
-  ✓ User is planning a NEW video ad from scratch
-  ✗ User is asking about a marketplace post/boost
-  ✗ User asks generically "como devia ser o anúncio"
-  ✗ User asks for advice on an existing static ad
-  ✗ User is asking about strategy, benchmarks, or diagnosis
+   User explicitly says "gera hooks", "me dá hooks", "hook options", "variações de hook"
+   User is planning a NEW video ad from scratch
+   User is asking about a marketplace post/boost
+   User asks generically "como devia ser o anúncio"
+   User asks for advice on an existing static ad
+   User is asking about strategy, benchmarks, or diagnosis
   When NOT using hooks block type → respond in plain conversational text with specific advice.
 
 ── WHAT NOT TO DO ────────────────────────────────────────────────────────────
@@ -3085,9 +3085,9 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
           }
           if (ctrDelta !== null) parts.push(`CTR ${ctrDelta > 0 ? "↑" : "↓"} ${Math.abs(ctrDelta).toFixed(1)}% vs semana anterior.`);
           if (toScale.length) parts.push(`"${toScale[0].name?.slice(0, 40)}" está com CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — bom candidato para escalar.`);
-          if (toPause.length) parts.push(`"${toPause[0].name?.slice(0, 40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}%, ${currSymbol}${toPause[0].spend?.toFixed(0)} gastos — considere pausar.`);
+          if (toPause.length) parts.push(`"${toPause[0].name?.slice(0, 40)}"CTR ${(toPause[0].ctr*100)?.toFixed(2)}%, ${currSymbol}${toPause[0].spend?.toFixed(0)} gastos — considere pausar.`);
           if (fatigued.length) parts.push(`"${fatigued[0].name?.slice(0, 40)}" freq. ${fatigued[0].frequency?.toFixed(1)}x — fadiga criativa, troque o criativo.`);
-          if (approachingFatigue.length) parts.push(`⚠️ "${approachingFatigue[0].name?.slice(0, 35)}" — ${approachingFatigue[0].predictCritical}: prepare uma variação agora.`);
+          if (approachingFatigue.length) parts.push(` "${approachingFatigue[0].name?.slice(0, 35)}" — ${approachingFatigue[0].predictCritical}: prepare uma variação agora.`);
           if (snapshot.ai_insight) parts.push(snapshot.ai_insight);
           parts.push("O que quer fazer?");
         } else if (lang === "es") {
@@ -3096,8 +3096,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
           } else {
             parts.push(`Analicé ${accountName ? `la cuenta ${accountName}` : "tu cuenta"} — $${snapshot.total_spend?.toFixed(0)} gastados esta semana, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%.`);
           }
-          if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — buen candidato para escalar.`);
-          if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" CTR ${(toPause[0].ctr*100)?.toFixed(2)}% — considera pausarlo.`);
+          if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}"CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — buen candidato para escalar.`);
+          if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}"CTR ${(toPause[0].ctr*100)?.toFixed(2)}% — considera pausarlo.`);
           parts.push("¿Qué quieres hacer?");
         } else {
           if (isBoth && googleRaw && !googleRaw.skipped) {
@@ -3444,18 +3444,18 @@ To disconnect, click the Telegram icon at the top.`;
           const txt = lang==="pt"
             ? `Simples. Clique no link — ele abre o @AdBriefAlertsBot com o seu token. Toque em /start e pronto.
 
-🔗 ${link}
+ ${link}
 
 Você vai receber alertas críticos e pode pausar anúncios direto pelo Telegram. Tudo fica registrado aqui com data e hora.`
             : lang==="es"
             ? `Simple. Haz clic en el enlace — abre @AdBriefAlertsBot con tu token. Toca /start y listo.
 
-🔗 ${link}
+ ${link}
 
 Recibirás alertas críticos y podrás pausar anuncios desde Telegram.`
             : `Simple. Click the link — it opens @AdBriefAlertsBot with your token. Tap /start and you're done.
 
-🔗 ${link}
+ ${link}
 
 You'll get critical alerts and can pause ads from Telegram. Everything logged here.`;
           setMessages(prev=>[...prev,{role:"assistant",id:aid,ts:aid,blocks:[{type:"text" as const,title:lang==="pt"?"Conectar Telegram":lang==="es"?"Conectar Telegram":"Connect Telegram",content:txt}]}]);
@@ -3940,7 +3940,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   transition: isDismissing ? "all 0.25s cubic-bezier(0.4,0,0.2,1)" : "opacity 0.15s",
                   pointerEvents: isDismissing ? "none" as const : "auto" as const
                 }}>
-                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{isHigh ? "🔴" : "🟡"}</span>
+                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{isHigh ? "" : ""}</span>
                   <div style={{flex:1,minWidth:0}}>
                     <p style={{margin:"0 0 2px",fontSize:12,fontWeight:700,color: isHigh ? "#f87171" : alert.type==="system" ? "rgba(14,165,233,0.8)" : "#fbbf24",textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:"'DM Mono',monospace"}}>
                       {(() => {
@@ -4179,20 +4179,20 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             : [niche, mkt, obj ? `Goal: ${obj.toLowerCase()}` : ""].filter(Boolean).join(" · ") + ".";
 
           const actions = pt ? [
-            { icon: "✍️", label: "Roteiro de vídeo", desc: "30 segundos, direto ao ponto", msg: `Escreva um roteiro de vídeo para minha conta de ${niche} com objetivo de ${obj.toLowerCase() || "conversão"}` },
-            { icon: "🎯", label: "Headlines de impacto", desc: "5 variações para testar", msg: `Gere 5 headlines de alto impacto para ${niche} com objetivo de ${obj.toLowerCase() || "gerar leads"}` },
-            { icon: "📊", label: "Benchmarks do nicho", desc: "CTR, CPM, ROAS esperados", msg: `Quais são os benchmarks de mercado para ${niche} no Meta Ads no Brasil?` },
-            { icon: "🔍", label: "O que a concorrência faz", desc: "Análise de criativos do setor", msg: `Analise o que os concorrentes de ${niche} estão fazendo no Meta Ads e o que costuma funcionar` },
+            { icon: "", label: "Roteiro de vídeo", desc: "30 segundos, direto ao ponto", msg: `Escreva um roteiro de vídeo para minha conta de ${niche} com objetivo de ${obj.toLowerCase() || "conversão"}` },
+            { icon: "", label: "Headlines de impacto", desc: "5 variações para testar", msg: `Gere 5 headlines de alto impacto para ${niche} com objetivo de ${obj.toLowerCase() || "gerar leads"}` },
+            { icon: "", label: "Benchmarks do nicho", desc: "CTR, CPM, ROAS esperados", msg: `Quais são os benchmarks de mercado para ${niche} no Meta Ads no Brasil?` },
+            { icon: "", label: "O que a concorrência faz", desc: "Análise de criativos do setor", msg: `Analise o que os concorrentes de ${niche} estão fazendo no Meta Ads e o que costuma funcionar` },
           ] : es ? [
-            { icon: "✍️", label: "Guión de video", desc: "30 segundos, directo al punto", msg: `Escribe un guión de video para mi cuenta de ${niche}` },
-            { icon: "🎯", label: "Headlines de impacto", desc: "5 variaciones para probar", msg: `Genera 5 headlines de alto impacto para ${niche}` },
-            { icon: "📊", label: "Benchmarks del nicho", desc: "CTR, CPM, ROAS esperados", msg: `¿Cuáles son los benchmarks para ${niche} en Meta Ads?` },
-            { icon: "🔍", label: "Qué hace la competencia", desc: "Análisis de creativos del sector", msg: `Analiza qué hacen los competidores de ${niche} en Meta Ads` },
+            { icon: "", label: "Guión de video", desc: "30 segundos, directo al punto", msg: `Escribe un guión de video para mi cuenta de ${niche}` },
+            { icon: "", label: "Headlines de impacto", desc: "5 variaciones para probar", msg: `Genera 5 headlines de alto impacto para ${niche}` },
+            { icon: "", label: "Benchmarks del nicho", desc: "CTR, CPM, ROAS esperados", msg: `¿Cuáles son los benchmarks para ${niche} en Meta Ads?` },
+            { icon: "", label: "Qué hace la competencia", desc: "Análisis de creativos del sector", msg: `Analiza qué hacen los competidores de ${niche} en Meta Ads` },
           ] : [
-            { icon: "✍️", label: "Video script", desc: "30 seconds, straight to the point", msg: `Write a video script for my ${niche} account with goal: ${obj.toLowerCase() || "conversions"}` },
-            { icon: "🎯", label: "Headlines", desc: "5 variations to test", msg: `Generate 5 high-impact headlines for ${niche}` },
-            { icon: "📊", label: "Niche benchmarks", desc: "Expected CTR, CPM, ROAS", msg: `What are the Meta Ads benchmarks for ${niche}?` },
-            { icon: "🔍", label: "Competitor analysis", desc: "What's working in the sector", msg: `Analyze what ${niche} competitors are doing on Meta Ads` },
+            { icon: "", label: "Video script", desc: "30 seconds, straight to the point", msg: `Write a video script for my ${niche} account with goal: ${obj.toLowerCase() || "conversions"}` },
+            { icon: "", label: "Headlines", desc: "5 variations to test", msg: `Generate 5 high-impact headlines for ${niche}` },
+            { icon: "", label: "Niche benchmarks", desc: "Expected CTR, CPM, ROAS", msg: `What are the Meta Ads benchmarks for ${niche}?` },
+            { icon: "", label: "Competitor analysis", desc: "What's working in the sector", msg: `Analyze what ${niche} competitors are doing on Meta Ads` },
           ];
 
           return (
@@ -4424,7 +4424,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} onSend={send} accountCtx={{product:(profile as any)?.product||selectedPersona?.name,niche:(profile as any)?.industry||(profile as any)?.niche,market:(profile as any)?.market||(lang==="pt"?"BR":lang==="es"?"MX":"US"),platform:connections.includes("meta")?"Meta":undefined}} stream={isLatest}/>
                   )
                 )}
-                {/* 👍 👎 Copy Retry row — hidden for proactive messages */}
+                {/*   Copy Retry row — hidden for proactive messages */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                 <div style={{display:"flex",alignItems:"center",gap:4,marginTop:4,paddingLeft:0,opacity:0,transition:"opacity 0.15s",animation:"fadeUp 0.25s ease-out"}} className="msg-actions-row" onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.opacity="1"}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.opacity="0.6"}}>
                   <button onClick={()=>handleFeedback(msg.id,"like",msg.blocks||[])}
@@ -4752,7 +4752,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <p style={{ ...m, fontSize:11, color:"rgba(255,255,255,0.6)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{chatImage.name}</p>
                     <p style={{ ...m, fontSize:10, color:"rgba(13,162,231,0.7)" }}>{lang==="pt"?"Criativo anexado — descreva o que quer analisar":lang==="es"?"Creativo adjunto — describe qué quieres analizar":"Creative attached — describe what to analyze"}</p>
                   </div>
-                  <button onClick={() => setChatImage(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.3)", padding:4, lineHeight:1 }}>✕</button>
+                  <button onClick={() => setChatImage(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.3)", padding:4, lineHeight:1 }}></button>
                 </div>
               )}
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>

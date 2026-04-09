@@ -150,7 +150,7 @@ const ALL_MARKETS = [
   { value: "ZA", flag: "🇿🇦", label: "África do Sul" },
   { value: "NG", flag: "🇳🇬", label: "Nigéria" },
   { value: "EG", flag: "🇪🇬", label: "Egito" },
-  { value: "GLOBAL", flag: "🌐", label: "Global" },
+  { value: "GLOBAL", flag: "", label: "Global" },
 ];
 
 const VERDICT_CFG = {
@@ -457,7 +457,7 @@ function buildMetrics(raw: any): CheckResult["metrics"] {
   if (raw.compliance?.length > 0) {
     const blocked = raw.compliance.some((c: any) => ["FLAG","BLOCKED","CRITICAL"].includes(c.status));
     const clear   = raw.compliance.every((c: any) => c.status === "CLEAR");
-    m.push({ label: "Compliance", value: blocked ? "⚠ Risco" : clear ? "✓ Ok" : "Revisar", color: blocked ? "red" : clear ? "green" : "amber" });
+    m.push({ label: "Compliance", value: blocked ? "Risco" : clear ? "Ok" : "Revisar", color: blocked ? "red" : clear ? "green" : "amber" });
   }
   return m;
 }
@@ -833,7 +833,7 @@ Platform: ${platformsStr}`,
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "#f0f2f8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{fileInfo.file.name}</p>
                   <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,.28)", ...mono }}>
                     {formatFileSize(fileInfo.file.size)} · {fileInfo.type === "video" ? "Vídeo" : "Imagem"}
-                    {pageState === "analyzing" && " · analisando..."}
+                    {pageState === "analyzing" && "analisando..."}
                   </p>
                 </div>
                 {pageState === "ready"
