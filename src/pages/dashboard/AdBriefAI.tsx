@@ -3961,7 +3961,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
         {visibleMessages.length > 0 && <div style={{height:8,flexShrink:0}}/>}
         {visibleMessages.map((msg, mi)=>{
-          const isLatest = mi === visibleMessages.length - 1 && msg.role === "assistant";
+          const isLatest = msg.role === "assistant" && msg.id === streamingMsgId;
           return (
           <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 14px",padding:"0 clamp(12px,4vw,28px)",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
