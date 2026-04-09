@@ -4399,9 +4399,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes cursorBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
         @keyframes cursorFade{0%,85%{opacity:1}100%{opacity:0}}
-        .stream-cursor{animation:cursorBlink 0.6s step-end 6, cursorFade 4s linear 1 forwards!important;}
-        @keyframes wordReveal{from{opacity:0;filter:blur(4px);transform:translateY(2px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
-        @keyframes blockSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .stream-cursor{animation:cursorBlink 0.53s step-end infinite, cursorFadeOut 3.5s linear 1 forwards!important;}
+        @keyframes cursorFadeOut{0%,80%{opacity:1}100%{opacity:0;display:none}}
+        @keyframes wordReveal{from{opacity:0}to{opacity:1}}
+        @keyframes blockSlideIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes typeIn{from{opacity:0;transform:translateY(3px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes lp-glow{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.75)}}
         @keyframes lp-spin{to{transform:rotate(360deg)}}
