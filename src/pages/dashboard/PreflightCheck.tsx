@@ -696,7 +696,8 @@ export default function PreflightCheck() {
             </div>
           )}
 
-          {/* Hook + CTA row */}
+          {/* Hook + CTA row — only for script/video modes */}
+          {inputMode !== "static" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4 pb-4">
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_hook_label")} <span className="text-white/15">{t("pf_optional")}</span></label>
@@ -719,9 +720,10 @@ export default function PreflightCheck() {
               />
             </div>
           </div>
+          )}
 
-          {/* Config grid */}
-          <div className="px-4 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Config grid — platform/market for all modes, duration/format only for script/video */}
+          <div className={`px-4 pb-4 grid gap-3 ${inputMode === "static" ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}>
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_platform")}</label>
               <Select value={platform} onChange={setPlatform} options={PLATFORMS} />
@@ -730,16 +732,20 @@ export default function PreflightCheck() {
               <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_market")}</label>
               <Select value={market} onChange={setMarket} options={MARKETS} />
             </div>
+            {inputMode !== "static" && (
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_duration")}</label>
               <Select value={duration} onChange={setDuration}
                 options={DURATIONS.map(d => ({ value: d, label: `${d}s` }))} />
             </div>
+            )}
+            {inputMode !== "static" && (
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase tracking-[0.18em] text-white/50" style={mono}>{t("pf_format")}</label>
               <Select value={format} onChange={setFormat}
                 options={FORMATS.map(f => ({ value: f, label: f }))} />
             </div>
+            )}
           </div>
 
           {/* Product + compliance */}
@@ -785,7 +791,7 @@ export default function PreflightCheck() {
 
           {/* Run button */}
           <div className="px-4 pb-4">
-            <button onClick={run} disabled={loading || (inputMode === "script" ? !script.trim() : !videoFile)}
+            <button onClick={run} disabled={loading || (inputMode === "script" ? !script.trim() : inputMode === "video" ? !videoFile : (!staticHeadline.trim() && !staticBody.trim()))}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
               style={{ ...syne, background: "linear-gradient(135deg, #fbbf24, #f59e0b)", color: "#000" }}>
               {loading

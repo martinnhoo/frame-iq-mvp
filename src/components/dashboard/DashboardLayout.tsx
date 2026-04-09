@@ -579,8 +579,8 @@ export default function DashboardLayout() {
               <span className="hidden lg:block" style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Inter', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {selectedPersona ? selectedPersona.name : (language === "pt" ? "Selecionar conta" : language === "es" ? "Seleccionar" : "Select account")}
               </span>
-              <span className="lg:hidden" style={{ fontSize: 12, fontWeight: 600, color: selectedPersona ? "#e2f4ff" : "rgba(255,255,255,0.5)", fontFamily: "'Inter', sans-serif", whiteSpace: "nowrap" }}>
-                {language === "pt" ? "Contas" : language === "es" ? "Cuentas" : "Accounts"}
+              <span className="lg:hidden" style={{ fontSize: 12, fontWeight: 600, color: selectedPersona ? "#e2f4ff" : "rgba(255,255,255,0.5)", fontFamily: "'Inter', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "min(120px, calc(100vw - 160px))", display: "inline-block" }}>
+                {selectedPersona ? selectedPersona.name : (language === "pt" ? "Contas" : language === "es" ? "Cuentas" : "Accounts")}
               </span>
               <ChevronDown className="h-3 w-3" style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />
             </button>

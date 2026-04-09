@@ -93,8 +93,9 @@ export default function HookGenerator() {
     }
     // Pre-fill niche from persona result first, then ai_profile as fallback
     const personaNiche = (selectedPersona as any)?.result?.niche || (selectedPersona as any)?.result?.industry || "";
-    const industryVal = personaNiche || aiProfile?.industry || (selectedPersona as any)?.industry || "";
-    if (industryVal && !niche) setNiche(industryVal);
+    const industryVal = personaNiche || (selectedPersona as any)?.industry || "";
+    // Always reset niche when persona changes — never keep stale data from previous persona or ai_profile
+    setNiche(industryVal);
     // Pre-fill market
     const valid = ["BR","MX","US","IN","AR","CO","ES","UK","FR","DE","GLOBAL"];
     const personaMarket = (
