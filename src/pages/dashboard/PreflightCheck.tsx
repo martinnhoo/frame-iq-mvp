@@ -38,14 +38,77 @@ interface CheckResult {
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PLATFORMS = [
-  { value: "tiktok",         label: "TikTok",     flag: "🎵" },
-  { value: "reels",          label: "Reels",      flag: "📸" },
-  { value: "facebook",       label: "Facebook",   flag: "📘" },
-  { value: "stories",        label: "Stories",    flag: "⬜" },
-  { value: "youtube_shorts", label: "YT Shorts",  flag: "▶️" },
-  { value: "google_uac",     label: "Google UAC", flag: "🔍" },
+// Platform → placements hierarchy
+const PLATFORM_GROUPS = [
+  {
+    id: "instagram",
+    label: "Instagram",
+    placements: [
+      { id: "feed",    label: "Feed"    },
+      { id: "reels",   label: "Reels"   },
+      { id: "stories", label: "Stories" },
+    ],
+  },
+  {
+    id: "tiktok",
+    label: "TikTok",
+    placements: [
+      { id: "tiktok_feed", label: "Feed" },
+    ],
+  },
+  {
+    id: "facebook",
+    label: "Facebook",
+    placements: [
+      { id: "fb_feed",    label: "Feed"    },
+      { id: "fb_reels",   label: "Reels"   },
+      { id: "fb_stories", label: "Stories" },
+    ],
+  },
+  {
+    id: "youtube",
+    label: "YouTube",
+    placements: [
+      { id: "yt_shorts",    label: "Shorts"    },
+      { id: "yt_instream",  label: "In-stream" },
+    ],
+  },
+  {
+    id: "google",
+    label: "Google",
+    placements: [
+      { id: "google_uac",  label: "UAC"             },
+      { id: "google_pmax", label: "Performance Max" },
+    ],
+  },
 ];
+
+// For backwards compat with run-preflight API
+function platformsToApiString(selected: Record<string, string[]>): string {
+  return Object.entries(selected)
+    .filter(([, placements]) => placements.length > 0)
+    .map(([pid, placements]) => {
+      const g = PLATFORM_GROUPS.find(g => g.id === pid);
+      return `${g?.label || pid} (${placements.map(plid => g?.placements.find(p => p.id === plid)?.label || plid).join(", ")})`;
+    })
+    .join(", ");
+}
+
+// Legacy — kept for run-preflight compat (takes first platform/placement)
+function getPrimaryPlatform(selected: Record<string, string[]>): string {
+  for (const g of PLATFORM_GROUPS) {
+    if (selected[g.id]?.length > 0) {
+      const pl = selected[g.id][0];
+      if (pl === "reels" || pl === "fb_reels") return "reels";
+      if (pl === "stories" || pl === "fb_stories") return "stories";
+      if (pl === "yt_shorts") return "youtube_shorts";
+      if (pl === "google_uac" || pl === "google_pmax") return "google_uac";
+      if (pl === "tiktok_feed") return "tiktok";
+      if (pl === "feed" || pl === "fb_feed") return g.id === "instagram" ? "reels" : "facebook";
+    }
+  }
+  return "tiktok";
+}
 
 const ALL_MARKETS = [
   { value: "BR", flag: "🇧🇷", label: "Brasil" },
@@ -418,7 +481,9 @@ export default function PreflightCheck() {
 
   const [pageState, setPageState] = useState<PageState>("idle");
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null);
-  const [platform, setPlatform] = useState("tiktok");
+  // selectedPlatforms: { platformId: [placementId, ...] }
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, string[]>>({ instagram: ["feed", "reels"] });
+  const [expandedPlatform, setExpandedPlatform] = useState<string | null>("instagram");
   const [market, setMarket] = useState("BR");
   const [dragOver, setDragOver] = useState(false);
   const [result, setResult] = useState<CheckResult | null>(null);
@@ -470,7 +535,9 @@ export default function PreflightCheck() {
   }, []);
 
   const analyze = useCallback(async () => {
-    if (!fileInfo || !platform) return;
+    if (!fileInfo) return;
+    const hasAnyPlatform = Object.values(selectedPlatforms).some(p => p.length > 0);
+    if (!hasAnyPlatform) { toast.error("Selecione pelo menos uma plataforma"); return; }
     if (!selectedPersona && !pendingRun) { setShowPersonaWarning(true); setPendingRun(true); return; }
     setPendingRun(false);
     setPageState("analyzing");
@@ -488,7 +555,8 @@ export default function PreflightCheck() {
         }
         const fd = new FormData();
         fd.append("video_file", fileToSend);
-        fd.append("platform", platform); fd.append("market", market);
+        fd.append("platform", getPrimaryPlatform(selectedPlatforms));
+        fd.append("market", market);
         fd.append("duration", "30"); fd.append("format", "video");
         fd.append("product", selectedPersona?.name || "");
         fd.append("funnel_stage", "tofu");
@@ -507,26 +575,53 @@ export default function PreflightCheck() {
           reader.onerror = reject;
           reader.readAsDataURL(fileInfo.file);
         });
-        const { data: d, error } = await supabase.functions.invoke("run-preflight", {
+        // Images: route to adbrief-ai-chat (has vision) then parse result
+        const platformsStr = platformsToApiString(selectedPlatforms);
+        const { data: chatData, error: chatError } = await supabase.functions.invoke("adbrief-ai-chat", {
           body: {
-            user_id: user?.id, platform, market, duration: "static", format: "Static-image",
-            product: selectedPersona?.name || "", funnel_stage: "tofu",
-            persona_context: selectedPersona || undefined,
-            image_base64: base64, image_media_type: fileInfo.file.type || "image/jpeg",
-            script: `[STATIC IMAGE ANALYSIS: ${fileInfo.file.name}]\nAnalyze this static ad creative.`,
+            user_id: user?.id,
+            persona_id: selectedPersona?.id || null,
+            user_language: lang,
+            image_base64: base64,
+            image_media_type: fileInfo.file.type || "image/jpeg",
+            message: `Analyze this static ad creative. Platform: ${platformsStr}. Market: ${market}.
+Return a JSON object (no markdown) with:
+{
+  "verdict": "READY"|"REVIEW"|"BLOCKED",
+  "verdict_reason": "one sentence diagnostic headline",
+  "hook_analysis": { "score": 1-10, "detail": "text" },
+  "estimated_hook_score": 0-100,
+  "compliance": [{ "rule": "name", "status": "CLEAR"|"FLAG"|"BLOCKED", "detail": "text" }],
+  "cta_check": { "detail": "text" },
+  "top_fixes": ["fix1","fix2","fix3"],
+  "strengths": ["strength1","strength2"],
+  "language_check": { "issues": [{ "found": "wrong word", "fix": "correct word" }] }
+}`,
+            context: `=== ACTIVE ACCOUNT ===
+${selectedPersona?.name || "Unknown"}
+Market: ${market}
+Platform: ${platformsStr}`,
+            history: [],
           },
         });
-        if (error) throw error;
-        if (d?.error) throw new Error(d.error);
-        rawData = d;
+        if (chatError) throw chatError;
+        // Parse response from chat blocks
+        const blocks = chatData?.blocks || chatData?.response?.blocks || [];
+        const textBlock = blocks.find((b: any) => b.type === "text");
+        const rawText = textBlock?.content || chatData?.content || "{}";
+        try {
+          rawData = JSON.parse(rawText.replace(/```json|```/g, "").trim());
+        } catch {
+          // Fallback: build minimal result from text
+          rawData = { verdict: "REVIEW", verdict_reason: rawText.slice(0, 120), top_fixes: [], strengths: [] };
+        }
       }
 
-      const platformLabel = PLATFORMS.find(p => p.value === platform)?.label || platform;
-      const marketLabel   = ALL_MARKETS.find(m => m.value === market)?.label || market;
+      const marketLabel = ALL_MARKETS.find(m => m.value === market)?.label || market;
 
       setResult({
         headline: buildHeadline(rawData),
-        subline: `${fileInfo.file.name} · ${platformLabel} · ${marketLabel}`,
+        subline: `${fileInfo.file.name} · ${platformsToApiString(selectedPlatforms)} · ${marketLabel}`,
         verdict: rawData.verdict || "REVIEW",
         metrics: buildMetrics(rawData),
         diagnosis: buildDiagnosis(rawData),
@@ -542,7 +637,7 @@ export default function PreflightCheck() {
       toast.error(err.message || "Algo deu errado. Tente novamente.");
       setPageState("ready");
     }
-  }, [fileInfo, platform, market, selectedPersona, user, pendingRun]);
+  }, [fileInfo, selectedPlatforms, market, selectedPersona, user, pendingRun, lang]);
 
   useEffect(() => {
     if (pendingRun && selectedPersona) analyze();
@@ -712,31 +807,110 @@ export default function PreflightCheck() {
 
               {pageState === "ready" && (
                 <>
-                  {/* Platform */}
-                  <div style={{ marginBottom: 16 }}>
-                    <p style={{ margin: "0 0 9px", fontSize: 9.5, fontWeight: 700, letterSpacing: ".1em", color: "rgba(255,255,255,.25)", textTransform: "uppercase" as const, ...mono }}>Plataforma</p>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
-                      {PLATFORMS.map((p, i) => (
-                        <button key={p.value} onClick={() => setPlatform(p.value)}
-                          className={`pf-platform ${platform === p.value ? "sel" : ""}`}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 5, padding: "6px 12px",
-                            borderRadius: 20, cursor: "pointer",
-                            background: platform === p.value ? "rgba(13,162,231,.12)" : "rgba(255,255,255,.04)",
-                            border: `1px solid ${platform === p.value ? "rgba(13,162,231,.32)" : "rgba(255,255,255,.07)"}`,
-                            color: platform === p.value ? "#fff" : "rgba(255,255,255,.5)",
-                            fontSize: 13, fontWeight: 500, transition: "all .15s",
-                            animation: `slideUp .28s cubic-bezier(.34,1.1,.64,1) ${i * 35}ms both`,
-                          }}>
-                          <span>{p.flag}</span><span>{p.label}</span>
-                        </button>
-                      ))}
+                  {/* Platform — hierarchical */}
+                  <div style={{ marginBottom: 18 }}>
+                    <p style={{ margin: "0 0 10px", fontSize: 10, fontWeight: 600, letterSpacing: ".12em", color: "rgba(255,255,255,.22)", textTransform: "uppercase" as const, fontFamily: "Inter,-apple-system,sans-serif" }}>
+                      Plataforma
+                    </p>
+                    {/* Platform row */}
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, marginBottom: 10 }}>
+                      {PLATFORM_GROUPS.map((g, i) => {
+                        const isSelected = selectedPlatforms[g.id]?.length > 0;
+                        const isExpanded = expandedPlatform === g.id;
+                        return (
+                          <button key={g.id}
+                            onClick={() => {
+                              setExpandedPlatform(isExpanded ? null : g.id);
+                              // Auto-select all placements on first click if none selected
+                              if (!isSelected) {
+                                setSelectedPlatforms(prev => ({ ...prev, [g.id]: g.placements.map(p => p.id) }));
+                              }
+                            }}
+                            style={{
+                              padding: "6px 13px", borderRadius: 8, cursor: "pointer",
+                              background: isSelected ? "rgba(13,162,231,.1)" : "rgba(255,255,255,.03)",
+                              border: `1px solid ${isExpanded ? "rgba(13,162,231,.4)" : isSelected ? "rgba(13,162,231,.22)" : "rgba(255,255,255,.07)"}`,
+                              color: isSelected ? "#e8f4fd" : "rgba(255,255,255,.42)",
+                              fontSize: 12.5, fontWeight: isSelected ? 600 : 400,
+                              fontFamily: "Inter,-apple-system,sans-serif",
+                              letterSpacing: "-.01em",
+                              transition: "all .15s",
+                              animation: `slideUp .28s cubic-bezier(.34,1.1,.64,1) ${i * 35}ms both`,
+                              display: "flex", alignItems: "center", gap: 5,
+                            }}
+                            onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,.65)"; }}
+                            onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,.42)"; }}
+                          >
+                            {g.label}
+                            {isSelected && (
+                              <span style={{ fontSize: 10, background: "rgba(13,162,231,.25)", color: "#0da2e7", padding: "1px 5px", borderRadius: 4, fontWeight: 700, letterSpacing: ".02em" }}>
+                                {selectedPlatforms[g.id].length}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
+                    {/* Expanded placements */}
+                    {expandedPlatform && (() => {
+                      const g = PLATFORM_GROUPS.find(g => g.id === expandedPlatform);
+                      if (!g) return null;
+                      const selPlacements = selectedPlatforms[g.id] || [];
+                      return (
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" as const,
+                          padding: "10px 12px", borderRadius: 10,
+                          background: "rgba(13,162,231,.04)", border: "1px solid rgba(13,162,231,.12)",
+                          animation: "slideUp .2s ease",
+                        }}>
+                          <span style={{ fontSize: 10.5, color: "rgba(255,255,255,.3)", fontFamily: "Inter,-apple-system,sans-serif", marginRight: 2 }}>
+                            {g.label}:
+                          </span>
+                          {g.placements.map(p => {
+                            const active = selPlacements.includes(p.id);
+                            return (
+                              <button key={p.id}
+                                onClick={() => {
+                                  setSelectedPlatforms(prev => {
+                                    const cur = prev[g.id] || [];
+                                    return { ...prev, [g.id]: active ? cur.filter(x => x !== p.id) : [...cur, p.id] };
+                                  });
+                                }}
+                                style={{
+                                  padding: "4px 10px", borderRadius: 6, cursor: "pointer",
+                                  background: active ? "rgba(13,162,231,.15)" : "rgba(255,255,255,.04)",
+                                  border: `1px solid ${active ? "rgba(13,162,231,.35)" : "rgba(255,255,255,.08)"}`,
+                                  color: active ? "#e8f4fd" : "rgba(255,255,255,.38)",
+                                  fontSize: 12, fontWeight: active ? 600 : 400,
+                                  fontFamily: "Inter,-apple-system,sans-serif",
+                                  transition: "all .12s",
+                                  display: "flex", alignItems: "center", gap: 5,
+                                }}
+                              >
+                                {active && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#0da2e7", display: "inline-block" }} />}
+                                {p.label}
+                              </button>
+                            );
+                          })}
+                          {/* Deselect all for this platform */}
+                          {selPlacements.length > 0 && (
+                            <button
+                              onClick={() => setSelectedPlatforms(prev => ({ ...prev, [g.id]: [] }))}
+                              style={{ marginLeft: "auto", padding: "3px 8px", borderRadius: 5, cursor: "pointer", background: "transparent", border: "1px solid rgba(255,255,255,.06)", color: "rgba(255,255,255,.22)", fontSize: 10.5, fontFamily: "Inter,-apple-system,sans-serif", transition: "all .12s" }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(239,68,68,.7)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,.2)"; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,.22)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,.06)"; }}
+                            >
+                              remover
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Market */}
                   <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 10 }}>
-                    <p style={{ margin: 0, fontSize: 9.5, fontWeight: 700, letterSpacing: ".1em", color: "rgba(255,255,255,.25)", textTransform: "uppercase" as const, ...mono }}>Mercado</p>
+                    <p style={{ margin: 0, fontSize: 10, fontWeight: 600, letterSpacing: ".12em", color: "rgba(255,255,255,.22)", textTransform: "uppercase" as const, fontFamily: "Inter,-apple-system,sans-serif" }}>Mercado</p>
                     <MarketDropdown value={market} onChange={setMarket} />
                   </div>
 
