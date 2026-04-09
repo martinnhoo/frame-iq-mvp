@@ -67,16 +67,19 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
         display: "flex", alignItems: "center", gap: 10,
         padding: "7px 14px", margin: "1px 0",
         color: isActive ? "#fff" : hov ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.50)",
-        background: isActive ? "rgba(255,255,255,0.07)" : hov ? "rgba(255,255,255,0.04)" : "transparent",
+        background: isActive ? "rgba(14,165,233,0.08)" : hov ? "rgba(255,255,255,0.04)" : "transparent",
         fontSize: 13.5, fontWeight: isActive ? 600 : 400,
-        textDecoration: "none", transition: "all 0.12s",
+        textDecoration: "none", transition: "all 0.15s ease",
         fontFamily: F, letterSpacing: "-0.01em", position: "relative",
+        borderRadius: isActive ? "0 8px 8px 0" : undefined,
+        marginRight: isActive ? 8 : undefined,
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       {isActive && (
         <div style={{
           position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
-          width: 2, height: 18, background: BLUE, borderRadius: "0 2px 2px 0",
+          width: 3, height: 20, background: BLUE, borderRadius: "0 3px 3px 0",
+          boxShadow: `0 0 8px ${BLUE}55, 0 0 20px ${BLUE}22`,
         }} />
       )}
       <Icon size={15} strokeWidth={1.6}
@@ -104,16 +107,19 @@ function NavTool({ url, label, icon: Icon, isActive, onClose }: {
         display: "flex", alignItems: "center", gap: 10,
         padding: "6px 14px",
         color: isActive ? "rgba(255,255,255,0.90)" : hov ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.38)",
-        background: isActive ? "rgba(255,255,255,0.055)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
+        background: isActive ? "rgba(14,165,233,0.06)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
         fontSize: 13, fontWeight: isActive ? 500 : 400,
-        textDecoration: "none", transition: "all 0.1s",
+        textDecoration: "none", transition: "all 0.15s ease",
         fontFamily: F, position: "relative",
+        borderRadius: isActive ? "0 6px 6px 0" : undefined,
+        marginRight: isActive ? 8 : undefined,
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       {isActive && (
         <div style={{
           position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
-          width: 2, height: 14, background: "rgba(14,165,233,0.55)", borderRadius: "0 2px 2px 0",
+          width: 2, height: 16, background: "rgba(14,165,233,0.65)", borderRadius: "0 2px 2px 0",
+          boxShadow: "0 0 6px rgba(14,165,233,0.3)",
         }} />
       )}
       <Icon size={14} strokeWidth={1.5}
@@ -195,8 +201,9 @@ export function DashboardSidebar({
 
       <aside style={{
         width: 216, height: "100%",
-        background: "var(--bg-main)",
-        borderRight: "1px solid rgba(255,255,255,0.07)",
+        background: "linear-gradient(180deg, #080c16 0%, #060a12 100%)",
+        borderRight: "1px solid transparent",
+        borderImage: "linear-gradient(180deg, rgba(14,165,233,0.12) 0%, rgba(255,255,255,0.06) 40%, rgba(255,255,255,0.03) 100%) 1",
         display: "flex", flexDirection: "column", flexShrink: 0,
         fontFamily: F, overflow: "hidden",
       }}>
@@ -347,7 +354,7 @@ export function DashboardSidebar({
         </div>
 
         {/* Divider */}
-        <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "4px 0 6px", flexShrink: 0 }} />
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.08) 50%, transparent 95%)", margin: "4px 0 6px", flexShrink: 0 }} />
 
         {/* Primary nav */}
         <nav style={{ flexShrink: 0 }}>
@@ -378,7 +385,7 @@ export function DashboardSidebar({
 
         {/* Footer */}
         <div style={{ flexShrink: 0 }}>
-          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "0 0 4px" }} />
+          <div style={{ height: 1, background: "linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.07) 50%, transparent 95%)", margin: "0 0 4px" }} />
 
           {/* Referral link */}
           <NavTool url="/dashboard/referral"
