@@ -754,6 +754,47 @@ export type Database = {
           },
         ]
       }
+      credit_transactions: {
+        Row: {
+          action: string
+          balance_after: number
+          created_at: string
+          credits: number
+          id: string
+          metadata: Json | null
+          period: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          balance_after: number
+          created_at?: string
+          credits: number
+          id?: string
+          metadata?: Json | null
+          period: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          balance_after?: number
+          created_at?: string
+          credits?: number
+          id?: string
+          metadata?: Json | null
+          period?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_snapshots: {
         Row: {
           account_id: string | null
@@ -1752,6 +1793,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credits: {
+        Row: {
+          bonus_credits: number
+          created_at: string
+          id: string
+          period: string
+          total_credits: number
+          updated_at: string
+          used_credits: number
+          user_id: string
+        }
+        Insert: {
+          bonus_credits?: number
+          created_at?: string
+          id?: string
+          period: string
+          total_credits?: number
+          updated_at?: string
+          used_credits?: number
+          user_id: string
+        }
+        Update: {
+          bonus_credits?: number
+          created_at?: string
+          id?: string
+          period?: string
+          total_credits?: number
+          updated_at?: string
+          used_credits?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_preferences: {
         Row: {
           disliked_patterns: string | null
@@ -1842,6 +1924,29 @@ export type Database = {
       }
     }
     Views: {
+      credit_usage_overview: {
+        Row: {
+          bonus_credits: number | null
+          email: string | null
+          period: string | null
+          plan: string | null
+          remaining: number | null
+          total_credits: number | null
+          updated_at: string | null
+          usage_pct: number | null
+          used_credits: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_connections_safe: {
         Row: {
           ad_accounts: Json | null
@@ -1893,12 +1998,33 @@ export type Database = {
         Args: { fn_name: string; payload?: string }
         Returns: undefined
       }
+      add_bonus_credits: {
+        Args: {
+          p_credits: number
+          p_reason?: string
+          p_total_credits?: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
       check_and_increment_ai_usage: {
         Args: { p_plan?: string; p_user_id: string }
         Returns: Json
       }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      deduct_credits: {
+        Args: {
+          p_action: string
+          p_bonus_credits?: number
+          p_credits: number
+          p_metadata?: Json
+          p_total_credits: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
       generate_referral_code: { Args: never; Returns: string }
+      get_credit_balance: { Args: { p_user_id: string }; Returns: Json }
       increment_chat_usage: {
         Args: {
           p_daily_cap: number
