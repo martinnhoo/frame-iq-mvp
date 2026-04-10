@@ -41,7 +41,7 @@ const T: Record<Lang, {
   signup_cta: string; signup_sub: string;
   rate_limit: string; error: string;
   unlock_card: string; unlock_details: string; unlock_items: string[];
-  social_proof: string;
+  social_proof: string; social_proof_count: string; social_proof_note: string;
   connect_title: string; connect_sub: string; connect_btn: string;
   connect_benefits: string[]; go_dashboard: string;
 }> = {
@@ -65,7 +65,7 @@ const T: Record<Lang, {
       "Sugestões de CTA e melhorias de copy",
       "IA conectada às suas campanhas reais",
     ],
-    social_proof: "Usado por 2.000+ gestores de tráfego",
+    social_proof: "14.200+ anúncios analisados", social_proof_count: "14.200+", social_proof_note: "anúncios analisados esta semana",
     connect_title: "Conecte Meta Ads para resultados reais",
     connect_sub: "A IA analisa suas campanhas ao vivo — ROAS, CTR, criativos fadigados — e diz o que pausar, escalar e testar.",
     connect_btn: "Conectar Meta Ads",
@@ -92,7 +92,7 @@ const T: Record<Lang, {
       "Sugerencias de CTA y mejoras de copy",
       "IA conectada a tus campañas reales",
     ],
-    social_proof: "Usado por 2.000+ media buyers",
+    social_proof: "14.200+ anuncios analizados", social_proof_count: "14.200+", social_proof_note: "anuncios analizados esta semana",
     connect_title: "Conecta Meta Ads para resultados reales",
     connect_sub: "La IA analiza tus campañas en vivo — ROAS, CTR, creativos fatigados — y te dice qué pausar, escalar y testear.",
     connect_btn: "Conectar Meta Ads",
@@ -119,7 +119,7 @@ const T: Record<Lang, {
       "CTA suggestions and copy improvements",
       "AI connected to your real campaigns",
     ],
-    social_proof: "Used by 2,000+ media buyers",
+    social_proof: "14,200+ ads analyzed", social_proof_count: "14,200+", social_proof_note: "ads analyzed this week",
     connect_title: "Connect Meta Ads for real results",
     connect_sub: "AI analyzes your live campaigns — ROAS, CTR, fatigued creatives — and tells you what to pause, scale and test.",
     connect_btn: "Connect Meta Ads",
@@ -337,21 +337,7 @@ export default function Demo() {
           </p>
         </div>
 
-        {/* ── Social proof pill — visible on upload ── */}
-        {phase === "upload" && (
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <span style={{
-              fontFamily: F, fontSize: 12, fontWeight: 600,
-              color: "rgba(99,102,241,0.8)",
-              padding: "6px 16px", borderRadius: 20,
-              border: "1px solid rgba(99,102,241,0.18)",
-              background: "rgba(99,102,241,0.06)",
-              letterSpacing: "-0.01em",
-            }}>
-              {t.social_proof}
-            </span>
-          </div>
-        )}
+        {/* Social proof removed from upload — moved to below result/upload area */}
 
         {/* ── Rate Limited ── */}
         {rateLimited && (
@@ -438,6 +424,21 @@ export default function Demo() {
           </div>
         )}
 
+        {/* ── Social proof below upload ── */}
+        {phase === "upload" && !rateLimited && (
+          <div style={{
+            marginTop: 16, padding: "12px 20px", borderRadius: 12,
+            background: C.surface, border: `1px solid ${C.border}`,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+          }}>
+            <Sparkles size={14} color={C.accent} strokeWidth={2} />
+            <span style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.5)" }}>
+              <span style={{ fontWeight: 700, color: C.text }}>{t.social_proof_count}</span>{" "}
+              {t.social_proof_note}
+            </span>
+          </div>
+        )}
+
         {/* ── Analyzing ── */}
         {phase === "analyzing" && (
           <div style={{ textAlign: "center", padding: "56px 24px", animation: "fadeUp 0.35s ease-out" }}>
@@ -503,20 +504,7 @@ export default function Demo() {
                   {result.verdict}
                 </p>
               </div>
-              {/* Social proof inline */}
-              <span style={{
-                fontFamily: F, fontSize: 10, fontWeight: 600,
-                color: "rgba(99,102,241,0.7)",
-                padding: "4px 10px", borderRadius: 16,
-                border: "1px solid rgba(99,102,241,0.15)",
-                background: "rgba(99,102,241,0.05)",
-                whiteSpace: "nowrap", flexShrink: 0,
-                display: "none", // hide on mobile, show on wider
-              }}
-              className="demo-social-inline"
-              >
-                {t.social_proof}
-              </span>
+              {/* social proof moved to bottom */}
             </div>
 
             {/* ── Two-column cards ── */}
@@ -786,16 +774,16 @@ export default function Demo() {
               </div>
             )}
 
-            {/* Social proof below result */}
-            <div style={{ textAlign: "center", marginTop: 16 }}>
-              <span style={{
-                fontFamily: F, fontSize: 11, fontWeight: 600,
-                color: "rgba(99,102,241,0.7)",
-                padding: "5px 14px", borderRadius: 20,
-                border: "1px solid rgba(99,102,241,0.15)",
-                background: "rgba(99,102,241,0.05)",
-              }}>
-                {t.social_proof}
+            {/* ── Social proof — specific metric ── */}
+            <div style={{
+              marginTop: 20, padding: "14px 20px", borderRadius: 12,
+              background: C.surface, border: `1px solid ${C.border}`,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            }}>
+              <Sparkles size={14} color={C.accent} strokeWidth={2} />
+              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.5)" }}>
+                <span style={{ fontWeight: 700, color: C.text }}>{t.social_proof_count}</span>{" "}
+                {t.social_proof_note}
               </span>
             </div>
 
