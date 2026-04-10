@@ -1,11 +1,13 @@
-import { useState, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Sparkles, Shield, Zap } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Sparkles, Shield, Zap, Plug } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const DEMO_STORAGE_KEY = "adbrief_demo_result";
 
 /* ── Design tokens — matched to IndexNew.tsx ─────────────────────────── */
 const F = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -40,6 +42,8 @@ const T: Record<Lang, {
   rate_limit: string; error: string;
   unlock_card: string; unlock_details: string; unlock_items: string[];
   social_proof: string;
+  connect_title: string; connect_sub: string; connect_btn: string;
+  connect_benefits: string[]; go_dashboard: string;
 }> = {
   pt: {
     hero: "Nota do seu anúncio\nem 10 segundos",
@@ -62,6 +66,11 @@ const T: Record<Lang, {
       "IA conectada às suas campanhas reais",
     ],
     social_proof: "Usado por 2.000+ gestores de tráfego",
+    connect_title: "Conecte Meta Ads para resultados reais",
+    connect_sub: "A IA analisa suas campanhas ao vivo — ROAS, CTR, criativos fadigados — e diz o que pausar, escalar e testar.",
+    connect_btn: "Conectar Meta Ads",
+    connect_benefits: ["Alertas de ROAS em tempo real", "Diagnóstico de criativos", "Recomendações personalizadas"],
+    go_dashboard: "Ir para o dashboard",
   },
   es: {
     hero: "Nota de tu anuncio\nen 10 segundos",
@@ -84,6 +93,11 @@ const T: Record<Lang, {
       "IA conectada a tus campañas reales",
     ],
     social_proof: "Usado por 2.000+ media buyers",
+    connect_title: "Conecta Meta Ads para resultados reales",
+    connect_sub: "La IA analiza tus campañas en vivo — ROAS, CTR, creativos fatigados — y te dice qué pausar, escalar y testear.",
+    connect_btn: "Conectar Meta Ads",
+    connect_benefits: ["Alertas de ROAS en tiempo real", "Diagnóstico de creativos", "Recomendaciones personalizadas"],
+    go_dashboard: "Ir al dashboard",
   },
   en: {
     hero: "Rate your ad\nin 10 seconds",
@@ -106,6 +120,11 @@ const T: Record<Lang, {
       "AI connected to your real campaigns",
     ],
     social_proof: "Used by 2,000+ media buyers",
+    connect_title: "Connect Meta Ads for real results",
+    connect_sub: "AI analyzes your live campaigns — ROAS, CTR, fatigued creatives — and tells you what to pause, scale and test.",
+    connect_btn: "Connect Meta Ads",
+    connect_benefits: ["Real-time ROAS alerts", "Creative diagnostics", "Personalized recommendations"],
+    go_dashboard: "Go to dashboard",
   },
 };
 
@@ -141,6 +160,8 @@ const KF = `
 ══════════════════════════════════════════════════════════════════════════ */
 export default function Demo() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromSignup = searchParams.get("unlocked") === "1";
   const { language } = useLanguage();
   const lang: Lang = ["pt", "es"].includes(language) ? (language as Lang) : "en";
   const t = T[lang];
@@ -149,8 +170,27 @@ export default function Demo() {
   const [phase, setPhase] = useState<Phase>("upload");
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const previewRef = useRef<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
+
+  /* ── Restore demo result after signup ─────────────────────────────── */
+  useEffect(() => {
+    if (!fromSignup) return;
+    try {
+      const saved = localStorage.getItem(DEMO_STORAGE_KEY);
+      if (!saved) return;
+      const { result: savedResult, preview: savedPreview } = JSON.parse(saved);
+      if (savedResult && savedResult.score) {
+        // Mark as full (unlocked) since user signed up
+        setResult({ ...savedResult, full: true });
+        setPreview(savedPreview || null);
+        setPhase("result");
+        // Clean up
+        localStorage.removeItem(DEMO_STORAGE_KEY);
+      }
+    } catch {}
+  }, [fromSignup]);
 
   /* ── Compress image ──────────────────────────────────────────────────── */
   const compressImage = (file: File, maxW = 1200, quality = 0.7): Promise<{ base64: string; mediaType: string }> =>
@@ -187,7 +227,7 @@ export default function Demo() {
     if (!file.type.startsWith("image/")) { toast.error("Please upload an image file."); return; }
 
     const reader = new FileReader();
-    reader.onload = () => setPreview(reader.result as string);
+    reader.onload = () => { const url = reader.result as string; setPreview(url); previewRef.current = url; };
     reader.readAsDataURL(file);
     setPhase("analyzing");
     setRateLimited(false);
@@ -213,6 +253,15 @@ export default function Demo() {
 
       setResult(parsed);
       setPhase("result");
+
+      // Save to localStorage so we can restore after signup
+      // preview is set from FileReader.onload before compressImage resolves, so it's available
+      try {
+        localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify({
+          result: parsed,
+          preview: previewRef.current,
+        }));
+      } catch {}
     } catch (e) {
       console.error("[Demo] Analysis error:", e);
       toast.error(t.error);
@@ -250,7 +299,7 @@ export default function Demo() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <LanguageSwitcher />
           <button
-            onClick={() => navigate("/signup")}
+            onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/demo?unlocked=1"))}
             style={{
               fontFamily: F, fontSize: 13, fontWeight: 700,
               padding: "9px 20px", borderRadius: 10,
@@ -316,7 +365,7 @@ export default function Demo() {
               {t.rate_limit}
             </p>
             <button
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/demo?unlocked=1"))}
               style={{
                 fontFamily: F, fontSize: 14, fontWeight: 700,
                 padding: "12px 28px", borderRadius: 10,
@@ -504,7 +553,7 @@ export default function Demo() {
               {/* RIGHT — What to improve (locked or open) */}
               {!result.full ? (
                 <div
-                  onClick={() => navigate("/signup")}
+                  onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/demo?unlocked=1"))}
                   style={{
                     flex: 1, minWidth: 0,
                     position: "relative", borderRadius: 16,
@@ -640,7 +689,7 @@ export default function Demo() {
                 </div>
 
                 <button
-                  onClick={() => navigate("/signup")}
+                  onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/demo?unlocked=1"))}
                   style={{
                     fontFamily: F, fontSize: 15, fontWeight: 700,
                     padding: "14px 40px", borderRadius: 12,
@@ -658,6 +707,82 @@ export default function Demo() {
                 <p style={{ fontFamily: F, fontSize: 11, fontWeight: 400, color: C.textMuted, marginTop: 10 }}>
                   {t.signup_sub}
                 </p>
+              </div>
+            )}
+
+            {/* ── Connect Meta Ads CTA — visible after signup (full result) ── */}
+            {result.full && (
+              <div style={{
+                marginTop: 20, padding: "28px 24px", borderRadius: 16,
+                background: "linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.04))",
+                border: `1px solid rgba(99,102,241,0.15)`,
+                animation: "fadeUp2 0.6s ease-out",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10,
+                    background: "rgba(99,102,241,0.1)",
+                    border: "1px solid rgba(99,102,241,0.2)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Plug size={18} color={C.accent} strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontFamily: F, fontSize: 15, fontWeight: 700, color: C.text, margin: 0, letterSpacing: "-0.02em" }}>
+                      {t.connect_title}
+                    </h3>
+                  </div>
+                </div>
+                <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, marginBottom: 16 }}>
+                  {t.connect_sub}
+                </p>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+                  {t.connect_benefits.map((b: string, i: number) => (
+                    <div key={i} style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      padding: "5px 12px", borderRadius: 20,
+                      background: "rgba(255,255,255,0.04)",
+                      border: `1px solid ${C.border}`,
+                    }}>
+                      <Zap size={11} color={C.accent} strokeWidth={2.5} />
+                      <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.7)" }}>{b}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => navigate("/dashboard/ai")}
+                    style={{
+                      fontFamily: F, fontSize: 14, fontWeight: 700,
+                      padding: "13px 28px", borderRadius: 12,
+                      background: "#fff", color: "#000",
+                      border: "none", cursor: "pointer",
+                      display: "inline-flex", alignItems: "center", gap: 8,
+                      transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
+                      boxShadow: "0 0 24px rgba(255,255,255,0.06)",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 0 32px rgba(255,255,255,0.12)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 0 24px rgba(255,255,255,0.06)"; }}
+                  >
+                    {t.connect_btn} <ArrowRight size={14} />
+                  </button>
+                  <button
+                    onClick={() => navigate("/dashboard/ai")}
+                    style={{
+                      fontFamily: F, fontSize: 13, fontWeight: 600,
+                      padding: "13px 20px", borderRadius: 12,
+                      background: "transparent", color: "rgba(255,255,255,0.5)",
+                      border: `1px solid ${C.border}`, cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; e.currentTarget.style.borderColor = C.borderHov; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; e.currentTarget.style.borderColor = C.border; }}
+                  >
+                    {t.go_dashboard}
+                  </button>
+                </div>
               </div>
             )}
 

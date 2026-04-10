@@ -21,6 +21,7 @@ const Signup = () => {
   const [searchParams] = useSearchParams();
   const planParam = searchParams.get("plan"); // e.g. "maker", "pro", "studio"
   const billingParam = searchParams.get("billing"); // "annual" | null
+  const redirectParam = searchParams.get("redirect"); // e.g. "/demo?unlocked=1"
   const { t, language } = useLanguage();
 
   const handleGoogleSignup = async () => {
@@ -64,11 +65,15 @@ const Signup = () => {
       }
       setEmailLoading(false);
     } else {
-      // Welcome email is sent by Onboarding.tsx after profile is complete — not here
+      // Send branded confirmation email (non-blocking)
+      supabase.functions.invoke("send-confirmation-email", {
+        body: { email: email.trim(), name: name.trim(), language, redirect: redirectParam || "/onboarding" },
+      }).catch(() => {}); // fire-and-forget
 
-      // Go directly to dashboard (no email confirmation required)
+      // Go directly to onboarding (no blocking email confirmation)
       const billingQuery = billingParam ? `&billing=${billingParam}` : '';
-      const redirectUrl = planParam ? `/onboarding?checkout=${planParam}${billingQuery}` : "/onboarding";
+      const redirectQuery = redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : '';
+      const redirectUrl = planParam ? `/onboarding?checkout=${planParam}${billingQuery}${redirectQuery}` : `/onboarding?${redirectQuery.replace('&', '')}`;
       navigate(redirectUrl);
       setEmailLoading(false);
     }

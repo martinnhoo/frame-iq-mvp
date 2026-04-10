@@ -138,6 +138,7 @@ export default function Onboarding() {
   const [searchParams] = useSearchParams();
   const checkoutPlan    = searchParams.get("checkout");
   const checkoutBilling = searchParams.get("billing");
+  const redirectAfter   = searchParams.get("redirect"); // e.g. "/demo?unlocked=1"
   const { language: globalLang } = useLanguage();
   const lang = (["pt","en","es"].includes(globalLang) ? globalLang : "en") as "pt"|"en"|"es";
   const t = T[lang];
@@ -283,7 +284,7 @@ export default function Onboarding() {
         if (data?.url) { window.location.href = data.url; return; }
       }
     }
-    navigate("/dashboard/ai");
+    navigate(redirectAfter || "/dashboard/ai");
   };
 
   const canStep1 = acceptedTerms && name.trim().length > 0;
