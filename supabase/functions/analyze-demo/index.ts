@@ -214,24 +214,18 @@ Format: pure JSON with fields {score, verdict, hook, message, cta, actions}
     if (insertErr) log("Insert error (non-blocking)", { error: JSON.stringify(insertErr) });
 
     const hasEmail = !!email;
-    const result = hasEmail
-      ? {
-          ok: true,
-          full: true,
-          score: analysis.score,
-          verdict: analysis.verdict,
-          hook: analysis.hook,
-          message: analysis.message,
-          cta: analysis.cta,
-          actions: analysis.actions || [],
-        }
-      : {
-          ok: true,
-          full: false,
-          score: analysis.score,
-          verdict: analysis.verdict,
-          hook: analysis.hook,
-        };
+    // Always return all fields — frontend controls visibility via "full" flag
+    // This ensures localStorage has the complete analysis for post-signup injection
+    const result = {
+      ok: true,
+      full: hasEmail,
+      score: analysis.score,
+      verdict: analysis.verdict,
+      hook: analysis.hook,
+      message: analysis.message,
+      cta: analysis.cta,
+      actions: analysis.actions || [],
+    };
 
     log("Analysis complete", { score: analysis.score, verdict: analysis.verdict, hasEmail });
     return json(result);

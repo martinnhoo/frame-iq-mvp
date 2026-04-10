@@ -2,48 +2,34 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
 
 const F = "'Plus Jakarta Sans', system-ui, sans-serif";
-const BRAND = "#6366f1";
 const BG = "#050508";
-const CARD_BG = "rgba(255,255,255,0.04)";
-const CARD_BORDER = "rgba(255,255,255,0.07)";
 
 type Lang = "pt" | "es" | "en";
 
-const T: Record<Lang, {
-  title: string; sub: string;
-  cta_onboarding: string; cta_dashboard: string;
-  footer: string;
-}> = {
+const T: Record<Lang, { title: string; sub: string; redirecting: string }> = {
   pt: {
-    title: "Email confirmado.",
-    sub: "Tudo certo — sua conta está verificada. Agora é só continuar.",
-    cta_onboarding: "Continuar configuração",
-    cta_dashboard: "Ir para o dashboard",
-    footer: "Você já pode fechar esta aba se preferir.",
+    title: "Email verificado.",
+    sub: "Sua conta está confirmada.",
+    redirecting: "Redirecionando...",
   },
   es: {
-    title: "Email confirmado.",
-    sub: "Todo listo — tu cuenta está verificada. Ahora solo sigue adelante.",
-    cta_onboarding: "Continuar configuración",
-    cta_dashboard: "Ir al dashboard",
-    footer: "Puedes cerrar esta pestaña si prefieres.",
+    title: "Email verificado.",
+    sub: "Tu cuenta está confirmada.",
+    redirecting: "Redirigiendo...",
   },
   en: {
-    title: "Email confirmed.",
-    sub: "All set — your account is verified. Now just keep going.",
-    cta_onboarding: "Continue setup",
-    cta_dashboard: "Go to dashboard",
-    footer: "You can close this tab if you prefer.",
+    title: "Email verified.",
+    sub: "Your account is confirmed.",
+    redirecting: "Redirecting...",
   },
 };
 
 const KF = `
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes checkDraw{from{stroke-dashoffset:24}to{stroke-dashoffset:0}}
-@keyframes ringScale{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes ringScale{from{transform:scale(0.85);opacity:0}to{transform:scale(1);opacity:1}}
 `;
 
 export default function EmailConfirmed() {
@@ -51,114 +37,66 @@ export default function EmailConfirmed() {
   const { language } = useLanguage();
   const lang: Lang = ["pt", "es"].includes(language) ? (language as Lang) : "en";
   const t = T[lang];
-  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
 
-  // Check if user has completed onboarding (has a profile)
+  // Auto-redirect to dashboard after 2.5 seconds
   useEffect(() => {
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { setHasProfile(false); return; }
-      const { data } = await supabase
-        .from("profiles")
-        .select("name")
-        .eq("id", session.user.id)
-        .maybeSingle();
-      setHasProfile(!!data?.name);
-    })();
-  }, []);
-
-  const handleContinue = () => {
-    if (hasProfile) {
-      navigate("/dashboard/ai");
-    } else {
-      navigate("/onboarding");
-    }
-  };
+    const timer = setTimeout(() => navigate("/dashboard/ai", { replace: true }), 2500);
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   return (
     <div style={{
       minHeight: "100vh", background: BG, fontFamily: F,
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      position: "relative", overflow: "hidden", padding: "40px 20px",
+      position: "relative", overflow: "hidden",
     }}>
       <style>{KF}</style>
 
-      {/* Background glow */}
       <div style={{
         position: "fixed", top: "-20%", left: "50%", transform: "translateX(-50%)",
-        width: 700, height: 500, borderRadius: "50%",
-        background: "radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)",
+        width: 600, height: 400, borderRadius: "50%",
+        background: "radial-gradient(ellipse, rgba(34,197,94,0.06) 0%, transparent 70%)",
         filter: "blur(80px)", pointerEvents: "none", zIndex: 0,
       }} />
 
       <div style={{
-        position: "relative", zIndex: 1,
-        maxWidth: 420, width: "100%", textAlign: "center",
-        animation: "fadeUp 0.5s ease-out",
+        position: "relative", zIndex: 1, textAlign: "center",
+        animation: "fadeUp 0.45s ease-out",
       }}>
-        {/* Logo */}
-        <div style={{ marginBottom: 40 }}>
-          <Link to="/"><Logo size="lg" /></Link>
-        </div>
-
-        {/* Success icon */}
+        {/* Checkmark */}
         <div style={{
-          width: 64, height: 64, borderRadius: 18,
+          width: 56, height: 56, borderRadius: 16,
           background: "rgba(34,197,94,0.08)",
           border: "1px solid rgba(34,197,94,0.2)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 28px",
-          animation: "ringScale 0.4s ease-out",
+          margin: "0 auto 24px",
+          animation: "ringScale 0.35s ease-out",
         }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 13l4 4L19 7" style={{
-              strokeDasharray: 24, strokeDashoffset: 0,
-              animation: "checkDraw 0.5s ease-out 0.2s both",
-            }} />
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 13l4 4L19 7" style={{ strokeDasharray: 24, strokeDashoffset: 0, animation: "checkDraw 0.4s ease-out 0.15s both" }} />
           </svg>
         </div>
 
-        {/* Title */}
         <h1 style={{
-          fontFamily: F, fontWeight: 800,
-          fontSize: 28, letterSpacing: "-0.04em",
-          color: "#fff", marginBottom: 10, lineHeight: 1.15,
+          fontFamily: F, fontWeight: 800, fontSize: 24,
+          letterSpacing: "-0.035em", color: "#fff",
+          marginBottom: 6,
         }}>
           {t.title}
         </h1>
 
         <p style={{
-          fontFamily: F, fontSize: 15, fontWeight: 400,
-          color: "rgba(255,255,255,0.5)", lineHeight: 1.6,
-          marginBottom: 36, maxWidth: 340, margin: "0 auto 36px",
+          fontFamily: F, fontSize: 14, fontWeight: 400,
+          color: "rgba(255,255,255,0.4)", marginBottom: 28,
         }}>
           {t.sub}
         </p>
 
-        {/* CTA */}
-        <button
-          onClick={handleContinue}
-          style={{
-            fontFamily: F, fontSize: 15, fontWeight: 700,
-            padding: "14px 40px", borderRadius: 12,
-            background: "#fff", color: "#000",
-            border: "none", cursor: "pointer",
-            display: "inline-flex", alignItems: "center", gap: 8,
-            transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
-            boxShadow: "0 0 32px rgba(255,255,255,0.06)",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(255,255,255,0.12)"; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 0 32px rgba(255,255,255,0.06)"; }}
-        >
-          {hasProfile ? t.cta_dashboard : t.cta_onboarding}
-          <span style={{ fontSize: 16 }}>→</span>
-        </button>
-
         <p style={{
-          fontFamily: F, fontSize: 12, fontWeight: 400,
-          color: "rgba(255,255,255,0.2)", marginTop: 24,
+          fontFamily: F, fontSize: 12, fontWeight: 500,
+          color: "rgba(255,255,255,0.2)",
         }}>
-          {t.footer}
+          {t.redirecting}
         </p>
       </div>
     </div>

@@ -193,9 +193,12 @@ export default function Onboarding() {
     const { data: existing, error: selectErr } = await supabase.from("personas")
       .select("id").eq("user_id", session.user.id).limit(1);
     
+    const resultPayload = { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche: effectiveNiche, industry: effectiveNiche, biz_description: accountDesc, name: personaName };
+
     if (existing?.length) {
       await supabase.from("personas").update({
-        result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche: effectiveNiche, industry: effectiveNiche, biz_description: accountDesc, name: personaName },
+        name: personaName,
+        result: resultPayload,
       } as never).eq("id", (existing[0] as any).id);
       return (existing[0] as any).id as string;
     }
@@ -203,7 +206,8 @@ export default function Onboarding() {
     // 2. Insert new persona
     const { data: inserted, error: insertError } = await supabase.from("personas").insert({
       user_id: session.user.id,
-      result: { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche: effectiveNiche, industry: effectiveNiche, biz_description: accountDesc, name: personaName },
+      name: personaName,
+      result: resultPayload,
     } as never).select("id");
 
     
