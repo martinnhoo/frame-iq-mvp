@@ -377,12 +377,16 @@ Deno.serve(async (req) => {
     const resData = await res.json();
 
     // Record that we sent this alert (prevent duplicates)
+    // Log alert (non-critical, ignore errors)
+    const period = new Date().toISOString().slice(0, 7);
     await supabase.from("credit_transactions").insert({
       user_id,
+      period,
       action: alertKey,
-      credits_used: 0,
+      credits: 0,
+      balance_after: 0,
       metadata: { type, sent_to: profile.email, resend_id: resData?.id },
-    }).catch(() => {}); // non-critical
+    }).then(() => {}, () => {});
 
     console.log(`[send-credit-alert] ${type} email sent to ${profile.email} (${res.ok ? "ok" : "failed"})`);
 
