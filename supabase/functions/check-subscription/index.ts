@@ -1,6 +1,6 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
-// LIFETIME_ACCOUNTS removed — all accounts use normal credit system
+import { ADMIN_EMAILS } from "../_shared/credits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,7 +48,15 @@ Deno.serve(async (req) => {
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found");
-      // Ensure profile plan is free
+      // Admin emails keep their current plan — don't downgrade
+      if (ADMIN_EMAILS.includes(user.email!)) {
+        const { data: prof } = await supabase.from("profiles").select("plan").eq("id", user.id).maybeSingle();
+        const currentPlan = prof?.plan || "free";
+        logStep("Admin email — preserving current plan", { email: user.email, plan: currentPlan });
+        return new Response(JSON.stringify({ subscribed: false, plan: currentPlan, admin: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       await supabase.from("profiles").update({ plan: "free" }).eq("id", user.id);
       return new Response(JSON.stringify({ subscribed: false, plan: "free" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -77,6 +85,15 @@ Deno.serve(async (req) => {
 
     if (!sub) {
       logStep("No active/trialing subscription");
+      // Admin emails keep their current plan — don't downgrade
+      if (ADMIN_EMAILS.includes(user.email!)) {
+        const { data: prof } = await supabase.from("profiles").select("plan").eq("id", user.id).maybeSingle();
+        const currentPlan = prof?.plan || "free";
+        logStep("Admin email — preserving current plan", { email: user.email, plan: currentPlan });
+        return new Response(JSON.stringify({ subscribed: false, plan: currentPlan, admin: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       await supabase.from("profiles").update({ plan: "free" }).eq("id", user.id);
       return new Response(JSON.stringify({ subscribed: false, plan: "free" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
