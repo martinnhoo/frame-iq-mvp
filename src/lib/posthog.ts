@@ -1,45 +1,35 @@
-import posthog from 'posthog-js';
+// GA4 custom events — uses the gtag already loaded in index.html (G-X0P1QLGZLG)
 
-let isInitialized = false;
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
+function gtag(...args: unknown[]) {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag(...args);
+  }
+}
 
 export function initPostHog(): void {
-  if (isInitialized) return;
-
-  // Only initialize in production
-  if (import.meta.env.PROD) {
-    const apiKey = import.meta.env.VITE_POSTHOG_KEY || 'phc_PLACEHOLDER';
-
-    posthog.init(apiKey, {
-      api_host: 'https://us.i.posthog.com',
-      loaded: (ph) => {
-        console.log('PostHog initialized');
-      },
-    });
-
-    isInitialized = true;
-  }
+  // no-op — gtag is already initialized via index.html script tag
 }
 
 export function trackEvent(
   name: string,
   properties?: Record<string, unknown>
 ): void {
-  if (import.meta.env.PROD && isInitialized) {
-    posthog.capture(name, properties);
-  }
+  gtag("event", name, properties);
 }
 
 export function identifyUser(
   userId: string,
   traits?: Record<string, unknown>
 ): void {
-  if (import.meta.env.PROD && isInitialized) {
-    posthog.identify(userId, traits);
-  }
+  gtag("set", "user_properties", { user_id: userId, ...traits });
 }
 
 export function resetUser(): void {
-  if (import.meta.env.PROD && isInitialized) {
-    posthog.reset();
-  }
+  // GA4 doesn't need explicit reset — session ends naturally
 }
