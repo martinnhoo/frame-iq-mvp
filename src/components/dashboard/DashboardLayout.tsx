@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SectionBoundary } from "@/components/SectionBoundary";
 import { DashboardSidebar } from "./DashboardSidebar";
-import { ReferralPopup } from "./ReferralPopup";
+// ReferralPopup now lives inside DashboardSidebar footer
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, AlertCircle, Users, ChevronDown, Sparkles, X, PartyPopper } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -923,8 +923,7 @@ export default function DashboardLayout() {
         />
       )}
 
-      {/* Referral popup — shows on login, dismissable for 24h */}
-      <ReferralPopup userId={user?.id} />
+      {/* Referral now inline in sidebar footer */}
     </div>
     </>
   );

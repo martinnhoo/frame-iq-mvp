@@ -9,6 +9,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PlanUpgradeModal } from "./PlanUpgradeModal";
+import { ReferralPopup } from "./ReferralPopup";
 
 interface Profile {
   id: string; name: string | null; email: string | null; avatar_url: string | null;
@@ -425,6 +426,9 @@ export function DashboardSidebar({
               <ArrowUpRight size={12} color={`${A}40`} style={{ marginLeft: "auto" }} />
             </button>
           )}
+
+          {/* Referral */}
+          <ReferralPopup userId={user?.id} />
 
           {/* User profile */}
           <button onClick={() => onOpenProfile?.()}
