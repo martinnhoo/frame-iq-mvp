@@ -39,7 +39,7 @@ export function AdMetric({ label, value, format = 'number', suffix, prefix, size
         {prefix && <span style={{ fontSize: fontSizes[size] * 0.55, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>{prefix}</span>}
         <NumberFlow
           value={valueForFlow}
-          format={FORMAT_MAP[format]}
+          format={FORMAT_MAP[format] as any}
           style={{
             fontSize: fontSizes[size],
             fontWeight: 800,
