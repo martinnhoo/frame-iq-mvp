@@ -830,6 +830,7 @@ export type Database = {
           id: string
           ip_address: string | null
           lang: string | null
+          share_id: string | null
         }
         Insert: {
           analysis_result?: Json | null
@@ -840,6 +841,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           lang?: string | null
+          share_id?: string | null
         }
         Update: {
           analysis_result?: Json | null
@@ -850,6 +852,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           lang?: string | null
+          share_id?: string | null
         }
         Relationships: []
       }

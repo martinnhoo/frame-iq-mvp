@@ -973,6 +973,10 @@ export const translations: Record<Language, TranslationKeys> = {
     lp_plan_pro_features: "60 analyses vidéo/mois|60 boards de production/mois|Traductions illimitées|60 pré-checks/mois|Générateur de Hooks — illimité|Intelligence IA + profil d'apprentissage|Intelligence persona",
     lp_plan_studio_features: "Analyses vidéo illimitées|Boards de production illimités|Traductions illimitées|Pré-checks illimités|Hooks & scripts illimités|Intelligence IA + profil d'apprentissage|Intelligence persona|Accès API",
     lp_start_maker: "Démarrer Maker", lp_start_pro: "Démarrer Pro", lp_start_studio: "Démarrer Studio",
+    confirm_resent: "Email de confirmation renvoyé !",
+    confirm_email_placeholder: "votre email",
+    confirm_sending: "Envoi...",
+    confirm_signup_again: "essayez de vous inscrire à nouveau",
   },
 
   de: {
@@ -1212,6 +1216,10 @@ export const translations: Record<Language, TranslationKeys> = {
     lp_plan_pro_features: "60 Video-Analysen/Monat|60 Production Boards/Monat|Unbegrenzte Übersetzungen|60 Pre-Flight-Checks/Monat|Hook-Generator — unbegrenzt|KI-Intelligenz + Lernprofil|Persona-Intelligenz",
     lp_plan_studio_features: "Unbegrenzte Video-Analysen|Unbegrenzte Production Boards|Unbegrenzte Übersetzungen|Unbegrenzte Pre-Flight-Checks|Unbegrenzte Hooks & Scripts|KI-Intelligenz + Lernprofil|Persona-Intelligenz|API-Zugang",
     lp_start_maker: "Maker starten", lp_start_pro: "Pro starten", lp_start_studio: "Studio starten",
+    confirm_resent: "Bestätigungs-E-Mail erneut gesendet!",
+    confirm_email_placeholder: "Ihre E-Mail",
+    confirm_sending: "Senden...",
+    confirm_signup_again: "versuchen Sie sich erneut anzumelden",
   },
 
   ar: {
@@ -1451,6 +1459,10 @@ export const translations: Record<Language, TranslationKeys> = {
     lp_plan_pro_features: "60 تحليل فيديو/شهر|60 لوحة إنتاج/شهر|ترجمات غير محدودة|60 فحص قبل الإطلاق/شهر|مولد الخطافات — غير محدود|ذكاء اصطناعي + ملف تعلم|ذكاء الشخصية",
     lp_plan_studio_features: "تحليلات فيديو غير محدودة|لوحات إنتاج غير محدودة|ترجمات غير محدودة|فحوصات غير محدودة|خطافات وسكريبتات غير محدودة|ذكاء اصطناعي + ملف تعلم|ذكاء الشخصية|وصول API",
     lp_start_maker: "ابدأ Maker", lp_start_pro: "ابدأ Pro", lp_start_studio: "ابدأ Studio",
+    confirm_resent: "تم إعادة إرسال بريد التأكيد!",
+    confirm_email_placeholder: "بريدك الإلكتروني",
+    confirm_sending: "جاري الإرسال...",
+    confirm_signup_again: "حاول التسجيل مرة أخرى",
   },
 
   zh: {
@@ -1690,6 +1702,10 @@ export const translations: Record<Language, TranslationKeys> = {
     lp_plan_pro_features: "60次视频分析/月|60个制作板/月|无限翻译|60次预检/月|Hook生成器——无限制|AI智能+学习档案|Persona智能",
     lp_plan_studio_features: "无限视频分析|无限制作板|无限翻译|无限预检|无限Hook和脚本|AI智能+学习档案|Persona智能|API访问",
     lp_start_maker: "开始Maker", lp_start_pro: "开始Pro", lp_start_studio: "开始Studio",
+    confirm_resent: "确认邮件已重新发送！",
+    confirm_email_placeholder: "您的邮箱",
+    confirm_sending: "发送中...",
+    confirm_signup_again: "请重新注册",
   },
 
   pt: {
