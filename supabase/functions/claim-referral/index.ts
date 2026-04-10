@@ -1,7 +1,8 @@
-// claim-referral — validate referral code & grant +10 bonus analyses to both parties
+// claim-referral — validate referral code & grant +10 bonus CREDITS to both parties
 // Auth required. Each user can only be referred once.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { REFERRAL_BONUS_CREDITS, isBlockedEmailDomain } from "../_shared/credits.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +12,7 @@ const cors = {
 const log = (step: string, d?: unknown) =>
   console.log(`[CLAIM-REFERRAL] ${step}${d ? ` — ${JSON.stringify(d)}` : ""}`);
 
-const BONUS = 10; // analyses granted to both referrer and referee
+const BONUS = REFERRAL_BONUS_CREDITS; // 10 credits to both sides
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
     if (action === "get_info") {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("referral_code, referral_bonus_analyses, referred_by")
+        .select("referral_code, referred_by")
         .eq("id", user.id)
         .single();
 
@@ -69,9 +70,12 @@ Deno.serve(async (req) => {
         .select("*", { count: "exact", head: true })
         .eq("referrer_id", user.id);
 
+      // Get bonus credits from current period
+      const { data: balance } = await supabase.rpc("get_credit_balance", { p_user_id: user.id });
+
       return new Response(JSON.stringify({
         referral_code: profile?.referral_code,
-        bonus_analyses: profile?.referral_bonus_analyses || 0,
+        bonus_credits: balance?.bonus ?? 0,
         total_referrals: count || 0,
         already_referred: !!profile?.referred_by,
       }), { headers: { ...cors, "Content-Type": "application/json" } });
@@ -138,6 +142,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Block disposable emails
+    if (user.email && isBlockedEmailDomain(user.email)) {
+      return new Response(JSON.stringify({ error: "blocked_email", message: "This email domain is not eligible for referral rewards." }), {
+        status: 400, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     log("Claim attempt", { userId: user.id, code });
 
     // Check if user already has been referred
@@ -173,27 +184,29 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Grant bonuses ────────────────────────────────────────────────────────
+    // ── Grant bonuses via credit system ──────────────────────────────────────
     // 1. Mark referee as referred
     await supabase.from("profiles").update({
       referred_by: referrer.id,
-      referral_bonus_analyses: (myProfile as any)?.referral_bonus_analyses
-        ? (myProfile as any).referral_bonus_analyses + BONUS
-        : BONUS,
     }).eq("id", user.id);
 
-    // 2. Grant bonus to referrer
-    const { data: referrerProfile } = await supabase
-      .from("profiles")
-      .select("referral_bonus_analyses")
-      .eq("id", referrer.id)
-      .single();
+    // 2. Add bonus credits to referee (current user)
+    const { data: refereeBonusResult, error: refereeErr } = await supabase.rpc("add_bonus_credits", {
+      p_user_id: user.id,
+      p_credits: BONUS,
+      p_reason: "referral_referee",
+    });
+    if (refereeErr) log("Referee bonus error", { error: String(refereeErr) });
 
-    await supabase.from("profiles").update({
-      referral_bonus_analyses: (referrerProfile?.referral_bonus_analyses || 0) + BONUS,
-    }).eq("id", referrer.id);
+    // 3. Add bonus credits to referrer
+    const { data: referrerBonusResult, error: referrerErr } = await supabase.rpc("add_bonus_credits", {
+      p_user_id: referrer.id,
+      p_credits: BONUS,
+      p_reason: "referral_referrer",
+    });
+    if (referrerErr) log("Referrer bonus error", { error: String(referrerErr) });
 
-    // 3. Log the claim
+    // 4. Log the claim
     const { error: claimErr } = await supabase.from("referral_claims").insert({
       referrer_id: referrer.id,
       referee_id: user.id,
@@ -213,7 +226,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       bonus: BONUS,
-      message: `You earned +${BONUS} bonus analyses! Your referrer also got +${BONUS}.`,
+      message: `You earned +${BONUS} bonus credits! Your referrer also got +${BONUS}.`,
     }), { headers: { ...cors, "Content-Type": "application/json" } });
 
   } catch (e) {

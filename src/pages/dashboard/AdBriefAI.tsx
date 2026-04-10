@@ -2280,50 +2280,30 @@ export default function AdBriefAI() {
   const [activeToolParams,setActiveToolParams]=useState<Record<string,string>>({});
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   const [showDashboardLimit,setShowDashboardLimit]=useState(false);
-  // usageStats — computed from freeUsage + profile (no backend dependency)
-  const [freeUsage,setFreeUsage]=useState<{count:number,lastReset:string|null}|null>(null);
-  const [countdown,setCountdown]=useState("");
+  // Credit balance from the new credit system
+  const [creditBalance,setCreditBalance]=useState<{remaining:number,total:number}|null>(null);
   const [proactiveLoading,setProactiveLoading]=useState(false);
   const proactiveFired=useRef(false);
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
   const prevPersonaId=useRef<string|null>(null);
 
-  // ── Load free_usage from DB (source of truth — not affected by clearing chat) ──
+  // ── Load credit balance on mount ──
   useEffect(()=>{
-    if(!user?.id||(profile?.plan&&profile.plan!=="free")) return;
+    if(!user?.id) return;
     const load = async () => {
-      const { data } = await (supabase as any).from("free_usage").select("chat_count,last_reset").eq("user_id",user.id).maybeSingle();
-      const today = new Date().toISOString().slice(0,10);
-      if(data){
-        const sameDay = data.last_reset?.slice(0,10)===today;
-        setFreeUsage({ count: sameDay ? (data.chat_count||0) : 0, lastReset: data.last_reset });
-      } else {
-        setFreeUsage({ count:0, lastReset:null });
-      }
+      try {
+        const { data } = await supabase.functions.invoke("check-usage", {
+          body: { user_id: user.id },
+        });
+        if(data?.credits){
+          setCreditBalance({ remaining: data.credits.remaining, total: data.credits.total + (data.credits.bonus||0) });
+        }
+      } catch(_){}
     };
     load();
-  },[user?.id, profile?.plan]);
+  },[user?.id]);
 
-  // ── Countdown timer: time until midnight (daily reset) ──
-  useEffect(()=>{
-    if(!freeUsage||freeUsage.count<5) return;
-    const tick=()=>{
-      const now=new Date();
-      const midnight=new Date(now);
-      midnight.setHours(24,0,0,0);
-      const diff=midnight.getTime()-now.getTime();
-      const h=Math.floor(diff/3600000);
-      const m=Math.floor((diff%3600000)/60000);
-      const s=Math.floor((diff%60000)/1000);
-      setCountdown(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`);
-    };
-    tick();
-    const id=setInterval(tick,1000);
-    return ()=>clearInterval(id);
-  },[freeUsage]);
-
-  // Update freeUsage count after each successful send
   // ── Load correct chat history when account changes (no reset — each account has its own history) ──
   useEffect(()=>{
     const newId = selectedPersona?.id || null;
@@ -3553,9 +3533,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       if(!data?.blocks)throw new Error("No response");
 
-      // Update usage counter from response
-      // Update freeUsage count after send
-      if(data?.usage) setFreeUsage(prev => prev ? {...prev, count: data.usage.daily_count} : {count: data.usage.daily_count, lastReset: new Date().toISOString().slice(0,10)});
+      // Update credit balance from response
+      if(data?.usage) {
+        setCreditBalance({ remaining: data.usage.remaining_credits, total: data.usage.total_credits });
+        window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
+      }
 
       // Show upgrade popup on daily limit (in case returned with 200)
       if(data?.error==="daily_limit"){setShowUpgradeWall(true);setLoading(false);return;}
@@ -3824,10 +3806,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           extractAndSaveMemory(lastUserMsg, user.id, selectedPersona.id, lang);
         }
       }
-      // Increment free usage count locally after successful send
-      if(profile?.plan==="free"||!profile?.plan){
-        setFreeUsage(prev=>prev?{...prev,count:Math.min(5,prev.count+1)}:{count:1,lastReset:new Date().toISOString().slice(0,10)});
-      }
+      // Credit balance already updated above from response payload
     }catch(e:any){
       const eid=Date.now()+1;
       setMessages(prev=>[...prev,{role:"assistant",ts:eid,id:eid,blocks:[{type:"warning",title:lang==="pt"?"Erro de conexão":"Connection error",content:e?.message||"Network error."}]}]);
@@ -4392,15 +4371,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               })}
             </div>
 
-            {/* Usage — barra + count, funciona pra qualquer plano */}
-            {freeUsage!==null&&(()=>{
-              const planKey = profile?.plan||"free";
-              const CAPS: Record<string,number> = {free:5,maker:50,pro:200,studio:500};
-              const cap = CAPS[planKey]??3;
-              if(cap>=500) return null; // studio — sem limite, esconde
-              const used = freeUsage?.count??0;
-              const isLocked = used>=cap;
-              const pct = Math.min(100,(used/cap)*100);
+            {/* Usage — credit bar */}
+            {creditBalance!==null&&creditBalance.total>0&&(()=>{
+              const { remaining, total } = creditBalance;
+              const used = total - remaining;
+              const pct = Math.min(100,(used/total)*100);
+              const isLocked = remaining<=0;
               const barColor = isLocked?"rgba(239,68,68,0.6)":pct>=80?"rgba(245,158,11,0.6)":"rgba(14,165,233,0.5)";
               const textColor = isLocked?"rgba(239,68,68,0.5)":pct>=80?"rgba(245,158,11,0.5)":"rgba(255,255,255,0.2)";
               return(
@@ -4411,14 +4387,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   </div>
                   {/* count */}
                   <span style={{fontSize:11,color:textColor,fontFamily:"'Plus Jakarta Sans', sans-serif",fontVariantNumeric:"tabular-nums"}}>
-                    {used}/{cap}
+                    {remaining}/{total}
                   </span>
-                  {/* timer quando locked */}
-                  {isLocked&&countdown&&(
-                    <span style={{fontSize:11,color:"rgba(255,255,255,0.18)",fontFamily:"'Plus Jakarta Sans', sans-serif",fontVariantNumeric:"tabular-nums"}}>
-                      {countdown}
-                    </span>
-                  )}
                   {/* soft nudge — aparece quando 80%+ mas ainda não locked */}
                   {!isLocked&&pct>=80&&(
                     <button onClick={()=>setShowUpgradeWall(true)} style={{
@@ -4541,9 +4511,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   </button>
                 )}
                 <button onClick={()=>{
-                  const isFree=(profile?.plan==="free"||!profile?.plan);
-                  const used=freeUsage?.count??0;
-                  if(isFree&&used>=5){setShowUpgradeWall(true);return;}
+                  if(creditBalance&&creditBalance.remaining<=0){setShowUpgradeWall(true);return;}
                   send();
                 }} disabled={!input.trim()||loading||!contextReady}
                   style={{

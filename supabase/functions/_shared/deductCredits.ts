@@ -31,7 +31,12 @@ export async function requireCredits(
     .from('profiles')
     .select('plan, email, subscription_status')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
+
+  if (!profile) {
+    console.warn('[deduct_credits] No profile found for user:', userId);
+    return { allowed: true }; // fail open — don't block if profile missing
+  }
 
   const email = profile?.email;
 

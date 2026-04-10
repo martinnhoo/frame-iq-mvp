@@ -47,41 +47,28 @@ Deno.serve(async (req) => {
         const loginScore = Math.max(0, 0.3 * (1 - daysSinceLogin / 7));
 
         // ── 2. Feature breadth (0-0.3) ────────────────────────────────────────
-        // Check how many distinct features user has used this month
+        // Count distinct actions used this month from credit_transactions
         const period = new Date().toISOString().slice(0, 7); // YYYY-MM
-        const { data: usage } = await supabase
-          .from("usage")
-          .select("analyses_count, boards_count, translations_count, preflights_count, hooks_count")
+        const { data: txns } = await supabase
+          .from("credit_transactions")
+          .select("action, credits")
           .eq("user_id", user.id)
           .eq("period", period)
-          .maybeSingle();
+          .gt("credits", 0); // only deductions, not bonuses
 
-        let featuresUsed = 0;
-        if (usage) {
-          if ((usage.analyses_count || 0) > 0) featuresUsed++;
-          if ((usage.boards_count || 0) > 0) featuresUsed++;
-          if ((usage.translations_count || 0) > 0) featuresUsed++;
-          if ((usage.preflights_count || 0) > 0) featuresUsed++;
-          if ((usage.hooks_count || 0) > 0) featuresUsed++;
+        const actionCounts: Record<string, number> = {};
+        let totalMonthlyActions = 0;
+        for (const tx of txns || []) {
+          actionCounts[tx.action] = (actionCounts[tx.action] || 0) + 1;
+          totalMonthlyActions++;
         }
 
-        // Also check chat usage
-        const { data: freeUsage } = await supabase
-          .from("free_usage")
-          .select("chat_count")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if ((freeUsage?.chat_count || 0) > 0) featuresUsed++;
+        const featuresUsed = Object.keys(actionCounts).length;
 
-        // 6 possible features → 0.3 max
-        const breadthScore = 0.3 * Math.min(featuresUsed / 4, 1); // 4+ features = max
+        // 4+ distinct features = max breadth score
+        const breadthScore = 0.3 * Math.min(featuresUsed / 4, 1);
 
         // ── 3. Usage volume (0-0.2) ───────────────────────────────────────────
-        const totalMonthlyActions = usage
-          ? (usage.analyses_count || 0) + (usage.boards_count || 0) +
-            (usage.translations_count || 0) + (usage.preflights_count || 0) +
-            (usage.hooks_count || 0)
-          : 0;
         // 10+ actions = max
         const volumeScore = 0.2 * Math.min(totalMonthlyActions / 10, 1);
 
