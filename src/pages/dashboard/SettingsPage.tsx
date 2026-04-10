@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Loader2, LogOut, Shield, Brain, XCircle } from "lucide-react";
 import { CancelModal } from "@/components/dashboard/CancelModal";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { trackEvent, resetUser } from "@/lib/posthog";
 
 const SettingsPage = () => {
   const { user, profile } = useOutletContext<DashboardContext>();
@@ -95,6 +96,7 @@ const SettingsPage = () => {
   };
 
   const handleLogout = async () => {
+    resetUser();
     await supabase.auth.signOut();
     toast.success("Logged out");
     navigate("/login");
@@ -188,7 +190,7 @@ const SettingsPage = () => {
             </Badge>
           </div>
           {profile?.plan === "free" ? (
-            <Button variant="outline" className="border-border" onClick={() => navigate("/pricing")}>
+            <Button variant="outline" className="border-border" onClick={() => { trackEvent("plan_upgrade_clicked"); navigate("/pricing"); }}>
               {t("upgrade")}
             </Button>
           ) : (

@@ -5,10 +5,291 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, ArrowRight, Shield, HelpCircle, X, Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
-
+import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+type Lang = "en" | "pt" | "es";
+
+const T: Record<Lang, Record<string, any>> = {
+  en: {
+    nav_signin: "Sign in",
+    hero_title: "Simple, transparent pricing",
+    hero_sub: "3-day free trial on all plans. Card required. No charge until day 4. Cancel anytime.",
+    monthly: "Monthly",
+    annual: "Annual",
+    save_badge: "Save 20%",
+
+    plan_free_name: "Free",
+    plan_free_price: "$0",
+    plan_free_desc: "Try AdBrief with no commitment.",
+
+    plan_maker_name: "Maker",
+    plan_maker_desc: "For freelancers and solo buyers.",
+    plan_maker_badge: null,
+
+    plan_pro_name: "Pro",
+    plan_pro_desc: "For small agencies and performance teams.",
+    plan_pro_badge: "Most Popular",
+
+    plan_studio_name: "Studio",
+    plan_studio_desc: "For agencies managing multiple clients.",
+    plan_studio_badge: null,
+
+    feature_free_1: "5 AI messages / day",
+    feature_free_2: "1 ad account connected",
+    feature_free_3: "All tools (limited usage)",
+    feature_free_4: "1 persona",
+    feature_free_5: "Hook Generator (5 uses)",
+    feature_free_6: "Script & Brief (3 uses)",
+    feature_free_7: "Priority support",
+
+    feature_maker_1: "50 AI messages / day",
+    feature_maker_2: "1 ad account connected",
+    feature_maker_3: "All tools unlocked",
+    feature_maker_4: "Hook Generator",
+    feature_maker_5: "Script & Brief generator",
+    feature_maker_6: "3 personas",
+    feature_maker_7: "Multi-account",
+
+    feature_pro_1: "200 AI messages / day",
+    feature_pro_2: "3 ad accounts connected",
+    feature_pro_3: "All tools unlocked",
+    feature_pro_4: "Hook Generator",
+    feature_pro_5: "Script & Brief generator",
+    feature_pro_6: "Unlimited personas",
+    feature_pro_7: "Multi-market support",
+
+    feature_studio_1: "Unlimited AI messages",
+    feature_studio_2: "Unlimited ad accounts",
+    feature_studio_3: "All tools unlocked",
+    feature_studio_4: "Hook Generator",
+    feature_studio_5: "Script & Brief generator",
+    feature_studio_6: "Unlimited personas",
+    feature_studio_7: "Agency workspace",
+
+    cta_free: "Get started",
+    cta_trial: "Start free trial",
+
+    faq_title: "Frequently Asked Questions",
+    faq_1_q: "Can I cancel anytime?",
+    faq_1_a: "Yes. All plans are month-to-month with no long-term contracts. You can cancel or downgrade anytime from your account settings.",
+    faq_2_q: "What happens when I exceed my plan limits?",
+    faq_2_a: "You'll receive a notification when approaching your limits. You can upgrade at any time. We never cut access mid-project.",
+    faq_3_q: "Is there a free trial for paid plans?",
+    faq_3_a: "Yes. All paid plans come with a 3-day free trial. No charge until the trial ends. Cancel anytime.",
+    faq_4_q: "How does billing work?",
+    faq_4_a: "We bill monthly via credit card (Visa, Mastercard, Amex). For annual billing or custom invoicing, contact our sales team.",
+    faq_5_q: "Do you offer refunds?",
+    faq_5_a: "We offer a 30-day money-back guarantee on your first payment for Studio plans.",
+    faq_6_q: "Is my data secure?",
+    faq_6_a: "Yes. AdBrief uses 256-bit encryption at rest and in transit. We never share or sell your data.",
+
+    trust_encryption: "256-bit Encryption",
+    trust_gdpr: "GDPR Ready",
+    trust_uptime: "99.9% Uptime SLA",
+    trust_guarantee: "30-day money-back",
+
+    cta_questions_title: "Still have questions?",
+    cta_questions_sub: "Talk to our team. We'll help you find the right plan for your needs.",
+    cta_book_demo: "Book a demo",
+    cta_contact_sales: "Contact sales",
+
+    footer_prices: "Prices shown in USD. All paid plans include a 3-day free trial. Annual plans billed as one payment. You may cancel at any time before the trial expires.",
+    footer_copyright: "© 2026 AdBrief. All rights reserved.",
+    footer_privacy: "Privacy Policy",
+    footer_terms: "Terms of Service",
+    footer_refund: "Refund Policy",
+
+    period_month: "/mo",
+    period_year: "/year",
+  },
+  pt: {
+    nav_signin: "Entrar",
+    hero_title: "Preços simples e transparentes",
+    hero_sub: "Teste gratuito de 3 dias em todos os planos. Cartão obrigatório. Sem cobranças até o 4º dia. Cancele quando quiser.",
+    monthly: "Mensal",
+    annual: "Anual",
+    save_badge: "Economize 20%",
+
+    plan_free_name: "Gratuito",
+    plan_free_price: "$0",
+    plan_free_desc: "Experimente o AdBrief sem compromisso.",
+
+    plan_maker_name: "Maker",
+    plan_maker_desc: "Para gestores de tráfego independentes.",
+    plan_maker_badge: null,
+
+    plan_pro_name: "Pro",
+    plan_pro_desc: "Para pequenas agências e equipes de performance.",
+    plan_pro_badge: "Mais Popular",
+
+    plan_studio_name: "Studio",
+    plan_studio_desc: "Para agências gerenciando múltiplos clientes.",
+    plan_studio_badge: null,
+
+    feature_free_1: "5 mensagens IA / dia",
+    feature_free_2: "1 conta de anúncios conectada",
+    feature_free_3: "Todas as ferramentas (uso limitado)",
+    feature_free_4: "1 persona",
+    feature_free_5: "Gerador de Hooks (5 usos)",
+    feature_free_6: "Script & Brief (3 usos)",
+    feature_free_7: "Suporte prioritário",
+
+    feature_maker_1: "50 mensagens IA / dia",
+    feature_maker_2: "1 conta de anúncios conectada",
+    feature_maker_3: "Todas as ferramentas desbloqueadas",
+    feature_maker_4: "Gerador de Hooks",
+    feature_maker_5: "Gerador de Scripts & Briefs",
+    feature_maker_6: "3 personas",
+    feature_maker_7: "Multi-conta",
+
+    feature_pro_1: "200 mensagens IA / dia",
+    feature_pro_2: "3 contas de anúncios conectadas",
+    feature_pro_3: "Todas as ferramentas desbloqueadas",
+    feature_pro_4: "Gerador de Hooks",
+    feature_pro_5: "Gerador de Scripts & Briefs",
+    feature_pro_6: "Personas ilimitadas",
+    feature_pro_7: "Suporte multi-mercado",
+
+    feature_studio_1: "Mensagens IA ilimitadas",
+    feature_studio_2: "Contas de anúncios ilimitadas",
+    feature_studio_3: "Todas as ferramentas desbloqueadas",
+    feature_studio_4: "Gerador de Hooks",
+    feature_studio_5: "Gerador de Scripts & Briefs",
+    feature_studio_6: "Personas ilimitadas",
+    feature_studio_7: "Workspace de agência",
+
+    cta_free: "Começar",
+    cta_trial: "Iniciar teste gratuito",
+
+    faq_title: "Perguntas Frequentes",
+    faq_1_q: "Posso cancelar a qualquer momento?",
+    faq_1_a: "Sim. Todos os planos são mês a mês sem contratos de longo prazo. Você pode cancelar ou fazer downgrade a qualquer momento nas configurações da conta.",
+    faq_2_q: "O que acontece quando ultrapasso meus limites de plano?",
+    faq_2_a: "Você receberá uma notificação ao se aproximar dos seus limites. Você pode fazer upgrade a qualquer momento. Nunca cortamos acesso no meio do projeto.",
+    faq_3_q: "Há teste gratuito para planos pagos?",
+    faq_3_a: "Sim. Todos os planos pagos vêm com teste gratuito de 3 dias. Sem cobranças até o final do teste. Cancele quando quiser.",
+    faq_4_q: "Como funciona o faturamento?",
+    faq_4_a: "Faturamos mensalmente via cartão de crédito (Visa, Mastercard, Amex). Para faturamento anual ou faturamento personalizado, entre em contato com nosso time de vendas.",
+    faq_5_q: "Vocês oferecem devoluções?",
+    faq_5_a: "Oferecemos garantia de devolução de 30 dias no seu primeiro pagamento para planos Studio.",
+    faq_6_q: "Meus dados são seguros?",
+    faq_6_a: "Sim. O AdBrief usa criptografia de 256 bits em repouso e em trânsito. Nunca compartilhamos ou vendemos seus dados.",
+
+    trust_encryption: "Criptografia de 256 bits",
+    trust_gdpr: "GDPR Pronto",
+    trust_uptime: "SLA de 99,9% Uptime",
+    trust_guarantee: "Garantia de devolução de 30 dias",
+
+    cta_questions_title: "Ainda tem dúvidas?",
+    cta_questions_sub: "Fale com nosso time. Vamos ajudá-lo a encontrar o plano certo para suas necessidades.",
+    cta_book_demo: "Agendar demonstração",
+    cta_contact_sales: "Contatar vendas",
+
+    footer_prices: "Preços exibidos em USD. Todos os planos pagos incluem teste gratuito de 3 dias. Planos anuais são faturados como um pagamento. Você pode cancelar a qualquer momento antes do teste expirar.",
+    footer_copyright: "© 2026 AdBrief. Todos os direitos reservados.",
+    footer_privacy: "Política de Privacidade",
+    footer_terms: "Termos de Serviço",
+    footer_refund: "Política de Reembolso",
+
+    period_month: "/mês",
+    period_year: "/ano",
+  },
+  es: {
+    nav_signin: "Iniciar sesión",
+    hero_title: "Precios simples y transparentes",
+    hero_sub: "Prueba gratuita de 3 días en todos los planes. Tarjeta requerida. Sin cargos hasta el día 4. Cancela en cualquier momento.",
+    monthly: "Mensual",
+    annual: "Anual",
+    save_badge: "Ahorra 20%",
+
+    plan_free_name: "Gratuito",
+    plan_free_price: "$0",
+    plan_free_desc: "Prueba AdBrief sin compromiso.",
+
+    plan_maker_name: "Maker",
+    plan_maker_desc: "Para gestores de tráfico independientes.",
+    plan_maker_badge: null,
+
+    plan_pro_name: "Pro",
+    plan_pro_desc: "Para pequeñas agencias y equipos de performance.",
+    plan_pro_badge: "Más Popular",
+
+    plan_studio_name: "Studio",
+    plan_studio_desc: "Para agencias que gestionan múltiples clientes.",
+    plan_studio_badge: null,
+
+    feature_free_1: "5 mensajes IA / día",
+    feature_free_2: "1 cuenta de anuncios conectada",
+    feature_free_3: "Todas las herramientas (uso limitado)",
+    feature_free_4: "1 persona",
+    feature_free_5: "Generador de Hooks (5 usos)",
+    feature_free_6: "Script & Brief (3 usos)",
+    feature_free_7: "Soporte prioritario",
+
+    feature_maker_1: "50 mensajes IA / día",
+    feature_maker_2: "1 cuenta de anuncios conectada",
+    feature_maker_3: "Todas las herramientas desbloqueadas",
+    feature_maker_4: "Generador de Hooks",
+    feature_maker_5: "Generador de Scripts & Briefs",
+    feature_maker_6: "3 personas",
+    feature_maker_7: "Multi-cuenta",
+
+    feature_pro_1: "200 mensajes IA / día",
+    feature_pro_2: "3 cuentas de anuncios conectadas",
+    feature_pro_3: "Todas las herramientas desbloqueadas",
+    feature_pro_4: "Generador de Hooks",
+    feature_pro_5: "Generador de Scripts & Briefs",
+    feature_pro_6: "Personas ilimitadas",
+    feature_pro_7: "Soporte multi-mercado",
+
+    feature_studio_1: "Mensajes IA ilimitados",
+    feature_studio_2: "Cuentas de anuncios ilimitadas",
+    feature_studio_3: "Todas las herramientas desbloqueadas",
+    feature_studio_4: "Generador de Hooks",
+    feature_studio_5: "Generador de Scripts & Briefs",
+    feature_studio_6: "Personas ilimitadas",
+    feature_studio_7: "Workspace de agencia",
+
+    cta_free: "Comenzar",
+    cta_trial: "Iniciar prueba gratuita",
+
+    faq_title: "Preguntas Frecuentes",
+    faq_1_q: "¿Puedo cancelar en cualquier momento?",
+    faq_1_a: "Sí. Todos los planes son mes a mes sin contratos a largo plazo. Puedes cancelar o degradar en cualquier momento desde la configuración de tu cuenta.",
+    faq_2_q: "¿Qué pasa cuando excedo mis límites de plan?",
+    faq_2_a: "Recibirás una notificación al acercarte a tus límites. Puedes actualizar en cualquier momento. Nunca cortamos el acceso en medio de un proyecto.",
+    faq_3_q: "¿Hay prueba gratuita para planes pagos?",
+    faq_3_a: "Sí. Todos los planes pagos incluyen una prueba gratuita de 3 días. Sin cargos hasta que termine la prueba. Cancela en cualquier momento.",
+    faq_4_q: "¿Cómo funciona la facturación?",
+    faq_4_a: "Facturamos mensualmente por tarjeta de crédito (Visa, Mastercard, Amex). Para facturación anual o facturación personalizada, ponte en contacto con nuestro equipo de ventas.",
+    faq_5_q: "¿Ofrecen reembolsos?",
+    faq_5_a: "Ofrecemos una garantía de devolución de dinero de 30 días en tu primer pago para planes Studio.",
+    faq_6_q: "¿Mis datos son seguros?",
+    faq_6_a: "Sí. AdBrief utiliza cifrado de 256 bits en reposo y en tránsito. Nunca compartimos ni vendemos tus datos.",
+
+    trust_encryption: "Cifrado de 256 bits",
+    trust_gdpr: "GDPR Listo",
+    trust_uptime: "SLA de 99,9% Uptime",
+    trust_guarantee: "Garantía de devolución de 30 días",
+
+    cta_questions_title: "¿Aún tienes preguntas?",
+    cta_questions_sub: "Habla con nuestro equipo. Te ayudaremos a encontrar el plan adecuado para tus necesidades.",
+    cta_book_demo: "Reservar una demostración",
+    cta_contact_sales: "Contactar ventas",
+
+    footer_prices: "Precios mostrados en USD. Todos los planes pagos incluyen una prueba gratuita de 3 días. Los planes anuales se facturan como un pago. Puedes cancelar en cualquier momento antes de que expire la prueba.",
+    footer_copyright: "© 2026 AdBrief. Todos los derechos reservados.",
+    footer_privacy: "Política de Privacidad",
+    footer_terms: "Términos de Servicio",
+    footer_refund: "Política de Reembolso",
+
+    period_month: "/mes",
+    period_year: "/año",
+  },
+};
 
 // Stripe product/price mapping
 const PLANS = {
@@ -21,6 +302,9 @@ const Pricing = () => {
   const navigate = useNavigate();
   const [upgrading, setUpgrading] = useState<string | null>(null);
   const [annual, setAnnual] = useState(false);
+  const { language } = useLanguage();
+  const lang: Lang = ["pt", "es"].includes(language) ? language as Lang : "en";
+  const t = T[lang];
 
   const monthlyPrices = { maker: 19, pro: 49, studio: 149 };
   // Annual totals from Stripe: $182, $470.40, $1428
@@ -60,105 +344,87 @@ const Pricing = () => {
 
   const plans = [
     {
-      name: "Free",
-      price: "$0",
+      name: t.plan_free_name,
+      price: t.plan_free_price,
       period: "",
-      description: "Try AdBrief with no commitment.",
+      description: t.plan_free_desc,
       features: [
-        { text: "5 AI messages / day", included: true },
-        { text: "1 ad account connected", included: true },
-        { text: "All tools (limited usage)", included: true },
-        { text: "1 persona", included: true },
-        { text: "Hook Generator (5 uses)", included: true },
-        { text: "Script & Brief (3 uses)", included: true },
-        { text: "Priority support", included: false },
+        { text: t.feature_free_1, included: true },
+        { text: t.feature_free_2, included: true },
+        { text: t.feature_free_3, included: true },
+        { text: t.feature_free_4, included: true },
+        { text: t.feature_free_5, included: true },
+        { text: t.feature_free_6, included: true },
+        { text: t.feature_free_7, included: false },
       ],
-      cta: "Get started",
+      cta: t.cta_free,
       ctaAction: () => navigate("/signup"),
       highlighted: false,
     },
     {
-      name: "Maker",
+      name: t.plan_maker_name,
       price: annual ? `$${annualTotals.maker}` : `$${monthlyPrices.maker}`,
-      period: annual ? "/year" : "/mo",
-      description: "For freelancers and solo buyers.",
+      period: annual ? t.period_year : t.period_month,
+      description: t.plan_maker_desc,
       features: [
-        { text: "50 AI messages / day", included: true },
-        { text: "1 ad account connected", included: true },
-        { text: "All tools unlocked", included: true },
-        { text: "Hook Generator", included: true },
-        { text: "Script & Brief generator", included: true },
-        { text: "3 personas", included: true },
-        { text: "Multi-account", included: false },
+        { text: t.feature_maker_1, included: true },
+        { text: t.feature_maker_2, included: true },
+        { text: t.feature_maker_3, included: true },
+        { text: t.feature_maker_4, included: true },
+        { text: t.feature_maker_5, included: true },
+        { text: t.feature_maker_6, included: true },
+        { text: t.feature_maker_7, included: false },
       ],
-      cta: "Start free trial",
+      cta: t.cta_trial,
       ctaAction: () => handleUpgrade("maker"),
       highlighted: false,
     },
     {
-      name: "Pro",
+      name: t.plan_pro_name,
       price: annual ? `$${annualTotals.pro}` : `$${monthlyPrices.pro}`,
-      period: annual ? "/year" : "/mo",
-      description: "For small agencies and performance teams.",
+      period: annual ? t.period_year : t.period_month,
+      description: t.plan_pro_desc,
       features: [
-        { text: "200 AI messages / day", included: true },
-        { text: "3 ad accounts connected", included: true },
-        { text: "All tools unlocked", included: true },
-        { text: "Hook Generator", included: true },
-        { text: "Script & Brief generator", included: true },
-        { text: "Unlimited personas", included: true },
-        { text: "Multi-market support", included: true },
+        { text: t.feature_pro_1, included: true },
+        { text: t.feature_pro_2, included: true },
+        { text: t.feature_pro_3, included: true },
+        { text: t.feature_pro_4, included: true },
+        { text: t.feature_pro_5, included: true },
+        { text: t.feature_pro_6, included: true },
+        { text: t.feature_pro_7, included: true },
       ],
-      cta: "Start free trial",
+      cta: t.cta_trial,
       ctaAction: () => handleUpgrade("pro"),
       highlighted: true,
-      badge: "Most Popular",
+      badge: t.plan_pro_badge,
     },
     {
-      name: "Studio",
+      name: t.plan_studio_name,
       price: annual ? `$${annualTotals.studio}` : `$${monthlyPrices.studio}`,
-      period: annual ? "/year" : "/mo",
-      description: "For agencies managing multiple clients.",
+      period: annual ? t.period_year : t.period_month,
+      description: t.plan_studio_desc,
       features: [
-        { text: "Unlimited AI messages", included: true },
-        { text: "Unlimited ad accounts", included: true },
-        { text: "All tools unlocked", included: true },
-        { text: "Hook Generator", included: true },
-        { text: "Script & Brief generator", included: true },
-        { text: "Unlimited personas", included: true },
-        { text: "Agency workspace", included: true },
+        { text: t.feature_studio_1, included: true },
+        { text: t.feature_studio_2, included: true },
+        { text: t.feature_studio_3, included: true },
+        { text: t.feature_studio_4, included: true },
+        { text: t.feature_studio_5, included: true },
+        { text: t.feature_studio_6, included: true },
+        { text: t.feature_studio_7, included: true },
       ],
-      cta: "Start free trial",
+      cta: t.cta_trial,
       ctaAction: () => handleUpgrade("studio"),
       highlighted: false,
     },
   ];
 
   const faqs = [
-    {
-      q: "Can I cancel anytime?",
-      a: "Yes. All plans are month-to-month with no long-term contracts. You can cancel or downgrade anytime from your account settings.",
-    },
-    {
-      q: "What happens when I exceed my plan limits?",
-      a: "You'll receive a notification when approaching your limits. You can upgrade at any time. We never cut access mid-project.",
-    },
-    {
-      q: "Is there a free trial for paid plans?",
-      a: "Yes. All paid plans come with a 3-day free trial. No charge until the trial ends. Cancel anytime.",
-    },
-    {
-      q: "How does billing work?",
-      a: "We bill monthly via credit card (Visa, Mastercard, Amex). For annual billing or custom invoicing, contact our sales team.",
-    },
-    {
-      q: "Do you offer refunds?",
-      a: "We offer a 30-day money-back guarantee on your first payment for Studio plans.",
-    },
-    {
-      q: "Is my data secure?",
-      a: "Yes. AdBrief uses 256-bit encryption at rest and in transit. We never share or sell your data.",
-    },
+    { q: t.faq_1_q, a: t.faq_1_a },
+    { q: t.faq_2_q, a: t.faq_2_a },
+    { q: t.faq_3_q, a: t.faq_3_a },
+    { q: t.faq_4_q, a: t.faq_4_a },
+    { q: t.faq_5_q, a: t.faq_5_a },
+    { q: t.faq_6_q, a: t.faq_6_a },
   ];
 
   return (
@@ -172,7 +438,7 @@ const Pricing = () => {
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
             <Button variant="ghost" className="text-muted-foreground" onClick={() => navigate("/login")}>
-              Sign in
+              {t.nav_signin}
             </Button>
           </div>
         </div>
@@ -183,15 +449,15 @@ const Pricing = () => {
         <div className="container mx-auto max-w-5xl text-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Simple, transparent pricing
+              {t.hero_title}
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              3-day free trial on all plans. Card required. No charge until day 4. Cancel anytime.
+              {t.hero_sub}
             </p>
 
             {/* Annual/Monthly Toggle */}
             <div className="flex items-center justify-center gap-3 mt-6">
-              <span className={`text-sm font-medium transition-colors ${!annual ? "text-white" : "text-white/40"}`}>Monthly</span>
+              <span className={`text-sm font-medium transition-colors ${!annual ? "text-white" : "text-white/40"}`}>{t.monthly}</span>
               <button
                 onClick={() => setAnnual(v => !v)}
                 className="relative w-11 h-6 rounded-full transition-colors"
@@ -202,11 +468,11 @@ const Pricing = () => {
                   style={{ left: annual ? "22px" : "2px" }}
                 />
               </button>
-              <span className={`text-sm font-medium transition-colors ${annual ? "text-white" : "text-white/40"}`}>Annual</span>
+              <span className={`text-sm font-medium transition-colors ${annual ? "text-white" : "text-white/40"}`}>{t.annual}</span>
               {annual && (
                 <span className="text-xs font-bold px-2 py-0.5 rounded-md"
                   style={{ background: "rgba(52,211,153,0.12)", color: "#34d399", border: "1px solid rgba(52,211,153,0.25)" }}>
-                  Save 20%
+                  {t.save_badge}
                 </span>
               )}
             </div>
@@ -292,19 +558,19 @@ const Pricing = () => {
           <div className="flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-500" />
-              256-bit Encryption
+              {t.trust_encryption}
             </span>
             <span className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-500" />
-              GDPR Ready
+              {t.trust_gdpr}
             </span>
             <span className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-500" />
-              99.9% Uptime SLA
+              {t.trust_uptime}
             </span>
             <span className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-500" />
-              30-day money-back
+              {t.trust_guarantee}
             </span>
           </div>
         </div>
@@ -313,7 +579,7 @@ const Pricing = () => {
       {/* FAQ */}
       <section className="py-16 px-6 border-t border-border/30">
         <div className="container mx-auto max-w-3xl">
-          <h2 className="text-2xl font-bold text-center mb-10">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-center mb-10">{t.faq_title}</h2>
           <div className="space-y-6">
             {faqs.map((faq, i) => (
               <div key={i} className="border-b border-border/30 pb-6 last:border-0">
@@ -338,16 +604,16 @@ const Pricing = () => {
               border: "1px solid rgba(139, 92, 246, 0.2)",
             }}
           >
-            <h2 className="text-2xl font-bold mb-3">Still have questions?</h2>
+            <h2 className="text-2xl font-bold mb-3">{t.cta_questions_title}</h2>
             <p className="text-muted-foreground mb-6">
-              Talk to our team. We'll help you find the right plan for your needs.
+              {t.cta_questions_sub}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
                 className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white border-0"
                 onClick={() => navigate("/book-demo")}
               >
-                Book a demo
+                {t.cta_book_demo}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
               <Button
@@ -355,7 +621,7 @@ const Pricing = () => {
                 className="border-border"
                 onClick={() => navigate("/contact")}
               >
-                Contact sales
+                {t.cta_contact_sales}
               </Button>
             </div>
           </div>
@@ -367,17 +633,16 @@ const Pricing = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="text-xs text-muted-foreground/60 leading-relaxed text-center space-y-2">
             <p>
-              Prices shown in USD. All paid plans include a 3-day free trial. Annual plans billed as one payment.
-              You may cancel at any time before the trial expires.
+              {t.footer_prices}
             </p>
             <p className="pt-2">
-              © 2026 AdBrief. All rights reserved.
+              {t.footer_copyright}
               {" · "}
-              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+              <Link to="/privacy" className="hover:text-foreground transition-colors">{t.footer_privacy}</Link>
               {" · "}
-              <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+              <Link to="/terms" className="hover:text-foreground transition-colors">{t.footer_terms}</Link>
               {" · "}
-              <Link to="/refund" className="hover:text-foreground transition-colors">Refund Policy</Link>
+              <Link to="/refund" className="hover:text-foreground transition-colors">{t.footer_refund}</Link>
             </p>
           </div>
         </div>

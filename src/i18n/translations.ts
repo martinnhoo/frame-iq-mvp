@@ -152,6 +152,10 @@ type TranslationKeys = {
   confirm_back: string;
   confirm_confirmed_title: string;
   confirm_confirmed_text: string;
+  confirm_resent: string;
+  confirm_email_placeholder: string;
+  confirm_sending: string;
+  confirm_signup_again: string;
 
   // Forgot / Reset password
   forgot_title: string;
@@ -386,6 +390,10 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_back: "Back to login",
     confirm_confirmed_title: "Email confirmed!",
     confirm_confirmed_text: "Your account is verified. Redirecting to dashboard...",
+    confirm_resent: "Confirmation email resent!",
+    confirm_email_placeholder: "your email",
+    confirm_sending: "Sending...",
+    confirm_signup_again: "try signing up again",
 
     forgot_title: "Reset your password",
     forgot_subtitle: "Enter your email and we'll send you a link to reset your password.",
@@ -632,6 +640,10 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_back: "Volver al login",
     confirm_confirmed_title: "¡Email confirmado!",
     confirm_confirmed_text: "Tu cuenta está verificada. Redirigiendo al dashboard...",
+    confirm_resent: "¡Email de confirmación reenviado!",
+    confirm_email_placeholder: "tu email",
+    confirm_sending: "Enviando...",
+    confirm_signup_again: "intenta registrarte de nuevo",
 
     forgot_title: "Recuperar contraseña",
     forgot_subtitle: "Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.",
@@ -1829,6 +1841,10 @@ export const translations: Record<Language, TranslationKeys> = {
     confirm_back: "Voltar ao login",
     confirm_confirmed_title: "Email confirmado!",
     confirm_confirmed_text: "Sua conta foi verificada. Redirecionando para o dashboard...",
+    confirm_resent: "Email de confirmação reenviado!",
+    confirm_email_placeholder: "seu email",
+    confirm_sending: "Enviando...",
+    confirm_signup_again: "tente se inscrever novamente",
 
     forgot_title: "Recuperar senha",
     forgot_subtitle: "Digite seu email e enviaremos um link para redefinir sua senha.",

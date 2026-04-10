@@ -14,6 +14,7 @@ import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import { UserProfilePanel } from "@/components/dashboard/UserProfilePanel";
+import { identifyUser } from "@/lib/posthog";
 
 
 export interface ActivePersona {
@@ -153,6 +154,7 @@ export default function DashboardLayout() {
       if (!session) { navigate("/login"); return; }
       if (!mounted) return;
       setUser(session.user);
+      identifyUser(session.user.id, { email: session.user.email });
 
       // Fetch profile in parallel with usage — don't wait sequentially
       const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle();

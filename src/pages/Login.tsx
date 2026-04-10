@@ -9,6 +9,7 @@ import { Loader2, Eye, EyeOff, Mail } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Logo } from "@/components/Logo";
+import { trackEvent } from "@/lib/posthog";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -53,6 +54,7 @@ const Login = () => {
         toast.error(error.message);
       }
     } else {
+      trackEvent("login_completed");
       navigate("/dashboard/ai");
     }
     setEmailLoading(false);

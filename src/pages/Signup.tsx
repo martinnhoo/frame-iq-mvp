@@ -9,6 +9,7 @@ import { Loader2, Eye, EyeOff, Mail, User } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Logo } from "@/components/Logo";
+import { trackEvent } from "@/lib/posthog";
 
 const Signup = () => {
   const [loading, setLoading] = useState(false);
@@ -75,6 +76,7 @@ const Signup = () => {
       const billingQuery = billingParam ? `&billing=${billingParam}` : '';
       const redirectQuery = redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : '';
       const redirectUrl = planParam ? `/onboarding?checkout=${planParam}${billingQuery}${redirectQuery}` : `/onboarding?${redirectQuery.replace('&', '')}`;
+      trackEvent("signup_completed", { plan: planParam || "free" });
       navigate(redirectUrl);
       setEmailLoading(false);
     }

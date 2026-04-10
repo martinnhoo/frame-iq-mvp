@@ -56,7 +56,7 @@ const ConfirmEmail = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Confirmation email resent!");
+      toast.success(t("confirm_resent"));
       setResendCooldown(RESEND_COOLDOWN);
     }
     setResending(false);
@@ -105,7 +105,7 @@ const ConfirmEmail = () => {
                 {email ? (
                   <span className="font-semibold text-foreground">{email}</span>
                 ) : (
-                  "your email"
+                  <span>{t("confirm_email_placeholder")}</span>
                 )}
                 .
               </p>
@@ -122,7 +122,7 @@ const ConfirmEmail = () => {
                       className="text-primary hover:underline font-medium disabled:opacity-50 disabled:no-underline"
                     >
                       {resending
-                        ? "Sending..."
+                        ? t("confirm_sending")
                         : resendCooldown > 0
                         ? `${t("confirm_resend")} (${resendCooldown}s)`
                         : t("confirm_resend")}
@@ -154,6 +154,7 @@ const ConfirmEmail = () => {
                 {t("confirm_back")}
               </Button>
             </Link>
+            <p className="text-sm text-muted-foreground text-center">{t("confirm_signup_again")}</p>
           </CardContent>
         </Card>
       </div>

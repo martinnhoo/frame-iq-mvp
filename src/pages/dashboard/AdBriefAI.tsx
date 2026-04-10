@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
 import FirstWinBanner from "@/components/dashboard/FirstWinBanner";
+import { trackEvent } from "@/lib/posthog";
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 const DEMO_STORAGE_KEY = "adbrief_demo_result";
@@ -3524,6 +3525,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     setActiveTool(null);
     const uid=Date.now();
     setMessages(prev=>[...prev,{role:"user",userText:userText,ts:uid,id:uid,imagePreview:pendingImage?.preview||undefined}]);
+    trackEvent("ai_message_sent");
     // Scroll imediato ao enviar — não espera a resposta
     requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
     setLoading(true);

@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Zap, Plug } from "lucide-react";
+import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Zap, Plug, Share2, Copy, Check } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/posthog";
 
 const DEMO_STORAGE_KEY = "adbrief_demo_result";
 
@@ -44,6 +45,7 @@ const T: Record<Lang, {
   sp_count: number; sp_label: string; sp_live: string; sp_live_count: number;
   connect_title: string; connect_sub: string; connect_btn: string;
   connect_benefits: string[]; go_dashboard: string;
+  share_result: string; link_copied: string;
 }> = {
   pt: {
     hero: "Nota do seu anúncio\nem 10 segundos",
@@ -71,6 +73,8 @@ const T: Record<Lang, {
     connect_btn: "Conectar Meta Ads",
     connect_benefits: ["Alertas de ROAS em tempo real", "Diagnóstico de criativos", "Recomendações personalizadas"],
     go_dashboard: "Ir para o dashboard",
+    share_result: "Compartilhar resultado",
+    link_copied: "Link copiado!",
   },
   es: {
     hero: "Nota de tu anuncio\nen 10 segundos",
@@ -98,6 +102,8 @@ const T: Record<Lang, {
     connect_btn: "Conectar Meta Ads",
     connect_benefits: ["Alertas de ROAS en tiempo real", "Diagnóstico de creativos", "Recomendaciones personalizadas"],
     go_dashboard: "Ir al dashboard",
+    share_result: "Compartir resultado",
+    link_copied: "¡Link copiado!",
   },
   en: {
     hero: "Rate your ad\nin 10 seconds",
@@ -125,6 +131,8 @@ const T: Record<Lang, {
     connect_btn: "Connect Meta Ads",
     connect_benefits: ["Real-time ROAS alerts", "Creative diagnostics", "Personalized recommendations"],
     go_dashboard: "Go to dashboard",
+    share_result: "Share result",
+    link_copied: "Link copied!",
   },
 };
 
@@ -233,6 +241,8 @@ export default function Demo() {
   const previewRef = useRef<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareButtonState, setShareButtonState] = useState<"idle" | "copied">("idle");
 
   /* ── Compress image ──────────────────────────────────────────────────── */
   const compressImage = (file: File, maxW = 1200, quality = 0.7): Promise<{ base64: string; mediaType: string }> =>
@@ -273,6 +283,7 @@ export default function Demo() {
     reader.readAsDataURL(file);
     setPhase("analyzing");
     setRateLimited(false);
+    trackEvent("demo_analysis_started");
 
     try {
       const { base64, mediaType } = await compressImage(file);
@@ -295,6 +306,7 @@ export default function Demo() {
 
       setResult(parsed);
       setPhase("result");
+      trackEvent("demo_analysis_completed", { score: parsed.score });
 
       // Save to localStorage so we can restore after signup
       // preview is set from FileReader.onload before compressImage resolves, so it's available
@@ -315,6 +327,60 @@ export default function Demo() {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) analyze(f); };
 
   const scoreColor = (s: number) => s >= 8 ? C.green : s >= 5 ? C.amber : C.red;
+
+  /* ── Share result ────────────────────────────────────────────────────── */
+  const handleShare = async () => {
+    if (!result) return;
+
+    setSharing(true);
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/demo-share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          analysis_score: result.score,
+          analysis_result: result,
+          lang,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("[Demo] Share error: response not ok");
+        toast.error(t.error);
+        setSharing(false);
+        return;
+      }
+
+      const data = await response.json();
+      if (!data.share_id) {
+        console.error("[Demo] Share error: no share_id");
+        toast.error(t.error);
+        setSharing(false);
+        return;
+      }
+
+      const shareUrl = `${window.location.origin}/s/${data.share_id}`;
+
+      // Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareButtonState("copied");
+        toast.success(t.link_copied);
+
+        // Reset button state after 2 seconds
+        setTimeout(() => setShareButtonState("idle"), 2000);
+      } catch {
+        // Fallback: show URL in toast if clipboard fails
+        toast.success(`Share URL: ${shareUrl}`);
+      }
+    } catch (e) {
+      console.error("[Demo] Share error:", e);
+      toast.error(t.error);
+    } finally {
+      setSharing(false);
+    }
+  };
 
   /* ── Render ──────────────────────────────────────────────────────────── */
   return (
@@ -537,6 +603,46 @@ export default function Demo() {
                 </p>
               </div>
               {/* social proof moved to bottom */}
+              {/* Share button */}
+              <button
+                onClick={handleShare}
+                disabled={sharing}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "8px 14px", borderRadius: 8,
+                  background: "transparent", border: `1px solid ${C.border}`,
+                  color: C.textMuted, fontSize: 12, fontWeight: 600,
+                  cursor: sharing ? "not-allowed" : "pointer",
+                  transition: "all 0.2s",
+                  opacity: sharing ? 0.5 : 1,
+                }}
+                onMouseEnter={e => {
+                  if (!sharing) {
+                    e.currentTarget.style.borderColor = C.accent;
+                    e.currentTarget.style.color = C.accent;
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!sharing) {
+                    e.currentTarget.style.borderColor = C.border;
+                    e.currentTarget.style.color = C.textMuted;
+                  }
+                }}
+              >
+                {shareButtonState === "copied" ? (
+                  <>
+                    <Check size={12} /> Copied
+                  </>
+                ) : sharing ? (
+                  <>
+                    <Loader2 size={12} style={{ animation: "spin 0.8s linear infinite" }} /> Sharing...
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={12} /> {t.share_result}
+                  </>
+                )}
+              </button>
             </div>
 
             {/* ── Two-column cards ── */}

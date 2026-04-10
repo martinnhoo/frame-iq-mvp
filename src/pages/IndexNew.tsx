@@ -185,6 +185,9 @@ const T: Record<Lang, Record<string, string>> = {
     footer_terms: "Terms",
     footer_faq: "FAQ",
     footer_built: "Built for performance marketers who move fast.",
+    sp_count: "ads analyzed",
+    sp_live: "analyzing now",
+    sp_trust: "Used by agencies in 14 countries",
   },
   pt: {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_tools: "Ferramentas", nav_signin: "Entrar", nav_cta: "Testar grátis por 3 dias",
@@ -261,6 +264,9 @@ const T: Record<Lang, Record<string, string>> = {
     footer_terms: "Termos",
     footer_faq: "FAQ",
     footer_built: "Feito para gestores de tráfego que movem rápido.",
+    sp_count: "anúncios analisados",
+    sp_live: "analisando agora",
+    sp_trust: "Usado por agências em 14 países",
   },
   es: {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_tools: "Herramientas", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 3 días",
@@ -337,6 +343,9 @@ const T: Record<Lang, Record<string, string>> = {
     footer_terms: "Términos",
     footer_faq: "FAQ",
     footer_built: "Hecho para gestores de tráfico que se mueven rápido.",
+    sp_count: "anuncios analizados",
+    sp_live: "analizando ahora",
+    sp_trust: "Usado por agencias en 14 países",
   },
 };
 
@@ -2648,136 +2657,186 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 }
 
 
-// ─── How It Works ─────────────────────────────────────────────────────────────
-// ─── Pain → Solution section ──────────────────────────────────────────────────
+// ─── Social Proof Strip — Dynamic with ticking counter ─────────────────────────
 function SocialProofStrip({ lang }: { lang: Lang }) {
-  const MONO = "'DM Mono', 'Fira Code', monospace";
-  const SANS = "'Plus Jakarta Sans', sans-serif";
+  const [count, setCount] = useState(1247);
+  const [liveCount, setLiveCount] = useState(4);
+  const countIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const liveIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const stats = lang === "pt"
-    ? [
-        { value: "30s",    label: "Da pergunta ao diagnóstico",         sub: "com dados reais da sua conta" },
-        { value: "90 dias", label: "Absorvidos na primeira conexão",     sub: "sem CSV, sem configuração manual" },
-        { value: "Zero",   label: "Planilhas para entender sua conta",  sub: "a IA lê tudo por você" },
-        { value: "Antes",  label: "Você é avisado antes do problema",   sub: "alerta no Telegram em tempo real" },
-      ]
-    : lang === "es"
-    ? [
-        { value: "30s",    label: "De la pregunta al diagnóstico",      sub: "con datos reales de tu cuenta" },
-        { value: "90 días", label: "Absorbidos en la primera conexión", sub: "sin CSV, sin configuración manual" },
-        { value: "Cero",   label: "Hojas de cálculo para tu cuenta",    sub: "la IA lo lee todo por ti" },
-        { value: "Antes",  label: "Recibes la alerta antes del problema",sub: "notificación en Telegram en tiempo real" },
-      ]
-    : [
-        { value: "30s",    label: "From question to full diagnosis",    sub: "with your real account data" },
-        { value: "90 days", label: "Absorbed on first connection",      sub: "no CSV, no manual setup" },
-        { value: "Zero",   label: "Spreadsheets to understand your account", sub: "the AI reads everything for you" },
-        { value: "Before", label: "You're alerted before the problem hits", sub: "real-time Telegram notification" },
-      ];
+  const t = T[lang];
+
+  useEffect(() => {
+    // Increment counter every ~4s with slight randomness
+    countIntervalRef.current = setInterval(() => {
+      setCount(prev => prev + (Math.random() > 0.5 ? 2 : 1));
+    }, 3800 + Math.random() * 400);
+
+    return () => {
+      if (countIntervalRef.current) clearInterval(countIntervalRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Fluctuate live count between 2-7 every 2-3s
+    liveIntervalRef.current = setInterval(() => {
+      setLiveCount(Math.floor(Math.random() * 6) + 2);
+    }, 2000 + Math.random() * 1000);
+
+    return () => {
+      if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
+    };
+  }, []);
+
+  const MONO = "'DM Mono', 'Courier New', monospace";
+  const SANS = "'Plus Jakarta Sans', system-ui, sans-serif";
 
   return (
     <div style={{
-      background: "#050508",
-      borderTop: "1px solid rgba(255,255,255,0.06)",
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
-      padding: "0 clamp(20px,5vw,80px)",
+      background: BG,
+      borderTop: "1px solid rgba(255,255,255,0.05)",
+      borderBottom: "1px solid rgba(255,255,255,0.05)",
+      padding: "32px clamp(20px,5vw,80px)",
       position: "relative",
       overflow: "hidden",
     }}>
-      {/* Subtle top accent line */}
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 1,
-        background: "linear-gradient(90deg, transparent 0%, rgba(13,162,231,0.4) 30%, rgba(13,162,231,0.4) 70%, transparent 100%)",
-      }} />
-
-      <div style={{
-        maxWidth: 1100, margin: "0 auto",
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-      }} className="spstrip-grid">
-        {stats.map(({ value, label, sub }, i) => (
-          <div key={i} style={{
-            padding: "32px 28px",
-            borderRight: i < 3 ? "1px solid rgba(255,255,255,0.06)" : "none",
-            position: "relative",
-          }}>
-            {/* Left accent bar */}
-            <div style={{
-              position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
-              width: 2, height: 32, borderRadius: 1,
-              background: i === 0 ? "#0da2e7" : "rgba(13,162,231,0.25)",
-            }} />
-
-            {/* Value */}
-            <div style={{
-              fontFamily: MONO,
-              fontSize: "clamp(20px, 2.2vw, 28px)",
-              fontWeight: 700,
-              color: i === 0 ? "#0da2e7" : "rgba(255,255,255,0.9)",
-              letterSpacing: "-0.03em",
-              lineHeight: 1,
-              marginBottom: 10,
-              paddingLeft: 14,
-            }}>{value}</div>
-
-            {/* Label */}
-            <div style={{
-              fontFamily: SANS,
-              fontSize: 13,
-              fontWeight: 600,
-              color: "rgba(255,255,255,0.75)",
-              letterSpacing: "-0.01em",
-              lineHeight: 1.3,
-              marginBottom: 5,
-              paddingLeft: 14,
-            }}>{label}</div>
-
-            {/* Sub */}
-            <div style={{
-              fontFamily: SANS,
-              fontSize: 11.5,
-              color: "rgba(255,255,255,0.3)",
-              letterSpacing: "0.01em",
-              lineHeight: 1.4,
-              paddingLeft: 14,
-            }}>{sub}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Mobile: 2×2 grid */}
       <style>{`
-        @media (max-width: 768px) {
-          .spstrip-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .spstrip-grid > div:nth-child(2) {
-            border-right: none !important;
-          }
-          .spstrip-grid > div:nth-child(3),
-          .spstrip-grid > div:nth-child(4) {
-            border-top: 1px solid rgba(255,255,255,0.06);
-          }
-          .spstrip-grid > div:nth-child(3) {
-            border-right: 1px solid rgba(255,255,255,0.06) !important;
-          }
+        @keyframes livePulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
         }
-        @media (max-width: 480px) {
-          .spstrip-grid {
-            grid-template-columns: 1fr !important;
+        .sp-pulse {
+          animation: livePulse 2s ease-in-out infinite;
+        }
+        @media (max-width: 768px) {
+          .sp-strip-container {
+            flex-direction: column;
+            gap: 24px;
           }
-          .spstrip-grid > div {
-            border-right: none !important;
-            border-top: 1px solid rgba(255,255,255,0.06) !important;
+          .sp-item {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 16px;
           }
-          .spstrip-grid > div:first-child {
-            border-top: none !important;
+          .sp-item:last-child {
+            border-bottom: none;
           }
         }
       `}</style>
+
+      <div
+        className="sp-strip-container"
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 48,
+        }}
+      >
+        {/* Counter */}
+        <div className="sp-item" style={{ flex: 1, borderRight: "1px solid rgba(255,255,255,0.05)", paddingRight: 32 }}>
+          <div style={{
+            fontFamily: MONO,
+            fontSize: "clamp(24px, 2.5vw, 32px)",
+            fontWeight: 700,
+            color: "#22c55e",
+            letterSpacing: "-0.02em",
+            lineHeight: 1,
+            marginBottom: 6,
+          }}>
+            {count.toLocaleString()}
+          </div>
+          <div style={{
+            fontFamily: SANS,
+            fontSize: "clamp(12px, 1.1vw, 13px)",
+            color: "rgba(255,255,255,0.4)",
+            fontWeight: 500,
+            letterSpacing: "0.01em",
+          }}>
+            {t.sp_count}
+          </div>
+        </div>
+
+        {/* Separator dot */}
+        <div style={{
+          width: 4,
+          height: 4,
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.15)",
+          flexShrink: 0,
+        }} />
+
+        {/* Live indicator */}
+        <div className="sp-item" style={{ flex: 1, borderRight: "1px solid rgba(255,255,255,0.05)", paddingLeft: 32, paddingRight: 32 }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 6,
+          }}>
+            <div
+              className="sp-pulse"
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "#22c55e",
+                flexShrink: 0,
+              }}
+            />
+            <div style={{
+              fontFamily: MONO,
+              fontSize: "clamp(16px, 1.8vw, 20px)",
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.85)",
+              letterSpacing: "-0.01em",
+            }}>
+              {liveCount}
+            </div>
+          </div>
+          <div style={{
+            fontFamily: SANS,
+            fontSize: "clamp(12px, 1.1vw, 13px)",
+            color: "rgba(255,255,255,0.4)",
+            fontWeight: 500,
+            letterSpacing: "0.01em",
+          }}>
+            {t.sp_live}
+          </div>
+        </div>
+
+        {/* Separator dot */}
+        <div style={{
+          width: 4,
+          height: 4,
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.15)",
+          flexShrink: 0,
+        }} />
+
+        {/* Trust indicator */}
+        <div className="sp-item" style={{ flex: 1, paddingLeft: 32 }}>
+          <div style={{
+            fontFamily: SANS,
+            fontSize: "clamp(12px, 1.1vw, 13px)",
+            color: "rgba(255,255,255,0.7)",
+            fontWeight: 500,
+            letterSpacing: "0.01em",
+            lineHeight: 1.4,
+          }}>
+            {t.sp_trust}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
+// ─── How It Works ─────────────────────────────────────────────────────────────
+// ─── Pain → Solution section ──────────────────────────────────────────────────
 
 function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt" | "es" | "en"; ctaLoading?: boolean }) {
   const copy = {

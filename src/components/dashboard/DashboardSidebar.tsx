@@ -1,4 +1,4 @@
-// DashboardSidebar v9 — redesign: flat, consistente, hierarquia clara
+// DashboardSidebar v10 — progressive disclosure: core + secondary + advanced
 import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, Clapperboard, FileText, ScanEye, ScanLine, Brain, Gift } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
@@ -134,6 +134,41 @@ export function DashboardSidebar({
   const [kpi, setKpi] = useState<{ spend: number; ctr: number; ads: number; trend: "up" | "down" | "flat" | null } | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
+  // Progressive disclosure: load collapse state from localStorage
+  const [secondaryOpen, setSecondaryOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem("sb-secondary-open");
+      return saved !== null ? JSON.parse(saved) : true; // Show by default
+    } catch {
+      return true;
+    }
+  });
+  const [advancedOpen, setAdvancedOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem("sb-advanced-open");
+      return saved !== null ? JSON.parse(saved) : false; // Collapsed by default
+    } catch {
+      return false;
+    }
+  });
+
+  // Persist collapse state
+  useEffect(() => {
+    try {
+      localStorage.setItem("sb-secondary-open", JSON.stringify(secondaryOpen));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [secondaryOpen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("sb-advanced-open", JSON.stringify(advancedOpen));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [advancedOpen]);
+
   const plan = profile?.plan || "free";
   const isLifetime = LIFETIME.includes(user?.email || "");
   const pm = PLANS[plan] || PLANS.free;
@@ -173,18 +208,30 @@ export function DashboardSidebar({
 
   const perfActive = isAt("/dashboard/performance") || isAt("/dashboard/diary");
 
+  // Core: always visible (no collapse)
   const PRIMARY = [
     { url: "/dashboard/ai",          label: "IA Chat",     icon: MessageSquare, badge: "AI" },
     { url: "/dashboard/performance",  label: "Performance", icon: BarChart2, forceActive: perfActive },
+    { url: "/dashboard/accounts",     label: pt ? "Contas" : es ? "Cuentas" : "Accounts", icon: Building2 },
   ];
-  const TOOLS = [
+
+  // Secondary: shown by default (collapsible under "Ferramentas")
+  const SECONDARY_TOOLS = [
     { url: "/dashboard/intelligence", label: pt ? "Inteligência" : es ? "Inteligencia" : "Intelligence", icon: Brain },
-    { url: "/dashboard/boards",       label: "Boards",                                                     icon: LayoutGrid },
     { url: "/dashboard/hooks",        label: "Hooks",                                                      icon: Sparkles },
-    { url: "/dashboard/script",       label: pt ? "Roteiro" : es ? "Guión" : "Script",                    icon: Clapperboard },
-    { url: "/dashboard/brief",        label: "Brief",                                                      icon: FileText },
-    { url: "/dashboard/competitor",   label: pt ? "Concorrentes" : es ? "Competidores" : "Competitors",   icon: ScanEye },
     { url: "/dashboard/preflight",    label: pt ? "Check Criativo" : es ? "Check Creativo" : "Creative Check", icon: ScanLine },
+    { url: "/dashboard/brief",        label: "Brief",                                                      icon: FileText },
+  ];
+
+  // Advanced: collapsed by default (under "Mais ferramentas")
+  const ADVANCED_TOOLS = [
+    { url: "/dashboard/boards",       label: "Boards",                                                     icon: LayoutGrid },
+    { url: "/dashboard/script",       label: pt ? "Roteiro" : es ? "Guión" : "Script",                    icon: Clapperboard },
+    { url: "/dashboard/competitor",   label: pt ? "Concorrentes" : es ? "Competidores" : "Competitors",   icon: ScanEye },
+    { url: "/dashboard/translate",    label: pt ? "Traduzir" : es ? "Traducir" : "Translate",            icon: MessageSquare },
+    { url: "/dashboard/templates",    label: pt ? "Templates" : es ? "Plantillas" : "Templates",         icon: FileText },
+    { url: "/dashboard/preflight-pro", label: pt ? "Preflight Pro" : es ? "Preflight Pro" : "Preflight Pro", icon: ScanLine },
+    { url: "/dashboard/campaign",     label: pt ? "Campaign Builder" : es ? "Constructor Campañas" : "Campaign Builder", icon: BarChart2 },
   ];
 
   return (
@@ -358,20 +405,66 @@ export function DashboardSidebar({
           ))}
         </nav>
 
-        {/* Tools section */}
-        <div style={{ margin: "10px 14px 5px", flexShrink: 0 }}>
-          <p style={{
-            fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.18)",
-            letterSpacing: "0.10em", textTransform: "uppercase", margin: 0, fontFamily: F,
-          }}>
-            {pt ? "Ferramentas" : es ? "Herramientas" : "Tools"}
-          </p>
-        </div>
+        {/* Secondary Tools section (shown by default) */}
         <div style={{ flexShrink: 0 }}>
-          {TOOLS.map(item => (
-            <NavTool key={item.url} url={item.url} label={item.label} icon={item.icon}
-              isActive={isAt(item.url)} onClose={onClose} />
-          ))}
+          <button
+            onClick={() => setSecondaryOpen(!secondaryOpen)}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 8,
+              margin: "10px 14px 5px", padding: 0, background: "none", border: "none",
+              cursor: "pointer", transition: "all 0.12s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.9"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}>
+            <p style={{
+              fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.18)",
+              letterSpacing: "0.10em", textTransform: "uppercase", margin: 0, fontFamily: F, flex: 1,
+            }}>
+              {pt ? "Ferramentas" : es ? "Herramientas" : "Tools"}
+            </p>
+            <ChevronDown size={12} color="rgba(255,255,255,0.15)"
+              style={{ flexShrink: 0, transform: secondaryOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.18s" }} />
+          </button>
+
+          {secondaryOpen && (
+            <div style={{ flexShrink: 0, animation: "sb-in 0.12s ease" }}>
+              {SECONDARY_TOOLS.map(item => (
+                <NavTool key={item.url} url={item.url} label={item.label} icon={item.icon}
+                  isActive={isAt(item.url)} onClose={onClose} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Advanced Tools section (collapsed by default) */}
+        <div style={{ flexShrink: 0 }}>
+          <button
+            onClick={() => setAdvancedOpen(!advancedOpen)}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 8,
+              margin: "8px 14px 5px", padding: 0, background: "none", border: "none",
+              cursor: "pointer", transition: "all 0.12s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.9"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}>
+            <p style={{
+              fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.12)",
+              letterSpacing: "0.10em", textTransform: "uppercase", margin: 0, fontFamily: F, flex: 1,
+            }}>
+              {pt ? "Mais ferramentas" : es ? "Más herramientas" : "Advanced"}
+            </p>
+            <ChevronDown size={12} color="rgba(255,255,255,0.10)"
+              style={{ flexShrink: 0, transform: advancedOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.18s" }} />
+          </button>
+
+          {advancedOpen && (
+            <div style={{ flexShrink: 0, animation: "sb-in 0.12s ease" }}>
+              {ADVANCED_TOOLS.map(item => (
+                <NavTool key={item.url} url={item.url} label={item.label} icon={item.icon}
+                  isActive={isAt(item.url)} onClose={onClose} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ flex: 1 }} />

@@ -3,6 +3,33 @@ import { useNavigate } from "react-router-dom";
 import { X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/i18n/LanguageContext";
+
+type Lang = "en" | "pt" | "es";
+
+const T: Record<Lang, Record<string, string>> = {
+  en: {
+    title: "Thanks for trying AdBrief",
+    subtitle: "Create a free account to save your analyses, generate boards, and unlock the full platform.",
+    signup: "Sign up free",
+    login: "Log in",
+    logout: "Stay logged out",
+  },
+  pt: {
+    title: "Obrigado por experimentar o AdBrief",
+    subtitle: "Crie uma conta gratuita para salvar suas análises, gerar boards e desbloquear a plataforma completa.",
+    signup: "Cadastre-se grátis",
+    login: "Entrar",
+    logout: "Manter-se desconectado",
+  },
+  es: {
+    title: "Gracias por probar AdBrief",
+    subtitle: "Crea una cuenta gratuita para guardar tus análisis, generar boards y desbloquear la plataforma completa.",
+    signup: "Regístrate gratis",
+    login: "Iniciar sesión",
+    logout: "Mantenerse desconectado",
+  },
+};
 
 const AUTH_PROMPT_KEY = "adbrief_auth_prompt_dismissed";
 const TIMER_MS = 5 * 60 * 1000; // 5 minutes
@@ -16,6 +43,9 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
   const [show, setShow] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const lang: Lang = ["pt", "es"].includes(language) ? language as Lang : "en";
+  const t = T[lang];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -99,10 +129,10 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
               </div>
 
               <h2 className="text-xl font-bold text-foreground mb-2">
-                Thanks for trying AdBrief
+                {t.title}
               </h2>
               <p className="text-secondary text-sm leading-relaxed mb-8">
-                Create a free account to save your analyses, generate boards, and unlock the full platform.
+                {t.subtitle}
               </p>
 
               {/* Actions */}
@@ -111,14 +141,14 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
                   className="w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:from-sky-700 hover:to-cyan-700 border-0 h-12 text-base font-semibold rounded-xl"
                   onClick={() => navigate("/signup")}
                 >
-                  Sign up free
+                  {t.signup}
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full bg-transparent text-foreground hover:bg-muted border-border h-11 rounded-xl"
                   onClick={() => navigate("/login")}
                 >
-                  Log in
+                  {t.login}
                 </Button>
               </div>
 
@@ -127,7 +157,7 @@ const AuthPromptModal = ({ forceShow = false, onClose }: AuthPromptModalProps) =
                 onClick={dismiss}
                 className="mt-6 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
               >
-                Stay logged out
+                {t.logout}
               </button>
             </div>
           </div>

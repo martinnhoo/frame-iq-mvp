@@ -33,6 +33,7 @@ const Refund       = lazy(() => import("./pages/Refund"));
 const Careers      = lazy(() => import("./pages/Careers"));
 const Pricing      = lazy(() => import("./pages/Pricing"));
 const Demo         = lazy(() => import("./pages/Demo"));
+const DemoShare    = lazy(() => import("./pages/DemoShare"));
 const Diagnostico  = lazy(() => import("./pages/Diagnostico"));
 const Gestao       = lazy(() => import("./pages/Gestao"));
 const Criativo     = lazy(() => import("./pages/Criativo"));
@@ -123,6 +124,7 @@ const App = () => (
               <Route path="/levels" element={<Levels />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/demo" element={<Demo />} />
+              <Route path="/s/:shareId" element={<DemoShare />} />
               <Route path="/diagnostico" element={<Diagnostico />} />
               <Route path="/gestao" element={<Gestao />} />
               <Route path="/criativo" element={<Criativo />} />

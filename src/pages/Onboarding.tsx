@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { ArrowRight, Check, Loader2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { trackEvent } from "@/lib/posthog";
 
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -277,6 +278,9 @@ export default function Onboarding() {
             setAccountName(name.trim().split(" ")[0] || "Minha conta");
           }
           await createFirstAccount(session);
+          trackEvent("onboarding_completed");
+        } else {
+          trackEvent("onboarding_skipped");
         }
       }
     } catch {}
