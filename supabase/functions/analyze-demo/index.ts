@@ -31,9 +31,11 @@ const parseAnalysis = (rawText: string): Analysis => {
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]) as Analysis;
+      // Strip any emojis from verdict (model sometimes adds 🟢🟡🔴)
+      const cleanVerdict = (parsed.verdict || "Test").replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FEFF}]/gu, "").trim();
       return {
         score: Number(parsed.score) || 0,
-        verdict: parsed.verdict || "Test",
+        verdict: cleanVerdict || "Test",
         hook: parsed.hook || "",
         message: parsed.message || "",
         cta: parsed.cta || "",

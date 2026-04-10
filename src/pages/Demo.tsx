@@ -1,136 +1,110 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
+import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Sparkles, Shield, Zap } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-/* ── Typography ───────────────────────────────────────────────────────── */
-const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
+/* ── Design tokens — matched to IndexNew.tsx ─────────────────────────── */
+const F = "'Plus Jakarta Sans', system-ui, sans-serif";
+const BRAND = "#6366f1";
+const BG = "#050508";
+const CARD_BG = "rgba(255,255,255,0.04)";
+const CARD_BORDER = "rgba(255,255,255,0.07)";
+const TEXT_MUTED = "rgba(255,255,255,0.55)";
 
-/* ── Vivid color palette — no soft/muted tones ────────────────────────── */
 const C = {
-  bg:          "#050508",
-  surface:     "rgba(255,255,255,0.03)",
-  surfaceHov:  "rgba(255,255,255,0.055)",
-  border:      "rgba(255,255,255,0.07)",
-  borderHov:   "rgba(255,255,255,0.14)",
-  text:        "#fff",
-  textSoft:    "rgba(255,255,255,0.6)",
-  textMuted:   "rgba(255,255,255,0.32)",
-  accent:      "#6366f1",   /* vivid indigo */
-  green:       "#22c55e",   /* vivid green */
-  amber:       "#f97316",   /* vivid orange */
-  red:         "#ef4444",   /* vivid red */
+  bg: BG,
+  surface: CARD_BG,
+  border: CARD_BORDER,
+  borderHov: "rgba(255,255,255,0.14)",
+  text: "#fff",
+  textSoft: "rgba(255,255,255,0.6)",
+  textMuted: "rgba(255,255,255,0.32)",
+  accent: BRAND,
+  green: "#22c55e",
+  amber: "#f97316",
+  red: "#ef4444",
 };
 
 type Lang = "pt" | "es" | "en";
 
 const T: Record<Lang, {
-  hero: string; sub: string; upload_cta: string; uploading: string;
-  analyzing: string; drop: string; score: string; verdict: string;
-  hook: string; message_label: string; cta_label: string; actions_label: string;
-  locked_title: string; locked_sub: string; email_placeholder: string;
-  unlock_cta: string; signup_cta: string; signup_sub: string;
-  rate_limit: string; error: string; drag_text: string;
-  or_text: string; formats: string;
-  positive_title: string; improve_title: string; unlock_card: string;
-  unlock_details: string; unlock_items: string[];
+  hero: string; sub: string;
+  analyzing: string; drop: string;
+  drag_text: string; formats: string;
+  positive_title: string; improve_title: string;
+  signup_cta: string; signup_sub: string;
+  rate_limit: string; error: string;
+  unlock_card: string; unlock_details: string; unlock_items: string[];
   social_proof: string;
 }> = {
   pt: {
     hero: "Nota do seu anúncio\nem 10 segundos",
     sub: "IA analisa hook, copy e CTA. Nota de 1 a 10.",
-    upload_cta: "Upload do criativo",
-    uploading: "Enviando...",
     analyzing: "Analisando",
     drop: "Solte aqui",
-    score: "Score",
-    verdict: "Veredicto",
-    hook: "Hook",
-    message_label: "Mensagem",
-    cta_label: "CTA",
-    actions_label: "Ações",
-    locked_title: "Análise completa",
-    locked_sub: "Email para desbloquear mensagem, CTA e ações.",
-    email_placeholder: "seu@email.com",
-    unlock_cta: "Desbloquear",
+    drag_text: "Arraste ou clique para enviar",
+    formats: "PNG, JPG, WEBP — até 10 MB",
+    positive_title: "O que funciona",
+    improve_title: "O que melhorar",
     signup_cta: "Ver análise completa",
     signup_sub: "Grátis — sem cartão",
     rate_limit: "Limite atingido. Crie uma conta para continuar.",
     error: "Erro. Tente novamente.",
-    drag_text: "Arraste ou clique para enviar",
-    or_text: "ou",
-    formats: "PNG, JPG, WEBP — até 10 MB",
-    positive_title: "O que funciona",
-    improve_title: "O que melhorar",
     unlock_card: "Crie sua conta para ver tudo",
     unlock_details: "Com uma conta gratuita você desbloqueia:",
-    unlock_items: ["Análise completa: pontos fortes + melhorias", "Sugestões de CTA e ações práticas", "IA conectada às suas campanhas reais"],
-    social_proof: "Usado por 2.000+ media buyers",
+    unlock_items: [
+      "Análise completa com ações práticas",
+      "Sugestões de CTA e melhorias de copy",
+      "IA conectada às suas campanhas reais",
+    ],
+    social_proof: "Usado por 2.000+ gestores de tráfego",
   },
   es: {
     hero: "Nota de tu anuncio\nen 10 segundos",
     sub: "IA analiza hook, copy y CTA. Nota de 1 a 10.",
-    upload_cta: "Subir creativo",
-    uploading: "Subiendo...",
     analyzing: "Analizando",
     drop: "Suelta aquí",
-    score: "Score",
-    verdict: "Veredicto",
-    hook: "Hook",
-    message_label: "Mensaje",
-    cta_label: "CTA",
-    actions_label: "Acciones",
-    locked_title: "Análisis completo",
-    locked_sub: "Email para desbloquear mensaje, CTA y acciones.",
-    email_placeholder: "tu@email.com",
-    unlock_cta: "Desbloquear",
+    drag_text: "Arrastra o haz clic para subir",
+    formats: "PNG, JPG, WEBP — hasta 10 MB",
+    positive_title: "Lo que funciona",
+    improve_title: "Qué mejorar",
     signup_cta: "Ver análisis completo",
     signup_sub: "Gratis — sin tarjeta",
     rate_limit: "Límite alcanzado. Crea una cuenta para continuar.",
     error: "Error. Intenta de nuevo.",
-    drag_text: "Arrastra o haz clic para subir",
-    or_text: "o",
-    formats: "PNG, JPG, WEBP — hasta 10 MB",
-    positive_title: "Lo que funciona",
-    improve_title: "Qué mejorar",
     unlock_card: "Crea tu cuenta para ver todo",
     unlock_details: "Con una cuenta gratuita desbloqueas:",
-    unlock_items: ["Análisis completo: fortalezas + mejoras", "Sugerencias de CTA y acciones prácticas", "IA conectada a tus campañas reales"],
+    unlock_items: [
+      "Análisis completo con acciones prácticas",
+      "Sugerencias de CTA y mejoras de copy",
+      "IA conectada a tus campañas reales",
+    ],
     social_proof: "Usado por 2.000+ media buyers",
   },
   en: {
     hero: "Rate your ad\nin 10 seconds",
     sub: "AI analyzes hook, copy and CTA. Score from 1 to 10.",
-    upload_cta: "Upload creative",
-    uploading: "Uploading...",
     analyzing: "Analyzing",
     drop: "Drop here",
-    score: "Score",
-    verdict: "Verdict",
-    hook: "Hook",
-    message_label: "Message",
-    cta_label: "CTA",
-    actions_label: "Actions",
-    locked_title: "Full analysis",
-    locked_sub: "Email to unlock message, CTA and actions.",
-    email_placeholder: "your@email.com",
-    unlock_cta: "Unlock",
+    drag_text: "Drag or click to upload",
+    formats: "PNG, JPG, WEBP — up to 10 MB",
+    positive_title: "What works",
+    improve_title: "What to improve",
     signup_cta: "See full analysis",
     signup_sub: "Free — no card required",
     rate_limit: "Limit reached. Sign up to continue.",
     error: "Error. Try again.",
-    drag_text: "Drag or click to upload",
-    or_text: "or",
-    formats: "PNG, JPG, WEBP — up to 10 MB",
-    positive_title: "What works",
-    improve_title: "What to improve",
     unlock_card: "Create your account to see everything",
     unlock_details: "With a free account you unlock:",
-    unlock_items: ["Full analysis: strengths + improvements", "CTA suggestions and actionable next steps", "AI connected to your real campaigns"],
+    unlock_items: [
+      "Full analysis with actionable steps",
+      "CTA suggestions and copy improvements",
+      "AI connected to your real campaigns",
+    ],
     social_proof: "Used by 2,000+ media buyers",
   },
 };
@@ -148,18 +122,17 @@ interface AnalysisResult {
 }
 
 /* ── Keyframes ────────────────────────────────────────────────────────── */
-const KEYFRAMES = `
-@keyframes demoFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes demoFadeUp2{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+const KF = `
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp2{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes scanLine{0%{top:10%;opacity:0}20%{opacity:1}80%{opacity:1}100%{top:85%;opacity:0}}
 @keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.18)}50%{box-shadow:0 0 0 10px rgba(99,102,241,0)}}
 @property --beam-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes beamSpin{to{--beam-angle:360deg}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@media(max-width:480px){
-  .demo-upload{padding:40px 20px!important}
-  .demo-score-img{width:64px!important;height:64px!important;borderRadius:10px!important}
+@media(max-width:700px){
+  .demo-result-grid{flex-direction:column!important}
+  .demo-result-grid>div{width:100%!important}
 }
 `;
 
@@ -231,11 +204,13 @@ export default function Demo() {
       if (!parsed) return;
 
       if (!parsed.hook && !parsed.verdict) {
-        console.warn("[Demo] Empty analysis received, showing fallback");
         parsed.hook = lang === "pt" ? "Análise processada." : lang === "es" ? "Análisis procesado." : "Analysis processed.";
         parsed.verdict = lang === "pt" ? "Resultado" : lang === "es" ? "Resultado" : "Result";
         if (!parsed.score) parsed.score = 5;
       }
+      // Strip emojis from verdict (belt + suspenders with backend)
+      if (parsed.verdict) parsed.verdict = parsed.verdict.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FEFF}]/gu, "").trim();
+
       setResult(parsed);
       setPhase("result");
     } catch (e) {
@@ -249,15 +224,19 @@ export default function Demo() {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) analyze(f); };
 
   const scoreColor = (s: number) => s >= 8 ? C.green : s >= 5 ? C.amber : C.red;
-  const scoreLabel = (s: number) =>
-    s >= 8 ? (lang === "pt" ? "Excelente" : lang === "es" ? "Excelente" : "Excellent") :
-    s >= 5 ? (lang === "pt" ? "Testar" : lang === "es" ? "Probar" : "Test") :
-    (lang === "pt" ? "Repensar" : lang === "es" ? "Repensar" : "Rethink");
 
   /* ── Render ──────────────────────────────────────────────────────────── */
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: BODY, position: "relative", overflow: "hidden" }}>
-      <style>{KEYFRAMES}</style>
+    <div style={{ minHeight: "100vh", background: C.bg, fontFamily: F, position: "relative", overflow: "hidden" }}>
+      <style>{KF}</style>
+
+      {/* ── Background glow — matches IndexNew ── */}
+      <div style={{
+        position: "fixed", top: "-20%", left: "50%", transform: "translateX(-50%)",
+        width: 900, height: 600, borderRadius: "50%",
+        background: `radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%)`,
+        filter: "blur(80px)", pointerEvents: "none", zIndex: 0,
+      }} />
 
       {/* ── Nav ── */}
       <nav style={{
@@ -273,7 +252,7 @@ export default function Demo() {
           <button
             onClick={() => navigate("/signup")}
             style={{
-              fontFamily: BODY, fontSize: 13, fontWeight: 700,
+              fontFamily: F, fontSize: 13, fontWeight: 700,
               padding: "9px 20px", borderRadius: 10,
               background: C.text, color: C.bg,
               border: "none", cursor: "pointer",
@@ -287,43 +266,59 @@ export default function Demo() {
         </div>
       </nav>
 
-      {/* ── Main ── */}
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 560, margin: "0 auto", padding: "56px 20px 100px" }}>
+      {/* ── Main container ── */}
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto", padding: "48px 20px 80px" }}>
 
         {/* ── Hero ── */}
-        <div style={{ textAlign: "center", marginBottom: 44 }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
           <h1 style={{
-            fontFamily: BODY, fontWeight: 800,
-            fontSize: "clamp(26px, 6vw, 38px)",
-            letterSpacing: "-0.035em", lineHeight: 1.1,
+            fontFamily: F, fontWeight: 800,
+            fontSize: "clamp(26px, 6vw, 40px)",
+            letterSpacing: "-0.035em", lineHeight: 1.08,
             color: C.text, marginBottom: 14, whiteSpace: "pre-line",
           }}>
             {t.hero}
           </h1>
           <p style={{
-            fontFamily: BODY, fontSize: 14, fontWeight: 400,
-            color: C.textMuted, lineHeight: 1.5,
-            maxWidth: 320, margin: "0 auto",
+            fontFamily: F, fontSize: 15, fontWeight: 400,
+            color: TEXT_MUTED, lineHeight: 1.5,
+            maxWidth: 340, margin: "0 auto",
           }}>
             {t.sub}
           </p>
         </div>
 
+        {/* ── Social proof pill — visible on upload ── */}
+        {phase === "upload" && (
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <span style={{
+              fontFamily: F, fontSize: 12, fontWeight: 600,
+              color: "rgba(99,102,241,0.8)",
+              padding: "6px 16px", borderRadius: 20,
+              border: "1px solid rgba(99,102,241,0.18)",
+              background: "rgba(99,102,241,0.06)",
+              letterSpacing: "-0.01em",
+            }}>
+              {t.social_proof}
+            </span>
+          </div>
+        )}
+
         {/* ── Rate Limited ── */}
         {rateLimited && (
           <div style={{
-            textAlign: "center", padding: "32px 28px", borderRadius: 16,
+            textAlign: "center", padding: "28px 24px", borderRadius: 16,
             border: `1px solid rgba(239,68,68,0.2)`,
             background: "rgba(239,68,68,0.06)",
-            marginBottom: 28, animation: "demoFadeUp 0.4s ease-out",
+            marginBottom: 28, animation: "fadeUp 0.4s ease-out",
           }}>
-            <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 500, color: C.red, marginBottom: 18 }}>
+            <p style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: C.red, marginBottom: 16 }}>
               {t.rate_limit}
             </p>
             <button
               onClick={() => navigate("/signup")}
               style={{
-                fontFamily: BODY, fontSize: 14, fontWeight: 700,
+                fontFamily: F, fontSize: 14, fontWeight: 700,
                 padding: "12px 28px", borderRadius: 10,
                 background: C.text, color: C.bg,
                 border: "none", cursor: "pointer",
@@ -342,7 +337,6 @@ export default function Demo() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onClick={() => fileRef.current?.click()}
-            className="demo-upload"
             style={{
               position: "relative", borderRadius: 20,
               background: dragOver ? "rgba(99,102,241,0.04)" : C.surface,
@@ -353,7 +347,7 @@ export default function Demo() {
               overflow: "hidden",
             }}
             onMouseEnter={e => {
-              if (!dragOver) { e.currentTarget.style.borderColor = C.borderHov; e.currentTarget.style.background = C.surfaceHov; }
+              if (!dragOver) { e.currentTarget.style.borderColor = C.borderHov; e.currentTarget.style.background = "rgba(255,255,255,0.055)"; }
             }}
             onMouseLeave={e => {
               if (!dragOver) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; }
@@ -374,7 +368,6 @@ export default function Demo() {
 
             <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
 
-            {/* Upload icon — clean, no background box */}
             <Upload
               size={32}
               color={dragOver ? C.accent : C.textMuted}
@@ -383,17 +376,14 @@ export default function Demo() {
             />
 
             <p style={{
-              fontFamily: BODY, fontSize: 15, fontWeight: 600,
+              fontFamily: F, fontSize: 15, fontWeight: 600,
               color: dragOver ? C.text : "rgba(255,255,255,0.75)",
               marginBottom: 6, letterSpacing: "-0.02em",
               transition: "color 0.2s",
             }}>
               {dragOver ? t.drop : t.drag_text}
             </p>
-            <p style={{
-              fontFamily: BODY, fontSize: 12, fontWeight: 400,
-              color: C.textMuted,
-            }}>
+            <p style={{ fontFamily: F, fontSize: 12, fontWeight: 400, color: C.textMuted }}>
               {t.formats}
             </p>
           </div>
@@ -401,7 +391,7 @@ export default function Demo() {
 
         {/* ── Analyzing ── */}
         {phase === "analyzing" && (
-          <div style={{ textAlign: "center", padding: "56px 24px", animation: "demoFadeUp 0.35s ease-out" }}>
+          <div style={{ textAlign: "center", padding: "56px 24px", animation: "fadeUp 0.35s ease-out" }}>
             {preview && (
               <div style={{ position: "relative", display: "inline-block", marginBottom: 36 }}>
                 <img src={preview} alt="Ad" style={{
@@ -421,271 +411,269 @@ export default function Demo() {
                 border: `2px solid ${C.border}`, borderTopColor: C.accent,
                 animation: "spin 0.8s linear infinite",
               }} />
-              <span style={{ fontFamily: BODY, fontSize: 14, fontWeight: 600, color: C.textSoft }}>
+              <span style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: C.textSoft }}>
                 {t.analyzing}
               </span>
             </div>
           </div>
         )}
 
-        {/* ── Result ── */}
+        {/* ════════════════════════════════════════════════════════════════════
+            RESULT — two-column layout
+        ════════════════════════════════════════════════════════════════════ */}
         {phase === "result" && result && (
-          <div style={{ animation: "demoFadeUp 0.4s ease-out" }}>
+          <div style={{ animation: "fadeUp 0.4s ease-out" }}>
 
-            {/* ── Score row ── */}
+            {/* ── Score header ── */}
             <div style={{
-              display: "flex", gap: 18, alignItems: "center",
-              marginBottom: 20, padding: "20px 22px",
+              display: "flex", gap: 16, alignItems: "center",
+              marginBottom: 20, padding: "18px 22px",
               borderRadius: 16, background: C.surface,
               border: `1px solid ${C.border}`,
             }}>
               {preview && (
                 <img src={preview} alt="Ad" style={{
-                  width: 72, height: 72, borderRadius: 12,
+                  width: 64, height: 64, borderRadius: 10,
                   border: `1px solid ${C.border}`, objectFit: "cover", flexShrink: 0,
                 }} />
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 3 }}>
                   <span style={{
-                    fontFamily: BODY, fontSize: 32, fontWeight: 800,
+                    fontFamily: F, fontSize: 30, fontWeight: 800,
                     color: scoreColor(result.score), letterSpacing: "-0.04em", lineHeight: 1,
                   }}>
                     {result.score}
                   </span>
-                  <span style={{ fontFamily: BODY, fontSize: 14, fontWeight: 500, color: C.textMuted }}>/10</span>
+                  <span style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: C.textMuted }}>/10</span>
                 </div>
                 <p style={{
-                  fontFamily: BODY, fontSize: 13, fontWeight: 600,
+                  fontFamily: F, fontSize: 13, fontWeight: 600,
                   color: scoreColor(result.score),
                 }}>
-                  {result.verdict || scoreLabel(result.score)}
+                  {result.verdict}
                 </p>
               </div>
+              {/* Social proof inline */}
+              <span style={{
+                fontFamily: F, fontSize: 10, fontWeight: 600,
+                color: "rgba(99,102,241,0.7)",
+                padding: "4px 10px", borderRadius: 16,
+                border: "1px solid rgba(99,102,241,0.15)",
+                background: "rgba(99,102,241,0.05)",
+                whiteSpace: "nowrap", flexShrink: 0,
+                display: "none", // hide on mobile, show on wider
+              }}
+              className="demo-social-inline"
+              >
+                {t.social_proof}
+              </span>
             </div>
 
-            {/* ── Gated analysis — blurred cards + signup CTA ── */}
-            {!result.full ? (
-              <div style={{ position: "relative", animation: "demoFadeUp2 0.5s ease-out" }}>
+            {/* ── Two-column cards ── */}
+            <div className="demo-result-grid" style={{
+              display: "flex", gap: 12, alignItems: "stretch",
+              animation: "fadeUp2 0.5s ease-out",
+            }}>
 
-                {/* Blurred preview of both cards — decorative only */}
-                <div style={{ filter: "blur(6px)", userSelect: "none", pointerEvents: "none", opacity: 0.5 }}>
-                  {/* Fake "What works" card */}
-                  <div style={{
-                    borderRadius: 16, padding: "20px 22px", marginBottom: 12,
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderLeft: `3px solid ${C.green}`,
+              {/* LEFT — What works (visible) */}
+              <div style={{
+                flex: 1, minWidth: 0,
+                borderRadius: 16, padding: "20px 20px",
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderTop: `3px solid ${C.green}`,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                  <CheckCircle2 size={16} color={C.green} strokeWidth={2.2} />
+                  <span style={{
+                    fontFamily: F, fontSize: 12, fontWeight: 700,
+                    color: C.green, letterSpacing: "0.04em", textTransform: "uppercase",
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                      <CheckCircle2 size={16} color={C.green} strokeWidth={2.2} />
-                      <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: C.green, letterSpacing: "0.04em", textTransform: "uppercase" }}>{t.positive_title}</span>
-                    </div>
-                    <div style={{ height: 12, width: "85%", borderRadius: 3, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
-                    <div style={{ height: 12, width: "65%", borderRadius: 3, background: "rgba(255,255,255,0.04)" }} />
-                  </div>
-                  {/* Fake "What to improve" card */}
-                  <div style={{
-                    borderRadius: 16, padding: "20px 22px",
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderLeft: `3px solid ${C.accent}`,
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                      <AlertTriangle size={16} color={C.accent} strokeWidth={2.2} />
-                      <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: C.accent, letterSpacing: "0.04em", textTransform: "uppercase" }}>{t.improve_title}</span>
-                    </div>
-                    <div style={{ height: 12, width: "90%", borderRadius: 3, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
-                    <div style={{ height: 12, width: "72%", borderRadius: 3, background: "rgba(255,255,255,0.04)", marginBottom: 10 }} />
-                    <div style={{ height: 12, width: "60%", borderRadius: 3, background: "rgba(255,255,255,0.05)" }} />
-                  </div>
+                    {t.positive_title}
+                  </span>
                 </div>
-
-                {/* Overlay CTA */}
-                <div style={{
-                  position: "absolute", inset: 0,
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center",
-                  background: "rgba(5,5,8,0.6)",
-                  backdropFilter: "blur(4px)",
-                  borderRadius: 16,
-                  padding: "24px 28px",
+                <p style={{
+                  fontFamily: F, fontSize: 13, fontWeight: 400,
+                  color: "rgba(255,255,255,0.7)", lineHeight: 1.7,
                 }}>
-                  <div style={{
-                    width: 48, height: 48, borderRadius: 14,
-                    border: `1px solid rgba(99,102,241,0.25)`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    marginBottom: 16,
-                    animation: "lockPulse 2.5s ease-in-out infinite",
-                  }}>
-                    <Lock size={20} color={C.accent} strokeWidth={1.8} />
-                  </div>
-
-                  <span style={{
-                    fontFamily: BODY, fontSize: 15, fontWeight: 700,
-                    color: C.text, marginBottom: 6, textAlign: "center",
-                  }}>
-                    {t.unlock_card}
-                  </span>
-
-                  <span style={{
-                    fontFamily: BODY, fontSize: 12, fontWeight: 400,
-                    color: C.textMuted, marginBottom: 16, textAlign: "center",
-                  }}>
-                    {t.unlock_details}
-                  </span>
-
-                  {/* Value items */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20, width: "100%", maxWidth: 280 }}>
-                    {t.unlock_items.map((item, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <CheckCircle2 size={14} color={C.green} strokeWidth={2.2} style={{ flexShrink: 0 }} />
-                        <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)" }}>
-                          {item}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => navigate("/signup")}
-                    style={{
-                      fontFamily: BODY, fontSize: 14, fontWeight: 700,
-                      padding: "13px 32px", borderRadius: 10,
-                      background: C.text, color: C.bg,
-                      border: "none", cursor: "pointer",
-                      display: "inline-flex", alignItems: "center", gap: 8,
-                      transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
-                      marginBottom: 8,
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(255,255,255,0.08)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
-                  >
-                    {t.signup_cta} <ArrowRight size={14} />
-                  </button>
-                  <span style={{ fontFamily: BODY, fontSize: 11, color: C.textMuted }}>
-                    {t.signup_sub}
-                  </span>
-                </div>
+                  {result.hook}
+                </p>
               </div>
-            ) : (
-              /* ── Full result cards (logged-in / full response) ── */
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-                {/* Card 1: Positives */}
-                <div style={{
-                  borderRadius: 16, padding: "20px 22px",
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderLeft: `3px solid ${C.green}`,
-                  animation: "demoFadeUp2 0.5s ease-out",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                    <CheckCircle2 size={16} color={C.green} strokeWidth={2.2} />
-                    <span style={{
-                      fontFamily: BODY, fontSize: 12, fontWeight: 700,
-                      color: C.green, letterSpacing: "0.04em", textTransform: "uppercase",
-                    }}>
-                      {t.positive_title}
-                    </span>
-                  </div>
-                  <p style={{
-                    fontFamily: BODY, fontSize: 14, fontWeight: 400,
-                    color: C.textSoft, lineHeight: 1.7,
-                  }}>
-                    {result.hook}
-                  </p>
-                </div>
-
-                {/* Card 2: Improvements */}
-                <div style={{
-                  borderRadius: 16, padding: "20px 22px",
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderLeft: `3px solid ${C.accent}`,
-                  animation: "demoFadeUp2 0.6s ease-out",
-                }}>
+              {/* RIGHT — What to improve (locked or open) */}
+              {!result.full ? (
+                <div
+                  onClick={() => navigate("/signup")}
+                  style={{
+                    flex: 1, minWidth: 0,
+                    position: "relative", borderRadius: 16,
+                    padding: "20px 20px",
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
+                    borderTop: `3px solid ${C.accent}`,
+                    cursor: "pointer",
+                    transition: "border-color 0.2s",
+                    overflow: "hidden",
+                    minHeight: 140,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(99,102,241,0.3)"}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
+                >
+                  {/* Header */}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                     <AlertTriangle size={16} color={C.accent} strokeWidth={2.2} />
                     <span style={{
-                      fontFamily: BODY, fontSize: 12, fontWeight: 700,
+                      fontFamily: F, fontSize: 12, fontWeight: 700,
                       color: C.accent, letterSpacing: "0.04em", textTransform: "uppercase",
                     }}>
                       {t.improve_title}
                     </span>
                   </div>
 
-                  <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.7, marginBottom: 16 }}>
+                  {/* Blurred placeholder */}
+                  <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }}>
+                    <div style={{ height: 10, width: "90%", borderRadius: 3, background: "rgba(255,255,255,0.07)", marginBottom: 9 }} />
+                    <div style={{ height: 10, width: "72%", borderRadius: 3, background: "rgba(255,255,255,0.05)", marginBottom: 9 }} />
+                    <div style={{ height: 10, width: "80%", borderRadius: 3, background: "rgba(255,255,255,0.06)" }} />
+                  </div>
+
+                  {/* Lock overlay */}
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center",
+                    background: "rgba(5,5,8,0.55)",
+                    backdropFilter: "blur(3px)",
+                  }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 11,
+                      border: `1px solid rgba(99,102,241,0.25)`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      marginBottom: 8,
+                      animation: "lockPulse 2.5s ease-in-out infinite",
+                    }}>
+                      <Lock size={17} color={C.accent} strokeWidth={1.8} />
+                    </div>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: C.text }}>
+                      {t.unlock_card}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                /* Unlocked improvements card */
+                <div style={{
+                  flex: 1, minWidth: 0,
+                  borderRadius: 16, padding: "20px 20px",
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderTop: `3px solid ${C.accent}`,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                    <AlertTriangle size={16} color={C.accent} strokeWidth={2.2} />
+                    <span style={{
+                      fontFamily: F, fontSize: 12, fontWeight: 700,
+                      color: C.accent, letterSpacing: "0.04em", textTransform: "uppercase",
+                    }}>
+                      {t.improve_title}
+                    </span>
+                  </div>
+                  <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 14 }}>
                     {result.message}
                   </p>
-
                   {result.cta && (
-                    <div style={{ marginBottom: 16 }}>
-                      <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
-                        CTA
-                      </p>
-                      <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.6 }}>
-                        {result.cta}
-                      </p>
+                    <div style={{ marginBottom: 14 }}>
+                      <p style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>CTA</p>
+                      <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{result.cta}</p>
                     </div>
                   )}
-
                   {result.actions && result.actions.length > 0 && (
                     <div>
-                      <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
-                        {t.actions_label}
-                      </p>
                       {result.actions.map((action, i) => (
-                        <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
+                        <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "flex-start" }}>
                           <span style={{
-                            fontFamily: BODY, fontSize: 11, fontWeight: 800,
+                            fontFamily: F, fontSize: 10, fontWeight: 800,
                             color: C.accent, marginTop: 3, flexShrink: 0,
-                            width: 18, height: 18, borderRadius: 5,
+                            width: 16, height: 16, borderRadius: 4,
                             border: `1px solid rgba(99,102,241,0.2)`,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                          }}>
-                            {i + 1}
-                          </span>
-                          <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.6 }}>
-                            {action}
-                          </p>
+                          }}>{i + 1}</span>
+                          <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{action}</p>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
+              )}
+            </div>
+
+            {/* ── CTA section below cards ── */}
+            {!result.full && (
+              <div style={{
+                marginTop: 20, padding: "24px", borderRadius: 16,
+                background: "rgba(99,102,241,0.04)",
+                border: `1px solid rgba(99,102,241,0.12)`,
+                textAlign: "center",
+                animation: "fadeUp2 0.6s ease-out",
+              }}>
+                {/* Value items */}
+                <p style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: C.textSoft, marginBottom: 16 }}>
+                  {t.unlock_details}
+                </p>
+                <div style={{
+                  display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center",
+                  marginBottom: 20,
+                }}>
+                  {t.unlock_items.map((item, i) => (
+                    <div key={i} style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      padding: "5px 12px", borderRadius: 20,
+                      background: "rgba(255,255,255,0.04)",
+                      border: `1px solid ${C.border}`,
+                    }}>
+                      <CheckCircle2 size={12} color={C.green} strokeWidth={2.5} />
+                      <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.75)" }}>
+                        {item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => navigate("/signup")}
+                  style={{
+                    fontFamily: F, fontSize: 15, fontWeight: 700,
+                    padding: "14px 40px", borderRadius: 12,
+                    background: "#fff", color: "#000",
+                    border: "none", cursor: "pointer",
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                    transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
+                    boxShadow: "0 0 32px rgba(255,255,255,0.08)",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(255,255,255,0.15)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 0 32px rgba(255,255,255,0.08)"; }}
+                >
+                  {t.signup_cta} <ArrowRight size={15} />
+                </button>
+                <p style={{ fontFamily: F, fontSize: 11, fontWeight: 400, color: C.textMuted, marginTop: 10 }}>
+                  {t.signup_sub}
+                </p>
               </div>
             )}
 
-            {/* Social proof pill */}
-            <div style={{
-              textAlign: "center", marginTop: 20,
-              animation: "demoFadeUp2 0.7s ease-out",
-            }}>
+            {/* Social proof below result */}
+            <div style={{ textAlign: "center", marginTop: 16 }}>
               <span style={{
-                fontFamily: BODY, fontSize: 11, fontWeight: 500,
-                color: C.textMuted,
-                padding: "6px 14px", borderRadius: 20,
-                border: `1px solid ${C.border}`,
-                background: C.surface,
+                fontFamily: F, fontSize: 11, fontWeight: 600,
+                color: "rgba(99,102,241,0.7)",
+                padding: "5px 14px", borderRadius: 20,
+                border: "1px solid rgba(99,102,241,0.15)",
+                background: "rgba(99,102,241,0.05)",
               }}>
                 {t.social_proof}
               </span>
             </div>
 
-            {/* Try another */}
-            <button
-              onClick={() => { setPhase("upload"); setResult(null); setPreview(null); }}
-              style={{
-                display: "block", margin: "16px auto 0",
-                fontFamily: BODY, fontSize: 13, fontWeight: 500,
-                color: C.textMuted, background: "none", border: "none",
-                cursor: "pointer", padding: "8px 16px", borderRadius: 8,
-                transition: "color 0.15s",
-              }}
-              onMouseEnter={e => e.currentTarget.style.color = C.textSoft}
-              onMouseLeave={e => e.currentTarget.style.color = C.textMuted}
-            >
-              {lang === "pt" ? "Analisar outro" : lang === "es" ? "Analizar otro" : "Analyze another"}
-            </button>
           </div>
         )}
       </div>
