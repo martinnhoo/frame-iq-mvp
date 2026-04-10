@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Sparkles, Shield, Zap, Plug } from "lucide-react";
+import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Zap, Plug } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -41,7 +41,7 @@ const T: Record<Lang, {
   signup_cta: string; signup_sub: string;
   rate_limit: string; error: string;
   unlock_card: string; unlock_details: string; unlock_items: string[];
-  social_proof: string; social_proof_count: string; social_proof_note: string;
+  sp_count: number; sp_label: string; sp_live: string; sp_live_count: number;
   connect_title: string; connect_sub: string; connect_btn: string;
   connect_benefits: string[]; go_dashboard: string;
 }> = {
@@ -65,7 +65,7 @@ const T: Record<Lang, {
       "Sugestões de CTA e melhorias de copy",
       "IA conectada às suas campanhas reais",
     ],
-    social_proof: "14.200+ anúncios analisados", social_proof_count: "14.200+", social_proof_note: "anúncios analisados esta semana",
+    sp_count: 1247, sp_label: "anúncios analisados", sp_live: "analisando agora", sp_live_count: 4,
     connect_title: "Conecte Meta Ads para resultados reais",
     connect_sub: "A IA analisa suas campanhas ao vivo — ROAS, CTR, criativos fadigados — e diz o que pausar, escalar e testar.",
     connect_btn: "Conectar Meta Ads",
@@ -92,7 +92,7 @@ const T: Record<Lang, {
       "Sugerencias de CTA y mejoras de copy",
       "IA conectada a tus campañas reales",
     ],
-    social_proof: "14.200+ anuncios analizados", social_proof_count: "14.200+", social_proof_note: "anuncios analizados esta semana",
+    sp_count: 1247, sp_label: "anuncios analizados", sp_live: "analizando ahora", sp_live_count: 4,
     connect_title: "Conecta Meta Ads para resultados reales",
     connect_sub: "La IA analiza tus campañas en vivo — ROAS, CTR, creativos fatigados — y te dice qué pausar, escalar y testear.",
     connect_btn: "Conectar Meta Ads",
@@ -119,7 +119,7 @@ const T: Record<Lang, {
       "CTA suggestions and copy improvements",
       "AI connected to your real campaigns",
     ],
-    social_proof: "14,200+ ads analyzed", social_proof_count: "14,200+", social_proof_note: "ads analyzed this week",
+    sp_count: 1247, sp_label: "ads analyzed", sp_live: "analyzing now", sp_live_count: 4,
     connect_title: "Connect Meta Ads for real results",
     connect_sub: "AI analyzes your live campaigns — ROAS, CTR, fatigued creatives — and tells you what to pause, scale and test.",
     connect_btn: "Connect Meta Ads",
@@ -147,6 +147,7 @@ const KF = `
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes scanLine{0%{top:10%;opacity:0}20%{opacity:1}80%{opacity:1}100%{top:85%;opacity:0}}
 @keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.18)}50%{box-shadow:0 0 0 10px rgba(99,102,241,0)}}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.4}}
 @property --beam-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes beamSpin{to{--beam-angle:360deg}}
 @media(max-width:700px){
@@ -154,6 +155,67 @@ const KF = `
   .demo-result-grid>div{width:100%!important}
 }
 `;
+
+/* ── Live social proof bar ──────────────────────────────────────────────── */
+function LiveProof({ base, label, liveLabel, liveBase }: { base: number; label: string; liveLabel: string; liveBase: number }) {
+  const [count, setCount] = useState(base);
+  const [live, setLive] = useState(liveBase);
+
+  useEffect(() => {
+    // Tick the counter up naturally every few seconds
+    const id = setInterval(() => {
+      setCount(prev => prev + 1);
+    }, 4200 + Math.random() * 3000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    // Fluctuate live count between base-2 and base+3
+    const id = setInterval(() => {
+      setLive(liveBase + Math.floor(Math.random() * 6) - 2);
+    }, 6000 + Math.random() * 4000);
+    return () => clearInterval(id);
+  }, [liveBase]);
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "center",
+      gap: 20, padding: "12px 0",
+    }}>
+      {/* Counter */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+        <span style={{
+          fontFamily: "'SF Mono', 'JetBrains Mono', monospace",
+          fontSize: 16, fontWeight: 700, color: C.text,
+          letterSpacing: "-0.02em",
+          fontVariantNumeric: "tabular-nums",
+        }}>
+          {count.toLocaleString()}
+        </span>
+        <span style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)" }}>
+          {label}
+        </span>
+      </div>
+
+      {/* Separator dot */}
+      <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.12)" }} />
+
+      {/* Live indicator */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{
+          width: 6, height: 6, borderRadius: "50%",
+          background: "#22c55e",
+          animation: "livePulse 2s ease-in-out infinite",
+          boxShadow: "0 0 6px rgba(34,197,94,0.4)",
+        }} />
+        <span style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)" }}>
+          <span style={{ color: "rgba(255,255,255,0.55)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{live}</span>{" "}
+          {liveLabel}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 /* ══════════════════════════════════════════════════════════════════════════
    DEMO PAGE
@@ -424,19 +486,9 @@ export default function Demo() {
           </div>
         )}
 
-        {/* ── Social proof below upload ── */}
+        {/* ── Live social proof below upload ── */}
         {phase === "upload" && !rateLimited && (
-          <div style={{
-            marginTop: 16, padding: "12px 20px", borderRadius: 12,
-            background: C.surface, border: `1px solid ${C.border}`,
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-          }}>
-            <Sparkles size={14} color={C.accent} strokeWidth={2} />
-            <span style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.5)" }}>
-              <span style={{ fontWeight: 700, color: C.text }}>{t.social_proof_count}</span>{" "}
-              {t.social_proof_note}
-            </span>
-          </div>
+          <LiveProof base={t.sp_count} label={t.sp_label} liveLabel={t.sp_live} liveBase={t.sp_live_count} />
         )}
 
         {/* ── Analyzing ── */}
@@ -774,17 +826,9 @@ export default function Demo() {
               </div>
             )}
 
-            {/* ── Social proof — specific metric ── */}
-            <div style={{
-              marginTop: 20, padding: "14px 20px", borderRadius: 12,
-              background: C.surface, border: `1px solid ${C.border}`,
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            }}>
-              <Sparkles size={14} color={C.accent} strokeWidth={2} />
-              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.5)" }}>
-                <span style={{ fontWeight: 700, color: C.text }}>{t.social_proof_count}</span>{" "}
-                {t.social_proof_note}
-              </span>
+            {/* ── Live social proof below result ── */}
+            <div style={{ marginTop: 16 }}>
+              <LiveProof base={t.sp_count} label={t.sp_label} liveLabel={t.sp_live} liveBase={t.sp_live_count} />
             </div>
 
           </div>
