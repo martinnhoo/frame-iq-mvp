@@ -6,19 +6,21 @@ import type { ReactNode } from 'react';
 interface RevealProps {
   children: ReactNode;
   delay?: number;
-  direction?: 'up' | 'left' | 'fade';
+  direction?: 'up' | 'left' | 'right' | 'fade';
 }
 
 const variants = {
   hidden: {
-    up:   { opacity: 0, y: 20 },
-    left: { opacity: 0, x: -16 },
-    fade: { opacity: 0 },
+    up:    { opacity: 0, y: 20 },
+    left:  { opacity: 0, x: -16 },
+    right: { opacity: 0, x: 16 },
+    fade:  { opacity: 0 },
   },
   visible: {
-    up:   { opacity: 1, y: 0 },
-    left: { opacity: 1, x: 0 },
-    fade: { opacity: 1 },
+    up:    { opacity: 1, y: 0 },
+    left:  { opacity: 1, x: 0 },
+    right: { opacity: 1, x: 0 },
+    fade:  { opacity: 1 },
   },
 } as const;
 

@@ -111,9 +111,14 @@ function generateMockLosers(): Array<{ name: string; ctr: number; roas: number; 
 function generateMockBumpData() {
   const creatives = ["Carrossel_V3", "Video_Hook", "Static_40", "UGC_Maria", "Reels_BTS"];
   const periods = ["Sem 1", "Sem 2", "Sem 3", "Sem 4"];
-  return creatives.map(id => ({
+  // Bump chart requires each rank to appear exactly once per period
+  return creatives.map((id, ci) => ({
     id,
-    data: periods.map(x => ({ x, y: Math.floor(Math.random() * 5) + 1 })),
+    data: periods.map((x, pi) => {
+      // Deterministic but varied ranking per period
+      const rank = ((ci + pi) % creatives.length) + 1;
+      return { x, y: rank };
+    }),
   }));
 }
 
@@ -439,6 +444,11 @@ export default function PerformanceDashboard() {
     return `${fmtLabel(dateRange.from)} → ${fmtLabel(dateRange.to)}`;
   },[dateRange,today]);
 
+  // Memoize mock data to avoid re-generating on every render
+  const mockWinners = useMemo(() => generateMockWinners(), []);
+  const mockHeatmap = useMemo(() => generateMockHeatmapData(), []);
+  const mockBump = useMemo(() => generateMockBumpData(), []);
+
   const handleDragStart=(i:number)=>setDragging(i);
   const handleDragOver=(e:React.DragEvent,i:number)=>{ e.preventDefault(); setDragOver(i); };
   const handleDrop=(i:number)=>{
@@ -733,10 +743,10 @@ export default function PerformanceDashboard() {
           {/* 2-column grid: WinnersList + HeatmapPerformance */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(300px, 1fr))",gap:20,marginBottom:28}}>
             <Reveal direction="left" delay={0.15}>
-              <WinnersList items={generateMockWinners()} type="winners"/>
+              <WinnersList items={mockWinners} type="winners"/>
             </Reveal>
             <Reveal direction="right" delay={0.2}>
-              <HeatmapPerformance data={generateMockHeatmapData()} metric="ctr"/>
+              <HeatmapPerformance data={mockHeatmap} metric="ctr"/>
             </Reveal>
           </div>
 
@@ -745,7 +755,7 @@ export default function PerformanceDashboard() {
           {/* Full-width CreativeRaceBar */}
           <Reveal delay={0.25}>
             <div style={{marginBottom:28}}>
-              <CreativeRaceBar data={generateMockBumpData()}/>
+              <CreativeRaceBar data={mockBump}/>
             </div>
           </Reveal>
 

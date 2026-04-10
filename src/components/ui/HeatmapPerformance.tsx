@@ -26,7 +26,6 @@ export function HeatmapPerformance({ data, metric = 'ctr' }: HeatmapPerformanceP
           colors={{
             type: 'sequential',
             scheme: 'blues',
-            minValue: 0,
           }}
           margin={{ top: 20, right: 10, bottom: 30, left: 36 }}
           axisTop={{

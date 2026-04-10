@@ -36,7 +36,7 @@ export function SparklineCard({ label, currentValue, prevValue, data, format = '
       <AdMetric label={label} value={currentValue} prev={prevValue} format={format} index={0} />
 
       <div style={{ height: 56, marginTop: 4, marginLeft: -18, marginRight: -18 }}>
-        <ResponsiveLine
+        {data.length > 0 ? <ResponsiveLine
           data={[{ id: label, data }]}
           theme={T.nivoTheme}
           colors={[lineColor]}
@@ -48,11 +48,11 @@ export function SparklineCard({ label, currentValue, prevValue, data, format = '
           margin={{ top: 4, bottom: 4, left: 0, right: 0 }}
           curve="monotoneX"
           enableArea
-          areaBaselineValue={Math.min(...data.map(d => d.y)) * 0.95}
+          areaBaselineValue={data.length > 0 ? Math.min(...data.map(d => d.y)) * 0.95 : 0}
           areaOpacity={0.12}
           isInteractive={false}
           animate
-        />
+        /> : <div style={{ height: '100%', background: 'rgba(255,255,255,0.02)', borderRadius: 4 }} />}
       </div>
     </motion.div>
   );

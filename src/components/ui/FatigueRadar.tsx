@@ -35,7 +35,7 @@ export function FatigueRadar({ escalando, estavel, fadigando, pausado }: Fatigue
             rows={5}
             columns={Math.ceil(total / 5)}
             theme={T.nivoTheme}
-            colors={(d: { data: { color: string } }) => d.data.color}
+            colors={data.map(d => d.color)}
             borderRadius={2}
             gap={2}
             padding={0}
