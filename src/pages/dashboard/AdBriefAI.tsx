@@ -1568,12 +1568,15 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   // Designed as a real toolbar: generous spacing, clear hierarchy, click to expand
   // ══════════════════════════════════════════════════════════════════════════
   if (!open) {
+    const cur = data?.currency_symbol || "R$";
     const metrics = data && !data.error && !busy ? [
-      k.spend       && { lbl: lang==="pt"?"Gasto":lang==="es"?"Gasto":"Spend", val: `${data.currency_symbol||"R$"}${parseFloat(k.spend||0).toLocaleString(undefined,{maximumFractionDigits:0})}`, warn: false, tr: sTr },
+      k.spend       && { lbl: lang==="pt"?"Gasto":lang==="es"?"Gasto":"Spend", val: `${cur}${parseFloat(k.spend||0).toLocaleString(undefined,{maximumFractionDigits:0})}`, warn: false, tr: sTr },
       k.ctr         && { lbl: "CTR", val: `${parseFloat(k.ctr||0).toFixed(2)}%`, warn: parseFloat(k.ctr) < 0.5, tr: cTr },
+      k.cpm && parseFloat(k.cpm) > 0 && { lbl: "CPM", val: `${cur}${parseFloat(k.cpm||0).toFixed(1)}`, warn: false, tr: "flat" as const },
+      k.cpc && parseFloat(k.cpc) > 0 && { lbl: "CPC", val: `${cur}${parseFloat(k.cpc).toFixed(2)}`, warn: false, tr: "flat" as const },
       k.frequency && parseFloat(k.frequency) > 0 && { lbl: "Freq", val: `${parseFloat(k.frequency).toFixed(1)}x`, warn: parseFloat(k.frequency) > 3.5, tr: "flat" as const },
       k.conversions && k.conversions !== "0" && { lbl: "Conv", val: k.conversions, warn: false, tr: "flat" as const },
-      k.cpc && parseFloat(k.cpc) > 0 && { lbl: "CPC", val: `${data.currency_symbol||"R$"}${parseFloat(k.cpc).toFixed(2)}`, warn: false, tr: "flat" as const },
+      k.roas && parseFloat(k.roas) > 0 && { lbl: "ROAS", val: `${parseFloat(k.roas).toFixed(2)}x`, warn: parseFloat(k.roas) < 1, tr: "flat" as const },
     ].filter(Boolean) : [];
     const warnCount = alerts.filter((a: any) => a.t === "warn").length;
     const scaleCount = (data?.winners || []).length;
@@ -1653,16 +1656,17 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             marginLeft: 20, gap: 24,
           }}>
             {(metrics as any[]).map((item: any) => (
-              <div key={item.lbl} style={{ display: "flex", alignItems: "baseline", gap: 6, flexShrink: 0 }}>
+              <div key={item.lbl} style={{ display: "flex", alignItems: "baseline", gap: 5, flexShrink: 0 }}>
                 <span style={{
-                  fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.35)",
+                  fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)",
                   fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  letterSpacing: "0.02em",
                 }}>
                   {item.lbl}
                 </span>
                 <span style={{
                   fontSize: 14, fontWeight: 700,
-                  color: item.warn ? "#f87171" : "#e8ecf2",
+                  color: item.warn ? "#f87171" : "#fff",
                   fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                   letterSpacing: "-0.01em",
                 }}>
