@@ -23,6 +23,7 @@ import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
+import FirstWinBanner from "@/components/dashboard/FirstWinBanner";
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
@@ -4252,6 +4253,16 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             </div>
           );
         })()}
+
+        {/* ── First Win Banner — shows once after signup to guide first action ── */}
+        {messages.length===0&&!proactiveLoading&&contextReady&&(
+          <div style={{maxWidth:720,margin:"0 auto",padding:"12px 16px 0"}}>
+            <FirstWinBanner
+              userName={profile?.name?.split(" ")[0]}
+              hasAdAccount={!!(selectedPersona?.result as any)?.meta_connected || connections.length > 0}
+            />
+          </div>
+        )}
 
         {messages.length===0&&proactiveLoading&&(
           <div style={{maxWidth:720,margin:"0 auto",paddingTop:12,padding:"12px 16px 0"}}>

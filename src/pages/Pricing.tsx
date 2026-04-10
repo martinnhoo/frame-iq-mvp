@@ -66,11 +66,11 @@ const Pricing = () => {
       description: "Try AdBrief with no commitment.",
       features: [
         { text: "5 AI messages / day", included: true },
+        { text: "1 ad account connected", included: true },
         { text: "All tools (limited usage)", included: true },
         { text: "1 persona", included: true },
         { text: "Hook Generator (5 uses)", included: true },
         { text: "Script & Brief (3 uses)", included: true },
-        { text: "Multi-account", included: false },
         { text: "Priority support", included: false },
       ],
       cta: "Get started",

@@ -1,5 +1,5 @@
 export const PLAN_LIMITS = {
-  free:   { chat_daily: 5,   chat_total: 5,   tools: true,  ad_accounts: 0,   label: "Free"   },
+  free:   { chat_daily: 5,   chat_total: 5,   tools: true,  ad_accounts: 1,   label: "Free"   },
   maker:  { chat_daily: 50,  chat_total: null, tools: true,  ad_accounts: 1,   label: "Maker"  },
   pro:    { chat_daily: 200, chat_total: null, tools: true,  ad_accounts: 3,   label: "Pro"    },
   studio: { chat_daily: null, chat_total: null, tools: true, ad_accounts: null, label: "Studio" },

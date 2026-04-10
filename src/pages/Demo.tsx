@@ -37,6 +37,8 @@ const T: Record<Lang, {
   rate_limit: string; error: string; drag_text: string;
   or_text: string; formats: string;
   positive_title: string; improve_title: string; unlock_card: string;
+  unlock_details: string; unlock_items: string[];
+  social_proof: string;
 }> = {
   pt: {
     hero: "Nota do seu anúncio\nem 10 segundos",
@@ -55,8 +57,8 @@ const T: Record<Lang, {
     locked_sub: "Email para desbloquear mensagem, CTA e ações.",
     email_placeholder: "seu@email.com",
     unlock_cta: "Desbloquear",
-    signup_cta: "Começar grátis",
-    signup_sub: "3 dias grátis · sem cartão",
+    signup_cta: "Ver análise completa",
+    signup_sub: "Grátis — sem cartão",
     rate_limit: "Limite atingido. Crie uma conta para continuar.",
     error: "Erro. Tente novamente.",
     drag_text: "Arraste ou clique para enviar",
@@ -64,7 +66,10 @@ const T: Record<Lang, {
     formats: "PNG, JPG, WEBP — até 10 MB",
     positive_title: "O que funciona",
     improve_title: "O que melhorar",
-    unlock_card: "Desbloquear análise completa",
+    unlock_card: "Crie sua conta para ver tudo",
+    unlock_details: "Com uma conta gratuita você desbloqueia:",
+    unlock_items: ["Análise completa: pontos fortes + melhorias", "Sugestões de CTA e ações práticas", "IA conectada às suas campanhas reais"],
+    social_proof: "Usado por 2.000+ media buyers",
   },
   es: {
     hero: "Nota de tu anuncio\nen 10 segundos",
@@ -83,8 +88,8 @@ const T: Record<Lang, {
     locked_sub: "Email para desbloquear mensaje, CTA y acciones.",
     email_placeholder: "tu@email.com",
     unlock_cta: "Desbloquear",
-    signup_cta: "Comenzar gratis",
-    signup_sub: "3 días gratis · sin tarjeta",
+    signup_cta: "Ver análisis completo",
+    signup_sub: "Gratis — sin tarjeta",
     rate_limit: "Límite alcanzado. Crea una cuenta para continuar.",
     error: "Error. Intenta de nuevo.",
     drag_text: "Arrastra o haz clic para subir",
@@ -92,7 +97,10 @@ const T: Record<Lang, {
     formats: "PNG, JPG, WEBP — hasta 10 MB",
     positive_title: "Lo que funciona",
     improve_title: "Qué mejorar",
-    unlock_card: "Desbloquear análisis completo",
+    unlock_card: "Crea tu cuenta para ver todo",
+    unlock_details: "Con una cuenta gratuita desbloqueas:",
+    unlock_items: ["Análisis completo: fortalezas + mejoras", "Sugerencias de CTA y acciones prácticas", "IA conectada a tus campañas reales"],
+    social_proof: "Usado por 2.000+ media buyers",
   },
   en: {
     hero: "Rate your ad\nin 10 seconds",
@@ -111,8 +119,8 @@ const T: Record<Lang, {
     locked_sub: "Email to unlock message, CTA and actions.",
     email_placeholder: "your@email.com",
     unlock_cta: "Unlock",
-    signup_cta: "Start free",
-    signup_sub: "3 days free · no card",
+    signup_cta: "See full analysis",
+    signup_sub: "Free — no card required",
     rate_limit: "Limit reached. Sign up to continue.",
     error: "Error. Try again.",
     drag_text: "Drag or click to upload",
@@ -120,7 +128,10 @@ const T: Record<Lang, {
     formats: "PNG, JPG, WEBP — up to 10 MB",
     positive_title: "What works",
     improve_title: "What to improve",
-    unlock_card: "Unlock full analysis",
+    unlock_card: "Create your account to see everything",
+    unlock_details: "With a free account you unlock:",
+    unlock_items: ["Full analysis: strengths + improvements", "CTA suggestions and actionable next steps", "AI connected to your real campaigns"],
+    social_proof: "Used by 2,000+ media buyers",
   },
 };
 
@@ -166,8 +177,6 @@ export default function Demo() {
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [email, setEmail] = useState("");
-  const [unlocking, setUnlocking] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
 
   /* ── Compress image ──────────────────────────────────────────────────── */
@@ -234,26 +243,6 @@ export default function Demo() {
       toast.error(t.error);
       setPhase("upload");
     }
-  };
-
-  const unlockFull = async () => {
-    if (!email || !email.includes("@") || !preview) return;
-    setUnlocking(true);
-    try {
-      const blob = await (await fetch(preview)).blob();
-      const imageFile = new File([blob], "demo-upload.jpg", { type: blob.type || "image/jpeg" });
-      const { base64, mediaType } = await compressImage(imageFile);
-      const { data, error } = await supabase.functions.invoke("analyze-demo", {
-        body: { image_base64: base64, media_type: mediaType, lang, email },
-      });
-      if (error) throw error;
-      const parsed = handleDemoResponse(data);
-      if (!parsed) return;
-      setResult(parsed);
-    } catch (e) {
-      console.error("Demo unlock error:", e);
-      toast.error(t.error);
-    } finally { setUnlocking(false); }
   };
 
   const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) analyze(f); };
@@ -446,7 +435,7 @@ export default function Demo() {
             {/* ── Score row ── */}
             <div style={{
               display: "flex", gap: 18, alignItems: "center",
-              marginBottom: 24, padding: "20px 22px",
+              marginBottom: 20, padding: "20px 22px",
               borderRadius: 16, background: C.surface,
               border: `1px solid ${C.border}`,
             }}>
@@ -475,105 +464,138 @@ export default function Demo() {
               </div>
             </div>
 
-            {/* ── Cards ── */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* ── Gated analysis — blurred cards + signup CTA ── */}
+            {!result.full ? (
+              <div style={{ position: "relative", animation: "demoFadeUp2 0.5s ease-out" }}>
 
-              {/* Card 1: Positives */}
-              <div style={{
-                borderRadius: 16, padding: "20px 22px",
-                background: C.surface,
-                border: `1px solid ${C.border}`,
-                borderLeft: `3px solid ${C.green}`,
-                animation: "demoFadeUp2 0.5s ease-out",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <CheckCircle2 size={16} color={C.green} strokeWidth={2.2} />
-                  <span style={{
-                    fontFamily: BODY, fontSize: 12, fontWeight: 700,
-                    color: C.green, letterSpacing: "0.04em", textTransform: "uppercase",
+                {/* Blurred preview of both cards — decorative only */}
+                <div style={{ filter: "blur(6px)", userSelect: "none", pointerEvents: "none", opacity: 0.5 }}>
+                  {/* Fake "What works" card */}
+                  <div style={{
+                    borderRadius: 16, padding: "20px 22px", marginBottom: 12,
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderLeft: `3px solid ${C.green}`,
                   }}>
-                    {t.positive_title}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                      <CheckCircle2 size={16} color={C.green} strokeWidth={2.2} />
+                      <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: C.green, letterSpacing: "0.04em", textTransform: "uppercase" }}>{t.positive_title}</span>
+                    </div>
+                    <div style={{ height: 12, width: "85%", borderRadius: 3, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
+                    <div style={{ height: 12, width: "65%", borderRadius: 3, background: "rgba(255,255,255,0.04)" }} />
+                  </div>
+                  {/* Fake "What to improve" card */}
+                  <div style={{
+                    borderRadius: 16, padding: "20px 22px",
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderLeft: `3px solid ${C.accent}`,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                      <AlertTriangle size={16} color={C.accent} strokeWidth={2.2} />
+                      <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: C.accent, letterSpacing: "0.04em", textTransform: "uppercase" }}>{t.improve_title}</span>
+                    </div>
+                    <div style={{ height: 12, width: "90%", borderRadius: 3, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
+                    <div style={{ height: 12, width: "72%", borderRadius: 3, background: "rgba(255,255,255,0.04)", marginBottom: 10 }} />
+                    <div style={{ height: 12, width: "60%", borderRadius: 3, background: "rgba(255,255,255,0.05)" }} />
+                  </div>
+                </div>
+
+                {/* Overlay CTA */}
+                <div style={{
+                  position: "absolute", inset: 0,
+                  display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center",
+                  background: "rgba(5,5,8,0.6)",
+                  backdropFilter: "blur(4px)",
+                  borderRadius: 16,
+                  padding: "24px 28px",
+                }}>
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 14,
+                    border: `1px solid rgba(99,102,241,0.25)`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    marginBottom: 16,
+                    animation: "lockPulse 2.5s ease-in-out infinite",
+                  }}>
+                    <Lock size={20} color={C.accent} strokeWidth={1.8} />
+                  </div>
+
+                  <span style={{
+                    fontFamily: BODY, fontSize: 15, fontWeight: 700,
+                    color: C.text, marginBottom: 6, textAlign: "center",
+                  }}>
+                    {t.unlock_card}
+                  </span>
+
+                  <span style={{
+                    fontFamily: BODY, fontSize: 12, fontWeight: 400,
+                    color: C.textMuted, marginBottom: 16, textAlign: "center",
+                  }}>
+                    {t.unlock_details}
+                  </span>
+
+                  {/* Value items */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20, width: "100%", maxWidth: 280 }}>
+                    {t.unlock_items.map((item, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <CheckCircle2 size={14} color={C.green} strokeWidth={2.2} style={{ flexShrink: 0 }} />
+                        <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)" }}>
+                          {item}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => navigate("/signup")}
+                    style={{
+                      fontFamily: BODY, fontSize: 14, fontWeight: 700,
+                      padding: "13px 32px", borderRadius: 10,
+                      background: C.text, color: C.bg,
+                      border: "none", cursor: "pointer",
+                      display: "inline-flex", alignItems: "center", gap: 8,
+                      transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
+                      marginBottom: 8,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(255,255,255,0.08)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+                  >
+                    {t.signup_cta} <ArrowRight size={14} />
+                  </button>
+                  <span style={{ fontFamily: BODY, fontSize: 11, color: C.textMuted }}>
+                    {t.signup_sub}
                   </span>
                 </div>
-                <p style={{
-                  fontFamily: BODY, fontSize: 14, fontWeight: 400,
-                  color: C.textSoft, lineHeight: 1.7,
-                }}>
-                  {result.hook}
-                </p>
               </div>
+            ) : (
+              /* ── Full result cards (logged-in / full response) ── */
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-              {/* Card 2: Improvements — locked or open */}
-              {!result.full ? (
-                <div
-                  onClick={() => navigate("/signup")}
-                  style={{
-                    position: "relative", borderRadius: 16,
-                    padding: "20px 22px",
-                    background: C.surface,
-                    border: `1px solid ${C.border}`,
-                    borderLeft: `3px solid ${C.accent}`,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    overflow: "hidden",
-                    animation: "demoFadeUp2 0.6s ease-out",
-                    minHeight: 150,
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = C.borderHov}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
-                >
-                  {/* Header */}
+                {/* Card 1: Positives */}
+                <div style={{
+                  borderRadius: 16, padding: "20px 22px",
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderLeft: `3px solid ${C.green}`,
+                  animation: "demoFadeUp2 0.5s ease-out",
+                }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                    <AlertTriangle size={16} color={C.accent} strokeWidth={2.2} />
+                    <CheckCircle2 size={16} color={C.green} strokeWidth={2.2} />
                     <span style={{
                       fontFamily: BODY, fontSize: 12, fontWeight: 700,
-                      color: C.accent, letterSpacing: "0.04em", textTransform: "uppercase",
+                      color: C.green, letterSpacing: "0.04em", textTransform: "uppercase",
                     }}>
-                      {t.improve_title}
+                      {t.positive_title}
                     </span>
                   </div>
-
-                  {/* Blurred placeholder lines */}
-                  <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }}>
-                    <div style={{ height: 11, width: "88%", borderRadius: 3, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
-                    <div style={{ height: 11, width: "70%", borderRadius: 3, background: "rgba(255,255,255,0.04)", marginBottom: 10 }} />
-                    <div style={{ height: 11, width: "78%", borderRadius: 3, background: "rgba(255,255,255,0.05)" }} />
-                  </div>
-
-                  {/* Lock overlay */}
-                  <div style={{
-                    position: "absolute", inset: 0,
-                    display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center",
-                    paddingTop: 12,
-                    background: "rgba(5,5,8,0.5)",
-                    backdropFilter: "blur(2px)",
+                  <p style={{
+                    fontFamily: BODY, fontSize: 14, fontWeight: 400,
+                    color: C.textSoft, lineHeight: 1.7,
                   }}>
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 12,
-                      border: `1px solid rgba(99,102,241,0.25)`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      marginBottom: 10,
-                      animation: "lockPulse 2.5s ease-in-out infinite",
-                    }}>
-                      <Lock size={18} color={C.accent} strokeWidth={1.8} />
-                    </div>
-                    <span style={{
-                      fontFamily: BODY, fontSize: 13, fontWeight: 700,
-                      color: C.text, marginBottom: 4,
-                    }}>
-                      {t.unlock_card}
-                    </span>
-                    <span style={{
-                      fontFamily: BODY, fontSize: 11, fontWeight: 400,
-                      color: C.textMuted,
-                    }}>
-                      {t.signup_sub}
-                    </span>
-                  </div>
+                    {result.hook}
+                  </p>
                 </div>
-              ) : (
-                /* Unlocked improvements card */
+
+                {/* Card 2: Improvements */}
                 <div style={{
                   borderRadius: 16, padding: "20px 22px",
                   background: C.surface,
@@ -630,38 +652,30 @@ export default function Demo() {
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-
-            {/* ── Bottom CTA ── */}
-            {result.full && (
-              <div style={{ textAlign: "center", paddingTop: 20, marginTop: 20, borderTop: `1px solid ${C.border}` }}>
-                <p style={{ fontFamily: BODY, fontSize: 13, fontWeight: 400, color: C.textMuted, marginBottom: 14 }}>
-                  {t.signup_sub}
-                </p>
-                <button
-                  onClick={() => navigate("/signup")}
-                  style={{
-                    fontFamily: BODY, fontSize: 14, fontWeight: 700,
-                    padding: "13px 32px", borderRadius: 10,
-                    background: C.text, color: C.bg,
-                    border: "none", cursor: "pointer",
-                    display: "inline-flex", alignItems: "center", gap: 8,
-                    transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(255,255,255,0.08)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
-                >
-                  {t.signup_cta} <ArrowRight size={14} />
-                </button>
               </div>
             )}
 
+            {/* Social proof pill */}
+            <div style={{
+              textAlign: "center", marginTop: 20,
+              animation: "demoFadeUp2 0.7s ease-out",
+            }}>
+              <span style={{
+                fontFamily: BODY, fontSize: 11, fontWeight: 500,
+                color: C.textMuted,
+                padding: "6px 14px", borderRadius: 20,
+                border: `1px solid ${C.border}`,
+                background: C.surface,
+              }}>
+                {t.social_proof}
+              </span>
+            </div>
+
             {/* Try another */}
             <button
-              onClick={() => { setPhase("upload"); setResult(null); setPreview(null); setEmail(""); }}
+              onClick={() => { setPhase("upload"); setResult(null); setPreview(null); }}
               style={{
-                display: "block", margin: "20px auto 0",
+                display: "block", margin: "16px auto 0",
                 fontFamily: BODY, fontSize: 13, fontWeight: 500,
                 color: C.textMuted, background: "none", border: "none",
                 cursor: "pointer", padding: "8px 16px", borderRadius: 8,
