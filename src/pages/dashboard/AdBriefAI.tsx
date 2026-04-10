@@ -1620,19 +1620,16 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           </svg>
 
           {/* Live pill */}
-          <div style={{ display:"flex", alignItems:"center", gap:4, padding:"2px 7px", borderRadius:99,
-            background: isLive ? "rgba(14,165,233,0.1)" : fail ? "rgba(248,113,133,0.1)" : "rgba(255,255,255,0.05)",
-            border: `1px solid ${isLive ? "rgba(14,165,233,0.2)" : fail ? "rgba(248,113,133,0.2)" : "rgba(255,255,255,0.08)"}`,
-          }}>
+          <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0 }}>
             <span style={{
               width: 5, height: 5, borderRadius:"50%", flexShrink:0,
-              background: busy ? "rgba(255,255,255,0.3)" : fail ? "#fb7185" : "#0ea5e9",
-              boxShadow: isLive ? "0 0 6px rgba(14,165,233,0.8), 0 0 12px rgba(14,165,233,0.4)" : "none",
+              background: busy ? "rgba(255,255,255,0.3)" : fail ? "#fb7185" : "#22d3ee",
+              boxShadow: isLive ? "0 0 6px rgba(34,211,238,0.8), 0 0 12px rgba(34,211,238,0.4)" : "none",
               animation: isLive ? "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite" : "none",
             }}/>
             <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600,
               letterSpacing:"0.06em", textTransform:"uppercase" as const,
-              color: isLive ? "rgba(14,165,233,0.8)" : fail ? "rgba(248,113,133,0.7)" : "rgba(255,255,255,0.3)" }}>
+              color: "#0da2e7" }}>
               {busy ? "···" : fail ? "err" : "live"}
             </span>
           </div>
@@ -1643,49 +1640,47 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
         {/* ── Metric chips ── */}
         {metrics.length > 0 && (
-          <div style={{ display:"flex", gap:6, flex:1, overflow:"hidden", alignItems:"center" }}>
-            {(metrics as any[]).map((item: any) => (
-              <div key={item.lbl} style={{
-                display:"flex", alignItems:"center", gap:5,
-                padding:"3px 9px", borderRadius:7, flexShrink:0,
-                background: item.warn ? "rgba(248,113,133,0.08)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${item.warn ? "rgba(248,113,133,0.15)" : "rgba(255,255,255,0.07)"}`,
-              }}>
-                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:500,
-                  color:"rgba(255,255,255,0.28)", letterSpacing:"0.05em", textTransform:"uppercase" as const }}>
-                  {item.lbl}
-                </span>
-                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:12, fontWeight:700,
-                  color: item.warn ? "#fb7185" : "rgba(255,255,255,0.88)", letterSpacing:"-0.02em" }}>
-                  {item.val}
-                </span>
-                {item.tr !== "flat" && (
-                  <span style={{ fontSize:10, fontWeight:600, lineHeight:1,
-                    color: item.tr === "up" ? "#22d3ee" : "#fb7185" }}>
-                    {item.tr === "up" ? "▲" : "▼"}
+          <div style={{ display:"flex", gap:0, flex:1, overflow:"hidden", alignItems:"center" }}>
+            {(metrics as any[]).map((item: any, idx: number) => (
+              <div key={item.lbl} style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:3 }}>
+                  <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:500,
+                    color:"rgba(255,255,255,0.28)", letterSpacing:"0.05em", textTransform:"uppercase" as const }}>
+                    {item.lbl}
                   </span>
+                  <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:12, fontWeight:700,
+                    color: item.warn ? "#fb7185" : "rgba(255,255,255,0.88)", letterSpacing:"-0.02em" }}>
+                    {item.val}
+                  </span>
+                  {item.tr !== "flat" && (
+                    <span style={{ fontSize:10, fontWeight:600, lineHeight:1,
+                      color: item.tr === "up" ? "#22d3ee" : "#fb7185" }}>
+                      {item.tr === "up" ? "▲" : "▼"}
+                    </span>
+                  )}
+                </div>
+                {idx < metrics.length - 1 && (
+                  <div style={{ width:1, height:14, background:"rgba(255,255,255,0.08)", flexShrink:0 }}/>
                 )}
               </div>
             ))}
 
             {/* Alert badge */}
             {warnCount > 0 && (
-              <div style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:7,
-                background:"rgba(248,113,133,0.1)", border:"1px solid rgba(248,113,133,0.2)", flexShrink:0 }}>
-                <span style={{ fontSize:10, color:"#fb7185" }}></span>
-                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600, color:"rgba(248,113,133,0.9)", letterSpacing:"0.03em" }}>
-                  {warnCount} {lang==="pt"?"alerta":"alert"}{warnCount > 1 ? "s" : ""}
+              <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, marginLeft:8 }}>
+                <span style={{ fontSize:10, color:"#fb7185" }}>⚠</span>
+                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600, color:"#fb7185", letterSpacing:"0.03em" }}>
+                  {warnCount}
                 </span>
               </div>
             )}
 
             {/* Scale badge */}
             {scaleCount > 0 && (
-              <div style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:7,
-                background:"rgba(34,211,238,0.07)", border:"1px solid rgba(34,211,238,0.15)", flexShrink:0 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, marginLeft:8 }}>
                 <span style={{ fontSize:10, color:"#22d3ee" }}>↑</span>
-                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600, color:"rgba(34,211,238,0.8)", letterSpacing:"0.03em" }}>
-                  {scaleCount} {lang==="pt"?"escalar":lang==="es"?"escalar":"scale"}
+                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600, color:"#22d3ee", letterSpacing:"0.03em" }}>
+                  {scaleCount}
                 </span>
               </div>
             )}

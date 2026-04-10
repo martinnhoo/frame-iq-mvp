@@ -127,6 +127,7 @@ export default function DashboardLayout() {
   const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
   const [vikaPopup, setVikaPopup] = useState(false);
   const [welcomeMsg, setWelcomeMsg] = useState<{ title: string; body: string } | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   // checkout success detection uses window.location directly (inside init callback)
@@ -561,9 +562,9 @@ export default function DashboardLayout() {
           <button
             onClick={() => { setSidebarOpen(s => !s); if (profileOpen) setProfileOpen(false); }}
             title={sidebarOpen ? "Ocultar menu" : "Mostrar menu"}
-            style={{ width: 32, height: 32, minWidth: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", color: "rgba(255,255,255,0.5)", flexShrink: 0, transition: "all 0.15s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}>
+            style={{ width: 32, height: 32, minWidth: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", flexShrink: 0, transition: "all 0.15s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}>
             <Menu className="h-4 w-4" />
           </button>
 
@@ -581,12 +582,14 @@ export default function DashboardLayout() {
               style={{
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "5px 8px 5px 6px", borderRadius: 8,
-                background: selectedPersona ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.04)",
-                border: selectedPersona ? "1px solid rgba(14,165,233,0.20)" : "1px solid rgba(255,255,255,0.09)",
+                background: "transparent", border: "none",
                 cursor: "pointer", maxWidth: "min(220px, calc(100vw - 130px))",
-              }}>
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
               {/* Initials badge */}
-              <span style={{ width: 22, height: 22, minWidth: 22, borderRadius: 5, background: selectedPersona ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: selectedPersona ? "#0ea5e9" : "rgba(255,255,255,0.4)", flexShrink: 0, overflow: "hidden" }}>
+              <span style={{ width: 22, height: 22, minWidth: 22, borderRadius: 5, background: selectedPersona ? "#0ea5e9" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff", flexShrink: 0, overflow: "hidden" }}>
                 {selectedPersona
                   ? (selectedPersona.logo_url ? <img src={selectedPersona.logo_url} alt="" style={{ width: 22, height: 22, objectFit: "cover" }} /> : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A"))
                   : <Users className="h-3 w-3" style={{ color: "rgba(255,255,255,0.4)" }} />
@@ -622,7 +625,7 @@ export default function DashboardLayout() {
                       {language === "pt" ? "Nenhuma conta ainda" : "No accounts yet"}
                     </p>
                     <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
-                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer", fontSize: 12, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", margin: "0 auto" }}>
+                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", color: "#0da2e7", border: "none", cursor: "pointer", fontSize: 12, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", margin: "0 auto" }}>
                       <Sparkles className="h-3 w-3" /> {language === "pt" ? "Criar conta" : "Add account"}
                     </button>
                   </div>
@@ -630,10 +633,10 @@ export default function DashboardLayout() {
                   <div style={{ padding: "5px", maxHeight: 260, overflowY: "auto" }}>
                     {savedPersonas.map(p => (
                       <button key={p.id} onClick={() => { setSelectedPersona(p); setPersonaPickerOpen(false); }}
-                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, background: selectedPersona?.id === p.id ? "rgba(14,165,233,0.08)" : "transparent", border: "1px solid transparent", cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "all 0.1s" }}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, background: selectedPersona?.id === p.id ? "rgba(255,255,255,0.06)" : "transparent", border: "1px solid transparent", cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "all 0.1s" }}
                         onMouseEnter={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
                         onMouseLeave={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                        <span style={{ width: 28, height: 28, minWidth: 28, borderRadius: 6, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 800, color: "#0ea5e9", overflow: "hidden" }}>
+                        <span style={{ width: 28, height: 28, minWidth: 28, borderRadius: 6, background: selectedPersona?.id === p.id ? "#0ea5e9" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 800, color: "#fff", overflow: "hidden" }}>
                           {p.logo_url ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (p.name?.charAt(0)?.toUpperCase() || "A")}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -667,40 +670,53 @@ export default function DashboardLayout() {
             className="hidden lg:flex"
             onClick={() => setTelegramModalOpen(true)}
             title="Telegram"
-            style={{ width: 32, height: 32, minWidth: 32, borderRadius: 8, flexShrink: 0, alignItems: "center", justifyContent: "center", background: telegramConn ? "rgba(39,175,225,0.12)" : "rgba(255,255,255,0.04)", border: telegramConn ? "1px solid rgba(39,175,225,0.3)" : "1px solid rgba(255,255,255,0.09)", cursor: "pointer" }}>
+            style={{ width: 32, height: 32, minWidth: 32, borderRadius: 8, flexShrink: 0, alignItems: "center", justifyContent: "center", background: "transparent", border: "none", cursor: "pointer", transition: "background 0.15s" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
               <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill={telegramConn ? "#27AEE1" : "rgba(255,255,255,0.3)"}/>
               <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
             </svg>
           </button>
 
-          {/* Avatar — toggle profile panel */}
-          <button
-            onClick={() => setProfileOpen(o => !o)}
-            title="Profile"
-            style={{ width: 32, height: 32, minWidth: 32, minHeight: 32, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, background: profile?.avatar_url ? "transparent" : "linear-gradient(135deg,#0ea5e9,#6366f1)", border: profileOpen ? "2px solid rgba(14,165,233,0.6)" : "2px solid transparent", cursor: "pointer", color: "#fff", overflow: "hidden", padding: 0, transition: "border-color 0.15s", boxSizing: "border-box", aspectRatio: "1/1" }}>
-            {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", borderRadius: "50%", aspectRatio: "1/1" }} />
-              : <span style={{ fontSize: 13, fontWeight: 700, lineHeight: 1 }}>{profile?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}</span>}
-          </button>
+          {/* AdBrief logo mark */}
+          <div style={{ width: 28, height: 28, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
+            <img src="/lovable-uploads/60ec6a1b-8e38-430e-b5ef-0be690878a63.png" alt="AdBrief" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          </div>
 
         </header>
 
         {/* Alerts */}
-        {usageDetails?.show_warning && !usageDetails?.is_over_limit && (
-          <div className="mx-4 mt-3 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {dt("ov_low_quota")}
+        {usageDetails?.show_warning && !usageDetails?.is_over_limit && !bannerDismissed && (
+          <div className="mx-4 mt-3 flex items-center justify-between px-4 py-2.5 rounded-lg text-amber-400 text-sm">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{dt("ov_low_quota")}</span>
+            </div>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              className="flex items-center justify-center w-5 h-5 hover:opacity-80 transition-opacity"
+              title="Dismiss">
+              <X className="h-4 w-4" />
+            </button>
           </div>
         )}
-        {usageDetails?.is_over_limit && (
-          <div className="mx-4 mt-3 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {dt("ov_limit_reached")}
+        {usageDetails?.is_over_limit && !bannerDismissed && (
+          <div className="mx-4 mt-3 flex items-center justify-between px-4 py-2.5 rounded-lg text-red-400 text-sm">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{dt("ov_limit_reached")}</span>
+            </div>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              className="flex items-center justify-center w-5 h-5 hover:opacity-80 transition-opacity"
+              title="Dismiss">
+              <X className="h-4 w-4" />
+            </button>
           </div>
         )}
         {(profile as any)?.subscription_status === "past_due" && (
-          <div className="mx-4 mt-3 flex items-center gap-3 px-4 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm cursor-pointer"
+          <div className="mx-4 mt-3 flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-400 text-sm cursor-pointer"
             onClick={async () => {
               try {
                 const { data } = await supabase.functions.invoke("customer-portal");
@@ -708,7 +724,7 @@ export default function DashboardLayout() {
               } catch {}
             }}>
             <AlertCircle className="h-4 w-4 shrink-0" />
-            {language === "pt" ? "Pagamento falhou — clique aqui para atualizar seu método de pagamento." : language === "es" ? "Pago fallido — haz clic aquí para actualizar tu método de pago." : "Payment failed — click here to update your payment method."}
+            <span>{language === "pt" ? "Pagamento falhou — clique aqui para atualizar seu método de pagamento." : language === "es" ? "Pago fallido — haz clic aquí para actualizar tu método de pago." : "Payment failed — click here to update your payment method."}</span>
           </div>
         )}
 
