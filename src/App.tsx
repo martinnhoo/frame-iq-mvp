@@ -60,7 +60,7 @@ const CompetitorDecoder = lazy(() => import("./pages/dashboard/CompetitorDecoder
 const ScriptGenerator  = lazy(() => import("./pages/dashboard/ScriptGenerator"));
 const BriefGenerator   = lazy(() => import("./pages/dashboard/BriefGenerator"));
 const CreativeLoopPage = lazy(() => import("./pages/dashboard/CreativeLoopPage"));
-const CampaignBuilder  = lazy(() => import("./pages/dashboard/CampaignBuilder"));
+// CampaignBuilder removed — AdBrief focuses on intelligence, not campaign execution
 const PerformanceDashboard = lazy(() => import("./pages/dashboard/PerformanceDashboard"));
 const OAuthCallback    = lazy(() => import("./pages/dashboard/OAuthCallback"));
 const LoopImportPage   = lazy(() => import("./pages/dashboard/LoopImportPage"));
@@ -163,7 +163,7 @@ const App = () => (
                 <Route path="script" element={<ToolGate><ScriptGenerator /></ToolGate>} />
                 <Route path="brief" element={<ToolGate><BriefGenerator /></ToolGate>} />
                 <Route path="loop" element={<CreativeLoopPage />} />
-                <Route path="campaigns/new" element={<CampaignBuilder />} />
+                <Route path="campaigns/new" element={<Navigate to="/dashboard/ai" replace />} />
                 <Route path="performance" element={<PerformanceDashboard />} />
                 <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
                 <Route path="loop/import" element={<LoopImportPage />} />
