@@ -1,77 +1,67 @@
 import { ResponsiveLine } from '@nivo/line';
-import { motion } from 'motion/react';
 import { ADBRIEF_TOKENS as T } from '@/styles/tokens';
 import { AdMetric } from './AdMetric';
+
+const A = '#0da2e7';
 
 interface SparklineCardProps {
   label: string;
   currentValue: number;
-  prevValue?: number;
   data: Array<{ x: string; y: number }>;
   format?: 'currency' | 'percent' | 'number' | 'roas';
-  color?: string;
-  index?: number;
 }
 
-export function SparklineCard({ label, currentValue, prevValue, data, format = 'number', color, index = 0 }: SparklineCardProps) {
-  const lineColor = color || T.accent;
-  const hasData = data.length > 0 && data.some(d => d.y > 0);
+export function SparklineCard({ label, currentValue, data, format = 'number' }: SparklineCardProps) {
+  const hasData = data.length > 1;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.08, duration: 0.45, ease: [0.34, 1.1, 0.64, 1] }}
+    <div
       className="spark-card"
       style={{
-        background: `linear-gradient(145deg, ${lineColor}0A, transparent 70%)`,
-        border: `1px solid ${lineColor}18`,
+        background: 'rgba(13,162,231,0.03)',
+        border: '1px solid rgba(13,162,231,0.10)',
         borderRadius: 14,
         padding: '16px 18px 0',
         overflow: 'hidden',
         position: 'relative',
-        cursor: 'default',
-        ['--card-color' as string]: lineColor,
+        height: 130,
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      {/* Top accent line */}
+      {/* Subtle top accent */}
       <div style={{
-        position: 'absolute', top: 0, left: '10%', right: '10%', height: 1,
-        background: `linear-gradient(90deg, transparent, ${lineColor}40, transparent)`,
+        position: 'absolute', top: 0, left: '10%', right: '10%',
+        height: 1, background: `linear-gradient(90deg, transparent, ${A}20, transparent)`,
       }} />
 
-      <AdMetric label={label} value={currentValue} prev={prevValue} format={format} index={0} />
+      <div style={{ flex: 1 }}>
+        <AdMetric label={label} value={currentValue} format={format} />
+      </div>
 
-      <div style={{ height: 56, marginTop: 4, marginLeft: -18, marginRight: -18 }}>
+      <div style={{ height: 44, marginLeft: -18, marginRight: -18, flexShrink: 0 }}>
         {hasData ? (
           <ResponsiveLine
             data={[{ id: label, data }]}
             theme={T.nivoTheme}
-            colors={[lineColor]}
+            colors={[A]}
             lineWidth={1.5}
             enablePoints={false}
             enableGridX={false}
             enableGridY={false}
             axisTop={null} axisRight={null} axisBottom={null} axisLeft={null}
-            margin={{ top: 4, bottom: 4, left: 0, right: 0 }}
+            margin={{ top: 4, bottom: 0, left: 0, right: 0 }}
             curve="monotoneX"
             enableArea
-            areaBaselineValue={Math.min(...data.map(d => d.y)) * 0.95}
-            areaOpacity={0.12}
+            areaBaselineValue={Math.min(...data.map(d => d.y)) * 0.9}
+            areaOpacity={0.15}
             isInteractive={false}
             animate
           />
         ) : (
-          <div style={{
-            height: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 10, color: T.textMuted, fontFamily: "'DM Mono', monospace",
-            letterSpacing: '0.05em',
-          }}>
-            sem dados no período
-          </div>
+          <div style={{ height: '100%', background: 'rgba(13,162,231,0.02)' }} />
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
