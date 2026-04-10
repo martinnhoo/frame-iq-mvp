@@ -120,17 +120,14 @@ export function normalizePlan(plan: string | null | undefined): string {
   return PLAN_ALIASES[raw] || raw;
 }
 
-/** Lifetime accounts — always studio, unlimited */
-export const LIFETIME_ACCOUNTS: Record<string, string> = {
-  "martinhovff@gmail.com": "studio",
-  "victoriafnogueira@hotmail.com": "studio",
-  "isadoradblima@gmail.com": "studio",
-  "denis.magalhaes10@gmail.com": "studio",
-  "denis@adbrief.pro": "studio",
-};
+/** Admin emails — used only for admin-credits endpoint access */
+export const ADMIN_EMAILS: string[] = [
+  "martinhovff@gmail.com",
+  "denis.magalhaes10@gmail.com",
+  "denis@adbrief.pro",
+];
 
-/** Get effective plan with lifetime override */
-export function getEffectivePlan(dbPlan: string | null | undefined, email: string | null | undefined): string {
-  if (email && LIFETIME_ACCOUNTS[email]) return LIFETIME_ACCOUNTS[email];
+/** Get effective plan (normalizes aliases, no special overrides) */
+export function getEffectivePlan(dbPlan: string | null | undefined, _email?: string | null): string {
   return normalizePlan(dbPlan);
 }

@@ -3,7 +3,7 @@
  * All new code should import directly from credits.ts
  * TODO: Remove this file once all edge functions are migrated
  */
-export { getEffectivePlan, LIFETIME_ACCOUNTS, normalizePlan as getEffectivePlanNormalized } from "./credits.ts";
+export { getEffectivePlan, ADMIN_EMAILS, normalizePlan as getEffectivePlanNormalized } from "./credits.ts";
 export { PLAN_CREDITS as PLAN_LIMITS_CREDITS } from "./credits.ts";
 
 // ── Legacy exports for functions not yet migrated ────────────────────────────

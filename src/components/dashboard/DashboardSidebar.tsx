@@ -29,7 +29,7 @@ interface SidebarProps {
   onSelectPersona?: (p: ActivePersona) => void;
 }
 
-const LIFETIME = ["martinhovff@gmail.com", "victoriafnogueira@hotmail.com", "isadoradblima@gmail.com"];
+// LIFETIME removed — all accounts use normal credit system
 const PLANS: Record<string, { label: string; color: string }> = {
   free:    { label: "Free",    color: "rgba(255,255,255,0.25)" },
   maker:   { label: "Maker",  color: "rgba(96,165,250,0.6)"   },
@@ -150,7 +150,7 @@ export function DashboardSidebar({
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const plan = profile?.plan || "free";
-  const isLifetime = LIFETIME.includes(user?.email || "");
+  // lifetime removed
   const pm = PLANS[plan] || PLANS.free;
   const initials = (profile?.name || profile?.email || "U").charAt(0).toUpperCase();
   const displayName = profile?.name || user?.email?.split("@")[0] || "Account";
@@ -410,7 +410,7 @@ export function DashboardSidebar({
           <div style={{ height: 1, background: `${A}08`, margin: "0 0 4px" }} />
 
           {/* Upgrade CTA */}
-          {plan === "free" && !isLifetime && (
+          {plan === "free" && (
             <button onClick={() => setUpgradeOpen(true)}
               style={{
                 display: "flex", alignItems: "center", gap: 8, padding: "7px 14px",
@@ -459,9 +459,9 @@ export function DashboardSidebar({
               }}>{displayName}</p>
               <p style={{
                 fontSize: 11, margin: 0, fontWeight: 500, lineHeight: 1.3, fontFamily: F,
-                color: isLifetime ? "rgba(251,191,36,0.55)" : pm.color,
+                color: pm.color,
               }}>
-                {isLifetime ? "∞ Lifetime" : pm.label}
+                {pm.label}
               </p>
             </div>
           </button>

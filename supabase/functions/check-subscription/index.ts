@@ -1,6 +1,6 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { LIFETIME_ACCOUNTS } from "../_shared/credits.ts";
+// LIFETIME_ACCOUNTS removed — all accounts use normal credit system
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,14 +42,6 @@ Deno.serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id, email: user.email });
-
-    if (user.email && LIFETIME_ACCOUNTS[user.email]) {
-      const lifetimePlan = LIFETIME_ACCOUNTS[user.email];
-      logStep("Lifetime account detected", { email: user.email, plan: lifetimePlan });
-      return new Response(JSON.stringify({ subscribed: lifetimePlan !== "free", plan: lifetimePlan, lifetime: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });

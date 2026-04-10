@@ -51,10 +51,12 @@ Deno.serve(async (req) => {
     // Get credit balance via RPC
     const { data: balance } = await supabase.rpc('get_credit_balance', { p_user_id: user_id });
 
-    const total = balance?.total ?? creditPool;
+    // Note: ?? doesn't catch 0, so use explicit null/undefined check for balance fields
+    const hasBalance = balance && balance.total !== undefined && balance.total > 0;
+    const total = hasBalance ? balance.total : creditPool;
     const used = balance?.used ?? 0;
     const bonus = balance?.bonus ?? 0;
-    const remaining = balance?.remaining ?? creditPool;
+    const remaining = hasBalance ? balance.remaining : creditPool;
     const period = balance?.period ?? new Date().toISOString().slice(0, 7);
 
     // Usage breakdown by action (last 30 days of transactions)

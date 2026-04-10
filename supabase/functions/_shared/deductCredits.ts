@@ -7,7 +7,7 @@
  *   const check = await requireCredits(supabase, user_id, "analysis");
  *   if (!check.allowed) return new Response(JSON.stringify(check.error), { status: 402, headers });
  */
-import { getEffectivePlan, getPlanCreditPool, getCreditCost, LIFETIME_ACCOUNTS } from "./credits.ts";
+import { getEffectivePlan, getPlanCreditPool, getCreditCost } from "./credits.ts";
 
 interface CreditCheck {
   allowed: boolean;
@@ -38,14 +38,7 @@ export async function requireCredits(
     return { allowed: true }; // fail open — don't block if profile missing
   }
 
-  const email = profile?.email;
-
-  // Lifetime accounts = unlimited
-  if (email && LIFETIME_ACCOUNTS[email]) {
-    return { allowed: true, remaining: -1 };
-  }
-
-  const plan = getEffectivePlan(profile?.plan, email);
+  const plan = getEffectivePlan(profile?.plan, profile?.email);
   const isTrialing = profile?.subscription_status === 'trialing';
   const creditPool = getPlanCreditPool(plan, isTrialing);
 

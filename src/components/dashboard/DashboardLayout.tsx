@@ -217,19 +217,16 @@ export default function DashboardLayout() {
         supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }).then(r => r.data),
       ]);
 
-      // check-subscription fires after render — skip for lifetime accounts
-      const LIFETIME_EMAILS = ["martinhovff@gmail.com", "victoriafnogueira@hotmail.com", "isadoradblima@gmail.com"];
-      if (!LIFETIME_EMAILS.includes(session.user.email || "")) {
-        Promise.race([
-          supabase.functions.invoke("check-subscription"),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
-        ]).then((res: any) => {
-          const subData = res?.data;
-          if (subData?.plan && profileData && subData.plan !== profileData.plan) {
-            setProfile(prev => prev ? { ...prev, plan: subData.plan } : prev);
-          }
-        }).catch(() => {}); // silent — never blocks UI
-      }
+      // check-subscription fires after render — sync plan from Stripe
+      Promise.race([
+        supabase.functions.invoke("check-subscription"),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
+      ]).then((res: any) => {
+        const subData = res?.data;
+        if (subData?.plan && profileData && subData.plan !== profileData.plan) {
+          setProfile(prev => prev ? { ...prev, plan: subData.plan } : prev);
+        }
+      }).catch(() => {}); // silent — never blocks UI
       const loadedPersonas = personaData
         ? (personaData
             .filter((d: Record<string, unknown>) => d.name)

@@ -1,9 +1,9 @@
 /**
  * admin-credits — Internal monitoring endpoint for credit system.
  * Returns aggregated credit usage data across all users.
- * Only accessible by LIFETIME_ACCOUNTS (admin emails).
+ * Only accessible by admin emails.
  */
-import { LIFETIME_ACCOUNTS } from "../_shared/credits.ts";
+import { ADMIN_EMAILS } from "../_shared/credits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
       });
     }
     const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.slice(7));
-    if (authErr || !user || !LIFETIME_ACCOUNTS[user.email || '']) {
+    if (authErr || !user || !ADMIN_EMAILS.includes(user.email || '')) {
       return new Response(JSON.stringify({ error: 'admin_only' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

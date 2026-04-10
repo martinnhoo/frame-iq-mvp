@@ -1,6 +1,6 @@
 // adbrief-ai-chat v20.1 — tom livre, fix toneMap removido
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { getEffectivePlan, LIFETIME_ACCOUNTS } from "../_shared/credits.ts";
+import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
 
 const corsHeaders = {
@@ -1350,13 +1350,10 @@ Não use regras fixas. Use os dados reais acima e raciocine sobre o que está ac
     const richContext = [
       // ── Identidade do usuário — SEMPRE primeiro ───────────────────────────
       (() => {
-        const isLifetime = !!(profileRow as any)?.email && !!LIFETIME_ACCOUNTS[(profileRow as any)?.email];
-        const planLabel = isLifetime
-          ? "Studio Lifetime (acesso ilimitado, sem restrições)"
-          : planKey === "studio" ? "Studio ($149/mês — ilimitado)"
-          : planKey === "pro"    ? "Pro ($49/mês — 200 msgs/dia)"
-          : planKey === "maker"  ? "Maker ($19/mês — 50 msgs/dia)"
-          : "Free (3 msgs/dia)";
+        const planLabel = planKey === "studio" ? "Studio ($149/mês — 9000 créditos/mês)"
+          : planKey === "pro"    ? "Pro ($49/mês — 2500 créditos/mês)"
+          : planKey === "maker"  ? "Maker ($19/mês — 1000 créditos/mês)"
+          : "Free (15 créditos/mês)";
         return `PLANO DO USUÁRIO: ${planLabel}
 IDIOMA DO USUÁRIO: ${uiLang === "pt" ? "Português — responda SEMPRE em português" : uiLang === "es" ? "Español — responde SIEMPRE en español" : "English — always respond in English"}
 REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre planos. NUNCA invente limitações de features baseado no plano.`;
