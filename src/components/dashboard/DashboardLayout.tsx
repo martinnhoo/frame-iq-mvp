@@ -545,113 +545,170 @@ export default function DashboardLayout() {
 
       <div className="flex-1 flex flex-col min-w-0" style={{ overflowX: "hidden", overflowY: "hidden", maxWidth: "100%", minHeight: 0 }}>
 
-        {/* ── Topbar: mobile-first, clean ── */}
+        {/* ══════════════════════════════════════════════════════════════════
+            TOPBAR v3 — Completely rewritten from scratch
+            Layout: [☰] [Account Picker] ──── spacer ──── [Telegram] [AdBrief Logo]
+            ══════════════════════════════════════════════════════════════════ */}
         <header className="dash-topbar" style={{
-          height: 52, minHeight: 52, maxHeight: 52, flexShrink: 0,
+          height: 48, minHeight: 48, maxHeight: 48, flexShrink: 0,
           display: "flex", alignItems: "center",
-          paddingLeft: 12, paddingRight: 12, gap: 8,
+          padding: "0 16px", gap: 10,
           position: "sticky", top: 0, zIndex: 100,
-          background: "rgba(12,15,26,0.88)",
-          backdropFilter: "blur(24px) saturate(1.5)",
-          WebkitBackdropFilter: "blur(24px) saturate(1.5)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.4)",
+          background: "#0b0e18",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}>
 
-          {/* Sidebar toggle — works on all screen sizes */}
+          {/* ── Sidebar toggle ── */}
           <button
             onClick={() => { setSidebarOpen(s => !s); if (profileOpen) setProfileOpen(false); }}
             title={sidebarOpen ? "Ocultar menu" : "Mostrar menu"}
-            style={{ width: 32, height: 32, minWidth: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, background: "transparent", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", flexShrink: 0, transition: "all 0.15s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}>
-            <Menu className="h-4 w-4" />
+            style={{
+              width: 34, height: 34, minWidth: 34, display: "flex", alignItems: "center",
+              justifyContent: "center", borderRadius: 8, background: "transparent",
+              border: "none", cursor: "pointer", color: "rgba(255,255,255,0.45)",
+              flexShrink: 0, transition: "color 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.85)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; }}>
+            <Menu size={17} />
           </button>
 
-          {/* Logo (only when sidebar is hidden) */}
+          {/* ── Logo wordmark (only when sidebar hidden) ── */}
           {!sidebarOpen && (
-            <div style={{ flexShrink: 0 }}>
+            <div style={{ flexShrink: 0, marginRight: 4 }}>
               <Logo size="sm" />
             </div>
           )}
 
-          {/* Account picker */}
-          <div className="relative" style={{ flexShrink: 0, minWidth: 0 }}>
+          {/* ── Account picker ── */}
+          <div className="relative" style={{ flexShrink: 1, minWidth: 0 }}>
             <button
               onClick={() => setPersonaPickerOpen(!personaPickerOpen)}
               style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "5px 8px 5px 6px", borderRadius: 8,
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "4px 10px 4px 4px", borderRadius: 8,
                 background: "transparent", border: "none",
-                cursor: "pointer", maxWidth: "min(220px, calc(100vw - 130px))",
+                cursor: "pointer", maxWidth: 240,
                 transition: "background 0.15s",
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-              {/* Initials badge */}
-              <span style={{ width: 22, height: 22, minWidth: 22, borderRadius: 5, background: selectedPersona ? "#0ea5e9" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff", flexShrink: 0, overflow: "hidden" }}>
+              {/* Avatar / initial */}
+              <span style={{
+                width: 26, height: 26, minWidth: 26, borderRadius: 6,
+                background: selectedPersona ? "#0ea5e9" : "rgba(255,255,255,0.08)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0, overflow: "hidden",
+              }}>
                 {selectedPersona
-                  ? (selectedPersona.logo_url ? <img src={selectedPersona.logo_url} alt="" style={{ width: 22, height: 22, objectFit: "cover" }} /> : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A"))
-                  : <Users className="h-3 w-3" style={{ color: "rgba(255,255,255,0.4)" }} />
+                  ? (selectedPersona.logo_url
+                    ? <img src={selectedPersona.logo_url} alt="" style={{ width: 26, height: 26, objectFit: "cover" }} />
+                    : (selectedPersona.name?.charAt(0)?.toUpperCase() || "A"))
+                  : <Users size={13} style={{ color: "rgba(255,255,255,0.4)" }} />
                 }
               </span>
-              {/* Name — mobile shows "Contas", desktop shows full name */}
-              <span className="hidden lg:block" style={{ fontSize: 13, fontWeight: 600, color: "#e2f4ff", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {selectedPersona ? selectedPersona.name : (language === "pt" ? "Selecionar conta" : language === "es" ? "Seleccionar" : "Select account")}
+              {/* Single name — no duplication */}
+              <span style={{
+                fontSize: 13, fontWeight: 600, color: "#dfe6f0",
+                fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                maxWidth: 160,
+              }}>
+                {selectedPersona
+                  ? selectedPersona.name
+                  : (language === "pt" ? "Selecionar conta" : language === "es" ? "Seleccionar" : "Select account")}
               </span>
-              <span className="lg:hidden" style={{ fontSize: 12, fontWeight: 600, color: selectedPersona ? "#e2f4ff" : "rgba(255,255,255,0.5)", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "min(120px, calc(100vw - 160px))", display: "inline-block" }}>
-                {selectedPersona ? selectedPersona.name : (language === "pt" ? "Contas" : language === "es" ? "Cuentas" : "Accounts")}
-              </span>
-              <ChevronDown className="h-3 w-3" style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />
+              <ChevronDown size={13} style={{ color: "rgba(255,255,255,0.3)", flexShrink: 0 }} />
             </button>
 
-            {/* Dropdown */}
+            {/* ── Account dropdown ── */}
             {personaPickerOpen && (
               <div style={{
-                position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 200,
-                width: 260, maxWidth: "calc(100vw - 24px)",
-                background: "var(--bg-elevated)", border: "1px solid var(--border-default)",
+                position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 200,
+                width: 272, maxWidth: "calc(100vw - 24px)",
+                background: "#141825",
+                border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 12, overflow: "hidden",
-                boxShadow: "0 16px 48px rgba(0,0,0,0.7)",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04)",
               }}>
-                <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.10)" }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                <div style={{ padding: "12px 16px 8px" }}>
+                  <p style={{
+                    fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.3)",
+                    letterSpacing: "0.08em", textTransform: "uppercase",
+                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  }}>
                     {language === "pt" ? "Conta ativa" : language === "es" ? "Cuenta activa" : "Active account"}
                   </p>
                 </div>
                 {savedPersonas.length === 0 ? (
-                  <div style={{ padding: "16px 14px", textAlign: "center" }}>
-                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+                  <div style={{ padding: "20px 16px", textAlign: "center" }}>
+                    <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 12, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
                       {language === "pt" ? "Nenhuma conta ainda" : "No accounts yet"}
                     </p>
                     <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
-                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, background: "none", color: "#0da2e7", border: "none", cursor: "pointer", fontSize: 12, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", margin: "0 auto" }}>
-                      <Sparkles className="h-3 w-3" /> {language === "pt" ? "Criar conta" : "Add account"}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        padding: "8px 16px", borderRadius: 8,
+                        background: "rgba(13,162,231,0.12)", color: "#0da2e7",
+                        border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+                        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                      }}>
+                      <Sparkles size={13} /> {language === "pt" ? "Criar conta" : "Add account"}
                     </button>
                   </div>
                 ) : (
-                  <div style={{ padding: "5px", maxHeight: 260, overflowY: "auto" }}>
-                    {savedPersonas.map(p => (
-                      <button key={p.id} onClick={() => { setSelectedPersona(p); setPersonaPickerOpen(false); }}
-                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, background: selectedPersona?.id === p.id ? "rgba(255,255,255,0.06)" : "transparent", border: "1px solid transparent", cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "all 0.1s" }}
-                        onMouseEnter={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-                        onMouseLeave={e => { if (selectedPersona?.id !== p.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                        <span style={{ width: 28, height: 28, minWidth: 28, borderRadius: 6, background: selectedPersona?.id === p.id ? "#0ea5e9" : "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 800, color: "#fff", overflow: "hidden" }}>
-                          {p.logo_url ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (p.name?.charAt(0)?.toUpperCase() || "A")}
-                        </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 500, color: "#e8e8f0", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
-                          {p.website && <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.website}</p>}
-                        </div>
-                        {selectedPersona?.id === p.id && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0 }} />}
-                      </button>
-                    ))}
-                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", padding: "7px 9px 4px", marginTop: 3 }}>
+                  <div style={{ padding: "4px 6px", maxHeight: 280, overflowY: "auto" }}>
+                    {savedPersonas.map(p => {
+                      const isActive = selectedPersona?.id === p.id;
+                      return (
+                        <button key={p.id} onClick={() => { setSelectedPersona(p); setPersonaPickerOpen(false); }}
+                          style={{
+                            width: "100%", display: "flex", alignItems: "center", gap: 10,
+                            padding: "8px 10px", borderRadius: 8,
+                            background: isActive ? "rgba(13,162,231,0.10)" : "transparent",
+                            border: "none", cursor: "pointer", textAlign: "left",
+                            marginBottom: 2, transition: "background 0.12s",
+                          }}
+                          onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+                          onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                          <span style={{
+                            width: 30, height: 30, minWidth: 30, borderRadius: 7,
+                            background: isActive ? "#0ea5e9" : "rgba(255,255,255,0.06)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            flexShrink: 0, fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden",
+                          }}>
+                            {p.logo_url
+                              ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              : (p.name?.charAt(0)?.toUpperCase() || "A")}
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: 13, fontWeight: 500, color: isActive ? "#e8f4ff" : "#c8cdd5", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>
+                              {p.name}
+                            </p>
+                            {p.website && (
+                              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>
+                                {p.website}
+                              </p>
+                            )}
+                          </div>
+                          {isActive && (
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", flexShrink: 0 }} />
+                          )}
+                        </button>
+                      );
+                    })}
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "8px 10px 6px", marginTop: 4 }}>
                       <button onClick={() => { setPersonaPickerOpen(false); navigate("/dashboard/accounts"); }}
-                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.38)", background: "none", border: "none", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", padding: "3px 0" }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.38)"; }}>
-                        <Sparkles className="h-3 w-3" /> {language === "pt" ? "Gerenciar contas" : "Manage accounts"}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 6,
+                          fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)",
+                          background: "none", border: "none", cursor: "pointer",
+                          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", padding: "4px 0",
+                          transition: "color 0.15s",
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.7)"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}>
+                        <Sparkles size={12} /> {language === "pt" ? "Gerenciar contas" : "Manage accounts"}
                       </button>
                     </div>
                   </div>
@@ -662,69 +719,149 @@ export default function DashboardLayout() {
 
           {personaPickerOpen && <div role="button" aria-label="Close menu" tabIndex={-1} className="fixed inset-0 z-10" onClick={() => setPersonaPickerOpen(false)} />}
 
-          {/* Flex spacer */}
+          {/* ── Spacer ── */}
           <div style={{ flex: 1 }} />
 
-          {/* Telegram (desktop only) */}
+          {/* ── Telegram (desktop) ── */}
           <button
             className="hidden lg:flex"
             onClick={() => setTelegramModalOpen(true)}
             title="Telegram"
-            style={{ width: 32, height: 32, minWidth: 32, borderRadius: 8, flexShrink: 0, alignItems: "center", justifyContent: "center", background: "transparent", border: "none", cursor: "pointer", transition: "background 0.15s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
+            style={{
+              width: 34, height: 34, minWidth: 34, borderRadius: 8, flexShrink: 0,
+              alignItems: "center", justifyContent: "center",
+              background: "transparent", border: "none", cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill={telegramConn ? "#27AEE1" : "rgba(255,255,255,0.3)"}/>
               <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
             </svg>
           </button>
 
-          {/* AdBrief logo mark */}
-          <div style={{ width: 28, height: 28, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
-            <img src="/lovable-uploads/60ec6a1b-8e38-430e-b5ef-0be690878a63.png" alt="AdBrief" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          {/* ── AdBrief logo — far right ── */}
+          <div style={{
+            width: 28, height: 28, borderRadius: 7, overflow: "hidden", flexShrink: 0,
+          }}>
+            <img
+              src="/lovable-uploads/60ec6a1b-8e38-430e-b5ef-0be690878a63.png"
+              alt="AdBrief"
+              style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            />
           </div>
 
         </header>
 
-        {/* Alerts */}
+        {/* ══════════════════════════════════════════════════════════════════
+            USAGE BANNERS v3 — Completely rewritten
+            - Warning (≥75%): amber, dismissible with X
+            - Limit reached: red, NOT dismissible (fixed)
+            - Past due: red, clickable
+            ══════════════════════════════════════════════════════════════════ */}
         {usageDetails?.show_warning && !usageDetails?.is_over_limit && !bannerDismissed && (
-          <div className="mx-4 mt-3 flex items-center justify-between px-4 py-2.5 rounded-lg text-amber-400 text-sm">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{dt("ov_low_quota")}</span>
+          <div style={{
+            margin: "0 16px", marginTop: 10,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "10px 16px", borderRadius: 10,
+            background: "rgba(234,179,8,0.08)",
+            borderLeft: "3px solid #eab308",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <AlertCircle size={18} style={{ color: "#eab308", flexShrink: 0 }} />
+              <span style={{
+                fontSize: 14, fontWeight: 600, color: "#eab308",
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              }}>
+                {language === "pt" ? "Seus créditos estão acabando" : language === "es" ? "Tus créditos se están agotando" : "Your credits are running low"}
+                {usageDetails?.credits && (
+                  <span style={{ fontWeight: 400, marginLeft: 6, color: "rgba(234,179,8,0.7)" }}>
+                    — {usageDetails.credits.remaining}/{usageDetails.credits.total}
+                  </span>
+                )}
+              </span>
             </div>
             <button
               onClick={() => setBannerDismissed(true)}
-              className="flex items-center justify-center w-5 h-5 hover:opacity-80 transition-opacity"
+              style={{
+                width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                borderRadius: 6, background: "transparent", border: "none", cursor: "pointer",
+                color: "rgba(234,179,8,0.5)", transition: "color 0.15s",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#eab308"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(234,179,8,0.5)"; }}
               title="Dismiss">
-              <X className="h-4 w-4" />
+              <X size={16} />
             </button>
           </div>
         )}
-        {usageDetails?.is_over_limit && !bannerDismissed && (
-          <div className="mx-4 mt-3 flex items-center justify-between px-4 py-2.5 rounded-lg text-red-400 text-sm">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{dt("ov_limit_reached")}</span>
+        {usageDetails?.is_over_limit && (
+          <div style={{
+            margin: "0 16px", marginTop: 10,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 16px", borderRadius: 10,
+            background: "rgba(239,68,68,0.08)",
+            borderLeft: "3px solid #ef4444",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <AlertCircle size={18} style={{ color: "#ef4444", flexShrink: 0 }} />
+              <div>
+                <span style={{
+                  fontSize: 14, fontWeight: 700, color: "#ef4444",
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  display: "block",
+                }}>
+                  {language === "pt" ? "Limite mensal atingido" : language === "es" ? "Límite mensual alcanzado" : "Monthly limit reached"}
+                </span>
+                <span style={{
+                  fontSize: 12, fontWeight: 400, color: "rgba(239,68,68,0.65)",
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  display: "block", marginTop: 2,
+                }}>
+                  {language === "pt" ? "Faça upgrade para continuar usando" : language === "es" ? "Mejora tu plan para continuar" : "Upgrade to continue using"}
+                </span>
+              </div>
             </div>
             <button
-              onClick={() => setBannerDismissed(true)}
-              className="flex items-center justify-center w-5 h-5 hover:opacity-80 transition-opacity"
-              title="Dismiss">
-              <X className="h-4 w-4" />
+              onClick={() => navigate("/dashboard/pricing")}
+              style={{
+                padding: "6px 14px", borderRadius: 7,
+                background: "#ef4444", color: "#fff",
+                border: "none", cursor: "pointer",
+                fontSize: 12, fontWeight: 600, flexShrink: 0,
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                transition: "opacity 0.15s",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.85"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}>
+              Upgrade
             </button>
           </div>
         )}
         {(profile as any)?.subscription_status === "past_due" && (
-          <div className="mx-4 mt-3 flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-400 text-sm cursor-pointer"
+          <div
+            style={{
+              margin: "0 16px", marginTop: 10,
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "12px 16px", borderRadius: 10,
+              background: "rgba(239,68,68,0.08)",
+              borderLeft: "3px solid #ef4444",
+              cursor: "pointer",
+            }}
             onClick={async () => {
               try {
                 const { data } = await supabase.functions.invoke("customer-portal");
                 if (data?.url) window.location.href = data.url;
               } catch {}
             }}>
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{language === "pt" ? "Pagamento falhou — clique aqui para atualizar seu método de pagamento." : language === "es" ? "Pago fallido — haz clic aquí para actualizar tu método de pago." : "Payment failed — click here to update your payment method."}</span>
+            <AlertCircle size={18} style={{ color: "#ef4444", flexShrink: 0 }} />
+            <span style={{
+              fontSize: 14, fontWeight: 600, color: "#ef4444",
+              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+            }}>
+              {language === "pt" ? "Pagamento falhou — clique para atualizar" : language === "es" ? "Pago fallido — haz clic para actualizar" : "Payment failed — click to update"}
+            </span>
           </div>
         )}
 

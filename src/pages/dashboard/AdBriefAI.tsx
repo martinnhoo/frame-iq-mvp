@@ -1563,13 +1563,17 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
     // google: disabled
   };
 
-  // ── Collapsed bar — redesign completo ────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // COLLAPSED TOOLBAR v3 — Completely rewritten from scratch
+  // Designed as a real toolbar: generous spacing, clear hierarchy, click to expand
+  // ══════════════════════════════════════════════════════════════════════════
   if (!open) {
     const metrics = data && !data.error && !busy ? [
-      k.spend       && { lbl: lang==="pt"?"gasto":lang==="es"?"gasto":"spend", val: `${data.currency_symbol||"R$"}${parseFloat(k.spend||0).toFixed(0)}`, warn: false, tr: sTr },
-      k.ctr         && { lbl: "ctr", val: `${parseFloat(k.ctr||0).toFixed(2)}%`, warn: parseFloat(k.ctr) < 0.5, tr: cTr },
-      k.frequency && parseFloat(k.frequency) > 0 && { lbl: "freq", val: `${parseFloat(k.frequency).toFixed(1)}×`, warn: parseFloat(k.frequency) > 3.5, tr: "flat" as const },
-      k.conversions && k.conversions !== "0" && { lbl: "conv", val: k.conversions, warn: false, tr: "flat" as const },
+      k.spend       && { lbl: lang==="pt"?"Gasto":lang==="es"?"Gasto":"Spend", val: `${data.currency_symbol||"R$"}${parseFloat(k.spend||0).toLocaleString(undefined,{maximumFractionDigits:0})}`, warn: false, tr: sTr },
+      k.ctr         && { lbl: "CTR", val: `${parseFloat(k.ctr||0).toFixed(2)}%`, warn: parseFloat(k.ctr) < 0.5, tr: cTr },
+      k.frequency && parseFloat(k.frequency) > 0 && { lbl: "Freq", val: `${parseFloat(k.frequency).toFixed(1)}x`, warn: parseFloat(k.frequency) > 3.5, tr: "flat" as const },
+      k.conversions && k.conversions !== "0" && { lbl: "Conv", val: k.conversions, warn: false, tr: "flat" as const },
+      k.cpc && parseFloat(k.cpc) > 0 && { lbl: "CPC", val: `${data.currency_symbol||"R$"}${parseFloat(k.cpc).toFixed(2)}`, warn: false, tr: "flat" as const },
     ].filter(Boolean) : [];
     const warnCount = alerts.filter((a: any) => a.t === "warn").length;
     const scaleCount = (data?.winners || []).length;
@@ -1577,134 +1581,137 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
     return (
       <div className="lp lp-bar" onClick={() => setOpen(true)} style={{
-        ...I, display: "flex", alignItems: "center", gap: 0, height: 36,
-        padding: "0 16px", cursor: "pointer", userSelect: "none" as const,
-        background: "var(--bg-main)",
-        borderBottom: "1px solid rgba(255,255,255,0.055)",
-        transition: "background 0.15s",
+        ...I, display: "flex", alignItems: "center", height: 44,
+        padding: "0 20px", cursor: "pointer", userSelect: "none" as const,
+        background: "#0c0f1a",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        gap: 0,
       }}>
 
-        {/* ── Meta ∞ icon — SVG oficial ── */}
-        <div style={{ display:"flex", alignItems:"center", gap:7, marginRight:14, flexShrink:0 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6.897 4h-.024l-.031 2.615h.022c1.715 0 3.046 1.357 5.94 6.246l.175.297.012.02 1.62-2.438-.012-.019a48.763 48.763 0 00-1.098-1.716 28.01 28.01 0 00-1.175-1.629C10.413 4.932 8.812 4 6.896 4z" fill="url(#lp-meta-0)"/>
-            <path d="M6.873 4C4.95 4.01 3.247 5.258 2.02 7.17l-.01.017 2.254 1.231.011-.017c.718-1.083 1.61-1.774 2.568-1.785h.021L6.896 4h-.023z" fill="url(#lp-meta-1)"/>
-            <path d="M2.019 7.17l-.011.017C1.2 8.447.598 9.995.274 11.664l-.005.022 2.534.6.004-.022c.27-1.467.786-2.828 1.456-3.845l.011-.017L2.02 7.17z" fill="url(#lp-meta-2)"/>
-            <path d="M2.807 12.264l-2.533-.6-.005.022c-.177.918-.267 1.851-.269 2.786v.023l2.598.233v-.023a12.591 12.591 0 01.21-2.44z" fill="url(#lp-meta-3)"/>
-            <path d="M2.677 15.537a5.462 5.462 0 01-.079-.813v-.022L0 14.468v.024a8.89 8.89 0 00.146 1.652l2.535-.585a4.106 4.106 0 01-.004-.022z" fill="url(#lp-meta-4)"/>
-            <path d="M3.27 16.89c-.284-.31-.484-.756-.589-1.328l-.004-.021-2.535.585.004.021c.192 1.01.568 1.85 1.106 2.487l.014.017 2.018-1.745a2.106 2.106 0 01-.015-.016z" fill="url(#lp-meta-5)"/>
+        {/* ── Status indicator: Meta logo + LIVE ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginRight: 20 }}>
+          {/* Meta infinity SVG — compact */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M6.897 4h-.024l-.031 2.615h.022c1.715 0 3.046 1.357 5.94 6.246l.175.297.012.02 1.62-2.438-.012-.019a48.763 48.763 0 00-1.098-1.716 28.01 28.01 0 00-1.175-1.629C10.413 4.932 8.812 4 6.896 4z" fill="#0082FB"/>
+            <path d="M6.873 4C4.95 4.01 3.247 5.258 2.02 7.17l-.01.017 2.254 1.231.011-.017c.718-1.083 1.61-1.774 2.568-1.785h.021L6.896 4h-.023z" fill="#0072EC"/>
+            <path d="M2.019 7.17l-.011.017C1.2 8.447.598 9.995.274 11.664l-.005.022 2.534.6.004-.022c.27-1.467.786-2.828 1.456-3.845l.011-.017L2.02 7.17z" fill="#0072EC"/>
             <path d="M10.78 9.654c-1.528 2.35-2.454 3.825-2.454 3.825-2.035 3.2-2.739 3.917-3.871 3.917a1.545 1.545 0 01-1.186-.508l-2.017 1.744.014.017C2.01 19.518 3.058 20 4.356 20c1.963 0 3.374-.928 5.884-5.33l1.766-3.13a41.283 41.283 0 00-1.227-1.886z" fill="#0082FB"/>
-            <path d="M13.502 5.946l-.016.016c-.4.43-.786.908-1.16 1.416.378.483.768 1.024 1.175 1.63.48-.743.928-1.345 1.367-1.807l.016-.016-1.382-1.24z" fill="url(#lp-meta-6)"/>
             <path d="M20.918 5.713C19.853 4.633 18.583 4 17.225 4c-1.432 0-2.637.787-3.723 1.944l-.016.016 1.382 1.24.016-.017c.715-.747 1.408-1.12 2.176-1.12.826 0 1.6.39 2.27 1.075l.015.016 1.589-1.425-.016-.016z" fill="#0082FB"/>
-            <path d="M23.998 14.125c-.06-3.467-1.27-6.566-3.064-8.396l-.016-.016-1.588 1.424.015.016c1.35 1.392 2.277 3.98 2.361 6.971v.023h2.292v-.022z" fill="url(#lp-meta-7)"/>
-            <path d="M23.998 14.15v-.023h-2.292v.022c.004.14.006.282.006.424 0 .815-.121 1.474-.368 1.95l-.011.022 1.708 1.782.013-.02c.62-.96.946-2.293.946-3.91 0-.083 0-.165-.002-.247z" fill="url(#lp-meta-8)"/>
-            <path d="M21.344 16.52l-.011.02c-.214.402-.519.67-.917.787l.778 2.462a3.493 3.493 0 00.438-.182 3.558 3.558 0 001.366-1.218l.044-.065.012-.02-1.71-1.784z" fill="url(#lp-meta-9)"/>
-            <path d="M19.92 17.393c-.262 0-.492-.039-.718-.14l-.798 2.522c.449.153.927.222 1.46.222.492 0 .943-.073 1.352-.215l-.78-2.462c-.167.05-.341.075-.517.073z" fill="url(#lp-meta-10)"/>
-            <path d="M18.323 16.534l-.014-.017-1.836 1.914.016.017c.637.682 1.246 1.105 1.937 1.337l.797-2.52c-.291-.125-.573-.353-.9-.731z" fill="url(#lp-meta-11)"/>
-            <path d="M18.309 16.515c-.55-.642-1.232-1.712-2.303-3.44l-1.396-2.336-.011-.02-1.62 2.438.012.02.989 1.668c.959 1.61 1.74 2.774 2.493 3.585l.016.016 1.834-1.914a2.353 2.353 0 01-.014-.017z" fill="url(#lp-meta-12)"/>
-            <defs>
-              <linearGradient id="lp-meta-0" x1="75.897%" x2="26.312%" y1="89.199%" y2="12.194%"><stop offset=".06%" stopColor="#0867DF"/><stop offset="45.39%" stopColor="#0668E1"/><stop offset="85.91%" stopColor="#0064E0"/></linearGradient>
-              <linearGradient id="lp-meta-1" x1="21.67%" x2="97.068%" y1="75.874%" y2="23.985%"><stop offset="13.23%" stopColor="#0064DF"/><stop offset="99.88%" stopColor="#0064E0"/></linearGradient>
-              <linearGradient id="lp-meta-2" x1="38.263%" x2="60.895%" y1="89.127%" y2="16.131%"><stop offset="1.47%" stopColor="#0072EC"/><stop offset="68.81%" stopColor="#0064DF"/></linearGradient>
-              <linearGradient id="lp-meta-3" x1="47.032%" x2="52.15%" y1="90.19%" y2="15.745%"><stop offset="7.31%" stopColor="#007CF6"/><stop offset="99.43%" stopColor="#0072EC"/></linearGradient>
-              <linearGradient id="lp-meta-4" x1="52.155%" x2="47.591%" y1="58.301%" y2="37.004%"><stop offset="7.31%" stopColor="#007FF9"/><stop offset="100%" stopColor="#007CF6"/></linearGradient>
-              <linearGradient id="lp-meta-5" x1="37.689%" x2="61.961%" y1="12.502%" y2="63.624%"><stop offset="7.31%" stopColor="#007FF9"/><stop offset="100%" stopColor="#0082FB"/></linearGradient>
-              <linearGradient id="lp-meta-6" x1="34.808%" x2="62.313%" y1="68.859%" y2="23.174%"><stop offset="27.99%" stopColor="#007FF8"/><stop offset="91.41%" stopColor="#0082FB"/></linearGradient>
-              <linearGradient id="lp-meta-7" x1="43.762%" x2="57.602%" y1="6.235%" y2="98.514%"><stop offset="0%" stopColor="#0082FB"/><stop offset="99.95%" stopColor="#0081FA"/></linearGradient>
-              <linearGradient id="lp-meta-8" x1="60.055%" x2="39.88%" y1="4.661%" y2="69.077%"><stop offset="6.19%" stopColor="#0081FA"/><stop offset="100%" stopColor="#0080F9"/></linearGradient>
-              <linearGradient id="lp-meta-9" x1="30.282%" x2="61.081%" y1="59.32%" y2="33.244%"><stop offset="0%" stopColor="#027AF3"/><stop offset="100%" stopColor="#0080F9"/></linearGradient>
-              <linearGradient id="lp-meta-10" x1="20.433%" x2="82.112%" y1="50.001%" y2="50.001%"><stop offset="0%" stopColor="#0377EF"/><stop offset="99.94%" stopColor="#0279F1"/></linearGradient>
-              <linearGradient id="lp-meta-11" x1="40.303%" x2="72.394%" y1="35.298%" y2="57.811%"><stop offset=".19%" stopColor="#0471E9"/><stop offset="100%" stopColor="#0377EF"/></linearGradient>
-              <linearGradient id="lp-meta-12" x1="32.254%" x2="68.003%" y1="19.719%" y2="84.908%"><stop offset="27.65%" stopColor="#0867DF"/><stop offset="100%" stopColor="#0471E9"/></linearGradient>
-            </defs>
+            <path d="M23.998 14.125c-.06-3.467-1.27-6.566-3.064-8.396l-.016-.016-1.588 1.424.015.016c1.35 1.392 2.277 3.98 2.361 6.971v.023h2.292v-.022z" fill="#0082FB"/>
+            <path d="M18.309 16.515c-.55-.642-1.232-1.712-2.303-3.44l-1.396-2.336-.011-.02-1.62 2.438.012.02.989 1.668c.959 1.61 1.74 2.774 2.493 3.585l.016.016 1.834-1.914a2.353 2.353 0 01-.014-.017z" fill="#0072EC"/>
           </svg>
 
-          {/* Live pill */}
-          <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0 }}>
+          {/* Live status */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{
-              width: 5, height: 5, borderRadius:"50%", flexShrink:0,
-              background: busy ? "rgba(255,255,255,0.3)" : fail ? "#fb7185" : "#22d3ee",
-              boxShadow: isLive ? "0 0 6px rgba(34,211,238,0.8), 0 0 12px rgba(34,211,238,0.4)" : "none",
-              animation: isLive ? "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite" : "none",
+              width: 6, height: 6, borderRadius: "50%",
+              background: busy ? "rgba(255,255,255,0.2)" : fail ? "#f87171" : "#34d399",
+              boxShadow: isLive ? "0 0 8px rgba(52,211,153,0.6)" : "none",
+              animation: isLive ? "pulse 2s ease-in-out infinite" : "none",
             }}/>
-            <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600,
-              letterSpacing:"0.06em", textTransform:"uppercase" as const,
-              color: "#0da2e7" }}>
-              {busy ? "···" : fail ? "err" : "live"}
+            <span style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+              textTransform: "uppercase" as const,
+              color: busy ? "rgba(255,255,255,0.3)" : fail ? "#f87171" : "#34d399",
+              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+            }}>
+              {busy ? "..." : fail ? "ERR" : "LIVE"}
             </span>
           </div>
         </div>
 
-        {/* ── Divider ── */}
-        <div style={{ width:1, height:16, background:"rgba(255,255,255,0.07)", marginRight:14, flexShrink:0 }}/>
+        {/* ── Vertical separator ── */}
+        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.06)", flexShrink: 0 }}/>
 
-        {/* ── Metric chips ── */}
+        {/* ── Metrics row ── */}
         {metrics.length > 0 && (
-          <div style={{ display:"flex", gap:0, flex:1, overflow:"hidden", alignItems:"center" }}>
-            {(metrics as any[]).map((item: any, idx: number) => (
-              <div key={item.lbl} style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:3 }}>
-                  <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:500,
-                    color:"rgba(255,255,255,0.28)", letterSpacing:"0.05em", textTransform:"uppercase" as const }}>
-                    {item.lbl}
+          <div style={{
+            display: "flex", alignItems: "center", flex: 1, overflow: "hidden",
+            marginLeft: 20, gap: 24,
+          }}>
+            {(metrics as any[]).map((item: any) => (
+              <div key={item.lbl} style={{ display: "flex", alignItems: "baseline", gap: 6, flexShrink: 0 }}>
+                <span style={{
+                  fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.35)",
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                }}>
+                  {item.lbl}
+                </span>
+                <span style={{
+                  fontSize: 14, fontWeight: 700,
+                  color: item.warn ? "#f87171" : "#e8ecf2",
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  letterSpacing: "-0.01em",
+                }}>
+                  {item.val}
+                </span>
+                {item.tr !== "flat" && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700,
+                    color: item.tr === "up" ? "#34d399" : "#f87171",
+                  }}>
+                    {item.tr === "up" ? "▲" : "▼"}
                   </span>
-                  <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:12, fontWeight:700,
-                    color: item.warn ? "#fb7185" : "rgba(255,255,255,0.88)", letterSpacing:"-0.02em" }}>
-                    {item.val}
-                  </span>
-                  {item.tr !== "flat" && (
-                    <span style={{ fontSize:10, fontWeight:600, lineHeight:1,
-                      color: item.tr === "up" ? "#22d3ee" : "#fb7185" }}>
-                      {item.tr === "up" ? "▲" : "▼"}
-                    </span>
-                  )}
-                </div>
-                {idx < metrics.length - 1 && (
-                  <div style={{ width:1, height:14, background:"rgba(255,255,255,0.08)", flexShrink:0 }}/>
                 )}
               </div>
             ))}
-
-            {/* Alert badge */}
-            {warnCount > 0 && (
-              <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, marginLeft:8 }}>
-                <span style={{ fontSize:10, color:"#fb7185" }}>⚠</span>
-                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600, color:"#fb7185", letterSpacing:"0.03em" }}>
-                  {warnCount}
-                </span>
-              </div>
-            )}
-
-            {/* Scale badge */}
-            {scaleCount > 0 && (
-              <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0, marginLeft:8 }}>
-                <span style={{ fontSize:10, color:"#22d3ee" }}>↑</span>
-                <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:10, fontWeight:600, color:"#22d3ee", letterSpacing:"0.03em" }}>
-                  {scaleCount}
-                </span>
-              </div>
-            )}
           </div>
         )}
 
-        {/* Loading state */}
+        {/* ── Loading skeleton ── */}
         {busy && (
-          <div style={{ display:"flex", alignItems:"center", gap:6, flex:1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, flex: 1, marginLeft: 20 }}>
             {[0,1,2].map(i => (
-              <div key={i} style={{ width:32, height:20, borderRadius:6, background:"rgba(255,255,255,0.05)",
-                animation:`skPulse 1.4s ease-in-out ${i*0.15}s infinite` }}/>
+              <div key={i} style={{
+                width: 56, height: 14, borderRadius: 4,
+                background: "rgba(255,255,255,0.04)",
+                animation: `skPulse 1.4s ease-in-out ${i * 0.15}s infinite`,
+              }}/>
             ))}
           </div>
         )}
 
-        {/* Error state */}
+        {/* ── Error ── */}
         {fail && !busy && (
-          <span style={{ fontFamily:"'Plus Jakarta Sans', sans-serif", fontSize:11, color:"rgba(248,113,133,0.6)", flex:1 }}>
-            {lang==="pt"?"falha ao carregar":lang==="es"?"error al cargar":"failed to load"}
+          <span style={{
+            fontSize: 12, fontWeight: 500, color: "rgba(248,113,133,0.5)", flex: 1, marginLeft: 20,
+            fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+          }}>
+            {lang==="pt" ? "Falha ao carregar dados" : lang==="es" ? "Error al cargar datos" : "Failed to load data"}
           </span>
         )}
 
-        <ChevronDown size={13} style={{ color:"rgba(255,255,255,0.25)", flexShrink:0, marginLeft:"auto" }}/>
+        {/* ── Right side: badges + expand arrow ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0, marginLeft: 16 }}>
+          {/* Alert count */}
+          {warnCount > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 12, color: "#f87171" }}>⚠</span>
+              <span style={{
+                fontSize: 12, fontWeight: 700, color: "#f87171",
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              }}>
+                {warnCount}
+              </span>
+            </div>
+          )}
+
+          {/* Scale opportunities */}
+          {scaleCount > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 12, color: "#34d399" }}>↑</span>
+              <span style={{
+                fontSize: 12, fontWeight: 700, color: "#34d399",
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              }}>
+                {scaleCount}
+              </span>
+            </div>
+          )}
+
+          {/* Expand chevron */}
+          <ChevronDown size={14} style={{ color: "rgba(255,255,255,0.2)" }}/>
+        </div>
       </div>
     );
   }
