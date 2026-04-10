@@ -9,7 +9,7 @@ import CookieConsent from "@/components/CookieConsent";
 import { Logo } from "@/components/Logo";
 import { Helmet } from "react-helmet-async";
 
-const BRAND = "linear-gradient(135deg, #0ea5e9, #06b6d4)";
+const BRAND = "#6366f1";
 const BG = "#050508";
 const CARD_BG = "rgba(255,255,255,0.04)";
 const CARD_BORDER = "rgba(255,255,255,0.07)";
@@ -111,7 +111,7 @@ type Lang = "en" | "pt" | "es";
 
 const T: Record<Lang, Record<string, string>> = {
   en: {
-    nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_signin: "Sign in", nav_cta: "Try free for 3 days",
+    nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_tools: "Tools", nav_signin: "Sign in", nav_cta: "Try free for 3 days",
     hero_badge: "AI CONNECTED TO YOUR AD ACCOUNT",
     hero_h1: "Chat with your ads.\nGet real answers.",
     hero_sub: "Connect Meta Ads. Reads your real data. Answers like a senior analyst who knows every campaign, creative, and metric.",
@@ -187,7 +187,7 @@ const T: Record<Lang, Record<string, string>> = {
     footer_built: "Built for performance marketers who move fast.",
   },
   pt: {
-    nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_signin: "Entrar", nav_cta: "Testar grátis por 3 dias",
+    nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_tools: "Ferramentas", nav_signin: "Entrar", nav_cta: "Testar grátis por 3 dias",
     hero_badge: "IA CONECTADA NA SUA CONTA DE ANÚNCIOS",
     hero_h1: "Converse com\nseus anúncios.",
     hero_sub: "Conecta em Meta Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha, criativo e métrica.",
@@ -263,7 +263,7 @@ const T: Record<Lang, Record<string, string>> = {
     footer_built: "Feito para gestores de tráfego que movem rápido.",
   },
   es: {
-    nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 3 días",
+    nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_tools: "Herramientas", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 3 días",
     hero_badge: "LA IA QUE CONOCE TU CUENTA DE ANUNCIOS",
     hero_h1: "Habla con tus anuncios.\nLa IA te responde.",
     hero_sub: "Conecta Meta Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
@@ -497,7 +497,7 @@ function Section({ children, id, className = "", noPadding = false, bg = "defaul
     default: "1px solid rgba(255,255,255,0.04)",
     subtle:  "1px solid rgba(255,255,255,0.04)",
     dark:    "1px solid rgba(255,255,255,0.04)",
-    accent:  "1px solid rgba(14,165,233,0.08)",
+    accent:  "1px solid rgba(99,102,241,0.08)",
   };
   return (
     <section
@@ -560,7 +560,7 @@ type ToolDef = {
 
 const TOOLS_DATA: ToolDef[] = [
   {
-    id: "hooks", color: "#0ea5e9", accent: "rgba(14,165,233,0.10)",
+    id: "hooks", color: "#6366f1", accent: "rgba(99,102,241,0.10)",
     icon: <Zap size={20} />,
     name:    { pt: "Gerador de Hooks", es: "Generador de Hooks", en: "Hook Generator" },
     tagline: { pt: "Prontos para gravar agora", es: "Listos para grabar ahora", en: "Ready to record now" },
@@ -612,7 +612,7 @@ const TOOLS_DATA: ToolDef[] = [
     },
   },
   {
-    id: "brief", color: "#06b6d4", accent: "rgba(6,182,212,0.10)",
+    id: "brief", color: "#818cf8", accent: "rgba(99,102,241,0.10)",
     icon: <Layers size={20} />,
     name:    { pt: "Brief Criativo", es: "Brief Creativo", en: "Creative Brief" },
     tagline: { pt: "Manda pro editor, sem revisão", es: "Envíalo al editor, sin revisión", en: "Send to editor, no revision needed" },
@@ -758,7 +758,7 @@ function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Re
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', height: 62, padding: '0 clamp(16px,4vw,32px)' }}>
         <Logo size="lg" />
         <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 32, marginLeft: 44 }}>
-          {([[t.nav_how,'#how'],['Casos de Uso' === t.nav_for ? 'Casos de Uso' : t.nav_for,'#for'],[t.nav_pricing,'#pricing'],['Tools','#tools']] as [string,string][]).map(([label,href]) => (
+          {([[t.nav_how,'#how'],[t.nav_for,'#for'],[t.nav_pricing,'#pricing'],[t.nav_tools,'#tools']] as [string,string][]).map(([label,href]) => (
             <a key={href} href={href} style={{ fontFamily: F, fontSize: 13, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', transition: 'color 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.85)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.4)'; }}>
@@ -790,9 +790,9 @@ function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Re
 // ─── Demo conversations data ──────────────────────────────────────────────────
 // ─── Industries for demo ──────────────────────────────────────────────────────
 const INDUSTRIES_DEMO = [
-  { id: "fitness",  label: { pt: "Meta · Fitness",   es: "Meta · Fitness",   en: "Meta · Fitness"   }, color: "#0ea5e9", initial: "F" },
+  { id: "fitness",  label: { pt: "Meta · Fitness",   es: "Meta · Fitness",   en: "Meta · Fitness"   }, color: "#6366f1", initial: "F" },
   { id: "clinica",  label: { pt: "Meta · Clínica", es: "Meta · Clínica", en: "Meta · Clinic"  }, color: "#60a5fa", initial: "C" },
-  { id: "ecomm",    label: { pt: "Meta · E-comm",    es: "Meta · E-comm",    en: "Meta · E-comm"    }, color: "#0ea5e9", initial: "L" },
+  { id: "ecomm",    label: { pt: "Meta · E-comm",    es: "Meta · E-comm",    en: "Meta · E-comm"    }, color: "#6366f1", initial: "L" },
   { id: "igaming",  label: { pt: "Meta · iGaming",   es: "Meta · iGaming",   en: "Meta · iGaming"   }, color: "#a78bfa", initial: "E" },
   { id: "saas",     label: { pt: "Meta · SaaS",      es: "Meta · SaaS",      en: "Meta · SaaS"      }, color: "#fbbf24", initial: "S" },
 ];
@@ -1532,8 +1532,8 @@ function SuggestionBubble({ qa, qi, phase, jump, lang, industry }: {
           <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: '#fff', lineHeight: 1.45, margin: 0, flex: 1 }}>
             {activeQ?.q.slice(0,52)}{activeQ?.q.length > 52 ? '…' : ''}
           </p>
-          {isLive && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 3, boxShadow: '0 0 5px #0ea5e9', animation: 'dotBounce2 1s ease-in-out infinite' }} />}
-          {phase === 'done' && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0, marginTop: 3 }} />}
+          {isLive && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#6366f1', flexShrink: 0, marginTop: 3, boxShadow: '0 0 5px #6366f1', animation: 'dotBounce2 1s ease-in-out infinite' }} />}
+          {phase === 'done' && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#6366f1', flexShrink: 0, marginTop: 3 }} />}
         </div>
       </div>
 
@@ -1679,7 +1679,7 @@ function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: 
           <button key={i} onClick={() => goTo(i)} style={{
             width: active === i ? 20 : 6, height: 6,
             borderRadius: 3, border: 'none', cursor: 'pointer',
-            background: active === i ? '#0ea5e9' : 'rgba(255,255,255,0.18)',
+            background: active === i ? '#6366f1' : 'rgba(255,255,255,0.18)',
             transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
             padding: 0,
           }} />
@@ -1690,7 +1690,7 @@ function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: 
       <div style={{
         borderRadius: 20,
         overflow: 'hidden',
-        border: '1px solid rgba(14,165,233,0.18)',
+        border: '1px solid rgba(99,102,241,0.18)',
         boxShadow: '0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
         opacity: animating ? 0 : 1,
         transform: animating ? 'translateY(6px)' : 'translateY(0)',
@@ -1702,16 +1702,16 @@ function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: 
             <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, letterSpacing: '-0.03em' }}>
               <span style={{ color: '#eef0f6' }}>ad</span><span style={{ color: '#38bdf8' }}>brief</span>
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 5, background: 'rgba(14,165,233,0.10)', border: '1px solid rgba(14,165,233,0.22)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 5, background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.22)' }}>
               <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#818cf8', animation: 'pulse 2s infinite' }} />
               <span style={{ fontFamily: F, fontSize: 9.5, color: '#a5b4fc', fontWeight: 700 }}>
                 {lang === 'pt' ? 'IA · Chat' : lang === 'es' ? 'IA · Chat' : 'AI · Chat'}
               </span>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 5, background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.18)' }}>
-            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#0ea5e9', animation: 'pulse 2s infinite' }} />
-            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(14,165,233,0.9)', fontWeight: 600 }}>Meta</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 5, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)' }}>
+            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#6366f1', animation: 'pulse 2s infinite' }} />
+            <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(99,102,241,0.9)', fontWeight: 600 }}>Meta</span>
           </div>
         </div>
 
@@ -1727,7 +1727,7 @@ function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: 
 
           {/* AI response */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-            <div style={{ width: 26, height: 26, borderRadius: 7, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+            <div style={{ width: 26, height: 26, borderRadius: 7, background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
               <span style={{ fontFamily: F, fontSize: 8.5, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>AB</span>
             </div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1735,8 +1735,8 @@ function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: 
                 <div key={i} style={{
                   padding: line.accent || line.highlight ? '9px 12px' : '0',
                   borderRadius: line.accent || line.highlight ? 9 : 0,
-                  background: line.accent ? 'rgba(14,165,233,0.08)' : line.highlight ? 'rgba(255,255,255,0.04)' : 'transparent',
-                  border: line.accent ? '1px solid rgba(14,165,233,0.18)' : line.highlight ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                  background: line.accent ? 'rgba(99,102,241,0.08)' : line.highlight ? 'rgba(255,255,255,0.04)' : 'transparent',
+                  border: line.accent ? '1px solid rgba(99,102,241,0.18)' : line.highlight ? '1px solid rgba(255,255,255,0.08)' : 'none',
                 }}>
                   <p style={{
                     fontFamily: F,
@@ -1993,14 +1993,14 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
     <div style={{ position:'relative', zIndex:1 }}>
 
       {/* Glow */}
-      <div style={{ position:'absolute', bottom:-60, left:'5%', right:'5%', height:140, background:'radial-gradient(ellipse, rgba(14,165,233,0.18) 0%, transparent 70%)', pointerEvents:'none', filter:'blur(24px)', zIndex:0 }} />
+      <div style={{ position:'absolute', bottom:-60, left:'5%', right:'5%', height:140, background:'radial-gradient(ellipse, rgba(99,102,241,0.18) 0%, transparent 70%)', pointerEvents:'none', filter:'blur(24px)', zIndex:0 }} />
 
       {/* Main card */}
       <div style={{
         position:'relative', zIndex:1, borderRadius:18, overflow:'hidden',
         background:'#080d1a',
         border:'1px solid rgba(255,255,255,0.09)',
-        boxShadow:'0 0 0 1px rgba(14,165,233,0.07), 0 40px 100px rgba(0,0,0,0.7)',
+        boxShadow:'0 0 0 1px rgba(99,102,241,0.07), 0 40px 100px rgba(0,0,0,0.7)',
       }}>
 
         {/* ── TOP BAR ── */}
@@ -2034,10 +2034,10 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
                 fontFamily:F, fontSize:12, fontWeight: isAct ? 700 : 500,
                 padding:'8px 16px', borderRadius:8, cursor:'pointer',
                 transition:'all 0.18s', whiteSpace:'nowrap' as const, flexShrink:0,
-                background: isAct ? 'rgba(14,165,233,0.15)' : 'rgba(255,255,255,0.04)',
+                background: isAct ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
                 color: isAct ? '#38bdf8' : 'rgba(255,255,255,0.45)',
-                border: isAct ? '1px solid rgba(14,165,233,0.4)' : '1px solid rgba(255,255,255,0.07)',
-                boxShadow: isAct ? '0 0 14px rgba(14,165,233,0.2), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
+                border: isAct ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                boxShadow: isAct ? '0 0 14px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
                 letterSpacing:'-0.01em',
               }}
               onMouseEnter={e => { if(!isAct) { const el=e.currentTarget as HTMLElement; el.style.background='rgba(255,255,255,0.07)'; el.style.color='rgba(255,255,255,0.75)'; el.style.borderColor='rgba(255,255,255,0.14)'; }}}
@@ -2066,7 +2066,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
             <div style={{ flex:1 }}>
 
               {/* Big result number — the first thing eyes go to */}
-              <div style={{ marginBottom:12, padding:'12px 16px', borderRadius:12, background:'linear-gradient(135deg, rgba(14,165,233,0.10) 0%, rgba(14,165,233,0.04) 100%)', border:'1px solid rgba(14,165,233,0.2)' }}>
+              <div style={{ marginBottom:12, padding:'12px 16px', borderRadius:12, background:'linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0.04) 100%)', border:'1px solid rgba(99,102,241,0.2)' }}>
                 <div style={{ fontFamily:F, fontSize:22, fontWeight:900, letterSpacing:'-0.04em', color:'#38bdf8', lineHeight:1 }}>{scene.metric}</div>
                 <div style={{ fontFamily:F, fontSize: 12, color:'rgba(255,255,255,0.45)', marginTop:4, letterSpacing:'0.01em' }}>{scene.metricLabel}</div>
               </div>
@@ -2078,7 +2078,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
                   if (isHook) {
                     return (
                       <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
-                        <div style={{ width:16, height:16, borderRadius:4, background:'rgba(14,165,233,0.12)', border:'1px solid rgba(14,165,233,0.25)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2, fontSize:8, fontWeight:700, color:'#38bdf8', fontFamily:F }}>
+                        <div style={{ width:16, height:16, borderRadius:4, background:'rgba(99,102,241,0.12)', border:'1px solid rgba(99,102,241,0.25)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2, fontSize:8, fontWeight:700, color:'#38bdf8', fontFamily:F }}>
                           {i+1}
                         </div>
                         <p style={{ fontFamily:F, fontSize:12.5, color:'rgba(255,255,255,0.88)', lineHeight:1.55, margin:0, fontStyle:'italic' }} dangerouslySetInnerHTML={{ __html: pt.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700;font-style:normal">$1</strong>') }} />
@@ -2087,7 +2087,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
                   }
                   return (
                     <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
-                      <div style={{ width:16, height:16, borderRadius:4, background: i===0 ? 'rgba(248,113,113,0.15)' : i===1 ? 'rgba(251,191,36,0.15)' : 'rgba(14,165,233,0.15)', border:`1px solid ${i===0 ? 'rgba(248,113,113,0.3)' : i===1 ? 'rgba(251,191,36,0.3)' : 'rgba(14,165,233,0.3)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2, fontSize:8 }}>
+                      <div style={{ width:16, height:16, borderRadius:4, background: i===0 ? 'rgba(248,113,113,0.15)' : i===1 ? 'rgba(251,191,36,0.15)' : 'rgba(99,102,241,0.15)', border:`1px solid ${i===0 ? 'rgba(248,113,113,0.3)' : i===1 ? 'rgba(251,191,36,0.3)' : 'rgba(99,102,241,0.3)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2, fontSize:8 }}>
                         {i===0 ? '!' : i===1 ? '↓' : '→'}
                       </div>
                       <p style={{ fontFamily:F, fontSize:13, color:'rgba(255,255,255,0.82)', lineHeight:1.5, margin:0 }} dangerouslySetInnerHTML={{ __html: pt.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700">$1</strong>') }} />
@@ -2097,7 +2097,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
               </div>
 
               {/* Action line */}
-              <div style={{ marginTop:12, padding:'9px 13px', borderRadius:8, background:'rgba(14,165,233,0.08)', border:'1px solid rgba(14,165,233,0.18)', display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ marginTop:12, padding:'9px 13px', borderRadius:8, background:'rgba(99,102,241,0.08)', border:'1px solid rgba(99,102,241,0.18)', display:'flex', alignItems:'center', gap:8 }}>
                 <span style={{ fontSize:12, flexShrink:0 }}></span>
                 <p style={{ fontFamily:F, fontSize:12.5, color:'#7dd3fc', fontWeight:600, lineHeight:1.4, margin:0 }}>{scene.action}</p>
               </div>
@@ -2108,7 +2108,7 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
         {/* ── PROGRESS + INPUT ── */}
         {/* Progress bar */}
         <div style={{ height:2, background:'rgba(255,255,255,0.04)' }}>
-          <div key={`prog-${activeIdx}`} style={{ height:'100%', background:'linear-gradient(90deg,#0ea5e9,#38bdf8)', animation:'progressBar 10s linear forwards' }} />
+          <div key={`prog-${activeIdx}`} style={{ height:'100%', background:'#6366f1', animation:'progressBar 10s linear forwards' }} />
         </div>
 
         {/* Input bar */}
@@ -2119,12 +2119,12 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
             </p>
             <button onClick={onCTA} style={{
               fontFamily:F, fontSize:12, fontWeight:700, padding:'8px 16px', borderRadius:8,
-              background:'linear-gradient(135deg,#0ea5e9,#0284c7)', color:'#fff',
+              background:'#6366f1', color:'#fff',
               border:'none', cursor:'pointer', whiteSpace:'nowrap' as const, flexShrink:0,
-              boxShadow:'0 2px 14px rgba(14,165,233,0.4)', transition:'all 0.15s',
+              boxShadow:'0 2px 14px rgba(99,102,241,0.4)', transition:'all 0.15s',
             }}
-            onMouseEnter={e => { const el=e.currentTarget as HTMLElement; el.style.transform='translateY(-1px)'; el.style.boxShadow='0 4px 20px rgba(14,165,233,0.6)'; }}
-            onMouseLeave={e => { const el=e.currentTarget as HTMLElement; el.style.transform='none'; el.style.boxShadow='0 2px 14px rgba(14,165,233,0.4)'; }}>
+            onMouseEnter={e => { const el=e.currentTarget as HTMLElement; el.style.transform='translateY(-1px)'; el.style.boxShadow='0 4px 20px rgba(99,102,241,0.6)'; }}
+            onMouseLeave={e => { const el=e.currentTarget as HTMLElement; el.style.transform='none'; el.style.boxShadow='0 2px 14px rgba(99,102,241,0.4)'; }}>
               {ctabtn} →
             </button>
           </div>
@@ -2172,8 +2172,8 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%', position: 'relative' as const }}>
       {/* Eyebrow */}
-      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content', padding: '6px 14px', borderRadius: 20, background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.2)' }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px #0ea5e9' }} />
+      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content', padding: '6px 14px', borderRadius: 20, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }} />
         <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#38bdf8' }}>
           {lang === 'pt' ? 'IA conectada na sua conta' : lang === 'es' ? 'IA conectada en tu cuenta' : 'AI connected to your account'}
         </span>
@@ -2320,12 +2320,12 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
       <div className="grid-pattern" style={{ position: 'absolute', inset: 0, opacity: 0.5, pointerEvents: 'none' }} />
 
       {/* Animated glow orbs */}
-      <div className="hero-glow-orb" style={{ left: '20%', top: '30%', width: 600, height: 600, background: 'rgba(14,165,233,0.12)' }} />
+      <div className="hero-glow-orb" style={{ left: '20%', top: '30%', width: 600, height: 600, background: 'rgba(99,102,241,0.12)' }} />
       <div className="hero-glow-orb" style={{ right: '10%', top: '50%', width: 400, height: 400, background: 'rgba(99,102,241,0.08)', animationDelay: '3s' }} />
-      <div className="hero-glow-orb" style={{ left: '60%', bottom: '10%', width: 300, height: 300, background: 'rgba(6,182,212,0.06)', animationDelay: '1.5s' }} />
+      <div className="hero-glow-orb" style={{ left: '60%', bottom: '10%', width: 300, height: 300, background: 'rgba(99,102,241,0.06)', animationDelay: '1.5s' }} />
 
       {/* Subtle radial glow */}
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(14,165,233,0.14) 0%, rgba(6,182,212,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(99,102,241,0.14) 0%, rgba(99,102,241,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
 
       {/* Grid */}
       <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1, overflow: 'hidden' }} className="hero-grid">
@@ -2522,12 +2522,12 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
   return (
     <Section id="tools" bg="subtle">
-      <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", background: "radial-gradient(ellipse at 100% 50%, rgba(14,165,233,0.04) 0%, transparent 55%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "80%", height: 1, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.08), transparent)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", background: "radial-gradient(ellipse at 100% 50%, rgba(99,102,241,0.04) 0%, transparent 55%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "80%", height: 1, background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.08), transparent)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 1060, margin: "0 auto", position: "relative" }}>
 
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
-          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(14,165,233,0.65)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
+          <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(99,102,241,0.65)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3.6vw,40px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "10px 0 8px", color: "#fff" }}>{t.tools_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 14.5, color: "rgba(255,255,255,0.42)", maxWidth: 380, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
@@ -2849,7 +2849,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
     }}>
       {/* Overlay sutil apenas — sem mudar cor de fundo */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.03) 0%, transparent 60%)" }} />
+        <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(99,102,241,0.03) 0%, transparent 60%)" }} />
         <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 600, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)" }} />
       </div>
 
@@ -2900,9 +2900,9 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
             <div style={{ width: 1, flex: 1, background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.08))", minHeight: 60 }} />
             <div style={{
               padding: "8px 16px", borderRadius: 24,
-              background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(99,102,241,0.2))",
-              border: "1px solid rgba(14,165,233,0.45)",
-              boxShadow: "0 0 20px rgba(14,165,233,0.15)",
+              background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(99,102,241,0.2))",
+              border: "1px solid rgba(99,102,241,0.45)",
+              boxShadow: "0 0 20px rgba(99,102,241,0.15)",
               backdropFilter: "blur(8px)",
               whiteSpace: "nowrap" as const,
             }}>
@@ -2913,9 +2913,9 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
 
           {/* SOLUTIONS column */}
           <div className="pain-col-right" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.18)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9", display: "inline-block", boxShadow: "0 0 6px #0ea5e9" }} />
-              <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(14,165,233,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+            <div style={{ padding: "4px 12px", borderRadius: 6, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.18)", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 8, width: "fit-content" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6366f1", display: "inline-block", boxShadow: "0 0 6px #6366f1" }} />
+              <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, fontWeight: 600, color: "rgba(99,102,241,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
                 {lang === "pt" ? "Com AdBrief" : lang === "es" ? "Con AdBrief" : "With AdBrief"}
               </span>
             </div>
@@ -2923,8 +2923,8 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
               <div key={i} style={{
                 display: "flex", alignItems: "flex-start", gap: 12,
                 padding: "14px 16px", borderRadius: 12,
-                background: "linear-gradient(135deg, rgba(14,165,233,0.1) 0%, rgba(99,102,241,0.05) 100%)",
-                border: "1px solid rgba(14,165,233,0.22)",
+                background: "linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(99,102,241,0.05) 100%)",
+                border: "1px solid rgba(99,102,241,0.22)",
                 backdropFilter: "blur(8px)",
               }}>
                 <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{s.icon}</span>
@@ -2951,17 +2951,17 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
     en: ["Account created in under 1 minute", "Meta Ads connected via OAuth in seconds", "Answers using real data from your account"],
   };
   const steps = [
-    { n: "01", icon: <Plug size={22} />, color: "#0ea5e9", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0] },
-    { n: "02", icon: <Users size={22} />, color: "#06b6d4", title: t.how_s2_title, desc: t.how_s2_desc, result: results[lang][1] },
-    { n: "03", icon: <MessageSquare size={22} />, color: "#0ea5e9", title: t.how_s3_title, desc: t.how_s3_desc, result: results[lang][2] },
+    { n: "01", icon: <Plug size={22} />, color: "#6366f1", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0] },
+    { n: "02", icon: <Users size={22} />, color: "#818cf8", title: t.how_s2_title, desc: t.how_s2_desc, result: results[lang][1] },
+    { n: "03", icon: <MessageSquare size={22} />, color: "#6366f1", title: t.how_s3_title, desc: t.how_s3_desc, result: results[lang][2] },
   ];
   return (
     <Section id="how" bg="dark">
-      <div style={{ position: "absolute", top: "-10%", left: "-5%", width: "50%", height: "70%", background: "radial-gradient(ellipse at 20% 30%, rgba(14,165,233,0.06) 0%, transparent 60%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: 0, right: 0, width: "40%", height: "50%", background: "radial-gradient(ellipse at 80% 80%, rgba(14,165,233,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "-10%", left: "-5%", width: "50%", height: "70%", background: "radial-gradient(ellipse at 20% 30%, rgba(99,102,241,0.06) 0%, transparent 60%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: 0, right: 0, width: "40%", height: "50%", background: "radial-gradient(ellipse at 80% 80%, rgba(99,102,241,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
-          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.how_label}</span>
+          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(99,102,241,0.7)", textTransform: "uppercase" as const }}>{t.how_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.how_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 400, margin: "0 auto" }}>{t.how_sub}</p>
         </div>
@@ -2989,7 +2989,7 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string, string>; ctaLoading?: boolean }) {
   const [active, setActive] = useState(0);
   const profiles = [
-    { label: t.for_tab0, color: "#0ea5e9", headline: t.for_h0, desc: t.for_d0, points: [t.for_p0_0, t.for_p0_1, t.for_p0_2, t.for_p0_3] },
+    { label: t.for_tab0, color: "#6366f1", headline: t.for_h0, desc: t.for_d0, points: [t.for_p0_0, t.for_p0_1, t.for_p0_2, t.for_p0_3] },
     { label: t.for_tab1, color: "#38bdf8", headline: t.for_h1, desc: t.for_d1, points: [t.for_p1_0, t.for_p1_1, t.for_p1_2, t.for_p1_3] },
     { label: t.for_tab2, color: "#a78bfa", headline: t.for_h2b, desc: t.for_d2, points: [t.for_p2_0, t.for_p2_1, t.for_p2_2, t.for_p2_3] },
   ];
@@ -2999,7 +2999,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
       <div style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "55%", background: "radial-gradient(ellipse at 90% 0%, rgba(99,102,241,0.06) 0%, transparent 55%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 20 }}>
-          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
+          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(99,102,241,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
           <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
         <div className="for-who-tabs" style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 40, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "4px", width: "fit-content", margin: "0 auto 40px" }}>
@@ -3071,7 +3071,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
                 <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
               </svg>
             </div>
-            <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const }}>
+            <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(99,102,241,0.7)", textTransform: "uppercase" as const }}>
               TELEGRAM ALERTS
             </span>
           </div>
@@ -3196,7 +3196,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
   return (
     <Section id="pricing" bg="accent">
       {/* Glow no topo do pricing — overlay interno */}
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 280, background: "radial-gradient(ellipse 60% 100% at 50% 0%, rgba(14,165,233,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 280, background: "radial-gradient(ellipse 60% 100% at 50% 0%, rgba(99,102,241,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 48 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.pricing_label}</span>
@@ -3222,19 +3222,19 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
             <div key={i} className={`premium-card ${plan.highlight ? 'pricing-highlight' : ''}`} style={{
               padding: "28px 24px", borderRadius: 18,
               background: plan.highlight
-                ? "linear-gradient(135deg, rgba(14,165,233,0.10) 0%, rgba(99,102,241,0.08) 100%)"
+                ? "linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0.08) 100%)"
                 : "rgba(255,255,255,0.02)",
               border: plan.highlight
-                ? "1px solid rgba(14,165,233,0.30)"
+                ? "1px solid rgba(99,102,241,0.30)"
                 : "1px solid rgba(255,255,255,0.06)",
               display: "flex", flexDirection: "column", gap: 20, position: "relative",
               transform: plan.highlight ? "scale(1.03)" : "scale(1)",
               zIndex: plan.highlight ? 2 : 1,
-              boxShadow: plan.highlight ? "0 0 40px rgba(14,165,233,0.12), 0 24px 48px rgba(0,0,0,0.3)" : "none",
+              boxShadow: plan.highlight ? "0 0 40px rgba(99,102,241,0.12), 0 24px 48px rgba(0,0,0,0.3)" : "none",
               overflow: "visible",
             }}>
               {plan.badge && (
-                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg, #0ea5e9, #6366f1)", borderRadius: 6, padding: "4px 14px", whiteSpace: "nowrap" as const, boxShadow: "0 0 16px rgba(14,165,233,0.4)" }}>
+                <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "#6366f1", borderRadius: 6, padding: "4px 14px", whiteSpace: "nowrap" as const, boxShadow: "0 0 16px rgba(99,102,241,0.4)" }}>
                   <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#fff", fontWeight: 800 }}>{plan.badge}</span>
                 </div>
               )}
@@ -3260,15 +3260,15 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
               <button onClick={plan.action} style={{
                 fontFamily: F, width: "100%", padding: "13px", borderRadius: 10, fontSize: 13, fontWeight: 600,
                 background: plan.highlight
-                  ? "linear-gradient(135deg, #0ea5e9, #6366f1)"
+                  ? "#6366f1"
                   : "rgba(255,255,255,0.06)",
                 color: plan.highlight ? "#fff" : "rgba(255,255,255,0.5)",
                 border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.08)",
                 cursor: "pointer", transition: "all 0.15s",
-                boxShadow: plan.highlight ? "0 0 20px rgba(14,165,233,0.25)" : "none",
+                boxShadow: plan.highlight ? "0 0 20px rgba(99,102,241,0.25)" : "none",
               }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; if(el.style.background.includes('gradient')){el.style.transform='translateY(-1px)';el.style.boxShadow='0 0 32px rgba(14,165,233,0.4)';}else{el.style.opacity='0.8';} }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.opacity='1'; el.style.boxShadow=el.style.background.includes('gradient')?'0 0 20px rgba(14,165,233,0.25)':'none'; }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; if(el.style.background.includes('gradient')){el.style.transform='translateY(-1px)';el.style.boxShadow='0 0 32px rgba(99,102,241,0.4)';}else{el.style.opacity='0.8';} }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.opacity='1'; el.style.boxShadow=el.style.background.includes('gradient')?'0 0 20px rgba(99,102,241,0.25)':'none'; }}
               >{t.pricing_cta}</button>
               <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center" as const }}>{t.pricing_note}</p>
             </div>
@@ -3286,7 +3286,7 @@ function FAQ({ t }: { t: Record<string, string> }) {
   return (
     <Section bg="dark">
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "60%", height: "40%", background: "radial-gradient(ellipse at 50% 0%, rgba(14,165,233,0.03) 0%, transparent 65%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "60%", height: "40%", background: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.03) 0%, transparent 65%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}>
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.faq_label}</span>
@@ -3294,7 +3294,7 @@ function FAQ({ t }: { t: Record<string, string> }) {
         </div>
         <div className="scroll-reveal scroll-reveal-delay-1" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {items.map((item, i) => (
-            <div key={i} style={{ borderRadius: 14, background: open === i ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${open === i ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.08)"}`, overflow: "hidden", transition: "all 0.2s" }}>
+            <div key={i} style={{ borderRadius: 14, background: open === i ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${open === i ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.08)"}`, overflow: "hidden", transition: "all 0.2s" }}>
               <button onClick={() => setOpen(open === i ? null : i)} style={{ width: "100%", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", gap: 14, textAlign: "left" }}>
                 <span style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.8)", lineHeight: 1.4 }}>{item.q}</span>
                 <ChevronDown size={14} color={open === i ? "#fff" : "rgba(255,255,255,0.2)"} style={{ flexShrink: 0, transform: open === i ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -3405,7 +3405,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
       overflow: "hidden",
     }}>
       {/* Glow */}
-      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 300, height: 300, background: "radial-gradient(circle, rgba(14,165,233,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 300, height: 300, background: "radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
 
       {/* Label — mesmo estilo de "O PROBLEMA" */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 14 }}>
@@ -3419,10 +3419,10 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
       {/* Chat window */}
       <div style={{
         borderRadius: 16,
-        border: "1px solid rgba(14,165,233,0.2)",
+        border: "1px solid rgba(99,102,241,0.2)",
         background: "rgba(8,12,20,0.9)",
         overflow: "hidden",
-        boxShadow: "0 0 40px rgba(14,165,233,0.08), 0 24px 48px rgba(0,0,0,0.5)",
+        boxShadow: "0 0 40px rgba(99,102,241,0.08), 0 24px 48px rgba(0,0,0,0.5)",
         maxWidth: 360,
         margin: "0 auto",
       }}>
@@ -3432,7 +3432,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
             {["#ff5f57","#febc2e","#28c840"].map(c => <span key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c, display: "inline-block" }} />)}
           </div>
           <span style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.3)", flex: 1, textAlign: "center" }}>adbrief.pro/ai</span>
-          <span style={{ fontFamily: M, fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(14,165,233,0.1)", color: "rgba(14,165,233,0.7)", border: "1px solid rgba(14,165,233,0.15)" }}>
+          <span style={{ fontFamily: M, fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "rgba(99,102,241,0.1)", color: "rgba(99,102,241,0.7)", border: "1px solid rgba(99,102,241,0.15)" }}>
             {lang === "pt" ? "∞ Meta" : lang === "es" ? "∞ Meta" : "∞ Meta"}
           </span>
         </div>
@@ -3453,8 +3453,8 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                  <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
-                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 800, color: "#0ea5e9" }}>ab</span>
+                  <div style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 800, color: "#6366f1" }}>ab</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
                     {(msg.lines || []).map((line: string, li: number) => (
@@ -3475,7 +3475,7 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
           <div style={{ flex: 1, padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
             {lang === "pt" ? "Pergunte algo..." : lang === "es" ? "Pregunta algo..." : "Ask anything..."}
           </div>
-          <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 9, background: "#6366f1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
         </div>
@@ -3488,17 +3488,17 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
   return (
     <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "linear-gradient(160deg, #04060c 0%, #071020 50%, #04060c 100%)" }}>
       {/* Grid pattern overlay */}
-      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(14,165,233,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,233,0.05) 1px, transparent 1px)", backgroundSize: "52px 52px", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px)", backgroundSize: "52px 52px", pointerEvents: "none" }} />
       {/* Top glow */}
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 800, height: 2, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.3), transparent)" }} />
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 800, height: 2, background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent)" }} />
       {/* Center radial */}
-      <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(14,165,233,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
 
       <div className="scroll-reveal" style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
         {/* Label — mesmo padrão de "O PROBLEMA" */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
-          <p style={{ fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(14,165,233,0.7)", textTransform: "uppercase" as const, margin: 0 }}>{t.final_label}</p>
+          <p style={{ fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "rgba(99,102,241,0.7)", textTransform: "uppercase" as const, margin: 0 }}>{t.final_label}</p>
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
         </div>
 
@@ -3658,7 +3658,7 @@ export default function IndexNew() {
           @keyframes pulse{0%,100%{transform:scale(1);opacity:0.6}50%{transform:scale(1.5);opacity:1}}
           
           /* AB avatar glow pulse */
-          @keyframes avatarGlow{0%,100%{box-shadow:0 0 10px rgba(14,165,233,0.25)}50%{box-shadow:0 0 22px rgba(14,165,233,0.55)}}
+          @keyframes avatarGlow{0%,100%{box-shadow:0 0 10px rgba(99,102,241,0.25)}50%{box-shadow:0 0 22px rgba(99,102,241,0.55)}}
           .ab-avatar{animation:avatarGlow 2.4s ease-in-out infinite}
 
           /* KPI floating cards */
