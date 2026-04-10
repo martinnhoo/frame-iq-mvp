@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
       .single();
 
     // Check credits
-    const creditCheck = await requireCredits(supabase_client, user_id, "video");
+    const creditCheck = await requireCredits(supabaseClient, user_id, "video");
     if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     // Fetch board data
