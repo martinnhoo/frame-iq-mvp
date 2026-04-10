@@ -501,13 +501,12 @@ export default function DashboardLayout() {
         }
       }
       
-      /* Desktop: sidebar no fluxo normal */
+      /* Desktop: sidebar no fluxo normal — inline styles control width */
       @media (min-width: 769px) {
         .sidebar-layout-slot {
           position: relative !important;
           transform: none !important;
           pointer-events: auto !important;
-          width: auto !important;
         }
         .sidebar-layout-slot.sidebar-mobile-closed,
         .sidebar-layout-slot.sidebar-mobile-open {
