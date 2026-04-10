@@ -56,7 +56,7 @@ function sbAvatarColor(name: string) {
   return SB_AVATAR_PALETTE[Math.abs(h) % SB_AVATAR_PALETTE.length];
 }
 
-// ── Nav item (primary links) ─────────────────────────────────────────────────
+// ── Nav item (primary links) — icon only when active ─────────────────────────
 function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
   url: string; label: string; icon: React.ElementType;
   isActive: boolean; onClose: () => void; badge?: string;
@@ -78,8 +78,7 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
         fontFamily: F, letterSpacing: "-0.01em",
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      <Icon size={15} strokeWidth={1.6}
-        style={{ color: isActive ? A : "inherit", flexShrink: 0, opacity: isActive ? 1 : 0.8 }} />
+      {isActive && <Icon size={15} strokeWidth={1.6} style={{ color: A, flexShrink: 0 }} />}
       <span style={{ flex: 1 }}>{label}</span>
       {badge && (
         <span style={{
@@ -92,7 +91,7 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
   );
 }
 
-// ── Nav tool (secondary links inside sections) ───────────────────────────────
+// ── Nav tool (secondary links) — icon only when active ───────────────────────
 function NavTool({ url, label, icon: Icon, isActive, onClose }: {
   url: string; label: string; icon: React.ElementType;
   isActive: boolean; onClose: () => void;
@@ -109,10 +108,10 @@ function NavTool({ url, label, icon: Icon, isActive, onClose }: {
         fontSize: 13, fontWeight: isActive ? 500 : 400,
         textDecoration: "none", transition: "all 0.12s",
         fontFamily: F,
+        paddingLeft: isActive ? 14 : 20,
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      <Icon size={14} strokeWidth={1.5}
-        style={{ flexShrink: 0, color: isActive ? `${A}80` : "inherit", opacity: isActive ? 1 : hov ? 0.6 : 0.42 }} />
+      {isActive && <Icon size={14} strokeWidth={1.5} style={{ flexShrink: 0, color: `${A}80` }} />}
       <span>{label}</span>
     </NavLink>
   );
