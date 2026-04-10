@@ -17,6 +17,46 @@ interface CreditCheck {
   error?: { error: string; code: string; remaining?: number; upgrade_needed?: boolean };
 }
 
+/**
+ * Fire-and-forget: send credit usage email alert when crossing 80% or 100%.
+ * Never blocks or throws — runs in background.
+ */
+function maybeSendCreditAlert(
+  supabase: any,
+  userId: string,
+  remaining: number,
+  total: number,
+  plan: string,
+  cost: number,
+): void {
+  if (total <= 0) return; // no pool = no alert
+
+  const usedPct = Math.round(((total - remaining) / total) * 100);
+  const prevRemaining = remaining + cost; // what remaining was BEFORE this deduction
+  const prevPct = Math.round(((total - prevRemaining) / total) * 100);
+
+  let alertType: string | null = null;
+
+  // Crossed 100% (remaining hit 0 or below)
+  if (remaining <= 0 && prevRemaining > 0) {
+    alertType = "exhausted";
+  }
+  // Crossed 80% threshold
+  else if (usedPct >= 80 && prevPct < 80) {
+    alertType = "warning";
+  }
+
+  if (!alertType) return;
+
+  // Fire and forget — invoke send-credit-alert edge function
+  console.log(`[deduct_credits] Triggering ${alertType} email for user ${userId} (${usedPct}%)`);
+  supabase.functions.invoke("send-credit-alert", {
+    body: { user_id: userId, type: alertType, remaining, total, used_pct: usedPct, plan },
+  }).catch((e: any) => {
+    console.error("[deduct_credits] Failed to send credit alert:", e);
+  });
+}
+
 export async function requireCredits(
   supabase: any,
   userId: string,
@@ -59,6 +99,9 @@ export async function requireCredits(
   }
 
   if (!data?.allowed) {
+    // Credits exhausted — trigger email alert (fire & forget)
+    maybeSendCreditAlert(supabase, userId, 0, data?.total ?? creditPool, plan, cost);
+
     return {
       allowed: false,
       remaining: data?.remaining ?? 0,
@@ -72,6 +115,9 @@ export async function requireCredits(
       },
     };
   }
+
+  // Success — check if we crossed a threshold (fire & forget)
+  maybeSendCreditAlert(supabase, userId, data.remaining, data.total, plan, cost);
 
   return {
     allowed: true,
