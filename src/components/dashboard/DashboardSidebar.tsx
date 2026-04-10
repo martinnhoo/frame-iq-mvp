@@ -1,5 +1,5 @@
 // DashboardSidebar v11 — Organized sections: Principal, Criar, Análise, Workspace
-import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, Clapperboard, FileText, ScanLine, Brain, Gift, ScanEye, Languages } from "lucide-react";
+import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, FileText, ScanLine, Brain, ScanEye, Languages } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -406,11 +406,6 @@ export function DashboardSidebar({
         {/* ── Footer ── */}
         <div style={{ flexShrink: 0 }}>
           <div style={{ height: 1, background: `${A}08`, margin: "0 0 4px" }} />
-
-          {/* Referral */}
-          <NavTool url="/dashboard/referral"
-            label={pt ? "Indicações" : es ? "Referidos" : "Referrals"}
-            icon={Gift} isActive={isAt("/dashboard/referral")} onClose={onClose} />
 
           {/* Upgrade CTA */}
           {plan === "free" && !isLifetime && (
