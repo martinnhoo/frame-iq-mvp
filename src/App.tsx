@@ -55,6 +55,7 @@ const TemplatesPage    = lazy(() => import("./pages/dashboard/TemplatesPage"));
 const PreflightCheck   = lazy(() => import("./pages/dashboard/PreflightCheck"));
 const PersonaPage      = lazy(() => import("./pages/dashboard/PersonaPage"));
 const AccountsPage     = lazy(() => import("./pages/dashboard/AccountsPage"));
+const AdScorePage      = lazy(() => import("./pages/dashboard/AdScorePage"));
 const HookGenerator    = lazy(() => import("./pages/dashboard/HookGenerator"));
 const CompetitorDecoder = lazy(() => import("./pages/dashboard/CompetitorDecoder"));
 const ScriptGenerator  = lazy(() => import("./pages/dashboard/ScriptGenerator"));
@@ -158,6 +159,7 @@ const App = () => (
                 <Route path="preflight" element={<ToolGate><PreflightCheck /></ToolGate>} />
                 <Route path="persona" element={<PersonaPage />} />
                 <Route path="accounts" element={<AccountsPage />} />
+                <Route path="ad-score" element={<AdScorePage />} />
                 <Route path="hooks" element={<ToolGate><HookGenerator /></ToolGate>} />
                 <Route path="competitor" element={<ToolGate><CompetitorDecoder /></ToolGate>} />
                 <Route path="script" element={<ToolGate><ScriptGenerator /></ToolGate>} />

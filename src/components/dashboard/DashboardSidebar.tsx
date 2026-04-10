@@ -189,7 +189,7 @@ export function DashboardSidebar({
   const PRINCIPAL = [
     { url: "/dashboard/ai",          label: "Chat",        icon: MessageSquare, badge: "AI" },
     { url: "/dashboard/performance",  label: "Performance", icon: BarChart2, forceActive: perfActive },
-    { url: "/dashboard/accounts",     label: pt ? "Criativos" : "Creatives", icon: LayoutGrid },
+    { url: "/dashboard/ad-score",      label: "Ad Score", icon: LayoutGrid },
   ];
 
   const CRIAR = [

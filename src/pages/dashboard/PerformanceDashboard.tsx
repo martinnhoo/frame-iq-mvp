@@ -6,12 +6,12 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import {
   RefreshCw, DollarSign, MousePointer, Target, Eye,
-  ArrowUpRight, AlertCircle, ChevronLeft, ChevronRight,
+  AlertCircle, ChevronLeft, ChevronRight,
   Settings2, X, Calendar, Check, TrendingUp,
   BarChart3, Activity, Users, Repeat
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import AdDiary from "./AdDiary";
+// AdDiary moved to Ad Score page
 import { SparklineCard } from "@/components/ui/SparklineCard";
 import { Reveal } from "@/components/ui/Reveal";
 import { ResponsiveLine } from "@nivo/line";
@@ -82,9 +82,9 @@ function getMetricValue(d: any, key: MetricKey): number {
 }
 
 // ── Section filter config ────────────────────────────────────────────────────
-type SectionKey = "cards"|"trend"|"ads";
+type SectionKey = "cards"|"trend";
 const SECTION_DEFS: {key:SectionKey;label:string}[] = [
-  {key:"cards",label:"Métricas"},{key:"trend",label:"Tendência"},{key:"ads",label:"Top Ads"}
+  {key:"cards",label:"Métricas"},{key:"trend",label:"Tendência"}
 ];
 
 // ── Calendar Date Picker ─────────────────────────────────────────────────────
@@ -237,56 +237,6 @@ function MetricCustomizer({ active, platform, onChange, onClose }: { active: Met
   );
 }
 
-// ── Ad Row ────────────────────────────────────────────────────────────────────
-const COL={spend:70,ctr:70,roas:70,status:90};
-
-const AdsCompact = React.memo(function AdsCompact({ ads }: { ads: any[] }) {
-  const [expanded, setExpanded] = useState(false);
-  const LIMIT = 5;
-  const visible = expanded ? ads : ads.slice(0, LIMIT);
-  const extra = ads.length - LIMIT;
-  return (
-    <div style={{paddingBottom:8}}>
-      {visible.map((ad:any,i:number)=><AdRow key={ad.id||i} ad={ad} rank={i+1}/>)}
-      {ads.length > LIMIT && (
-        <button onClick={()=>setExpanded(e=>!e)} style={{marginTop:10,width:"100%",padding:"8px 0",background:`${A}06`,border:`1px solid ${A}12`,borderRadius:8,color:A,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:MONO,transition:"all 0.15s",opacity:0.7}}
-          onMouseEnter={e=>{e.currentTarget.style.opacity="1"}}
-          onMouseLeave={e=>{e.currentTarget.style.opacity="0.7"}}>
-          {expanded ? "▲ Mostrar menos" : `▼ Ver mais ${extra} anúncio${extra>1?"s":""}`}
-        </button>
-      )}
-    </div>
-  );
-});
-
-const AdRow = React.memo(function AdRow({ ad, rank }: { ad:any; rank:number }) {
-  const ctr=(ad.ctr||0)*100;
-  const isWinner=ctr>2||(ad.roas&&ad.roas>2);
-  const isPauser=ctr<0.3&&ad.spend>20;
-  return (
-    <div style={{display:"flex",alignItems:"center",padding:"11px 0",borderBottom:`1px solid ${A}08`,gap:0}}>
-      <span style={{width:28,fontSize:12,color:`${A}60`,fontWeight:700,flexShrink:0,fontFamily:MONO}}>{rank}</span>
-      <div style={{flex:1,minWidth:0,paddingRight:16}}>
-        <p style={{margin:0,fontSize:13,fontWeight:500,color:TX,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ad.name||"—"}</p>
-        {ad.campaign&&ad.campaign!==ad.name&&<p style={{margin:"2px 0 0",fontSize:11,color:MT,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ad.campaign}</p>}
-      </div>
-      <div style={{width:COL.spend,textAlign:"right",flexShrink:0}}>
-        <p style={{margin:0,fontSize:13,fontWeight:700,color:TX,fontFamily:MONO}}>R${(ad.spend||0).toFixed(0)}</p>
-      </div>
-      <div style={{width:COL.ctr,textAlign:"right",flexShrink:0}}>
-        <p style={{margin:0,fontSize:13,fontWeight:700,color:ctr>2?GREEN:ctr<0.5?RED:TX,fontFamily:MONO}}>{ctr.toFixed(2)}%</p>
-      </div>
-      <div style={{width:COL.roas,textAlign:"right",flexShrink:0}}>
-        {ad.roas!=null?<p style={{margin:0,fontSize:13,fontWeight:700,color:ad.roas>2?GREEN:TX,fontFamily:MONO}}>{ad.roas.toFixed(1)}×</p>:<p style={{margin:0,fontSize:13,color:MT}}>—</p>}
-      </div>
-      <div style={{width:COL.status,textAlign:"right",flexShrink:0}}>
-        {isWinner&&<span style={{fontSize:11,fontWeight:700,color:GREEN,background:`${GREEN}15`,borderRadius:6,padding:"3px 8px",fontFamily:MONO}}>Escalar</span>}
-        {isPauser&&<span style={{fontSize:11,fontWeight:700,color:RED,background:`${RED}15`,borderRadius:6,padding:"3px 8px",fontFamily:MONO}}>Pausar</span>}
-        {!isWinner&&!isPauser&&<span style={{fontSize:12,color:MT}}>—</span>}
-      </div>
-    </div>
-  );
-});
 
 // ── Meta logo SVG ────────────────────────────────────────────────────────────
 function MetaLogo({ size=14 }: {size?:number}) {
@@ -310,7 +260,7 @@ export default function PerformanceDashboard() {
   const [dateRange, setDateRange] = useState<DateRange>({from:addDays(today,-6),to:today});
   const [showCalendar, setShowCalendar] = useState(false);
   const [activePlatform] = useState<"meta">("meta");
-  const [activeTab, setActiveTab] = useState<"metrics"|"ads">("metrics");
+  // Tab removed — Performance is metrics-only now
   const [activeMetrics, setActiveMetrics] = useState<MetricKey[]>(()=>storage.getJSON("adbrief_perf_metrics", DEFAULT_METRICS));
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [dragging, setDragging] = useState<number|null>(null);
@@ -320,7 +270,7 @@ export default function PerformanceDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date|null>(null);
-  const [visibleSections, setVisibleSections] = useState<Set<SectionKey>>(new Set(["cards","trend","ads"]));
+  const [visibleSections, setVisibleSections] = useState<Set<SectionKey>>(new Set(["cards","trend"]));
 
   useEffect(()=>{ storage.setJSON("adbrief_perf_metrics", activeMetrics); },[activeMetrics]);
 
@@ -423,30 +373,10 @@ export default function PerformanceDashboard() {
           </div>
           {lastUpdated&&<p style={{margin:0,fontSize:11,color:MT,fontFamily:MONO}}>{lastUpdated.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>}
 
-          {/* Tab switcher */}
-          <div style={{display:"flex",gap:0,marginTop:14,background:`${A}06`,border:`1px solid ${A}12`,borderRadius:10,padding:3,width:"fit-content"}}>
-            {([["metrics","Métricas"],["ads","Ads"]] as const).map(([tab,label])=>{
-              const isActive=activeTab===tab;
-              return (
-                <button key={tab} onClick={()=>setActiveTab(tab)}
-                  style={{
-                    padding:"7px 24px",borderRadius:7,cursor:"pointer",
-                    fontFamily:F,fontSize:13,fontWeight:isActive?700:500,
-                    background:isActive?A:"transparent",
-                    color:isActive?"#fff":`${A}80`,
-                    border:"none",
-                    transition:"all 0.15s",
-                  }}>
-                  {label}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         {/* Right side controls */}
-        {activeTab === "metrics" && (
-          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}} className="perf-header-actions">
+        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}} className="perf-header-actions">
             {/* Date picker */}
             <div style={{position:"relative"}}>
               <button onClick={()=>{setShowCalendar(!showCalendar);setShowCustomizer(false);}}
@@ -474,11 +404,10 @@ export default function PerformanceDashboard() {
               <RefreshCw size={13} style={{animation:refreshing?"spin 1s linear infinite":"none"}}/>
             </button>
           </div>
-        )}
       </div>
 
       {/* ── Empty: no persona ── */}
-      {activeTab==="metrics"&&!selectedPersona&&!loading&&(
+      {!selectedPersona&&!loading&&(
         <div style={{textAlign:"center",padding:"64px 24px",maxWidth:480,margin:"0 auto"}}>
           <div style={{width:48,height:48,borderRadius:14,background:`${A}10`,border:`1px solid ${A}20`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={A} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>
@@ -511,7 +440,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* ── Error: connection ── */}
-      {activeTab==="metrics"&&error==="__connection__"&&!loading&&(
+      {error==="__connection__"&&!loading&&(
         <div style={{textAlign:"center",padding:"64px 24px",maxWidth:420,margin:"0 auto"}}>
           <div style={{width:48,height:48,borderRadius:14,background:"rgba(255,255,255,0.03)",border:`1px solid ${A}15`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={A} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
@@ -529,7 +458,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* ── Error: generic ── */}
-      {activeTab==="metrics"&&error&&error!=="__connection__"&&!loading&&(
+      {error&&error!=="__connection__"&&!loading&&(
         <div style={{display:"flex",gap:10,padding:16,background:`${RED}10`,border:`1px solid ${RED}25`,borderRadius:12,marginBottom:24}}>
           <AlertCircle size={16} color={RED} style={{flexShrink:0,marginTop:1}}/>
           <p style={{margin:0,fontSize:13,color:"#f87171"}}>{error}</p>
@@ -537,7 +466,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* ── Loading skeleton ── */}
-      {activeTab==="metrics"&&loading&&(
+      {loading&&(
         <div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12,marginBottom:20}}>
             {[...Array(6)].map((_,i)=>(
@@ -549,7 +478,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* ── Platform error ── */}
-      {activeTab==="metrics"&&!loading&&data?.meta?.error&&(
+      {!loading&&data?.meta?.error&&(
         <div style={{display:"flex",gap:8,padding:"8px 12px",background:`${AMBER}10`,border:`1px solid ${AMBER}25`,borderRadius:10,marginBottom:16}}>
           <AlertCircle size={14} color={AMBER} style={{flexShrink:0,marginTop:1}}/>
           <p style={{margin:0,fontSize:13,color:AMBER}}><strong>Meta</strong> — {data.meta.error}</p>
@@ -557,7 +486,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* ── Section filter chips ── */}
-      {activeTab==="metrics"&&!loading&&d&&(
+      {!loading&&d&&(
         <div style={{display:"flex",gap:6,marginBottom:20,flexWrap:"wrap"}}>
           {SECTION_DEFS.map(s=>{
             const isActive=visibleSections.has(s.key);
@@ -579,7 +508,7 @@ export default function PerformanceDashboard() {
       )}
 
       {/* ── Data sections ── */}
-      {activeTab==="metrics"&&!loading&&d&&(
+      {!loading&&d&&(
         <>
           {/* Metric cards */}
           {visibleSections.has("cards")&&(
@@ -684,47 +613,9 @@ export default function PerformanceDashboard() {
             </Reveal>
           )}
 
-          {/* Top ads */}
-          {visibleSections.has("ads")&&(d.top_ads||[]).length>0&&(
-            <Reveal delay={0.1}>
-              <div style={{
-                background:`linear-gradient(145deg, ${A}04, transparent 60%)`,
-                border:`1px solid ${A}12`,
-                borderRadius:14,padding:"20px 24px",
-                position:"relative",
-              }}>
-                <div style={{position:"absolute",top:0,left:"5%",right:"5%",height:1,background:`linear-gradient(90deg, transparent, ${A}20, transparent)`}}/>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <div style={{width:3,height:16,borderRadius:2,background:A}}/>
-                    <div>
-                      <p style={{margin:0,fontSize:14,fontWeight:700,color:TX}}>Top anúncios</p>
-                      <p style={{margin:"3px 0 0",fontSize:11,color:MT,fontFamily:MONO}}>{dateLabel}</p>
-                    </div>
-                  </div>
-                  <button onClick={()=>navigate("/dashboard/ai")} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:`${A}08`,border:`1px solid ${A}20`,borderRadius:8,color:A,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}
-                    onMouseEnter={e=>{e.currentTarget.style.background=`${A}15`}}
-                    onMouseLeave={e=>{e.currentTarget.style.background=`${A}08`}}>
-                    Analisar com IA<ArrowUpRight size={12}/>
-                  </button>
-                </div>
-                <div className="perf-ads-cols" style={{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${A}08`,marginTop:16,gap:0}}>
-                  <span style={{width:28,flexShrink:0}}/>
-                  <span style={{flex:1,fontSize:10,fontWeight:600,color:`${A}50`,textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:MONO}}>Anúncio</span>
-                  <span style={{width:COL.spend,fontSize:10,fontWeight:600,color:`${A}50`,textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"right" as const,flexShrink:0,fontFamily:MONO}}>Spend</span>
-                  <span style={{width:COL.ctr,fontSize:10,fontWeight:600,color:`${A}50`,textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"right" as const,flexShrink:0,fontFamily:MONO}}>CTR</span>
-                  <span style={{width:COL.roas,fontSize:10,fontWeight:600,color:`${A}50`,textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"right" as const,flexShrink:0,fontFamily:MONO}}>ROAS</span>
-                  <span style={{width:COL.status,fontSize:10,fontWeight:600,color:`${A}50`,textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"right" as const,flexShrink:0,fontFamily:MONO}}>Status</span>
-                </div>
-                <AdsCompact ads={d.top_ads||[]}/>
-              </div>
-            </Reveal>
-          )}
         </>
       )}
 
-      {/* ── Ads tab ── */}
-      {activeTab === "ads" && <AdDiary propUser={user} propPersona={selectedPersona} propLang={language} embedded/>}
     </div>
   );
 }
