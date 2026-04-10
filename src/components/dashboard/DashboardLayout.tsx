@@ -9,7 +9,7 @@ import { SectionBoundary } from "@/components/SectionBoundary";
 import { DashboardSidebar } from "./DashboardSidebar";
 // ReferralPopup now lives inside DashboardSidebar footer
 import { supabase } from "@/integrations/supabase/client";
-import { Menu, AlertCircle, Users, ChevronDown, Sparkles, X, PartyPopper } from "lucide-react";
+import { Menu, Users, ChevronDown, Sparkles, PartyPopper } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -127,7 +127,7 @@ export default function DashboardLayout() {
   const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
   const [vikaPopup, setVikaPopup] = useState(false);
   const [welcomeMsg, setWelcomeMsg] = useState<{ title: string; body: string } | null>(null);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+  // bannerDismissed removed — limit notifications via email now
   const navigate = useNavigate();
   const location = useLocation();
   // checkout success detection uses window.location directly (inside init callback)
@@ -754,116 +754,7 @@ export default function DashboardLayout() {
 
         </header>
 
-        {/* ══════════════════════════════════════════════════════════════════
-            USAGE BANNERS v3 — Completely rewritten
-            - Warning (≥75%): amber, dismissible with X
-            - Limit reached: red, NOT dismissible (fixed)
-            - Past due: red, clickable
-            ══════════════════════════════════════════════════════════════════ */}
-        {usageDetails?.show_warning && !usageDetails?.is_over_limit && !bannerDismissed && (
-          <div style={{
-            margin: "0 16px", marginTop: 10,
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "10px 16px", borderRadius: 10,
-            background: "rgba(234,179,8,0.08)",
-            borderLeft: "3px solid #eab308",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <AlertCircle size={18} style={{ color: "#eab308", flexShrink: 0 }} />
-              <span style={{
-                fontSize: 14, fontWeight: 600, color: "#eab308",
-                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-              }}>
-                {language === "pt" ? "Seus créditos estão acabando" : language === "es" ? "Tus créditos se están agotando" : "Your credits are running low"}
-                {usageDetails?.credits && (
-                  <span style={{ fontWeight: 400, marginLeft: 6, color: "rgba(234,179,8,0.7)" }}>
-                    — {usageDetails.credits.remaining}/{usageDetails.credits.total}
-                  </span>
-                )}
-              </span>
-            </div>
-            <button
-              onClick={() => setBannerDismissed(true)}
-              style={{
-                width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                borderRadius: 6, background: "transparent", border: "none", cursor: "pointer",
-                color: "rgba(234,179,8,0.5)", transition: "color 0.15s",
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#eab308"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(234,179,8,0.5)"; }}
-              title="Dismiss">
-              <X size={16} />
-            </button>
-          </div>
-        )}
-        {usageDetails?.is_over_limit && (
-          <div style={{
-            margin: "0 16px", marginTop: 10,
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "12px 16px", borderRadius: 10,
-            background: "rgba(239,68,68,0.08)",
-            borderLeft: "3px solid #ef4444",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <AlertCircle size={18} style={{ color: "#ef4444", flexShrink: 0 }} />
-              <div>
-                <span style={{
-                  fontSize: 14, fontWeight: 700, color: "#ef4444",
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                  display: "block",
-                }}>
-                  {language === "pt" ? "Limite mensal atingido" : language === "es" ? "Límite mensual alcanzado" : "Monthly limit reached"}
-                </span>
-                <span style={{
-                  fontSize: 12, fontWeight: 400, color: "rgba(239,68,68,0.65)",
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                  display: "block", marginTop: 2,
-                }}>
-                  {language === "pt" ? "Faça upgrade para continuar usando" : language === "es" ? "Mejora tu plan para continuar" : "Upgrade to continue using"}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate("/dashboard/pricing")}
-              style={{
-                padding: "6px 14px", borderRadius: 7,
-                background: "#ef4444", color: "#fff",
-                border: "none", cursor: "pointer",
-                fontSize: 12, fontWeight: 600, flexShrink: 0,
-                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                transition: "opacity 0.15s",
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.85"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}>
-              Upgrade
-            </button>
-          </div>
-        )}
-        {(profile as any)?.subscription_status === "past_due" && (
-          <div
-            style={{
-              margin: "0 16px", marginTop: 10,
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "12px 16px", borderRadius: 10,
-              background: "rgba(239,68,68,0.08)",
-              borderLeft: "3px solid #ef4444",
-              cursor: "pointer",
-            }}
-            onClick={async () => {
-              try {
-                const { data } = await supabase.functions.invoke("customer-portal");
-                if (data?.url) window.location.href = data.url;
-              } catch {}
-            }}>
-            <AlertCircle size={18} style={{ color: "#ef4444", flexShrink: 0 }} />
-            <span style={{
-              fontSize: 14, fontWeight: 600, color: "#ef4444",
-              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-            }}>
-              {language === "pt" ? "Pagamento falhou — clique para atualizar" : language === "es" ? "Pago fallido — haz clic para actualizar" : "Payment failed — click to update"}
-            </span>
-          </div>
-        )}
+        {/* Usage/limit banners removed — notifications via email instead */}
 
 
 
