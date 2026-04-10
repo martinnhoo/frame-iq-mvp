@@ -1,31 +1,6 @@
-import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
+import { getEffectivePlan } from "../_shared/credits.ts";
+import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-// ── Cost-based progressive throttle ──────────────────────────────────────────
-const _COST_PER = { analysis:(3000/1e6*3)+(800/1e6*15), board:(2500/1e6*3)+(700/1e6*15), preflight:(2000/1e6*3)+(600/1e6*15), translation:(800/1e6*3)+(400/1e6*15), hook:(1500/1e6*3)+(400/1e6*15) };
-const _PLAN_REV: Record<string,number> = { free:0, maker:19, pro:49, studio:149 };
-async function checkThrottle(sb: any, uid: string): Promise<{allowed:boolean;retry_after:number}> {
-  const period = new Date().toISOString().slice(0,7);
-  const [{data:prof},{data:usage}] = await Promise.all([
-    sb.from('profiles').select('plan,last_ai_action_at').eq('id',uid).single(),
-    sb.from('usage').select('analyses_count,boards_count,translations_count,preflights_count,hooks_count').eq('user_id',uid).eq('period',period).single(),
-  ]);
-  const p = (prof as any);
-  const u = (usage as any);
-  const rev = _PLAN_REV[p?.plan||'free']??0;
-  if(rev<=0) return {allowed:true,retry_after:0};
-  const cost=(u?.analyses_count||0)*_COST_PER.analysis+(u?.boards_count||0)*_COST_PER.board+(u?.translations_count||0)*_COST_PER.translation+(u?.preflights_count||0)*_COST_PER.preflight+(u?.hooks_count||0)*_COST_PER.hook;
-  const ratio=cost/rev;
-  if(ratio<0.80) return {allowed:true,retry_after:0};
-  const maxSec=480;
-  const cooldown=ratio>=1?maxSec:Math.round(((ratio-0.80)/0.20)*maxSec);
-  const elapsed=p?.last_ai_action_at?(Date.now()-new Date(p.last_ai_action_at).getTime())/1000:cooldown+1;
-  const wait=Math.max(0,Math.ceil(cooldown-elapsed));
-  if(wait>0) return {allowed:false,retry_after:wait};
-  await sb.from('profiles').update({last_ai_action_at:new Date().toISOString()} as any).eq('id',uid);
-  return {allowed:true,retry_after:0};
-}
-// ─────────────────────────────────────────────────────────────────────────────
 
 
 const corsHeaders = {
@@ -115,40 +90,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check usage limits
-    const currentPeriod = new Date().toISOString().slice(0, 7);
+    // Check credits
     const { data: profile } = await supabaseClient
       .from('profiles')
       .select('plan, email')
       .eq('id', user_id)
       .single();
 
-    const { data: usage } = await supabaseClient
-      .from('usage')
-      .select('boards_count')
-      .eq('user_id', user_id)
-      .eq('period', currentPeriod)
-      .single();
-
     const plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
-    const usageCount = (usage?.boards_count as number) || 0;
-    const planLimit = getLimit('boards', plan);
 
-    // ── Cost-based throttle check ──
-    {
-      const throttle = await checkThrottle(supabaseClient, user_id);
-      if (!throttle.allowed) {
-        return new Response(
-          JSON.stringify({ error: 'rate_limited', message: 'Processing will be available shortly. Please try again in a moment.', retry_after_seconds: throttle.retry_after }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
-
-    if (planLimit !== -1 && usageCount >= planLimit) {
+    // Deduct credits for board generation
+    const creditCheck = await requireCredits(supabaseClient, user_id, "board");
+    if (!creditCheck.allowed) {
       return new Response(
-        JSON.stringify({ error: 'limit_reached', plan, message: `You've reached your ${plan} plan limit of ${planLimit} boards this month.` }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify(creditCheck.error),
+        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -370,19 +326,6 @@ IMPORTANT: If talent is involved, every scene's visual_description MUST referenc
       },
       body: JSON.stringify({ user_id, trigger: 'board_generated' }),
     }).catch(() => {});
-
-    // Increment usage
-    if (usage) {
-      await supabaseClient
-        .from('usage')
-        .update({ boards_count: usageCount + 1 })
-        .eq('user_id', user_id)
-        .eq('period', currentPeriod);
-    } else {
-      await supabaseClient
-        .from('usage')
-        .insert({ user_id, period: currentPeriod, boards_count: 1 });
-    }
 
     return new Response(
       JSON.stringify({ success: true, board: boardRecord, board_id: boardRecord.id, mock_mode: !ANTHROPIC_API_KEY }),

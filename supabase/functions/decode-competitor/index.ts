@@ -1,5 +1,6 @@
 // decode-competitor v6 — CS sênior briefing, prosa densa, copy pronto
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { requireCredits } from "../_shared/deductCredits.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -22,6 +23,9 @@ Deno.serve(async (req) => {
     if (!authUser) {
       return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
+
+    const creditCheck = await requireCredits(sb, authUser.id, "competitor");
+    if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...cors, 'Content-Type': 'application/json' } });
 
     const { ad_text, observation, persona_context, ui_language } = await req.json();
     if (!ad_text) return new Response(JSON.stringify({ error: 'ad_text required' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });

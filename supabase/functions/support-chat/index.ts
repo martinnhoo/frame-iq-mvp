@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { getEffectivePlan } from "../_shared/plans.ts";
+import { getEffectivePlan } from "../_shared/credits.ts";
+import { requireCredits } from "../_shared/deductCredits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,22 +60,14 @@ serve(async (req) => {
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
       );
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("plan, email")
-        .eq("id", user_id)
-        .single();
-      const { data: rateCheck } = await supabase.rpc("check_and_increment_ai_usage", {
-        p_user_id: user_id,
-        p_plan: getEffectivePlan(profile?.plan, (profile as any)?.email),
-      });
-      if (rateCheck && !rateCheck.allowed) {
+      const creditCheck = await requireCredits(supabase, user_id, "chat");
+      if (!creditCheck.allowed) {
         return new Response(
           JSON.stringify({
             reply:
               language === "pt"
-                ? "Você atingiu o limite diário de requisições. Tente novamente amanhã ou faça upgrade do plano."
-                : "You've reached your daily request limit. Please try again tomorrow or upgrade your plan.",
+                ? "Seus créditos acabaram. Renove ou faça upgrade do plano para continuar."
+                : "You've run out of credits. Renew or upgrade your plan to continue.",
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

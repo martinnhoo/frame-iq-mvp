@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { getEffectivePlan } from "../_shared/plans.ts";
+import { getEffectivePlan } from "../_shared/credits.ts";
+import { requireCredits } from "../_shared/deductCredits.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,40 +45,9 @@ Deno.serve(async (req) => {
       .eq('id', user_id)
       .single();
 
-    const plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
-
-    if (plan === 'free') {
-      return new Response(
-        JSON.stringify({ 
-          error: 'upgrade_required',
-          message: 'Video generation requires Studio or Scale plan. Upgrade to unlock this feature.'
-        }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check usage limits
-    const currentPeriod = new Date().toISOString().slice(0, 7);
-    const { data: usage } = await supabaseClient
-      .from('usage')
-      .select('videos_count')
-      .eq('user_id', user_id)
-      .eq('period', currentPeriod)
-      .single();
-
-    const limits: Record<string, number> = { free: 10, maker: 50, pro: 200, studio: -1 };
-    const usageCount = usage?.videos_count || 0;
-
-    if (limits[plan as keyof typeof limits] !== -1 && usageCount >= limits[plan as keyof typeof limits]) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'limit_reached', 
-          plan,
-          message: `You've reached your ${plan} plan limit of ${limits[plan as keyof typeof limits]} videos this month.`
-        }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Check credits
+    const creditCheck = await requireCredits(supabase_client, user_id, "video");
+    if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     // Fetch board data
     const { data: board, error: boardError } = await supabaseClient
@@ -183,17 +153,6 @@ Deno.serve(async (req) => {
     if (insertError) {
       throw insertError;
     }
-
-    // Increment usage count
-    await supabaseClient
-      .from('usage')
-      .upsert({
-        user_id,
-        period: currentPeriod,
-        videos_count: usageCount + 1
-      }, {
-        onConflict: 'user_id,period'
-      });
 
     return new Response(
       JSON.stringify({ 

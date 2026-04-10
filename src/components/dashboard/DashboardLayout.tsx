@@ -72,14 +72,30 @@ export interface Usage {
   boards_count: number;
 }
 
+export interface CreditInfo {
+  total: number;
+  used: number;
+  bonus: number;
+  remaining: number;
+  pool: number;
+}
+
 export interface UsageDetails {
   plan: string;
-  analyses: { used: number; limit: number; remaining: number };
-  boards: { used: number; limit: number; remaining: number };
-  translations: { used: number; limit: number; remaining: number };
+  credits: CreditInfo;
+  usage_pct: number;
+  breakdown: Record<string, { count: number; credits: number }>;
+  credit_costs: Record<string, number>;
+  ad_accounts: number;
   reset_date: string;
+  period: string;
   is_over_limit: boolean;
   show_warning: boolean;
+  is_trialing: boolean;
+  // Legacy compat (old format — will be removed once all consumers migrate)
+  analyses?: { used: number; limit: number; remaining: number };
+  boards?: { used: number; limit: number; remaining: number };
+  translations?: { used: number; limit: number; remaining: number };
 }
 
 export default function DashboardLayout() {

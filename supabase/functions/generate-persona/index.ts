@@ -1,4 +1,5 @@
-import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
+import { getEffectivePlan } from "../_shared/credits.ts";
+import { requireCredits } from "../_shared/deductCredits.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -79,17 +80,8 @@ serve(async (req) => {
         }
       }
 
-      const { data: profile } = await supabase.from("profiles").select("plan, email").eq("id", user_id).single();
-      const plan = getEffectivePlan(profile?.plan, (profile as any)?.email);
-      const limit = getLimit("personas", plan);
-      if (limit !== -1) {
-        const { count } = await supabase.from("personas").select("id", { count: "exact", head: true }).eq("user_id", user_id);
-        if ((count ?? 0) >= limit) {
-          return new Response(JSON.stringify({ error: "Persona limit reached for your plan.", daily_limit: true }), {
-            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
+      const creditCheck = await requireCredits(supabase, user_id, "persona");
+      if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     if (!ANTHROPIC_API_KEY) {

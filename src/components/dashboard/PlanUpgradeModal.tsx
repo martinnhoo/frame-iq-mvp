@@ -19,9 +19,9 @@ const PLANS = [
     accent: "text-blue-400",
     badge: null,
     features: {
-      pt: ["50 mensagens de IA/dia", "1 conta de anúncios", "Todas as ferramentas"],
-      es: ["50 mensajes de IA/día", "1 cuenta de anuncios", "Todas las herramientas"],
-      en: ["50 AI messages/day", "1 ad account", "All tools"],
+      pt: ["1.000 créditos/mês", "1 conta de anúncios", "Todas as ferramentas"],
+      es: ["1.000 créditos/mes", "1 cuenta de anuncios", "Todas las herramientas"],
+      en: ["1,000 credits/mo", "1 ad account", "All tools"],
     },
   },
   {
@@ -33,9 +33,9 @@ const PLANS = [
     accent: "text-sky-400",
     badge: { pt: "Mais popular", es: "Más popular", en: "Most Popular" },
     features: {
-      pt: ["200 mensagens de IA/dia", "3 contas de anúncios", "Todas as ferramentas", "Multi-mercado"],
-      es: ["200 mensajes de IA/día", "3 cuentas de anuncios", "Todas las herramientas", "Multi-mercado"],
-      en: ["200 AI messages/day", "3 ad accounts", "All tools", "Multi-market"],
+      pt: ["2.500 créditos/mês", "3 contas de anúncios", "Todas as ferramentas", "Multi-mercado"],
+      es: ["2.500 créditos/mes", "3 cuentas de anuncios", "Todas las herramientas", "Multi-mercado"],
+      en: ["2,500 credits/mo", "3 ad accounts", "All tools", "Multi-market"],
     },
   },
   {
@@ -47,9 +47,9 @@ const PLANS = [
     accent: "text-pink-400",
     badge: { pt: "Melhor valor", es: "Mejor valor", en: "Best value" },
     features: {
-      pt: ["IA ilimitada", "Contas ilimitadas", "Todas as ferramentas", "Workspace agência", "Suporte prioritário"],
-      es: ["IA ilimitada", "Cuentas ilimitadas", "Todas las herramientas", "Workspace agencia", "Soporte prioritario"],
-      en: ["Unlimited AI", "Unlimited accounts", "All tools", "Agency workspace", "Priority support"],
+      pt: ["9.000 créditos/mês", "Contas ilimitadas", "Todas as ferramentas", "Workspace agência", "Suporte prioritário"],
+      es: ["9.000 créditos/mes", "Cuentas ilimitadas", "Todas las herramientas", "Workspace agencia", "Soporte prioritario"],
+      en: ["9,000 credits/mo", "Unlimited accounts", "All tools", "Agency workspace", "Priority support"],
     },
   },
 ];

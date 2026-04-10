@@ -66,43 +66,43 @@ const PLANS: Record<string, { name: string; price: string; badge?: string; featu
   en: [
     {
       key: "maker", name: "Maker", price: "$19/mo", highlight: false, action: "/signup?plan=maker",
-      features: { en: ["50 AI messages / day", "1 ad account", "All tools", "1 ad account"] },
+      features: { en: ["1,000 credits/mo", "1 ad account", "All tools", "1 ad account"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mo", badge: "Most popular", highlight: true, action: "/signup?plan=pro",
-      features: { en: ["200 AI messages / day", "3 ad accounts", "All tools", "Unlimited accounts", "Multi-market"] },
+      features: { en: ["2,500 credits/mo", "3 ad accounts", "All tools", "Unlimited accounts", "Multi-market"] },
     },
     {
       key: "studio", name: "Studio", price: "$149/mo", highlight: false, action: "/signup?plan=studio",
-      features: { en: ["Unlimited AI messages", "Unlimited accounts", "All tools", "Agency workspace", "Priority support"] },
+      features: { en: ["9,000 credits/mo", "Unlimited accounts", "All tools", "Agency workspace", "Priority support"] },
     },
   ],
   pt: [
     {
       key: "maker", name: "Maker", price: "$19/mês", highlight: false, action: "/signup?plan=maker",
-      features: { pt: ["50 mensagens de IA/dia", "1 conta de anúncios", "Todas as ferramentas", "1 ad account"] },
+      features: { pt: ["1.000 créditos/mês", "1 conta de anúncios", "Todas as ferramentas", "1 ad account"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mês", badge: "Mais popular", highlight: true, action: "/signup?plan=pro",
-      features: { pt: ["200 mensagens de IA/dia", "3 contas de anúncios", "Todas as ferramentas", "Contas ilimitadas", "Multi-mercado"] },
+      features: { pt: ["2.500 créditos/mês", "3 contas de anúncios", "Todas as ferramentas", "Contas ilimitadas", "Multi-mercado"] },
     },
     {
       key: "studio", name: "Studio", price: "$149/mês", highlight: false, action: "/signup?plan=studio",
-      features: { pt: ["IA ilimitada", "Contas ilimitadas", "Todas as ferramentas", "Workspace agência", "Suporte prioritário"] },
+      features: { pt: ["9.000 créditos/mês", "Contas ilimitadas", "Todas as ferramentas", "Workspace agência", "Suporte prioritário"] },
     },
   ],
   es: [
     {
       key: "maker", name: "Maker", price: "$19/mes", highlight: false, action: "/signup?plan=maker",
-      features: { es: ["50 mensajes de IA/día", "1 cuenta de anuncios", "Todas las herramientas", "1 ad account"] },
+      features: { es: ["1.000 créditos/mes", "1 cuenta de anuncios", "Todas las herramientas", "1 ad account"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mes", badge: "Más popular", highlight: true, action: "/signup?plan=pro",
-      features: { es: ["200 mensajes de IA/día", "3 cuentas de anuncios", "Todas las herramientas", "Contas ilimitadas", "Multi-mercado"] },
+      features: { es: ["2.500 créditos/mes", "3 cuentas de anuncios", "Todas las herramientas", "Contas ilimitadas", "Multi-mercado"] },
     },
     {
       key: "studio", name: "Studio", price: "$149/mes", highlight: false, action: "/signup?plan=studio",
-      features: { es: ["IA ilimitada", "Cuentas ilimitadas", "Todas las herramientas", "Workspace agencia", "Soporte prioritario"] },
+      features: { es: ["9.000 créditos/mes", "Cuentas ilimitadas", "Todas las herramientas", "Workspace agencia", "Soporte prioritario"] },
     },
   ],
 };

@@ -1,6 +1,6 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { LIFETIME_ACCOUNTS } from "../_shared/plans.ts";
+import { LIFETIME_ACCOUNTS } from "../_shared/credits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

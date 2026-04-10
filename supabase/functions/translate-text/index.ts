@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { getEffectivePlan, getLimit } from "../_shared/plans.ts";
+import { getEffectivePlan } from "../_shared/credits.ts";
+import { requireCredits } from "../_shared/deductCredits.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -41,30 +42,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Usage check — use maybeSingle to avoid errors on missing rows
+    // Check credits for translation
     if (user_id) {
-      const period = new Date().toISOString().slice(0, 7);
-      const { data: profile } = await supabase.from('profiles').select('plan, email').eq('id', user_id).maybeSingle();
-      const email = (profile as any)?.email || null;
-      const plan = getEffectivePlan(profile?.plan, email);
-
-      // Daily AI rate limit
-      const { data: rateCheck } = await supabase.rpc('check_and_increment_ai_usage', { p_user_id: user_id, p_plan: plan });
-      if (rateCheck && !rateCheck.allowed) {
-        return new Response(JSON.stringify({ error: rateCheck.message, daily_limit: true }), {
-          status: 429, headers: { ...cors, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Monthly translation limit
-      const { data: usage } = await supabase.from('usage').select('translations_count').eq('user_id', user_id).eq('period', period).maybeSingle();
-      const limit = getLimit('translations', plan);
-      const count = usage?.translations_count || 0;
-      if (limit !== -1 && count >= limit) {
-        return new Response(JSON.stringify({ error: 'limit_reached', plan }), {
-          status: 403, headers: { ...cors, 'Content-Type': 'application/json' }
-        });
-      }
+      const creditCheck = await requireCredits(supabase, user_id, "translation");
+      if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
     // Build translation targets
@@ -145,15 +126,6 @@ Return ONLY valid JSON.`;
       });
     }
 
-    // Increment usage count
-    if (user_id) {
-      const period = new Date().toISOString().slice(0, 7);
-      const { data: usage } = await supabase.from('usage').select('translations_count').eq('user_id', user_id).eq('period', period).maybeSingle();
-      await supabase.from('usage').upsert(
-        { user_id, period, translations_count: (usage?.translations_count || 0) + 1 },
-        { onConflict: 'user_id,period' }
-      );
-    }
 
     const primary = results[0];
     return new Response(JSON.stringify({

@@ -1,4 +1,5 @@
-import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
+import { getEffectivePlan } from "../_shared/credits.ts";
+import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 const createSvcClient = createClient;
 import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.39.0";
@@ -26,22 +27,14 @@ Deno.serve(async (req) => {
     const { product, offer, objective, market, audience, competitors, extra_context } = await req.json();
     const user_id = verified_user_id; // always use verified id, never trust body
 
-    // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
-    {
-      const { data: prof } = await supabase.from('profiles').select('plan, email, subscription_status').eq('id', user_id).maybeSingle();
-      const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
-      const allowed = ['maker','pro','studio','creator','starter','scale'].includes(plan);
-      if (!allowed) {
-        return new Response(JSON.stringify({ error: 'plan_required', message: 'This tool requires a paid plan.' }), {
-          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
-
     if (!product) return new Response(JSON.stringify({ error: "Missing product" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
+    // ── Credit check (must be done before AI calls) ─────────────────────────
+    const creditCheck = await requireCredits(supabase, user_id, "brief");
+    if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // ─────────────────────────────────────────────────────────────────────────
 
     // Fetch accumulated creative context from the loop
     let loopContext = "";

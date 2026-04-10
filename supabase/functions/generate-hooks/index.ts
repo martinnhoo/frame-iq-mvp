@@ -1,31 +1,6 @@
-import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
+import { getEffectivePlan } from "../_shared/credits.ts";
+import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-// ── Cost-based progressive throttle ──────────────────────────────────────────
-const _COST_PER = { analysis:(3000/1e6*3)+(800/1e6*15), board:(2500/1e6*3)+(700/1e6*15), preflight:(2000/1e6*3)+(600/1e6*15), translation:(800/1e6*3)+(400/1e6*15), hook:(1500/1e6*3)+(400/1e6*15) };
-const _PLAN_REV: Record<string,number> = { free:0, maker:19, pro:49, studio:149 };
-async function checkThrottle(sb: any, uid: string): Promise<{allowed:boolean;retry_after:number}> {
-  const period = new Date().toISOString().slice(0,7);
-  const [{data:prof},{data:usage}] = await Promise.all([
-    sb.from('profiles').select('plan,last_ai_action_at').eq('id',uid).single(),
-    sb.from('usage').select('analyses_count,boards_count,translations_count,preflights_count,hooks_count').eq('user_id',uid).eq('period',period).single(),
-  ]);
-  const p = (prof as any);
-  const u = (usage as any);
-  const rev = _PLAN_REV[p?.plan||'free']??0;
-  if(rev<=0) return {allowed:true,retry_after:0};
-  const cost=(u?.analyses_count||0)*_COST_PER.analysis+(u?.boards_count||0)*_COST_PER.board+(u?.translations_count||0)*_COST_PER.translation+(u?.preflights_count||0)*_COST_PER.preflight+(u?.hooks_count||0)*_COST_PER.hook;
-  const ratio=cost/rev;
-  if(ratio<0.80) return {allowed:true,retry_after:0};
-  const maxSec=480;
-  const cooldown=ratio>=1?maxSec:Math.round(((ratio-0.80)/0.20)*maxSec);
-  const elapsed=p?.last_ai_action_at?(Date.now()-new Date(p.last_ai_action_at).getTime())/1000:cooldown+1;
-  const wait=Math.max(0,Math.ceil(cooldown-elapsed));
-  if(wait>0) return {allowed:false,retry_after:wait};
-  await sb.from('profiles').update({last_ai_action_at:new Date().toISOString()} as any).eq('id',uid);
-  return {allowed:true,retry_after:0};
-}
-// ─────────────────────────────────────────────────────────────────────────────
 
 
 const cors = {
@@ -57,18 +32,12 @@ Deno.serve(async (req) => {
     const { product, niche, market, platform, tone, persona_id, count = 10, persona_context, funnel_stage = "tofu", context, angle } = await req.json();
     const user_id = verified_user_id; // always use verified id, never trust body
 
-    // ── Cap hook count by plan ─────────────────────────────────────────────
-    let effectiveCount = count;
-    {
-      const { data: prof } = await supabase.from('profiles').select('plan, email, subscription_status').eq('id', user_id).maybeSingle();
-      const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
-      const isTrialing = (prof as any)?.subscription_status === 'trialing';
-      // Trial gets 3 hooks max regardless of plan — enough to evaluate, not enough to abuse
-      const hookCaps: Record<string, number> = { free: 3, maker: 5, pro: 8, studio: 10, creator: 5, starter: 8, scale: 10 };
-      const trialHookCap = 3;
-      const cap = isTrialing ? trialHookCap : (plan === 'studio' ? 10 : (hookCaps[plan] ?? 3));
-      effectiveCount = Math.min(count, cap);
-    }
+    // Credit check — must have credits before proceeding
+    const creditCheck = await requireCredits(supabase, user_id, "hooks");
+    if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...cors, 'Content-Type': 'application/json' } });
+
+    // Credit system handles limits — no hardcoded caps
+    const effectiveCount = count;
 
     const FUNNEL_CONTEXT: Record<string, string> = {
       tofu: "TOP OF FUNNEL (cold audience) — hooks must generate AWARENESS. Interrupt the scroll, spark curiosity or emotion. No assumptions about brand knowledge. Lead with a problem, insight, or bold claim.",
@@ -78,18 +47,6 @@ Deno.serve(async (req) => {
 
     // Fallback: if no product, use niche or a safe default — never fail
     const effectiveProduct = product || niche || 'iGaming';
-
-    // ── Cost-based throttle check ──
-    {
-      const throttle = await checkThrottle(supabase, user_id);
-      if (!throttle.allowed) {
-        return new Response(JSON.stringify({
-          error: 'rate_limited',
-          message: 'Processing will be available shortly. Please try again in a moment.',
-          retry_after_seconds: throttle.retry_after,
-        }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
-      }
-    }
 
     // ── Load full account intelligence for hook personalization ──────────────
     let userContext = '';

@@ -1,4 +1,5 @@
-import { getEffectivePlan, getLimit, isWithinLimit } from "../_shared/plans.ts";
+import { getEffectivePlan } from "../_shared/credits.ts";
+import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -39,19 +40,9 @@ Deno.serve(async (req) => {
     const { product, offer, audience, format, duration, market, angle, extra_context, user_id, ui_language } = await req.json();
     const effectiveUserId = verified_user_id;
 
-    // ── Plan gate — verify server-side, cannot be bypassed via frontend ──────
-    if (effectiveUserId) {
-      const { data: prof } = await supabase.from('profiles').select('plan, email, subscription_status').eq('id', effectiveUserId).maybeSingle();
-      const plan = getEffectivePlan(prof?.plan, (prof as any)?.email);
-      const isTrialing = (prof as any)?.subscription_status === 'trialing';
-      const allowed = ['maker','pro','studio','creator','starter','scale'].includes(plan);
-      if (!allowed) {
-        return new Response(JSON.stringify({ error: 'plan_required', message: 'This tool requires a paid plan.' }), {
-          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
+    // ── Credit check — must occur before AI logic ───────────────────────────
+    const creditCheck = await requireCredits(supabase, verified_user_id, "script");
+    if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     if (!product) return new Response(JSON.stringify({ error: "Missing product" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },

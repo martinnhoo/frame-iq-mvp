@@ -1,11 +1,48 @@
+/**
+ * AdBrief Credit System — Frontend constants
+ * Mirrors supabase/functions/_shared/credits.ts
+ */
+
+// Credit costs per action
+export const CREDIT_COSTS: Record<string, number> = {
+  chat:        2,
+  analysis:    3,
+  hooks:       2,
+  brief:       2,
+  preflight:   2,
+  board:       2,
+  script:      2,
+  translation: 1,
+  persona:     1,
+  competitor:  2,
+  video:       3,
+};
+
+// Plan credit pools (monthly)
+export const PLAN_CREDITS: Record<string, number> = {
+  free:   15,
+  maker:  1000,
+  pro:    2500,
+  studio: 9000,
+};
+
+// Ad accounts per plan (-1 = unlimited)
+export const PLAN_AD_ACCOUNTS: Record<string, number> = {
+  free:   0,
+  maker:  1,
+  pro:    3,
+  studio: -1,
+};
+
+// Plan metadata
 export const PLAN_LIMITS = {
-  free:   { chat_daily: 5,   chat_total: 5,   tools: true,  ad_accounts: 1,   label: "Free"   },
-  maker:  { chat_daily: 50,  chat_total: null, tools: true,  ad_accounts: 1,   label: "Maker"  },
-  pro:    { chat_daily: 200, chat_total: null, tools: true,  ad_accounts: 3,   label: "Pro"    },
-  studio: { chat_daily: null, chat_total: null, tools: true, ad_accounts: null, label: "Studio" },
+  free:   { credits: 15,   ad_accounts: 0,  label: "Free"   },
+  maker:  { credits: 1000, ad_accounts: 1,  label: "Maker"  },
+  pro:    { credits: 2500, ad_accounts: 3,  label: "Pro"    },
+  studio: { credits: 9000, ad_accounts: -1, label: "Studio" },
 } as const;
 
-// Legacy plan aliases — users who signed up under old plan names
+// Legacy plan aliases
 const PLAN_ALIAS: Record<string, keyof typeof PLAN_LIMITS> = {
   creator: "maker",
   starter: "pro",
@@ -24,10 +61,24 @@ export function isFree(plan: string | null | undefined) {
   return !plan || plan === "free";
 }
 
-export function canUseTools(plan: string | null | undefined) {
-  return getPlanLimits(plan).tools;
+export function getPlanCredits(plan: string | null | undefined): number {
+  const raw = plan || "free";
+  const key = (PLAN_ALIAS[raw] || raw) as string;
+  return PLAN_CREDITS[key] ?? PLAN_CREDITS.free;
 }
 
-export function chatDailyLimit(plan: string | null | undefined) {
-  return getPlanLimits(plan).chat_daily;
+export function getAdAccountLimit(plan: string | null | undefined): number {
+  const raw = plan || "free";
+  const key = (PLAN_ALIAS[raw] || raw) as string;
+  return PLAN_AD_ACCOUNTS[key] ?? PLAN_AD_ACCOUNTS.free;
+}
+
+export function getCreditCost(action: string): number {
+  return CREDIT_COSTS[action] ?? 0;
+}
+
+/** Format credit cost as readable label */
+export function creditLabel(action: string): string {
+  const cost = getCreditCost(action);
+  return cost === 1 ? "1 crédito" : `${cost} créditos`;
 }

@@ -1,6 +1,7 @@
 // adbrief-ai-chat v20.1 — tom livre, fix toneMap removido
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { getEffectivePlan, LIFETIME_ACCOUNTS } from "../_shared/plans.ts";
+import { getEffectivePlan, LIFETIME_ACCOUNTS } from "../_shared/credits.ts";
+import { requireCredits } from "../_shared/deductCredits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -365,101 +366,15 @@ Deno.serve(async (req) => {
     const todayDate = new Date().toISOString().slice(0, 10);
     const monthKey = todayDate.slice(0, 7); // YYYY-MM
 
-    // ── Cost model: $0.0236 per chat message (Sonnet, 5850 in + 400 out tokens)
-    const COST_PER_MSG = 0.0236;
-
-    // ── Plan revenue & thresholds
-    const PLAN_REVENUE: Record<string, number> = { free: 0, maker: 19, pro: 49, studio: 149 };
-    // Trial caps = 50% of paid plan caps (prevents full trial abuse while still being useful)
-    const DAILY_CAPS_TRIAL: Record<string, number> = { free: 3, maker: 20, pro: 80, studio: 150 };
-    const DAILY_CAPS: Record<string, number> = { free: 3, maker: 50, pro: 200, studio: 500 };
-    const COOLDOWN_MSGS: Record<string, number> = { free: 3, maker: 564, pro: 1456, studio: 4428 };
-    const SOFTCAP_MSGS: Record<string, number> = { free: 3, maker: 726, pro: 1872, studio: 5694 };
-
-    const revenue = PLAN_REVENUE[effectivePlanKey] ?? 0;
-    // Apply reduced trial cap if user is in trial period
-    const cap = isTrialing
-      ? (DAILY_CAPS_TRIAL[effectivePlanKey] ?? 3)
-      : (DAILY_CAPS[effectivePlanKey] ?? 3);
-    const cooldown = COOLDOWN_MSGS[effectivePlanKey] ?? 3;
-    const softcap = SOFTCAP_MSGS[effectivePlanKey] ?? 3;
     const uiLang = (user_language as string) || "pt";
 
-    // ── Read current usage for soft-cap / cooldown checks (non-atomic read is fine here —
-    //    these are advisory checks, not hard limits enforced by race-sensitive code)
-    const { data: usageRow } = await (supabase as any)
-      .from("free_usage")
-      .select("chat_count, last_reset, monthly_msg_count, monthly_reset")
-      .eq("user_id", user_id)
-      .maybeSingle();
-
-    const lastReset = usageRow?.last_reset?.slice(0, 10);
-    const dailyCount = lastReset === todayDate ? usageRow?.chat_count || 0 : 0;
-    const lastMonthReset = usageRow?.monthly_reset?.slice(0, 7);
-    const monthlyCount = lastMonthReset === monthKey ? usageRow?.monthly_msg_count || 0 : 0;
-    const estimatedMonthlyCost = monthlyCount * COST_PER_MSG;
-
-    // ── Pre-flight daily cap check (fast path before hitting the RPC)
-    if (dailyCount >= cap) {
-      return new Response(JSON.stringify({ error: "daily_limit" }), {
-        status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // ── Progressive warning — computed after RPC call below, using accurate finalDailyCount
-
-    // ── Soft cap: monthly cost approaching revenue ceiling — suggest upgrade, don't block
-    if (monthlyCount >= softcap && planKey !== "studio") {
-      const nextPlan = planKey === "free" ? "Maker" : planKey === "maker" ? "Pro" : "Studio";
-      const m: Record<string, string> = {
-        pt: `Você usou ${monthlyCount} mensagens este mês — está se aproximando do limite de rentabilidade do plano ${planKey}. Considere fazer upgrade para ${nextPlan} para continuar sem interrupções.`,
-        es: `Usaste ${monthlyCount} mensajes este mes. Considera actualizar a ${nextPlan}.`,
-        en: `You've used ${monthlyCount} messages this month. Consider upgrading to ${nextPlan} to continue without limits.`,
-      };
-      return new Response(
-        JSON.stringify({
-          error: "monthly_softcap",
-          blocks: [
-            {
-              type: "warning",
-              title: uiLang === "pt" ? "Limite mensal se aproximando" : "Monthly limit approaching",
-              content: m[uiLang] || m.en,
-              cta_label: uiLang === "pt" ? `Fazer upgrade para ${nextPlan}` : `Upgrade to ${nextPlan}`,
-              cta_route: "/pricing",
-            },
-          ],
-        }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // ── Smart cooldown: monthly cost crossed 70% of plan revenue
-    // Only kicks in for users who are genuinely heavy — normal users never hit this
-    let cooldownDelay = 0;
-    if (monthlyCount >= cooldown && planKey !== "studio") {
-      // Progressive delay: 2s at 70%, scaling to 8s at 90%
-      const pct = Math.min((monthlyCount - cooldown) / (softcap - cooldown), 1);
-      cooldownDelay = Math.round(2000 + pct * 6000); // 2s → 8s
-    }
-
-    // ── Log cost alert if user crossed 70% threshold (fire-and-forget)
-    if (monthlyCount >= cooldown && monthlyCount % 10 === 0) {
-      (supabase as any)
-        .from("cost_alerts")
-        .upsert(
-          {
-            user_id,
-            plan: planKey,
-            monthly_msgs: monthlyCount,
-            estimated_cost: estimatedMonthlyCost,
-            plan_revenue: revenue,
-            cost_pct: revenue > 0 ? Math.round((estimatedMonthlyCost / revenue) * 100) : 999,
-            alert_date: todayDate,
-            last_updated: new Date().toISOString(),
-          },
-          { onConflict: "user_id" },
-        );
+    // ── Credit check: Chat costs 2 credits per message ────────────────────────
+    const creditCheck = await requireCredits(supabase, user_id, "chat");
+    if (!creditCheck.allowed) {
+      return new Response(JSON.stringify({
+        ...creditCheck.error,
+        type: "credits_exhausted",
+      }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Only trigger dashboard offer for explicit data/analytics requests
@@ -552,51 +467,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Apply smart cooldown if active (only for abusive usage)
-    if (cooldownDelay > 0) {
-      await new Promise((r) => setTimeout(r, cooldownDelay));
-    }
-
-    // ── Atomic increment via RPC — prevents race condition where two concurrent
-    //    requests both read dailyCount=N, both pass the cap check, both write N+1
-    const { data: rpcResult } = await (supabase as any).rpc("increment_chat_usage", {
-      p_user_id: user_id,
-      p_daily_cap: cap,
-      p_today: todayDate,
-      p_month_key: monthKey,
-    });
-
-    // RPC returns null if function doesn't exist yet (migration pending) — fall back gracefully
-    if (rpcResult && rpcResult.allowed === false) {
-      return new Response(JSON.stringify({ error: "daily_limit" }), {
-        status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Use RPC counts if available, otherwise fall back to pre-read values
-    const finalDailyCount = rpcResult?.daily_count ?? dailyCount + 1;
-    const finalMonthlyCount = rpcResult?.monthly_count ?? monthlyCount + 1;
-
-    // ── Progressive warning — uses accurate post-RPC count
-    const willHitLimit = finalDailyCount >= cap;
-    const oneRemaining = finalDailyCount === cap - 1;
-    const limitWarning =
-      planKey === "free"
-        ? willHitLimit
-          ? {
-              pt: `— Esta foi sua última mensagem gratuita.`,
-              es: `— Este fue tu último mensaje gratuito.`,
-              en: `— This was your last free message.`,
-            }
-          : oneRemaining
-            ? {
-                pt: `— Você tem apenas 1 mensagem gratuita restante.`,
-                es: `— Solo tienes 1 mensaje gratuito restante.`,
-                en: `— You have 1 free message left.`,
-              }
-            : null
-        : null;
 
     // ── 2b. Detect "remember this" instructions — save before fetching context ──
     // Tolerante a typos: lemnre, lembr, lemb etc.
@@ -2097,7 +1967,11 @@ PROIBIDO:
         ]
       : message;
 
-    const aiMessages = [...historyMessages, { role: "user" as const, content: userContent }];
+    // Cap conversation length for cost safety — prevent unbounded context growth
+    // (Per credits.ts: MAX_CONVERSATION_MESSAGES = 20)
+    const cappedHistory = historyMessages.length > 20 ? historyMessages.slice(-20) : historyMessages;
+
+    const aiMessages = [...cappedHistory, { role: "user" as const, content: userContent }];
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
@@ -2204,18 +2078,24 @@ PROIBIDO:
       }
     }
 
-    // Append limit warning block if needed
+    // ── Limit warning block — now based on credit system ──
+    // (Credit check already happened at line ~375, so we only append if remaining credits are low)
     let finalBlocks = blocks;
-    if (limitWarning) {
-      const warnMsg = (limitWarning as any)[uiLang] || (limitWarning as any).en;
+    if (creditCheck.remaining !== undefined && creditCheck.remaining > 0 && creditCheck.remaining <= 2) {
+      const remainingActions = Math.floor(creditCheck.remaining / 2); // 2 credits per chat message
+      const warnText = {
+        pt: `— Seus créditos estão terminando. Você tem ${remainingActions} mensagem${remainingActions !== 1 ? "s" : ""} antes de precisar de um upgrade.`,
+        es: `— Tus créditos se están agotando. Tienes ${remainingActions} mensaje${remainingActions !== 1 ? "s" : ""} antes de necesitar una actualización.`,
+        en: `— Your credits are running low. You have ${remainingActions} message${remainingActions !== 1 ? "s" : ""} left before needing an upgrade.`,
+      };
       finalBlocks = [
         ...blocks,
         {
           type: "limit_warning",
           title: "",
-          content: warnMsg,
+          content: (warnText as any)[uiLang] || (warnText as any).en,
           is_limit_warning: true,
-          will_hit_limit: willHitLimit,
+          will_hit_limit: creditCheck.remaining <= 2,
         },
       ];
     }
@@ -2253,7 +2133,12 @@ PROIBIDO:
       }
     })().catch(() => {});
 
-    const usagePayload = { daily_count: finalDailyCount, daily_cap: cap, plan: planKey, is_trialing: isTrialing };
+    const usagePayload = {
+      remaining_credits: creditCheck.remaining ?? 0,
+      total_credits: creditCheck.total ?? 0,
+      plan: planKey,
+      is_trialing: isTrialing,
+    };
     return new Response(JSON.stringify({
       blocks: finalBlocks,
       usage: usagePayload,

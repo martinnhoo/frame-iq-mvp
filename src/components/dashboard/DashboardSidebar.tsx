@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PlanUpgradeModal } from "./PlanUpgradeModal";
 import { ReferralPopup } from "./ReferralPopup";
+import { CreditBar } from "./CreditBar";
 
 interface Profile {
   id: string; name: string | null; email: string | null; avatar_url: string | null;
@@ -426,6 +427,9 @@ export function DashboardSidebar({
               <ArrowUpRight size={12} color={`${A}40`} style={{ marginLeft: "auto" }} />
             </button>
           )}
+
+          {/* Credit usage bar */}
+          <CreditBar userId={user?.id} plan={plan} />
 
           {/* Referral */}
           <ReferralPopup userId={user?.id} />
