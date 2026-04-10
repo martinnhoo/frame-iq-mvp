@@ -1,35 +1,29 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-/* ── Typography tokens ─────────────────────────────────────────────────── */
-const BODY    = "'Plus Jakarta Sans', system-ui, sans-serif";
-const MONO    = "'DM Mono', 'SF Mono', monospace";
+/* ── Typography ───────────────────────────────────────────────────────── */
+const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
 
-/* ── Color tokens ──────────────────────────────────────────────────────── */
+/* ── Vivid color palette — no soft/muted tones ────────────────────────── */
 const C = {
   bg:          "#050508",
-  surface:     "rgba(255,255,255,0.025)",
-  surfaceHov:  "rgba(255,255,255,0.05)",
-  border:      "rgba(255,255,255,0.06)",
-  borderHov:   "rgba(255,255,255,0.12)",
+  surface:     "rgba(255,255,255,0.03)",
+  surfaceHov:  "rgba(255,255,255,0.055)",
+  border:      "rgba(255,255,255,0.07)",
+  borderHov:   "rgba(255,255,255,0.14)",
   text:        "#fff",
-  textSoft:    "rgba(255,255,255,0.55)",
-  textMuted:   "rgba(255,255,255,0.3)",
-  accent:      "#0ea5e9",
-  accentSoft:  "rgba(14,165,233,0.12)",
-  accentGlow:  "rgba(14,165,233,0.25)",
-  green:       "#34d399",
-  greenSoft:   "rgba(52,211,153,0.12)",
-  amber:       "#f59e0b",
-  amberSoft:   "rgba(245,158,11,0.12)",
-  red:         "#ef4444",
-  redSoft:     "rgba(239,68,68,0.08)",
+  textSoft:    "rgba(255,255,255,0.6)",
+  textMuted:   "rgba(255,255,255,0.32)",
+  accent:      "#6366f1",   /* vivid indigo */
+  green:       "#22c55e",   /* vivid green */
+  amber:       "#f97316",   /* vivid orange */
+  red:         "#ef4444",   /* vivid red */
 };
 
 type Lang = "pt" | "es" | "en";
@@ -65,12 +59,12 @@ const T: Record<Lang, {
     signup_sub: "3 dias grátis · sem cartão",
     rate_limit: "Limite atingido. Crie uma conta para continuar.",
     error: "Erro. Tente novamente.",
-    drag_text: "Arraste ou clique",
+    drag_text: "Arraste ou clique para enviar",
     or_text: "ou",
-    formats: "PNG, JPG, WEBP — até 10MB",
+    formats: "PNG, JPG, WEBP — até 10 MB",
     positive_title: "O que funciona",
     improve_title: "O que melhorar",
-    unlock_card: "Desbloquear análise",
+    unlock_card: "Desbloquear análise completa",
   },
   es: {
     hero: "Nota de tu anuncio\nen 10 segundos",
@@ -93,12 +87,12 @@ const T: Record<Lang, {
     signup_sub: "3 días gratis · sin tarjeta",
     rate_limit: "Límite alcanzado. Crea una cuenta para continuar.",
     error: "Error. Intenta de nuevo.",
-    drag_text: "Arrastra o haz clic",
+    drag_text: "Arrastra o haz clic para subir",
     or_text: "o",
-    formats: "PNG, JPG, WEBP — hasta 10MB",
+    formats: "PNG, JPG, WEBP — hasta 10 MB",
     positive_title: "Lo que funciona",
     improve_title: "Qué mejorar",
-    unlock_card: "Desbloquear análisis",
+    unlock_card: "Desbloquear análisis completo",
   },
   en: {
     hero: "Rate your ad\nin 10 seconds",
@@ -121,12 +115,12 @@ const T: Record<Lang, {
     signup_sub: "3 days free · no card",
     rate_limit: "Limit reached. Sign up to continue.",
     error: "Error. Try again.",
-    drag_text: "Drag or click",
+    drag_text: "Drag or click to upload",
     or_text: "or",
-    formats: "PNG, JPG, WEBP — up to 10MB",
+    formats: "PNG, JPG, WEBP — up to 10 MB",
     positive_title: "What works",
     improve_title: "What to improve",
-    unlock_card: "Unlock analysis",
+    unlock_card: "Unlock full analysis",
   },
 };
 
@@ -142,16 +136,16 @@ interface AnalysisResult {
   actions?: string[];
 }
 
-/* ── Inline keyframes ──────────────────────────────────────────────────── */
+/* ── Keyframes ────────────────────────────────────────────────────────── */
 const KEYFRAMES = `
 @keyframes demoFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes demoFadeUp2{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes scanLine{0%{top:10%;opacity:0}20%{opacity:1}80%{opacity:1}100%{top:85%;opacity:0}}
-@keyframes orbFloat{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.12)}}
-@keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(14,165,233,0.15)}50%{box-shadow:0 0 0 8px rgba(14,165,233,0)}}
+@keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.18)}50%{box-shadow:0 0 0 10px rgba(99,102,241,0)}}
 @property --beam-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes beamSpin{to{--beam-angle:360deg}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 @media(max-width:480px){
   .demo-upload{padding:40px 20px!important}
   .demo-score-img{width:64px!important;height:64px!important;borderRadius:10px!important}
@@ -176,12 +170,11 @@ export default function Demo() {
   const [unlocking, setUnlocking] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
 
-  /* ── Compress image to max 1MB JPEG for reliable transfer ────────────── */
+  /* ── Compress image ──────────────────────────────────────────────────── */
   const compressImage = (file: File, maxW = 1200, quality = 0.7): Promise<{ base64: string; mediaType: string }> =>
     new Promise((resolve, reject) => {
       const img = new Image();
       const objectUrl = URL.createObjectURL(file);
-
       img.onload = () => {
         const scale = Math.min(1, maxW / Math.max(img.width, img.height));
         const canvas = document.createElement("canvas");
@@ -192,44 +185,24 @@ export default function Demo() {
         URL.revokeObjectURL(objectUrl);
         resolve({ base64: dataUrl.split(",")[1], mediaType: "image/jpeg" });
       };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error("Failed to load image"));
-      };
-
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Failed to load image")); };
       img.src = objectUrl;
     });
 
   const handleDemoResponse = (payload: unknown) => {
     const response = payload as {
-      ok?: boolean;
-      error?: string;
-      full?: boolean;
-      score?: number;
-      verdict?: string;
-      hook?: string;
-      message?: string;
-      cta?: string;
-      actions?: string[];
+      ok?: boolean; error?: string; full?: boolean; score?: number;
+      verdict?: string; hook?: string; message?: string; cta?: string; actions?: string[];
     } | null;
-
     if (!response) throw new Error("empty_response");
-    if (response.error === "rate_limited") {
-      setRateLimited(true);
-      setPhase("upload");
-      return null;
-    }
-    if (response.ok === false || response.error) {
-      throw new Error(response.error || "analysis_failed");
-    }
+    if (response.error === "rate_limited") { setRateLimited(true); setPhase("upload"); return null; }
+    if (response.ok === false || response.error) throw new Error(response.error || "analysis_failed");
     return response as AnalysisResult;
   };
 
-  /* ── Business logic ──────────────────────────────────────────────────── */
   const analyze = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) { toast.error("File too large. Max 10MB."); return; }
-    if (!file.type.startsWith("image/"))  { toast.error("Please upload an image file."); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Please upload an image file."); return; }
 
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result as string);
@@ -242,21 +215,18 @@ export default function Demo() {
       const { data, error } = await supabase.functions.invoke("analyze-demo", {
         body: { image_base64: base64, media_type: mediaType, lang },
       });
-
       console.log("[Demo] Raw response:", JSON.stringify(data));
       if (error) { console.error("[Demo] Invoke error:", error); throw error; }
 
       const parsed = handleDemoResponse(data);
       if (!parsed) return;
 
-      // Fallback: ensure minimum visible content
       if (!parsed.hook && !parsed.verdict) {
         console.warn("[Demo] Empty analysis received, showing fallback");
         parsed.hook = lang === "pt" ? "Análise processada." : lang === "es" ? "Análisis procesado." : "Analysis processed.";
         parsed.verdict = lang === "pt" ? "Resultado" : lang === "es" ? "Resultado" : "Result";
         if (!parsed.score) parsed.score = 5;
       }
-
       setResult(parsed);
       setPhase("result");
     } catch (e) {
@@ -269,7 +239,6 @@ export default function Demo() {
   const unlockFull = async () => {
     if (!email || !email.includes("@") || !preview) return;
     setUnlocking(true);
-
     try {
       const blob = await (await fetch(preview)).blob();
       const imageFile = new File([blob], "demo-upload.jpg", { type: blob.type || "image/jpeg" });
@@ -277,7 +246,6 @@ export default function Demo() {
       const { data, error } = await supabase.functions.invoke("analyze-demo", {
         body: { image_base64: base64, media_type: mediaType, lang, email },
       });
-
       if (error) throw error;
       const parsed = handleDemoResponse(data);
       if (!parsed) return;
@@ -285,40 +253,28 @@ export default function Demo() {
     } catch (e) {
       console.error("Demo unlock error:", e);
       toast.error(t.error);
-    } finally {
-      setUnlocking(false);
-    }
+    } finally { setUnlocking(false); }
   };
 
   const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) analyze(f); };
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) analyze(f); };
+
   const scoreColor = (s: number) => s >= 8 ? C.green : s >= 5 ? C.amber : C.red;
-  const scoreBg    = (s: number) => s >= 8 ? C.greenSoft : s >= 5 ? C.amberSoft : C.redSoft;
+  const scoreLabel = (s: number) =>
+    s >= 8 ? (lang === "pt" ? "Excelente" : lang === "es" ? "Excelente" : "Excellent") :
+    s >= 5 ? (lang === "pt" ? "Testar" : lang === "es" ? "Probar" : "Test") :
+    (lang === "pt" ? "Repensar" : lang === "es" ? "Repensar" : "Rethink");
 
   /* ── Render ──────────────────────────────────────────────────────────── */
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: BODY, position: "relative", overflow: "hidden" }}>
       <style>{KEYFRAMES}</style>
 
-      {/* ── Ambient glow orbs ── */}
-      <div style={{
-        position: "fixed", top: "15%", left: "50%", width: 600, height: 600,
-        background: "radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 70%)",
-        transform: "translate(-50%, -50%)", pointerEvents: "none",
-        animation: "orbFloat 8s ease-in-out infinite",
-      }} />
-      <div style={{
-        position: "fixed", top: "60%", left: "30%", width: 400, height: 400,
-        background: "radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%)",
-        transform: "translate(-50%, -50%)", pointerEvents: "none",
-        animation: "orbFloat 10s ease-in-out infinite 2s",
-      }} />
-
       {/* ── Nav ── */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
         borderBottom: `1px solid ${C.border}`,
-        background: "rgba(5,5,8,0.8)", backdropFilter: "blur(24px) saturate(1.4)",
+        background: "rgba(5,5,8,0.85)", backdropFilter: "blur(24px) saturate(1.4)",
         padding: "14px 24px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
@@ -342,28 +298,23 @@ export default function Demo() {
         </div>
       </nav>
 
-      {/* ── Main content ── */}
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 580, margin: "0 auto", padding: "56px 20px 100px" }}>
+      {/* ── Main ── */}
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 560, margin: "0 auto", padding: "56px 20px 100px" }}>
 
         {/* ── Hero ── */}
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          {/* Headline */}
+        <div style={{ textAlign: "center", marginBottom: 44 }}>
           <h1 style={{
             fontFamily: BODY, fontWeight: 800,
-            fontSize: "clamp(28px, 6vw, 40px)",
+            fontSize: "clamp(26px, 6vw, 38px)",
             letterSpacing: "-0.035em", lineHeight: 1.1,
-            color: C.text, marginBottom: 14,
-            whiteSpace: "pre-line",
+            color: C.text, marginBottom: 14, whiteSpace: "pre-line",
           }}>
             {t.hero}
           </h1>
-
-          {/* Sub */}
           <p style={{
-            fontFamily: BODY, fontSize: 14,
-            fontWeight: 400, color: C.textMuted,
-            lineHeight: 1.5, maxWidth: 340, margin: "0 auto",
-            letterSpacing: "-0.01em",
+            fontFamily: BODY, fontSize: 14, fontWeight: 400,
+            color: C.textMuted, lineHeight: 1.5,
+            maxWidth: 320, margin: "0 auto",
           }}>
             {t.sub}
           </p>
@@ -372,18 +323,19 @@ export default function Demo() {
         {/* ── Rate Limited ── */}
         {rateLimited && (
           <div style={{
-            textAlign: "center", padding: "32px 28px", borderRadius: 20,
-            background: C.redSoft, border: `1px solid rgba(239,68,68,0.15)`,
+            textAlign: "center", padding: "32px 28px", borderRadius: 16,
+            border: `1px solid rgba(239,68,68,0.2)`,
+            background: "rgba(239,68,68,0.06)",
             marginBottom: 28, animation: "demoFadeUp 0.4s ease-out",
           }}>
-            <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 500, color: "rgba(239,68,68,0.8)", marginBottom: 18 }}>
+            <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 500, color: C.red, marginBottom: 18 }}>
               {t.rate_limit}
             </p>
             <button
               onClick={() => navigate("/signup")}
               style={{
                 fontFamily: BODY, fontSize: 14, fontWeight: 700,
-                padding: "12px 28px", borderRadius: 12,
+                padding: "12px 28px", borderRadius: 10,
                 background: C.text, color: C.bg,
                 border: "none", cursor: "pointer",
                 display: "inline-flex", alignItems: "center", gap: 6,
@@ -394,43 +346,36 @@ export default function Demo() {
           </div>
         )}
 
-        {/* ── Upload Phase ── */}
+        {/* ── Upload ── */}
         {phase === "upload" && !rateLimited && (
           <div
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onClick={() => fileRef.current?.click()}
+            className="demo-upload"
             style={{
-              position: "relative",
-              borderRadius: 24,
-              background: dragOver ? "rgba(14,165,233,0.04)" : C.surface,
-              border: `1px solid ${dragOver ? "rgba(14,165,233,0.3)" : C.border}`,
-              padding: "clamp(40px, 8vw, 64px) clamp(20px, 5vw, 32px)",
-              textAlign: "center",
-              cursor: "pointer",
+              position: "relative", borderRadius: 20,
+              background: dragOver ? "rgba(99,102,241,0.04)" : C.surface,
+              border: `1px solid ${dragOver ? "rgba(99,102,241,0.35)" : C.border}`,
+              padding: "clamp(40px, 8vw, 56px) clamp(20px, 5vw, 32px)",
+              textAlign: "center", cursor: "pointer",
               transition: "all 0.25s cubic-bezier(0.16,1,0.3,1)",
               overflow: "hidden",
             }}
             onMouseEnter={e => {
-              if (!dragOver) {
-                e.currentTarget.style.borderColor = C.borderHov;
-                e.currentTarget.style.background = C.surfaceHov;
-              }
+              if (!dragOver) { e.currentTarget.style.borderColor = C.borderHov; e.currentTarget.style.background = C.surfaceHov; }
             }}
             onMouseLeave={e => {
-              if (!dragOver) {
-                e.currentTarget.style.borderColor = C.border;
-                e.currentTarget.style.background = C.surface;
-              }
+              if (!dragOver) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; }
             }}
           >
-            {/* Border beam — rotating highlight on idle, glow on drag */}
+            {/* Border beam */}
             <div style={{
-              position: "absolute", inset: -1, borderRadius: 25, padding: 1,
+              position: "absolute", inset: -1, borderRadius: 21, padding: 1,
               background: dragOver
-                ? "rgba(14,165,233,0.3)"
-                : `conic-gradient(from var(--beam-angle), transparent 0%, transparent 75%, rgba(14,165,233,0.2) 85%, transparent 95%)`,
+                ? "rgba(99,102,241,0.35)"
+                : `conic-gradient(from var(--beam-angle), transparent 0%, transparent 75%, rgba(99,102,241,0.25) 85%, transparent 95%)`,
               animation: dragOver ? "none" : "beamSpin 4s linear infinite",
               WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
               WebkitMaskComposite: "xor",
@@ -440,209 +385,159 @@ export default function Demo() {
 
             <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
 
-            {/* Upload icon */}
-            <div style={{
-              width: 64, height: 64, borderRadius: 18,
-              background: dragOver ? C.accentSoft : "rgba(255,255,255,0.04)",
-              border: `1px solid ${dragOver ? "rgba(14,165,233,0.25)" : C.border}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 24px",
-              transition: "all 0.25s",
-            }}>
-              <Upload size={24} color={dragOver ? C.accent : C.textMuted} strokeWidth={1.5} />
-            </div>
+            {/* Upload icon — clean, no background box */}
+            <Upload
+              size={32}
+              color={dragOver ? C.accent : C.textMuted}
+              strokeWidth={1.4}
+              style={{ margin: "0 auto 20px", transition: "color 0.2s" }}
+            />
 
-            {/* Text */}
             <p style={{
-              fontFamily: BODY, fontSize: 16, fontWeight: 700,
-              color: dragOver ? C.text : "rgba(255,255,255,0.8)",
-              marginBottom: 8, letterSpacing: "-0.02em",
+              fontFamily: BODY, fontSize: 15, fontWeight: 600,
+              color: dragOver ? C.text : "rgba(255,255,255,0.75)",
+              marginBottom: 6, letterSpacing: "-0.02em",
               transition: "color 0.2s",
             }}>
               {dragOver ? t.drop : t.drag_text}
             </p>
             <p style={{
               fontFamily: BODY, fontSize: 12, fontWeight: 400,
-              color: C.textMuted, letterSpacing: "-0.01em",
+              color: C.textMuted,
             }}>
               {t.formats}
             </p>
           </div>
         )}
 
-        {/* ── Analyzing Phase ── */}
+        {/* ── Analyzing ── */}
         {phase === "analyzing" && (
-          <div style={{
-            textAlign: "center", padding: "56px 24px",
-            animation: "demoFadeUp 0.35s ease-out",
-          }}>
+          <div style={{ textAlign: "center", padding: "56px 24px", animation: "demoFadeUp 0.35s ease-out" }}>
             {preview && (
-              <div style={{
-                position: "relative", display: "inline-block", marginBottom: 36,
-              }}>
+              <div style={{ position: "relative", display: "inline-block", marginBottom: 36 }}>
                 <img src={preview} alt="Ad" style={{
                   maxWidth: 200, maxHeight: 160, borderRadius: 14,
-                  border: `1px solid ${C.border}`,
-                  objectFit: "cover", opacity: 0.7,
+                  border: `1px solid ${C.border}`, objectFit: "cover", opacity: 0.7,
                 }} />
-                {/* Scanning line */}
                 <div style={{
                   position: "absolute", left: 0, right: 0, height: 2,
                   background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)`,
-                  animation: "scanLine 2s ease-in-out infinite",
-                  borderRadius: 1,
+                  animation: "scanLine 2s ease-in-out infinite", borderRadius: 1,
                 }} />
               </div>
             )}
-
-            {/* Minimal spinner + text */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
               <div style={{
                 width: 16, height: 16, borderRadius: "50%",
                 border: `2px solid ${C.border}`, borderTopColor: C.accent,
                 animation: "spin 0.8s linear infinite",
               }} />
-              <span style={{
-                fontFamily: BODY, fontSize: 14, fontWeight: 600,
-                color: C.textSoft, letterSpacing: "-0.01em",
-              }}>
+              <span style={{ fontFamily: BODY, fontSize: 14, fontWeight: 600, color: C.textSoft }}>
                 {t.analyzing}
               </span>
             </div>
           </div>
         )}
 
-        {/* ── Result Phase ── */}
+        {/* ── Result ── */}
         {phase === "result" && result && (
           <div style={{ animation: "demoFadeUp 0.4s ease-out" }}>
 
-            {/* ── Score header: image + score + verdict ── */}
+            {/* ── Score row ── */}
             <div style={{
-              display: "flex", gap: 20, alignItems: "center",
-              marginBottom: 28, flexWrap: "wrap",
+              display: "flex", gap: 18, alignItems: "center",
+              marginBottom: 24, padding: "20px 22px",
+              borderRadius: 16, background: C.surface,
+              border: `1px solid ${C.border}`,
             }}>
               {preview && (
-                <div style={{ position: "relative", flexShrink: 0 }}>
-                  <img src={preview} alt="Ad" style={{
-                    width: 88, height: 88, borderRadius: 14,
-                    border: `1px solid ${C.border}`,
-                    objectFit: "cover",
-                  }} />
-                  {/* Score badge on image */}
-                  <div style={{
-                    position: "absolute", bottom: -8, right: -8,
-                    width: 36, height: 36, borderRadius: 10,
-                    background: scoreBg(result.score),
-                    border: `2px solid ${C.bg}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <span style={{
-                      fontFamily: BODY, fontSize: 14, fontWeight: 800,
-                      color: scoreColor(result.score),
-                    }}>
-                      {result.score}
-                    </span>
-                  </div>
-                </div>
+                <img src={preview} alt="Ad" style={{
+                  width: 72, height: 72, borderRadius: 12,
+                  border: `1px solid ${C.border}`, objectFit: "cover", flexShrink: 0,
+                }} />
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 4 }}>
                   <span style={{
-                    fontFamily: BODY, fontSize: 28, fontWeight: 800,
-                    color: scoreColor(result.score),
-                    letterSpacing: "-0.04em", lineHeight: 1,
+                    fontFamily: BODY, fontSize: 32, fontWeight: 800,
+                    color: scoreColor(result.score), letterSpacing: "-0.04em", lineHeight: 1,
                   }}>
                     {result.score}
                   </span>
-                  <span style={{ fontFamily: BODY, fontSize: 13, fontWeight: 500, color: C.textMuted }}>/10</span>
+                  <span style={{ fontFamily: BODY, fontSize: 14, fontWeight: 500, color: C.textMuted }}>/10</span>
                 </div>
                 <p style={{
                   fontFamily: BODY, fontSize: 13, fontWeight: 600,
-                  color: scoreColor(result.score), opacity: 0.85,
+                  color: scoreColor(result.score),
                 }}>
-                  {result.verdict}
+                  {result.verdict || scoreLabel(result.score)}
                 </p>
               </div>
             </div>
 
-            {/* ── Two-card layout ── */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* ── Cards ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
-              {/* Card 1: Positives (always visible) */}
+              {/* Card 1: Positives */}
               <div style={{
-                borderRadius: 18, padding: "20px 22px",
-                borderLeft: `2px solid rgba(52,211,153,0.4)`,
+                borderRadius: 16, padding: "20px 22px",
                 background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderLeft: `3px solid ${C.green}`,
                 animation: "demoFadeUp2 0.5s ease-out",
               }}>
-                {/* Card header */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 7,
-                  marginBottom: 12,
-                }}>
-                  <CheckCircle2 size={15} color={C.green} strokeWidth={2} />
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <CheckCircle2 size={16} color={C.green} strokeWidth={2.2} />
                   <span style={{
                     fontFamily: BODY, fontSize: 12, fontWeight: 700,
-                    color: C.green, letterSpacing: "0.02em",
-                    textTransform: "uppercase",
+                    color: C.green, letterSpacing: "0.04em", textTransform: "uppercase",
                   }}>
                     {t.positive_title}
                   </span>
                 </div>
-
-                {/* Hook content */}
                 <p style={{
                   fontFamily: BODY, fontSize: 14, fontWeight: 400,
-                  color: C.textSoft, lineHeight: 1.65,
+                  color: C.textSoft, lineHeight: 1.7,
                 }}>
                   {result.hook}
                 </p>
               </div>
 
-              {/* Card 2: Improvements — locked or full */}
+              {/* Card 2: Improvements — locked or open */}
               {!result.full ? (
                 <div
                   onClick={() => navigate("/signup")}
                   style={{
-                    position: "relative", borderRadius: 18,
+                    position: "relative", borderRadius: 16,
                     padding: "20px 22px",
-                    borderLeft: `2px solid rgba(14,165,233,0.3)`,
                     background: C.surface,
+                    border: `1px solid ${C.border}`,
+                    borderLeft: `3px solid ${C.accent}`,
                     cursor: "pointer",
-                    transition: "all 0.25s cubic-bezier(0.16,1,0.3,1)",
+                    transition: "all 0.2s",
                     overflow: "hidden",
                     animation: "demoFadeUp2 0.6s ease-out",
-                    minHeight: 160,
+                    minHeight: 150,
                   }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderLeftColor = "rgba(14,165,233,0.5)";
-                    e.currentTarget.style.background = C.surfaceHov;
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderLeftColor = "rgba(14,165,233,0.3)";
-                    e.currentTarget.style.background = C.surface;
-                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = C.borderHov}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
                 >
-                  {/* Card header */}
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 7,
-                    marginBottom: 12,
-                  }}>
-                    <AlertTriangle size={15} color={C.accent} strokeWidth={2} />
+                  {/* Header */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <AlertTriangle size={16} color={C.accent} strokeWidth={2.2} />
                     <span style={{
                       fontFamily: BODY, fontSize: 12, fontWeight: 700,
-                      color: C.accent, letterSpacing: "0.02em",
-                      textTransform: "uppercase",
+                      color: C.accent, letterSpacing: "0.04em", textTransform: "uppercase",
                     }}>
                       {t.improve_title}
                     </span>
                   </div>
 
-                  {/* Blurred placeholder content */}
+                  {/* Blurred placeholder lines */}
                   <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }}>
-                    <div style={{ height: 12, width: "90%", borderRadius: 4, background: "rgba(255,255,255,0.06)", marginBottom: 9 }} />
-                    <div style={{ height: 12, width: "72%", borderRadius: 4, background: "rgba(255,255,255,0.04)", marginBottom: 9 }} />
-                    <div style={{ height: 12, width: "80%", borderRadius: 4, background: "rgba(255,255,255,0.05)" }} />
+                    <div style={{ height: 11, width: "88%", borderRadius: 3, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
+                    <div style={{ height: 11, width: "70%", borderRadius: 3, background: "rgba(255,255,255,0.04)", marginBottom: 10 }} />
+                    <div style={{ height: 11, width: "78%", borderRadius: 3, background: "rgba(255,255,255,0.05)" }} />
                   </div>
 
                   {/* Lock overlay */}
@@ -650,13 +545,22 @@ export default function Demo() {
                     position: "absolute", inset: 0,
                     display: "flex", flexDirection: "column",
                     alignItems: "center", justifyContent: "center",
-                    paddingTop: 16,
-                    background: "rgba(5,5,8,0.4)",
+                    paddingTop: 12,
+                    background: "rgba(5,5,8,0.5)",
+                    backdropFilter: "blur(2px)",
                   }}>
-                    <Lock size={20} color={C.accent} strokeWidth={1.8} style={{ marginBottom: 10, animation: "lockPulse 2.5s ease-in-out infinite" }} />
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 12,
+                      border: `1px solid rgba(99,102,241,0.25)`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      marginBottom: 10,
+                      animation: "lockPulse 2.5s ease-in-out infinite",
+                    }}>
+                      <Lock size={18} color={C.accent} strokeWidth={1.8} />
+                    </div>
                     <span style={{
                       fontFamily: BODY, fontSize: 13, fontWeight: 700,
-                      color: C.text, letterSpacing: "-0.01em", marginBottom: 3,
+                      color: C.text, marginBottom: 4,
                     }}>
                       {t.unlock_card}
                     </span>
@@ -669,36 +573,31 @@ export default function Demo() {
                   </div>
                 </div>
               ) : (
+                /* Unlocked improvements card */
                 <div style={{
-                  borderRadius: 18, padding: "20px 22px",
-                  borderLeft: `2px solid rgba(14,165,233,0.3)`,
+                  borderRadius: 16, padding: "20px 22px",
                   background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderLeft: `3px solid ${C.accent}`,
                   animation: "demoFadeUp2 0.6s ease-out",
                 }}>
-                  {/* Card header */}
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 7,
-                    marginBottom: 14,
-                  }}>
-                    <AlertTriangle size={15} color={C.accent} strokeWidth={2} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                    <AlertTriangle size={16} color={C.accent} strokeWidth={2.2} />
                     <span style={{
                       fontFamily: BODY, fontSize: 12, fontWeight: 700,
-                      color: C.accent, letterSpacing: "0.02em",
-                      textTransform: "uppercase",
+                      color: C.accent, letterSpacing: "0.04em", textTransform: "uppercase",
                     }}>
                       {t.improve_title}
                     </span>
                   </div>
 
-                  {/* Message */}
-                  <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.65, marginBottom: 16 }}>
+                  <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.7, marginBottom: 16 }}>
                     {result.message}
                   </p>
 
-                  {/* CTA feedback */}
                   {result.cta && (
                     <div style={{ marginBottom: 16 }}>
-                      <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                      <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
                         CTA
                       </p>
                       <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.6 }}>
@@ -707,16 +606,23 @@ export default function Demo() {
                     </div>
                   )}
 
-                  {/* Actions */}
                   {result.actions && result.actions.length > 0 && (
                     <div>
-                      <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+                      <p style={{ fontFamily: BODY, fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
                         {t.actions_label}
                       </p>
                       {result.actions.map((action, i) => (
-                        <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-start" }}>
-                          <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: C.accent, marginTop: 2, flexShrink: 0 }}>{i + 1}</span>
-                          <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.55 }}>
+                        <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
+                          <span style={{
+                            fontFamily: BODY, fontSize: 11, fontWeight: 800,
+                            color: C.accent, marginTop: 3, flexShrink: 0,
+                            width: 18, height: 18, borderRadius: 5,
+                            border: `1px solid rgba(99,102,241,0.2)`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                          }}>
+                            {i + 1}
+                          </span>
+                          <p style={{ fontFamily: BODY, fontSize: 14, fontWeight: 400, color: C.textSoft, lineHeight: 1.6 }}>
                             {action}
                           </p>
                         </div>
@@ -727,7 +633,7 @@ export default function Demo() {
               )}
             </div>
 
-            {/* ── Bottom CTA (only when unlocked) ── */}
+            {/* ── Bottom CTA ── */}
             {result.full && (
               <div style={{ textAlign: "center", paddingTop: 20, marginTop: 20, borderTop: `1px solid ${C.border}` }}>
                 <p style={{ fontFamily: BODY, fontSize: 13, fontWeight: 400, color: C.textMuted, marginBottom: 14 }}>
@@ -737,7 +643,7 @@ export default function Demo() {
                   onClick={() => navigate("/signup")}
                   style={{
                     fontFamily: BODY, fontSize: 14, fontWeight: 700,
-                    padding: "13px 32px", borderRadius: 12,
+                    padding: "13px 32px", borderRadius: 10,
                     background: C.text, color: C.bg,
                     border: "none", cursor: "pointer",
                     display: "inline-flex", alignItems: "center", gap: 8,

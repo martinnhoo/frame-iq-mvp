@@ -8,25 +8,20 @@ import { BarChart3, BookOpen, Brain, Users, ArrowRight } from "lucide-react";
 const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
 const C = {
   bg:         "#050508",
-  surface:    "rgba(255,255,255,0.025)",
-  border:     "rgba(255,255,255,0.06)",
-  borderHov:  "rgba(255,255,255,0.12)",
+  surface:    "rgba(255,255,255,0.03)",
+  border:     "rgba(255,255,255,0.07)",
+  borderHov:  "rgba(255,255,255,0.14)",
   text:       "#fff",
-  textSoft:   "rgba(255,255,255,0.55)",
-  textMuted:  "rgba(255,255,255,0.3)",
-  accent:     "#0ea5e9",
-  accentSoft: "rgba(14,165,233,0.12)",
-  green:      "#34d399",
-  greenSoft:  "rgba(52,211,153,0.12)",
-  amber:      "#f59e0b",
-  amberSoft:  "rgba(245,158,11,0.12)",
-  purple:     "#a78bfa",
-  purpleSoft: "rgba(167,139,250,0.12)",
+  textSoft:   "rgba(255,255,255,0.6)",
+  textMuted:  "rgba(255,255,255,0.32)",
+  accent:     "#6366f1",
+  green:      "#22c55e",
+  amber:      "#f97316",
+  purple:     "#a855f7",
 };
 
 const KF = `
 @keyframes aFadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-@keyframes orbFloat{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.12)}}
 `;
 
 type Lang = "pt" | "es" | "en";
@@ -77,10 +72,10 @@ const T: Record<Lang, {
 };
 
 const ICONS = [
-  { Icon: BarChart3, bg: C.accentSoft, color: C.accent },
-  { Icon: BookOpen,  bg: C.greenSoft,  color: C.green },
-  { Icon: Brain,     bg: C.amberSoft,  color: C.amber },
-  { Icon: Users,     bg: C.purpleSoft, color: C.purple },
+  { Icon: BarChart3, color: C.accent },
+  { Icon: BookOpen,  color: C.green },
+  { Icon: Brain,     color: C.amber },
+  { Icon: Users,     color: C.purple },
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════ */
@@ -94,25 +89,11 @@ export default function Gestao() {
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: BODY, position: "relative", overflow: "hidden" }}>
       <style>{KF}</style>
 
-      {/* Ambient orbs */}
-      <div style={{
-        position: "fixed", top: "18%", left: "48%", width: 500, height: 500,
-        background: "radial-gradient(circle, rgba(14,165,233,0.05) 0%, transparent 70%)",
-        transform: "translate(-50%,-50%)", pointerEvents: "none",
-        animation: "orbFloat 9s ease-in-out infinite",
-      }} />
-      <div style={{
-        position: "fixed", top: "60%", left: "60%", width: 350, height: 350,
-        background: "radial-gradient(circle, rgba(167,139,250,0.04) 0%, transparent 70%)",
-        transform: "translate(-50%,-50%)", pointerEvents: "none",
-        animation: "orbFloat 11s ease-in-out infinite 2s",
-      }} />
-
       {/* Nav */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 50,
         borderBottom: `1px solid ${C.border}`,
-        background: "rgba(5,5,8,0.8)", backdropFilter: "blur(24px) saturate(1.4)",
+        background: "rgba(5,5,8,0.85)", backdropFilter: "blur(24px) saturate(1.4)",
         padding: "14px 24px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
@@ -125,8 +106,7 @@ export default function Gestao() {
               fontFamily: BODY, fontSize: 13, fontWeight: 700,
               padding: "9px 20px", borderRadius: 10,
               background: C.text, color: C.bg,
-              border: "none", cursor: "pointer",
-              transition: "all 0.15s",
+              border: "none", cursor: "pointer", transition: "all 0.15s",
             }}
             onMouseEnter={e => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "none"; }}
@@ -145,8 +125,7 @@ export default function Gestao() {
             fontFamily: BODY, fontWeight: 800,
             fontSize: "clamp(28px, 5.5vw, 42px)",
             letterSpacing: "-0.035em", lineHeight: 1.1,
-            color: C.text, marginBottom: 16,
-            whiteSpace: "pre-line",
+            color: C.text, marginBottom: 16, whiteSpace: "pre-line",
           }}>
             {t.hero}
           </h1>
@@ -154,7 +133,6 @@ export default function Gestao() {
             fontFamily: BODY, fontSize: 15, fontWeight: 400,
             color: C.textSoft, lineHeight: 1.6,
             maxWidth: 440, margin: "0 auto",
-            letterSpacing: "-0.01em",
           }}>
             {t.sub}
           </p>
@@ -164,8 +142,7 @@ export default function Gestao() {
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: 14,
-          marginBottom: 56,
+          gap: 12, marginBottom: 56,
         }}>
           {t.features.map((f, i) => {
             const ic = ICONS[i];
@@ -173,17 +150,17 @@ export default function Gestao() {
               <div
                 key={i}
                 style={{
-                  padding: "24px 22px", borderRadius: 18,
+                  padding: "22px 20px", borderRadius: 14,
                   background: C.surface,
                   border: `1px solid ${C.border}`,
-                  backdropFilter: "blur(8px)",
+                  borderLeft: `3px solid ${ic.color}`,
                   animation: `aFadeUp ${0.5 + i * 0.08}s ease-out`,
                   transition: "border-color 0.2s",
                 }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = C.borderHov}
                 onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
               >
-                <ic.Icon size={18} color={ic.color} strokeWidth={1.8} style={{ marginBottom: 14 }} />
+                <ic.Icon size={18} color={ic.color} strokeWidth={1.8} style={{ marginBottom: 12 }} />
                 <p style={{
                   fontFamily: BODY, fontSize: 14, fontWeight: 700,
                   color: C.text, marginBottom: 6, letterSpacing: "-0.02em",
@@ -207,7 +184,7 @@ export default function Gestao() {
             onClick={() => navigate("/signup")}
             style={{
               fontFamily: BODY, fontSize: 15, fontWeight: 700,
-              padding: "14px 36px", borderRadius: 12,
+              padding: "14px 36px", borderRadius: 10,
               background: C.text, color: C.bg,
               border: "none", cursor: "pointer",
               display: "inline-flex", alignItems: "center", gap: 8,
