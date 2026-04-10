@@ -48,12 +48,11 @@ Deno.serve(async (req) => {
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found");
-      // Admin emails keep their current plan — don't downgrade
+      // Admin emails get studio plan — always
       if (ADMIN_EMAILS.includes(user.email!)) {
-        const { data: prof } = await supabase.from("profiles").select("plan").eq("id", user.id).maybeSingle();
-        const currentPlan = prof?.plan || "free";
-        logStep("Admin email — preserving current plan", { email: user.email, plan: currentPlan });
-        return new Response(JSON.stringify({ subscribed: false, plan: currentPlan, admin: true }), {
+        await supabase.from("profiles").update({ plan: "studio" }).eq("id", user.id);
+        logStep("Admin email — forcing studio plan", { email: user.email });
+        return new Response(JSON.stringify({ subscribed: false, plan: "studio", admin: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -85,12 +84,11 @@ Deno.serve(async (req) => {
 
     if (!sub) {
       logStep("No active/trialing subscription");
-      // Admin emails keep their current plan — don't downgrade
+      // Admin emails get studio plan — always
       if (ADMIN_EMAILS.includes(user.email!)) {
-        const { data: prof } = await supabase.from("profiles").select("plan").eq("id", user.id).maybeSingle();
-        const currentPlan = prof?.plan || "free";
-        logStep("Admin email — preserving current plan", { email: user.email, plan: currentPlan });
-        return new Response(JSON.stringify({ subscribed: false, plan: currentPlan, admin: true }), {
+        await supabase.from("profiles").update({ plan: "studio" }).eq("id", user.id);
+        logStep("Admin email — forcing studio plan", { email: user.email });
+        return new Response(JSON.stringify({ subscribed: false, plan: "studio", admin: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
