@@ -14,10 +14,6 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import AdDiary from "./AdDiary";
 import { SparklineCard } from "@/components/ui/SparklineCard";
-import { HeatmapPerformance } from "@/components/ui/HeatmapPerformance";
-import { WinnersList } from "@/components/ui/WinnersList";
-import { FatigueRadar } from "@/components/ui/FatigueRadar";
-import { CreativeRaceBar } from "@/components/ui/CreativeRaceBar";
 import { Reveal } from "@/components/ui/Reveal";
 import { ResponsiveLine } from "@nivo/line";
 import { ADBRIEF_TOKENS as TK } from "@/styles/tokens";
@@ -78,75 +74,6 @@ function getMetricValue(d: any, key: MetricKey): number {
   }
 }
 
-// ── Mock data generators — replace with real data from live-metrics edge function ──
-function generateMockHeatmapData() {
-  const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  return DAYS.map(day => ({
-    id: day,
-    data: Array.from({ length: 12 }, (_, i) => ({
-      x: `${i * 2}h`,
-      y: +(Math.random() * 3 + 0.5).toFixed(2),
-    })),
-  }));
-}
-
-function generateMockWinners(): Array<{ name: string; ctr: number; roas: number; spend: number; trend: "up" | "down" | "hot" | "risk"; contribution: number }> {
-  return [
-    { name: "Carrossel_Oferta_V3", ctr: 0.042, roas: 4.2, spend: 1240, trend: "hot", contribution: 28 },
-    { name: "Video_Hook_Direto", ctr: 0.038, roas: 3.8, spend: 980, trend: "up", contribution: 22 },
-    { name: "Static_Desconto_40", ctr: 0.031, roas: 3.1, spend: 760, trend: "up", contribution: 17 },
-    { name: "UGC_Depoimento_Maria", ctr: 0.027, roas: 2.4, spend: 620, trend: "down", contribution: 14 },
-    { name: "Reels_Bastidores", ctr: 0.019, roas: 1.6, spend: 440, trend: "risk", contribution: 10 },
-  ];
-}
-
-function generateMockLosers(): Array<{ name: string; ctr: number; roas: number; spend: number; trend: "up" | "down" | "hot" | "risk"; contribution: number }> {
-  return [
-    { name: "Banner_Generico_V1", ctr: 0.008, roas: 0.4, spend: 320, trend: "risk", contribution: 7 },
-    { name: "Copy_Longa_V2", ctr: 0.011, roas: 0.7, spend: 280, trend: "down", contribution: 6 },
-    { name: "Imagem_Stock_05", ctr: 0.006, roas: 0.2, spend: 200, trend: "risk", contribution: 5 },
-  ];
-}
-
-function generateMockBumpData() {
-  const creatives = ["Carrossel_V3", "Video_Hook", "Static_40", "UGC_Maria", "Reels_BTS"];
-  const periods = ["Sem 1", "Sem 2", "Sem 3", "Sem 4"];
-  // Bump chart requires each rank to appear exactly once per period
-  return creatives.map((id, ci) => ({
-    id,
-    data: periods.map((x, pi) => {
-      // Deterministic but varied ranking per period
-      const rank = ((ci + pi) % creatives.length) + 1;
-      return { x, y: rank };
-    }),
-  }));
-}
-
-// ── Gradient separator ────────────────────────────────────────────────────────
-function GradientSep() {
-  return (
-    <div style={{
-      height: 1,
-      background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07) 20%, rgba(255,255,255,0.07) 80%, transparent)",
-      margin: "20px 0",
-    }} />
-  );
-}
-
-// ── Live pulse dot ───────────────────────────────────────────────────────────
-function LiveDot() {
-  return (
-    <div style={{ position: "relative", width: 8, height: 8, display: "inline-flex" }}>
-      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981" }} />
-      <div style={{
-        position: "absolute", inset: -3,
-        borderRadius: "50%", border: "1px solid #10b981",
-        animation: "ping 1.5s ease-out infinite",
-        opacity: 0.6,
-      }} />
-    </div>
-  );
-}
 
 // ── Calendar Date Picker ──────────────────────────────────────────────────────
 interface DateRange { from: Date; to: Date; }
@@ -330,7 +257,7 @@ const AdRow = React.memo(function AdRow({ ad, rank }: { ad:any; rank:number }) {
   const isPauser=ctr<0.3&&ad.spend>20;
   const isMeta=ad.platform==="meta";
   return (
-    <div style={{display:"flex",alignItems:"center",padding:"11px 0",borderBottom:`1px solid ${BD}`,gap:0}}>
+    <div style={{display:"flex",alignItems:"center",padding:"11px 0",borderBottom:"1px solid rgba(13,162,231,0.08)",gap:0}}>
       <span style={{width:28,fontSize:12,color:MT,fontWeight:600,flexShrink:0}}>{rank}</span>
       <div style={{flex:1,minWidth:0,paddingRight:16}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -352,7 +279,7 @@ const AdRow = React.memo(function AdRow({ ad, rank }: { ad:any; rank:number }) {
         {ad.roas!=null?<p style={{margin:0,fontSize:13,fontWeight:700,color:ad.roas>2?GREEN:TX}}>{ad.roas.toFixed(1)}×</p>:<p style={{margin:0,fontSize:13,color:MT}}>—</p>}
       </div>
       <div style={{width:COL.status,textAlign:"right",flexShrink:0}}>
-        {isWinner&&<span style={{fontSize:12,fontWeight:700,color:GREEN,background:"rgba(34,197,94,0.1)",borderRadius:6,padding:"3px 8px"}}>↑ Escalar</span>}
+        {isWinner&&<span style={{fontSize:12,fontWeight:700,color:ACCENT,background:"rgba(14,165,233,0.1)",borderRadius:6,padding:"3px 8px"}}>↑ Escalar</span>}
         {isPauser&&<span style={{fontSize:12,fontWeight:700,color:RED,background:"rgba(239,68,68,0.1)",borderRadius:6,padding:"3px 8px"}}> Pausar</span>}
         {!isWinner&&!isPauser&&<span style={{fontSize:12,color:MT}}>—</span>}
       </div>
@@ -444,10 +371,19 @@ export default function PerformanceDashboard() {
     return `${fmtLabel(dateRange.from)} → ${fmtLabel(dateRange.to)}`;
   },[dateRange,today]);
 
-  // Memoize mock data to avoid re-generating on every render
-  const mockWinners = useMemo(() => generateMockWinners(), []);
-  const mockHeatmap = useMemo(() => generateMockHeatmapData(), []);
-  const mockBump = useMemo(() => generateMockBumpData(), []);
+  // Section visibility filter
+  type Section = "cards"|"trend"|"ads";
+  const SECTIONS: {key:Section;label:string}[] = [
+    {key:"cards",label:"Métricas"},{key:"trend",label:"Tendência"},{key:"ads",label:"Top Ads"}
+  ];
+  const [visibleSections, setVisibleSections] = useState<Set<Section>>(new Set(["cards","trend","ads"]));
+  const toggleSection = useCallback((s:Section) => {
+    setVisibleSections(prev => {
+      const next = new Set(prev);
+      if (next.has(s) && next.size > 1) next.delete(s); else next.add(s);
+      return next;
+    });
+  }, []);
 
   const handleDragStart=(i:number)=>setDragging(i);
   const handleDragOver=(e:React.DragEvent,i:number)=>{ e.preventDefault(); setDragOver(i); };
@@ -465,28 +401,29 @@ export default function PerformanceDashboard() {
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         @keyframes ping{0%{transform:scale(1);opacity:1}75%{transform:scale(2);opacity:0}}
         @keyframes shimmer{0%{background-position:200% 0}to{background-position:-200% 0}}
-        .perf-card{animation:fadeIn 0.3s ease both;transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s}
-        .perf-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.06)!important;}
+        .perf-card{animation:fadeIn 0.3s ease both;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s}
+        .perf-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(13,162,231,0.10),0 0 0 1px rgba(13,162,231,0.12)!important}
+        .perf-card:hover .spark-card{border-color:rgba(13,162,231,0.25)!important}
         .drag-over{border-color:${ACCENT}60!important;background:${ACCENT}08!important}
+        .spark-card{transition:border-color 0.2s,box-shadow 0.2s}
         @media(max-width:768px){
           .perf-page{padding:14px 14px 80px!important}
           .perf-header-actions{gap:6px!important;flex-wrap:wrap!important}
           .perf-platform-tabs button{padding:5px 10px!important;font-size:12px!important}
           .perf-action-btn{padding:6px 10px!important;font-size:12px!important}
-          /* Metric cards: 2 por linha */
           .perf-metrics-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}
-          /* Header: empilha verticalmente */
           .perf-header{flex-direction:column!important;align-items:flex-start!important;gap:12px!important}
-          /* Calendar: esconde texto do presets */
           .perf-preset-label{display:none!important}
-          /* Tabs: menores */
           .perf-tabs button{padding:5px 14px!important;font-size:12px!important}
         }
         @media(max-width:480px){
-          .perf-page{padding:12px 12px 80px!important}
-          .perf-metrics-grid{grid-template-columns:repeat(2,1fr)!important;gap:6px!important}
+          .perf-page{padding:10px 10px 80px!important}
+          .perf-metrics-grid{grid-template-columns:1fr 1fr!important;gap:6px!important}
           .perf-new-btn span{display:none}
           .perf-action-btn span{display:none}
+        }
+        @media(max-width:360px){
+          .perf-metrics-grid{grid-template-columns:1fr!important;gap:6px!important}
         }
       `}</style>
 
@@ -644,31 +581,53 @@ export default function PerformanceDashboard() {
         </>
       )}
 
-      {/* SparklineCard grid with new UI components */}
+      {/* Section filter chips */}
+      {activeTab==="metrics"&&!loading&&d&&(
+        <div style={{display:"flex",gap:6,marginBottom:20,flexWrap:"wrap"}}>
+          {SECTIONS.map(s=>{
+            const active=visibleSections.has(s.key);
+            return (
+              <button key={s.key} onClick={()=>toggleSection(s.key)}
+                style={{
+                  padding:"5px 14px",borderRadius:8,cursor:"pointer",
+                  fontFamily:F,fontSize:12,fontWeight:active?700:500,
+                  background:active?`${ACCENT}15`:"transparent",
+                  border:`1px solid ${active?ACCENT+"40":BD}`,
+                  color:active?ACCENT:MT,
+                  transition:"all 0.15s",
+                }}>
+                {active?"✓ ":""}{s.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Real data sections */}
       {activeTab==="metrics"&&!loading&&d&&(
         <>
           {/* Sparkline Cards Grid */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))",gap:14,marginBottom:28,overflow:"visible"}}>
-            {validMetrics.map((key,i)=>{
-              const def=METRICS.find(m=>m.key===key);
-              if(!def) return null;
-              const value=getMetricValue(d,key);
-              const prevValue=d[`prev_${key}`];
-              const daily=d.daily||[];
-              const sparklineData = daily.map((day:any)=>({
-                x: fmtLabel(new Date(day.date+"T12:00:00")),
-                y: getMetricValue(day,key),
-              }));
+          {visibleSections.has("cards")&&(
+            <div className="perf-metrics-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:12,marginBottom:28,overflow:"visible"}}>
+              {validMetrics.map((key,i)=>{
+                const def=METRICS.find(m=>m.key===key);
+                if(!def) return null;
+                const value=getMetricValue(d,key);
+                const prevValue=d[`prev_${key}`];
+                const daily=d.daily||[];
+                const sparklineData = daily.map((day:any)=>({
+                  x: fmtLabel(new Date(day.date+"T12:00:00")),
+                  y: getMetricValue(day,key),
+                }));
 
-              const formatMap: Record<MetricKey, "currency"|"percent"|"number"|"roas"> = {
-                spend: "currency", ctr: "percent", clicks: "number", impressions: "number",
-                conversions: "number", roas: "roas", cpa: "currency", cpm: "currency",
-                cpc: "currency", reach: "number", frequency: "number", conv_value: "currency"
-              };
+                const formatMap: Record<MetricKey, "currency"|"percent"|"number"|"roas"> = {
+                  spend: "currency", ctr: "percent", clicks: "number", impressions: "number",
+                  conversions: "number", roas: "roas", cpa: "currency", cpm: "currency",
+                  cpc: "currency", reach: "number", frequency: "number", conv_value: "currency"
+                };
 
-              return (
-                <Reveal key={key} delay={i*0.05}>
-                  <div draggable
+                return (
+                  <div key={key} draggable
                     onDragStart={()=>handleDragStart(i)}
                     onDragOver={e=>handleDragOver(e,i)}
                     onDrop={()=>handleDrop(i)}
@@ -685,102 +644,112 @@ export default function PerformanceDashboard() {
                       index={i}
                     />
                   </div>
-                </Reveal>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
-          <GradientSep />
-
-          {/* 2-column grid: Nivo Line Chart + FatigueRadar */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(320px, 1fr))",gap:20,marginBottom:28}}>
-            <Reveal direction="left">
-              <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:24,overflow:"hidden"}}>
-                <p style={{margin:"0 0 16px",fontSize:13,fontWeight:700,color:TX}}>Tendência — CTR + ROAS (últimos 14 dias)</p>
-                <div style={{height:280}}>
+          {/* Trend chart — real daily data */}
+          {visibleSections.has("trend")&&(d.daily||[]).length>1&&(
+            <Reveal>
+              <div style={{
+                background:`linear-gradient(145deg, ${ACCENT}08, transparent 60%)`,
+                border:`1px solid ${ACCENT}18`,
+                borderRadius:16,padding:"20px 24px",marginBottom:28,overflow:"hidden",
+                position:"relative",
+              }}>
+                {/* Top accent line */}
+                <div style={{position:"absolute",top:0,left:"5%",right:"5%",height:1,background:`linear-gradient(90deg, transparent, ${ACCENT}30, transparent)`}}/>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{width:3,height:16,borderRadius:2,background:ACCENT}}/>
+                    <p style={{margin:0,fontSize:14,fontWeight:700,color:TX,letterSpacing:"-0.01em"}}>
+                      Tendência — {dateLabel}
+                    </p>
+                  </div>
+                  <div style={{display:"flex",gap:14}}>
+                    {[{label:"CTR",color:ACCENT},{label:"Spend",color:AMBER}].map(l=>(
+                      <div key={l.label} style={{display:"flex",alignItems:"center",gap:5}}>
+                        <div style={{width:12,height:2,borderRadius:1,background:l.color}}/>
+                        <span style={{fontSize:10,fontWeight:600,color:MT,letterSpacing:"0.05em",textTransform:"uppercase" as const,fontFamily:"'DM Mono',monospace"}}>{l.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{height:260}}>
                   <ResponsiveLine
                     data={[
                       {
-                        id:"CTR",
-                        data:(d.daily||[]).slice(-14).map((day:any)=>({
+                        id:"CTR (%)",
+                        data:(d.daily||[]).map((day:any)=>({
                           x:fmtLabel(new Date(day.date+"T12:00:00")),
-                          y:(day.ctr||0)*100
+                          y:+((day.ctr||0)*100).toFixed(2)
                         }))
                       },
                       {
-                        id:"ROAS",
-                        data:(d.daily||[]).slice(-14).map((day:any)=>({
+                        id:"Spend (R$)",
+                        data:(d.daily||[]).map((day:any)=>({
                           x:fmtLabel(new Date(day.date+"T12:00:00")),
-                          y:day.roas||0
+                          y:+(day.spend||0).toFixed(0)
                         }))
                       }
                     ]}
                     theme={TK.nivoTheme}
-                    colors={[GREEN,TK.accent]}
-                    margin={{top:16,right:16,bottom:40,left:60}}
+                    colors={[ACCENT,AMBER]}
+                    margin={{top:12,right:12,bottom:36,left:52}}
                     xScale={{type:"point"}}
                     yScale={{type:"linear",min:"auto",max:"auto"}}
-                    axisBottom={{tickRotation:-45,tickPadding:8}}
-                    axisLeft={{tickSize:4,tickPadding:8}}
+                    axisBottom={{tickRotation:-45,tickPadding:8,tickSize:0}}
+                    axisLeft={{tickSize:0,tickPadding:8}}
                     enableGridX={false}
                     enableGridY={true}
                     lineWidth={2}
-                    enablePoints={false}
+                    enablePoints={true}
+                    pointSize={4}
+                    pointColor={{theme:"background"}}
+                    pointBorderWidth={2}
+                    pointBorderColor={{from:"serieColor"}}
                     enableCrosshair={true}
                     useMesh={true}
                     curve="monotoneX"
+                    enableArea
+                    areaOpacity={0.06}
                   />
                 </div>
               </div>
             </Reveal>
-            <Reveal direction="right" delay={0.1}>
-              <FatigueRadar escalando={12} estavel={8} fadigando={3} pausado={2}/>
-            </Reveal>
-          </div>
+          )}
 
-          <GradientSep />
-
-          {/* 2-column grid: WinnersList + HeatmapPerformance */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(300px, 1fr))",gap:20,marginBottom:28}}>
-            <Reveal direction="left" delay={0.15}>
-              <WinnersList items={mockWinners} type="winners"/>
-            </Reveal>
-            <Reveal direction="right" delay={0.2}>
-              <HeatmapPerformance data={mockHeatmap} metric="ctr"/>
-            </Reveal>
-          </div>
-
-          <GradientSep />
-
-          {/* Full-width CreativeRaceBar */}
-          <Reveal delay={0.25}>
-            <div style={{marginBottom:28}}>
-              <CreativeRaceBar data={mockBump}/>
-            </div>
-          </Reveal>
-
-          <GradientSep />
-
-          {/* Top ads */}
-          {(d.top_ads||[]).length>0&&(
-            <Reveal>
-              <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:24}}>
+          {/* Top ads — real data */}
+          {visibleSections.has("ads")&&(d.top_ads||[]).length>0&&(
+            <Reveal delay={0.1}>
+              <div style={{
+                background:`linear-gradient(145deg, ${ACCENT}06, transparent 60%)`,
+                border:`1px solid ${ACCENT}15`,
+                borderRadius:16,padding:"20px 24px",
+                position:"relative",
+              }}>
+                {/* Top accent line */}
+                <div style={{position:"absolute",top:0,left:"5%",right:"5%",height:1,background:`linear-gradient(90deg, transparent, ${ACCENT}25, transparent)`}}/>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
-                  <div>
-                    <p style={{margin:0,fontSize:15,fontWeight:700,color:TX}}>Top anúncios</p>
-                    <p style={{margin:"4px 0 0",fontSize:12,color:MT}}>Ordenados por spend · {dateLabel}</p>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{width:3,height:16,borderRadius:2,background:ACCENT}}/>
+                    <div>
+                      <p style={{margin:0,fontSize:14,fontWeight:700,color:TX,letterSpacing:"-0.01em"}}>Top anúncios</p>
+                      <p style={{margin:"3px 0 0",fontSize:11,color:MT}}>Ordenados por spend · {dateLabel}</p>
+                    </div>
                   </div>
-                  <button onClick={()=>navigate("/dashboard/ai")} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"transparent",border:`1px solid ${BD}`,borderRadius:8,color:MT,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:F}}>
+                  <button onClick={()=>navigate("/dashboard/ai")} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:`${ACCENT}10`,border:`1px solid ${ACCENT}25`,borderRadius:8,color:ACCENT,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
                     Analisar com IA<ArrowUpRight size={12}/>
                   </button>
                 </div>
-                <div style={{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${BD}`,marginTop:16,gap:0}}>
+                <div style={{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:`1px solid rgba(13,162,231,0.1)`,marginTop:16,gap:0}}>
                   <span style={{width:28,flexShrink:0}}/>
-                  <span style={{flex:1,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Anúncio</span>
-                  <span style={{width:COL.spend,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>Spend</span>
-                  <span style={{width:COL.ctr,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>CTR</span>
-                  <span style={{width:COL.roas,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>ROAS</span>
-                  <span style={{width:COL.status,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>Status</span>
+                  <span style={{flex:1,fontSize:10,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:"'DM Mono',monospace"}}>Anúncio</span>
+                  <span style={{width:COL.spend,fontSize:10,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"right" as const,flexShrink:0,fontFamily:"'DM Mono',monospace"}}>Spend</span>
+                  <span style={{width:COL.ctr,fontSize:10,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"right" as const,flexShrink:0,fontFamily:"'DM Mono',monospace"}}>CTR</span>
+                  <span style={{width:COL.roas,fontSize:10,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"right" as const,flexShrink:0,fontFamily:"'DM Mono',monospace"}}>ROAS</span>
+                  <span style={{width:COL.status,fontSize:10,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"right" as const,flexShrink:0,fontFamily:"'DM Mono',monospace"}}>Status</span>
                 </div>
                 <AdsCompact ads={d.top_ads||[]}/>
               </div>
