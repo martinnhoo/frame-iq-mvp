@@ -138,7 +138,8 @@ Deno.serve(async (req) => {
     const email = body.email;
     const name = body.name || "";
     const language = body.language || "en";
-    const redirectPath = body.redirect || "/onboarding";
+    // Always redirect to the dedicated confirmation success page
+    const redirectPath = "/email-confirmed";
 
     if (!email) {
       return new Response(JSON.stringify({ ok: false, error: "missing_email" }), {

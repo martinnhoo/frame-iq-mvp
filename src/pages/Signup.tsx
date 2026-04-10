@@ -66,8 +66,9 @@ const Signup = () => {
       setEmailLoading(false);
     } else {
       // Send branded confirmation email (non-blocking)
+      // Always redirects to /email-confirmed — never to demo or onboarding
       supabase.functions.invoke("send-confirmation-email", {
-        body: { email: email.trim(), name: name.trim(), language, redirect: redirectParam || "/onboarding" },
+        body: { email: email.trim(), name: name.trim(), language },
       }).catch(() => {}); // fire-and-forget
 
       // Go directly to onboarding (no blocking email confirmation)

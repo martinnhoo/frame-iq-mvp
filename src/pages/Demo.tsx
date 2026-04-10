@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Zap, Plug } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -222,8 +222,6 @@ function LiveProof({ base, label, liveLabel, liveBase }: { base: number; label: 
 ══════════════════════════════════════════════════════════════════════════ */
 export default function Demo() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const fromSignup = searchParams.get("unlocked") === "1";
   const { language } = useLanguage();
   const lang: Lang = ["pt", "es"].includes(language) ? (language as Lang) : "en";
   const t = T[lang];
@@ -235,24 +233,6 @@ export default function Demo() {
   const previewRef = useRef<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
-
-  /* ── Restore demo result after signup ─────────────────────────────── */
-  useEffect(() => {
-    if (!fromSignup) return;
-    try {
-      const saved = localStorage.getItem(DEMO_STORAGE_KEY);
-      if (!saved) return;
-      const { result: savedResult, preview: savedPreview } = JSON.parse(saved);
-      if (savedResult && savedResult.score) {
-        // Mark as full (unlocked) since user signed up
-        setResult({ ...savedResult, full: true });
-        setPreview(savedPreview || null);
-        setPhase("result");
-        // Clean up
-        localStorage.removeItem(DEMO_STORAGE_KEY);
-      }
-    } catch {}
-  }, [fromSignup]);
 
   /* ── Compress image ──────────────────────────────────────────────────── */
   const compressImage = (file: File, maxW = 1200, quality = 0.7): Promise<{ base64: string; mediaType: string }> =>
@@ -361,7 +341,7 @@ export default function Demo() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <LanguageSwitcher />
           <button
-            onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/demo?unlocked=1"))}
+            onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/dashboard/ai?from_demo=1"))}
             style={{
               fontFamily: F, fontSize: 13, fontWeight: 700,
               padding: "9px 20px", borderRadius: 10,
@@ -413,7 +393,7 @@ export default function Demo() {
               {t.rate_limit}
             </p>
             <button
-              onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/demo?unlocked=1"))}
+              onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/dashboard/ai?from_demo=1"))}
               style={{
                 fontFamily: F, fontSize: 14, fontWeight: 700,
                 padding: "12px 28px", borderRadius: 10,
@@ -593,7 +573,7 @@ export default function Demo() {
               {/* RIGHT — What to improve (locked or open) */}
               {!result.full ? (
                 <div
-                  onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/demo?unlocked=1"))}
+                  onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/dashboard/ai?from_demo=1"))}
                   style={{
                     flex: 1, minWidth: 0,
                     position: "relative", borderRadius: 16,
@@ -729,7 +709,7 @@ export default function Demo() {
                 </div>
 
                 <button
-                  onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/demo?unlocked=1"))}
+                  onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/dashboard/ai?from_demo=1"))}
                   style={{
                     fontFamily: F, fontSize: 15, fontWeight: 700,
                     padding: "14px 40px", borderRadius: 12,

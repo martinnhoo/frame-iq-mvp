@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { storage } from "@/lib/storage";
 import { SectionBoundary } from "@/components/SectionBoundary";
-import { useOutletContext, useNavigate } from "react-router-dom";
+import { useOutletContext, useNavigate, useSearchParams } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
@@ -26,6 +26,7 @@ import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
 import FirstWinBanner from "@/components/dashboard/FirstWinBanner";
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Plus Jakarta Sans', system-ui, sans-serif";
+const DEMO_STORAGE_KEY = "adbrief_demo_result";
 
 // ── ABAvatar — logo real do adbrief (PNG asset) ───────────────────────────────
 function ABAvatar({ size = 28 }: { size?: number }) {
@@ -211,6 +212,7 @@ interface AIMessage {
   role: "user"|"assistant";
   blocks?: Block[];
   userText?: string;
+  imagePreview?: string;
   ts: number;
   id: number;
 }
@@ -2173,6 +2175,7 @@ export default function AdBriefAI() {
   const {language}=useLanguage();
   const lang=(["pt","es"].includes(language)?language:"en") as "pt"|"es"|"en";
   const navigate=useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   // SK scoped per persona — each account has its own persistent chat history
   const SK=`adbrief_chat_v1_${selectedPersona?.id||"default"}`;
 
@@ -2188,6 +2191,40 @@ export default function AdBriefAI() {
       return hasUserHistory ? sanitized : [];
     } catch { return []; }
   });
+  /* ── Inject demo analysis into chat when arriving from demo signup ── */
+  const demoInjectedRef = useRef(false);
+  useEffect(() => {
+    if (demoInjectedRef.current) return;
+    if (searchParams.get("from_demo") !== "1") return;
+    demoInjectedRef.current = true;
+    // Clean up URL param
+    searchParams.delete("from_demo");
+    setSearchParams(searchParams, { replace: true });
+    try {
+      const saved = localStorage.getItem(DEMO_STORAGE_KEY);
+      if (!saved) return;
+      const { result, preview } = JSON.parse(saved);
+      if (!result?.score) return;
+      localStorage.removeItem(DEMO_STORAGE_KEY);
+      const now = Date.now();
+      const scoreColor = result.score >= 8 ? "#22c55e" : result.score >= 5 ? "#f97316" : "#ef4444";
+      const pt = lang === "pt"; const es = lang === "es";
+      // Build a rich analysis text from the demo result
+      const parts: string[] = [];
+      parts.push(`**${pt ? "Nota" : es ? "Nota" : "Score"}: ${result.score}/10** — ${result.verdict || ""}`);
+      if (result.hook) parts.push(`\n**${pt ? "O que funciona" : es ? "Lo que funciona" : "What works"}:**\n${result.hook}`);
+      if (result.message) parts.push(`\n**${pt ? "O que melhorar" : es ? "Qué mejorar" : "What to improve"}:**\n${result.message}`);
+      if (result.cta) parts.push(`\n**CTA:** ${result.cta}`);
+      if (result.actions?.length) parts.push(`\n**${pt ? "Próximos passos" : es ? "Próximos pasos" : "Next steps"}:**\n${result.actions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}`);
+      parts.push(`\n---\n${pt ? "Conecte sua conta de Meta Ads para análises conectadas aos seus dados reais de ROAS, CTR e spend." : es ? "Conecta tu cuenta de Meta Ads para análisis conectados a tus datos reales." : "Connect your Meta Ads account for analyses connected to your real ROAS, CTR and spend data."}`);
+      const analysisText = parts.join("\n");
+      setMessages([
+        { role: "user", id: now, ts: now, userText: pt ? "Analise este anúncio" : es ? "Analiza este anuncio" : "Analyze this ad", imagePreview: preview || undefined },
+        { role: "assistant", id: now + 1, ts: now + 1, blocks: [{ type: "text", title: pt ? "Análise do anúncio" : es ? "Análisis del anuncio" : "Ad Analysis", content: analysisText }] },
+      ]);
+    } catch {}
+  }, [searchParams, lang]);
+
   const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
   // Virtual scroll: render only last N messages for performance
   // User can load older messages with "Ver mais"

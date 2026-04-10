@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import ConfirmEmail from "./pages/ConfirmEmail";
+import EmailConfirmed from "./pages/EmailConfirmed";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
@@ -132,6 +133,7 @@ const App = () => (
               <Route path="/features/:slug" element={<FeatureDetail />} />
               <Route path="/features" element={<Features />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
+              <Route path="/email-confirmed" element={<EmailConfirmed />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
