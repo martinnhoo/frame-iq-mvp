@@ -2,7 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { BarChart3, BookOpen, Brain, Users, ArrowRight } from "lucide-react";
+import { BarChart3, BookOpen, Users, ArrowRight, Clock } from "lucide-react";
 
 /* ── Tokens ───────────────────────────────────────────────────────────── */
 const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -16,7 +16,6 @@ const C = {
   textMuted:  "rgba(255,255,255,0.32)",
   accent:     "#6366f1",
   green:      "#22c55e",
-  amber:      "#f97316",
   purple:     "#a855f7",
 };
 
@@ -26,47 +25,54 @@ const KF = `
 
 type Lang = "pt" | "es" | "en";
 
+interface Feature {
+  title: string;
+  desc: string;
+  soon?: boolean;
+}
+
 const T: Record<Lang, {
   hero: string; sub: string; cta: string; ctaSub: string; nav_cta: string;
-  features: { title: string; desc: string }[];
+  soon: string;
+  features: Feature[];
 }> = {
   pt: {
     hero: "Central de comando\ndos seus anúncios",
-    sub: "Dashboards, relatórios automáticos, diário de ads e alertas inteligentes. Tudo num lugar só.",
+    sub: "Veja tudo num lugar só. Sem alternar entre abas do Ads Manager.",
     cta: "Começar grátis",
     ctaSub: "3 dias grátis · sem cartão",
     nav_cta: "Começar grátis",
+    soon: "Em breve",
     features: [
-      { title: "Dashboard em tempo real", desc: "Métricas atualizadas, KPIs e tendências numa visão unificada. Sem precisar abrir o Ads Manager." },
-      { title: "Diário de Ads automático", desc: "Registro diário do que aconteceu em cada campanha — gerado pela IA, pronto pra consulta." },
-      { title: "Inteligência semanal", desc: "Relatório com padrões descobertos, oportunidades escondidas e riscos antes que virem problema." },
-      { title: "Múltiplas contas", desc: "Gerencie várias contas Meta com contexto dedicado. A IA aprende o nicho de cada uma." },
+      { title: "Dashboard unificado", desc: "Métricas, KPIs e tendências atualizadas numa visão única. O que importa, sem ruído." },
+      { title: "Diário de Ads", desc: "Registro automático do que aconteceu em cada campanha — gerado pela IA, pronto pra consulta.", soon: true },
+      { title: "Múltiplas contas", desc: "Gerencie várias contas Meta com contexto dedicado. A IA aprende o nicho de cada uma.", soon: true },
     ],
   },
   es: {
     hero: "Centro de comando\nde tus anuncios",
-    sub: "Dashboards, reportes automáticos, diario de ads y alertas inteligentes. Todo en un solo lugar.",
+    sub: "Mira todo en un solo lugar. Sin alternar entre pestañas del Ads Manager.",
     cta: "Comenzar gratis",
     ctaSub: "3 días gratis · sin tarjeta",
     nav_cta: "Comenzar gratis",
+    soon: "Pronto",
     features: [
-      { title: "Dashboard en tiempo real", desc: "Métricas actualizadas, KPIs y tendencias en una vista unificada. Sin abrir el Ads Manager." },
-      { title: "Diario de Ads automático", desc: "Registro diario de lo que pasó en cada campaña — generado por IA, listo para consulta." },
-      { title: "Inteligencia semanal", desc: "Reporte con patrones descubiertos, oportunidades ocultas y riesgos antes de que se vuelvan problema." },
-      { title: "Múltiples cuentas", desc: "Gestiona varias cuentas Meta con contexto dedicado. La IA aprende el nicho de cada una." },
+      { title: "Dashboard unificado", desc: "Métricas, KPIs y tendencias actualizadas en una vista única. Lo que importa, sin ruido." },
+      { title: "Diario de Ads", desc: "Registro automático de lo que pasó en cada campaña — generado por IA, listo para consulta.", soon: true },
+      { title: "Múltiples cuentas", desc: "Gestiona varias cuentas Meta con contexto dedicado. La IA aprende el nicho de cada una.", soon: true },
     ],
   },
   en: {
     hero: "Command center\nfor your ads",
-    sub: "Dashboards, automated reports, ad diary and smart alerts. Everything in one place.",
+    sub: "See everything in one place. No more switching between Ads Manager tabs.",
     cta: "Start free",
     ctaSub: "3 days free · no card",
     nav_cta: "Start free",
+    soon: "Soon",
     features: [
-      { title: "Real-time dashboard", desc: "Up-to-date metrics, KPIs and trends in one unified view. No more Ads Manager tab-hopping." },
-      { title: "Automatic Ad Diary", desc: "Daily log of what happened in each campaign — AI-generated, ready for review." },
-      { title: "Weekly intelligence", desc: "Report with discovered patterns, hidden opportunities and risks before they become problems." },
-      { title: "Multiple accounts", desc: "Manage several Meta accounts with dedicated context. AI learns each account's niche." },
+      { title: "Unified dashboard", desc: "Up-to-date metrics, KPIs and trends in one single view. What matters, without noise." },
+      { title: "Ad Diary", desc: "Automatic daily log of what happened in each campaign — AI-generated, ready for review.", soon: true },
+      { title: "Multiple accounts", desc: "Manage several Meta accounts with dedicated context. AI learns each account's niche.", soon: true },
     ],
   },
 };
@@ -74,7 +80,6 @@ const T: Record<Lang, {
 const ICONS = [
   { Icon: BarChart3, color: C.accent },
   { Icon: BookOpen,  color: C.green },
-  { Icon: Brain,     color: C.amber },
   { Icon: Users,     color: C.purple },
 ];
 
@@ -117,80 +122,40 @@ export default function Gestao() {
       </nav>
 
       {/* Content */}
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 620, margin: "0 auto", padding: "64px 20px 100px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 560, margin: "0 auto", padding: "64px 20px 100px" }}>
 
         {/* Hero */}
-        <div style={{ textAlign: "center", marginBottom: 56, animation: "aFadeUp 0.5s ease-out" }}>
+        <div style={{ textAlign: "center", marginBottom: 52, animation: "aFadeUp 0.5s ease-out" }}>
           <h1 style={{
             fontFamily: BODY, fontWeight: 800,
-            fontSize: "clamp(28px, 5.5vw, 42px)",
+            fontSize: "clamp(26px, 5.5vw, 38px)",
             letterSpacing: "-0.035em", lineHeight: 1.1,
-            color: C.text, marginBottom: 16, whiteSpace: "pre-line",
+            color: C.text, marginBottom: 14, whiteSpace: "pre-line",
           }}>
             {t.hero}
           </h1>
           <p style={{
-            fontFamily: BODY, fontSize: 15, fontWeight: 400,
+            fontFamily: BODY, fontSize: 14, fontWeight: 400,
             color: C.textSoft, lineHeight: 1.6,
-            maxWidth: 440, margin: "0 auto",
+            maxWidth: 380, margin: "0 auto",
           }}>
             {t.sub}
           </p>
         </div>
 
-        {/* Feature grid */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: 12, marginBottom: 56,
-        }}>
-          {t.features.map((f, i) => {
-            const ic = ICONS[i];
-            return (
-              <div
-                key={i}
-                style={{
-                  padding: "22px 20px", borderRadius: 14,
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderLeft: `3px solid ${ic.color}`,
-                  animation: `aFadeUp ${0.5 + i * 0.08}s ease-out`,
-                  transition: "border-color 0.2s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = C.borderHov}
-                onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
-              >
-                <ic.Icon size={18} color={ic.color} strokeWidth={1.8} style={{ marginBottom: 12 }} />
-                <p style={{
-                  fontFamily: BODY, fontSize: 14, fontWeight: 700,
-                  color: C.text, marginBottom: 6, letterSpacing: "-0.02em",
-                }}>
-                  {f.title}
-                </p>
-                <p style={{
-                  fontFamily: BODY, fontSize: 13, fontWeight: 400,
-                  color: C.textSoft, lineHeight: 1.55,
-                }}>
-                  {f.desc}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-
         {/* CTA */}
-        <div style={{ textAlign: "center", animation: "aFadeUp 0.9s ease-out" }}>
+        <div style={{ textAlign: "center", marginBottom: 48, animation: "aFadeUp 0.6s ease-out" }}>
           <button
             onClick={() => navigate("/signup")}
             style={{
               fontFamily: BODY, fontSize: 15, fontWeight: 700,
-              padding: "14px 36px", borderRadius: 10,
+              padding: "14px 36px", borderRadius: 12,
               background: C.text, color: C.bg,
               border: "none", cursor: "pointer",
               display: "inline-flex", alignItems: "center", gap: 8,
               transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(255,255,255,0.08)"; }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(255,255,255,0.1)"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
           >
             {t.cta} <ArrowRight size={15} />
@@ -201,6 +166,59 @@ export default function Gestao() {
           }}>
             {t.ctaSub}
           </p>
+        </div>
+
+        {/* Features */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {t.features.map((f, i) => {
+            const ic = ICONS[i];
+            return (
+              <div
+                key={i}
+                style={{
+                  padding: "20px 20px", borderRadius: 14,
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderLeft: `3px solid ${f.soon ? C.textMuted : ic.color}`,
+                  opacity: f.soon ? 0.65 : 1,
+                  animation: `aFadeUp ${0.7 + i * 0.1}s ease-out`,
+                  transition: "border-color 0.2s, opacity 0.2s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderHov; if (f.soon) e.currentTarget.style.opacity = "0.8"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; if (f.soon) e.currentTarget.style.opacity = "0.65"; }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <ic.Icon size={16} color={f.soon ? C.textMuted : ic.color} strokeWidth={1.8} />
+                  <span style={{
+                    fontFamily: BODY, fontSize: 14, fontWeight: 700,
+                    color: C.text, letterSpacing: "-0.02em",
+                  }}>
+                    {f.title}
+                  </span>
+                  {f.soon && (
+                    <span style={{
+                      fontFamily: BODY, fontSize: 10, fontWeight: 600,
+                      color: C.textMuted, letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                      padding: "2px 8px", borderRadius: 6,
+                      border: `1px solid ${C.border}`,
+                      marginLeft: "auto", flexShrink: 0,
+                      display: "inline-flex", alignItems: "center", gap: 4,
+                    }}>
+                      <Clock size={9} strokeWidth={2} />
+                      {t.soon}
+                    </span>
+                  )}
+                </div>
+                <p style={{
+                  fontFamily: BODY, fontSize: 13, fontWeight: 400,
+                  color: C.textSoft, lineHeight: 1.6, paddingLeft: 26,
+                }}>
+                  {f.desc}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

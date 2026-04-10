@@ -2,7 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Activity, Bell, TrendingUp, Eye, ArrowRight } from "lucide-react";
+import { Activity, TrendingUp, Eye, ArrowRight, Clock } from "lucide-react";
 
 /* ── Tokens ───────────────────────────────────────────────────────────── */
 const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -22,57 +22,65 @@ const C = {
 
 const KF = `
 @keyframes aFadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@property --beam-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
+@keyframes beamSpin{to{--beam-angle:360deg}}
 `;
 
 type Lang = "pt" | "es" | "en";
 
+interface Feature {
+  title: string;
+  desc: string;
+  soon?: boolean;
+}
+
 const T: Record<Lang, {
   hero: string; sub: string; cta: string; ctaSub: string;
-  features: { title: string; desc: string }[];
+  soon: string;
+  features: Feature[];
 }> = {
   pt: {
     hero: "Diagnóstico da sua conta\nem 30 segundos",
-    sub: "Conecte sua conta Meta. A IA analisa performance, identifica desperdício e mostra onde agir.",
-    cta: "Conectar minha conta",
+    sub: "Conecte sua conta Meta. A IA mostra onde você está perdendo dinheiro e o que fazer agora.",
+    cta: "Começar diagnóstico",
     ctaSub: "3 dias grátis · sem cartão",
+    soon: "Em breve",
     features: [
-      { title: "Health Score", desc: "Score de 1 a 10 que resume a saúde geral dos seus anúncios em um número." },
-      { title: "Alertas em tempo real", desc: "A IA monitora 24/7 e avisa antes de problemas virarem prejuízo." },
-      { title: "Eficiência de gasto", desc: "Identifica onde você está desperdiçando verba e sugere realocação inteligente." },
-      { title: "Fadiga criativa", desc: "Detecta quando seus criativos perderam impacto e precisam ser substituídos." },
+      { title: "Health Score", desc: "Um número de 1 a 10 que resume a saúde geral da sua conta. Simples, direto, sem painel complicado." },
+      { title: "Eficiência de gasto", desc: "Identifica onde você está queimando verba e sugere onde realocar pra ter mais resultado." },
+      { title: "Fadiga criativa", desc: "Detecta quando seus criativos perderam impacto e precisam ser trocados antes de prejudicar a performance.", soon: true },
     ],
   },
   es: {
     hero: "Diagnóstico de tu cuenta\nen 30 segundos",
-    sub: "Conecta tu cuenta Meta. La IA analiza rendimiento, identifica desperdicio y muestra dónde actuar.",
-    cta: "Conectar mi cuenta",
+    sub: "Conecta tu cuenta Meta. La IA muestra dónde estás perdiendo dinero y qué hacer ahora.",
+    cta: "Empezar diagnóstico",
     ctaSub: "3 días gratis · sin tarjeta",
+    soon: "Pronto",
     features: [
-      { title: "Health Score", desc: "Score de 1 a 10 que resume la salud general de tus anuncios en un número." },
-      { title: "Alertas en tiempo real", desc: "La IA monitorea 24/7 y avisa antes de que los problemas se conviertan en pérdidas." },
-      { title: "Eficiencia de gasto", desc: "Identifica dónde estás desperdiciando presupuesto y sugiere reasignación inteligente." },
-      { title: "Fatiga creativa", desc: "Detecta cuándo tus creativos perdieron impacto y necesitan ser reemplazados." },
+      { title: "Health Score", desc: "Un número de 1 a 10 que resume la salud general de tu cuenta. Simple, directo, sin paneles complicados." },
+      { title: "Eficiencia de gasto", desc: "Identifica dónde estás quemando presupuesto y sugiere dónde reasignar para mejor resultado." },
+      { title: "Fatiga creativa", desc: "Detecta cuándo tus creativos perdieron impacto y necesitan ser cambiados antes de afectar la performance.", soon: true },
     ],
   },
   en: {
     hero: "Account diagnostic\nin 30 seconds",
-    sub: "Connect your Meta account. AI analyzes performance, identifies waste, and shows where to act.",
-    cta: "Connect my account",
+    sub: "Connect your Meta account. AI shows where you're losing money and what to do now.",
+    cta: "Start diagnostic",
     ctaSub: "3 days free · no card",
+    soon: "Soon",
     features: [
-      { title: "Health Score", desc: "A single 1-to-10 score that summarizes the overall health of your ads." },
-      { title: "Real-time alerts", desc: "AI monitors 24/7 and warns you before problems become costly." },
-      { title: "Spend efficiency", desc: "Identifies where you're wasting budget and suggests smart reallocation." },
-      { title: "Creative fatigue", desc: "Detects when your creatives have lost impact and need to be replaced." },
+      { title: "Health Score", desc: "A single 1-to-10 number that summarizes your account health. Simple, direct, no complicated dashboards." },
+      { title: "Spend efficiency", desc: "Identifies where you're burning budget and suggests where to reallocate for better results." },
+      { title: "Creative fatigue", desc: "Detects when your creatives have lost impact and need replacing before they hurt performance.", soon: true },
     ],
   },
 };
 
 const ICONS = [
   { Icon: Activity,   color: C.green },
-  { Icon: Bell,       color: C.amber },
   { Icon: TrendingUp, color: C.accent },
-  { Icon: Eye,        color: C.red },
+  { Icon: Eye,        color: C.amber },
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════ */
@@ -114,80 +122,44 @@ export default function Diagnostico() {
       </nav>
 
       {/* Content */}
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 620, margin: "0 auto", padding: "64px 20px 100px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 560, margin: "0 auto", padding: "64px 20px 100px" }}>
 
         {/* Hero */}
-        <div style={{ textAlign: "center", marginBottom: 56, animation: "aFadeUp 0.5s ease-out" }}>
+        <div style={{ textAlign: "center", marginBottom: 52, animation: "aFadeUp 0.5s ease-out" }}>
           <h1 style={{
             fontFamily: BODY, fontWeight: 800,
-            fontSize: "clamp(28px, 5.5vw, 42px)",
+            fontSize: "clamp(26px, 5.5vw, 38px)",
             letterSpacing: "-0.035em", lineHeight: 1.1,
-            color: C.text, marginBottom: 16, whiteSpace: "pre-line",
+            color: C.text, marginBottom: 14, whiteSpace: "pre-line",
           }}>
             {t.hero}
           </h1>
           <p style={{
-            fontFamily: BODY, fontSize: 15, fontWeight: 400,
+            fontFamily: BODY, fontSize: 14, fontWeight: 400,
             color: C.textSoft, lineHeight: 1.6,
-            maxWidth: 420, margin: "0 auto",
+            maxWidth: 380, margin: "0 auto",
           }}>
             {t.sub}
           </p>
         </div>
 
-        {/* Feature grid */}
+        {/* CTA principal — acima dos features */}
         <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: 12, marginBottom: 56,
+          position: "relative", textAlign: "center",
+          marginBottom: 48, animation: "aFadeUp 0.6s ease-out",
         }}>
-          {t.features.map((f, i) => {
-            const ic = ICONS[i];
-            return (
-              <div
-                key={i}
-                style={{
-                  padding: "22px 20px", borderRadius: 14,
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderLeft: `3px solid ${ic.color}`,
-                  animation: `aFadeUp ${0.5 + i * 0.08}s ease-out`,
-                  transition: "border-color 0.2s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = C.borderHov}
-                onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
-              >
-                <ic.Icon size={18} color={ic.color} strokeWidth={1.8} style={{ marginBottom: 12 }} />
-                <p style={{
-                  fontFamily: BODY, fontSize: 14, fontWeight: 700,
-                  color: C.text, marginBottom: 6, letterSpacing: "-0.02em",
-                }}>
-                  {f.title}
-                </p>
-                <p style={{
-                  fontFamily: BODY, fontSize: 13, fontWeight: 400,
-                  color: C.textSoft, lineHeight: 1.55,
-                }}>
-                  {f.desc}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* CTA */}
-        <div style={{ textAlign: "center", animation: "aFadeUp 0.9s ease-out" }}>
           <button
             onClick={() => navigate("/signup")}
             style={{
+              position: "relative",
               fontFamily: BODY, fontSize: 15, fontWeight: 700,
-              padding: "14px 36px", borderRadius: 10,
+              padding: "14px 36px", borderRadius: 12,
               background: C.text, color: C.bg,
               border: "none", cursor: "pointer",
               display: "inline-flex", alignItems: "center", gap: 8,
               transition: "all 0.2s cubic-bezier(0.16,1,0.3,1)",
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(255,255,255,0.08)"; }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(255,255,255,0.1)"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
           >
             {t.cta} <ArrowRight size={15} />
@@ -198,6 +170,59 @@ export default function Diagnostico() {
           }}>
             {t.ctaSub}
           </p>
+        </div>
+
+        {/* Feature list — vertical, clean */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {t.features.map((f, i) => {
+            const ic = ICONS[i];
+            return (
+              <div
+                key={i}
+                style={{
+                  padding: "20px 20px", borderRadius: 14,
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderLeft: `3px solid ${f.soon ? C.textMuted : ic.color}`,
+                  opacity: f.soon ? 0.65 : 1,
+                  animation: `aFadeUp ${0.7 + i * 0.1}s ease-out`,
+                  transition: "border-color 0.2s, opacity 0.2s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderHov; if (f.soon) e.currentTarget.style.opacity = "0.8"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; if (f.soon) e.currentTarget.style.opacity = "0.65"; }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <ic.Icon size={16} color={f.soon ? C.textMuted : ic.color} strokeWidth={1.8} />
+                  <span style={{
+                    fontFamily: BODY, fontSize: 14, fontWeight: 700,
+                    color: C.text, letterSpacing: "-0.02em",
+                  }}>
+                    {f.title}
+                  </span>
+                  {f.soon && (
+                    <span style={{
+                      fontFamily: BODY, fontSize: 10, fontWeight: 600,
+                      color: C.textMuted, letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                      padding: "2px 8px", borderRadius: 6,
+                      border: `1px solid ${C.border}`,
+                      marginLeft: "auto", flexShrink: 0,
+                      display: "inline-flex", alignItems: "center", gap: 4,
+                    }}>
+                      <Clock size={9} strokeWidth={2} />
+                      {t.soon}
+                    </span>
+                  )}
+                </div>
+                <p style={{
+                  fontFamily: BODY, fontSize: 13, fontWeight: 400,
+                  color: C.textSoft, lineHeight: 1.6, paddingLeft: 26,
+                }}>
+                  {f.desc}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
