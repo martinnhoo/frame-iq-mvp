@@ -1,8 +1,7 @@
 import { storage } from "@/lib/storage";
-// PerformanceDashboard v3 — calendar date picker, all metrics, drag & drop customization
+// PerformanceDashboard v4 — New UI components with SparklineCard, visualizations, and Nivo charts
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { SectionBoundary } from "@/components/SectionBoundary";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +13,14 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import AdDiary from "./AdDiary";
+import { SparklineCard } from "@/components/ui/SparklineCard";
+import { HeatmapPerformance } from "@/components/ui/HeatmapPerformance";
+import { WinnersList } from "@/components/ui/WinnersList";
+import { FatigueRadar } from "@/components/ui/FatigueRadar";
+import { CreativeRaceBar } from "@/components/ui/CreativeRaceBar";
+import { Reveal } from "@/components/ui/Reveal";
+import { ResponsiveLine } from "@nivo/line";
+import { ADBRIEF_TOKENS as TK } from "@/styles/tokens";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const F = "'DM Sans','Plus Jakarta Sans',system-ui,sans-serif";
@@ -71,64 +78,68 @@ function getMetricValue(d: any, key: MetricKey): number {
   }
 }
 
-// ── Sparkline ─────────────────────────────────────────────────────────────────
-const Sparkline = React.memo(function Sparkline({ data, color }: { data: number[]; color: string }) {
-  if (!data||data.length<2) return null;
-  // viewBox has 2px padding on all sides so stroke never clips
-  const w=80,h=28,pad=3,vx=-pad,vy=-pad,vw=w+pad*2,vh=h+pad*2;
-  const min=Math.min(...data),max=Math.max(...data),range=max-min;
-  const pts=data.map((v,i)=>{
-    const x=(i/(data.length-1))*w;
-    const y=range===0 ? h/2 : h-((v-min)/range)*h;
-    return `${x},${y}`;
-  });
-  const path=`M ${pts.join("L ")}`;
-  const area=`M 0,${h} L ${path.slice(2)} L ${w},${h} Z`;
-  return (
-    <svg width={w} height={h} viewBox={`${vx} ${vy} ${vw} ${vh}`} style={{overflow:"visible",display:"block"}}>
-      <path d={area} fill={`${color}18`}/>
-      <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>
-    </svg>
-  );
-});
+// ── Mock data generators — replace with real data from live-metrics edge function ──
+function generateMockHeatmapData() {
+  const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  return DAYS.map(day => ({
+    id: day,
+    data: Array.from({ length: 12 }, (_, i) => ({
+      x: `${i * 2}h`,
+      y: +(Math.random() * 3 + 0.5).toFixed(2),
+    })),
+  }));
+}
 
-// ── Area Chart ────────────────────────────────────────────────────────────────
-function AreaChart({ daily, metricKey }: { daily: any[]; metricKey: MetricKey }) {
-  if (!daily||daily.length<2) return null;
-  const def = METRICS.find(m=>m.key===metricKey)!;
-  const vals = daily.map(d=>getMetricValue(d,metricKey));
-  const W=800,H=180,PAD={top:12,right:16,bottom:28,left:60};
-  const iW=W-PAD.left-PAD.right,iH=H-PAD.top-PAD.bottom;
-  const maxV=Math.max(...vals,0.001);
-  const pts=vals.map((v,i)=>[PAD.left+(i/(vals.length-1||1))*iW, PAD.top+iH-(v/maxV)*iH]);
-  const path=pts.map((p,i)=>`${i===0?"M":"L"} ${p[0]} ${p[1]}`).join(" ");
-  const area=`${path} L ${pts[pts.length-1][0]} ${PAD.top+iH} L ${PAD.left} ${PAD.top+iH} Z`;
-  const ticks=[0,maxV/2,maxV].map(v=>({y:PAD.top+iH-(v/maxV)*iH,label:def.format(v,"pt")}));
-  const labelIdx=[0,Math.floor(daily.length/2),daily.length-1].filter((v,i,a)=>a.indexOf(v)===i);
+function generateMockWinners(): Array<{ name: string; ctr: number; roas: number; spend: number; trend: "up" | "down" | "hot" | "risk"; contribution: number }> {
+  return [
+    { name: "Carrossel_Oferta_V3", ctr: 0.042, roas: 4.2, spend: 1240, trend: "hot", contribution: 28 },
+    { name: "Video_Hook_Direto", ctr: 0.038, roas: 3.8, spend: 980, trend: "up", contribution: 22 },
+    { name: "Static_Desconto_40", ctr: 0.031, roas: 3.1, spend: 760, trend: "up", contribution: 17 },
+    { name: "UGC_Depoimento_Maria", ctr: 0.027, roas: 2.4, spend: 620, trend: "down", contribution: 14 },
+    { name: "Reels_Bastidores", ctr: 0.019, roas: 1.6, spend: 440, trend: "risk", contribution: 10 },
+  ];
+}
+
+function generateMockLosers(): Array<{ name: string; ctr: number; roas: number; spend: number; trend: "up" | "down" | "hot" | "risk"; contribution: number }> {
+  return [
+    { name: "Banner_Generico_V1", ctr: 0.008, roas: 0.4, spend: 320, trend: "risk", contribution: 7 },
+    { name: "Copy_Longa_V2", ctr: 0.011, roas: 0.7, spend: 280, trend: "down", contribution: 6 },
+    { name: "Imagem_Stock_05", ctr: 0.006, roas: 0.2, spend: 200, trend: "risk", contribution: 5 },
+  ];
+}
+
+function generateMockBumpData() {
+  const creatives = ["Carrossel_V3", "Video_Hook", "Static_40", "UGC_Maria", "Reels_BTS"];
+  const periods = ["Sem 1", "Sem 2", "Sem 3", "Sem 4"];
+  return creatives.map(id => ({
+    id,
+    data: periods.map(x => ({ x, y: Math.floor(Math.random() * 5) + 1 })),
+  }));
+}
+
+// ── Gradient separator ────────────────────────────────────────────────────────
+function GradientSep() {
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{overflow:"visible"}}>
-      <defs>
-        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={def.accent} stopOpacity="0.35"/>
-          <stop offset="100%" stopColor={def.accent} stopOpacity="0.02"/>
-        </linearGradient>
-      </defs>
-      {ticks.map((t,i)=>(
-        <g key={i}>
-          <line x1={PAD.left} y1={t.y} x2={W-PAD.right} y2={t.y} stroke={BD} strokeWidth={1} strokeDasharray="4,3"/>
-          <text x={PAD.left-8} y={t.y+4} textAnchor="end" style={{fontSize: 12,fill:MT,fontFamily:F}}>{t.label}</text>
-        </g>
-      ))}
-      <path d={area} fill="url(#areaGrad)"/>
-      <path d={path} fill="none" stroke={def.accent} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
-      {pts.filter((_,i)=>daily.length<=14||i%Math.ceil(daily.length/14)===0).map((p,i)=>(
-        <circle key={i} cx={p[0]} cy={p[1]} r={3} fill={def.accent} stroke={S1} strokeWidth={2}/>
-      ))}
-      {labelIdx.map(i=>{
-        const d=new Date(daily[i].date+"T12:00:00");
-        return <text key={i} x={pts[i][0]} y={H-4} textAnchor="middle" style={{fontSize: 12,fill:MT,fontFamily:F}}>{fmtLabel(d)}</text>;
-      })}
-    </svg>
+    <div style={{
+      height: 1,
+      background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07) 20%, rgba(255,255,255,0.07) 80%, transparent)",
+      margin: "20px 0",
+    }} />
+  );
+}
+
+// ── Live pulse dot ───────────────────────────────────────────────────────────
+function LiveDot() {
+  return (
+    <div style={{ position: "relative", width: 8, height: 8, display: "inline-flex" }}>
+      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981" }} />
+      <div style={{
+        position: "absolute", inset: -3,
+        borderRadius: "50%", border: "1px solid #10b981",
+        animation: "ping 1.5s ease-out infinite",
+        opacity: 0.6,
+      }} />
+    </div>
   );
 }
 
@@ -283,50 +294,6 @@ function MetricCustomizer({ active, platform, onChange, onClose }: { active: Met
   );
 }
 
-// ── Delta ─────────────────────────────────────────────────────────────────────
-const Delta = React.memo(function Delta({ value, higherIsBetter }: { value:number|null; higherIsBetter:boolean }) {
-  if(value===null||isNaN(value)) return <span style={{color:MT,fontSize: 12}}>—</span>;
-  const positive=higherIsBetter?value>=0:value<=0;
-  const Icon=value>=0?TrendingUp:TrendingDown;
-  return <span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize: 12,fontWeight:600,color:positive?GREEN:RED}}><Icon size={11}/>{Math.abs(value).toFixed(1)}%</span>;
-});
-
-// ── Metric Card ───────────────────────────────────────────────────────────────
-const MetricCard = React.memo(function MetricCard({ def, value, delta, sparkData, isDragging, lang }: { def:MetricDef; value:number; delta?:number|null; sparkData?:number[]; isDragging?:boolean; lang?:string }) {
-  const formatted = value>0?def.format(value, lang):"—";
-  return (
-    <div style={{
-      background:`linear-gradient(160deg, var(--bg-card) 0%, var(--bg-surface) 100%)`,
-      border:`1px solid ${isDragging?def.accent+"60":"var(--border-subtle)"}`,
-      boxShadow:isDragging?`0 20px 60px rgba(0,0,0,0.6),0 0 0 1px ${def.accent}30`:`0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)`,
-      backdropFilter:"blur(16px) saturate(160%)",
-      borderRadius:14,padding:"16px",display:"flex",flexDirection:"column",gap:10,
-      transition:"border-color 0.2s, box-shadow 0.2s, transform 0.15s",
-      opacity:isDragging?0.9:1,
-      cursor:"grab",height:"100%",boxSizing:"border-box" as const,overflow:"visible",
-    }}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <GripVertical size={13} color={MT} style={{opacity:0.5,flexShrink:0}}/>
-          <div style={{width:25,height:25,borderRadius:8,background:`${def.accent}18`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <def.icon size={12} color={def.accent}/>
-          </div>
-          <span style={{fontFamily:F,fontSize: 12,fontWeight:700,color:MT,textTransform:"uppercase",letterSpacing:"0.08em"}}>{def.labelPt}</span>
-        </div>
-        {sparkData&&<div style={{overflow:"visible",flexShrink:0}}><Sparkline data={sparkData} color={def.accent}/></div>}
-      </div>
-      <div>
-        <div style={{fontSize:formatted.length>7?22:28,fontWeight:700,color:TX,letterSpacing:"-0.03em",lineHeight:1,fontFamily:"'DM Mono', monospace",transition:"font-size 0.15s"}}>{formatted}</div>
-        {delta!==undefined&&delta!==null&&(
-          <div style={{marginTop:6,display:"flex",alignItems:"center",gap:6}}>
-            <Delta value={delta} higherIsBetter={def.higherIsBetter}/>
-            <span style={{fontSize: 12,color:MT}}>vs anterior</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-});
 
 // ── Ad Row ────────────────────────────────────────────────────────────────────
 // ── Ads list with compact/expand ─────────────────────────────────────────────
@@ -486,6 +453,8 @@ export default function PerformanceDashboard() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes ping{0%{transform:scale(1);opacity:1}75%{transform:scale(2);opacity:0}}
+        @keyframes shimmer{0%{background-position:200% 0}to{background-position:-200% 0}}
         .perf-card{animation:fadeIn 0.3s ease both;transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s}
         .perf-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.06)!important;}
         .drag-over{border-color:${ACCENT}60!important;background:${ACCENT}08!important}
@@ -665,79 +634,147 @@ export default function PerformanceDashboard() {
         </>
       )}
 
-      {/* Metric cards — drag & drop */}
+      {/* SparklineCard grid with new UI components */}
       {activeTab==="metrics"&&!loading&&d&&(
         <>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(195px,1fr))",gap:14,marginBottom:20,overflow:"visible"}}>
+          {/* Sparkline Cards Grid */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))",gap:14,marginBottom:28,overflow:"visible"}}>
             {validMetrics.map((key,i)=>{
               const def=METRICS.find(m=>m.key===key);
               if(!def) return null;
               const value=getMetricValue(d,key);
-              const delta=getMetricDelta(key);
-              const spark=sparkData[key];
+              const prevValue=d[`prev_${key}`];
+              const daily=d.daily||[];
+              const sparklineData = daily.map((day:any)=>({
+                x: fmtLabel(new Date(day.date+"T12:00:00")),
+                y: getMetricValue(day,key),
+              }));
+
+              const formatMap: Record<MetricKey, "currency"|"percent"|"number"|"roas"> = {
+                spend: "currency", ctr: "percent", clicks: "number", impressions: "number",
+                conversions: "number", roas: "roas", cpa: "currency", cpm: "currency",
+                cpc: "currency", reach: "number", frequency: "number", conv_value: "currency"
+              };
+
               return (
-                <div key={key} draggable
-                  onDragStart={()=>handleDragStart(i)}
-                  onDragOver={e=>handleDragOver(e,i)}
-                  onDrop={()=>handleDrop(i)}
-                  onDragEnd={()=>{setDragging(null);setDragOver(null);}}
-                  className={`perf-card${dragOver===i&&dragging!==i?" drag-over":""}`}
-                  style={{animationDelay:`${i*0.04}s`}}>
-                  <MetricCard def={def} value={value} delta={delta} sparkData={spark} isDragging={dragging===i} lang={lang}/>
-                </div>
+                <Reveal key={key} delay={i*0.05}>
+                  <div draggable
+                    onDragStart={()=>handleDragStart(i)}
+                    onDragOver={e=>handleDragOver(e,i)}
+                    onDrop={()=>handleDrop(i)}
+                    onDragEnd={()=>{setDragging(null);setDragOver(null);}}
+                    className={`perf-card${dragOver===i&&dragging!==i?" drag-over":""}`}
+                    style={{animationDelay:`${i*0.04}s`}}>
+                    <SparklineCard
+                      label={def.labelPt}
+                      currentValue={value}
+                      prevValue={prevValue}
+                      data={sparklineData}
+                      format={formatMap[key]}
+                      color={def.accent}
+                      index={i}
+                    />
+                  </div>
+                </Reveal>
               );
             })}
           </div>
 
-          {/* Chart */}
-          <SectionBoundary label="Gráfico" inline>
-          {(d.daily||[]).length>1&&(
-            <div style={{background:"var(--bg-card)",border:"1px solid var(--border-subtle)",borderRadius:16,padding:24,marginBottom:20,boxShadow:"0 1px 3px rgba(0,0,0,0.3)"}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap" as const,gap:12}}>
-                <div>
-                  <p style={{margin:0,fontSize:15,fontWeight:700,color:TX}}>Tendência</p>
-                  <p style={{margin:"4px 0 0",fontSize:12,color:MT}}>{dateLabel} · Meta Ads</p>
-                </div>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap" as const}}>
-                  {validMetrics.slice(0,6).map(key=>{
-                    const def=METRICS.find(m=>m.key===key); if(!def) return null;
-                    const active=chartMetric===key;
-                    return (
-                      <button key={key} onClick={()=>setChartMetric(key)}
-                        style={{padding:"4px 10px",borderRadius:8,border:`1px solid ${active?def.accent+"60":BD}`,background:active?`${def.accent}15`:"transparent",color:active?def.accent:MT,fontSize: 12,fontWeight:active?700:500,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
-                        {def.labelPt}
-                      </button>
-                    );
-                  })}
+          <GradientSep />
+
+          {/* 2-column grid: Nivo Line Chart + FatigueRadar */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(320px, 1fr))",gap:20,marginBottom:28}}>
+            <Reveal direction="left">
+              <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:24,overflow:"hidden"}}>
+                <p style={{margin:"0 0 16px",fontSize:13,fontWeight:700,color:TX}}>Tendência — CTR + ROAS (últimos 14 dias)</p>
+                <div style={{height:280}}>
+                  <ResponsiveLine
+                    data={[
+                      {
+                        id:"CTR",
+                        data:(d.daily||[]).slice(-14).map((day:any)=>({
+                          x:fmtLabel(new Date(day.date+"T12:00:00")),
+                          y:(day.ctr||0)*100
+                        }))
+                      },
+                      {
+                        id:"ROAS",
+                        data:(d.daily||[]).slice(-14).map((day:any)=>({
+                          x:fmtLabel(new Date(day.date+"T12:00:00")),
+                          y:day.roas||0
+                        }))
+                      }
+                    ]}
+                    theme={TK.nivoTheme}
+                    colors={[GREEN,TK.accent]}
+                    margin={{top:16,right:16,bottom:40,left:60}}
+                    xScale={{type:"point"}}
+                    yScale={{type:"linear",min:"auto",max:"auto"}}
+                    axisBottom={{tickRotation:-45,tickPadding:8}}
+                    axisLeft={{tickSize:4,tickPadding:8}}
+                    enableGridX={false}
+                    enableGridY={true}
+                    lineWidth={2}
+                    enablePoints={false}
+                    enableCrosshair={true}
+                    useMesh={true}
+                    curve="monotoneX"
+                  />
                 </div>
               </div>
-              <AreaChart daily={d.daily} metricKey={chartMetric}/>
+            </Reveal>
+            <Reveal direction="right" delay={0.1}>
+              <FatigueRadar escalando={12} estavel={8} fadigando={3} pausado={2}/>
+            </Reveal>
+          </div>
+
+          <GradientSep />
+
+          {/* 2-column grid: WinnersList + HeatmapPerformance */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(300px, 1fr))",gap:20,marginBottom:28}}>
+            <Reveal direction="left" delay={0.15}>
+              <WinnersList items={generateMockWinners()} type="winners"/>
+            </Reveal>
+            <Reveal direction="right" delay={0.2}>
+              <HeatmapPerformance data={generateMockHeatmapData()} metric="ctr"/>
+            </Reveal>
+          </div>
+
+          <GradientSep />
+
+          {/* Full-width CreativeRaceBar */}
+          <Reveal delay={0.25}>
+            <div style={{marginBottom:28}}>
+              <CreativeRaceBar data={generateMockBumpData()}/>
             </div>
-          )}
+          </Reveal>
+
+          <GradientSep />
 
           {/* Top ads */}
-          </SectionBoundary>
           {(d.top_ads||[]).length>0&&(
-            <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:24}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
-                <div>
-                  <p style={{margin:0,fontSize:15,fontWeight:700,color:TX}}>Top anúncios</p>
-                  <p style={{margin:"4px 0 0",fontSize:12,color:MT}}>Ordenados por spend · {dateLabel}</p>
+            <Reveal>
+              <div style={{background:S1,border:`1px solid ${BD}`,borderRadius:16,padding:24}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+                  <div>
+                    <p style={{margin:0,fontSize:15,fontWeight:700,color:TX}}>Top anúncios</p>
+                    <p style={{margin:"4px 0 0",fontSize:12,color:MT}}>Ordenados por spend · {dateLabel}</p>
+                  </div>
+                  <button onClick={()=>navigate("/dashboard/ai")} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"transparent",border:`1px solid ${BD}`,borderRadius:8,color:MT,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:F}}>
+                    Analisar com IA<ArrowUpRight size={12}/>
+                  </button>
                 </div>
-                <button onClick={()=>navigate("/dashboard/ai")} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"transparent",border:`1px solid ${BD}`,borderRadius:8,color:MT,fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:F}}>
-                  Analisar com IA<ArrowUpRight size={12}/>
-                </button>
+                <div style={{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${BD}`,marginTop:16,gap:0}}>
+                  <span style={{width:28,flexShrink:0}}/>
+                  <span style={{flex:1,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Anúncio</span>
+                  <span style={{width:COL.spend,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>Spend</span>
+                  <span style={{width:COL.ctr,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>CTR</span>
+                  <span style={{width:COL.roas,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>ROAS</span>
+                  <span style={{width:COL.status,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>Status</span>
+                </div>
+                <AdsCompact ads={d.top_ads||[]}/>
               </div>
-              <div style={{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:`1px solid ${BD}`,marginTop:16,gap:0}}>
-                <span style={{width:28,flexShrink:0}}/>
-                <span style={{flex:1,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em"}}>Anúncio</span>
-                <span style={{width:COL.spend,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>Spend</span>
-                <span style={{width:COL.ctr,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>CTR</span>
-                <span style={{width:COL.roas,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>ROAS</span>
-                <span style={{width:COL.status,fontSize:11,fontWeight:600,color:MT,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"right" as const,flexShrink:0}}>Status</span>
-              </div>
-              <AdsCompact ads={d.top_ads||[]}/>
-            </div>
+            </Reveal>
           )}
         </>
       )}
