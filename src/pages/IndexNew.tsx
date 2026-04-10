@@ -2696,7 +2696,7 @@ function SocialProofStrip({ lang }: { lang: Lang }) {
       background: BG,
       borderTop: "1px solid rgba(255,255,255,0.05)",
       borderBottom: "1px solid rgba(255,255,255,0.05)",
-      padding: "32px clamp(20px,5vw,80px)",
+      padding: "20px clamp(20px,5vw,80px)",
       position: "relative",
       overflow: "hidden",
     }}>
@@ -2752,7 +2752,7 @@ function SocialProofStrip({ lang }: { lang: Lang }) {
           <div style={{
             fontFamily: SANS,
             fontSize: "clamp(12px, 1.1vw, 13px)",
-            color: "rgba(255,255,255,0.4)",
+            color: "rgba(255,255,255,0.55)",
             fontWeight: 500,
             letterSpacing: "0.01em",
           }}>
@@ -2800,7 +2800,7 @@ function SocialProofStrip({ lang }: { lang: Lang }) {
           <div style={{
             fontFamily: SANS,
             fontSize: "clamp(12px, 1.1vw, 13px)",
-            color: "rgba(255,255,255,0.4)",
+            color: "rgba(255,255,255,0.55)",
             fontWeight: 500,
             letterSpacing: "0.01em",
           }}>
