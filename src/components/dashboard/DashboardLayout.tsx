@@ -671,127 +671,236 @@ export default function DashboardLayout() {
         </div>
       )}
 
-      {/* ── Telegram Modal ── */}
+      {/* ── Telegram Modal — Premium UI ── */}
       {telegramModalOpen && (
         <div
           onClick={e => { if (e.target === e.currentTarget) setTelegramModalOpen(false); }}
           style={{
             position: "fixed", inset: 0, zIndex: 500,
-            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)",
+            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)",
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: 20,
-            animation: "tgFadeIn 0.2s cubic-bezier(0.4,0,0.2,1)",
           }}>
+          <style>{`
+            @keyframes tgModalIn { from { opacity:0; transform:scale(0.92) translateY(16px); } to { opacity:1; transform:scale(1) translateY(0); } }
+            @keyframes tgOverlayIn { from { opacity:0; } to { opacity:1; } }
+            @keyframes tgFeatureIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+            @keyframes tgPulseGlow { 0%,100% { box-shadow: 0 0 20px rgba(39,174,225,0.15); } 50% { box-shadow: 0 0 40px rgba(39,174,225,0.3); } }
+            @keyframes tgShine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+            @keyframes tgDotPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.8); } }
+          `}</style>
           <div style={{
-            width: "100%", maxWidth: 400,
-            background: "#131827", border: "1px solid rgba(255,255,255,0.10)",
-            borderRadius: 20, overflow: "hidden",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
-            animation: "tgSlideUp 0.22s cubic-bezier(0.34,1.56,0.64,1)",
+            width: "100%", maxWidth: 420,
+            background: "linear-gradient(165deg, #111827 0%, #0c1220 50%, #0a0f1a 100%)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 24, overflow: "hidden",
+            boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.06)",
+            animation: "tgModalIn 0.35s cubic-bezier(0.34,1.56,0.64,1)",
           }}>
-            {/* Header */}
-            <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(39,175,225,0.12)", border: "1px solid rgba(39,175,225,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            {/* ── Glow accent top ── */}
+            <div style={{ height: 2, background: "linear-gradient(90deg, transparent, #27AEE1, #1a8fc2, transparent)", opacity: 0.6 }} />
+
+            {/* ── Header ── */}
+            <div style={{ padding: "24px 26px 20px", display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 14,
+                background: "linear-gradient(135deg, rgba(39,174,225,0.15), rgba(39,174,225,0.05))",
+                border: "1px solid rgba(39,174,225,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                animation: "tgPulseGlow 3s ease-in-out infinite",
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#27AEE1"/>
                   <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
                 </svg>
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 17, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
                   AdBrief Alerts
                 </p>
-                <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "2px 0 0", fontWeight: 500 }}>
                   @AdBriefAlertsBot
                 </p>
               </div>
               {telegramConn && (
-                <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)" }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399" }} />
-                  <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "#34d399", fontWeight: 600 }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20,
+                  background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)",
+                }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#34d399", animation: "tgDotPulse 2s ease-in-out infinite" }} />
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "#34d399", fontWeight: 700, letterSpacing: "0.02em" }}>
                     {language === "pt" ? "Ativo" : language === "es" ? "Activo" : "Active"}
                   </span>
                 </div>
               )}
               <button onClick={() => setTelegramModalOpen(false)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 18, lineHeight: 1, padding: "2px 4px", flexShrink: 0 }}>×</button>
+                style={{
+                  width: 32, height: 32, borderRadius: 10, background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
+                  color: "rgba(255,255,255,0.4)", fontSize: 16, lineHeight: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={e => { const t = e.currentTarget; t.style.background = "rgba(255,255,255,0.08)"; t.style.color = "rgba(255,255,255,0.7)"; }}
+                onMouseLeave={e => { const t = e.currentTarget; t.style.background = "rgba(255,255,255,0.04)"; t.style.color = "rgba(255,255,255,0.4)"; }}>
+                ×
+              </button>
             </div>
 
-            {/* Body */}
-            <div style={{ padding: "18px 22px 22px" }}>
+            {/* ── Divider ── */}
+            <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)", margin: "0 26px" }} />
+
+            {/* ── Body ── */}
+            <div style={{ padding: "22px 26px 28px" }}>
               {telegramConn ? (
-                /* Connected state */
+                /* ── Connected state ── */
                 <div>
-                  <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 16px", lineHeight: 1.6 }}>
-                    {telegramConn.telegram_username ? `@${telegramConn.telegram_username}` : (language === "pt" ? "Conta conectada" : "Account connected")}
-                    {" — "}
-                    {language === "pt" ? "Recebendo alertas e comandos." : language === "es" ? "Recibiendo alertas y comandos." : "Receiving alerts and commands."}
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 8, marginBottom: 18 }}>
+                  <div style={{
+                    padding: "14px 16px", borderRadius: 14,
+                    background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.08)",
+                    marginBottom: 20,
+                  }}>
+                    <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.7)", margin: 0, lineHeight: 1.6 }}>
+                      {telegramConn.telegram_username ? `@${telegramConn.telegram_username}` : (language === "pt" ? "Conta conectada" : "Account connected")}
+                      {" — "}
+                      {language === "pt" ? "recebendo alertas em tempo real." : language === "es" ? "recibiendo alertas en tiempo real." : "receiving real-time alerts."}
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, marginBottom: 22 }}>
                     {[
-                      language === "pt" ? "Alertas críticos da conta" : language === "es" ? "Alertas críticos de la cuenta" : "Critical account alerts",
-                      language === "pt" ? " /pausar [criativo] com confirmação" : language === "es" ? " /pausar [creativo] con confirmación" : " /pause [creative] with confirmation",
-                      language === "pt" ? " /status — resumo da conta" : language === "es" ? " /status — resumen de cuenta" : " /status — account summary",
+                      { icon: "🔔", cmd: "", text: language === "pt" ? "Alertas críticos da conta" : language === "es" ? "Alertas críticos" : "Critical account alerts" },
+                      { icon: "⏸", cmd: "/pausar", text: language === "pt" ? "Pausar criativo com confirmação" : language === "es" ? "Pausar creativo" : "Pause creative with confirmation" },
+                      { icon: "📊", cmd: "/status", text: language === "pt" ? "Resumo completo da conta" : language === "es" ? "Resumen de cuenta" : "Full account summary" },
                     ].map((item, i) => (
-                      <p key={i} style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>{item}</p>
+                      <div key={i} style={{
+                        display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
+                        borderRadius: 12, background: "rgba(255,255,255,0.02)",
+                        border: "1px solid rgba(255,255,255,0.04)",
+                        animation: `tgFeatureIn 0.3s ease ${0.1 + i * 0.08}s both`,
+                      }}>
+                        <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
+                        <div style={{ flex: 1 }}>
+                          {item.cmd && <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#27AEE1", background: "rgba(39,174,225,0.1)", padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>{item.cmd}</code>}
+                          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{item.text}</span>
+                        </div>
+                      </div>
                     ))}
                   </div>
                   <button onClick={async () => {
                     await (supabase as any).from("telegram_connections").update({ active: false }).eq("user_id", user?.id);
                     setTelegramConn(null);
                     setTelegramPairingLink(null);
-                  }} style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(248,113,113,0.7)", background: "none", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}>
+                  }} style={{
+                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, fontWeight: 600,
+                    color: "rgba(248,113,113,0.7)", background: "rgba(248,113,113,0.04)",
+                    border: "1px solid rgba(248,113,113,0.12)", borderRadius: 10,
+                    padding: "8px 16px", cursor: "pointer", transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { const t = e.currentTarget; t.style.background = "rgba(248,113,113,0.1)"; t.style.borderColor = "rgba(248,113,113,0.25)"; }}
+                  onMouseLeave={e => { const t = e.currentTarget; t.style.background = "rgba(248,113,113,0.04)"; t.style.borderColor = "rgba(248,113,113,0.12)"; }}>
                     {language === "pt" ? "Desconectar" : language === "es" ? "Desconectar" : "Disconnect"}
                   </button>
                 </div>
               ) : telegramPairingLink ? (
-                /* Link generated */
+                /* ── Link generated state ── */
                 <div>
-                  <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", margin: "0 0 14px", lineHeight: 1.6 }}>
-                    {language === "pt" ? "Clique no botão abaixo para abrir o bot e toque /start:" : language === "es" ? "Haz clic en el botón para abrir el bot y toca /start:" : "Click the button below to open the bot and tap /start:"}
-                  </p>
+                  <div style={{
+                    padding: "16px", borderRadius: 14,
+                    background: "rgba(39,174,225,0.04)", border: "1px solid rgba(39,174,225,0.1)",
+                    marginBottom: 18, textAlign: "center" as const,
+                  }}>
+                    <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.7)", margin: 0, lineHeight: 1.6 }}>
+                      {language === "pt" ? "Abra o bot no Telegram e toque" : language === "es" ? "Abre el bot en Telegram y toca" : "Open the bot on Telegram and tap"}{" "}
+                      <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#27AEE1", background: "rgba(39,174,225,0.12)", padding: "2px 8px", borderRadius: 4 }}>/start</code>
+                    </p>
+                  </div>
                   <a href={telegramPairingLink} target="_blank" rel="noreferrer"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "13px 0", borderRadius: 12, background: "linear-gradient(135deg, #27AEE1, #1a8fc2)", color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", textDecoration: "none", marginBottom: 10, boxSizing: "border-box" as const }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="white" opacity="0.3"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
-                    {language === "pt" ? "Abrir @AdBriefAlertsBot" : language === "es" ? "Abrir @AdBriefAlertsBot" : "Open @AdBriefAlertsBot"}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                      width: "100%", padding: "14px 0", borderRadius: 14,
+                      background: "linear-gradient(135deg, #27AEE1, #1a8fc2)",
+                      color: "#fff", fontSize: 15, fontWeight: 700,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif", textDecoration: "none",
+                      boxSizing: "border-box" as const, position: "relative" as const, overflow: "hidden",
+                      boxShadow: "0 4px 20px rgba(39,174,225,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+                      transition: "transform 0.15s, box-shadow 0.15s",
+                    }}
+                    onMouseEnter={e => { const t = e.currentTarget; t.style.transform = "translateY(-1px)"; t.style.boxShadow = "0 6px 28px rgba(39,174,225,0.4), inset 0 1px 0 rgba(255,255,255,0.15)"; }}
+                    onMouseLeave={e => { const t = e.currentTarget; t.style.transform = "translateY(0)"; t.style.boxShadow = "0 4px 20px rgba(39,174,225,0.3), inset 0 1px 0 rgba(255,255,255,0.15)"; }}>
+                    {/* Shine effect */}
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)", animation: "tgShine 2.5s ease-in-out infinite" }} />
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ position: "relative" as const, zIndex: 1 }}>
+                      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="white" opacity="0.25"/>
+                      <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
+                    </svg>
+                    <span style={{ position: "relative" as const, zIndex: 1 }}>
+                      {language === "pt" ? "Abrir @AdBriefAlertsBot" : language === "es" ? "Abrir @AdBriefAlertsBot" : "Open @AdBriefAlertsBot"}
+                    </span>
                   </a>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
-                    <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.2)", margin: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, padding: "0 2px" }}>
+                    <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.25)", margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(251,191,36,0.5)", display: "inline-block" }} />
                       {language === "pt" ? "Expira em 10 minutos" : language === "es" ? "Expira en 10 minutos" : "Expires in 10 minutes"}
                     </p>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(telegramPairingLink || "");
                         const btn = document.getElementById("tg-copy-btn");
-                        if (btn) { btn.textContent = language === "pt" ? "Copiado " : language === "es" ? "Copiado " : "Copied "; setTimeout(() => { if (btn) btn.textContent = language === "pt" ? "Copiar link" : language === "es" ? "Copiar enlace" : "Copy link"; }, 2000); }
+                        if (btn) { btn.textContent = "✓"; setTimeout(() => { if (btn) btn.textContent = language === "pt" ? "Copiar link" : language === "es" ? "Copiar enlace" : "Copy link"; }, 2000); }
                       }}
                       id="tg-copy-btn"
-                      style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}>
+                      style={{
+                        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, fontWeight: 600,
+                        color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8,
+                        padding: "4px 12px", cursor: "pointer", transition: "all 0.15s",
+                      }}
+                      onMouseEnter={e => { const t = e.currentTarget; t.style.color = "rgba(255,255,255,0.7)"; t.style.background = "rgba(255,255,255,0.08)"; }}
+                      onMouseLeave={e => { const t = e.currentTarget; t.style.color = "rgba(255,255,255,0.35)"; t.style.background = "rgba(255,255,255,0.04)"; }}>
                       {language === "pt" ? "Copiar link" : language === "es" ? "Copiar enlace" : "Copy link"}
                     </button>
                   </div>
                 </div>
               ) : (
-                /* Not connected */
+                /* ── Not connected state ── */
                 <div>
-                  <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", margin: "0 0 16px", lineHeight: 1.7 }}>
+                  <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 14, color: "rgba(255,255,255,0.65)", margin: "0 0 20px", lineHeight: 1.7 }}>
                     {language === "pt"
-                      ? "Receba alertas críticos da sua conta de anúncios no Telegram e execute comandos direto por lá."
+                      ? "Receba alertas críticos da sua conta no Telegram e execute comandos direto por lá."
                       : language === "es"
-                      ? "Recibe alertas críticos de tu cuenta de anuncios en Telegram y ejecuta comandos directamente."
-                      : "Get critical ad account alerts on Telegram and run commands directly from there."}
+                      ? "Recibe alertas de tu cuenta en Telegram y ejecuta comandos directamente."
+                      : "Get critical ad account alerts on Telegram and run commands directly."}
                   </p>
-                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 7, marginBottom: 20 }}>
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 8, marginBottom: 24 }}>
                     {[
-                      { icon: "", text: language === "pt" ? "Alerta quando CTR cair ou CPM explodir" : language === "es" ? "Alerta cuando CTR baje o CPM explote" : "Alert when CTR drops or CPM spikes" },
-                      { icon: "", text: language === "pt" ? "Pause anúncios com 1 toque e confirmação" : language === "es" ? "Pausa anuncios con 1 toque y confirmación" : "Pause ads with 1 tap and confirmation" },
-                      { icon: "", text: language === "pt" ? "Resumo diário da performance" : language === "es" ? "Resumen diario de performance" : "Daily performance summary" },
+                      { icon: "🔔", title: language === "pt" ? "Alertas inteligentes" : language === "es" ? "Alertas inteligentes" : "Smart alerts", desc: language === "pt" ? "CTR caiu, CPM explodiu, frequência alta" : language === "es" ? "CTR cayó, CPM explotó, frecuencia alta" : "CTR drops, CPM spikes, high frequency" },
+                      { icon: "⏸", title: language === "pt" ? "Controle remoto" : language === "es" ? "Control remoto" : "Remote control", desc: language === "pt" ? "Pause anúncios com 1 toque" : language === "es" ? "Pausa anuncios con 1 toque" : "Pause ads with 1 tap" },
+                      { icon: "📊", title: language === "pt" ? "Resumo diário" : language === "es" ? "Resumen diario" : "Daily digest", desc: language === "pt" ? "Performance completa todo dia" : language === "es" ? "Performance completa todos los días" : "Full performance every day" },
                     ].map((item, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                        <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
-                        <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>{item.text}</p>
+                      <div key={i} style={{
+                        display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
+                        borderRadius: 14, background: "rgba(255,255,255,0.02)",
+                        border: "1px solid rgba(255,255,255,0.04)",
+                        animation: `tgFeatureIn 0.35s ease ${0.15 + i * 0.1}s both`,
+                        transition: "background 0.15s, border-color 0.15s",
+                      }}
+                      onMouseEnter={e => { const t = e.currentTarget; t.style.background = "rgba(255,255,255,0.04)"; t.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                      onMouseLeave={e => { const t = e.currentTarget; t.style.background = "rgba(255,255,255,0.02)"; t.style.borderColor = "rgba(255,255,255,0.04)"; }}>
+                        <div style={{
+                          width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+                          background: "rgba(39,174,225,0.06)", border: "1px solid rgba(39,174,225,0.1)",
+                          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
+                        }}>
+                          {item.icon}
+                        </div>
+                        <div>
+                          <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
+                            {item.title}
+                          </p>
+                          <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>
+                            {item.desc}
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -807,11 +916,36 @@ export default function DashboardLayout() {
                       setTelegramPairingLink("https://t.me/AdBriefAlertsBot?start=" + tok);
                     } catch (e) { console.error("[AdBrief]", e); }
                     setTelegramLinkLoading(false);
-                  }} style={{ width: "100%", padding: "13px 0", borderRadius: 12, background: telegramLinkLoading ? "rgba(39,175,225,0.15)" : "linear-gradient(135deg, #27AEE1, #1a8fc2)", border: "none", color: telegramLinkLoading ? "#27AEE1" : "#fff", fontSize: 14, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: telegramLinkLoading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxSizing: "border-box" as const }}>
-                    {telegramLinkLoading ? "..." : (
+                  }} style={{
+                    width: "100%", padding: "14px 0", borderRadius: 14,
+                    background: telegramLinkLoading ? "rgba(39,174,225,0.1)" : "linear-gradient(135deg, #27AEE1, #1a8fc2)",
+                    border: "none",
+                    color: telegramLinkLoading ? "#27AEE1" : "#fff",
+                    fontSize: 15, fontWeight: 700,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    cursor: telegramLinkLoading ? "not-allowed" : "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                    boxSizing: "border-box" as const,
+                    boxShadow: telegramLinkLoading ? "none" : "0 4px 20px rgba(39,174,225,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+                    position: "relative" as const, overflow: "hidden",
+                    transition: "transform 0.15s, box-shadow 0.15s",
+                  }}
+                  onMouseEnter={e => { if (!telegramLinkLoading) { const t = e.currentTarget; t.style.transform = "translateY(-1px)"; t.style.boxShadow = "0 6px 28px rgba(39,174,225,0.4), inset 0 1px 0 rgba(255,255,255,0.15)"; } }}
+                  onMouseLeave={e => { const t = e.currentTarget; t.style.transform = "translateY(0)"; t.style.boxShadow = telegramLinkLoading ? "none" : "0 4px 20px rgba(39,174,225,0.3), inset 0 1px 0 rgba(255,255,255,0.15)"; }}>
+                    {!telegramLinkLoading && <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)", animation: "tgShine 3s ease-in-out infinite" }} />}
+                    {telegramLinkLoading ? (
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "#27AEE1", animation: `tgDotPulse 1s ease ${i * 0.2}s infinite` }} />)}
+                      </div>
+                    ) : (
                       <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="white" opacity="0.3"/><path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/></svg>
-                        {language === "pt" ? "Conectar Telegram" : language === "es" ? "Conectar Telegram" : "Connect Telegram"}
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ position: "relative" as const, zIndex: 1 }}>
+                          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="white" opacity="0.25"/>
+                          <path d="M5.491 11.74l11.57-4.461c.537-.194 1.006.131.832.943l.001-.001-1.97 9.281c-.146.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.158 13.31 4.17 12.4c-.642-.204-.657-.642.136-.95z" fill="white"/>
+                        </svg>
+                        <span style={{ position: "relative" as const, zIndex: 1 }}>
+                          {language === "pt" ? "Conectar Telegram" : language === "es" ? "Conectar Telegram" : "Connect Telegram"}
+                        </span>
                       </>
                     )}
                   </button>
