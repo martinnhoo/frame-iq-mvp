@@ -12,7 +12,7 @@ export const COLORS = {
   green:    "#34d399",
   red:      "#f87171",
   amber:    "#fbbf24",
-  bg:       "#0c0f1a",
+  bg:       "#070d1a",  // aligned with --bg-main
   surface:  "rgba(255,255,255,0.035)",
   border:   "rgba(255,255,255,0.07)",
   text:     "rgba(235,240,248,0.90)",

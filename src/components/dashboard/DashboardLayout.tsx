@@ -554,8 +554,8 @@ export default function DashboardLayout() {
           display: "flex", alignItems: "center",
           padding: "0 16px", gap: 10,
           position: "sticky", top: 0, zIndex: 100,
-          background: "#0b0e18",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "var(--bg-surface)",
+          borderBottom: "1px solid var(--border-subtle)",
         }}>
 
           {/* ── Sidebar toggle ── */}

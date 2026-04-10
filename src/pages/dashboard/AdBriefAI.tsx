@@ -1586,8 +1586,8 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       <div className="lp lp-bar" onClick={() => setOpen(true)} style={{
         ...I, display: "flex", alignItems: "center", height: 44,
         padding: "0 20px", cursor: "pointer", userSelect: "none" as const,
-        background: "#0c0f1a",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        background: "var(--bg-surface)",
+        borderBottom: "1px solid var(--border-subtle)",
         gap: 0,
       }}>
 
