@@ -1651,7 +1651,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
         {/* ── Metrics row ── */}
         {metrics.length > 0 && (
-          <div style={{
+          <div className="lp-metrics-scroll" style={{
             display: "flex", alignItems: "center", flex: 1, overflow: "hidden",
             marginLeft: 20, gap: 24,
           }}>
@@ -4634,13 +4634,20 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           /* Suggestions: scroll horizontal */
           .suggestions-bar{overflow-x:auto!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
           .suggestions-bar::-webkit-scrollbar{display:none}
+          /* LivePanel collapsed bar: metrics scroll horizontal */
+          .lp-bar{padding:0 12px!important;height:40px!important;gap:0!important}
+          .lp-metrics-scroll{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;gap:14px!important;margin-left:12px!important;scrollbar-width:none;mask-image:linear-gradient(to right,#000 85%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 85%,transparent 100%)}
+          .lp-metrics-scroll::-webkit-scrollbar{display:none}
+          /* LivePanel full-width on mobile */
+          .lp{width:100%!important;max-width:100vw!important}
         }
         @media(max-width:480px){
           .msg-wrap-inner{padding:0 10px!important;margin-bottom:10px!important}
           .user-bubble-wrap{max-width:90%!important}
           .lp-bar{height:38px!important;padding:0 10px!important}
-          /* Metric chips na bar: menores */
+          /* Metric chips na bar: menores, scrollable */
           .lp-bar [style*="padding: 3px"]{padding:2px 7px!important}
+          .lp-metrics-scroll{gap:10px!important;margin-left:8px!important}
         }
       `}</style>
 

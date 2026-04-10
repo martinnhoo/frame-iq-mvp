@@ -467,6 +467,13 @@ export default function DashboardLayout() {
         .dashboard-main { scrollbar-width: none; }
         .dashboard-main::-webkit-scrollbar { display: none; }
 
+        /* Content area: full width on mobile, no squeeze */
+        .dashboard-content-area {
+          width: 100vw !important;
+          max-width: 100vw !important;
+          flex: 1 !important;
+        }
+
         /* Ferramentas: output cards responsivos */
         .tool-output-card { overflow-x: hidden !important; word-break: break-word !important; }
         
@@ -478,12 +485,40 @@ export default function DashboardLayout() {
           position: fixed !important;
           top: 0 !important; left: 0 !important; height: 100% !important;
           z-index: 50 !important;
+          /* Override inline width/minWidth — sidebar should never push content on mobile */
+          width: 216px !important;
+          min-width: 0 !important;
+          flex-shrink: 0 !important;
+          transition: transform 0.25s cubic-bezier(0.4,0,0.2,1) !important;
+        }
+        .sidebar-layout-slot.sidebar-mobile-closed {
+          transform: translateX(-100%) !important;
+          pointer-events: none !important;
+        }
+        .sidebar-layout-slot.sidebar-mobile-open {
+          transform: translateX(0) !important;
+          pointer-events: auto !important;
         }
       }
       
       /* Desktop: sidebar no fluxo normal */
-      @media (min-width: 768px) {
-        .sidebar-layout-slot { position: relative !important; }
+      @media (min-width: 769px) {
+        .sidebar-layout-slot {
+          position: relative !important;
+          transform: none !important;
+          pointer-events: auto !important;
+          width: auto !important;
+        }
+        .sidebar-layout-slot.sidebar-mobile-closed,
+        .sidebar-layout-slot.sidebar-mobile-open {
+          transform: none !important;
+          pointer-events: auto !important;
+        }
+        .sidebar-overlay { display: none !important; }
+        .dashboard-content-area {
+          width: auto !important;
+          max-width: none !important;
+        }
       }
       
       /* Dropdowns e calendários: sempre visíveis, nunca cortados pelo overflow */
@@ -513,7 +548,7 @@ export default function DashboardLayout() {
       {/* Mobile overlay — tap to close */}
       {sidebarOpen && (
         <div
-          className="lg:hidden"
+          className="sidebar-overlay"
           onClick={() => setSidebarOpen(false)}
           style={{ position: "fixed", inset: 0, zIndex: 49, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)" }}
         />
@@ -524,12 +559,12 @@ export default function DashboardLayout() {
         minWidth: sidebarOpen ? 216 : 0,
         height: "100%",
         flexShrink: 0,
-        transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1)",
+        transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1), transform 0.22s cubic-bezier(0.4,0,0.2,1)",
         overflow: "hidden",
         position: "relative",
         zIndex: 50,
       }}
-      className="sidebar-layout-slot">
+      className={`sidebar-layout-slot ${sidebarOpen ? "sidebar-mobile-open" : "sidebar-mobile-closed"}`}>
         <DashboardSidebar
           user={user}
           profile={profile}
@@ -543,7 +578,7 @@ export default function DashboardLayout() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0" style={{ overflowX: "hidden", overflowY: "hidden", maxWidth: "100%", minHeight: 0 }}>
+      <div className="flex-1 flex flex-col min-w-0 dashboard-content-area" style={{ overflowX: "hidden", overflowY: "hidden", maxWidth: "100%", minHeight: 0, width: "100%" }}>
 
         {/* ══════════════════════════════════════════════════════════════════
             TOPBAR v3 — Completely rewritten from scratch
