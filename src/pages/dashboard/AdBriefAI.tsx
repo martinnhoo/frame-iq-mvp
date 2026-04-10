@@ -2284,6 +2284,9 @@ export default function AdBriefAI() {
   const [creditBalance,setCreditBalance]=useState<{remaining:number,total:number}|null>(null);
   const [proactiveLoading,setProactiveLoading]=useState(false);
   const proactiveFired=useRef(false);
+  const onboardingSessionDone=useRef(false);
+  const [showOnboardingWelcome,setShowOnboardingWelcome]=useState(false);
+  const [onboardingStep,setOnboardingStep]=useState<number|null>(null);
   const bottomRef=useRef<HTMLDivElement>(null);
   const textareaRef=useRef<HTMLTextAreaElement>(null);
   const prevPersonaId=useRef<string|null>(null);
