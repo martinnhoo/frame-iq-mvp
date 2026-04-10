@@ -516,20 +516,25 @@ function Section({ children, id, className = "", noPadding = false, bg = "defaul
 // ─── Language switcher ────────────────────────────────────────────────────────
 function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
   const [open, setOpen] = useState(false);
-  const flags: Record<Lang, string> = { en: "🇺🇸", pt: "🇧🇷", es: "🇲🇽" };
   const pick = (l: Lang) => { setLang(l); storage.set("adbrief_language", l); setOpen(false); };
   return (
     <div style={{ position: "relative" }}>
-      <button onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "6px 10px", borderRadius: 8, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.65)", cursor: "pointer", fontFamily: F }}>
-        <Globe size={11} /> {flags[lang]} {lang.toUpperCase()}
+      <button onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, padding: "6px 10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontFamily: F, transition: "all 0.15s" }}
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+      >
+        <Globe size={12} strokeWidth={1.8} /> {lang.toUpperCase()}
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transition: "transform 0.15s", transform: open ? "rotate(180deg)" : "none" }}>
+          <path d="M2.5 3.75L5 6.25L7.5 3.75" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       </button>
       {open && (
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 998 }} onClick={() => setOpen(false)} />
-          <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#161b22", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, overflow: "hidden", zIndex: 999, minWidth: 80, boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+          <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#111114", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, overflow: "hidden", zIndex: 999, minWidth: 100, boxShadow: "0 8px 32px rgba(0,0,0,0.5)", padding: 4 }}>
             {(["en", "pt", "es"] as Lang[]).map(l => (
-              <button key={l} onClick={() => pick(l)} style={{ width: "100%", padding: "8px 14px", display: "flex", alignItems: "center", gap: 8, background: lang === l ? "rgba(14,165,233,0.08)" : "transparent", border: "none", color: lang === l ? "#0ea5e9" : "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer", fontFamily: F }}>
-                {flags[l]} {l.toUpperCase()}
+              <button key={l} onClick={() => pick(l)} style={{ width: "100%", padding: "8px 14px", display: "flex", alignItems: "center", gap: 8, background: lang === l ? "rgba(99,102,241,0.1)" : "transparent", border: "none", borderRadius: 7, color: lang === l ? "#6366f1" : "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: lang === l ? 600 : 400, cursor: "pointer", fontFamily: F, transition: "all 0.12s" }}>
+                {l.toUpperCase()}
               </button>
             ))}
           </div>
