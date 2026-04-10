@@ -29,6 +29,9 @@ const T: Record<string, any> = {
     s1_terms_and: "e a",
     s1_terms_link: "Termos de Uso",
     s1_privacy_link: "Política de Privacidade",
+    s1_referral_label: "Código de indicação (opcional)",
+    s1_referral_ph: "Ex: AB3F9K2L",
+    s1_referral_hint: "+10 créditos grátis para você e quem indicou",
     s3_tag: "PASSO 2 DE 2",
     s3_urgency_title: "Conecte agora e desbloqueie:",
     s3_urgency_items: ["Alertas quando ROAS cair abaixo do esperado", "Diagnóstico automático de criativos fadigados", "Recomendações baseadas nos seus dados reais"],
@@ -64,6 +67,9 @@ const T: Record<string, any> = {
     s1_terms_and: "and",
     s1_terms_link: "Terms of Service",
     s1_privacy_link: "Privacy Policy",
+    s1_referral_label: "Referral code (optional)",
+    s1_referral_ph: "e.g. AB3F9K2L",
+    s1_referral_hint: "+10 free credits for you and the referrer",
     s3_tag: "STEP 2 OF 2",
     s3_urgency_title: "Connect now and unlock:",
     s3_urgency_items: ["Alerts when ROAS drops below expected", "Automatic fatigued creative diagnosis", "Recommendations based on your real data"],
@@ -99,6 +105,9 @@ const T: Record<string, any> = {
     s1_terms_and: "y la",
     s1_terms_link: "Términos de Uso",
     s1_privacy_link: "Política de Privacidad",
+    s1_referral_label: "Código de referido (opcional)",
+    s1_referral_ph: "Ej: AB3F9K2L",
+    s1_referral_hint: "+10 créditos gratis para ti y quien te invitó",
     s3_tag: "PASO 2 DE 2",
     s3_urgency_title: "Conecta ahora y desbloquea:",
     s3_urgency_items: ["Alertas cuando el ROAS caiga", "Diagnóstico automático de creativos fatigados", "Recomendaciones basadas en tus datos reales"],
@@ -140,6 +149,7 @@ export default function Onboarding() {
   const checkoutPlan    = searchParams.get("checkout");
   const checkoutBilling = searchParams.get("billing");
   const redirectAfter   = searchParams.get("redirect"); // e.g. "/demo?unlocked=1"
+  const refParam        = searchParams.get("ref");       // referral code from URL
   const { language: globalLang } = useLanguage();
   const lang = (["pt","en","es"].includes(globalLang) ? globalLang : "en") as "pt"|"en"|"es";
   const t = T[lang];
@@ -152,6 +162,8 @@ export default function Onboarding() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [accountDesc, setAccountDesc] = useState("");
+  const [referralCode, setReferralCode] = useState(refParam?.toUpperCase() || "");
+  const [referralClaimed, setReferralClaimed] = useState(false);
   const nameRef        = useRef<HTMLInputElement>(null);
   const accountNameRef = useRef<HTMLInputElement>(null);
 
@@ -174,6 +186,19 @@ export default function Onboarding() {
       onboarding_data: { niche, completedAt: new Date().toISOString() },
     } as never).eq("id", session.user.id);
     // pain_point / business-profiler removed — AI learns from conversation
+
+    // Auto-claim referral code if provided
+    if (referralCode.trim().length >= 4 && !referralClaimed) {
+      try {
+        const { data: claimResult } = await supabase.functions.invoke("claim-referral", {
+          body: { code: referralCode.trim(), action: "claim" },
+        });
+        if (claimResult?.success) {
+          setReferralClaimed(true);
+          toast.success(lang === "pt" ? `+${claimResult.bonus} créditos bônus!` : lang === "es" ? `+${claimResult.bonus} créditos bonus!` : `+${claimResult.bonus} bonus credits!`);
+        }
+      } catch (_) { /* silent — referral is optional */ }
+    }
   };
 
   const createFirstAccount = async (session: any): Promise<string | null> => {
@@ -422,6 +447,34 @@ export default function Onboarding() {
                     <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: "rgba(255,255,255,0.7)", textDecoration: "underline", textUnderlineOffset: 3 }}>{t.s1_privacy_link}</a>
                   </span>
                 </label>
+
+                {/* Referral code */}
+                <div style={{ marginBottom: 28 }}>
+                  <label style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.02em" }}>
+                    {t.s1_referral_label}
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      value={referralCode}
+                      onChange={e => setReferralCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12))}
+                      placeholder={t.s1_referral_ph}
+                      maxLength={12}
+                      style={{ ...inputStyle, fontVariantNumeric: "tabular-nums", letterSpacing: "0.08em", paddingRight: 40 }}
+                      onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.6)"; e.currentTarget.style.background = "rgba(14,165,233,0.06)"; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }}
+                    />
+                    {referralCode.length >= 4 && (
+                      <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "rgba(14,165,233,0.7)" }}>
+                        <Check size={16} />
+                      </span>
+                    )}
+                  </div>
+                  {referralCode.length >= 4 && (
+                    <p style={{ fontFamily: M, fontSize: 12, color: "rgba(14,165,233,0.6)", margin: "8px 0 0", lineHeight: 1.4 }}>
+                      {t.s1_referral_hint}
+                    </p>
+                  )}
+                </div>
 
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => navigate(-1 as any)}
