@@ -413,18 +413,17 @@ export function DashboardSidebar({
           {plan === "free" && (
             <button onClick={() => setUpgradeOpen(true)}
               style={{
-                display: "flex", alignItems: "center", gap: 8, padding: "7px 14px",
+                display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
                 marginLeft: 6, marginRight: 6, borderRadius: 8,
-                background: `${A}06`, border: `1px solid ${A}12`, cursor: "pointer", width: "calc(100% - 12px)",
-                transition: "all 0.15s", marginBottom: 2,
+                background: "transparent", border: "none", cursor: "pointer", width: "calc(100% - 12px)",
+                transition: "background 0.12s", marginBottom: 2,
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${A}12`; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `${A}06`; }}>
-              <Zap size={14} strokeWidth={1.6} color={`${A}70`} />
-              <span style={{ fontSize: 12.5, fontWeight: 500, color: `${A}80`, fontFamily: F }}>
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: "#0ea5e9", fontFamily: F }}>
                 {pt ? "Fazer upgrade" : es ? "Mejorar plan" : "Upgrade"}
               </span>
-              <ArrowUpRight size={12} color={`${A}40`} style={{ marginLeft: "auto" }} />
+              <ArrowUpRight size={12} color="#0ea5e9" style={{ marginLeft: "auto", opacity: 0.5 }} />
             </button>
           )}
 
@@ -447,8 +446,8 @@ export function DashboardSidebar({
               <AvatarImage src={profile?.avatar_url || undefined} />
               <AvatarFallback style={{
                 fontSize: 11, fontWeight: 700, borderRadius: 7,
-                background: `${A}10`, color: `${A}60`,
-                border: `1px solid ${A}15`,
+                background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)",
+                border: "none",
               }}>{initials}</AvatarFallback>
             </Avatar>
             <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
