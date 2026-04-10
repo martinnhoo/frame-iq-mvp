@@ -173,16 +173,7 @@ export default function Onboarding() {
       onboarding_completed: true,
       onboarding_data: { niche, completedAt: new Date().toISOString() },
     } as never).eq("id", session.user.id);
-    if (niche || name) {
-      try {
-        await (supabase.from("user_ai_profile" as any) as any).upsert({
-          user_id: session.user.id,
-          industry: niche,
-          pain_point: [name ? `User: ${name}.` : "", niche ? `Niche: ${nicheObj?.label || niche}.` : ""].filter(Boolean).join(" "),
-          last_updated: new Date().toISOString(),
-        }, { onConflict: "user_id" });
-      } catch {}
-    }
+    // pain_point / business-profiler removed — AI learns from conversation
   };
 
   const createFirstAccount = async (session: any): Promise<string | null> => {
@@ -220,18 +211,7 @@ export default function Onboarding() {
         body: { user_id: session.user.id, email: session.user.email, first_name: name.trim().split(" ")[0] || personaName, language: lang }
       }).catch(() => {});
 
-      // Fire business-profiler async — research this business so the AI knows it from day 1
-      if (accountDesc || niche) {
-        supabase.functions.invoke("business-profiler", {
-          body: {
-            user_id: session.user.id,
-            persona_id: newPersonaId,
-            product_name: personaName,
-            niche,
-            market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US",
-          }
-        }).catch(() => {});
-      }
+      // business-profiler removed — no more auto-generated compliance rules
 
       return newPersonaId;
     }

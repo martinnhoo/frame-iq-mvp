@@ -1074,15 +1074,11 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
           .join("\n");
         return `=== BENCHMARKS DO SETOR (dados agregados, anônimos) ===\n${summary ? `${summary}\n` : ""}${lines}\n(Use como referência de mercado. Fraseie como "dados do setor" ou "em campanhas similares". Nunca revele que são dados de outras contas.)`;
       })(),
-      // Business profile — who this company really is, compliance rules
+      // Business profile — simplified, no auto-generated compliance rules
       businessProfile
-        ? `=== PERFIL DO NEGÓCIO (pesquisado) ===\n` +
-          `Indústria: ${(businessProfile.variables as any)?.industry}\n` +
-          `Licença: ${(businessProfile.variables as any)?.license_status}\n` +
-          `Compliance obrigatório:\n${((businessProfile.variables as any)?.compliance_rules || []).map((r: string) => `  - ${r}`).join("\n")}\n` +
-          `Frases proibidas: ${((businessProfile.variables as any)?.forbidden_phrases || []).join(", ")}\n` +
-          `Tom da marca: ${(businessProfile.variables as any)?.brand_tone}\n` +
-          `Oportunidades de marketing: ${((businessProfile.variables as any)?.marketing_opportunities || []).slice(0, 2).join(" | ")}`
+        ? `=== PERFIL DO NEGÓCIO ===\n` +
+          `Indústria: ${(businessProfile.variables as any)?.industry || "não definida"}\n` +
+          `Oportunidades: ${((businessProfile.variables as any)?.marketing_opportunities || []).slice(0, 2).join(" | ") || "a descobrir"}`
         : "",
       // Real-time market context — Google Trends + Meta Ads Library
       latestMarket
@@ -1630,10 +1626,14 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
         const items = notes
           .split("|||")
           .filter(Boolean)
-          .filter((n) => !n.trim().startsWith("Usuário:") && !n.trim().startsWith("Nicho:"))
+          // Filter out onboarding artifacts — only keep real user instructions
+          .filter((n) => {
+            const t = n.trim().toLowerCase();
+            return !t.startsWith("user:") && !t.startsWith("usuário:") && !t.startsWith("niche:") && !t.startsWith("nicho:") && t.length > 5;
+          })
           .slice(0, 5);
         if (!items.length) return "";
-        return `=== INSTRUÇÕES PERMANENTES DO USUÁRIO ===\nO usuário pediu explicitamente para você lembrar:\n${items.map((n) => `  • ${n}`).join("\n")}\n(Aplique sempre. Nunca pergunte de novo. Nunca esqueça.)`;
+        return `=== INSTRUÇÕES DO USUÁRIO ===\nO usuário pediu para lembrar:\n${items.map((n) => `  • ${n}`).join("\n")}`;
       })(),
       // Persistent chat memory — facts extracted from previous conversations
       memorySummary
