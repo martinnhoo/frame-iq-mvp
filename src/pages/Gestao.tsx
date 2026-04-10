@@ -2,7 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { BarChart3, BookOpen, Users, ArrowRight, Clock } from "lucide-react";
+import { BarChart3, BookOpen, Users, ArrowRight } from "lucide-react";
 
 /* ── Tokens ───────────────────────────────────────────────────────────── */
 const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -25,16 +25,9 @@ const KF = `
 
 type Lang = "pt" | "es" | "en";
 
-interface Feature {
-  title: string;
-  desc: string;
-  soon?: boolean;
-}
-
 const T: Record<Lang, {
   hero: string; sub: string; cta: string; ctaSub: string; nav_cta: string;
-  soon: string;
-  features: Feature[];
+  features: { title: string; desc: string }[];
 }> = {
   pt: {
     hero: "Central de comando\ndos seus anúncios",
@@ -42,11 +35,10 @@ const T: Record<Lang, {
     cta: "Começar grátis",
     ctaSub: "3 dias grátis · sem cartão",
     nav_cta: "Começar grátis",
-    soon: "Em breve",
     features: [
-      { title: "Dashboard unificado", desc: "Métricas, KPIs e tendências atualizadas numa visão única. O que importa, sem ruído." },
-      { title: "Diário de Ads", desc: "Registro automático do que aconteceu em cada campanha — gerado pela IA, pronto pra consulta.", soon: true },
-      { title: "Múltiplas contas", desc: "Gerencie várias contas Meta com contexto dedicado. A IA aprende o nicho de cada uma.", soon: true },
+      { title: "Dashboard unificado", desc: "Métricas em tempo real, KPIs e tendências numa visão única. O que importa, sem ruído." },
+      { title: "Diário de Ads", desc: "Registro automático do que aconteceu em cada campanha — gerado pela IA, sincronizado diariamente." },
+      { title: "Múltiplas contas", desc: "Gerencie várias contas Meta com contexto dedicado. A IA aprende o nicho de cada uma." },
     ],
   },
   es: {
@@ -55,11 +47,10 @@ const T: Record<Lang, {
     cta: "Comenzar gratis",
     ctaSub: "3 días gratis · sin tarjeta",
     nav_cta: "Comenzar gratis",
-    soon: "Pronto",
     features: [
-      { title: "Dashboard unificado", desc: "Métricas, KPIs y tendencias actualizadas en una vista única. Lo que importa, sin ruido." },
-      { title: "Diario de Ads", desc: "Registro automático de lo que pasó en cada campaña — generado por IA, listo para consulta.", soon: true },
-      { title: "Múltiples cuentas", desc: "Gestiona varias cuentas Meta con contexto dedicado. La IA aprende el nicho de cada una.", soon: true },
+      { title: "Dashboard unificado", desc: "Métricas en tiempo real, KPIs y tendencias en una vista única. Lo que importa, sin ruido." },
+      { title: "Diario de Ads", desc: "Registro automático de lo que pasó en cada campaña — generado por IA, sincronizado diariamente." },
+      { title: "Múltiples cuentas", desc: "Gestiona varias cuentas Meta con contexto dedicado. La IA aprende el nicho de cada una." },
     ],
   },
   en: {
@@ -68,11 +59,10 @@ const T: Record<Lang, {
     cta: "Start free",
     ctaSub: "3 days free · no card",
     nav_cta: "Start free",
-    soon: "Soon",
     features: [
-      { title: "Unified dashboard", desc: "Up-to-date metrics, KPIs and trends in one single view. What matters, without noise." },
-      { title: "Ad Diary", desc: "Automatic daily log of what happened in each campaign — AI-generated, ready for review.", soon: true },
-      { title: "Multiple accounts", desc: "Manage several Meta accounts with dedicated context. AI learns each account's niche.", soon: true },
+      { title: "Unified dashboard", desc: "Real-time metrics, KPIs and trends in one single view. What matters, without noise." },
+      { title: "Ad Diary", desc: "Automatic daily log of what happened in each campaign — AI-generated, synced daily." },
+      { title: "Multiple accounts", desc: "Manage several Meta accounts with dedicated context. AI learns each account's niche." },
     ],
   },
 };
@@ -160,10 +150,7 @@ export default function Gestao() {
           >
             {t.cta} <ArrowRight size={15} />
           </button>
-          <p style={{
-            fontFamily: BODY, fontSize: 12, fontWeight: 400,
-            color: C.textMuted, marginTop: 12,
-          }}>
+          <p style={{ fontFamily: BODY, fontSize: 12, fontWeight: 400, color: C.textMuted, marginTop: 12 }}>
             {t.ctaSub}
           </p>
         </div>
@@ -179,36 +166,21 @@ export default function Gestao() {
                   padding: "20px 20px", borderRadius: 14,
                   background: C.surface,
                   border: `1px solid ${C.border}`,
-                  borderLeft: `3px solid ${f.soon ? C.textMuted : ic.color}`,
-                  opacity: f.soon ? 0.65 : 1,
+                  borderLeft: `3px solid ${ic.color}`,
                   animation: `aFadeUp ${0.7 + i * 0.1}s ease-out`,
-                  transition: "border-color 0.2s, opacity 0.2s",
+                  transition: "border-color 0.2s",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderHov; if (f.soon) e.currentTarget.style.opacity = "0.8"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; if (f.soon) e.currentTarget.style.opacity = "0.65"; }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = C.borderHov}
+                onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                  <ic.Icon size={16} color={f.soon ? C.textMuted : ic.color} strokeWidth={1.8} />
+                  <ic.Icon size={16} color={ic.color} strokeWidth={1.8} />
                   <span style={{
                     fontFamily: BODY, fontSize: 14, fontWeight: 700,
                     color: C.text, letterSpacing: "-0.02em",
                   }}>
                     {f.title}
                   </span>
-                  {f.soon && (
-                    <span style={{
-                      fontFamily: BODY, fontSize: 10, fontWeight: 600,
-                      color: C.textMuted, letterSpacing: "0.04em",
-                      textTransform: "uppercase",
-                      padding: "2px 8px", borderRadius: 6,
-                      border: `1px solid ${C.border}`,
-                      marginLeft: "auto", flexShrink: 0,
-                      display: "inline-flex", alignItems: "center", gap: 4,
-                    }}>
-                      <Clock size={9} strokeWidth={2} />
-                      {t.soon}
-                    </span>
-                  )}
                 </div>
                 <p style={{
                   fontFamily: BODY, fontSize: 13, fontWeight: 400,

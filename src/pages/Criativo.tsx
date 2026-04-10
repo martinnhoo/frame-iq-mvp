@@ -2,7 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Type, Crosshair, Shield, ArrowRight, Clock } from "lucide-react";
+import { Type, Shield, Crosshair, ArrowRight } from "lucide-react";
 
 /* ── Tokens ───────────────────────────────────────────────────────────── */
 const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -26,16 +26,9 @@ const KF = `
 
 type Lang = "pt" | "es" | "en";
 
-interface Feature {
-  title: string;
-  desc: string;
-  soon?: boolean;
-}
-
 const T: Record<Lang, {
   hero: string; sub: string; cta: string; ctaSub: string; nav_cta: string;
-  soon: string;
-  features: Feature[];
+  features: { title: string; desc: string }[];
 }> = {
   pt: {
     hero: "Anúncios que escalam,\ncriados por IA",
@@ -43,11 +36,10 @@ const T: Record<Lang, {
     cta: "Começar a criar",
     ctaSub: "3 dias grátis · sem cartão",
     nav_cta: "Começar grátis",
-    soon: "Em breve",
     features: [
       { title: "Gerador de Hooks", desc: "Hooks com score de engajamento previsto, baseados no que realmente performa no seu segmento." },
       { title: "Preflight Check", desc: "Valida seu anúncio antes de publicar. Pega erros de copy, CTA fraco e problemas de compliance." },
-      { title: "Decodificador de concorrentes", desc: "Analisa o que seus concorrentes estão rodando e por quê funciona. Sem achismo.", soon: true },
+      { title: "Decodificador de concorrentes", desc: "Analisa o que seus concorrentes estão rodando e por quê funciona. Sem achismo." },
     ],
   },
   es: {
@@ -56,11 +48,10 @@ const T: Record<Lang, {
     cta: "Empezar a crear",
     ctaSub: "3 días gratis · sin tarjeta",
     nav_cta: "Comenzar gratis",
-    soon: "Pronto",
     features: [
       { title: "Generador de Hooks", desc: "Hooks con score de engagement previsto, basados en lo que realmente funciona en tu segmento." },
       { title: "Preflight Check", desc: "Valida tu anuncio antes de publicar. Detecta errores de copy, CTA débil y problemas de compliance." },
-      { title: "Decodificador de competidores", desc: "Analiza lo que tus competidores están corriendo y por qué funciona. Sin suposiciones.", soon: true },
+      { title: "Decodificador de competidores", desc: "Analiza lo que tus competidores están corriendo y por qué funciona. Sin suposiciones." },
     ],
   },
   en: {
@@ -69,11 +60,10 @@ const T: Record<Lang, {
     cta: "Start creating",
     ctaSub: "3 days free · no card",
     nav_cta: "Start free",
-    soon: "Soon",
     features: [
       { title: "Hook Generator", desc: "Hooks with predicted engagement scores, based on what actually performs in your segment." },
       { title: "Preflight Check", desc: "Validates your ad before publishing. Catches copy errors, weak CTAs and compliance issues." },
-      { title: "Competitor Decoder", desc: "Analyzes what your competitors are running and why it works. No guesswork.", soon: true },
+      { title: "Competitor Decoder", desc: "Analyzes what your competitors are running and why it works. No guesswork." },
     ],
   },
 };
@@ -161,10 +151,7 @@ export default function Criativo() {
           >
             {t.cta} <ArrowRight size={15} />
           </button>
-          <p style={{
-            fontFamily: BODY, fontSize: 12, fontWeight: 400,
-            color: C.textMuted, marginTop: 12,
-          }}>
+          <p style={{ fontFamily: BODY, fontSize: 12, fontWeight: 400, color: C.textMuted, marginTop: 12 }}>
             {t.ctaSub}
           </p>
         </div>
@@ -180,36 +167,21 @@ export default function Criativo() {
                   padding: "20px 20px", borderRadius: 14,
                   background: C.surface,
                   border: `1px solid ${C.border}`,
-                  borderLeft: `3px solid ${f.soon ? C.textMuted : ic.color}`,
-                  opacity: f.soon ? 0.65 : 1,
+                  borderLeft: `3px solid ${ic.color}`,
                   animation: `aFadeUp ${0.7 + i * 0.1}s ease-out`,
-                  transition: "border-color 0.2s, opacity 0.2s",
+                  transition: "border-color 0.2s",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.borderHov; if (f.soon) e.currentTarget.style.opacity = "0.8"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; if (f.soon) e.currentTarget.style.opacity = "0.65"; }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = C.borderHov}
+                onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                  <ic.Icon size={16} color={f.soon ? C.textMuted : ic.color} strokeWidth={1.8} />
+                  <ic.Icon size={16} color={ic.color} strokeWidth={1.8} />
                   <span style={{
                     fontFamily: BODY, fontSize: 14, fontWeight: 700,
                     color: C.text, letterSpacing: "-0.02em",
                   }}>
                     {f.title}
                   </span>
-                  {f.soon && (
-                    <span style={{
-                      fontFamily: BODY, fontSize: 10, fontWeight: 600,
-                      color: C.textMuted, letterSpacing: "0.04em",
-                      textTransform: "uppercase",
-                      padding: "2px 8px", borderRadius: 6,
-                      border: `1px solid ${C.border}`,
-                      marginLeft: "auto", flexShrink: 0,
-                      display: "inline-flex", alignItems: "center", gap: 4,
-                    }}>
-                      <Clock size={9} strokeWidth={2} />
-                      {t.soon}
-                    </span>
-                  )}
                 </div>
                 <p style={{
                   fontFamily: BODY, fontSize: 13, fontWeight: 400,
