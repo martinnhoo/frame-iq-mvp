@@ -2467,6 +2467,7 @@ export default function AdBriefAI() {
   const [greetingKey,setGreetingKey]=useState(0);
   // Onboarding quiz removed — AI learns from conversation naturally
   const [chatImage,setChatImage]=useState<{base64:string;name:string;preview:string;mediaType:string}|null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [chatDragOver,setChatDragOver]=useState(false);
   const [input,setInput]=useState("");
 
@@ -4633,15 +4634,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 return (
                   <button key={tool.action}
                     onClick={()=>{
-                      const oneShot: Record<string,string> = {
-                        analyze_ad: lang==="pt"
-                          ? "[ANALYZE_AD] Pronto para analisar um criativo. Manda a imagem ou descreve o anúncio (com CTR atual se tiver). Vou dar: score do hook, CTA, clareza visual, fit com audiência, veredito (Escalar/Testar/Pausar) e 3 ações."
-                          : lang==="es"
-                          ? "[ANALYZE_AD] Listo para analizar un creativo. Envía la imagen o describe el anuncio. Daré: score del hook, CTA, claridad visual, fit, veredicto (Escalar/Testar/Pausar) y 3 acciones."
-                          : "[ANALYZE_AD] Ready to analyze a creative. Send the image or describe the ad. I'll give: hook score, CTA, visual clarity, fit, verdict (Scale/Test/Pause) and 3 actions.",
-                      };
-                      if(oneShot[tool.action]){
-                        if(!isOn) send(oneShot[tool.action]);
+                      if(tool.action === "analyze_ad"){
+                        // Open file picker instead of sending a text message
+                        imageInputRef.current?.click();
                         return;
                       }
                       setActiveTool(isOn?null:tool.action);
@@ -4718,7 +4713,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.22)"}}
                   onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(13,162,231,0.3)";el.style.color="rgba(13,162,231,0.7)";}}
                   onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.08)";el.style.color="rgba(255,255,255,0.22)";}}>
-                  <input type="file" accept="image/*" className="hidden" style={{display:"none"}}
+                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" style={{display:"none"}}
                     onChange={e=>{
                       const file=e.target.files?.[0];
                       if(file){
