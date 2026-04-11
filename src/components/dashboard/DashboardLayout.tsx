@@ -1,7 +1,7 @@
-// DashboardLayout v2 — build 2026-03-20
+// DashboardLayout v3 — build 2026-04-10 — motion primitives
 import { useEffect, useState } from "react";
 import { storage } from "@/lib/storage";
-// framer-motion removed — using CSS transitions
+import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -545,13 +545,19 @@ export default function DashboardLayout() {
     `}</style>
     <div className="dashboard-root" style={{ height: "100dvh", background: "var(--bg-main)", display: "flex", overflow: "hidden", maxWidth: "100vw" }}>
       {/* Mobile overlay — tap to close */}
-      {sidebarOpen && (
-        <div
-          className="sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-          style={{ position: "fixed", inset: 0, zIndex: 49, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(2px)" }}
-        />
-      )}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            className="sidebar-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setSidebarOpen(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 49, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
+          />
+        )}
+      </AnimatePresence>
       <div style={{
         // Desktop: ocupa espaço no fluxo. Mobile: position:fixed via CSS (não empurra conteúdo)
         width: sidebarOpen ? 216 : 0,
@@ -647,10 +653,15 @@ export default function DashboardLayout() {
 
 
         <main className="flex-1 dashboard-main" style={{ background: "var(--bg-main)", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
-          <div
-            key={location.pathname}
-            style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, animation: "pageIn 0.18s ease" }}
-          >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 6, filter: "blur(3px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -4, filter: "blur(2px)" }}
+              transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+              style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
+            >
               <ErrorBoundary>
               {profile ? (
                 <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile, lang: language } satisfies DashboardContext} />
@@ -660,7 +671,8 @@ export default function DashboardLayout() {
                 </div>
               )}
               </ErrorBoundary>
-          </div>
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
