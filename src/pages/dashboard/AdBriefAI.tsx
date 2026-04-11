@@ -3175,9 +3175,83 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     setProactiveLoading(true);
     try {
       const accountName = selectedPersona?.name || null;
-      const greetingTitle = accountName
-        ? (lang === "es" ? `${accountName} está lista.` : lang === "en" ? `${accountName} is ready.` : `${accountName} está pronta.`)
-        : (lang === "es" ? "Tu cuenta está lista." : lang === "en" ? "Your account is ready." : "Sua conta está pronta.");
+      const hour = new Date().getHours();
+      const period: "morning"|"afternoon"|"evening"|"night" = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "afternoon" : hour < 22 ? "evening" : "night";
+
+      const greetingPool: Record<string, Record<typeof period, string[]>> = {
+        pt: {
+          morning: [
+            accountName ? `Bom dia. ${accountName} está pronta.` : "Bom dia. Sua conta está pronta.",
+            accountName ? `Bom dia — ${accountName} já está no ar.` : "Bom dia — tudo pronto por aqui.",
+            "Bom dia. O que vamos otimizar?",
+            "Bom dia. Suas campanhas te esperam.",
+          ],
+          afternoon: [
+            accountName ? `Boa tarde. ${accountName} está pronta.` : "Boa tarde. Sua conta está pronta.",
+            accountName ? `Boa tarde — ${accountName} já está ativa.` : "Boa tarde — tudo pronto por aqui.",
+            "Boa tarde. O que vamos ajustar?",
+            "Boa tarde. Hora de escalar?",
+          ],
+          evening: [
+            accountName ? `Boa noite. ${accountName} está pronta.` : "Boa noite. Sua conta está pronta.",
+            accountName ? `Boa noite — ${accountName} no ar.` : "Boa noite — tudo pronto.",
+            "Boa noite. Ainda dá tempo de otimizar.",
+            "Boa noite. Vamos revisar o dia?",
+          ],
+          night: [
+            accountName ? `${accountName} está pronta.` : "Sua conta está pronta.",
+            "Trabalhando até tarde? Bora otimizar.",
+            "Ainda online? Vamos aproveitar.",
+            accountName ? `${accountName} no ar. Vamos lá.` : "Tudo pronto. Vamos lá.",
+          ],
+        },
+        es: {
+          morning: [
+            accountName ? `Buenos días. ${accountName} está lista.` : "Buenos días. Tu cuenta está lista.",
+            "Buenos días. ¿Qué optimizamos?",
+            accountName ? `Buenos días — ${accountName} ya está activa.` : "Buenos días — todo listo.",
+          ],
+          afternoon: [
+            accountName ? `Buenas tardes. ${accountName} está lista.` : "Buenas tardes. Tu cuenta está lista.",
+            "Buenas tardes. ¿Qué ajustamos?",
+            "Buenas tardes. ¿Hora de escalar?",
+          ],
+          evening: [
+            accountName ? `Buenas noches. ${accountName} está lista.` : "Buenas noches. Tu cuenta está lista.",
+            "Buenas noches. ¿Revisamos el día?",
+            "Buenas noches. Aún hay tiempo de optimizar.",
+          ],
+          night: [
+            accountName ? `${accountName} está lista.` : "Tu cuenta está lista.",
+            "¿Trabajando tarde? Vamos.",
+            accountName ? `${accountName} activa. Vamos.` : "Todo listo. Vamos.",
+          ],
+        },
+        en: {
+          morning: [
+            accountName ? `Good morning. ${accountName} is ready.` : "Good morning. Your account is ready.",
+            "Good morning. What are we optimizing?",
+            accountName ? `Good morning — ${accountName} is live.` : "Good morning — all set.",
+          ],
+          afternoon: [
+            accountName ? `Good afternoon. ${accountName} is ready.` : "Good afternoon. Your account is ready.",
+            "Good afternoon. Time to scale?",
+            "Good afternoon. What needs attention?",
+          ],
+          evening: [
+            accountName ? `Good evening. ${accountName} is ready.` : "Good evening. Your account is ready.",
+            "Good evening. Let's review the day.",
+            "Good evening. Still time to optimize.",
+          ],
+          night: [
+            accountName ? `${accountName} is ready.` : "Your account is ready.",
+            "Working late? Let's make it count.",
+            accountName ? `${accountName} is live. Let's go.` : "All set. Let's go.",
+          ],
+        },
+      };
+      const pool = (greetingPool[lang] || greetingPool.pt)[period];
+      const greetingTitle = pool[Math.floor(Math.random() * pool.length)];
 
       // Build platform context string
       const platforms: string[] = [];
