@@ -517,32 +517,13 @@ export default function Demo() {
             >
               {/* Hero */}
               <div style={{ textAlign: "center", marginBottom: 44 }}>
-                {/* Badge */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "6px 14px", borderRadius: 20,
-                    background: "rgba(99,102,241,0.08)",
-                    border: "1px solid rgba(99,102,241,0.15)",
-                    marginBottom: 24,
-                  }}
-                >
-                  <Sparkles size={13} color={C.accent} />
-                  <span style={{ fontFamily: F, fontSize: 11.5, fontWeight: 600, color: C.accent, letterSpacing: "-0.01em" }}>
-                    AI-Powered Ad Analysis
-                  </span>
-                </motion.div>
-
                 <motion.h1
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
                   style={{
                     fontFamily: F, fontWeight: 900,
-                    fontSize: "clamp(28px, 6.5vw, 46px)",
+                    fontSize: "clamp(26px, 5.5vw, 42px)",
                     letterSpacing: "-0.04em", lineHeight: 1.06,
                     marginBottom: 16, whiteSpace: "pre-line",
                     background: "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 50%, #fff 100%)",
@@ -568,17 +549,6 @@ export default function Demo() {
                 >
                   {t.sub}
                 </motion.p>
-              </div>
-
-              {/* Feature pills */}
-              <div className="demo-feat-grid" style={{
-                display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr",
-                gap: 8, marginBottom: 32,
-              }}>
-                <FeaturePill icon={<Eye size={14} />} label={t.feat1} delay={0.4} />
-                <FeaturePill icon={<TrendingUp size={14} />} label={t.feat2} delay={0.5} />
-                <FeaturePill icon={<MessageSquare size={14} />} label={t.feat3} delay={0.6} />
-                <FeaturePill icon={<Sparkles size={14} />} label={t.feat4} delay={0.7} />
               </div>
 
               {/* Rate Limited */}
@@ -691,17 +661,6 @@ export default function Demo() {
                 <LiveProof base={t.sp_count} label={t.sp_label} liveLabel={t.sp_live} liveBase={t.sp_live_count} />
               )}
 
-              {/* Trusted badge */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                style={{ textAlign: "center", marginTop: 4 }}
-              >
-                <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.2)" }}>
-                  {t.trusted}
-                </span>
-              </motion.div>
             </motion.div>
           )}
 
