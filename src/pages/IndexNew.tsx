@@ -11,7 +11,7 @@ import { Helmet } from "react-helmet-async";
 
 const BRAND = "#6366f1";
 const BRAND_BRIGHT = "#38bdf8"; // sky blue accent
-const BG = "#030306";
+const BG = "#070d1a";
 const CARD_BG = "rgba(17,22,32,0.65)";
 const CARD_BORDER = "rgba(99,102,241,0.12)";
 const TEXT_MUTED = "rgba(255,255,255,0.55)";
@@ -498,10 +498,10 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
-    default: "#030306",
-    subtle:  "#030306",
-    dark:    "#030306",
-    accent:  "#030306",
+    default: "#070d1a",
+    subtle:  "#070d1a",
+    dark:    "#070d1a",
+    accent:  "#070d1a",
   };
   const borderMap: Record<string, string> = {
     default: "1px solid rgba(99,102,241,0.06)",
@@ -759,7 +759,7 @@ function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Re
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: scrolled ? 'rgba(3,3,6,0.92)' : 'transparent',
+      background: scrolled ? 'rgba(7,13,26,0.92)' : 'transparent',
       backdropFilter: scrolled ? 'blur(20px)' : 'none',
       WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
       borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
@@ -2324,37 +2324,17 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
 
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#030306' }}>
+    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#070d1a' }}>
 
-      {/* Aurora mesh gradient — 3 animated layers */}
+      {/* Soft ambient gradient */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: `
-          radial-gradient(ellipse 80% 60% at 20% 30%, rgba(99,102,241,0.13) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 80% at 75% 20%, rgba(56,189,248,0.08) 0%, transparent 55%),
-          radial-gradient(ellipse 70% 50% at 50% 80%, rgba(99,102,241,0.07) 0%, transparent 60%)
-        `,
-        animation: 'auroraShift 25s ease-in-out infinite alternate',
+        background: 'radial-gradient(ellipse 72% 48% at 50% 38%, rgba(56,189,248,0.08) 0%, transparent 70%)',
       }} />
-
-      {/* Grid pattern with radial mask */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)',
-        backgroundSize: '64px 64px',
-        maskImage: 'radial-gradient(ellipse 60% 50% at 50% 40%, black, transparent)',
-        WebkitMaskImage: 'radial-gradient(ellipse 60% 50% at 50% 40%, black, transparent)',
-      }} />
-
-      {/* SVG noise texture overlay */}
-      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity: 0.3 }}>
-        <filter id="heroNoise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" /></filter>
-        <rect width="100%" height="100%" filter="url(#heroNoise)" opacity="0.08" />
-      </svg>
 
       {/* Soft glow orbs */}
-      <div className="hero-glow-orb" style={{ left: '15%', top: '25%', width: 500, height: 500, background: 'rgba(99,102,241,0.10)' }} />
-      <div className="hero-glow-orb" style={{ right: '10%', top: '50%', width: 350, height: 350, background: 'rgba(56,189,248,0.06)', animationDelay: '3s' }} />
+      <div className="hero-glow-orb" style={{ left: '12%', top: '20%', width: 520, height: 520, background: 'rgba(56,189,248,0.07)' }} />
+      <div className="hero-glow-orb" style={{ right: '8%', top: '55%', width: 380, height: 380, background: 'rgba(99,102,241,0.05)', animationDelay: '3s' }} />
 
       {/* Grid */}
       <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1, overflow: 'hidden' }} className="hero-grid">
@@ -2448,7 +2428,6 @@ function FeatureTabs() {
 
   return (
     <section style={{ background: "#0d1117", padding: "96px 0", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(13,162,231,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(13,162,231,0.03) 1px, transparent 1px)", backgroundSize: "60px 60px", pointerEvents: "none" }} />
       <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 24px", position: "relative" }}>
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
           <p style={{ color: "#0da2e7", fontFamily: "monospace", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase" as const, marginBottom: 16 }}>conta real · dados reais</p>
@@ -2746,7 +2725,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       position: "relative",
       padding: "96px 24px",
       overflow: "hidden",
-      background: "#030306",
+      background: "#070d1a",
       borderTop: "1px solid rgba(255,255,255,0.04)",
     }}>
       {/* Overlay sutil apenas — sem mudar cor de fundo */}
@@ -3390,18 +3369,11 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
 
 function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string, string>; ctaLoading?: boolean }) {
   return (
-    <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "#030306" }}>
-      {/* Grid pattern overlay with mask */}
-      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)", backgroundSize: "52px 52px", pointerEvents: "none", maskImage: "radial-gradient(ellipse 60% 60% at 50% 50%, black, transparent)", WebkitMaskImage: "radial-gradient(ellipse 60% 60% at 50% 50%, black, transparent)" }} />
-      {/* Aurora top glow */}
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 800, height: 2, background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.35), transparent)" }} />
-      {/* Center aurora radial */}
-      <div style={{ position: "absolute", top: "5%", left: "50%", transform: "translateX(-50%)", width: 900, height: 600, background: "radial-gradient(ellipse, rgba(99,102,241,0.10) 0%, rgba(56,189,248,0.04) 40%, transparent 65%)", pointerEvents: "none" }} />
-      {/* Noise */}
-      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", opacity: 0.25 }}>
-        <filter id="ctaNoise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" /></filter>
-        <rect width="100%" height="100%" filter="url(#ctaNoise)" opacity="0.08" />
-      </svg>
+    <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "#070d1a" }}>
+      {/* Top glow line */}
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 800, height: 1, background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.25), transparent)" }} />
+      {/* Soft center radial */}
+      <div style={{ position: "absolute", top: "5%", left: "50%", transform: "translateX(-50%)", width: 900, height: 600, background: "radial-gradient(ellipse, rgba(56,189,248,0.06) 0%, transparent 60%)", pointerEvents: "none" }} />
 
       <div className="scroll-reveal" style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
         {/* Label — mesmo padrão de "O PROBLEMA" */}
@@ -3442,7 +3414,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
 // ─── Footer ───────────────────────────────────────────────────────────────────
 function Footer({ t }: { t: Record<string, string> }) {
   return (
-    <footer style={{ borderTop: "1px solid rgba(99,102,241,0.08)", background: "#030306", padding: "48px clamp(16px,4vw,40px) 32px" }}>
+    <footer style={{ borderTop: "1px solid rgba(99,102,241,0.08)", background: "#070d1a", padding: "48px clamp(16px,4vw,40px) 32px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         <div className="footer-inner" style={{ display: "flex", justifyContent: "space-between", gap: 40, flexWrap: "wrap" as const, marginBottom: 40 }}>
           {/* Brand */}
@@ -3541,8 +3513,7 @@ export default function IndexNew() {
         <meta property="og:image" content="https://adbrief.pro/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <html lang={lang} />
-        <style>{`          @keyframes auroraShift{0%{background-position:0% 0%,100% 0%,50% 100%}100%{background-position:100% 50%,0% 100%,80% 0%}}
-          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        <style>{`          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
           .cursor-blink{animation:blink 1s step-end infinite}
           
           /* Line enter — used for AI response lines and greeting cards */
