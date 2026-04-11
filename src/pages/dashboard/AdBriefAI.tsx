@@ -172,26 +172,19 @@ Você está no modo Growth Hacker. Ao analisar dados:
 
 const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string}>> = {
   en: [
-    { icon: Zap,            label: "Gen hooks",        action: "hooks",        color: "#06b6d4" },
-    { icon: Clapperboard,   label: "Write script",     action: "script",       color: "#34d399" },
-    { icon: ScanEye,        label: "Competitors",       action: "competitor",   color: "#a78bfa" },
-    { icon: LayoutDashboard,label: "Report",            action: "report",       color: "#0ea5e9" },
-    { icon: Target,         label: "Campaign plan",    action: "campaign_plan",color: "#f59e0b" },
-    { icon: BarChart2,      label: "Analyze creative", action: "analyze_ad",   color: "#10b981" },
+    { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
+    { icon: Clapperboard,   label: "Script",           action: "script",       color: "#34d399" },
+    { icon: BarChart2,      label: "Analyze",          action: "analyze_ad",   color: "#10b981" },
   ],
   pt: [
-    { icon: Zap,            label: "Gerar hooks",        action: "hooks",        color: "#06b6d4" },
-    { icon: Clapperboard,   label: "Escrever roteiro",   action: "script",       color: "#34d399" },
-    { icon: ScanEye,        label: "Concorrentes",        action: "competitor",   color: "#a78bfa" },
-    { icon: LayoutDashboard,label: "Relatório",           action: "report",       color: "#0ea5e9" },
-    { icon: Target,         label: "Plano de campanha",  action: "campaign_plan",color: "#f59e0b" },
-    { icon: BarChart2,      label: "Analisar criativo",  action: "analyze_ad",   color: "#10b981" },
+    { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
+    { icon: Clapperboard,   label: "Roteiro",          action: "script",       color: "#34d399" },
+    { icon: BarChart2,      label: "Analisar",         action: "analyze_ad",   color: "#10b981" },
   ],
   es: [
-    { icon: Zap,            label: "Generar hooks",     action: "hooks",      color: "#06b6d4" },
-    { icon: Clapperboard,   label: "Escribir guión",    action: "script",     color: "#34d399" },
-    { icon: ScanEye,        label: "Competidores",        action: "competitor", color: "#a78bfa" },
-    { icon: BarChart2, label: "Dashboard",    action: "dashboard",  color: "#0ea5e9" },
+    { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
+    { icon: Clapperboard,   label: "Guión",            action: "script",       color: "#34d399" },
+    { icon: BarChart2,      label: "Analizar",         action: "analyze_ad",   color: "#10b981" },
   ],
 };
 
@@ -2630,7 +2623,34 @@ export default function AdBriefAI() {
   useEffect(()=>{
     if(!contextReady || proactiveFired.current) return;
     if(!lang) return;
-    if(!user?.id || !selectedPersona?.id) return;
+    if(!user?.id) return;
+    // No persona — show welcome message for new users without account
+    if(!selectedPersona?.id){
+      proactiveFired.current = true;
+      const hour = new Date().getHours();
+      const greeting = lang==="pt"
+        ? (hour<12?"Bom dia":hour<18?"Boa tarde":"Boa noite")
+        : lang==="es"
+        ? (hour<12?"Buenos días":hour<18?"Buenas tardes":"Buenas noches")
+        : (hour<12?"Good morning":hour<18?"Good afternoon":"Good evening");
+
+      const welcome = lang==="pt"
+        ? `${greeting}! Bem-vindo ao AdBrief. Sou sua IA de performance criativa para Meta Ads.\n\nPosso te ajudar com:\n- Gerar hooks que convertem\n- Escrever roteiros para vídeo ads\n- Analisar criativos (manda uma imagem)\n- Estratégia criativa para seu nicho\n\nPara análises conectadas aos seus dados reais (CTR, ROAS, o que escalar e pausar), crie uma conta em **Contas** e conecte o Meta Ads.\n\nMe conta: qual seu nicho e o que está trabalhando agora?`
+        : lang==="es"
+        ? `${greeting}! Bienvenido a AdBrief. Soy tu IA de performance creativa para Meta Ads.\n\nPuedo ayudarte con:\n- Generar hooks que convierten\n- Escribir guiones para video ads\n- Analizar creativos (envía una imagen)\n- Estrategia creativa para tu nicho\n\nPara análisis conectados a tus datos reales, crea una cuenta en **Cuentas** y conecta Meta Ads.\n\nCuéntame: ¿cuál es tu nicho y en qué estás trabajando?`
+        : `${greeting}! Welcome to AdBrief. I'm your creative performance AI for Meta Ads.\n\nI can help with:\n- Generate high-converting hooks\n- Write video ad scripts\n- Analyze creatives (send an image)\n- Creative strategy for your niche\n\nFor analyses connected to your real data (CTR, ROAS, what to scale and pause), create an account in **Accounts** and connect Meta Ads.\n\nTell me: what's your niche and what are you working on?`;
+
+      const aid = Date.now() + 1;
+      setMessages([{
+        role: "assistant",
+        blocks: [
+          { type: "text" as any, title: greeting + "!", content: welcome },
+        ],
+        ts: aid, id: aid
+      }]);
+      setProactiveLoading(false);
+      return;
+    }
     // Wait a tick to let connections settle
     const timer = setTimeout(()=>{
       const pid = selectedPersona?.id || null;
@@ -2670,9 +2690,15 @@ export default function AdBriefAI() {
 
   // Load context — scoped to active account, re-runs when account changes
   useEffect(()=>{
-    if(!user?.id || !selectedPersona?.id){
+    if(!user?.id){
       setContext("");
       setContextReady(false);
+      return;
+    }
+    // No persona — still mark context ready so chat is usable
+    if(!selectedPersona?.id){
+      setContext("");
+      setContextReady(true);
       return;
     }
     const pid=selectedPersona?.id||null;
@@ -4577,47 +4603,41 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             )}
 
-            {/* Tool pills */}
-            <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",marginBottom:10} as any}>
-              {/* Skill pill — first in row */}
+            {/* Tool pills — compact row */}
+            <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",marginBottom:10,alignItems:"center"} as any}>
+              {/* Skill pill */}
               <button
                 onClick={() => setShowSkills(s => !s)}
                 style={{
                   display:"flex", alignItems:"center", gap:5,
                   padding:"5px 12px", borderRadius:99, flexShrink:0,
-                  background: activeSkill ? `${activeSkill.color}20` : "var(--bg-surface)",
-                  border:`1px solid ${activeSkill ? activeSkill.color + "50" : "var(--border-default)"}`,
-                  color: activeSkill ? activeSkill.color : "rgba(255,255,255,0.5)",
-                  fontSize:12, fontWeight: activeSkill ? 600 : 400, cursor:"pointer",
+                  background: activeSkill ? `${activeSkill.color}14` : "rgba(255,255,255,0.03)",
+                  border:`1px solid ${activeSkill ? activeSkill.color + "40" : "rgba(255,255,255,0.08)"}`,
+                  color: activeSkill ? activeSkill.color : "rgba(255,255,255,0.45)",
+                  fontSize:12, fontWeight: activeSkill ? 600 : 500, cursor:"pointer",
                   fontFamily:"'Plus Jakarta Sans', sans-serif",
                   letterSpacing:"-0.01em",
-                  transition:"background 0.15s, border-color 0.15s, color 0.15s",
+                  transition:"all 0.15s",
                 }}
               >
                 {activeSkill ? (
                   <><span>{activeSkill.icon}</span><span>{activeSkill.name}</span></>
                 ) : (
-                  <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span>{lang==="pt"?"Skill":lang==="es"?"Skill":"Skill"}</span></>
+                  <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span>Skill</span></>
                 )}
               </button>
+              {/* Separator dot */}
+              <span style={{width:3,height:3,borderRadius:"50%",background:"rgba(255,255,255,0.12)",flexShrink:0}}/>
               {TOOLS.map(tool=>{
                 const isOn = activeTool===tool.action;
                 return (
-                  <button key={tool.action} className={isOn?"tool-pill tool-pill-on":"tool-pill"}
+                  <button key={tool.action}
                     onClick={()=>{
-                      // One-shot tools — send message and don't toggle
                       const oneShot: Record<string,string> = {
-                        dashboard: lang==="pt"
-                          ? "[DASHBOARD] Mostrar resumo da conta — campanhas, ROAS e criativos ativos"
-                          : "[DASHBOARD] Show account summary — campaigns, ROAS and active creatives",
-                        report: lang==="pt"
-                          ? "[REPORT] Gera um relatório de performance completo: gasto, CTR, ROAS, winners, losers, evolução semanal e próximos passos. Formato claro com seções, números destacados e ações em bullet."
-                          : "[REPORT] Generate a complete performance report: spend, CTR, ROAS, winners, losers, weekly trend and next steps.",
-                        campaign_plan: lang==="pt"
-                          ? "[CAMPAIGN_PLAN] Vou criar um plano de campanha. Me diga: produto, objetivo (leads/vendas/tráfego), orçamento e mercado."
-                          : "[CAMPAIGN_PLAN] I'll create a campaign plan. Tell me: product, objective, budget and market.",
                         analyze_ad: lang==="pt"
                           ? "[ANALYZE_AD] Pronto para analisar um criativo. Manda a imagem ou descreve o anúncio (com CTR atual se tiver). Vou dar: score do hook, CTA, clareza visual, fit com audiência, veredito (Escalar/Testar/Pausar) e 3 ações."
+                          : lang==="es"
+                          ? "[ANALYZE_AD] Listo para analizar un creativo. Envía la imagen o describe el anuncio. Daré: score del hook, CTA, claridad visual, fit, veredicto (Escalar/Testar/Pausar) y 3 acciones."
                           : "[ANALYZE_AD] Ready to analyze a creative. Send the image or describe the ad. I'll give: hook score, CTA, visual clarity, fit, verdict (Scale/Test/Pause) and 3 actions.",
                       };
                       if(oneShot[tool.action]){
@@ -4629,14 +4649,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     style={{
                       display:"flex",alignItems:"center",gap:5,
                       padding:"5px 12px",borderRadius:99,flexShrink:0,
-                      background: isOn ? tool.color : "var(--bg-surface)",
-                      border:`1px solid ${isOn ? "transparent" : "var(--border-default)"}`,
-                      color: isOn ? "#000" : "rgba(255,255,255,0.65)",
-                      fontSize:12,fontWeight:500,cursor:"pointer",
+                      background: isOn ? `${tool.color}18` : "rgba(255,255,255,0.03)",
+                      border:`1px solid ${isOn ? tool.color+"40" : "rgba(255,255,255,0.08)"}`,
+                      color: isOn ? tool.color : "rgba(255,255,255,0.45)",
+                      fontSize:12,fontWeight:isOn?600:500,cursor:"pointer",
                       fontFamily:"'Plus Jakarta Sans', sans-serif",
                       letterSpacing:"-0.01em",
-                      transition:"background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s",
-                      boxShadow: isOn ? `0 0 12px ${tool.color}50` : "0 0 0px transparent",
+                      transition:"all 0.15s",
                     }}
                   >
                     <tool.icon size={12} strokeWidth={isOn?2.5:2}/>
