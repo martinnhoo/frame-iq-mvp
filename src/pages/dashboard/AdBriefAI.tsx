@@ -2425,9 +2425,13 @@ export default function AdBriefAI() {
   });
   /* ── Inject demo analysis into chat when arriving from demo signup ── */
   const demoInjectedRef = useRef(false);
+  // Track whether from_demo param was present on initial load (before any effect cleans it)
+  const fromDemoParam = useRef(searchParams.get("from_demo") === "1");
   useEffect(() => {
     if (demoInjectedRef.current) return;
-    if (searchParams.get("from_demo") !== "1") return;
+    if (!fromDemoParam.current) return;
+    // Wait for persona to be loaded — otherwise persona-change effect will wipe messages
+    if (!selectedPersona?.id) return;
     demoInjectedRef.current = true;
     // Clean up URL param
     searchParams.delete("from_demo");
@@ -2439,7 +2443,6 @@ export default function AdBriefAI() {
       if (!result?.score) return;
       localStorage.removeItem(DEMO_STORAGE_KEY);
       const now = Date.now();
-      const scoreColor = result.score >= 8 ? "#22c55e" : result.score >= 5 ? "#f97316" : "#ef4444";
       const pt = lang === "pt"; const es = lang === "es";
       // Build a rich analysis text from the demo result
       const parts: string[] = [];
@@ -2454,8 +2457,10 @@ export default function AdBriefAI() {
         { role: "user", id: now, ts: now, userText: pt ? "Analise este anúncio" : es ? "Analiza este anuncio" : "Analyze this ad", imagePreview: preview || undefined },
         { role: "assistant", id: now + 1, ts: now + 1, blocks: [{ type: "text", title: pt ? "Análise do anúncio" : es ? "Análisis del anuncio" : "Ad Analysis", content: analysisText }] },
       ]);
+      // Also force contextReady so the chat doesn't show spinner
+      setContextReady(true);
     } catch {}
-  }, [searchParams, lang]);
+  }, [searchParams, lang, selectedPersona?.id]);
 
   const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
   // Virtual scroll: render only last N messages for performance
