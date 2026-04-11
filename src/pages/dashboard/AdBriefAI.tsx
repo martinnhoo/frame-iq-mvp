@@ -1940,9 +1940,9 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
-    <div className="lp" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "var(--bg-main)", animation: "lp-in 0.18s ease" }}>
+    <div className="lp lp-expanded" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "var(--bg-main)", animation: "lp-in 0.18s ease" }}>
       {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
+      <div className="lp-expanded-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           {/* Platform tabs */}
           {[hasMeta && "meta"].filter(Boolean).map((p: any) => {
@@ -2168,7 +2168,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       </div>
 
       {/* ── Body ── */}
-      <div style={{ padding: "14px 20px 18px" }}>
+      <div className="lp-expanded-body" style={{ padding: "14px 20px 18px" }}>
 
         {/* Skeleton */}
         {busy && !pd && (
@@ -4861,6 +4861,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           .lp-metrics-scroll::-webkit-scrollbar{display:none}
           /* LivePanel full-width on mobile */
           .lp{width:100%!important;max-width:100vw!important}
+          /* LivePanel EXPANDED: limit height on mobile so chat remains usable */
+          .lp-expanded{max-height:55vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+          .lp-expanded-body{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;flex:1!important;min-height:0!important}
+          .lp-expanded-header{flex-shrink:0!important}
+          /* Expanded header: more compact */
+          .lp-expanded-header{padding:8px 12px!important}
+          .lp-expanded-header .lp-tab{padding:4px 8px!important;font-size:11px!important}
+          .lp-expanded-body{padding:10px 12px 14px!important}
+          /* KPIs in expanded: 2-col grid instead of flex row */
+          .lp-expanded-body .lp-kpi{min-width:calc(50% - 4px)!important;flex:1 1 calc(50% - 4px)!important;padding:8px 10px!important}
+          .lp-expanded-body .lp-kpi .kpi-spark{display:none!important}
+          /* Quick action chips: horizontal scroll */
+          .lp-expanded-body .lp-chip{font-size:10px!important;padding:4px 8px!important;white-space:nowrap!important}
         }
         @media(max-width:480px){
           .msg-wrap-inner{padding:0 10px!important;margin-bottom:10px!important}
