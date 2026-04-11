@@ -2421,11 +2421,11 @@ export default function AdBriefAI() {
   const demoMessagesRef = useRef<AIMessage[] | null>(null);
   // Track whether from_demo param was present on initial load (before any effect cleans it)
   const fromDemoParam = useRef(searchParams.get("from_demo") === "1");
+  // Parse demo data IMMEDIATELY on mount — no persona dependency
+  // This ensures demoMessagesRef is populated before any greeting path reads it
   useEffect(() => {
     if (demoInjectedRef.current) return;
     if (!fromDemoParam.current) return;
-    // Wait for persona to be loaded — otherwise persona-change effect will wipe messages
-    if (!selectedPersona?.id) return;
     demoInjectedRef.current = true;
     // Clean up URL param
     searchParams.delete("from_demo");
@@ -2453,7 +2453,7 @@ export default function AdBriefAI() {
         { role: "assistant", id: now + 1, ts: now + 1, blocks: [{ type: "text", title: pt ? "An\u00e1lise do an\u00fancio" : es ? "An\u00e1lisis del anuncio" : "Ad Analysis", content: analysisText }] },
       ];
     } catch {}
-  }, [searchParams, lang, selectedPersona?.id]);
+  }, []);
 
   const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
   // Virtual scroll: render only last N messages for performance
