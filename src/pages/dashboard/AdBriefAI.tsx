@@ -1158,6 +1158,8 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
       <style>{`
         @keyframes pb-fadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
         @keyframes pb-cardIn { from { opacity:0; transform:translateY(12px) scale(0.98) } to { opacity:1; transform:translateY(0) scale(1) } }
+        @keyframes pb-breathe { 0%,100% { box-shadow: 0 0 0 0 rgba(13,162,231,0) } 50% { box-shadow: 0 0 16px 2px rgba(13,162,231,0.12) } }
+        @keyframes pb-shimmer { 0% { background-position: -200% center } 100% { background-position: 200% center } }
       `}</style>
 
       {/* ── Container card — depth + glass ── */}
@@ -1175,11 +1177,12 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
         opacity: mounted ? 1 : 0,
       }}>
 
-        {/* Logo avatar — stagger 1 */}
+        {/* Logo avatar — stagger 1, breathing glow */}
         <div style={{
           marginBottom: 20,
-          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.08s both" : "none",
+          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.08s both, pb-breathe 3.5s ease-in-out 1s infinite" : "none",
           opacity: 0,
+          borderRadius: 12,
         }}>
           <ABAvatar size={36} />
         </div>
@@ -1251,6 +1254,8 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
               transition: "all 0.18s ease-out",
               transform: pressed ? "scale(0.98)" : "scale(1)",
               outline: "none",
+              position: "relative" as const,
+              overflow: "hidden",
             }}
             onMouseEnter={e => {
               if (!pressed) {
@@ -1263,7 +1268,15 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
               e.currentTarget.style.boxShadow = "0 4px 24px rgba(13,162,231,0.35), 0 1px 0 rgba(255,255,255,0.10) inset";
             }}
           >
-            {primaryAction}
+            {/* Shimmer sweep */}
+            <span style={{
+              position: "absolute", inset: 0,
+              background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%)",
+              backgroundSize: "200% 100%",
+              animation: "pb-shimmer 3s ease-in-out 1.5s infinite",
+              pointerEvents: "none",
+            }}/>
+            <span style={{ position: "relative" }}>{primaryAction}</span>
           </button>
         </div>
 
@@ -4627,52 +4640,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 );
               })}
             </div>
-
-            {/* Usage — credit bar */}
-            {creditBalance!==null&&creditBalance.total>0&&(()=>{
-              const { remaining, total } = creditBalance;
-              const used = total - remaining;
-              const pct = Math.min(100,(used/total)*100);
-              const isLocked = remaining<=0;
-              const barColor = isLocked?"rgba(239,68,68,0.6)":pct>=80?"rgba(245,158,11,0.6)":"rgba(14,165,233,0.5)";
-              const textColor = isLocked?"rgba(239,68,68,0.5)":pct>=80?"rgba(245,158,11,0.5)":"rgba(255,255,255,0.2)";
-              return(
-                <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:8,marginBottom:6}}>
-                  {/* barra */}
-                  <div style={{width:40,height:2,borderRadius:99,background:"rgba(255,255,255,0.07)",overflow:"hidden"}}>
-                    <div style={{height:"100%",borderRadius:99,width:`${pct}%`,background:barColor,transition:"width 0.4s"}}/>
-                  </div>
-                  {/* count */}
-                  <span style={{fontSize:11,color:textColor,fontFamily:"'Plus Jakarta Sans', sans-serif",fontVariantNumeric:"tabular-nums"}}>
-                    {remaining}/{total}
-                  </span>
-                  {/* soft nudge — aparece quando 80%+ mas ainda não locked */}
-                  {!isLocked&&pct>=80&&(
-                    <button onClick={()=>setShowUpgradeWall(true)} style={{
-                      fontSize:11,fontFamily:"'Plus Jakarta Sans', sans-serif",fontWeight:600,
-                      padding:"4px 10px",borderRadius:8,
-                      border:"1px solid rgba(245,158,11,0.2)",
-                      background:"rgba(245,158,11,0.06)",color:"rgba(245,158,11,0.7)",
-                      cursor:"pointer",whiteSpace:"nowrap",letterSpacing:"-0.01em",
-                      transition:"all 0.15s",
-                    }}
-                    onMouseEnter={e=>{const el=e.currentTarget;el.style.background="rgba(245,158,11,0.12)";el.style.borderColor="rgba(245,158,11,0.35)";}}
-                    onMouseLeave={e=>{const el=e.currentTarget;el.style.background="rgba(245,158,11,0.06)";el.style.borderColor="rgba(245,158,11,0.2)";}}
-                    >{lang==="pt"?"Quase no limite — upgrade":"Almost at limit — upgrade"}</button>
-                  )}
-                  {/* upgrade — hard lock button */}
-                  {isLocked&&(
-                    <button onClick={()=>setShowUpgradeWall(true)} style={{
-                      fontSize:13,fontFamily:"'Plus Jakarta Sans', sans-serif",fontWeight:700,
-                      padding:"6px 16px",borderRadius:12,border:"none",
-                      background:"#0ea5e9",color:"#fff",cursor:"pointer",
-                      boxShadow:"0 0 32px rgba(14,165,233,0.25)",
-                      whiteSpace:"nowrap",letterSpacing:"-0.025em",
-                    }}>Upgrade</button>
-                  )}
-                </div>
-              );
-            })()}
 
             {/* Input card — clean dark, como a demo */}
             <div className="input-box-wrap" style={{
