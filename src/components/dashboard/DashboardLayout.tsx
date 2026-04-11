@@ -252,10 +252,20 @@ export default function DashboardLayout() {
             })) as ActivePersona[])
         : [];
       setSavedPersonas(loadedPersonas);
-      // If cached active persona was deleted, clear it
+      // Auto-select persona: if none selected but personas exist, pick the first one
       setSelectedPersonaState(prev => {
+        if (!prev && loadedPersonas.length > 0) {
+          const first = loadedPersonas[0];
+          try { storage.setJSON("frameiq_active_persona", first); } catch {}
+          return first;
+        }
         if (!prev) return null;
         if (!loadedPersonas.some(p => p.id === prev.id)) {
+          // Cached persona was deleted — fallback to first available or null
+          if (loadedPersonas.length > 0) {
+            try { storage.setJSON("frameiq_active_persona", loadedPersonas[0]); } catch {}
+            return loadedPersonas[0];
+          }
           try { storage.remove("frameiq_active_persona"); } catch (e) { console.error("[AdBrief]", e); }
           return null;
         }
