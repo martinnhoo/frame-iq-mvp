@@ -3492,6 +3492,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
         return;
       }
 
+      const aid = Date.now() + 1;
       const demoMsgs2 = demoMessagesRef.current || [];
       demoMessagesRef.current = null;
       setMessages([{
