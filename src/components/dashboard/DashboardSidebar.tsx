@@ -81,7 +81,7 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <Icon size={16} strokeWidth={1.5} style={{
-        color: isActive ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.30)",
+        color: isActive ? "#0da2e7" : "rgba(255,255,255,0.30)",
         flexShrink: 0, transition: "color 0.15s",
       }} />
       <span style={{ flex: 1 }}>{label}</span>
@@ -116,7 +116,7 @@ function NavTool({ url, label, icon: Icon, isActive, onClose }: {
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <Icon size={15} strokeWidth={1.5} style={{
         flexShrink: 0, transition: "color 0.12s",
-        color: isActive ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.22)",
+        color: isActive ? "#0da2e7" : "rgba(255,255,255,0.22)",
       }} />
       <span>{label}</span>
     </NavLink>
