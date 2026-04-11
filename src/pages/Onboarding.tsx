@@ -190,14 +190,37 @@ export default function Onboarding() {
     // Auto-claim referral code if provided
     if (referralCode.trim().length >= 4 && !referralClaimed) {
       try {
-        const { data: claimResult } = await supabase.functions.invoke("claim-referral", {
+        const { data: claimResult, error: claimError } = await supabase.functions.invoke("claim-referral", {
           body: { code: referralCode.trim(), action: "claim" },
         });
-        if (claimResult?.success) {
+        // Edge function returns errors as HTTP 400/404 — parse from error context
+        if (claimError) {
+          let parsed: any = null;
+          try {
+            const ctx = (claimError as any).context;
+            if (ctx instanceof Response) parsed = await ctx.clone().json();
+            else if (typeof ctx === "string") parsed = JSON.parse(ctx);
+            else if (ctx && typeof ctx === "object") parsed = ctx;
+          } catch {}
+          const errCode = parsed?.error || claimResult?.error || "";
+          const errMsgs: Record<string, Record<string, string>> = {
+            self_referral:   { pt: "Você não pode usar seu próprio código.", es: "No puedes usar tu propio código.", en: "You can't use your own code." },
+            already_referred:{ pt: "Você já usou um código de indicação.", es: "Ya usaste un código de referido.", en: "You've already used a referral code." },
+            code_not_found:  { pt: "Código de indicação não encontrado.", es: "Código de referido no encontrado.", en: "Referral code not found." },
+            blocked_email:   { pt: "Este domínio de email não é elegível.", es: "Este dominio de email no es elegible.", en: "This email domain is not eligible." },
+          };
+          const msg = errMsgs[errCode]?.[lang] || errMsgs[errCode]?.en || (lang === "pt" ? "Código inválido." : lang === "es" ? "Código inválido." : "Invalid code.");
+          toast.error(msg);
+        } else if (claimResult?.success) {
           setReferralClaimed(true);
           toast.success(lang === "pt" ? `+${claimResult.bonus} créditos bônus!` : lang === "es" ? `+${claimResult.bonus} créditos bonus!` : `+${claimResult.bonus} bonus credits!`);
+        } else if (claimResult?.error) {
+          // Edge function returned 200 but with error field (shouldn't happen, safety net)
+          const errCode = claimResult.error;
+          const fallback = lang === "pt" ? "Código inválido." : lang === "es" ? "Código inválido." : "Invalid code.";
+          toast.error(claimResult.message || fallback);
         }
-      } catch (_) { /* silent — referral is optional */ }
+      } catch (_) { /* network error — silent, referral is optional */ }
     }
   };
 
