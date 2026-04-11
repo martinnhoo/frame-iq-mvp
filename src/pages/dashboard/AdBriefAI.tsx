@@ -2418,6 +2418,7 @@ export default function AdBriefAI() {
   });
   /* ── Inject demo analysis into chat when arriving from demo signup ── */
   const demoInjectedRef = useRef(false);
+  const demoMessagesRef = useRef<AIMessage[] | null>(null);
   // Track whether from_demo param was present on initial load (before any effect cleans it)
   const fromDemoParam = useRef(searchParams.get("from_demo") === "1");
   useEffect(() => {
@@ -2437,21 +2438,20 @@ export default function AdBriefAI() {
       localStorage.removeItem(DEMO_STORAGE_KEY);
       const now = Date.now();
       const pt = lang === "pt"; const es = lang === "es";
-      // Build a rich analysis text from the demo result
+      // Build a rich analysis text from the demo result (same format as /demo, fully readable)
       const parts: string[] = [];
-      parts.push(`**${pt ? "Nota" : es ? "Nota" : "Score"}: ${result.score}/10** — ${result.verdict || ""}`);
+      parts.push(`**${pt ? "Nota" : es ? "Nota" : "Score"}: ${result.score}/10** \u2014 ${result.verdict || ""}`);
       if (result.hook) parts.push(`\n**${pt ? "O que funciona" : es ? "Lo que funciona" : "What works"}:**\n${result.hook}`);
-      if (result.message) parts.push(`\n**${pt ? "O que melhorar" : es ? "Qué mejorar" : "What to improve"}:**\n${result.message}`);
+      if (result.message) parts.push(`\n**${pt ? "O que melhorar" : es ? "Qu\u00e9 mejorar" : "What to improve"}:**\n${result.message}`);
       if (result.cta) parts.push(`\n**CTA:** ${result.cta}`);
-      if (result.actions?.length) parts.push(`\n**${pt ? "Próximos passos" : es ? "Próximos pasos" : "Next steps"}:**\n${result.actions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}`);
-      parts.push(`\n---\n${pt ? "Conecte sua conta de Meta Ads para análises conectadas aos seus dados reais de ROAS, CTR e spend." : es ? "Conecta tu cuenta de Meta Ads para análisis conectados a tus datos reales." : "Connect your Meta Ads account for analyses connected to your real ROAS, CTR and spend data."}`);
+      if (result.actions?.length) parts.push(`\n**${pt ? "Pr\u00f3ximos passos" : es ? "Pr\u00f3ximos pasos" : "Next steps"}:**\n${result.actions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}`);
+      parts.push(`\n---\n${pt ? "Conecte sua conta de Meta Ads para an\u00e1lises conectadas aos seus dados reais de ROAS, CTR e spend." : es ? "Conecta tu cuenta de Meta Ads para an\u00e1lisis conectados a tus datos reales." : "Connect your Meta Ads account for analyses connected to your real ROAS, CTR and spend data."}`);
       const analysisText = parts.join("\n");
-      setMessages([
-        { role: "user", id: now, ts: now, userText: pt ? "Analise este anúncio" : es ? "Analiza este anuncio" : "Analyze this ad", imagePreview: preview || undefined },
-        { role: "assistant", id: now + 1, ts: now + 1, blocks: [{ type: "text", title: pt ? "Análise do anúncio" : es ? "Análisis del anuncio" : "Ad Analysis", content: analysisText }] },
-      ]);
-      // Also force contextReady so the chat doesn't show spinner
-      setContextReady(true);
+      // Store demo messages to inject AFTER the proactive greeting fires
+      demoMessagesRef.current = [
+        { role: "user", id: now, ts: now, userText: pt ? "Analise este an\u00fancio" : es ? "Analiza este anuncio" : "Analyze this ad", imagePreview: preview || undefined },
+        { role: "assistant", id: now + 1, ts: now + 1, blocks: [{ type: "text", title: pt ? "An\u00e1lise do an\u00fancio" : es ? "An\u00e1lisis del anuncio" : "Ad Analysis", content: analysisText }] },
+      ];
     } catch {}
   }, [searchParams, lang, selectedPersona?.id]);
 
@@ -2467,6 +2467,7 @@ export default function AdBriefAI() {
   const [greetingKey,setGreetingKey]=useState(0);
   // Onboarding quiz removed — AI learns from conversation naturally
   const [chatImage,setChatImage]=useState<{base64:string;name:string;preview:string;mediaType:string}|null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [chatDragOver,setChatDragOver]=useState(false);
   const [input,setInput]=useState("");
 
@@ -2641,13 +2642,15 @@ export default function AdBriefAI() {
         : `${greeting}! Welcome to AdBrief. I'm your creative performance AI for Meta Ads.\n\nI can help with:\n- Generate high-converting hooks\n- Write video ad scripts\n- Analyze creatives (send an image)\n- Creative strategy for your niche\n\nFor analyses connected to your real data (CTR, ROAS, what to scale and pause), create an account in **Accounts** and connect Meta Ads.\n\nTell me: what's your niche and what are you working on?`;
 
       const aid = Date.now() + 1;
+      const demoMsgs0 = demoMessagesRef.current || [];
+      demoMessagesRef.current = null;
       setMessages([{
         role: "assistant",
         blocks: [
           { type: "text" as any, title: greeting + "!", content: welcome },
         ],
         ts: aid, id: aid
-      }]);
+      }, ...demoMsgs0]);
       setProactiveLoading(false);
       return;
     }
@@ -3477,6 +3480,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
 
         const cta = lang === "es" ? "Conectar cuenta →" : lang === "pt" ? "Conectar conta →" : "Connect account →";
 
+        const demoMsgs = demoMessagesRef.current || [];
+        demoMessagesRef.current = null;
         setMessages([{
           role: "assistant",
           blocks: [
@@ -3484,17 +3489,19 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             { type: "navigate" as any, title: lang === "pt" ? "Conectar Meta Ads" : lang === "es" ? "Conectar Meta Ads o Google Ads" : "Connect Meta Ads", content: lang === "pt" ? "Leva 30 segundos — depois vejo tudo da sua conta em tempo real." : lang === "es" ? "Solo 30 segundos — luego veo todo en tiempo real." : "Takes 30 seconds — then I see everything in real time.", route: "/dashboard/accounts", cta },
           ],
           ts: aid, id: aid
-        }]);
+        }, ...demoMsgs]);
         setProactiveLoading(false);
         return;
       }
 
       const aid = Date.now() + 1;
+      const demoMsgs2 = demoMessagesRef.current || [];
+      demoMessagesRef.current = null;
       setMessages([{
         role: "assistant",
         blocks: [{ type: "proactive" as any, title: greetingTitle, content: proactiveMsg }],
         ts: aid, id: aid
-      }]);
+      }, ...demoMsgs2]);
 
     } catch (e) {
       console.error("proactive greeting failed:", e);
@@ -4633,15 +4640,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 return (
                   <button key={tool.action}
                     onClick={()=>{
-                      const oneShot: Record<string,string> = {
-                        analyze_ad: lang==="pt"
-                          ? "[ANALYZE_AD] Pronto para analisar um criativo. Manda a imagem ou descreve o anúncio (com CTR atual se tiver). Vou dar: score do hook, CTA, clareza visual, fit com audiência, veredito (Escalar/Testar/Pausar) e 3 ações."
-                          : lang==="es"
-                          ? "[ANALYZE_AD] Listo para analizar un creativo. Envía la imagen o describe el anuncio. Daré: score del hook, CTA, claridad visual, fit, veredicto (Escalar/Testar/Pausar) y 3 acciones."
-                          : "[ANALYZE_AD] Ready to analyze a creative. Send the image or describe the ad. I'll give: hook score, CTA, visual clarity, fit, verdict (Scale/Test/Pause) and 3 actions.",
-                      };
-                      if(oneShot[tool.action]){
-                        if(!isOn) send(oneShot[tool.action]);
+                      if(tool.action === "analyze_ad"){
+                        // Open file picker instead of sending a text message
+                        imageInputRef.current?.click();
                         return;
                       }
                       setActiveTool(isOn?null:tool.action);
@@ -4718,7 +4719,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.22)"}}
                   onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(13,162,231,0.3)";el.style.color="rgba(13,162,231,0.7)";}}
                   onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.08)";el.style.color="rgba(255,255,255,0.22)";}}>
-                  <input type="file" accept="image/*" className="hidden" style={{display:"none"}}
+                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" style={{display:"none"}}
                     onChange={e=>{
                       const file=e.target.files?.[0];
                       if(file){
