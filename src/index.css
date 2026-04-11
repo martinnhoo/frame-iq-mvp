@@ -6,24 +6,24 @@
 
 @layer base {
   :root {
-    /* ── AdBrief v2 Design System ── */
-    --background: 224 22% 8%;        /* #0e1118 */
+    /* ── AdBrief v3 Design System — premium dark ── */
+    --background: 230 20% 5%;        /* #0a0b10 */
     --foreground: 220 30% 96%;       /* #eef0f6 */
 
-    --card: 224 22% 11%;             /* #181e2d */
+    --card: 228 16% 9%;              /* #12141c */
     --card-foreground: 220 30% 96%;
 
-    --popover: 224 20% 13%;          /* #1d2438 */
+    --popover: 228 16% 11%;          /* #181a24 */
     --popover-foreground: 220 30% 96%;
 
     --primary: 0 0% 100%;
     --primary-foreground: 0 0% 0%;
 
-    --secondary: 220 15% 55%;
+    --secondary: 220 10% 50%;
     --secondary-foreground: 220 30% 96%;
 
-    --muted: 224 20% 16%;
-    --muted-foreground: 220 15% 55%;
+    --muted: 228 14% 14%;
+    --muted-foreground: 220 10% 50%;
 
     --accent: 199 89% 48%;           /* #0ea5e9 */
     --accent-foreground: 0 0% 100%;
@@ -31,38 +31,38 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 224 18% 22%;           /* rgba(255,255,255,0.10) equivalent */
-    --input: 224 20% 16%;
+    --border: 228 10% 16%;           /* neutral dark border */
+    --input: 228 14% 12%;
     --ring: 199 89% 48%;
-    --radius: 0.75rem;               /* 12px base radius */
+    --radius: 0.75rem;
 
     /* Brand tokens */
     --accent-sky: #0ea5e9;
     --accent-indigo: #6366f1;
     --accent-emerald: #34d399;
-    --accent-glow: rgba(14, 165, 233, 0.18);
+    --accent-glow: rgba(14, 165, 233, 0.10);
 
-    /* Surface tokens — deeper base for more contrast */
-    --bg-main:     #070d1a;
-    --bg-surface:  #0d1117;
-    --bg-card:     #111620;
-    --bg-elevated: #161c2a;
-    --bg-input:    #0f1420;
+    /* Surface tokens — true blacks, less blue tint */
+    --bg-main:     #060709;
+    --bg-surface:  #0c0d12;
+    --bg-card:     #101218;
+    --bg-elevated: #16181f;
+    --bg-input:    #0e1014;
 
-    /* Border tokens — blue tint instead of dead grey */
-    --border-subtle:  rgba(148,163,184,0.06);
-    --border-default: rgba(148,163,184,0.10);
-    --border-strong:  rgba(148,163,184,0.18);
-    --border-accent:  rgba(14,165,233,0.40);
+    /* Border tokens — neutral, no blue tint */
+    --border-subtle:  rgba(255,255,255,0.04);
+    --border-default: rgba(255,255,255,0.07);
+    --border-strong:  rgba(255,255,255,0.14);
+    --border-accent:  rgba(14,165,233,0.35);
 
-    /* Text tokens — slightly warmer white */
-    --text-primary:   #f0f4ff;
-    --text-secondary: rgba(200,210,240,0.60);
-    --text-muted:     rgba(200,210,240,0.35);
+    /* Text tokens */
+    --text-primary:   #f0f2f8;
+    --text-secondary: rgba(255,255,255,0.50);
+    --text-muted:     rgba(255,255,255,0.28);
 
-    /* Glow tokens */
-    --glow-blue:   rgba(14,165,233,0.12);
-    --glow-purple: rgba(139,92,246,0.08);
+    /* Glow tokens — subtle */
+    --glow-blue:   rgba(14,165,233,0.08);
+    --glow-purple: rgba(139,92,246,0.05);
 
     /* Radius tokens */
     --r-sm: 8px;

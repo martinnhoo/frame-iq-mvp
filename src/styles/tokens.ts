@@ -1,8 +1,8 @@
 export const ADBRIEF_TOKENS = {
   // Cores
   accent:       '#0da2e7',
-  accentMuted:  'rgba(13,162,231,0.12)',
-  accentBorder: 'rgba(13,162,231,0.25)',
+  accentMuted:  'rgba(13,162,231,0.08)',
+  accentBorder: 'rgba(13,162,231,0.18)',
 
   // Semântico
   green:  '#10b981',
@@ -10,19 +10,19 @@ export const ADBRIEF_TOKENS = {
   red:    '#ef4444',
   purple: '#a855f7',
 
-  // Fundos
-  bg:        '#080a0f',
-  bgSurface: 'rgba(255,255,255,0.03)',
-  bgHover:   'rgba(255,255,255,0.06)',
+  // Fundos — deeper blacks for premium feel
+  bg:        '#050508',
+  bgSurface: 'rgba(255,255,255,0.025)',
+  bgHover:   'rgba(255,255,255,0.05)',
 
-  // Bordas
-  border:       'rgba(255,255,255,0.07)',
-  borderHover:  'rgba(255,255,255,0.14)',
+  // Bordas — neutral, not blue
+  border:       'rgba(255,255,255,0.06)',
+  borderHover:  'rgba(255,255,255,0.12)',
 
   // Texto
   textPrimary:   '#f0f2f8',
-  textSecondary: 'rgba(255,255,255,0.55)',
-  textMuted:     'rgba(255,255,255,0.28)',
+  textSecondary: 'rgba(255,255,255,0.50)',
+  textMuted:     'rgba(255,255,255,0.25)',
 
   // Nivo theme (para todos os gráficos)
   nivoTheme: {

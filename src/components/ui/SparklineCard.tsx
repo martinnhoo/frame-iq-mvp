@@ -18,8 +18,8 @@ export function SparklineCard({ label, currentValue, data, format = 'number' }: 
     <div
       className="spark-card"
       style={{
-        background: 'rgba(13,162,231,0.03)',
-        border: '1px solid rgba(13,162,231,0.10)',
+        background: 'rgba(255,255,255,0.025)',
+        border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: 14,
         padding: '16px 18px 0',
         overflow: 'hidden',
@@ -32,7 +32,7 @@ export function SparklineCard({ label, currentValue, data, format = 'number' }: 
       {/* Subtle top accent */}
       <div style={{
         position: 'absolute', top: 0, left: '10%', right: '10%',
-        height: 1, background: `linear-gradient(90deg, transparent, ${A}20, transparent)`,
+        height: 1, background: `linear-gradient(90deg, transparent, ${A}15, transparent)`,
       }} />
 
       <div style={{ flex: 1 }}>

@@ -127,13 +127,13 @@ function SectionHeader({ label }: { label: string }) {
       display: "flex", alignItems: "center", gap: 8,
     }}>
       <p style={{
-        fontSize: 10, fontWeight: 700, color: `${A}35`,
+        fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.18)",
         letterSpacing: "0.12em", textTransform: "uppercase", margin: 0,
         fontFamily: "'DM Mono', monospace",
       }}>
         {label}
       </p>
-      <div style={{ flex: 1, height: 1, background: `${A}08` }} />
+      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.04)" }} />
     </div>
   );
 }
@@ -219,8 +219,8 @@ export function DashboardSidebar({
 
       <aside style={{
         width: 216, height: "100%",
-        background: "var(--bg-main)",
-        borderRight: `1px solid ${A}10`,
+        background: "#060709",
+        borderRight: "1px solid rgba(255,255,255,0.06)",
         display: "flex", flexDirection: "column", flexShrink: 0,
         fontFamily: F, overflow: "hidden",
       }}>
@@ -407,7 +407,7 @@ export function DashboardSidebar({
 
         {/* ── Footer ── */}
         <div style={{ flexShrink: 0 }}>
-          <div style={{ height: 1, background: `${A}08`, margin: "0 0 4px" }} />
+          <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "0 0 4px" }} />
 
           {/* Upgrade CTA */}
           {plan === "free" && (

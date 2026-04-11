@@ -28,7 +28,7 @@ export function AdMetric({ label, value, format = 'number', suffix, prefix, size
       <p style={{
         margin: 0, fontSize: 11, fontWeight: 700,
         letterSpacing: '0.08em', textTransform: 'uppercase',
-        color: A, opacity: 0.7,
+        color: A, opacity: 0.55,
         fontFamily: "'DM Mono', 'SF Mono', monospace",
       }}>
         {label}

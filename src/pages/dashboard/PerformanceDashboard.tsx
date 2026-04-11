@@ -547,8 +547,8 @@ export default function PerformanceDashboard() {
           {visibleSections.has("trend")&&(d.daily||[]).length>1&&(
             <Reveal>
               <div style={{
-                background:`linear-gradient(145deg, ${A}06, transparent 60%)`,
-                border:`1px solid ${A}15`,
+                background:"rgba(255,255,255,0.02)",
+                border:"1px solid rgba(255,255,255,0.06)",
                 borderRadius:14,padding:"20px 24px",marginBottom:28,overflow:"hidden",
                 position:"relative",
               }}>
