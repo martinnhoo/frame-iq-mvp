@@ -2547,13 +2547,30 @@ export default function AdBriefAI() {
         if (!newId) {
           setMessages([]);
         } else {
-          const saved = storage.getJSON(newSK, []);
-          const sanitized = saved.map((m: any) => ({
+          const sanitizeMessages = (items: any[]) => items.map((m: any) => ({
             ...m,
-            blocks: (m.blocks||[]).filter((b: any) => b.type !== "trend_chart")
+            blocks: (m.blocks || []).filter((b: any) => b.type !== "trend_chart")
           }));
-          const hasUserHistory = sanitized.some((m: any) => m?.role === "user" && String(m?.userText || "").trim().length > 0);
-          setMessages(hasUserHistory ? sanitized : []);
+          const hasUserHistory = (items: any[]) =>
+            items.some((m: any) => m?.role === "user" && String(m?.userText || "").trim().length > 0);
+
+          const saved = sanitizeMessages(storage.getJSON(newSK, []));
+          const currentVisible = sanitizeMessages(messages as any[]);
+          const defaultSaved = sanitizeMessages(storage.getJSON("adbrief_chat_v1_default", []));
+
+          if (hasUserHistory(saved)) {
+            setMessages(saved);
+          } else if (fromDemoParam.current && hasUserHistory(currentVisible)) {
+            setMessages(currentVisible as AIMessage[]);
+            storage.setJSON(newSK, currentVisible);
+            storage.remove("adbrief_chat_v1_default");
+          } else if (fromDemoParam.current && hasUserHistory(defaultSaved)) {
+            setMessages(defaultSaved as AIMessage[]);
+            storage.setJSON(newSK, defaultSaved);
+            storage.remove("adbrief_chat_v1_default");
+          } else {
+            setMessages([]);
+          }
         }
       } catch { setMessages([]); }
       // Reload session goal for this account
