@@ -381,7 +381,7 @@ export default function PerformanceDashboard() {
             <div style={{position:"relative"}}>
               <button onClick={()=>{setShowCalendar(!showCalendar);setShowCustomizer(false);}}
                 style={{display:"flex",alignItems:"center",gap:7,padding:"7px 14px",background:showCalendar?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.04)",border:`1px solid ${showCalendar?"rgba(255,255,255,0.14)":"rgba(255,255,255,0.07)"}`,borderRadius:8,color:showCalendar?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.55)",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:MONO,transition:"all 0.15s"}}>
-                <Calendar size={13}/>{dateLabel}
+                <Calendar size={13} color={showCalendar?A:undefined}/>{dateLabel}
               </button>
               {showCalendar&&<CalendarPicker value={dateRange} onChange={r=>{setDateRange(r);}} onClose={()=>setShowCalendar(false)}/>}
             </div>
@@ -390,7 +390,7 @@ export default function PerformanceDashboard() {
             <div style={{position:"relative"}}>
               <button onClick={()=>{setShowCustomizer(!showCustomizer);setShowCalendar(false);}}
                 style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:showCustomizer?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.04)",border:`1px solid ${showCustomizer?"rgba(255,255,255,0.14)":"rgba(255,255,255,0.07)"}`,borderRadius:8,color:showCustomizer?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.50)",fontSize:13,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
-                <Settings2 size={13}/>
+                <Settings2 size={13} color={showCustomizer?A:undefined}/>
                 <span style={{fontWeight:600,fontSize:12}}>Métricas</span>
                 <span style={{fontSize:11,background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.55)",borderRadius:5,padding:"1px 6px",fontWeight:700,fontFamily:MONO}}>{activeMetrics.length}</span>
               </button>
@@ -401,7 +401,7 @@ export default function PerformanceDashboard() {
             <button onClick={()=>load(true)} style={{display:"flex",alignItems:"center",padding:8,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8,color:"rgba(255,255,255,0.45)",cursor:"pointer",transition:"all 0.15s"}}
               onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.08)";e.currentTarget.style.color="rgba(255,255,255,0.70)";}}
               onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.04)";e.currentTarget.style.color="rgba(255,255,255,0.45)";}}>
-              <RefreshCw size={13} style={{animation:refreshing?"spin 1s linear infinite":"none"}}/>
+              <RefreshCw size={13} color={refreshing?A:undefined} style={{animation:refreshing?"spin 1s linear infinite":"none"}}/>
             </button>
           </div>
       </div>
