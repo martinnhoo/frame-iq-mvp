@@ -1140,10 +1140,10 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
 
   return (
     <div style={{
-      width: "100%", maxWidth: 680, margin: "auto",
-      padding: "clamp(16px,3vw,32px) clamp(20px,5vw,40px) 32px",
+      width: "100%", maxWidth: 600, margin: "auto",
+      padding: "clamp(10px,2vw,16px) clamp(16px,4vw,28px) 16px",
       display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-      marginTop: "-8%",
+      marginTop: "-4%",
     }}>
       <style>{`
         @keyframes pb-fadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
@@ -1154,9 +1154,9 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
 
       {/* ── Container card — depth + glass ── */}
       <div ref={cardRef} style={{
-        width: "100%", maxWidth: 480,
-        padding: "clamp(36px,5vw,48px) clamp(28px,4vw,40px) clamp(32px,4vw,40px)",
-        borderRadius: 22,
+        width: "100%", maxWidth: 440,
+        padding: "clamp(20px,3vw,28px) clamp(20px,3vw,32px) clamp(18px,3vw,24px)",
+        borderRadius: 18,
         background: "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%)",
         border: "1px solid rgba(255,255,255,0.08)",
         backdropFilter: "blur(12px)",
@@ -1169,19 +1169,19 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
 
         {/* Logo avatar — stagger 1, breathing glow */}
         <div style={{
-          marginBottom: 20,
+          marginBottom: 12,
           animation: mounted ? "pb-fadeUp 0.3s ease-out 0.08s both, pb-breathe 3.5s ease-in-out 1s infinite" : "none",
           opacity: 0,
-          borderRadius: 12,
+          borderRadius: 10,
         }}>
-          <ABAvatar size={36} />
+          <ABAvatar size={28} />
         </div>
 
         {/* Hero headline — stagger 2 */}
         <h1 style={{
-          fontFamily: F, fontSize: "clamp(28px,5.5vw,38px)", fontWeight: 800,
-          color: "#f0f2f8", letterSpacing: "-0.04em", lineHeight: 1.1,
-          margin: "0 0 8px",
+          fontFamily: F, fontSize: "clamp(22px,4.5vw,28px)", fontWeight: 800,
+          color: "#f0f2f8", letterSpacing: "-0.03em", lineHeight: 1.15,
+          margin: "0 0 6px",
           animation: mounted ? "pb-fadeUp 0.3s ease-out 0.14s both" : "none",
           opacity: 0,
         }}>
@@ -1212,8 +1212,8 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
 
         {/* Subtitle — stagger 4 */}
         <p style={{
-          fontFamily: M, fontSize: 13.5, color: "rgba(192,198,207,0.85)", lineHeight: 1.5,
-          margin: "0 0 26px", maxWidth: 320,
+          fontFamily: M, fontSize: 12.5, color: "rgba(192,198,207,0.80)", lineHeight: 1.45,
+          margin: "0 0 16px", maxWidth: 300,
           animation: mounted ? "pb-fadeUp 0.3s ease-out 0.20s both" : "none",
           opacity: 0,
         }}>
@@ -1230,13 +1230,13 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
             onMouseDown={() => setPressed(true)}
             onMouseUp={() => !expanded && setPressed(false)}
             style={{
-              padding: "12px 30px",
-              borderRadius: 12,
+              padding: "10px 24px",
+              borderRadius: 10,
               background: "linear-gradient(180deg, #12b0f8 0%, #0a8fd4 100%)",
               border: "1px solid rgba(13,162,231,0.4)",
               cursor: "pointer",
               fontFamily: F,
-              fontSize: 14.5,
+              fontSize: 13.5,
               fontWeight: 700,
               color: "#fff",
               letterSpacing: "-0.01em",
@@ -1320,8 +1320,8 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
             onMouseEnter={() => setHintHover(true)}
             onMouseLeave={() => setHintHover(false)}
             style={{
-              marginTop: 14, background: "none", border: "none", cursor: "pointer",
-              fontFamily: M, fontSize: 12, color: hintHover ? "rgba(255,255,255,0.50)" : "rgba(255,255,255,0.22)",
+              marginTop: 8, background: "none", border: "none", cursor: "pointer",
+              fontFamily: M, fontSize: 11, color: hintHover ? "rgba(255,255,255,0.50)" : "rgba(255,255,255,0.22)",
               transition: "color 0.18s ease-out", padding: "4px 8px",
               display: "flex", alignItems: "center", gap: 4,
               animation: mounted ? "pb-fadeUp 0.3s ease-out 0.34s both" : "none",
