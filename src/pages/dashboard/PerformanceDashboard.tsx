@@ -336,9 +336,9 @@ export default function PerformanceDashboard() {
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         @keyframes ping{0%{transform:scale(1);opacity:1}75%{transform:scale(2);opacity:0}}
         .perf-card{animation:fadeIn 0.3s ease both;transition:transform 0.2s,box-shadow 0.2s}
-        .perf-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(13,162,231,0.12)!important}
-        .perf-card:hover .spark-card{border-color:rgba(13,162,231,0.28)!important}
-        .drag-over .spark-card{border-color:rgba(13,162,231,0.40)!important;background:rgba(13,162,231,0.06)!important}
+        .perf-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,255,255,0.04)!important}
+        .perf-card:hover .spark-card{border-color:rgba(255,255,255,0.12)!important}
+        .drag-over .spark-card{border-color:rgba(255,255,255,0.18)!important;background:rgba(255,255,255,0.03)!important}
         .spark-card{transition:border-color 0.2s,box-shadow 0.2s}
         @media(max-width:768px){
           .perf-page{padding:14px 14px 80px!important}
@@ -364,10 +364,10 @@ export default function PerformanceDashboard() {
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
             <h1 style={{margin:0,fontSize:22,fontWeight:800,color:TX,letterSpacing:"-0.03em"}}>{selectedPersona?.name||"Performance"}</h1>
             {hasMeta&&!loading&&(
-              <div style={{display:"flex",alignItems:"center",gap:6,padding:"4px 10px",borderRadius:20,background:`${A}10`,border:`1px solid ${A}20`}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,padding:"4px 10px",borderRadius:8,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)"}}>
                 <MetaLogo size={13}/>
                 <span style={{width:5,height:5,borderRadius:"50%",background:GREEN,boxShadow:`0 0 6px ${GREEN}`}}/>
-                <span style={{fontSize:11,fontWeight:700,color:GREEN,fontFamily:MONO,letterSpacing:"0.05em"}}>LIVE</span>
+                <span style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,0.50)",fontFamily:MONO,letterSpacing:"0.05em"}}>LIVE</span>
               </div>
             )}
           </div>
@@ -380,7 +380,7 @@ export default function PerformanceDashboard() {
             {/* Date picker */}
             <div style={{position:"relative"}}>
               <button onClick={()=>{setShowCalendar(!showCalendar);setShowCustomizer(false);}}
-                style={{display:"flex",alignItems:"center",gap:7,padding:"7px 14px",background:showCalendar?`${A}12`:`${A}06`,border:`1px solid ${showCalendar?A+"40":A+"15"}`,borderRadius:10,color:showCalendar?A:TX,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:MONO,transition:"all 0.15s"}}>
+                style={{display:"flex",alignItems:"center",gap:7,padding:"7px 14px",background:showCalendar?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.04)",border:`1px solid ${showCalendar?"rgba(255,255,255,0.14)":"rgba(255,255,255,0.07)"}`,borderRadius:8,color:showCalendar?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.55)",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:MONO,transition:"all 0.15s"}}>
                 <Calendar size={13}/>{dateLabel}
               </button>
               {showCalendar&&<CalendarPicker value={dateRange} onChange={r=>{setDateRange(r);}} onClose={()=>setShowCalendar(false)}/>}
@@ -389,18 +389,18 @@ export default function PerformanceDashboard() {
             {/* Metric customizer */}
             <div style={{position:"relative"}}>
               <button onClick={()=>{setShowCustomizer(!showCustomizer);setShowCalendar(false);}}
-                style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:showCustomizer?`${A}12`:`${A}06`,border:`1px solid ${showCustomizer?A+"40":A+"15"}`,borderRadius:10,color:showCustomizer?A:MT,fontSize:13,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
+                style={{display:"flex",alignItems:"center",gap:6,padding:"7px 12px",background:showCustomizer?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.04)",border:`1px solid ${showCustomizer?"rgba(255,255,255,0.14)":"rgba(255,255,255,0.07)"}`,borderRadius:8,color:showCustomizer?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.50)",fontSize:13,cursor:"pointer",fontFamily:F,transition:"all 0.15s"}}>
                 <Settings2 size={13}/>
                 <span style={{fontWeight:600,fontSize:12}}>Métricas</span>
-                <span style={{fontSize:11,background:`${A}18`,color:A,borderRadius:5,padding:"1px 6px",fontWeight:700,fontFamily:MONO}}>{activeMetrics.length}</span>
+                <span style={{fontSize:11,background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.55)",borderRadius:5,padding:"1px 6px",fontWeight:700,fontFamily:MONO}}>{activeMetrics.length}</span>
               </button>
               {showCustomizer&&<MetricCustomizer active={activeMetrics} platform={activePlatform} onChange={setActiveMetrics} onClose={()=>setShowCustomizer(false)}/>}
             </div>
 
             {/* Refresh */}
-            <button onClick={()=>load(true)} style={{display:"flex",alignItems:"center",padding:8,background:`${A}06`,border:`1px solid ${A}15`,borderRadius:10,color:A,cursor:"pointer",transition:"all 0.15s",opacity:0.6}}
-              onMouseEnter={e=>{e.currentTarget.style.opacity="1"}}
-              onMouseLeave={e=>{e.currentTarget.style.opacity="0.6"}}>
+            <button onClick={()=>load(true)} style={{display:"flex",alignItems:"center",padding:8,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:8,color:"rgba(255,255,255,0.45)",cursor:"pointer",transition:"all 0.15s"}}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,0.08)";e.currentTarget.style.color="rgba(255,255,255,0.70)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.04)";e.currentTarget.style.color="rgba(255,255,255,0.45)";}}>
               <RefreshCw size={13} style={{animation:refreshing?"spin 1s linear infinite":"none"}}/>
             </button>
           </div>
@@ -409,8 +409,8 @@ export default function PerformanceDashboard() {
       {/* ── Empty: no persona ── */}
       {!selectedPersona&&!loading&&(
         <div style={{textAlign:"center",padding:"64px 24px",maxWidth:480,margin:"0 auto"}}>
-          <div style={{width:48,height:48,borderRadius:14,background:`${A}10`,border:`1px solid ${A}20`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={A} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>
+          <div style={{width:48,height:48,borderRadius:14,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.40)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="18" y="3" width="3" height="18" rx="1"/><rect x="10.5" y="8" width="3" height="13" rx="1"/><rect x="3" y="13" width="3" height="8" rx="1"/></svg>
           </div>
           <h3 style={{color:TX,fontSize:17,fontWeight:700,margin:"0 0 8px",letterSpacing:"-0.02em"}}>
             {lang==="pt"?"Selecione uma conta para começar":lang==="es"?"Selecciona una cuenta":"Select an account"}
@@ -487,20 +487,20 @@ export default function PerformanceDashboard() {
 
       {/* ── Section filter chips ── */}
       {!loading&&d&&(
-        <div style={{display:"flex",gap:6,marginBottom:20,flexWrap:"wrap"}}>
+        <div style={{display:"inline-flex",gap:1,marginBottom:20,background:"rgba(255,255,255,0.04)",borderRadius:8,padding:2,border:"1px solid rgba(255,255,255,0.06)"}}>
           {SECTION_DEFS.map(s=>{
             const isActive=visibleSections.has(s.key);
             return (
               <button key={s.key} onClick={()=>toggleSection(s.key)}
                 style={{
-                  padding:"5px 14px",borderRadius:8,cursor:"pointer",
-                  fontFamily:MONO,fontSize:11,fontWeight:isActive?700:500,
-                  background:isActive?`${A}12`:"transparent",
-                  border:`1px solid ${isActive?A+"35":A+"12"}`,
-                  color:isActive?A:MT,
-                  transition:"all 0.15s",letterSpacing:"0.03em",
+                  padding:"5px 16px",borderRadius:6,cursor:"pointer",
+                  fontFamily:F,fontSize:12,fontWeight:isActive?600:500,
+                  background:isActive?"rgba(255,255,255,0.08)":"transparent",
+                  border:"none",
+                  color:isActive?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.40)",
+                  transition:"all 0.15s",letterSpacing:"-0.01em",
                 }}>
-                {isActive?"✓ ":""}{s.label}
+                {s.label}
               </button>
             );
           })}

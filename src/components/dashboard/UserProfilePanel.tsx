@@ -75,13 +75,13 @@ const LANGUAGES = [
 ];
 
 const PLAN_INFO: Record<string, { label: string; color: string; desc: string; price: string }> = {
-  free:    { label: "Free",    color: "#9ca3af", desc: "5 mensagens grátis · todas as tools · conecte Meta Ads", price: "$0" },
-  maker:   { label: "Maker",   color: "#60a5fa", desc: "50 mensagens/dia · 1 conta · ferramentas básicas", price: "$19/mo" },
-  pro:     { label: "Pro",     color: "#0ea5e9", desc: "200 mensagens/dia · 3 contas · todas as tools",   price: "$49/mo" },
-  studio:  { label: "Studio",  color: "#a78bfa", desc: "Mensagens ilimitadas · contas ilimitadas · agência", price: "$149/mo" },
-  creator: { label: "Maker",   color: "#60a5fa", desc: "50 mensagens/dia · 1 conta",                      price: "$19/mo" },
-  starter: { label: "Pro",     color: "#0ea5e9", desc: "200 mensagens/dia · 3 contas",                    price: "$49/mo" },
-  scale:   { label: "Studio",  color: "#a78bfa", desc: "Mensagens ilimitadas · agência",                  price: "$149/mo" },
+  free:    { label: "Free",    color: "rgba(255,255,255,0.35)", desc: "5 mensagens grátis · todas as tools · conecte Meta Ads", price: "$0" },
+  maker:   { label: "Maker",   color: "rgba(255,255,255,0.45)", desc: "50 mensagens/dia · 1 conta · ferramentas básicas", price: "$19/mo" },
+  pro:     { label: "Pro",     color: "rgba(255,255,255,0.45)", desc: "200 mensagens/dia · 3 contas · todas as tools",   price: "$49/mo" },
+  studio:  { label: "Studio",  color: "rgba(255,255,255,0.50)", desc: "Mensagens ilimitadas · contas ilimitadas · agência", price: "$149/mo" },
+  creator: { label: "Maker",   color: "rgba(255,255,255,0.45)", desc: "50 mensagens/dia · 1 conta",                      price: "$19/mo" },
+  starter: { label: "Pro",     color: "rgba(255,255,255,0.45)", desc: "200 mensagens/dia · 3 contas",                    price: "$49/mo" },
+  scale:   { label: "Studio",  color: "rgba(255,255,255,0.50)", desc: "Mensagens ilimitadas · agência",                  price: "$149/mo" },
 };
 
 // ── Persona Detail View (Editable) ─────────────────────────────────────────────
@@ -177,7 +177,7 @@ function PersonaDetailView({
             <button onClick={() => { setDraft(persona); setEditing(false); }}
               className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white/60 transition-colors">Cancel</button>
             <button onClick={handleSave} disabled={saving}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/30 text-purple-300 text-xs font-medium hover:bg-sky-500/30 transition-all">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.08] border border-white/[0.12] text-white/70 text-xs font-medium hover:bg-white/[0.12] transition-all">
               {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Save
             </button>
           </div>
@@ -197,9 +197,9 @@ function PersonaDetailView({
         ) : (
           <p className="text-lg font-bold text-white">{draft.name}</p>
         )}
-        <p className="text-xs text-purple-300/60 text-center">{editing
+        <p className="text-xs text-white/40 text-center">{editing
           ? <input value={draft.headline} onChange={e => setDraft(d => ({ ...d, headline: e.target.value }))}
-              className="text-center text-xs text-purple-300/60 bg-transparent border-b border-white/10 outline-none w-full" />
+              className="text-center text-xs text-white/40 bg-transparent border-b border-white/10 outline-none w-full" />
           : draft.headline}</p>
       </div>
 

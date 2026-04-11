@@ -96,7 +96,7 @@ Você está no modo Media Buyer especialista. Ao analisar dados:
     id: "creative_director",
     name: "Creative Director",
     icon: "",
-    color: "#a855f7",
+    color: "#60a5fa",
     desc: {
       pt: "Hooks, storytelling, scroll-stop e direção criativa",
       en: "Hooks, storytelling, scroll-stop and creative direction",
