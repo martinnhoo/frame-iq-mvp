@@ -23,7 +23,7 @@ import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
-import FirstWinBanner from "@/components/dashboard/FirstWinBanner";
+// FirstWinBanner removed — ProactiveBlock handles welcome flow
 import { trackEvent } from "@/lib/posthog";
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -4007,77 +4007,45 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
 
-        {/* Onboarding quiz + welcome removed — AI learns from conversation */}
-
-        {/* ── First Win Banner — shows once after signup to guide first action ── */}
-        {messages.length===0&&!proactiveLoading&&contextReady&&(
-          <div style={{maxWidth:720,margin:"0 auto",padding:"12px 16px 0"}}>
-            <FirstWinBanner
-              userName={profile?.name?.split(" ")[0]}
-              hasAdAccount={!!(selectedPersona?.result as any)?.meta_connected || connections.length > 0}
-            />
-          </div>
-        )}
-
-        {messages.length===0&&proactiveLoading&&(
-          <div style={{maxWidth:720,margin:"0 auto",paddingTop:12,padding:"12px 16px 0"}}>
-            <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:16}}>
-              <div style={{width:28,height:28,borderRadius:8,background:"rgba(14,165,233,0.10)",flexShrink:0,animation:"skPulse 1.4s ease-in-out infinite"}}/>
-              <div style={{flex:1}}>
-                <div style={{height:10,width:72,borderRadius:6,background:"rgba(255,255,255,0.06)",marginBottom:10,animation:"skPulse 1.4s ease-in-out infinite"}}/>
-                <div style={{height:13,width:"90%",borderRadius:6,background:"rgba(255,255,255,0.05)",marginBottom:7,animation:"skPulse 1.4s 0.1s ease-in-out infinite"}}/>
-                <div style={{height:13,width:"75%",borderRadius:6,background:"rgba(255,255,255,0.05)",marginBottom:7,animation:"skPulse 1.4s 0.2s ease-in-out infinite"}}/>
-                <div style={{height:13,width:"55%",borderRadius:6,background:"rgba(255,255,255,0.03)",marginBottom:14,animation:"skPulse 1.4s 0.3s ease-in-out infinite"}}/>
-                <div style={{display:"flex",gap:8}}>
-                  {[96,84,88,78].map((w,i)=>(
-                    <div key={i} style={{height:26,width:w,borderRadius:20,background:"rgba(255,255,255,0.03)",animation:`skPulse 1.4s ${i*0.12}s ease-in-out infinite`}}/>
-                  ))}
-                </div>
-              </div>
+        {/* ── Loading state — minimal, no skeleton flash ── */}
+        {messages.length===0&&(proactiveLoading||!contextReady)&&(
+          <div style={{maxWidth:680,margin:"0 auto",padding:"clamp(48px,10vw,80px) 24px 32px",display:"flex",flexDirection:"column",alignItems:"center",opacity:0.5}}>
+            <div style={{width:44,height:44,borderRadius:12,background:"rgba(255,255,255,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <div style={{width:20,height:20,borderRadius:"50%",border:"2px solid rgba(255,255,255,0.08)",borderTopColor:"rgba(13,162,231,0.5)",animation:"spin 0.8s linear infinite"}}/>
             </div>
-            <style>{`@keyframes skPulse{0%,100%{opacity:0.35}50%{opacity:0.75}}`}</style>
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           </div>
         )}
 
-        {messages.length===0&&!proactiveLoading&&contextReady&&(
+        {messages.length===0&&!proactiveLoading&&contextReady&&!hasData&&(
           <div style={{maxWidth:720,margin:"16px auto 0",padding:"0 16px"}}>
-            {!hasData ? (
-              /* ── No account connected — force connect ── */
-              <div style={{textAlign:"center",padding:"48px 24px"}}>
-                {/* Icon */}
-                <div style={{width:52,height:52,borderRadius:14,background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(14,165,233,0.75)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8M8 14h5"/></svg>
-                </div>
-                <h3 style={{...j,fontSize:17,fontWeight:700,color:"#f0f2f8",margin:"0 0 8px",letterSpacing:"-0.02em"}}>
-                  {lang==="pt"?"Conecte sua conta de anúncios":lang==="es"?"Conecta tu cuenta de anuncios":"Connect your ad account"}
-                </h3>
-                <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.4)",lineHeight:1.65,margin:"0 0 24px",maxWidth:320,marginLeft:"auto",marginRight:"auto"}}>
-                  {lang==="pt"?"Sem conexão, a IA responde de forma genérica. Com sua conta, ela vê CTR, spend, o que pausar e o que escalar.":lang==="es"?"Sin conexión la IA responde de forma genérica. Con tu cuenta ve CTR, spend, qué pausar y escalar.":"Without connection, AI gives generic answers. With your account it sees CTR, spend, what to pause and scale."}
-                </p>
-                {selectedPersona ? (
-                  <div style={{display:"flex",flexDirection:"column",gap:10,alignItems:"center"}}>
-                    <button onClick={()=>handleConnect("meta","meta-oauth")}
-                      style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"#1877F2",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,boxShadow:"0 0 24px rgba(14,165,233,0.2)",transition:"all 0.2s"}}
-                      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(-1px)";}}
-                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(0)";}}>
-                      {PLATFORM_ICONS_INLINE.meta} {lang==="pt"?"Conectar Meta Ads":lang==="es"?"Conectar Meta Ads":"Connect Meta Ads"}
-                    </button>
-                    <button onClick={()=>navigate("/dashboard/accounts")}
-                      style={{...j,display:"inline-flex",alignItems:"center",gap:6,padding:"9px 20px",borderRadius:10,background:"rgba(255,255,255,0.03)",color:"rgba(255,255,255,0.4)",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",fontSize:12,fontWeight:500}}>
-                      {lang==="pt"?"Ou conectar Google Ads →":lang==="es"?"O conectar Google Ads →":"Or connect Google Ads →"}
-                    </button>
-                  </div>
-                ) : (
-                  <button onClick={()=>navigate("/dashboard/accounts")}
-                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.12)",cursor:"pointer",fontSize:13,fontWeight:700}}>
-                    {lang==="pt"?"Criar conta primeiro →":lang==="es"?"Crear cuenta primero →":"Create account first →"}
-                  </button>
-                )}
-                <p style={{...m,fontSize:12,color:"rgba(255,255,255,0.15)",marginTop:16}}>
-                  {lang==="pt"?"Conectar leva menos de 2 minutos":lang==="es"?"Conectar toma menos de 2 minutos":"Takes less than 2 minutes to connect"}
-                </p>
+            {/* ── No account connected — force connect ── */}
+            <div style={{textAlign:"center",padding:"48px 24px"}}>
+              <div style={{width:52,height:52,borderRadius:14,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.40)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8M8 14h5"/></svg>
               </div>
-            ) : null}
+              <h3 style={{...j,fontSize:24,fontWeight:800,color:"#f0f2f8",margin:"0 0 10px",letterSpacing:"-0.03em"}}>
+                {lang==="pt"?"Conecte sua conta":lang==="es"?"Conecta tu cuenta":"Connect your account"}
+              </h3>
+              <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.38)",lineHeight:1.65,margin:"0 0 28px",maxWidth:360,marginLeft:"auto",marginRight:"auto"}}>
+                {lang==="pt"?"Com sua conta conectada, a IA vê CTR, spend, o que pausar e escalar.":lang==="es"?"Con tu cuenta, la IA ve CTR, spend, qué pausar y escalar.":"With your account, AI sees CTR, spend, what to pause and scale."}
+              </p>
+              {selectedPersona ? (
+                <div style={{display:"flex",flexDirection:"column",gap:10,alignItems:"center"}}>
+                  <button onClick={()=>handleConnect("meta","meta-oauth")}
+                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"#1877F2",color:"#fff",border:"none",cursor:"pointer",fontSize:14,fontWeight:700,boxShadow:"0 0 20px rgba(24,119,242,0.25)",transition:"all 0.2s"}}
+                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(-1px)";}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(0)";}}>
+                    {PLATFORM_ICONS_INLINE.meta} {lang==="pt"?"Conectar Meta Ads":lang==="es"?"Conectar Meta Ads":"Connect Meta Ads"}
+                  </button>
+                </div>
+              ) : (
+                <button onClick={()=>navigate("/dashboard/accounts")}
+                  style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"rgba(255,255,255,0.08)",color:"#fff",border:"1px solid rgba(255,255,255,0.12)",cursor:"pointer",fontSize:14,fontWeight:700}}>
+                  {lang==="pt"?"Criar conta primeiro":lang==="es"?"Crear cuenta primero":"Create account first"}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
