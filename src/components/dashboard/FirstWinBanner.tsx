@@ -8,7 +8,7 @@ const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
 const STORAGE_KEY = "adbrief_first_win_dismissed";
 
 const C = {
-  accent: "#6366f1",
+  accent: "#0da2e7",
   green: "#22c55e",
   amber: "#f97316",
   text: "#fff",
@@ -131,18 +131,18 @@ export default function FirstWinBanner({ userName, hasAdAccount }: FirstWinBanne
       </button>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-        <Sparkles size={18} color={C.accent} strokeWidth={2} />
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+        <Sparkles size={18} color="#0da2e7" strokeWidth={2} />
         <span style={{
-          fontFamily: BODY, fontSize: 15, fontWeight: 700,
-          color: C.text,
+          fontFamily: BODY, fontSize: 18, fontWeight: 800,
+          color: C.text, letterSpacing: "-0.03em",
         }}>
           {userName ? `${t.welcome}, ${userName}` : t.welcome}
         </span>
       </div>
       <p style={{
         fontFamily: BODY, fontSize: 13, fontWeight: 400,
-        color: C.textMuted, marginBottom: 20, lineHeight: 1.5,
+        color: "rgba(255,255,255,0.40)", marginBottom: 20, lineHeight: 1.55,
         maxWidth: 420,
       }}>
         {t.sub}

@@ -1629,3 +1629,9 @@ html {
   mix-blend-mode: overlay;
   z-index: 0;
 }
+
+/* Chat input placeholder — more visible */
+.chat-textarea::placeholder {
+  color: rgba(255,255,255,0.30);
+  font-weight: 400;
+}

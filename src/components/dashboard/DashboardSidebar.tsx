@@ -72,10 +72,10 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
         marginLeft: 8, marginRight: 8,
         color: isActive ? "#fff" : hov ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.50)",
         background: isActive
-          ? "rgba(255,255,255,0.08)"
+          ? "rgba(255,255,255,0.10)"
           : hov ? "rgba(255,255,255,0.04)" : "transparent",
         border: "none",
-        fontSize: 13.5, fontWeight: isActive ? 500 : 400,
+        fontSize: 13.5, fontWeight: isActive ? 600 : 400,
         textDecoration: "none", transition: "all 0.15s",
         fontFamily: F, letterSpacing: "-0.01em",
       }}
@@ -107,9 +107,9 @@ function NavTool({ url, label, icon: Icon, isActive, onClose }: {
         display: "flex", alignItems: "center", gap: 10,
         padding: "7px 12px", marginLeft: 8, marginRight: 8,
         borderRadius: 7, border: "none",
-        color: isActive ? "rgba(255,255,255,0.90)" : hov ? "rgba(255,255,255,0.60)" : "rgba(255,255,255,0.40)",
-        background: isActive ? "rgba(255,255,255,0.06)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
-        fontSize: 13, fontWeight: isActive ? 500 : 400,
+        color: isActive ? "rgba(255,255,255,0.95)" : hov ? "rgba(255,255,255,0.60)" : "rgba(255,255,255,0.40)",
+        background: isActive ? "rgba(255,255,255,0.08)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
+        fontSize: 13, fontWeight: isActive ? 600 : 400,
         textDecoration: "none", transition: "all 0.12s",
         fontFamily: F,
       }}
@@ -131,7 +131,7 @@ function SectionHeader({ label }: { label: string }) {
       display: "flex", alignItems: "center", gap: 0,
     }}>
       <p style={{
-        fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.28)",
+        fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.35)",
         letterSpacing: "0.08em", textTransform: "uppercase", margin: 0,
         fontFamily: F,
       }}>

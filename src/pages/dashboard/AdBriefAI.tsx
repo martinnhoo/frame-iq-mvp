@@ -1132,53 +1132,80 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   const ctr   = ctrMatch?.[1];
 
   return (
-    <div style={{ width:"100%", maxWidth: 680, margin: "auto", padding:"clamp(28px,6vw,48px) clamp(20px,5vw,40px) 32px", display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
-      {/* Greeting header — ABAvatar + title */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-        <ABAvatar size={40} />
-        <span style={{ fontFamily: F, fontSize: 22, fontWeight: 700, color: "#f0f2f8", letterSpacing: "-0.03em", lineHeight: 1.2 }}>{block.title}</span>
+    <div style={{ width:"100%", maxWidth: 680, margin: "auto", padding:"clamp(36px,8vw,64px) clamp(20px,5vw,40px) 32px", display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center" }}>
+
+      {/* Avatar */}
+      <div style={{ marginBottom: 20 }}>
+        <ABAvatar size={44} />
       </div>
 
-      {/* If real data: show KPI callout row + message */}
+      {/* Hero headline — big, bold, clear */}
+      <h1 style={{ fontFamily: F, fontSize: "clamp(28px,5vw,36px)", fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.04em", lineHeight: 1.15, margin: "0 0 10px" }}>
+        {block.title}
+      </h1>
+
+      {/* KPI badges inline */}
       {hasRealData && (spend || ctr) && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" as const }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, justifyContent:"center", flexWrap: "wrap" as const }}>
           {spend && (
-            <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.18)", flex: "1 1 120px", minWidth: 120 }}>
-              <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "0 0 3px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
-                {lang === "pt" ? "Esta semana" : lang === "es" ? "Esta semana" : "This week"}
-              </p>
-              <p style={{ fontFamily: F, fontSize: 20, fontWeight: 900, color: "#fff", margin: 0, letterSpacing: "-0.03em" }}>
+            <div style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", display:"flex", alignItems:"center", gap: 8 }}>
+              <span style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+                {lang === "pt" ? "Gasto" : lang === "es" ? "Gasto" : "Spend"}
+              </span>
+              <span style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
                 {lang === "en" ? "$" : "R$"}{spend}
-              </p>
+              </span>
             </div>
           )}
           {ctr && (
-            <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.18)", flex: "1 1 100px", minWidth: 100 }}>
-              <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "0 0 3px", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>CTR</p>
-              <p style={{ fontFamily: F, fontSize: 20, fontWeight: 900, color: "#34d399", margin: 0, letterSpacing: "-0.03em" }}>{ctr}%</p>
+            <div style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.12)", display:"flex", alignItems:"center", gap: 8 }}>
+              <span style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>CTR</span>
+              <span style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#34d399", letterSpacing: "-0.02em" }}>{ctr}%</span>
             </div>
           )}
         </div>
       )}
 
-      {/* Message body */}
-      <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.75, margin: "0 0 24px", letterSpacing: "-0.01em", maxWidth: 520 }}>
-        {/* Strip spend/CTR from content since we showed them as cards */}
+      {/* Subtitle — short, 1-2 lines max */}
+      <p style={{ fontFamily: M, fontSize: 14, color: "rgba(255,255,255,0.40)", lineHeight: 1.65, margin: "0 0 28px", maxWidth: 440 }}>
         {hasRealData
           ? content.replace(/—\s*R\$[\d,]+\s*(gastos|spent).*?(?=\.\s|$)/i, "—").replace(/—\s*\$[\d,]+\s*(spent|gastos).*?(?=\.\s|$)/i, "—").replace(/CTR\s(?:médio|avg|promedio)\s[\d,.]+%/i, "").replace(/,\s*,/g, ",").replace(/—\s*\./g, ".").trim()
           : content}
       </p>
 
-      {/* Quick action pills */}
-      <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8 }}>
-        {actions.map((label, i) => (
-          <button key={i} onClick={() => onSend(label)}
-            style={{ padding: "7px 16px", borderRadius: 99, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.60)", transition: "all 0.15s", whiteSpace: "nowrap" as const, letterSpacing: "-0.01em" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(14,165,233,0.08)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.22)"; e.currentTarget.style.color = "rgba(255,255,255,0.90)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "rgba(255,255,255,0.60)"; }}>
-            {label}
-          </button>
-        ))}
+      {/* Action buttons — 1 primary + rest ghost */}
+      <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8, justifyContent:"center" }}>
+        {actions.map((label, i) => {
+          const isPrimary = i === 0;
+          return (
+            <button key={i} onClick={() => onSend(label)}
+              style={{
+                padding: isPrimary ? "10px 22px" : "8px 18px",
+                borderRadius: 10,
+                background: isPrimary ? "#0da2e7" : "rgba(255,255,255,0.05)",
+                border: isPrimary ? "none" : "1px solid rgba(255,255,255,0.10)",
+                cursor: "pointer",
+                fontFamily: F,
+                fontSize: isPrimary ? 14 : 13,
+                fontWeight: isPrimary ? 700 : 500,
+                color: isPrimary ? "#fff" : "rgba(255,255,255,0.55)",
+                transition: "all 0.15s",
+                whiteSpace: "nowrap" as const,
+                letterSpacing: "-0.01em",
+                boxShadow: isPrimary ? "0 0 20px rgba(13,162,231,0.25)" : "none",
+              }}
+              onMouseEnter={e => {
+                if (isPrimary) { e.currentTarget.style.boxShadow = "0 0 28px rgba(13,162,231,0.40)"; e.currentTarget.style.transform = "translateY(-1px)"; }
+                else { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.16)"; e.currentTarget.style.color = "rgba(255,255,255,0.80)"; }
+              }}
+              onMouseLeave={e => {
+                if (isPrimary) { e.currentTarget.style.boxShadow = "0 0 20px rgba(13,162,231,0.25)"; e.currentTarget.style.transform = "translateY(0)"; }
+                else { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }
+              }}>
+              {label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -1653,28 +1680,28 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         {metrics.length > 0 && (
           <div className="lp-metrics-scroll" style={{
             display: "flex", alignItems: "center", flex: 1, overflow: "hidden",
-            marginLeft: 20, gap: 24,
+            marginLeft: 16, gap: 6,
           }}>
             {(metrics as any[]).map((item: any) => (
-              <div key={item.lbl} style={{ display: "flex", alignItems: "baseline", gap: 5, flexShrink: 0 }}>
+              <div key={item.lbl} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "3px 10px", borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{
-                  fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)",
+                  fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)",
                   fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                  letterSpacing: "0.02em",
+                  letterSpacing: "0.04em", textTransform: "uppercase" as const,
                 }}>
                   {item.lbl}
                 </span>
                 <span style={{
-                  fontSize: 14, fontWeight: 700,
+                  fontSize: 13, fontWeight: 800,
                   color: item.warn ? "#f87171" : "#fff",
                   fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                  letterSpacing: "-0.01em",
+                  letterSpacing: "-0.02em",
                 }}>
                   {item.val}
                 </span>
                 {item.tr !== "flat" && (
                   <span style={{
-                    fontSize: 10, fontWeight: 700,
+                    fontSize: 9, fontWeight: 700,
                     color: item.tr === "up" ? "#34d399" : "#f87171",
                   }}>
                     {item.tr === "up" ? "▲" : "▼"}
@@ -3889,16 +3916,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"var(--bg-main)",position:"relative" as const}}>
-      {/* Background — blueprint grid técnico */}
+      {/* Background — subtle grid */}
       <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
-        {/* Blueprint grid — linhas horizontais */}
-        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(14,165,233,0.045) 1px, transparent 1px)",backgroundSize:"100% 44px",maskImage:"linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%)"}}/>
-        {/* Blueprint grid — linhas verticais */}
-        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(90deg, rgba(14,165,233,0.03) 1px, transparent 1px)",backgroundSize:"44px 100%",maskImage:"linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%)"}}/>
-        {/* Bloom topo-direita — azul estático */}
-        <div style={{position:"absolute",width:700,height:500,borderRadius:"50%",background:"radial-gradient(ellipse at 80% 10%,rgba(14,165,233,0.09) 0%,transparent 60%)",top:0,right:0,filter:"blur(40px)"}}/>
-        {/* Bloom baixo-esquerda — indigo estático */}
-        <div style={{position:"absolute",width:500,height:400,borderRadius:"50%",background:"radial-gradient(ellipse at 20% 90%,rgba(99,102,241,0.07) 0%,transparent 60%)",bottom:0,left:0,filter:"blur(40px)"}}/>
+        {/* Grid — muito sutil, quase invisível */}
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px)",backgroundSize:"100% 48px",maskImage:"linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%)"}}/>
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)",backgroundSize:"48px 100%",maskImage:"linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%)"}}/>
+        {/* Bloom topo-direita — muito suave */}
+        <div style={{position:"absolute",width:600,height:400,borderRadius:"50%",background:"radial-gradient(ellipse at 80% 10%,rgba(14,165,233,0.04) 0%,transparent 60%)",top:0,right:0,filter:"blur(60px)"}}/>
         {/* Fade top */}
         <div style={{position:"absolute",top:0,left:0,right:0,height:60,background:"linear-gradient(to bottom,var(--bg-main),transparent)"}}/>
         {/* Fade bottom */}
@@ -4452,12 +4476,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             {/* Input card — clean dark, como a demo */}
             <div className="input-box-wrap" style={{
               display:"flex",flexDirection:"column",gap:0,
-              background: chatDragOver ? "rgba(13,162,231,0.06)" : "rgba(255,255,255,0.04)",
+              background: chatDragOver ? "rgba(13,162,231,0.06)" : "rgba(255,255,255,0.05)",
               backdropFilter:"blur(20px) saturate(180%)",
-              border: chatDragOver ? "1px solid rgba(13,162,231,0.4)" : "1px solid var(--border-subtle)",
+              border: chatDragOver ? "1px solid rgba(13,162,231,0.4)" : "1px solid rgba(255,255,255,0.10)",
               borderRadius:16,
-              padding:"12px 12px 12px 18px",
-              boxShadow:"0 2px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)",
+              padding:"14px 14px 14px 20px",
+              boxShadow:"0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)",
               transition:"border-color 0.2s, box-shadow 0.2s",
             }}
             onDragOver={e => { e.preventDefault(); setChatDragOver(true); }}
@@ -4492,7 +4516,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
-                style={{flex:1,background:"transparent",border:"none",padding:"0",color:"#f0f2f8",fontSize:15.5,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:26,maxHeight:140,caretColor:"#0ea5e9"}}
+                style={{flex:1,background:"transparent",border:"none",padding:"2px 0",color:"#f0f2f8",fontSize:15.5,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:32,maxHeight:140,caretColor:"#0ea5e9"}}
                 className="chat-textarea"
                 onInput={e=>{const t=e.target as HTMLTextAreaElement;requestAnimationFrame(()=>{t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";});}}
               />
