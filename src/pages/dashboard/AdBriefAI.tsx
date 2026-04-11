@@ -1103,6 +1103,12 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   const M = "'Plus Jakarta Sans', system-ui, sans-serif";
   const [expanded, setExpanded] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [hintHover, setHintHover] = useState(false);
+  const cardRef = React.useRef<HTMLDivElement>(null);
+
+  // Entrance animation — staggered fade-in on mount
+  React.useEffect(() => { const t = setTimeout(() => setMounted(true), 40); return () => clearTimeout(t); }, []);
 
   const hasMeta = connections?.includes("meta");
   const hasData = hasMeta;
@@ -1128,58 +1134,82 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   const spend = spendMatch?.[1];
   const ctr = ctrMatch?.[1];
 
-  // Short subtitle — 2 lines max, high contrast
   const subtitle = hasData
     ? (lang === "pt" ? "Meta Ads conectado. Escolha uma ação." : lang === "es" ? "Meta Ads conectado. Elige una acción." : "Meta Ads connected. Choose an action.")
     : (lang === "pt" ? "Escolha uma ação para começar." : lang === "es" ? "Elige una acción para empezar." : "Choose an action to start.");
 
+  const doExpand = () => {
+    setPressed(true);
+    setTimeout(() => { setPressed(false); setExpanded(true); }, 80);
+  };
+
   const handlePrimaryClick = () => {
     if (expanded) { onSend(primaryAction); return; }
-    setPressed(true);
-    setTimeout(() => { setPressed(false); setExpanded(true); }, 100);
+    doExpand();
   };
 
   return (
-    <div style={{ width:"100%", maxWidth: 680, margin: "auto", padding:"clamp(16px,3vw,32px) clamp(20px,5vw,40px) 32px", display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center" }}>
+    <div style={{
+      width: "100%", maxWidth: 680, margin: "auto",
+      padding: "clamp(16px,3vw,32px) clamp(20px,5vw,40px) 32px",
+      display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+      marginTop: "-8%",
+    }}>
       <style>{`
-        @keyframes pb-fadeSlide { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes pb-expand { from { max-height:0; opacity:0 } to { max-height:200px; opacity:1 } }
+        @keyframes pb-fadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes pb-cardIn { from { opacity:0; transform:translateY(12px) scale(0.98) } to { opacity:1; transform:translateY(0) scale(1) } }
       `}</style>
 
       {/* ── Container card — depth + glass ── */}
-      <div style={{
+      <div ref={cardRef} style={{
         width: "100%", maxWidth: 480,
-        padding: "clamp(32px,5vw,44px) clamp(28px,4vw,40px)",
-        borderRadius: 20,
-        background: "rgba(255,255,255,0.025)",
+        padding: "clamp(36px,5vw,48px) clamp(28px,4vw,40px) clamp(32px,4vw,40px)",
+        borderRadius: 22,
+        background: "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%)",
         border: "1px solid rgba(255,255,255,0.08)",
-        backdropFilter: "blur(8px)",
-        boxShadow: "0 10px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.03) inset",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.40), 0 0 0 1px rgba(255,255,255,0.03) inset",
         display: "flex", flexDirection: "column", alignItems: "center",
-        transition: "box-shadow 0.3s ease",
+        animation: mounted ? "pb-cardIn 0.35s ease-out both" : "none",
+        opacity: mounted ? 1 : 0,
       }}>
 
-        {/* Logo avatar */}
-        <div style={{ marginBottom: 18 }}>
-          <ABAvatar size={38} />
+        {/* Logo avatar — stagger 1 */}
+        <div style={{
+          marginBottom: 20,
+          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.08s both" : "none",
+          opacity: 0,
+        }}>
+          <ABAvatar size={36} />
         </div>
 
-        {/* Hero headline */}
-        <h1 style={{ fontFamily: F, fontSize: "clamp(32px,6vw,42px)", fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.045em", lineHeight: 1.08, margin: "0 0 10px" }}>
+        {/* Hero headline — stagger 2 */}
+        <h1 style={{
+          fontFamily: F, fontSize: "clamp(28px,5.5vw,38px)", fontWeight: 800,
+          color: "#f0f2f8", letterSpacing: "-0.04em", lineHeight: 1.1,
+          margin: "0 0 8px",
+          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.14s both" : "none",
+          opacity: 0,
+        }}>
           {block.title}
         </h1>
 
-        {/* KPI badges */}
+        {/* KPI badges — stagger 3 */}
         {hasRealData && (spend || ctr) && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 12, justifyContent:"center", flexWrap: "wrap" as const }}>
+          <div style={{
+            display: "flex", gap: 8, marginBottom: 10, justifyContent: "center", flexWrap: "wrap" as const,
+            animation: mounted ? "pb-fadeUp 0.3s ease-out 0.18s both" : "none",
+            opacity: 0,
+          }}>
             {spend && (
-              <div style={{ padding: "5px 12px", borderRadius: 7, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", display:"flex", alignItems:"center", gap: 7 }}>
+              <div style={{ padding: "5px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 7 }}>
                 <span style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.30)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{lang === "pt" ? "Gasto" : "Spend"}</span>
                 <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>{lang === "en" ? "$" : "R$"}{spend}</span>
               </div>
             )}
             {ctr && (
-              <div style={{ padding: "5px 12px", borderRadius: 7, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.10)", display:"flex", alignItems:"center", gap: 7 }}>
+              <div style={{ padding: "5px 12px", borderRadius: 8, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.10)", display: "flex", alignItems: "center", gap: 7 }}>
                 <span style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.30)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>CTR</span>
                 <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#34d399", letterSpacing: "-0.02em" }}>{ctr}%</span>
               </div>
@@ -1187,88 +1217,121 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
           </div>
         )}
 
-        {/* Subtitle — short, clear, higher contrast */}
-        <p style={{ fontFamily: M, fontSize: 14, color: "#C0C6CF", lineHeight: 1.5, margin: "0 0 28px", maxWidth: 340 }}>
+        {/* Subtitle — stagger 4 */}
+        <p style={{
+          fontFamily: M, fontSize: 13.5, color: "rgba(192,198,207,0.85)", lineHeight: 1.5,
+          margin: "0 0 26px", maxWidth: 320,
+          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.20s both" : "none",
+          opacity: 0,
+        }}>
           {subtitle}
         </p>
 
-        {/* ── Primary CTA ── */}
-        <button
-          onClick={handlePrimaryClick}
-          onMouseDown={() => setPressed(true)}
-          onMouseUp={() => !expanded && setPressed(false)}
-          style={{
-            padding: "13px 32px",
-            borderRadius: 12,
-            background: "#0da2e7",
-            border: "1px solid rgba(13,162,231,0.5)",
-            cursor: "pointer",
-            fontFamily: F,
-            fontSize: 15,
-            fontWeight: 700,
-            color: "#fff",
-            letterSpacing: "-0.01em",
-            boxShadow: "0 4px 28px rgba(13,162,231,0.40)",
-            transition: "all 0.2s ease-out",
-            transform: pressed ? "scale(0.97)" : "scale(1)",
-            outline: "none",
-          }}
-          onMouseEnter={e => { if(!pressed) { e.currentTarget.style.transform = "scale(1.02)"; e.currentTarget.style.boxShadow = "0 6px 36px rgba(13,162,231,0.55)"; }}}
-          onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 28px rgba(13,162,231,0.40)"; }}
-          onFocus={e => { e.currentTarget.style.boxShadow = "0 4px 28px rgba(13,162,231,0.40), 0 0 0 3px rgba(13,162,231,0.20)"; }}
-          onBlur={e => { e.currentTarget.style.boxShadow = "0 4px 28px rgba(13,162,231,0.40)"; }}
-        >
-          {primaryAction}
-        </button>
+        {/* ── Primary CTA — stagger 5 ── */}
+        <div style={{
+          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.26s both" : "none",
+          opacity: 0,
+        }}>
+          <button
+            onClick={handlePrimaryClick}
+            onMouseDown={() => setPressed(true)}
+            onMouseUp={() => !expanded && setPressed(false)}
+            style={{
+              padding: "12px 30px",
+              borderRadius: 12,
+              background: "linear-gradient(180deg, #12b0f8 0%, #0a8fd4 100%)",
+              border: "1px solid rgba(13,162,231,0.4)",
+              cursor: "pointer",
+              fontFamily: F,
+              fontSize: 14.5,
+              fontWeight: 700,
+              color: "#fff",
+              letterSpacing: "-0.01em",
+              boxShadow: "0 4px 24px rgba(13,162,231,0.35), 0 1px 0 rgba(255,255,255,0.10) inset",
+              transition: "all 0.18s ease-out",
+              transform: pressed ? "scale(0.98)" : "scale(1)",
+              outline: "none",
+            }}
+            onMouseEnter={e => {
+              if (!pressed) {
+                e.currentTarget.style.transform = "scale(1.03)";
+                e.currentTarget.style.boxShadow = "0 6px 32px rgba(13,162,231,0.50), 0 1px 0 rgba(255,255,255,0.10) inset";
+              }
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = "0 4px 24px rgba(13,162,231,0.35), 0 1px 0 rgba(255,255,255,0.10) inset";
+            }}
+          >
+            {primaryAction}
+          </button>
+        </div>
 
         {/* ── Expandable secondary actions ── */}
         <div style={{
           overflow: "hidden",
-          maxHeight: expanded ? 200 : 0,
+          maxHeight: expanded ? 260 : 0,
           opacity: expanded ? 1 : 0,
-          transition: "max-height 0.25s ease-out, opacity 0.2s ease-out",
+          transition: "max-height 0.2s ease-out, opacity 0.18s ease-out",
           width: "100%",
-          marginTop: expanded ? 16 : 0,
+          marginTop: expanded ? 14 : 0,
         }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, width: "100%" }}>
             {secondaryActions.map((label, i) => (
               <button key={i} onClick={() => onSend(label)}
                 style={{
                   display: "flex", alignItems: "center", gap: 10,
-                  width: "100%", padding: "11px 16px", borderRadius: 10,
+                  width: "100%", padding: "10px 14px", borderRadius: 10,
                   background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  cursor: "pointer", fontFamily: F, fontSize: 13.5, fontWeight: 500,
-                  color: "rgba(255,255,255,0.70)", textAlign: "left",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 500,
+                  color: "rgba(255,255,255,0.65)", textAlign: "left",
                   transition: "all 0.18s ease-out",
-                  animation: expanded ? `pb-fadeSlide 0.25s ease-out ${i * 0.06}s both` : "none",
+                  animation: expanded ? `pb-fadeUp 0.2s ease-out ${i * 0.04}s both` : "none",
                   outline: "none",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.70)"; e.currentTarget.style.transform = "translateY(0)"; }}
-                onFocus={e => { e.currentTarget.style.boxShadow = "0 0 0 2px rgba(13,162,231,0.18)"; }}
-                onBlur={e => { e.currentTarget.style.boxShadow = "none"; }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.13)";
+                  e.currentTarget.style.color = "#fff";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.65)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(13,162,231,0.6)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(13,162,231,0.5)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 <span>{label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Expand hint — only when collapsed */}
+        {/* ── Expand hint — only when collapsed, stagger 6 ── */}
         {!expanded && (
-          <button onClick={() => setExpanded(true)} style={{
-            marginTop: 14, background: "none", border: "none", cursor: "pointer",
-            fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.25)",
-            transition: "color 0.15s", padding: "4px 8px",
-            display: "flex", alignItems: "center", gap: 4,
-          }}
-            onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.25)"; }}
+          <button
+            onClick={doExpand}
+            onMouseEnter={() => setHintHover(true)}
+            onMouseLeave={() => setHintHover(false)}
+            style={{
+              marginTop: 14, background: "none", border: "none", cursor: "pointer",
+              fontFamily: M, fontSize: 12, color: hintHover ? "rgba(255,255,255,0.50)" : "rgba(255,255,255,0.22)",
+              transition: "color 0.18s ease-out", padding: "4px 8px",
+              display: "flex", alignItems: "center", gap: 4,
+              animation: mounted ? "pb-fadeUp 0.3s ease-out 0.34s both" : "none",
+              opacity: 0,
+            }}
           >
-            {lang === "pt" ? "ou ver mais opções" : lang === "es" ? "o ver más opciones" : "or see more options"}
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            {lang === "pt" ? "ver mais opções" : lang === "es" ? "ver más opciones" : "see more options"}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+              style={{
+                transition: "transform 0.18s ease-out",
+                transform: hintHover ? "translateY(2px)" : "translateY(0)",
+              }}
+            ><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         )}
       </div>
