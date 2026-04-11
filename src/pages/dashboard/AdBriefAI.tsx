@@ -1676,17 +1676,30 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
     return (
       <div className="lp lp-bar" onClick={() => setOpen(true)} style={{
-        ...I, display: "flex", alignItems: "center", height: 44,
+        ...I, display: "flex", alignItems: "center", height: 48,
         padding: "0 20px", cursor: "pointer", userSelect: "none" as const,
-        background: "var(--bg-surface)",
-        borderBottom: "1px solid var(--border-subtle)",
+        background: "rgba(8,10,14,0.65)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
         gap: 0,
-      }}>
+        transition: "background 0.15s",
+      }}
+        onMouseEnter={e => e.currentTarget.style.background = "rgba(8,10,14,0.80)"}
+        onMouseLeave={e => e.currentTarget.style.background = "rgba(8,10,14,0.65)"}
+      >
 
-        {/* ── Status indicator: Meta logo + LIVE ── */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginRight: 20 }}>
-          {/* Meta official logo SVG */}
-          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        {/* ── Live status chip ── */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 7,
+          padding: "4px 12px 4px 10px", borderRadius: 999,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          flexShrink: 0, marginRight: 14,
+          transition: "all 0.15s",
+        }}>
+          {/* Meta mini logo */}
+          <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
             <path d="M6.897 4h-.024l-.031 2.615h.022c1.715 0 3.046 1.357 5.94 6.246l.175.297.012.02 1.62-2.438-.012-.019a48.763 48.763 0 00-1.098-1.716 28.01 28.01 0 00-1.175-1.629C10.413 4.932 8.812 4 6.896 4z" fill="url(#meta-g0)"/>
             <path d="M6.873 4C4.95 4.01 3.247 5.258 2.02 7.17a4.352 4.352 0 00-.01.017l2.254 1.231.011-.017c.718-1.083 1.61-1.774 2.568-1.785h.021L6.896 4h-.023z" fill="url(#meta-g1)"/>
             <path d="M2.019 7.17l-.011.017C1.2 8.447.598 9.995.274 11.664l-.005.022 2.534.6.004-.022c.27-1.467.786-2.828 1.456-3.845l.011-.017L2.02 7.17z" fill="url(#meta-g2)"/>
@@ -1719,54 +1732,65 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             </defs>
           </svg>
 
-          {/* Live status */}
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: "50%",
-              background: busy ? "rgba(255,255,255,0.2)" : fail ? "#f87171" : "#34d399",
-              boxShadow: isLive ? "0 0 8px rgba(52,211,153,0.6)" : "none",
-              animation: isLive ? "pulse 2s ease-in-out infinite" : "none",
-            }}/>
-            <span style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
-              textTransform: "uppercase" as const,
-              color: busy ? "rgba(255,255,255,0.3)" : fail ? "#f87171" : "#34d399",
-              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-            }}>
-              {busy ? "..." : fail ? "ERR" : "LIVE"}
-            </span>
-          </div>
+          {/* Live dot + label */}
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: busy ? "rgba(255,255,255,0.2)" : fail ? "#f87171" : "#22c55e",
+            boxShadow: isLive ? "0 0 8px rgba(34,197,94,0.4)" : "none",
+            animation: isLive ? "pulse 2s ease-in-out infinite" : "none",
+            flexShrink: 0,
+          }}/>
+          <span style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
+            textTransform: "uppercase" as const,
+            color: busy ? "rgba(255,255,255,0.3)" : fail ? "#f87171" : "rgba(255,255,255,0.50)",
+            fontFamily: F,
+          }}>
+            {busy ? "..." : fail ? "ERR" : "LIVE"}
+          </span>
         </div>
 
-        {/* ── Vertical separator ── */}
-        <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.06)", flexShrink: 0 }}/>
+        {/* ── Separator ── */}
+        <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.06)", flexShrink: 0 }}/>
 
-        {/* ── Metrics row ── */}
+        {/* ── Metric chips ── */}
         {metrics.length > 0 && (
           <div className="lp-metrics-scroll" style={{
             display: "flex", alignItems: "center", flex: 1, overflow: "hidden",
-            marginLeft: 16, gap: 6,
+            marginLeft: 12, gap: 6,
           }}>
             {(metrics as any[]).map((item: any) => (
-              <div key={item.lbl} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "3px 10px", borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div key={item.lbl} style={{
+                display: "flex", alignItems: "center", gap: 5,
+                flexShrink: 0, padding: "4px 10px", borderRadius: 999,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                transition: "all 0.15s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
+                onClick={e => e.stopPropagation()}
+              >
                 <span style={{
-                  fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)",
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.40)",
+                  fontFamily: F,
                   letterSpacing: "0.04em", textTransform: "uppercase" as const,
+                  lineHeight: 1,
                 }}>
                   {item.lbl}
                 </span>
                 <span style={{
-                  fontSize: 13, fontWeight: 800,
+                  fontSize: 12, fontWeight: 800,
                   color: item.warn ? "#f87171" : "#fff",
-                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  fontFamily: F,
                   letterSpacing: "-0.02em",
+                  lineHeight: 1,
                 }}>
                   {item.val}
                 </span>
                 {item.tr !== "flat" && (
                   <span style={{
-                    fontSize: 9, fontWeight: 700,
+                    fontSize: 8, fontWeight: 700, lineHeight: 1,
                     color: item.tr === "up" ? "#34d399" : "#f87171",
                   }}>
                     {item.tr === "up" ? "▲" : "▼"}
@@ -1779,10 +1803,10 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
         {/* ── Loading skeleton ── */}
         {busy && (
-          <div style={{ display: "flex", alignItems: "center", gap: 20, flex: 1, marginLeft: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, marginLeft: 12 }}>
             {[0,1,2].map(i => (
               <div key={i} style={{
-                width: 56, height: 14, borderRadius: 4,
+                width: 56, height: 22, borderRadius: 999,
                 background: "rgba(255,255,255,0.04)",
                 animation: `skPulse 1.4s ease-in-out ${i * 0.15}s infinite`,
               }}/>
@@ -1793,35 +1817,45 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         {/* ── Error ── */}
         {fail && !busy && (
           <span style={{
-            fontSize: 12, fontWeight: 500, color: "rgba(248,113,133,0.5)", flex: 1, marginLeft: 20,
-            fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+            fontSize: 11, fontWeight: 500, color: "rgba(248,113,133,0.45)", flex: 1, marginLeft: 12,
+            fontFamily: F,
           }}>
             {lang==="pt" ? "Falha ao carregar dados" : lang==="es" ? "Error al cargar datos" : "Failed to load data"}
           </span>
         )}
 
         {/* ── Right side: badges + expand arrow ── */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0, marginLeft: 16 }}>
-          {/* Alert count */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 12 }}>
+          {/* Alert chip */}
           {warnCount > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ fontSize: 12, color: "#f87171" }}>⚠</span>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 4,
+              padding: "3px 8px", borderRadius: 999,
+              background: "rgba(248,113,113,0.08)",
+              border: "1px solid rgba(248,113,113,0.15)",
+            }}>
+              <span style={{ fontSize: 10, color: "#f87171" }}>⚠</span>
               <span style={{
-                fontSize: 12, fontWeight: 700, color: "#f87171",
-                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                fontSize: 11, fontWeight: 700, color: "#f87171",
+                fontFamily: F,
               }}>
                 {warnCount}
               </span>
             </div>
           )}
 
-          {/* Scale opportunities */}
+          {/* Scale chip */}
           {scaleCount > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ fontSize: 12, color: "#34d399" }}>↑</span>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 4,
+              padding: "3px 8px", borderRadius: 999,
+              background: "rgba(34,197,94,0.08)",
+              border: "1px solid rgba(34,197,94,0.15)",
+            }}>
+              <span style={{ fontSize: 10, color: "#34d399" }}>↑</span>
               <span style={{
-                fontSize: 12, fontWeight: 700, color: "#34d399",
-                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                fontSize: 11, fontWeight: 700, color: "#34d399",
+                fontFamily: F,
               }}>
                 {scaleCount}
               </span>
@@ -1829,7 +1863,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           )}
 
           {/* Expand chevron */}
-          <ChevronDown size={14} style={{ color: "rgba(255,255,255,0.2)" }}/>
+          <ChevronDown size={14} style={{ color: "rgba(255,255,255,0.25)", transition: "color 0.15s" }}/>
         </div>
       </div>
     );
