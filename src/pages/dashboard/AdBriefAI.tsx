@@ -2447,11 +2447,13 @@ export default function AdBriefAI() {
       if (result.actions?.length) parts.push(`\n**${pt ? "Pr\u00f3ximos passos" : es ? "Pr\u00f3ximos pasos" : "Next steps"}:**\n${result.actions.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}`);
       parts.push(`\n---\n${pt ? "Conecte sua conta de Meta Ads para an\u00e1lises conectadas aos seus dados reais de ROAS, CTR e spend." : es ? "Conecta tu cuenta de Meta Ads para an\u00e1lisis conectados a tus datos reales." : "Connect your Meta Ads account for analyses connected to your real ROAS, CTR and spend data."}`);
       const analysisText = parts.join("\n");
-      // Store demo messages to inject AFTER the proactive greeting fires
-      demoMessagesRef.current = [
+      const demoMessages: AIMessage[] = [
         { role: "user", id: now, ts: now, userText: pt ? "Analise este an\u00fancio" : es ? "Analiza este anuncio" : "Analyze this ad", imagePreview: preview || undefined },
         { role: "assistant", id: now + 1, ts: now + 1, blocks: [{ type: "text", title: pt ? "An\u00e1lise do an\u00fancio" : es ? "An\u00e1lisis del anuncio" : "Ad Analysis", content: analysisText }] },
       ];
+      // Keep the unlocked demo alive even if persona/account selection finishes a bit later
+      demoMessagesRef.current = demoMessages;
+      storage.setJSON("adbrief_chat_v1_default", demoMessages);
     } catch {}
   }, []);
 
