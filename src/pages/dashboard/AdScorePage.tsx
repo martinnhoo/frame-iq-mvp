@@ -7,8 +7,9 @@ import { RefreshCw, Trophy, TrendingUp, Zap, AlertTriangle, Flame, Target } from
 import { useLanguage } from "@/i18n/LanguageContext";
 
 // ── Design tokens ──
-const F = "'DM Sans','Plus Jakarta Sans',system-ui,sans-serif";
-const MONO = "'DM Mono','SF Mono',monospace";
+const F = "'Plus Jakarta Sans',system-ui,sans-serif";
+const MONO = "'DM Mono','Fira Code',monospace";
+const HERO = "'Plus Jakarta Sans',system-ui,sans-serif"; // hero numbers — clean, not monospace
 const A = "#0da2e7";
 const GREEN = "#10b981";
 const RED = "#ef4444";
@@ -122,7 +123,7 @@ function ScoreRing({ score, tier, size = 56 }: { score: number; tier: Tier; size
       </svg>
       <div style={{
         position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: MONO, fontSize: size * 0.32, fontWeight: 800, color: cfg.color, letterSpacing: "-0.03em",
+        fontFamily: HERO, fontSize: size * 0.34, fontWeight: 900, color: cfg.color, letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" as any,
       }}>
         {score}
       </div>
@@ -130,20 +131,122 @@ function ScoreRing({ score, tier, size = 56 }: { score: number; tier: Tier; size
   );
 }
 
+// ── Score Detail Panel ──
+function ScoreDetail({ ad, pt, onClose }: { ad: any; pt: boolean; onClose: () => void }) {
+  const { score, tier, badges } = calcAdScore(ad);
+  const cfg = TIER_CONFIG[tier];
+  const ctr = ((ad.ctr || 0) * 100).toFixed(2);
+  const spend = ad.spend || 0;
+  const roas = ad.roas || 0;
+  const conv = ad.conversions || 0;
+  const freq = ad.frequency || 0;
+
+  // Individual metric scores for breakdown
+  const ctrPct = ctr >= 3 ? 100 : ctr >= 2 ? 80 : ctr >= 1.5 ? 63 : ctr >= 1 ? 43 : ctr >= 0.5 ? 23 : 6;
+  const roasPct = roas >= 4 ? 100 : roas >= 3 ? 83 : roas >= 2 ? 67 : roas >= 1 ? 40 : 10;
+  const convPct = conv >= 50 ? 100 : conv >= 20 ? 80 : conv >= 10 ? 60 : conv >= 5 ? 40 : conv >= 1 ? 20 : 5;
+  const effPct = freq > 0 && freq < 2 ? 100 : freq < 3 ? 67 : freq < 4 ? 33 : 0;
+
+  const metrics = [
+    { label: "CTR", value: `${ctr}%`, pct: ctrPct, weight: "35%", color: A },
+    { label: "ROAS", value: roas ? `${roas.toFixed(1)}×` : "—", pct: roasPct, weight: "30%", color: GREEN },
+    { label: pt ? "Conversões" : "Conversions", value: String(conv), pct: convPct, weight: "20%", color: AMBER },
+    { label: pt ? "Eficiência" : "Efficiency", value: freq ? `${freq.toFixed(1)} freq` : "—", pct: effPct, weight: "15%", color: "#8b5cf6" },
+  ];
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)",
+    }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: "min(480px, 92vw)", background: "#0e1014",
+        border: `1px solid ${cfg.border}`, borderRadius: 20,
+        overflow: "hidden", animation: "fadeUp 0.25s ease both",
+      }}>
+        {/* Header */}
+        <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <ScoreRing score={score} tier={tier} size={56} />
+              <div>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TX, fontFamily: F }}>{ad.ad_name || ad.name || "—"}</p>
+                <p style={{ margin: "3px 0 0", fontSize: 11, color: MT, fontFamily: F }}>{ad.campaign_name || ad.campaign || ""}</p>
+              </div>
+            </div>
+            <button onClick={onClose} style={{
+              background: "rgba(255,255,255,0.06)", border: "none", borderRadius: 8,
+              width: 32, height: 32, cursor: "pointer", color: MT, fontSize: 16,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>✕</button>
+          </div>
+        </div>
+        {/* Score breakdown */}
+        <div style={{ padding: "16px 24px 20px" }}>
+          <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>
+            {pt ? "Breakdown do Score" : "Score Breakdown"}
+          </p>
+          {metrics.map(m => (
+            <div key={m.label} style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: TX, fontFamily: F }}>{m.label} <span style={{ fontSize: 10, color: MT }}>({m.weight})</span></span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: m.color, fontFamily: HERO, fontVariantNumeric: "tabular-nums" as any }}>{m.value}</span>
+              </div>
+              <div style={{ height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${m.pct}%`, background: m.color, borderRadius: 2, transition: "width 0.5s ease" }} />
+              </div>
+            </div>
+          ))}
+          {/* Badges */}
+          {badges.length > 0 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              {badges.map(b => (
+                <span key={b.label} style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  fontSize: 11, fontWeight: 700, fontFamily: F,
+                  color: b.color, background: `${b.color}12`,
+                  border: `1px solid ${b.color}20`,
+                  borderRadius: 8, padding: "5px 10px",
+                }}>
+                  <BadgeIcon icon={b.icon} size={11} />
+                  {b.label}
+                </span>
+              ))}
+            </div>
+          )}
+          {/* Quick metrics row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            {[
+              { label: spend >= 1000 ? `R$${(spend/1000).toFixed(1)}k` : `R$${spend.toFixed(0)}`, sub: pt ? "Gasto" : "Spend" },
+              { label: `${ctr}%`, sub: "CTR" },
+              { label: roas ? `${roas.toFixed(1)}×` : "—", sub: "ROAS" },
+            ].map(m => (
+              <div key={m.sub} style={{ textAlign: "center" }}>
+                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: TX, fontFamily: HERO, fontVariantNumeric: "tabular-nums" as any }}>{m.label}</p>
+                <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>{m.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Ad Card (TikTok style) ──
-function AdCard({ ad, allScores, pt }: { ad: any; allScores: number[]; pt: boolean }) {
+function AdCard({ ad, allScores, pt, onSelect }: { ad: any; allScores: number[]; pt: boolean; onSelect: () => void }) {
   const { score, tier, badges } = useMemo(() => calcAdScore(ad), [ad]);
   const percentile = useMemo(() => calcPercentile(score, allScores), [score, allScores]);
   const cfg = TIER_CONFIG[tier];
   const ctr = ((ad.ctr || 0) * 100).toFixed(2);
-  const navigate = useNavigate();
 
   // Try to get thumbnail from ad data
   const thumb = ad.thumbnail_url || ad.image_url || ad.creative_thumbnail || null;
 
   return (
     <div
-      onClick={() => navigate("/dashboard/ai")}
+      onClick={onSelect}
       style={{
         background: "linear-gradient(165deg, rgba(13,162,231,0.04), transparent 60%)",
         border: `1px solid ${cfg.border}`,
@@ -187,7 +290,7 @@ function AdCard({ ad, allScores, pt }: { ad: any; allScores: number[]; pt: boole
           backdropFilter: "blur(8px)",
         }}>
           <Trophy size={10} color={cfg.color} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: cfg.color, fontFamily: MONO }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: cfg.color, fontFamily: F, letterSpacing: "0.02em" }}>
             {pt ? cfg.labelPt : cfg.label}
           </span>
         </div>
@@ -204,7 +307,7 @@ function AdCard({ ad, allScores, pt }: { ad: any; allScores: number[]; pt: boole
             display: "flex", alignItems: "center", gap: 5,
           }}>
             <TrendingUp size={10} color={GREEN} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: GREEN, fontFamily: MONO }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: GREEN, fontFamily: F }}>
               Top {100 - percentile}%
             </span>
           </div>
@@ -215,7 +318,7 @@ function AdCard({ ad, allScores, pt }: { ad: any; allScores: number[]; pt: boole
       <div style={{ padding: "14px 14px 10px", flex: 1 }}>
         {/* Ad name */}
         <p style={{
-          margin: 0, fontSize: 13, fontWeight: 600, color: TX,
+          margin: 0, fontSize: 13, fontWeight: 600, color: TX, fontFamily: F,
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           lineHeight: 1.3,
         }}>
@@ -236,7 +339,7 @@ function AdCard({ ad, allScores, pt }: { ad: any; allScores: number[]; pt: boole
             {badges.map(b => (
               <span key={b.label} style={{
                 display: "inline-flex", alignItems: "center", gap: 3,
-                fontSize: 10, fontWeight: 700, fontFamily: MONO,
+                fontSize: 10, fontWeight: 700, fontFamily: F,
                 color: b.color, background: `${b.color}12`,
                 border: `1px solid ${b.color}20`,
                 borderRadius: 6, padding: "3px 7px",
@@ -261,8 +364,8 @@ function AdCard({ ad, allScores, pt }: { ad: any; allScores: number[]; pt: boole
           { label: ad.roas ? `${ad.roas.toFixed(1)}×` : "—", sub: "ROAS" },
         ].map(m => (
           <div key={m.sub} style={{ textAlign: "center" }}>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: TX, fontFamily: MONO, letterSpacing: "-0.02em" }}>{m.label}</p>
-            <p style={{ margin: "2px 0 0", fontSize: 10, fontWeight: 600, color: MT, textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: MONO }}>{m.sub}</p>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: TX, fontFamily: HERO, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" as any }}>{m.label}</p>
+            <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>{m.sub}</p>
           </div>
         ))}
       </div>
@@ -286,6 +389,7 @@ export default function AdScorePage() {
   const [syncing, setSyncing] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>("score");
   const [filterTier, setFilterTier] = useState<Tier | "all">("all");
+  const [selectedAd, setSelectedAd] = useState<any | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.id || !selectedPersona?.id) { setLoading(false); return; }
@@ -375,7 +479,7 @@ export default function AdScorePage() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 14 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TX, letterSpacing: "-0.03em" }}>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TX, letterSpacing: "-0.03em", fontFamily: F }}>
               Ad Score
             </h1>
             <div style={{
@@ -383,7 +487,7 @@ export default function AdScorePage() {
               borderRadius: 20, background: `${A}10`, border: `1px solid ${A}20`,
             }}>
               <Trophy size={11} color={A} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: A, fontFamily: MONO }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: A, fontFamily: F }}>
                 {scored.length} ads
               </span>
             </div>
@@ -420,8 +524,8 @@ export default function AdScorePage() {
               background: `${s.color}06`, border: `1px solid ${s.color}15`,
               borderRadius: 12, padding: "12px 14px", textAlign: "center",
             }}>
-              <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: s.color, fontFamily: MONO, letterSpacing: "-0.02em" }}>{s.value}</p>
-              <p style={{ margin: "2px 0 0", fontSize: 10, fontWeight: 600, color: MT, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: MONO }}>{s.label}</p>
+              <p style={{ margin: 0, fontSize: 26, fontWeight: 900, color: s.color, fontFamily: HERO, letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" }}>{s.value}</p>
+              <p style={{ margin: "4px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.10em", fontFamily: F }}>{s.label}</p>
             </div>
           ))}
         </div>
@@ -438,7 +542,7 @@ export default function AdScorePage() {
             <button key={t} onClick={() => setFilterTier(t)}
               style={{
                 padding: "5px 14px", borderRadius: 8, cursor: "pointer",
-                fontFamily: MONO, fontSize: 11, fontWeight: isActive ? 700 : 500,
+                fontFamily: F, fontSize: 11, fontWeight: isActive ? 700 : 500,
                 background: isActive ? `${color}15` : "transparent",
                 border: `1px solid ${isActive ? color + "40" : A + "12"}`,
                 color: isActive ? color : MT,
@@ -459,7 +563,7 @@ export default function AdScorePage() {
             <button key={s} onClick={() => setSortBy(s)}
               style={{
                 padding: "5px 12px", borderRadius: 8, cursor: "pointer",
-                fontFamily: MONO, fontSize: 10, fontWeight: isActive ? 700 : 500,
+                fontFamily: F, fontSize: 10, fontWeight: isActive ? 700 : 500,
                 background: isActive ? `${A}12` : "transparent",
                 border: `1px solid ${isActive ? A + "35" : A + "10"}`,
                 color: isActive ? A : MT,
@@ -544,11 +648,14 @@ export default function AdScorePage() {
         }}>
           {filtered.map((ad, i) => (
             <div key={ad.id || ad.ad_id || i} style={{ animationDelay: `${i * 0.04}s` }}>
-              <AdCard ad={ad} allScores={allScores} pt={pt} />
+              <AdCard ad={ad} allScores={allScores} pt={pt} onSelect={() => setSelectedAd(ad)} />
             </div>
           ))}
         </div>
       )}
+
+      {/* Score detail modal */}
+      {selectedAd && <ScoreDetail ad={selectedAd} pt={pt} onClose={() => setSelectedAd(null)} />}
     </div>
   );
 }
