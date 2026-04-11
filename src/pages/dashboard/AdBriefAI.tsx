@@ -2445,12 +2445,16 @@ export default function AdBriefAI() {
       parts.push(`\n---\n${pt ? "Conecte sua conta de Meta Ads para an\u00e1lises conectadas aos seus dados reais de ROAS, CTR e spend." : es ? "Conecta tu cuenta de Meta Ads para an\u00e1lisis conectados a tus datos reales." : "Connect your Meta Ads account for analyses connected to your real ROAS, CTR and spend data."}`);
       const analysisText = parts.join("\n");
       const demoMessages: AIMessage[] = [
-        { role: "user", id: now, ts: now, userText: pt ? "Analise este an\u00fancio" : es ? "Analiza este anuncio" : "Analyze this ad", imagePreview: preview || undefined },
-        { role: "assistant", id: now + 1, ts: now + 1, blocks: [{ type: "text", title: pt ? "An\u00e1lise do an\u00fancio" : es ? "An\u00e1lisis del anuncio" : "Ad Analysis", content: analysisText }] },
+        { role: "user", id: now, ts: now, userText: pt ? "Analise este anúncio" : es ? "Analiza este anuncio" : "Analyze this ad", imagePreview: preview || undefined },
+        { role: "assistant", id: now + 1, ts: now + 1, blocks: [{ type: "text", title: pt ? "Análise do anúncio" : es ? "Análisis del anuncio" : "Ad Analysis", content: analysisText }] },
       ];
       // Keep the unlocked demo alive even if persona/account selection finishes a bit later
       demoMessagesRef.current = demoMessages;
       storage.setJSON("adbrief_chat_v1_default", demoMessages);
+      // Prevent proactive greeting from overwriting demo messages
+      proactiveFired.current = true;
+      // Also force contextReady so the chat doesn't show spinner
+      setContextReady(true);
     } catch {}
   }, []);
 
