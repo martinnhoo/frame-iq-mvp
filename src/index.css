@@ -469,14 +469,142 @@ code, pre,
 }
 .stat-card:hover::before { opacity: 1; }
 
-/* ── Page fade-in ────────────────────────────────────────────────────────────── */
+/* ── Page fade-in — Enhanced with blur ────────────────────────────────────────── */
 
 .page-enter {
-  animation: pageIn 0.3s ease;
+  animation: pageIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 @keyframes pageIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(8px); filter: blur(3px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0px); }
+}
+
+/* ── Tool Page Wrapper — Global premium styles ───────────────────────────────── */
+
+.tool-page-wrap {
+  padding: 24px 28px;
+}
+
+/* Tool page cards: glassmorphism upgrade */
+.tool-page-wrap > .rounded-2xl,
+.tool-page-wrap > div > .rounded-2xl {
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.tool-page-wrap > .rounded-2xl:hover,
+.tool-page-wrap > div > .rounded-2xl:hover {
+  border-color: rgba(14,165,233,0.15) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(14,165,233,0.05);
+}
+
+/* Tool page inputs: glow on focus */
+.tool-page-wrap input:focus,
+.tool-page-wrap textarea:focus,
+.tool-page-wrap select:focus {
+  border-color: rgba(14,165,233,0.35) !important;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.08), 0 0 16px rgba(14,165,233,0.05) !important;
+  outline: none;
+}
+
+/* Tool page buttons: smooth hover lift */
+.tool-page-wrap button[class*="bg-"]:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+}
+
+.tool-page-wrap button[class*="bg-"]:not(:disabled):active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ── Dashboard-wide: Staggered children animation ────────────────────────────── */
+
+@keyframes staggerFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-main .space-y-6 > * {
+  animation: staggerFadeUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.dashboard-main .space-y-6 > *:nth-child(1) { animation-delay: 0.02s; }
+.dashboard-main .space-y-6 > *:nth-child(2) { animation-delay: 0.06s; }
+.dashboard-main .space-y-6 > *:nth-child(3) { animation-delay: 0.10s; }
+.dashboard-main .space-y-6 > *:nth-child(4) { animation-delay: 0.14s; }
+.dashboard-main .space-y-6 > *:nth-child(5) { animation-delay: 0.18s; }
+.dashboard-main .space-y-6 > *:nth-child(6) { animation-delay: 0.22s; }
+.dashboard-main .space-y-6 > *:nth-child(7) { animation-delay: 0.26s; }
+.dashboard-main .space-y-6 > *:nth-child(8) { animation-delay: 0.30s; }
+.dashboard-main .space-y-6 > *:nth-child(9) { animation-delay: 0.34s; }
+.dashboard-main .space-y-6 > *:nth-child(10) { animation-delay: 0.38s; }
+
+/* ── Dashboard cards: Global hover glow ─────────────────────────────────────── */
+
+.dashboard-main [style*="border-radius"][style*="border"][style*="background"] {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+/* ── Hook/Script/Brief output cards: premium styling ─────────────────────────── */
+
+.hook-item,
+.tool-output-card {
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.hook-item:hover,
+.tool-output-card:hover {
+  border-color: rgba(14,165,233,0.18) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px rgba(14,165,233,0.06);
+  transform: translateY(-1px);
+}
+
+/* ── Chat: Premium message styling ───────────────────────────────────────────── */
+
+@keyframes msgFadeIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.chat-messages-area > div > div {
+  animation: msgFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ── Performance Dashboard: Grid items stagger ───────────────────────────────── */
+
+.perf-page .grid > * {
+  animation: staggerFadeUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.perf-page .grid > *:nth-child(1) { animation-delay: 0.03s; }
+.perf-page .grid > *:nth-child(2) { animation-delay: 0.06s; }
+.perf-page .grid > *:nth-child(3) { animation-delay: 0.09s; }
+.perf-page .grid > *:nth-child(4) { animation-delay: 0.12s; }
+.perf-page .grid > *:nth-child(5) { animation-delay: 0.15s; }
+.perf-page .grid > *:nth-child(6) { animation-delay: 0.18s; }
+
+/* ── Sidebar: Premium glass effect ───────────────────────────────────────────── */
+
+.sidebar-layout-slot > div {
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+}
+
+/* ── LivePanel bar: Premium glow ─────────────────────────────────────────────── */
+
+.lp-bar {
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* ── Reduced motion: Respect user preference ─────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ── Shimmer loading ─────────────────────────────────────────────────────────── */

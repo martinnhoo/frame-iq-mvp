@@ -4570,9 +4570,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
         @keyframes orbFloat1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(8%,12%) scale(1.08)}}
         @keyframes orbFloat2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-10%,-8%) scale(1.05)}}
-        @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98);filter:blur(3px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0px)}}
         @keyframes lp-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes bubbleIn{from{opacity:0;transform:translateX(10px) scale(0.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+        @keyframes bubbleIn{from{opacity:0;transform:translateX(10px) scale(0.95);filter:blur(2px)}to{opacity:1;transform:translateX(0) scale(1);filter:blur(0px)}}
         @keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(0.995)}to{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
         @keyframes wordReveal{from{opacity:0}to{opacity:1}}
