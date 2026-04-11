@@ -70,22 +70,22 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
         display: "flex", alignItems: "center", gap: 10,
         padding: "8px 14px", margin: "1px 0", borderRadius: 8,
         marginLeft: 6, marginRight: 6,
-        color: isActive ? "#fff" : hov ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.50)",
+        color: isActive ? "#fff" : hov ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.48)",
         background: isActive
-          ? `linear-gradient(135deg, ${A}20, ${A}10)`
+          ? "rgba(255,255,255,0.07)"
           : hov ? "rgba(255,255,255,0.04)" : "transparent",
-        border: isActive ? `1px solid ${A}25` : "1px solid transparent",
-        fontSize: 13.5, fontWeight: isActive ? 600 : 400,
+        border: isActive ? "1px solid rgba(255,255,255,0.10)" : "1px solid transparent",
+        fontSize: 13.5, fontWeight: isActive ? 600 : 450,
         textDecoration: "none", transition: "all 0.15s",
         fontFamily: F, letterSpacing: "-0.01em",
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      {isActive && <Icon size={15} strokeWidth={1.6} style={{ color: A, flexShrink: 0 }} />}
+      {isActive && <Icon size={15} strokeWidth={1.6} style={{ color: "#fff", opacity: 0.7, flexShrink: 0 }} />}
       <span style={{ flex: 1 }}>{label}</span>
       {badge && (
         <span style={{
-          fontSize: 9, fontWeight: 700, color: `${A}90`,
-          background: `${A}12`, border: `1px solid ${A}20`, borderRadius: 4,
+          fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.50)",
+          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
           padding: "1px 5px", letterSpacing: "0.06em", fontFamily: F,
         }}>{badge}</span>
       )}
@@ -105,15 +105,15 @@ function NavTool({ url, label, icon: Icon, isActive, onClose }: {
         display: "flex", alignItems: "center", gap: 10,
         padding: "6px 14px", marginLeft: 6, marginRight: 6,
         borderRadius: 6,
-        color: isActive ? "rgba(255,255,255,0.90)" : hov ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.40)",
-        background: isActive ? `${A}08` : hov ? "rgba(255,255,255,0.03)" : "transparent",
-        fontSize: 13, fontWeight: isActive ? 500 : 400,
+        color: isActive ? "rgba(255,255,255,0.85)" : hov ? "rgba(255,255,255,0.58)" : "rgba(255,255,255,0.38)",
+        background: isActive ? "rgba(255,255,255,0.05)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
+        fontSize: 13, fontWeight: isActive ? 500 : 420,
         textDecoration: "none", transition: "all 0.12s",
         fontFamily: F,
         paddingLeft: isActive ? 14 : 20,
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      {isActive && <Icon size={14} strokeWidth={1.5} style={{ flexShrink: 0, color: `${A}80` }} />}
+      {isActive && <Icon size={14} strokeWidth={1.5} style={{ flexShrink: 0, color: "rgba(255,255,255,0.55)" }} />}
       <span>{label}</span>
     </NavLink>
   );
@@ -123,17 +123,16 @@ function NavTool({ url, label, icon: Icon, isActive, onClose }: {
 function SectionHeader({ label }: { label: string }) {
   return (
     <div style={{
-      padding: "14px 20px 5px",
-      display: "flex", alignItems: "center", gap: 8,
+      padding: "16px 20px 6px",
+      display: "flex", alignItems: "center", gap: 0,
     }}>
       <p style={{
-        fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.18)",
-        letterSpacing: "0.12em", textTransform: "uppercase", margin: 0,
-        fontFamily: "'DM Mono', monospace",
+        fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.28)",
+        letterSpacing: "0.08em", textTransform: "uppercase", margin: 0,
+        fontFamily: F,
       }}>
         {label}
       </p>
-      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.04)" }} />
     </div>
   );
 }
@@ -243,25 +242,23 @@ export function DashboardSidebar({
               cursor: "pointer", textAlign: "left", transition: "background 0.12s",
               borderRadius: 0,
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${A}06`; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
 
             {/* Avatar */}
             <div style={{
               width: 30, height: 30, borderRadius: 8, flexShrink: 0, overflow: "hidden",
-              background: selectedPersona ? sbAvatarColor(selectedPersona.name || "?").bg : `${A}08`,
-              border: `1px solid ${selectedPersona ? sbAvatarColor(selectedPersona.name || "?").border : `${A}15`}`,
+              background: selectedPersona ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.10)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               {selectedPersona?.logo_url
                 ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : selectedPersona
-                  ? (() => { const av = sbAvatarColor(selectedPersona.name || "?"); return (
-                      <span style={{ fontSize: 13, fontWeight: 700, color: av.text, fontFamily: F }}>
+                  ? <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.7)", fontFamily: F }}>
                         {(selectedPersona.name || "?").charAt(0).toUpperCase()}
                       </span>
-                    ); })()
-                  : <Building2 size={13} color={`${A}40`} />
+                  : <Building2 size={13} color="rgba(255,255,255,0.25)" />
               }
             </div>
 
@@ -282,12 +279,12 @@ export function DashboardSidebar({
                     background: "#10b981",
                     boxShadow: "0 0 4px rgba(16,185,129,0.6)",
                   }} />
-                  <span style={{ fontSize: 10.5, color: `${A}70`, fontFamily: F, fontWeight: 500 }}>
+                  <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", fontFamily: F, fontWeight: 500 }}>
                     {pt ? "Conectado" : "Connected"}
                   </span>
                   {kpi.ctr > 0 && (
                     <>
-                      <span style={{ fontSize: 9, color: `${A}20` }}>·</span>
+                      <span style={{ fontSize: 9, color: "rgba(255,255,255,0.12)" }}>·</span>
                       <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.35)", fontFamily: "'DM Mono',monospace" }}>
                         {kpi.ctr.toFixed(1)}%
                         {kpi.trend === "up" && <span style={{ color: "#10b981", marginLeft: 2 }}>↑</span>}
@@ -304,14 +301,14 @@ export function DashboardSidebar({
             </div>
 
             {savedPersonas.length > 0 && (
-              <ChevronDown size={12} color={`${A}30`}
+              <ChevronDown size={12} color="rgba(255,255,255,0.20)"
                 style={{ flexShrink: 0, transform: accountsOpen ? "rotate(180deg)" : "none", transition: "transform 0.18s" }} />
             )}
           </button>
 
           {/* Account dropdown */}
           {accountsOpen && savedPersonas.length > 0 && (
-            <div style={{ borderTop: `1px solid ${A}08`, animation: "sb-in 0.12s ease", paddingTop: 2 }}>
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", animation: "sb-in 0.12s ease", paddingTop: 2 }}>
               {savedPersonas.map(p => {
                 const isSel = p.id === selectedPersona?.id;
                 return (
@@ -320,14 +317,14 @@ export function DashboardSidebar({
                     style={{
                       width: "100%", display: "flex", alignItems: "center", gap: 8,
                       padding: "7px 14px",
-                      background: isSel ? `${A}08` : "transparent",
+                      background: isSel ? "rgba(255,255,255,0.04)" : "transparent",
                       border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.1s",
                     }}
                     onMouseEnter={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
-                    onMouseLeave={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = isSel ? `${A}08` : "transparent"; }}>
+                    onMouseLeave={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = isSel ? "rgba(255,255,255,0.04)" : "transparent"; }}>
                     <div style={{
                       width: 20, height: 20, borderRadius: 5, flexShrink: 0, overflow: "hidden",
-                      background: `${A}06`, border: `1px solid ${A}12`,
+                      background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       {p.logo_url
@@ -351,12 +348,12 @@ export function DashboardSidebar({
                 style={{
                   width: "100%", display: "flex", alignItems: "center", gap: 8,
                   padding: "6px 14px", background: "transparent", border: "none",
-                  borderTop: `1px solid ${A}06`, cursor: "pointer", transition: "background 0.1s",
+                  borderTop: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "background 0.1s",
                 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                <Plus size={11} color={`${A}50`} />
-                <span style={{ fontSize: 12, color: `${A}60`, fontFamily: F }}>
+                <Plus size={11} color="rgba(255,255,255,0.35)" />
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.40)", fontFamily: F }}>
                   {pt ? "Nova conta" : "New account"}
                 </span>
               </button>
@@ -440,7 +437,7 @@ export function DashboardSidebar({
               background: "transparent", border: "none", cursor: "pointer", width: "100%",
               transition: "background 0.12s",
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${A}06`; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
             <Avatar style={{ width: 28, height: 28, flexShrink: 0, borderRadius: 7 }}>
               <AvatarImage src={profile?.avatar_url || undefined} />
