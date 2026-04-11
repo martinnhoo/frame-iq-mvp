@@ -1,4 +1,4 @@
-// DashboardSidebar v11 — Organized sections: Principal, Criar, Análise, Workspace
+// DashboardSidebar v12 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
 import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, FileText, ScanLine, Brain, ScanEye, Languages } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
@@ -31,13 +31,13 @@ interface SidebarProps {
 
 // LIFETIME removed — all accounts use normal credit system
 const PLANS: Record<string, { label: string; color: string }> = {
-  free:    { label: "Free",    color: "rgba(255,255,255,0.25)" },
-  maker:   { label: "Maker",  color: "rgba(96,165,250,0.6)"   },
-  pro:     { label: "Pro",    color: "rgba(14,165,233,0.65)"  },
-  studio:  { label: "Studio", color: "rgba(167,139,250,0.65)" },
-  creator: { label: "Maker",  color: "rgba(96,165,250,0.6)"   },
-  starter: { label: "Pro",    color: "rgba(14,165,233,0.65)"  },
-  scale:   { label: "Studio", color: "rgba(167,139,250,0.65)" },
+  free:    { label: "Free",    color: "rgba(255,255,255,0.30)" },
+  maker:   { label: "Maker",  color: "rgba(255,255,255,0.40)" },
+  pro:     { label: "Pro",    color: "rgba(255,255,255,0.45)" },
+  studio:  { label: "Studio", color: "rgba(255,255,255,0.45)" },
+  creator: { label: "Maker",  color: "rgba(255,255,255,0.40)" },
+  starter: { label: "Pro",    color: "rgba(255,255,255,0.45)" },
+  scale:   { label: "Studio", color: "rgba(255,255,255,0.45)" },
 };
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -58,7 +58,7 @@ function sbAvatarColor(name: string) {
   return SB_AVATAR_PALETTE[Math.abs(h) % SB_AVATAR_PALETTE.length];
 }
 
-// ── Nav item (primary links) — icon only when active ─────────────────────────
+// ── Nav item (primary links) — always show icon, like Linear ─────────────────
 function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
   url: string; label: string; icon: React.ElementType;
   isActive: boolean; onClose: () => void; badge?: string;
@@ -68,32 +68,34 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
     <NavLink to={url} onClick={onClose}
       style={{
         display: "flex", alignItems: "center", gap: 10,
-        padding: "8px 14px", margin: "1px 0", borderRadius: 8,
-        marginLeft: 6, marginRight: 6,
-        color: isActive ? "#fff" : hov ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.48)",
+        padding: "7px 12px", margin: "1px 0", borderRadius: 7,
+        marginLeft: 8, marginRight: 8,
+        color: isActive ? "#fff" : hov ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.50)",
         background: isActive
-          ? "rgba(255,255,255,0.07)"
+          ? "rgba(255,255,255,0.08)"
           : hov ? "rgba(255,255,255,0.04)" : "transparent",
-        border: isActive ? "1px solid rgba(255,255,255,0.10)" : "1px solid transparent",
-        fontSize: 13.5, fontWeight: isActive ? 600 : 450,
+        border: "none",
+        fontSize: 13.5, fontWeight: isActive ? 500 : 400,
         textDecoration: "none", transition: "all 0.15s",
         fontFamily: F, letterSpacing: "-0.01em",
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      {isActive && <Icon size={15} strokeWidth={1.6} style={{ color: "#fff", opacity: 0.7, flexShrink: 0 }} />}
+      <Icon size={16} strokeWidth={1.5} style={{
+        color: isActive ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.30)",
+        flexShrink: 0, transition: "color 0.15s",
+      }} />
       <span style={{ flex: 1 }}>{label}</span>
       {badge && (
         <span style={{
-          fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.50)",
-          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
-          padding: "1px 5px", letterSpacing: "0.06em", fontFamily: F,
+          fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.40)",
+          letterSpacing: "0.04em", fontFamily: F,
         }}>{badge}</span>
       )}
     </NavLink>
   );
 }
 
-// ── Nav tool (secondary links) — icon only when active ───────────────────────
+// ── Nav tool (secondary links) — always show icon ───────────────────────────
 function NavTool({ url, label, icon: Icon, isActive, onClose }: {
   url: string; label: string; icon: React.ElementType;
   isActive: boolean; onClose: () => void;
@@ -103,17 +105,19 @@ function NavTool({ url, label, icon: Icon, isActive, onClose }: {
     <NavLink to={url} onClick={onClose}
       style={{
         display: "flex", alignItems: "center", gap: 10,
-        padding: "6px 14px", marginLeft: 6, marginRight: 6,
-        borderRadius: 6,
-        color: isActive ? "rgba(255,255,255,0.85)" : hov ? "rgba(255,255,255,0.58)" : "rgba(255,255,255,0.38)",
-        background: isActive ? "rgba(255,255,255,0.05)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
-        fontSize: 13, fontWeight: isActive ? 500 : 420,
+        padding: "7px 12px", marginLeft: 8, marginRight: 8,
+        borderRadius: 7, border: "none",
+        color: isActive ? "rgba(255,255,255,0.90)" : hov ? "rgba(255,255,255,0.60)" : "rgba(255,255,255,0.40)",
+        background: isActive ? "rgba(255,255,255,0.06)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
+        fontSize: 13, fontWeight: isActive ? 500 : 400,
         textDecoration: "none", transition: "all 0.12s",
         fontFamily: F,
-        paddingLeft: isActive ? 14 : 20,
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      {isActive && <Icon size={14} strokeWidth={1.5} style={{ flexShrink: 0, color: "rgba(255,255,255,0.55)" }} />}
+      <Icon size={15} strokeWidth={1.5} style={{
+        flexShrink: 0, transition: "color 0.12s",
+        color: isActive ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.22)",
+      }} />
       <span>{label}</span>
     </NavLink>
   );
@@ -340,7 +344,7 @@ export function DashboardSidebar({
                       color: isSel ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.50)",
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: F,
                     }}>{p.name}</span>
-                    {isSel && <div style={{ width: 4, height: 4, borderRadius: "50%", background: A, flexShrink: 0 }} />}
+                    {isSel && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(255,255,255,0.50)", flexShrink: 0 }} />}
                   </button>
                 );
               })}
@@ -417,10 +421,10 @@ export function DashboardSidebar({
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: "#0ea5e9", fontFamily: F }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.55)", fontFamily: F }}>
                 {pt ? "Fazer upgrade" : es ? "Mejorar plan" : "Upgrade"}
               </span>
-              <ArrowUpRight size={12} color="#0ea5e9" style={{ marginLeft: "auto", opacity: 0.5 }} />
+              <ArrowUpRight size={12} color="rgba(255,255,255,0.35)" style={{ marginLeft: "auto" }} />
             </button>
           )}
 
