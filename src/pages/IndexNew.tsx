@@ -2820,108 +2820,173 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
 
 
 function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
-  const results: Record<Lang, string[]> = {
-    pt: ["Perfil + pesquisa de nicho automática", "Dados de 90 dias sincronizados via API", "Respostas com métricas reais da conta"],
-    es: ["Perfil + investigación de nicho automática", "Datos de 90 días sincronizados vía API", "Respuestas con métricas reales de la cuenta"],
-    en: ["Profile + automatic niche research", "90 days of data synced via API", "Answers with real account metrics"],
-  };
-  const tags: Record<Lang, string[][]> = {
-    pt: [["30 seg", "Auto-research", "Personalização"], ["OAuth 2.0", "Real-time", "90 dias"], ["IA + dados", "Sem achismo", "Métricas reais"]],
-    es: [["30 seg", "Auto-research", "Personalización"], ["OAuth 2.0", "Real-time", "90 días"], ["IA + datos", "Sin suposiciones", "Métricas reales"]],
-    en: [["30 sec", "Auto-research", "Personalized"], ["OAuth 2.0", "Real-time", "90 days"], ["AI + data", "No guessing", "Real metrics"]],
-  };
-  const steps = [
-    { n: "01", icon: <Plug size={20} />, accent: "#38bdf8", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0], tags: tags[lang][0] },
-    { n: "02", icon: <Globe size={20} />, accent: "#6366f1", title: t.how_s2_title, desc: t.how_s2_desc, result: results[lang][1], tags: tags[lang][1] },
-    { n: "03", icon: <MessageSquare size={20} />, accent: "#34d399", title: t.how_s3_title, desc: t.how_s3_desc, result: results[lang][2], tags: tags[lang][2] },
+  const [active, setActive] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const DURATION = 6000; // 6s per step
+  const TICK = 30;
+
+  const steps: { accent: string; title: string; desc: string; img: string; time: string }[] = lang === "pt" ? [
+    { accent: "#38bdf8", title: "Crie o perfil da marca", desc: "Nome, site e nicho. A IA pesquisa seu mercado automaticamente.", img: "/screenshots/inteligencia.png", time: "30 seg" },
+    { accent: "#6366f1", title: "Conecte sua conta Meta Ads", desc: "OAuth em um clique. 90 dias de dados sincronizados em tempo real.", img: "/screenshots/performance.png", time: "1 clique" },
+    { accent: "#34d399", title: "Pergunte qualquer coisa", desc: "A IA responde com dados reais da sua conta — não inventa números.", img: "/screenshots/chat-diagnostico.png", time: "Em segundos" },
+  ] : lang === "es" ? [
+    { accent: "#38bdf8", title: "Crea el perfil de tu marca", desc: "Nombre, sitio y nicho. La IA investiga tu mercado automáticamente.", img: "/screenshots/inteligencia.png", time: "30 seg" },
+    { accent: "#6366f1", title: "Conecta tu cuenta Meta Ads", desc: "OAuth en un clic. 90 días de datos sincronizados en tiempo real.", img: "/screenshots/performance.png", time: "1 clic" },
+    { accent: "#34d399", title: "Pregunta lo que quieras", desc: "La IA responde con datos reales de tu cuenta — sin suposiciones.", img: "/screenshots/chat-diagnostico.png", time: "En segundos" },
+  ] : [
+    { accent: "#38bdf8", title: "Create your brand profile", desc: "Name, website and niche. The AI researches your market automatically.", img: "/screenshots/inteligencia.png", time: "30 sec" },
+    { accent: "#6366f1", title: "Connect your Meta Ads account", desc: "One-click OAuth. 90 days of data synced in real time.", img: "/screenshots/performance.png", time: "1 click" },
+    { accent: "#34d399", title: "Ask anything", desc: "The AI answers with real data from your account — no made-up numbers.", img: "/screenshots/chat-diagnostico.png", time: "In seconds" },
   ];
+
+  useEffect(() => {
+    setProgress(0);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          setActive(a => (a + 1) % steps.length);
+          return 0;
+        }
+        return prev + (100 / (DURATION / TICK));
+      });
+    }, TICK);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [active]);
+
+  const handleClick = (i: number) => { setActive(i); setProgress(0); };
+  const s = steps[active];
+
   return (
     <Section id="how" bg="dark">
-      <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative" }}>
+      <div style={{ maxWidth: 1060, margin: "0 auto", position: "relative" }}>
         {/* Header */}
-        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
+        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 16 }}>
             <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.3))" }} />
             <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.16em", fontWeight: 700, color: "rgba(56,189,248,0.8)", textTransform: "uppercase" as const }}>{t.how_label}</span>
             <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(56,189,248,0.3), transparent)" }} />
           </div>
-          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "0 0 14px", color: "#fff", lineHeight: 1.1 }}>{t.how_h2}</h2>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 440, margin: "0 auto", lineHeight: 1.65 }}>{t.how_sub}</p>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,44px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "0 0 10px", color: "#fff", lineHeight: 1.1 }}>{t.how_h2}</h2>
+          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>{t.how_sub}</p>
         </div>
 
-        {/* Steps — horizontal timeline with connector */}
-        <div className="how-grid scroll-reveal scroll-reveal-delay-1" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, position: "relative" }}>
-          {/* Horizontal connector line behind cards */}
-          <div style={{ position: "absolute", top: 32, left: "16.67%", right: "16.67%", height: 1, background: "linear-gradient(90deg, rgba(56,189,248,0.2), rgba(99,102,241,0.2), rgba(52,211,153,0.2))", zIndex: 0 }} />
+        {/* Interactive split: steps left + screenshot right */}
+        <div className="how-interactive scroll-reveal scroll-reveal-delay-1" style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 32, alignItems: "center" }}>
 
-          {steps.map((step, i) => (
-            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1, padding: "0 12px" }}>
-              {/* Step number circle */}
-              <div style={{
-                width: 64, height: 64, borderRadius: "50%",
-                background: `radial-gradient(circle, ${step.accent}18 0%, transparent 70%)`,
-                border: `1.5px solid ${step.accent}30`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                marginBottom: 28, position: "relative",
-                boxShadow: `0 0 32px ${step.accent}12`,
-              }}>
-                <span style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: step.accent, letterSpacing: "-0.03em" }}>{step.n}</span>
-              </div>
-
-              {/* Card */}
-              <div style={{
-                width: "100%", padding: "28px 24px", borderRadius: 16,
-                background: "rgba(255,255,255,0.025)",
-                border: `1px solid ${step.accent}15`,
-                transition: "border-color 0.3s, box-shadow 0.3s, transform 0.3s",
-                display: "flex", flexDirection: "column",
-                cursor: "default",
-              }}
-                onMouseEnter={e => { const el = e.currentTarget; el.style.borderColor = `${step.accent}30`; el.style.boxShadow = `0 8px 48px ${step.accent}10`; el.style.transform = 'translateY(-3px)'; }}
-                onMouseLeave={e => { const el = e.currentTarget; el.style.borderColor = `${step.accent}15`; el.style.boxShadow = 'none'; el.style.transform = 'none'; }}>
-
-                {/* Icon + title row */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          {/* Left — step selector */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {steps.map((step, i) => {
+              const isActive = i === active;
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleClick(i)}
+                  style={{
+                    display: "flex", alignItems: "flex-start", gap: 16,
+                    padding: "20px 20px 20px 0",
+                    background: "none", border: "none", cursor: "pointer",
+                    textAlign: "left", position: "relative",
+                    borderBottom: i < steps.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  {/* Vertical progress bar on left edge */}
                   <div style={{
-                    width: 34, height: 34, borderRadius: 9,
-                    background: `${step.accent}12`, border: `1px solid ${step.accent}25`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: step.accent, flexShrink: 0,
-                  }}>{step.icon}</div>
-                  <h3 style={{ fontFamily: F, fontSize: 15, fontWeight: 700, color: "#fff", margin: 0, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{step.title}</h3>
-                </div>
+                    width: 3, alignSelf: "stretch", borderRadius: 3,
+                    background: isActive ? `${step.accent}18` : "rgba(255,255,255,0.04)",
+                    position: "relative", overflow: "hidden", flexShrink: 0, marginLeft: 2,
+                  }}>
+                    {isActive && (
+                      <div style={{
+                        position: "absolute", top: 0, left: 0, width: "100%",
+                        height: `${progress}%`,
+                        background: step.accent,
+                        borderRadius: 3,
+                        transition: "height 0.05s linear",
+                      }} />
+                    )}
+                  </div>
 
-                {/* Description */}
-                <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, flex: 1, marginBottom: 18, margin: "0 0 18px" }}>{step.desc}</p>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Step number + title */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                      <span style={{
+                        fontFamily: F, fontSize: 11, fontWeight: 800,
+                        color: isActive ? step.accent : "rgba(255,255,255,0.2)",
+                        letterSpacing: "0.05em",
+                        transition: "color 0.3s",
+                      }}>0{i + 1}</span>
+                      <span style={{
+                        fontFamily: F, fontSize: 15, fontWeight: 700,
+                        color: isActive ? "#fff" : "rgba(255,255,255,0.35)",
+                        letterSpacing: "-0.02em",
+                        transition: "color 0.3s",
+                      }}>{step.title}</span>
+                    </div>
 
-                {/* Tags row */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
-                  {step.tags.map((tag, ti) => (
-                    <span key={ti} style={{
-                      fontFamily: F, fontSize: 11, fontWeight: 600, letterSpacing: "0.02em",
-                      padding: "4px 10px", borderRadius: 100,
-                      background: `${step.accent}08`, border: `1px solid ${step.accent}18`,
-                      color: step.accent, opacity: 0.85,
-                    }}>{tag}</span>
-                  ))}
-                </div>
+                    {/* Description — only visible when active */}
+                    <div style={{
+                      maxHeight: isActive ? 60 : 0,
+                      opacity: isActive ? 1 : 0,
+                      overflow: "hidden",
+                      transition: "max-height 0.4s ease, opacity 0.3s ease",
+                    }}>
+                      <p style={{
+                        fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.5)",
+                        lineHeight: 1.6, margin: "0 0 8px", paddingLeft: 0,
+                      }}>{step.desc}</p>
+                      <span style={{
+                        fontFamily: F, fontSize: 11, fontWeight: 700,
+                        color: step.accent, letterSpacing: "0.06em",
+                        textTransform: "uppercase" as const,
+                        opacity: 0.8,
+                      }}>{step.time}</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
 
-                {/* Result badge */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "10px 14px", borderRadius: 10,
-                  background: `${step.accent}06`,
-                  borderTop: `1px solid ${step.accent}12`,
-                }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <circle cx="7" cy="7" r="6" stroke={step.accent} strokeOpacity="0.35" strokeWidth="1.2"/>
-                    <path d="M4.5 7l1.8 1.8L9.5 5" stroke={step.accent} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span style={{ fontFamily: F, fontSize: 12.5, color: step.accent, fontWeight: 600, opacity: 0.9 }}>{step.result}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+          {/* Right — product screenshot */}
+          <div style={{
+            position: "relative", borderRadius: 16, overflow: "hidden",
+            border: `1px solid ${s.accent}18`,
+            background: "rgba(0,0,0,0.3)",
+            boxShadow: `0 24px 80px rgba(0,0,0,0.4), 0 0 60px ${s.accent}06`,
+            transition: "border-color 0.4s, box-shadow 0.4s",
+            aspectRatio: "16/10",
+          }}>
+            {/* Glow behind screenshot */}
+            <div style={{
+              position: "absolute", inset: -40, pointerEvents: "none",
+              background: `radial-gradient(ellipse at 50% 50%, ${s.accent}08 0%, transparent 60%)`,
+              transition: "background 0.5s",
+            }} />
+            {steps.map((step, i) => (
+              <img
+                key={i}
+                src={step.img}
+                alt={step.title}
+                style={{
+                  position: i === active ? "relative" : "absolute",
+                  top: 0, left: 0, width: "100%", height: "100%",
+                  objectFit: "cover",
+                  opacity: i === active ? 1 : 0,
+                  transition: "opacity 0.5s ease",
+                  pointerEvents: i === active ? "auto" : "none",
+                }}
+              />
+            ))}
+            {/* Top reflection */}
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, height: 80,
+              background: "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)",
+              pointerEvents: "none",
+            }} />
+          </div>
         </div>
       </div>
     </Section>
@@ -3711,6 +3776,7 @@ export default function IndexNew() {
             .pain-col-left,.pain-col-right{padding:0!important}
 
             /* ── HOW IT WORKS ── */
+            .how-interactive{grid-template-columns:1fr!important;gap:24px!important}
             .how-grid{grid-template-columns:1fr!important;gap:14px!important}
 
             /* ── FEATURE TABS ── */
