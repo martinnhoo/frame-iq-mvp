@@ -1101,9 +1101,10 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
 const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend, connections, personaName }: { block: Block; lang: string; onSend: (s: string) => void; connections?: string[]; personaName?: string }) {
   const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Plus Jakarta Sans', system-ui, sans-serif";
+  const [expanded, setExpanded] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
   const hasMeta = connections?.includes("meta");
-  const hasGoogle = false; // disabled
   const hasData = hasMeta;
   const quickActions: Record<string, string[]> = {
     pt: hasData
@@ -1117,67 +1118,64 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
       : ["Generate hooks for my account", "Write an ad script", "Analyze a competitor", "Which trends can I use?"],
   };
   const actions = quickActions[lang] || quickActions.pt;
+  const primaryAction = actions[0];
+  const secondaryActions = actions.slice(1);
 
-  // Detect if this is a "real data" greeting by looking for spend values
   const content = block.content || "";
   const hasRealData = /R\$[\d,]+|CTR\s[\d,.]+%|\$[\d,]+\s(spent|gastos|gastados)/i.test(content);
-
-  // Parse key numbers from content for visual callouts
-  const spendMatch = content.match(/R\$(\d+[\d.,]*)\s*(gastos|spent|gastados)/i) ||
-                     content.match(/\$(\d+[\d.,]*)\s*(spent|gastos|gastados)/i);
-  const ctrMatch   = content.match(/CTR\s(?:médio\s|promedio\s|avg\s)?(\d+[.,]\d+)%/i) ||
-                     content.match(/(\d+[.,]\d+)%\s*(?:avg\s)?CTR/i);
-
+  const spendMatch = content.match(/R\$(\d+[\d.,]*)\s*(gastos|spent|gastados)/i) || content.match(/\$(\d+[\d.,]*)\s*(spent|gastos|gastados)/i);
+  const ctrMatch = content.match(/CTR\s(?:médio\s|promedio\s|avg\s)?(\d+[.,]\d+)%/i) || content.match(/(\d+[.,]\d+)%\s*(?:avg\s)?CTR/i);
   const spend = spendMatch?.[1];
-  const ctr   = ctrMatch?.[1];
+  const ctr = ctrMatch?.[1];
 
-  // Shorten subtitle — strip redundant parts, keep 1 line
-  const shortContent = (() => {
-    let t = hasRealData
-      ? content.replace(/—\s*R\$[\d,]+\s*(gastos|spent).*?(?=\.\s|$)/i, "—").replace(/—\s*\$[\d,]+\s*(spent|gastos).*?(?=\.\s|$)/i, "—").replace(/CTR\s(?:médio|avg|promedio)\s[\d,.]+%/i, "").replace(/,\s*,/g, ",").replace(/—\s*\./g, ".").trim()
-      : content;
-    // Remove "O que quer fazer?" / "What do you want to do?" — buttons already say it
-    t = t.replace(/\s*O que quer fazer\?\s*$/i, "").replace(/\s*¿Qué quieres hacer\?\s*$/i, "").replace(/\s*What do you want.*$/i, "").trim();
-    // Cap at ~80 chars for scannability
-    if (t.length > 100) { const idx = t.lastIndexOf(".", 100); t = idx > 40 ? t.slice(0, idx + 1) : t.slice(0, 100) + "…"; }
-    return t;
-  })();
+  // Short subtitle — 2 lines max, high contrast
+  const subtitle = hasData
+    ? (lang === "pt" ? "Meta Ads conectado. Escolha uma ação." : lang === "es" ? "Meta Ads conectado. Elige una acción." : "Meta Ads connected. Choose an action.")
+    : (lang === "pt" ? "Escolha uma ação para começar." : lang === "es" ? "Elige una acción para empezar." : "Choose an action to start.");
+
+  const handlePrimaryClick = () => {
+    if (expanded) { onSend(primaryAction); return; }
+    setPressed(true);
+    setTimeout(() => { setPressed(false); setExpanded(true); }, 100);
+  };
 
   return (
-    <div style={{ width:"100%", maxWidth: 680, margin: "auto", padding:"clamp(20px,4vw,40px) clamp(20px,5vw,40px) 32px", display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center" }}>
+    <div style={{ width:"100%", maxWidth: 680, margin: "auto", padding:"clamp(16px,3vw,32px) clamp(20px,5vw,40px) 32px", display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center" }}>
+      <style>{`
+        @keyframes pb-fadeSlide { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes pb-expand { from { max-height:0; opacity:0 } to { max-height:200px; opacity:1 } }
+      `}</style>
 
-      {/* ── Container card — glass effect ── */}
+      {/* ── Container card — depth + glass ── */}
       <div style={{
-        width: "100%", maxWidth: 520,
-        padding: "clamp(28px,5vw,40px) clamp(24px,4vw,36px)",
+        width: "100%", maxWidth: 480,
+        padding: "clamp(32px,5vw,44px) clamp(28px,4vw,40px)",
         borderRadius: 20,
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.06)",
-        backdropFilter: "blur(12px)",
+        background: "rgba(255,255,255,0.025)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        backdropFilter: "blur(8px)",
+        boxShadow: "0 10px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.03) inset",
         display: "flex", flexDirection: "column", alignItems: "center",
+        transition: "box-shadow 0.3s ease",
       }}>
 
-        {/* Avatar — smaller, subtle */}
-        <div style={{ marginBottom: 16, opacity: 0.9 }}>
-          <ABAvatar size={36} />
+        {/* Logo avatar */}
+        <div style={{ marginBottom: 18 }}>
+          <ABAvatar size={38} />
         </div>
 
-        {/* Hero headline — dominant */}
-        <h1 style={{ fontFamily: F, fontSize: "clamp(30px,5.5vw,40px)", fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.04em", lineHeight: 1.1, margin: "0 0 12px" }}>
+        {/* Hero headline */}
+        <h1 style={{ fontFamily: F, fontSize: "clamp(32px,6vw,42px)", fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.045em", lineHeight: 1.08, margin: "0 0 10px" }}>
           {block.title}
         </h1>
 
-        {/* KPI badges inline */}
+        {/* KPI badges */}
         {hasRealData && (spend || ctr) && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 14, justifyContent:"center", flexWrap: "wrap" as const }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12, justifyContent:"center", flexWrap: "wrap" as const }}>
             {spend && (
               <div style={{ padding: "5px 12px", borderRadius: 7, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", display:"flex", alignItems:"center", gap: 7 }}>
-                <span style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.30)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
-                  {lang === "pt" ? "Gasto" : lang === "es" ? "Gasto" : "Spend"}
-                </span>
-                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-                  {lang === "en" ? "$" : "R$"}{spend}
-                </span>
+                <span style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.30)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{lang === "pt" ? "Gasto" : "Spend"}</span>
+                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>{lang === "en" ? "$" : "R$"}{spend}</span>
               </div>
             )}
             {ctr && (
@@ -1189,45 +1187,90 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
           </div>
         )}
 
-        {/* Subtitle — 1 line, scannable */}
-        <p style={{ fontFamily: M, fontSize: 13.5, color: "rgba(255,255,255,0.38)", lineHeight: 1.55, margin: "0 0 24px", maxWidth: 380 }}>
-          {shortContent}
+        {/* Subtitle — short, clear, higher contrast */}
+        <p style={{ fontFamily: M, fontSize: 14, color: "#C0C6CF", lineHeight: 1.5, margin: "0 0 28px", maxWidth: 340 }}>
+          {subtitle}
         </p>
 
-        {/* Action buttons — 1 primary + rest ghost */}
-        <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8, justifyContent:"center" }}>
-          {actions.map((label, i) => {
-            const isPrimary = i === 0;
-            return (
+        {/* ── Primary CTA ── */}
+        <button
+          onClick={handlePrimaryClick}
+          onMouseDown={() => setPressed(true)}
+          onMouseUp={() => !expanded && setPressed(false)}
+          style={{
+            padding: "13px 32px",
+            borderRadius: 12,
+            background: "#0da2e7",
+            border: "1px solid rgba(13,162,231,0.5)",
+            cursor: "pointer",
+            fontFamily: F,
+            fontSize: 15,
+            fontWeight: 700,
+            color: "#fff",
+            letterSpacing: "-0.01em",
+            boxShadow: "0 4px 28px rgba(13,162,231,0.40)",
+            transition: "all 0.2s ease-out",
+            transform: pressed ? "scale(0.97)" : "scale(1)",
+            outline: "none",
+          }}
+          onMouseEnter={e => { if(!pressed) { e.currentTarget.style.transform = "scale(1.02)"; e.currentTarget.style.boxShadow = "0 6px 36px rgba(13,162,231,0.55)"; }}}
+          onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 28px rgba(13,162,231,0.40)"; }}
+          onFocus={e => { e.currentTarget.style.boxShadow = "0 4px 28px rgba(13,162,231,0.40), 0 0 0 3px rgba(13,162,231,0.20)"; }}
+          onBlur={e => { e.currentTarget.style.boxShadow = "0 4px 28px rgba(13,162,231,0.40)"; }}
+        >
+          {primaryAction}
+        </button>
+
+        {/* ── Expandable secondary actions ── */}
+        <div style={{
+          overflow: "hidden",
+          maxHeight: expanded ? 200 : 0,
+          opacity: expanded ? 1 : 0,
+          transition: "max-height 0.25s ease-out, opacity 0.2s ease-out",
+          width: "100%",
+          marginTop: expanded ? 16 : 0,
+        }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+            {secondaryActions.map((label, i) => (
               <button key={i} onClick={() => onSend(label)}
                 style={{
-                  padding: isPrimary ? "11px 26px" : "9px 18px",
-                  borderRadius: 10,
-                  background: isPrimary ? "#0da2e7" : "rgba(255,255,255,0.06)",
-                  border: isPrimary ? "1px solid rgba(13,162,231,0.4)" : "1px solid rgba(255,255,255,0.12)",
-                  cursor: "pointer",
-                  fontFamily: F,
-                  fontSize: isPrimary ? 14 : 13,
-                  fontWeight: isPrimary ? 700 : 500,
-                  color: isPrimary ? "#fff" : "rgba(255,255,255,0.65)",
-                  transition: "all 0.18s",
-                  whiteSpace: "nowrap" as const,
-                  letterSpacing: "-0.01em",
-                  boxShadow: isPrimary ? "0 4px 24px rgba(13,162,231,0.35)" : "none",
+                  display: "flex", alignItems: "center", gap: 10,
+                  width: "100%", padding: "11px 16px", borderRadius: 10,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  cursor: "pointer", fontFamily: F, fontSize: 13.5, fontWeight: 500,
+                  color: "rgba(255,255,255,0.70)", textAlign: "left",
+                  transition: "all 0.18s ease-out",
+                  animation: expanded ? `pb-fadeSlide 0.25s ease-out ${i * 0.06}s both` : "none",
+                  outline: "none",
                 }}
-                onMouseEnter={e => {
-                  if (isPrimary) { e.currentTarget.style.boxShadow = "0 4px 32px rgba(13,162,231,0.50)"; e.currentTarget.style.transform = "translateY(-1px)"; }
-                  else { e.currentTarget.style.background = "rgba(255,255,255,0.10)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.20)"; e.currentTarget.style.color = "#fff"; }
-                }}
-                onMouseLeave={e => {
-                  if (isPrimary) { e.currentTarget.style.boxShadow = "0 4px 24px rgba(13,162,231,0.35)"; e.currentTarget.style.transform = "translateY(0)"; }
-                  else { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }
-                }}>
-                {label}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.70)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                onFocus={e => { e.currentTarget.style.boxShadow = "0 0 0 2px rgba(13,162,231,0.18)"; }}
+                onBlur={e => { e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(13,162,231,0.6)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <span>{label}</span>
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
+
+        {/* Expand hint — only when collapsed */}
+        {!expanded && (
+          <button onClick={() => setExpanded(true)} style={{
+            marginTop: 14, background: "none", border: "none", cursor: "pointer",
+            fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.25)",
+            transition: "color 0.15s", padding: "4px 8px",
+            display: "flex", alignItems: "center", gap: 4,
+          }}
+            onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.50)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.25)"; }}
+          >
+            {lang === "pt" ? "ou ver mais opções" : lang === "es" ? "o ver más opciones" : "or see more options"}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -3938,16 +3981,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"var(--bg-main)",position:"relative" as const}}>
-      {/* Background — minimal, content-first */}
+      {/* Background — ultra minimal */}
       <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
-        {/* Grid — barely visible, fades in center */}
-        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px)",backgroundSize:"100% 52px",maskImage:"radial-gradient(ellipse 70% 60% at 50% 45%,transparent 30%,black 80%),linear-gradient(to bottom,transparent 0%,black 18%,black 82%,transparent 100%)",WebkitMaskImage:"radial-gradient(ellipse 70% 60% at 50% 45%,transparent 30%,black 80%),linear-gradient(to bottom,transparent 0%,black 18%,black 82%,transparent 100%)",maskComposite:"intersect" as any,WebkitMaskComposite:"source-in" as any}}/>
-        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(90deg, rgba(255,255,255,0.010) 1px, transparent 1px)",backgroundSize:"52px 100%",maskImage:"radial-gradient(ellipse 70% 60% at 50% 45%,transparent 30%,black 80%),linear-gradient(to bottom,transparent 0%,black 18%,black 82%,transparent 100%)",WebkitMaskImage:"radial-gradient(ellipse 70% 60% at 50% 45%,transparent 30%,black 80%),linear-gradient(to bottom,transparent 0%,black 18%,black 82%,transparent 100%)",maskComposite:"intersect" as any,WebkitMaskComposite:"source-in" as any}}/>
-        {/* Subtle top bloom */}
-        <div style={{position:"absolute",width:500,height:300,borderRadius:"50%",background:"radial-gradient(ellipse at 50% 0%,rgba(14,165,233,0.03) 0%,transparent 70%)",top:0,left:"50%",transform:"translateX(-50%)",filter:"blur(60px)"}}/>
-        {/* Fade top */}
+        {/* Grid — edges only, invisible in center */}
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px)",backgroundSize:"100% 56px",opacity:0.6,maskImage:"radial-gradient(ellipse 60% 55% at 50% 42%,transparent 20%,black 75%)",WebkitMaskImage:"radial-gradient(ellipse 60% 55% at 50% 42%,transparent 20%,black 75%)"}}/>
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(90deg, rgba(255,255,255,0.008) 1px, transparent 1px)",backgroundSize:"56px 100%",opacity:0.6,maskImage:"radial-gradient(ellipse 60% 55% at 50% 42%,transparent 20%,black 75%)",WebkitMaskImage:"radial-gradient(ellipse 60% 55% at 50% 42%,transparent 20%,black 75%)"}}/>
+        {/* Fade edges */}
         <div style={{position:"absolute",top:0,left:0,right:0,height:60,background:"linear-gradient(to bottom,var(--bg-main),transparent)"}}/>
-        {/* Fade bottom */}
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:80,background:"linear-gradient(to top,var(--bg-main),transparent)"}}/>
       </div>
 
