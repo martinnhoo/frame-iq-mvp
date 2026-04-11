@@ -142,7 +142,8 @@ function ScoreDetail({ ad, pt, onClose }: { ad: any; pt: boolean; onClose: () =>
   const freq = ad.frequency || 0;
 
   // Individual metric scores for breakdown
-  const ctrPct = ctr >= 3 ? 100 : ctr >= 2 ? 80 : ctr >= 1.5 ? 63 : ctr >= 1 ? 43 : ctr >= 0.5 ? 23 : 6;
+  const ctrNum = parseFloat(ctr);
+  const ctrPct = ctrNum >= 3 ? 100 : ctrNum >= 2 ? 80 : ctrNum >= 1.5 ? 63 : ctrNum >= 1 ? 43 : ctrNum >= 0.5 ? 23 : 6;
   const roasPct = roas >= 4 ? 100 : roas >= 3 ? 83 : roas >= 2 ? 67 : roas >= 1 ? 40 : 10;
   const convPct = conv >= 50 ? 100 : conv >= 20 ? 80 : conv >= 10 ? 60 : conv >= 5 ? 40 : conv >= 1 ? 20 : 5;
   const effPct = freq > 0 && freq < 2 ? 100 : freq < 3 ? 67 : freq < 4 ? 33 : 0;
