@@ -6,7 +6,7 @@
 // Credit costs per action
 export const CREDIT_COSTS: Record<string, number> = {
   chat:        2,
-  analysis:    3,
+  analysis:    5,
   hooks:       2,
   brief:       2,
   preflight:   2,

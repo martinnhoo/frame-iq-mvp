@@ -50,10 +50,13 @@ Deno.serve(async (req) => {
     // ── Step 1: Transcribe audio via Lovable AI (Gemini) ─────────────────
     let transcript = '';
     let duration = 30;
+    // Store base64 + mimeType for reuse in visual analysis (Step 2)
+    let videoBase64 = '';
+    let videoMime = '';
 
     if (videoFile && ANTHROPIC_API_KEY) {
       try {
-        
+
         // Convert file to base64 for Gemini
         const arrayBuffer = await videoFile.arrayBuffer();
         const uint8 = new Uint8Array(arrayBuffer);
@@ -62,9 +65,11 @@ Deno.serve(async (req) => {
           binary += String.fromCharCode(uint8[i]);
         }
         const base64Audio = btoa(binary);
-        
+        videoBase64 = base64Audio; // Save for Step 2 visual analysis
+
         // Determine MIME type
         const mimeType = videoFile.type || (videoFile.name?.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg');
+        videoMime = mimeType;
         
         const transcribeRes = await fetch("https://api.anthropic.com/v1/messages", {
           method: 'POST',
@@ -234,8 +239,24 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
 
     let analysis: Record<string, unknown>;
 
+    // ── Build multimodal message: video (visual) + text prompt ──────────
+    // Gemini supports video natively via image_url with video/* mime types
+    // This gives the AI EYES — it can see hooks, colors, text overlays, CTAs
+    const analysisContent: Array<Record<string, unknown>> = [];
+
+    if (videoBase64 && videoMime) {
+      // Include the video as visual input — Gemini processes it frame-by-frame
+      analysisContent.push({
+        type: 'image_url',
+        image_url: {
+          url: `data:${videoMime};base64,${videoBase64}`,
+        },
+      });
+    }
+    analysisContent.push({ type: 'text', text: prompt });
+
     if (ANTHROPIC_API_KEY) {
-      // Use Lovable AI Gateway
+      // Use Lovable AI Gateway — Gemini with video + text
       const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
         method: 'POST',
         headers: {
@@ -244,14 +265,14 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
         },
         body: JSON.stringify({
           model: 'google/gemini-2.5-flash',
-          messages: [{ role: 'user', content: prompt }],
+          messages: [{ role: 'user', content: analysisContent }],
         }),
       });
 
       if (!aiRes.ok) {
         const errText = await aiRes.text();
         console.error('Lovable AI error:', aiRes.status, errText);
-        
+
         if (aiRes.status === 429) {
           throw new Error('Rate limit exceeded — please try again in a moment');
         }
@@ -266,18 +287,18 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
       const clean = rawText.replace(/```json|```/g, '').trim();
       analysis = JSON.parse(clean);
     } else {
-      // Fallback to Anthropic
-      const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
+      // Fallback to Anthropic Claude — text-only (Claude vision needs images, not video)
+      const ANTHROPIC_DIRECT_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
       const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'x-api-key': ANTHROPIC_API_KEY,
+          'x-api-key': ANTHROPIC_DIRECT_KEY,
           'anthropic-version': '2023-06-01',
           'content-type': 'application/json',
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1000,
+          max_tokens: 1500,
           messages: [{ role: 'user', content: prompt }],
         }),
       });

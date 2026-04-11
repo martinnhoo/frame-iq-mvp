@@ -9,7 +9,7 @@
  *
  * Credit costs per action:
  *  Chat message   = 2 credits (most expensive per-credit due to context growth)
- *  Análise Vídeo  = 3 credits
+ *  Análise Vídeo  = 5 credits (visual + audio analysis via Gemini multimodal)
  *  Gerar Hooks    = 2 credits
  *  Criar Brief    = 2 credits
  *  Preflight      = 2 credits
@@ -23,7 +23,7 @@
 // ── Credit cost per action ────────────────────────────────────────────────────
 export const CREDIT_COSTS: Record<string, number> = {
   chat:        2,
-  analysis:    3,
+  analysis:    5,
   hooks:       2,
   brief:       2,
   preflight:   2,
@@ -32,7 +32,7 @@ export const CREDIT_COSTS: Record<string, number> = {
   translation: 1,
   persona:     1,
   competitor:  2,
-  video:       3,  // generate-video (same cost class as analysis)
+  video:       5,  // generate-video (visual + audio multimodal analysis)
 };
 
 // ── Plan credit pools (monthly) ───────────────────────────────────────────────
