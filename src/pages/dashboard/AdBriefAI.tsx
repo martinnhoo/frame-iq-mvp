@@ -174,17 +174,14 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
   en: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
     { icon: Clapperboard,   label: "Script",           action: "script",       color: "#34d399" },
-    { icon: BarChart2,      label: "Analyze",          action: "analyze_ad",   color: "#10b981" },
   ],
   pt: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
     { icon: Clapperboard,   label: "Roteiro",          action: "script",       color: "#34d399" },
-    { icon: BarChart2,      label: "Analisar",         action: "analyze_ad",   color: "#10b981" },
   ],
   es: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
     { icon: Clapperboard,   label: "Guión",            action: "script",       color: "#34d399" },
-    { icon: BarChart2,      label: "Analizar",         action: "analyze_ad",   color: "#10b981" },
   ],
 };
 
