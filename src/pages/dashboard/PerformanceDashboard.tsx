@@ -162,14 +162,23 @@ function CalendarPicker({ value, onChange, onClose }: { value: DateRange; onChan
     );
   };
 
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+
   return (
     <div ref={ref} style={{
-      position:"absolute",top:"calc(100% + 8px)",right:0,zIndex:999,
+      position: isMobile ? "fixed" : "absolute",
+      top: isMobile ? "50%" : "calc(100% + 8px)",
+      left: isMobile ? "50%" : "auto",
+      right: isMobile ? "auto" : 0,
+      transform: isMobile ? "translate(-50%, -50%)" : "none",
+      zIndex: 999,
       background:"#0c0e14",border:`1px solid ${A}20`,borderRadius:16,
       boxShadow:`0 20px 60px rgba(0,0,0,0.7),0 0 40px ${A}08`,
       padding:"clamp(12px,3vw,20px)",
-      width:"min(560px, calc(100vw - 24px))",
+      width: isMobile ? "calc(100vw - 32px)" : "min(560px, calc(100vw - 24px))",
       maxWidth:"calc(100vw - 24px)",
+      maxHeight: isMobile ? "85vh" : "none",
+      overflowY: isMobile ? "auto" : "visible",
       display:"flex",flexDirection:"column",gap:16,
     }}>
       <div style={{display:"flex",gap:6,flexWrap:"wrap" as const}}>
