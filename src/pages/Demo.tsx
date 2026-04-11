@@ -18,8 +18,8 @@ const C = {
   text: "#fff",
   textSoft: "rgba(255,255,255,0.55)",
   textMuted: "rgba(255,255,255,0.28)",
-  accent: "#818cf8",
-  accentBright: "#a78bfa",
+  accent: "#6366f1",
+  accentBright: "#38bdf8",
   green: "#34d399",
   amber: "#fbbf24",
   red: "#f87171",
@@ -118,7 +118,7 @@ interface AnalysisResult {
 const CSS = `
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes scanLine{0%{top:8%;opacity:0}15%{opacity:1}85%{opacity:1}100%{top:88%;opacity:0}}
-@keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(129,140,248,0.22)}50%{box-shadow:0 0 0 12px rgba(129,140,248,0)}}
+@keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.22)}50%{box-shadow:0 0 0 12px rgba(99,102,241,0)}}
 @keyframes aurora{
   0%{background-position:0% 50%,100% 50%,50% 0%}
   25%{background-position:50% 100%,0% 0%,100% 50%}
@@ -276,8 +276,8 @@ export default function Demo() {
       <div style={{
         position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
         background: [
-          "radial-gradient(ellipse 80% 60% at 20% 10%, rgba(129,140,248,0.09), transparent 50%)",
-          "radial-gradient(ellipse 60% 80% at 80% 90%, rgba(167,139,250,0.07), transparent 50%)",
+          "radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.09), transparent 50%)",
+          "radial-gradient(ellipse 60% 80% at 80% 90%, rgba(56,189,248,0.07), transparent 50%)",
           "radial-gradient(ellipse 70% 50% at 50% 50%, rgba(99,102,241,0.05), transparent 60%)",
         ].join(","),
         backgroundSize: "200% 200%, 200% 200%, 150% 150%",
@@ -369,7 +369,7 @@ export default function Demo() {
                   {t.hero1}<br />
                   <span style={{ color: C.textSoft }}>{t.hero2} </span>
                   <span style={{
-                    background: "linear-gradient(135deg, #818cf8, #c084fc)",
+                    background: "linear-gradient(135deg, #6366f1, #38bdf8)",
                     WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
                     backgroundClip: "text",
                   }}>
@@ -432,8 +432,8 @@ export default function Demo() {
                   onClick={() => fileRef.current?.click()}
                   style={{
                     position: "relative", borderRadius: 20, cursor: "pointer",
-                    background: dragOver ? "rgba(129,140,248,0.04)" : "rgba(255,255,255,0.015)",
-                    border: `1px solid ${dragOver ? "rgba(129,140,248,0.35)" : "rgba(255,255,255,0.06)"}`,
+                    background: dragOver ? "rgba(99,102,241,0.04)" : "rgba(255,255,255,0.015)",
+                    border: `1px solid ${dragOver ? "rgba(99,102,241,0.35)" : "rgba(255,255,255,0.06)"}`,
                     padding: "56px 32px 48px",
                     textAlign: "center",
                     transition: "border-color 0.3s, background 0.3s",
@@ -443,7 +443,7 @@ export default function Demo() {
                   {/* Beam border */}
                   <div style={{
                     position: "absolute", inset: -1, borderRadius: 21, padding: 1,
-                    background: `conic-gradient(from var(--beam-angle), transparent 0%, transparent 65%, rgba(129,140,248,0.25) 78%, rgba(167,139,250,0.18) 88%, transparent 98%)`,
+                    background: `conic-gradient(from var(--beam-angle), transparent 0%, transparent 65%, rgba(99,102,241,0.25) 78%, rgba(56,189,248,0.18) 88%, transparent 98%)`,
                     animation: "beamSpin 5s linear infinite",
                     WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
                     WebkitMaskComposite: "xor", maskComposite: "exclude" as any,
@@ -452,15 +452,15 @@ export default function Demo() {
                   }} />
 
                   {/* Scanner crosshair lines */}
-                  <div style={{ position: "absolute", top: "50%", left: 24, right: 24, height: 1, background: "linear-gradient(90deg, transparent, rgba(129,140,248,0.06), transparent)", pointerEvents: "none", animation: "scannerIdle 4s ease-in-out infinite" }} />
-                  <div style={{ position: "absolute", left: "50%", top: 24, bottom: 24, width: 1, background: "linear-gradient(180deg, transparent, rgba(129,140,248,0.06), transparent)", pointerEvents: "none", animation: "scannerIdle 4s ease-in-out infinite 1s" }} />
+                  <div style={{ position: "absolute", top: "50%", left: 24, right: 24, height: 1, background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.06), transparent)", pointerEvents: "none", animation: "scannerIdle 4s ease-in-out infinite" }} />
+                  <div style={{ position: "absolute", left: "50%", top: 24, bottom: 24, width: 1, background: "linear-gradient(180deg, transparent, rgba(99,102,241,0.06), transparent)", pointerEvents: "none", animation: "scannerIdle 4s ease-in-out infinite 1s" }} />
 
                   {/* Corner brackets */}
                   {[
-                    { top: 12, left: 12, borderTop: "2px solid rgba(129,140,248,0.2)", borderLeft: "2px solid rgba(129,140,248,0.2)" },
-                    { top: 12, right: 12, borderTop: "2px solid rgba(129,140,248,0.2)", borderRight: "2px solid rgba(129,140,248,0.2)" },
-                    { bottom: 12, left: 12, borderBottom: "2px solid rgba(129,140,248,0.2)", borderLeft: "2px solid rgba(129,140,248,0.2)" },
-                    { bottom: 12, right: 12, borderBottom: "2px solid rgba(129,140,248,0.2)", borderRight: "2px solid rgba(129,140,248,0.2)" },
+                    { top: 12, left: 12, borderTop: "2px solid rgba(99,102,241,0.2)", borderLeft: "2px solid rgba(99,102,241,0.2)" },
+                    { top: 12, right: 12, borderTop: "2px solid rgba(99,102,241,0.2)", borderRight: "2px solid rgba(99,102,241,0.2)" },
+                    { bottom: 12, left: 12, borderBottom: "2px solid rgba(99,102,241,0.2)", borderLeft: "2px solid rgba(99,102,241,0.2)" },
+                    { bottom: 12, right: 12, borderBottom: "2px solid rgba(99,102,241,0.2)", borderRight: "2px solid rgba(99,102,241,0.2)" },
                   ].map((s, i) => (
                     <div key={i} style={{ position: "absolute", width: 20, height: 20, borderRadius: 2, pointerEvents: "none", transition: "border-color 0.3s", ...s } as any} />
                   ))}
@@ -472,8 +472,8 @@ export default function Demo() {
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     style={{
                       width: 56, height: 56, borderRadius: 16,
-                      background: "rgba(129,140,248,0.06)",
-                      border: "1px solid rgba(129,140,248,0.12)",
+                      background: "rgba(99,102,241,0.06)",
+                      border: "1px solid rgba(99,102,241,0.12)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       margin: "0 auto 22px",
                     }}
@@ -651,11 +651,11 @@ export default function Demo() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4, duration: 0.5 }}
                     onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/dashboard/ai?from_demo=1"))}
-                    whileHover={{ borderColor: "rgba(129,140,248,0.2)" }}
+                    whileHover={{ borderColor: "rgba(99,102,241,0.2)" }}
                     style={{
                       flex: 1, minWidth: 0, position: "relative", borderRadius: 18,
                       padding: "20px", background: "rgba(255,255,255,0.02)",
-                      border: `1px solid rgba(129,140,248,0.08)`, borderTop: `2px solid ${C.accent}`,
+                      border: `1px solid rgba(99,102,241,0.08)`, borderTop: `2px solid ${C.accent}`,
                       cursor: "pointer", overflow: "hidden", minHeight: 130,
                     }}
                   >
@@ -672,7 +672,7 @@ export default function Demo() {
                       <motion.div
                         animate={{ scale: [1, 1.06, 1] }}
                         transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                        style={{ width: 42, height: 42, borderRadius: 12, border: "1px solid rgba(129,140,248,0.25)", background: "rgba(129,140,248,0.05)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8, boxShadow: "0 0 20px rgba(129,140,248,0.1)" }}
+                        style={{ width: 42, height: 42, borderRadius: 12, border: "1px solid rgba(99,102,241,0.25)", background: "rgba(99,102,241,0.05)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8, boxShadow: "0 0 20px rgba(99,102,241,0.1)" }}
                       >
                         <Lock size={17} color={C.accent} strokeWidth={1.8} />
                       </motion.div>
@@ -686,7 +686,7 @@ export default function Demo() {
                     transition={{ delay: 0.4, duration: 0.5 }}
                     style={{
                       flex: 1, minWidth: 0, borderRadius: 18, padding: "20px",
-                      background: "rgba(255,255,255,0.02)", border: `1px solid rgba(129,140,248,0.1)`,
+                      background: "rgba(255,255,255,0.02)", border: `1px solid rgba(99,102,241,0.1)`,
                       borderTop: `2px solid ${C.accent}`,
                     }}
                   >
@@ -703,7 +703,7 @@ export default function Demo() {
                     )}
                     {result.actions?.map((a, i) => (
                       <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 + i * 0.1 }} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "flex-start" }}>
-                        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 800, color: C.accent, marginTop: 3, width: 18, height: 18, borderRadius: 6, background: "rgba(129,140,248,0.08)", border: "1px solid rgba(129,140,248,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 800, color: C.accent, marginTop: 3, width: 18, height: 18, borderRadius: 6, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
                         <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>{a}</p>
                       </motion.div>
                     ))}
@@ -719,8 +719,8 @@ export default function Demo() {
                   transition={{ delay: 0.6, duration: 0.5 }}
                   style={{
                     marginTop: 18, padding: "28px 24px", borderRadius: 20,
-                    background: "rgba(129,140,248,0.03)",
-                    border: `1px solid rgba(129,140,248,0.08)`,
+                    background: "rgba(99,102,241,0.03)",
+                    border: `1px solid rgba(99,102,241,0.08)`,
                     textAlign: "center",
                   }}
                 >
@@ -756,10 +756,10 @@ export default function Demo() {
               {result.full && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.5 }}
-                  style={{ marginTop: 18, padding: "26px 24px", borderRadius: 20, background: "rgba(129,140,248,0.03)", border: `1px solid rgba(129,140,248,0.1)` }}
+                  style={{ marginTop: 18, padding: "26px 24px", borderRadius: 20, background: "rgba(99,102,241,0.03)", border: `1px solid rgba(99,102,241,0.1)` }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 11, background: "rgba(129,140,248,0.08)", border: "1px solid rgba(129,140,248,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 11, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Plug size={17} color={C.accent} />
                     </div>
                     <h3 style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: C.text, margin: 0, letterSpacing: "-0.02em" }}>{t.connect_title}</h3>

@@ -10,9 +10,10 @@ import { Logo } from "@/components/Logo";
 import { Helmet } from "react-helmet-async";
 
 const BRAND = "#6366f1";
-const BG = "#050508";
-const CARD_BG = "rgba(255,255,255,0.04)";
-const CARD_BORDER = "rgba(255,255,255,0.07)";
+const BRAND_BRIGHT = "#38bdf8"; // sky blue accent
+const BG = "#030306";
+const CARD_BG = "rgba(17,22,32,0.65)";
+const CARD_BORDER = "rgba(99,102,241,0.12)";
 const TEXT_MUTED = "rgba(255,255,255,0.55)";
 const F = "'Plus Jakarta Sans', system-ui, sans-serif";
 
@@ -497,16 +498,16 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 // ─── Section wrapper with reveal ──────────────────────────────────────────────
 function Section({ children, id, className = "", noPadding = false, bg = "default" }: { children: React.ReactNode; id?: string; className?: string; noPadding?: boolean; bg?: "default"|"subtle"|"dark"|"accent" }) {
   const bgMap: Record<string, string> = {
-    default: "#050508",
-    subtle:  "#050508",
-    dark:    "#050508",
-    accent:  "#050508",
+    default: "#030306",
+    subtle:  "#030306",
+    dark:    "#030306",
+    accent:  "#030306",
   };
   const borderMap: Record<string, string> = {
-    default: "1px solid rgba(255,255,255,0.04)",
-    subtle:  "1px solid rgba(255,255,255,0.04)",
-    dark:    "1px solid rgba(255,255,255,0.04)",
-    accent:  "1px solid rgba(99,102,241,0.08)",
+    default: "1px solid rgba(99,102,241,0.06)",
+    subtle:  "1px solid rgba(99,102,241,0.06)",
+    dark:    "1px solid rgba(99,102,241,0.06)",
+    accent:  "1px solid rgba(99,102,241,0.10)",
   };
   return (
     <section
@@ -595,7 +596,7 @@ const TOOLS_DATA: ToolDef[] = [
     },
   },
   {
-    id: "script", color: "#a78bfa", accent: "rgba(167,139,250,0.10)",
+    id: "script", color: "#38bdf8", accent: "rgba(167,139,250,0.10)",
     icon: <Play size={20} />,
     name:    { pt: "Script de Vídeo", es: "Script de Video", en: "Video Script" },
     tagline: { pt: "UGC e DR prontos para gravar", es: "UGC y DR listos para grabar", en: "UGC & DR ready to record" },
@@ -621,7 +622,7 @@ const TOOLS_DATA: ToolDef[] = [
     },
   },
   {
-    id: "brief", color: "#818cf8", accent: "rgba(99,102,241,0.10)",
+    id: "brief", color: "#6366f1", accent: "rgba(99,102,241,0.10)",
     icon: <Layers size={20} />,
     name:    { pt: "Brief Criativo", es: "Brief Creativo", en: "Creative Brief" },
     tagline: { pt: "Manda pro editor, sem revisão", es: "Envíalo al editor, sin revisión", en: "Send to editor, no revision needed" },
@@ -758,7 +759,7 @@ function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Re
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: scrolled ? 'rgba(5,5,8,0.9)' : 'transparent',
+      background: scrolled ? 'rgba(3,3,6,0.92)' : 'transparent',
       backdropFilter: scrolled ? 'blur(20px)' : 'none',
       WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
       borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
@@ -802,7 +803,7 @@ const INDUSTRIES_DEMO = [
   { id: "fitness",  label: { pt: "Meta · Fitness",   es: "Meta · Fitness",   en: "Meta · Fitness"   }, color: "#6366f1", initial: "F" },
   { id: "clinica",  label: { pt: "Meta · Clínica", es: "Meta · Clínica", en: "Meta · Clinic"  }, color: "#60a5fa", initial: "C" },
   { id: "ecomm",    label: { pt: "Meta · E-comm",    es: "Meta · E-comm",    en: "Meta · E-comm"    }, color: "#6366f1", initial: "L" },
-  { id: "igaming",  label: { pt: "Meta · iGaming",   es: "Meta · iGaming",   en: "Meta · iGaming"   }, color: "#a78bfa", initial: "E" },
+  { id: "igaming",  label: { pt: "Meta · iGaming",   es: "Meta · iGaming",   en: "Meta · iGaming"   }, color: "#38bdf8", initial: "E" },
   { id: "saas",     label: { pt: "Meta · SaaS",      es: "Meta · SaaS",      en: "Meta · SaaS"      }, color: "#fbbf24", initial: "S" },
 ];
 
@@ -1712,7 +1713,7 @@ function MobileDemoCard({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: 
               <span style={{ color: '#eef0f6' }}>ad</span><span style={{ color: '#38bdf8' }}>brief</span>
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 5, background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.22)' }}>
-              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#818cf8', animation: 'pulse 2s infinite' }} />
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#6366f1', animation: 'pulse 2s infinite' }} />
               <span style={{ fontFamily: F, fontSize: 9.5, color: '#a5b4fc', fontWeight: 700 }}>
                 {lang === 'pt' ? 'IA · Chat' : lang === 'es' ? 'IA · Chat' : 'AI · Chat'}
               </span>
@@ -2181,7 +2182,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%', position: 'relative' as const }}>
       {/* Eyebrow */}
-      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content', padding: '6px 14px', borderRadius: 20, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
+      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content', padding: '6px 14px', borderRadius: 20, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', backdropFilter: 'blur(8px)' }}>
         <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }} />
         <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#38bdf8' }}>
           {lang === 'pt' ? 'IA conectada na sua conta' : lang === 'es' ? 'IA conectada en tu cuenta' : 'AI connected to your account'}
@@ -2323,18 +2324,37 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
 
 
   return (
-    <section className="hero-main-section noise-overlay" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#070d1a' }}>
+    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#030306' }}>
 
-      {/* Grid pattern background */}
-      <div className="grid-pattern" style={{ position: 'absolute', inset: 0, opacity: 0.5, pointerEvents: 'none' }} />
+      {/* Aurora mesh gradient — 3 animated layers */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `
+          radial-gradient(ellipse 80% 60% at 20% 30%, rgba(99,102,241,0.13) 0%, transparent 60%),
+          radial-gradient(ellipse 60% 80% at 75% 20%, rgba(56,189,248,0.08) 0%, transparent 55%),
+          radial-gradient(ellipse 70% 50% at 50% 80%, rgba(99,102,241,0.07) 0%, transparent 60%)
+        `,
+        animation: 'auroraShift 25s ease-in-out infinite alternate',
+      }} />
 
-      {/* Animated glow orbs */}
-      <div className="hero-glow-orb" style={{ left: '20%', top: '30%', width: 600, height: 600, background: 'rgba(99,102,241,0.12)' }} />
-      <div className="hero-glow-orb" style={{ right: '10%', top: '50%', width: 400, height: 400, background: 'rgba(99,102,241,0.08)', animationDelay: '3s' }} />
-      <div className="hero-glow-orb" style={{ left: '60%', bottom: '10%', width: 300, height: 300, background: 'rgba(99,102,241,0.06)', animationDelay: '1.5s' }} />
+      {/* Grid pattern with radial mask */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: 'linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)',
+        backgroundSize: '64px 64px',
+        maskImage: 'radial-gradient(ellipse 60% 50% at 50% 40%, black, transparent)',
+        WebkitMaskImage: 'radial-gradient(ellipse 60% 50% at 50% 40%, black, transparent)',
+      }} />
 
-      {/* Subtle radial glow */}
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 70% at 72% 48%, rgba(99,102,241,0.14) 0%, rgba(99,102,241,0.06) 45%, transparent 70%)', pointerEvents: 'none' }} />
+      {/* SVG noise texture overlay */}
+      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity: 0.3 }}>
+        <filter id="heroNoise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" /></filter>
+        <rect width="100%" height="100%" filter="url(#heroNoise)" opacity="0.08" />
+      </svg>
+
+      {/* Soft glow orbs */}
+      <div className="hero-glow-orb" style={{ left: '15%', top: '25%', width: 500, height: 500, background: 'rgba(99,102,241,0.10)' }} />
+      <div className="hero-glow-orb" style={{ right: '10%', top: '50%', width: 350, height: 350, background: 'rgba(56,189,248,0.06)', animationDelay: '3s' }} />
 
       {/* Grid */}
       <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1, overflow: 'hidden' }} className="hero-grid">
@@ -2726,7 +2746,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
       position: "relative",
       padding: "96px 24px",
       overflow: "hidden",
-      background: "#050508",
+      background: "#030306",
       borderTop: "1px solid rgba(255,255,255,0.04)",
     }}>
       {/* Overlay sutil apenas — sem mudar cor de fundo */}
@@ -2834,7 +2854,7 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   };
   const steps = [
     { n: "01", icon: <Plug size={22} />, color: "#6366f1", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0] },
-    { n: "02", icon: <Users size={22} />, color: "#818cf8", title: t.how_s2_title, desc: t.how_s2_desc, result: results[lang][1] },
+    { n: "02", icon: <Users size={22} />, color: "#6366f1", title: t.how_s2_title, desc: t.how_s2_desc, result: results[lang][1] },
     { n: "03", icon: <MessageSquare size={22} />, color: "#6366f1", title: t.how_s3_title, desc: t.how_s3_desc, result: results[lang][2] },
   ];
   return (
@@ -2849,9 +2869,9 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
         </div>
         <div className="how-grid scroll-reveal scroll-reveal-delay-1" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {steps.map((step, i) => (
-            <div key={i} className="premium-card" style={{ padding: "32px 28px", borderRadius: 20, background: "rgba(255,255,255,0.05)", border: `1px solid ${step.color}22`, position: "relative", overflow: "hidden", transition: "border-color 0.2s, background 0.2s, transform 0.2s", display: "flex", flexDirection: "column", boxShadow: `0 0 40px ${step.color}08` }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${step.color}30`; el.style.background = 'rgba(255,255,255,0.06)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "rgba(255,255,255,0.08)"; el.style.background = 'rgba(255,255,255,0.04)'; }}>
+            <div key={i} className="premium-card" style={{ padding: "32px 28px", borderRadius: 20, background: "rgba(17,22,32,0.65)", backdropFilter: "blur(16px) saturate(1.4)", WebkitBackdropFilter: "blur(16px) saturate(1.4)", border: `1px solid ${step.color}22`, position: "relative", overflow: "hidden", transition: "border-color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.25s", display: "flex", flexDirection: "column", boxShadow: `0 4px 24px ${step.color}08, inset 0 1px 0 rgba(255,255,255,0.03)` }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${step.color}35`; el.style.boxShadow = `0 8px 40px ${step.color}15, inset 0 1px 0 rgba(255,255,255,0.05)`; el.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${step.color}22`; el.style.boxShadow = `0 4px 24px ${step.color}08, inset 0 1px 0 rgba(255,255,255,0.03)`; el.style.transform = 'none'; }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: "rgba(255,255,255,0.55)" }}>{step.icon}</div>
               <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{step.title}</h3>
               <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, flex: 1, marginBottom: 20 }}>{step.desc}</p>
@@ -2873,7 +2893,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
   const profiles = [
     { label: t.for_tab0, color: "#6366f1", headline: t.for_h0, desc: t.for_d0, points: [t.for_p0_0, t.for_p0_1, t.for_p0_2, t.for_p0_3] },
     { label: t.for_tab1, color: "#38bdf8", headline: t.for_h1, desc: t.for_d1, points: [t.for_p1_0, t.for_p1_1, t.for_p1_2, t.for_p1_3] },
-    { label: t.for_tab2, color: "#a78bfa", headline: t.for_h2b, desc: t.for_d2, points: [t.for_p2_0, t.for_p2_1, t.for_p2_2, t.for_p2_3] },
+    { label: t.for_tab2, color: "#38bdf8", headline: t.for_h2b, desc: t.for_d2, points: [t.for_p2_0, t.for_p2_1, t.for_p2_2, t.for_p2_3] },
   ];
   const p = profiles[active];
   return (
@@ -3104,11 +3124,13 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
             <div key={i} className={`premium-card ${plan.highlight ? 'pricing-highlight' : ''}`} style={{
               padding: "28px 24px", borderRadius: 18,
               background: plan.highlight
-                ? "linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0.08) 100%)"
-                : "rgba(255,255,255,0.02)",
+                ? "linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0.06) 100%)"
+                : "rgba(17,22,32,0.5)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
               border: plan.highlight
                 ? "1px solid rgba(99,102,241,0.30)"
-                : "1px solid rgba(255,255,255,0.06)",
+                : "1px solid rgba(99,102,241,0.08)",
               display: "flex", flexDirection: "column", gap: 20, position: "relative",
               transform: plan.highlight ? "scale(1.03)" : "scale(1)",
               zIndex: plan.highlight ? 2 : 1,
@@ -3176,7 +3198,7 @@ function FAQ({ t }: { t: Record<string, string> }) {
         </div>
         <div className="scroll-reveal scroll-reveal-delay-1" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {items.map((item, i) => (
-            <div key={i} style={{ borderRadius: 14, background: open === i ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${open === i ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.08)"}`, overflow: "hidden", transition: "all 0.2s" }}>
+            <div key={i} style={{ borderRadius: 14, background: open === i ? "rgba(99,102,241,0.06)" : "rgba(17,22,32,0.45)", backdropFilter: "blur(8px)", border: `1px solid ${open === i ? "rgba(99,102,241,0.2)" : "rgba(99,102,241,0.06)"}`, overflow: "hidden", transition: "all 0.2s" }}>
               <button onClick={() => setOpen(open === i ? null : i)} style={{ width: "100%", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", gap: 14, textAlign: "left" }}>
                 <span style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.8)", lineHeight: 1.4 }}>{item.q}</span>
                 <ChevronDown size={14} color={open === i ? "#fff" : "rgba(255,255,255,0.2)"} style={{ flexShrink: 0, transform: open === i ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -3368,13 +3390,18 @@ function MobileDemoSection({ lang }: { lang: "pt" | "es" | "en" }) {
 
 function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string, string>; ctaLoading?: boolean }) {
   return (
-    <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "linear-gradient(160deg, #04060c 0%, #071020 50%, #04060c 100%)" }}>
-      {/* Grid pattern overlay */}
-      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px)", backgroundSize: "52px 52px", pointerEvents: "none" }} />
-      {/* Top glow */}
-      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 800, height: 2, background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent)" }} />
-      {/* Center radial */}
-      <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
+    <section style={{ position: "relative", padding: "80px 24px 96px", overflow: "hidden", background: "#030306" }}>
+      {/* Grid pattern overlay with mask */}
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)", backgroundSize: "52px 52px", pointerEvents: "none", maskImage: "radial-gradient(ellipse 60% 60% at 50% 50%, black, transparent)", WebkitMaskImage: "radial-gradient(ellipse 60% 60% at 50% 50%, black, transparent)" }} />
+      {/* Aurora top glow */}
+      <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 800, height: 2, background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.35), transparent)" }} />
+      {/* Center aurora radial */}
+      <div style={{ position: "absolute", top: "5%", left: "50%", transform: "translateX(-50%)", width: 900, height: 600, background: "radial-gradient(ellipse, rgba(99,102,241,0.10) 0%, rgba(56,189,248,0.04) 40%, transparent 65%)", pointerEvents: "none" }} />
+      {/* Noise */}
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", opacity: 0.25 }}>
+        <filter id="ctaNoise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" /></filter>
+        <rect width="100%" height="100%" filter="url(#ctaNoise)" opacity="0.08" />
+      </svg>
 
       <div className="scroll-reveal" style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", position: "relative" }}>
         {/* Label — mesmo padrão de "O PROBLEMA" */}
@@ -3415,7 +3442,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
 // ─── Footer ───────────────────────────────────────────────────────────────────
 function Footer({ t }: { t: Record<string, string> }) {
   return (
-    <footer style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "#060810", padding: "48px clamp(16px,4vw,40px) 32px" }}>
+    <footer style={{ borderTop: "1px solid rgba(99,102,241,0.08)", background: "#030306", padding: "48px clamp(16px,4vw,40px) 32px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         <div className="footer-inner" style={{ display: "flex", justifyContent: "space-between", gap: 40, flexWrap: "wrap" as const, marginBottom: 40 }}>
           {/* Brand */}
@@ -3514,7 +3541,8 @@ export default function IndexNew() {
         <meta property="og:image" content="https://adbrief.pro/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <html lang={lang} />
-        <style>{`          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        <style>{`          @keyframes auroraShift{0%{background-position:0% 0%,100% 0%,50% 100%}100%{background-position:100% 50%,0% 100%,80% 0%}}
+          @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
           .cursor-blink{animation:blink 1s step-end infinite}
           
           /* Line enter — used for AI response lines and greeting cards */
