@@ -1940,9 +1940,9 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
-    <div className="lp" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "var(--bg-main)", animation: "lp-in 0.18s ease" }}>
+    <div className="lp lp-expanded" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "var(--bg-main)", animation: "lp-in 0.18s ease" }}>
       {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
+      <div className="lp-expanded-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           {/* Platform tabs */}
           {[hasMeta && "meta"].filter(Boolean).map((p: any) => {
@@ -2168,7 +2168,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       </div>
 
       {/* ── Body ── */}
-      <div style={{ padding: "14px 20px 18px" }}>
+      <div className="lp-expanded-body" style={{ padding: "14px 20px 18px" }}>
 
         {/* Skeleton */}
         {busy && !pd && (
