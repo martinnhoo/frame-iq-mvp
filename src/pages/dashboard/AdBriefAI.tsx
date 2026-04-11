@@ -2418,6 +2418,7 @@ export default function AdBriefAI() {
   });
   /* ── Inject demo analysis into chat when arriving from demo signup ── */
   const demoInjectedRef = useRef(false);
+  const demoMessagesRef = useRef<AIMessage[] | null>(null);
   // Track whether from_demo param was present on initial load (before any effect cleans it)
   const fromDemoParam = useRef(searchParams.get("from_demo") === "1");
   useEffect(() => {
