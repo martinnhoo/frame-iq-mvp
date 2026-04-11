@@ -3478,6 +3478,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
 
         const cta = lang === "es" ? "Conectar cuenta →" : lang === "pt" ? "Conectar conta →" : "Connect account →";
 
+        const demoMsgs = demoMessagesRef.current || [];
+        demoMessagesRef.current = null;
         setMessages([{
           role: "assistant",
           blocks: [
@@ -3485,17 +3487,18 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             { type: "navigate" as any, title: lang === "pt" ? "Conectar Meta Ads" : lang === "es" ? "Conectar Meta Ads o Google Ads" : "Connect Meta Ads", content: lang === "pt" ? "Leva 30 segundos — depois vejo tudo da sua conta em tempo real." : lang === "es" ? "Solo 30 segundos — luego veo todo en tiempo real." : "Takes 30 seconds — then I see everything in real time.", route: "/dashboard/accounts", cta },
           ],
           ts: aid, id: aid
-        }]);
+        }, ...demoMsgs]);
         setProactiveLoading(false);
         return;
       }
 
-      const aid = Date.now() + 1;
+      const demoMsgs2 = demoMessagesRef.current || [];
+      demoMessagesRef.current = null;
       setMessages([{
         role: "assistant",
         blocks: [{ type: "proactive" as any, title: greetingTitle, content: proactiveMsg }],
         ts: aid, id: aid
-      }]);
+      }, ...demoMsgs2]);
 
     } catch (e) {
       console.error("proactive greeting failed:", e);
