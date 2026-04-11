@@ -2642,13 +2642,15 @@ export default function AdBriefAI() {
         : `${greeting}! Welcome to AdBrief. I'm your creative performance AI for Meta Ads.\n\nI can help with:\n- Generate high-converting hooks\n- Write video ad scripts\n- Analyze creatives (send an image)\n- Creative strategy for your niche\n\nFor analyses connected to your real data (CTR, ROAS, what to scale and pause), create an account in **Accounts** and connect Meta Ads.\n\nTell me: what's your niche and what are you working on?`;
 
       const aid = Date.now() + 1;
+      const demoMsgs0 = demoMessagesRef.current || [];
+      demoMessagesRef.current = null;
       setMessages([{
         role: "assistant",
         blocks: [
           { type: "text" as any, title: greeting + "!", content: welcome },
         ],
         ts: aid, id: aid
-      }]);
+      }, ...demoMsgs0]);
       setProactiveLoading(false);
       return;
     }
