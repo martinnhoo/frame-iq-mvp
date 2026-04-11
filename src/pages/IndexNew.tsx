@@ -131,11 +131,11 @@ const T: Record<Lang, Record<string, string>> = {
     demo_connected: "connected to FitCore Brasil",
     demo_cta_note: "This is a sample account. With yours, the AI uses real data.",
     demo_cta_btn: "Try with my account →",
-    how_label: "HOW IT WORKS", how_h2: "Three steps. Zero friction.",
-    how_sub: "No CSV uploads. No manual data. Just connect and ask.",
-    how_s1_title: "Create your account", how_s1_desc: "Sign up and create an account for each brand or client. Add website and context — the AI uses all of it to personalize every answer.",
-    how_s2_title: "Connect Meta Ads", how_s2_desc: "Link your ad account in one click via OAuth. AdBrief reads spend, CTR, creatives and performance — in real time.",
-    how_s3_title: "Ask anything. Get real answers.", how_s3_desc: "Chat like ChatGPT — but AdBrief knows your actual account. Ask what's working, what to kill, what to produce next.",
+    how_label: "HOW IT WORKS", how_h2: "From zero to insights in 2 minutes.",
+    how_sub: "No CSV. No manual data. OAuth connect → real-time AI analysis.",
+    how_s1_title: "Create your brand profile", how_s1_desc: "Sign up, name your brand, add your website URL. The AI automatically researches your niche, competitors and tone of voice to personalize every response.",
+    how_s2_title: "Connect via Meta OAuth", how_s2_desc: "One-click OAuth 2.0 authentication. AdBrief pulls spend, CPM, CTR, frequency, creative assets and performance data from the last 90 days — updated in real time via Meta API v21.",
+    how_s3_title: "Ask. Get data-backed answers.", how_s3_desc: "Natural language queries against your live account data. 'Which creative has the best CTR this week?' — the AI responds with actual numbers, not guesses. Every answer cites real metrics.",
     for_label: "WHO IT'S FOR", for_h2: "Built for performance teams.",
     for_tab0: "Agencies", for_tab1: "Media Buyers", for_tab2: "In-house Teams",
     for_h0: "Manage 10 clients like you have a full data team.", for_d0: "AdBrief connects to each client's ad account and gives your strategists real answers — which creatives to scale, which to kill, what to brief next.",
@@ -210,11 +210,11 @@ const T: Record<Lang, Record<string, string>> = {
     demo_connected: "conectado à FitCore Brasil",
     demo_cta_note: "Conta de exemplo. Com a sua, a IA usa dados reais.",
     demo_cta_btn: "Testar com minha conta →",
-    how_label: "COMO FUNCIONA", how_h2: "Conecte. Pergunte. Escale.",
-    how_sub: "Do zero à sua primeira resposta em menos de 2 minutos.",
-    how_s1_title: "Crie sua conta", how_s1_desc: "30 segundos. Adicione o nome da marca, site e contexto — a IA usa isso para personalizar cada resposta com a identidade do seu negócio.",
-    how_s2_title: "Conecte Meta Ads", how_s2_desc: "Um clique via OAuth. O AdBrief lê spend, CTR, frequência, criativos e performance dos últimos 90 dias — em tempo real, sem CSV.",
-    how_s3_title: "Pergunte. Receba diagnóstico.", how_s3_desc: "Digite qualquer pergunta sobre sua conta — a IA responde com dados reais, em segundos. Sem planilha, sem espera.",
+    how_label: "COMO FUNCIONA", how_h2: "Do zero a insights reais em 2 minutos.",
+    how_sub: "Sem CSV. Sem planilha. OAuth connect → análise em tempo real.",
+    how_s1_title: "Crie o perfil da marca", how_s1_desc: "Cadastre-se, nomeie sua marca, adicione a URL do site. A IA pesquisa automaticamente seu nicho, concorrentes e tom de voz para personalizar cada resposta.",
+    how_s2_title: "Conecte via Meta OAuth", how_s2_desc: "Autenticação OAuth 2.0 em um clique. O AdBrief puxa spend, CPM, CTR, frequência, criativos e performance dos últimos 90 dias — atualizado em tempo real via Meta API v21.",
+    how_s3_title: "Pergunte. Receba dados reais.", how_s3_desc: "Perguntas em linguagem natural contra dados reais da sua conta. 'Qual criativo tem melhor CTR essa semana?' — a IA responde com números reais, sem achismo. Cada resposta cita métricas reais.",
     for_label: "PARA QUEM", for_h2: "Para quem gerencia anúncios a sério.",
     for_tab0: "Agências", for_tab1: "Gestores de Tráfego", for_tab2: "Times Internos",
     for_h0: "Gerencie 10 clientes como se tivesse um time de dados.", for_d0: "O AdBrief conecta à conta de cada cliente e dá respostas reais — quais criativos escalar, quais pausar, o que briefar.",
@@ -289,11 +289,11 @@ const T: Record<Lang, Record<string, string>> = {
     demo_connected: "conectado a FitCore Brasil",
     demo_cta_note: "Cuenta de ejemplo. Con la tuya, la IA usa datos reales.",
     demo_cta_btn: "Probar con mi cuenta →",
-    how_label: "CÓMO FUNCIONA", how_h2: "Tres pasos. Cero fricción.",
-    how_sub: "Sin CSV. Sin entrada manual. Conecta y pregunta.",
-    how_s1_title: "Crea tu cuenta", how_s1_desc: "Regístrate y crea una cuenta para cada marca o cliente. Agrega el sitio y contexto — la IA usa todo eso para personalizar cada respuesta.",
-    how_s2_title: "Configura tu cuenta", how_s2_desc: "Crea una cuenta por marca. Agrega sitio web, descripción y conecta Meta Ads o Google Ads.",
-    how_s3_title: "Pregunta lo que quieras.", how_s3_desc: "Chatea como en ChatGPT — pero AdBrief conoce tu cuenta. Pregunta qué funciona, qué pausar, qué producir.",
+    how_label: "CÓMO FUNCIONA", how_h2: "De cero a insights reales en 2 minutos.",
+    how_sub: "Sin CSV. Sin datos manuales. OAuth connect → análisis en tiempo real.",
+    how_s1_title: "Crea el perfil de tu marca", how_s1_desc: "Regístrate, nombra tu marca, agrega la URL de tu sitio. La IA investiga automáticamente tu nicho, competidores y tono de voz para personalizar cada respuesta.",
+    how_s2_title: "Conecta vía Meta OAuth", how_s2_desc: "Autenticación OAuth 2.0 en un clic. AdBrief extrae spend, CPM, CTR, frecuencia, creativos y rendimiento de los últimos 90 días — actualizado en tiempo real vía Meta API v21.",
+    how_s3_title: "Pregunta. Recibe datos reales.", how_s3_desc: "Consultas en lenguaje natural contra los datos de tu cuenta. '¿Cuál creativo tiene mejor CTR esta semana?' — la IA responde con números reales, sin suposiciones.",
     for_label: "PARA QUIÉN", for_h2: "Hecho para equipos de performance.",
     for_tab0: "Agencias", for_tab1: "Media Buyers", for_tab2: "Equipos Internos",
     for_h0: "Gestiona 10 clientes como si tuvieras un equipo de datos.", for_d0: "AdBrief se conecta a cada cuenta y da respuestas reales — qué escalar, qué pausar, qué briefear.",
@@ -503,19 +503,13 @@ function Section({ children, id, className = "", noPadding = false, bg = "defaul
     dark:    "#070d1a",
     accent:  "#070d1a",
   };
-  const borderMap: Record<string, string> = {
-    default: "1px solid rgba(99,102,241,0.06)",
-    subtle:  "1px solid rgba(99,102,241,0.06)",
-    dark:    "1px solid rgba(99,102,241,0.06)",
-    accent:  "1px solid rgba(99,102,241,0.10)",
-  };
   return (
     <section
       id={id}
       className={`section-divider noise-overlay ${className}`}
       style={noPadding
-        ? { background: bgMap[bg], borderTop: borderMap[bg] }
-        : { padding: "clamp(56px,7vw,80px) clamp(20px,4vw,40px)", background: bgMap[bg], borderTop: borderMap[bg], position: "relative" as const, overflow: "hidden" }
+        ? { background: bgMap[bg] }
+        : { padding: "clamp(56px,7vw,80px) clamp(20px,4vw,40px)", background: bgMap[bg], position: "relative" as const, overflow: "hidden" }
       }
     >
       {children}
@@ -2827,36 +2821,104 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
 
 function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
   const results: Record<Lang, string[]> = {
-    pt: ["Conta criada em menos de 1 minuto", "Meta Ads conectado via OAuth em segundos", "Respostas com dados reais da sua conta"],
-    es: ["Cuenta creada en menos de 1 minuto", "Meta Ads conectado vía OAuth en segundos", "Respuestas con datos reales de tu cuenta"],
-    en: ["Account created in under 1 minute", "Meta Ads connected via OAuth in seconds", "Answers using real data from your account"],
+    pt: ["Perfil + pesquisa de nicho automática", "Dados de 90 dias sincronizados via API", "Respostas com métricas reais da conta"],
+    es: ["Perfil + investigación de nicho automática", "Datos de 90 días sincronizados vía API", "Respuestas con métricas reales de la cuenta"],
+    en: ["Profile + automatic niche research", "90 days of data synced via API", "Answers with real account metrics"],
+  };
+  const tags: Record<Lang, string[][]> = {
+    pt: [["30 seg", "Auto-research", "Personalização"], ["OAuth 2.0", "Real-time", "90 dias"], ["IA + dados", "Sem achismo", "Métricas reais"]],
+    es: [["30 seg", "Auto-research", "Personalización"], ["OAuth 2.0", "Real-time", "90 días"], ["IA + datos", "Sin suposiciones", "Métricas reales"]],
+    en: [["30 sec", "Auto-research", "Personalized"], ["OAuth 2.0", "Real-time", "90 days"], ["AI + data", "No guessing", "Real metrics"]],
   };
   const steps = [
-    { n: "01", icon: <Plug size={22} />, color: "#6366f1", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0] },
-    { n: "02", icon: <Users size={22} />, color: "#6366f1", title: t.how_s2_title, desc: t.how_s2_desc, result: results[lang][1] },
-    { n: "03", icon: <MessageSquare size={22} />, color: "#6366f1", title: t.how_s3_title, desc: t.how_s3_desc, result: results[lang][2] },
+    { n: "01", icon: <Plug size={20} />, accent: "#38bdf8", title: t.how_s1_title, desc: t.how_s1_desc, result: results[lang][0], tags: tags[lang][0] },
+    { n: "02", icon: <Globe size={20} />, accent: "#6366f1", title: t.how_s2_title, desc: t.how_s2_desc, result: results[lang][1], tags: tags[lang][1] },
+    { n: "03", icon: <MessageSquare size={20} />, accent: "#34d399", title: t.how_s3_title, desc: t.how_s3_desc, result: results[lang][2], tags: tags[lang][2] },
   ];
   return (
     <Section id="how" bg="dark">
-      <div style={{ position: "absolute", top: "-10%", left: "-5%", width: "50%", height: "70%", background: "radial-gradient(ellipse at 20% 30%, rgba(99,102,241,0.06) 0%, transparent 60%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: 0, right: 0, width: "40%", height: "50%", background: "radial-gradient(ellipse at 80% 80%, rgba(99,102,241,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
-      <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
-        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
-          <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(99,102,241,0.7)", textTransform: "uppercase" as const }}>{t.how_label}</span>
-          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 12px", color: "#fff" }}>{t.how_h2}</h2>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.72)", maxWidth: 400, margin: "0 auto" }}>{t.how_sub}</p>
+      <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative" }}>
+        {/* Header */}
+        <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 64 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.3))" }} />
+            <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.16em", fontWeight: 700, color: "rgba(56,189,248,0.8)", textTransform: "uppercase" as const }}>{t.how_label}</span>
+            <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(56,189,248,0.3), transparent)" }} />
+          </div>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "0 0 14px", color: "#fff", lineHeight: 1.1 }}>{t.how_h2}</h2>
+          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 440, margin: "0 auto", lineHeight: 1.65 }}>{t.how_sub}</p>
         </div>
-        <div className="how-grid scroll-reveal scroll-reveal-delay-1" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+
+        {/* Steps — horizontal timeline with connector */}
+        <div className="how-grid scroll-reveal scroll-reveal-delay-1" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, position: "relative" }}>
+          {/* Horizontal connector line behind cards */}
+          <div style={{ position: "absolute", top: 32, left: "16.67%", right: "16.67%", height: 1, background: "linear-gradient(90deg, rgba(56,189,248,0.2), rgba(99,102,241,0.2), rgba(52,211,153,0.2))", zIndex: 0 }} />
+
           {steps.map((step, i) => (
-            <div key={i} className="premium-card" style={{ padding: "32px 28px", borderRadius: 20, background: "rgba(17,22,32,0.65)", backdropFilter: "blur(16px) saturate(1.4)", WebkitBackdropFilter: "blur(16px) saturate(1.4)", border: `1px solid ${step.color}22`, position: "relative", overflow: "hidden", transition: "border-color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.25s", display: "flex", flexDirection: "column", boxShadow: `0 4px 24px ${step.color}08, inset 0 1px 0 rgba(255,255,255,0.03)` }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${step.color}35`; el.style.boxShadow = `0 8px 40px ${step.color}15, inset 0 1px 0 rgba(255,255,255,0.05)`; el.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = `${step.color}22`; el.style.boxShadow = `0 4px 24px ${step.color}08, inset 0 1px 0 rgba(255,255,255,0.03)`; el.style.transform = 'none'; }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, color: "rgba(255,255,255,0.55)" }}>{step.icon}</div>
-              <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 10, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{step.title}</h3>
-              <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, flex: 1, marginBottom: 20 }}>{step.desc}</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 12px", borderRadius: 8, background: `${step.color}08`, border: `1px solid ${step.color}18` }}>
-                <svg width="11" height="11" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" stroke={step.color} strokeOpacity="0.4" strokeWidth="1"/><path d="M4 6.5l1.8 1.8L9 4.5" stroke={step.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span style={{ fontFamily: F, fontSize: 13, color: step.color, fontWeight: 500, opacity: 0.85 }}>{step.result}</span>
+            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1, padding: "0 12px" }}>
+              {/* Step number circle */}
+              <div style={{
+                width: 64, height: 64, borderRadius: "50%",
+                background: `radial-gradient(circle, ${step.accent}18 0%, transparent 70%)`,
+                border: `1.5px solid ${step.accent}30`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 28, position: "relative",
+                boxShadow: `0 0 32px ${step.accent}12`,
+              }}>
+                <span style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: step.accent, letterSpacing: "-0.03em" }}>{step.n}</span>
+              </div>
+
+              {/* Card */}
+              <div style={{
+                width: "100%", padding: "28px 24px", borderRadius: 16,
+                background: "rgba(255,255,255,0.025)",
+                border: `1px solid ${step.accent}15`,
+                transition: "border-color 0.3s, box-shadow 0.3s, transform 0.3s",
+                display: "flex", flexDirection: "column",
+                cursor: "default",
+              }}
+                onMouseEnter={e => { const el = e.currentTarget; el.style.borderColor = `${step.accent}30`; el.style.boxShadow = `0 8px 48px ${step.accent}10`; el.style.transform = 'translateY(-3px)'; }}
+                onMouseLeave={e => { const el = e.currentTarget; el.style.borderColor = `${step.accent}15`; el.style.boxShadow = 'none'; el.style.transform = 'none'; }}>
+
+                {/* Icon + title row */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 9,
+                    background: `${step.accent}12`, border: `1px solid ${step.accent}25`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: step.accent, flexShrink: 0,
+                  }}>{step.icon}</div>
+                  <h3 style={{ fontFamily: F, fontSize: 15, fontWeight: 700, color: "#fff", margin: 0, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{step.title}</h3>
+                </div>
+
+                {/* Description */}
+                <p style={{ fontFamily: F, fontSize: 13.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, flex: 1, marginBottom: 18, margin: "0 0 18px" }}>{step.desc}</p>
+
+                {/* Tags row */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+                  {step.tags.map((tag, ti) => (
+                    <span key={ti} style={{
+                      fontFamily: F, fontSize: 11, fontWeight: 600, letterSpacing: "0.02em",
+                      padding: "4px 10px", borderRadius: 100,
+                      background: `${step.accent}08`, border: `1px solid ${step.accent}18`,
+                      color: step.accent, opacity: 0.85,
+                    }}>{tag}</span>
+                  ))}
+                </div>
+
+                {/* Result badge */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "10px 14px", borderRadius: 10,
+                  background: `${step.accent}06`,
+                  borderTop: `1px solid ${step.accent}12`,
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="7" r="6" stroke={step.accent} strokeOpacity="0.35" strokeWidth="1.2"/>
+                    <path d="M4.5 7l1.8 1.8L9.5 5" stroke={step.accent} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span style={{ fontFamily: F, fontSize: 12.5, color: step.accent, fontWeight: 600, opacity: 0.9 }}>{step.result}</span>
+                </div>
               </div>
             </div>
           ))}
