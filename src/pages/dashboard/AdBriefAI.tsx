@@ -1131,81 +1131,103 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   const spend = spendMatch?.[1];
   const ctr   = ctrMatch?.[1];
 
+  // Shorten subtitle — strip redundant parts, keep 1 line
+  const shortContent = (() => {
+    let t = hasRealData
+      ? content.replace(/—\s*R\$[\d,]+\s*(gastos|spent).*?(?=\.\s|$)/i, "—").replace(/—\s*\$[\d,]+\s*(spent|gastos).*?(?=\.\s|$)/i, "—").replace(/CTR\s(?:médio|avg|promedio)\s[\d,.]+%/i, "").replace(/,\s*,/g, ",").replace(/—\s*\./g, ".").trim()
+      : content;
+    // Remove "O que quer fazer?" / "What do you want to do?" — buttons already say it
+    t = t.replace(/\s*O que quer fazer\?\s*$/i, "").replace(/\s*¿Qué quieres hacer\?\s*$/i, "").replace(/\s*What do you want.*$/i, "").trim();
+    // Cap at ~80 chars for scannability
+    if (t.length > 100) { const idx = t.lastIndexOf(".", 100); t = idx > 40 ? t.slice(0, idx + 1) : t.slice(0, 100) + "…"; }
+    return t;
+  })();
+
   return (
-    <div style={{ width:"100%", maxWidth: 680, margin: "auto", padding:"clamp(36px,8vw,64px) clamp(20px,5vw,40px) 32px", display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center" }}>
+    <div style={{ width:"100%", maxWidth: 680, margin: "auto", padding:"clamp(20px,4vw,40px) clamp(20px,5vw,40px) 32px", display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center" }}>
 
-      {/* Avatar */}
-      <div style={{ marginBottom: 20 }}>
-        <ABAvatar size={44} />
-      </div>
+      {/* ── Container card — glass effect ── */}
+      <div style={{
+        width: "100%", maxWidth: 520,
+        padding: "clamp(28px,5vw,40px) clamp(24px,4vw,36px)",
+        borderRadius: 20,
+        background: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        backdropFilter: "blur(12px)",
+        display: "flex", flexDirection: "column", alignItems: "center",
+      }}>
 
-      {/* Hero headline — big, bold, clear */}
-      <h1 style={{ fontFamily: F, fontSize: "clamp(28px,5vw,36px)", fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.04em", lineHeight: 1.15, margin: "0 0 10px" }}>
-        {block.title}
-      </h1>
-
-      {/* KPI badges inline */}
-      {hasRealData && (spend || ctr) && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 16, justifyContent:"center", flexWrap: "wrap" as const }}>
-          {spend && (
-            <div style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", display:"flex", alignItems:"center", gap: 8 }}>
-              <span style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
-                {lang === "pt" ? "Gasto" : lang === "es" ? "Gasto" : "Spend"}
-              </span>
-              <span style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-                {lang === "en" ? "$" : "R$"}{spend}
-              </span>
-            </div>
-          )}
-          {ctr && (
-            <div style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.12)", display:"flex", alignItems:"center", gap: 8 }}>
-              <span style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>CTR</span>
-              <span style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: "#34d399", letterSpacing: "-0.02em" }}>{ctr}%</span>
-            </div>
-          )}
+        {/* Avatar — smaller, subtle */}
+        <div style={{ marginBottom: 16, opacity: 0.9 }}>
+          <ABAvatar size={36} />
         </div>
-      )}
 
-      {/* Subtitle — short, 1-2 lines max */}
-      <p style={{ fontFamily: M, fontSize: 14, color: "rgba(255,255,255,0.40)", lineHeight: 1.65, margin: "0 0 28px", maxWidth: 440 }}>
-        {hasRealData
-          ? content.replace(/—\s*R\$[\d,]+\s*(gastos|spent).*?(?=\.\s|$)/i, "—").replace(/—\s*\$[\d,]+\s*(spent|gastos).*?(?=\.\s|$)/i, "—").replace(/CTR\s(?:médio|avg|promedio)\s[\d,.]+%/i, "").replace(/,\s*,/g, ",").replace(/—\s*\./g, ".").trim()
-          : content}
-      </p>
+        {/* Hero headline — dominant */}
+        <h1 style={{ fontFamily: F, fontSize: "clamp(30px,5.5vw,40px)", fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.04em", lineHeight: 1.1, margin: "0 0 12px" }}>
+          {block.title}
+        </h1>
 
-      {/* Action buttons — 1 primary + rest ghost */}
-      <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8, justifyContent:"center" }}>
-        {actions.map((label, i) => {
-          const isPrimary = i === 0;
-          return (
-            <button key={i} onClick={() => onSend(label)}
-              style={{
-                padding: isPrimary ? "10px 22px" : "8px 18px",
-                borderRadius: 10,
-                background: isPrimary ? "#0da2e7" : "rgba(255,255,255,0.05)",
-                border: isPrimary ? "none" : "1px solid rgba(255,255,255,0.10)",
-                cursor: "pointer",
-                fontFamily: F,
-                fontSize: isPrimary ? 14 : 13,
-                fontWeight: isPrimary ? 700 : 500,
-                color: isPrimary ? "#fff" : "rgba(255,255,255,0.55)",
-                transition: "all 0.15s",
-                whiteSpace: "nowrap" as const,
-                letterSpacing: "-0.01em",
-                boxShadow: isPrimary ? "0 0 20px rgba(13,162,231,0.25)" : "none",
-              }}
-              onMouseEnter={e => {
-                if (isPrimary) { e.currentTarget.style.boxShadow = "0 0 28px rgba(13,162,231,0.40)"; e.currentTarget.style.transform = "translateY(-1px)"; }
-                else { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.16)"; e.currentTarget.style.color = "rgba(255,255,255,0.80)"; }
-              }}
-              onMouseLeave={e => {
-                if (isPrimary) { e.currentTarget.style.boxShadow = "0 0 20px rgba(13,162,231,0.25)"; e.currentTarget.style.transform = "translateY(0)"; }
-                else { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }
-              }}>
-              {label}
-            </button>
-          );
-        })}
+        {/* KPI badges inline */}
+        {hasRealData && (spend || ctr) && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 14, justifyContent:"center", flexWrap: "wrap" as const }}>
+            {spend && (
+              <div style={{ padding: "5px 12px", borderRadius: 7, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", display:"flex", alignItems:"center", gap: 7 }}>
+                <span style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.30)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+                  {lang === "pt" ? "Gasto" : lang === "es" ? "Gasto" : "Spend"}
+                </span>
+                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
+                  {lang === "en" ? "$" : "R$"}{spend}
+                </span>
+              </div>
+            )}
+            {ctr && (
+              <div style={{ padding: "5px 12px", borderRadius: 7, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.10)", display:"flex", alignItems:"center", gap: 7 }}>
+                <span style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.30)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>CTR</span>
+                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#34d399", letterSpacing: "-0.02em" }}>{ctr}%</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Subtitle — 1 line, scannable */}
+        <p style={{ fontFamily: M, fontSize: 13.5, color: "rgba(255,255,255,0.38)", lineHeight: 1.55, margin: "0 0 24px", maxWidth: 380 }}>
+          {shortContent}
+        </p>
+
+        {/* Action buttons — 1 primary + rest ghost */}
+        <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8, justifyContent:"center" }}>
+          {actions.map((label, i) => {
+            const isPrimary = i === 0;
+            return (
+              <button key={i} onClick={() => onSend(label)}
+                style={{
+                  padding: isPrimary ? "11px 26px" : "9px 18px",
+                  borderRadius: 10,
+                  background: isPrimary ? "#0da2e7" : "rgba(255,255,255,0.06)",
+                  border: isPrimary ? "1px solid rgba(13,162,231,0.4)" : "1px solid rgba(255,255,255,0.12)",
+                  cursor: "pointer",
+                  fontFamily: F,
+                  fontSize: isPrimary ? 14 : 13,
+                  fontWeight: isPrimary ? 700 : 500,
+                  color: isPrimary ? "#fff" : "rgba(255,255,255,0.65)",
+                  transition: "all 0.18s",
+                  whiteSpace: "nowrap" as const,
+                  letterSpacing: "-0.01em",
+                  boxShadow: isPrimary ? "0 4px 24px rgba(13,162,231,0.35)" : "none",
+                }}
+                onMouseEnter={e => {
+                  if (isPrimary) { e.currentTarget.style.boxShadow = "0 4px 32px rgba(13,162,231,0.50)"; e.currentTarget.style.transform = "translateY(-1px)"; }
+                  else { e.currentTarget.style.background = "rgba(255,255,255,0.10)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.20)"; e.currentTarget.style.color = "#fff"; }
+                }}
+                onMouseLeave={e => {
+                  if (isPrimary) { e.currentTarget.style.boxShadow = "0 4px 24px rgba(13,162,231,0.35)"; e.currentTarget.style.transform = "translateY(0)"; }
+                  else { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }
+                }}>
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -3916,17 +3938,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"var(--bg-main)",position:"relative" as const}}>
-      {/* Background — subtle grid */}
+      {/* Background — minimal, content-first */}
       <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
-        {/* Grid — muito sutil, quase invisível */}
-        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px)",backgroundSize:"100% 48px",maskImage:"linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%)"}}/>
-        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)",backgroundSize:"48px 100%",maskImage:"linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%)",WebkitMaskImage:"linear-gradient(to bottom,transparent 0%,black 15%,black 85%,transparent 100%)"}}/>
-        {/* Bloom topo-direita — muito suave */}
-        <div style={{position:"absolute",width:600,height:400,borderRadius:"50%",background:"radial-gradient(ellipse at 80% 10%,rgba(14,165,233,0.04) 0%,transparent 60%)",top:0,right:0,filter:"blur(60px)"}}/>
+        {/* Grid — barely visible, fades in center */}
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px)",backgroundSize:"100% 52px",maskImage:"radial-gradient(ellipse 70% 60% at 50% 45%,transparent 30%,black 80%),linear-gradient(to bottom,transparent 0%,black 18%,black 82%,transparent 100%)",WebkitMaskImage:"radial-gradient(ellipse 70% 60% at 50% 45%,transparent 30%,black 80%),linear-gradient(to bottom,transparent 0%,black 18%,black 82%,transparent 100%)",maskComposite:"intersect" as any,WebkitMaskComposite:"source-in" as any}}/>
+        <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(90deg, rgba(255,255,255,0.010) 1px, transparent 1px)",backgroundSize:"52px 100%",maskImage:"radial-gradient(ellipse 70% 60% at 50% 45%,transparent 30%,black 80%),linear-gradient(to bottom,transparent 0%,black 18%,black 82%,transparent 100%)",WebkitMaskImage:"radial-gradient(ellipse 70% 60% at 50% 45%,transparent 30%,black 80%),linear-gradient(to bottom,transparent 0%,black 18%,black 82%,transparent 100%)",maskComposite:"intersect" as any,WebkitMaskComposite:"source-in" as any}}/>
+        {/* Subtle top bloom */}
+        <div style={{position:"absolute",width:500,height:300,borderRadius:"50%",background:"radial-gradient(ellipse at 50% 0%,rgba(14,165,233,0.03) 0%,transparent 70%)",top:0,left:"50%",transform:"translateX(-50%)",filter:"blur(60px)"}}/>
         {/* Fade top */}
         <div style={{position:"absolute",top:0,left:0,right:0,height:60,background:"linear-gradient(to bottom,var(--bg-main),transparent)"}}/>
         {/* Fade bottom */}
-        <div style={{position:"absolute",bottom:0,left:0,right:0,height:100,background:"linear-gradient(to top,var(--bg-main),transparent)"}}/>
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:80,background:"linear-gradient(to top,var(--bg-main),transparent)"}}/>
       </div>
 
       {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
