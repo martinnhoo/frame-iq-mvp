@@ -27,10 +27,14 @@ const Signup = () => {
 
   const handleGoogleSignup = async () => {
     setLoading(true);
+    // If coming from demo flow, redirect to /dashboard/ai?from_demo=1 after OAuth
+    const oauthRedirect = redirectParam
+      ? window.location.origin + redirectParam
+      : window.location.origin + "/dashboard";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin + "/dashboard",
+        redirectTo: oauthRedirect,
       },
     });
     if (error) {

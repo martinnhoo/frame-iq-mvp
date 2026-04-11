@@ -187,9 +187,11 @@ export default function DashboardLayout() {
         .eq("user_id", session.user.id).maybeSingle()
         .then(({ data, error }: any) => { if (mounted && !error) setAiProfile(data || null); });
       if (profileData && mounted) {
-        // Test account: reset onboarding every login
+        // Test account: reset onboarding every login — BUT skip if arriving from demo flow
         const TEST_EMAIL = "testadbrief@yopmail.com";
-        if (session.user.email === TEST_EMAIL && profileData.onboarding_completed) {
+        const currentParams = new URLSearchParams(window.location.search);
+        const isFromDemo = currentParams.get("from_demo") === "1";
+        if (session.user.email === TEST_EMAIL && profileData.onboarding_completed && !isFromDemo) {
           await supabase.from("profiles").update({ onboarding_completed: false, onboarding_data: null }).eq("id", session.user.id);
           profileData.onboarding_completed = false;
         }
@@ -205,10 +207,20 @@ export default function DashboardLayout() {
           }
         }
 
-        // New user — redirect to onboarding (preserve checkout param)
+        // New user — redirect to onboarding (preserve redirect + checkout params)
         if (!profileData.onboarding_completed) {
-          const checkoutParam = new URLSearchParams(window.location.search).get("checkout");
-          navigate(checkoutParam ? `/onboarding?checkout=${checkoutParam}` : "/onboarding");
+          const dashParams = new URLSearchParams(window.location.search);
+          const checkoutParam = dashParams.get("checkout");
+          // Preserve full current path+search so onboarding can redirect back here after completion
+          const currentFullPath = window.location.pathname + window.location.search;
+          const onboardingParams = new URLSearchParams();
+          if (checkoutParam) onboardingParams.set("checkout", checkoutParam);
+          // If we're on a dashboard page with params (e.g. /dashboard/ai?from_demo=1), preserve as redirect
+          if (currentFullPath !== "/dashboard" && currentFullPath !== "/dashboard/") {
+            onboardingParams.set("redirect", currentFullPath);
+          }
+          const qs = onboardingParams.toString();
+          navigate(qs ? `/onboarding?${qs}` : "/onboarding");
           return;
         }
       }
