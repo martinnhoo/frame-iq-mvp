@@ -4696,6 +4696,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     setShowOnboardingWelcome(false);
                     setOnboardingStep(-1);
                     setVisibleCount(MSG_PAGE);
+                    // Re-trigger proactive greeting on clear
+                    proactiveFired.current = false;
+                    setProactiveLoading(true);
+                    setGreetingKey(k => k + 1);
                   }}
                     title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
                     style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.22)"}}
