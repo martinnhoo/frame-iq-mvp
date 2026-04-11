@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Zap, Plug, Share2, Check, Sparkles, TrendingUp, Eye, MessageSquare } from "lucide-react";
+import { Upload, Loader2, Lock, ArrowRight, CheckCircle2, AlertTriangle, Zap, Plug, Share2, Check } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -11,115 +11,100 @@ import { motion, AnimatePresence } from "motion/react";
 
 const DEMO_STORAGE_KEY = "adbrief_demo_result";
 
-/* ── Design tokens ─────────────────────────────────────────────────── */
+/* ── Tokens ────────────────────────────────────────────────────────── */
 const F = "'Plus Jakarta Sans', system-ui, sans-serif";
-const BRAND = "#6366f1";
-const BG = "#050508";
-const CARD_BG = "rgba(255,255,255,0.04)";
-const CARD_BORDER = "rgba(255,255,255,0.07)";
-const TEXT_MUTED = "rgba(255,255,255,0.55)";
-
 const C = {
-  bg: BG, surface: CARD_BG, border: CARD_BORDER,
-  borderHov: "rgba(255,255,255,0.14)", text: "#fff",
-  textSoft: "rgba(255,255,255,0.6)", textMuted: "rgba(255,255,255,0.32)",
-  accent: BRAND, green: "#22c55e", amber: "#f97316", red: "#ef4444",
+  bg: "#030306",
+  text: "#fff",
+  textSoft: "rgba(255,255,255,0.55)",
+  textMuted: "rgba(255,255,255,0.28)",
+  accent: "#818cf8",
+  accentBright: "#a78bfa",
+  green: "#34d399",
+  amber: "#fbbf24",
+  red: "#f87171",
+  border: "rgba(255,255,255,0.06)",
 };
 
 type Lang = "pt" | "es" | "en";
 
 const T: Record<Lang, {
-  hero: string; sub: string; analyzing: string; drop: string;
-  drag_text: string; formats: string; positive_title: string; improve_title: string;
-  signup_cta: string; signup_sub: string; rate_limit: string; error: string;
+  hero1: string; hero2: string; hero3: string;
+  sub: string; analyzing: string; drop: string;
+  drag_text: string; drag_sub: string;
+  positive_title: string; improve_title: string;
+  signup_cta: string; signup_sub: string;
+  rate_limit: string; error: string;
   unlock_card: string; unlock_details: string; unlock_items: string[];
-  sp_count: number; sp_label: string; sp_live: string; sp_live_count: number;
   connect_title: string; connect_sub: string; connect_btn: string;
   connect_benefits: string[]; go_dashboard: string;
   share_result: string; link_copied: string;
-  feat1: string; feat2: string; feat3: string; feat4: string;
-  trusted: string;
 }> = {
   pt: {
-    hero: "Nota do seu anúncio\nem 10 segundos",
-    sub: "IA analisa hook, copy e CTA. Nota de 1 a 10 com sugestões de melhoria.",
-    analyzing: "Analisando seu criativo", drop: "Solte aqui",
-    drag_text: "Arraste seu anúncio ou clique para enviar",
-    formats: "PNG, JPG, WEBP — até 10 MB",
+    hero1: "Nota do seu anúncio",
+    hero2: "em 10",
+    hero3: "segundos",
+    sub: "IA analisa hook, copy e CTA — e diz exatamente o que mudar.",
+    analyzing: "Analisando", drop: "Solte aqui",
+    drag_text: "Arraste seu anúncio aqui",
+    drag_sub: "ou clique para escolher · PNG, JPG, WEBP",
     positive_title: "O que funciona", improve_title: "O que melhorar",
     signup_cta: "Ver análise completa", signup_sub: "Grátis — sem cartão",
     rate_limit: "Limite atingido. Crie uma conta para continuar.",
     error: "Erro. Tente novamente.",
-    unlock_card: "Crie sua conta para ver tudo",
+    unlock_card: "Crie sua conta para desbloquear",
     unlock_details: "Com uma conta gratuita você desbloqueia:",
-    unlock_items: [
-      "Análise completa com ações práticas",
-      "Sugestões de CTA e melhorias de copy",
-      "IA conectada às suas campanhas reais",
-    ],
-    sp_count: 1247, sp_label: "anúncios analisados", sp_live: "analisando agora", sp_live_count: 4,
+    unlock_items: ["Análise completa com ações práticas", "Sugestões de CTA e melhorias de copy", "IA conectada às suas campanhas reais"],
     connect_title: "Conecte Meta Ads para resultados reais",
     connect_sub: "A IA analisa suas campanhas ao vivo — ROAS, CTR, criativos fadigados — e diz o que pausar, escalar e testar.",
     connect_btn: "Conectar Meta Ads",
     connect_benefits: ["Alertas de ROAS em tempo real", "Diagnóstico de criativos", "Recomendações personalizadas"],
     go_dashboard: "Ir para o dashboard",
     share_result: "Compartilhar", link_copied: "Link copiado!",
-    feat1: "Análise de Hook", feat2: "Score de 1–10", feat3: "Sugestões de CTA", feat4: "Melhorias de Copy",
-    trusted: "Usado por +1.200 anunciantes",
   },
   es: {
-    hero: "Nota de tu anuncio\nen 10 segundos",
-    sub: "IA analiza hook, copy y CTA. Nota de 1 a 10 con sugerencias de mejora.",
-    analyzing: "Analizando tu creativo", drop: "Suelta aquí",
-    drag_text: "Arrastra tu anuncio o haz clic para subir",
-    formats: "PNG, JPG, WEBP — hasta 10 MB",
+    hero1: "Nota de tu anuncio",
+    hero2: "en 10",
+    hero3: "segundos",
+    sub: "IA analiza hook, copy y CTA — y te dice exactamente qué cambiar.",
+    analyzing: "Analizando", drop: "Suelta aquí",
+    drag_text: "Arrastra tu anuncio aquí",
+    drag_sub: "o haz clic para elegir · PNG, JPG, WEBP",
     positive_title: "Lo que funciona", improve_title: "Qué mejorar",
     signup_cta: "Ver análisis completo", signup_sub: "Gratis — sin tarjeta",
     rate_limit: "Límite alcanzado. Crea una cuenta para continuar.",
     error: "Error. Intenta de nuevo.",
-    unlock_card: "Crea tu cuenta para ver todo",
+    unlock_card: "Crea tu cuenta para desbloquear",
     unlock_details: "Con una cuenta gratuita desbloqueas:",
-    unlock_items: [
-      "Análisis completo con acciones prácticas",
-      "Sugerencias de CTA y mejoras de copy",
-      "IA conectada a tus campañas reales",
-    ],
-    sp_count: 1247, sp_label: "anuncios analizados", sp_live: "analizando ahora", sp_live_count: 4,
+    unlock_items: ["Análisis completo con acciones prácticas", "Sugerencias de CTA y mejoras de copy", "IA conectada a tus campañas reales"],
     connect_title: "Conecta Meta Ads para resultados reales",
     connect_sub: "La IA analiza tus campañas en vivo — ROAS, CTR, creativos fatigados — y te dice qué pausar, escalar y testear.",
     connect_btn: "Conectar Meta Ads",
     connect_benefits: ["Alertas de ROAS en tiempo real", "Diagnóstico de creativos", "Recomendaciones personalizadas"],
     go_dashboard: "Ir al dashboard",
     share_result: "Compartir", link_copied: "¡Link copiado!",
-    feat1: "Análisis de Hook", feat2: "Score de 1–10", feat3: "Sugerencias de CTA", feat4: "Mejoras de Copy",
-    trusted: "Usado por +1.200 anunciantes",
   },
   en: {
-    hero: "Rate your ad\nin 10 seconds",
-    sub: "AI analyzes hook, copy and CTA. Score from 1 to 10 with improvement suggestions.",
-    analyzing: "Analyzing your creative", drop: "Drop here",
-    drag_text: "Drag your ad or click to upload",
-    formats: "PNG, JPG, WEBP — up to 10 MB",
+    hero1: "Rate your ad",
+    hero2: "in 10",
+    hero3: "seconds",
+    sub: "AI analyzes hook, copy and CTA — and tells you exactly what to change.",
+    analyzing: "Analyzing", drop: "Drop here",
+    drag_text: "Drag your ad here",
+    drag_sub: "or click to browse · PNG, JPG, WEBP",
     positive_title: "What works", improve_title: "What to improve",
     signup_cta: "See full analysis", signup_sub: "Free — no card required",
     rate_limit: "Limit reached. Sign up to continue.",
     error: "Error. Try again.",
-    unlock_card: "Create your account to see everything",
+    unlock_card: "Create your account to unlock",
     unlock_details: "With a free account you unlock:",
-    unlock_items: [
-      "Full analysis with actionable steps",
-      "CTA suggestions and copy improvements",
-      "AI connected to your real campaigns",
-    ],
-    sp_count: 1247, sp_label: "ads analyzed", sp_live: "analyzing now", sp_live_count: 4,
+    unlock_items: ["Full analysis with actionable steps", "CTA suggestions and copy improvements", "AI connected to your real campaigns"],
     connect_title: "Connect Meta Ads for real results",
     connect_sub: "AI analyzes your live campaigns — ROAS, CTR, fatigued creatives — and tells you what to pause, scale and test.",
     connect_btn: "Connect Meta Ads",
     connect_benefits: ["Real-time ROAS alerts", "Creative diagnostics", "Personalized recommendations"],
     go_dashboard: "Go to dashboard",
     share_result: "Share", link_copied: "Link copied!",
-    feat1: "Hook Analysis", feat2: "Score 1–10", feat3: "CTA Suggestions", feat4: "Copy Improvements",
-    trusted: "Used by 1,200+ advertisers",
   },
 };
 
@@ -129,108 +114,34 @@ interface AnalysisResult {
   message?: string; cta?: string; actions?: string[];
 }
 
-/* ── Keyframes ────────────────────────────────────────────────────── */
-const KF = `
+/* ── CSS ──────────────────────────────────────────────────────────── */
+const CSS = `
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes scanLine{0%{top:8%;opacity:0}15%{opacity:1}85%{opacity:1}100%{top:88%;opacity:0}}
-@keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.22)}50%{box-shadow:0 0 0 12px rgba(99,102,241,0)}}
-@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.35}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-@keyframes orbFloat1{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.1)}66%{transform:translate(-20px,15px) scale(0.95)}}
-@keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-25px,20px) scale(0.9)}66%{transform:translate(15px,-25px) scale(1.05)}}
-@keyframes pulseRing{0%{transform:scale(0.9);opacity:0}40%{opacity:0.15}100%{transform:scale(2.5);opacity:0}}
-@keyframes beamSweep{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-@keyframes scoreReveal{0%{transform:scale(0);opacity:0}50%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
-@keyframes progressFill{from{width:0%}to{width:var(--fill-width)}}
+@keyframes lockPulse{0%,100%{box-shadow:0 0 0 0 rgba(129,140,248,0.22)}50%{box-shadow:0 0 0 12px rgba(129,140,248,0)}}
+@keyframes aurora{
+  0%{background-position:0% 50%,100% 50%,50% 0%}
+  25%{background-position:50% 100%,0% 0%,100% 50%}
+  50%{background-position:100% 50%,50% 100%,0% 50%}
+  75%{background-position:50% 0%,100% 50%,50% 100%}
+  100%{background-position:0% 50%,100% 50%,50% 0%}
+}
+@keyframes gridPulse{0%,100%{opacity:0.03}50%{opacity:0.06}}
+@keyframes pulseRing{0%{transform:scale(0.85);opacity:0}40%{opacity:0.12}100%{transform:scale(2.8);opacity:0}}
+@keyframes scannerIdle{0%,100%{opacity:0.4}50%{opacity:0.8}}
 @property --beam-angle{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes beamSpin{to{--beam-angle:360deg}}
 @media(max-width:700px){
   .demo-result-grid{flex-direction:column!important}
   .demo-result-grid>div{width:100%!important}
-  .demo-feat-grid{grid-template-columns:1fr 1fr!important}
 }
 `;
 
-/* ── Floating Particle Background ──────────────────────────────────── */
-function ParticleField() {
-  const particles = useMemo(() =>
-    Array.from({ length: 40 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 2 + 0.5,
-      duration: Math.random() * 20 + 15,
-      delay: Math.random() * -20,
-      opacity: Math.random() * 0.3 + 0.05,
-    })), []
-  );
-
-  return (
-    <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
-      {particles.map(p => (
-        <motion.div
-          key={p.id}
-          animate={{
-            y: [0, -120, 0],
-            x: [0, Math.random() * 40 - 20, 0],
-            opacity: [p.opacity, p.opacity * 2, p.opacity],
-          }}
-          transition={{
-            duration: p.duration, repeat: Infinity,
-            ease: "easeInOut", delay: p.delay,
-          }}
-          style={{
-            position: "absolute",
-            left: `${p.x}%`, top: `${p.y}%`,
-            width: p.size, height: p.size,
-            borderRadius: "50%",
-            background: `rgba(99,102,241,${p.opacity + 0.15})`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-/* ── Live social proof bar ──────────────────────────────────────────── */
-function LiveProof({ base, label, liveLabel, liveBase }: { base: number; label: string; liveLabel: string; liveBase: number }) {
-  const [count, setCount] = useState(base);
-  const [live, setLive] = useState(liveBase);
-  useEffect(() => { const id = setInterval(() => setCount(p => p + 1), 4200 + Math.random() * 3000); return () => clearInterval(id); }, []);
-  useEffect(() => { const id = setInterval(() => setLive(liveBase + Math.floor(Math.random() * 6) - 2), 6000 + Math.random() * 4000); return () => clearInterval(id); }, [liveBase]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.6, duration: 0.5 }}
-      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, padding: "12px 0" }}
-    >
-      <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-        <span style={{ fontFamily: "'SF Mono', 'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, color: C.text, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-          {count.toLocaleString()}
-        </span>
-        <span style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)" }}>{label}</span>
-      </div>
-      <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.12)" }} />
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", animation: "livePulse 2s ease-in-out infinite", boxShadow: "0 0 8px rgba(34,197,94,0.5)" }} />
-        <span style={{ fontFamily: F, fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.35)" }}>
-          <span style={{ color: "rgba(255,255,255,0.55)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{live}</span>{" "}{liveLabel}
-        </span>
-      </div>
-    </motion.div>
-  );
-}
-
-/* ── Score Ring — Animated circular score indicator ────────────────── */
-function ScoreRing({ score, size = 100 }: { score: number; size?: number }) {
+/* ── Score Ring ───────────────────────────────────────────────────── */
+function ScoreRing({ score, size = 96 }: { score: number; size?: number }) {
   const color = score >= 8 ? C.green : score >= 5 ? C.amber : C.red;
-  const circumference = 2 * Math.PI * 38;
-  const dashoffset = circumference - (score / 10) * circumference;
-
+  const circ = 2 * Math.PI * 38;
+  const offset = circ - (score / 10) * circ;
   return (
     <motion.div
       initial={{ scale: 0, opacity: 0 }}
@@ -238,63 +149,34 @@ function ScoreRing({ score, size = 100 }: { score: number; size?: number }) {
       transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
       style={{ position: "relative", width: size, height: size, flexShrink: 0 }}
     >
-      {/* Pulse rings */}
-      <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: `2px solid ${color}`, animation: "pulseRing 2.5s ease-out infinite", opacity: 0.15 }} />
-      <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: `2px solid ${color}`, animation: "pulseRing 2.5s ease-out infinite 0.8s", opacity: 0.1 }} />
+      <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: `2px solid ${color}`, animation: "pulseRing 2.5s ease-out infinite", opacity: 0.12 }} />
       <svg width={size} height={size} viewBox="0 0 88 88" style={{ transform: "rotate(-90deg)" }}>
-        {/* Track */}
-        <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-        {/* Progress */}
+        <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4.5" />
         <motion.circle
           cx="44" cy="44" r="38" fill="none"
-          stroke={color} strokeWidth="5" strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: dashoffset }}
+          stroke={color} strokeWidth="4.5" strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: offset }}
           transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.4 }}
           style={{ filter: `drop-shadow(0 0 8px ${color}80)` }}
         />
       </svg>
-      {/* Number */}
       <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
         transition={{ delay: 0.7, type: "spring", stiffness: 300, damping: 20 }}
-        style={{
-          position: "absolute", inset: 0,
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        }}
+        style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}
       >
-        <span style={{ fontFamily: F, fontSize: 32, fontWeight: 900, color, letterSpacing: "-0.04em", lineHeight: 1 }}>{score}</span>
-        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.3)", marginTop: 1 }}>/10</span>
+        <span style={{ fontFamily: F, fontSize: 30, fontWeight: 900, color, letterSpacing: "-0.04em", lineHeight: 1 }}>{score}</span>
+        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.25)", marginTop: 1 }}>/10</span>
       </motion.div>
     </motion.div>
   );
 }
 
-/* ── Feature Pill ──────────────────────────────────────────────────── */
-function FeaturePill({ icon, label, delay }: { icon: React.ReactNode; label: string; delay: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-      style={{
-        display: "flex", alignItems: "center", gap: 8,
-        padding: "10px 16px", borderRadius: 12,
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.06)",
-        backdropFilter: "blur(8px)",
-      }}
-    >
-      <span style={{ color: C.accent, display: "flex", alignItems: "center" }}>{icon}</span>
-      <span style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "-0.01em" }}>{label}</span>
-    </motion.div>
-  );
-}
-
 /* ══════════════════════════════════════════════════════════════════════
-   DEMO PAGE — Premium v2
+   DEMO PAGE — v3
 ══════════════════════════════════════════════════════════════════════ */
 export default function Demo() {
   const navigate = useNavigate();
@@ -313,117 +195,73 @@ export default function Demo() {
   const [shareButtonState, setShareButtonState] = useState<"idle" | "copied">("idle");
   const [analyzeProgress, setAnalyzeProgress] = useState(0);
 
-  /* ── Compress image ──────────────────────────────────────────────── */
+  /* ── Logic (unchanged) ──────────────────────────────────────────── */
   const compressImage = (file: File, maxW = 1200, quality = 0.7): Promise<{ base64: string; mediaType: string }> =>
     new Promise((resolve, reject) => {
       const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
+      const url = URL.createObjectURL(file);
       img.onload = () => {
-        const scale = Math.min(1, maxW / Math.max(img.width, img.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
-        URL.revokeObjectURL(objectUrl);
-        resolve({ base64: dataUrl.split(",")[1], mediaType: "image/jpeg" });
+        const s = Math.min(1, maxW / Math.max(img.width, img.height));
+        const cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+        cv.getContext("2d")!.drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        resolve({ base64: cv.toDataURL("image/jpeg", quality).split(",")[1], mediaType: "image/jpeg" });
       };
-      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Failed to load image")); };
-      img.src = objectUrl;
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("img")); };
+      img.src = url;
     });
 
   const handleDemoResponse = (payload: unknown) => {
-    const response = payload as {
-      ok?: boolean; error?: string; full?: boolean; score?: number;
-      verdict?: string; hook?: string; message?: string; cta?: string; actions?: string[];
-    } | null;
-    if (!response) throw new Error("empty_response");
-    if (response.error === "rate_limited") { setRateLimited(true); setPhase("upload"); return null; }
-    if (response.ok === false || response.error) throw new Error(response.error || "analysis_failed");
-    return response as AnalysisResult;
+    const r = payload as any;
+    if (!r) throw new Error("empty");
+    if (r.error === "rate_limited") { setRateLimited(true); setPhase("upload"); return null; }
+    if (r.ok === false || r.error) throw new Error(r.error || "fail");
+    return r as AnalysisResult;
   };
 
   const analyze = async (file: File) => {
-    if (file.size > 10 * 1024 * 1024) { toast.error("File too large. Max 10MB."); return; }
-    if (!file.type.startsWith("image/")) { toast.error("Please upload an image file."); return; }
-
+    if (file.size > 10 * 1024 * 1024) { toast.error("Max 10MB"); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Image only"); return; }
     const reader = new FileReader();
-    reader.onload = () => { const url = reader.result as string; setPreview(url); previewRef.current = url; };
+    reader.onload = () => { const u = reader.result as string; setPreview(u); previewRef.current = u; };
     reader.readAsDataURL(file);
-    setPhase("analyzing");
-    setRateLimited(false);
-    setAnalyzeProgress(0);
+    setPhase("analyzing"); setRateLimited(false); setAnalyzeProgress(0);
     trackEvent("demo_analysis_started");
-
-    // Fake progress for UX
-    const progressInterval = setInterval(() => {
-      setAnalyzeProgress(p => {
-        if (p >= 90) { clearInterval(progressInterval); return 90; }
-        return p + Math.random() * 12 + 3;
-      });
-    }, 400);
-
+    const pi = setInterval(() => setAnalyzeProgress(p => p >= 90 ? (clearInterval(pi), 90) : p + Math.random() * 12 + 3), 400);
     try {
       const { base64, mediaType } = await compressImage(file);
-      const { data, error } = await supabase.functions.invoke("analyze-demo", {
-        body: { image_base64: base64, media_type: mediaType, lang },
-      });
-      clearInterval(progressInterval);
-      setAnalyzeProgress(100);
-      console.log("[Demo] Raw response:", JSON.stringify(data));
-      if (error) { console.error("[Demo] Invoke error:", error); throw error; }
-
+      const { data, error } = await supabase.functions.invoke("analyze-demo", { body: { image_base64: base64, media_type: mediaType, lang } });
+      clearInterval(pi); setAnalyzeProgress(100);
+      if (error) throw error;
       const parsed = handleDemoResponse(data);
       if (!parsed) return;
-
-      if (!parsed.hook && !parsed.verdict) {
-        parsed.hook = lang === "pt" ? "Análise processada." : lang === "es" ? "Análisis procesado." : "Analysis processed.";
-        parsed.verdict = lang === "pt" ? "Resultado" : lang === "es" ? "Resultado" : "Result";
-        if (!parsed.score) parsed.score = 5;
-      }
+      if (!parsed.hook && !parsed.verdict) { parsed.hook = "—"; parsed.verdict = "Result"; if (!parsed.score) parsed.score = 5; }
       if (parsed.verdict) parsed.verdict = parsed.verdict.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{FE00}-\u{FEFF}]/gu, "").trim();
-
-      // Small delay so the user sees 100%
       await new Promise(r => setTimeout(r, 300));
-
-      setResult(parsed);
-      setPhase("result");
+      setResult(parsed); setPhase("result");
       trackEvent("demo_analysis_completed", { score: parsed.score });
-
       try { localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify({ result: parsed, preview: previewRef.current })); } catch {}
-    } catch (e) {
-      clearInterval(progressInterval);
-      console.error("[Demo] Analysis error:", e);
-      toast.error(t.error);
-      setPhase("upload");
-    }
+    } catch (e) { clearInterval(pi); console.error(e); toast.error(t.error); setPhase("upload"); }
   };
 
   const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) analyze(f); };
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) analyze(f); };
   const scoreColor = (s: number) => s >= 8 ? C.green : s >= 5 ? C.amber : C.red;
 
-  /* ── Share result ────────────────────────────────────────────────── */
   const handleShare = async () => {
     if (!result) return;
     setSharing(true);
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/demo-share`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/demo-share`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ analysis_score: result.score, analysis_result: result, lang }),
       });
-      if (!response.ok) { toast.error(t.error); setSharing(false); return; }
-      const data = await response.json();
-      if (!data.share_id) { toast.error(t.error); setSharing(false); return; }
-      const shareUrl = `${window.location.origin}/s/${data.share_id}`;
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        setShareButtonState("copied");
-        toast.success(t.link_copied);
-        setTimeout(() => setShareButtonState("idle"), 2000);
-      } catch { toast.success(`Share URL: ${shareUrl}`); }
+      if (!resp.ok) { toast.error(t.error); return; }
+      const data = await resp.json();
+      if (!data.share_id) { toast.error(t.error); return; }
+      const url = `${window.location.origin}/s/${data.share_id}`;
+      try { await navigator.clipboard.writeText(url); setShareButtonState("copied"); toast.success(t.link_copied); setTimeout(() => setShareButtonState("idle"), 2000); } catch { toast.success(url); }
     } catch { toast.error(t.error); } finally { setSharing(false); }
   };
 
@@ -432,67 +270,66 @@ export default function Demo() {
   ══════════════════════════════════════════════════════════════════ */
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: F, position: "relative", overflow: "hidden" }}>
-      <style>{KF}</style>
+      <style>{CSS}</style>
 
-      {/* ── Animated background ── */}
-      <ParticleField />
+      {/* ── Aurora background ── */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
+        background: [
+          "radial-gradient(ellipse 80% 60% at 20% 10%, rgba(129,140,248,0.09), transparent 50%)",
+          "radial-gradient(ellipse 60% 80% at 80% 90%, rgba(167,139,250,0.07), transparent 50%)",
+          "radial-gradient(ellipse 70% 50% at 50% 50%, rgba(99,102,241,0.05), transparent 60%)",
+        ].join(","),
+        backgroundSize: "200% 200%, 200% 200%, 150% 150%",
+        animation: "aurora 25s ease-in-out infinite",
+      }} />
 
-      {/* ── Ambient orbs ── */}
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.06, 0.1, 0.06] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        style={{
-          position: "fixed", top: "-15%", left: "50%", transform: "translateX(-50%)",
-          width: 900, height: 600, borderRadius: "50%",
-          background: `radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%)`,
-          filter: "blur(80px)", pointerEvents: "none", zIndex: 0,
-        }}
-      />
-      <motion.div
-        style={{
-          position: "fixed", bottom: "-20%", left: "-10%",
-          width: 500, height: 500, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(139,92,246,0.06), transparent 70%)",
-          filter: "blur(60px)", pointerEvents: "none", zIndex: 0,
-          animation: "orbFloat1 20s ease-in-out infinite",
-        }}
-      />
-      <motion.div
-        style={{
-          position: "fixed", top: "30%", right: "-10%",
-          width: 400, height: 400, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(14,165,233,0.05), transparent 70%)",
-          filter: "blur(60px)", pointerEvents: "none", zIndex: 0,
-          animation: "orbFloat2 18s ease-in-out infinite",
-        }}
-      />
+      {/* ── Grid pattern ── */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
+        backgroundImage: `
+          linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+        `,
+        backgroundSize: "80px 80px",
+        animation: "gridPulse 8s ease-in-out infinite",
+        maskImage: "radial-gradient(ellipse 60% 50% at 50% 40%, black, transparent)",
+        WebkitMaskImage: "radial-gradient(ellipse 60% 50% at 50% 40%, black, transparent)",
+      }} />
+
+      {/* ── Noise texture ── */}
+      <svg style={{ position: "fixed", inset: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none", opacity: 0.35 }}>
+        <filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" /></filter>
+        <rect width="100%" height="100%" filter="url(#noise)" opacity="0.04" />
+      </svg>
 
       {/* ── Nav ── */}
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.6 }}
         style={{
           position: "sticky", top: 0, zIndex: 50,
-          borderBottom: `1px solid rgba(255,255,255,0.05)`,
-          background: "rgba(5,5,8,0.7)", backdropFilter: "blur(24px) saturate(1.5)",
-          padding: "14px 24px",
+          borderBottom: `1px solid ${C.border}`,
+          background: "rgba(3,3,6,0.6)", backdropFilter: "blur(20px) saturate(1.3)",
+          padding: "14px 28px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}
       >
         <Link to="/"><Logo size="lg" /></Link>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <LanguageSwitcher />
           <motion.button
-            whileHover={{ scale: 1.03, y: -1 }}
+            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/dashboard/ai?from_demo=1"))}
             style={{
               fontFamily: F, fontSize: 13, fontWeight: 700,
-              padding: "9px 22px", borderRadius: 10,
-              background: "linear-gradient(135deg, #fff, #e2e8f0)",
-              color: "#0a0a0a", border: "none", cursor: "pointer",
-              boxShadow: "0 2px 12px rgba(255,255,255,0.1)",
+              padding: "8px 20px", borderRadius: 10,
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.8)", cursor: "pointer",
+              backdropFilter: "blur(8px)",
             }}
           >
             {t.signup_cta}
@@ -500,51 +337,54 @@ export default function Demo() {
         </div>
       </motion.nav>
 
-      {/* ── Main container ── */}
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 720, margin: "0 auto", padding: "48px 20px 80px" }}>
+      {/* ── Content ── */}
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto", padding: "0 20px 80px" }}>
 
         <AnimatePresence mode="wait">
-          {/* ════════════════════════════════════════════════════════════════
-              PHASE: UPLOAD
-          ════════════════════════════════════════════════════════════════ */}
+          {/* ═══════════════════════════════════════════════════════════
+              UPLOAD
+          ═══════════════════════════════════════════════════════════ */}
           {phase === "upload" && (
             <motion.div
               key="upload"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20, filter: "blur(4px)" }}
-              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, y: -30, filter: "blur(6px)" }}
+              transition={{ duration: 0.4 }}
+              style={{ paddingTop: "min(12vh, 80px)" }}
             >
-              {/* Hero */}
-              <div style={{ textAlign: "center", marginBottom: 44 }}>
+              {/* ── Hero ── */}
+              <div style={{ textAlign: "center", marginBottom: 48 }}>
                 <motion.h1
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
+                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                   style={{
                     fontFamily: F, fontWeight: 900,
-                    fontSize: "clamp(26px, 5.5vw, 42px)",
-                    letterSpacing: "-0.04em", lineHeight: 1.06,
-                    marginBottom: 16, whiteSpace: "pre-line",
-                    background: "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 50%, #fff 100%)",
-                    backgroundSize: "200% auto",
-                    animation: "gradientShift 5s ease infinite",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
+                    fontSize: "clamp(30px, 7vw, 52px)",
+                    letterSpacing: "-0.045em", lineHeight: 1.05,
+                    color: C.text, marginBottom: 18,
                   }}
                 >
-                  {t.hero}
+                  {t.hero1}<br />
+                  <span style={{ color: C.textSoft }}>{t.hero2} </span>
+                  <span style={{
+                    background: "linear-gradient(135deg, #818cf8, #c084fc)",
+                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}>
+                    {t.hero3}
+                  </span>
                 </motion.h1>
 
                 <motion.p
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35, duration: 0.4 }}
+                  transition={{ delay: 0.15, duration: 0.6 }}
                   style={{
-                    fontFamily: F, fontSize: 16, fontWeight: 400,
-                    color: TEXT_MUTED, lineHeight: 1.55,
-                    maxWidth: 380, margin: "0 auto",
+                    fontFamily: F, fontSize: 17, fontWeight: 400,
+                    color: C.textSoft, lineHeight: 1.5,
+                    maxWidth: 420, margin: "0 auto",
                   }}
                 >
                   {t.sub}
@@ -557,21 +397,19 @@ export default function Demo() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   style={{
-                    textAlign: "center", padding: "28px 24px", borderRadius: 20,
-                    border: `1px solid rgba(239,68,68,0.2)`,
-                    background: "rgba(239,68,68,0.06)",
-                    backdropFilter: "blur(12px)",
-                    marginBottom: 28,
+                    textAlign: "center", padding: "24px", borderRadius: 16,
+                    border: `1px solid rgba(248,113,113,0.2)`,
+                    background: "rgba(248,113,113,0.05)",
+                    marginBottom: 24,
                   }}
                 >
-                  <p style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: C.red, marginBottom: 16 }}>{t.rate_limit}</p>
+                  <p style={{ fontFamily: F, fontSize: 14, fontWeight: 500, color: C.red, marginBottom: 14 }}>{t.rate_limit}</p>
                   <motion.button
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/dashboard/ai?from_demo=1"))}
                     style={{
                       fontFamily: F, fontSize: 14, fontWeight: 700,
-                      padding: "12px 28px", borderRadius: 12,
+                      padding: "11px 28px", borderRadius: 10,
                       background: C.text, color: C.bg,
                       border: "none", cursor: "pointer",
                       display: "inline-flex", alignItems: "center", gap: 6,
@@ -582,345 +420,263 @@ export default function Demo() {
                 </motion.div>
               )}
 
-              {/* Upload Zone */}
+              {/* ── Upload Scanner ── */}
               {!rateLimited && (
                 <motion.div
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
+                  transition={{ delay: 0.25, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={handleDrop}
                   onClick={() => fileRef.current?.click()}
-                  whileHover={{ borderColor: "rgba(99,102,241,0.3)", background: "rgba(255,255,255,0.045)" }}
                   style={{
-                    position: "relative", borderRadius: 24,
-                    background: dragOver ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.025)",
-                    border: `1.5px dashed ${dragOver ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.1)"}`,
-                    padding: "clamp(48px, 8vw, 64px) clamp(20px, 5vw, 32px)",
-                    textAlign: "center", cursor: "pointer",
+                    position: "relative", borderRadius: 20, cursor: "pointer",
+                    background: dragOver ? "rgba(129,140,248,0.04)" : "rgba(255,255,255,0.015)",
+                    border: `1px solid ${dragOver ? "rgba(129,140,248,0.35)" : "rgba(255,255,255,0.06)"}`,
+                    padding: "56px 32px 48px",
+                    textAlign: "center",
                     transition: "border-color 0.3s, background 0.3s",
                     overflow: "hidden",
-                    backdropFilter: "blur(12px)",
                   }}
                 >
                   {/* Beam border */}
                   <div style={{
-                    position: "absolute", inset: -2, borderRadius: 26, padding: 2,
-                    background: dragOver
-                      ? "rgba(99,102,241,0.4)"
-                      : `conic-gradient(from var(--beam-angle), transparent 0%, transparent 70%, rgba(99,102,241,0.3) 80%, rgba(139,92,246,0.2) 90%, transparent 100%)`,
-                    animation: dragOver ? "none" : "beamSpin 4s linear infinite",
+                    position: "absolute", inset: -1, borderRadius: 21, padding: 1,
+                    background: `conic-gradient(from var(--beam-angle), transparent 0%, transparent 65%, rgba(129,140,248,0.25) 78%, rgba(167,139,250,0.18) 88%, transparent 98%)`,
+                    animation: "beamSpin 5s linear infinite",
                     WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                    WebkitMaskComposite: "xor",
-                    maskComposite: "exclude" as any,
-                    pointerEvents: "none",
+                    WebkitMaskComposite: "xor", maskComposite: "exclude" as any,
+                    pointerEvents: "none", opacity: dragOver ? 0 : 1,
+                    transition: "opacity 0.3s",
                   }} />
 
-                  {/* Inner glow */}
-                  <div style={{
-                    position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-                    width: 200, height: 200, borderRadius: "50%",
-                    background: "radial-gradient(circle, rgba(99,102,241,0.06), transparent 70%)",
-                    pointerEvents: "none",
-                  }} />
+                  {/* Scanner crosshair lines */}
+                  <div style={{ position: "absolute", top: "50%", left: 24, right: 24, height: 1, background: "linear-gradient(90deg, transparent, rgba(129,140,248,0.06), transparent)", pointerEvents: "none", animation: "scannerIdle 4s ease-in-out infinite" }} />
+                  <div style={{ position: "absolute", left: "50%", top: 24, bottom: 24, width: 1, background: "linear-gradient(180deg, transparent, rgba(129,140,248,0.06), transparent)", pointerEvents: "none", animation: "scannerIdle 4s ease-in-out infinite 1s" }} />
+
+                  {/* Corner brackets */}
+                  {[
+                    { top: 12, left: 12, borderTop: "2px solid rgba(129,140,248,0.2)", borderLeft: "2px solid rgba(129,140,248,0.2)" },
+                    { top: 12, right: 12, borderTop: "2px solid rgba(129,140,248,0.2)", borderRight: "2px solid rgba(129,140,248,0.2)" },
+                    { bottom: 12, left: 12, borderBottom: "2px solid rgba(129,140,248,0.2)", borderLeft: "2px solid rgba(129,140,248,0.2)" },
+                    { bottom: 12, right: 12, borderBottom: "2px solid rgba(129,140,248,0.2)", borderRight: "2px solid rgba(129,140,248,0.2)" },
+                  ].map((s, i) => (
+                    <div key={i} style={{ position: "absolute", width: 20, height: 20, borderRadius: 2, pointerEvents: "none", transition: "border-color 0.3s", ...s } as any} />
+                  ))}
 
                   <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
 
                   <motion.div
-                    animate={dragOver ? { scale: 1.15, y: -4 } : { scale: 1, y: 0 }}
+                    animate={dragOver ? { scale: 1.12, y: -6 } : {}}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     style={{
-                      width: 64, height: 64, borderRadius: 18,
-                      background: dragOver ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.04)",
-                      border: `1px solid ${dragOver ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.08)"}`,
+                      width: 56, height: 56, borderRadius: 16,
+                      background: "rgba(129,140,248,0.06)",
+                      border: "1px solid rgba(129,140,248,0.12)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      margin: "0 auto 20px",
-                      transition: "background 0.3s, border-color 0.3s",
+                      margin: "0 auto 22px",
                     }}
                   >
-                    <Upload size={26} color={dragOver ? C.accent : "rgba(255,255,255,0.35)"} strokeWidth={1.5} />
+                    <Upload size={24} color={dragOver ? C.accentBright : "rgba(255,255,255,0.3)"} strokeWidth={1.6} />
                   </motion.div>
 
                   <p style={{
                     fontFamily: F, fontSize: 16, fontWeight: 700,
-                    color: dragOver ? C.text : "rgba(255,255,255,0.75)",
+                    color: dragOver ? C.text : "rgba(255,255,255,0.65)",
                     marginBottom: 6, letterSpacing: "-0.02em",
-                    transition: "color 0.2s", position: "relative",
+                    position: "relative",
                   }}>
                     {dragOver ? t.drop : t.drag_text}
                   </p>
-                  <p style={{ fontFamily: F, fontSize: 12.5, fontWeight: 400, color: C.textMuted, position: "relative" }}>
-                    {t.formats}
+                  <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: C.textMuted, position: "relative" }}>
+                    {t.drag_sub}
                   </p>
                 </motion.div>
               )}
-
-              {/* Social proof */}
-              {!rateLimited && (
-                <LiveProof base={t.sp_count} label={t.sp_label} liveLabel={t.sp_live} liveBase={t.sp_live_count} />
-              )}
-
             </motion.div>
           )}
 
-          {/* ════════════════════════════════════════════════════════════════
-              PHASE: ANALYZING
-          ════════════════════════════════════════════════════════════════ */}
+          {/* ═══════════════════════════════════════════════════════════
+              ANALYZING
+          ═══════════════════════════════════════════════════════════ */}
           {phase === "analyzing" && (
             <motion.div
               key="analyzing"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
+              exit={{ opacity: 0, scale: 0.95, filter: "blur(6px)" }}
               transition={{ duration: 0.4 }}
-              style={{ textAlign: "center", padding: "40px 24px" }}
+              style={{ textAlign: "center", paddingTop: "min(12vh, 80px)" }}
             >
               {preview && (
                 <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  initial={{ scale: 0.85, opacity: 0, rotateX: 8 }}
+                  animate={{ scale: 1, opacity: 1, rotateX: 0 }}
+                  transition={{ type: "spring", stiffness: 180, damping: 20 }}
                   style={{
                     position: "relative", display: "inline-block", marginBottom: 40,
-                    borderRadius: 20, overflow: "hidden",
-                    boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(99,102,241,0.1)",
+                    borderRadius: 16, overflow: "hidden",
+                    boxShadow: "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
                   }}
                 >
-                  <img src={preview} alt="Ad" style={{
-                    maxWidth: 240, maxHeight: 200, borderRadius: 20,
-                    border: `1px solid rgba(255,255,255,0.1)`, objectFit: "cover", display: "block",
-                  }} />
-                  {/* Scanning overlay */}
-                  <div style={{
-                    position: "absolute", inset: 0,
-                    background: "linear-gradient(180deg, rgba(99,102,241,0.08), transparent, rgba(99,102,241,0.08))",
+                  <img src={preview} alt="" style={{
+                    maxWidth: 220, maxHeight: 180, borderRadius: 16,
+                    objectFit: "cover", display: "block",
+                    filter: "brightness(0.7) saturate(0.8)",
                   }} />
                   {/* Scan line */}
                   <div style={{
-                    position: "absolute", left: 8, right: 8, height: 2,
+                    position: "absolute", left: 0, right: 0, height: 2,
                     background: `linear-gradient(90deg, transparent, ${C.accent}, transparent)`,
-                    animation: "scanLine 2.2s ease-in-out infinite", borderRadius: 1,
-                    boxShadow: `0 0 12px ${C.accent}60`,
+                    animation: "scanLine 2s ease-in-out infinite",
+                    boxShadow: `0 0 16px ${C.accent}50`,
                   }} />
-                  {/* Corner markers */}
+                  {/* Corners */}
                   {[
-                    { top: 8, left: 8, borderTop: `2px solid ${C.accent}`, borderLeft: `2px solid ${C.accent}` },
-                    { top: 8, right: 8, borderTop: `2px solid ${C.accent}`, borderRight: `2px solid ${C.accent}` },
-                    { bottom: 8, left: 8, borderBottom: `2px solid ${C.accent}`, borderLeft: `2px solid ${C.accent}` },
-                    { bottom: 8, right: 8, borderBottom: `2px solid ${C.accent}`, borderRight: `2px solid ${C.accent}` },
+                    { top: 6, left: 6, borderTop: `2px solid ${C.accent}`, borderLeft: `2px solid ${C.accent}` },
+                    { top: 6, right: 6, borderTop: `2px solid ${C.accent}`, borderRight: `2px solid ${C.accent}` },
+                    { bottom: 6, left: 6, borderBottom: `2px solid ${C.accent}`, borderLeft: `2px solid ${C.accent}` },
+                    { bottom: 6, right: 6, borderBottom: `2px solid ${C.accent}`, borderRight: `2px solid ${C.accent}` },
                   ].map((s, i) => (
-                    <div key={i} style={{ position: "absolute", width: 16, height: 16, ...s, borderRadius: 2 } as any} />
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3 + i * 0.08 }}
+                      style={{ position: "absolute", width: 14, height: 14, borderRadius: 1, ...s } as any}
+                    />
                   ))}
                 </motion.div>
               )}
 
-              {/* Progress bar */}
-              <div style={{
-                maxWidth: 280, margin: "0 auto 20px",
-                height: 4, borderRadius: 4,
-                background: "rgba(255,255,255,0.06)",
-                overflow: "hidden",
-              }}>
+              {/* Progress */}
+              <div style={{ maxWidth: 260, margin: "0 auto 18px", height: 3, borderRadius: 3, background: "rgba(255,255,255,0.04)", overflow: "hidden" }}>
                 <motion.div
                   animate={{ width: `${Math.min(analyzeProgress, 100)}%` }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  style={{
-                    height: "100%", borderRadius: 4,
-                    background: `linear-gradient(90deg, ${C.accent}, #8b5cf6)`,
-                    boxShadow: `0 0 12px ${C.accent}40`,
-                  }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${C.accent}, ${C.accentBright})`, boxShadow: `0 0 12px ${C.accent}30` }}
                 />
               </div>
-
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                <div style={{
-                  width: 18, height: 18, borderRadius: "50%",
-                  border: `2px solid rgba(255,255,255,0.08)`, borderTopColor: C.accent,
-                  animation: "spin 0.7s linear infinite",
-                }} />
-                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: C.textSoft }}>
-                  {t.analyzing}...
-                </span>
-                <span style={{
-                  fontFamily: "'SF Mono', monospace", fontSize: 12, fontWeight: 600,
-                  color: C.accent, fontVariantNumeric: "tabular-nums",
-                }}>
-                  {Math.round(Math.min(analyzeProgress, 100))}%
-                </span>
+                <div style={{ width: 16, height: 16, borderRadius: "50%", border: `2px solid rgba(255,255,255,0.06)`, borderTopColor: C.accent, animation: "spin 0.7s linear infinite" }} />
+                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: C.textSoft }}>{t.analyzing}...</span>
+                <span style={{ fontFamily: "'SF Mono', monospace", fontSize: 12, fontWeight: 600, color: C.accent }}>{Math.round(Math.min(analyzeProgress, 100))}%</span>
               </div>
             </motion.div>
           )}
 
-          {/* ════════════════════════════════════════════════════════════════
-              PHASE: RESULT
-          ════════════════════════════════════════════════════════════════ */}
+          {/* ═══════════════════════════════════════════════════════════
+              RESULT
+          ═══════════════════════════════════════════════════════════ */}
           {phase === "result" && result && (
             <motion.div
               key="result"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ duration: 0.5 }}
+              style={{ paddingTop: "min(6vh, 48px)" }}
             >
-              {/* Score header — Glass card */}
+              {/* Score header */}
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, duration: 0.5 }}
                 style={{
-                  display: "flex", gap: 20, alignItems: "center",
-                  marginBottom: 20, padding: "24px 28px",
-                  borderRadius: 24,
-                  background: "rgba(255,255,255,0.03)",
-                  backdropFilter: "blur(20px) saturate(1.4)",
-                  border: `1px solid rgba(255,255,255,0.07)`,
-                  boxShadow: "0 8px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)",
+                  display: "flex", gap: 22, alignItems: "center",
+                  marginBottom: 18, padding: "26px 28px",
+                  borderRadius: 20,
+                  background: "rgba(255,255,255,0.02)",
+                  backdropFilter: "blur(16px)",
+                  border: `1px solid ${C.border}`,
+                  boxShadow: "0 8px 48px rgba(0,0,0,0.25)",
                 }}
               >
-                {/* Score Ring */}
-                <ScoreRing score={result.score} size={88} />
-
+                <ScoreRing score={result.score} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <motion.p
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6, duration: 0.4 }}
-                    style={{
-                      fontFamily: F, fontSize: 18, fontWeight: 800,
-                      color: scoreColor(result.score), letterSpacing: "-0.02em",
-                      marginBottom: 4,
-                    }}
+                    transition={{ delay: 0.6 }}
+                    style={{ fontFamily: F, fontSize: 18, fontWeight: 800, color: scoreColor(result.score), letterSpacing: "-0.02em", marginBottom: 6 }}
                   >
                     {result.verdict}
                   </motion.p>
-                  {preview && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.8 }}
-                      style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    {preview && <img src={preview} alt="" style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${C.border}`, objectFit: "cover" }} />}
+                    <motion.button
+                      whileHover={{ scale: 1.05, borderColor: C.accent }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleShare} disabled={sharing}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 5,
+                        padding: "5px 12px", borderRadius: 8,
+                        background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
+                        color: C.textMuted, fontSize: 11.5, fontWeight: 600, fontFamily: F,
+                        cursor: sharing ? "not-allowed" : "pointer", opacity: sharing ? 0.5 : 1,
+                      }}
                     >
-                      <img src={preview} alt="Ad" style={{
-                        width: 36, height: 36, borderRadius: 8,
-                        border: `1px solid ${C.border}`, objectFit: "cover",
-                      }} />
-                      {/* Share button */}
-                      <motion.button
-                        whileHover={{ scale: 1.05, borderColor: C.accent }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleShare}
-                        disabled={sharing}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 5,
-                          padding: "6px 14px", borderRadius: 10,
-                          background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`,
-                          color: C.textMuted, fontSize: 12, fontWeight: 600, fontFamily: F,
-                          cursor: sharing ? "not-allowed" : "pointer",
-                          transition: "all 0.2s", opacity: sharing ? 0.5 : 1,
-                        }}
-                      >
-                        {shareButtonState === "copied" ? <><Check size={11} /> {t.link_copied}</> :
-                          sharing ? <><Loader2 size={11} style={{ animation: "spin 0.8s linear infinite" }} /></> :
-                          <><Share2 size={11} /> {t.share_result}</>}
-                      </motion.button>
-                    </motion.div>
-                  )}
+                      {shareButtonState === "copied" ? <><Check size={11} /> {t.link_copied}</> :
+                        sharing ? <Loader2 size={11} style={{ animation: "spin 0.8s linear infinite" }} /> :
+                        <><Share2 size={11} /> {t.share_result}</>}
+                    </motion.button>
+                  </motion.div>
                 </div>
               </motion.div>
 
-              {/* Two-column cards */}
-              <div className="demo-result-grid" style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
-
-                {/* LEFT — What works */}
+              {/* Cards */}
+              <div className="demo-result-grid" style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
+                {/* What works */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
                   style={{
-                    flex: 1, minWidth: 0, borderRadius: 20, padding: "22px 22px",
-                    background: "rgba(255,255,255,0.03)",
-                    backdropFilter: "blur(16px)",
-                    border: `1px solid rgba(34,197,94,0.12)`,
-                    borderTop: `3px solid ${C.green}`,
-                    boxShadow: "0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03)",
+                    flex: 1, minWidth: 0, borderRadius: 18, padding: "20px",
+                    background: "rgba(255,255,255,0.02)", border: `1px solid rgba(52,211,153,0.1)`,
+                    borderTop: `2px solid ${C.green}`,
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 8,
-                      background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.15)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <CheckCircle2 size={14} color={C.green} strokeWidth={2.5} />
-                    </div>
-                    <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: C.green, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                      {t.positive_title}
-                    </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <CheckCircle2 size={14} color={C.green} strokeWidth={2.5} />
+                    <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: C.green, letterSpacing: "0.05em", textTransform: "uppercase" }}>{t.positive_title}</span>
                   </div>
-                  <p style={{ fontFamily: F, fontSize: 13.5, fontWeight: 400, color: "rgba(255,255,255,0.72)", lineHeight: 1.75 }}>
-                    {result.hook}
-                  </p>
+                  <p style={{ fontFamily: F, fontSize: 13.5, fontWeight: 400, color: "rgba(255,255,255,0.65)", lineHeight: 1.7 }}>{result.hook}</p>
                 </motion.div>
 
-                {/* RIGHT — What to improve (locked or open) */}
+                {/* What to improve */}
                 {!result.full ? (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4, duration: 0.5 }}
                     onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/dashboard/ai?from_demo=1"))}
-                    whileHover={{ borderColor: "rgba(99,102,241,0.25)" }}
+                    whileHover={{ borderColor: "rgba(129,140,248,0.2)" }}
                     style={{
-                      flex: 1, minWidth: 0, position: "relative", borderRadius: 20,
-                      padding: "22px 22px",
-                      background: "rgba(255,255,255,0.03)",
-                      backdropFilter: "blur(16px)",
-                      border: `1px solid rgba(99,102,241,0.1)`,
-                      borderTop: `3px solid ${C.accent}`,
-                      cursor: "pointer", overflow: "hidden", minHeight: 140,
-                      boxShadow: "0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03)",
+                      flex: 1, minWidth: 0, position: "relative", borderRadius: 18,
+                      padding: "20px", background: "rgba(255,255,255,0.02)",
+                      border: `1px solid rgba(129,140,248,0.08)`, borderTop: `2px solid ${C.accent}`,
+                      cursor: "pointer", overflow: "hidden", minHeight: 130,
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: 8,
-                        background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.15)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <AlertTriangle size={14} color={C.accent} strokeWidth={2.5} />
-                      </div>
-                      <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: C.accent, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                        {t.improve_title}
-                      </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                      <AlertTriangle size={14} color={C.accent} strokeWidth={2.5} />
+                      <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: "0.05em", textTransform: "uppercase" }}>{t.improve_title}</span>
                     </div>
-                    {/* Blurred placeholder */}
                     <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none" }}>
-                      <div style={{ height: 10, width: "90%", borderRadius: 4, background: "rgba(255,255,255,0.07)", marginBottom: 10 }} />
-                      <div style={{ height: 10, width: "72%", borderRadius: 4, background: "rgba(255,255,255,0.05)", marginBottom: 10 }} />
-                      <div style={{ height: 10, width: "80%", borderRadius: 4, background: "rgba(255,255,255,0.06)" }} />
+                      <div style={{ height: 10, width: "88%", borderRadius: 4, background: "rgba(255,255,255,0.06)", marginBottom: 9 }} />
+                      <div style={{ height: 10, width: "68%", borderRadius: 4, background: "rgba(255,255,255,0.04)", marginBottom: 9 }} />
+                      <div style={{ height: 10, width: "78%", borderRadius: 4, background: "rgba(255,255,255,0.05)" }} />
                     </div>
-                    {/* Lock overlay */}
-                    <div style={{
-                      position: "absolute", inset: 0,
-                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                      background: "rgba(5,5,8,0.5)", backdropFilter: "blur(4px)",
-                    }}>
+                    <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(3,3,6,0.5)", backdropFilter: "blur(4px)" }}>
                       <motion.div
-                        animate={{ scale: [1, 1.08, 1] }}
+                        animate={{ scale: [1, 1.06, 1] }}
                         transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                        style={{
-                          width: 44, height: 44, borderRadius: 13,
-                          border: `1px solid rgba(99,102,241,0.3)`,
-                          background: "rgba(99,102,241,0.06)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          marginBottom: 10,
-                          boxShadow: "0 0 20px rgba(99,102,241,0.15)",
-                        }}
+                        style={{ width: 42, height: 42, borderRadius: 12, border: "1px solid rgba(129,140,248,0.25)", background: "rgba(129,140,248,0.05)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8, boxShadow: "0 0 20px rgba(129,140,248,0.1)" }}
                       >
-                        <Lock size={18} color={C.accent} strokeWidth={1.8} />
+                        <Lock size={17} color={C.accent} strokeWidth={1.8} />
                       </motion.div>
-                      <span style={{ fontFamily: F, fontSize: 12.5, fontWeight: 700, color: C.text }}>{t.unlock_card}</span>
+                      <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: C.text }}>{t.unlock_card}</span>
                     </div>
                   </motion.div>
                 ) : (
@@ -929,211 +685,106 @@ export default function Demo() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4, duration: 0.5 }}
                     style={{
-                      flex: 1, minWidth: 0, borderRadius: 20, padding: "22px 22px",
-                      background: "rgba(255,255,255,0.03)",
-                      backdropFilter: "blur(16px)",
-                      border: `1px solid rgba(99,102,241,0.12)`,
-                      borderTop: `3px solid ${C.accent}`,
-                      boxShadow: "0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03)",
+                      flex: 1, minWidth: 0, borderRadius: 18, padding: "20px",
+                      background: "rgba(255,255,255,0.02)", border: `1px solid rgba(129,140,248,0.1)`,
+                      borderTop: `2px solid ${C.accent}`,
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: 8,
-                        background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.15)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <AlertTriangle size={14} color={C.accent} strokeWidth={2.5} />
-                      </div>
-                      <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: C.accent, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                        {t.improve_title}
-                      </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                      <AlertTriangle size={14} color={C.accent} strokeWidth={2.5} />
+                      <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: "0.05em", textTransform: "uppercase" }}>{t.improve_title}</span>
                     </div>
-                    <p style={{ fontFamily: F, fontSize: 13.5, fontWeight: 400, color: "rgba(255,255,255,0.72)", lineHeight: 1.75, marginBottom: 14 }}>
-                      {result.message}
-                    </p>
+                    <p style={{ fontFamily: F, fontSize: 13.5, fontWeight: 400, color: "rgba(255,255,255,0.65)", lineHeight: 1.7, marginBottom: 12 }}>{result.message}</p>
                     {result.cta && (
-                      <div style={{ marginBottom: 14 }}>
-                        <p style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>CTA</p>
-                        <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{result.cta}</p>
+                      <div style={{ marginBottom: 12 }}>
+                        <p style={{ fontFamily: F, fontSize: 10, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>CTA</p>
+                        <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>{result.cta}</p>
                       </div>
                     )}
-                    {result.actions && result.actions.length > 0 && (
-                      <div>
-                        {result.actions.map((action, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.6 + i * 0.1 }}
-                            style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-start" }}
-                          >
-                            <span style={{
-                              fontFamily: F, fontSize: 10, fontWeight: 800,
-                              color: C.accent, marginTop: 3, flexShrink: 0,
-                              width: 18, height: 18, borderRadius: 6,
-                              background: "rgba(99,102,241,0.1)",
-                              border: `1px solid rgba(99,102,241,0.2)`,
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>{i + 1}</span>
-                            <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{action}</p>
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
+                    {result.actions?.map((a, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 + i * 0.1 }} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "flex-start" }}>
+                        <span style={{ fontFamily: F, fontSize: 10, fontWeight: 800, color: C.accent, marginTop: 3, width: 18, height: 18, borderRadius: 6, background: "rgba(129,140,248,0.08)", border: "1px solid rgba(129,140,248,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                        <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>{a}</p>
+                      </motion.div>
+                    ))}
                   </motion.div>
                 )}
               </div>
 
-              {/* CTA section */}
+              {/* CTA */}
               {!result.full && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6, duration: 0.5 }}
                   style={{
-                    marginTop: 20, padding: "28px 24px", borderRadius: 24,
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.03))",
-                    border: `1px solid rgba(99,102,241,0.1)`,
-                    backdropFilter: "blur(16px)",
+                    marginTop: 18, padding: "28px 24px", borderRadius: 20,
+                    background: "rgba(129,140,248,0.03)",
+                    border: `1px solid rgba(129,140,248,0.08)`,
                     textAlign: "center",
-                    boxShadow: "0 8px 40px rgba(99,102,241,0.06)",
                   }}
                 >
-                  <p style={{ fontFamily: F, fontSize: 13.5, fontWeight: 500, color: C.textSoft, marginBottom: 18 }}>
-                    {t.unlock_details}
-                  </p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", marginBottom: 22 }}>
+                  <p style={{ fontFamily: F, fontSize: 13, fontWeight: 500, color: C.textSoft, marginBottom: 16 }}>{t.unlock_details}</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 20 }}>
                     {t.unlock_items.map((item, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.8 + i * 0.1 }}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 7,
-                          padding: "7px 14px", borderRadius: 24,
-                          background: "rgba(255,255,255,0.04)",
-                          border: `1px solid rgba(255,255,255,0.06)`,
-                          backdropFilter: "blur(8px)",
-                        }}
-                      >
-                        <CheckCircle2 size={12} color={C.green} strokeWidth={2.5} />
-                        <span style={{ fontFamily: F, fontSize: 11.5, fontWeight: 500, color: "rgba(255,255,255,0.75)" }}>{item}</span>
+                      <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.8 + i * 0.08 }}
+                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 13px", borderRadius: 20, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}` }}>
+                        <CheckCircle2 size={11} color={C.green} strokeWidth={2.5} />
+                        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.65)" }}>{item}</span>
                       </motion.div>
                     ))}
                   </div>
-
                   <motion.button
-                    whileHover={{ scale: 1.03, y: -2, boxShadow: "0 4px 40px rgba(255,255,255,0.18)" }}
-                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}
                     onClick={() => navigate("/signup?redirect=" + encodeURIComponent("/dashboard/ai?from_demo=1"))}
                     style={{
                       fontFamily: F, fontSize: 15, fontWeight: 800,
-                      padding: "15px 44px", borderRadius: 14,
-                      background: "linear-gradient(135deg, #fff, #e2e8f0)",
-                      color: "#0a0a0a", border: "none", cursor: "pointer",
+                      padding: "14px 44px", borderRadius: 14,
+                      background: C.text, color: C.bg,
+                      border: "none", cursor: "pointer",
                       display: "inline-flex", alignItems: "center", gap: 8,
-                      boxShadow: "0 2px 32px rgba(255,255,255,0.1)",
-                      position: "relative", overflow: "hidden",
+                      boxShadow: "0 4px 32px rgba(255,255,255,0.08)",
                     }}
                   >
-                    {/* Shine sweep */}
-                    <motion.div
-                      animate={{ x: ["-100%", "200%"] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatDelay: 2 }}
-                      style={{
-                        position: "absolute", inset: 0,
-                        background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent)",
-                      }}
-                    />
-                    <span style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      {t.signup_cta} <ArrowRight size={15} />
-                    </span>
+                    {t.signup_cta} <ArrowRight size={15} />
                   </motion.button>
-                  <p style={{ fontFamily: F, fontSize: 11, fontWeight: 400, color: C.textMuted, marginTop: 10 }}>
-                    {t.signup_sub}
-                  </p>
+                  <p style={{ fontFamily: F, fontSize: 11, fontWeight: 400, color: C.textMuted, marginTop: 10 }}>{t.signup_sub}</p>
                 </motion.div>
               )}
 
-              {/* Connect Meta Ads CTA */}
+              {/* Connect Meta */}
               {result.full && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.5 }}
-                  style={{
-                    marginTop: 20, padding: "28px 24px", borderRadius: 24,
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.04))",
-                    border: `1px solid rgba(99,102,241,0.12)`,
-                    backdropFilter: "blur(16px)",
-                    boxShadow: "0 8px 40px rgba(99,102,241,0.06)",
-                  }}
+                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.5 }}
+                  style={{ marginTop: 18, padding: "26px 24px", borderRadius: 20, background: "rgba(129,140,248,0.03)", border: `1px solid rgba(129,140,248,0.1)` }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: 12,
-                      background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <Plug size={18} color={C.accent} strokeWidth={1.8} />
+                    <div style={{ width: 38, height: 38, borderRadius: 11, background: "rgba(129,140,248,0.08)", border: "1px solid rgba(129,140,248,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Plug size={17} color={C.accent} />
                     </div>
-                    <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 800, color: C.text, margin: 0, letterSpacing: "-0.025em" }}>
-                      {t.connect_title}
-                    </h3>
+                    <h3 style={{ fontFamily: F, fontSize: 15, fontWeight: 800, color: C.text, margin: 0, letterSpacing: "-0.02em" }}>{t.connect_title}</h3>
                   </div>
-                  <p style={{ fontFamily: F, fontSize: 13.5, fontWeight: 400, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, marginBottom: 16 }}>
-                    {t.connect_sub}
-                  </p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+                  <p style={{ fontFamily: F, fontSize: 13, fontWeight: 400, color: C.textSoft, lineHeight: 1.65, marginBottom: 14 }}>{t.connect_sub}</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
                     {t.connect_benefits.map((b, i) => (
-                      <div key={i} style={{
-                        display: "flex", alignItems: "center", gap: 6,
-                        padding: "6px 14px", borderRadius: 24,
-                        background: "rgba(255,255,255,0.04)", border: `1px solid rgba(255,255,255,0.06)`,
-                      }}>
-                        <Zap size={11} color={C.accent} strokeWidth={2.5} />
-                        <span style={{ fontFamily: F, fontSize: 11.5, fontWeight: 500, color: "rgba(255,255,255,0.7)" }}>{b}</span>
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}` }}>
+                        <Zap size={10} color={C.accent} strokeWidth={2.5} />
+                        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.6)" }}>{b}</span>
                       </div>
                     ))}
                   </div>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <motion.button
-                      whileHover={{ scale: 1.02, y: -1 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => navigate("/dashboard/ai")}
-                      style={{
-                        fontFamily: F, fontSize: 14, fontWeight: 700,
-                        padding: "13px 28px", borderRadius: 12,
-                        background: "linear-gradient(135deg, #fff, #e2e8f0)", color: "#0a0a0a",
-                        border: "none", cursor: "pointer",
-                        display: "inline-flex", alignItems: "center", gap: 8,
-                        boxShadow: "0 2px 20px rgba(255,255,255,0.08)",
-                      }}
-                    >
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => navigate("/dashboard/ai")}
+                      style={{ fontFamily: F, fontSize: 14, fontWeight: 700, padding: "12px 26px", borderRadius: 12, background: C.text, color: C.bg, border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 7 }}>
                       {t.connect_btn} <ArrowRight size={14} />
                     </motion.button>
-                    <motion.button
-                      whileHover={{ borderColor: "rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.8)" }}
-                      onClick={() => navigate("/dashboard/ai")}
-                      style={{
-                        fontFamily: F, fontSize: 13, fontWeight: 600,
-                        padding: "13px 20px", borderRadius: 12,
-                        background: "transparent", color: "rgba(255,255,255,0.5)",
-                        border: `1px solid ${C.border}`, cursor: "pointer",
-                      }}
-                    >
+                    <motion.button whileHover={{ borderColor: "rgba(255,255,255,0.15)" }} onClick={() => navigate("/dashboard/ai")}
+                      style={{ fontFamily: F, fontSize: 13, fontWeight: 600, padding: "12px 18px", borderRadius: 12, background: "transparent", color: "rgba(255,255,255,0.4)", border: `1px solid ${C.border}`, cursor: "pointer" }}>
                       {t.go_dashboard}
                     </motion.button>
                   </div>
                 </motion.div>
               )}
-
-              {/* Live social proof */}
-              <div style={{ marginTop: 16 }}>
-                <LiveProof base={t.sp_count} label={t.sp_label} liveLabel={t.sp_live} liveBase={t.sp_live_count} />
-              </div>
             </motion.div>
           )}
         </AnimatePresence>
