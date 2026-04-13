@@ -732,6 +732,7 @@ export default function AccountDiagnostic() {
               </div>
             ) : null}
           </div>
+          </div>
         ) : allPaused ? (
           /* ALL DONE STATE */
           <div style={{ ...card(1), padding: "28px 22px", marginBottom: 16, textAlign: "center", ...fadeUp(60) }}>
