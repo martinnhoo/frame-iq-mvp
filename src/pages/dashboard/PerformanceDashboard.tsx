@@ -11,19 +11,23 @@ import {
   BarChart3, Activity, Users, Repeat
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 // AdDiary moved to Ad Score page
 import { SparklineCard } from "@/components/ui/SparklineCard";
 import { Reveal } from "@/components/ui/Reveal";
 import { ResponsiveLine } from "@nivo/line";
 import { ADBRIEF_TOKENS as TK } from "@/styles/tokens";
 
-// ── Design tokens ────────────────────────────────────────────────────────────
-const F = "'DM Sans','Plus Jakarta Sans',system-ui,sans-serif";
-const MONO = "'DM Mono','SF Mono',monospace";
-const BG = "var(--bg-main)";
-const TX = "var(--text-primary)", MT = "var(--text-muted)";
-const A = "#0da2e7"; // AdBrief accent
-const GREEN = "#10b981", RED = "#ef4444", AMBER = "#f59e0b";
+// ── Design tokens — from unified design system ──────────────────────────────
+const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
+const MONO = T.mono; // 'Space Grotesk', 'DM Mono', monospace
+const BG = T.surface0; // #070d1a
+const TX = T.textPrimary; // #f0f2f8
+const MT = T.textMuted; // rgba(255,255,255,0.45)
+const A = T.accent; // #0ea5e9
+const GREEN = T.green; // #22c55e
+const RED = T.red; // #ef4444
+const AMBER = T.amber; // #eab308
 
 // ── Metrics ──────────────────────────────────────────────────────────────────
 type MetricKey = "spend"|"ctr"|"clicks"|"impressions"|"conversions"|"roas"|"cpa"|"cpm"|"cpc"|"reach"|"frequency"|"conv_value";

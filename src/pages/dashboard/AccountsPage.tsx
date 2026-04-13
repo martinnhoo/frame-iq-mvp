@@ -6,14 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Globe, Upload, Loader2, X, CheckCircle2, Link2, AlertCircle, Check, ChevronDown, Building2, Save, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const F = "'Plus Jakarta Sans', sans-serif";
-const BLUE = "#0ea5e9", CYAN = "#06b6d4";
-const CARD  = "linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)";
-const SHD   = "0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.35)";
-const IBG   = "rgba(255,255,255,0.06)";
-const IBD   = "1px solid rgba(255,255,255,0.12)";
+// ── Design tokens — from unified design system ─────────────────────────────────
+const F = T.font;
+const BLUE = T.accent; // #0ea5e9
+const CYAN = "#06b6d4";
+const CARD  = `linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)`;
+const SHD   = `0 0 0 1px ${T.borderSubtle} inset, ${T.shadowMd}`;
+const IBG   = `rgba(255,255,255,0.06)`;
+const IBD   = `1px solid ${T.borderLight}`;
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const T = {
