@@ -2319,7 +2319,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
 
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(80px,8vw,100px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#070d1a' }}>
+    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(20px,3vw,40px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#070d1a' }}>
 
       {/* Soft ambient gradient */}
       <div style={{
