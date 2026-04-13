@@ -14,10 +14,8 @@ const BRAND_BRIGHT = "#38bdf8"; // sky blue accent
 const BG = "#070d1a";
 const CARD_BG = "rgba(17,22,32,0.65)";
 const CARD_BORDER = "rgba(99,102,241,0.12)";
-const TEXT_MUTED = "rgba(255,255,255,0.7)";
+const TEXT_MUTED = "rgba(255,255,255,0.55)";
 const F = "'Plus Jakarta Sans', system-ui, sans-serif";
-const F_DISPLAY = "'Syne', 'Plus Jakarta Sans', system-ui, sans-serif";
-const F_MONO = "'Space Grotesk', 'DM Mono', monospace";
 
 // ─── CTA Button ──────────────────────────────────────────────────────────────
 function CTAButton({
@@ -47,15 +45,15 @@ function CTAButton({
   };
 
   const variants: Record<string, React.CSSProperties> = {
-    primary: { background: 'linear-gradient(135deg, #38bdf8 0%, #6366f1 50%, #a855f7 100%)', color: '#fff', boxShadow: '0 0 32px rgba(56,189,248,0.25), 0 4px 16px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.15)' },
-    ghost:   { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.12)" },
-    white:   { background: "#fff", color: "#0a0a0a", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" },
+    primary: { background: 'linear-gradient(135deg, #38bdf8, #6366f1)', color: '#fff', boxShadow: '0 0 32px rgba(56,189,248,0.25), 0 4px 16px rgba(99,102,241,0.2)' },
+    ghost:   { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.09)" },
+    white:   { background: "#fff", color: "#000" },
   };
 
   const hoverStyle = {
-    primary: { transform: "translateY(-2px)", boxShadow: "0 0 48px rgba(56,189,248,0.35), 0 8px 24px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.2)" },
-    ghost:   { background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.85)", borderColor: "rgba(255,255,255,0.2)" },
-    white:   { opacity: "0.92", transform: "translateY(-1px)" },
+    primary: { transform: "translateY(-2px)", boxShadow: "0 0 48px rgba(56,189,248,0.35), 0 8px 24px rgba(99,102,241,0.3)" },
+    ghost:   { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" },
+    white:   { opacity: "0.88" },
   };
 
   const handleEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -490,7 +488,7 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
   return (
     <div ref={ref} style={{ textAlign: "center" }}>
       <div style={{ opacity: 1 }}>
-        <span style={{ fontFamily: F_MONO, fontSize: "clamp(28px,4vw,42px)", fontWeight: 700, letterSpacing: "-0.03em", fontVariantNumeric: 'tabular-nums', background: "linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.6))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{value}</span>
+        <span style={{ fontFamily: F, fontSize: "clamp(28px,4vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", background: "linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.5))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{value}</span>
         <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.72)", marginTop: 6, letterSpacing: "0.02em" }}>{label}</p>
       </div>
     </div>
@@ -1797,13 +1795,15 @@ function AnimatedKPI({ value, suffix = '', duration = 1200 }: { value: number; s
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, [value, duration]);
-  return <span ref={ref} style={{ fontFamily: F_MONO, fontVariantNumeric: 'tabular-nums' }}>{display}{suffix}</span>;
+  return <span ref={ref}>{display}{suffix}</span>;
 }
 
 // ─── Platform SVG badges ─────────────────────────────────────────────────────
 function MetaBadge() {
   return (
-    <span style={{ fontFamily: F_MONO, fontSize: 11, fontWeight: 600, color: '#0082FB', letterSpacing: '0.02em' }}>META</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.897 4h-.024l-.031 2.615h.022c1.715 0 3.046 1.357 5.94 6.246l.175.297.012.02 1.62-2.438-.012-.019a48.763 48.763 0 00-1.098-1.716 28.01 28.01 0 00-1.175-1.629C10.413 4.932 8.812 4 6.896 4z" fill="url(#lobe-icons-meta-fill-0)"></path><path d="M6.873 4C4.95 4.01 3.247 5.258 2.02 7.17a4.352 4.352 0 00-.01.017l2.254 1.231.011-.017c.718-1.083 1.61-1.774 2.568-1.785h.021L6.896 4h-.023z" fill="url(#lobe-icons-meta-fill-1)"></path><path d="M2.019 7.17l-.011.017C1.2 8.447.598 9.995.274 11.664l-.005.022 2.534.6.004-.022c.27-1.467.786-2.828 1.456-3.845l.011-.017L2.02 7.17z" fill="url(#lobe-icons-meta-fill-2)"></path><path d="M2.807 12.264l-2.533-.6-.005.022c-.177.918-.267 1.851-.269 2.786v.023l2.598.233v-.023a12.591 12.591 0 01.21-2.44z" fill="url(#lobe-icons-meta-fill-3)"></path><path d="M2.677 15.537a5.462 5.462 0 01-.079-.813v-.022L0 14.468v.024a8.89 8.89 0 00.146 1.652l2.535-.585a4.106 4.106 0 01-.004-.022z" fill="url(#lobe-icons-meta-fill-4)"></path><path d="M3.27 16.89c-.284-.31-.484-.756-.589-1.328l-.004-.021-2.535.585.004.021c.192 1.01.568 1.85 1.106 2.487l.014.017 2.018-1.745a2.106 2.106 0 01-.015-.016z" fill="url(#lobe-icons-meta-fill-5)"></path><path d="M10.78 9.654c-1.528 2.35-2.454 3.825-2.454 3.825-2.035 3.2-2.739 3.917-3.871 3.917a1.545 1.545 0 01-1.186-.508l-2.017 1.744.014.017C2.01 19.518 3.058 20 4.356 20c1.963 0 3.374-.928 5.884-5.33l1.766-3.13a41.283 41.283 0 00-1.227-1.886z" fill="#0082FB"></path><path d="M13.502 5.946l-.016.016c-.4.43-.786.908-1.16 1.416.378.483.768 1.024 1.175 1.63.48-.743.928-1.345 1.367-1.807l.016-.016-1.382-1.24z" fill="url(#lobe-icons-meta-fill-6)"></path><path d="M20.918 5.713C19.853 4.633 18.583 4 17.225 4c-1.432 0-2.637.787-3.723 1.944l-.016.016 1.382 1.24.016-.017c.715-.747 1.408-1.12 2.176-1.12.826 0 1.6.39 2.27 1.075l.015.016 1.589-1.425-.016-.016z" fill="#0082FB"></path><path d="M23.998 14.125c-.06-3.467-1.27-6.566-3.064-8.396l-.016-.016-1.588 1.424.015.016c1.35 1.392 2.277 3.98 2.361 6.971v.023h2.292v-.022z" fill="url(#lobe-icons-meta-fill-7)"></path><path d="M23.998 14.15v-.023h-2.292v.022c.004.14.006.282.006.424 0 .815-.121 1.474-.368 1.95l-.011.022 1.708 1.782.013-.02c.62-.96.946-2.293.946-3.91 0-.083 0-.165-.002-.247z" fill="url(#lobe-icons-meta-fill-8)"></path><path d="M21.344 16.52l-.011.02c-.214.402-.519.67-.917.787l.778 2.462a3.493 3.493 0 00.438-.182 3.558 3.558 0 001.366-1.218l.044-.065.012-.02-1.71-1.784z" fill="url(#lobe-icons-meta-fill-9)"></path><path d="M19.92 17.393c-.262 0-.492-.039-.718-.14l-.798 2.522c.449.153.927.222 1.46.222.492 0 .943-.073 1.352-.215l-.78-2.462c-.167.05-.341.075-.517.073z" fill="url(#lobe-icons-meta-fill-10)"></path><path d="M18.323 16.534l-.014-.017-1.836 1.914.016.017c.637.682 1.246 1.105 1.937 1.337l.797-2.52c-.291-.125-.573-.353-.9-.731z" fill="url(#lobe-icons-meta-fill-11)"></path><path d="M18.309 16.515c-.55-.642-1.232-1.712-2.303-3.44l-1.396-2.336-.011-.02-1.62 2.438.012.02.989 1.668c.959 1.61 1.74 2.774 2.493 3.585l.016.016 1.834-1.914a2.353 2.353 0 01-.014-.017z" fill="url(#lobe-icons-meta-fill-12)"></path><defs><linearGradient id="lobe-icons-meta-fill-0" x1="75.897%" x2="26.312%" y1="89.199%" y2="12.194%"><stop offset=".06%" stopColor="#0867DF"></stop><stop offset="45.39%" stopColor="#0668E1"></stop><stop offset="85.91%" stopColor="#0064E0"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-1" x1="21.67%" x2="97.068%" y1="75.874%" y2="23.985%"><stop offset="13.23%" stopColor="#0064DF"></stop><stop offset="99.88%" stopColor="#0064E0"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-2" x1="38.263%" x2="60.895%" y1="89.127%" y2="16.131%"><stop offset="1.47%" stopColor="#0072EC"></stop><stop offset="68.81%" stopColor="#0064DF"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-3" x1="47.032%" x2="52.15%" y1="90.19%" y2="15.745%"><stop offset="7.31%" stopColor="#007CF6"></stop><stop offset="99.43%" stopColor="#0072EC"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-4" x1="52.155%" x2="47.591%" y1="58.301%" y2="37.004%"><stop offset="7.31%" stopColor="#007FF9"></stop><stop offset="100%" stopColor="#007CF6"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-5" x1="37.689%" x2="61.961%" y1="12.502%" y2="63.624%"><stop offset="7.31%" stopColor="#007FF9"></stop><stop offset="100%" stopColor="#0082FB"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-6" x1="34.808%" x2="62.313%" y1="68.859%" y2="23.174%"><stop offset="27.99%" stopColor="#007FF8"></stop><stop offset="91.41%" stopColor="#0082FB"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-7" x1="43.762%" x2="57.602%" y1="6.235%" y2="98.514%"><stop offset="0%" stopColor="#0082FB"></stop><stop offset="99.95%" stopColor="#0081FA"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-8" x1="60.055%" x2="39.88%" y1="4.661%" y2="69.077%"><stop offset="6.19%" stopColor="#0081FA"></stop><stop offset="100%" stopColor="#0080F9"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-9" x1="30.282%" x2="61.081%" y1="59.32%" y2="33.244%"><stop offset="0%" stopColor="#027AF3"></stop><stop offset="100%" stopColor="#0080F9"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-10" x1="20.433%" x2="82.112%" y1="50.001%" y2="50.001%"><stop offset="0%" stopColor="#0377EF"></stop><stop offset="99.94%" stopColor="#0279F1"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-11" x1="40.303%" x2="72.394%" y1="35.298%" y2="57.811%"><stop offset=".19%" stopColor="#0471E9"></stop><stop offset="100%" stopColor="#0377EF"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-12" x1="32.254%" x2="68.003%" y1="19.719%" y2="84.908%"><stop offset="27.65%" stopColor="#0867DF"></stop><stop offset="100%" stopColor="#0471E9"></stop></linearGradient></defs>
+    </svg>
   );
 }// GoogleBadge removed
 
@@ -2071,8 +2071,8 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
 
               {/* Big result number — the first thing eyes go to */}
               <div style={{ marginBottom:12, padding:'12px 16px', borderRadius:12, background:'linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0.04) 100%)', border:'1px solid rgba(99,102,241,0.2)' }}>
-                <div style={{ fontFamily:F_MONO, fontSize:22, fontWeight:700, letterSpacing:'-0.03em', color:'#38bdf8', lineHeight:1, fontVariantNumeric:'tabular-nums' }}>{scene.metric}</div>
-                <div style={{ fontFamily:F, fontSize: 12, color:'rgba(255,255,255,0.6)', marginTop:4, letterSpacing:'0.01em' }}>{scene.metricLabel}</div>
+                <div style={{ fontFamily:F, fontSize:22, fontWeight:900, letterSpacing:'-0.04em', color:'#38bdf8', lineHeight:1 }}>{scene.metric}</div>
+                <div style={{ fontFamily:F, fontSize: 12, color:'rgba(255,255,255,0.45)', marginTop:4, letterSpacing:'0.01em' }}>{scene.metricLabel}</div>
               </div>
 
               {/* Key points — hook tabs get numbered style, others get icon style */}
@@ -2176,33 +2176,29 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%', position: 'relative' as const }}>
       {/* Eyebrow */}
-      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 28, width: 'fit-content', padding: '7px 16px', borderRadius: 20, background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(56,189,248,0.08))', border: '1px solid rgba(99,102,241,0.2)', backdropFilter: 'blur(8px)' }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #38bdf8)', boxShadow: '0 0 10px #6366f1' }} />
-        <span style={{ fontFamily: F_MONO, fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#38bdf8' }}>
+      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content', padding: '6px 14px', borderRadius: 20, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', backdropFilter: 'blur(8px)' }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }} />
+        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#38bdf8' }}>
           {lang === 'pt' ? 'IA conectada na sua conta' : lang === 'es' ? 'IA conectada en tu cuenta' : 'AI connected to your account'}
         </span>
       </div>
 
-      {/* Headline — Syne display, refined weight */}
+      {/* Headline — massive, bold, with glow */}
       <h1 style={{
-        fontFamily: F_DISPLAY, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.05,
-        margin: '0 0 22px', color: '#fff',
-        fontSize: 'clamp(42px, 5.2vw, 72px)',
+        fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.02,
+        margin: '0 0 20px', color: '#fff',
+        fontSize: 'clamp(44px, 5.5vw, 76px)',
       }}>
         {line1}
         <br />
         {line2}
         <br />
-        <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>
-          <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 600, fontSize: 'clamp(34px, 4.2vw, 60px)' }}>{line3prefix}</span>
+        <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+          <span style={{ color: 'rgba(255,255,255,0.25)', fontWeight: 400, fontSize: 'clamp(36px, 4.5vw, 64px)' }}>{line3prefix}</span>
           <span className="hero-text-shimmer" style={{
             display: 'inline-block',
-            fontWeight: 700,
-            fontSize: 'clamp(42px, 5.2vw, 72px)',
-            background: 'linear-gradient(135deg, #38bdf8 0%, #a78bfa 50%, #6366f1 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
+            fontWeight: 800,
+            fontSize: 'clamp(44px, 5.5vw, 76px)',
             opacity: fade ? 1 : 0,
             transform: fade ? 'translateY(0)' : 'translateY(6px)',
             transition: 'opacity 0.22s ease, transform 0.22s ease',
@@ -2212,11 +2208,11 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         </span>
       </h1>
 
-      {/* Subline — readable, not faded */}
+      {/* Subline — single sentence, max impact */}
       <p style={{
-        fontFamily: F, fontSize: 'clamp(15px,1.15vw,17px)',
-        color: 'rgba(255,255,255,0.75)', lineHeight: 1.65,
-        margin: '0 0 36px', maxWidth: 440, fontWeight: 400,
+        fontFamily: F, fontSize: 'clamp(15px,1.1vw,17px)',
+        color: 'rgba(255,255,255,0.65)', lineHeight: 1.6,
+        margin: '0 0 36px', maxWidth: 430,
       }}>
         {sub}
       </p>
@@ -2232,24 +2228,27 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         />
         <button
           onClick={() => window.location.href = '/demo'}
-          style={{ fontFamily: F, fontSize: 14, fontWeight: 600, padding: '14px 22px', borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', transition: 'all 0.2s' }}
-          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color='rgba(255,255,255,0.9)'; el.style.borderColor='rgba(255,255,255,0.25)'; el.style.background='rgba(255,255,255,0.08)'; }}
-          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color='rgba(255,255,255,0.65)'; el.style.borderColor='rgba(255,255,255,0.12)'; el.style.background='rgba(255,255,255,0.05)'; }}>
+          style={{ fontFamily: F, fontSize: 13, fontWeight: 500, padding: '14px 20px', borderRadius: 12, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.15s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.25)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.1)'; }}>
           {t.hero_see}
         </button>
       </div>
 
       {/* Fine print */}
-      <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: '0 0 20px', fontWeight: 500 }}>{finePrint}</p>
+      <p style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.32)', margin: '0 0 20px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: '100%' }}>{finePrint}</p>
 
-      {/* Platform badge — compact, no giant SVG */}
+      {/* Platform badge — Meta Ads only, clean and prominent */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em', fontWeight: 500 }}>
+        <span style={{ fontFamily: F, fontSize: 12, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>
           {lang === 'pt' ? 'Conecta com' : lang === 'es' ? 'Conecta con' : 'Connects with'}
         </span>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 10, background: 'linear-gradient(135deg, rgba(0,130,251,0.1), rgba(99,102,241,0.06))', border: '1px solid rgba(0,130,251,0.2)' }}>
-          <span style={{ fontSize: 16, lineHeight: 1 }}>&#8734;</span>
-          <span style={{ fontFamily: F_MONO, fontSize: 13, fontWeight: 600, color: '#fff', letterSpacing: '-0.01em' }}>Meta Ads</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 18px', borderRadius: 10, background: 'rgba(0,130,251,0.08)', border: '1px solid rgba(0,130,251,0.22)', boxShadow: '0 0 20px rgba(0,130,251,0.07)' }}>
+          {/* Meta ∞ — logo oficial */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6.897 4h-.024l-.031 2.615h.022c1.715 0 3.046 1.357 5.94 6.246l.175.297.012.02 1.62-2.438-.012-.019a48.763 48.763 0 00-1.098-1.716 28.01 28.01 0 00-1.175-1.629C10.413 4.932 8.812 4 6.896 4z" fill="url(#lobe-icons-meta-fill-0)"></path><path d="M6.873 4C4.95 4.01 3.247 5.258 2.02 7.17a4.352 4.352 0 00-.01.017l2.254 1.231.011-.017c.718-1.083 1.61-1.774 2.568-1.785h.021L6.896 4h-.023z" fill="url(#lobe-icons-meta-fill-1)"></path><path d="M2.019 7.17l-.011.017C1.2 8.447.598 9.995.274 11.664l-.005.022 2.534.6.004-.022c.27-1.467.786-2.828 1.456-3.845l.011-.017L2.02 7.17z" fill="url(#lobe-icons-meta-fill-2)"></path><path d="M2.807 12.264l-2.533-.6-.005.022c-.177.918-.267 1.851-.269 2.786v.023l2.598.233v-.023a12.591 12.591 0 01.21-2.44z" fill="url(#lobe-icons-meta-fill-3)"></path><path d="M2.677 15.537a5.462 5.462 0 01-.079-.813v-.022L0 14.468v.024a8.89 8.89 0 00.146 1.652l2.535-.585a4.106 4.106 0 01-.004-.022z" fill="url(#lobe-icons-meta-fill-4)"></path><path d="M3.27 16.89c-.284-.31-.484-.756-.589-1.328l-.004-.021-2.535.585.004.021c.192 1.01.568 1.85 1.106 2.487l.014.017 2.018-1.745a2.106 2.106 0 01-.015-.016z" fill="url(#lobe-icons-meta-fill-5)"></path><path d="M10.78 9.654c-1.528 2.35-2.454 3.825-2.454 3.825-2.035 3.2-2.739 3.917-3.871 3.917a1.545 1.545 0 01-1.186-.508l-2.017 1.744.014.017C2.01 19.518 3.058 20 4.356 20c1.963 0 3.374-.928 5.884-5.33l1.766-3.13a41.283 41.283 0 00-1.227-1.886z" fill="#0082FB"></path><path d="M13.502 5.946l-.016.016c-.4.43-.786.908-1.16 1.416.378.483.768 1.024 1.175 1.63.48-.743.928-1.345 1.367-1.807l.016-.016-1.382-1.24z" fill="url(#lobe-icons-meta-fill-6)"></path><path d="M20.918 5.713C19.853 4.633 18.583 4 17.225 4c-1.432 0-2.637.787-3.723 1.944l-.016.016 1.382 1.24.016-.017c.715-.747 1.408-1.12 2.176-1.12.826 0 1.6.39 2.27 1.075l.015.016 1.589-1.425-.016-.016z" fill="#0082FB"></path><path d="M23.998 14.125c-.06-3.467-1.27-6.566-3.064-8.396l-.016-.016-1.588 1.424.015.016c1.35 1.392 2.277 3.98 2.361 6.971v.023h2.292v-.022z" fill="url(#lobe-icons-meta-fill-7)"></path><path d="M23.998 14.15v-.023h-2.292v.022c.004.14.006.282.006.424 0 .815-.121 1.474-.368 1.95l-.011.022 1.708 1.782.013-.02c.62-.96.946-2.293.946-3.91 0-.083 0-.165-.002-.247z" fill="url(#lobe-icons-meta-fill-8)"></path><path d="M21.344 16.52l-.011.02c-.214.402-.519.67-.917.787l.778 2.462a3.493 3.493 0 00.438-.182 3.558 3.558 0 001.366-1.218l.044-.065.012-.02-1.71-1.784z" fill="url(#lobe-icons-meta-fill-9)"></path><path d="M19.92 17.393c-.262 0-.492-.039-.718-.14l-.798 2.522c.449.153.927.222 1.46.222.492 0 .943-.073 1.352-.215l-.78-2.462c-.167.05-.341.075-.517.073z" fill="url(#lobe-icons-meta-fill-10)"></path><path d="M18.323 16.534l-.014-.017-1.836 1.914.016.017c.637.682 1.246 1.105 1.937 1.337l.797-2.52c-.291-.125-.573-.353-.9-.731z" fill="url(#lobe-icons-meta-fill-11)"></path><path d="M18.309 16.515c-.55-.642-1.232-1.712-2.303-3.44l-1.396-2.336-.011-.02-1.62 2.438.012.02.989 1.668c.959 1.61 1.74 2.774 2.493 3.585l.016.016 1.834-1.914a2.353 2.353 0 01-.014-.017z" fill="url(#lobe-icons-meta-fill-12)"></path><defs><linearGradient id="lobe-icons-meta-fill-0" x1="75.897%" x2="26.312%" y1="89.199%" y2="12.194%"><stop offset=".06%" stopColor="#0867DF"></stop><stop offset="45.39%" stopColor="#0668E1"></stop><stop offset="85.91%" stopColor="#0064E0"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-1" x1="21.67%" x2="97.068%" y1="75.874%" y2="23.985%"><stop offset="13.23%" stopColor="#0064DF"></stop><stop offset="99.88%" stopColor="#0064E0"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-2" x1="38.263%" x2="60.895%" y1="89.127%" y2="16.131%"><stop offset="1.47%" stopColor="#0072EC"></stop><stop offset="68.81%" stopColor="#0064DF"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-3" x1="47.032%" x2="52.15%" y1="90.19%" y2="15.745%"><stop offset="7.31%" stopColor="#007CF6"></stop><stop offset="99.43%" stopColor="#0072EC"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-4" x1="52.155%" x2="47.591%" y1="58.301%" y2="37.004%"><stop offset="7.31%" stopColor="#007FF9"></stop><stop offset="100%" stopColor="#007CF6"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-5" x1="37.689%" x2="61.961%" y1="12.502%" y2="63.624%"><stop offset="7.31%" stopColor="#007FF9"></stop><stop offset="100%" stopColor="#0082FB"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-6" x1="34.808%" x2="62.313%" y1="68.859%" y2="23.174%"><stop offset="27.99%" stopColor="#007FF8"></stop><stop offset="91.41%" stopColor="#0082FB"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-7" x1="43.762%" x2="57.602%" y1="6.235%" y2="98.514%"><stop offset="0%" stopColor="#0082FB"></stop><stop offset="99.95%" stopColor="#0081FA"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-8" x1="60.055%" x2="39.88%" y1="4.661%" y2="69.077%"><stop offset="6.19%" stopColor="#0081FA"></stop><stop offset="100%" stopColor="#0080F9"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-9" x1="30.282%" x2="61.081%" y1="59.32%" y2="33.244%"><stop offset="0%" stopColor="#027AF3"></stop><stop offset="100%" stopColor="#0080F9"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-10" x1="20.433%" x2="82.112%" y1="50.001%" y2="50.001%"><stop offset="0%" stopColor="#0377EF"></stop><stop offset="99.94%" stopColor="#0279F1"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-11" x1="40.303%" x2="72.394%" y1="35.298%" y2="57.811%"><stop offset=".19%" stopColor="#0471E9"></stop><stop offset="100%" stopColor="#0377EF"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-12" x1="32.254%" x2="68.003%" y1="19.719%" y2="84.908%"><stop offset="27.65%" stopColor="#0867DF"></stop><stop offset="100%" stopColor="#0471E9"></stop></linearGradient></defs>
+          </svg>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>Meta Ads</span>
         </div>
       </div>
     </div>
@@ -2427,8 +2426,8 @@ function FeatureTabs() {
       <div style={{ maxWidth: 1160, margin: "0 auto", padding: "0 24px", position: "relative" }}>
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 56 }}>
           <p style={{ color: "#0da2e7", fontFamily: "monospace", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase" as const, marginBottom: 16 }}>conta real · dados reais</p>
-          <h2 style={{ fontFamily: F_DISPLAY, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, color: "#fff", margin: "0 0 16px", lineHeight: 1.15, letterSpacing: "-0.03em" }}>O que você ganha usando o AdBrief</h2>
-          <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 17, maxWidth: 480, margin: "0 auto", lineHeight: 1.5 }}>Resultados reais de gestores com conta conectada.</p>
+          <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#fff", margin: "0 0 16px", lineHeight: 1.15, letterSpacing: "-0.02em" }}>O que você ganha usando o AdBrief</h2>
+          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 17, maxWidth: 480, margin: "0 auto", lineHeight: 1.5 }}>Resultados reais de gestores com conta conectada.</p>
         </div>
         <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 52, flexWrap: "wrap" as const }}>
           {featureTabsData.map((t, i) => (
@@ -2440,8 +2439,8 @@ function FeatureTabs() {
         <div className="feature-tabs-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 56, alignItems: "center", opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.2s ease, transform 0.2s ease" }}>
           <div>
             <div style={{ display: "inline-block", padding: "5px 12px", borderRadius: 6, background: "rgba(13,162,231,0.08)", border: "1px solid rgba(13,162,231,0.2)", color: "#0da2e7", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 20 }}>{tab.proof}</div>
-            <h3 style={{ fontFamily: F_DISPLAY, fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 700, color: "#fff", margin: "0 0 16px", lineHeight: 1.2, letterSpacing: "-0.02em" }}>{tab.headline}</h3>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 1.65, margin: "0 0 32px" }}>{tab.sub}</p>
+            <h3 style={{ fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 800, color: "#fff", margin: "0 0 16px", lineHeight: 1.2, letterSpacing: "-0.02em" }}>{tab.headline}</h3>
+            <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 16, lineHeight: 1.65, margin: "0 0 32px" }}>{tab.sub}</p>
             <a href="/signup" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "11px 22px", borderRadius: 8, background: "transparent", border: "1px solid rgba(13,162,231,0.4)", color: "#0da2e7", fontSize: 14, fontWeight: 600, textDecoration: "none", letterSpacing: "0.01em" }}>{tab.cta}</a>
             <div style={{ display: "flex", gap: 6, marginTop: 40 }}>
               {featureTabsData.map((_, i) => (
@@ -2532,7 +2531,7 @@ function Tools({ t, lang }: { t: Record<string, string>; lang: Lang }) {
 
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.14em", fontWeight: 700, color: "rgba(99,102,241,0.65)", textTransform: "uppercase" as const }}>{t.tools_label}</span>
-          <h2 style={{ fontFamily: F_DISPLAY, fontSize: "clamp(26px,3.6vw,40px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "10px 0 8px", color: "#fff" }}>{t.tools_h2}</h2>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3.6vw,40px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "10px 0 8px", color: "#fff" }}>{t.tools_h2}</h2>
           <p style={{ fontFamily: F, fontSize: 14.5, color: "rgba(255,255,255,0.42)", maxWidth: 380, margin: "0 auto", lineHeight: 1.6 }}>{t.tools_sub}</p>
         </div>
 
@@ -2742,7 +2741,7 @@ function PainSection({ onCTA, lang, ctaLoading }: { onCTA: () => void; lang: "pt
         </div>
 
         {/* Title */}
-        <h2 className="scroll-reveal scroll-reveal-delay-1" style={{ fontFamily: F_DISPLAY, fontSize: "clamp(24px,3.5vw,42px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1, textAlign: "center", color: "#fff", whiteSpace: "pre-line" as const, marginBottom: 48 }}>
+        <h2 className="scroll-reveal scroll-reveal-delay-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "clamp(24px,3.5vw,42px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.1, textAlign: "center", color: "#fff", whiteSpace: "pre-line" as const, marginBottom: 48 }}>
           {c.title}
         </h2>
 
@@ -2870,8 +2869,8 @@ function HowItWorks({ t, lang }: { t: Record<string, string>; lang: Lang }) {
             <span style={{ fontFamily: F, fontSize: 11, letterSpacing: "0.16em", fontWeight: 700, color: "rgba(56,189,248,0.8)", textTransform: "uppercase" as const }}>{t.how_label}</span>
             <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(56,189,248,0.3), transparent)" }} />
           </div>
-          <h2 style={{ fontFamily: F_DISPLAY, fontSize: "clamp(28px,4vw,44px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "0 0 10px", color: "#fff", lineHeight: 1.1 }}>{t.how_h2}</h2>
-          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.65)", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>{t.how_sub}</p>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,44px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "0 0 10px", color: "#fff", lineHeight: 1.1 }}>{t.how_h2}</h2>
+          <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>{t.how_sub}</p>
         </div>
 
         {/* Interactive split: steps left + screenshot right */}
@@ -3010,7 +3009,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 20 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 700, color: "rgba(99,102,241,0.7)", textTransform: "uppercase" as const }}>{t.for_label}</span>
-          <h2 style={{ fontFamily: F_DISPLAY, fontSize: "clamp(28px,4vw,48px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(28px,4vw,48px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "14px 0 0", color: "#fff" }}>{t.for_h2}</h2>
         </div>
         <div className="for-who-tabs" style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 40, background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "4px", width: "fit-content", margin: "0 auto 40px" }}>
           {profiles.map((pr, i) => (
@@ -3030,7 +3029,7 @@ function ForWho({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<string,
             <div className="for-who-card" style={{ padding: "32px 28px", borderRadius: 20, background: `linear-gradient(135deg, ${p.color}07 0%, rgba(255,255,255,0.02) 100%)`, border: `1px solid ${p.color}18` }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: `${p.color}18`, border: `1px solid ${p.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, marginBottom: 20 }}><Target size={18} color={p.color} /></div>
               <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.2, marginBottom: 10, color: "#fff" }}>{p.headline}</h3>
-              <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: 24 }}>{p.desc}</p>
+              <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, marginBottom: 24 }}>{p.desc}</p>
               <CTAButton onClick={onCTA} loading={ctaLoading} label={t.for_cta} size="sm" variant="white" icon={<ArrowRight size={14} />} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -3085,7 +3084,7 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
               TELEGRAM ALERTS
             </span>
           </div>
-          <h2 style={{ fontFamily: F_DISPLAY, fontSize: "clamp(26px,3.8vw,44px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "0 0 14px", color: "#fff", lineHeight: 1.15 }}>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(26px,3.8vw,44px)", fontWeight: 900, letterSpacing: "-0.04em", margin: "0 0 14px", color: "#fff", lineHeight: 1.15 }}>
             {lang === "pt" ? "O AdBrief chega no seu celular." : lang === "es" ? "AdBrief llega a tu celular." : "AdBrief comes to your phone."}
           </h2>
           <p style={{ fontFamily: F, fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 480, lineHeight: 1.65 }}>
@@ -3253,7 +3252,7 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
               <div>
                 <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>{plan.name}</p>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                  <span style={{ fontFamily: F_MONO, fontSize: 42, fontWeight: 700, color: "#fff", letterSpacing: "-0.03em", fontVariantNumeric: 'tabular-nums' }}>{plan.price}</span>
+                  <span style={{ fontFamily: F, fontSize: 42, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{plan.price}</span>
                   <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{plan.desc}</span>
                 </div>
               </div>
@@ -3302,7 +3301,7 @@ function FAQ({ t }: { t: Record<string, string> }) {
       <div style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}>
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 44 }}>
           <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.12em", fontWeight: 600, color: "rgba(255,255,255,0.28)" }}>{t.faq_label}</span>
-          <h2 style={{ fontFamily: F_DISPLAY, fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 700, letterSpacing: "-0.03em", margin: "14px 0 0", color: "#fff" }}>{t.faq_h2}</h2>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "14px 0 0", color: "#fff" }}>{t.faq_h2}</h2>
         </div>
         <div className="scroll-reveal scroll-reveal-delay-1" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {items.map((item, i) => (
@@ -3512,7 +3511,7 @@ function FinalCTA({ onCTA, t, ctaLoading }: { onCTA: () => void; t: Record<strin
           <div style={{ height: 1, width: 40, background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
         </div>
 
-        <h2 className="hero-text-shimmer" style={{ fontFamily: F_DISPLAY, fontSize: "clamp(32px,5vw,56px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line" }}>{t.final_h2}</h2>
+        <h2 className="hero-text-shimmer" style={{ fontFamily: F, fontSize: "clamp(32px,5vw,56px)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.08, marginBottom: 20, whiteSpace: "pre-line" }}>{t.final_h2}</h2>
         <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 16, color: "rgba(255,255,255,0.5)", marginBottom: 44, lineHeight: 1.65, maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>{t.final_sub}</p>
 
         <CTAButton
