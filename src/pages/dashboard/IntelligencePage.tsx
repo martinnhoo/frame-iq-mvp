@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Brain, TrendingUp, MessageSquare, Zap, Star, Trash2, RefreshCw, ChevronRight, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
-const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'DM Mono', monospace";
+const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
+const M = T.mono; // 'Space Grotesk', 'DM Mono', monospace
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Memory  { id:string; memory_text:string; memory_type:string; importance:number; created_at:string; }
@@ -16,7 +17,10 @@ interface Pattern { id:string; pattern_key:string; insight_text:string; avg_ctr:
 
 // ── Compact memory row ────────────────────────────────────────────────────────
 const TYPE_COLOR: Record<string,string> = {
-  preference:"#38bdf8", decision:"#a78bfa", rule:"#34d399", context:"#fb923c",
+  preference: "#38bdf8", // Sky blue (visual)
+  decision: "#a78bfa", // Purple (strategic)
+  rule: T.green, // #22c55e (positive)
+  context: T.amber, // #eab308 (informational)
 };
 const TYPE_LABEL: Record<string,Record<string,string>> = {
   preference:{ pt:"Preferência",  es:"Preferencia",  en:"Preference"  },

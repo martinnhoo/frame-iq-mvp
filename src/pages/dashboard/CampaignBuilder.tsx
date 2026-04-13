@@ -5,6 +5,7 @@ import { useOutletContext } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { Loader2, Rocket, Check, AlertCircle, Send, Zap, Users, ShoppingCart, Heart, Eye, Globe } from "lucide-react";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 type Platform = "meta"; // google disabled (see GOOGLE_ADS_BACKUP.md)
 interface Persona { id: string; name: string; result?: any; }
@@ -40,9 +41,9 @@ const DFLT: Form = {
   channel_type:"", cpc_bid:"1.50", daily_budget:"", country:"BR",
   age_min:18, age_max:65, destination_url:"", primary_text:"", headline:"",
 };
-const accent = "#0ea5e9";
-const F = "'Plus Jakarta Sans', system-ui, sans-serif";
-const MONO = "'DM Mono', monospace";
+const accent = T.accent; // #0ea5e9
+const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
+const MONO = T.mono; // 'Space Grotesk', 'DM Mono', monospace
 const inputStyle: React.CSSProperties = {
   width:"100%", padding:"11px 14px", background:"var(--bg-surface)",
   border:"1px solid var(--border-subtle)", borderRadius:10,

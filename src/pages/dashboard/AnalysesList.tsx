@@ -6,13 +6,14 @@ import { BarChart3, Plus, Clock, CheckCircle, AlertCircle, Loader2, Trash2, XCir
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 interface Analysis {
   id: string; title: string | null; status: string; created_at: string;
   video_url: string | null; result: Record<string, unknown> | null; hook_strength: string | null;
 }
 
-const F = "'Plus Jakarta Sans', system-ui, sans-serif";
+const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
 
 const STATUS_LABELS: Record<string, Record<string, string>> = {
   pending:   { en: "Processing", pt: "Processando",  es: "Procesando"  },
@@ -20,12 +21,12 @@ const STATUS_LABELS: Record<string, Record<string, string>> = {
   failed:    { en: "Failed",     pt: "Falhou",       es: "Falló"       },
 };
 const STATUS_ICONS: Record<string, { icon: typeof Clock; color: string; bg: string; border: string }> = {
-  pending:   { icon: Clock,        color: "#fbbf24", bg: "rgba(251,191,36,0.08)",   border: "rgba(251,191,36,0.2)" },
-  completed: { icon: CheckCircle,  color: "#34d399", bg: "rgba(52,211,153,0.08)",  border: "rgba(52,211,153,0.2)" },
-  failed:    { icon: AlertCircle,  color: "#f87171", bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.2)" },
+  pending:   { icon: Clock,        color: T.amber, bg: `${T.amber}15`,     border: `${T.amber}20` },
+  completed: { icon: CheckCircle,  color: T.green, bg: `${T.green}15`,     border: `${T.green}20` },
+  failed:    { icon: AlertCircle,  color: T.red,   bg: `${T.red}15`,       border: `${T.red}20` },
 };
 
-const scoreColor = (s: number | null) => !s ? "rgba(255,255,255,0.35)" : s >= 8 ? "#34d399" : s >= 6 ? "#fbbf24" : "#f87171";
+const scoreColor = (s: number | null) => !s ? "rgba(255,255,255,0.35)" : s >= 8 ? T.green : s >= 6 ? T.amber : T.red;
 
 const UI: Record<string, Record<string, string>> = {
   pt: { title: "Análises", new_btn: "Nova análise", search_ph: "Buscar por nome...", recent: "Recentes", top_score: "Maior score", empty_title: "Nenhuma análise ainda", empty_sub: "Faça upload de um vídeo para obter scores de hook e insights criativos", empty_btn: "Criar primeira análise", untitled: "Análise sem título", no_match: "Nenhuma análise encontrada", cancel: "Cancelar análise", delete: "Excluir análise" },
