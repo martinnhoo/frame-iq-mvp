@@ -93,12 +93,15 @@ export default function OAuthCallback() {
 
         if (accs.length === 0) {
           setStatus("success");
-          const dest = `/dashboard/accounts?connected=${platform || ""}`;
           const savedId = data?.saved_id;
           setMessage(platform === "google"
             ? `Google Ads conectado${savedId ? " " : ""}. Vá em Contas → Google Ads → insira seu Customer ID.`
             : `${pl.name} connected.`);
-          setTimeout(() => navigate(dest), 2500);
+          // Meta → go to diagnostic; others → accounts page
+          const dest = platform === "meta"
+            ? "/dashboard/diagnostic"
+            : `/dashboard/accounts?connected=${platform || ""}`;
+          setTimeout(() => navigate(dest), 2000);
           return;
         }
 
@@ -107,7 +110,11 @@ export default function OAuthCallback() {
           await saveSelectedAccount(uid, accs[0].id, pid);
           setStatus("success");
           setMessage(`${pl.name} connected with ${accs[0].name || accs[0].id}.`);
-          setTimeout(() => navigate(`/dashboard/accounts?connected=${platform || ""}`), 2500);
+          // Meta → go to diagnostic for instant wow
+          const dest = platform === "meta"
+            ? "/dashboard/diagnostic"
+            : `/dashboard/accounts?connected=${platform || ""}`;
+          setTimeout(() => navigate(dest), 2000);
           return;
         }
 
@@ -155,7 +162,10 @@ export default function OAuthCallback() {
       setStatus("success");
       const acc = accounts.find(a => a.id === accountId);
       setMessage(`${pl.name} connected with "${acc?.name || accountId}".`);
-      setTimeout(() => navigate("/dashboard/accounts"), 2000);
+      const dest = platform === "meta"
+        ? "/dashboard/diagnostic"
+        : "/dashboard/accounts";
+      setTimeout(() => navigate(dest), 2000);
     } catch (e: any) {
       setSaving(false);
       setSelectedId(null);

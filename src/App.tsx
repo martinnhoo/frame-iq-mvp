@@ -64,6 +64,7 @@ const CreativeLoopPage = lazy(() => import("./pages/dashboard/CreativeLoopPage")
 // CampaignBuilder removed — AdBrief focuses on intelligence, not campaign execution
 const PerformanceDashboard = lazy(() => import("./pages/dashboard/PerformanceDashboard"));
 const OAuthCallback    = lazy(() => import("./pages/dashboard/OAuthCallback"));
+const AccountDiagnostic = lazy(() => import("./pages/dashboard/AccountDiagnostic"));
 const LoopImportPage   = lazy(() => import("./pages/dashboard/LoopImportPage"));
 const LoopSettingsPage = lazy(() => import("./pages/dashboard/LoopSettingsPage"));
 const LoopGuidePage    = lazy(() => import("./pages/dashboard/LoopGuidePage"));
@@ -167,6 +168,7 @@ const App = () => (
                 <Route path="loop" element={<CreativeLoopPage />} />
                 <Route path="campaigns/new" element={<Navigate to="/dashboard/ai" replace />} />
                 <Route path="performance" element={<PerformanceDashboard />} />
+                <Route path="diagnostic" element={<AccountDiagnostic />} />
                 <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
                 <Route path="loop/import" element={<LoopImportPage />} />
                 <Route path="loop/settings" element={<LoopSettingsPage />} />
