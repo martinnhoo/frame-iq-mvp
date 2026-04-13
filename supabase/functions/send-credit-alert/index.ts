@@ -378,10 +378,10 @@ Deno.serve(async (req) => {
 
     // Record that we sent this alert (prevent duplicates)
     // Log alert (non-critical, ignore errors)
-    const period = new Date().toISOString().slice(0, 7);
+    const alertPeriod = new Date().toISOString().slice(0, 7);
     await supabase.from("credit_transactions").insert({
       user_id,
-      period,
+      period: alertPeriod,
       action: alertKey,
       credits: 0,
       balance_after: 0,
