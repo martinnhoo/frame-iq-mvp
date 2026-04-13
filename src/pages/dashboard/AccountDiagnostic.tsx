@@ -45,11 +45,12 @@ interface DiagnosticData {
 
 const T = {
   font: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
-  mono: "'DM Mono', 'SF Mono', 'Fira Code', monospace",
+  mono: "'Space Grotesk', 'DM Mono', monospace",
+  display: "'Syne', 'Plus Jakarta Sans', system-ui, sans-serif",
   surface0: "#070d1a", surface1: "#0d1117", surface2: "#111620", surface3: "#161c2a",
   accent: "#0ea5e9", accentGlow: "rgba(14,165,233,.1)",
   red: "#ef4444", green: "#22c55e", amber: "#eab308",
-  textPrimary: "#f0f2f8", textSecondary: "rgba(255,255,255,.5)", textMuted: "rgba(255,255,255,.28)",
+  textPrimary: "#f0f2f8", textSecondary: "rgba(255,255,255,.65)", textMuted: "rgba(255,255,255,.45)",
   borderSubtle: "rgba(255,255,255,.04)", borderLight: "rgba(255,255,255,.08)", borderTopLight: "rgba(255,255,255,.12)",
   r: 12,
 };
@@ -350,7 +351,7 @@ function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
           style={{ transition: "stroke-dashoffset 2s cubic-bezier(.16,1,.3,1)", filter: `drop-shadow(0 0 4px ${color}40)` }} />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 16, fontWeight: 900, color: T.textPrimary, ...mono }}>{score}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, fontFamily: T.mono, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: T.textPrimary }}>{score}</span>
       </div>
     </div>
   );
@@ -582,15 +583,15 @@ export default function AccountDiagnostic() {
                 Você está perdendo hoje
               </p>
               <div>
-                <span style={{ fontSize: 18, fontWeight: 600, color: T.textMuted, ...mono, marginRight: 2 }}>R$</span>
+                <span style={{ fontSize: 18, fontWeight: 600, fontFamily: T.mono, color: T.textMuted, marginRight: 2 }}>R$</span>
                 <span style={{
-                  fontSize: 48, fontWeight: 900, color: T.textPrimary, ...mono,
+                  fontSize: 48, fontWeight: 700, fontFamily: T.mono, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: T.textPrimary,
                   animation: "countUp .8s ease-out",
                 }}>{animatedWaste.toLocaleString("pt-BR")}</span>
                 <span style={{ fontSize: 14, fontWeight: 500, color: T.textMuted, marginLeft: 4 }}>/mês</span>
               </div>
               <p style={{ fontSize: 12, color: T.textMuted, margin: "6px 0 0" }}>
-                <span style={{ ...mono, color: T.red }}>R${totalWastePerDay.toFixed(0)}/dia</span> em {unpausedAds.length} anúncio{unpausedAds.length > 1 ? "s" : ""} de baixa performance
+                <span style={{ fontFamily: T.mono, fontVariantNumeric: "tabular-nums", color: T.red }}>R${totalWastePerDay.toFixed(0)}/dia</span> em {unpausedAds.length} anúncio{unpausedAds.length > 1 ? "s" : ""} de baixa performance
               </p>
             </div>
 
@@ -602,10 +603,13 @@ export default function AccountDiagnostic() {
                   onClick={() => setBatchConfirm(true)}
                   style={{
                     flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 14, fontWeight: 700,
-                    background: T.red, color: "#fff", border: "none", cursor: "pointer", fontFamily: T.font,
+                    background: `linear-gradient(135deg, ${T.red}, #dc2626)`, color: "#fff", border: "none", cursor: "pointer", fontFamily: T.font,
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                    boxShadow: `0 0 20px ${T.red}30`,
+                    boxShadow: `0 0 20px ${T.red}40, inset 0 1px 0 rgba(255,255,255,.2)`,
+                    transition: "all .2s ease",
                   }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 4px 24px ${T.red}50, inset 0 1px 0 rgba(255,255,255,.3)`; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 0 20px ${T.red}40, inset 0 1px 0 rgba(255,255,255,.2)`; }}
                 >
                   <Pause size={15} />
                   Pausar {unpausedAds.length > 1 ? `todos (${unpausedAds.length})` : "agora"}
@@ -618,9 +622,12 @@ export default function AccountDiagnostic() {
                   }}
                   style={{
                     padding: "12px 20px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                    background: T.surface2, color: T.textSecondary, border: `1px solid ${T.borderSubtle}`,
+                    background: `linear-gradient(135deg, ${T.surface2}, ${T.surface3})`, color: T.textSecondary, border: `1px solid ${T.borderLight}`,
                     cursor: "pointer", fontFamily: T.font, display: "flex", alignItems: "center", gap: 5,
+                    transition: "all .2s ease",
                   }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = T.textPrimary; e.currentTarget.style.borderColor = T.borderTopLight; e.currentTarget.style.background = `linear-gradient(135deg, ${T.surface3}, #1a2032)`; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = T.textSecondary; e.currentTarget.style.borderColor = T.borderLight; e.currentTarget.style.background = `linear-gradient(135deg, ${T.surface2}, ${T.surface3})`; }}
                 >
                   Revisar antes <ChevronDown size={14} />
                 </button>
@@ -632,7 +639,7 @@ export default function AccountDiagnostic() {
                   Pausar {unpausedAds.length} anúncio{unpausedAds.length > 1 ? "s" : ""} agora?
                 </p>
                 <p style={{ fontSize: 11, color: T.textMuted, margin: "0 0 12px" }}>
-                  Isso economiza <span style={{ color: T.green, fontWeight: 700, ...mono }}>R${data.wasted_spend.toFixed(0)}/mês</span>. Você pode reativar a qualquer momento no Meta Ads Manager.
+                  Isso economiza <span style={{ color: T.green, fontWeight: 700, fontFamily: T.mono, fontVariantNumeric: "tabular-nums" }}>R${data.wasted_spend.toFixed(0)}/mês</span>. Você pode reativar a qualquer momento no Meta Ads Manager.
                 </p>
                 <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
                   <button
@@ -640,11 +647,15 @@ export default function AccountDiagnostic() {
                     disabled={batchPausing}
                     style={{
                       padding: "10px 24px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-                      background: T.red, color: "#fff", border: "none",
+                      background: `linear-gradient(135deg, ${T.red}, #dc2626)`, color: "#fff", border: "none",
                       cursor: batchPausing ? "not-allowed" : "pointer", fontFamily: T.font,
                       display: "flex", alignItems: "center", gap: 5,
                       opacity: batchPausing ? 0.7 : 1,
+                      boxShadow: `0 0 16px ${T.red}40, inset 0 1px 0 rgba(255,255,255,.2)`,
+                      transition: "all .2s ease",
                     }}
+                    onMouseEnter={(e) => { if (!batchPausing) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 4px 20px ${T.red}50, inset 0 1px 0 rgba(255,255,255,.3)`; } }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 0 16px ${T.red}40, inset 0 1px 0 rgba(255,255,255,.2)`; }}
                   >
                     {batchPausing ? <Loader2 size={13} style={{ animation: "spin .8s linear infinite" }} /> : <Check size={13} />}
                     {batchPausing ? `Pausando (${pausedIds.size}/${data.ads_to_pause.length})...` : "Confirmar"}
@@ -710,7 +721,7 @@ export default function AccountDiagnostic() {
             <CheckCircle2 size={15} color={T.green} />
             <span style={{ fontSize: 12, color: T.green, fontWeight: 600 }}>{pausedIds.size} pausado{pausedIds.size > 1 ? "s" : ""}</span>
             <span style={{ color: T.textMuted }}>—</span>
-            <span style={{ fontSize: 12, color: T.textPrimary, fontWeight: 700, ...mono }}>R${savedMoney.toFixed(0)}/mês economizados</span>
+            <span style={{ fontSize: 12, color: T.textPrimary, fontWeight: 700, fontFamily: T.mono, fontVariantNumeric: "tabular-nums" }}>R${savedMoney.toFixed(0)}/mês economizados</span>
           </div>
         )}
 
@@ -722,7 +733,7 @@ export default function AccountDiagnostic() {
           <div id="ad-decisions" style={{ marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, ...fadeUp(200) }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary }}>Ações recomendadas</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: T.red, ...mono, padding: "1px 6px", borderRadius: 4, background: `${T.red}0c` }}>{unpausedAds.length}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: T.red, fontFamily: T.mono, fontVariantNumeric: "tabular-nums", padding: "1px 6px", borderRadius: 4, background: `${T.red}0c` }}>{unpausedAds.length}</span>
               <Tip text="Cada card é uma decisão: veja o problema, clique 'Pausar' pra executar, ou 'Revisar' pra ver detalhes antes." />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -749,7 +760,7 @@ export default function AccountDiagnostic() {
               <span style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary, flex: 1, textAlign: "left" }}>
                 Anúncios para escalar
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: T.green, ...mono, padding: "1px 6px", borderRadius: 4, background: `${T.green}0c` }}>{data.ads_to_scale.length}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: T.green, fontFamily: T.mono, fontVariantNumeric: "tabular-nums", padding: "1px 6px", borderRadius: 4, background: `${T.green}0c` }}>{data.ads_to_scale.length}</span>
               {showScale ? <ChevronUp size={14} color={T.textMuted} /> : <ChevronDown size={14} color={T.textMuted} />}
             </button>
             {showScale && (
@@ -770,7 +781,7 @@ export default function AccountDiagnostic() {
             }}>
               <Flame size={14} color={T.amber} />
               <span style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary, flex: 1, textAlign: "left" }}>Em fadiga criativa</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: T.amber, ...mono, padding: "1px 6px", borderRadius: 4, background: `${T.amber}0c` }}>{data.ads_fatigued.length}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: T.amber, fontFamily: T.mono, fontVariantNumeric: "tabular-nums", padding: "1px 6px", borderRadius: 4, background: `${T.amber}0c` }}>{data.ads_fatigued.length}</span>
               <Tip text="Frequência acima de 3.5x. Troque o criativo pra recuperar performance." />
             </button>
           </div>
@@ -786,7 +797,7 @@ export default function AccountDiagnostic() {
           ].map((m, i) => (
             <div key={i} style={{ ...card(1), padding: "10px 8px", textAlign: "center" }}>
               <span style={{ fontSize: 9, color: T.textMuted, display: "block", marginBottom: 3, textTransform: "uppercase", letterSpacing: ".06em" }}>{m.label}</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: m.color, ...mono }}>{m.value}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: m.color, fontFamily: T.mono, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>{m.value}</span>
             </div>
           ))}
         </div>

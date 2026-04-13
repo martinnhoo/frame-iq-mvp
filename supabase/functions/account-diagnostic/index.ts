@@ -416,7 +416,8 @@ Deno.serve(async (req) => {
       // ── Deterministic classification (same as daily-intelligence) ──
       const isFatigued = frequency > 3.5;
 
-      const isScalable = isPrimaryGood && spend > 10;
+      // Only scalable if: KPI is good, spent > $10, is ACTIVE, and has conversions
+      const isScalable = isPrimaryGood && spend > 10 && ad.status === "ACTIVE" && conversions > 0;
 
       const needsPause =
         (!isPrimaryGood && spend > 20 && conversions === 0 && ctr < 0.005)
