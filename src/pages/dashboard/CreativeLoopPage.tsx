@@ -11,9 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const m = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" } as const;
+const j = { fontFamily: T.font } as const;
+const m = { fontFamily: T.font } as const;
 
 interface Pattern {
   id: string;

@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 interface Board {
   id: string;

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Loader2, X, ChevronDown, Check, RotateCcw, Sparkles, AlertTriangle } from "lucide-react";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -288,7 +289,7 @@ function ResultCard({ result, onReset }: { result: CheckResult; onReset: () => v
   useEffect(() => { const t = setTimeout(() => setVisible(true), 40); return () => clearTimeout(t); }, []);
   const vc = VERDICT_CFG[result.verdict];
   const F = "Inter,-apple-system,sans-serif";
-  const M = { fontFamily: "'DM Mono',monospace" };
+  const M = { fontFamily: T.mono };
 
   return (
     <div style={{
@@ -491,7 +492,7 @@ export default function PreflightCheck() {
   const [pendingRun, setPendingRun] = useState(false);
   const [analyzingText, setAnalyzingText] = useState("Analisando...");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const mono = { fontFamily: "'DM Mono',monospace" };
+  const mono = { fontFamily: T.mono };
 
   // Auto-detect market from persona
   useEffect(() => {

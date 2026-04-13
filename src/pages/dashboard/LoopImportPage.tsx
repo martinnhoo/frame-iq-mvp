@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const m = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" } as const;
+const j = { fontFamily: T.font } as const;
+const m = { fontFamily: T.font } as const;
 
 interface NomenclatureField {
   position: number;

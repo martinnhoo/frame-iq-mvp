@@ -9,6 +9,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import { TEMPLATES, CAT_META, type Template } from "@/pages/dashboard/TemplatesPage";
 import { getTemplateTranslation } from "@/i18n/templateTranslations";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 // ─── Platform connections per persona ─────────────────────────────────────────
 
@@ -25,7 +26,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
   const [changingAccount, setChangingAccount] = useState<string | null>(null);
   const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null);
 
-  const F = "'Plus Jakarta Sans', system-ui, sans-serif";
+  const F = T.font; // Design tokens;
 
   const loadConnections = async () => {
     if (!personaId) { setLoading(false); return; }

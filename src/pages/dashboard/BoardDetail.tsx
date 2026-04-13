@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ChevronDown, Users, Target, Film, Settings, Loader2, Copy, Check, Download, Trash2, Shuffle, ChevronUp, Zap, Image, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 interface BoardData {
   id: string;

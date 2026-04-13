@@ -7,6 +7,7 @@ import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 const LANGUAGES = [
   { code: "en", flag: "🇺🇸", name: "English",    market: "US / Global" },
@@ -37,8 +38,8 @@ const TONES = [
   { id: "Emotional",           label: "Emotional" },
 ];
 
-const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const mono = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" } as const;
+const syne = { fontFamily: T.font } as const;
+const mono = { fontFamily: T.font } as const;
 
 const LangPill = ({ value, onChange, exclude = [] }: { value: string; onChange: (c: string) => void; exclude?: string[] }) => {
   const [open, setOpen] = useState(false);

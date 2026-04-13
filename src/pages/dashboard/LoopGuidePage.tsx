@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { Upload, Brain, TrendingUp, Target, RefreshCw, ChevronRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
-const j = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-const m = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" } as const;
+const j = { fontFamily: T.font } as const;
+const m = { fontFamily: T.font } as const;
 
 const STEPS = [
   {

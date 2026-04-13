@@ -9,6 +9,7 @@ import { Search, Clock, ArrowRight, Layers, ChevronLeft, ChevronRight as Chevron
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useObT } from "@/i18n/onboardingTranslations";
 import { getTemplateTranslation, getCategoryLabel, getUpgradeCTA } from "@/i18n/templateTranslations";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 type Category = string;
 type Duration = "all" | "15" | "30" | "60";
@@ -119,7 +120,7 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
           {/* Target market */}
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3">
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Target market</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2" style={{ fontFamily: T.font }}>Target market</p>
               <div className="relative">
                 <button onClick={() => setLangOpen(o => !o)}
                   className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.15] hover:bg-white/[0.08] text-white text-sm transition-all">
@@ -146,7 +147,7 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
             </div>
 
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Ad language (VO)</p>
+              <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2" style={{ fontFamily: T.font }}>Ad language (VO)</p>
               <div className="relative">
                 <button onClick={() => setAdLangOpen(o => !o)}
                   className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.15] hover:bg-white/[0.08] text-white text-sm transition-all">
@@ -176,12 +177,12 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
           {preview ? (
             <div className="space-y-3">
               <div className="rounded-2xl border border-white/[0.13] bg-white/[0.06] p-4">
-                <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Translated brief</p>
+                <p className="text-[10px] uppercase tracking-widest text-white/45 mb-2" style={{ fontFamily: T.font }}>Translated brief</p>
                 <p className="text-xs text-white/60 leading-relaxed">{preview.text}</p>
               </div>
               {preview.notes && (
                 <div className="rounded-xl bg-emerald-500/[0.05] border border-emerald-500/15 px-4 py-3">
-                  <p className="text-[10px] uppercase tracking-widest text-emerald-400/50 mb-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Cultural adaptation</p>
+                  <p className="text-[10px] uppercase tracking-widest text-emerald-400/50 mb-1" style={{ fontFamily: T.font }}>Cultural adaptation</p>
                   <p className="text-[11px] text-white/55 leading-relaxed">{preview.notes}</p>
                 </div>
               )}
@@ -1760,8 +1761,8 @@ const TemplatesPage = () => {
     return counts;
   }, []);
 
-  const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
-  const mono = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" } as const;
+  const syne = { fontFamily: T.font } as const;
+  const mono = { fontFamily: T.font } as const;
 
   return (
     <div className="page-enter relative flex flex-col min-h-screen">

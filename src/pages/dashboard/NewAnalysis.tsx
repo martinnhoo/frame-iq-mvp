@@ -8,6 +8,7 @@ import { useDashT } from "@/i18n/dashboardTranslations";
 import { Upload, Check, ArrowLeft, Loader2, Link as LinkIcon, BarChart3, X, Video, FileSpreadsheet, ChevronDown } from "lucide-react";
 import { extractAudioFromFile, needsExtraction, MAX_WHISPER_SIZE } from "@/lib/audioExtractor";
 import PersonaGateModal from "@/components/PersonaGateModal";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 // ── CSV Meta Ads Parser ──────────────────────────────────────────────────────
 interface MetaAdRow {
@@ -118,7 +119,7 @@ function detectMarketFromPersona(style: string): string {
   return "US";
 }
 
-const syne = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
+const syne = { fontFamily: T.font } as const;
 
 const NewAnalysis = () => {
   const { user, refreshUsage, selectedPersona } = useOutletContext<DashboardContext>();

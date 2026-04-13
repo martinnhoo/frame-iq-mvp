@@ -16,6 +16,7 @@ import { ArrowLeft, Sparkles, Loader2, Globe, Clock, Video, User, Package, Layer
 import { PersonaWarningModal } from "@/components/dashboard/PersonaWarningModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 const getFunnelStages = (dt: (key: any) => string) => [
   { value: "tofu", label: dt("bo_tofu"), full: "Top of Funnel", desc: "Cold audience — awareness", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },

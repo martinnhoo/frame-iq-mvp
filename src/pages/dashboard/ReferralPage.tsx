@@ -5,10 +5,11 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, Check, Gift, Trophy, Users, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 interface DashCtx { user: any; profile: any; [k: string]: any }
 
-const F = "'Plus Jakarta Sans', sans-serif";
+const F = T.font; // Design tokens;
 
 const t = {
   en: {

@@ -9,6 +9,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 interface AnalysisData {
   id: string;
@@ -25,8 +26,8 @@ interface AnalysisData {
   recommended_platforms: string[] | null;
 }
 
-const mono = { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" } as const;
-const jakarta = { fontFamily: "'Plus Jakarta Sans', sans-serif" } as const;
+const mono = { fontFamily: T.font } as const;
+const jakarta = { fontFamily: T.font } as const;
 
 const SCORE_COLOR = (s: number) =>
   s >= 8 ? "#34d399" : s >= 6 ? "#0ea5e9" : s >= 4 ? "#fbbf24" : "#f87171";
@@ -115,7 +116,7 @@ const AnalysisDetail = () => {
   );
 
   if (!analysis) return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 12, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 12, fontFamily: T.font }}>
       <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Análise não encontrada.</p>
       <button onClick={() => navigate("/dashboard/analyses")}
         style={{ fontSize: 13, color: "#0ea5e9", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
