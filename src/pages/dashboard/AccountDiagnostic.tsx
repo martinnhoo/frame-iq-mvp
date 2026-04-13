@@ -71,6 +71,11 @@ const ANIM_CSS = `
 @keyframes glowPulse { 0%,100% { opacity:.4 } 50% { opacity:.9 } }
 @keyframes shake { 0%,100% { transform:translateX(0) } 25% { transform:translateX(-3px) } 75% { transform:translateX(3px) } }
 @keyframes successPop { 0% { transform:scale(0) } 50% { transform:scale(1.2) } 100% { transform:scale(1) } }
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
 `;
 
 const fadeUp = (d: number): React.CSSProperties => ({ animation: `fadeUp .55s cubic-bezier(.16,1,.3,1) ${d}ms both` });
@@ -83,7 +88,9 @@ function Tip({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
   return (
     <span style={{ position: "relative", display: "inline-flex", cursor: "help" }}
-      onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onClick={() => setOpen(o => !o)}>
+      onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onClick={() => setOpen(o => !o)}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { setOpen(o => !o); } }}
+      role="button" tabIndex={0} aria-label="Mostrar dica" aria-expanded={open} aria-haspopup="dialog">
       <HelpCircle size={12} color={T.textMuted} style={{ opacity: 0.5 }} />
       {open && (
         <span style={{
@@ -91,7 +98,7 @@ function Tip({ text }: { text: string }) {
           width: 220, padding: "10px 12px", borderRadius: 10,
           background: T.surface3, border: `1px solid ${T.borderLight}`, boxShadow: "0 8px 24px rgba(0,0,0,.5)",
           fontSize: 11, lineHeight: 1.55, color: T.textSecondary, fontWeight: 400, fontFamily: T.font, pointerEvents: "none",
-        }}>
+        }} role="tooltip">
           <span style={{ position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%) rotate(45deg)", width: 10, height: 10, background: T.surface3, border: `1px solid ${T.borderLight}`, borderTop: "none", borderLeft: "none" }} />
           {text}
         </span>
@@ -624,10 +631,11 @@ export default function AccountDiagnostic() {
                 {/* Path 1: Execute now — PROMINENT */}
                 <button
                   onClick={() => setBatchConfirm(true)}
+                  aria-label={`Pausar ${unpausedAds.length} anúncio(s) para economizar R$${data.wasted_spend.toFixed(0)}/mês`}
                   style={{
                     padding: "16px 24px", borderRadius: 12, fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em",
                     background: `linear-gradient(135deg, ${T.red}, #dc2626)`, color: "#fff", border: `1px solid ${T.red}40`, cursor: "pointer", fontFamily: T.font,
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8, minHeight: "44px",
                     boxShadow: `0 0 30px ${T.red}40, 0 8px 24px ${T.red}20, inset 0 1px 0 rgba(255,255,255,.25)`,
                     transition: "all .3s cubic-bezier(.16,1,.3,1)",
                     position: "relative",
@@ -645,10 +653,11 @@ export default function AccountDiagnostic() {
                     const el = document.getElementById("ad-decisions");
                     el?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
+                  aria-label="Revisar cada anúncio antes de pausar"
                   style={{
                     padding: "16px 20px", borderRadius: 12, fontSize: 14, fontWeight: 600,
                     background: `linear-gradient(135deg, ${T.surface2}88, ${T.surface3}88)`, color: T.textSecondary, border: `1.5px solid ${T.borderLight}`,
-                    cursor: "pointer", fontFamily: T.font, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    cursor: "pointer", fontFamily: T.font, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, minHeight: "44px",
                     transition: "all .3s cubic-bezier(.16,1,.3,1)",
                     boxShadow: `0 4px 12px rgba(0,0,0,.2)`,
                   }}
