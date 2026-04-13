@@ -45,13 +45,13 @@ function CTAButton({
   };
 
   const variants: Record<string, React.CSSProperties> = {
-    primary: { background: "#fff", color: "#000", boxShadow: "0 0 32px rgba(255,255,255,0.08)" },
+    primary: { background: 'linear-gradient(135deg, #38bdf8, #6366f1)', color: '#fff', boxShadow: '0 0 32px rgba(56,189,248,0.25), 0 4px 16px rgba(99,102,241,0.2)' },
     ghost:   { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.09)" },
     white:   { background: "#fff", color: "#000" },
   };
 
   const hoverStyle = {
-    primary: { transform: "translateY(-2px)", boxShadow: "0 0 40px rgba(255,255,255,0.15)" },
+    primary: { transform: "translateY(-2px)", boxShadow: "0 0 48px rgba(56,189,248,0.35), 0 8px 24px rgba(99,102,241,0.3)" },
     ghost:   { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" },
     white:   { opacity: "0.88" },
   };
