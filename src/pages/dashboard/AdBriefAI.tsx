@@ -1910,40 +1910,25 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             </div>
           )}
 
-          {/* Scale chip */}
-          {scaleCount > 0 && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 4,
-              padding: "3px 8px", borderRadius: 999,
-              background: "rgba(34,197,94,0.08)",
-              border: "1px solid rgba(34,197,94,0.15)",
-            }}>
-              <span style={{ fontSize: 10, color: "#34d399" }}>↑</span>
-              <span style={{
-                fontSize: 11, fontWeight: 700, color: "#34d399",
-                fontFamily: F,
-              }}>
-                {scaleCount}
-              </span>
-            </div>
-          )}
-
           {/* Diagnostic button */}
           <button
             onClick={e => { e.stopPropagation(); window.location.href = "/dashboard/diagnostic"; }}
-            title="Diagnóstico da conta"
+            title={lang === "pt" ? "Diagnóstico da conta" : lang === "es" ? "Diagnóstico de cuenta" : "Account Diagnostic"}
             style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: 28, height: 28, borderRadius: 7,
+              display: "flex", alignItems: "center", gap: 5,
+              padding: "4px 10px", borderRadius: 999,
               background: "rgba(59,130,246,0.10)",
               border: "1px solid rgba(59,130,246,0.20)",
               cursor: "pointer", transition: "all 0.15s",
-              padding: 0,
+              fontFamily: F,
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.20)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.35)"; }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.18)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.35)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.10)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.20)"; }}
           >
-            <Stethoscope size={14} color="#60a5fa" />
+            <Stethoscope size={12} color="#60a5fa" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#60a5fa", letterSpacing: "-0.01em" }}>
+              {lang === "pt" ? "Diagnóstico" : lang === "es" ? "Diagnóstico" : "Diagnostic"}
+            </span>
           </button>
 
           {/* Expand chevron */}
