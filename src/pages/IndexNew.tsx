@@ -2319,7 +2319,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
 
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: 'clamp(20px,3vw,40px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#070d1a' }}>
+    <section className="hero-main-section" style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', padding: 'clamp(20px,3vw,40px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#070d1a' }}>
 
       {/* Soft ambient gradient */}
       <div style={{
@@ -3622,7 +3622,7 @@ export default function IndexNew() {
     es: "Conecta Meta Ads y pregunta lo que quieras. AdBrief lee tu cuenta real y responde como un experto — ROAS, hooks, qué pausar, qué escalar. Prueba gratis 3 días.",
   };
 
-  if (!ready) return <div style={{ minHeight: "100vh", background: BG }} />;
+  if (!ready) return <div style={{ minHeight: "100dvh", background: BG }} />;
 
   return (
     <div style={{ minHeight: "100vh", background: BG, color: "#fff", fontFamily: F, overflowX: "hidden", maxWidth: "100vw" }}>
@@ -3699,9 +3699,10 @@ export default function IndexNew() {
 
             /* ── HERO — tela cheia, conteúdo empilhado ── */
             .hero-main-section{
-              min-height:auto!important;
+              min-height:100vh!important;
+              min-height:100dvh!important;
               padding:56px 20px 32px!important;
-              align-items:flex-start!important;
+              align-items:center!important;
               overflow:hidden!important;
             }
             .hero-grid{
@@ -3845,7 +3846,7 @@ export default function IndexNew() {
           /* ── 480px — smaller screens ── */
           @media(max-width:480px){
             h1,.hero-h1{font-size:clamp(34px,9vw,44px)!important}
-            .hero-main-section{padding:48px 16px 28px!important}
+            .hero-main-section{min-height:100vh!important;min-height:100dvh!important;padding:48px 16px 28px!important}
             section{padding-left:16px!important;padding-right:16px!important;padding-top:48px!important;padding-bottom:48px!important}
             .spstrip-grid{grid-template-columns:1fr!important}
             .spstrip-grid>div{
@@ -3858,7 +3859,7 @@ export default function IndexNew() {
 
           /* ── 390px — iPhone SE / Mini ── */
           @media(max-width:390px){
-            .hero-main-section{padding:44px 14px 24px!important}
+            .hero-main-section{min-height:100vh!important;min-height:100dvh!important;padding:44px 14px 24px!important}
             section{padding-left:14px!important;padding-right:14px!important}
             h1,.hero-h1{font-size:clamp(30px,8.5vw,40px)!important}
           }
