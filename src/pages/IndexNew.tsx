@@ -45,13 +45,13 @@ function CTAButton({
   };
 
   const variants: Record<string, React.CSSProperties> = {
-    primary: { background: "#fff", color: "#000", boxShadow: "0 0 32px rgba(255,255,255,0.08)" },
+    primary: { background: 'linear-gradient(135deg, #38bdf8, #6366f1)', color: '#fff', boxShadow: '0 0 32px rgba(56,189,248,0.25), 0 4px 16px rgba(99,102,241,0.2)' },
     ghost:   { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.09)" },
     white:   { background: "#fff", color: "#000" },
   };
 
   const hoverStyle = {
-    primary: { transform: "translateY(-2px)", boxShadow: "0 0 40px rgba(255,255,255,0.15)" },
+    primary: { transform: "translateY(-2px)", boxShadow: "0 0 48px rgba(56,189,248,0.35), 0 8px 24px rgba(99,102,241,0.3)" },
     ghost:   { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)" },
     white:   { opacity: "0.88" },
   };
@@ -114,10 +114,10 @@ const T: Record<Lang, Record<string, string>> = {
   en: {
     nav_how: "How it works", nav_for: "Who it's for", nav_pricing: "Pricing", nav_tools: "Tools", nav_signin: "Sign in", nav_cta: "Try free for 3 days",
     hero_badge: "AI CONNECTED TO YOUR AD ACCOUNT",
-    hero_h1: "Chat with your ads.\nGet real answers.",
-    hero_sub: "Connect Meta Ads. Reads your real data. Answers like a senior analyst who knows every campaign, creative, and metric.",
+    hero_h1: "Talk to\nyour ads.",
+    hero_sub: "Connect Meta Ads. Ask anything. The AI reads your real data and answers like a senior media buyer.",
     hero_cta: "Try free for 3 days", hero_see: "Analyze an ad free",
-    hero_fine: "3-day free trial · No charge for 72h · Cancel anytime",
+    hero_fine: "3 days free · No charge until day 4 · Cancel anytime",
     stat_1: "30s", stat_1_label: "To connect Meta Ads",
     stat_2: "90 days", stat_2_label: "Of real data analyzed",
     stat_3: "7", stat_3_label: "Integrated tools",
@@ -141,7 +141,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_h0: "Manage 10 clients like you have a full data team.", for_d0: "AdBrief connects to each client's ad account and gives your strategists real answers — which creatives to scale, which to kill, what to brief next.",
     for_h1: "Stop flying blind on creative decisions.", for_d1: "AdBrief gives you data-backed answers — which format is underperforming, what the winning hook pattern is, what to brief next.",
     for_h2b: "Your campaigns, finally speaking to each other.", for_d2: "Connect your company's ad accounts and give your whole team access to a shared AI that knows your performance history.",
-    for_cta: "Start for free",
+    for_cta: "Try free for 3 days",
     for_p0_0: "Per-client accounts with Meta Ads connection", for_p0_1: "Real-time performance in chat", for_p0_2: "Brief generation tuned to each brand", for_p0_3: "AI that learns each client's patterns",
     for_p1_0: "Real spend and CTR in every answer", for_p1_1: "Pattern detection across performers", for_p1_2: "Competitor analysis and benchmarking", for_p1_3: "Account memory that improves over time",
     for_p2_0: "Connected to your real data", for_p2_1: "Accounts for each product line", for_p2_2: "Brand context baked in", for_p2_3: "Team-wide shared intelligence",
@@ -194,9 +194,9 @@ const T: Record<Lang, Record<string, string>> = {
     nav_how: "Como funciona", nav_for: "Para quem", nav_pricing: "Preços", nav_tools: "Ferramentas", nav_signin: "Entrar", nav_cta: "Testar grátis por 3 dias",
     hero_badge: "IA CONECTADA NA SUA CONTA DE ANÚNCIOS",
     hero_h1: "Converse com\nseus anúncios.",
-    hero_sub: "Conecta em Meta Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha, criativo e métrica.",
+    hero_sub: "Conecta no Meta Ads. Pergunte qualquer coisa. A IA lê seus dados reais e responde como um media buyer sênior.",
     hero_cta: "Testar grátis por 3 dias", hero_see: "Analisar um anúncio grátis",
-    hero_fine: "3 dias grátis · Sem cobrança por 72h · Cancele quando quiser",
+    hero_fine: "3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser",
     stat_1: "30s", stat_1_label: "Para conectar o Meta Ads",
     stat_2: "90 dias", stat_2_label: "De dados reais analisados",
     stat_3: "7", stat_3_label: "Ferramentas integradas",
@@ -220,7 +220,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_h0: "Gerencie 10 clientes como se tivesse um time de dados.", for_d0: "O AdBrief conecta à conta de cada cliente e dá respostas reais — quais criativos escalar, quais pausar, o que briefar.",
     for_h1: "Pare de decidir no escuro.", for_d1: "AdBrief te dá respostas baseadas em dados — qual formato underperforma, qual hook vence, o que briefar.",
     for_h2b: "Suas campanhas finalmente conectadas.", for_d2: "Conecte as contas e dê ao time acesso a uma IA que conhece seu histórico de performance.",
-    for_cta: "Começar grátis",
+    for_cta: "Testar grátis por 3 dias",
     for_p0_0: "Contas por cliente com Meta Ads", for_p0_1: "Performance em tempo real", for_p0_2: "Brief calibrado por marca", for_p0_3: "IA que aprende cada cliente",
     for_p1_0: "Dados reais em cada resposta", for_p1_1: "Detecção de padrões", for_p1_2: "Análise de concorrentes", for_p1_3: "Memória que melhora",
     for_p2_0: "Conectado aos dados reais", for_p2_1: "Contas por produto", for_p2_2: "Contexto de marca integrado", for_p2_3: "Inteligência compartilhada",
@@ -272,10 +272,10 @@ const T: Record<Lang, Record<string, string>> = {
   es: {
     nav_how: "Cómo funciona", nav_for: "Para quién", nav_pricing: "Precios", nav_tools: "Herramientas", nav_signin: "Iniciar sesión", nav_cta: "Probar gratis 3 días",
     hero_badge: "LA IA QUE CONOCE TU CUENTA DE ANUNCIOS",
-    hero_h1: "Habla con tus anuncios.\nLa IA te responde.",
-    hero_sub: "Conecta Meta Ads y pregunta lo que quieras. La IA lee tu cuenta y responde como un analista que conoce cada campaña.",
+    hero_h1: "Habla con\ntus anuncios.",
+    hero_sub: "Conecta Meta Ads. Pregunta lo que quieras. La IA lee tus datos reales y responde como un media buyer senior.",
     hero_cta: "Probar gratis 3 días", hero_see: "Analizar un anuncio gratis",
-    hero_fine: "3 días gratis · Sin cobro por 72h · Cancela cuando quieras",
+    hero_fine: "3 días gratis · Sin cobro hasta el 4º día · Cancela cuando quieras",
     stat_1: "30s", stat_1_label: "Para conectar Meta Ads",
     stat_2: "90 días", stat_2_label: "De datos reales analizados",
     stat_3: "7", stat_3_label: "Herramientas integradas",
@@ -299,7 +299,7 @@ const T: Record<Lang, Record<string, string>> = {
     for_h0: "Gestiona 10 clientes como si tuvieras un equipo de datos.", for_d0: "AdBrief se conecta a cada cuenta y da respuestas reales — qué escalar, qué pausar, qué briefear.",
     for_h1: "Deja de decidir a ciegas.", for_d1: "AdBrief te da respuestas con datos — qué formato underperforma, cuál es el hook ganador.",
     for_h2b: "Tus campañas, finalmente conectadas.", for_d2: "Conecta las cuentas y da acceso a una IA que conoce tu historial de performance.",
-    for_cta: "Comenzar gratis",
+    for_cta: "Probar gratis 3 días",
     for_p0_0: "Cuentas por cliente con Meta Ads", for_p0_1: "Performance en tiempo real", for_p0_2: "Brief calibrado por marca", for_p0_3: "IA que aprende cada cliente",
     for_p1_0: "Datos reales en cada respuesta", for_p1_1: "Detección de patrones", for_p1_2: "Análisis de competidores", for_p1_3: "Memoria que mejora",
     for_p2_0: "Conectado a datos reales", for_p2_1: "Personas por producto", for_p2_2: "Contexto de marca integrado", for_p2_3: "Inteligencia compartida",
@@ -781,7 +781,7 @@ function Nav({ onCTA, t, lang, setLang, ctaLoading }: { onCTA: () => void; t: Re
           <CTAButton
             onClick={onCTA}
             loading={ctaLoading}
-            label={lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
+            label={t.nav_cta}
             size="sm"
             variant="white"
           />
@@ -2167,11 +2167,11 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
   const line2 = lang === 'pt' ? 'seus anúncios.' : lang === 'es' ? 'tus anuncios.' : 'your ads.';
   const line3prefix = lang === 'pt' ? 'A IA ' : lang === 'es' ? 'La IA ' : 'The AI ';
   const sub = lang === 'pt'
-    ? 'Conecta no Meta Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha, criativo e métrica.'
+    ? 'Conecta no Meta Ads. Pergunte qualquer coisa. A IA lê seus dados reais e responde como um media buyer sênior.'
     : lang === 'es'
-    ? 'Conecta Meta Ads. Lee tus datos reales. Responde como un analista que conoce cada campaña, creativo y métrica.'
-    : 'Connects to Meta Ads. Reads your real data. Responds like an analyst who knows every campaign, creative, and metric.';
-  const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cargo hasta el 4º día · Cancela cuando quieras' : '3 days free · No charge until day 4 · Cancel anytime';
+    ? 'Conecta Meta Ads. Pregunta lo que quieras. La IA lee tus datos reales y responde como un media buyer senior.'
+    : 'Connect Meta Ads. Ask anything. The AI reads your real data and answers like a senior media buyer.';
+  const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cobro hasta el 4º día · Cancela cuando quieras' : '3 days free · No charge until day 4 · Cancel anytime';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%', position: 'relative' as const }}>
@@ -2186,18 +2186,19 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
       {/* Headline — massive, bold, with glow */}
       <h1 style={{
         fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.02,
-        margin: '0 0 24px', color: '#fff',
-        fontSize: 'clamp(42px, 5vw, 72px)',
+        margin: '0 0 20px', color: '#fff',
+        fontSize: 'clamp(44px, 5.5vw, 76px)',
       }}>
         {line1}
         <br />
         {line2}
         <br />
-        <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>{line3prefix}</span>
+        <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+          <span style={{ color: 'rgba(255,255,255,0.25)', fontWeight: 400, fontSize: 'clamp(36px, 4.5vw, 64px)' }}>{line3prefix}</span>
           <span className="hero-text-shimmer" style={{
             display: 'inline-block',
             fontWeight: 800,
+            fontSize: 'clamp(44px, 5.5vw, 76px)',
             opacity: fade ? 1 : 0,
             transform: fade ? 'translateY(0)' : 'translateY(6px)',
             transition: 'opacity 0.22s ease, transform 0.22s ease',
@@ -2221,7 +2222,7 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
         <CTAButton
           onClick={onCTA}
           loading={ctaLoading}
-          label={lang === 'pt' ? 'Começar grátis' : lang === 'es' ? 'Comenzar gratis' : 'Start for free'}
+          label={t.hero_cta}
           size="md"
           variant="primary"
         />
