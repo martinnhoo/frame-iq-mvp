@@ -2167,11 +2167,11 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
   const line2 = lang === 'pt' ? 'seus anúncios.' : lang === 'es' ? 'tus anuncios.' : 'your ads.';
   const line3prefix = lang === 'pt' ? 'A IA ' : lang === 'es' ? 'La IA ' : 'The AI ';
   const sub = lang === 'pt'
-    ? 'Conecta no Meta Ads. Lê seus dados reais. Responde como um analista que conhece cada campanha, criativo e métrica.'
+    ? 'Conecta no Meta Ads. Pergunte qualquer coisa. A IA lê seus dados reais e responde como um media buyer sênior.'
     : lang === 'es'
-    ? 'Conecta Meta Ads. Lee tus datos reales. Responde como un analista que conoce cada campaña, creativo y métrica.'
-    : 'Connects to Meta Ads. Reads your real data. Responds like an analyst who knows every campaign, creative, and metric.';
-  const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cargo hasta el 4º día · Cancela cuando quieras' : '3 days free · No charge until day 4 · Cancel anytime';
+    ? 'Conecta Meta Ads. Pregunta lo que quieras. La IA lee tus datos reales y responde como un media buyer senior.'
+    : 'Connect Meta Ads. Ask anything. The AI reads your real data and answers like a senior media buyer.';
+  const finePrint = lang === 'pt' ? '3 dias grátis · Sem cobrança até o 4º dia · Cancele quando quiser' : lang === 'es' ? '3 días gratis · Sin cobro hasta el 4º día · Cancela cuando quieras' : '3 days free · No charge until day 4 · Cancel anytime';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%', position: 'relative' as const }}>
