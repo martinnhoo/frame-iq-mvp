@@ -65,6 +65,72 @@ export type Database = {
         }
         Relationships: []
       }
+      account_diagnostics: {
+        Row: {
+          ad_account_id: string
+          ads_fatigued: Json | null
+          ads_to_pause: Json | null
+          ads_to_scale: Json | null
+          benchmarks: Json | null
+          created_at: string | null
+          current_roas: number | null
+          id: string
+          insights: Json | null
+          metrics: Json | null
+          persona_id: string | null
+          projected_roas: number | null
+          roas_improvement_pct: number | null
+          score: number | null
+          score_breakdown: Json | null
+          top_performers: Json | null
+          user_id: string
+          wasted_spend: number | null
+          wasted_spend_monthly: number | null
+        }
+        Insert: {
+          ad_account_id: string
+          ads_fatigued?: Json | null
+          ads_to_pause?: Json | null
+          ads_to_scale?: Json | null
+          benchmarks?: Json | null
+          created_at?: string | null
+          current_roas?: number | null
+          id?: string
+          insights?: Json | null
+          metrics?: Json | null
+          persona_id?: string | null
+          projected_roas?: number | null
+          roas_improvement_pct?: number | null
+          score?: number | null
+          score_breakdown?: Json | null
+          top_performers?: Json | null
+          user_id: string
+          wasted_spend?: number | null
+          wasted_spend_monthly?: number | null
+        }
+        Update: {
+          ad_account_id?: string
+          ads_fatigued?: Json | null
+          ads_to_pause?: Json | null
+          ads_to_scale?: Json | null
+          benchmarks?: Json | null
+          created_at?: string | null
+          current_roas?: number | null
+          id?: string
+          insights?: Json | null
+          metrics?: Json | null
+          persona_id?: string | null
+          projected_roas?: number | null
+          roas_improvement_pct?: number | null
+          score?: number | null
+          score_breakdown?: Json | null
+          top_performers?: Json | null
+          user_id?: string
+          wasted_spend?: number | null
+          wasted_spend_monthly?: number | null
+        }
+        Relationships: []
+      }
       ad_diary: {
         Row: {
           ad_id: string
