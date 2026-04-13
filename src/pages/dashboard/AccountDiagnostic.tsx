@@ -621,7 +621,7 @@ export default function AccountDiagnostic() {
 
   if (phase === "loading") {
     return (
-      <div style={{ minHeight: "100vh", background: T.surface0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.font }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.font }}>
         <style>{ANIM_CSS}</style>
         <div style={{ textAlign: "center", maxWidth: 380, padding: 24 }}>
           <div style={{
@@ -691,7 +691,7 @@ export default function AccountDiagnostic() {
 
   if (phase === "error") {
     return (
-      <div style={{ minHeight: "100vh", background: T.surface0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.font }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.font }}>
         <style>{ANIM_CSS}</style>
         <div style={{ textAlign: "center", maxWidth: 400, padding: 24 }}>
           <div style={{
@@ -719,7 +719,7 @@ export default function AccountDiagnostic() {
 
   if (phase === "empty") {
     return (
-      <div style={{ minHeight: "100vh", background: T.surface0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.font }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.font }}>
         <style>{ANIM_CSS}</style>
         <div style={{ textAlign: "center", maxWidth: 420, padding: 24 }}>
           <div style={{
@@ -764,16 +764,8 @@ export default function AccountDiagnostic() {
   const hasConversions = data.metrics.total_conversions > 0;
 
   return (
-    <div style={{ minHeight: "100vh", background: T.surface0, fontFamily: T.font }}>
+    <div style={{ minHeight: "100vh", fontFamily: T.font }}>
       <style>{ANIM_CSS}</style>
-
-      {/* Radial glow at top */}
-      <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, height: 500, pointerEvents: "none",
-        background: data.wasted_spend > 0
-          ? `radial-gradient(ellipse 70% 45% at 50% -10%, ${T.red}06 0%, transparent 70%)`
-          : `radial-gradient(ellipse 70% 45% at 50% -10%, ${T.accent}04 0%, transparent 70%)`,
-      }} />
 
       <div style={{ position: "relative", maxWidth: 700, margin: "0 auto", padding: "24px 20px 80px" }}>
 
