@@ -574,62 +574,89 @@ export default function AccountDiagnostic() {
            ══════════════════════════════════════════════════════════════ */}
 
         {data.wasted_spend > 0 && !allPaused ? (
-          <div style={{ ...card(1), padding: "28px 22px", marginBottom: 16, position: "relative", overflow: "hidden", ...fadeUp(60) }}>
-            {/* Red accent top line */}
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${T.red}, transparent)` }} />
+          <div style={{ marginBottom: 20, position: "relative", overflow: "hidden", ...fadeUp(60) }}>
+            {/* Background glow */}
+            <div style={{ position: "absolute", top: "-50%", left: "50%", transform: "translateX(-50%)", width: 400, height: 400, background: `radial-gradient(circle, ${T.red}15 0%, transparent 70%)`, pointerEvents: "none" }} />
 
-            <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: T.red, textTransform: "uppercase", letterSpacing: ".1em", margin: "0 0 8px" }}>
-                Você está perdendo hoje
-              </p>
-              <div>
-                <span style={{ fontSize: 18, fontWeight: 600, fontFamily: T.mono, color: T.textMuted, marginRight: 2 }}>R$</span>
-                <span style={{
-                  fontSize: 48, fontWeight: 700, fontFamily: T.mono, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: T.textPrimary,
-                  animation: "countUp .8s ease-out",
-                }}>{animatedWaste.toLocaleString("pt-BR")}</span>
-                <span style={{ fontSize: 14, fontWeight: 500, color: T.textMuted, marginLeft: 4 }}>/mês</span>
+            {/* Main card */}
+            <div style={{ ...card(1), padding: "40px 28px", position: "relative", zIndex: 1, border: `1.5px solid ${T.red}20` }}>
+              {/* Top accent bar */}
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${T.red} 20%, ${T.red} 80%, transparent)` }} />
+
+              <div style={{ textAlign: "center" }}>
+                {/* Label */}
+                <p style={{ fontSize: 10, fontWeight: 700, color: T.red, textTransform: "uppercase", letterSpacing: ".15em", margin: "0 0 16px", opacity: 0.9 }}>
+                  ⚠️ Desperdício detectado
+                </p>
+
+                {/* Main number — huge and impressive */}
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4 }}>
+                    <span style={{ fontSize: 28, fontWeight: 600, fontFamily: T.mono, color: T.textMuted }}>R$</span>
+                    <span style={{
+                      fontSize: 72, fontWeight: 700, fontFamily: T.mono, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums",
+                      color: T.red,
+                      animation: "countUp .8s ease-out",
+                      textShadow: `0 0 20px ${T.red}40`
+                    }}>{animatedWaste.toLocaleString("pt-BR")}</span>
+                  </div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: T.textMuted, margin: "4px 0 0" }}>
+                    por mês em anúncios de baixa performance
+                  </p>
+                </div>
+
+                {/* Breakdown */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 20, marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.borderSubtle}` }}>
+                  <div style={{ textAlign: "left", padding: "12px 14px", borderRadius: 8, background: `${T.red}08`, border: `1px solid ${T.red}12` }}>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: ".05em" }}>Diário</p>
+                    <p style={{ fontSize: 22, fontWeight: 700, fontFamily: T.mono, fontVariantNumeric: "tabular-nums", color: T.red, margin: 0 }}>R${totalWastePerDay.toFixed(0)}</p>
+                  </div>
+                  <div style={{ textAlign: "left", padding: "12px 14px", borderRadius: 8, background: `${T.red}08`, border: `1px solid ${T.red}12` }}>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: ".05em" }}>Anúncios</p>
+                    <p style={{ fontSize: 22, fontWeight: 700, fontFamily: T.mono, fontVariantNumeric: "tabular-nums", color: T.red, margin: 0 }}>{unpausedAds.length}</p>
+                  </div>
+                </div>
               </div>
-              <p style={{ fontSize: 12, color: T.textMuted, margin: "6px 0 0" }}>
-                <span style={{ fontFamily: T.mono, fontVariantNumeric: "tabular-nums", color: T.red }}>R${totalWastePerDay.toFixed(0)}/dia</span> em {unpausedAds.length} anúncio{unpausedAds.length > 1 ? "s" : ""} de baixa performance
-              </p>
-            </div>
 
             {/* THE TWO PATHS — Execute or Review */}
             {!batchConfirm ? (
-              <div style={{ display: "flex", gap: 8 }}>
-                {/* Path 1: Execute now */}
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+                {/* Path 1: Execute now — PROMINENT */}
                 <button
                   onClick={() => setBatchConfirm(true)}
                   style={{
-                    flex: 1, padding: "12px 16px", borderRadius: 10, fontSize: 14, fontWeight: 700,
-                    background: `linear-gradient(135deg, ${T.red}, #dc2626)`, color: "#fff", border: "none", cursor: "pointer", fontFamily: T.font,
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                    boxShadow: `0 0 20px ${T.red}40, inset 0 1px 0 rgba(255,255,255,.2)`,
-                    transition: "all .2s ease",
+                    padding: "16px 24px", borderRadius: 12, fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em",
+                    background: `linear-gradient(135deg, ${T.red}, #dc2626)`, color: "#fff", border: `1px solid ${T.red}40`, cursor: "pointer", fontFamily: T.font,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    boxShadow: `0 0 30px ${T.red}40, 0 8px 24px ${T.red}20, inset 0 1px 0 rgba(255,255,255,.25)`,
+                    transition: "all .3s cubic-bezier(.16,1,.3,1)",
+                    position: "relative",
+                    overflow: "hidden",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 4px 24px ${T.red}50, inset 0 1px 0 rgba(255,255,255,.3)`; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 0 20px ${T.red}40, inset 0 1px 0 rgba(255,255,255,.2)`; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 0 40px ${T.red}50, 0 12px 32px ${T.red}30, inset 0 1px 0 rgba(255,255,255,.35)`; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 0 30px ${T.red}40, 0 8px 24px ${T.red}20, inset 0 1px 0 rgba(255,255,255,.25)`; }}
                 >
-                  <Pause size={15} />
+                  <Pause size={18} />
                   Pausar {unpausedAds.length > 1 ? `todos (${unpausedAds.length})` : "agora"}
                 </button>
-                {/* Path 2: Review first */}
+                {/* Path 2: Review first — Secondary */}
                 <button
                   onClick={() => {
                     const el = document.getElementById("ad-decisions");
                     el?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                   style={{
-                    padding: "12px 20px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                    background: `linear-gradient(135deg, ${T.surface2}, ${T.surface3})`, color: T.textSecondary, border: `1px solid ${T.borderLight}`,
-                    cursor: "pointer", fontFamily: T.font, display: "flex", alignItems: "center", gap: 5,
-                    transition: "all .2s ease",
+                    padding: "16px 20px", borderRadius: 12, fontSize: 14, fontWeight: 600,
+                    background: `linear-gradient(135deg, ${T.surface2}88, ${T.surface3}88)`, color: T.textSecondary, border: `1.5px solid ${T.borderLight}`,
+                    cursor: "pointer", fontFamily: T.font, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    transition: "all .3s cubic-bezier(.16,1,.3,1)",
+                    boxShadow: `0 4px 12px rgba(0,0,0,.2)`,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = T.textPrimary; e.currentTarget.style.borderColor = T.borderTopLight; e.currentTarget.style.background = `linear-gradient(135deg, ${T.surface3}, #1a2032)`; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = T.textSecondary; e.currentTarget.style.borderColor = T.borderLight; e.currentTarget.style.background = `linear-gradient(135deg, ${T.surface2}, ${T.surface3})`; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = T.textPrimary; e.currentTarget.style.borderColor = T.borderTopLight; e.currentTarget.style.background = `linear-gradient(135deg, ${T.surface3}cc, #1a2032cc)`; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 6px 16px rgba(0,0,0,.3)`; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = T.textSecondary; e.currentTarget.style.borderColor = T.borderLight; e.currentTarget.style.background = `linear-gradient(135deg, ${T.surface2}88, ${T.surface3}88)`; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,.2)`; }}
                 >
-                  Revisar antes <ChevronDown size={14} />
+                  <Eye size={16} />
+                  Revisar
                 </button>
               </div>
             ) : (
@@ -674,18 +701,34 @@ export default function AccountDiagnostic() {
               </div>
             )}
 
-            {/* ROAS projection */}
+            {/* ROAS projection — premium card */}
             {data.projected_roas && data.current_roas && data.roas_improvement_pct ? (
               <div style={{
-                marginTop: 14, padding: "8px 12px", borderRadius: 8,
-                background: `${T.green}06`, border: `1px solid ${T.green}10`,
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                marginTop: 20, padding: "16px 18px", borderRadius: 12,
+                background: `linear-gradient(135deg, ${T.green}12, ${T.green}08)`, border: `1.5px solid ${T.green}25`,
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                boxShadow: `0 0 24px ${T.green}20, inset 0 1px 0 ${T.green}30`
               }}>
-                <TrendingUp size={12} color={T.green} />
-                <span style={{ fontSize: 11, color: T.textSecondary }}>ROAS projetado:</span>
-                <span style={{ fontSize: 12, fontWeight: 800, color: T.textPrimary, ...mono }}>{data.current_roas.toFixed(2)}x</span>
-                <ArrowRight size={10} color={T.textMuted} />
-                <span style={{ fontSize: 12, fontWeight: 800, color: T.green, ...mono }}>{data.projected_roas.toFixed(2)}x</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: `${T.green}15`, border: `1px solid ${T.green}25`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <TrendingUp size={20} color={T.green} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, margin: "0 0 2px", textTransform: "uppercase", letterSpacing: ".05em" }}>ROAS Projetado</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: T.textSecondary, margin: 0 }}>Após pausar anúncios de baixa performance</p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: T.textMuted, margin: "0 0 2px" }}>Hoje</p>
+                    <p style={{ fontSize: 20, fontWeight: 700, fontFamily: T.mono, fontVariantNumeric: "tabular-nums", color: T.textPrimary, margin: 0 }}>{data.current_roas.toFixed(2)}x</p>
+                  </div>
+                  <ArrowRight size={14} color={T.green} strokeWidth={3} />
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: T.green, margin: "0 0 2px" }}>Projetado</p>
+                    <p style={{ fontSize: 20, fontWeight: 700, fontFamily: T.mono, fontVariantNumeric: "tabular-nums", color: T.green, margin: 0 }}>{data.projected_roas.toFixed(2)}x</p>
+                  </div>
+                </div>
               </div>
             ) : null}
           </div>
