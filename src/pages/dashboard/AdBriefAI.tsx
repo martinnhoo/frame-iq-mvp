@@ -23,10 +23,11 @@ import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 // FirstWinBanner removed — ProactiveBlock handles welcome flow
 import { trackEvent } from "@/lib/posthog";
-const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Plus Jakarta Sans', system-ui, sans-serif";
+const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
+const M = T.font; // Same as F
 const DEMO_STORAGE_KEY = "adbrief_demo_result";
 
 // ── ABAvatar — logo real do adbrief (PNG asset) ───────────────────────────────
@@ -77,7 +78,7 @@ const SKILLS: Skill[] = [
     id: "media_buyer",
     name: "Media Buyer",
     icon: "",
-    color: "#0da2e7",
+    color: T.accent, // #0ea5e9 — unified design system
     desc: {
       pt: "Lances, orçamento, frequência e estrutura de campanha",
       en: "Bids, budget, frequency and campaign structure",
@@ -96,7 +97,7 @@ Você está no modo Media Buyer especialista. Ao analisar dados:
     id: "creative_director",
     name: "Creative Director",
     icon: "",
-    color: "#60a5fa",
+    color: "#38bdf8", // Sky blue for creative/visual thinking
     desc: {
       pt: "Hooks, storytelling, scroll-stop e direção criativa",
       en: "Hooks, storytelling, scroll-stop and creative direction",
@@ -115,7 +116,7 @@ Você está no modo Creative Director. Ao analisar dados:
     id: "copywriter",
     name: "Copywriter DR",
     icon: "",
-    color: "#10b981",
+    color: T.green, // #22c55e — unified design system
     desc: {
       pt: "Copy de alta conversão, PAS/AIDA, scripts e CTAs irresistíveis",
       en: "High-conversion copy, PAS/AIDA, scripts and CTAs",
