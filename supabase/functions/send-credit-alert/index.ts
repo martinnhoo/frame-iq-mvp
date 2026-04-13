@@ -381,7 +381,7 @@ Deno.serve(async (req) => {
     const alertPeriod = new Date().toISOString().slice(0, 7);
     await supabase.from("credit_transactions").insert({
       user_id,
-      period,
+      period: alertPeriod,
       action: alertKey,
       credits: 0,
       balance_after: 0,
