@@ -14,7 +14,7 @@ import {
   Send, Loader2, RotateCcw,
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
   Zap, Clapperboard, ScanEye, LayoutDashboard, X, Sparkles, Target,
-  TrendingUp, TrendingDown, BarChart2, BarChart3,
+  TrendingUp, TrendingDown, BarChart2, BarChart3, Stethoscope,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Calendar,
 } from "lucide-react";
 // v20: removed unused — Sparkles, Brain, Upload, FileText, Activity, ExternalLink,
@@ -1927,6 +1927,24 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               </span>
             </div>
           )}
+
+          {/* Diagnostic button */}
+          <button
+            onClick={e => { e.stopPropagation(); window.location.href = "/dashboard/diagnostic"; }}
+            title="Diagnóstico da conta"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 28, height: 28, borderRadius: 7,
+              background: "rgba(59,130,246,0.10)",
+              border: "1px solid rgba(59,130,246,0.20)",
+              cursor: "pointer", transition: "all 0.15s",
+              padding: 0,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.20)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.35)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.10)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.20)"; }}
+          >
+            <Stethoscope size={14} color="#60a5fa" />
+          </button>
 
           {/* Expand chevron */}
           <ChevronDown size={14} style={{ color: "rgba(255,255,255,0.25)", transition: "color 0.15s" }}/>
