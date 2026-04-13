@@ -295,7 +295,7 @@ Deno.serve(async (req) => {
     }
 
     const accountMeta = adAccounts.find((a: any) => a.account_id === selectedAccountId) || {};
-    const accountName = accountMeta.account_name || selectedAccountId;
+    let accountName = accountMeta.account_name || accountMeta.name || "";
     const currency = accountMeta.currency || "BRL";
 
     // ── Fetch Meta API data in parallel ─────────────────────────────────
@@ -314,7 +314,7 @@ Deno.serve(async (req) => {
 
     const actId = selectedAccountId.startsWith("act_") ? selectedAccountId : `act_${selectedAccountId}`;
 
-    const [adsRes, campsRes, accountInsightsRes] = await Promise.all([
+    const [adsRes, campsRes, accountInsightsRes, accountInfoRes] = await Promise.all([
       // Ad-level insights (last 30 days, limit 200)
       fetch(
         `https://graph.facebook.com/v21.0/${actId}/insights?` +
@@ -331,6 +331,10 @@ Deno.serve(async (req) => {
         `fields=spend,impressions,clicks,ctr,cpc,cpm,actions,action_values,website_purchase_roas,frequency,reach` +
         `&date_preset=last_30d&access_token=${token}`
       ),
+      // Account name (fallback if not stored in platform_connections)
+      fetch(
+        `https://graph.facebook.com/v21.0/${actId}?fields=name,currency,account_id&access_token=${token}`
+      ),
     ]);
 
     if (!adsRes.ok) {
@@ -344,6 +348,14 @@ Deno.serve(async (req) => {
     const adsData = await adsRes.json();
     const campsData = await campsRes.json().catch(() => ({ data: [] }));
     const accountData = await accountInsightsRes.json().catch(() => ({ data: [] }));
+
+    // Get account name from API if not stored
+    if (!accountName) {
+      try {
+        const accountInfo = await accountInfoRes.json();
+        accountName = accountInfo.name || selectedAccountId;
+      } catch { accountName = selectedAccountId; }
+    }
 
     const rawAds: any[] = adsData.data || [];
 
@@ -368,7 +380,10 @@ Deno.serve(async (req) => {
     // ── Enrich & classify each ad ───────────────────────────────────────
     const enrichedAds = rawAds.map((ad: any) => {
       const spend = parseN(ad.spend);
-      const ctr = parseN(ad.ctr);
+      // Meta API returns CTR as percentage string (e.g. "8.32" means 8.32%)
+      // Convert to fraction (0.0832) for all calculations
+      const ctr = parseN(ad.ctr) / 100;
+      const clicks = parseN(ad.clicks);
       const cpc = parseN(ad.cpc);
       const cpm = parseN(ad.cpm);
       const impressions = parseN(ad.impressions);
@@ -413,7 +428,7 @@ Deno.serve(async (req) => {
       if (needsPause) {
         if (roas !== null && roas < 0.5 && spend > 50) reason = `ROAS ${roas.toFixed(2)}x com R$${spend.toFixed(0)} gastos`;
         else if (cpa !== null && cpa > 200) reason = `CPA R$${cpa.toFixed(0)} (muito alto) com R$${spend.toFixed(0)} gastos`;
-        else reason = `${conversions} conversões, CTR ${(ctr * 100).toFixed(2)}%, R$${spend.toFixed(0)} gastos`;
+        else reason = `${conversions} conversões, CTR ${(ctr * 100).toFixed(2)}%, R$${spend.toFixed(0)} gastos`;  // ctr already fraction, *100 for display
       } else if (isScalable) {
         reason = `${kpiCfg.primaryLabel} ${kpiValue !== null ? (COST_KPIS.includes(kpiCfg.primary) ? `R$${kpiValue.toFixed(2)}` : kpiCfg.primary === "roas" ? `${kpiValue.toFixed(2)}x` : `${(kpiValue * 100).toFixed(1)}%`) : "N/A"} (acima do threshold)`;
       } else if (isFatigued) {
@@ -427,6 +442,7 @@ Deno.serve(async (req) => {
         adset_name: ad.adset_name || "",
         spend,
         impressions,
+        clicks,
         ctr,
         cpc,
         cpm,
@@ -454,7 +470,7 @@ Deno.serve(async (req) => {
     // ── Aggregate metrics ───────────────────────────────────────────────
     const totalSpend = enrichedAds.reduce((s, a) => s + a.spend, 0);
     const totalImpressions = enrichedAds.reduce((s, a) => s + a.impressions, 0);
-    const totalClicks = enrichedAds.reduce((s, a) => s + parseN(a.ctr) * a.impressions, 0);
+    const totalClicks = enrichedAds.reduce((s, a) => s + a.clicks, 0);
     const totalConversions = enrichedAds.reduce((s, a) => s + a.conversions, 0);
     const totalRevenue = enrichedAds.reduce((s, a) => s + a.revenue, 0);
 
@@ -594,7 +610,7 @@ Deno.serve(async (req) => {
           adsToPause: adsToPause.length,
           adsToScale: adsToScale.length,
           adsFatigued: adsFatigued.length,
-          avgCtr: (avgCtr * 100).toFixed(2) + "%",
+          avgCtr: (avgCtr * 100).toFixed(2) + "%",  // avgCtr is fraction (0.08), display as 8.00%
           avgFrequency: avgFrequency.toFixed(1),
           topPauseAds: adsToPause.slice(0, 3).map(a => `${a.ad_name}: R$${a.spend.toFixed(0)} gastos, ${a.reason}`),
           topScaleAds: adsToScale.slice(0, 3).map(a => `${a.ad_name}: R$${a.spend.toFixed(0)} gastos, ${a.reason}`),

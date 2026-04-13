@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, AlertTriangle, TrendingUp, TrendingDown, Shield,
   Pause, Zap, Activity, ChevronDown, ChevronUp, Check, X,
   ArrowRight, RefreshCw, BarChart3, DollarSign, Eye, MousePointerClick,
+  Target, Flame, Crown, Sparkles,
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -78,44 +79,86 @@ interface DiagnosticData {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// STYLES
+// DESIGN TOKENS — AdBrief DNA
 // ═══════════════════════════════════════════════════════════════════════════
 
-const F = "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif";
-const BG = "#07080f";
-const CARD_BG = "rgba(255,255,255,0.03)";
-const CARD_BORDER = "rgba(255,255,255,0.06)";
-const RED = "#ef4444";
-const GREEN = "#22c55e";
-const AMBER = "#f59e0b";
-const BLUE = "#3b82f6";
-const MUTED = "rgba(255,255,255,0.4)";
+const T = {
+  font: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+  mono: "'DM Mono', 'SF Mono', 'Fira Code', monospace",
+  bg: "#060709",
+  card: "rgba(255,255,255,0.035)",
+  cardBorder: "rgba(255,255,255,0.06)",
+  cardGlass: "rgba(16,18,24,0.65)",
+  accent: "#0ea5e9",
+  red: "#ef4444",
+  green: "#22c55e",
+  amber: "#f59e0b",
+  white: "#fff",
+  muted: "rgba(255,255,255,0.38)",
+  dimmer: "rgba(255,255,255,0.22)",
+  glow: (color: string, opacity = 0.12) =>
+    `radial-gradient(ellipse 60% 40% at 50% 0%, ${color}${Math.round(opacity * 255).toString(16).padStart(2, "0")} 0%, transparent 70%)`,
+};
+
+const glass = {
+  background: T.cardGlass,
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  border: `1px solid ${T.cardBorder}`,
+  borderRadius: 14,
+};
+
+const insetLight = {
+  boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.04), 0 1px 3px 0 rgba(0,0,0,0.3)",
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ANIMATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const ANIM_CSS = `
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes scoreReveal { from { stroke-dashoffset: var(--circ); } }
+@keyframes countUp { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: blur(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes glowPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+`;
+
+const fadeUp = (delay: number) => ({
+  animation: `fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
+});
+
+const scaleIn = (delay: number) => ({
+  animation: `scaleIn 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LOADING STEPS
 // ═══════════════════════════════════════════════════════════════════════════
 
 const LOADING_STEPS = [
-  { label: "Conectando à Meta Ads API...", duration: 1500 },
-  { label: "Puxando dados dos últimos 30 dias...", duration: 2000 },
-  { label: "Classificando cada anúncio...", duration: 1500 },
-  { label: "Calculando desperdício real...", duration: 1000 },
-  { label: "Gerando insights com IA...", duration: 2000 },
+  { label: "Conectando à Meta Ads API", icon: "🔗", duration: 1500 },
+  { label: "Puxando 30 dias de dados", icon: "📊", duration: 2000 },
+  { label: "Classificando cada anúncio", icon: "🏷️", duration: 1500 },
+  { label: "Calculando desperdício real", icon: "💰", duration: 1000 },
+  { label: "Gerando insights com IA", icon: "✨", duration: 2000 },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ANIMATED COUNTER
 // ═══════════════════════════════════════════════════════════════════════════
 
-function useAnimatedNumber(target: number, duration = 2000, enabled = true) {
+function useAnimatedNumber(target: number, duration = 2500, enabled = true) {
   const [value, setValue] = useState(0);
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || target === 0) { setValue(0); return; }
     const start = performance.now();
     const tick = (now: number) => {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(target * eased));
       if (progress < 1) requestAnimationFrame(tick);
@@ -126,87 +169,166 @@ function useAnimatedNumber(target: number, duration = 2000, enabled = true) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SCORE RING
+// SCORE RING — Premium with glow
 // ═══════════════════════════════════════════════════════════════════════════
 
-function ScoreRing({ score, size = 120 }: { score: number; size?: number }) {
-  const radius = (size - 12) / 2;
+function ScoreRing({ score, size = 140 }: { score: number; size?: number }) {
+  const radius = (size - 16) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
-  const color = score >= 70 ? GREEN : score >= 40 ? AMBER : RED;
+  const color = score >= 70 ? T.green : score >= 40 ? T.amber : T.red;
+  const label = score >= 80 ? "Excelente" : score >= 60 ? "Bom" : score >= 40 ? "Regular" : "Crítico";
 
   return (
     <div style={{ position: "relative", width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={8} />
+      {/* Glow behind */}
+      <div style={{
+        position: "absolute", inset: -12,
+        background: `radial-gradient(circle, ${color}18 0%, transparent 70%)`,
+        animation: "glowPulse 3s ease-in-out infinite",
+      }} />
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: "relative" }}>
+        {/* Track */}
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={10} />
+        {/* Progress */}
         <circle
           cx={size / 2} cy={size / 2} r={radius} fill="none"
-          stroke={color} strokeWidth={8} strokeLinecap="round"
+          stroke={color} strokeWidth={10} strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={circumference - progress}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          style={{ transition: "stroke-dashoffset 1.5s ease-out" }}
+          style={{ transition: "stroke-dashoffset 2s cubic-bezier(0.16,1,0.3,1)", filter: `drop-shadow(0 0 8px ${color}60)` }}
         />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: size * 0.3, fontWeight: 800, color: "#fff", fontFamily: F, lineHeight: 1 }}>{score}</span>
-        <span style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>/ 100</span>
+        <span style={{
+          fontSize: size * 0.28, fontWeight: 900, color: T.white,
+          fontFamily: T.mono, lineHeight: 1,
+          letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums",
+        }}>{score}</span>
+        <span style={{ fontSize: 10, color: color, fontWeight: 700, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</span>
       </div>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// AD ROW (with pause action)
+// METRIC CARD — Glassmorphism KPI
+// ═══════════════════════════════════════════════════════════════════════════
+
+function MetricCard({ icon: Icon, label, value, sub, color, delay }: {
+  icon: any; label: string; value: string; sub?: string; color: string; delay: number;
+}) {
+  return (
+    <div style={{
+      ...glass, ...insetLight, padding: "16px 14px",
+      position: "relative", overflow: "hidden",
+      ...fadeUp(delay),
+    }}>
+      {/* Subtle top glow */}
+      <div style={{
+        position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: "80%", height: 1,
+        background: `linear-gradient(90deg, transparent, ${color}40, transparent)`,
+      }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+        <Icon size={13} color={T.muted} />
+        <span style={{ fontSize: 11, color: T.muted, fontWeight: 500 }}>{label}</span>
+      </div>
+      <span style={{
+        fontSize: 20, fontWeight: 800, color,
+        fontFamily: T.mono, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums",
+        display: "block",
+      }}>{value}</span>
+      {sub && <span style={{ fontSize: 10, color: T.dimmer, marginTop: 2, display: "block" }}>{sub}</span>}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AD ROW — Premium with glassmorphism
 // ═══════════════════════════════════════════════════════════════════════════
 
 function AdRow({
-  ad, type, onPause, pausingId,
+  ad, type, onPause, pausingId, isPaused, delay = 0,
 }: {
   ad: ClassifiedAd;
-  type: "pause" | "scale" | "fatigued";
+  type: "pause" | "scale" | "fatigued" | "top";
   onPause?: (adId: string) => void;
   pausingId?: string | null;
+  isPaused?: boolean;
+  delay?: number;
 }) {
-  const iconColor = type === "pause" ? RED : type === "scale" ? GREEN : AMBER;
-  const Icon = type === "pause" ? AlertTriangle : type === "scale" ? TrendingUp : Activity;
+  const colorMap = { pause: T.red, scale: T.green, fatigued: T.amber, top: T.accent };
+  const IconMap = { pause: AlertTriangle, scale: TrendingUp, fatigued: Flame, top: Crown };
+  const color = colorMap[type];
+  const Icon = IconMap[type];
   const isPausing = pausingId === ad.ad_id;
+
+  if (isPaused) return null;
+
+  // CTR already comes as fraction from backend now
+  const ctrDisplay = (ad.ctr * 100).toFixed(2);
 
   return (
     <div style={{
-      display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-      background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 10,
+      display: "flex", alignItems: "center", gap: 12, padding: "11px 14px",
+      ...glass, ...insetLight,
+      opacity: isPausing ? 0.6 : 1,
+      transition: "all 0.2s",
+      ...fadeUp(delay),
     }}>
-      <div style={{ width: 36, height: 36, borderRadius: 8, background: `${iconColor}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <Icon size={16} color={iconColor} />
+      <div style={{
+        width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+        background: `${color}12`, border: `1px solid ${color}18`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <Icon size={14} color={color} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>
           {ad.ad_name}
         </p>
-        <p style={{ fontSize: 11, color: MUTED, margin: "3px 0 0 0" }}>
-          {ad.campaign_name} · R${ad.spend.toFixed(0)} · {ad.reason}
+        <p style={{ fontSize: 11, color: T.muted, margin: "2px 0 0 0", lineHeight: 1.4 }}>
+          {ad.campaign_name}
+          <span style={{ color: T.dimmer }}> · </span>
+          <span style={{ fontFamily: T.mono, fontSize: 10, fontVariantNumeric: "tabular-nums" }}>
+            R${ad.spend.toFixed(0)}
+          </span>
+          <span style={{ color: T.dimmer }}> · </span>
+          <span style={{ fontFamily: T.mono, fontSize: 10 }}>CTR {ctrDisplay}%</span>
+          {ad.roas !== null && (
+            <>
+              <span style={{ color: T.dimmer }}> · </span>
+              <span style={{ fontFamily: T.mono, fontSize: 10 }}>ROAS {ad.roas.toFixed(1)}x</span>
+            </>
+          )}
         </p>
+        {ad.reason && (
+          <p style={{ fontSize: 10, color: color, fontWeight: 500, margin: "3px 0 0 0", opacity: 0.8 }}>
+            {ad.reason}
+          </p>
+        )}
       </div>
       {type === "pause" && onPause && (
         <button
           onClick={() => onPause(ad.ad_id)}
           disabled={!!pausingId}
           style={{
-            padding: "6px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600,
-            background: isPausing ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.1)",
-            color: RED, border: `1px solid ${RED}30`, cursor: isPausing ? "not-allowed" : "pointer",
-            display: "flex", alignItems: "center", gap: 4, fontFamily: F,
+            padding: "6px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600,
+            background: `${T.red}12`, color: T.red, border: `1px solid ${T.red}25`,
+            cursor: isPausing ? "not-allowed" : "pointer",
+            display: "flex", alignItems: "center", gap: 4, fontFamily: T.font,
             transition: "all 0.15s",
           }}
         >
           {isPausing ? <Loader2 size={12} className="animate-spin" /> : <Pause size={12} />}
-          {isPausing ? "Pausando..." : "Pausar"}
+          {isPausing ? "..." : "Pausar"}
         </button>
       )}
       {type === "scale" && (
-        <div style={{ padding: "4px 10px", borderRadius: 6, background: `${GREEN}15`, border: `1px solid ${GREEN}25` }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: GREEN }}>Escalável</span>
+        <div style={{ padding: "4px 10px", borderRadius: 6, background: `${T.green}10`, border: `1px solid ${T.green}18` }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: T.green, textTransform: "uppercase", letterSpacing: "0.04em" }}>Escalar</span>
         </div>
       )}
     </div>
@@ -214,29 +336,51 @@ function AdRow({
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// INSIGHT CARD
+// INSIGHT CARD — Premium glassmorphism
 // ═══════════════════════════════════════════════════════════════════════════
 
-function InsightCard({ insight }: { insight: DiagnosticInsight }) {
-  const color = insight.type === "waste" ? RED : insight.type === "opportunity" ? GREEN : BLUE;
-  const Icon = insight.type === "waste" ? AlertTriangle : insight.type === "opportunity" ? TrendingUp : Shield;
-  const urgencyColor = insight.urgency === "alta" ? RED : insight.urgency === "media" ? AMBER : MUTED;
+function InsightCard({ insight, delay }: { insight: DiagnosticInsight; delay: number }) {
+  const colorMap = { waste: T.red, opportunity: T.green, health: T.accent };
+  const IconMap = { waste: AlertTriangle, opportunity: TrendingUp, health: Shield };
+  const color = colorMap[insight.type];
+  const Icon = IconMap[insight.type];
+  const urgencyColor = insight.urgency === "alta" ? T.red : insight.urgency === "media" ? T.amber : T.muted;
 
   return (
     <div style={{
-      padding: 16, borderRadius: 12,
-      background: `${color}08`, border: `1px solid ${color}20`,
+      ...glass, ...insetLight, padding: 18, position: "relative", overflow: "hidden",
+      ...fadeUp(delay),
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-        <Icon size={16} color={color} />
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{insight.title}</span>
-        <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 600, color: urgencyColor, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      {/* Color accent line */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 1,
+        background: `linear-gradient(90deg, transparent, ${color}50, transparent)`,
+      }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <div style={{
+          width: 28, height: 28, borderRadius: 7,
+          background: `${color}12`, border: `1px solid ${color}18`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <Icon size={13} color={color} />
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 700, color: T.white, flex: 1 }}>{insight.title}</span>
+        <span style={{
+          fontSize: 9, fontWeight: 700, color: urgencyColor,
+          textTransform: "uppercase", letterSpacing: "0.08em",
+          padding: "3px 8px", borderRadius: 4,
+          background: `${urgencyColor}12`,
+        }}>
           {insight.urgency}
         </span>
       </div>
-      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: 0 }}>{insight.description}</p>
-      <div style={{ marginTop: 10, padding: "6px 10px", borderRadius: 6, background: `${color}12`, display: "inline-block" }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color }}>{insight.impact}</span>
+      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, margin: "0 0 12px 0" }}>{insight.description}</p>
+      <div style={{
+        padding: "6px 12px", borderRadius: 7, display: "inline-flex", alignItems: "center", gap: 6,
+        background: `${color}08`, border: `1px solid ${color}15`,
+      }}>
+        <Sparkles size={11} color={color} />
+        <span style={{ fontSize: 12, fontWeight: 700, color, fontFamily: T.mono, fontVariantNumeric: "tabular-nums" }}>{insight.impact}</span>
       </div>
     </div>
   );
@@ -247,22 +391,88 @@ function InsightCard({ insight }: { insight: DiagnosticInsight }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function BenchmarkRow({ label, yours, benchmark, verdict, format }: {
-  label: string;
-  yours: number;
-  benchmark: number;
-  verdict: "above" | "below" | "at";
-  format: (v: number) => string;
+  label: string; yours: number; benchmark: number; verdict: "above" | "below" | "at"; format: (v: number) => string;
 }) {
-  const color = verdict === "above" ? GREEN : verdict === "below" ? RED : AMBER;
+  const color = verdict === "above" ? T.green : verdict === "below" ? T.red : T.amber;
+  const pct = benchmark > 0 ? ((yours - benchmark) / benchmark) * 100 : 0;
+  const isGood = verdict === "above";
+
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${CARD_BORDER}` }}>
-      <span style={{ fontSize: 13, color: MUTED }}>{label}</span>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{format(yours)}</span>
-        <span style={{ fontSize: 11, color: MUTED }}>vs</span>
-        <span style={{ fontSize: 12, color: MUTED }}>{format(benchmark)}</span>
-        <div style={{ width: 8, height: 8, borderRadius: 4, background: color }} />
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 0", borderBottom: `1px solid rgba(255,255,255,0.04)` }}>
+      <span style={{ fontSize: 12, color: T.muted, fontWeight: 500 }}>{label}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: T.white, fontFamily: T.mono, fontVariantNumeric: "tabular-nums" }}>{format(yours)}</span>
+        <span style={{ fontSize: 10, color: T.dimmer }}>vs {format(benchmark)}</span>
+        <div style={{
+          padding: "2px 7px", borderRadius: 4,
+          background: `${color}12`, border: `1px solid ${color}18`,
+          display: "flex", alignItems: "center", gap: 3,
+        }}>
+          {isGood ? <TrendingUp size={10} color={color} /> : verdict === "below" ? <TrendingDown size={10} color={color} /> : null}
+          <span style={{ fontSize: 10, fontWeight: 700, color, fontFamily: T.mono }}>{pct >= 0 ? "+" : ""}{pct.toFixed(0)}%</span>
+        </div>
       </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION HEADER
+// ═══════════════════════════════════════════════════════════════════════════
+
+function SectionHeader({ icon: Icon, color, title, count, delay }: {
+  icon: any; color: string; title: string; count?: number; delay: number;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, ...fadeUp(delay) }}>
+      <div style={{
+        width: 28, height: 28, borderRadius: 7,
+        background: `${color}12`, border: `1px solid ${color}18`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <Icon size={13} color={color} />
+      </div>
+      <span style={{ fontSize: 14, fontWeight: 700, color: T.white }}>{title}</span>
+      {count !== undefined && (
+        <span style={{
+          fontSize: 11, fontWeight: 700, color,
+          fontFamily: T.mono, padding: "2px 8px", borderRadius: 5,
+          background: `${color}10`,
+        }}>{count}</span>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCORE BREAKDOWN BAR
+// ═══════════════════════════════════════════════════════════════════════════
+
+function BreakdownBar({ label, score, max, delay }: { label: string; score: number; max: number; delay: number }) {
+  const pct = max > 0 ? score / max : 0;
+  const color = pct >= 0.7 ? T.green : pct >= 0.4 ? T.amber : T.red;
+  const labelTag = pct >= 0.7 ? "Bom" : pct >= 0.4 ? "Regular" : "Baixo";
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, ...fadeUp(delay) }}>
+      <span style={{ fontSize: 11, color: T.muted, width: 110, fontWeight: 500, flexShrink: 0 }}>{label}</span>
+      <div style={{ flex: 1, height: 5, background: "rgba(255,255,255,0.05)", borderRadius: 3, overflow: "hidden" }}>
+        <div style={{
+          height: "100%", borderRadius: 3,
+          background: `linear-gradient(90deg, ${color}80, ${color})`,
+          width: `${pct * 100}%`,
+          transition: "width 1.5s cubic-bezier(0.16,1,0.3,1)",
+          boxShadow: `0 0 8px ${color}40`,
+        }} />
+      </div>
+      <span style={{
+        fontSize: 11, fontWeight: 700, color: T.white, width: 40, textAlign: "right",
+        fontFamily: T.mono, fontVariantNumeric: "tabular-nums",
+      }}>{score}/{max}</span>
+      <span style={{
+        fontSize: 9, fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.06em",
+        width: 50, textAlign: "right",
+      }}>{labelTag}</span>
     </div>
   );
 }
@@ -282,9 +492,10 @@ export default function AccountDiagnostic() {
   const [batchPausing, setBatchPausing] = useState(false);
   const [showAllPause, setShowAllPause] = useState(false);
   const [showAllScale, setShowAllScale] = useState(false);
+  const [showAllFatigued, setShowAllFatigued] = useState(false);
 
-  // Animated hero number
   const animatedWaste = useAnimatedNumber(data?.wasted_spend || 0, 2500, phase === "reveal" || phase === "done");
+  const animatedScore = useAnimatedNumber(data?.score || 0, 2000, phase === "reveal" || phase === "done");
 
   // ── Load diagnostic ─────────────────────────────────────────────────
   useEffect(() => {
@@ -293,7 +504,6 @@ export default function AccountDiagnostic() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { navigate("/login"); return; }
 
-        // Get active persona
         const { data: personas } = await supabase
           .from("personas" as any)
           .select("id")
@@ -302,38 +512,29 @@ export default function AccountDiagnostic() {
           .limit(1);
         const personaId = (personas as any)?.[0]?.id || null;
 
-        // Animate loading steps
         for (let i = 0; i < LOADING_STEPS.length; i++) {
           setLoadingStep(i);
           await new Promise(r => setTimeout(r, LOADING_STEPS[i].duration));
         }
 
-        // Call edge function
         const { data: result, error: fnError } = await supabase.functions.invoke("account-diagnostic", {
           body: { user_id: user.id, persona_id: personaId },
         });
 
         if (fnError) throw new Error(fnError.message);
         if (result?.error) {
-          if (result.error === "no_meta_connection") {
-            setPhase("empty");
-            return;
-          }
+          if (result.error === "no_meta_connection") { setPhase("empty"); return; }
           throw new Error(result.error);
         }
 
         setData(result);
 
-        // Check if account has enough data
         if (result.metrics.active_ads < 2 || result.metrics.total_spend < 50) {
-          setPhase("empty");
-          return;
+          setPhase("empty"); return;
         }
 
-        // Reveal phase (hero number animation)
         setPhase("reveal");
         setTimeout(() => setPhase("done"), 3000);
-
       } catch (e: any) {
         setError(e.message || "Erro ao gerar diagnóstico");
         setPhase("error");
@@ -352,11 +553,9 @@ export default function AccountDiagnostic() {
 
       const { data: result, error } = await supabase.functions.invoke("meta-actions", {
         body: {
-          action: "pause",
-          user_id: user!.id,
+          action: "pause", user_id: user!.id,
           persona_id: personas?.[0]?.id || null,
-          target_id: adId,
-          target_type: "ad",
+          target_id: adId, target_type: "ad",
         },
       });
 
@@ -369,14 +568,12 @@ export default function AccountDiagnostic() {
     }
   }, []);
 
-  // ── Batch pause all ─────────────────────────────────────────────────
   const handleBatchPause = useCallback(async () => {
     if (!data) return;
     setBatchPausing(true);
     const toPause = data.ads_to_pause.filter(a => !pausedIds.has(a.ad_id));
     for (const ad of toPause) {
       await handlePause(ad.ad_id);
-      // Small delay between calls to respect rate limits
       await new Promise(r => setTimeout(r, 500));
     }
     setBatchPausing(false);
@@ -388,42 +585,71 @@ export default function AccountDiagnostic() {
 
   if (phase === "loading") {
     return (
-      <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F }}>
-        <div style={{ textAlign: "center", maxWidth: 400 }}>
-          <div style={{ width: 56, height: 56, margin: "0 auto 24px", borderRadius: 14, background: `${BLUE}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Loader2 size={24} color={BLUE} className="animate-spin" />
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.font }}>
+        <style>{ANIM_CSS}</style>
+        <div style={{ textAlign: "center", maxWidth: 380, padding: 24 }}>
+          {/* Pulsing accent ring */}
+          <div style={{
+            width: 64, height: 64, margin: "0 auto 28px", borderRadius: 16, position: "relative",
+            background: `${T.accent}10`, border: `1px solid ${T.accent}20`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <div style={{
+              position: "absolute", inset: -6, borderRadius: 20,
+              border: `2px solid ${T.accent}15`,
+              animation: "glowPulse 2s ease-in-out infinite",
+            }} />
+            <Loader2 size={24} color={T.accent} style={{ animation: "spin 1s linear infinite" }} />
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 24 }}>Analisando sua conta</h2>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, textAlign: "left" }}>
-            {LOADING_STEPS.map((step, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, opacity: i <= loadingStep ? 1 : 0.3, transition: "opacity 0.4s" }}>
-                <div style={{
-                  width: 20, height: 20, borderRadius: 10, flexShrink: 0,
-                  background: i < loadingStep ? `${GREEN}20` : i === loadingStep ? `${BLUE}20` : "rgba(255,255,255,0.05)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: T.white, marginBottom: 6, letterSpacing: "-0.02em" }}>
+            Analisando sua conta
+          </h2>
+          <p style={{ fontSize: 12, color: T.dimmer, marginBottom: 28 }}>Isso leva ~15 segundos</p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, textAlign: "left" }}>
+            {LOADING_STEPS.map((step, i) => {
+              const active = i === loadingStep;
+              const done = i < loadingStep;
+              return (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "10px 14px", borderRadius: 10,
+                  background: active ? `${T.accent}08` : "transparent",
+                  border: active ? `1px solid ${T.accent}15` : "1px solid transparent",
+                  opacity: done || active ? 1 : 0.3,
+                  transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)",
                 }}>
-                  {i < loadingStep ? (
-                    <Check size={12} color={GREEN} />
-                  ) : i === loadingStep ? (
-                    <Loader2 size={12} color={BLUE} className="animate-spin" />
-                  ) : (
-                    <div style={{ width: 6, height: 6, borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
-                  )}
+                  <div style={{
+                    width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+                    background: done ? `${T.green}15` : active ? `${T.accent}15` : "rgba(255,255,255,0.04)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    border: `1px solid ${done ? T.green + "25" : active ? T.accent + "25" : "transparent"}`,
+                  }}>
+                    {done ? (
+                      <Check size={12} color={T.green} />
+                    ) : active ? (
+                      <Loader2 size={12} color={T.accent} style={{ animation: "spin 1s linear infinite" }} />
+                    ) : (
+                      <div style={{ width: 5, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
+                    )}
+                  </div>
+                  <span style={{ fontSize: 12, color: active ? T.white : done ? "rgba(255,255,255,0.55)" : T.dimmer, fontWeight: active ? 600 : 400 }}>
+                    {step.label}
+                  </span>
                 </div>
-                <span style={{ fontSize: 13, color: i <= loadingStep ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.25)" }}>
-                  {step.label}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Progress bar */}
-          <div style={{ marginTop: 24, height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
+          <div style={{ marginTop: 24, height: 3, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
             <div style={{
-              height: "100%", background: BLUE, borderRadius: 2,
+              height: "100%", borderRadius: 2,
+              background: `linear-gradient(90deg, ${T.accent}80, ${T.accent})`,
               width: `${((loadingStep + 1) / LOADING_STEPS.length) * 100}%`,
-              transition: "width 0.8s ease-out",
+              transition: "width 0.8s cubic-bezier(0.16,1,0.3,1)",
+              boxShadow: `0 0 12px ${T.accent}40`,
             }} />
           </div>
         </div>
@@ -437,16 +663,28 @@ export default function AccountDiagnostic() {
 
   if (phase === "error") {
     return (
-      <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F }}>
-        <div style={{ textAlign: "center", maxWidth: 400 }}>
-          <div style={{ width: 56, height: 56, margin: "0 auto 20px", borderRadius: 14, background: "rgba(239,68,68,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <X size={24} color={RED} />
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.font }}>
+        <style>{ANIM_CSS}</style>
+        <div style={{ textAlign: "center", maxWidth: 400, padding: 24, ...scaleIn(0) }}>
+          <div style={{
+            width: 56, height: 56, margin: "0 auto 20px", borderRadius: 14,
+            background: `${T.red}10`, border: `1px solid ${T.red}20`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <X size={24} color={T.red} />
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Erro no diagnóstico</h2>
-          <p style={{ fontSize: 13, color: MUTED, marginBottom: 20 }}>{error}</p>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: T.white, marginBottom: 8 }}>Erro no diagnóstico</h2>
+          <div style={{
+            ...glass, padding: "10px 14px", marginBottom: 20, textAlign: "left",
+          }}>
+            <p style={{ fontSize: 11, color: T.red, fontFamily: T.mono, margin: 0, wordBreak: "break-all", lineHeight: 1.5 }}>{error}</p>
+          </div>
           <button
             onClick={() => navigate("/dashboard/accounts")}
-            style={{ padding: "10px 20px", borderRadius: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: F }}
+            style={{
+              padding: "10px 20px", borderRadius: 9, fontFamily: T.font,
+              ...glass, color: T.white, fontSize: 13, fontWeight: 600, cursor: "pointer",
+            }}
           >
             Voltar para Contas
           </button>
@@ -456,20 +694,25 @@ export default function AccountDiagnostic() {
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  // RENDER: EMPTY (no data / no connection)
+  // RENDER: EMPTY
   // ═══════════════════════════════════════════════════════════════════════
 
   if (phase === "empty") {
     return (
-      <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: F }}>
-        <div style={{ textAlign: "center", maxWidth: 420 }}>
-          <div style={{ width: 56, height: 56, margin: "0 auto 20px", borderRadius: 14, background: `${AMBER}12`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <BarChart3 size={24} color={AMBER} />
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.font }}>
+        <style>{ANIM_CSS}</style>
+        <div style={{ textAlign: "center", maxWidth: 420, padding: 24, ...scaleIn(0) }}>
+          <div style={{
+            width: 56, height: 56, margin: "0 auto 20px", borderRadius: 14,
+            background: `${T.amber}10`, border: `1px solid ${T.amber}20`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <BarChart3 size={24} color={T.amber} />
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: T.white, marginBottom: 8, letterSpacing: "-0.02em" }}>
             {data ? "Dados insuficientes" : "Conecte sua conta Meta Ads"}
           </h2>
-          <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.6, marginBottom: 24 }}>
+          <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, marginBottom: 24 }}>
             {data
               ? `Sua conta tem ${data.metrics.active_ads} anúncio(s) e R$${data.metrics.total_spend.toFixed(0)} de spend nos últimos 30 dias. Precisamos de pelo menos 2 anúncios e R$50 de spend para gerar um diagnóstico completo.`
               : "Para gerar seu diagnóstico, conecte uma conta Meta Ads na página de Contas."}
@@ -477,9 +720,10 @@ export default function AccountDiagnostic() {
           <button
             onClick={() => navigate("/dashboard/accounts")}
             style={{
-              padding: "10px 20px", borderRadius: 8, fontFamily: F,
-              background: BLUE, color: "#fff", fontSize: 13, fontWeight: 600,
+              padding: "11px 24px", borderRadius: 9, fontFamily: T.font,
+              background: T.accent, color: T.white, fontSize: 13, fontWeight: 700,
               border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
+              boxShadow: `0 0 20px ${T.accent}30`,
             }}
           >
             {data ? "Voltar" : "Conectar conta"} <ArrowRight size={14} />
@@ -500,132 +744,206 @@ export default function AccountDiagnostic() {
     .filter(a => pausedIds.has(a.ad_id))
     .reduce((s, a) => s + a.spend, 0);
 
+  // CTR from backend is now a fraction. avg_ctr is also fraction.
+  const ctrDisplay = (data.metrics.avg_ctr * 100).toFixed(2);
+
   return (
-    <div style={{ minHeight: "100vh", background: BG, fontFamily: F, padding: "24px 16px 80px" }}>
-      <div style={{ maxWidth: 680, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.font }}>
+      <style>{ANIM_CSS}</style>
+
+      {/* ── Radial glow backdrop ──────────────────────────────────── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: 500, pointerEvents: "none",
+        background: data.wasted_spend > 0
+          ? `radial-gradient(ellipse 70% 50% at 50% -10%, ${T.red}08 0%, transparent 70%)`
+          : `radial-gradient(ellipse 70% 50% at 50% -10%, ${T.green}06 0%, transparent 70%)`,
+      }} />
+
+      <div style={{ position: "relative", maxWidth: 700, margin: "0 auto", padding: "28px 20px 80px" }}>
 
         {/* ── Header ───────────────────────────────────────────────── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, ...fadeUp(0) }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: "#fff", margin: 0 }}>Diagnóstico da Conta</h1>
-            <p style={{ fontSize: 13, color: MUTED, margin: "4px 0 0 0" }}>
-              {data.ad_account_name} · Últimos {data.period_days} dias
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: T.white, margin: 0, letterSpacing: "-0.02em" }}>
+              Diagnóstico da Conta
+            </h1>
+            <p style={{ fontSize: 12, color: T.muted, margin: "5px 0 0 0" }}>
+              {data.ad_account_name}
+              <span style={{ color: T.dimmer }}> · </span>
+              Últimos {data.period_days} dias
+              <span style={{ color: T.dimmer }}> · </span>
+              <span style={{ fontFamily: T.mono, fontSize: 11 }}>{data.metrics.active_ads} ads</span>
             </p>
           </div>
           <button
             onClick={() => window.location.reload()}
-            style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: `1px solid ${CARD_BORDER}`, color: MUTED, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontFamily: F }}
+            style={{
+              padding: "8px 14px", borderRadius: 8, fontFamily: T.font,
+              ...glass, color: T.muted, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600,
+            }}
           >
-            <RefreshCw size={13} /> Atualizar
+            <RefreshCw size={12} /> Atualizar
           </button>
         </div>
 
-        {/* ── Hero: Wasted Spend ───────────────────────────────────── */}
+        {/* ── HERO: Wasted Spend ──────────────────────────────────── */}
         <div style={{
-          padding: "32px 24px", borderRadius: 16, marginBottom: 16,
-          background: data.wasted_spend > 0
-            ? "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.02) 100%)"
-            : "linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%)",
-          border: `1px solid ${data.wasted_spend > 0 ? RED : GREEN}18`,
-          textAlign: "center",
+          padding: "36px 28px", borderRadius: 18, marginBottom: 16, position: "relative", overflow: "hidden",
+          ...glass, ...insetLight, textAlign: "center",
+          ...scaleIn(100),
         }}>
+          {/* Glow behind hero */}
+          <div style={{
+            position: "absolute", top: "-30%", left: "50%", transform: "translateX(-50%)",
+            width: "120%", height: "80%", pointerEvents: "none",
+            background: data.wasted_spend > 0
+              ? `radial-gradient(ellipse, ${T.red}10 0%, transparent 70%)`
+              : `radial-gradient(ellipse, ${T.green}08 0%, transparent 70%)`,
+          }} />
+
           {data.wasted_spend > 0 ? (
-            <>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 8 }}>
-                <AlertTriangle size={16} color={RED} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: RED, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                  Dinheiro desperdiçado este mês
+            <div style={{ position: "relative" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 12 }}>
+                <AlertTriangle size={14} color={T.red} />
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: T.red,
+                  textTransform: "uppercase", letterSpacing: "0.1em",
+                }}>
+                  Dinheiro desperdiçado em 30 dias
                 </span>
               </div>
-              <div style={{ fontSize: 52, fontWeight: 900, color: "#fff", lineHeight: 1, marginBottom: 8 }}>
-                <span style={{ fontSize: 28, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginRight: 4 }}>R$</span>
-                {animatedWaste.toLocaleString("pt-BR")}
+              <div style={{ marginBottom: 10 }}>
+                <span style={{
+                  fontSize: 22, fontWeight: 600, color: "rgba(255,255,255,0.4)",
+                  fontFamily: T.mono, marginRight: 4,
+                }}>R$</span>
+                <span style={{
+                  fontSize: 56, fontWeight: 900, color: T.white,
+                  fontFamily: T.mono, letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums",
+                  animation: "countUp 0.8s ease-out",
+                  textShadow: data.wasted_spend > 500 ? `0 0 30px ${T.red}30` : "none",
+                }}>{animatedWaste.toLocaleString("pt-BR")}</span>
               </div>
-              <p style={{ fontSize: 13, color: MUTED, margin: 0 }}>
-                em {data.ads_to_pause.length} anúncio{data.ads_to_pause.length > 1 ? "s" : ""} que deveria{data.ads_to_pause.length > 1 ? "m" : ""} ser pausado{data.ads_to_pause.length > 1 ? "s" : ""}
+              <p style={{ fontSize: 12, color: T.muted, margin: "0 0 16px 0" }}>
+                em <span style={{ color: T.white, fontWeight: 700 }}>{data.ads_to_pause.length}</span> anúncio{data.ads_to_pause.length > 1 ? "s" : ""} que deveria{data.ads_to_pause.length > 1 ? "m" : ""} ser pausado{data.ads_to_pause.length > 1 ? "s" : ""}
               </p>
               {data.projected_roas && data.current_roas && data.roas_improvement_pct ? (
-                <div style={{ marginTop: 16, padding: "10px 16px", borderRadius: 8, background: "rgba(34,197,94,0.08)", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <TrendingUp size={14} color={GREEN} />
-                  <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>
-                    ROAS projetado: {data.current_roas.toFixed(2)}x → {data.projected_roas.toFixed(2)}x (+{data.roas_improvement_pct.toFixed(0)}%)
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "8px 16px", borderRadius: 9,
+                  background: `${T.green}08`, border: `1px solid ${T.green}15`,
+                }}>
+                  <TrendingUp size={13} color={T.green} />
+                  <span style={{ fontSize: 12, color: T.green, fontWeight: 600 }}>
+                    ROAS:
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: T.white, fontFamily: T.mono }}>
+                    {data.current_roas.toFixed(2)}x
+                  </span>
+                  <ArrowRight size={12} color={T.dimmer} />
+                  <span style={{ fontSize: 13, fontWeight: 800, color: T.green, fontFamily: T.mono }}>
+                    {data.projected_roas.toFixed(2)}x
+                  </span>
+                  <span style={{ fontSize: 11, color: T.green, fontFamily: T.mono }}>
+                    (+{data.roas_improvement_pct.toFixed(0)}%)
                   </span>
                 </div>
               ) : null}
-            </>
+            </div>
           ) : (
-            <>
+            <div style={{ position: "relative" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 8 }}>
-                <Check size={16} color={GREEN} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: GREEN, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                <Check size={16} color={T.green} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: T.green, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                   Conta saudável
                 </span>
               </div>
-              <p style={{ fontSize: 16, fontWeight: 600, color: "#fff", margin: 0 }}>
+              <p style={{ fontSize: 16, fontWeight: 700, color: T.white, margin: 0 }}>
                 Nenhum anúncio precisa ser pausado agora
               </p>
-            </>
+            </div>
           )}
         </div>
 
-        {/* ── Score + Quick Metrics Row ─────────────────────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 16, marginBottom: 16 }}>
+        {/* ── Score + Quick Metrics ────────────────────────────────── */}
+        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 12, marginBottom: 16 }}>
           {/* Score Ring */}
           <div style={{
-            padding: 20, borderRadius: 14, background: CARD_BG, border: `1px solid ${CARD_BORDER}`,
+            ...glass, ...insetLight, padding: "24px 28px",
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            position: "relative", overflow: "hidden",
+            ...fadeUp(200),
           }}>
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background: T.glow(data.score >= 70 ? T.green : data.score >= 40 ? T.amber : T.red, 0.06),
+            }} />
             <ScoreRing score={data.score} />
-            <span style={{ fontSize: 11, color: MUTED, marginTop: 8 }}>Account Health</span>
+            <span style={{ fontSize: 10, color: T.dimmer, marginTop: 10, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
+              Account Health
+            </span>
           </div>
 
           {/* Quick metrics grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {[
-              { icon: DollarSign, label: "Spend total", value: `R$${data.metrics.total_spend.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`, color: "#fff" },
-              { icon: MousePointerClick, label: "CTR médio", value: `${(data.metrics.avg_ctr * 100).toFixed(2)}%`, color: data.benchmarks.ctr?.verdict === "above" ? GREEN : data.benchmarks.ctr?.verdict === "below" ? RED : AMBER },
-              { icon: Eye, label: "Impressões", value: data.metrics.total_impressions.toLocaleString("pt-BR"), color: "#fff" },
-              { icon: Zap, label: "Conversões", value: String(data.metrics.total_conversions), color: data.metrics.total_conversions > 0 ? GREEN : MUTED },
-            ].map((m, i) => (
-              <div key={i} style={{ padding: "12px 14px", borderRadius: 10, background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <m.icon size={13} color={MUTED} />
-                  <span style={{ fontSize: 11, color: MUTED }}>{m.label}</span>
-                </div>
-                <span style={{ fontSize: 16, fontWeight: 700, color: m.color }}>{m.value}</span>
-              </div>
-            ))}
+            <MetricCard
+              icon={DollarSign} label="Spend total"
+              value={`R$${data.metrics.total_spend.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`}
+              sub={`${data.metrics.active_campaigns} campanhas`}
+              color={T.white} delay={250}
+            />
+            <MetricCard
+              icon={MousePointerClick} label="CTR médio"
+              value={`${ctrDisplay}%`}
+              sub={`vs 1.50% benchmark`}
+              color={data.benchmarks.ctr?.verdict === "above" ? T.green : data.benchmarks.ctr?.verdict === "below" ? T.red : T.amber}
+              delay={300}
+            />
+            <MetricCard
+              icon={Eye} label="Impressões"
+              value={data.metrics.total_impressions >= 1000000
+                ? `${(data.metrics.total_impressions / 1000000).toFixed(1)}M`
+                : data.metrics.total_impressions >= 1000
+                  ? `${(data.metrics.total_impressions / 1000).toFixed(1)}K`
+                  : String(data.metrics.total_impressions)}
+              sub={`CPM R$${data.metrics.avg_cpm.toFixed(2)}`}
+              color={T.white} delay={350}
+            />
+            <MetricCard
+              icon={Target} label="Conversões"
+              value={String(data.metrics.total_conversions)}
+              sub={data.metrics.total_conversions > 0 && data.metrics.total_spend > 0
+                ? `CPA R$${(data.metrics.total_spend / data.metrics.total_conversions).toFixed(0)}`
+                : "Sem dados de conversão"}
+              color={data.metrics.total_conversions > 0 ? T.green : T.dimmer}
+              delay={400}
+            />
           </div>
         </div>
 
         {/* ── Score Breakdown ──────────────────────────────────────── */}
-        <div style={{ padding: 16, borderRadius: 14, background: CARD_BG, border: `1px solid ${CARD_BORDER}`, marginBottom: 16 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 12px 0" }}>Score Breakdown</h3>
-          {[
-            { label: "ROAS", score: data.score_breakdown.roas_score, max: 35 },
-            { label: "CPA", score: data.score_breakdown.cpa_score, max: 25 },
-            { label: "CTR", score: data.score_breakdown.ctr_score, max: 20 },
-            { label: "Budget Efficiency", score: data.score_breakdown.budget_efficiency, max: 10 },
-            { label: "Creative Health", score: data.score_breakdown.creative_health, max: 10 },
-          ].map((item, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <span style={{ fontSize: 12, color: MUTED, width: 120 }}>{item.label}</span>
-              <div style={{ flex: 1, height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{
-                  height: "100%", borderRadius: 3,
-                  background: (item.score / item.max) >= 0.7 ? GREEN : (item.score / item.max) >= 0.4 ? AMBER : RED,
-                  width: `${(item.score / item.max) * 100}%`,
-                  transition: "width 1s ease-out",
-                }} />
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#fff", width: 45, textAlign: "right" }}>{item.score}/{item.max}</span>
-            </div>
-          ))}
+        <div style={{ ...glass, ...insetLight, padding: "18px 18px 12px", marginBottom: 16, ...fadeUp(450) }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>Score Breakdown</span>
+            <span style={{
+              fontSize: 12, fontWeight: 800, color: T.white,
+              fontFamily: T.mono, fontVariantNumeric: "tabular-nums",
+            }}>{data.score}<span style={{ color: T.dimmer, fontWeight: 500 }}>/100</span></span>
+          </div>
+          <BreakdownBar label="ROAS" score={data.score_breakdown.roas_score} max={35} delay={500} />
+          <BreakdownBar label="CPA" score={data.score_breakdown.cpa_score} max={25} delay={540} />
+          <BreakdownBar label="CTR" score={data.score_breakdown.ctr_score} max={20} delay={580} />
+          <BreakdownBar label="Eficiência Orçamento" score={data.score_breakdown.budget_efficiency} max={10} delay={620} />
+          <BreakdownBar label="Saúde Criativa" score={data.score_breakdown.creative_health} max={10} delay={660} />
         </div>
 
         {/* ── Benchmarks ───────────────────────────────────────────── */}
-        <div style={{ padding: 16, borderRadius: 14, background: CARD_BG, border: `1px solid ${CARD_BORDER}`, marginBottom: 16 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 8px 0" }}>vs Benchmark do Mercado</h3>
+        <div style={{ ...glass, ...insetLight, padding: "18px", marginBottom: 16, ...fadeUp(700) }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <BarChart3 size={14} color={T.accent} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: T.white }}>vs Benchmark do Mercado</span>
+          </div>
           <BenchmarkRow label="CTR" yours={data.benchmarks.ctr.yours} benchmark={data.benchmarks.ctr.benchmark} verdict={data.benchmarks.ctr.verdict} format={v => `${(v * 100).toFixed(2)}%`} />
           <BenchmarkRow label="CPM" yours={data.benchmarks.cpm.yours} benchmark={data.benchmarks.cpm.benchmark} verdict={data.benchmarks.cpm.verdict} format={v => `R$${v.toFixed(2)}`} />
           <BenchmarkRow label="CPC" yours={data.benchmarks.cpc.yours} benchmark={data.benchmarks.cpc.benchmark} verdict={data.benchmarks.cpc.verdict} format={v => `R$${v.toFixed(2)}`} />
@@ -634,20 +952,20 @@ export default function AccountDiagnostic() {
 
         {/* ── Ads to Pause ─────────────────────────────────────────── */}
         {data.ads_to_pause.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
-                <Pause size={15} color={RED} /> Anúncios para pausar ({unpausedAds.length})
-              </h3>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <SectionHeader icon={Pause} color={T.red} title="Anúncios para pausar" count={unpausedAds.length} delay={750} />
               {unpausedAds.length > 1 && (
                 <button
                   onClick={handleBatchPause}
                   disabled={batchPausing || unpausedAds.length === 0}
                   style={{
-                    padding: "6px 14px", borderRadius: 7, fontSize: 11, fontWeight: 600,
-                    background: `${RED}15`, color: RED, border: `1px solid ${RED}30`,
-                    cursor: batchPausing ? "not-allowed" : "pointer", fontFamily: F,
-                    display: "flex", alignItems: "center", gap: 4,
+                    padding: "7px 16px", borderRadius: 8, fontSize: 11, fontWeight: 700,
+                    background: `${T.red}10`, color: T.red, border: `1px solid ${T.red}20`,
+                    cursor: batchPausing ? "not-allowed" : "pointer", fontFamily: T.font,
+                    display: "flex", alignItems: "center", gap: 5,
+                    boxShadow: `0 0 16px ${T.red}10`,
+                    ...fadeUp(760),
                   }}
                 >
                   {batchPausing ? <Loader2 size={12} className="animate-spin" /> : <Pause size={12} />}
@@ -657,27 +975,33 @@ export default function AccountDiagnostic() {
             </div>
 
             {pausedIds.size > 0 && (
-              <div style={{ padding: "8px 12px", borderRadius: 8, background: `${GREEN}10`, border: `1px solid ${GREEN}20`, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                <Check size={14} color={GREEN} />
-                <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>
-                  {pausedIds.size} pausado{pausedIds.size > 1 ? "s" : ""} — economizando R${savedMoney.toFixed(0)}/mês
+              <div style={{
+                ...glass, padding: "10px 14px", marginBottom: 10,
+                border: `1px solid ${T.green}20`,
+                display: "flex", alignItems: "center", gap: 8,
+              }}>
+                <Check size={14} color={T.green} />
+                <span style={{ fontSize: 12, color: T.green, fontWeight: 600 }}>
+                  {pausedIds.size} pausado{pausedIds.size > 1 ? "s" : ""}
+                </span>
+                <span style={{ fontSize: 12, color: T.dimmer }}>—</span>
+                <span style={{ fontSize: 12, color: T.white, fontWeight: 700, fontFamily: T.mono }}>
+                  R${savedMoney.toFixed(0)}/mês economizados
                 </span>
               </div>
             )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {(showAllPause ? data.ads_to_pause : data.ads_to_pause.slice(0, 5))
-                .filter(a => !pausedIds.has(a.ad_id))
-                .map(ad => (
-                  <AdRow key={ad.ad_id} ad={ad} type="pause" onPause={handlePause} pausingId={pausingId} />
-                ))}
+              {(showAllPause ? data.ads_to_pause : data.ads_to_pause.slice(0, 5)).map((ad, i) => (
+                <AdRow key={ad.ad_id} ad={ad} type="pause" onPause={handlePause} pausingId={pausingId} isPaused={pausedIds.has(ad.ad_id)} delay={780 + i * 40} />
+              ))}
             </div>
             {data.ads_to_pause.length > 5 && (
               <button
                 onClick={() => setShowAllPause(!showAllPause)}
-                style={{ marginTop: 8, background: "none", border: "none", color: BLUE, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: F, display: "flex", alignItems: "center", gap: 4 }}
+                style={{ marginTop: 10, background: "none", border: "none", color: T.accent, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: T.font, display: "flex", alignItems: "center", gap: 4 }}
               >
-                {showAllPause ? <><ChevronUp size={14} /> Mostrar menos</> : <><ChevronDown size={14} /> Ver todos ({data.ads_to_pause.length})</>}
+                {showAllPause ? <><ChevronUp size={13} /> Mostrar menos</> : <><ChevronDown size={13} /> Ver todos ({data.ads_to_pause.length})</>}
               </button>
             )}
           </div>
@@ -685,21 +1009,19 @@ export default function AccountDiagnostic() {
 
         {/* ── Ads to Scale ─────────────────────────────────────────── */}
         {data.ads_to_scale.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 10px 0", display: "flex", alignItems: "center", gap: 6 }}>
-              <TrendingUp size={15} color={GREEN} /> Anúncios para escalar ({data.ads_to_scale.length})
-            </h3>
+          <div style={{ marginBottom: 20 }}>
+            <SectionHeader icon={TrendingUp} color={T.green} title="Anúncios para escalar" count={data.ads_to_scale.length} delay={900} />
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {(showAllScale ? data.ads_to_scale : data.ads_to_scale.slice(0, 5)).map(ad => (
-                <AdRow key={ad.ad_id} ad={ad} type="scale" />
+              {(showAllScale ? data.ads_to_scale : data.ads_to_scale.slice(0, 5)).map((ad, i) => (
+                <AdRow key={ad.ad_id} ad={ad} type="scale" delay={920 + i * 40} />
               ))}
             </div>
             {data.ads_to_scale.length > 5 && (
               <button
                 onClick={() => setShowAllScale(!showAllScale)}
-                style={{ marginTop: 8, background: "none", border: "none", color: BLUE, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: F, display: "flex", alignItems: "center", gap: 4 }}
+                style={{ marginTop: 10, background: "none", border: "none", color: T.accent, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: T.font, display: "flex", alignItems: "center", gap: 4 }}
               >
-                {showAllScale ? <><ChevronUp size={14} /> Mostrar menos</> : <><ChevronDown size={14} /> Ver todos ({data.ads_to_scale.length})</>}
+                {showAllScale ? <><ChevronUp size={13} /> Mostrar menos</> : <><ChevronDown size={13} /> Ver todos ({data.ads_to_scale.length})</>}
               </button>
             )}
           </div>
@@ -707,13 +1029,31 @@ export default function AccountDiagnostic() {
 
         {/* ── Fatigued Ads ─────────────────────────────────────────── */}
         {data.ads_fatigued.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 10px 0", display: "flex", alignItems: "center", gap: 6 }}>
-              <Activity size={15} color={AMBER} /> Em fadiga ({data.ads_fatigued.length})
-            </h3>
+          <div style={{ marginBottom: 20 }}>
+            <SectionHeader icon={Flame} color={T.amber} title="Em fadiga criativa" count={data.ads_fatigued.length} delay={1000} />
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {data.ads_fatigued.slice(0, 5).map(ad => (
-                <AdRow key={ad.ad_id} ad={ad} type="fatigued" />
+              {(showAllFatigued ? data.ads_fatigued : data.ads_fatigued.slice(0, 4)).map((ad, i) => (
+                <AdRow key={ad.ad_id} ad={ad} type="fatigued" delay={1020 + i * 40} />
+              ))}
+            </div>
+            {data.ads_fatigued.length > 4 && (
+              <button
+                onClick={() => setShowAllFatigued(!showAllFatigued)}
+                style={{ marginTop: 10, background: "none", border: "none", color: T.accent, fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: T.font, display: "flex", alignItems: "center", gap: 4 }}
+              >
+                {showAllFatigued ? <><ChevronUp size={13} /> Mostrar menos</> : <><ChevronDown size={13} /> Ver todos ({data.ads_fatigued.length})</>}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Top Performers ───────────────────────────────────────── */}
+        {data.top_performers.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <SectionHeader icon={Crown} color={T.accent} title="Top performers" count={data.top_performers.length} delay={1100} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {data.top_performers.slice(0, 5).map((ad, i) => (
+                <AdRow key={ad.ad_id} ad={ad} type="top" delay={1120 + i * 40} />
               ))}
             </div>
           </div>
@@ -721,13 +1061,11 @@ export default function AccountDiagnostic() {
 
         {/* ── AI Insights ──────────────────────────────────────────── */}
         {data.insights.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "0 0 10px 0", display: "flex", alignItems: "center", gap: 6 }}>
-              <Zap size={15} color={BLUE} /> Insights da IA
-            </h3>
+          <div style={{ marginBottom: 20 }}>
+            <SectionHeader icon={Sparkles} color={T.accent} title="Insights da IA" delay={1200} />
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {data.insights.map((insight, i) => (
-                <InsightCard key={i} insight={insight} />
+                <InsightCard key={i} insight={insight} delay={1220 + i * 80} />
               ))}
             </div>
           </div>
@@ -735,22 +1073,34 @@ export default function AccountDiagnostic() {
 
         {/* ── CTA Footer ──────────────────────────────────────────── */}
         <div style={{
-          padding: 20, borderRadius: 14, marginTop: 24,
-          background: "linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)",
-          border: `1px solid ${BLUE}18`, textAlign: "center",
+          padding: "28px 24px", borderRadius: 16, marginTop: 32,
+          ...glass, ...insetLight, textAlign: "center",
+          position: "relative", overflow: "hidden",
+          ...fadeUp(1400),
         }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: "#fff", margin: "0 0 8px 0" }}>
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, height: 1,
+            background: `linear-gradient(90deg, transparent, ${T.accent}40, transparent)`,
+          }} />
+          <div style={{
+            position: "absolute", top: "-50%", left: "50%", transform: "translateX(-50%)",
+            width: "100%", height: "100%", pointerEvents: "none",
+            background: `radial-gradient(ellipse 60% 50% at 50% 0%, ${T.accent}06 0%, transparent 70%)`,
+          }} />
+          <p style={{ fontSize: 15, fontWeight: 700, color: T.white, margin: "0 0 6px 0", position: "relative" }}>
             Quer ir mais fundo?
           </p>
-          <p style={{ fontSize: 12, color: MUTED, margin: "0 0 16px 0" }}>
+          <p style={{ fontSize: 12, color: T.muted, margin: "0 0 18px 0", position: "relative" }}>
             Converse com a IA sobre seus resultados — ela conhece cada detalhe da sua conta.
           </p>
           <button
             onClick={() => navigate("/dashboard/ai")}
             style={{
-              padding: "10px 24px", borderRadius: 8, fontFamily: F,
-              background: BLUE, color: "#fff", fontSize: 13, fontWeight: 600,
+              padding: "11px 28px", borderRadius: 9, fontFamily: T.font,
+              background: T.accent, color: T.white, fontSize: 13, fontWeight: 700,
               border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
+              boxShadow: `0 0 24px ${T.accent}30`,
+              position: "relative",
             }}
           >
             Abrir AI Chat <ArrowRight size={14} />
