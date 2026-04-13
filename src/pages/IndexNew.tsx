@@ -2186,18 +2186,19 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
       {/* Headline — massive, bold, with glow */}
       <h1 style={{
         fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.02,
-        margin: '0 0 24px', color: '#fff',
-        fontSize: 'clamp(42px, 5vw, 72px)',
+        margin: '0 0 20px', color: '#fff',
+        fontSize: 'clamp(44px, 5.5vw, 76px)',
       }}>
         {line1}
         <br />
         {line2}
         <br />
-        <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>{line3prefix}</span>
+        <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+          <span style={{ color: 'rgba(255,255,255,0.25)', fontWeight: 400, fontSize: 'clamp(36px, 4.5vw, 64px)' }}>{line3prefix}</span>
           <span className="hero-text-shimmer" style={{
             display: 'inline-block',
             fontWeight: 800,
+            fontSize: 'clamp(44px, 5.5vw, 76px)',
             opacity: fade ? 1 : 0,
             transform: fade ? 'translateY(0)' : 'translateY(6px)',
             transition: 'opacity 0.22s ease, transform 0.22s ease',
