@@ -300,7 +300,7 @@ export default function AccountDiagnostic() {
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(1);
-        const personaId = personas?.[0]?.id || null;
+        const personaId = (personas as any)?.[0]?.id || null;
 
         // Animate loading steps
         for (let i = 0; i < LOADING_STEPS.length; i++) {
@@ -348,7 +348,7 @@ export default function AccountDiagnostic() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: personas } = await supabase
-        .from("personas" as any).select("id").eq("user_id", user!.id).limit(1);
+        .from("personas" as any).select("id").eq("user_id", user!.id).limit(1) as any;
 
       const { data: result, error } = await supabase.functions.invoke("meta-actions", {
         body: {
