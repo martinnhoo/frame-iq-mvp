@@ -9,13 +9,17 @@ import CookieConsent from "@/components/CookieConsent";
 import { Logo } from "@/components/Logo";
 import { Helmet } from "react-helmet-async";
 
-const BRAND = "#6366f1";
-const BRAND_BRIGHT = "#38bdf8"; // sky blue accent
-const BG = "#070d1a";
-const CARD_BG = "rgba(17,22,32,0.65)";
-const CARD_BORDER = "rgba(99,102,241,0.12)";
-const TEXT_MUTED = "rgba(255,255,255,0.55)";
-const F = "'Plus Jakarta Sans', system-ui, sans-serif";
+// ── Design System Tokens ─────────────────────────────────────────────────────
+// All colors and fonts aligned with DESIGN_SYSTEM.md for consistency
+import { DESIGN_TOKENS as T_DESIGN } from "@/hooks/useDesignTokens";
+
+const BRAND = T_DESIGN.accent; // #0ea5e9 — consistent with dashboard
+const BRAND_BRIGHT = "#38bdf8"; // Sky blue accent for gradient
+const BG = T_DESIGN.surface0; // #070d1a
+const CARD_BG = "rgba(13,17,23,0.65)"; // Matches surface1 with transparency
+const CARD_BORDER = "rgba(14,165,233,0.12)"; // Accent color with transparency
+const TEXT_MUTED = T_DESIGN.textSecondary; // rgba(255,255,255,0.65)
+const F = T_DESIGN.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
 
 // ─── CTA Button ──────────────────────────────────────────────────────────────
 function CTAButton({

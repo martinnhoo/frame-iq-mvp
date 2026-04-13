@@ -1,0 +1,296 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADBRIEF DESIGN TOKENS — Single Source of Truth
+   Applied across all pages for visual consistency
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────────── */
+  /* COLORS — Palette */
+  /* ─────────────────────────────────────────────────────────────────────── */
+
+  /* Surface Layer (Backgrounds) */
+  --color-surface-0: #070d1a; /* Deepest background */
+  --color-surface-1: #0d1117; /* Primary background */
+  --color-surface-2: #111620; /* Elevated surface */
+  --color-surface-3: #161c2a; /* Highest elevation */
+
+  /* Accent & Actions */
+  --color-accent: #0ea5e9; /* Sky blue — secondary actions */
+  --color-accent-glow: rgba(14, 165, 233, 0.1); /* Glow effect */
+
+  /* Status Colors */
+  --color-red: #ef4444; /* Destructive/warning/pause */
+  --color-green: #22c55e; /* Success/positive */
+  --color-amber: #eab308; /* Info/caution */
+
+  /* Text Colors */
+  --color-text-primary: #f0f2f8; /* Headings, primary text */
+  --color-text-secondary: rgba(255, 255, 255, 0.65); /* Body text, secondary */
+  --color-text-muted: rgba(255, 255, 255, 0.45); /* Labels, hints, disabled */
+
+  /* Borders & Dividers */
+  --color-border-subtle: rgba(255, 255, 255, 0.04); /* Minimal borders */
+  --color-border-light: rgba(255, 255, 255, 0.08); /* Standard borders */
+  --color-border-top-light: rgba(255, 255, 255, 0.12); /* Inset highlights */
+
+  /* ─────────────────────────────────────────────────────────────────────── */
+  /* TYPOGRAPHY — Font Families */
+  /* ─────────────────────────────────────────────────────────────────────── */
+
+  --font-display: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-mono: 'Space Grotesk', 'DM Mono', monospace;
+
+  /* ─────────────────────────────────────────────────────────────────────── */
+  /* TYPOGRAPHY — Sizes & Weights */
+  /* ─────────────────────────────────────────────────────────────────────── */
+
+  --font-size-label: 10px; /* Labels (uppercase) */
+  --font-size-xs: 11px; /* Extra small */
+  --font-size-sm: 13px; /* Small */
+  --font-size-base: 15px; /* Body */
+  --font-size-md: 17px; /* Medium headline */
+  --font-size-lg: 19px; /* Large headline */
+  --font-size-xl: 28px; /* Extra large */
+  --font-size-2xl: 56px; /* Display */
+  --font-size-3xl: 72px; /* Hero/impact */
+
+  --font-weight-400: 400;
+  --font-weight-500: 500;
+  --font-weight-600: 600;
+  --font-weight-700: 700;
+  --font-weight-800: 800;
+
+  /* ─────────────────────────────────────────────────────────────────────── */
+  /* SPACING — Base 4px Unit */
+  /* ─────────────────────────────────────────────────────────────────────── */
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* ─────────────────────────────────────────────────────────────────────── */
+  /* RADIUS — Border Radius */
+  /* ─────────────────────────────────────────────────────────────────────── */
+
+  --radius-sm: 7px;
+  --radius-md: 8px;
+  --radius-base: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ─────────────────────────────────────────────────────────────────────── */
+  /* SHADOWS — Elevation Levels */
+  /* ─────────────────────────────────────────────────────────────────────── */
+
+  --shadow-inset: inset 0 1px 0 0 var(--color-border-top-light);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.4);
+
+  /* ─────────────────────────────────────────────────────────────────────── */
+  /* TRANSITIONS & ANIMATIONS */
+  /* ─────────────────────────────────────────────────────────────────────── */
+
+  --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: all 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ─────────────────────────────────────────────────────────────────────── */
+  /* LAYOUT */
+  /* ─────────────────────────────────────────────────────────────────────── */
+
+  --max-width-content: 680px;
+  --max-width-wide: 1200px;
+  --padding-page: 24px;
+  --padding-page-mobile: 16px;
+
+  /* ─────────────────────────────────────────────────────────────────────── */
+  /* Z-INDEX STACK */
+  /* ─────────────────────────────────────────────────────────────────────── */
+
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-modal-bg: 40;
+  --z-modal: 50;
+  --z-tooltip: 60;
+  --z-notification: 70;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL UTILITIES — Applied to all elements
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  background: var(--color-surface-0);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY — Respect Motion Preferences
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KEYFRAME ANIMATIONS — Standard set
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes countUp {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES — Optional shortcuts
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.bg-surface-1 {
+  background: var(--color-surface-1);
+}
+
+.bg-surface-2 {
+  background: var(--color-surface-2);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.gap-2 {
+  gap: var(--space-2);
+}
+
+.gap-3 {
+  gap: var(--space-3);
+}
+
+.gap-4 {
+  gap: var(--space-4);
+}
+
+.p-4 {
+  padding: var(--space-4);
+}
+
+.p-6 {
+  padding: var(--space-6);
+}
+
+.rounded {
+  border-radius: var(--radius-base);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+
+.shadow {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+.transition {
+  transition: var(--transition-base);
+}
+
+.transition-fast {
+  transition: var(--transition-fast);
+}
