@@ -5,17 +5,18 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, Trophy, TrendingUp, Zap, AlertTriangle, Flame, Target } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
-// ── Design tokens ──
-const F = "'Plus Jakarta Sans',system-ui,sans-serif";
-const MONO = "'DM Mono','Fira Code',monospace";
-const HERO = "'Plus Jakarta Sans',system-ui,sans-serif"; // hero numbers — clean, not monospace
-const A = "#0da2e7";
-const GREEN = "#10b981";
-const RED = "#ef4444";
-const AMBER = "#f59e0b";
-const TX = "var(--text-primary)";
-const MT = "var(--text-muted)";
+// ── Design tokens — from unified design system ──
+const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
+const MONO = T.mono; // 'Space Grotesk', 'DM Mono', monospace
+const HERO = T.font; // hero numbers — clean, not monospace
+const A = T.accent; // #0ea5e9
+const GREEN = T.green; // #22c55e
+const RED = T.red; // #ef4444
+const AMBER = T.amber; // #eab308
+const TX = T.textPrimary;
+const MT = T.textMuted;
 
 // ── Score engine ──
 function calcAdScore(ad: any): { score: number; tier: Tier; badges: Badge[] } {

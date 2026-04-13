@@ -6,9 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { Upload, Zap, Copy, Check, AlertCircle, Target, Crosshair, X, Film } from "lucide-react";
 import { toast } from "sonner";
+import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
-const F = {fontFamily:"'Plus Jakarta Sans', sans-serif"} as const;
-const M = {fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif"} as const;
+const F = {fontFamily: T.font} as const;
+const M = {fontFamily: T.font} as const;
 
 interface Result {
   industry: string; market: string;
