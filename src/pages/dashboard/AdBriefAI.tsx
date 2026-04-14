@@ -4237,22 +4237,43 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:80,background:"linear-gradient(to top,var(--bg-main),transparent)"}}/>
       </div>
 
-      {/* ── Live Panel — always visible when platform connected, outside scroll ── */}
-      {contextReady&&hasData&&(
-        <div style={{position:"relative",zIndex:2,flexShrink:0}}>
-        <SectionBoundary label="LivePanel" inline>
-        <LivePanel
-          user={user}
-          selectedPersona={selectedPersona}
-          connections={connections}
-          lang={lang}
-          onSend={send}
-        />
-        </SectionBoundary>
+      {/* ── Creative Skills Panel — shown when chat is empty ── */}
+      {messages.length===0&&contextReady&&hasData&&(
+        <div style={{position:"relative",zIndex:2,flexShrink:0,maxWidth:720,margin:"0 auto",width:"100%",padding:"24px 16px 0"}}>
+          <div style={{marginBottom:8}}>
+            <h2 style={{...j,fontSize:18,fontWeight:700,color:"#fff",margin:"0 0 4px",letterSpacing:"-0.02em"}}>
+              {lang==="pt"?"Ferramentas de criação":lang==="es"?"Herramientas de creación":"Creative tools"}
+            </h2>
+            <p style={{...j,fontSize:12,color:"rgba(255,255,255,0.30)",margin:0}}>
+              {lang==="pt"?"Selecione uma skill para iniciar uma conversa especializada":lang==="es"?"Selecciona una skill para iniciar una conversación especializada":"Select a skill to start a specialized conversation"}
+            </p>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>
+            {SKILLS.map(skill=>(
+              <button key={skill.id} onClick={()=>{
+                setActiveSkillId(skill.id);
+                send(lang==="pt"?`Olá! Me ajude como ${skill.name}.`:lang==="es"?`¡Hola! Ayúdame como ${skill.name}.`:`Hi! Help me as ${skill.name}.`);
+              }}
+                style={{
+                  ...j,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",
+                  borderRadius:12,padding:"20px 16px",cursor:"pointer",textAlign:"left",
+                  transition:"all 0.15s",display:"flex",flexDirection:"column",gap:8,
+                }}
+                onMouseEnter={e=>{const t=e.currentTarget as HTMLElement;t.style.background="rgba(255,255,255,0.06)";t.style.borderColor="rgba(255,255,255,0.12)";}}
+                onMouseLeave={e=>{const t=e.currentTarget as HTMLElement;t.style.background="rgba(255,255,255,0.03)";t.style.borderColor="rgba(255,255,255,0.06)";}}
+              >
+                <div style={{width:36,height:36,borderRadius:10,background:`${skill.color}15`,border:`1px solid ${skill.color}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>
+                  {skill.icon}
+                </div>
+                <div>
+                  <div style={{fontSize:14,fontWeight:700,color:"#fff",marginBottom:2}}>{skill.name}</div>
+                  <div style={{fontSize:11.5,color:"rgba(255,255,255,0.35)",lineHeight:1.4}}>{skill.desc[lang]||skill.desc.en}</div>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
-
-      
 
       {/* ── Messages ── */}
       <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8}}>

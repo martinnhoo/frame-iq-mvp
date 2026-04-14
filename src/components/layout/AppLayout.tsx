@@ -1,4 +1,5 @@
 // AppLayout — Simplified v2 Copilot sidebar, provides DashboardContext for child pages
+// Mobile: hamburger menu, sidebar as overlay
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
@@ -17,18 +18,21 @@ import {
   Settings,
   LogOut,
   Link2,
+  Menu,
+  X,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
+const MOBILE_BP = 768;
 
-// ── Nav item — matches DashboardSidebar NavItem exactly ─────────────────
-function NavItem({ url, label, icon: Icon, isActive, badge }: {
+// ── Nav item ─────────────────────────────────────────────────────────────────
+function NavItem({ url, label, icon: Icon, isActive, badge, onClick }: {
   url: string; label: string; icon: React.ElementType;
-  isActive: boolean; badge?: string;
+  isActive: boolean; badge?: string; onClick?: () => void;
 }) {
   const [hov, setHov] = useState(false);
   return (
-    <NavLink to={url}
+    <NavLink to={url} onClick={onClick}
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '7px 12px', margin: '1px 0', borderRadius: 7,
@@ -85,6 +89,22 @@ export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { language, setLanguage } = useLanguage();
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < MOBILE_BP);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   // ── Auth + profile state (same as DashboardLayout) ──
   const [user, setUser] = useState<User | null>(null);
@@ -203,73 +223,131 @@ export function AppLayout() {
     );
   }
 
+  // ── Sidebar content (shared between desktop static + mobile overlay) ──
+  const sidebarContent = (
+    <>
+      {/* Logo row */}
+      <div style={{
+        height: 52, padding: '0 16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexShrink: 0,
+      }}>
+        <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+          <Logo size="md" />
+        </button>
+        {isMobile && (
+          <button onClick={() => setMobileOpen(false)}
+            style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer' }}>
+            <X size={20} color="rgba(255,255,255,0.50)" />
+          </button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 8 }}>
+        <SectionHeader label="Copilot" />
+        <nav>
+          {NAV_ITEMS.map(item => (
+            <NavItem
+              key={item.url}
+              url={item.url}
+              label={item.label}
+              icon={item.icon}
+              isActive={isAt(item.url)}
+              badge={item.badge}
+              onClick={() => setMobileOpen(false)}
+            />
+          ))}
+        </nav>
+      </div>
+
+      {/* Footer — CreditBar + Referral + Logout */}
+      <div style={{ flexShrink: 0 }}>
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.04)', margin: '0 0 4px' }} />
+        <CreditBar userId={user?.id} plan={plan} />
+        <ReferralPopup userId={user?.id} />
+        <button
+          onClick={handleLogout}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 9,
+            padding: '8px 14px 12px',
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            width: '100%', transition: 'background 0.12s',
+            fontFamily: F,
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+          <LogOut size={14} strokeWidth={1.5} color="rgba(255,255,255,0.30)" />
+          <span style={{ fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.40)' }}>
+            Sair
+          </span>
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#060709' }}>
-      {/* Sidebar */}
+      {/* ── Mobile top bar ── */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+          height: 52, background: '#060709',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex', alignItems: 'center', padding: '0 12px',
+          fontFamily: F,
+        }}>
+          <button onClick={() => setMobileOpen(true)}
+            style={{
+              background: 'none', border: 'none', padding: 8, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+            <Menu size={20} color="rgba(255,255,255,0.60)" />
+          </button>
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <Logo size="md" />
+          </div>
+          <div style={{ width: 36 }} /> {/* spacer to center logo */}
+        </div>
+      )}
+
+      {/* ── Mobile overlay backdrop ── */}
+      {isMobile && mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 98,
+            background: 'rgba(0,0,0,0.60)',
+            transition: 'opacity 0.2s',
+          }}
+        />
+      )}
+
+      {/* ── Sidebar ── */}
       <aside style={{
-        width: 216, height: '100%',
+        width: 216,
+        height: '100%',
         background: '#060709',
         borderRight: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', flexDirection: 'column', flexShrink: 0,
         fontFamily: F, overflow: 'hidden',
+        // Mobile: fixed overlay
+        ...(isMobile ? {
+          position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 99,
+          transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+          boxShadow: mobileOpen ? '8px 0 32px rgba(0,0,0,0.5)' : 'none',
+        } : {}),
       }}>
-        {/* Logo */}
-        <div style={{ height: 52, padding: '0 16px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <button onClick={() => navigate('/dashboard')}
-            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-            <Logo size="md" />
-          </button>
-        </div>
-
-        {/* Nav */}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 8 }}>
-          <SectionHeader label="Copilot" />
-          <nav>
-            {NAV_ITEMS.map(item => (
-              <NavItem
-                key={item.url}
-                url={item.url}
-                label={item.label}
-                icon={item.icon}
-                isActive={isAt(item.url)}
-                badge={item.badge}
-              />
-            ))}
-          </nav>
-        </div>
-
-        {/* Footer — CreditBar + Referral + Logout */}
-        <div style={{ flexShrink: 0 }}>
-          <div style={{ height: 1, background: 'rgba(255,255,255,0.04)', margin: '0 0 4px' }} />
-
-          {/* Credit usage bar */}
-          <CreditBar userId={user?.id} plan={plan} />
-
-          {/* Referral */}
-          <ReferralPopup userId={user?.id} />
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 9,
-              padding: '8px 14px 12px',
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              width: '100%', transition: 'background 0.12s',
-              fontFamily: F,
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-            <LogOut size={14} strokeWidth={1.5} color="rgba(255,255,255,0.30)" />
-            <span style={{ fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.40)' }}>
-              Sair
-            </span>
-          </button>
-        </div>
+        {sidebarContent}
       </aside>
 
-      {/* Main content — provides DashboardContext so all existing pages work */}
-      <main style={{ flex: 1, overflow: 'auto', background: '#060709' }}>
+      {/* Main content */}
+      <main style={{
+        flex: 1, overflow: 'auto', background: '#060709',
+        ...(isMobile ? { paddingTop: 52 } : {}),
+      }}>
         {profile ? (
           <Outlet context={{
             user,
