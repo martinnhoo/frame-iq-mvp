@@ -5,10 +5,10 @@ import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, ChevronDown, ChevronUp, Layers, LayoutList } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
+import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
 
-const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
-const M = T.mono; // 'Space Grotesk', 'DM Mono', monospace
+const F = DT.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
+const M = DT.mono; // 'Space Grotesk', 'DM Mono', monospace
 
 const T = {
   pt: {

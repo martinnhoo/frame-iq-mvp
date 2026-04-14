@@ -20,11 +20,11 @@ export function useMoneyTracker(accountId: string | null): UseMoneyTrackerReturn
 
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('money_tracker')
+      const { data, error } = await (supabase
+        .from('money_tracker' as any)
         .select('*')
         .eq('account_id', accountId)
-        .single();
+        .single() as any);
 
       if (error && error.code !== 'PGRST116') {
         // PGRST116 = no rows returned
