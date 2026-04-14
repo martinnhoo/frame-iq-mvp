@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ScanAnimation from '../components/onboarding/ScanAnimation';
+import ScanAnimation from '../../components/onboarding/ScanAnimation';
 
 interface MockAccount {
   accountId: string;
