@@ -2036,6 +2036,12 @@ PROIBIDO:
     if (!anthropicRes.ok) {
       const errText = await anthropicRes.text();
       console.error("Anthropic error:", anthropicRes.status, errText);
+      // Return 200 with error block so frontend can display nicely
+      if (body.image_base64 && anthropicRes.status === 413) {
+        return new Response(JSON.stringify({ blocks: [{ type: "text", text: "Imagem muito grande. Tente uma imagem menor (max 5MB)." }] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       throw new Error(`Anthropic ${anthropicRes.status}: ${errText.slice(0, 200)}`);
     }
 
@@ -2145,8 +2151,11 @@ PROIBIDO:
     });
   } catch (e) {
     console.error("adbrief-ai-chat error:", String(e));
-    return new Response(JSON.stringify({ error: String(e) || "internal_error" }), {
-      status: 500,
+    // Return 200 with error block so SDK doesn't throw "non-2xx" — frontend handles gracefully
+    const errMsg = String(e) || "internal_error";
+    const userFriendly = errMsg.includes("Anthropic 4") ? "Erro temporário na IA. Tente novamente." : errMsg.slice(0, 150);
+    return new Response(JSON.stringify({ blocks: [{ type: "text", text: userFriendly }], error: errMsg }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
