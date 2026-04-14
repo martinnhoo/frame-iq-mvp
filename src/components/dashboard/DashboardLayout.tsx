@@ -502,6 +502,9 @@ export default function DashboardLayout() {
         /* Botões de ação: touch target mínimo */
         .tool-action-btn { min-height: 44px !important; }
 
+        /* Show sidebar close button only on mobile */
+        .sidebar-close-btn { display: flex !important; }
+
         /* Mobile sidebar: posição fixa — não empurra o conteúdo principal */
         .sidebar-layout-slot {
           position: fixed !important;
