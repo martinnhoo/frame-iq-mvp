@@ -38,8 +38,8 @@ const Diagnostico  = lazy(() => import("./pages/Diagnostico"));
 const Gestao       = lazy(() => import("./pages/Gestao"));
 const Criativo     = lazy(() => import("./pages/Criativo"));
 
-// Dashboard — uses existing DashboardLayout with sidebar
-const DashboardLayout  = lazy(() => import("./components/dashboard/DashboardLayout"));
+// Dashboard — simplified v2 AppLayout with Copilot sidebar
+const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
 const AdBriefAI        = lazy(() => import("./pages/dashboard/AdBriefAI"));
 const IntelligencePage = lazy(() => import("./pages/dashboard/IntelligencePage"));
 const AdDiary         = lazy(() => import("./pages/dashboard/AdDiary"));
@@ -146,9 +146,8 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
 
-              {/* Dashboard — same DashboardLayout, same sidebar, same logo, same everything.
-                  Only change: default route is now FeedPage (Decision Engine). */}
-              <Route path="/dashboard" element={<DashboardLayout />}>
+              {/* Dashboard — simplified v2 AppLayout with Copilot sidebar */}
+              <Route path="/dashboard" element={<AppLayout />}>
                 {/* V2: Copilot Feed is the new default */}
                 <Route index element={<Navigate to="/dashboard/feed" replace />} />
                 <Route path="feed" element={<FeedPage />} />
