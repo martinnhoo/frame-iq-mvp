@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
 import { MoneyBar } from '../../components/feed/MoneyBar';
@@ -8,39 +8,28 @@ import { EmptyState } from '../../components/feed/EmptyState';
 import { useDecisions } from '../../hooks/useDecisions';
 import { useMoneyTracker } from '../../hooks/useMoneyTracker';
 import { useActions } from '../../hooks/useActions';
-import { useActiveAccount } from '../../hooks/useActiveAccount';
 import type { DecisionAction } from '../../types/v2-database';
-import { ChevronDown, Link2 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'DM Mono', 'JetBrains Mono', monospace";
 
 /**
  * FeedPage — Copilot Feed: Decision Cards (KILL / FIX / SCALE)
- * Now properly resolves persona → platform_connections → ad_accounts (v2)
+ * Account is resolved at layout level (AppLayout) — Feed just consumes it.
  */
 const FeedPage: React.FC = () => {
-  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const ctx = useOutletContext<DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean }>();
   const navigate = useNavigate();
 
-  // Resolve the active Meta ad account (v2 UUID) from persona
-  const {
-    account: activeAccount,
-    isLoading: accountLoading,
-    isConnected,
-    switchAccount,
-  } = useActiveAccount(user?.id, selectedPersona?.id ?? null);
+  const { activeAccount, metaConnected, accountResolving } = ctx;
 
-  // Use the v2 ad_accounts UUID for queries — NOT persona ID
+  // Use the v2 ad_accounts UUID for queries
   const accountId = activeAccount?.id ?? null;
 
   const { decisions, isLoading: decisionsLoading } = useDecisions(accountId);
   const { tracker, isLoading: trackerLoading } = useMoneyTracker(accountId);
   const { executeAction } = useActions();
 
-  const [switcherOpen, setSwitcherOpen] = useState(false);
-
-  const isLoading = accountLoading || (accountId ? (decisionsLoading || trackerLoading) : false);
+  const isLoading = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
 
   const handleAction = async (decisionId: string, action: DecisionAction) => {
     try {
@@ -50,7 +39,6 @@ const FeedPage: React.FC = () => {
     }
   };
 
-  // Stop all losses: execute all pending kill decisions
   const handleStopLosses = async () => {
     const killDecisions = decisions.filter(d => d.type === 'kill' && d.status === 'pending');
     for (const decision of killDecisions) {
@@ -65,7 +53,7 @@ const FeedPage: React.FC = () => {
     }
   };
 
-  // ── Loading skeleton ──
+  // ── Loading ──
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
@@ -98,8 +86,8 @@ const FeedPage: React.FC = () => {
     );
   }
 
-  // ── No Meta connection — prompt to connect ──
-  if (!isConnected) {
+  // ── No Meta connection — nudge to connect (not blocking) ──
+  if (!metaConnected) {
     return (
       <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
@@ -108,41 +96,7 @@ const FeedPage: React.FC = () => {
               Copilot Feed
             </h1>
           </div>
-          <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            borderRadius: 12, padding: '48px 32px',
-            textAlign: 'center', fontFamily: F,
-          }}>
-            <div style={{
-              width: 52, height: 52, borderRadius: 14,
-              background: 'rgba(24,119,242,0.08)',
-              border: '1px solid rgba(24,119,242,0.15)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px', fontSize: 24,
-            }}>
-              <Link2 size={24} color="#1877F2" />
-            </div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 8px', letterSpacing: '-0.02em' }}>
-              Conecte sua conta Meta Ads
-            </h2>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '0 0 24px', lineHeight: 1.5 }}>
-              O Copilot precisa de acesso à sua conta para analisar anúncios e gerar decisões automaticamente.
-            </p>
-            <button
-              onClick={() => navigate('/dashboard/accounts')}
-              style={{
-                background: '#1877F2', color: '#fff', border: 'none',
-                borderRadius: 10, padding: '12px 28px',
-                fontSize: 14, fontWeight: 700, fontFamily: F,
-                cursor: 'pointer', transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#1565D8'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#1877F2'; }}
-            >
-              Conectar conta
-            </button>
-          </div>
+          <EmptyState totalAds={0} nextSyncMinutes={0} todaySummary={{ paused: 0, scaled: 0, savedToday: 0, revenueToday: 0 }} />
         </div>
       </div>
     );
@@ -150,7 +104,6 @@ const FeedPage: React.FC = () => {
 
   const pendingDecisions = decisions.filter(d => d.status === 'pending');
   const hasKills = pendingDecisions.some(d => d.type === 'kill');
-  const hasMultipleAccounts = (activeAccount?.allAccounts?.length || 0) > 1;
 
   return (
     <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
@@ -176,92 +129,6 @@ const FeedPage: React.FC = () => {
               </span>
             )}
           </div>
-
-          {/* Account switcher */}
-          {activeAccount && (
-            <div style={{ marginTop: 12, position: 'relative' }}>
-              <button
-                onClick={() => hasMultipleAccounts && setSwitcherOpen(!switcherOpen)}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 8, padding: '6px 12px',
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  cursor: hasMultipleAccounts ? 'pointer' : 'default',
-                  fontFamily: F, transition: 'all 0.12s',
-                }}
-                onMouseEnter={e => { if (hasMultipleAccounts) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.15)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
-              >
-                <div style={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: '#34d399',
-                  boxShadow: '0 0 4px rgba(52,211,153,0.4)',
-                }} />
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.60)', fontWeight: 500 }}>
-                  {activeAccount.name}
-                </span>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: M }}>
-                  {activeAccount.metaAccountId}
-                </span>
-                {hasMultipleAccounts && (
-                  <ChevronDown size={12} color="rgba(255,255,255,0.30)"
-                    style={{ transform: switcherOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.15s' }} />
-                )}
-              </button>
-
-              {/* Dropdown */}
-              {switcherOpen && hasMultipleAccounts && (
-                <div style={{
-                  position: 'absolute', top: '100%', left: 0, marginTop: 4,
-                  background: '#0d0f14', border: '1px solid rgba(255,255,255,0.10)',
-                  borderRadius: 10, padding: 4, minWidth: 280, zIndex: 20,
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                }}>
-                  {activeAccount.allAccounts.map(acc => {
-                    const isActive = acc.id === activeAccount.metaAccountId;
-                    return (
-                      <button
-                        key={acc.id}
-                        onClick={async () => {
-                          if (!isActive) await switchAccount(acc.id);
-                          setSwitcherOpen(false);
-                        }}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 10,
-                          width: '100%', padding: '8px 12px', borderRadius: 6,
-                          background: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
-                          border: 'none', cursor: 'pointer',
-                          fontFamily: F, transition: 'background 0.1s',
-                          textAlign: 'left',
-                        }}
-                        onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                        onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                      >
-                        <div style={{
-                          width: 6, height: 6, borderRadius: '50%',
-                          background: isActive ? '#34d399' : 'rgba(255,255,255,0.15)',
-                        }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#fff' : 'rgba(255,255,255,0.60)' }}>
-                            {acc.name || acc.id}
-                          </div>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: M }}>
-                            {acc.id}
-                          </div>
-                        </div>
-                        {isActive && (
-                          <span style={{ fontSize: 9, fontWeight: 700, color: '#34d399', letterSpacing: '0.06em' }}>
-                            ATIVO
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Money tracker */}

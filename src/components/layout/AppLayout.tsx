@@ -1,5 +1,5 @@
 // AppLayout — Simplified v2 Copilot sidebar, provides DashboardContext for child pages
-// Mobile: hamburger menu, sidebar as overlay
+// Account selector at top (always visible), mobile hamburger menu
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
@@ -8,6 +8,7 @@ import { ReferralPopup } from '@/components/dashboard/ReferralPopup';
 import { supabase } from '@/integrations/supabase/client';
 import { storage } from '@/lib/storage';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useActiveAccount } from '@/hooks/useActiveAccount';
 import type { DashboardContext, Profile, Usage, UsageDetails, ActivePersona } from '@/components/dashboard/DashboardLayout';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -20,6 +21,9 @@ import {
   Link2,
   Menu,
   X,
+  Building2,
+  ChevronDown,
+  Plus,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -81,7 +85,6 @@ const NAV_ITEMS = [
   { url: '/dashboard/history',  label: 'Histórico', icon: Clock },
   { url: '/dashboard/performance', label: 'Padrões', icon: TrendingUp },
   { url: '/dashboard/ai',      label: 'Criar',     icon: Sparkles },
-  { url: '/dashboard/accounts', label: 'Contas',    icon: Link2 },
   { url: '/dashboard/settings', label: 'Config',    icon: Settings },
 ];
 
@@ -92,6 +95,8 @@ export function AppLayout() {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [accountsOpen, setAccountsOpen] = useState(false);
+  const [savedPersonas, setSavedPersonas] = useState<any[]>([]);
 
   // Detect mobile
   useEffect(() => {
@@ -104,9 +109,10 @@ export function AppLayout() {
   // Close sidebar on route change (mobile)
   useEffect(() => {
     setMobileOpen(false);
+    setAccountsOpen(false);
   }, [location.pathname]);
 
-  // ── Auth + profile state (same as DashboardLayout) ──
+  // ── Auth + profile state ──
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
@@ -130,6 +136,13 @@ export function AppLayout() {
       else storage.remove('frameiq_active_persona');
     } catch {}
   };
+
+  // ── Active account resolution (persona → Meta → v2) ──
+  const {
+    account: activeAccount,
+    isConnected: metaConnected,
+    isLoading: accountResolving,
+  } = useActiveAccount(user?.id, selectedPersona?.id ?? null);
 
   const fetchUsage = useCallback(async (userId: string) => {
     const currentPeriod = new Date().toISOString().slice(0, 7);
@@ -186,6 +199,7 @@ export function AppLayout() {
         .order('created_at', { ascending: false });
 
       if (mounted && personas?.length) {
+        setSavedPersonas(personas);
         const stored = selectedPersona;
         if (!stored || !personas.find((p: any) => p.id === stored.id)) {
           setSelectedPersona(personas[0]);
@@ -223,7 +237,7 @@ export function AppLayout() {
     );
   }
 
-  // ── Sidebar content (shared between desktop static + mobile overlay) ──
+  // ── Sidebar content ──
   const sidebarContent = (
     <>
       {/* Logo row */}
@@ -242,6 +256,144 @@ export function AppLayout() {
             <X size={20} color="rgba(255,255,255,0.50)" />
           </button>
         )}
+      </div>
+
+      {/* ── Account selector — always visible ── */}
+      <div style={{ flexShrink: 0 }}>
+        <button
+          onClick={() => savedPersonas.length > 1 ? setAccountsOpen(o => !o) : navigate('/dashboard/accounts')}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 9,
+            padding: '8px 14px', background: 'transparent', border: 'none',
+            cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s',
+            fontFamily: F,
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        >
+          {/* Avatar */}
+          <div style={{
+            width: 30, height: 30, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
+            background: selectedPersona ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {selectedPersona?.logo_url
+              ? <img src={selectedPersona.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : selectedPersona
+                ? <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>
+                    {(selectedPersona.name || '?').charAt(0).toUpperCase()}
+                  </span>
+                : <Building2 size={13} color="rgba(255,255,255,0.25)" />
+            }
+          </div>
+
+          {/* Name + connection status */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              margin: 0, fontSize: 13, fontWeight: 600,
+              color: selectedPersona ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.30)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {selectedPersona?.name || 'Selecionar conta'}
+            </p>
+            {selectedPersona && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+                  background: metaConnected ? '#10b981' : 'rgba(255,255,255,0.15)',
+                  boxShadow: metaConnected ? '0 0 4px rgba(16,185,129,0.6)' : 'none',
+                }} />
+                <span style={{ fontSize: 10.5, color: metaConnected ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.18)' }}>
+                  {accountResolving ? 'Conectando...' : metaConnected ? 'Conectado' : 'Não conectado'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {savedPersonas.length > 1 && (
+            <ChevronDown size={12} color="rgba(255,255,255,0.20)"
+              style={{ flexShrink: 0, transform: accountsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s' }} />
+          )}
+        </button>
+
+        {/* Account dropdown */}
+        {accountsOpen && savedPersonas.length > 1 && (
+          <div style={{
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+            paddingTop: 2, paddingBottom: 2,
+          }}>
+            {savedPersonas.map(p => {
+              const isActive = p.id === selectedPersona?.id;
+              return (
+                <button key={p.id}
+                  onClick={() => {
+                    setSelectedPersona(p);
+                    setAccountsOpen(false);
+                    setMobileOpen(false);
+                  }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '6px 14px', background: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
+                    border: 'none', cursor: 'pointer', fontFamily: F,
+                    transition: 'background 0.1s', textAlign: 'left',
+                  }}
+                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+                  onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 6, flexShrink: 0, overflow: 'hidden',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {p.logo_url
+                      ? <img src={p.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
+                          {(p.name || '?').charAt(0).toUpperCase()}
+                        </span>
+                    }
+                  </div>
+                  <span style={{
+                    flex: 1, fontSize: 12.5, fontWeight: isActive ? 600 : 400,
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.50)',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {p.name}
+                  </span>
+                  {isActive && (
+                    <span style={{ fontSize: 8, fontWeight: 700, color: '#10b981', letterSpacing: '0.06em' }}>
+                      ATIVO
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => { navigate('/dashboard/accounts'); setAccountsOpen(false); setMobileOpen(false); }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                padding: '6px 14px', background: 'transparent', border: 'none',
+                cursor: 'pointer', fontFamily: F, transition: 'background 0.1s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            >
+              <div style={{
+                width: 22, height: 22, borderRadius: 6,
+                background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Plus size={10} color="rgba(255,255,255,0.30)" />
+              </div>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.30)' }}>
+                Gerenciar contas
+              </span>
+            </button>
+          </div>
+        )}
+
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.04)', margin: '4px 0 0' }} />
       </div>
 
       {/* Nav */}
@@ -308,7 +460,7 @@ export function AppLayout() {
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
             <Logo size="md" />
           </div>
-          <div style={{ width: 36 }} /> {/* spacer to center logo */}
+          <div style={{ width: 36 }} />
         </div>
       )}
 
@@ -332,7 +484,6 @@ export function AppLayout() {
         borderRight: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', flexDirection: 'column', flexShrink: 0,
         fontFamily: F, overflow: 'hidden',
-        // Mobile: fixed overlay
         ...(isMobile ? {
           position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 99,
           transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
@@ -359,7 +510,11 @@ export function AppLayout() {
             setSelectedPersona,
             aiProfile,
             lang: language,
-          } satisfies DashboardContext} />
+            // v2: active account resolution
+            activeAccount,
+            metaConnected,
+            accountResolving,
+          } satisfies DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean }} />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300 }}>
             <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
