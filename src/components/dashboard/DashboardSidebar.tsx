@@ -1,5 +1,5 @@
 // DashboardSidebar v12 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
-import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, FileText, ScanLine, Brain, ScanEye, Languages, Activity, Clock } from "lucide-react";
+import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, FileText, ScanLine, Brain, ScanEye, Languages, Activity, Clock, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -230,11 +230,20 @@ export function DashboardSidebar({
         fontFamily: F, overflow: "hidden",
       }}>
 
-        {/* Logo */}
-        <div style={{ height: 52, padding: "0 16px", display: "flex", alignItems: "center", flexShrink: 0 }}>
+        {/* Logo + close button on mobile */}
+        <div style={{ height: 52, padding: "0 16px", display: "flex", alignItems: "center", flexShrink: 0, justifyContent: "space-between" }}>
           <button onClick={() => { navigate("/dashboard"); onClose(); }}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
             <Logo size="md" />
+          </button>
+          {/* Mobile close button */}
+          <button onClick={onClose}
+            className="sidebar-close-btn"
+            style={{
+              display: "none", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 8, padding: 6, cursor: "pointer", flexShrink: 0,
+            }}>
+            <X size={16} color="rgba(255,255,255,0.5)" />
           </button>
         </div>
 
