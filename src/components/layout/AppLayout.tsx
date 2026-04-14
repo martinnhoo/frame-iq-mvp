@@ -81,11 +81,11 @@ function SectionHeader({ label }: { label: string }) {
 }
 
 const NAV_ITEMS = [
-  { url: '/dashboard/feed',     label: 'Feed',      icon: Activity,    badge: 'IA' },
-  { url: '/dashboard/history',  label: 'Histórico', icon: Clock },
-  { url: '/dashboard/performance', label: 'Padrões', icon: TrendingUp },
-  { url: '/dashboard/ai',      label: 'Criar',     icon: Sparkles },
-  { url: '/dashboard/settings', label: 'Config',    icon: Settings },
+  { url: '/dashboard/feed',        label: 'Feed',        icon: Activity,    badge: 'IA' },
+  { url: '/dashboard/history',     label: 'Histórico',   icon: Clock },
+  { url: '/dashboard/performance', label: 'Padrões',     icon: TrendingUp },
+  { url: '/dashboard/criar',      label: 'Criar',       icon: Sparkles },
+  { url: '/dashboard/settings',   label: 'Config',      icon: Settings },
 ];
 
 export function AppLayout() {

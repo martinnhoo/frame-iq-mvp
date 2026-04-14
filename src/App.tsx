@@ -73,6 +73,7 @@ const ReferralPage     = lazy(() => import("./pages/dashboard/ReferralPage"));
 const FeedPage         = lazy(() => import("./pages/dashboard/FeedPage"));
 const HistoryPage      = lazy(() => import("./pages/dashboard/HistoryPage"));
 const OnboardingPage   = lazy(() => import("./pages/dashboard/OnboardingPage"));
+const CriarHub         = lazy(() => import("./pages/dashboard/CriarHub"));
 
 // SEO pages — lazily loaded, rarely visited from landing
 const ToolsIndex    = lazy(() => import("@/pages/seo/ToolsIndex"));
@@ -154,7 +155,8 @@ const App = () => (
                 <Route path="history" element={<HistoryPage />} />
                 <Route path="welcome" element={<OnboardingPage />} />
 
-                {/* Existing pages — all preserved */}
+                {/* Criar hub + AI chat */}
+                <Route path="criar" element={<CriarHub />} />
                 <Route path="ai" element={<AdBriefAI />} />
                 <Route path="intelligence" element={<IntelligencePage />} />
                 <Route path="diary" element={<AdDiary />} />
