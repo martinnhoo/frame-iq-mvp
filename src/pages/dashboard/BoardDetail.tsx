@@ -168,12 +168,12 @@ const BoardDetail = () => {
       });
       if (error) throw error;
       setAbVariants(data.variants || []);
-      if (data.mock_mode) toast.info("Add ANTHROPIC_API_KEY for real AI variants");
-    } catch { toast.error("Variant generation failed"); } finally { setAbLoading(false); }
+      if (data.mock_mode) toast.info("Configure ANTHROPIC_API_KEY no Supabase para variantes reais com IA");
+    } catch { toast.error("Falha ao gerar variantes"); } finally { setAbLoading(false); }
   };
 
   const handleDelete = async () => {
-    if (!confirm("Delete this board? This cannot be undone.")) return;
+    if (!confirm("Excluir este board? Essa ação não pode ser desfeita.")) return;
     try {
       await supabase.from("boards").delete().eq("id", id);
       toast.success(language === "pt" ? "Board excluído" : "Board deleted");

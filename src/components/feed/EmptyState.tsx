@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatMoney } from '../../lib/format';
 
@@ -27,21 +27,60 @@ const STEPS = [
   'Gerando decisões',
 ];
 
+const STORAGE_KEY = 'adbrief_scan_step';
+const STORAGE_TS_KEY = 'adbrief_scan_ts';
+
+/** Recover persisted step so navigation doesn't reset progress */
+function getPersistedStep(): number {
+  try {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    const ts = sessionStorage.getItem(STORAGE_TS_KEY);
+    if (!saved || !ts) return 1;
+    // If more than 5 min old, reset
+    if (Date.now() - Number(ts) > 5 * 60 * 1000) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_TS_KEY);
+      return 1;
+    }
+    return Math.max(1, Math.min(Number(saved), STEPS.length));
+  } catch {
+    return 1;
+  }
+}
+
+function persistStep(step: number) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, String(step));
+    sessionStorage.setItem(STORAGE_TS_KEY, String(Date.now()));
+  } catch { /* noop */ }
+}
+
 export const EmptyState: React.FC<EmptyStateProps> = ({
   totalAds, nextSyncMinutes, todaySummary, connected, adsSynced = 0,
 }) => {
   const navigate = useNavigate();
   const hasActivity = todaySummary.paused > 0 || todaySummary.scaled > 0;
   const hasSaved = todaySummary.savedToday > 0;
-  const [step, setStep] = useState(1); // starts at step 1 (conta conectada = done)
+  const [step, setStepRaw] = useState(() => getPersistedStep());
 
-  // Auto-advance steps for first-scan feel (timed, not stuck)
+  const setStep = (s: number) => {
+    setStepRaw(s);
+    persistStep(s);
+  };
+
+  // Auto-advance steps — completes ALL 4 steps, never gets stuck
   useEffect(() => {
     if (!connected || hasActivity || hasSaved) return;
-    const timers = [
-      setTimeout(() => setStep(2), 4000),
-      setTimeout(() => setStep(3), 9000),
-    ];
+    const current = getPersistedStep();
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    // Schedule remaining steps from wherever we left off
+    const delays = [0, 4000, 9000, 15000]; // step 1=immediate, 2=4s, 3=9s, 4=15s
+    for (let i = current + 1; i <= STEPS.length; i++) {
+      const delay = Math.max(0, delays[i - 1]! - delays[current - 1]!);
+      timers.push(setTimeout(() => setStep(i), delay));
+    }
+
     return () => timers.forEach(clearTimeout);
   }, [connected, hasActivity, hasSaved]);
 
@@ -156,7 +195,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   }
 
   // ── Connected, first scan — progress bar + steps ──
-  const progress = Math.min((step / STEPS.length) * 100, 95);
+  const allDone = step >= STEPS.length;
+  const progress = allDone ? 100 : Math.min((step / STEPS.length) * 100, 90);
 
   return (
     <div style={{
@@ -169,37 +209,40 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <div style={{
           width: 56, height: 56, borderRadius: 14,
-          background: 'rgba(14,165,233,0.06)',
-          border: '1px solid rgba(14,165,233,0.12)',
+          background: allDone ? 'rgba(16,185,129,0.06)' : 'rgba(14,165,233,0.06)',
+          border: `1px solid ${allDone ? 'rgba(16,185,129,0.12)' : 'rgba(14,165,233,0.12)'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           margin: '0 auto 16px', position: 'relative',
+          transition: 'all 0.5s ease',
         }}>
-          {/* Radar sweep animation */}
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%',
-            border: '2px solid rgba(14,165,233,0.15)',
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <div style={{
-              position: 'absolute', top: '50%', left: '50%',
-              width: '50%', height: '50%',
-              background: 'conic-gradient(from 0deg, transparent 0deg, rgba(14,165,233,0.5) 60deg, transparent 60deg)',
-              transformOrigin: '0 0',
-              animation: 'es-radar 2s linear infinite',
-            }} />
-            <div style={{
-              position: 'absolute', top: '50%', left: '50%',
-              width: 4, height: 4, borderRadius: '50%',
-              background: '#0ea5e9', transform: 'translate(-50%, -50%)',
-            }} />
-          </div>
+          {allDone ? (
+            /* Completed — green check */
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            /* Radar — clean SVG approach */
+            <svg width="28" height="28" viewBox="0 0 28 28" style={{ animation: 'es-radar-rotate 2.5s linear infinite' }}>
+              <circle cx="14" cy="14" r="12" fill="none" stroke="rgba(14,165,233,0.15)" strokeWidth="1.5"/>
+              <circle cx="14" cy="14" r="7" fill="none" stroke="rgba(14,165,233,0.08)" strokeWidth="1"/>
+              <circle cx="14" cy="14" r="2.5" fill="#0ea5e9"/>
+              {/* Sweep wedge */}
+              <path
+                d="M14 14 L14 2 A12 12 0 0 1 24.39 8.0 Z"
+                fill="rgba(14,165,233,0.25)"
+              />
+              <line x1="14" y1="14" x2="14" y2="2" stroke="rgba(14,165,233,0.5)" strokeWidth="1"/>
+            </svg>
+          )}
         </div>
 
         <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
-          Analisando sua conta
+          {allDone ? 'Análise concluída' : 'Analisando sua conta'}
         </h2>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.5 }}>
-          Processando dados para gerar as primeiras decisões
+          {allDone
+            ? 'Aguardando o próximo ciclo para gerar decisões'
+            : 'Processando dados para gerar as primeiras decisões'}
         </p>
       </div>
 
@@ -212,9 +255,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       }}>
         <div style={{
           height: '100%', borderRadius: 2,
-          background: '#0ea5e9',
+          background: allDone ? '#34d399' : '#0ea5e9',
           width: `${progress}%`,
-          transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease',
         }} />
       </div>
 
@@ -225,8 +268,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       }}>
         {STEPS.map((label, i) => {
           const isDone = i < step;
-          const isActive = i === step;
-          const isPending = i > step;
+          const isActive = i === step && !allDone;
 
           return (
             <div key={i} style={{
@@ -281,7 +323,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 {label}
               </span>
 
-              {/* Connector line */}
+              {/* Check mark */}
               {isDone && (
                 <span style={{
                   marginLeft: 'auto', fontSize: 10, fontWeight: 500,
@@ -295,16 +337,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         })}
       </div>
 
-      {/* Tip */}
+      {/* Tip — different message when all done */}
       <p style={{
         textAlign: 'center', fontSize: 11.5, color: 'rgba(255,255,255,0.20)',
         margin: '24px 0 0', lineHeight: 1.5,
       }}>
-        Pode levar alguns minutos. Você pode navegar normalmente.
+        {allDone
+          ? 'As decisões aparecerão aqui automaticamente no próximo sync.'
+          : 'Isso leva menos de um minuto.'}
       </p>
 
       <style>{`
-        @keyframes es-radar {
+        @keyframes es-radar-rotate {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }

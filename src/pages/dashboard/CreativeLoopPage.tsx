@@ -40,11 +40,11 @@ interface LoopStats {
 }
 
 const CYCLE_STEPS = [
-  { id: "import",  label: "Import Data",   icon: Upload,      color: "#60a5fa", desc: "Connect your ad performance data" },
-  { id: "parse",   label: "Parse Creatives", icon: FileText,  color: "#0ea5e9", desc: "AI extracts metadata from filenames" },
-  { id: "learn",   label: "Find Patterns",  icon: Brain,      color: "#06b6d4", desc: "AI discovers winning combinations" },
-  { id: "predict", label: "Score & Brief",  icon: Target,     color: "#34d399", desc: "Predict before spending" },
-  { id: "ship",    label: "Ship & Track",   icon: TrendingUp, color: "#fbbf24", desc: "Performance feeds back into the loop" },
+  { id: "import",  label: "Importar Dados",     icon: Upload,      color: "#60a5fa", desc: "Conecte seus dados de performance" },
+  { id: "parse",   label: "Analisar Criativos",  icon: FileText,  color: "#0ea5e9", desc: "IA extrai metadata dos nomes" },
+  { id: "learn",   label: "Encontrar Padrões",   icon: Brain,      color: "#06b6d4", desc: "IA descobre combinações vencedoras" },
+  { id: "predict", label: "Pontuar & Brief",     icon: Target,     color: "#34d399", desc: "Preveja antes de gastar" },
+  { id: "ship",    label: "Publicar & Medir",    icon: TrendingUp, color: "#fbbf24", desc: "Performance retroalimenta o loop" },
 ];
 
 export default function CreativeLoopPage() {
@@ -114,10 +114,10 @@ export default function CreativeLoopPage() {
         body: { action: "learn", user_id: user.id },
       });
       if (error) throw error;
-      toast.success(`Found ${data.patterns_found} patterns, ${data.winners} winners`);
+      toast.success(`${data.patterns_found} padrões encontrados, ${data.winners} vencedores`);
       loadData();
     } catch (e: any) {
-      toast.error(e.message || "Learning failed");
+      toast.error(e.message || "Falha no aprendizado");
     } finally {
       setLearning(false);
     }
@@ -167,18 +167,18 @@ export default function CreativeLoopPage() {
             <h1 style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>Performance Loop</h1>
           </div>
           <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em" }}>
-            AI learns from your ad data — every import makes the next brief smarter
+            A IA aprende com seus dados — cada importação melhora o próximo brief
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           <button onClick={() => navigate("/dashboard/loop/settings")}
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-            <Settings size={13} /> Naming rules
+            <Settings size={13} /> Regras de nomes
           </button>
           <button onClick={runLearning} disabled={learning || !hasData}
             style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: hasData ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "rgba(255,255,255,0.05)", color: hasData ? "#000" : "rgba(255,255,255,0.2)", fontSize: 12, fontWeight: 700, cursor: hasData ? "pointer" : "not-allowed", border: "none" }}>
             {learning ? <Loader2 size={13} className="animate-spin" /> : <Brain size={13} />}
-            {learning ? "Learning..." : "Run Learning"}
+            {learning ? "Aprendendo..." : "Rodar Aprendizado"}
           </button>
         </div>
       </div>
@@ -186,12 +186,12 @@ export default function CreativeLoopPage() {
       {/* ── Coming soon banner — subtle ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)", marginBottom: 24, width: "fit-content" }}>
         <span style={{ fontSize: 12 }}></span>
-        <span style={{ ...m, fontSize: 12, fontWeight: 600, color: "rgba(251,191,36,0.65)", letterSpacing: "0.06em" }}>Coming soon: direct Meta Ads connection</span>
+        <span style={{ ...m, fontSize: 12, fontWeight: 600, color: "rgba(251,191,36,0.65)", letterSpacing: "0.06em" }}>Em breve: conexão direta com Meta Ads</span>
       </div>
 
       {/* ── Loop steps — horizontal timeline ── */}
       <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 18, padding: "20px 24px", marginBottom: 20 }}>
-        <p style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.18)", marginBottom: 18 }}>The loop</p>
+        <p style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.18)", marginBottom: 18 }}>O Loop</p>
         <div style={{ display: "flex", alignItems: "flex-start", overflowX: "auto", paddingBottom: 4 }}>
           {CYCLE_STEPS.map((step, i) => {
             const done = i < activeStep;
@@ -226,10 +226,10 @@ export default function CreativeLoopPage() {
       {/* ── Stats row ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
         {[
-          { label: "Creatives", value: String(stats.totalEntries), color: "#60a5fa", icon: FileText },
-          { label: "Patterns", value: String(stats.totalPatterns), sub: `${stats.winners} winning`, color: "#0ea5e9", icon: Brain },
-          { label: "Avg CTR", value: stats.avgCtr ? `${(stats.avgCtr*100).toFixed(2)}%` : "—", color: "#34d399", icon: TrendingUp },
-          { label: "Top Platform", value: stats.topPlatform || "—", color: "#fbbf24", icon: Zap },
+          { label: "Criativos", value: String(stats.totalEntries), color: "#60a5fa", icon: FileText },
+          { label: "Padrões", value: String(stats.totalPatterns), sub: `${stats.winners} vencedores`, color: "#0ea5e9", icon: Brain },
+          { label: "CTR Médio", value: stats.avgCtr ? `${(stats.avgCtr*100).toFixed(2)}%` : "—", color: "#34d399", icon: TrendingUp },
+          { label: "Top Plataforma", value: stats.topPlatform || "—", color: "#fbbf24", icon: Zap },
         ].map(s => (
           <div key={s.label} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "16px 14px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
@@ -248,18 +248,18 @@ export default function CreativeLoopPage() {
           <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(96,165,250,0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
             <Upload size={22} style={{ color: "#60a5fa" }} />
           </div>
-          <h3 style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Start your loop</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Comece seu loop</h3>
           <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.4)", maxWidth: 380, margin: "0 auto 20px", lineHeight: 1.7 }}>
-            Import a CSV from Meta, TikTok, or any platform. The AI parses your creative filenames, finds winning patterns, and calibrates every future output.
+            Importe um CSV do Meta, TikTok ou qualquer plataforma. A IA analisa os nomes dos criativos, encontra padrões vencedores e calibra cada saída futura.
           </p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={() => navigate("/dashboard/loop/import")}
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg,#60a5fa,#0ea5e9)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
-              <Upload size={14} /> Import Data
+              <Upload size={14} /> Importar Dados
             </button>
             <button onClick={() => navigate("/dashboard/loop/settings")}
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", fontSize: 13, cursor: "pointer" }}>
-              <Settings size={14} /> Naming Rules
+              <Settings size={14} /> Regras de Nomes
             </button>
           </div>
         </div>
@@ -270,8 +270,8 @@ export default function CreativeLoopPage() {
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 18, padding: "20px", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <Sparkles size={14} style={{ color: "#fbbf24" }} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Winning Patterns</span>
-            <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)", marginLeft: 4 }}>outperform avg CTR by 20%+</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Padrões Vencedores</span>
+            <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)", marginLeft: 4 }}>superam CTR médio em 20%+</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {patterns.filter(p => p.is_winner).slice(0, 6).map(p => (
@@ -289,8 +289,8 @@ export default function CreativeLoopPage() {
                   <div style={{ display: "flex", gap: 12 }}>
                     {p.avg_ctr && <span style={{ ...m, fontSize: 12, color: "#34d399" }}>CTR {(p.avg_ctr*100).toFixed(2)}%</span>}
                     {p.avg_roas && <span style={{ ...m, fontSize: 12, color: "#fbbf24" }}>ROAS {p.avg_roas.toFixed(1)}x</span>}
-                    <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{p.sample_size} samples</span>
-                    <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{(p.confidence*100).toFixed(0)}% conf</span>
+                    <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{p.sample_size} amostras</span>
+                    <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{(p.confidence*100).toFixed(0)}% confiança</span>
                   </div>
                 </div>
               </div>
@@ -304,14 +304,14 @@ export default function CreativeLoopPage() {
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 18, padding: "20px", overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <Brain size={14} style={{ color: "#0ea5e9" }} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>All Patterns</span>
-            <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{patterns.length} discovered</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Todos os Padrões</span>
+            <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.25)" }}>{patterns.length} descobertos</span>
           </div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  {["Combination", "CTR", "ROAS", "Samples", "Confidence", ""].map(h => (
+                  {["Combinação", "CTR", "ROAS", "Amostras", "Confiança", ""].map(h => (
                     <th key={h} style={{ ...m, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.18)", padding: "6px 10px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>{h}</th>
                   ))}
                 </tr>

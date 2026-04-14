@@ -19,9 +19,9 @@ import { useDashT } from "@/i18n/dashboardTranslations";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
 const getFunnelStages = (dt: (key: any) => string) => [
-  { value: "tofu", label: dt("bo_tofu"), full: "Top of Funnel", desc: "Cold audience — awareness", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
-  { value: "mofu", label: dt("bo_mofu"), full: "Mid of Funnel", desc: "Warm — consideration", color: "#0ea5e9", bg: "rgba(14,165,233,0.08)", border: "rgba(14,165,233,0.2)" },
-  { value: "bofu", label: dt("bo_bofu"), full: "Bottom of Funnel", desc: "Hot — conversion", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
+  { value: "tofu", label: dt("bo_tofu"), full: "Topo de Funil", desc: "Público frio — awareness", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.2)" },
+  { value: "mofu", label: dt("bo_mofu"), full: "Meio de Funil", desc: "Público morno — consideração", color: "#0ea5e9", bg: "rgba(14,165,233,0.08)", border: "rgba(14,165,233,0.2)" },
+  { value: "bofu", label: dt("bo_bofu"), full: "Fundo de Funil", desc: "Público quente — conversão", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.2)" },
 ];
 
 const MARKETS = [
@@ -291,14 +291,14 @@ const NewBoard = () => {
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-border bg-card">
             <CardHeader className="pb-4">
-              <CardTitle className="text-base">Creative Brief</CardTitle>
+              <CardTitle className="text-base">Brief Criativo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title (optional)</Label>
+                <Label htmlFor="title">Título (opcional)</Label>
                 <Input
                   id="title"
-                  placeholder="e.g. Summer Campaign — Variant A"
+                  placeholder="ex: Campanha Verão — Variante A"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="bg-muted border-border"
@@ -307,18 +307,18 @@ const NewBoard = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="prompt">
-                  Describe your video idea <span className="text-destructive">*</span>
+                  Descreva sua ideia de vídeo <span className="text-destructive">*</span>
                 </Label>
                 <Textarea
                   id="prompt"
-                  placeholder="Example: A UGC-style testimonial ad for a meditation app targeting stressed professionals aged 30-45. The creator should share their personal story of burnout and how the app helped them find calm. Include a strong hook in the first 3 seconds and end with a limited-time offer CTA."
+                  placeholder="Exemplo: Um anúncio estilo UGC depoimento para um app de meditação, público: profissionais estressados 30-45 anos. O criador compartilha sua história de burnout e como o app ajudou. Hook forte nos primeiros 3 segundos e CTA de oferta por tempo limitado."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   rows={5}
                   className="bg-muted border-border resize-none"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Minimum 10 characters. Be specific about product, audience, tone, and format.
+                  Mínimo 10 caracteres. Seja específico sobre produto, público, tom e formato.
                 </p>
               </div>
 
@@ -328,14 +328,14 @@ const NewBoard = () => {
                   {hookScoring ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-white/50 shrink-0" />
-                      <span className="text-xs text-white/50">Scoring hook preview...</span>
+                      <span className="text-xs text-white/50">Pontuando hook...</span>
                     </>
                   ) : hookPreview ? (
                     <>
                       <Zap className="h-3.5 w-3.5 text-sky-400 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-white/40">Predicted hook score</span>
+                          <span className="text-xs text-white/40">Hook score previsto</span>
                           <span className={`text-sm font-bold font-mono ${hookPreview.score >= 8 ? "text-green-400" : hookPreview.score >= 6.5 ? "text-yellow-400" : "text-red-400"}`}>
                             {hookPreview.score.toFixed(1)}/10
                           </span>
@@ -352,7 +352,7 @@ const NewBoard = () => {
               )}
 
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">Try a suggestion:</p>
+                <p className="text-xs text-muted-foreground">Tente uma sugestão:</p>
                 <div className="flex flex-wrap gap-2">
                   {promptSuggestions.map((suggestion) => (
                     <Badge
@@ -368,10 +368,10 @@ const NewBoard = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="context">Additional context (optional)</Label>
+                <Label htmlFor="context">Contexto adicional (opcional)</Label>
                 <Textarea
                   id="context"
-                  placeholder="Any additional notes, brand guidelines, competitor references, or specific requirements..."
+                  placeholder="Notas adicionais, diretrizes de marca, referências de concorrentes ou requisitos específicos..."
                   value={context}
                   onChange={(e) => setContext(e.target.value)}
                   rows={2}
@@ -386,14 +386,14 @@ const NewBoard = () => {
             <CardHeader className="pb-4">
               <CardTitle className="text-base flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Talent / Creator
+                Talento / Criador
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Product-only video</Label>
-                  <p className="text-xs text-muted-foreground">No person on camera, focus on product</p>
+                  <Label>Vídeo só de produto</Label>
+                  <p className="text-xs text-muted-foreground">Sem pessoa na câmera, foco no produto</p>
                 </div>
                 <Switch
                   checked={productOnly}
@@ -408,24 +408,24 @@ const NewBoard = () => {
                 <>
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label>Features a person/creator</Label>
-                      <p className="text-xs text-muted-foreground">UGC creator or influencer on camera</p>
+                      <Label>Com pessoa/criador</Label>
+                      <p className="text-xs text-muted-foreground">Criador UGC ou influenciador na câmera</p>
                     </div>
                     <Switch checked={hasTalent} onCheckedChange={setHasTalent} />
                   </div>
 
                   {hasTalent && (
                     <div className="space-y-2">
-                      <Label htmlFor="talent">Specific influencer/person (optional)</Label>
+                      <Label htmlFor="talent">Influenciador/pessoa específica (opcional)</Label>
                       <Input
                         id="talent"
-                        placeholder="e.g. MrBeast, Charli D'Amelio, or leave blank for generic UGC"
+                        placeholder="ex: MrBeast, Virgínia, ou deixe em branco para UGC genérico"
                         value={talentName}
                         onChange={(e) => setTalentName(e.target.value)}
                         className="bg-muted border-border"
                       />
                       <p className="text-xs text-muted-foreground">
-                        If left blank, we'll generate a generic UGC creator profile.
+                        Se vazio, vamos gerar um perfil de criador UGC genérico.
                       </p>
                     </div>
                   )}

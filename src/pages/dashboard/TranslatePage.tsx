@@ -469,7 +469,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (data?.mock_mode) toast.info("Add ANTHROPIC_API_KEY in Supabase for real AI translation");
+      if (data?.mock_mode) toast.info("Configure ANTHROPIC_API_KEY no Supabase para tradução real com IA");
       const rawResults = data?.multi ?? [{ lang: targetLangs[0], translated_text: data?.translated_text, cultural_adaptation: data?.cultural_adaptation }];
       setResults(rawResults.map((r: { lang: string; translated_text: string; cultural_adaptation: string }) => {
         const l = LANGUAGES.find(ll => ll.code === r.lang);
@@ -503,14 +503,14 @@ const AdaptMode = ({ userId }: { userId: string }) => {
               </div>
             </div>
             <Textarea
-              placeholder={"Paste your ad script, VO, caption, or hook here...\n\nInclude hook → body → CTA for best results."}
+              placeholder={"Cole seu roteiro, VO, legenda ou hook aqui...\n\nInclua hook → corpo → CTA para melhores resultados."}
               value={input} onChange={e => setInput(e.target.value)} rows={10}
               className="bg-transparent border-0 resize-none text-white/80 placeholder:text-white/40 focus-visible:ring-0 px-4 py-3 text-sm leading-relaxed" />
           </div>
           <div>
             <label className="block text-xs text-white/50 mb-2" style={mono}>CONTEXT <span className="text-white/15 normal-case font-sans">(product, platform, audience — optional)</span></label>
             <input value={context} onChange={e => setContext(e.target.value)}
-              placeholder='e.g. "iGaming app, TikTok, male 25-35"'
+              placeholder='ex: "App de iGaming, TikTok, homens 25-35"'
               className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-colors"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.7)" }} />
           </div>

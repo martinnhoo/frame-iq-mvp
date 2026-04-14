@@ -1,358 +1,350 @@
-import React, { useState, useEffect } from 'react';
-import { Undo2, Check, X, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useOutletContext } from 'react-router-dom';
+import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
+import { supabase } from '@/integrations/supabase/client';
+import { Undo2, Check, X, RotateCcw, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+const F = "'Plus Jakarta Sans', sans-serif";
+const M = "'DM Mono', 'JetBrains Mono', monospace";
 
 interface ActionLogEntry {
   id: string;
-  actionType: 'kill' | 'scale' | 'fix';
-  targetName: string;
-  campaignName: string;
-  executedAt: Date;
-  status: 'success' | 'error' | 'rolled_back';
-  estimatedImpact: number; // in centavos
-  actualImpact?: number; // in centavos
-  isValidated?: boolean;
-  rollbackAvailable: boolean;
-  rollbackExpiredAt?: Date;
+  action_type: string;
+  target_name: string;
+  target_type: string;
+  target_meta_id: string;
+  result: 'pending' | 'success' | 'error' | 'rolled_back';
+  estimated_daily_impact: number | null;
+  actual_impact_48h: number | null;
+  rollback_available: boolean;
+  rollback_expires_at: string | null;
+  rolled_back_at: string | null;
+  executed_at: string;
+  validated_at: string | null;
+  error_message: string | null;
+  decision_id: string | null;
 }
 
 const HistoryPage: React.FC = () => {
+  const ctx = useOutletContext<DashboardContext & { activeAccount: any; metaConnected: boolean }>();
+  const { activeAccount, metaConnected } = ctx;
+  const accountId = activeAccount?.id ?? null;
+
   const [history, setHistory] = useState<ActionLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [undoingId, setUndoingId] = useState<string | null>(null);
 
-  // Fetch action history on mount
-  useEffect(() => {
-    // Simulated data fetch - in real app, would query action_log table
-    const mockHistory: ActionLogEntry[] = [
-      {
-        id: 'action_001',
-        actionType: 'kill',
-        targetName: 'Summer Clearance - Broad',
-        campaignName: 'Summer 2026 Campaign',
-        executedAt: new Date(Date.now() - 86400000), // 1 day ago
-        status: 'success',
-        estimatedImpact: 25000,
-        actualImpact: 26500,
-        isValidated: true,
-        rollbackAvailable: true,
-      },
-      {
-        id: 'action_002',
-        actionType: 'scale',
-        targetName: 'High Performers - Lookalike',
-        campaignName: 'Retention Campaign',
-        executedAt: new Date(Date.now() - 172800000), // 2 days ago
-        status: 'success',
-        estimatedImpact: 15000,
-        actualImpact: 18200,
-        isValidated: true,
-        rollbackAvailable: true,
-      },
-      {
-        id: 'action_003',
-        actionType: 'fix',
-        targetName: 'Product Launch - V2',
-        campaignName: 'Q2 Product Launch',
-        executedAt: new Date(Date.now() - 259200000), // 3 days ago
-        status: 'success',
-        estimatedImpact: 8500,
-        isValidated: false,
-        rollbackAvailable: false,
-      },
-      {
-        id: 'action_004',
-        actionType: 'kill',
-        targetName: 'Seasonal Promo - Old',
-        campaignName: 'Spring Campaign',
-        executedAt: new Date(Date.now() - 432000000), // 5 days ago
-        status: 'rolled_back',
-        estimatedImpact: 12000,
-        rollbackAvailable: false,
-      },
-      {
-        id: 'action_005',
-        actionType: 'scale',
-        targetName: 'Best Converter - Segment A',
-        campaignName: 'Acquisition Drive',
-        executedAt: new Date(Date.now() - 604800000), // 7 days ago
-        status: 'success',
-        estimatedImpact: 32000,
-        actualImpact: 31500,
-        isValidated: true,
-        rollbackAvailable: false,
-      },
-    ];
-
-    // Simulate network delay
-    setTimeout(() => {
-      setHistory(mockHistory);
+  const loadHistory = useCallback(async () => {
+    if (!accountId) {
+      setHistory([]);
       setLoading(false);
-    }, 600);
-  }, []);
+      return;
+    }
 
-  const handleUndo = (id: string) => {
-    setUndoingId(id);
-    // Simulate undo operation
-    setTimeout(() => {
-      setHistory((prev) =>
-        prev.map((entry) =>
-          entry.id === id
-            ? { ...entry, status: 'rolled_back', rollbackAvailable: false }
-            : entry
+    try {
+      setLoading(true);
+      const { data, error } = await (supabase
+        .from('action_log' as any)
+        .select('*')
+        .eq('account_id', accountId)
+        .order('executed_at', { ascending: false })
+        .limit(50) as any);
+
+      if (error) throw error;
+      setHistory((data || []) as ActionLogEntry[]);
+    } catch (err) {
+      console.error('[HistoryPage] load error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [accountId]);
+
+  useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  const handleUndo = async (entry: ActionLogEntry) => {
+    setUndoingId(entry.id);
+    try {
+      // Call the undo edge function
+      const { error } = await supabase.functions.invoke('execute-action', {
+        body: {
+          action: 'rollback',
+          action_log_id: entry.id,
+          target_type: entry.target_type,
+          target_meta_id: entry.target_meta_id,
+        },
+      });
+      if (error) throw error;
+
+      // Update local state
+      setHistory(prev =>
+        prev.map(h => h.id === entry.id
+          ? { ...h, result: 'rolled_back' as const, rollback_available: false, rolled_back_at: new Date().toISOString() }
+          : h
         )
       );
+      toast.success('Ação desfeita com sucesso');
+    } catch (err: any) {
+      toast.error(err.message || 'Falha ao desfazer');
+    } finally {
       setUndoingId(null);
-    }, 1200);
-  };
-
-  const getActionIcon = (type: ActionLogEntry['actionType']) => {
-    switch (type) {
-      case 'kill':
-        return '🛑';
-      case 'scale':
-        return '🚀';
-      case 'fix':
-        return '🔧';
     }
   };
 
-  const getActionLabel = (type: ActionLogEntry['actionType']) => {
-    switch (type) {
-      case 'kill':
-        return 'Parado';
-      case 'scale':
-        return 'Escalado';
-      case 'fix':
-        return 'Corrigido';
-    }
+  const getActionIcon = (type: string) => {
+    if (type.includes('pause')) return '🛑';
+    if (type.includes('increase') || type.includes('duplicate')) return '🚀';
+    if (type.includes('reactivate')) return '♻️';
+    if (type.includes('decrease')) return '📉';
+    return '🔧';
   };
 
-  const getStatusIcon = (status: ActionLogEntry['status']) => {
-    switch (status) {
-      case 'success':
-        return <Check className="w-4 h-4 text-green-400" />;
-      case 'error':
-        return <X className="w-4 h-4 text-red-400" />;
-      case 'rolled_back':
-        return <RotateCcw className="w-4 h-4 text-yellow-400" />;
-    }
-  };
-
-  const getStatusText = (status: ActionLogEntry['status']) => {
-    switch (status) {
-      case 'success':
-        return 'Sucesso';
-      case 'error':
-        return 'Erro';
-      case 'rolled_back':
-        return 'Desfeito';
-    }
-  };
-
-  const timeAgo = (date: Date): string => {
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    const intervals: { [key: string]: number } = {
-      ano: 31536000,
-      mês: 2592000,
-      semana: 604800,
-      dia: 86400,
-      hora: 3600,
-      minuto: 60,
+  const getActionLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      pause_ad: 'Anúncio pausado',
+      pause_adset: 'Conjunto pausado',
+      pause_campaign: 'Campanha pausada',
+      reactivate_ad: 'Anúncio reativado',
+      reactivate_adset: 'Conjunto reativado',
+      increase_budget: 'Budget aumentado',
+      decrease_budget: 'Budget reduzido',
+      duplicate_ad: 'Anúncio duplicado',
+      generate_hook: 'Hook gerado',
+      generate_variation: 'Variação gerada',
     };
+    return labels[type] || type;
+  };
 
-    for (const [name, secondsInInterval] of Object.entries(intervals)) {
-      const interval = Math.floor(seconds / secondsInInterval);
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'success': return { icon: <Check size={13} />, label: 'Sucesso', color: '#34d399', bg: 'rgba(52,211,153,0.08)' };
+      case 'error': return { icon: <X size={13} />, label: 'Erro', color: '#f87171', bg: 'rgba(248,113,113,0.08)' };
+      case 'rolled_back': return { icon: <RotateCcw size={13} />, label: 'Desfeito', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)' };
+      default: return { icon: <Loader2 size={13} className="animate-spin" />, label: 'Pendente', color: 'rgba(255,255,255,0.4)', bg: 'rgba(255,255,255,0.04)' };
+    }
+  };
+
+  const timeAgo = (dateStr: string): string => {
+    const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+    const intervals: [string, number][] = [
+      ['ano', 31536000], ['mês', 2592000], ['semana', 604800],
+      ['dia', 86400], ['hora', 3600], ['minuto', 60],
+    ];
+    for (const [name, secs] of intervals) {
+      const interval = Math.floor(seconds / secs);
       if (interval >= 1) {
-        return `${interval} ${name}${interval > 1 ? 's' : ''} atrás`;
+        const plural = interval > 1 ? (name === 'mês' ? 'es' : 's') : '';
+        return `${interval} ${name}${plural} atrás`;
       }
     }
     return 'Agora';
   };
 
-  // Calculate summary stats
+  const formatCentavos = (v: number) => `R$ ${(v / 100).toFixed(2)}`;
+
+  // Summary stats
   const totalSaved = history
-    .filter((h) => h.status === 'success' && h.actualImpact)
-    .reduce((sum, h) => sum + (h.actualImpact || 0), 0);
+    .filter(h => h.result === 'success' && h.actual_impact_48h)
+    .reduce((sum, h) => sum + (h.actual_impact_48h || 0), 0);
 
-  const totalGenerated = history
-    .filter((h) => h.status === 'success' && h.actionType === 'scale' && h.actualImpact)
-    .reduce((sum, h) => sum + (h.actualImpact || 0), 0);
-
-  const actionsThisMonth = history.filter((h) => {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    return h.executedAt > thirtyDaysAgo;
+  const actionsThisMonth = history.filter(h => {
+    return new Date(h.executed_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   }).length;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#060709] p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-gray-800 rounded-lg" />
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-24 bg-gray-800 rounded-lg" />
-              ))}
+      <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.03)', borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.06)', padding: 24, marginBottom: 16,
+            }}>
+              <div style={{ width: '40%', height: 18, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 12 }} />
+              <div style={{ width: '60%', height: 14, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }} />
             </div>
-          </div>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#060709] p-6">
-      <div className="max-w-4xl mx-auto">
+    <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Histórico de Ações</h1>
-          <p className="text-gray-400">
-            Acompanhe todas as ações tomadas e seu impacto no seu negócio.
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>
+            Histórico de Ações
+          </h1>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.30)', margin: '4px 0 0', fontFamily: F }}>
+            Todas as ações executadas pelo Copilot na sua conta
           </p>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {/* Total Saved */}
-          <div className="bg-[#111827] border border-gray-800 rounded-xl p-6">
-            <p className="text-gray-400 text-sm uppercase tracking-wide mb-2">
-              Total economizado
-            </p>
-            <p className="text-3xl font-bold text-green-400">
-              R${(totalSaved / 100).toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              em {history.filter((h) => h.status === 'success').length} ações bem-sucedidas
-            </p>
-          </div>
-
-          {/* Total Generated */}
-          <div className="bg-[#111827] border border-gray-800 rounded-xl p-6">
-            <p className="text-gray-400 text-sm uppercase tracking-wide mb-2">
-              Total gerado
-            </p>
-            <p className="text-3xl font-bold text-blue-400">
-              R${(totalGenerated / 100).toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              em escaladas bem-sucedidas
-            </p>
-          </div>
-
-          {/* Actions This Month */}
-          <div className="bg-[#111827] border border-gray-800 rounded-xl p-6">
-            <p className="text-gray-400 text-sm uppercase tracking-wide mb-2">
-              Ações este mês
-            </p>
-            <p className="text-3xl font-bold text-white">{actionsThisMonth}</p>
-            <p className="text-xs text-gray-500 mt-2">
-              últimos 30 dias
-            </p>
-          </div>
-        </div>
-
-        {/* Timeline */}
-        <div className="space-y-4">
-          {history.length === 0 ? (
-            <div className="bg-[#111827] border border-gray-800 rounded-xl p-12 text-center">
-              <p className="text-gray-400 mb-2">Nenhuma ação registrada ainda</p>
-              <p className="text-gray-500 text-sm">
-                Comece tomando ações nas decisões para ver seu histórico aqui.
+        {/* Summary row */}
+        {history.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 12, padding: '16px 20px',
+            }}>
+              <p style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.30)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px', fontFamily: F }}>
+                Total economizado
+              </p>
+              <p style={{ fontSize: 22, fontWeight: 800, color: '#34d399', fontFamily: M, letterSpacing: '-0.02em', margin: 0 }}>
+                {formatCentavos(totalSaved)}
               </p>
             </div>
-          ) : (
-            history.map((entry) => {
-              const isRollbackExpired =
-                entry.rollbackExpiredAt &&
-                new Date() > entry.rollbackExpiredAt;
-              const canRollback =
-                entry.rollbackAvailable && !isRollbackExpired;
+            <div style={{
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 12, padding: '16px 20px',
+            }}>
+              <p style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.30)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px', fontFamily: F }}>
+                Ações este mês
+              </p>
+              <p style={{ fontSize: 22, fontWeight: 800, color: '#fff', fontFamily: M, letterSpacing: '-0.02em', margin: 0 }}>
+                {actionsThisMonth}
+              </p>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 12, padding: '16px 20px',
+            }}>
+              <p style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.30)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px', fontFamily: F }}>
+                Total de ações
+              </p>
+              <p style={{ fontSize: 22, fontWeight: 800, color: '#fff', fontFamily: M, letterSpacing: '-0.02em', margin: 0 }}>
+                {history.length}
+              </p>
+            </div>
+          </div>
+        )}
 
-              return (
-                <div
-                  key={entry.id}
-                  className="bg-[#111827] border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Left: Icon and details */}
-                    <div className="flex items-start gap-4 flex-1">
-                      <span className="text-3xl mt-1">{getActionIcon(entry.actionType)}</span>
+        {/* Empty state */}
+        {history.length === 0 && (
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 12, padding: '48px 32px',
+            textAlign: 'center', fontFamily: F,
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 16px', fontSize: 22,
+            }}>
+              📋
+            </div>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '0 0 6px' }}>
+              Nenhuma ação registrada ainda
+            </h2>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+              Quando você executar ações nas decisões do Feed, elas aparecerão aqui.
+            </p>
+          </div>
+        )}
 
-                      <div className="flex-1">
-                        {/* Target and campaign */}
-                        <div className="mb-3">
-                          <p className="font-semibold text-white">
-                            {entry.targetName}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {entry.campaignName}
-                          </p>
-                        </div>
+        {/* Action list */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {history.map(entry => {
+            const status = getStatusConfig(entry.result);
+            const canRollback = entry.rollback_available
+              && entry.result === 'success'
+              && (!entry.rollback_expires_at || new Date(entry.rollback_expires_at) > new Date());
 
-                        {/* Status and time */}
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(entry.status)}
-                            <span className="text-sm text-gray-400">
-                              {getStatusText(entry.status)}
-                            </span>
-                          </div>
-                          <span className="text-xs text-gray-500">
-                            {timeAgo(entry.executedAt)}
-                          </span>
-                        </div>
+            return (
+              <div key={entry.id} style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 12, padding: '18px 20px',
+                fontFamily: F, transition: 'border-color 0.2s',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                  {/* Icon */}
+                  <span style={{ fontSize: 24, lineHeight: 1, marginTop: 2 }}>
+                    {getActionIcon(entry.action_type)}
+                  </span>
 
-                        {/* Impact section */}
-                        <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-800">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                                Impacto estimado
-                              </p>
-                              <p className="font-semibold text-white">
-                                R${(entry.estimatedImpact / 100).toFixed(2)}/dia
-                              </p>
-                            </div>
-                            {entry.actualImpact && (
-                              <div>
-                                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                                  Impacto real {entry.isValidated && '✓'}
-                                </p>
-                                <p className="font-semibold text-green-400">
-                                  R${(entry.actualImpact / 100).toFixed(2)}/dia
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                  {/* Details */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                        {entry.target_name || entry.target_meta_id}
+                      </span>
+                      <span style={{
+                        fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 999,
+                        background: status.bg, color: status.color,
+                        border: `1px solid ${status.color}25`,
+                      }}>
+                        {status.label}
+                      </span>
                     </div>
 
-                    {/* Right: Undo button */}
-                    {canRollback && (
-                      <button
-                        onClick={() => handleUndo(entry.id)}
-                        disabled={undoingId === entry.id}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-900/50 hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
-                      >
-                        {undoingId === entry.id ? (
-                          <>
-                            <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-                            Desfazendo...
-                          </>
-                        ) : (
-                          <>
-                            <Undo2 className="w-4 h-4" />
-                            Desfazer
-                          </>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '0 0 10px' }}>
+                      {getActionLabel(entry.action_type)} · {timeAgo(entry.executed_at)}
+                    </p>
+
+                    {/* Impact row */}
+                    {(entry.estimated_daily_impact || entry.actual_impact_48h) && (
+                      <div style={{ display: 'flex', gap: 20 }}>
+                        {entry.estimated_daily_impact && (
+                          <div>
+                            <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                              Estimado
+                            </span>
+                            <p style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.6)', fontFamily: M, margin: '2px 0 0' }}>
+                              {formatCentavos(entry.estimated_daily_impact)}/dia
+                            </p>
+                          </div>
                         )}
-                      </button>
+                        {entry.actual_impact_48h && (
+                          <div>
+                            <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                              Real (48h) {entry.validated_at ? '✓' : ''}
+                            </span>
+                            <p style={{ fontSize: 14, fontWeight: 700, color: '#34d399', fontFamily: M, margin: '2px 0 0' }}>
+                              {formatCentavos(entry.actual_impact_48h)}/dia
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {entry.error_message && (
+                      <p style={{ fontSize: 11, color: '#f87171', margin: '8px 0 0', fontFamily: M }}>
+                        {entry.error_message}
+                      </p>
                     )}
                   </div>
+
+                  {/* Undo button */}
+                  {canRollback && (
+                    <button
+                      onClick={() => handleUndo(entry)}
+                      disabled={undoingId === entry.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                        background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontFamily: F,
+                        opacity: undoingId === entry.id ? 0.5 : 1,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {undoingId === entry.id ? (
+                        <><Loader2 size={13} className="animate-spin" /> Desfazendo...</>
+                      ) : (
+                        <><Undo2 size={13} /> Desfazer</>
+                      )}
+                    </button>
+                  )}
                 </div>
-              );
-            })
-          )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
