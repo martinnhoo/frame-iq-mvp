@@ -77,6 +77,7 @@ const NAV_ITEMS = [
   { url: '/dashboard/history',  label: 'Histórico', icon: Clock },
   { url: '/dashboard/performance', label: 'Padrões', icon: TrendingUp },
   { url: '/dashboard/ai',      label: 'Criar',     icon: Sparkles },
+  { url: '/dashboard/accounts', label: 'Contas',    icon: Link2 },
   { url: '/dashboard/settings', label: 'Config',    icon: Settings },
 ];
 
