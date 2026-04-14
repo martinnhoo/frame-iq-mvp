@@ -143,6 +143,7 @@ export function AppLayout() {
     account: activeAccount,
     isConnected: metaConnected,
     isLoading: accountResolving,
+    switchAccount,
   } = useActiveAccount(user?.id, selectedPersona?.id ?? null);
 
   const fetchUsage = useCallback(async (userId: string) => {
@@ -262,7 +263,7 @@ export function AppLayout() {
       {/* ── Account selector — always visible ── */}
       <div style={{ flexShrink: 0 }}>
         <button
-          onClick={() => savedPersonas.length > 1 ? setAccountsOpen(o => !o) : navigate('/dashboard/accounts')}
+          onClick={() => setAccountsOpen(o => !o)}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 9,
             padding: '8px 14px', background: 'transparent', border: 'none',
@@ -289,7 +290,7 @@ export function AppLayout() {
             }
           </div>
 
-          {/* Name + connection status */}
+          {/* Name + Meta ad account + connection status */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
               margin: 0, fontSize: 13, fontWeight: 600,
@@ -305,71 +306,150 @@ export function AppLayout() {
                   background: metaConnected ? '#10b981' : 'rgba(255,255,255,0.15)',
                   boxShadow: metaConnected ? '0 0 4px rgba(16,185,129,0.6)' : 'none',
                 }} />
-                <span style={{ fontSize: 10.5, color: metaConnected ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.18)' }}>
-                  {accountResolving ? 'Conectando...' : metaConnected ? 'Conectado' : 'Não conectado'}
+                <span style={{
+                  fontSize: 10.5,
+                  color: metaConnected ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.18)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {accountResolving
+                    ? 'Conectando...'
+                    : activeAccount
+                      ? activeAccount.name
+                      : metaConnected
+                        ? 'Conectado'
+                        : 'Não conectado'}
                 </span>
               </div>
             )}
           </div>
 
-          {savedPersonas.length > 1 && (
-            <ChevronDown size={12} color="rgba(255,255,255,0.20)"
-              style={{ flexShrink: 0, transform: accountsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s' }} />
-          )}
+          <ChevronDown size={12} color="rgba(255,255,255,0.20)"
+            style={{ flexShrink: 0, transform: accountsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s' }} />
         </button>
 
-        {/* Account dropdown */}
-        {accountsOpen && savedPersonas.length > 1 && (
+        {/* Dropdown: personas + Meta ad accounts */}
+        {accountsOpen && (
           <div style={{
             borderTop: '1px solid rgba(255,255,255,0.05)',
             paddingTop: 2, paddingBottom: 2,
           }}>
-            {savedPersonas.map(p => {
-              const isActive = p.id === selectedPersona?.id;
-              return (
-                <button key={p.id}
-                  onClick={() => {
-                    setSelectedPersona(p);
-                    setAccountsOpen(false);
-                    setMobileOpen(false);
-                  }}
-                  style={{
-                    width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '6px 14px', background: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    border: 'none', cursor: 'pointer', fontFamily: F,
-                    transition: 'background 0.1s', textAlign: 'left',
-                  }}
-                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
-                  onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                >
-                  <div style={{
-                    width: 22, height: 22, borderRadius: 6, flexShrink: 0, overflow: 'hidden',
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {p.logo_url
-                      ? <img src={p.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
-                          {(p.name || '?').charAt(0).toUpperCase()}
-                        </span>
-                    }
-                  </div>
-                  <span style={{
-                    flex: 1, fontSize: 12.5, fontWeight: isActive ? 600 : 400,
-                    color: isActive ? '#fff' : 'rgba(255,255,255,0.50)',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {p.name}
-                  </span>
-                  {isActive && (
-                    <span style={{ fontSize: 8, fontWeight: 700, color: '#10b981', letterSpacing: '0.06em' }}>
-                      ATIVO
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            {/* Persona switcher (if multiple) */}
+            {savedPersonas.length > 1 && (
+              <>
+                <div style={{ padding: '6px 14px 3px', fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: F }}>
+                  Marcas
+                </div>
+                {savedPersonas.map(p => {
+                  const isActive = p.id === selectedPersona?.id;
+                  return (
+                    <button key={p.id}
+                      onClick={() => {
+                        setSelectedPersona(p);
+                        setAccountsOpen(false);
+                        setMobileOpen(false);
+                      }}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '5px 14px', background: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
+                        border: 'none', cursor: 'pointer', fontFamily: F,
+                        transition: 'background 0.1s', textAlign: 'left',
+                      }}
+                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                    >
+                      <div style={{
+                        width: 20, height: 20, borderRadius: 5, flexShrink: 0, overflow: 'hidden',
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {p.logo_url
+                          ? <img src={p.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
+                              {(p.name || '?').charAt(0).toUpperCase()}
+                            </span>
+                        }
+                      </div>
+                      <span style={{
+                        flex: 1, fontSize: 12, fontWeight: isActive ? 600 : 400,
+                        color: isActive ? '#fff' : 'rgba(255,255,255,0.50)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {p.name}
+                      </span>
+                      {isActive && (
+                        <span style={{ fontSize: 8, fontWeight: 700, color: '#10b981', letterSpacing: '0.06em' }}>ATIVO</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Meta ad accounts switcher (if multiple) */}
+            {activeAccount && activeAccount.allAccounts.length > 1 && (
+              <>
+                <div style={{ padding: '8px 14px 3px', fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: F }}>
+                  Contas de anúncio
+                </div>
+                {activeAccount.allAccounts.map(adAcc => {
+                  const isActive = adAcc.id === activeAccount.metaAccountId;
+                  return (
+                    <button key={adAcc.id}
+                      onClick={async () => {
+                        if (!isActive && switchAccount) {
+                          await switchAccount(adAcc.id);
+                        }
+                        setAccountsOpen(false);
+                        setMobileOpen(false);
+                      }}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '5px 14px', background: isActive ? 'rgba(14,165,233,0.08)' : 'transparent',
+                        border: 'none', cursor: 'pointer', fontFamily: F,
+                        transition: 'background 0.1s', textAlign: 'left',
+                      }}
+                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                    >
+                      <span style={{
+                        width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+                        background: isActive ? '#0ea5e9' : 'rgba(255,255,255,0.12)',
+                      }} />
+                      <span style={{
+                        flex: 1, fontSize: 11.5, fontWeight: isActive ? 600 : 400,
+                        color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {adAcc.name || adAcc.id}
+                      </span>
+                    </button>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Not connected — nudge */}
+            {!metaConnected && selectedPersona && (
+              <button
+                onClick={() => { navigate('/dashboard/accounts'); setAccountsOpen(false); setMobileOpen(false); }}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '7px 14px', background: 'rgba(239,68,68,0.06)', border: 'none',
+                  cursor: 'pointer', fontFamily: F, transition: 'background 0.1s',
+                  borderRadius: 4, margin: '2px 0',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.10)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.06)'; }}
+              >
+                <Link2 size={12} color="#ef4444" />
+                <span style={{ fontSize: 11.5, color: '#ef4444', fontWeight: 500 }}>
+                  Conectar Meta Ads
+                </span>
+              </button>
+            )}
+
+            {/* Manage accounts link */}
             <button
               onClick={() => { navigate('/dashboard/accounts'); setAccountsOpen(false); setMobileOpen(false); }}
               style={{
@@ -381,13 +461,13 @@ export function AppLayout() {
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >
               <div style={{
-                width: 22, height: 22, borderRadius: 6,
+                width: 20, height: 20, borderRadius: 5,
                 background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Plus size={10} color="rgba(255,255,255,0.30)" />
+                <Plus size={9} color="rgba(255,255,255,0.30)" />
               </div>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.30)' }}>
+              <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.30)' }}>
                 Gerenciar contas
               </span>
             </button>
