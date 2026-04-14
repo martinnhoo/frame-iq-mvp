@@ -9,13 +9,13 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
 
 // ── Design tokens — from unified design system ─────────────────────────────────
-const F = T.font;
-const BLUE = T.accent; // #0ea5e9
+const F = DT.font;
+const BLUE = DT.accent; // #0ea5e9
 const CYAN = "#06b6d4";
 const CARD  = `linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)`;
-const SHD   = `0 0 0 1px ${T.borderSubtle} inset, ${T.shadowMd}`;
+const SHD   = `0 0 0 1px ${DT.borderSubtle} inset, ${DT.shadowMd}`;
 const IBG   = `rgba(255,255,255,0.06)`;
-const IBD   = `1px solid ${T.borderLight}`;
+const IBD   = `1px solid ${DT.borderLight}`;
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const T = {

@@ -7,8 +7,8 @@ import { RefreshCw, ChevronDown, ChevronUp, Layers, LayoutList } from "lucide-re
 import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
 
-const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
-const M = T.mono; // 'Space Grotesk', 'DM Mono', monospace
+const F = DT.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
+const M = DT.mono; // 'Space Grotesk', 'DM Mono', monospace
 
 const T = {
   pt: {
