@@ -2151,8 +2151,11 @@ PROIBIDO:
     });
   } catch (e) {
     console.error("adbrief-ai-chat error:", String(e));
-    return new Response(JSON.stringify({ error: String(e) || "internal_error" }), {
-      status: 500,
+    // Return 200 with error block so SDK doesn't throw "non-2xx" — frontend handles gracefully
+    const errMsg = String(e) || "internal_error";
+    const userFriendly = errMsg.includes("Anthropic 4") ? "Erro temporário na IA. Tente novamente." : errMsg.slice(0, 150);
+    return new Response(JSON.stringify({ blocks: [{ type: "text", text: userFriendly }], error: errMsg }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
