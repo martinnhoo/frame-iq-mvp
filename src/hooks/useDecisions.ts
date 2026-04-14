@@ -23,12 +23,12 @@ export function useDecisions(accountId: string | null): UseDecisionsReturn {
 
     try {
       setIsLoading(true);
-      const { data, error: fetchError } = await supabase
-        .from('decisions')
+      const { data, error: fetchError } = await (supabase
+        .from('decisions' as any)
         .select('*')
         .eq('account_id', accountId)
         .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any);
 
       if (fetchError) throw fetchError;
 

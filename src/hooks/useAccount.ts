@@ -27,11 +27,11 @@ export function useAccount(): UseAccountReturn {
       }
 
       // Fetch ad_accounts for current user
-      const { data, error } = await supabase
-        .from('ad_accounts')
+      const { data, error } = await (supabase
+        .from('ad_accounts' as any)
         .select('*')
         .eq('user_id', userdata.user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any);
 
       if (error) throw error;
 
