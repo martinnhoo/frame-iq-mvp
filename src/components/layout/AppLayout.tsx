@@ -16,6 +16,7 @@ import {
   Sparkles,
   Settings,
   LogOut,
+  Link2,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
