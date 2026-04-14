@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAccountContext } from '../../providers/AccountProvider';
-import { useMoneyTracker } from '../../hooks/useMoneyTracker';
-import { timeAgo } from '../../lib/format';
-import { supabase } from '../../lib/supabase';
+import { useMoneyTracker } from '../../hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,33 +15,39 @@ import {
   Home,
   Clock,
   TrendingUp,
-  Plus,
+  Sparkles,
   Settings,
   ChevronDown,
   LogOut,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const NAV_ITEMS = [
-  { label: 'Feed', path: '/feed', icon: Home },
-  { label: 'History', path: '/history', icon: Clock },
-  { label: 'Patterns', path: '/patterns', icon: TrendingUp },
-  { label: 'Create', path: '/create', icon: Plus },
-  { label: 'Settings', path: '/settings', icon: Settings },
+  { label: 'Feed', path: '/dashboard', icon: Home },
+  { label: 'Histórico', path: '/dashboard/history', icon: Clock },
+  { label: 'Padrões', path: '/dashboard/patterns', icon: TrendingUp },
+  { label: 'Criar', path: '/dashboard/create', icon: Sparkles },
+  { label: 'Config', path: '/dashboard/settings', icon: Settings },
 ];
 
 export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentAccount, accounts, setCurrentAccount, user } = useAccountContext();
-  const { tracker } = useMoneyTracker(currentAccount?.id ?? null);
+  const { tracker } = useMoneyTracker(currentAccount?.id ?? undefined);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/onboarding');
+    navigate('/login');
   };
 
-  const lastAnalysisDate = tracker?.updated_at || null;
+  const isActive = (path: string) => {
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard' || location.pathname === '/dashboard/feed';
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <div className="flex h-screen bg-[#0a0e17]">
@@ -51,25 +55,30 @@ export function AppLayout() {
       <aside className="w-[220px] border-r border-sky-500/10 bg-[#0d1117] flex flex-col">
         {/* Logo */}
         <div className="p-4 border-b border-sky-500/10">
-          <div className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent">
-            ab
+          <div className="flex items-center gap-2">
+            <div className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent">
+              AdBrief
+            </div>
+            <span className="text-[10px] font-semibold text-sky-400/60 bg-sky-500/10 px-1.5 py-0.5 rounded">
+              PRO
+            </span>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-2">
+        <nav className="flex-1 px-3 py-4 space-y-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const active = isActive(item.path);
 
             return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive
-                    ? 'text-sky-500 bg-sky-500/10'
-                    : 'text-gray-400 hover:text-gray-300 hover:bg-sky-500/5'
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  active
+                    ? 'text-sky-400 bg-sky-500/10 shadow-[inset_0_0_0_1px_rgba(14,165,233,0.15)]'
+                    : 'text-gray-400 hover:text-gray-200 hover:bg-white/[0.04]'
                 }`}
               >
                 <Icon size={18} />
@@ -79,12 +88,27 @@ export function AppLayout() {
           })}
         </nav>
 
-        {/* Sync Status */}
-        <div className="px-3 py-3 border-t border-sky-500/10">
-          <div className="text-xs text-gray-500">
-            {lastAnalysisDate ? `Última análise: ${timeAgo(lastAnalysisDate)}` : 'Nunca analisado'}
+        {/* Money Summary Mini */}
+        {tracker && (
+          <div className="px-3 py-3 border-t border-sky-500/10">
+            <div className="bg-sky-500/5 rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-wider text-gray-500">Total salvo</span>
+                <span className="text-sm font-bold text-emerald-400">
+                  R${(tracker.total_saved / 100).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                </span>
+              </div>
+              {tracker.leaking_now > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-gray-500">Vazando agora</span>
+                  <span className="text-sm font-bold text-red-400 animate-pulse">
+                    R${(tracker.leaking_now / 100).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}/dia
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Account Switcher */}
         <div className="px-3 py-3 border-t border-sky-500/10">
@@ -92,18 +116,18 @@ export function AppLayout() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full justify-between text-left"
+                className="w-full justify-between text-left border-sky-500/10 bg-transparent hover:bg-sky-500/5"
                 size="sm"
               >
-                <span className="text-xs truncate">
-                  {currentAccount?.account_name || 'No account'}
+                <span className="text-xs truncate text-gray-300">
+                  {currentAccount?.account_name || 'Selecionar conta'}
                 </span>
-                <ChevronDown size={14} />
+                <ChevronDown size={14} className="text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Accounts</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+            <DropdownMenuContent align="end" className="w-56 bg-[#111827] border-sky-500/10">
+              <DropdownMenuLabel className="text-gray-400">Contas</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-sky-500/10" />
               {accounts.map((account) => (
                 <DropdownMenuItem
                   key={account.id}
@@ -111,15 +135,15 @@ export function AppLayout() {
                     setCurrentAccount(account);
                     setIsAccountMenuOpen(false);
                   }}
-                  className={currentAccount?.id === account.id ? 'bg-sky-500/10' : ''}
+                  className={`cursor-pointer ${currentAccount?.id === account.id ? 'bg-sky-500/10 text-sky-400' : 'text-gray-300'}`}
                 >
                   {account.account_name}
                 </DropdownMenuItem>
               ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-400">
+              <DropdownMenuSeparator className="bg-sky-500/10" />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-400 cursor-pointer">
                 <LogOut size={14} className="mr-2" />
-                Logout
+                Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -133,3 +157,5 @@ export function AppLayout() {
     </div>
   );
 }
+
+export default AppLayout;

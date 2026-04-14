@@ -1,25 +1,24 @@
 'use client';
 
 import React from 'react';
-import { MoneyBar } from '../components/feed/MoneyBar';
-import { SummaryBar } from '../components/feed/SummaryBar';
-import { DecisionCard } from '../components/feed/DecisionCard';
-import { EmptyState } from '../components/feed/EmptyState';
-import { useDecisions, useMoneyTracker, useActions } from '../hooks';
-import type { DecisionAction } from '../types/database';
-
-interface FeedPageProps {
-  accountId?: string;
-}
+import { MoneyBar } from '../../components/feed/MoneyBar';
+import { SummaryBar } from '../../components/feed/SummaryBar';
+import { DecisionCard } from '../../components/feed/DecisionCard';
+import { EmptyState } from '../../components/feed/EmptyState';
+import { useDecisions, useMoneyTracker, useActions } from '../../hooks';
+import { useAccountContext } from '../../providers/AccountProvider';
+import type { DecisionAction } from '../../types/database';
 
 /**
- * FeedPage - Main page composing all feed components
- * 1. MoneyBar at top
+ * FeedPage - Main Copilot Feed: the heart of the Decision Engine
+ * 1. MoneyBar at top (leaking / capturable / total saved)
  * 2. SummaryBar with decision counts
- * 3. DecisionCard list or EmptyState
- * 4. Loading skeleton during fetch
+ * 3. DecisionCard list (KILL / FIX / SCALE) or EmptyState
  */
-export const FeedPage: React.FC<FeedPageProps> = ({ accountId }) => {
+export const FeedPage: React.FC = () => {
+  const { currentAccount } = useAccountContext();
+  const accountId = currentAccount?.id ?? undefined;
+
   const { decisions, loading: decisionsLoading } = useDecisions(accountId);
   const { tracker, loading: trackerLoading } = useMoneyTracker(accountId);
   const { executeAction } = useActions(accountId);
@@ -32,14 +31,12 @@ export const FeedPage: React.FC<FeedPageProps> = ({ accountId }) => {
   ) => {
     try {
       await executeAction(decisionId, action);
-      // Optionally: refetch decisions or show success toast
     } catch (error) {
       console.error('Failed to execute action:', error);
-      // Optionally: show error toast
     }
   };
 
-  // Skeleton loader for initial loading state
+  // Skeleton loader
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0e17] p-6">
@@ -56,7 +53,7 @@ export const FeedPage: React.FC<FeedPageProps> = ({ accountId }) => {
             </div>
           </div>
 
-          {/* Decision Card Skeleton */}
+          {/* Decision Card Skeletons */}
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
@@ -85,6 +82,16 @@ export const FeedPage: React.FC<FeedPageProps> = ({ accountId }) => {
   return (
     <div className="min-h-screen bg-[#0a0e17] p-6">
       <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-white">
+            Copilot Feed
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Decisões em tempo real para proteger e crescer seu investimento
+          </p>
+        </div>
+
         {/* Money Bar */}
         {tracker && (
           <div className="mb-6">
@@ -116,13 +123,13 @@ export const FeedPage: React.FC<FeedPageProps> = ({ accountId }) => {
           </div>
         ) : (
           <EmptyState
-            totalAds={12} // TODO: Get from tracker or separate query
-            nextSyncMinutes={28} // TODO: Calculate from last sync
+            totalAds={12}
+            nextSyncMinutes={28}
             todaySummary={{
               paused: 2,
               scaled: 1,
-              savedToday: 83000, // centavos = R$830
-              revenueToday: 34000, // centavos = R$340
+              savedToday: 83000,
+              revenueToday: 34000,
             }}
           />
         )}
@@ -130,3 +137,5 @@ export const FeedPage: React.FC<FeedPageProps> = ({ accountId }) => {
     </div>
   );
 };
+
+export default FeedPage;

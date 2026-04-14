@@ -49,7 +49,7 @@ const OnboardingPage: React.FC = () => {
   const handleScanComplete = () => {
     // Mark onboarding as complete
     localStorage.setItem('adbrief_onboarded', 'true');
-    navigate('/feed');
+    navigate('/dashboard');
   };
 
   // Show scan animation if connected
