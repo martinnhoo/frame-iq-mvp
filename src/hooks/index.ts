@@ -2,3 +2,4 @@
 export { useDecisions } from './useDecisions';
 export { useMoneyTracker } from './useMoneyTracker';
 export { useActions } from './useActions';
+export { useActiveAccount } from './useActiveAccount';
