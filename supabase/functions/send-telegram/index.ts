@@ -1,84 +1,193 @@
-// send-telegram — envia mensagem para um usuário via Telegram
-// Chamado por: check-critical-alerts, adbrief-ai-chat (ações registradas), crons
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const cors = {
+const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN")!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const TELEGRAM_API = "https://api.telegram.org/bot";
-
-async function sendMessage(token: string, chat_id: string, text: string, reply_markup?: object) {
-  const body: Record<string, unknown> = {
-    chat_id,
-    text,
-    parse_mode: "HTML",
-  };
-  if (reply_markup) body.reply_markup = reply_markup;
-  const res = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  return res.ok;
+function formatMoney(centavos: number): string {
+  const reais = Math.abs(centavos) / 100;
+  const prefix = centavos < 0 ? "-R$" : "R$";
+  if (reais >= 100) return `${prefix}${Math.round(reais).toLocaleString("pt-BR")}`;
+  return `${prefix}${reais.toFixed(2).replace(".", ",")}`;
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
+// ================================================================
+// TELEGRAM MESSAGE TEMPLATES
+// ================================================================
+
+interface KillAlert {
+  type: "kill_alert";
+  adName: string;
+  campaignName: string;
+  dailyWaste: number; // centavos
+  waste7d: number;
+  reason: string;
+  feedUrl: string;
+}
+
+interface ActionFeedback {
+  type: "action_feedback";
+  actionType: string;
+  targetName: string;
+  dailyImpact: number;
+  totalSaved: number;
+}
+
+interface DailySummary {
+  type: "daily_summary";
+  accountName: string;
+  savedToday: number;
+  revenueToday: number;
+  actionsTaken: number;
+  pendingDecisions: number;
+  leakingNow: number;
+  feedUrl: string;
+}
+
+interface DecisionResult48h {
+  type: "decision_result_48h";
+  actionType: string;
+  targetName: string;
+  estimatedImpact: number;
+  actualImpact: number;
+  totalSaved: number;
+}
+
+type TelegramPayload = KillAlert | ActionFeedback | DailySummary | DecisionResult48h;
+
+function buildMessage(payload: TelegramPayload): string {
+  switch (payload.type) {
+    case "kill_alert":
+      return [
+        `🔴 *AÇÃO URGENTE* — AdBrief`,
+        ``,
+        `*"${payload.adName}"*`,
+        `está gastando ${formatMoney(payload.dailyWaste)}/dia sem resultado.`,
+        ``,
+        `❌ ${payload.reason}`,
+        ``,
+        `💰 Se não pausar: ${formatMoney(-payload.waste7d)} em 7 dias`,
+        ``,
+        `→ [Pausar agora](${payload.feedUrl})`,
+      ].join("\n");
+
+    case "action_feedback":
+      const emoji = payload.actionType.includes("pause") ? "🛑" : "🚀";
+      return [
+        `${emoji} *Ação executada* — AdBrief`,
+        ``,
+        `*${payload.targetName}*`,
+        `💰 ${formatMoney(payload.dailyImpact)}/dia ${payload.actionType.includes("pause") ? "salvos" : "potencial ativado"}`,
+        ``,
+        `Total acumulado: ${formatMoney(payload.totalSaved)}`,
+      ].join("\n");
+
+    case "daily_summary":
+      return [
+        `☀️ *Bom dia!* Resumo de ontem — AdBrief`,
+        ``,
+        `📊 *${payload.accountName}*`,
+        ``,
+        payload.savedToday > 0 ? `💰 Economizou ${formatMoney(payload.savedToday)}` : "",
+        payload.revenueToday > 0 ? `🚀 Gerou ${formatMoney(payload.revenueToday)} potencial` : "",
+        payload.actionsTaken > 0 ? `⚡ ${payload.actionsTaken} ações executadas` : "",
+        payload.pendingDecisions > 0 ? `⚠️ ${payload.pendingDecisions} decisões esperando` : "",
+        payload.leakingNow > 0 ? `🔴 ${formatMoney(payload.leakingNow)}/dia vazando agora` : `✅ Sem vazamentos`,
+        ``,
+        `→ [Abrir AdBrief](${payload.feedUrl})`,
+      ].filter(Boolean).join("\n");
+
+    case "decision_result_48h":
+      const improved = payload.actualImpact > 0;
+      return [
+        `${improved ? "✅" : "⚠️"} *Resultado 48h* — AdBrief`,
+        ``,
+        `Lembra que você ${payload.actionType.includes("pause") ? "pausou" : "escalou"} *"${payload.targetName}"*?`,
+        ``,
+        improved
+          ? `📈 Resultado: ${formatMoney(payload.actualImpact)} economizados`
+          : `📉 Resultado ainda inconclusivo`,
+        ``,
+        `Estimativa era: ${formatMoney(payload.estimatedImpact)}`,
+        `Total acumulado: ${formatMoney(payload.totalSaved)}`,
+      ].join("\n");
+  }
+}
+
+async function sendTelegramMessage(chatId: string, text: string) {
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: "Markdown",
+      disable_web_page_preview: true,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`Telegram API error: ${JSON.stringify(error)}`);
+  }
+
+  return response.json();
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-    const TELEGRAM_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
-    if (!TELEGRAM_TOKEN) return new Response(JSON.stringify({ error: "no token" }), { status: 500, headers: cors });
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { user_id, payload } = await req.json() as {
+      user_id: string;
+      payload: TelegramPayload;
+    };
 
-    const { user_id, message, reply_markup, alert_id } = await req.json();
-    if (!user_id || !message) return new Response(JSON.stringify({ error: "missing params" }), { status: 400, headers: cors });
-
-    // ── Auth: allow service role (internal cron/alerts) OR authenticated user ─
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const isServiceRole = authHeader === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
-    if (!isServiceRole) {
-      if (!authHeader.startsWith("Bearer ")) {
-        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: cors });
-      }
-      const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser(authHeader.slice(7));
-      if (authErr || !authUser || authUser.id !== user_id) {
-        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: cors });
-      }
-    }
-
-    // Get user's telegram chat_id
-    const { data: conn } = await (supabase as any)
-      .from("telegram_connections")
-      .select("chat_id")
+    // Get user's telegram settings
+    const { data: settings } = await supabase
+      .from("user_settings")
+      .select("telegram_chat_id, telegram_enabled")
       .eq("user_id", user_id)
-      .neq("active", false)  // aceita true OU null
-      .maybeSingle();
+      .single();
 
-    if (!conn?.chat_id) {
-      return new Response(JSON.stringify({ sent: false, reason: "not_connected" }), {
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
+    if (!settings?.telegram_enabled || !settings?.telegram_chat_id) {
+      return new Response(
+        JSON.stringify({ sent: false, reason: "Telegram not configured" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const sent = await sendMessage(TELEGRAM_TOKEN, conn.chat_id, message, reply_markup);
+    const message = buildMessage(payload);
+    await sendTelegramMessage(settings.telegram_chat_id, message);
 
-    // Log in account_alerts that telegram was notified
-    if (sent && alert_id) {
-      await (supabase as any)
-        .from("account_alerts")
-        .update({ telegram_sent_at: new Date().toISOString() })
-        .eq("id", alert_id);
-    }
-
-    return new Response(JSON.stringify({ sent }), {
-      headers: { ...cors, "Content-Type": "application/json" },
+    // Log notification
+    await supabase.from("notifications").insert({
+      user_id,
+      channel: "telegram",
+      notification_type: payload.type,
+      title: payload.type,
+      body: message,
+      sent_at: new Date().toISOString(),
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: cors });
+
+    return new Response(
+      JSON.stringify({ sent: true }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
