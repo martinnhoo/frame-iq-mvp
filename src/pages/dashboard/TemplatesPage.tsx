@@ -211,7 +211,7 @@ const TranslateModal = ({ template, onClose, onUse, userId }: TranslateModalProp
   );
 };
 
-const T = (id: string, name: string, description: string, category: string, duration: 15 | 30 | 60, prompt: string): Template =>
+const mkTemplate = (id: string, name: string, description: string, category: string, duration: 15 | 30 | 60, prompt: string): Template =>
   ({ id, name, description, category, duration, prompt });
 
 export const TEMPLATES: Template[] = [
