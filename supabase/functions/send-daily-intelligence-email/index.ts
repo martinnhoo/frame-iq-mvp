@@ -322,6 +322,12 @@ Deno.serve(async (req) => {
     if (!email) return new Response(JSON.stringify({ error: "email required" }), { status: 400, headers: cors });
     if (!snaps.length) return new Response(JSON.stringify({ skipped: "no snapshots" }), { headers: cors });
 
+    // Skip email when ALL accounts have zero spend AND zero active ads — nothing useful to report
+    const hasAnyActivity = snaps.some((s: any) => (s.total_spend || 0) > 0 || (s.active_ads || 0) > 0);
+    if (!hasAnyActivity) {
+      return new Response(JSON.stringify({ skipped: "all_accounts_zero", accounts: snaps.length }), { headers: { ...cors, "Content-Type": "application/json" } });
+    }
+
     const lang = detectLang(language);
     const l = L[lang];
     const firstName = name.split(" ")[0] || (lang === "pt" ? "gestor" : "there");
