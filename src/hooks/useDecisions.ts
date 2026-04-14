@@ -39,8 +39,8 @@ export function useDecisions(accountId: string | null): UseDecisionsReturn {
           fix: 1,
           scale: 2,
         };
-        const orderA = decisionTypeOrder[a.decision_type] ?? 999;
-        const orderB = decisionTypeOrder[b.decision_type] ?? 999;
+        const orderA = decisionTypeOrder[(a as any).decision_type || a.type] ?? 999;
+        const orderB = decisionTypeOrder[(b as any).decision_type || b.type] ?? 999;
 
         if (orderA !== orderB) {
           return orderA - orderB;
@@ -84,9 +84,9 @@ export function useDecisions(accountId: string | null): UseDecisionsReturn {
             const newDecision = payload.new as Decision;
             if (newDecision.status === 'pending') {
               // Alert on new KILL with score > 80
-              if (newDecision.decision_type === 'kill' && (newDecision.score || 0) > 80) {
+              if (((newDecision as any).decision_type || newDecision.type) === 'kill' && (newDecision.score || 0) > 80) {
                 console.log(
-                  `[ALERT] New high-score KILL decision: ${newDecision.name} (score: ${newDecision.score})`
+                  `[ALERT] New high-score KILL decision: ${(newDecision as any).name || newDecision.headline} (score: ${newDecision.score})`
                 );
               }
               setDecisions((prev) => {
@@ -133,8 +133,8 @@ function sortDecisions(decisions: Decision[]): Decision[] {
       fix: 1,
       scale: 2,
     };
-    const orderA = decisionTypeOrder[a.decision_type] ?? 999;
-    const orderB = decisionTypeOrder[b.decision_type] ?? 999;
+    const orderA = decisionTypeOrder[(a as any).decision_type || a.type] ?? 999;
+    const orderB = decisionTypeOrder[(b as any).decision_type || b.type] ?? 999;
 
     if (orderA !== orderB) {
       return orderA - orderB;

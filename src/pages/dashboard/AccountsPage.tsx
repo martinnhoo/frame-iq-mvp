@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Globe, Upload, Loader2, X, CheckCircle2, Link2, AlertCircle, Check, ChevronDown, Building2, Save, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
+import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
 
 // ── Design tokens — from unified design system ─────────────────────────────────
 const F = T.font;

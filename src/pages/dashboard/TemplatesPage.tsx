@@ -9,7 +9,7 @@ import { Search, Clock, ArrowRight, Layers, ChevronLeft, ChevronRight as Chevron
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useObT } from "@/i18n/onboardingTranslations";
 import { getTemplateTranslation, getCategoryLabel, getUpgradeCTA } from "@/i18n/templateTranslations";
-import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
+import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
 
 type Category = string;
 type Duration = "all" | "15" | "30" | "60";
