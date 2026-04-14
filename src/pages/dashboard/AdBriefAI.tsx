@@ -4238,7 +4238,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Creative Skills Panel — shown when chat is empty ── */}
-      {messages.length===0&&contextReady&&hasData&&(
+      {messages.length===0&&contextReady&&hasData&&!proactiveLoading&&(
         <div style={{position:"relative",zIndex:2,flexShrink:0,maxWidth:720,margin:"0 auto",width:"100%",padding:"24px 16px 0"}}>
           <div style={{marginBottom:8}}>
             <h2 style={{...j,fontSize:18,fontWeight:700,color:"#fff",margin:"0 0 4px",letterSpacing:"-0.02em"}}>
