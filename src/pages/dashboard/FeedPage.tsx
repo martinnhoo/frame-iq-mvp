@@ -158,7 +158,7 @@ const FeedPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <EmptyState totalAds={0} nextSyncMinutes={0} todaySummary={{ paused: 0, scaled: 0, savedToday: 0, revenueToday: 0 }} />
+          <EmptyState totalAds={0} nextSyncMinutes={0} connected={metaConnected} todaySummary={{ paused: 0, scaled: 0, savedToday: 0, revenueToday: 0 }} />
         )}
       </div>
     </div>

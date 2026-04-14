@@ -15,9 +15,11 @@ interface EmptyStateProps {
   totalAds: number;
   nextSyncMinutes: number;
   todaySummary: TodaySummary;
+  /** When true, Meta is connected — show "monitoring" state instead of "connect" nudge */
+  connected?: boolean;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ totalAds, nextSyncMinutes, todaySummary }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({ totalAds, nextSyncMinutes, todaySummary, connected }) => {
   const hasActivity = todaySummary.paused > 0 || todaySummary.scaled > 0;
   const hasSaved = todaySummary.savedToday > 0;
   const [dots, setDots] = useState('');
@@ -30,8 +32,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ totalAds, nextSyncMinute
     return () => clearInterval(interval);
   }, []);
 
-  // If no account connected yet
-  if (totalAds === 0 && !hasActivity) {
+  // If no account connected yet (and not explicitly told we're connected)
+  if (totalAds === 0 && !hasActivity && !connected) {
     return (
       <div style={{
         background: 'rgba(255,255,255,0.03)',

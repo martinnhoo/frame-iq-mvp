@@ -190,52 +190,36 @@ async function ensureV2Account(
 
     if (existing?.id) return existing.id;
 
-    // Create it — try with meta_access_token first (production column name),
-    // fall back to access_token_encrypted (migration column name)
-    let created: any = null;
-    let createErr: any = null;
-
-    const baseRow = {
-      user_id: userId,
-      meta_account_id: metaAccount.id,
-      name: metaAccount.name || metaAccount.id,
-      currency: metaAccount.currency || 'BRL',
-      timezone: 'America/Sao_Paulo',
-      status: 'active',
-      total_ads_synced: 0,
-      total_spend_30d: 0,
-    };
-
-    // Attempt 1: meta_access_token (used by sync-meta-data)
-    const res1 = await (supabase
+    // Create v2 ad_accounts row — column is access_token_encrypted (NOT NULL)
+    const { data: created, error: insertErr } = await (supabase
       .from('ad_accounts' as any)
-      .insert({ ...baseRow, meta_access_token: accessToken })
+      .insert({
+        user_id: userId,
+        meta_account_id: metaAccount.id,
+        name: metaAccount.name || metaAccount.id,
+        currency: metaAccount.currency || 'BRL',
+        timezone: 'America/Sao_Paulo',
+        status: 'active',
+        access_token_encrypted: accessToken,
+        total_ads_synced: 0,
+        total_spend_30d: 0,
+      })
       .select('id')
       .single() as any);
 
-    if (!res1.error) {
-      created = res1.data;
-    } else {
-      // Attempt 2: access_token_encrypted (migration column)
-      const res2 = await (supabase
-        .from('ad_accounts' as any)
-        .insert({ ...baseRow, access_token_encrypted: accessToken })
-        .select('id')
-        .single() as any);
-      created = res2.data;
-      createErr = res2.error;
-    }
-
-    if (createErr) {
-      console.error('[ensureV2Account] insert error:', createErr);
-      // Try one more time — might be a race condition (unique constraint)
-      const { data: retry } = await (supabase
-        .from('ad_accounts' as any)
-        .select('id')
-        .eq('user_id', userId)
-        .eq('meta_account_id', metaAccount.id)
-        .maybeSingle() as any);
-      return retry?.id || null;
+    if (insertErr) {
+      console.error('[ensureV2Account] insert error:', insertErr.message, insertErr.code);
+      // Unique constraint race — row may exist now
+      if (insertErr.code === '23505') {
+        const { data: retry } = await (supabase
+          .from('ad_accounts' as any)
+          .select('id')
+          .eq('user_id', userId)
+          .eq('meta_account_id', metaAccount.id)
+          .maybeSingle() as any);
+        return retry?.id || null;
+      }
+      return null;
     }
 
     return created?.id || null;
