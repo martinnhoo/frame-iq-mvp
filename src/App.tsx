@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { LanguageProvider } from "@/i18n/LanguageContext";
-import { AccountProvider } from "@/providers/AccountProvider";
 import { lazy, Suspense } from "react";
 
 // ── Eagerly loaded — needed on first paint for public routes ─────────────────
@@ -19,48 +18,63 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 
-// ── Lazily loaded — public pages ────────────────────────────────────────────
-const Blog          = lazy(() => import("./pages/Blog"));
-const BlogPost      = lazy(() => import("./pages/BlogPost"));
-const Contact       = lazy(() => import("./pages/Contact"));
-const BookDemo      = lazy(() => import("./pages/BookDemo"));
-const FAQ           = lazy(() => import("./pages/FAQ"));
-const Levels        = lazy(() => import("./pages/Levels"));
+// ── Lazily loaded — only fetched when user navigates there ───────────────────
+const Blog         = lazy(() => import("./pages/Blog"));
+const BlogPost     = lazy(() => import("./pages/BlogPost"));
+const Contact      = lazy(() => import("./pages/Contact"));
+const BookDemo     = lazy(() => import("./pages/BookDemo"));
+const FAQ          = lazy(() => import("./pages/FAQ"));
+const Levels       = lazy(() => import("./pages/Levels"));
 const FeatureDetail = lazy(() => import("./pages/FeatureDetail"));
-const Features      = lazy(() => import("./pages/Features"));
-const Terms         = lazy(() => import("./pages/Terms"));
-const Privacy       = lazy(() => import("./pages/Privacy"));
-const Refund        = lazy(() => import("./pages/Refund"));
-const Careers       = lazy(() => import("./pages/Careers"));
-const Pricing       = lazy(() => import("./pages/Pricing"));
-const Demo          = lazy(() => import("./pages/Demo"));
-const DemoShare     = lazy(() => import("./pages/DemoShare"));
-const Diagnostico   = lazy(() => import("./pages/Diagnostico"));
-const Gestao        = lazy(() => import("./pages/Gestao"));
-const Criativo      = lazy(() => import("./pages/Criativo"));
+const Features     = lazy(() => import("./pages/Features"));
+const Terms        = lazy(() => import("./pages/Terms"));
+const Privacy      = lazy(() => import("./pages/Privacy"));
+const Refund       = lazy(() => import("./pages/Refund"));
+const Careers      = lazy(() => import("./pages/Careers"));
+const Pricing      = lazy(() => import("./pages/Pricing"));
+const Demo         = lazy(() => import("./pages/Demo"));
+const DemoShare    = lazy(() => import("./pages/DemoShare"));
+const Diagnostico  = lazy(() => import("./pages/Diagnostico"));
+const Gestao       = lazy(() => import("./pages/Gestao"));
+const Criativo     = lazy(() => import("./pages/Criativo"));
 
-// ── V2 Decision Engine — NEW primary dashboard experience ───────────────────
-const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
+// Dashboard — uses existing DashboardLayout with sidebar
+const DashboardLayout  = lazy(() => import("./components/dashboard/DashboardLayout"));
+const AdBriefAI        = lazy(() => import("./pages/dashboard/AdBriefAI"));
+const IntelligencePage = lazy(() => import("./pages/dashboard/IntelligencePage"));
+const AdDiary         = lazy(() => import("./pages/dashboard/AdDiary"));
+const AnalysesList     = lazy(() => import("./pages/dashboard/AnalysesList"));
+const AnalysisDetail   = lazy(() => import("./pages/dashboard/AnalysisDetail"));
+const NewAnalysis      = lazy(() => import("./pages/dashboard/NewAnalysis"));
+const BoardsList       = lazy(() => import("./pages/dashboard/BoardsList"));
+const NewBoard         = lazy(() => import("./pages/dashboard/NewBoard"));
+const BoardDetail      = lazy(() => import("./pages/dashboard/BoardDetail"));
+const TranslatePage    = lazy(() => import("./pages/dashboard/TranslatePage"));
+const SettingsPage     = lazy(() => import("./pages/dashboard/SettingsPage"));
+const TemplatesPage    = lazy(() => import("./pages/dashboard/TemplatesPage"));
+const PreflightCheck   = lazy(() => import("./pages/dashboard/PreflightCheck"));
+const PersonaPage      = lazy(() => import("./pages/dashboard/PersonaPage"));
+const AccountsPage     = lazy(() => import("./pages/dashboard/AccountsPage"));
+const AdScorePage      = lazy(() => import("./pages/dashboard/AdScorePage"));
+const HookGenerator    = lazy(() => import("./pages/dashboard/HookGenerator"));
+const CompetitorDecoder = lazy(() => import("./pages/dashboard/CompetitorDecoder"));
+const ScriptGenerator  = lazy(() => import("./pages/dashboard/ScriptGenerator"));
+const BriefGenerator   = lazy(() => import("./pages/dashboard/BriefGenerator"));
+const CreativeLoopPage = lazy(() => import("./pages/dashboard/CreativeLoopPage"));
+const PerformanceDashboard = lazy(() => import("./pages/dashboard/PerformanceDashboard"));
+const OAuthCallback    = lazy(() => import("./pages/dashboard/OAuthCallback"));
+const AccountDiagnostic = lazy(() => import("./pages/dashboard/AccountDiagnostic"));
+const LoopImportPage   = lazy(() => import("./pages/dashboard/LoopImportPage"));
+const LoopSettingsPage = lazy(() => import("./pages/dashboard/LoopSettingsPage"));
+const LoopGuidePage    = lazy(() => import("./pages/dashboard/LoopGuidePage"));
+const ReferralPage     = lazy(() => import("./pages/dashboard/ReferralPage"));
+
+// V2 Decision Engine pages
 const FeedPage         = lazy(() => import("./pages/dashboard/FeedPage"));
 const HistoryPage      = lazy(() => import("./pages/dashboard/HistoryPage"));
 const OnboardingPage   = lazy(() => import("./pages/dashboard/OnboardingPage"));
-const SettingsPage     = lazy(() => import("./pages/dashboard/SettingsPage"));
-const AccountsPage     = lazy(() => import("./pages/dashboard/AccountsPage"));
 
-// ── Legacy tools kept under /dashboard/create/* ─────────────────────────────
-const HookGenerator     = lazy(() => import("./pages/dashboard/HookGenerator"));
-const CompetitorDecoder = lazy(() => import("./pages/dashboard/CompetitorDecoder"));
-const ScriptGenerator   = lazy(() => import("./pages/dashboard/ScriptGenerator"));
-const BriefGenerator    = lazy(() => import("./pages/dashboard/BriefGenerator"));
-const AdBriefAI         = lazy(() => import("./pages/dashboard/AdBriefAI"));
-const AdScorePage       = lazy(() => import("./pages/dashboard/AdScorePage"));
-const PersonaPage       = lazy(() => import("./pages/dashboard/PersonaPage"));
-const PerformanceDashboard = lazy(() => import("./pages/dashboard/PerformanceDashboard"));
-const AccountDiagnostic = lazy(() => import("./pages/dashboard/AccountDiagnostic"));
-const OAuthCallback     = lazy(() => import("./pages/dashboard/OAuthCallback"));
-const ReferralPage      = lazy(() => import("./pages/dashboard/ReferralPage"));
-
-// SEO pages — lazily loaded
+// SEO pages — lazily loaded, rarely visited from landing
 const ToolsIndex    = lazy(() => import("@/pages/seo/ToolsIndex"));
 const ToolPage      = lazy(() => import("@/pages/seo/ToolPage"));
 const GuidesIndex   = lazy(() => import("@/pages/seo/GuidesIndex"));
@@ -98,107 +112,118 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <AccountProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <SupportChat />
-              <Suspense fallback={<PageLoader />}>
-              <Routes>
-                {/* ── Public routes ── */}
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/book-demo" element={<BookDemo />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/levels" element={<Levels />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/demo" element={<Demo />} />
-                <Route path="/s/:shareId" element={<DemoShare />} />
-                <Route path="/diagnostico" element={<Diagnostico />} />
-                <Route path="/gestao" element={<Gestao />} />
-                <Route path="/criativo" element={<Criativo />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/refund" element={<Refund />} />
-                <Route path="/careers" element={<Careers />} />
-                <Route path="/features/:slug" element={<FeatureDetail />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/confirm-email" element={<ConfirmEmail />} />
-                <Route path="/email-confirmed" element={<EmailConfirmed />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/onboarding" element={<Onboarding />} />
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <SupportChat />
+            <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/book-demo" element={<BookDemo />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/levels" element={<Levels />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/demo" element={<Demo />} />
+              <Route path="/s/:shareId" element={<DemoShare />} />
+              <Route path="/diagnostico" element={<Diagnostico />} />
+              <Route path="/gestao" element={<Gestao />} />
+              <Route path="/criativo" element={<Criativo />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/refund" element={<Refund />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/features/:slug" element={<FeatureDetail />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/confirm-email" element={<ConfirmEmail />} />
+              <Route path="/email-confirmed" element={<EmailConfirmed />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/onboarding" element={<Onboarding />} />
 
-                {/* ══════════════════════════════════════════════════════════
-                    V2 DECISION ENGINE — Primary dashboard experience
-                    The Copilot Feed is the new default.
-                   ══════════════════════════════════════════════════════════ */}
-                <Route path="/dashboard" element={<AppLayout />}>
-                  {/* Default: Copilot Feed */}
-                  <Route index element={<FeedPage />} />
-                  <Route path="feed" element={<Navigate to="/dashboard" replace />} />
+              {/* Dashboard — same DashboardLayout, same sidebar, same logo, same everything.
+                  Only change: default route is now FeedPage (Decision Engine). */}
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                {/* V2: Copilot Feed is the new default */}
+                <Route index element={<Navigate to="/dashboard/feed" replace />} />
+                <Route path="feed" element={<FeedPage />} />
+                <Route path="history" element={<HistoryPage />} />
+                <Route path="welcome" element={<OnboardingPage />} />
 
-                  {/* V2 core pages */}
-                  <Route path="history" element={<HistoryPage />} />
-                  <Route path="welcome" element={<OnboardingPage />} />
-                  <Route path="settings" element={<SettingsPage />} />
-                  <Route path="accounts" element={<AccountsPage />} />
-                  <Route path="patterns" element={<PerformanceDashboard />} />
+                {/* Existing pages — all preserved */}
+                <Route path="ai" element={<AdBriefAI />} />
+                <Route path="intelligence" element={<IntelligencePage />} />
+                <Route path="diary" element={<AdDiary />} />
+                <Route path="analyses" element={<AnalysesList />} />
+                <Route path="analyses/new" element={<ToolGate><NewAnalysis /></ToolGate>} />
+                <Route path="analyses/:id" element={<AnalysisDetail />} />
+                <Route path="boards" element={<ToolGate><BoardsList /></ToolGate>} />
+                <Route path="boards/new" element={<ToolGate><NewBoard /></ToolGate>} />
+                <Route path="boards/:id" element={<ToolGate><BoardDetail /></ToolGate>} />
+                <Route path="translate" element={<ToolGate><TranslatePage /></ToolGate>} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="templates" element={<ToolGate><TemplatesPage /></ToolGate>} />
+                <Route path="preflight" element={<ToolGate><PreflightCheck /></ToolGate>} />
+                <Route path="persona" element={<PersonaPage />} />
+                <Route path="accounts" element={<AccountsPage />} />
+                <Route path="ad-score" element={<AdScorePage />} />
+                <Route path="hooks" element={<ToolGate><HookGenerator /></ToolGate>} />
+                <Route path="competitor" element={<ToolGate><CompetitorDecoder /></ToolGate>} />
+                <Route path="script" element={<ToolGate><ScriptGenerator /></ToolGate>} />
+                <Route path="brief" element={<ToolGate><BriefGenerator /></ToolGate>} />
+                <Route path="loop" element={<CreativeLoopPage />} />
+                <Route path="campaigns/new" element={<Navigate to="/dashboard/feed" replace />} />
+                <Route path="performance" element={<PerformanceDashboard />} />
+                <Route path="diagnostic" element={<AccountDiagnostic />} />
+                <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
+                <Route path="loop/import" element={<LoopImportPage />} />
+                <Route path="loop/settings" element={<LoopSettingsPage />} />
+                <Route path="loop/ai" element={<Navigate to="/dashboard/feed" replace />} />
+                <Route path="loop/guide" element={<LoopGuidePage />} />
+                <Route path="referral" element={<ReferralPage />} />
+                <Route path="*" element={<Navigate to="/dashboard/feed" replace />} />
+              </Route>
 
-                  {/* Creative tools — under /dashboard/create/* */}
-                  <Route path="create" element={<AdBriefAI />} />
-                  <Route path="create/hooks" element={<ToolGate><HookGenerator /></ToolGate>} />
-                  <Route path="create/competitor" element={<ToolGate><CompetitorDecoder /></ToolGate>} />
-                  <Route path="create/script" element={<ToolGate><ScriptGenerator /></ToolGate>} />
-                  <Route path="create/brief" element={<ToolGate><BriefGenerator /></ToolGate>} />
-                  <Route path="create/ad-score" element={<AdScorePage />} />
-                  <Route path="create/persona" element={<PersonaPage />} />
+              {/* ── SEO: Tools ── */}
+              <Route path="/tools"         element={<ToolsIndex />} />
+              <Route path="/tools/:slug"   element={<ToolPage />} />
 
-                  {/* Legacy routes — kept for backward compat */}
-                  <Route path="ai" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="diagnostic" element={<AccountDiagnostic />} />
-                  <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
-                  <Route path="referral" element={<ReferralPage />} />
+              {/* ── SEO: Guides ── */}
+              <Route path="/guides"        element={<GuidesIndex />} />
+              <Route path="/guides/:slug"  element={<GuidePage />} />
 
-                  {/* Catch-all → Feed */}
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                </Route>
+              {/* ── SEO: Compare ── */}
+              <Route path="/compare"       element={<CompareIndex />} />
+              <Route path="/compare/:slug" element={<CompareDetail />} />
+              <Route path="/platform/:slug"    element={<PlatformPage />} />
+              <Route path="/solutions/:slug"   element={<IndustryPage />} />
+              <Route path="/use-case/:slug"    element={<UseCasePage />} />
+              <Route path="/for/:slug"         element={<RolePage />} />
+              <Route path="/learn/:slug"       element={<LearnPage />} />
+              <Route path="/hooks/:slug"       element={<HookTypePage />} />
+              <Route path="/markets/:slug"     element={<LocationPage />} />
+              <Route path="/examples/:slug"    element={<AdExamplesPage />} />
 
-                {/* ── SEO routes ── */}
-                <Route path="/tools" element={<ToolsIndex />} />
-                <Route path="/tools/:slug" element={<ToolPage />} />
-                <Route path="/guides" element={<GuidesIndex />} />
-                <Route path="/guides/:slug" element={<GuidePage />} />
-                <Route path="/compare" element={<CompareIndex />} />
-                <Route path="/compare/:slug" element={<CompareDetail />} />
-                <Route path="/platform/:slug" element={<PlatformPage />} />
-                <Route path="/solutions/:slug" element={<IndustryPage />} />
-                <Route path="/use-case/:slug" element={<UseCasePage />} />
-                <Route path="/for/:slug" element={<RolePage />} />
-                <Route path="/learn/:slug" element={<LearnPage />} />
-                <Route path="/hooks/:slug" element={<HookTypePage />} />
-                <Route path="/markets/:slug" element={<LocationPage />} />
-                <Route path="/examples/:slug" element={<AdExamplesPage />} />
-                <Route path="/ads-library" element={<AdsLibraryIndex />} />
-                <Route path="/tiktok-ad-examples" element={<AdsLibraryLanding />} />
-                <Route path="/facebook-ad-examples" element={<AdsLibraryLanding />} />
-                <Route path="/ugc-ad-examples" element={<AdsLibraryLanding />} />
-                <Route path="/igaming-ad-examples" element={<AdsLibraryLanding />} />
-                <Route path="/ecommerce-ad-examples" element={<AdsLibraryLanding />} />
-                <Route path="/best-ad-hooks" element={<AdHooksPage />} />
-                <Route path="/glossary/:slug" element={<GlossaryPage />} />
+              {/* ── SEO: Ads Library ── */}
+              <Route path="/ads-library"           element={<AdsLibraryIndex />} />
+              <Route path="/tiktok-ad-examples"    element={<AdsLibraryLanding />} />
+              <Route path="/facebook-ad-examples"  element={<AdsLibraryLanding />} />
+              <Route path="/ugc-ad-examples"       element={<AdsLibraryLanding />} />
+              <Route path="/igaming-ad-examples"   element={<AdsLibraryLanding />} />
+              <Route path="/ecommerce-ad-examples" element={<AdsLibraryLanding />} />
+              <Route path="/best-ad-hooks"         element={<AdHooksPage />} />
+              <Route path="/glossary/:slug"        element={<GlossaryPage />} />
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AccountProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
       </LanguageProvider>
     </QueryClientProvider>
   </HelmetProvider>

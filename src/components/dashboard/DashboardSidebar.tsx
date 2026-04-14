@@ -1,5 +1,5 @@
 // DashboardSidebar v12 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
-import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, FileText, ScanLine, Brain, ScanEye, Languages } from "lucide-react";
+import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, FileText, ScanLine, Brain, ScanEye, Languages, Activity, Clock } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -192,6 +192,8 @@ export function DashboardSidebar({
 
   // ── Navigation structure (matching screenshot layout) ──
   const PRINCIPAL = [
+    { url: "/dashboard/feed",         label: "Copilot",     icon: Activity, badge: "NEW" },
+    { url: "/dashboard/history",      label: pt ? "Histórico" : "History", icon: Clock },
     { url: "/dashboard/ai",          label: "Chat",        icon: MessageSquare, badge: "AI" },
     { url: "/dashboard/performance",  label: "Performance", icon: BarChart2, forceActive: perfActive },
     { url: "/dashboard/ad-score",      label: "Ad Score", icon: LayoutGrid },

@@ -1,73 +1,69 @@
-'use client';
-
 import React from 'react';
+import { useOutletContext } from 'react-router-dom';
+import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
 import { MoneyBar } from '../../components/feed/MoneyBar';
 import { SummaryBar } from '../../components/feed/SummaryBar';
 import { DecisionCard } from '../../components/feed/DecisionCard';
 import { EmptyState } from '../../components/feed/EmptyState';
-import { useDecisions, useMoneyTracker, useActions } from '../../hooks';
-import { useAccountContext } from '../../providers/AccountProvider';
-import type { DecisionAction } from '../../types/database';
+import { useDecisions } from '../../hooks/useDecisions';
+import { useMoneyTracker } from '../../hooks/useMoneyTracker';
+import { useActions } from '../../hooks/useActions';
+import type { DecisionAction } from '../../types/v2-database';
+
+const F = "'Plus Jakarta Sans', sans-serif";
 
 /**
- * FeedPage - Main Copilot Feed: the heart of the Decision Engine
- * 1. MoneyBar at top (leaking / capturable / total saved)
- * 2. SummaryBar with decision counts
- * 3. DecisionCard list (KILL / FIX / SCALE) or EmptyState
+ * FeedPage — Copilot Feed: Decision Cards (KILL / FIX / SCALE)
+ * Uses the same DashboardLayout context as all other dashboard pages.
  */
-export const FeedPage: React.FC = () => {
-  const { currentAccount } = useAccountContext();
-  const accountId = currentAccount?.id ?? undefined;
+const FeedPage: React.FC = () => {
+  const { user, selectedPersona } = useOutletContext<DashboardContext>();
+  const accountId = selectedPersona?.id ?? null;
 
-  const { decisions, loading: decisionsLoading } = useDecisions(accountId);
-  const { tracker, loading: trackerLoading } = useMoneyTracker(accountId);
-  const { executeAction } = useActions(accountId);
+  const { decisions, isLoading: decisionsLoading } = useDecisions(accountId);
+  const { tracker, isLoading: trackerLoading } = useMoneyTracker(accountId);
+  const { executeAction } = useActions();
 
   const isLoading = decisionsLoading || trackerLoading;
 
-  const handleDecisionAction = async (
-    decisionId: string,
-    action: DecisionAction
-  ) => {
+  const handleDecisionAction = async (decisionId: string, action: DecisionAction) => {
     try {
-      await executeAction(decisionId, action);
+      await executeAction(
+        decisionId,
+        action.meta_api_action || action.type,
+        'ad',
+        '',
+      );
     } catch (error) {
       console.error('Failed to execute action:', error);
     }
   };
 
-  // Skeleton loader
+  // Skeleton
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0e17] p-6">
-        <div className="max-w-4xl mx-auto">
-          {/* Money Bar Skeleton */}
-          <div className="w-full bg-[#111827] rounded-2xl border border-sky-500/10 p-6 mb-6 animate-pulse">
-            <div className="grid grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex flex-col items-center">
-                  <div className="w-32 h-12 bg-gray-700/50 rounded-lg mb-2" />
-                  <div className="w-20 h-4 bg-gray-700/50 rounded" />
+      <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <div style={{
+            background: 'rgba(255,255,255,0.03)', borderRadius: 12,
+            border: '1px solid rgba(255,255,255,0.06)', padding: 24, marginBottom: 24,
+          }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ width: 120, height: 40, background: 'rgba(255,255,255,0.05)', borderRadius: 8, marginBottom: 8 }} />
+                  <div style={{ width: 80, height: 14, background: 'rgba(255,255,255,0.04)', borderRadius: 6 }} />
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Decision Card Skeletons */}
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="w-full bg-[#111827] rounded-2xl border border-sky-500/10 p-6 mb-4 animate-pulse"
-            >
-              <div className="space-y-4">
-                <div className="w-3/4 h-6 bg-gray-700/50 rounded" />
-                <div className="w-1/2 h-4 bg-gray-700/50 rounded" />
-                <div className="flex gap-2">
-                  {[...Array(3)].map((_, j) => (
-                    <div key={j} className="w-24 h-8 bg-gray-700/50 rounded-lg" />
-                  ))}
-                </div>
-              </div>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.03)', borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.06)', padding: 24, marginBottom: 16,
+            }}>
+              <div style={{ width: '75%', height: 20, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 12 }} />
+              <div style={{ width: '50%', height: 14, background: 'rgba(255,255,255,0.04)', borderRadius: 6 }} />
             </div>
           ))}
         </div>
@@ -75,26 +71,30 @@ export const FeedPage: React.FC = () => {
     );
   }
 
-  const pendingDecisions = decisions.filter(
-    (d) => d.status === 'pending'
-  );
+  const pendingDecisions = decisions.filter(d => d.status === 'pending');
 
   return (
-    <div className="min-h-screen bg-[#0a0e17] p-6">
-      <div className="max-w-4xl mx-auto">
+    <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{
+            fontSize: 22, fontWeight: 700, color: '#fff',
+            fontFamily: F, letterSpacing: '-0.02em', margin: 0,
+          }}>
             Copilot Feed
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p style={{
+            fontSize: 13, color: 'rgba(255,255,255,0.40)', margin: '6px 0 0',
+            fontFamily: F,
+          }}>
             Decisões em tempo real para proteger e crescer seu investimento
           </p>
         </div>
 
         {/* Money Bar */}
         {tracker && (
-          <div className="mb-6">
+          <div style={{ marginBottom: 24 }}>
             <MoneyBar
               leaking={tracker.leaking_now}
               capturable={tracker.capturable_now}
@@ -105,15 +105,15 @@ export const FeedPage: React.FC = () => {
 
         {/* Summary Bar */}
         {pendingDecisions.length > 0 && (
-          <div className="mb-6">
+          <div style={{ marginBottom: 24 }}>
             <SummaryBar decisions={pendingDecisions} />
           </div>
         )}
 
         {/* Decisions or Empty State */}
         {pendingDecisions.length > 0 ? (
-          <div className="space-y-4">
-            {pendingDecisions.map((decision) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {pendingDecisions.map(decision => (
               <DecisionCard
                 key={decision.id}
                 decision={decision}
@@ -123,13 +123,13 @@ export const FeedPage: React.FC = () => {
           </div>
         ) : (
           <EmptyState
-            totalAds={12}
-            nextSyncMinutes={28}
+            totalAds={0}
+            nextSyncMinutes={0}
             todaySummary={{
-              paused: 2,
-              scaled: 1,
-              savedToday: 83000,
-              revenueToday: 34000,
+              paused: 0,
+              scaled: 0,
+              savedToday: 0,
+              revenueToday: 0,
             }}
           />
         )}

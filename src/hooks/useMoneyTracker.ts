@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import type { MoneyTracker } from '../types/database';
+import { supabase } from '@/integrations/supabase/client';
+import type { MoneyTracker } from '../types/v2-database';
 
 interface UseMoneyTrackerReturn {
   tracker: MoneyTracker | null;

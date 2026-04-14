@@ -1,199 +1,205 @@
-'use client';
-
 import React, { useState } from 'react';
-import type { Decision, DecisionAction } from '../../types/database';
+import type { Decision, DecisionAction } from '../../types/v2-database';
+import { formatMoney } from '../../lib/format';
+
+const F = "'Plus Jakarta Sans', sans-serif";
 
 interface DecisionCardProps {
   decision: Decision;
   onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
 }
 
-/**
- * DecisionCard - Core actionable decision card
- * Type-specific styling (KILL, FIX, SCALE, INSIGHT)
- */
-export const DecisionCard: React.FC<DecisionCardProps> = ({
-  decision,
-  onAction,
-}) => {
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [executingActionId, setExecutingActionId] = useState<string | null>(null);
+const TYPE_CONFIG = {
+  kill: {
+    border: 'rgba(239,68,68,0.5)',
+    badgeBg: 'rgba(239,68,68,0.12)',
+    badgeText: '#f87171',
+    label: 'PARAR',
+    emoji: '🛑',
+    btnBg: '#ef4444',
+    btnHover: '#dc2626',
+    secondaryBg: 'rgba(239,68,68,0.08)',
+    secondaryBorder: 'rgba(239,68,68,0.20)',
+    accent: '#f87171',
+  },
+  fix: {
+    border: 'rgba(245,158,11,0.5)',
+    badgeBg: 'rgba(245,158,11,0.12)',
+    badgeText: '#fbbf24',
+    label: 'CORRIGIR',
+    emoji: '⚙️',
+    btnBg: '#f59e0b',
+    btnHover: '#d97706',
+    secondaryBg: 'rgba(245,158,11,0.08)',
+    secondaryBorder: 'rgba(245,158,11,0.20)',
+    accent: '#fbbf24',
+  },
+  scale: {
+    border: 'rgba(16,185,129,0.5)',
+    badgeBg: 'rgba(16,185,129,0.12)',
+    badgeText: '#34d399',
+    label: 'ESCALAR',
+    emoji: '📈',
+    btnBg: '#10b981',
+    btnHover: '#059669',
+    secondaryBg: 'rgba(16,185,129,0.08)',
+    secondaryBorder: 'rgba(16,185,129,0.20)',
+    accent: '#34d399',
+  },
+  insight: {
+    border: 'rgba(13,162,231,0.5)',
+    badgeBg: 'rgba(13,162,231,0.12)',
+    badgeText: '#0da2e7',
+    label: 'INSIGHT',
+    emoji: '💡',
+    btnBg: '#0da2e7',
+    btnHover: '#0284c7',
+    secondaryBg: 'rgba(13,162,231,0.08)',
+    secondaryBorder: 'rgba(13,162,231,0.20)',
+    accent: '#0da2e7',
+  },
+  alert: {
+    border: 'rgba(13,162,231,0.5)',
+    badgeBg: 'rgba(13,162,231,0.12)',
+    badgeText: '#0da2e7',
+    label: 'ALERTA',
+    emoji: '⚡',
+    btnBg: '#0da2e7',
+    btnHover: '#0284c7',
+    secondaryBg: 'rgba(13,162,231,0.08)',
+    secondaryBorder: 'rgba(13,162,231,0.20)',
+    accent: '#0da2e7',
+  },
+};
 
-  // Determine colors and badge based on type
-  const getTypeConfig = (type: Decision['type']) => {
-    switch (type) {
-      case 'kill':
-        return {
-          borderColor: 'border-red-500',
-          badgeColor: 'bg-red-500/20 text-red-400 border border-red-500/30',
-          badgeLabel: '🛑 PARAR',
-          buttonColor: 'bg-red-500 hover:bg-red-600 text-white',
-          secondaryColor: 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20',
-          accentColor: 'text-red-400',
-        };
-      case 'fix':
-        return {
-          borderColor: 'border-amber-500',
-          badgeColor: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-          badgeLabel: '⚙️ CORRIGIR',
-          buttonColor: 'bg-amber-500 hover:bg-amber-600 text-white',
-          secondaryColor: 'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20',
-          accentColor: 'text-amber-400',
-        };
-      case 'scale':
-        return {
-          borderColor: 'border-emerald-500',
-          badgeColor: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-          badgeLabel: '📈 ESCALAR',
-          buttonColor: 'bg-emerald-500 hover:bg-emerald-600 text-white',
-          secondaryColor: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20',
-          accentColor: 'text-emerald-400',
-        };
-      case 'insight':
-      case 'alert':
-        return {
-          borderColor: 'border-sky-500',
-          badgeColor: 'bg-sky-500/20 text-sky-400 border border-sky-500/30',
-          badgeLabel: '💡 INSIGHT',
-          buttonColor: 'bg-sky-500 hover:bg-sky-600 text-white',
-          secondaryColor: 'bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20',
-          accentColor: 'text-sky-400',
-        };
-      default:
-        return {
-          borderColor: 'border-gray-500',
-          badgeColor: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
-          badgeLabel: 'INFO',
-          buttonColor: 'bg-gray-500 hover:bg-gray-600 text-white',
-          secondaryColor: 'bg-gray-500/10 text-gray-400 border border-gray-500/20 hover:bg-gray-500/20',
-          accentColor: 'text-gray-400',
-        };
-    }
-  };
-
-  const config = getTypeConfig(decision.type);
+export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }) => {
+  const [executingId, setExecutingId] = useState<string | null>(null);
+  const cfg = TYPE_CONFIG[decision.type] || TYPE_CONFIG.insight;
 
   const handleAction = async (action: DecisionAction) => {
     try {
-      setExecutingActionId(action.id);
-      setIsExecuting(true);
+      setExecutingId(action.id);
       await onAction(decision.id, action);
     } finally {
-      setIsExecuting(false);
-      setExecutingActionId(null);
+      setExecutingId(null);
     }
   };
 
+  const impactText = decision.impact_daily > 0
+    ? `${formatMoney(decision.impact_daily)}/dia`
+    : '';
+
   return (
-    <>
-      <style>{`
-        @keyframes slideUpFadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(16px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .decision-card {
-          animation: slideUpFadeIn 0.4s ease-out;
-        }
-        .decision-card:hover {
-          transform: scale(1.01);
-        }
-        .decision-card {
-          transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        .decision-card:hover {
-          box-shadow: 0 0 24px rgba(14, 165, 233, 0.1);
-        }
-      `}</style>
+    <div
+      data-decision-type={decision.type}
+      style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderLeft: `3px solid ${cfg.border}`,
+        borderRadius: 12,
+        padding: '20px 24px',
+        fontFamily: F,
+        transition: 'border-color 0.15s, background 0.15s',
+        position: 'relative',
+      }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.borderLeftColor = cfg.border; }}
+    >
+      {/* Badge row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{
+          background: cfg.badgeBg,
+          color: cfg.badgeText,
+          fontSize: 11,
+          fontWeight: 700,
+          padding: '3px 10px',
+          borderRadius: 6,
+          letterSpacing: '0.04em',
+        }}>
+          {cfg.emoji} {cfg.label}
+        </span>
+        <span style={{
+          background: 'rgba(255,255,255,0.04)',
+          color: 'rgba(255,255,255,0.40)',
+          fontSize: 10,
+          fontWeight: 600,
+          padding: '3px 8px',
+          borderRadius: 6,
+        }}>
+          Score: {Math.round(decision.score)}
+        </span>
+        {impactText && (
+          <span style={{
+            marginLeft: 'auto',
+            color: cfg.accent,
+            fontSize: 13,
+            fontWeight: 700,
+          }}>
+            {impactText}
+          </span>
+        )}
+      </div>
 
-      <div
-        className={`decision-card relative bg-[#111827] rounded-2xl p-6 border-l-4 ${config.borderColor} border border-l-4 border-sky-500/10 hover:border-sky-500/30`}
-        data-decision-type={decision.type}
-      >
-        {/* Score Badge - Top Right */}
-        <div className="absolute top-4 right-4">
-          <div className={`${config.badgeColor} px-3 py-1 rounded-lg text-xs font-bold`}>
-            Score: {Math.round(decision.score * 100)}
-          </div>
-        </div>
+      {/* Headline */}
+      <h3 style={{
+        fontSize: 16, fontWeight: 700, color: '#fff',
+        margin: '0 0 6px', lineHeight: 1.35, letterSpacing: '-0.01em',
+      }}>
+        {decision.headline}
+      </h3>
 
-        {/* Type Badge - Top Right Below Score */}
-        <div className="absolute top-16 right-4">
-          <div className={`${config.badgeColor} px-3 py-1 rounded-lg text-xs font-bold`}>
-            {config.badgeLabel}
-          </div>
-        </div>
+      {/* Ad name */}
+      <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.35)', margin: '0 0 12px' }}>
+        {decision.ad?.name || decision.reason || ''}
+      </p>
 
-        {/* Content */}
-        <div className="pr-32">
-          {/* Headline */}
-          <h3 className="text-xl font-bold text-white mb-2 leading-tight">
-            {decision.headline}
-          </h3>
-
-          {/* Ad Name */}
-          <p className="text-sm text-gray-500 mb-4">{decision.ad?.name || 'Ad'}</p>
-
-          {/* Metrics Row */}
-          {decision.metrics && decision.metrics.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {decision.metrics.map((metric, idx) => (
-                <div
-                  key={idx}
-                  className="bg-gray-800/50 rounded-lg px-3 py-1 text-xs border border-gray-700/50"
-                >
-                  <span className="text-gray-400">{metric.key}:</span>
-                  <span className="text-gray-200 font-semibold ml-1">{metric.value}</span>
-                  {metric.context && (
-                    <span className="text-gray-500 ml-1 text-[10px]">({metric.context})</span>
-                  )}
-                </div>
-              ))}
+      {/* Metrics */}
+      {decision.metrics && decision.metrics.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+          {decision.metrics.map((m, i) => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 6, padding: '4px 10px', fontSize: 11.5,
+            }}>
+              <span style={{ color: 'rgba(255,255,255,0.45)' }}>{m.key}: </span>
+              <span style={{ color: 'rgba(255,255,255,0.80)', fontWeight: 600 }}>{m.value}</span>
+              {m.context && <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, marginLeft: 4 }}>({m.context})</span>}
             </div>
-          )}
-
-          {/* Impact Line */}
-          <p className={`text-sm font-semibold mb-6 ${config.accentColor}`}>
-            {decision.impact}
-          </p>
+          ))}
         </div>
+      )}
 
-        {/* Actions Row - Bottom */}
-        <div className="flex gap-3 mt-6 flex-wrap">
-          {decision.actions && decision.actions.length > 0 ? (
-            decision.actions.map((action, idx) => (
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+        {decision.actions && decision.actions.length > 0 ? (
+          decision.actions.map((action, idx) => {
+            const isPrimary = idx === 0;
+            const isRunning = executingId === action.id;
+            return (
               <button
                 key={action.id}
                 onClick={() => handleAction(action)}
-                disabled={isExecuting}
-                className={`${
-                  idx === 0 ? config.buttonColor : config.secondaryColor
-                } rounded-xl px-6 py-3 font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                  executingActionId === action.id
-                    ? 'opacity-75 scale-95'
-                    : 'hover:scale-105'
-                }`}
+                disabled={executingId !== null}
+                style={{
+                  background: isPrimary ? cfg.btnBg : cfg.secondaryBg,
+                  color: isPrimary ? '#fff' : cfg.accent,
+                  border: isPrimary ? 'none' : `1px solid ${cfg.secondaryBorder}`,
+                  borderRadius: 8, padding: '8px 18px',
+                  fontSize: 13, fontWeight: 700,
+                  cursor: executingId !== null ? 'not-allowed' : 'pointer',
+                  opacity: executingId !== null && !isRunning ? 0.5 : 1,
+                  fontFamily: F, transition: 'all 0.12s',
+                }}
               >
-                {executingActionId === action.id ? (
-                  <span className="inline-flex items-center gap-2">
-                    <span className="animate-spin inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full" />
-                    Executando...
-                  </span>
-                ) : (
-                  action.label
-                )}
+                {isRunning ? 'Executando...' : action.label}
               </button>
-            ))
-          ) : (
-            <p className="text-xs text-gray-500">Sem ações disponíveis</p>
-          )}
-        </div>
+            );
+          })
+        ) : (
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Sem ações disponíveis</span>
+        )}
       </div>
-    </>
+    </div>
   );
 };

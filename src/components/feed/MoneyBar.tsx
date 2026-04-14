@@ -1,7 +1,7 @@
-'use client';
-
 import React, { useEffect, useRef, useState } from 'react';
 import { formatMoney } from '../../lib/format';
+
+const F = "'Plus Jakarta Sans', sans-serif";
 
 interface MoneyBarProps {
   leaking: number;
@@ -10,110 +10,87 @@ interface MoneyBarProps {
 }
 
 /**
- * MoneyBar - THE most important visual in AdBrief
- * Always visible at top of feed
- * Three big numbers: leaking, capturable, totalSaved
+ * MoneyBar — THE most important visual in AdBrief
+ * Always visible at top of feed. Three big numbers.
  */
-export const MoneyBar: React.FC<MoneyBarProps> = ({
-  leaking,
-  capturable,
-  totalSaved,
-}) => {
+export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSaved }) => {
   const [displayedSaved, setDisplayedSaved] = useState(totalSaved);
   const prevSavedRef = useRef(totalSaved);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Animate saved amount when it changes
   useEffect(() => {
     const startValue = prevSavedRef.current;
     const endValue = totalSaved;
-    const duration = 1000; // 1 second
+    const duration = 1000;
     const startTime = Date.now();
-
     if (startValue === endValue) return;
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const currentValue = Math.floor(
-        startValue + (endValue - startValue) * progress
-      );
-      setDisplayedSaved(currentValue);
-
-      if (progress < 1) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      }
+      setDisplayedSaved(Math.floor(startValue + (endValue - startValue) * progress));
+      if (progress < 1) animationFrameRef.current = requestAnimationFrame(animate);
     };
-
     animationFrameRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
+    return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
   }, [totalSaved]);
 
-  useEffect(() => {
-    prevSavedRef.current = totalSaved;
-  }, [totalSaved]);
+  useEffect(() => { prevSavedRef.current = totalSaved; }, [totalSaved]);
 
   const hasLeaking = leaking > 0;
 
   return (
-    <div className="w-full bg-[#111827] rounded-2xl border border-sky-500/10 p-6">
+    <>
       <style>{`
-        @keyframes pulse-glow {
-          0%, 100% {
-            opacity: 0.8;
-            text-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
-          }
-          50% {
-            opacity: 1;
-            text-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
-          }
-        }
-        .leak-pulse {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
+        @keyframes money-pulse { 0%,100%{opacity:0.85;text-shadow:0 0 6px rgba(239,68,68,0.25)} 50%{opacity:1;text-shadow:0 0 14px rgba(239,68,68,0.45)} }
+        .leak-pulse { animation: money-pulse 2s ease-in-out infinite; }
       `}</style>
-
-      <div className="grid grid-cols-3 gap-4 text-center">
+      <div style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 12, padding: '20px 16px',
+        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, textAlign: 'center',
+        fontFamily: F,
+      }}>
         {/* Leaking */}
-        <div className="flex flex-col items-center">
+        <div>
           {hasLeaking ? (
             <>
-              <div className="text-4xl font-bold text-red-400 leak-pulse mb-2">
+              <div className="leak-pulse" style={{ fontSize: 28, fontWeight: 800, color: '#f87171', letterSpacing: '-0.02em', marginBottom: 4 }}>
                 {formatMoney(leaking)}
               </div>
-              <div className="text-xs text-gray-500 font-medium">vazando</div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                vazando/dia
+              </div>
             </>
           ) : (
             <>
-              <div className="text-2xl font-bold text-emerald-400 mb-2">
-                ✅ Sem vazamentos
-              </div>
-              <div className="text-xs text-gray-500 font-medium">nenhuma perda</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#34d399', marginBottom: 4 }}>Sem vazamentos</div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>nenhuma perda</div>
             </>
           )}
         </div>
 
         {/* Capturable */}
-        <div className="flex flex-col items-center">
-          <div className="text-4xl font-bold text-emerald-400 mb-2">
+        <div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#34d399', letterSpacing: '-0.02em', marginBottom: 4 }}>
             {formatMoney(capturable)}
           </div>
-          <div className="text-xs text-gray-500 font-medium">para capturar</div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            para capturar
+          </div>
         </div>
 
         {/* Total Saved */}
-        <div className="flex flex-col items-center">
-          <div className="text-4xl font-bold text-sky-400 mb-2">
+        <div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#0da2e7', letterSpacing: '-0.02em', marginBottom: 4 }}>
             {formatMoney(displayedSaved)}
           </div>
-          <div className="text-xs text-gray-500 font-medium">salvos</div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            total salvo
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

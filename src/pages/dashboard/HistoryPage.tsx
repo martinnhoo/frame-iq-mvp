@@ -185,7 +185,7 @@ const HistoryPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0e27] p-6">
+      <div className="min-h-screen bg-[#060709] p-6">
         <div className="max-w-4xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-32 bg-gray-800 rounded-lg" />
@@ -201,7 +201,7 @@ const HistoryPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e27] p-6">
+    <div className="min-h-screen bg-[#060709] p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
