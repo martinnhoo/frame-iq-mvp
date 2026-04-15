@@ -11,54 +11,58 @@ interface DecisionCardProps {
   isDemo?: boolean;
 }
 
-// ── Financial-grade muted palette ──
+// ── AdBrief proprietary color system ──
+// Red = deeper/wine (money risk, not form error)
+// Green = financial, not gamified
+// Teal = "brain" color for IA/smart actions
+// Purple = pattern detection
 const TYPE_CONFIG: Record<string, {
   border: string; badgeBg: string; badgeText: string; label: string;
   btnBg: string; btnHover: string; secondaryBg: string; secondaryBorder: string;
   accent: string; impactLabel: string; confirmTitle: string;
 }> = {
   kill: {
-    border: '#c53030', badgeBg: 'rgba(197,48,48,0.14)', badgeText: '#e53e3e',
-    label: 'STOP LOSS', btnBg: '#c53030', btnHover: '#9b2c2c',
-    secondaryBg: 'rgba(197,48,48,0.06)', secondaryBorder: 'rgba(197,48,48,0.18)',
-    accent: '#e53e3e', impactLabel: 'perda potencial', confirmTitle: 'Confirmar pausa',
+    border: '#B4232A', badgeBg: 'rgba(180,35,42,0.22)', badgeText: '#D63B3B',
+    label: 'STOP LOSS', btnBg: '#B4232A', btnHover: '#8A1D22',
+    secondaryBg: 'rgba(180,35,42,0.08)', secondaryBorder: 'rgba(180,35,42,0.22)',
+    accent: '#D63B3B', impactLabel: 'perda potencial', confirmTitle: 'Confirmar pausa',
   },
   fix: {
-    border: '#b7791f', badgeBg: 'rgba(183,121,31,0.14)', badgeText: '#d69e2e',
-    label: 'CORRIGIR', btnBg: '#b7791f', btnHover: '#975a16',
-    secondaryBg: 'rgba(183,121,31,0.06)', secondaryBorder: 'rgba(183,121,31,0.18)',
-    accent: '#d69e2e', impactLabel: 'recuperável', confirmTitle: 'Confirmar ação',
+    border: '#A36B1D', badgeBg: 'rgba(163,107,29,0.18)', badgeText: '#C8922A',
+    label: 'CORRIGIR', btnBg: '#A36B1D', btnHover: '#7D5216',
+    secondaryBg: 'rgba(163,107,29,0.07)', secondaryBorder: 'rgba(163,107,29,0.20)',
+    accent: '#C8922A', impactLabel: 'recuperável', confirmTitle: 'Confirmar ação',
   },
   scale: {
-    border: '#276749', badgeBg: 'rgba(39,103,73,0.14)', badgeText: '#48bb78',
-    label: 'ESCALAR', btnBg: '#276749', btnHover: '#22543d',
-    secondaryBg: 'rgba(39,103,73,0.06)', secondaryBorder: 'rgba(39,103,73,0.18)',
-    accent: '#48bb78', impactLabel: 'oportunidade', confirmTitle: 'Confirmar escala',
+    border: '#1B6E57', badgeBg: 'rgba(27,110,87,0.18)', badgeText: '#2D9B6E',
+    label: 'ESCALAR', btnBg: '#1B6E57', btnHover: '#145443',
+    secondaryBg: 'rgba(27,110,87,0.07)', secondaryBorder: 'rgba(27,110,87,0.20)',
+    accent: '#2D9B6E', impactLabel: 'oportunidade', confirmTitle: 'Confirmar escala',
   },
   pattern: {
-    border: '#553c9a', badgeBg: 'rgba(85,60,154,0.14)', badgeText: '#9f7aea',
+    border: '#553c9a', badgeBg: 'rgba(85,60,154,0.18)', badgeText: '#9f7aea',
     label: 'PADRÃO', btnBg: '#553c9a', btnHover: '#44337a',
-    secondaryBg: 'rgba(85,60,154,0.06)', secondaryBorder: 'rgba(85,60,154,0.18)',
+    secondaryBg: 'rgba(85,60,154,0.07)', secondaryBorder: 'rgba(85,60,154,0.20)',
     accent: '#9f7aea', impactLabel: '', confirmTitle: 'Confirmar ação',
   },
   insight: {
-    border: '#2b6cb0', badgeBg: 'rgba(43,108,176,0.14)', badgeText: '#63b3ed',
-    label: 'INSIGHT', btnBg: '#2b6cb0', btnHover: '#2c5282',
-    secondaryBg: 'rgba(43,108,176,0.06)', secondaryBorder: 'rgba(43,108,176,0.18)',
-    accent: '#63b3ed', impactLabel: '', confirmTitle: 'Confirmar ação',
+    border: '#1F3A5F', badgeBg: 'rgba(34,163,163,0.14)', badgeText: '#22A3A3',
+    label: 'INSIGHT', btnBg: '#1F3A5F', btnHover: '#162C48',
+    secondaryBg: 'rgba(34,163,163,0.06)', secondaryBorder: 'rgba(34,163,163,0.18)',
+    accent: '#22A3A3', impactLabel: '', confirmTitle: 'Confirmar ação',
   },
   alert: {
-    border: '#2b6cb0', badgeBg: 'rgba(43,108,176,0.14)', badgeText: '#63b3ed',
-    label: 'ALERTA', btnBg: '#2b6cb0', btnHover: '#2c5282',
-    secondaryBg: 'rgba(43,108,176,0.06)', secondaryBorder: 'rgba(43,108,176,0.18)',
-    accent: '#63b3ed', impactLabel: '', confirmTitle: 'Confirmar ação',
+    border: '#1F3A5F', badgeBg: 'rgba(34,163,163,0.14)', badgeText: '#22A3A3',
+    label: 'ALERTA', btnBg: '#1F3A5F', btnHover: '#162C48',
+    secondaryBg: 'rgba(34,163,163,0.06)', secondaryBorder: 'rgba(34,163,163,0.18)',
+    accent: '#22A3A3', impactLabel: '', confirmTitle: 'Confirmar ação',
   },
 };
 
 const CONFIDENCE_CONFIG: Record<string, { dot: string; text: string; label: string }> = {
-  high: { dot: '#48bb78', text: 'rgba(255,255,255,0.50)', label: 'Alta' },
-  medium: { dot: '#d69e2e', text: 'rgba(255,255,255,0.40)', label: 'Média' },
-  low: { dot: 'rgba(255,255,255,0.25)', text: 'rgba(255,255,255,0.30)', label: 'Baixa' },
+  high: { dot: '#2D9B6E', text: 'rgba(230,237,243,0.50)', label: 'Alta' },
+  medium: { dot: '#C8922A', text: 'rgba(230,237,243,0.40)', label: 'Média' },
+  low: { dot: 'rgba(230,237,243,0.25)', text: 'rgba(230,237,243,0.30)', label: 'Baixa' },
 };
 
 // PART 4: Direct ranking signal — clear severity
@@ -206,8 +210,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         data-decision-type={decision.type}
         style={{
           // PART 8: tighter, sharper
-          background: hovered ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.015)',
-          border: `1px solid ${hovered ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)'}`,
+          background: hovered ? '#121821' : '#0F141A',
+          border: `1px solid ${hovered ? 'rgba(230,237,243,0.08)' : 'rgba(230,237,243,0.04)'}`,
           borderLeft: `3px solid ${cfg.border}`,
           borderRadius: 3,
           padding: '12px 14px',
@@ -272,7 +276,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           {/* #2: Active indicator — stronger */}
           {isActiveAd && decision.status === 'pending' && (
             <span style={{
-              fontSize: 9.5, color: 'rgba(229,62,62,0.70)',
+              fontSize: 9.5, color: 'rgba(214,59,59,0.75)',
               fontWeight: 600,
             }}>
               Ativo — gasto contínuo
@@ -313,8 +317,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           <div style={{
             fontSize: 11, fontWeight: 500, marginBottom: 8,
             color: decision.type === 'scale'
-              ? 'rgba(72,187,120,0.75)'
-              : 'rgba(229,62,62,0.70)',
+              ? 'rgba(45,155,110,0.80)'
+              : 'rgba(214,59,59,0.75)',
           }}>
             Impacto projetado (7 dias): {decision.type === 'scale' ? '+' : '-'}{formatMoney(decision.impact_7d)}
           </div>
@@ -322,7 +326,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
 
         {/* 2. PROBLEM — headline */}
         <div style={{
-          fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.88)',
+          fontSize: 13, fontWeight: 600, color: '#E6EDF3',
           margin: '0 0 5px', lineHeight: 1.35, letterSpacing: '-0.01em',
         }}>
           {decision.headline}
@@ -366,19 +370,19 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         {decision.metrics && decision.metrics.length > 0 && (
           <div style={{
             display: 'flex', flexWrap: 'wrap', gap: 3, marginBottom: 10,
-            borderTop: '1px solid rgba(255,255,255,0.04)',
+            borderTop: '1px solid rgba(230,237,243,0.04)',
             paddingTop: 8,
           }}>
             {decision.metrics.map((m, i) => (
               <div key={i} style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.04)',
+                background: 'rgba(230,237,243,0.02)',
+                border: '1px solid rgba(230,237,243,0.04)',
                 borderRadius: 2, padding: '3px 7px', fontSize: 10.5,
                 display: 'flex', alignItems: 'baseline', gap: 3,
               }}>
-                <span style={{ color: 'rgba(255,255,255,0.30)', fontWeight: 500 }}>{m.key}</span>
+                <span style={{ color: '#8B949E', fontWeight: 500 }}>{m.key}</span>
                 <span style={{
-                  color: m.trend === 'down' ? '#e53e3e' : m.trend === 'up' ? '#48bb78' : 'rgba(255,255,255,0.60)',
+                  color: m.trend === 'down' ? '#D63B3B' : m.trend === 'up' ? '#2D9B6E' : '#8B949E',
                   fontWeight: 600, fontSize: 11,
                 }}>
                   {m.value}
@@ -396,8 +400,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         {/* Action recommendation — "decision box" */}
         {recItems.length > 0 && (
           <div style={{
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(230,237,243,0.04)',
+            border: '1px solid rgba(230,237,243,0.07)',
             borderLeft: `3px solid ${cfg.border}`,
             borderRadius: 3,
             padding: '12px 14px',
@@ -423,7 +427,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         {/* Micro-trigger: urgency on kill cards */}
         {decision.type === 'kill' && decision.status === 'pending' && decision.impact_daily > 0 && (
           <div style={{
-            fontSize: 10, color: 'rgba(229,62,62,0.55)',
+            fontSize: 10, color: 'rgba(180,35,42,0.60)',
             fontWeight: 500, marginBottom: 8,
           }}>
             Cada hora ativo mantém esse nível de perda
@@ -483,7 +487,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           {actionFeedback && (
             <span style={{
               fontSize: 11, fontWeight: 500, marginLeft: 4,
-              color: actionFeedback.type === 'success' ? '#48bb78' : '#e53e3e',
+              color: actionFeedback.type === 'success' ? '#2D9B6E' : '#D63B3B',
             }}>
               {actionFeedback.msg}
             </span>

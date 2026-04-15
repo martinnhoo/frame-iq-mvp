@@ -14,7 +14,7 @@ interface ConfirmModalProps {
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
-  open, title, description, confirmLabel, confirmColor = '#c53030',
+  open, title, description, confirmLabel, confirmColor = '#B4232A',
   onConfirm, onCancel, loading = false,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -37,14 +37,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       onClick={(e) => { if (e.target === overlayRef.current) onCancel(); }}
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,0.65)',
+        background: 'rgba(0,0,0,0.70)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 20,
       }}
     >
       <div style={{
-        background: '#111318',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: '#0F141A',
+        border: '1px solid rgba(230,237,243,0.08)',
         borderRadius: 4,
         padding: '20px 24px',
         maxWidth: 420, width: '100%',
@@ -52,14 +52,15 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       }}>
         <h3 style={{
           fontSize: 15, fontWeight: 700,
-          color: 'rgba(255,255,255,0.90)',
+          color: '#E6EDF3',
           margin: '0 0 8px', letterSpacing: '-0.01em',
         }}>
           {title}
         </h3>
         <p style={{
-          fontSize: 13, color: 'rgba(255,255,255,0.50)',
+          fontSize: 13, color: '#8B949E',
           margin: '0 0 20px', lineHeight: 1.5,
+          whiteSpace: 'pre-line',
         }}>
           {description}
         </p>
@@ -68,9 +69,9 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             onClick={onCancel}
             disabled={loading}
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              color: 'rgba(255,255,255,0.50)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(230,237,243,0.04)',
+              color: '#8B949E',
+              border: '1px solid rgba(230,237,243,0.08)',
               borderRadius: 3, padding: '7px 14px',
               fontSize: 12, fontWeight: 600,
               cursor: loading ? 'not-allowed' : 'pointer',

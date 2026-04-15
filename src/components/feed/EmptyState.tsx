@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatMoney } from '../../lib/format';
 
-const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'DM Mono', 'JetBrains Mono', monospace";
+const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
 interface TodaySummary {
   paused: number;
@@ -91,12 +90,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <h2 style={{
-            fontSize: 18, fontWeight: 700, color: '#fff',
+            fontSize: 18, fontWeight: 700, color: '#E6EDF3',
             margin: '0 0 6px', letterSpacing: '-0.02em',
           }}>
             O que você quer fazer?
           </h2>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: '#8B949E', margin: 0, lineHeight: 1.5 }}>
             Funciona melhor com o Meta Ads conectado
           </p>
         </div>
@@ -109,8 +108,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         }}>
           {/* Block 1 — Começar pelos criativos */}
           <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: '#0F141A',
+            border: '1px solid rgba(230,237,243,0.06)',
             borderRadius: 12,
             padding: '28px 24px',
             display: 'flex', flexDirection: 'column', gap: 16,
@@ -126,13 +125,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             </div>
             <div>
               <h3 style={{
-                fontSize: 15, fontWeight: 700, color: '#fff',
+                fontSize: 15, fontWeight: 700, color: '#E6EDF3',
                 margin: '0 0 6px', letterSpacing: '-0.01em',
               }}>
                 Começar pelos criativos
               </h3>
               <p style={{
-                fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
+                fontSize: 12.5, color: '#8B949E',
                 margin: 0, lineHeight: 1.5,
               }}>
                 Explore ideias iniciais de anúncios antes de rodar campanhas
@@ -142,8 +141,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               onClick={() => navigate('/dashboard/ai')}
               style={{
                 background: 'transparent',
-                color: 'rgba(255,255,255,0.60)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                color: 'rgba(230,237,243,0.60)',
+                border: '1px solid rgba(230,237,243,0.12)',
                 padding: '9px 20px', borderRadius: 8,
                 fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', fontFamily: F,
@@ -151,14 +150,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 transition: 'all 0.15s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)';
+                e.currentTarget.style.background = 'rgba(230,237,243,0.04)';
+                e.currentTarget.style.borderColor = 'rgba(230,237,243,0.18)';
                 e.currentTarget.style.color = '#fff';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-                e.currentTarget.style.color = 'rgba(255,255,255,0.60)';
+                e.currentTarget.style.borderColor = 'rgba(230,237,243,0.12)';
+                e.currentTarget.style.color = 'rgba(230,237,243,0.60)';
               }}
             >
               Falar com a IA
@@ -184,13 +183,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             </div>
             <div>
               <h3 style={{
-                fontSize: 15, fontWeight: 700, color: '#fff',
+                fontSize: 15, fontWeight: 700, color: '#E6EDF3',
                 margin: '0 0 6px', letterSpacing: '-0.01em',
               }}>
                 Analisar campanhas
               </h3>
               <p style={{
-                fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
+                fontSize: 12.5, color: '#8B949E',
                 margin: 0, lineHeight: 1.5,
               }}>
                 Conecte sua conta e identifique perdas e oportunidades
@@ -199,8 +198,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <button
               onClick={() => navigate('/dashboard/accounts')}
               style={{
-                background: '#0ea5e9',
-                color: '#fff',
+                background: '#22A3A3',
+                color: '#E6EDF3',
                 border: 'none',
                 padding: '9px 20px', borderRadius: 8,
                 fontSize: 13, fontWeight: 600,
@@ -209,10 +208,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 transition: 'all 0.15s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#0d94d1';
+                e.currentTarget.style.background = '#1B8A8A';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#0ea5e9';
+                e.currentTarget.style.background = '#22A3A3';
               }}
             >
               Conectar Meta Ads
@@ -227,8 +226,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   if (hasActivity || hasSaved) {
     return (
       <div style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: '#0F141A',
+        border: '1px solid rgba(230,237,243,0.06)',
         borderRadius: 12, padding: '40px 32px',
         textAlign: 'center', fontFamily: F,
       }}>
@@ -241,48 +240,48 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         }}>
           <div style={{
             width: 10, height: 10, borderRadius: '50%',
-            background: '#34d399',
+            background: '#2D9B6E',
             boxShadow: '0 0 8px rgba(52,211,153,0.4)',
             animation: 'es-pulse 2s ease-in-out infinite',
           }} />
         </div>
 
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#E6EDF3', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
           Tudo sob controle
         </h2>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+        <p style={{ fontSize: 13, color: '#8B949E', margin: 0 }}>
           Nenhuma ação necessária agora
         </p>
 
         <div style={{
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px solid rgba(255,255,255,0.05)',
+          background: 'rgba(230,237,243,0.02)',
+          border: '1px solid rgba(230,237,243,0.05)',
           borderRadius: 10, padding: '16px 20px', textAlign: 'left',
           maxWidth: 420, margin: '24px auto 0',
         }}>
           <h3 style={{
-            fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.30)',
+            fontSize: 10.5, fontWeight: 600, color: 'rgba(139,148,158,0.70)',
             textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px',
           }}>
             Resultado do dia
           </h3>
           {hasSaved && (
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: hasActivity ? 12 : 0 }}>
-              <span style={{ fontSize: 20, fontWeight: 800, color: '#34d399', fontFamily: M, letterSpacing: '-0.02em' }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: '#2D9B6E', fontFamily: F, letterSpacing: '-0.02em' }}>
                 {formatMoney(todaySummary.savedToday)}
               </span>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>economizado hoje</span>
+              <span style={{ fontSize: 12, color: '#8B949E' }}>economizado hoje</span>
             </div>
           )}
           {hasActivity && (
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               {todaySummary.paused > 0 && (
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)' }}>
+                <span style={{ fontSize: 12, color: '#8B949E' }}>
                   {todaySummary.paused} pausado{todaySummary.paused !== 1 ? 's' : ''}
                 </span>
               )}
               {todaySummary.scaled > 0 && (
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)' }}>
+                <span style={{ fontSize: 12, color: '#8B949E' }}>
                   {todaySummary.scaled} escalado{todaySummary.scaled !== 1 ? 's' : ''}
                 </span>
               )}
@@ -322,20 +321,20 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             </span>
           </div>
           <h2 style={{
-            fontSize: 18, fontWeight: 700, color: '#fff',
+            fontSize: 18, fontWeight: 700, color: '#E6EDF3',
             margin: '0 0 6px', letterSpacing: '-0.02em',
           }}>
             Enquanto isso, crie seus anúncios
           </h2>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: '#8B949E', margin: 0, lineHeight: 1.5 }}>
             Use a IA para gerar ideias de criativos e roteiros
           </p>
         </div>
 
         {/* Single box — Criativos */}
         <div style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.06)',
+          background: '#0F141A',
+          border: '1px solid rgba(230,237,243,0.06)',
           borderRadius: 12,
           padding: '28px 24px',
           maxWidth: 420, margin: '0 auto',
@@ -352,13 +351,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           </div>
           <div>
             <h3 style={{
-              fontSize: 15, fontWeight: 700, color: '#fff',
+              fontSize: 15, fontWeight: 700, color: '#E6EDF3',
               margin: '0 0 6px', letterSpacing: '-0.01em',
             }}>
               Começar pelos criativos
             </h3>
             <p style={{
-              fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
+              fontSize: 12.5, color: '#8B949E',
               margin: 0, lineHeight: 1.5,
             }}>
               Explore ideias de anúncios, gere roteiros e hooks antes de ativar campanhas
@@ -367,8 +366,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           <button
             onClick={() => navigate('/dashboard/ai')}
             style={{
-              background: '#0ea5e9',
-              color: '#fff',
+              background: '#22A3A3',
+              color: '#E6EDF3',
               border: 'none',
               padding: '10px 20px', borderRadius: 8,
               fontSize: 13, fontWeight: 600,
@@ -376,10 +375,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               transition: 'all 0.15s',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#0d94d1';
+              e.currentTarget.style.background = '#1B8A8A';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#0ea5e9';
+              e.currentTarget.style.background = '#22A3A3';
             }}
           >
             Falar com a IA
@@ -388,7 +387,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
         {/* Subtle hint */}
         <p style={{
-          textAlign: 'center', fontSize: 11.5, color: 'rgba(255,255,255,0.18)',
+          textAlign: 'center', fontSize: 11.5, color: 'rgba(230,237,243,0.18)',
           margin: '20px 0 0', lineHeight: 1.5,
         }}>
           Quando suas campanhas estiverem ativas, as decisões aparecerão aqui automaticamente.
@@ -400,8 +399,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   // ── Still scanning — progress bar + steps ──
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.03)',
-      border: '1px solid rgba(255,255,255,0.06)',
+      background: '#0F141A',
+      border: '1px solid rgba(230,237,243,0.06)',
       borderRadius: 12, padding: '36px 32px',
       fontFamily: F,
       minHeight: 280,
@@ -420,7 +419,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           <svg width="28" height="28" viewBox="0 0 28 28" style={{ animation: 'es-radar-rotate 2.5s linear infinite' }}>
             <circle cx="14" cy="14" r="12" fill="none" stroke="rgba(14,165,233,0.15)" strokeWidth="1.5"/>
             <circle cx="14" cy="14" r="7" fill="none" stroke="rgba(14,165,233,0.08)" strokeWidth="1"/>
-            <circle cx="14" cy="14" r="2.5" fill="#0ea5e9"/>
+            <circle cx="14" cy="14" r="2.5" fill="#22A3A3"/>
             {/* Sweep wedge */}
             <path
               d="M14 14 L14 2 A12 12 0 0 1 24.39 8.0 Z"
@@ -430,10 +429,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           </svg>
         </div>
 
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#E6EDF3', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
           Analisando sua conta
         </h2>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: '#8B949E', margin: 0, lineHeight: 1.5 }}>
           Processando dados para gerar as primeiras decisões
         </p>
       </div>
@@ -442,12 +441,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <div style={{
         maxWidth: 380, margin: '0 auto 24px',
         height: 3, borderRadius: 2,
-        background: 'rgba(255,255,255,0.06)',
+        background: 'rgba(230,237,243,0.06)',
         overflow: 'hidden',
       }}>
         <div style={{
           height: '100%', borderRadius: 2,
-          background: '#0ea5e9',
+          background: '#22A3A3',
           width: `${progress}%`,
           transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
         }} />
@@ -478,24 +477,24 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                   ? 'rgba(16,185,129,0.15)'
                   : isActive
                     ? 'rgba(14,165,233,0.15)'
-                    : 'rgba(255,255,255,0.04)',
+                    : 'rgba(230,237,243,0.04)',
                 border: `1.5px solid ${
-                  isDone ? '#10b981' : isActive ? '#0ea5e9' : 'rgba(255,255,255,0.08)'
+                  isDone ? '#1B6E57' : isActive ? '#22A3A3' : 'rgba(230,237,243,0.08)'
                 }`,
                 transition: 'all 0.4s ease',
               }}>
                 {isDone ? (
                   <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                    <path d="M2.5 6L5 8.5L9.5 3.5" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2.5 6L5 8.5L9.5 3.5" stroke="#1B6E57" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 ) : isActive ? (
                   <div style={{
                     width: 6, height: 6, borderRadius: '50%',
-                    background: '#0ea5e9',
+                    background: '#22A3A3',
                     animation: 'es-blink 1.2s ease-in-out infinite',
                   }} />
                 ) : (
-                  <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.20)' }}>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(139,148,158,0.50)' }}>
                     {i + 1}
                   </span>
                 )}
@@ -506,10 +505,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 fontSize: 13, fontFamily: F,
                 fontWeight: isDone || isActive ? 500 : 400,
                 color: isDone
-                  ? 'rgba(255,255,255,0.50)'
+                  ? 'rgba(230,237,243,0.50)'
                   : isActive
                     ? '#fff'
-                    : 'rgba(255,255,255,0.25)',
+                    : 'rgba(230,237,243,0.25)',
                 transition: 'color 0.3s ease',
               }}>
                 {label}
@@ -519,7 +518,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               {isDone && (
                 <span style={{
                   marginLeft: 'auto', fontSize: 10, fontWeight: 500,
-                  color: '#10b981', opacity: 0.7,
+                  color: '#1B6E57', opacity: 0.7,
                 }}>
                   ✓
                 </span>
@@ -531,7 +530,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
       {/* Tip */}
       <p style={{
-        textAlign: 'center', fontSize: 11.5, color: 'rgba(255,255,255,0.20)',
+        textAlign: 'center', fontSize: 11.5, color: 'rgba(139,148,158,0.50)',
         margin: '24px 0 0', lineHeight: 1.5,
       }}>
         Isso leva menos de um minuto.

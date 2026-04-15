@@ -351,15 +351,15 @@ const FeedPage: React.FC = () => {
   // ── Loading skeleton ──
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#08090b', padding: '24px 20px' }}>
+      <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.04)', borderRadius: 3, marginBottom: 6 }} />
-            <div style={{ width: 200, height: 10, background: 'rgba(255,255,255,0.02)', borderRadius: 3 }} />
+            <div style={{ width: 100, height: 16, background: 'rgba(230,237,243,0.04)', borderRadius: 3, marginBottom: 6 }} />
+            <div style={{ width: 200, height: 10, background: 'rgba(230,237,243,0.02)', borderRadius: 3 }} />
           </div>
           {[1,2,3].map(i => (
             <div key={i} style={{
-              background: 'rgba(255,255,255,0.015)', borderRadius: 4,
+              background: '#0F141A', borderRadius: 4,
               border: '1px solid rgba(255,255,255,0.04)', padding: 16,
               marginBottom: 8, height: 120,
             }} />
@@ -372,10 +372,10 @@ const FeedPage: React.FC = () => {
   // ── No Meta connection ──
   if (!metaConnected) {
     return (
-      <div style={{ minHeight: '100vh', background: '#08090b', padding: '24px 20px' }}>
+      <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>
               Feed
             </h1>
           </div>
@@ -390,7 +390,7 @@ const FeedPage: React.FC = () => {
   const urgentCount = pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#08090b', padding: '24px 20px' }}>
+    <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         {/* Header — minimal */}
         <div style={{ marginBottom: 16 }}>
@@ -398,7 +398,7 @@ const FeedPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <h1 style={{
                 fontSize: 16, fontWeight: 700,
-                color: 'rgba(255,255,255,0.85)',
+                color: '#E6EDF3',
                 fontFamily: F, letterSpacing: '-0.02em', margin: 0,
               }}>
                 Feed
@@ -406,9 +406,9 @@ const FeedPage: React.FC = () => {
               {isDemo && (
                 <span style={{
                   fontSize: 9, fontWeight: 700,
-                  color: 'rgba(255,255,255,0.35)',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  color: '#8B949E',
+                  background: 'rgba(230,237,243,0.04)',
+                  border: '1px solid rgba(230,237,243,0.06)',
                   padding: '2px 6px',
                   borderRadius: 3,
                   letterSpacing: '0.08em',
@@ -421,7 +421,7 @@ const FeedPage: React.FC = () => {
               {pendingDecisions.length > 0 && (
                 <span style={{
                   fontSize: 11, fontWeight: 500,
-                  color: 'rgba(255,255,255,0.25)',
+                  color: 'rgba(139,148,158,0.60)',
                   fontFamily: F,
                 }}>
                   {pendingDecisions.length} {pendingDecisions.length === 1 ? 'item' : 'itens'}
@@ -431,9 +431,9 @@ const FeedPage: React.FC = () => {
                 <button
                   onClick={() => navigate('/dashboard/accounts')}
                   style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    color: 'rgba(255,255,255,0.45)',
-                    border: '1px solid rgba(255,255,255,0.06)',
+                    background: 'rgba(230,237,243,0.04)',
+                    color: '#8B949E',
+                    border: '1px solid rgba(230,237,243,0.06)',
                     borderRadius: 4, padding: '4px 10px',
                     fontSize: 11, fontWeight: 600,
                     cursor: 'pointer', fontFamily: F,
@@ -449,15 +449,15 @@ const FeedPage: React.FC = () => {
         {/* Demo explanation — concise, with prominent CTA */}
         {isDemo && (
           <div style={{
-            background: 'rgba(255,255,255,0.015)',
-            border: '1px solid rgba(255,255,255,0.05)',
+            background: '#0F141A',
+            border: '1px solid rgba(230,237,243,0.05)',
             borderRadius: 3, padding: '10px 14px',
             marginBottom: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             gap: 16,
           }}>
             <span style={{
-              fontSize: 12, color: 'rgba(255,255,255,0.38)',
+              fontSize: 12, color: '#8B949E',
               fontFamily: F, lineHeight: 1.5,
             }}>
               Dados simulados. Sincronize sua conta Meta para análise real.
@@ -465,15 +465,15 @@ const FeedPage: React.FC = () => {
             <button
               onClick={() => navigate('/dashboard/accounts')}
               style={{
-                background: '#2b6cb0', color: '#fff', border: 'none',
+                background: '#1F3A5F', color: '#fff', border: 'none',
                 borderRadius: 3, padding: '7px 14px',
                 fontSize: 12, fontWeight: 700, fontFamily: F,
                 cursor: 'pointer', whiteSpace: 'nowrap',
                 transition: 'background 0.1s',
                 letterSpacing: '-0.01em',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#2c5282'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#2b6cb0'; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#162C48'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#1F3A5F'; }}
             >
               Sincronizar conta
             </button>
@@ -512,13 +512,13 @@ const FeedPage: React.FC = () => {
           }}>
             <span style={{
               width: 6, height: 6, borderRadius: '50%',
-              background: '#48bb78',
-              boxShadow: '0 0 4px rgba(72,187,120,0.4)',
+              background: '#2D9B6E',
+              boxShadow: '0 0 4px rgba(45,155,110,0.4)',
               display: 'inline-block',
               animation: 'pulse 2s ease-in-out infinite',
             }} />
             <span style={{
-              fontSize: 10.5, color: 'rgba(255,255,255,0.22)',
+              fontSize: 10.5, color: 'rgba(139,148,158,0.50)',
               fontFamily: F, fontWeight: 500,
             }}>
               Monitorando performance em tempo real — última análise há {lastAnalysisMin} min

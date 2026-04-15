@@ -28,8 +28,8 @@ function Pill({ count, label, impact, color, hoverBorder, type }: PillProps) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: 'rgba(255,255,255,0.015)',
-        border: `1px solid ${hov ? hoverBorder : 'rgba(255,255,255,0.04)'}`,
+        background: '#0F141A',
+        border: `1px solid ${hov ? hoverBorder : 'rgba(230,237,243,0.04)'}`,
         borderRadius: 3, padding: '5px 9px',
         cursor: 'pointer', fontFamily: F,
         display: 'flex', alignItems: 'center', gap: 6,
@@ -43,13 +43,13 @@ function Pill({ count, label, impact, color, hoverBorder, type }: PillProps) {
       }}>
         {count}
       </span>
-      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.32)', fontWeight: 500 }}>
+      <span style={{ fontSize: 11, color: '#8B949E', fontWeight: 500, opacity: 0.7 }}>
         {label}
       </span>
       {impact > 0 && (
         <span style={{
           fontSize: 11, fontWeight: 600,
-          color: 'rgba(255,255,255,0.40)', fontFamily: F,
+          color: '#8B949E', fontFamily: F,
           marginLeft: 2,
         }}>
           {formatMoney(impact)}
@@ -75,20 +75,20 @@ export const SummaryBar: React.FC<SummaryBarProps> = ({ decisions }) => {
     }}>
       {killDecisions.length > 0 && (
         <Pill count={killDecisions.length} label="stop loss" impact={killImpact}
-          color="#e53e3e" hoverBorder="rgba(197,48,48,0.35)" type="kill" />
+          color="#D63B3B" hoverBorder="rgba(180,35,42,0.40)" type="kill" />
       )}
       {fixDecisions.length > 0 && (
         <Pill count={fixDecisions.length} label="corrigir" impact={fixImpact}
-          color="#d69e2e" hoverBorder="rgba(183,121,31,0.35)" type="fix" />
+          color="#C8922A" hoverBorder="rgba(163,107,29,0.40)" type="fix" />
       )}
       {scaleDecisions.length > 0 && (
         <Pill count={scaleDecisions.length} label="escalar" impact={scaleImpact}
-          color="#48bb78" hoverBorder="rgba(39,103,73,0.35)" type="scale" />
+          color="#2D9B6E" hoverBorder="rgba(27,110,87,0.40)" type="scale" />
       )}
       {patternDecisions.length > 0 && (
         <Pill count={patternDecisions.length}
           label={patternDecisions.length === 1 ? 'padrão' : 'padrões'}
-          impact={0} color="#9f7aea" hoverBorder="rgba(85,60,154,0.35)" type="pattern" />
+          impact={0} color="#9f7aea" hoverBorder="rgba(85,60,154,0.40)" type="pattern" />
       )}
     </div>
   );
