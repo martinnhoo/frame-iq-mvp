@@ -402,12 +402,46 @@ const FeedPage: React.FC = () => {
                     cursor: 'pointer', fontFamily: F,
                   }}
                 >
-                  Conectar conta
+                  Sincronizar
                 </button>
               )}
             </div>
           </div>
         </div>
+
+        {/* Demo explanation — concise, with prominent CTA */}
+        {isDemo && (
+          <div style={{
+            background: 'rgba(255,255,255,0.015)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: 4, padding: '12px 16px',
+            marginBottom: 14,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 16,
+          }}>
+            <span style={{
+              fontSize: 12, color: 'rgba(255,255,255,0.38)',
+              fontFamily: F, lineHeight: 1.5,
+            }}>
+              Dados simulados. Sincronize sua conta Meta para análise real.
+            </span>
+            <button
+              onClick={() => navigate('/dashboard/accounts')}
+              style={{
+                background: '#2b6cb0', color: '#fff', border: 'none',
+                borderRadius: 4, padding: '8px 16px',
+                fontSize: 12, fontWeight: 700, fontFamily: F,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'background 0.1s',
+                letterSpacing: '-0.01em',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#2c5282'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#2b6cb0'; }}
+            >
+              Sincronizar conta
+            </button>
+          </div>
+        )}
 
         {/* Money tracker */}
         {tracker && (
