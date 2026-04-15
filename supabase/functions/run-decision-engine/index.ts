@@ -488,6 +488,8 @@ function enrichWithGroupNotes(items: FeedItem[]): void {
 
 function buildMetricsSnapshot(ad: AggregatedMetrics, baseline: AccountBaseline): Record<string, unknown> {
   return {
+    ad_name: ad.ad_name,
+    campaign_name: ad.campaign_name,
     impressions: ad.impressions,
     clicks: ad.clicks,
     spend_cents: ad.spend_cents,
@@ -1441,6 +1443,48 @@ serve(async (req: Request) => {
       updateMoneyTracker(account_id, allItems),
       persistPatterns(account_id, allItems),
     ]);
+
+    // 6b. Telegram kill alerts (fire-and-forget — never blocks the response)
+    try {
+      const killItems = allItems
+        .filter(d => d.type === "kill" && d.score >= 70)
+        .slice(0, 3); // max 3 alerts per run
+
+      if (killItems.length > 0) {
+        // Look up user_id from ad_accounts
+        const { data: acctData } = await supabase
+          .from("ad_accounts")
+          .select("user_id")
+          .eq("id", account_id)
+          .single();
+
+        if (acctData?.user_id) {
+          const feedUrl = `${Deno.env.get("APP_URL") ?? "https://adbrief.pro"}/dashboard`;
+
+          await Promise.allSettled(
+            killItems.map(item =>
+              supabase.functions.invoke("send-telegram", {
+                body: {
+                  user_id: acctData.user_id,
+                  payload: {
+                    type: "kill_alert" as const,
+                    adName: item.metrics_snapshot?.ad_name || item.headline,
+                    campaignName: item.metrics_snapshot?.campaign_name || "",
+                    dailyWaste: item.impact_daily_cents,
+                    waste7d: item.impact_7d_cents,
+                    reason: item.reason,
+                    feedUrl,
+                  },
+                },
+              })
+            )
+          );
+        }
+      }
+    } catch (e) {
+      // Never fail the engine because Telegram failed
+      console.error("[run-decision-engine] Telegram kill alerts failed:", e);
+    }
 
     // 7. Response
     return new Response(

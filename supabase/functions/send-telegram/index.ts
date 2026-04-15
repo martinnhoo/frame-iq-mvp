@@ -153,14 +153,33 @@ serve(async (req) => {
       payload: TelegramPayload;
     };
 
-    // Get user's telegram settings
-    const { data: settings } = await supabase
-      .from("user_settings")
-      .select("telegram_chat_id, telegram_enabled")
-      .eq("user_id", user_id)
-      .single();
+    // Get user's telegram chat_id — check both tables
+    let chatId: string | null = null;
 
-    if (!settings?.telegram_enabled || !settings?.telegram_chat_id) {
+    // Primary: telegram_connections (new pairing flow)
+    const { data: conn } = await supabase
+      .from("telegram_connections")
+      .select("chat_id")
+      .eq("user_id", user_id)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (conn?.chat_id) {
+      chatId = String(conn.chat_id);
+    } else {
+      // Fallback: legacy user_settings
+      const { data: settings } = await supabase
+        .from("user_settings")
+        .select("telegram_chat_id, telegram_enabled")
+        .eq("user_id", user_id)
+        .single();
+
+      if (settings?.telegram_enabled && settings?.telegram_chat_id) {
+        chatId = settings.telegram_chat_id;
+      }
+    }
+
+    if (!chatId) {
       return new Response(
         JSON.stringify({ sent: false, reason: "Telegram not configured" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -168,7 +187,7 @@ serve(async (req) => {
     }
 
     const message = buildMessage(payload);
-    await sendTelegramMessage(settings.telegram_chat_id, message);
+    await sendTelegramMessage(chatId, message);
 
     // Log notification
     await supabase.from("notifications").insert({

@@ -151,10 +151,10 @@ async function executeAction(
 
   const userId = (user as { id: string }).id;
 
-  // Get the ad account ID from the decision
+  // Get the ad account ID and headline from the decision
   const { data: decisionData, error: decisionError } = await supabase
     .from("decisions")
-    .select("ad_account_id, estimated_daily_impact")
+    .select("ad_account_id, estimated_daily_impact, headline, type")
     .eq("id", decision_id)
     .eq("user_id", userId)
     .single();
@@ -367,6 +367,36 @@ async function executeAction(
         console.error("Failed to update money tracker savings:", trackerError);
       }
     }
+  }
+
+  // Send Telegram notification (fire-and-forget — never blocks the response)
+  try {
+    const targetName = decisionData.headline || target_meta_id;
+    const dailyImpact = estimated_daily_impact || 0;
+
+    // Get total saved for context
+    const { data: tracker } = await supabase
+      .from("money_tracker")
+      .select("total_saved")
+      .eq("ad_account_id", adAccountId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    await supabase.functions.invoke("send-telegram", {
+      body: {
+        user_id: userId,
+        payload: {
+          type: "action_feedback",
+          actionType: action_type,
+          targetName,
+          dailyImpact,
+          totalSaved: tracker?.total_saved || 0,
+        },
+      },
+    });
+  } catch (e) {
+    // Never fail the action because Telegram failed
+    console.error("[execute-action] Telegram notification failed:", e);
   }
 
   return {
