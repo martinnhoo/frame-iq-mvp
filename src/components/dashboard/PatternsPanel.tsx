@@ -1,8 +1,9 @@
 /**
- * PatternsPanel — "WHAT WORKS" — Core intelligence section.
+ * PatternsPanel — "O QUE FUNCIONA" — Core intelligence section.
  *
  * Elevated from sidebar widget to a prominent intelligence block.
  * Displays validated patterns with clear impact, confidence, and actionability.
+ * All labels in PT-BR, numbers formatted with context.
  */
 import { useState, useEffect, useCallback } from "react";
 import { TrendingUp, TrendingDown, Sparkles, ChevronRight, Loader2, RefreshCw } from "lucide-react";
@@ -39,6 +40,137 @@ interface PatternsPanelProps {
   compact?: boolean;
 }
 
+// ── Humanization helpers ──
+
+const HOOK_TYPE_LABELS: Record<string, string> = {
+  urgency: "Urgência",
+  question: "Pergunta",
+  curiosity: "Curiosidade",
+  social_proof: "Prova social",
+  benefit: "Benefício direto",
+  pain_point: "Dor do cliente",
+  storytelling: "Storytelling",
+  statistic: "Estatística",
+  testimonial: "Depoimento",
+  cta: "Chamada para ação",
+  humor: "Humor",
+  controversy: "Controvérsia",
+  fear: "Medo",
+  authority: "Autoridade",
+  scarcity: "Escassez",
+  newness: "Novidade",
+  comparison: "Comparação",
+  emotional: "Emocional",
+};
+
+const FORMAT_LABELS: Record<string, string> = {
+  video: "Vídeo",
+  image: "Imagem",
+  carousel: "Carrossel",
+  ugc: "UGC",
+  static: "Estático",
+  reels: "Reels",
+  stories: "Stories",
+};
+
+const TEXT_DENSITY_LABELS: Record<string, string> = {
+  low: "Pouco texto",
+  medium: "Texto moderado",
+  high: "Muito texto",
+  none: "Sem texto",
+};
+
+function humanizeHookType(raw: string): string {
+  return HOOK_TYPE_LABELS[raw.toLowerCase()] || raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+function humanizeFormat(raw: string): string {
+  return FORMAT_LABELS[raw.toLowerCase()] || raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+function humanizeTextDensity(raw: string): string {
+  return TEXT_DENSITY_LABELS[raw.toLowerCase()] || raw;
+}
+
+/** Convert raw pattern data into a clean PT-BR display label */
+function humanizePatternLabel(p: DetectedPattern): string {
+  // If we have a good AI-generated insight, clean and use it
+  if (p.insight_text && p.insight_text.length > 10) {
+    // Clean up any raw numbers in insight text
+    let cleaned = p.insight_text;
+    // Truncate if too long
+    if (cleaned.length > 100) cleaned = cleaned.slice(0, 97) + "...";
+    return cleaned;
+  }
+
+  const featureType = p.feature_type || p.variables?.feature_type || "";
+  const featureValue = p.feature_value || p.variables?.feature_value || "";
+
+  switch (featureType) {
+    case "hook_type":
+      return `Hook com ${humanizeHookType(featureValue).toLowerCase()} se destaca`;
+    case "hook_presence":
+      return featureValue === "with_hook"
+        ? "Anúncios com hook performam melhor"
+        : "Anúncios sem hook nesta conta";
+    case "format":
+      return `Formato ${humanizeFormat(featureValue)} se destaca`;
+    case "text_density":
+      return `${humanizeTextDensity(featureValue)} nos criativos`;
+    case "campaign":
+      return `Campanha: ${featureValue}`;
+    case "adset":
+      return `Público: ${featureValue}`;
+    case "gap":
+      return `Formato ${humanizeFormat(featureValue)} ainda não testado`;
+    case "deviation":
+      return p.label || "Desvio detectado";
+    case "combination": {
+      const parts = featureValue.split("+");
+      const formatted = parts.map((part) => {
+        const trimmed = part.trim();
+        if (trimmed === "hook") return "com hook";
+        if (trimmed === "no_hook") return "sem hook";
+        return humanizeFormat(trimmed);
+      });
+      return `Combinação: ${formatted.join(" + ")}`;
+    }
+    case "status":
+      return `Status: ${featureValue}`;
+    default:
+      // Fallback: try to clean up the raw label
+      if (p.label) {
+        return p.label
+          .replace(/\bads\b/gi, "anúncios")
+          .replace(/\bAds\b/g, "Anúncios")
+          .replace(/\bHook:\s*/gi, "Hook: ")
+          .replace(/\bText density:\s*/gi, "Densidade de texto: ");
+      }
+      return "Padrão detectado";
+  }
+}
+
+/** Format CTR for display — handles both decimal (0.079) and percentage (7.9) formats */
+function formatCtr(value: number): string {
+  // If value > 1, it's already in percentage form
+  const pct = value > 1 ? value : value * 100;
+  return pct.toFixed(1) + "%";
+}
+
+/** Format confidence as human-readable PT-BR */
+function formatConfidence(confidence: number): { label: string; color: string } {
+  const pct = Math.round(confidence * 100);
+  if (pct >= 70) return { label: "Alta confiança", color: "rgba(52,211,153,0.50)" };
+  if (pct >= 40) return { label: "Confiança moderada", color: "rgba(245,158,11,0.50)" };
+  if (pct >= 20) return { label: "Poucos dados", color: "rgba(255,255,255,0.22)" };
+  return { label: "Dados iniciais", color: "rgba(255,255,255,0.15)" };
+}
+
+/** Pluralize "anúncio" correctly */
+function pluralAds(count: number): string {
+  return count === 1 ? "1 anúncio" : `${count} anúncios`;
+}
+
 export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatternsLoaded, compact = false }: PatternsPanelProps) {
   const [patterns, setPatterns] = useState<DetectedPattern[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,18 +190,16 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
       const list = data?.patterns || [];
       const mapped: DetectedPattern[] = list.map((p: any) => ({
         ...p,
-        label: p.variables?.feature_value
-          ? `${p.variables.feature_type}: ${p.variables.feature_value}`
-          : p.pattern_key?.split(":").slice(2).join(":") || "Pattern",
-        feature_type: p.variables?.feature_type,
-        feature_value: p.variables?.feature_value,
+        label: p.label || p.pattern_key?.split(":").slice(2).join(":") || "Padrão",
+        feature_type: p.variables?.feature_type || p.feature_type,
+        feature_value: p.variables?.feature_value || p.feature_value,
       }));
       setPatterns(mapped);
       if (data?.alignment) setAlignment(data.alignment);
       onPatternsLoaded?.(mapped.length);
     } catch (err) {
       console.error("PatternsPanel fetch error:", err);
-      setError("Failed to load patterns");
+      setError("Erro ao carregar padrões");
     } finally {
       setLoading(false);
     }
@@ -87,11 +217,13 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
       const mapped: DetectedPattern[] = list.map((p: any) => ({
         ...p,
         label: p.label || `${p.feature_type}: ${p.feature_value}`,
+        feature_type: p.feature_type || p.variables?.feature_type,
+        feature_value: p.feature_value || p.variables?.feature_value,
       }));
       setPatterns(mapped);
     } catch (err) {
       console.error("PatternsPanel detect error:", err);
-      setError("Detection failed");
+      setError("Detecção falhou");
     } finally {
       setDetecting(false);
     }
@@ -118,7 +250,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
       borderRadius: 6,
       overflow: "hidden",
     }}>
-      {/* ── HEADER — elevated, prominent ── */}
+      {/* ── HEADER ── */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "14px 16px 10px",
@@ -139,7 +271,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
             fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.40)",
             fontFamily: F,
           }}>
-            What works
+            O que funciona
           </span>
           {patterns.length > 0 && (
             <span style={{
@@ -162,7 +294,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
           }}
           onMouseEnter={(e) => { if (!detecting) (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = detecting ? "0.3" : "0.4"; }}
-          title="Refresh patterns"
+          title="Atualizar padrões"
         >
           {detecting
             ? <Loader2 size={13} color="rgba(255,255,255,0.4)" style={{ animation: "spin 1s linear infinite" }} />
@@ -264,7 +396,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
   );
 }
 
-// ── Pattern Card — elevated design ──
+// ── Pattern Card — humanized display ──
 
 function PatternCard({
   pattern: p,
@@ -279,9 +411,11 @@ function PatternCard({
   const isPositive = impactNum > 0;
   const impactColor = isPositive ? "#34d399" : "#DC2626";
 
-  const displayLabel = p.insight_text
-    ? p.insight_text.length > 80 ? p.insight_text.slice(0, 80) + "..." : p.insight_text
-    : p.label;
+  // Humanized label — never show raw debug text
+  const displayLabel = humanizePatternLabel(p);
+
+  // Humanized confidence
+  const conf = formatConfidence(p.confidence);
 
   return (
     <div
@@ -316,11 +450,11 @@ function PatternCard({
             </span>
           )}
           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", fontFamily: M }}>
-            {p.sample_size} ads
+            {pluralAds(p.sample_size)}
           </span>
         </div>
 
-        {p.impact_ctr_pct && (
+        {p.impact_ctr_pct && p.impact_ctr_pct !== "?" && (
           <div style={{
             display: "flex", alignItems: "center", gap: 3,
             padding: "2px 6px", borderRadius: 3,
@@ -336,7 +470,7 @@ function PatternCard({
         )}
       </div>
 
-      {/* Insight */}
+      {/* Insight — humanized */}
       <p style={{
         fontSize: 12.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.45,
         margin: "0 0 8px", fontFamily: F,
@@ -344,11 +478,11 @@ function PatternCard({
         {displayLabel}
       </p>
 
-      {/* Metrics */}
+      {/* Metrics — formatted with context */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: p.is_winner ? 8 : 0 }}>
         {p.avg_ctr != null && p.avg_ctr > 0 && (
           <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.25)", fontFamily: M }}>
-            CTR {(p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100).toFixed(2)}%
+            CTR {formatCtr(p.avg_ctr)}
           </span>
         )}
         {p.avg_roas != null && p.avg_roas > 0 && (
@@ -360,12 +494,12 @@ function PatternCard({
           </>
         )}
         <span style={{ fontSize: 7, color: "rgba(255,255,255,0.08)" }}>·</span>
-        <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.18)", fontFamily: M }}>
-          {(p.confidence * 100).toFixed(0)}% conf
+        <span style={{ fontSize: 10.5, color: conf.color, fontFamily: M }}>
+          {conf.label}
         </span>
       </div>
 
-      {/* CTA — execution trigger, not "feature" */}
+      {/* CTA */}
       {p.is_winner && onGenerateVariation && (
         <button
           onClick={() => onGenerateVariation(p)}

@@ -138,13 +138,13 @@ function groupByFeatures(ads: AdEntry[]): PatternGroup[] {
     // Group by creative format
     if (ad.format && ad.format !== "unknown") {
       const k = `format:${ad.format}`;
-      addToGroup(k, `${ad.format} ads`, "format", ad.format, ad);
+      addToGroup(k, `Formato ${ad.format}`, "format", ad.format, ad);
     }
 
     // Group by hook presence
     if (ad.has_hook != null) {
       const hookLabel = ad.has_hook ? "with_hook" : "no_hook";
-      addToGroup(`hook:${hookLabel}`, ad.has_hook ? "Ads with hook" : "Ads without hook", "hook_presence", hookLabel, ad);
+      addToGroup(`hook:${hookLabel}`, ad.has_hook ? "Anúncios com hook" : "Anúncios sem hook", "hook_presence", hookLabel, ad);
     }
 
     // Group by hook type (if available)
@@ -154,17 +154,17 @@ function groupByFeatures(ads: AdEntry[]): PatternGroup[] {
 
     // Group by text density
     if (ad.text_density && ad.text_density !== "unknown") {
-      addToGroup(`text_density:${ad.text_density}`, `Text density: ${ad.text_density}`, "text_density", ad.text_density, ad);
+      addToGroup(`text_density:${ad.text_density}`, `Densidade de texto: ${ad.text_density}`, "text_density", ad.text_density, ad);
     }
 
     // Group by campaign (detect campaign-level patterns)
     if (ad.campaign_name) {
-      addToGroup(`campaign:${ad.campaign_name}`, `Campaign: ${ad.campaign_name}`, "campaign", ad.campaign_name, ad);
+      addToGroup(`campaign:${ad.campaign_name}`, `Campanha: ${ad.campaign_name}`, "campaign", ad.campaign_name, ad);
     }
 
     // Group by ad set (audience-level patterns)
     if (ad.adset_name) {
-      addToGroup(`adset:${ad.adset_name}`, `Audience: ${ad.adset_name}`, "adset", ad.adset_name, ad);
+      addToGroup(`adset:${ad.adset_name}`, `Público: ${ad.adset_name}`, "adset", ad.adset_name, ad);
     }
 
     // Group by status
@@ -611,9 +611,10 @@ serve(async (req) => {
         const confidence = Math.round((sampleConf * 0.4 + consistencyConf * 0.3 + impactConf * 0.3) * 100) / 100;
         const isWinner = comboCtr > baselineCtr * 1.15 && confidence >= 0.25;
 
+        const comboLabel = comboKey.replace("+", " + ").replace("hook", "com hook").replace("no_hook", "sem hook");
         validPatterns.push({
           pattern_key: `persona:${persona_id}:combo:${comboKey}`,
-          label: `Combinação: ${comboKey.replace("+", " + ")}`,
+          label: `Combinação: ${comboLabel}`,
           feature_type: "combination",
           feature_value: comboKey,
           variables: { persona_id, feature_type: "combination", feature_value: comboKey },
@@ -645,16 +646,16 @@ serve(async (req) => {
 
       // 5. Generate AI insights for top patterns
       if (ANTHROPIC_API_KEY && topPatterns.length > 0) {
-        const prompt = `You are a senior Meta Ads performance analyst. Analyze these creative patterns detected from real ad account data.
+        const prompt = `Você é um analista sênior de Meta Ads. Analise estes padrões criativos detectados de dados reais de uma conta de anúncios.
 
-Account baseline: CTR ${(baselineCtr * 100).toFixed(2)}%${baselineRoas ? `, ROAS ${baselineRoas.toFixed(1)}x` : ""}${baselineCpc ? `, CPC $${baselineCpc.toFixed(2)}` : ""} (${ads.length} ads analyzed)
+Baseline da conta: CTR ${(baselineCtr * 100).toFixed(2)}%${baselineRoas ? `, ROAS ${baselineRoas.toFixed(1)}x` : ""}${baselineCpc ? `, CPC R$${baselineCpc.toFixed(2)}` : ""} (${ads.length} anúncios analisados)
 
-Detected patterns:
-${topPatterns.map((p, i) => `${i + 1}. ${p.label} — CTR ${p.avg_ctr ? (p.avg_ctr * 100).toFixed(2) : "?"}% (${p.impact_ctr_pct} vs baseline), ${p.sample_size} ads, confidence ${(p.confidence * 100).toFixed(0)}%${p.is_winner ? " [WINNER]" : ""}`).join("\n")}
+Padrões detectados:
+${topPatterns.map((p, i) => `${i + 1}. ${p.label} — CTR ${p.avg_ctr ? (p.avg_ctr * 100).toFixed(2) : "?"}% (${p.impact_ctr_pct} vs baseline), ${p.sample_size} anúncios, confiança ${(p.confidence * 100).toFixed(0)}%${p.is_winner ? " [VENCEDOR]" : ""}`).join("\n")}
 
-For each pattern, write a specific, actionable 1-sentence insight explaining WHY this pattern performs the way it does and what the advertiser should DO about it. Reference the actual numbers. Be direct, no fluff.
+Para cada padrão, escreva 1 frase específica e acionável EM PORTUGUÊS DO BRASIL explicando POR QUE esse padrão performa assim e o que o anunciante deve FAZER. Referencie os números reais. Seja direto, sem enrolação.
 
-Return JSON array: [{"index": 0, "insight": "..."}, ...]`;
+Retorne um array JSON: [{"index": 0, "insight": "..."}, ...]`;
 
         try {
           const aiRes = await fetch("https://api.anthropic.com/v1/messages", {

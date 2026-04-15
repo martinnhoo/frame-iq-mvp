@@ -1538,7 +1538,7 @@ const FeedPage: React.FC = () => {
     const targetType = action.meta_api_action?.includes('adset') ? 'adset'
       : action.meta_api_action?.includes('campaign') ? 'campaign' : 'ad';
     const result = await executeAction(decisionId, action.meta_api_action || action.type, targetType, metaId, action.params);
-    if (!result.success) throw new Error(result.error || 'Action failed');
+    if (!result.success) throw new Error(result.error || 'Erro ao executar ação');
   };
 
   const handleStopLosses = async () => {
