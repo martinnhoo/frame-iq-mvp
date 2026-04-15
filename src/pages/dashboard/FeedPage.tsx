@@ -53,6 +53,34 @@ const ConfidenceBadge: React.FC<{ level: 'baixa' | 'média' | 'alta' }> = ({ lev
   );
 };
 
+/** Period options for metrics filter */
+type PeriodKey = '7d' | '14d' | '30d';
+const PERIODS: { key: PeriodKey; label: string; days: number }[] = [
+  { key: '7d',  label: '7 dias',  days: 7  },
+  { key: '14d', label: '14 dias', days: 14 },
+  { key: '30d', label: '30 dias', days: 30 },
+];
+
+const PeriodSelector: React.FC<{ value: PeriodKey; onChange: (k: PeriodKey) => void }> = ({ value, onChange }) => (
+  <div style={{ display: 'flex', gap: 2, background: 'rgba(230,237,243,0.03)', borderRadius: 3, padding: 2 }}>
+    {PERIODS.map(p => {
+      const active = p.key === value;
+      return (
+        <button key={p.key} onClick={() => onChange(p.key)} style={{
+          background: active ? 'rgba(230,237,243,0.08)' : 'transparent',
+          color: active ? '#E6EDF3' : 'rgba(139,148,158,0.50)',
+          border: active ? '1px solid rgba(230,237,243,0.10)' : '1px solid transparent',
+          borderRadius: 2, padding: '3px 8px',
+          fontSize: 10.5, fontWeight: active ? 600 : 500,
+          cursor: 'pointer', fontFamily: F, transition: 'all 0.1s',
+        }}>
+          {p.label}
+        </button>
+      );
+    })}
+  </div>
+);
+
 /** Teal CTA button used across states */
 const ActionButton: React.FC<{ label: string; onClick: () => void; variant?: 'primary' | 'ghost' }> = ({
   label, onClick, variant = 'primary',
@@ -454,7 +482,7 @@ interface AdMetricsSummary {
   daysOfData: number;
 }
 
-const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null }> = ({ ad, metrics }) => {
+const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null; periodLabel: string }> = ({ ad, metrics, periodLabel }) => {
   const navigate = useNavigate();
   const breadcrumb = [ad.ad_set?.campaign?.name, ad.ad_set?.name, ad.name].filter(Boolean).join(' → ');
 
@@ -548,7 +576,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null 
             fontSize: 9.5, fontWeight: 700, color: 'rgba(139,148,158,0.55)',
             textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 8,
           }}>
-            Recomendação baseada em padrões similares
+            Recomendação baseada nos dados dos últimos {periodLabel}
           </div>
           <div style={{ fontSize: 12.5, color: '#E6EDF3', lineHeight: 1.7 }}>
             <div style={{ marginBottom: 3 }}>• Hook mais direto nos primeiros segundos</div>
@@ -585,7 +613,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null 
 // STATE 3 — FEW DATA (baixo volume / poucos dias)
 // Direction without certainty
 // ================================================================
-const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | null }> = ({ totalAds, metrics }) => {
+const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | null; periodLabel: string }> = ({ totalAds, metrics, periodLabel }) => {
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
   const lowCtr = hasMetrics && metrics.avgCtr < 0.015;
@@ -620,7 +648,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
         <p style={{
           fontSize: 12.5, color: '#8B949E', margin: '0 0 14px', lineHeight: 1.6,
         }}>
-          {totalAds} {totalAds === 1 ? 'anúncio analisado' : 'anúncios analisados'} — volume ainda insuficiente para decisões críticas
+          {totalAds} {totalAds === 1 ? 'anúncio analisado' : 'anúncios analisados'} nos últimos {periodLabel} — volume ainda insuficiente para decisões críticas
         </p>
 
         {/* Signals */}
@@ -680,7 +708,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[] }> = ({ totalAds, ads }) => {
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string }> = ({ totalAds, ads, periodLabel }) => {
   const navigate = useNavigate();
   return (
     <div style={{ fontFamily: F }}>
@@ -704,7 +732,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[] }> = ({ tot
         <p style={{
           fontSize: 12.5, color: '#8B949E', margin: '0 0 16px', lineHeight: 1.6,
         }}>
-          Seus {totalAds} {totalAds === 1 ? 'anúncio está' : 'anúncios estão'} performando dentro do esperado
+          Seus {totalAds} {totalAds === 1 ? 'anúncio está' : 'anúncios estão'} performando dentro do esperado nos últimos {periodLabel}
         </p>
 
         {/* Opportunity card */}
@@ -788,24 +816,26 @@ const FeedPage: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastAnalysisMin] = useState(() => Math.floor(Math.random() * 4) + 2);
+  const [period, setPeriod] = useState<PeriodKey>('7d');
+  const periodDays = PERIODS.find(p => p.key === period)!.days;
 
   // ── Fetch user's actual ads ──
   const [userAds, setUserAds] = useState<AdSummary[]>([]);
   const [totalAdCount, setTotalAdCount] = useState<number>(0);
   const [adsLoaded, setAdsLoaded] = useState(false);
 
-  // ── Fetch aggregate metrics for state detection ──
+  // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
 
+  // Ads fetch — only runs once per accountId
   useEffect(() => {
     if (!accountId) {
-      setUserAds([]); setTotalAdCount(0); setAdsLoaded(true); setAdMetrics(null);
+      setUserAds([]); setTotalAdCount(0); setAdsLoaded(true);
       return;
     }
     let cancelled = false;
     (async () => {
       try {
-        // Fetch ads
         const { data, count } = await (supabase
           .from('ads' as any)
           .select('name, meta_ad_id, status, ad_set:ad_sets(name, campaign:campaigns(name))', { count: 'exact' })
@@ -814,10 +844,22 @@ const FeedPage: React.FC = () => {
         if (!cancelled) {
           setUserAds((data || []) as AdSummary[]);
           setTotalAdCount(count ?? (data?.length ?? 0));
+          setAdsLoaded(true);
         }
+      } catch {
+        if (!cancelled) setAdsLoaded(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [accountId]);
 
-        // Fetch aggregate metrics (last 7 days)
-        const since = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  // Metrics fetch — re-runs when period or accountId changes
+  useEffect(() => {
+    if (!accountId) { setAdMetrics(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const since = new Date(Date.now() - periodDays * 86400000).toISOString().slice(0, 10);
         const { data: mData } = await (supabase
           .from('ad_metrics' as any)
           .select('spend, conversions, ctr, cpa, date')
@@ -841,12 +883,10 @@ const FeedPage: React.FC = () => {
         }
       } catch {
         // noop
-      } finally {
-        if (!cancelled) setAdsLoaded(true);
       }
     })();
     return () => { cancelled = true; };
-  }, [accountId]);
+  }, [accountId, periodDays]);
 
   const hasRealData = realDecisions.length > 0;
   const demoDismissed = isDemoDismissedToday();
@@ -922,8 +962,10 @@ const FeedPage: React.FC = () => {
     if (!adsLoaded) return 'no-ads'; // fallback while loading
     if (totalAdCount === 0) return 'no-ads';         // STATE 1
     if (totalAdCount === 1) return 'single-ad';      // STATE 2
-    // Multiple ads but no decisions
-    const lowData = !adMetrics || adMetrics.daysOfData <= 3 || adMetrics.totalSpend < 5000; // < R$50
+    // Multiple ads but no decisions — thresholds scale with period
+    const minDays = Math.max(2, Math.floor(periodDays * 0.4)); // 7d→2, 14d→5, 30d→12
+    const minSpend = periodDays <= 7 ? 5000 : periodDays <= 14 ? 10000 : 25000; // centavos
+    const lowData = !adMetrics || adMetrics.daysOfData <= minDays || adMetrics.totalSpend < minSpend;
     if (lowData) return 'few-data';                   // STATE 3
     return 'no-critical';                              // STATE 4
   }
@@ -997,7 +1039,10 @@ const FeedPage: React.FC = () => {
                 }}>DEMO</span>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {!isDemo && metaConnected && (
+                <PeriodSelector value={period} onChange={setPeriod} />
+              )}
               {pendingDecisions.length > 0 && (
                 <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(139,148,158,0.60)', fontFamily: F }}>
                   {pendingDecisions.length} {pendingDecisions.length === 1 ? 'item' : 'itens'}
@@ -1098,11 +1143,11 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'no-ads' ? (
           <StateNoAds />
         ) : feedState === 'single-ad' ? (
-          <StateSingleAd ad={userAds[0]!} metrics={adMetrics} />
+          <StateSingleAd ad={userAds[0]!} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'few-data' ? (
-          <StateFewData totalAds={totalAdCount} metrics={adMetrics} />
+          <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
-          <StateNoCritical totalAds={totalAdCount} ads={userAds} />
+          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : null}
       </div>
     </div>
