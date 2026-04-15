@@ -181,46 +181,40 @@ const SettingsPage = () => {
           <CardDescription>{t("planSub")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {(() => {
-            const p = profile?.plan || "free";
-            const isFree = p === "free" || p === "studio";
-            const planLabel = p === "studio" ? "Studio" : p;
-            const planDesc = isFree
-              ? "5 mensagens/dia · Todas as ferramentas com limites · Faça upgrade para uso ilimitado."
-              : p === "maker"
-              ? "50 mensagens IA/dia · 1 conta de anúncios · Todas as ferramentas."
-              : p === "pro"
-              ? "200 mensagens IA/dia · 3 contas de anúncios · Todas as ferramentas."
-              : "Mensagens ilimitadas · Contas ilimitadas · Tudo liberado.";
-            return (
-              <>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground capitalize">{planLabel}</p>
-                    <p className="text-sm text-muted-foreground">{planDesc}</p>
-                  </div>
-                  <Badge variant="outline" className="capitalize border-border text-muted-foreground">
-                    {planLabel}
-                  </Badge>
-                </div>
-                {isFree ? (
-                  <Button variant="outline" className="border-border" onClick={() => { trackEvent("plan_upgrade_clicked"); navigate("/pricing"); }}>
-                    {t("upgrade")}
-                  </Button>
-                ) : (
-                  <div className="flex gap-2 flex-wrap">
-                    <Button variant="outline" className="border-border" onClick={handleBillingPortal} disabled={portalLoading}>
-                      {portalLoading ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Abrindo portal...</> : t("billing")}
-                    </Button>
-                    <Button variant="outline" className="border-border text-red-400 hover:text-red-300 hover:border-red-400/30" onClick={() => setCancelOpen(true)}>
-                      <XCircle className="h-3.5 w-3.5 mr-2" />
-                      {lang === "pt" ? "Cancelar plano" : lang === "es" ? "Cancelar plan" : "Cancel plan"}
-                    </Button>
-                  </div>
-                )}
-              </>
-            );
-          })()}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-foreground capitalize">{profile?.plan}</p>
+              <p className="text-sm text-muted-foreground">
+                {profile?.plan === "free"
+                  ? "5 mensagens/dia · Todas as ferramentas com limites · Faça upgrade para uso ilimitado."
+                  : profile?.plan === "maker"
+                  ? "50 mensagens IA/dia · 1 conta de anúncios · Todas as ferramentas."
+                  : profile?.plan === "pro"
+                  ? "200 mensagens IA/dia · 3 contas de anúncios · Todas as ferramentas."
+                  : profile?.plan === "studio"
+                  ? "Mensagens ilimitadas · Contas ilimitadas · Tudo liberado · Suporte prioritário."
+                  : "Mensagens ilimitadas · Contas ilimitadas · Tudo liberado."}
+              </p>
+            </div>
+            <Badge variant="outline" className="capitalize border-border text-muted-foreground">
+              {profile?.plan}
+            </Badge>
+          </div>
+          {profile?.plan === "free" ? (
+            <Button variant="outline" className="border-border" onClick={() => { trackEvent("plan_upgrade_clicked"); navigate("/pricing"); }}>
+              {t("upgrade")}
+            </Button>
+          ) : (
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" className="border-border" onClick={handleBillingPortal} disabled={portalLoading}>
+                {portalLoading ? <><Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />Abrindo portal...</> : t("billing")}
+              </Button>
+              <Button variant="outline" className="border-border text-red-400 hover:text-red-300 hover:border-red-400/30" onClick={() => setCancelOpen(true)}>
+                <XCircle className="h-3.5 w-3.5 mr-2" />
+                {lang === "pt" ? "Cancelar plano" : lang === "es" ? "Cancelar plan" : "Cancel plan"}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
