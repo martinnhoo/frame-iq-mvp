@@ -224,7 +224,10 @@ export default function DashboardLayout() {
           return;
         }
       }
-      // Run usage + personas in parallel — don't block render on either
+      // ── Show dashboard immediately after profile loads — don't block on usage/personas ──
+      if (mounted) setLoading(false);
+
+      // Run usage + personas in parallel — non-blocking (dashboard already visible)
       const [, personaData] = await Promise.all([
         fetchUsage(session.user.id),
         supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }).then(r => r.data),
@@ -369,7 +372,6 @@ export default function DashboardLayout() {
         }
         window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
       }
-      if (mounted) setLoading(false);
     };
     // Safety timeout — if init takes >6s on mobile, force show dashboard
     const timeout = setTimeout(() => { setLoading(false); }, 6000);
@@ -694,12 +696,10 @@ export default function DashboardLayout() {
             <Menu size={17} />
           </button>
 
-          {/* ── Logo wordmark (only when sidebar hidden) ── */}
-          {!sidebarOpen && (
-            <div style={{ flexShrink: 0, marginRight: 4 }}>
-              <Logo size="sm" />
-            </div>
-          )}
+          {/* ── Logo wordmark (only when sidebar hidden) — fixed width prevents layout shift ── */}
+          <div style={{ flexShrink: 0, marginRight: 4, width: sidebarOpen ? 0 : "auto", overflow: "hidden", transition: "width 0.15s ease" }}>
+            {!sidebarOpen && <Logo size="sm" />}
+          </div>
 
           {/* Account picker moved to sidebar — header is clean */}
 
