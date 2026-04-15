@@ -433,15 +433,30 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
 
   const displayPatterns = compact ? worthShowing.slice(0, 3) : worthShowing.slice(0, 5);
   const isEmpty = !loading && !detecting && displayPatterns.length === 0;
+  const [sectionOpen, setSectionOpen] = useState(true);
+  const hasContent = displayPatterns.length > 0 || (loading || detecting) || isEmpty;
 
   return (
     <div style={{ paddingTop: 12 }}>
-      {/* ── HEADER ── */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 2px 14px",
-      }}>
+      {/* ── HEADER — clickable collapse toggle ── */}
+      <div
+        onClick={() => { if (hasContent) setSectionOpen(prev => !prev); }}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 2px 10px",
+          cursor: hasContent ? "pointer" : "default",
+          userSelect: "none",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{
+            fontSize: 14, lineHeight: 1,
+            color: sectionOpen ? "rgba(255,255,255,0.50)" : "rgba(255,255,255,0.30)",
+            transition: "transform 0.2s ease, color 0.15s",
+            transform: sectionOpen ? "rotate(90deg)" : "rotate(0deg)",
+          }}>
+            ›
+          </span>
           <span style={{
             fontSize: 13, fontWeight: 700, color: L1,
             fontFamily: F, letterSpacing: "-0.01em",
@@ -456,9 +471,25 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
               {worthShowing.length} {worthShowing.length === 1 ? "padrão" : "padrões"}
             </span>
           )}
+          {/* Alignment inline when collapsed */}
+          {!sectionOpen && alignment && alignment.score > 0 && patterns.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5, marginLeft: 4 }}>
+              <span style={{
+                width: 5, height: 5, borderRadius: "50%",
+                background: "#A78BFA",
+                boxShadow: "0 0 6px rgba(167,139,250,0.35)",
+              }} />
+              <span style={{
+                fontSize: 10.5, fontWeight: 700, fontFamily: F, fontVariant: "tabular-nums",
+                color: alignment.score >= 70 ? "#4ADE80" : alignment.score >= 40 ? "#FBBF24" : "rgba(255,255,255,0.50)",
+              }}>
+                {alignment.score}%
+              </span>
+            </div>
+          )}
         </div>
         <button
-          onClick={runDetection}
+          onClick={(e) => { e.stopPropagation(); runDetection(); }}
           disabled={detecting}
           style={{
             background: "none", border: "none",
@@ -478,91 +509,96 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
         </button>
       </div>
 
-      {/* Alignment Score */}
-      {alignment && alignment.score > 0 && patterns.length > 0 && (
-        <div style={{
-          padding: "0 2px 12px",
-          display: "flex", alignItems: "center", gap: 7,
-        }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: "50%",
-            background: "#A78BFA",
-            boxShadow: "0 0 8px rgba(167,139,250,0.40)",
-            flexShrink: 0,
-          }} />
-          <span style={{
-            fontSize: 11, fontWeight: 700, fontFamily: F, fontVariant: "tabular-nums",
-            color: alignment.score >= 70 ? "#4ADE80" : alignment.score >= 40 ? "#FBBF24" : "rgba(255,255,255,0.50)",
-          }}>
-            {alignment.score}%
-          </span>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", fontFamily: F }}>
-            alinhamento · {alignment.label}
-          </span>
-        </div>
-      )}
-
-      {/* Loading */}
-      {(loading || detecting) && patterns.length === 0 && (
-        <div style={{ padding: "4px 2px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-          <style>{`@keyframes ppPulse{0%,100%{opacity:0.4}50%{opacity:0.7}}`}</style>
-          {[0, 1, 2].map((i) => (
-            <div key={i} style={{
-              height: 44, borderRadius: 4,
-              background: "rgba(255,255,255,0.03)",
-              animation: `ppPulse 1.4s ease-in-out ${i * 0.12}s infinite`,
-            }} />
-          ))}
-        </div>
-      )}
-
-      {/* Empty */}
-      {isEmpty && (
-        <div style={{ padding: "4px 2px 16px" }}>
-          <p style={{
-            fontSize: 12.5, color: L3, fontFamily: F,
-            margin: 0, lineHeight: 1.55,
-          }}>
-            {patterns.length > 0
-              ? "Nenhum padrão forte identificado ainda. Sinais fracos foram filtrados — só mostramos o que realmente funciona."
-              : "Dados insuficientes para gerar padrões. Eles aparecem automaticamente conforme seus anúncios acumulam dados."}
-          </p>
-        </div>
-      )}
-
-      {/* Pattern list */}
-      {displayPatterns.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {displayPatterns.map((p, idx) => (
-            <div key={p.pattern_key || idx} style={{
-              animation: 'pp-fadeUp 0.3s ease both',
-              animationDelay: `${idx * 0.05}s`,
+      {/* ── COLLAPSIBLE BODY ── */}
+      <PPExpandable open={sectionOpen}>
+        <div>
+          {/* Alignment Score */}
+          {alignment && alignment.score > 0 && patterns.length > 0 && (
+            <div style={{
+              padding: "0 2px 12px",
+              display: "flex", alignItems: "center", gap: 7,
             }}>
-              <PatternRow pattern={p} onGenerateVariation={onGenerateVariation} isFirst={idx === 0} />
+              <span style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: "#A78BFA",
+                boxShadow: "0 0 8px rgba(167,139,250,0.40)",
+                flexShrink: 0,
+              }} />
+              <span style={{
+                fontSize: 11, fontWeight: 700, fontFamily: F, fontVariant: "tabular-nums",
+                color: alignment.score >= 70 ? "#4ADE80" : alignment.score >= 40 ? "#FBBF24" : "rgba(255,255,255,0.50)",
+              }}>
+                {alignment.score}%
+              </span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", fontFamily: F }}>
+                alinhamento · {alignment.label}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {/* View all */}
-      {worthShowing.length > displayPatterns.length && (
-        <button
-          onClick={() => navigate("/dashboard/intelligence")}
-          style={{
-            background: "transparent", border: "none",
-            cursor: "pointer", transition: "opacity 0.15s",
-            padding: "14px 2px 4px", display: "flex", alignItems: "center", gap: 4,
-            opacity: 0.5,
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.5"; }}
-        >
-          <span style={{ fontSize: 11.5, color: "#A78BFA", fontFamily: F, fontWeight: 600 }}>
-            Ver todos os padrões
-          </span>
-          <ChevronRight size={12} color="#A78BFA" />
-        </button>
-      )}
+          {/* Loading */}
+          {(loading || detecting) && patterns.length === 0 && (
+            <div style={{ padding: "4px 2px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+              <style>{`@keyframes ppPulse{0%,100%{opacity:0.4}50%{opacity:0.7}}`}</style>
+              {[0, 1, 2].map((i) => (
+                <div key={i} style={{
+                  height: 44, borderRadius: 4,
+                  background: "rgba(255,255,255,0.03)",
+                  animation: `ppPulse 1.4s ease-in-out ${i * 0.12}s infinite`,
+                }} />
+              ))}
+            </div>
+          )}
+
+          {/* Empty */}
+          {isEmpty && (
+            <div style={{ padding: "4px 2px 16px" }}>
+              <p style={{
+                fontSize: 12.5, color: L3, fontFamily: F,
+                margin: 0, lineHeight: 1.55,
+              }}>
+                {patterns.length > 0
+                  ? "Nenhum padrão forte identificado ainda. Sinais fracos foram filtrados — só mostramos o que realmente funciona."
+                  : "Dados insuficientes para gerar padrões. Eles aparecem automaticamente conforme seus anúncios acumulam dados."}
+              </p>
+            </div>
+          )}
+
+          {/* Pattern list */}
+          {displayPatterns.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {displayPatterns.map((p, idx) => (
+                <div key={p.pattern_key || idx} style={{
+                  animation: 'pp-fadeUp 0.3s ease both',
+                  animationDelay: `${idx * 0.05}s`,
+                }}>
+                  <PatternRow pattern={p} onGenerateVariation={onGenerateVariation} isFirst={idx === 0} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* View all */}
+          {worthShowing.length > displayPatterns.length && (
+            <button
+              onClick={() => navigate("/dashboard/intelligence")}
+              style={{
+                background: "transparent", border: "none",
+                cursor: "pointer", transition: "opacity 0.15s",
+                padding: "14px 2px 4px", display: "flex", alignItems: "center", gap: 4,
+                opacity: 0.5,
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.5"; }}
+            >
+              <span style={{ fontSize: 11.5, color: "#A78BFA", fontFamily: F, fontWeight: 600 }}>
+                Ver todos os padrões
+              </span>
+              <ChevronRight size={12} color="#A78BFA" />
+            </button>
+          )}
+        </div>
+      </PPExpandable>
 
       <style>{`
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}

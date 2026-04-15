@@ -1288,94 +1288,136 @@ const PerformanceSummary: React.FC<{
 // ================================================================
 // COLLAPSIBLE DECISIONS — shows first 5, expand to see all
 // ================================================================
-const DECISIONS_COLLAPSE_THRESHOLD = 5;
+// Collapsible section header — used by both AÇÃO IMEDIATA and RECOMENDAÇÕES
+const SectionHeader: React.FC<{
+  label: string; color: string; count: number;
+  open: boolean; onToggle: () => void;
+}> = ({ label, color, count, open, onToggle }) => (
+  <div
+    onClick={onToggle}
+    style={{
+      display: 'flex', alignItems: 'center', gap: 6,
+      padding: '0 2px', marginBottom: open ? 6 : 0, marginTop: 0,
+      cursor: 'pointer', userSelect: 'none',
+    }}
+  >
+    <span style={{
+      fontSize: 14, lineHeight: 1,
+      color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
+      transition: 'transform 0.2s ease, color 0.15s',
+      transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+    }}>
+      ›
+    </span>
+    <span style={{
+      fontSize: 9.5, fontWeight: 800, color,
+      letterSpacing: '0.12em',
+    }}>
+      {label}
+    </span>
+    <span style={{
+      fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.30)',
+      fontFamily: F,
+    }}>
+      {count}
+    </span>
+  </div>
+);
+
+// Animated expand/collapse wrapper for feed sections
+const FeedExpandable: React.FC<{ open: boolean; children: React.ReactNode }> = ({ open, children }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [h, setH] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (open) {
+      const full = el.scrollHeight;
+      setH(0);
+      requestAnimationFrame(() => requestAnimationFrame(() => setH(full)));
+      const t = setTimeout(() => setH(-1), 250);
+      return () => clearTimeout(t);
+    } else {
+      setH(el.scrollHeight);
+      requestAnimationFrame(() => requestAnimationFrame(() => setH(0)));
+    }
+  }, [open]);
+
+  const isAuto = open && h === -1;
+  return (
+    <div style={{
+      height: isAuto ? 'auto' : h,
+      overflow: 'hidden',
+      transition: isAuto ? 'none' : 'height 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease',
+      opacity: open ? 1 : 0,
+      pointerEvents: open ? 'auto' : 'none',
+    }}>
+      <div ref={ref}>{children}</div>
+    </div>
+  );
+};
 
 const CollapsibleDecisions: React.FC<{
   decisions: Decision[];
   onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
   isDemo: boolean;
 }> = ({ decisions, onAction, isDemo }) => {
-  const [expanded, setExpanded] = useState(false);
-  const shouldCollapse = decisions.length > DECISIONS_COLLAPSE_THRESHOLD;
-  const visible = shouldCollapse && !expanded ? decisions.slice(0, DECISIONS_COLLAPSE_THRESHOLD) : decisions;
-  const hiddenCount = decisions.length - DECISIONS_COLLAPSE_THRESHOLD;
+  const [criticalOpen, setCriticalOpen] = useState(true);
+  const [recsOpen, setRecsOpen] = useState(true);
 
   // Split into critical (kill/fix) and other (scale/pattern/insight)
-  const critical = visible.filter(d => d.type === 'kill' || d.type === 'fix');
-  const other = visible.filter(d => d.type !== 'kill' && d.type !== 'fix');
+  const critical = decisions.filter(d => d.type === 'kill' || d.type === 'fix');
+  const other = decisions.filter(d => d.type !== 'kill' && d.type !== 'fix');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-      {/* LEVEL 1+2: Critical decisions — continuous flow */}
+      {/* AÇÃO IMEDIATA — collapsible */}
       {critical.length > 0 && (
-        <>
-          <div style={{
-            fontSize: 9.5, fontWeight: 800, color: '#EF4444',
-            letterSpacing: '0.12em', padding: '0 2px', marginBottom: 6,
-            animation: 'feed-fadeUp 0.3s ease both',
-          }}>
-            AÇÃO IMEDIATA
-          </div>
-          {critical.map((decision, idx) => (
-            <div key={decision.id} style={{
-              borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-              animation: 'feed-fadeUp 0.35s ease both',
-              animationDelay: `${idx * 0.06}s`,
-            }}>
-              <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} isHero={idx === 0} />
+        <div style={{ marginBottom: other.length > 0 ? 16 : 0 }}>
+          <SectionHeader
+            label="AÇÃO IMEDIATA"
+            color="#EF4444"
+            count={critical.length}
+            open={criticalOpen}
+            onToggle={() => setCriticalOpen(prev => !prev)}
+          />
+          <FeedExpandable open={criticalOpen}>
+            <div>
+              {critical.map((decision, idx) => (
+                <div key={decision.id} style={{
+                  borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                }}>
+                  <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} isHero={idx === 0} />
+                </div>
+              ))}
             </div>
-          ))}
-        </>
+          </FeedExpandable>
+        </div>
       )}
 
-      {/* LEVEL 3: Other recommendations — lighter section */}
+      {/* RECOMENDAÇÕES — collapsible */}
       {other.length > 0 && (
-        <>
-          {critical.length > 0 && (
-            <div style={{
-              fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.40)',
-              letterSpacing: '0.12em', padding: '0 2px', marginTop: 16, marginBottom: 6,
-              animation: 'feed-fadeUp 0.3s ease both',
-              animationDelay: `${critical.length * 0.06 + 0.1}s`,
-            }}>
-              RECOMENDAÇÕES
+        <div>
+          <SectionHeader
+            label={critical.length > 0 ? "RECOMENDAÇÕES" : "DECISÕES"}
+            color="rgba(255,255,255,0.40)"
+            count={other.length}
+            open={recsOpen}
+            onToggle={() => setRecsOpen(prev => !prev)}
+          />
+          <FeedExpandable open={recsOpen}>
+            <div>
+              {other.map((decision, idx) => (
+                <div key={decision.id} style={{
+                  borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                }}>
+                  <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} />
+                </div>
+              ))}
             </div>
-          )}
-          {other.map((decision, idx) => (
-            <div key={decision.id} style={{
-              borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-              animation: 'feed-fadeUp 0.35s ease both',
-              animationDelay: `${(critical.length + idx) * 0.06 + 0.12}s`,
-            }}>
-              <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} />
-            </div>
-          ))}
-        </>
-      )}
-      {shouldCollapse && !expanded && (
-        <button onClick={() => setExpanded(true)} style={{
-          background: 'rgba(230,237,243,0.03)', border: '1px solid rgba(230,237,243,0.06)',
-          borderRadius: 4, padding: '10px 16px',
-          fontSize: 12, fontWeight: 600, color: '#0ea5e9',
-          cursor: 'pointer', fontFamily: F, textAlign: 'center',
-          transition: 'all 0.15s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(14,165,233,0.06)'; e.currentTarget.style.borderColor = 'rgba(14,165,233,0.15)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(230,237,243,0.03)'; e.currentTarget.style.borderColor = 'rgba(230,237,243,0.06)'; }}>
-          Ver mais {hiddenCount} {hiddenCount === 1 ? 'recomendação' : 'recomendações'} ▾
-        </button>
-      )}
-      {shouldCollapse && expanded && (
-        <button onClick={() => setExpanded(false)} style={{
-          background: 'none', border: 'none', padding: '6px 2px',
-          fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.40)',
-          cursor: 'pointer', fontFamily: F, textAlign: 'center',
-          transition: 'color 0.1s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.40)'; }}>
-          ▴ Recolher recomendações
-        </button>
+          </FeedExpandable>
+        </div>
       )}
     </div>
   );
@@ -1791,32 +1833,6 @@ const FeedPage: React.FC = () => {
               />
             )}
 
-            {/* Intelligence — always visible before decisions */}
-            {metaConnected && !isDemo && userId && personaId && (
-              <div style={{ marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 4 }}>
-                <PatternsPanel
-                  userId={userId}
-                  personaId={personaId}
-                  onGenerateVariation={(pattern) => {
-                    const ft = pattern.feature_type || pattern.variables?.feature_type || "";
-                    const state = { state: { fromPattern: pattern } };
-                    if (ft === "hook_type" || ft === "hook_presence") {
-                      navigate('/dashboard/hooks', state);
-                    } else if (ft === "format" || ft === "combination" || ft === "text_density") {
-                      navigate('/dashboard/boards/new', state);
-                    } else if (ft === "campaign" || ft === "adset") {
-                      navigate('/dashboard/brief', state);
-                    } else if (ft === "gap") {
-                      navigate('/dashboard/boards/new', state);
-                    } else {
-                      navigate('/dashboard/hooks', state);
-                    }
-                  }}
-                  onPatternsLoaded={(count: number) => setPatternsCount(count)}
-                  compact
-                />
-              </div>
-            )}
 
             {pendingDecisions.length > 0 && hasCritical && (
               <div style={{ marginBottom: 12 }}>
@@ -1849,8 +1865,8 @@ const FeedPage: React.FC = () => {
           <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} />
         ) : null}
 
-        {/* Intelligence for non-critical states (critical state has it above decisions) */}
-        {metaConnected && !isDemo && userId && personaId && feedState !== 'full' && (
+        {/* Intelligence — collapsible, always available */}
+        {metaConnected && !isDemo && userId && personaId && (
           <div style={{ marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
             <PatternsPanel
               userId={userId}
