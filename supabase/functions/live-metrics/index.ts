@@ -103,7 +103,7 @@ serve(async (req) => {
           const adsFields = "ad_id,ad_name,adset_name,campaign_name,spend,ctr,cpc,impressions,actions,action_values,website_purchase_roas";
           const adsRes = await fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${adsFields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=10&access_token=${token}`);
           const adsData = await adsRes.json();
-          const topAds = (adsData.data || []).map((ad: any) => ({
+          const topAdsRaw = (adsData.data || []).map((ad: any) => ({
             id: ad.ad_id,
             name: ad.ad_name,
             campaign: ad.campaign_name,
@@ -119,7 +119,24 @@ serve(async (req) => {
               return spendAd > 0 && convVal > 0 ? convVal / spendAd : null;
             })(),
             platform: "meta",
+            thumbnail_url: null as string | null,
           }));
+
+          // Fetch creative thumbnails in batch for top ads
+          const adIds = topAdsRaw.map((a: any) => a.id).filter(Boolean);
+          if (adIds.length > 0) {
+            try {
+              const thumbRes = await fetch(`https://graph.facebook.com/v21.0/?ids=${adIds.join(",")}&fields=creative{thumbnail_url}&access_token=${token}`);
+              const thumbData = await thumbRes.json();
+              for (const ad of topAdsRaw) {
+                const thumbInfo = thumbData?.[ad.id];
+                if (thumbInfo?.creative?.thumbnail_url) {
+                  ad.thumbnail_url = thumbInfo.creative.thumbnail_url;
+                }
+              }
+            } catch { /* thumbnail fetch is optional — don't block on failure */ }
+          }
+          const topAds = topAdsRaw;
 
           // Daily breakdown for chart
           const daily = (breakdown.data || []).map((d: any) => ({

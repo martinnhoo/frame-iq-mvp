@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { RefreshCw, ChevronDown, ChevronUp, Layers, LayoutList } from "lucide-react";
+import { RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
 
-const F = DT.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
-const M = DT.mono; // 'Space Grotesk', 'DM Mono', monospace
+const F = DT.font;
+const M = DT.mono;
 
 const T = {
   pt: {
@@ -16,16 +16,13 @@ const T = {
     updated: "Atualizado às",
     sync: "Sincronizar",
     syncing: "Sincronizando...",
-    combined: "Combinado",
-    separate: "Separado",
     win_rate: "Taxa de acerto",
-    winners_of: (w: number, t: number) => `${w} vencedor${w !== 1 ? "es" : ""} de ${t} anúncios`,
+    winners_of: (w: number, t: number) => `${w} vencedor${w !== 1 ? "es" : ""} de ${t}`,
     invested: "Investido",
-    last90: "últimos 90 dias",
     roas_label: "ROAS geral",
     return_label: "Retorno",
     return_suffix: "retorno",
-    no_conv: "sem dados de conversão",
+    no_conv: "sem conversão",
     all: "Todos",
     winners: "Vencedores",
     scaled: "Escalados",
@@ -34,8 +31,6 @@ const T = {
     no_name: "Sem nome",
     launched: "Lançado",
     paused_on: "Pausado",
-    select_account: "Selecione uma conta",
-    select_sub: "Escolha acima qual conta quer analisar",
     no_ads: "Nenhum anúncio ainda",
     no_ads_sub: "Conecte Meta Ads e clique em Sincronizar",
     sync_now: "Sincronizar agora",
@@ -43,26 +38,23 @@ const T = {
     importing_sub: "Isso pode levar alguns segundos",
     no_category: "Nenhum anúncio nessa categoria",
     more_ads: (n: number) => `+${n} anúncios`,
-    accounts_label: (n: number) => `${n} contas`,
     verdict: { winner: "Vencedor", scaled: "Escalado", testing: "Testando", loser: "Pausado" },
     metrics: { spend: "Gasto", impressions: "Impressões", clicks: "Cliques", cpc: "CPC", conversions: "Conversões", frequency: "Frequência", days: "Dias", ctr: "CTR", roas: "ROAS" },
     date_locale: "pt-BR",
+    pick_dates: "Escolher datas",
   },
   es: {
     title: "Diario de Anuncios",
     updated: "Actualizado a las",
     sync: "Sincronizar",
     syncing: "Sincronizando...",
-    combined: "Combinado",
-    separate: "Separado",
     win_rate: "Tasa de acierto",
-    winners_of: (w: number, t: number) => `${w} ganador${w !== 1 ? "es" : ""} de ${t} anuncios`,
+    winners_of: (w: number, t: number) => `${w} ganador${w !== 1 ? "es" : ""} de ${t}`,
     invested: "Invertido",
-    last90: "últimos 90 días",
     roas_label: "ROAS general",
     return_label: "Retorno",
     return_suffix: "retorno",
-    no_conv: "sin datos de conversión",
+    no_conv: "sin conversión",
     all: "Todos",
     winners: "Ganadores",
     scaled: "Escalados",
@@ -71,8 +63,6 @@ const T = {
     no_name: "Sin nombre",
     launched: "Lanzado",
     paused_on: "Pausado",
-    select_account: "Selecciona una cuenta",
-    select_sub: "Elige arriba qué cuenta quieres analizar",
     no_ads: "Sin anuncios aún",
     no_ads_sub: "Conecta Meta Ads y haz clic en Sincronizar",
     sync_now: "Sincronizar ahora",
@@ -80,26 +70,23 @@ const T = {
     importing_sub: "Esto puede tardar unos segundos",
     no_category: "Sin anuncios en esta categoría",
     more_ads: (n: number) => `+${n} anuncios`,
-    accounts_label: (n: number) => `${n} cuentas`,
     verdict: { winner: "Ganador", scaled: "Escalado", testing: "Probando", loser: "Pausado" },
     metrics: { spend: "Gasto", impressions: "Impresiones", clicks: "Clics", cpc: "CPC", conversions: "Conversiones", frequency: "Frecuencia", days: "Días", ctr: "CTR", roas: "ROAS" },
     date_locale: "es-MX",
+    pick_dates: "Elegir fechas",
   },
   en: {
     title: "Ad Diary",
     updated: "Updated at",
     sync: "Sync",
     syncing: "Syncing...",
-    combined: "Combined",
-    separate: "Separate",
     win_rate: "Win rate",
-    winners_of: (w: number, t: number) => `${w} winner${w !== 1 ? "s" : ""} of ${t} ads`,
+    winners_of: (w: number, t: number) => `${w} winner${w !== 1 ? "s" : ""} of ${t}`,
     invested: "Invested",
-    last90: "last 90 days",
     roas_label: "Overall ROAS",
     return_label: "Return",
     return_suffix: "return",
-    no_conv: "no conversion data",
+    no_conv: "no conversions",
     all: "All",
     winners: "Winners",
     scaled: "Scaled",
@@ -108,8 +95,6 @@ const T = {
     no_name: "Untitled",
     launched: "Launched",
     paused_on: "Paused",
-    select_account: "Select an account",
-    select_sub: "Choose which account to analyze above",
     no_ads: "No ads yet",
     no_ads_sub: "Connect Meta Ads and click Sync",
     sync_now: "Sync now",
@@ -117,18 +102,18 @@ const T = {
     importing_sub: "This may take a few seconds",
     no_category: "No ads in this category",
     more_ads: (n: number) => `+${n} ads`,
-    accounts_label: (n: number) => `${n} accounts`,
     verdict: { winner: "Winner", scaled: "Scaled", testing: "Testing", loser: "Paused" },
     metrics: { spend: "Spend", impressions: "Impressions", clicks: "Clicks", cpc: "CPC", conversions: "Conversions", frequency: "Frequency", days: "Days", ctr: "CTR", roas: "ROAS" },
     date_locale: "en-US",
+    pick_dates: "Pick dates",
   },
 };
 
 const V_STYLE = {
-  winner:  { bg: "rgba(34,197,94,0.06)",  border: "rgba(34,197,94,0.18)",  bar: "#22c55e", num: "#4ade80", badge: "rgba(34,197,94,0.12)"  },
+  winner:  { bg: "rgba(34,197,94,0.06)",  border: "rgba(34,197,94,0.18)",  bar: "#22c55e", num: "#4ade80", badge: "rgba(34,197,94,0.12)" },
   scaled:  { bg: "rgba(14,165,233,0.06)", border: "rgba(14,165,233,0.18)", bar: "#0ea5e9", num: "#38bdf8", badge: "rgba(14,165,233,0.12)" },
   testing: { bg: "rgba(251,191,36,0.05)", border: "rgba(251,191,36,0.15)", bar: "#fbbf24", num: "#fcd34d", badge: "rgba(251,191,36,0.10)" },
-  loser:   { bg: "rgba(239,68,68,0.05)",  border: "rgba(239,68,68,0.15)",  bar: "#ef4444", num: "#f87171", badge: "rgba(239,68,68,0.10)"  },
+  loser:   { bg: "rgba(239,68,68,0.05)",  border: "rgba(239,68,68,0.15)",  bar: "#ef4444", num: "#f87171", badge: "rgba(239,68,68,0.10)" },
 };
 
 type Verdict = keyof typeof V_STYLE;
@@ -141,10 +126,8 @@ interface Entry {
   conversions: number; conv_value: number; roas: number | null;
   frequency: number | null; verdict: Verdict; verdict_reason: string;
   peak_ctr: number; synced_at: string; persona_id: string;
+  thumbnail_url?: string | null;
 }
-
-const PLAT_COLOR: Record<string, string> = { meta: "#1877F2" }; // google disabled
-const PLAT_LABEL: Record<string, string> = { meta: "Meta" }; // google disabled
 
 function money(n: number, lang?: string) {
   const sym = lang === "pt" ? "R$" : "$";
@@ -152,57 +135,83 @@ function money(n: number, lang?: string) {
   return `${sym}${n.toFixed(0)}`;
 }
 
+// ── Thumbnail component with fallback ──
+function AdThumb({ url, name, verdict }: { url?: string | null; name: string; verdict: Verdict }) {
+  const [err, setErr] = useState(false);
+  const cfg = V_STYLE[verdict] || V_STYLE.testing;
+  if (url && !err) {
+    return (
+      <img src={url} alt={name} onError={() => setErr(true)}
+        style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flexShrink: 0, background: "rgba(255,255,255,0.04)", border: `1px solid ${cfg.border}` }}
+      />
+    );
+  }
+  // Fallback: colored initial
+  return (
+    <div style={{ width: 44, height: 44, borderRadius: 8, flexShrink: 0, background: cfg.badge, border: `1px solid ${cfg.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <span style={{ fontSize: 16, fontWeight: 800, color: cfg.num, fontFamily: M }}>{(name || "?").charAt(0).toUpperCase()}</span>
+    </div>
+  );
+}
+
+// ── Diary Row — card style with thumbnail ──
 const DiaryRow = React.memo(function DiaryRow({ entry, expanded, onToggle, t, lang }: { entry: Entry; expanded: boolean; onToggle: () => void; t: typeof T.pt; lang?: string }) {
   const cfg = V_STYLE[entry.verdict] || V_STYLE.testing;
   const verdictLabel = t.verdict[entry.verdict as keyof typeof t.verdict] || entry.verdict;
   const ctr = (entry.ctr * 100).toFixed(2);
   const isPos = entry.verdict === "winner" || entry.verdict === "scaled";
-  const platColor = PLAT_COLOR[entry.platform] || "#666";
 
   return (
-    <div style={{ borderRadius: 12, background: cfg.bg, border: `1px solid ${cfg.border}`, overflow: "hidden", transition:"transform 0.15s, box-shadow 0.15s" }} className="ab-diary-row">
+    <div style={{ borderRadius: 14, background: cfg.bg, border: `1px solid ${cfg.border}`, overflow: "hidden", transition: "transform 0.15s, box-shadow 0.15s" }} className="ab-diary-row">
       <button onClick={onToggle} style={{ width: "100%", display: "flex", alignItems: "center", padding: 0, background: "none", border: "none", cursor: "pointer" }}>
         <div style={{ width: 3, alignSelf: "stretch", background: cfg.bar, flexShrink: 0, opacity: 0.75 }} />
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, padding: "13px 15px" }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12, padding: "11px 14px" }}>
+          {/* Thumbnail */}
+          <AdThumb url={entry.thumbnail_url} name={entry.ad_name} verdict={entry.verdict} />
+
+          {/* Name + campaign */}
           <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
             <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#f0f2f8", fontFamily: F, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {entry.ad_name || t.no_name}
             </p>
-            <p style={{ margin: "3px 0 0", fontSize: 11.5, color: "rgba(255,255,255,0.3)", fontFamily: F, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              <span style={{ color: platColor, fontWeight: 600 }}>{PLAT_LABEL[entry.platform] || entry.platform}</span>
-              {entry.campaign_name && ` · ${entry.campaign_name}`}
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.28)", fontFamily: F, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {entry.campaign_name || ""}
               {entry.days_running > 0 && ` · ${entry.days_running}d`}
             </p>
           </div>
-          <div style={{ textAlign: "right", flexShrink: 0 }}>
-            <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: cfg.num, fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{ctr}%</p>
-            <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>CTR</p>
-          </div>
-          <div style={{ textAlign: "right", flexShrink: 0, minWidth: 52 }}>
+
+          {/* CTR + ROAS/Spend in compact form */}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
+            <div style={{ textAlign: "right" }}>
+              <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: cfg.num, fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{ctr}%</p>
+              <p style={{ margin: "1px 0 0", fontSize: 9, color: "rgba(255,255,255,0.22)", fontFamily: F, letterSpacing: "0.08em", textTransform: "uppercase" }}>CTR</p>
+            </div>
             {entry.roas && entry.roas > 0 ? (
-              <>
-                <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: isPos ? "#4ade80" : "#f87171", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{entry.roas.toFixed(1)}×</p>
-                <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>ROAS</p>
-              </>
+              <div style={{ textAlign: "right", minWidth: 40 }}>
+                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: isPos ? "#4ade80" : "#f87171", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{entry.roas.toFixed(1)}×</p>
+                <p style={{ margin: "1px 0 0", fontSize: 9, color: "rgba(255,255,255,0.22)", fontFamily: F, letterSpacing: "0.08em", textTransform: "uppercase" }}>ROAS</p>
+              </div>
             ) : (
-              <>
-                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.55)", fontFamily: M, letterSpacing: "-0.02em", lineHeight: 1 }}>{money(entry.spend, lang)}</p>
-                <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: F, letterSpacing: "0.06em", textTransform: "uppercase" }}>{t.metrics.spend}</p>
-              </>
+              <div style={{ textAlign: "right", minWidth: 40 }}>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.5)", fontFamily: M, letterSpacing: "-0.02em", lineHeight: 1 }}>{money(entry.spend, lang)}</p>
+                <p style={{ margin: "1px 0 0", fontSize: 9, color: "rgba(255,255,255,0.22)", fontFamily: F, letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.metrics.spend}</p>
+              </div>
             )}
           </div>
-          <div style={{ padding: "3px 9px", borderRadius: 5, background: cfg.badge, flexShrink: 0 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: cfg.num, fontFamily: F }}>{verdictLabel}</span>
+
+          {/* Badge + chevron */}
+          <div style={{ padding: "3px 8px", borderRadius: 5, background: cfg.badge, flexShrink: 0 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: cfg.num, fontFamily: F }}>{verdictLabel}</span>
           </div>
-          <div style={{ color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          <div style={{ color: "rgba(255,255,255,0.15)", flexShrink: 0 }}>
+            {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </div>
         </div>
       </button>
 
       {expanded && (
-        <div style={{ borderTop: `1px solid ${cfg.border}`, padding: "13px 18px 15px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 7, marginBottom: 12 }}>
+        <div style={{ borderTop: `1px solid ${cfg.border}`, padding: "12px 16px 14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(82px, 1fr))", gap: 6, marginBottom: 10 }}>
             {[
               { l: t.metrics.spend,       v: money(entry.spend, lang) },
               { l: t.metrics.impressions, v: entry.impressions >= 1000 ? `${(entry.impressions/1000).toFixed(0)}k` : String(entry.impressions) },
@@ -214,17 +223,17 @@ const DiaryRow = React.memo(function DiaryRow({ entry, expanded, onToggle, t, la
               ...(entry.frequency         ? [{ l: t.metrics.frequency,   v: `${entry.frequency.toFixed(1)}×` }] : []),
               ...(entry.days_running > 0  ? [{ l: t.metrics.days,        v: String(entry.days_running)    }] : []),
             ].map(m => (
-              <div key={m.l} style={{ padding: "8px 10px", borderRadius: 7, background: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: F, textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.l}</p>
-                <p style={{ margin: "3px 0 0", fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.85)", fontFamily: M, letterSpacing: "-0.02em" }}>{m.v}</p>
+              <div key={m.l} style={{ padding: "7px 9px", borderRadius: 7, background: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", fontFamily: F, textTransform: "uppercase", letterSpacing: "0.06em" }}>{m.l}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.8)", fontFamily: M, letterSpacing: "-0.02em" }}>{m.v}</p>
               </div>
             ))}
           </div>
-          <p style={{ margin: 0, fontSize: 12.5, color: "rgba(255,255,255,0.4)", fontFamily: F, lineHeight: 1.6, borderLeft: `2px solid ${cfg.bar}`, paddingLeft: 10, borderRadius: 0 }}>
+          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.38)", fontFamily: F, lineHeight: 1.6, borderLeft: `2px solid ${cfg.bar}`, paddingLeft: 10, borderRadius: 0 }}>
             {entry.verdict_reason}
           </p>
           {(entry.launched_at || entry.paused_at) && (
-            <p style={{ margin: "8px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)", fontFamily: F }}>
+            <p style={{ margin: "7px 0 0", fontSize: 10, color: "rgba(255,255,255,0.18)", fontFamily: F }}>
               {entry.launched_at && `${t.launched} ${new Date(entry.launched_at).toLocaleDateString(t.date_locale)}`}
               {entry.paused_at && ` · ${t.paused_on} ${new Date(entry.paused_at).toLocaleDateString(t.date_locale)}`}
             </p>
@@ -235,6 +244,11 @@ const DiaryRow = React.memo(function DiaryRow({ entry, expanded, onToggle, t, la
   );
 });
 
+// ── Helpers for calendar ──
+const addDays = (d: Date, n: number) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+const fmtD = (d: Date) => d.toISOString().slice(0, 10);
+const fmtLabel = (d: Date, locale: string) => d.toLocaleDateString(locale, { day: "numeric", month: "short" });
+
 export default function AdDiary({ propUser, propPersona, propLang, embedded }: { propUser?: any; propPersona?: any; propLang?: string; embedded?: boolean } = {}) {
   usePageTitle("Diário de Anúncios");
   const { user: ctxUser, selectedPersona: ctxPersona } = useOutletContext<DashboardContext>();
@@ -244,43 +258,45 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
   const language = propLang ?? ctxLang;
   const t = T[language as keyof typeof T] || T.pt;
 
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"combined" | "separate">("combined");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<Verdict | "all">("all");
-  const [campaignFilter, setCampaignFilter] = useState<string>("all");
-  const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
-  // Load accounts
-  useEffect(() => {
-    if (!user?.id) return;
-    supabase.from("personas").select("id, name").eq("user_id", user.id).order("created_at")
-      .then(({ data }) => setAccounts((data || []) as Account[]));
-  }, [user?.id]);
+  // Date range (like LivePanel)
+  const today = useMemo(() => new Date(), []);
+  const PRESETS = [{ label: "7D", days: 7 }, { label: "30D", days: 30 }, { label: "90D", days: 90 }];
+  const [activePreset, setActivePreset] = useState("90D");
+  const [dateRange, setDateRange] = useState({ from: addDays(today, -89), to: today });
+  const [showCal, setShowCal] = useState(false);
+  const [calView, setCalView] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [calDraft, setCalDraft] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
+  const [calSel, setCalSel] = useState<"from" | "to">("from");
+  const calRef = useRef<HTMLDivElement>(null);
 
-  // Sync selected with active persona from sidebar
+  // Close calendar on outside click
   useEffect(() => {
-    if (selectedPersona?.id && !selectedIds.includes(selectedPersona.id)) {
-      setSelectedIds([selectedPersona.id]);
-    }
-  }, [selectedPersona?.id]);
+    if (!showCal) return;
+    const handler = (e: MouseEvent) => { if (calRef.current && !calRef.current.contains(e.target as Node)) setShowCal(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showCal]);
+
+  const personaId = selectedPersona?.id || null;
 
   const load = useCallback(async () => {
-    if (!user?.id || selectedIds.length === 0) { setLoading(false); return; }
+    if (!user?.id || !personaId) { setLoading(false); return; }
     setLoading(true);
     const { data } = await (supabase as any).from("ad_diary")
-      .select("*").eq("user_id", user.id).in("persona_id", selectedIds)
+      .select("*").eq("user_id", user.id).eq("persona_id", personaId)
       .order("spend", { ascending: false }).limit(500);
     setEntries((data || []) as Entry[]);
     if (data?.length) setLastSync(new Date((data[0] as any).synced_at));
     setLoading(false);
-  }, [user?.id, selectedIds.join(",")]);
+  }, [user?.id, personaId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -291,23 +307,21 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
     return () => window.removeEventListener('meta-account-changed', handler);
   }, [load]);
 
-  // Auto-sync disabled — prevents infinite loop when embedded. User clicks Sync manually.
-
-  const syncAccount = async (personaId: string) => {
-    if (!user?.id) return;
+  const syncAccount = async () => {
+    if (!user?.id || !personaId) return;
     setSyncing(personaId);
     setSyncError(null);
     try {
-      // Use live-metrics (same as Performance Dashboard) — works reliably for paused ads
+      const days = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / 86400000) + 1;
+      const period = days <= 7 ? "7d" : days <= 14 ? "14d" : days <= 30 ? "30d" : days <= 60 ? "60d" : "90d";
       const { data: res, error } = await supabase.functions.invoke("live-metrics", {
-        body: { user_id: user.id, persona_id: personaId, period: "90d" }
+        body: { user_id: user.id, persona_id: personaId, period, date_from: fmtD(dateRange.from), date_to: fmtD(dateRange.to) }
       });
       if (error) { setSyncError(`Erro: ${error.message}`); setSyncing(null); return; }
 
       const metaAds: any[] = res?.meta?.top_ads || [];
-      if (!metaAds.length) { setSyncError("0 anúncios encontrados nos últimos 90 dias"); setSyncing(null); return; }
+      if (!metaAds.length) { setSyncError("0 anúncios encontrados"); setSyncing(null); return; }
 
-      // Map live-metrics top_ads to Entry format and upsert to ad_diary
       const calcVerdict = (a: any) => {
         const ctr = (a.ctr || 0) * 100;
         const spend = a.spend || 0;
@@ -320,11 +334,11 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       };
 
       const rows = metaAds.map((a: any) => {
-        const ctr = a.ctr || 0; // already 0-1 from live-metrics
+        const ctr = a.ctr || 0;
         const spend = a.spend || 0;
         const roas = a.roas || null;
         const conv = a.conversions || 0;
-        const verd = calcVerdict({ ...a, ctr: ctr * 100, spend, roas }); // calcVerdict expects ctr as %
+        const verd = calcVerdict({ ...a, ctr: ctr * 100, spend, roas });
         return {
           user_id: user.id, persona_id: personaId, platform: "meta",
           ad_id: a.id || a.name || String(Math.random()),
@@ -338,6 +352,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
           roas, frequency: null,
           verdict: verd.verdict, verdict_reason: verd.reason,
           peak_ctr: ctr, synced_at: new Date().toISOString(),
+          thumbnail_url: a.thumbnail_url || null,
         };
       });
 
@@ -348,40 +363,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
     setSyncing(null);
   };
 
-  const syncAll = () => selectedIds.forEach(pid => syncAccount(pid));
-
-  const toggleAccount = (id: string) => {
-    setSelectedIds(prev =>
-      prev.includes(id)
-        ? prev.length > 1 ? prev.filter(x => x !== id) : prev
-        : [...prev, id]
-    );
-  };
-
-  const entriesByAccount = useMemo(() => {
-    const map: Record<string, Entry[]> = {};
-    for (const e of entries) {
-      if (!map[e.persona_id]) map[e.persona_id] = [];
-      map[e.persona_id].push(e);
-    }
-    return map;
-  }, [entries]);
-
-  const campaigns = useMemo(() => {
-    const seen = new Set<string>();
-    return entries.map(e => e.campaign_name).filter(c => c && !seen.has(c!) && seen.add(c!)) as string[];
-  }, [entries]);
-
-  const platforms = useMemo(() => {
-    const seen = new Set<string>();
-    return entries.map(e => e.platform).filter(p => p && !seen.has(p) && seen.add(p));
-  }, [entries]);
-
-  const filteredEntries = entries.filter(e =>
-    (filter === "all" || e.verdict === filter) &&
-    (campaignFilter === "all" || e.campaign_name === campaignFilter) &&
-    (platformFilter === "all" || e.platform === platformFilter)
-  );
+  const filteredEntries = entries.filter(e => filter === "all" || e.verdict === filter);
 
   const stats = useMemo(() => {
     const winners = entries.filter(e => e.verdict === "winner" || e.verdict === "scaled").length;
@@ -408,142 +390,198 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
 
   return (
     <div style={{ maxWidth: embedded ? "none" : 840, margin: embedded ? "0" : "0 auto", padding: embedded ? "20px 0 40px" : "clamp(16px,4vw,36px)", fontFamily: F }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .ab-diary-row:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.25)}`}</style>
 
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, gap: 12, flexWrap: "wrap" }}>
+      {/* ── Header: title + date presets/calendar + sync ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 10, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: "clamp(20px,3vw,26px)", fontWeight: 800, color: "#f0f2f8", letterSpacing: "-0.03em" }}>{t.title}</h1>
-          {lastSync && <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{t.updated} {lastSync.toLocaleTimeString(t.date_locale, { hour: "2-digit", minute: "2-digit" })}</p>}
+          {lastSync && <p style={{ margin: "3px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{t.updated} {lastSync.toLocaleTimeString(t.date_locale, { hour: "2-digit", minute: "2-digit" })}</p>}
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {selectedIds.length > 1 && (
-            <div style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3, gap: 2 }}>
-              {(["combined", "separate"] as const).map(mode => (
-                <button key={mode} onClick={() => setViewMode(mode)}
-                  style={{ padding: "5px 10px", borderRadius: 6, border: "none", cursor: "pointer", background: viewMode === mode ? "rgba(255,255,255,0.1)" : "transparent", color: viewMode === mode ? "#f0f2f8" : "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontFamily: F }}>
-                  {mode === "combined" ? <Layers size={12} /> : <LayoutList size={12} />}
-                  {mode === "combined" ? t.combined : t.separate}
-                </button>
-              ))}
-            </div>
-          )}
-          <button onClick={syncAll} disabled={!!syncing}
-            style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 16px", borderRadius: 9, background: syncing ? "rgba(255,255,255,0.04)" : "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#38bdf8", fontSize: 13, fontWeight: 600, cursor: syncing ? "default" : "pointer", opacity: syncing ? 0.5 : 1, fontFamily: F, whiteSpace: "nowrap" }}>
-            <RefreshCw size={13} style={{ animation: syncing ? "spin 1s linear infinite" : "none" }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {/* Period presets */}
+          {PRESETS.map(p => (
+            <button key={p.label} onClick={() => {
+              setActivePreset(p.label);
+              setDateRange({ from: addDays(today, -(p.days - 1)), to: today });
+            }}
+              style={{
+                padding: "4px 10px", borderRadius: 999, border: "none",
+                background: activePreset === p.label ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)",
+                color: activePreset === p.label ? "#0ea5e9" : "rgba(255,255,255,0.38)",
+                fontSize: 10, fontWeight: 700, fontFamily: F,
+                letterSpacing: "0.02em", cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}}
+              onMouseLeave={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}}
+            >
+              {p.label}
+            </button>
+          ))}
+
+          {/* Calendar icon */}
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setShowCal(!showCal)}
+              style={{
+                width: 28, height: 28, borderRadius: 999, border: "none",
+                background: showCal ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { if (!showCal) e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+              onMouseLeave={e => { if (!showCal) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+              title={t.pick_dates}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={showCal ? "#0ea5e9" : "rgba(255,255,255,0.40)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </button>
+
+            {/* Calendar dropdown */}
+            {showCal && (
+              <div ref={calRef} style={{
+                position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 100,
+                background: "rgba(15,17,22,0.98)", border: "1px solid rgba(255,255,255,0.10)",
+                borderRadius: 14, padding: 16, minWidth: 260,
+                boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+                backdropFilter: "blur(16px)",
+              }}>
+                {/* Month nav */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() - 1, 1))}
+                    style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: 16, padding: "2px 6px" }}>
+                    ‹
+                  </button>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: F }}>
+                    {calView.toLocaleDateString(language === "pt" ? "pt-BR" : language === "es" ? "es-MX" : "en-US", { month: "long", year: "numeric" })}
+                  </span>
+                  <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() + 1, 1))}
+                    style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: 16, padding: "2px 6px" }}>
+                    ›
+                  </button>
+                </div>
+                {/* Day headers */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
+                  {(language === "pt" ? ["D","S","T","Q","Q","S","S"] : language === "es" ? ["D","L","M","M","J","V","S"] : ["S","M","T","W","T","F","S"]).map((d, i) => (
+                    <div key={i} style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.25)", textAlign: "center", padding: 4, fontFamily: F }}>{d}</div>
+                  ))}
+                </div>
+                {/* Calendar days */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
+                  {(() => {
+                    const first = new Date(calView.getFullYear(), calView.getMonth(), 1);
+                    const last = new Date(calView.getFullYear(), calView.getMonth() + 1, 0);
+                    const cells: React.ReactNode[] = [];
+                    for (let i = 0; i < first.getDay(); i++) cells.push(<div key={`e${i}`} />);
+                    for (let d = 1; d <= last.getDate(); d++) {
+                      const dt = new Date(calView.getFullYear(), calView.getMonth(), d);
+                      const isFrom = calDraft.from && dt.toDateString() === calDraft.from.toDateString();
+                      const isTo = calDraft.to && dt.toDateString() === calDraft.to.toDateString();
+                      const inRange = calDraft.from && calDraft.to && dt >= calDraft.from && dt <= calDraft.to;
+                      const isFuture = dt > today;
+                      cells.push(
+                        <button key={d} disabled={isFuture} onClick={() => {
+                          if (calSel === "from") {
+                            setCalDraft({ from: dt, to: null });
+                            setCalSel("to");
+                          } else {
+                            const from = calDraft.from!;
+                            const finalFrom = dt < from ? dt : from;
+                            const finalTo = dt < from ? from : dt;
+                            setCalDraft({ from: finalFrom, to: finalTo });
+                            setActivePreset("");
+                            setDateRange({ from: finalFrom, to: finalTo });
+                            setShowCal(false);
+                            setCalSel("from");
+                          }
+                        }}
+                          style={{
+                            width: "100%", aspectRatio: "1", border: "none", borderRadius: 8,
+                            background: isFrom || isTo ? "rgba(14,165,233,0.3)" : inRange ? "rgba(14,165,233,0.08)" : "transparent",
+                            color: isFuture ? "rgba(255,255,255,0.12)" : isFrom || isTo ? "#0ea5e9" : "#fff",
+                            fontSize: 11, fontWeight: isFrom || isTo ? 700 : 500, fontFamily: F,
+                            cursor: isFuture ? "default" : "pointer",
+                            transition: "all 0.1s",
+                          }}
+                        >
+                          {d}
+                        </button>
+                      );
+                    }
+                    return cells;
+                  })()}
+                </div>
+                {/* Current range label */}
+                <div style={{ marginTop: 10, fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", fontFamily: F }}>
+                  {fmtLabel(dateRange.from, t.date_locale)} — {fmtLabel(dateRange.to, t.date_locale)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sync button */}
+          <button onClick={syncAccount} disabled={!!syncing}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 9, background: syncing ? "rgba(255,255,255,0.04)" : "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#38bdf8", fontSize: 12, fontWeight: 600, cursor: syncing ? "default" : "pointer", opacity: syncing ? 0.5 : 1, fontFamily: F, whiteSpace: "nowrap" }}>
+            <RefreshCw size={12} style={{ animation: syncing ? "spin 1s linear infinite" : "none" }} />
             {syncing ? t.syncing : t.sync}
           </button>
         </div>
       </div>
 
-      {/* Account selector — só aparece se há mais de 1 conta */}
-      {accounts.length > 1 && (
-        <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
-          {accounts.map(acc => {
-            const isSel = selectedIds.includes(acc.id);
-            const isSyncing = syncing === acc.id;
-            return (
-              <button key={acc.id} onClick={() => toggleAccount(acc.id)}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: `1px solid ${isSel ? "rgba(14,165,233,0.35)" : "var(--border-subtle)"}`, background: isSel ? "rgba(14,165,233,0.1)" : "var(--bg-surface)", color: isSel ? "#38bdf8" : "rgba(255,255,255,0.4)", fontSize: 12.5, fontWeight: isSel ? 600 : 400, cursor: "pointer", fontFamily: F, transition: "all 0.12s" }}>
-                {isSyncing
-                  ? <div style={{ width: 8, height: 8, borderRadius: "50%", border: "1.5px solid rgba(14,165,233,0.3)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
-                  : isSel && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#0ea5e9" }} />
-                }
-                {acc.name || "Conta"}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Summary */}
+      {/* ── Summary cards — horizontal strip ── */}
       {entries.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
-          <div style={{ gridColumn: "span 2", padding: "18px 20px", borderRadius: 14, background: stats.winRate >= 40 ? "rgba(34,197,94,0.07)" : "var(--bg-card)", border: `1px solid ${stats.winRate >= 40 ? "rgba(34,197,94,0.15)" : "var(--border-subtle)"}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-            <div>
-              <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.win_rate}</p>
-              <p style={{ margin: "5px 0 3px", fontSize: 36, fontWeight: 700, color: stats.winRate >= 40 ? "#4ade80" : stats.winRate >= 20 ? "#fcd34d" : "#f87171", fontFamily: M, letterSpacing: "-0.04em", lineHeight: 1 }}>{stats.winRate}%</p>
-              <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{t.winners_of(stats.winners, entries.length)}</p>
-            </div>
-            <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 40 }}>
-              {[
-                { pct: stats.winners / Math.max(entries.length, 1), color: "#22c55e" },
-                { pct: entries.filter(e => e.verdict === "testing").length / Math.max(entries.length, 1), color: "#fbbf24" },
-                { pct: entries.filter(e => e.verdict === "loser").length / Math.max(entries.length, 1), color: "#ef4444" },
-              ].map((b, i) => (
-                <div key={i} style={{ width: 12, height: `${Math.max(b.pct * 100, 4)}%`, background: b.color, borderRadius: "3px 3px 0 0", opacity: 0.7, minHeight: 4 }} />
-              ))}
-            </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 18, overflowX: "auto", paddingBottom: 2 }}>
+          {/* Win rate */}
+          <div style={{ flex: "1 1 0", minWidth: 120, padding: "12px 14px", borderRadius: 12, background: stats.winRate >= 40 ? "rgba(34,197,94,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${stats.winRate >= 40 ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)"}` }}>
+            <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.win_rate}</p>
+            <p style={{ margin: "4px 0 1px", fontSize: 26, fontWeight: 700, color: stats.winRate >= 40 ? "#4ade80" : stats.winRate >= 20 ? "#fcd34d" : "#f87171", fontFamily: M, letterSpacing: "-0.04em", lineHeight: 1 }}>{stats.winRate}%</p>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{t.winners_of(stats.winners, entries.length)}</p>
           </div>
-          <div style={{ padding: "14px 16px", borderRadius: 12, background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.invested}</p>
-            <p style={{ margin: "5px 0 2px", fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.75)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{money(stats.totalSpend)}</p>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{t.last90}</p>
+          {/* Invested */}
+          <div style={{ flex: "1 1 0", minWidth: 100, padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.invested}</p>
+            <p style={{ margin: "4px 0 1px", fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.7)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{money(stats.totalSpend, language)}</p>
           </div>
-          <div style={{ padding: "14px 16px", borderRadius: 12, background: stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.05)" : "rgba(255,255,255,0.03)", border: `1px solid ${stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.07)"}` }}>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{stats.overallRoas ? t.roas_label : t.return_label}</p>
-            <p style={{ margin: "5px 0 2px", fontSize: 22, fontWeight: 700, color: stats.overallRoas && stats.overallRoas >= 2 ? "#4ade80" : stats.overallRoas && stats.overallRoas >= 1 ? "#fcd34d" : "rgba(255,255,255,0.4)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>
-              {stats.overallRoas ? `${stats.overallRoas.toFixed(2)}×` : stats.totalReturn > 0 ? money(stats.totalReturn) : "—"}
+          {/* ROAS */}
+          <div style={{ flex: "1 1 0", minWidth: 100, padding: "12px 14px", borderRadius: 12, background: stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.05)" : "rgba(255,255,255,0.03)", border: `1px solid ${stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.10)" : "rgba(255,255,255,0.06)"}` }}>
+            <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{stats.overallRoas ? t.roas_label : t.return_label}</p>
+            <p style={{ margin: "4px 0 1px", fontSize: 22, fontWeight: 700, color: stats.overallRoas && stats.overallRoas >= 2 ? "#4ade80" : stats.overallRoas && stats.overallRoas >= 1 ? "#fcd34d" : "rgba(255,255,255,0.38)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>
+              {stats.overallRoas ? `${stats.overallRoas.toFixed(2)}×` : stats.totalReturn > 0 ? money(stats.totalReturn, language) : "—"}
             </p>
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
-              {stats.overallRoas ? `${money(stats.totalReturn)} ${t.return_suffix}` : t.no_conv}
-            </p>
+            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.22)" }}>{stats.overallRoas ? `${money(stats.totalReturn, language)} ${t.return_suffix}` : t.no_conv}</p>
           </div>
         </div>
       )}
 
-      {/* Filter tabs */}
+      {/* ── Verdict filter tabs — inline, compact ── */}
       {entries.length > 0 && (
-        <div style={{ display: "flex", gap: 4, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
+        <div style={{ display: "flex", gap: 4, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
           {TABS.filter(tab => tab.count > 0 || tab.key === "all").map(tab => {
             const isActive = filter === tab.key;
             const color = tab.key !== "all" ? V_STYLE[tab.key].bar : undefined;
             return (
               <button key={tab.key} onClick={() => setFilter(tab.key)}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 7, border: "1px solid", whiteSpace: "nowrap", cursor: "pointer", fontFamily: F, fontSize: 12.5, fontWeight: isActive ? 600 : 400, transition: "all 0.12s", background: isActive ? "var(--bg-card)" : "transparent", borderColor: isActive ? "var(--border-default)" : "var(--border-subtle)", color: isActive ? "var(--text-primary)" : "var(--text-muted)" }}>
-                {color && <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, border: "1px solid", whiteSpace: "nowrap", cursor: "pointer", fontFamily: F, fontSize: 12, fontWeight: isActive ? 600 : 400, transition: "all 0.12s", background: isActive ? "rgba(255,255,255,0.06)" : "transparent", borderColor: isActive ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)", color: isActive ? "#f0f2f8" : "rgba(255,255,255,0.35)" }}>
+                {color && <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0 }} />}
                 {tab.label}
-                <span style={{ fontSize: 11, fontFamily: M, color: isActive ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.2)" }}>{tab.count}</span>
+                <span style={{ fontSize: 10, fontFamily: M, color: isActive ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.18)" }}>{tab.count}</span>
               </button>
             );
           })}
         </div>
       )}
 
-      {/* Campaign + Platform filters */}
-      {entries.length > 0 && (campaigns.length > 1 || platforms.length > 1) && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-          {platforms.length > 1 && (
-            <select value={platformFilter} onChange={e => setPlatformFilter(e.target.value)}
-              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid var(--border-subtle)", background: "var(--bg-elevated)", color: platformFilter !== "all" ? "#38bdf8" : "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: F, cursor: "pointer", outline: "none" }}>
-              <option value="all">Todas as plataformas</option>
-              {platforms.filter(p => p === "meta").map(p => <option key={p} value={p}>Meta Ads</option>)}
-            </select>
-          )}
-          {campaigns.length > 1 && (
-            <select value={campaignFilter} onChange={e => setCampaignFilter(e.target.value)}
-              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid var(--border-subtle)", background: "var(--bg-elevated)", color: campaignFilter !== "all" ? "#38bdf8" : "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: F, cursor: "pointer", outline: "none", maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis" }}>
-              <option value="all">Todas as campanhas ({campaigns.length})</option>
-              {campaigns.map(c => <option key={c} value={c}>{c.length > 40 ? c.slice(0, 38) + "…" : c}</option>)}
-            </select>
-          )}
-          {(campaignFilter !== "all" || platformFilter !== "all") && (
-            <button onClick={() => { setCampaignFilter("all"); setPlatformFilter("all"); }}
-              style={{ padding: "6px 10px", borderRadius: 7, border: "1px solid var(--border-subtle)", background: "transparent", color: "var(--text-muted)", fontSize: 12, fontFamily: F, cursor: "pointer" }}>
-               Limpar filtros
-            </button>
-          )}
+      {/* Error */}
+      {syncError && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, marginBottom: 12 }}>
+          <span style={{ fontSize: 12, color: "#f87171", flex: 1 }}>{syncError}</span>
+          <button onClick={() => setSyncError(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 14, padding: 0 }}>✕</button>
         </div>
       )}
 
       {/* Loading */}
-      {syncError && (
-        <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 14px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, marginBottom:12 }}>
-          <span style={{ fontSize:12, color:"#f87171", flex:1 }}> {syncError}</span>
-          <button onClick={()=>setSyncError(null)} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.3)", cursor:"pointer", fontSize:14, padding:0 }}></button>
-        </div>
-      )}
-
       {loading && (
         <div style={{ display: "flex", justifyContent: "center", padding: "48px 0", minHeight: 140 }}>
           <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid rgba(14,165,233,0.15)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
@@ -559,27 +597,19 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
         </div>
       )}
 
-      {/* No account selected */}
-      {!loading && selectedIds.length === 0 && (
-        <div style={{ textAlign: "center", padding: "48px 20px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.07)", minHeight: 140 }}>
-          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>{t.select_account}</p>
-          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, margin: 0 }}>{t.select_sub}</p>
-        </div>
-      )}
-
       {/* Empty */}
-      {!loading && !syncing && entries.length === 0 && selectedIds.length > 0 && (
+      {!loading && !syncing && entries.length === 0 && (
         <div style={{ textAlign: "center", padding: "48px 20px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.07)", minHeight: 140 }}>
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>{t.no_ads}</p>
           <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, margin: "0 0 20px" }}>{t.no_ads_sub}</p>
-          <button onClick={syncAll} style={{ padding: "10px 24px", borderRadius: 9, background: "#0ea5e9", color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+          <button onClick={syncAccount} style={{ padding: "10px 24px", borderRadius: 9, background: "#0ea5e9", color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
             {t.sync_now}
           </button>
         </div>
       )}
 
-      {/* Combined view */}
-      {!loading && filteredEntries.length > 0 && (viewMode === "combined" || selectedIds.length <= 1) && (
+      {/* ── Ad list ── */}
+      {!loading && filteredEntries.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {filteredEntries.map(entry => (
             <DiaryRow key={entry.id} entry={entry} t={t} lang={language}
@@ -587,45 +617,6 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
               onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
             />
           ))}
-          {filteredEntries.length < entries.length && (
-            <p style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.2)", margin: "4px 0 0" }}>
-              {t.more_ads(entries.length - filteredEntries.length)}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Separate view */}
-      {!loading && selectedIds.length > 1 && viewMode === "separate" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-          {selectedIds.map(pid => {
-            const acc = accounts.find(a => a.id === pid);
-            const accEntries = (entriesByAccount[pid] || []).filter(e => filter === "all" || e.verdict === filter);
-            if (accEntries.length === 0) return null;
-            const accWin = Math.round((accEntries.filter(e => e.verdict === "winner" || e.verdict === "scaled").length / accEntries.length) * 100);
-            return (
-              <div key={pid}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 7, background: "rgba(14,165,233,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#0ea5e9" }}>{(acc?.name || "?").charAt(0).toUpperCase()}</span>
-                  </div>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#f0f2f8", fontFamily: F }}>{acc?.name || "Conta"}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: F }}>{accEntries.length} ads · {accWin}%</p>
-                  </div>
-                  {syncing === pid && <div style={{ width: 12, height: 12, borderRadius: "50%", border: "1.5px solid rgba(14,165,233,0.3)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite", marginLeft: "auto" }} />}
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                  {accEntries.map(entry => (
-                    <DiaryRow key={entry.id} entry={entry} t={t} lang={language}
-                      expanded={expanded === entry.id}
-                      onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
         </div>
       )}
 
