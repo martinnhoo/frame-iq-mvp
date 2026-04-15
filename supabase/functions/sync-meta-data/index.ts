@@ -709,11 +709,23 @@ async function syncDeep(accountId: string, token: string, metaAccountId?: string
   );
 }
 
+// CORS headers for browser requests
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 // Main handler
 serve(async (req: Request) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   try {
     if (req.method !== "POST") {
-      return new Response("Method not allowed", { status: 405 });
+      return new Response("Method not allowed", { status: 405, headers: corsHeaders });
     }
 
     const body: SyncRequest = await req.json();
@@ -722,7 +734,7 @@ serve(async (req: Request) => {
     if (!account_id || !sync_type) {
       return new Response(
         JSON.stringify({ error: "account_id and sync_type are required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -744,7 +756,7 @@ serve(async (req: Request) => {
       default:
         return new Response(
           JSON.stringify({ error: "Invalid sync_type" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }
 
@@ -755,7 +767,7 @@ serve(async (req: Request) => {
         sync_type,
         timestamp: new Date().toISOString(),
       }),
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Sync error:", error);
@@ -765,7 +777,7 @@ serve(async (req: Request) => {
       }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
