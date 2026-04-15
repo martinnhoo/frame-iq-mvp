@@ -84,41 +84,141 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     return () => timers.forEach(clearTimeout);
   }, [connected, hasActivity, hasSaved]);
 
-  // ── Not connected ──
+  // ── Not connected — skip scanning, go straight to entry screen ──
   if (!connected) {
     return (
-      <div style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 12, padding: '48px 32px',
-        textAlign: 'center', fontFamily: F,
-        minHeight: 280,
-      }}>
-        <div style={{
-          width: 48, height: 48, borderRadius: 12,
-          background: 'rgba(13,162,231,0.08)',
-          border: '1px solid rgba(13,162,231,0.15)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 20px', fontSize: 22,
-        }}>
-          📡
+      <div style={{ fontFamily: F, minHeight: 280 }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h2 style={{
+            fontSize: 18, fontWeight: 700, color: '#fff',
+            margin: '0 0 6px', letterSpacing: '-0.02em',
+          }}>
+            O que você quer fazer?
+          </h2>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.5 }}>
+            Funciona melhor com o Meta Ads conectado
+          </p>
         </div>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 8px', letterSpacing: '-0.02em' }}>
-          Conecte uma conta Meta Ads
-        </h2>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '0 0 16px', lineHeight: 1.5 }}>
-          O Copilot vai analisar seus anúncios e gerar decisões automaticamente.
-        </p>
-        <button
-          onClick={() => navigate('/dashboard/accounts')}
-          style={{
-            background: '#0ea5e9', color: '#fff', border: 'none',
-            padding: '10px 24px', borderRadius: 8, fontSize: 13,
-            fontWeight: 600, cursor: 'pointer', fontFamily: F,
-          }}
-        >
-          Conectar conta
-        </button>
+
+        {/* Two-block grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: 12,
+        }}>
+          {/* Block 1 — Começar pelos criativos */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 12,
+            padding: '28px 24px',
+            display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 10,
+              background: 'rgba(139,92,246,0.08)',
+              border: '1px solid rgba(139,92,246,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>
+              💬
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: 15, fontWeight: 700, color: '#fff',
+                margin: '0 0 6px', letterSpacing: '-0.01em',
+              }}>
+                Começar pelos criativos
+              </h3>
+              <p style={{
+                fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
+                margin: 0, lineHeight: 1.5,
+              }}>
+                Explore ideias iniciais de anúncios antes de rodar campanhas
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/ai')}
+              style={{
+                background: 'transparent',
+                color: 'rgba(255,255,255,0.60)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                padding: '9px 20px', borderRadius: 8,
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: F,
+                marginTop: 'auto',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)';
+                e.currentTarget.style.color = '#fff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                e.currentTarget.style.color = 'rgba(255,255,255,0.60)';
+              }}
+            >
+              Falar com a IA
+            </button>
+          </div>
+
+          {/* Block 2 — Conectar Meta Ads */}
+          <div style={{
+            background: 'rgba(14,165,233,0.04)',
+            border: '1px solid rgba(14,165,233,0.12)',
+            borderRadius: 12,
+            padding: '28px 24px',
+            display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 10,
+              background: 'rgba(14,165,233,0.08)',
+              border: '1px solid rgba(14,165,233,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>
+              📡
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: 15, fontWeight: 700, color: '#fff',
+                margin: '0 0 6px', letterSpacing: '-0.01em',
+              }}>
+                Analisar campanhas
+              </h3>
+              <p style={{
+                fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
+                margin: 0, lineHeight: 1.5,
+              }}>
+                Conecte sua conta e identifique perdas e oportunidades
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/accounts')}
+              style={{
+                background: '#0ea5e9',
+                color: '#fff',
+                border: 'none',
+                padding: '9px 20px', borderRadius: 8,
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: F,
+                marginTop: 'auto',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#0d94d1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#0ea5e9';
+              }}
+            >
+              Conectar Meta Ads
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -199,141 +299,100 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   const allDone = step >= STEPS.length;
   const progress = allDone ? 100 : Math.min((step / STEPS.length) * 100, 90);
 
-  // ── All done → show two-block entry state instead of dead-end ──
+  // ── All done → connected but no active campaigns ──
   if (allDone) {
     return (
       <div style={{ fontFamily: F, minHeight: 280 }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        {/* Header — no active campaigns notice */}
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '5px 14px', borderRadius: 20,
+            background: 'rgba(251,191,36,0.06)',
+            border: '1px solid rgba(251,191,36,0.12)',
+            marginBottom: 16,
+          }}>
+            <div style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: '#fbbf24',
+              opacity: 0.7,
+            }} />
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(251,191,36,0.80)', letterSpacing: '0.01em' }}>
+              Nenhuma campanha ativa
+            </span>
+          </div>
           <h2 style={{
             fontSize: 18, fontWeight: 700, color: '#fff',
             margin: '0 0 6px', letterSpacing: '-0.02em',
           }}>
-            Pronto para começar
+            Enquanto isso, crie seus anúncios
           </h2>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.5 }}>
-            Escolha por onde quer iniciar
+            Use a IA para gerar ideias de criativos e roteiros
           </p>
         </div>
 
-        {/* Two-block grid */}
+        {/* Single box — Criativos */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: 12,
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 12,
+          padding: '28px 24px',
+          maxWidth: 420, margin: '0 auto',
+          display: 'flex', flexDirection: 'column', gap: 16,
         }}>
-          {/* Block 1 — Secondary: Começar pelos criativos */}
           <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            borderRadius: 12,
-            padding: '28px 24px',
-            display: 'flex', flexDirection: 'column', gap: 16,
+            width: 40, height: 40, borderRadius: 10,
+            background: 'rgba(139,92,246,0.08)',
+            border: '1px solid rgba(139,92,246,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 18,
           }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10,
-              background: 'rgba(139,92,246,0.08)',
-              border: '1px solid rgba(139,92,246,0.15)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18,
-            }}>
-              💬
-            </div>
-            <div>
-              <h3 style={{
-                fontSize: 15, fontWeight: 700, color: '#fff',
-                margin: '0 0 6px', letterSpacing: '-0.01em',
-              }}>
-                Começar pelos criativos
-              </h3>
-              <p style={{
-                fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
-                margin: 0, lineHeight: 1.5,
-              }}>
-                Explore ideias iniciais de anúncios antes de rodar campanhas
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/dashboard/ai')}
-              style={{
-                background: 'transparent',
-                color: 'rgba(255,255,255,0.60)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                padding: '9px 20px', borderRadius: 8,
-                fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', fontFamily: F,
-                marginTop: 'auto',
-                transition: 'all 0.15s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)';
-                e.currentTarget.style.color = '#fff';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-                e.currentTarget.style.color = 'rgba(255,255,255,0.60)';
-              }}
-            >
-              Falar com a IA
-            </button>
+            💬
           </div>
-
-          {/* Block 2 — Primary: Analisar campanhas */}
-          <div style={{
-            background: 'rgba(14,165,233,0.04)',
-            border: '1px solid rgba(14,165,233,0.12)',
-            borderRadius: 12,
-            padding: '28px 24px',
-            display: 'flex', flexDirection: 'column', gap: 16,
-          }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10,
-              background: 'rgba(14,165,233,0.08)',
-              border: '1px solid rgba(14,165,233,0.15)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18,
+          <div>
+            <h3 style={{
+              fontSize: 15, fontWeight: 700, color: '#fff',
+              margin: '0 0 6px', letterSpacing: '-0.01em',
             }}>
-              📡
-            </div>
-            <div>
-              <h3 style={{
-                fontSize: 15, fontWeight: 700, color: '#fff',
-                margin: '0 0 6px', letterSpacing: '-0.01em',
-              }}>
-                Analisar campanhas
-              </h3>
-              <p style={{
-                fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
-                margin: 0, lineHeight: 1.5,
-              }}>
-                Conecte sua conta e identifique perdas e oportunidades
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/dashboard/accounts')}
-              style={{
-                background: '#0ea5e9',
-                color: '#fff',
-                border: 'none',
-                padding: '9px 20px', borderRadius: 8,
-                fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', fontFamily: F,
-                marginTop: 'auto',
-                transition: 'all 0.15s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#0d94d1';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#0ea5e9';
-              }}
-            >
-              Conectar Meta Ads
-            </button>
+              Começar pelos criativos
+            </h3>
+            <p style={{
+              fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
+              margin: 0, lineHeight: 1.5,
+            }}>
+              Explore ideias de anúncios, gere roteiros e hooks antes de ativar campanhas
+            </p>
           </div>
+          <button
+            onClick={() => navigate('/dashboard/ai')}
+            style={{
+              background: '#0ea5e9',
+              color: '#fff',
+              border: 'none',
+              padding: '10px 20px', borderRadius: 8,
+              fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: F,
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#0d94d1';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#0ea5e9';
+            }}
+          >
+            Falar com a IA
+          </button>
         </div>
+
+        {/* Subtle hint */}
+        <p style={{
+          textAlign: 'center', fontSize: 11.5, color: 'rgba(255,255,255,0.18)',
+          margin: '20px 0 0', lineHeight: 1.5,
+        }}>
+          Quando suas campanhas estiverem ativas, as decisões aparecerão aqui automaticamente.
+        </p>
       </div>
     );
   }
