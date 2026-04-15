@@ -2,7 +2,7 @@ import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { useState, useEffect } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
-import { ClipboardList, Sparkles, Copy, Check, Target, Users, AlertTriangle, Eye, MessageSquare, BarChart3, Brain } from "lucide-react";
+import { Sparkles, Copy, Check, Target, Users, AlertTriangle, Eye, MessageSquare, BarChart3, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useDashT } from "@/i18n/dashboardTranslations";
 import { FeedbackBar } from "@/components/dashboard/FeedbackBar";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 
@@ -32,7 +31,6 @@ export default function BriefGenerator() {
   const { user, selectedPersona } = useOutletContext<DashboardContext>();
 
   const { language } = useLanguage();
-  const dt = useDashT(language);
   const [product, setProduct] = useState("");
   const [offer, setOffer] = useState("");
   const [searchParams] = useSearchParams();
@@ -65,22 +63,22 @@ export default function BriefGenerator() {
 
     // Build audience from persona
     const audienceParts = [
-      p.age ? `Age: ${p.age}` : "",
-      p.gender ? `Gender: ${p.gender}` : "",
-      p.pains?.length ? `Pain points: ${p.pains.join(", ")}` : "",
-      p.desires?.length ? `Desires: ${p.desires.join(", ")}` : "",
+      p.age ? `Idade: ${p.age}` : "",
+      p.gender ? `Gênero: ${p.gender}` : "",
+      p.pains?.length ? `Dores: ${p.pains.join(", ")}` : "",
+      p.desires?.length ? `Desejos: ${p.desires.join(", ")}` : "",
     ].filter(Boolean);
     if (audienceParts.length) setAudience(audienceParts.join(". "));
 
     // Build extra context from persona
     const ctxParts = [
       p.headline ? `Persona: ${p.name} — ${p.headline}` : `Persona: ${p.name}`,
-      p.triggers?.length ? `Purchase triggers: ${p.triggers.join(", ")}` : "",
-      p.hook_angles?.length ? `Preferred hook angles: ${p.hook_angles.join(", ")}` : "",
-      p.cta_style ? `CTA style: ${p.cta_style}` : "",
-      p.language_style ? `Language/tone: ${p.language_style}` : "",
-      p.best_platforms?.length ? `Best platforms: ${p.best_platforms.join(", ")}` : "",
-      p.best_formats?.length ? `Best formats: ${p.best_formats.join(", ")}` : "",
+      p.triggers?.length ? `Gatilhos de compra: ${p.triggers.join(", ")}` : "",
+      p.hook_angles?.length ? `Ângulos de hook preferidos: ${p.hook_angles.join(", ")}` : "",
+      p.cta_style ? `Estilo de CTA: ${p.cta_style}` : "",
+      p.language_style ? `Linguagem/tom: ${p.language_style}` : "",
+      p.best_platforms?.length ? `Melhores plataformas: ${p.best_platforms.join(", ")}` : "",
+      p.best_formats?.length ? `Melhores formatos: ${p.best_formats.join(", ")}` : "",
     ].filter(Boolean);
     if (ctxParts.length) setExtraContext(ctxParts.join("\n"));
 
@@ -114,7 +112,7 @@ export default function BriefGenerator() {
   const copyBrief = () => {
     if (!result?.brief) return;
     const b = result.brief;
-    const text = `# ${b.campaign_name}\n\n## Objective\n${b.objective}\n\n## Target Audience\n${b.target_audience?.demographics}\n${b.target_audience?.psychographics}\nPain points: ${b.target_audience?.pain_points?.join(", ")}\nTriggers: ${b.target_audience?.triggers?.join(", ")}\n\n## Core Message\n${b.core_message}\n\n## Value Proposition\n${b.value_proposition}\n\n## Tone & Voice\n${b.tone_and_voice}\n\n## Key Messages\n${b.key_messages?.map((m: string) => `- ${m}`).join("\n")}\n\n## CTA\n${b.cta}\n\n## Formats\n${b.formats?.map((f: any) => `- ${f.format} (${f.duration}) — ${f.rationale}`).join("\n")}\n\n## Visual Direction\n${b.visual_direction}\n\n## KPIs\n${b.kpis?.map((k: string) => `- ${k}`).join("\n")}\n\n## Do NOT\n${b.do_not?.map((d: string) => `- ${d}`).join("\n")}\n\n## Compliance\n${b.compliance_notes}`;
+    const text = `# ${b.campaign_name}\n\n## Objetivo\n${b.objective}\n\n## Público-Alvo\n${b.target_audience?.demographics}\n${b.target_audience?.psychographics}\nDores: ${b.target_audience?.pain_points?.join(", ")}\nGatilhos: ${b.target_audience?.triggers?.join(", ")}\n\n## Mensagem Central\n${b.core_message}\n\n## Proposta de Valor\n${b.value_proposition}\n\n## Tom & Voz\n${b.tone_and_voice}\n\n## Mensagens-Chave\n${b.key_messages?.map((m: string) => `- ${m}`).join("\n")}\n\n## CTA\n${b.cta}\n\n## Formatos Recomendados\n${b.formats?.map((f: any) => `- ${f.format} (${f.duration}) — ${f.rationale}`).join("\n")}\n\n## Direção Visual\n${b.visual_direction}\n\n## KPIs\n${b.kpis?.map((k: string) => `- ${k}`).join("\n")}\n\n## NÃO Fazer\n${b.do_not?.map((d: string) => `- ${d}`).join("\n")}\n\n## Compliance\n${b.compliance_notes}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -125,12 +123,12 @@ export default function BriefGenerator() {
   return (
     <div className="tool-page-wrap max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3 mb-2">
-        <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(96,165,250,0.15)" }}>
-          <ClipboardList className="h-5 w-5" style={{ color: "#60a5fa" }} />
+        <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(16,185,129,0.15)" }}>
+          <Sparkles className="h-5 w-5" style={{ color: "#10b981" }} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-foreground" style={syne}>{dt("br_title")}</h1>
-          <p className="text-sm text-muted-foreground" style={mono}>Production-ready creative briefs in seconds</p>
+          <h1 className="text-xl font-bold text-foreground" style={syne}>Brief AI</h1>
+          <p className="text-sm text-muted-foreground" style={mono}>Prompts completos e detalhados para a IA criar seus anúncios</p>
         </div>
       </div>
 
@@ -139,73 +137,73 @@ export default function BriefGenerator() {
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)" }}>
           <Brain className="h-3.5 w-3.5" style={{ color: "#0ea5e9" }} />
           <span className="text-xs text-muted-foreground" style={mono}>
-            Persona <strong className="text-foreground">{selectedPersona.name}</strong> auto-applied — audience, market & context pre-filled
+            Persona <strong className="text-foreground">{selectedPersona.name}</strong> aplicada — público, mercado e contexto preenchidos
           </span>
         </div>
       )}
 
       <div className="rounded-2xl border border-border/50 p-6 space-y-4" style={{ background: "rgba(255,255,255,0.02)" }}>
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Product / Service *</label>
-          <Textarea placeholder="Descreva o produto, marca ou campanha..." value={product} onChange={e => setProduct(e.target.value)} className="min-h-[80px]" />
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Produto / Serviço *</label>
+          <Textarea placeholder="Descreva o produto, marca ou campanha em detalhes..." value={product} onChange={e => setProduct(e.target.value)} className="min-h-[80px]" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Offer / Promotion (optional)</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Oferta / Promoção (opcional)</label>
             <Input value={offer} onChange={e => setOffer(e.target.value)} placeholder="ex: 50% off, trial grátis, tempo limitado" />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Target Audience {personaApplied ? "" : "(optional)"}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Público-Alvo {personaApplied ? "" : "(opcional)"}</label>
             <Input value={audience} onChange={e => setAudience(e.target.value)} placeholder="ex: Mulheres 25-34, entusiastas fitness" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Objective</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Objetivo</label>
             <Select value={objective} onValueChange={setObjective}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="awareness">Awareness</SelectItem>
-                <SelectItem value="consideration">Consideration</SelectItem>
-                <SelectItem value="conversion">Conversion</SelectItem>
-                <SelectItem value="retention">Retention</SelectItem>
-                <SelectItem value="installs">App Installs</SelectItem>
+                <SelectItem value="consideration">Consideração</SelectItem>
+                <SelectItem value="conversion">Conversão</SelectItem>
+                <SelectItem value="retention">Retenção</SelectItem>
+                <SelectItem value="installs">Instalações de App</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Market {personaApplied ? "" : ""}</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Mercado</label>
             <Select value={market} onValueChange={setMarket}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="US">🇺🇸 US</SelectItem>
-                <SelectItem value="BR">🇧🇷 Brazil</SelectItem>
-                <SelectItem value="MX">🇲🇽 Mexico</SelectItem>
-                <SelectItem value="IN">🇮🇳 India</SelectItem>
-                <SelectItem value="GLOBAL"> Global</SelectItem>
+                <SelectItem value="US">🇺🇸 EUA</SelectItem>
+                <SelectItem value="BR">🇧🇷 Brasil</SelectItem>
+                <SelectItem value="MX">🇲🇽 México</SelectItem>
+                <SelectItem value="IN">🇮🇳 Índia</SelectItem>
+                <SelectItem value="GLOBAL">🌎 Global</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2 col-span-2 md:col-span-1">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Competitors (optional)</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Concorrentes (opcional)</label>
             <Input value={competitors} onChange={e => setCompetitors(e.target.value)} placeholder="ex: Concorrente A, Concorrente B" />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Extra Context {personaApplied ? " (persona enriched)" : "(optional)"}</label>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" style={mono}>Contexto Extra {personaApplied ? " (enriquecido pela persona)" : "(opcional)"}</label>
           <Textarea placeholder="Diretrizes de marca, compliance, aprendizados de campanhas anteriores..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
-        <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #60a5fa, #0ea5e9)" }}>
+        <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>
           <Sparkles className="h-4 w-4" />
-          {loading ? (language==="es"?"Creando brief...":language==="pt"?"Gerando brief...":"Generating brief...") : (language==="es"?"Crear Brief Creativo":language==="pt"?"Gerar Brief Criativo":"Generate Creative Brief")}
+          {loading ? "Gerando prompts detalhados..." : "Gerar Brief AI"}
         </Button>
       </div>
 
-      {loading && <ThinkingIndicator lang={language as "pt"|"es"|"en"} variant="tool" label={language === "pt" ? "Criando brief criativo" : language === "es" ? "Creando brief creativo" : "Creating creative brief"} />}
+      {loading && <ThinkingIndicator lang={language as "pt"|"es"|"en"} variant="tool" label="Criando prompt detalhado com IA" />}
 
       {b && (
         <div className="space-y-4">
@@ -214,7 +212,7 @@ export default function BriefGenerator() {
               <h2 className="text-lg font-bold text-foreground" style={syne}>{b.campaign_name}</h2>
               <Button size="sm" variant="ghost" onClick={copyBrief} className="gap-1.5">
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? (language === "pt" ? "Copiado" : language === "es" ? "Copiado" : "Copied") : (language === "pt" ? "Copiar tudo" : language === "es" ? "Copiar todo" : "Copy All")}
+                {copied ? "Copiado" : "Copiar tudo"}
               </Button>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed" style={mono}>{b.objective}</p>
@@ -224,25 +222,25 @@ export default function BriefGenerator() {
             <div className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" style={{ color: "#0ea5e9" }} />
-                <span className="text-sm font-bold text-foreground" style={syne}>Target Audience</span>
+                <span className="text-sm font-bold text-foreground" style={syne}>Público-Alvo</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm" style={mono}>
                 <div>
-                  <span className="text-xs text-muted-foreground/60 uppercase">Demographics</span>
+                  <span className="text-xs text-muted-foreground/60 uppercase">Demografia</span>
                   <p className="text-muted-foreground mt-0.5">{b.target_audience.demographics}</p>
                 </div>
                 <div>
-                  <span className="text-xs text-muted-foreground/60 uppercase">Psychographics</span>
+                  <span className="text-xs text-muted-foreground/60 uppercase">Psicografia</span>
                   <p className="text-muted-foreground mt-0.5">{b.target_audience.psychographics}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <span className="text-xs text-muted-foreground/60 uppercase" style={mono}>Pain Points</span>
+                  <span className="text-xs text-muted-foreground/60 uppercase" style={mono}>Dores</span>
                   <ul className="mt-1 space-y-0.5">{b.target_audience.pain_points?.map((p: string, i: number) => <li key={i} className="text-sm text-muted-foreground" style={mono}>• {p}</li>)}</ul>
                 </div>
                 <div>
-                  <span className="text-xs text-muted-foreground/60 uppercase" style={mono}>Triggers</span>
+                  <span className="text-xs text-muted-foreground/60 uppercase" style={mono}>Gatilhos</span>
                   <ul className="mt-1 space-y-0.5">{b.target_audience.triggers?.map((t: string, i: number) => <li key={i} className="text-sm text-muted-foreground" style={mono}>• {t}</li>)}</ul>
                 </div>
               </div>
@@ -253,21 +251,21 @@ export default function BriefGenerator() {
             <div className="rounded-2xl border border-border/50 p-5 space-y-2" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
                 <Target className="h-4 w-4" style={{ color: "#06b6d4" }} />
-                <span className="text-sm font-bold text-foreground" style={syne}>Core Message</span>
+                <span className="text-sm font-bold text-foreground" style={syne}>Mensagem Central</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed" style={mono}>{b.core_message}</p>
             </div>
             <div className="rounded-2xl border border-border/50 p-5 space-y-2" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" style={{ color: "#34d399" }} />
-                <span className="text-sm font-bold text-foreground" style={syne}>Value Proposition</span>
+                <span className="text-sm font-bold text-foreground" style={syne}>Proposta de Valor</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed" style={mono}>{b.value_proposition}</p>
             </div>
           </div>
 
           <div className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <span className="text-sm font-bold text-foreground" style={syne}>Key Messages</span>
+            <span className="text-sm font-bold text-foreground" style={syne}>Mensagens-Chave</span>
             <ul className="space-y-1">{b.key_messages?.map((m: string, i: number) => <li key={i} className="text-sm text-muted-foreground" style={mono}>→ {m}</li>)}</ul>
             <div className="pt-2 border-t border-border/30">
               <span className="text-xs text-muted-foreground/60 uppercase" style={mono}>CTA</span>
@@ -277,7 +275,7 @@ export default function BriefGenerator() {
 
           {b.formats?.length > 0 && (
             <div className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "rgba(255,255,255,0.02)" }}>
-              <span className="text-sm font-bold text-foreground" style={syne}>Recommended Formats</span>
+              <span className="text-sm font-bold text-foreground" style={syne}>Formatos Recomendados</span>
               <div className="space-y-2">
                 {b.formats.map((f: any, i: number) => (
                   <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)" }}>
@@ -296,12 +294,12 @@ export default function BriefGenerator() {
             <div className="rounded-2xl border border-border/50 p-5 space-y-2" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
                 <Eye className="h-4 w-4" style={{ color: "#fbbf24" }} />
-                <span className="text-sm font-bold text-foreground" style={syne}>Visual Direction</span>
+                <span className="text-sm font-bold text-foreground" style={syne}>Direção Visual</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed" style={mono}>{b.visual_direction}</p>
             </div>
             <div className="rounded-2xl border border-border/50 p-5 space-y-2" style={{ background: "rgba(255,255,255,0.02)" }}>
-              <span className="text-sm font-bold text-foreground" style={syne}>Tone & Voice</span>
+              <span className="text-sm font-bold text-foreground" style={syne}>Tom & Voz</span>
               <p className="text-sm text-muted-foreground leading-relaxed" style={mono}>{b.tone_and_voice}</p>
             </div>
           </div>
@@ -317,7 +315,7 @@ export default function BriefGenerator() {
             <div className="rounded-2xl border border-border/50 p-5 space-y-2" style={{ background: "rgba(255,255,255,0.02)" }}>
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" style={{ color: "#f87171" }} />
-                <span className="text-sm font-bold text-foreground" style={syne}>Do NOT</span>
+                <span className="text-sm font-bold text-foreground" style={syne}>NÃO Fazer</span>
               </div>
               <ul className="space-y-0.5">{b.do_not?.map((d: string, i: number) => <li key={i} className="text-sm text-muted-foreground" style={mono}> {d}</li>)}</ul>
             </div>
@@ -330,7 +328,7 @@ export default function BriefGenerator() {
           )}
 
           <div className="flex items-center justify-between pt-2 border-t border-white/[0.05]">
-            <span className="text-[10px] text-white/40" style={mono}>Was this brief useful?</span>
+            <span className="text-[10px] text-white/40" style={mono}>Este brief foi útil?</span>
             <FeedbackBar
               userId={user.id}
               sourceType="brief"

@@ -9,9 +9,7 @@ import {
   Target,
   Clapperboard,
   Languages,
-  LayoutDashboard,
   Stethoscope,
-  RefreshCw,
   Sparkles,
 } from 'lucide-react';
 
@@ -29,12 +27,21 @@ interface ToolCard {
 
 const TOOLS: ToolCard[] = [
   {
-    id: 'ad-score',
-    label: 'Ad Score',
-    desc: 'Análise de criativo com nota e recomendações',
-    icon: ScanEye,
-    color: '#0ea5e9',
-    route: '/dashboard/ad-score',
+    id: 'brief-ai',
+    label: 'Brief AI',
+    desc: 'Prompts completos e detalhados para IA criar seus anúncios',
+    icon: Sparkles,
+    color: '#10b981',
+    route: '/dashboard/brief',
+    tag: 'IA',
+  },
+  {
+    id: 'roteiros',
+    label: 'Roteiros & Produção',
+    desc: 'Scripts cena a cena com direção visual e de talento',
+    icon: Clapperboard,
+    color: '#8b5cf6',
+    route: '/dashboard/boards',
   },
   {
     id: 'hooks',
@@ -45,20 +52,12 @@ const TOOLS: ToolCard[] = [
     route: '/dashboard/hooks',
   },
   {
-    id: 'script',
-    label: 'Roteiros',
-    desc: 'Scripts de vídeo otimizados para ads',
-    icon: Clapperboard,
-    color: '#8b5cf6',
-    route: '/dashboard/script',
-  },
-  {
-    id: 'brief',
-    label: 'Briefing Criativo',
-    desc: 'Brief completo para seu time ou designer',
-    icon: FileText,
-    color: '#10b981',
-    route: '/dashboard/brief',
+    id: 'ad-score',
+    label: 'Ad Score',
+    desc: 'Análise de criativo com nota e recomendações',
+    icon: ScanEye,
+    color: '#0ea5e9',
+    route: '/dashboard/ad-score',
   },
   {
     id: 'competitor',
@@ -91,22 +90,6 @@ const TOOLS: ToolCard[] = [
     icon: Stethoscope,
     color: '#f97316',
     route: '/dashboard/diagnostic',
-  },
-  {
-    id: 'loop',
-    label: 'Creative Loop',
-    desc: 'Ciclo contínuo de criação e teste',
-    icon: RefreshCw,
-    color: '#14b8a6',
-    route: '/dashboard/loop',
-  },
-  {
-    id: 'boards',
-    label: 'Boards',
-    desc: 'Organize referências e inspirações',
-    icon: LayoutDashboard,
-    color: '#a78bfa',
-    route: '/dashboard/boards',
   },
   {
     id: 'ai-chat',

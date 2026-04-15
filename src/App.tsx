@@ -58,7 +58,6 @@ const AccountsPage     = lazy(() => import("./pages/dashboard/AccountsPage"));
 const AdScorePage      = lazy(() => import("./pages/dashboard/AdScorePage"));
 const HookGenerator    = lazy(() => import("./pages/dashboard/HookGenerator"));
 const CompetitorDecoder = lazy(() => import("./pages/dashboard/CompetitorDecoder"));
-const ScriptGenerator  = lazy(() => import("./pages/dashboard/ScriptGenerator"));
 const BriefGenerator   = lazy(() => import("./pages/dashboard/BriefGenerator"));
 const CreativeLoopPage = lazy(() => import("./pages/dashboard/CreativeLoopPage"));
 const PerformanceDashboard = lazy(() => import("./pages/dashboard/PerformanceDashboard"));
@@ -175,7 +174,7 @@ const App = () => (
                 <Route path="ad-score" element={<AdScorePage />} />
                 <Route path="hooks" element={<ToolGate><HookGenerator /></ToolGate>} />
                 <Route path="competitor" element={<ToolGate><CompetitorDecoder /></ToolGate>} />
-                <Route path="script" element={<ToolGate><ScriptGenerator /></ToolGate>} />
+                <Route path="script" element={<Navigate to="/dashboard/boards/new" replace />} />
                 <Route path="brief" element={<ToolGate><BriefGenerator /></ToolGate>} />
                 <Route path="loop" element={<CreativeLoopPage />} />
                 <Route path="campaigns/new" element={<Navigate to="/dashboard/feed" replace />} />
