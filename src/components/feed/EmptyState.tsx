@@ -90,7 +90,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <h2 style={{
-            fontSize: 18, fontWeight: 700, color: '#E6EDF3',
+            fontSize: 18, fontWeight: 700, color: '#F0F6FC',
             margin: '0 0 6px', letterSpacing: '-0.02em',
           }}>
             O que você quer fazer?
@@ -125,7 +125,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             </div>
             <div>
               <h3 style={{
-                fontSize: 15, fontWeight: 700, color: '#E6EDF3',
+                fontSize: 15, fontWeight: 700, color: '#F0F6FC',
                 margin: '0 0 6px', letterSpacing: '-0.01em',
               }}>
                 Começar pelos criativos
@@ -183,7 +183,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             </div>
             <div>
               <h3 style={{
-                fontSize: 15, fontWeight: 700, color: '#E6EDF3',
+                fontSize: 15, fontWeight: 700, color: '#F0F6FC',
                 margin: '0 0 6px', letterSpacing: '-0.01em',
               }}>
                 Analisar campanhas
@@ -199,7 +199,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               onClick={() => navigate('/dashboard/accounts')}
               style={{
                 background: '#0ea5e9',
-                color: '#E6EDF3',
+                color: '#F0F6FC',
                 border: 'none',
                 padding: '9px 20px', borderRadius: 8,
                 fontSize: 13, fontWeight: 600,
@@ -246,7 +246,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           }} />
         </div>
 
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#E6EDF3', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F0F6FC', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
           Tudo sob controle
         </h2>
         <p style={{ fontSize: 13, color: '#8B949E', margin: 0 }}>
@@ -321,7 +321,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             </span>
           </div>
           <h2 style={{
-            fontSize: 18, fontWeight: 700, color: '#E6EDF3',
+            fontSize: 18, fontWeight: 700, color: '#F0F6FC',
             margin: '0 0 6px', letterSpacing: '-0.02em',
           }}>
             Enquanto isso, crie seus anúncios
@@ -351,7 +351,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           </div>
           <div>
             <h3 style={{
-              fontSize: 15, fontWeight: 700, color: '#E6EDF3',
+              fontSize: 15, fontWeight: 700, color: '#F0F6FC',
               margin: '0 0 6px', letterSpacing: '-0.01em',
             }}>
               Começar pelos criativos
@@ -367,7 +367,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             onClick={() => navigate('/dashboard/ai')}
             style={{
               background: '#0ea5e9',
-              color: '#E6EDF3',
+              color: '#F0F6FC',
               border: 'none',
               padding: '10px 20px', borderRadius: 8,
               fontSize: 13, fontWeight: 600,
@@ -387,7 +387,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
         {/* Subtle hint */}
         <p style={{
-          textAlign: 'center', fontSize: 11.5, color: 'rgba(230,237,243,0.18)',
+          textAlign: 'center', fontSize: 11.5, color: 'rgba(255,255,255,0.35)',
           margin: '20px 0 0', lineHeight: 1.5,
         }}>
           Quando suas campanhas estiverem ativas, as decisões aparecerão aqui automaticamente.
@@ -429,7 +429,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           </svg>
         </div>
 
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#E6EDF3', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F0F6FC', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
           Analisando sua conta
         </h2>
         <p style={{ fontSize: 13, color: '#8B949E', margin: 0, lineHeight: 1.5 }}>
@@ -530,7 +530,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
       {/* Tip */}
       <p style={{
-        textAlign: 'center', fontSize: 11.5, color: 'rgba(139,148,158,0.50)',
+        textAlign: 'center', fontSize: 11.5, color: 'rgba(255,255,255,0.40)',
         margin: '24px 0 0', lineHeight: 1.5,
       }}>
         Isso leva menos de um minuto.

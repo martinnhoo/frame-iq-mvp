@@ -70,7 +70,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
                     animation: 'mb-pulse 2s ease-in-out infinite',
                   }} />
                   <span style={{
-                    fontSize: 10, fontWeight: 700, color: 'rgba(214,59,59,0.65)',
+                    fontSize: 10, fontWeight: 700, color: '#EF4444',
                     letterSpacing: '0.08em', textTransform: 'uppercase',
                   }}>
                     Perda ativa
@@ -86,7 +86,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
                     {formatMoney(leaking)}
                   </span>
                   <span style={{
-                    fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.30)',
+                    fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.45)',
                     fontFamily: F, letterSpacing: '-0.02em',
                   }}>
                     /dia
@@ -96,7 +96,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
                 {/* Urgent count */}
                 {urgentCount > 0 && (
                   <div style={{
-                    fontSize: 11.5, fontWeight: 600, color: 'rgba(214,59,59,0.55)',
+                    fontSize: 11.5, fontWeight: 600, color: '#F87171',
                     marginTop: 8,
                   }}>
                     {urgentCount} {urgentCount === 1 ? 'decisão pode' : 'decisões podem'} reduzir perdas agora
@@ -133,18 +133,18 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
           <div style={{ display: 'flex', gap: 6 }}>
             <div style={{
               flex: 1, background: '#0C1017',
-              border: '1px solid rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
               borderRadius: 4, padding: '12px 14px',
               transition: 'border-color 0.15s',
             }}>
               <div style={{
-                fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.25)',
+                fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.40)',
                 textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
               }}>
                 Recuperável
               </div>
               <div style={{
-                fontSize: 20, fontWeight: 700, color: 'rgba(14,165,233,0.85)',
+                fontSize: 20, fontWeight: 700, color: '#38BDF8',
                 fontFamily: F, letterSpacing: '-0.03em', lineHeight: 1,
               }}>
                 +{formatMoney(capturable)}
@@ -152,18 +152,18 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             </div>
             <div style={{
               flex: 1, background: '#0C1017',
-              border: '1px solid rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
               borderRadius: 4, padding: '12px 14px',
               transition: 'border-color 0.15s',
             }}>
               <div style={{
-                fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.25)',
+                fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.40)',
                 textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
               }}>
                 Economizado
               </div>
               <div style={{
-                fontSize: 20, fontWeight: 700, color: 'rgba(52,211,153,0.85)',
+                fontSize: 20, fontWeight: 700, color: '#4ADE80',
                 fontFamily: F, letterSpacing: '-0.03em', lineHeight: 1,
               }}>
                 {formatMoney(displayedSaved)}
@@ -179,24 +179,24 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{
-              width: 6, height: 6, borderRadius: '50%', background: '#34d399',
-              boxShadow: '0 0 6px rgba(52,211,153,0.35)',
+              width: 6, height: 6, borderRadius: '50%', background: '#4ADE80',
+              boxShadow: '0 0 8px rgba(74,222,128,0.40)',
             }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#E6EDF3' }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#F0F6FC' }}>
               Sem perdas detectadas
             </span>
-            <span style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.40)' }}>
+            <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.40)' }}>
               Foco: crescimento
             </span>
           </div>
           {onResolve && (
             <button onClick={onResolve} style={{
-              background: 'none', color: 'rgba(14,165,233,0.60)', border: 'none',
+              background: 'none', color: '#38BDF8', border: 'none',
               fontSize: 11.5, fontWeight: 600, fontFamily: F,
               cursor: 'pointer', padding: 0, transition: 'color 0.15s',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#0ea5e9'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(14,165,233,0.60)'; }}>
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#7DD3FC'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#38BDF8'; }}>
               Criar com IA →
             </button>
           )}

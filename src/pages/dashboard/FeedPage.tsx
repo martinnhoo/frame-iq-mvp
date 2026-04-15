@@ -35,9 +35,9 @@ function dismissDemoToday(): void {
 /** Confidence badge — always visible per spec */
 const ConfidenceBadge: React.FC<{ level: 'baixa' | 'média' | 'alta' }> = ({ level }) => {
   const cfg = {
-    baixa: { color: '#C8922A', bg: 'rgba(200,146,42,0.08)', border: 'rgba(200,146,42,0.15)' },
-    média: { color: '#0ea5e9', bg: 'rgba(14,165,233,0.08)', border: 'rgba(14,165,233,0.15)' },
-    alta:  { color: '#0ea5e9', bg: 'rgba(14,165,233,0.06)', border: 'rgba(14,165,233,0.12)' },
+    baixa: { color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.15)' },
+    média: { color: '#38BDF8', bg: 'rgba(56,189,248,0.08)', border: 'rgba(56,189,248,0.15)' },
+    alta:  { color: '#4ADE80', bg: 'rgba(74,222,128,0.06)', border: 'rgba(74,222,128,0.12)' },
   }[level];
   return (
     <span style={{
@@ -48,6 +48,7 @@ const ConfidenceBadge: React.FC<{ level: 'baixa' | 'média' | 'alta' }> = ({ lev
     }}>
       <span style={{
         width: 5, height: 5, borderRadius: '50%', background: cfg.color,
+        boxShadow: `0 0 6px ${cfg.color}40`,
       }} />
       Confiança: {level}
     </span>
@@ -88,32 +89,32 @@ const VisibleWin: React.FC<{
 
   return (
     <div style={{
-      borderLeft: '2px solid rgba(52,211,153,0.30)',
+      borderLeft: '2px solid rgba(74,222,128,0.40)',
       padding: '12px 16px', marginBottom: 14,
     }}>
       <div style={{
-        fontSize: 9, fontWeight: 800, color: 'rgba(52,211,153,0.50)',
+        fontSize: 9, fontWeight: 800, color: '#4ADE80',
         letterSpacing: '0.12em', marginBottom: 6,
       }}>RESULTADO ALCANÇADO</div>
 
       {bestWin && (
         <div style={{ marginBottom: 6 }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: '#34d399', fontFamily: F }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: '#4ADE80', fontFamily: F }}>
             {bestWin.type === 'kill' ? '-' : '+'}R${Math.round(Math.abs(totalImpact) / 100).toLocaleString('pt-BR')}
           </span>
-          <span style={{ fontSize: 12, color: 'rgba(52,211,153,0.60)', marginLeft: 4, fontWeight: 600 }}>/dia</span>
+          <span style={{ fontSize: 12, color: 'rgba(74,222,128,0.70)', marginLeft: 4, fontWeight: 600 }}>/dia</span>
         </div>
       )}
 
       {monthlyImpact > 0 && (
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontFamily: F, marginBottom: 4 }}>
-          Impacto projetado: <span style={{ color: '#34d399', fontWeight: 600 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.70)', fontFamily: F, marginBottom: 4 }}>
+          Impacto projetado: <span style={{ color: '#4ADE80', fontWeight: 600 }}>
             +R${Math.round(monthlyImpact / 100).toLocaleString('pt-BR')}/mês
           </span>
         </div>
       )}
 
-      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.25)', fontFamily: F }}>
+      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontFamily: F }}>
         → baseado nos seus dados reais de performance · {actioned.length} {actioned.length === 1 ? 'otimização aplicada' : 'otimizações aplicadas'}
       </div>
     </div>
@@ -140,15 +141,15 @@ const SystemStatus: React.FC<{
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{
-          width: 6, height: 6, borderRadius: '50%', background: '#34d399',
-          boxShadow: '0 0 6px rgba(52,211,153,0.30)',
+          width: 6, height: 6, borderRadius: '50%', background: '#4ADE80',
+          boxShadow: '0 0 8px rgba(74,222,128,0.40)',
           animation: 'pulse 2.5s ease-in-out infinite',
         }} />
         <div>
-          <div style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.50)', fontFamily: F }}>
+          <div style={{ fontSize: 11.5, fontWeight: 600, color: '#F0F6FC', fontFamily: F }}>
             Sistema ativo
           </div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: F, marginTop: 1 }}>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)', fontFamily: F, marginTop: 1 }}>
             {patternsCount > 0 && `${patternsCount} padrões validados`}
             {patternsCount > 0 && actioned.length > 0 && ' · '}
             {actioned.length > 0 && `${actioned.length} ${actioned.length === 1 ? 'otimização aplicada' : 'otimizações aplicadas'}`}
@@ -157,10 +158,10 @@ const SystemStatus: React.FC<{
       </div>
       {monthlyEstimate > 0 && (
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#0ea5e9', fontFamily: F }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#38BDF8', fontFamily: F }}>
             +R${monthlyEstimate.toLocaleString('pt-BR')}
           </div>
-          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.20)', fontFamily: F }}>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.40)', fontFamily: F }}>
             impacto projetado/mês
           </div>
         </div>
@@ -1280,14 +1281,14 @@ const CollapsibleDecisions: React.FC<{
       {critical.length > 0 && (
         <>
           <div style={{
-            fontSize: 9.5, fontWeight: 800, color: 'rgba(220,38,38,0.45)',
+            fontSize: 9.5, fontWeight: 800, color: '#EF4444',
             letterSpacing: '0.12em', padding: '0 2px', marginBottom: 6,
           }}>
             AÇÃO IMEDIATA
           </div>
           {critical.map((decision, idx) => (
             <div key={decision.id} style={{
-              borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.025)' : 'none',
+              borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
             }}>
               <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} isHero={idx === 0} />
             </div>
@@ -1300,7 +1301,7 @@ const CollapsibleDecisions: React.FC<{
         <>
           {critical.length > 0 && (
             <div style={{
-              fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.15)',
+              fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.40)',
               letterSpacing: '0.12em', padding: '0 2px', marginTop: 16, marginBottom: 6,
             }}>
               RECOMENDAÇÕES
@@ -1308,7 +1309,7 @@ const CollapsibleDecisions: React.FC<{
           )}
           {other.map((decision, idx) => (
             <div key={decision.id} style={{
-              borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.025)' : 'none',
+              borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
             }}>
               <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} />
             </div>
@@ -1591,11 +1592,11 @@ const FeedPage: React.FC = () => {
   // ── Loading skeleton ──
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#08090D', padding: '24px 20px' }}>
+      <div style={{ minHeight: '100vh', background: '#06080C', padding: '24px 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 3, marginBottom: 6 }} />
-            <div style={{ width: 200, height: 10, background: 'rgba(255,255,255,0.02)', borderRadius: 3 }} />
+            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: 6 }} />
+            <div style={{ width: 200, height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 3 }} />
           </div>
           {[1,2,3].map(i => (
             <div key={i} style={{
@@ -1612,10 +1613,10 @@ const FeedPage: React.FC = () => {
   // ── No Meta connection — special entry screen ──
   if (!metaConnected) {
     return (
-      <div style={{ minHeight: '100vh', background: '#08090D', padding: '24px 20px' }}>
+      <div style={{ minHeight: '100vh', background: '#06080C', padding: '24px 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <h1 style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.50)', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>DECISÕES</h1>
+            <h1 style={{ fontSize: 14, fontWeight: 800, color: '#F0F6FC', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>DECISÕES</h1>
           </div>
           <StateNoAds />
         </div>
@@ -1626,13 +1627,13 @@ const FeedPage: React.FC = () => {
   // Syncing is now an inline banner — no full-page overlay
 
   return (
-    <div style={{ minHeight: '100vh', background: '#08090D', padding: '24px 20px' }}>
+    <div style={{ minHeight: '100vh', background: '#06080C', padding: '24px 20px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <h1 style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.50)', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>
+              <h1 style={{ fontSize: 14, fontWeight: 800, color: '#F0F6FC', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>
                 DECISÕES
               </h1>
               {isDemo && (
@@ -1648,7 +1649,7 @@ const FeedPage: React.FC = () => {
                 <PeriodSelector value={period} onChange={setPeriod} />
               )}
               {pendingDecisions.length > 0 && (
-                <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(139,148,158,0.60)', fontFamily: F }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.40)', fontFamily: F }}>
                   {pendingDecisions.length} {pendingDecisions.length === 1 ? 'item' : 'itens'}
                 </span>
               )}
@@ -1755,7 +1756,7 @@ const FeedPage: React.FC = () => {
                   boxShadow: '0 0 4px rgba(14,165,233,0.4)',
                   animation: 'pulse 2s ease-in-out infinite',
                 }} />
-                <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.70)', fontFamily: F, fontWeight: 500 }}>
+                <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontFamily: F, fontWeight: 500 }}>
                   Monitorando performance em tempo real — última análise há {lastAnalysisMin} min
                 </span>
               </div>
@@ -1775,7 +1776,7 @@ const FeedPage: React.FC = () => {
 
         {/* Patterns panel — the brain of the system */}
         {metaConnected && !isDemo && userId && personaId && (
-          <div style={{ marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.025)', paddingTop: 8 }}>
+          <div style={{ marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
             <PatternsPanel
               userId={userId}
               personaId={personaId}

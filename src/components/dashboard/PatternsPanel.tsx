@@ -1,9 +1,12 @@
 /**
  * PatternsPanel — "O QUE FUNCIONA" — Core intelligence section.
  *
- * DESIGN: Fluid, borderless, central "brain" of the product.
- * No box-in-box nesting. Patterns flow like a continuous list.
- * Actions integrated, not dominant.
+ * DESIGN v3: High contrast, readable at low brightness.
+ * - L1 text: #F0F6FC (titles, metrics)
+ * - L2 text: rgba(255,255,255,0.70) (content)
+ * - L3 text: rgba(255,255,255,0.40) (hints)
+ * - Content bg: #0D1117 (elevated from page #06080C)
+ * - Colors at full signal strength
  */
 import { useState, useEffect, useCallback } from "react";
 import { TrendingUp, TrendingDown, ChevronRight, Loader2, RefreshCw, Zap } from "lucide-react";
@@ -12,6 +15,11 @@ import { useNavigate } from "react-router-dom";
 
 const F = "'Inter', 'Plus Jakarta Sans', sans-serif";
 const M = "'DM Mono', 'SF Mono', monospace";
+
+// ── Text hierarchy constants ──
+const L1 = "#F0F6FC";          // titles, key info — bright white
+const L2 = "rgba(255,255,255,0.70)"; // content — clearly readable
+const L3 = "rgba(255,255,255,0.40)"; // hints, meta — visible but subtle
 
 interface DetectedPattern {
   id?: string;
@@ -70,12 +78,30 @@ function humanizeTextDensity(raw: string): string {
   return TEXT_DENSITY_LABELS[raw.toLowerCase()] || raw;
 }
 
+/** Detect if insight_text is raw/debug data that should NOT be shown */
+function isRawInsightText(text: string): boolean {
+  // Patterns that indicate raw debug output:
+  // "urgency em meta: CTR 7.909774, ROAS null"
+  // "question em meta: CTR 2.068966, ROAS null"
+  // Contains raw numbers with many decimals, "null", "em meta:", etc.
+  if (/CTR \d+\.\d{4,}/.test(text)) return true;
+  if (/ROAS null/i.test(text)) return true;
+  if (/em meta:/i.test(text)) return true;
+  if (/\bnull\b/.test(text)) return true;
+  // Raw pattern_key format like "hook_type:urgency"
+  if (/^[a-z_]+:[a-z_]+$/i.test(text.trim())) return true;
+  return false;
+}
+
 function humanizePatternLabel(p: DetectedPattern): string {
-  if (p.insight_text && p.insight_text.length > 10) {
+  // Only use insight_text if it's actually a good human-written insight
+  if (p.insight_text && p.insight_text.length > 10 && !isRawInsightText(p.insight_text)) {
     let cleaned = p.insight_text;
     if (cleaned.length > 100) cleaned = cleaned.slice(0, 97) + "...";
     return cleaned;
   }
+
+  // Always fall through to structured humanization
   const featureType = p.feature_type || p.variables?.feature_type || "";
   const featureValue = p.feature_value || p.variables?.feature_value || "";
   switch (featureType) {
@@ -99,7 +125,7 @@ function humanizePatternLabel(p: DetectedPattern): string {
     }
     case "status": return `Status: ${featureValue}`;
     default:
-      if (p.label) {
+      if (p.label && !isRawInsightText(p.label)) {
         return p.label.replace(/\bads\b/gi, "anúncios").replace(/\bAds\b/g, "Anúncios")
           .replace(/\bHook:\s*/gi, "Hook: ").replace(/\bText density:\s*/gi, "Densidade de texto: ");
       }
@@ -114,10 +140,10 @@ function formatCtr(value: number): string {
 
 function formatConfidence(confidence: number): { label: string; color: string } {
   const pct = Math.round(confidence * 100);
-  if (pct >= 70) return { label: "Alta confiança", color: "rgba(52,211,153,0.50)" };
-  if (pct >= 40) return { label: "Confiança moderada", color: "rgba(245,158,11,0.50)" };
-  if (pct >= 20) return { label: "Poucos dados", color: "rgba(255,255,255,0.22)" };
-  return { label: "Dados iniciais", color: "rgba(255,255,255,0.15)" };
+  if (pct >= 70) return { label: "Alta confiança", color: "#4ADE80" };
+  if (pct >= 40) return { label: "Confiança moderada", color: "#FBBF24" };
+  if (pct >= 20) return { label: "Poucos dados", color: L3 };
+  return { label: "Dados iniciais", color: L3 };
 }
 
 function pluralAds(count: number): string {
@@ -192,30 +218,29 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
   const isEmpty = !loading && !detecting && displayPatterns.length === 0;
 
   return (
-    <div style={{ paddingTop: 8 }}>
-      {/* ── HEADER — elevated, central, "brain" presence ── */}
+    <div style={{ paddingTop: 12 }}>
+      {/* ── HEADER — "brain" of the product, high contrast ── */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 2px 14px",
+        padding: "0 2px 16px",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Accent dot — purple glow, signals "intelligence active" */}
           <span style={{
-            width: 7, height: 7, borderRadius: "50%",
-            background: "#8B5CF6",
-            boxShadow: "0 0 8px rgba(139,92,246,0.35)",
+            width: 8, height: 8, borderRadius: "50%",
+            background: "#A78BFA",
+            boxShadow: "0 0 12px rgba(167,139,250,0.50), 0 0 4px rgba(167,139,250,0.30)",
           }} />
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{
-                fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.65)",
+                fontSize: 14, fontWeight: 700, color: L1,
                 fontFamily: F, letterSpacing: "-0.01em",
               }}>
                 Inteligência
               </span>
               {patterns.length > 0 && (
                 <span style={{
-                  fontSize: 10.5, fontWeight: 600, color: "rgba(139,92,246,0.50)",
+                  fontSize: 11, fontWeight: 600, color: "#A78BFA",
                   fontFamily: M,
                 }}>
                   {patterns.length} {patterns.length === 1 ? "padrão" : "padrões"}
@@ -223,7 +248,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
               )}
             </div>
             <span style={{
-              fontSize: 10.5, color: "rgba(255,255,255,0.25)",
+              fontSize: 11, color: L3,
               fontFamily: F,
             }}>
               O que funciona na sua conta
@@ -237,42 +262,42 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
             background: "none", border: "none",
             cursor: detecting ? "default" : "pointer",
             padding: 4, display: "flex", alignItems: "center",
-            opacity: detecting ? 0.3 : 0.35,
+            opacity: detecting ? 0.4 : 0.5,
             transition: "opacity 0.15s",
           }}
-          onMouseEnter={(e) => { if (!detecting) (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = detecting ? "0.3" : "0.35"; }}
+          onMouseEnter={(e) => { if (!detecting) (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = detecting ? "0.4" : "0.5"; }}
           title="Atualizar padrões"
         >
           {detecting
-            ? <Loader2 size={14} color="rgba(255,255,255,0.4)" style={{ animation: "spin 1s linear infinite" }} />
-            : <RefreshCw size={14} color="rgba(255,255,255,0.3)" />
+            ? <Loader2 size={14} color={L3} style={{ animation: "spin 1s linear infinite" }} />
+            : <RefreshCw size={14} color={L3} />
           }
         </button>
       </div>
 
-      {/* Alignment Score — inline, not boxed */}
+      {/* Alignment Score */}
       {alignment && alignment.score > 0 && patterns.length > 0 && (
         <div style={{
-          padding: "0 2px 14px",
+          padding: "0 2px 16px",
           display: "flex", alignItems: "center", gap: 10,
         }}>
           <div style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: `conic-gradient(${alignment.score >= 70 ? "#34d399" : alignment.score >= 40 ? "#F59E0B" : "rgba(139,92,246,0.50)"} ${alignment.score * 3.6}deg, rgba(255,255,255,0.04) 0deg)`,
+            width: 34, height: 34, borderRadius: "50%",
+            background: `conic-gradient(${alignment.score >= 70 ? "#4ADE80" : alignment.score >= 40 ? "#FBBF24" : "#A78BFA"} ${alignment.score * 3.6}deg, rgba(255,255,255,0.06) 0deg)`,
             display: "flex", alignItems: "center", justifyContent: "center",
             flexShrink: 0,
           }}>
             <div style={{
-              width: 24, height: 24, borderRadius: "50%", background: "#08090D",
+              width: 26, height: 26, borderRadius: "50%", background: "#06080C",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.50)", fontFamily: M,
+              fontSize: 9.5, fontWeight: 800, color: L2, fontFamily: M,
             }}>
               {alignment.score}%
             </div>
           </div>
-          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.25)", fontFamily: F }}>
-            Alinhamento · {alignment.label}
+          <div style={{ fontSize: 11, color: L3, fontFamily: F }}>
+            Alinhamento · <span style={{ color: L2 }}>{alignment.label}</span>
           </div>
         </div>
       )}
@@ -280,11 +305,11 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
       {/* Loading */}
       {(loading || detecting) && patterns.length === 0 && (
         <div style={{ padding: "4px 2px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-          <style>{`@keyframes ppPulse{0%,100%{opacity:0.3}50%{opacity:0.6}}`}</style>
+          <style>{`@keyframes ppPulse{0%,100%{opacity:0.4}50%{opacity:0.7}}`}</style>
           {[0, 1, 2].map((i) => (
             <div key={i} style={{
-              height: 40, borderRadius: 3,
-              background: "rgba(255,255,255,0.015)",
+              height: 44, borderRadius: 4,
+              background: "rgba(255,255,255,0.03)",
               animation: `ppPulse 1.4s ease-in-out ${i * 0.12}s infinite`,
             }} />
           ))}
@@ -295,7 +320,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
       {isEmpty && (
         <div style={{ padding: "4px 2px 16px" }}>
           <p style={{
-            fontSize: 12, color: "rgba(255,255,255,0.18)", fontFamily: F,
+            fontSize: 12.5, color: L3, fontFamily: F,
             margin: 0, lineHeight: 1.55,
           }}>
             Dados insuficientes para gerar padrões. Eles aparecem automaticamente conforme seus anúncios acumulam dados.
@@ -303,32 +328,32 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
         </div>
       )}
 
-      {/* Pattern list — fluid, no card wrappers */}
+      {/* Pattern list */}
       {displayPatterns.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           {displayPatterns.map((p, idx) => (
             <PatternRow key={p.pattern_key || idx} pattern={p} onGenerateVariation={onGenerateVariation} isFirst={idx === 0} />
           ))}
         </div>
       )}
 
-      {/* View all — subtle link, not button */}
+      {/* View all */}
       {patterns.length > displayPatterns.length && (
         <button
           onClick={() => navigate("/dashboard/intelligence")}
           style={{
             background: "transparent", border: "none",
             cursor: "pointer", transition: "opacity 0.15s",
-            padding: "12px 2px 4px", display: "flex", alignItems: "center", gap: 4,
-            opacity: 0.35,
+            padding: "14px 2px 4px", display: "flex", alignItems: "center", gap: 4,
+            opacity: 0.5,
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.6"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.35"; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.5"; }}
         >
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: F, fontWeight: 600 }}>
+          <span style={{ fontSize: 11.5, color: "#A78BFA", fontFamily: F, fontWeight: 600 }}>
             Ver todos os padrões
           </span>
-          <ChevronRight size={11} color="rgba(255,255,255,0.30)" />
+          <ChevronRight size={12} color="#A78BFA" />
         </button>
       )}
 
@@ -337,7 +362,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
   );
 }
 
-// ── Pattern Row — fluid, borderless, content-first ──
+// ── Pattern Row — high contrast, readable ──
 
 function PatternRow({
   pattern: p,
@@ -352,7 +377,7 @@ function PatternRow({
 
   const impactNum = parseFloat(p.impact_ctr_pct || "0");
   const isPositive = impactNum > 0;
-  const impactColor = isPositive ? "#34d399" : "#DC2626";
+  const impactColor = isPositive ? "#4ADE80" : "#F87171";
   const displayLabel = humanizePatternLabel(p);
   const conf = formatConfidence(p.confidence);
 
@@ -361,27 +386,26 @@ function PatternRow({
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        padding: "12px 10px",
-        borderRadius: 3,
-        background: hov ? "rgba(255,255,255,0.02)" : "transparent",
+        padding: "14px 12px",
+        borderRadius: 4,
+        background: hov ? "rgba(255,255,255,0.03)" : "transparent",
         transition: "background 0.15s ease",
-        // No borders — just spacing separates items
-        borderTop: isFirst ? "none" : "1px solid rgba(255,255,255,0.025)",
+        borderTop: isFirst ? "none" : "1px solid rgba(255,255,255,0.06)",
       }}
     >
-      {/* Single-line meta: badge + sample + impact — all compact */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+      {/* Meta row: badge + sample + impact */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {p.is_winner && (
             <span style={{
-              fontSize: 8, fontWeight: 800, color: "#8B5CF6",
-              background: "rgba(139,92,246,0.08)", padding: "1.5px 5px",
+              fontSize: 8.5, fontWeight: 800, color: "#A78BFA",
+              background: "rgba(167,139,250,0.12)", padding: "2px 6px",
               borderRadius: 2, letterSpacing: "0.08em", fontFamily: F,
             }}>
               VALIDADO
             </span>
           )}
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.13)", fontFamily: M }}>
+          <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
             {pluralAds(p.sample_size)}
           </span>
         </div>
@@ -389,45 +413,45 @@ function PatternRow({
         {p.impact_ctr_pct && p.impact_ctr_pct !== "?" && (
           <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
             {isPositive
-              ? <TrendingUp size={9} color={impactColor} />
-              : <TrendingDown size={9} color={impactColor} />
+              ? <TrendingUp size={10} color={impactColor} />
+              : <TrendingDown size={10} color={impactColor} />
             }
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: impactColor, fontFamily: M }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: impactColor, fontFamily: M }}>
               {p.impact_ctr_pct}
             </span>
           </div>
         )}
       </div>
 
-      {/* Insight text — the main content */}
+      {/* Insight — L2 contrast, clearly readable */}
       <div style={{
-        fontSize: 12.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.5,
-        margin: "0 0 6px", fontFamily: F,
+        fontSize: 13, color: L2, lineHeight: 1.5,
+        margin: "0 0 8px", fontFamily: F,
       }}>
         {displayLabel}
       </div>
 
-      {/* Metrics — inline, subtle */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {/* Metrics row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         {p.avg_ctr != null && p.avg_ctr > 0 && (
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.20)", fontFamily: M }}>
-            CTR {formatCtr(p.avg_ctr)}
+          <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
+            CTR <span style={{ color: L2, fontWeight: 600 }}>{formatCtr(p.avg_ctr)}</span>
           </span>
         )}
         {p.avg_roas != null && p.avg_roas > 0 && (
           <>
-            <span style={{ fontSize: 6, color: "rgba(255,255,255,0.06)" }}>·</span>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.20)", fontFamily: M }}>
-              ROAS {p.avg_roas.toFixed(1)}x
+            <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
+            <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
+              ROAS <span style={{ color: L2, fontWeight: 600 }}>{p.avg_roas.toFixed(1)}x</span>
             </span>
           </>
         )}
-        <span style={{ fontSize: 6, color: "rgba(255,255,255,0.06)" }}>·</span>
-        <span style={{ fontSize: 10, color: conf.color, fontFamily: M }}>
+        <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
+        <span style={{ fontSize: 10.5, color: conf.color, fontFamily: M, fontWeight: 500 }}>
           {conf.label}
         </span>
 
-        {/* Inline action — not a big button, just a subtle link */}
+        {/* Inline action */}
         {p.is_winner && onGenerateVariation && (
           <>
             <span style={{ flex: 1 }} />
@@ -438,13 +462,13 @@ function PatternRow({
                 background: "none", border: "none",
                 cursor: "pointer", padding: "2px 0",
                 transition: "opacity 0.15s",
-                opacity: hov ? 0.7 : 0.4,
+                opacity: hov ? 0.8 : 0.5,
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov ? "0.7" : "0.4"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov ? "0.8" : "0.5"; }}
             >
-              <Zap size={10} color="#8B5CF6" />
-              <span style={{ fontSize: 10.5, fontWeight: 600, color: "#8B5CF6", fontFamily: F }}>
+              <Zap size={11} color="#A78BFA" />
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
                 Gerar variações
               </span>
             </button>

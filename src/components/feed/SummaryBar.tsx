@@ -42,12 +42,12 @@ function Pill({ count, label, impact, color, type }: PillProps) {
         {count}
       </span>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}>
-        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontWeight: 600 }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>
           {label}
         </span>
         {impact > 0 && (
           <span style={{
-            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.22)',
+            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.35)',
             fontFamily: F,
           }}>
             {formatMoney(impact)}/dia
@@ -72,20 +72,20 @@ export const SummaryBar: React.FC<SummaryBarProps> = ({ decisions }) => {
     <div style={{ display: 'flex', gap: 4, fontFamily: F, flexWrap: 'wrap' }}>
       {killDecisions.length > 0 && (
         <Pill count={killDecisions.length} label="stop loss" impact={killImpact}
-          color="#DC2626" type="kill" />
+          color="#EF4444" type="kill" />
       )}
       {fixDecisions.length > 0 && (
         <Pill count={fixDecisions.length} label="corrigir" impact={fixImpact}
-          color="#D97706" type="fix" />
+          color="#F59E0B" type="fix" />
       )}
       {scaleDecisions.length > 0 && (
         <Pill count={scaleDecisions.length} label="escalar" impact={scaleImpact}
-          color="#0EA5E9" type="scale" />
+          color="#38BDF8" type="scale" />
       )}
       {patternDecisions.length > 0 && (
         <Pill count={patternDecisions.length}
           label={patternDecisions.length === 1 ? 'padrão' : 'padrões'}
-          impact={0} color="#8B5CF6" type="pattern" />
+          impact={0} color="#A78BFA" type="pattern" />
       )}
     </div>
   );
