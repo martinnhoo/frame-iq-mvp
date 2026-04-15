@@ -1283,12 +1283,15 @@ const CollapsibleDecisions: React.FC<{
           <div style={{
             fontSize: 9.5, fontWeight: 800, color: '#EF4444',
             letterSpacing: '0.12em', padding: '0 2px', marginBottom: 6,
+            animation: 'feed-fadeUp 0.3s ease both',
           }}>
             AÇÃO IMEDIATA
           </div>
           {critical.map((decision, idx) => (
             <div key={decision.id} style={{
               borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+              animation: 'feed-fadeUp 0.35s ease both',
+              animationDelay: `${idx * 0.06}s`,
             }}>
               <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} isHero={idx === 0} />
             </div>
@@ -1303,6 +1306,8 @@ const CollapsibleDecisions: React.FC<{
             <div style={{
               fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.40)',
               letterSpacing: '0.12em', padding: '0 2px', marginTop: 16, marginBottom: 6,
+              animation: 'feed-fadeUp 0.3s ease both',
+              animationDelay: `${critical.length * 0.06 + 0.1}s`,
             }}>
               RECOMENDAÇÕES
             </div>
@@ -1310,6 +1315,8 @@ const CollapsibleDecisions: React.FC<{
           {other.map((decision, idx) => (
             <div key={decision.id} style={{
               borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+              animation: 'feed-fadeUp 0.35s ease both',
+              animationDelay: `${(critical.length + idx) * 0.06 + 0.12}s`,
             }}>
               <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} />
             </div>
@@ -1589,23 +1596,35 @@ const FeedPage: React.FC = () => {
 
   const feedState = resolveFeedState();
 
-  // ── Loading skeleton ──
+  // ── Loading skeleton with shimmer ──
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', background: '#06080C', padding: '24px 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: 6 }} />
-            <div style={{ width: 200, height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 3 }} />
+            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: 6, animation: 'feed-shimmer 1.5s ease-in-out infinite' }} />
+            <div style={{ width: 200, height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 3, animation: 'feed-shimmer 1.5s ease-in-out infinite', animationDelay: '0.1s' }} />
           </div>
           {[1,2,3].map(i => (
             <div key={i} style={{
-              background: '#0C1017', borderRadius: 4,
-              border: '1px solid rgba(255,255,255,0.03)', padding: 16,
-              marginBottom: 8, height: 120,
-            }} />
+              borderLeft: '2px solid rgba(255,255,255,0.04)',
+              padding: '14px 16px',
+              marginBottom: 0,
+              borderTop: i > 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              animation: 'feed-shimmer 1.5s ease-in-out infinite',
+              animationDelay: `${i * 0.15}s`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div style={{ width: 60, height: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
+                <div style={{ width: 80, height: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+              </div>
+              <div style={{ width: '70%', height: 22, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 8 }} />
+              <div style={{ width: '90%', height: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 2, marginBottom: 4 }} />
+              <div style={{ width: '60%', height: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+            </div>
           ))}
         </div>
+        <style>{`@keyframes feed-shimmer{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
       </div>
     );
   }
@@ -1791,6 +1810,12 @@ const FeedPage: React.FC = () => {
         {/* Telegram connection card — shown when Meta is connected */}
         {metaConnected && !isDemo && userId && <TelegramCard userId={userId} />}
       </div>
+
+      {/* Global feed animations */}
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+        @keyframes feed-fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
     </div>
   );
 };

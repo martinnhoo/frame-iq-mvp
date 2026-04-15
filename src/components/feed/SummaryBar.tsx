@@ -27,12 +27,13 @@ function Pill({ count, label, impact, color, type }: PillProps) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? 'rgba(255,255,255,0.03)' : 'transparent',
+        background: hov ? 'rgba(255,255,255,0.04)' : 'transparent',
         border: 'none',
         borderRadius: 3, padding: '4px 10px',
         cursor: 'pointer', fontFamily: F,
         display: 'flex', alignItems: 'center', gap: 6,
-        transition: 'background 0.15s ease',
+        transition: 'all 0.15s ease',
+        transform: hov ? 'translateY(-1px)' : 'translateY(0)',
       }}
     >
       <span style={{

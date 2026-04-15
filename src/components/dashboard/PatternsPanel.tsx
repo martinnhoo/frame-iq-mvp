@@ -332,7 +332,12 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
       {displayPatterns.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           {displayPatterns.map((p, idx) => (
-            <PatternRow key={p.pattern_key || idx} pattern={p} onGenerateVariation={onGenerateVariation} isFirst={idx === 0} />
+            <div key={p.pattern_key || idx} style={{
+              animation: 'pp-fadeUp 0.3s ease both',
+              animationDelay: `${idx * 0.05}s`,
+            }}>
+              <PatternRow pattern={p} onGenerateVariation={onGenerateVariation} isFirst={idx === 0} />
+            </div>
           ))}
         </div>
       )}
@@ -357,7 +362,10 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
         </button>
       )}
 
-      <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes pp-fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
     </div>
   );
 }

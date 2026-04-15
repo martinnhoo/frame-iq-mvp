@@ -49,6 +49,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             marginBottom: 8,
             position: 'relative',
             overflow: 'hidden',
+            animation: 'mb-fadeIn 0.4s ease both',
           }}>
             {/* Subtle red glow at top */}
             <div style={{
@@ -117,7 +118,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
                     fontSize: 13, fontWeight: 700, fontFamily: F,
                     cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'all 0.15s ease',
-                    transform: btnHov ? 'translateY(-1px)' : 'none',
+                    transform: btnHov ? 'translateY(-1px) scale(1.02)' : 'none',
                     boxShadow: btnHov ? '0 4px 12px rgba(180,35,42,0.30)' : 'none',
                     letterSpacing: '-0.01em',
                     flexShrink: 0, marginTop: 8,
@@ -203,7 +204,10 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
         </div>
       )}
 
-      <style>{`@keyframes mb-pulse{0%,100%{opacity:1;box-shadow:0 0 8px rgba(180,35,42,0.50)}50%{opacity:.6;box-shadow:0 0 4px rgba(180,35,42,0.25)}}`}</style>
+      <style>{`
+        @keyframes mb-pulse{0%,100%{opacity:1;box-shadow:0 0 8px rgba(180,35,42,0.50)}50%{opacity:.6;box-shadow:0 0 4px rgba(180,35,42,0.25)}}
+        @keyframes mb-fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import type { Decision, DecisionAction, ImpactConfidence } from '../../types/v2-database';
 import { formatMoney, timeAgo } from '../../lib/format';
 import { ConfirmModal } from './ConfirmModal';
@@ -6,9 +6,9 @@ import { ConfirmModal } from './ConfirmModal';
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
 // ── Text hierarchy ──
-const L1 = "#F0F6FC";          // titles, headlines — bright
-const L2 = "rgba(255,255,255,0.70)"; // content — readable
-const L3 = "rgba(255,255,255,0.40)"; // hints — subtle but visible
+const L1 = "#F0F6FC";
+const L2 = "rgba(255,255,255,0.70)";
+const L3 = "rgba(255,255,255,0.40)";
 
 interface DecisionCardProps {
   decision: Decision;
@@ -75,11 +75,66 @@ function buildConfirmDesc(decision: Decision, action: DecisionAction): string {
   return parts.join('\n');
 }
 
+// ── Animated expand/collapse wrapper ──
+const Expandable: React.FC<{ open: boolean; children: React.ReactNode }> = ({ open, children }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | 'auto'>(open ? 'auto' : 0);
+  const [visible, setVisible] = useState(open);
+
+  useEffect(() => {
+    if (open) {
+      setVisible(true);
+      // Measure content height for smooth transition
+      const el = contentRef.current;
+      if (el) {
+        const h = el.scrollHeight;
+        setHeight(0);
+        // Force reflow, then animate to measured height
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setHeight(h));
+        });
+        // After transition, set to auto for dynamic content
+        const timer = setTimeout(() => setHeight('auto'), 220);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      // Animate from current height to 0
+      const el = contentRef.current;
+      if (el) {
+        setHeight(el.scrollHeight);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setHeight(0));
+        });
+        const timer = setTimeout(() => setVisible(false), 220);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [open]);
+
+  if (!visible && !open) return null;
+
+  return (
+    <div style={{
+      height: height === 'auto' ? 'auto' : height,
+      overflow: 'hidden',
+      transition: 'height 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      opacity: open ? 1 : 0,
+      ...(height !== 'auto' ? { transition: 'height 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease' } : {}),
+    }}>
+      <div ref={contentRef}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, isDemo = false, isHero = false }) => {
   const [executingId, setExecutingId] = useState<string | null>(null);
   const [hovered, setHovered] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [confirmAction, setConfirmAction] = useState<DecisionAction | null>(null);
   const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [pressing, setPressing] = useState(false);
   const cfg = TYPE_CONFIG[decision.type] || TYPE_CONFIG.insight;
 
   const executeAction = useCallback(async (action: DecisionAction) => {
@@ -147,6 +202,11 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
   const moneySize = isHero ? 28 : 22;
   const headlineSize = isHero ? 15 : 13.5;
 
+  // Determine if there's enough "deep" content worth expanding
+  const hasDeepContent = reasonLines.length > 1 || recItems.length > 0 ||
+    (decision as any).pattern_ref || (decision as any).prediction ||
+    (decision.metrics && decision.metrics.length > 0);
+
   return (
     <>
       <ConfirmModal
@@ -167,13 +227,22 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           borderLeft: `2px solid ${cfg.accentColor}`,
           padding: isHero ? '16px 18px' : '14px 16px',
           fontFamily: F,
-          transition: 'background 0.15s ease',
+          transition: 'background 0.15s ease, transform 0.1s ease',
           position: 'relative',
+          cursor: hasDeepContent ? 'pointer' : 'default',
+          transform: pressing ? 'scale(0.995)' : 'scale(1)',
         }}
         onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseLeave={() => { setHovered(false); setPressing(false); }}
+        onMouseDown={() => { if (hasDeepContent) setPressing(true); }}
+        onMouseUp={() => setPressing(false)}
+        onClick={(e) => {
+          // Don't toggle if clicking a button or link
+          if ((e.target as HTMLElement).closest('button')) return;
+          if (hasDeepContent) setExpanded(prev => !prev);
+        }}
       >
-        {/* Row 1: Type label + confidence */}
+        {/* Row 1: Type label + confidence + expand indicator */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: 6,
@@ -192,14 +261,28 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
             )}
           </div>
           <div style={{
-            fontSize: 10, color: L3,
-            display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
+            display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
           }}>
-            <span style={{
-              width: 5, height: 5, borderRadius: '50%',
-              background: confidence === 'high' ? '#38BDF8' : confidence === 'medium' ? '#FBBF24' : '#94A3B8',
-            }} />
-            {basisText.toLowerCase()}
+            <div style={{
+              fontSize: 10, color: L3,
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <span style={{
+                width: 5, height: 5, borderRadius: '50%',
+                background: confidence === 'high' ? '#38BDF8' : confidence === 'medium' ? '#FBBF24' : '#94A3B8',
+              }} />
+              {basisText.toLowerCase()}
+            </div>
+            {hasDeepContent && (
+              <span style={{
+                fontSize: 14, color: L3, lineHeight: 1,
+                transition: 'transform 0.2s ease, opacity 0.15s',
+                transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                opacity: hovered ? 0.8 : 0.3,
+              }}>
+                ›
+              </span>
+            )}
           </div>
         </div>
 
@@ -214,7 +297,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         )}
 
-        {/* MONEY — dominant signal, full color */}
+        {/* MONEY — always visible (collapsed state) */}
         {decision.impact_daily > 0 && (
           <div style={{ marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
@@ -225,25 +308,19 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
               }}>
                 {decision.type === 'scale' ? '+' : '-'}{formatMoney(decision.impact_daily)}
               </span>
-              <span style={{
-                fontSize: 11, fontWeight: 600, color: L3,
-                fontFamily: F,
-              }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: L3, fontFamily: F }}>
                 /{cfg.impactLabel}
               </span>
             </div>
             {has7dProjection && (
-              <div style={{
-                fontSize: 11, fontWeight: 500, marginTop: 3,
-                color: L3,
-              }}>
+              <div style={{ fontSize: 11, fontWeight: 500, marginTop: 3, color: L3 }}>
                 7d: {decision.type === 'scale' ? '+' : '-'}{formatMoney(decision.impact_7d)}
               </div>
             )}
           </div>
         )}
 
-        {/* HEADLINE — L1, bright */}
+        {/* HEADLINE — always visible (collapsed state) */}
         <div style={{
           fontSize: headlineSize, fontWeight: 700, color: L1,
           margin: '0 0 5px', lineHeight: 1.35, letterSpacing: '-0.01em',
@@ -257,159 +334,159 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         )}
 
-        {/* STRUCTURED EVIDENCE */}
-        {((decision as any).pattern_ref || (decision as any).prediction) ? (
-          <div style={{ marginBottom: 8 }}>
-            {reasonLines[0] && (
-              <div style={{
-                fontSize: 12, color: L2, lineHeight: 1.55, marginBottom: 5,
-              }}>
-                {reasonLines[0]}
-              </div>
-            )}
+        {/* First reason line — always visible as summary */}
+        {reasonLines.length > 0 && (
+          <div style={{
+            fontSize: 12, color: L2, lineHeight: 1.55, marginBottom: hasDeepContent && !expanded ? 4 : 8,
+          }}>
+            {reasonLines[0]}
+          </div>
+        )}
 
-            {(decision as any).pattern_ref && (
-              <div style={{
-                borderLeft: '2px solid rgba(167,139,250,0.35)',
-                paddingLeft: 10, marginBottom: 5,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-                  <span style={{
-                    fontSize: 9, fontWeight: 800, color: '#A78BFA',
-                    letterSpacing: '0.10em',
-                  }}>PADRÃO</span>
-                  {(decision as any).pattern_ref.impact_pct && (
-                    <span style={{
-                      fontSize: 10.5, fontWeight: 700,
-                      color: (decision as any).pattern_ref.is_winner ? '#38BDF8' : '#F87171',
-                    }}>
-                      {(decision as any).pattern_ref.impact_pct}
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: 12, color: '#C4B5FD', fontWeight: 600, lineHeight: 1.4 }}>
-                  {(decision as any).pattern_ref.insight}
-                </div>
-              </div>
-            )}
+        {/* ═══ EXPANDABLE DEEP CONTENT ═══ */}
+        <Expandable open={expanded}>
+          <div style={{ paddingTop: 4 }}>
+            {/* STRUCTURED EVIDENCE */}
+            {((decision as any).pattern_ref || (decision as any).prediction) ? (
+              <div style={{ marginBottom: 8 }}>
+                {(decision as any).pattern_ref && (
+                  <div style={{
+                    borderLeft: '2px solid rgba(167,139,250,0.35)',
+                    paddingLeft: 10, marginBottom: 5,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: '#A78BFA', letterSpacing: '0.10em' }}>PADRÃO</span>
+                      {(decision as any).pattern_ref.impact_pct && (
+                        <span style={{
+                          fontSize: 10.5, fontWeight: 700,
+                          color: (decision as any).pattern_ref.is_winner ? '#38BDF8' : '#F87171',
+                        }}>
+                          {(decision as any).pattern_ref.impact_pct}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#C4B5FD', fontWeight: 600, lineHeight: 1.4 }}>
+                      {(decision as any).pattern_ref.insight}
+                    </div>
+                  </div>
+                )}
 
-            {(decision as any).prediction && (
-              <div style={{
-                borderLeft: '2px solid rgba(56,189,248,0.35)',
-                paddingLeft: 10, marginBottom: 5,
-              }}>
-                <div style={{ fontSize: 9, fontWeight: 800, color: '#38BDF8', letterSpacing: '0.10em', marginBottom: 3 }}>
-                  PREVISÃO
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                  <span style={{ fontSize: 11.5, color: L3 }}>
-                    {(decision as any).prediction.current_value}
-                  </span>
-                  <span style={{ fontSize: 11.5, color: L3 }}>→</span>
-                  <span style={{ fontSize: 12, color: '#38BDF8', fontWeight: 700 }}>
-                    {(decision as any).prediction.expected_value}
-                  </span>
-                </div>
-                {(decision as any).prediction.estimated_impact && (
-                  <div style={{ fontSize: 12.5, color: '#38BDF8', fontWeight: 700 }}>
-                    {(decision as any).prediction.estimated_impact}
+                {(decision as any).prediction && (
+                  <div style={{
+                    borderLeft: '2px solid rgba(56,189,248,0.35)',
+                    paddingLeft: 10, marginBottom: 5,
+                  }}>
+                    <div style={{ fontSize: 9, fontWeight: 800, color: '#38BDF8', letterSpacing: '0.10em', marginBottom: 3 }}>
+                      PREVISÃO
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <span style={{ fontSize: 11.5, color: L3 }}>
+                        {(decision as any).prediction.current_value}
+                      </span>
+                      <span style={{ fontSize: 11.5, color: L3 }}>→</span>
+                      <span style={{ fontSize: 12, color: '#38BDF8', fontWeight: 700 }}>
+                        {(decision as any).prediction.expected_value}
+                      </span>
+                    </div>
+                    {(decision as any).prediction.estimated_impact && (
+                      <div style={{ fontSize: 12.5, color: '#38BDF8', fontWeight: 700 }}>
+                        {(decision as any).prediction.estimated_impact}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {(decision as any).priority_position && (decision as any).priority_position <= 3 && (
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, marginBottom: 4,
+                    color: (decision as any).priority_position === 1 ? '#FBBF24' : L3,
+                  }}>
+                    #{(decision as any).priority_position}
+                    {(decision as any).priority_position === 1 && ' — Ação mais importante agora'}
+                  </div>
+                )}
+
+                {(decision as any).urgency && (
+                  <div style={{ fontSize: 11, color: '#F87171', fontWeight: 500, marginBottom: 4 }}>
+                    {(decision as any).urgency.message}
+                  </div>
+                )}
+
+                {reasonLines.length > 1 && (
+                  <div style={{ marginTop: 3 }}>
+                    {reasonLines.slice(1).filter(l => !l.startsWith('Padrão detectado:')).map((line, i) => (
+                      <div key={i} style={{ fontSize: 11.5, color: L2, lineHeight: 1.55 }}>
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(decision as any).money_explanation && (
+                  <div style={{ fontSize: 10.5, color: L3, marginTop: 3, lineHeight: 1.4 }}>
+                    {(decision as any).money_explanation}
                   </div>
                 )}
               </div>
+            ) : (
+              reasonLines.length > 1 && (
+                <div style={{ marginBottom: 8 }}>
+                  {reasonLines.slice(1).map((line, i) => (
+                    <div key={i} style={{ fontSize: 12, color: L2, lineHeight: 1.55 }}>
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              )
             )}
 
-            {(decision as any).priority_position && (decision as any).priority_position <= 3 && (
+            {/* METRICS */}
+            {decision.metrics && decision.metrics.length > 0 && (
               <div style={{
-                fontSize: 11, fontWeight: 700, marginBottom: 4,
-                color: (decision as any).priority_position === 1 ? '#FBBF24' : L3,
+                display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 10,
+                paddingTop: 8,
+                borderTop: '1px solid rgba(255,255,255,0.06)',
               }}>
-                #{(decision as any).priority_position}
-                {(decision as any).priority_position === 1 && ' — Ação mais importante agora'}
-              </div>
-            )}
-
-            {(decision as any).urgency && (
-              <div style={{ fontSize: 11, color: '#F87171', fontWeight: 500, marginBottom: 4 }}>
-                {(decision as any).urgency.message}
-              </div>
-            )}
-
-            {reasonLines.length > 1 && (
-              <div style={{ marginTop: 3 }}>
-                {reasonLines.slice(1).filter(l => !l.startsWith('Padrão detectado:')).map((line, i) => (
-                  <div key={i} style={{ fontSize: 11.5, color: L2, lineHeight: 1.55 }}>
-                    {line}
+                {decision.metrics.map((m, i) => (
+                  <div key={i} style={{ fontSize: 11, display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                    <span style={{ color: L3, fontWeight: 500 }}>{m.key}</span>
+                    <span style={{
+                      color: m.trend === 'down' ? '#F87171' : m.trend === 'up' ? '#38BDF8' : L2,
+                      fontWeight: 700, fontSize: 12,
+                    }}>
+                      {m.value}
+                    </span>
+                    {m.context && (
+                      <span style={{ color: L3, fontSize: 10 }}>{m.context}</span>
+                    )}
                   </div>
                 ))}
               </div>
             )}
 
-            {(decision as any).money_explanation && (
-              <div style={{ fontSize: 10.5, color: L3, marginTop: 3, lineHeight: 1.4 }}>
-                {(decision as any).money_explanation}
+            {/* NEXT STEP */}
+            {recItems.length > 0 && (
+              <div style={{
+                borderLeft: `2px solid ${cfg.accentColor}44`,
+                paddingLeft: 10, marginBottom: 8,
+              }}>
+                <div style={{
+                  fontSize: 9.5, fontWeight: 800, color: L3,
+                  letterSpacing: '0.10em', marginBottom: 4,
+                }}>
+                  PRÓXIMO PASSO
+                </div>
+                {recItems.map((item, i) => (
+                  <div key={i} style={{ fontSize: 12, color: L2, lineHeight: 1.6 }}>
+                    {item}
+                  </div>
+                ))}
               </div>
             )}
           </div>
-        ) : (
-          reasonLines.length > 0 && (
-            <div style={{ marginBottom: 8 }}>
-              {reasonLines.map((line, i) => (
-                <div key={i} style={{ fontSize: 12, color: L2, lineHeight: 1.55 }}>
-                  {line}
-                </div>
-              ))}
-            </div>
-          )
-        )}
+        </Expandable>
 
-        {/* METRICS — readable values */}
-        {decision.metrics && decision.metrics.length > 0 && (
-          <div style={{
-            display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 10,
-            paddingTop: 8,
-            borderTop: '1px solid rgba(255,255,255,0.06)',
-          }}>
-            {decision.metrics.map((m, i) => (
-              <div key={i} style={{
-                fontSize: 11,
-                display: 'flex', alignItems: 'baseline', gap: 4,
-              }}>
-                <span style={{ color: L3, fontWeight: 500 }}>{m.key}</span>
-                <span style={{
-                  color: m.trend === 'down' ? '#F87171' : m.trend === 'up' ? '#38BDF8' : L2,
-                  fontWeight: 700, fontSize: 12,
-                }}>
-                  {m.value}
-                </span>
-                {m.context && (
-                  <span style={{ color: L3, fontSize: 10 }}>{m.context}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* NEXT STEP */}
-        {recItems.length > 0 && (
-          <div style={{
-            borderLeft: `2px solid ${cfg.accentColor}44`,
-            paddingLeft: 10, marginBottom: 8,
-          }}>
-            <div style={{
-              fontSize: 9.5, fontWeight: 800, color: L3,
-              letterSpacing: '0.10em', marginBottom: 4,
-            }}>
-              PRÓXIMO PASSO
-            </div>
-            {recItems.map((item, i) => (
-              <div key={i} style={{ fontSize: 12, color: L2, lineHeight: 1.6 }}>
-                {item}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Kill urgency */}
+        {/* Kill urgency — always visible */}
         {isDestructive && decision.status === 'pending' && decision.impact_daily > 0 && (
           <div style={{
             fontSize: 10.5, color: 'rgba(248,113,113,0.60)', fontWeight: 500, marginBottom: 6,
@@ -418,8 +495,12 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         )}
 
-        {/* ACTIONS */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* ACTIONS — visible on hover (desktop) or always (touch) */}
+        <div style={{
+          display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center',
+          opacity: hovered || expanded || executingId !== null || actionFeedback ? 1 : 0.5,
+          transition: 'opacity 0.15s ease',
+        }}>
           {decision.actions && decision.actions.length > 0 ? (
             decision.actions.map((action, idx) => {
               const isPrimary = idx === 0;
@@ -427,7 +508,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
               return (
                 <button
                   key={action.id}
-                  onClick={() => handleButtonClick(action)}
+                  onClick={(e) => { e.stopPropagation(); handleButtonClick(action); }}
                   disabled={executingId !== null}
                   style={{
                     background: isPrimary ? cfg.btnBg : 'rgba(255,255,255,0.04)',
@@ -440,13 +521,15 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                     cursor: executingId !== null ? 'not-allowed' : 'pointer',
                     opacity: executingId !== null && !isRunning ? 0.4 : 1,
                     fontFamily: F,
-                    transition: 'all 0.15s ease',
+                    transition: 'all 0.12s ease',
                     letterSpacing: '-0.01em',
+                    transform: isRunning ? 'scale(0.97)' : 'scale(1)',
                   }}
                   onMouseEnter={e => {
                     if (!executingId) {
                       if (isPrimary) {
                         (e.currentTarget as HTMLElement).style.background = cfg.btnHover;
+                        (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
                       } else {
                         (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)';
                       }
@@ -455,12 +538,24 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                   onMouseLeave={e => {
                     if (isPrimary) {
                       (e.currentTarget as HTMLElement).style.background = cfg.btnBg;
+                      (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
                     } else {
                       (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
                     }
                   }}
                 >
-                  {isRunning ? 'Executando...' : action.label}
+                  {isRunning ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{
+                        width: 10, height: 10, borderRadius: '50%',
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderTopColor: '#fff',
+                        animation: 'dc-spin 0.6s linear infinite',
+                        display: 'inline-block',
+                      }} />
+                      Executando...
+                    </span>
+                  ) : action.label}
                 </button>
               );
             })
@@ -478,12 +573,19 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
             <span style={{
               fontSize: 11, fontWeight: 500, marginLeft: 4,
               color: actionFeedback.type === 'success' ? '#4ADE80' : '#F87171',
+              animation: 'dc-fadeIn 0.2s ease',
             }}>
+              {actionFeedback.type === 'success' && '✓ '}
               {actionFeedback.msg}
             </span>
           )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes dc-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes dc-fadeIn{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
     </>
   );
 };
