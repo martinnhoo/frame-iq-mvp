@@ -95,6 +95,9 @@ interface FeedItem {
   impact_basis: string;
   metrics_snapshot: Record<string, unknown>;
   actions: ActionDef[];
+  // AI-generated (populated after clustering)
+  action_recommendation?: string | null;
+  group_note?: string | null;
   // Clustering
   cluster_key: string;
   // Pattern-specific
@@ -410,6 +413,69 @@ function calculateKillScore(ad: AggregatedMetrics, baseline: AccountBaseline): n
   if (ad.conversions === 0 && ad.spend_cents > baseline.cpa_target_cents * 2) score += 5;
   if (ad.days_active >= 5) score += 2;
   return clamp(score, 85, 100);
+}
+
+// ── Generate action_recommendation based on decision context ──
+function generateActionRecommendation(item: FeedItem): string | null {
+  if (item.type === "kill") {
+    const ms = item.metrics_snapshot as any;
+    if (ms.conversions === 0) {
+      return "Considerar: testar novo criativo com hook diferente, ajustar público-alvo, ou realocar budget para anúncios que convertem";
+    }
+    if (ms.ctr < (ms.baseline_ctr || 0.01) * 0.5) {
+      return "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC";
+    }
+    if (ms.cpa_cents > (ms.baseline_cpa || 100) * 2) {
+      return "Considerar: novo público lookalike baseado em compradores recentes, ou testar criativo com abordagem diferente";
+    }
+    return "Pausar e realocar budget para criativos com melhor performance";
+  }
+
+  if (item.type === "fix") {
+    const ms = item.metrics_snapshot as any;
+    if (ms.frequency > 3.5) {
+      return "Rotacionar criativo: manter copy atual, trocar visual por formato carrossel ou UGC";
+    }
+    if (ms.hook_rate > 0.4 && ms.ctr < (ms.baseline_ctr || 0.01)) {
+      return "Testar LP com: headline alinhado ao hook, prova social acima do fold, CTA mais direto";
+    }
+    if (ms.cpm_cents > 0) {
+      return "Considerar: expandir público com lookalike 1-2%, ou testar interesse diferente para reduzir CPM";
+    }
+    return "Ajustar criativo ou público para recuperar performance";
+  }
+
+  if (item.type === "scale") {
+    return "Escalar gradualmente: +50% budget hoje, reavaliar em 48h antes de novo aumento";
+  }
+
+  return null;
+}
+
+// ── Detect related decisions and generate group_note ──
+function enrichWithGroupNotes(items: FeedItem[]): void {
+  // Group by campaign (from cluster_key)
+  const campaignClusters: Record<string, FeedItem[]> = {};
+  for (const item of items) {
+    // cluster_key format: "kill_low_ctr_CampaignName"
+    const parts = item.cluster_key.split("_");
+    const campaignKey = parts.slice(2).join("_");
+    if (campaignKey) {
+      if (!campaignClusters[campaignKey]) campaignClusters[campaignKey] = [];
+      campaignClusters[campaignKey].push(item);
+    }
+  }
+
+  for (const [, group] of Object.entries(campaignClusters)) {
+    if (group.length >= 2) {
+      const killsInGroup = group.filter(i => i.type === "kill" || i.type === "fix");
+      if (killsInGroup.length >= 2) {
+        for (const item of killsInGroup) {
+          item.group_note = `${killsInGroup.length} anúncios nesta campanha com padrão semelhante de queda`;
+        }
+      }
+    }
+  }
 }
 
 function buildMetricsSnapshot(ad: AggregatedMetrics, baseline: AccountBaseline): Record<string, unknown> {
@@ -1091,6 +1157,8 @@ async function persistDecisions(accountId: string, items: FeedItem[]): Promise<v
     impact_basis: item.impact_basis,
     metrics_snapshot: item.metrics_snapshot,
     actions: item.actions,
+    action_recommendation: item.action_recommendation,
+    group_note: item.group_note,
     status: "pending",
     created_at: new Date().toISOString(),
   }));
@@ -1228,10 +1296,13 @@ serve(async (req: Request) => {
     // 3. Prioritize by financial impact
     allItems = prioritize(allItems);
 
-    // 4. Set account_id on all items
+    // 4. Set account_id + generate recommendations + group notes
     for (const item of allItems) {
       item.account_id = account_id;
+      item.action_recommendation = item.action_recommendation || generateActionRecommendation(item);
+      item.group_note = item.group_note || null;
     }
+    enrichWithGroupNotes(allItems);
 
     // 5. FEED NEVER EMPTY guarantee
     if (allItems.length === 0) {

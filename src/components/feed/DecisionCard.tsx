@@ -172,8 +172,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
   const isActiveAd = decision.type === 'kill' || decision.type === 'fix';
   const has7dProjection = decision.impact_7d > 0 && decision.impact_daily > 0;
   const isDestructive = decision.type === 'kill';
-  const actionRec = (decision as any).action_recommendation as string | undefined;
-  const groupNote = (decision as any).group_note as string | undefined;
+  const actionRec = decision.action_recommendation;
+  const groupNote = decision.group_note;
 
   // Parse action_recommendation into bullet items if it contains commas/colons
   const recItems: string[] = [];
@@ -396,27 +396,37 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         {/* Action recommendation — "decision box" */}
         {recItems.length > 0 && (
           <div style={{
-            background: 'rgba(255,255,255,0.035)',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)',
             borderLeft: `3px solid ${cfg.border}`,
             borderRadius: 3,
-            padding: '10px 12px',
+            padding: '12px 14px',
             marginBottom: 10,
           }}>
             <div style={{
-              fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)',
-              letterSpacing: '0.06em', marginBottom: 6,
+              fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.50)',
+              letterSpacing: '0.10em', marginBottom: 7,
             }}>
               PRÓXIMA AÇÃO RECOMENDADA
             </div>
             {recItems.map((item, i) => (
               <div key={i} style={{
-                fontSize: 11.5, color: 'rgba(255,255,255,0.60)',
+                fontSize: 11.5, color: 'rgba(255,255,255,0.65)',
                 lineHeight: 1.6, paddingLeft: 2,
               }}>
                 · {item}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Micro-trigger: urgency on kill cards */}
+        {decision.type === 'kill' && decision.status === 'pending' && decision.impact_daily > 0 && (
+          <div style={{
+            fontSize: 10, color: 'rgba(229,62,62,0.55)',
+            fontWeight: 500, marginBottom: 8,
+          }}>
+            Cada hora ativo mantém esse nível de perda
           </div>
         )}
 

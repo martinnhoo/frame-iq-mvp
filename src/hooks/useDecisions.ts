@@ -25,7 +25,7 @@ export function useDecisions(accountId: string | null): UseDecisionsReturn {
       setIsLoading(true);
       const { data, error: fetchError } = await (supabase
         .from('decisions' as any)
-        .select('*')
+        .select('*, ad:ads(name, meta_ad_id, ad_set:ad_sets(name, campaign:campaigns(name)))')
         .eq('account_id', accountId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false }) as any);

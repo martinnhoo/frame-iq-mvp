@@ -146,6 +146,9 @@ export interface Decision {
   // Structured
   metrics: DecisionMetric[];
   actions: DecisionAction[];
+  // AI-generated recommendations
+  action_recommendation: string | null;
+  group_note: string | null;
   // State
   status: DecisionStatus;
   acted_at: string | null;

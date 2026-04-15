@@ -33,7 +33,7 @@ function buildDemoDecisions(): Decision[] {
       // #8: varied language — "queda consistente"
       headline: "Queda consistente de performance — CTR 62% abaixo da mediana",
       // #9: stronger time context — "nos últimos 3 dias"
-      reason: "CTR: 0.80% (baseline: 1.45%) — queda contínua nos últimos 3 dias\nCPA: R$47,50 (baseline: R$28,00) — tendência de alta desde seg\nGasto acumulado: R$540 em 5 dias sem melhora",
+      reason: "CTR: 0.80% (baseline: 1.45%) — queda consistente nos últimos 3 dias\nCPA: R$47,50 (baseline: R$28,00) — tendência de alta desde seg\nGasto acumulado: R$540 em 5 dias sem melhora",
       impact_type: "waste",
       impact_daily: 18000,
       impact_7d: 126000,
