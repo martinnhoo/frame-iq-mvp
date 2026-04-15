@@ -347,7 +347,7 @@ export type Database = {
       }
       ad_accounts: {
         Row: {
-          access_token_encrypted: string
+          access_token_encrypted: string | null
           created_at: string | null
           currency: string | null
           id: string
@@ -365,7 +365,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          access_token_encrypted: string
+          access_token_encrypted?: string | null
           created_at?: string | null
           currency?: string | null
           id?: string
@@ -383,7 +383,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          access_token_encrypted?: string
+          access_token_encrypted?: string | null
           created_at?: string | null
           currency?: string | null
           id?: string
@@ -1529,7 +1529,7 @@ export type Database = {
           account_id: string
           acted_at: string | null
           actions: Json | null
-          ad_id: string
+          ad_id: string | null
           created_at: string | null
           dismissed_at: string | null
           expires_at: string | null
@@ -1541,6 +1541,7 @@ export type Database = {
           impact_daily: number | null
           impact_type: string | null
           metrics: Json | null
+          metrics_snapshot: Json | null
           priority_rank: number | null
           reason: string
           score: number
@@ -1552,7 +1553,7 @@ export type Database = {
           account_id: string
           acted_at?: string | null
           actions?: Json | null
-          ad_id: string
+          ad_id?: string | null
           created_at?: string | null
           dismissed_at?: string | null
           expires_at?: string | null
@@ -1564,6 +1565,7 @@ export type Database = {
           impact_daily?: number | null
           impact_type?: string | null
           metrics?: Json | null
+          metrics_snapshot?: Json | null
           priority_rank?: number | null
           reason: string
           score: number
@@ -1575,7 +1577,7 @@ export type Database = {
           account_id?: string
           acted_at?: string | null
           actions?: Json | null
-          ad_id?: string
+          ad_id?: string | null
           created_at?: string | null
           dismissed_at?: string | null
           expires_at?: string | null
@@ -1587,6 +1589,7 @@ export type Database = {
           impact_daily?: number | null
           impact_type?: string | null
           metrics?: Json | null
+          metrics_snapshot?: Json | null
           priority_rank?: number | null
           reason?: string
           score?: number
