@@ -372,7 +372,7 @@ async function fetchInsights(
   return insights;
 }
 
-// Process and normalize metrics
+// Process and normalize metrics — all stored as integers (centavos/basis points)
 function normalizeMetrics(insight: MetaInsights, adUuid: string, accountUuid: string) {
   const spend = dollarsToCentavos(insight.spend || "0");
   const impressions = parseInt(insight.impressions || "0", 10);
@@ -398,16 +398,18 @@ function normalizeMetrics(insight: MetaInsights, adUuid: string, accountUuid: st
     );
   }
 
-  // ctr and roas are numeric columns — decimals OK
-  const ctr =
-    impressions > 0 ? Math.round((clicks / impressions) * 10000) / 100 : 0;
-  // cpc and cpa are integer columns — must be whole numbers (stored in centavos)
-  const cpc =
-    clicks > 0 ? Math.round(spend / clicks) : 0;
-  const roas =
-    spend > 0 ? Math.round((actionValue / spend) * 10000) / 10000 : 0;
-  const cpa =
-    conversions > 0 ? Math.round(spend / conversions) : 0;
+  // CTR: stored as basis points (0.93% → 93)
+  const ctr = impressions > 0 ? Math.round((clicks / impressions) * 10000) : 0;
+  // CPC: stored in centavos
+  const cpc = clicks > 0 ? Math.round(spend / clicks) : 0;
+  // CPM: stored in centavos
+  const cpm = impressions > 0 ? Math.round(spend / (impressions / 1000)) : 0;
+  // ROAS: stored as basis points (4.8x → 48000)
+  const roas = spend > 0 ? Math.round((actionValue / spend) * 10000) : 0;
+  // CPA: stored in centavos
+  const cpa = conversions > 0 ? Math.round(spend / conversions) : 0;
+  // Frequency: stored as integer × 100 (3.2 → 320)
+  const frequency = Math.round(parseFloat(insight.frequency || "0") * 100);
 
   return {
     ad_id: adUuid,
@@ -422,7 +424,7 @@ function normalizeMetrics(insight: MetaInsights, adUuid: string, accountUuid: st
     cpc,
     roas,
     cpa,
-    frequency: parseFloat(insight.frequency || "0"),
+    frequency,
     reach,
   };
 }
