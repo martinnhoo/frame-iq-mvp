@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// deno-lint-ignore no-explicit-any
+type SupabaseClient = any;
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -32,7 +34,7 @@ const corsHeaders = {
 
 async function getAuthUser(
   req: Request,
-  supabase: ReturnType<typeof createClient>
+  supabase: SupabaseClient
 ) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
@@ -50,7 +52,7 @@ async function getAuthUser(
 }
 
 async function getAdAccountMetaToken(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   adAccountId: string,
   userId: string
 ) {
@@ -132,15 +134,9 @@ async function callMetaApi(
 
 async function executeAction(
   req: ExecuteActionRequest,
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   user: unknown
-): Promise<{
-  success: boolean;
-  action_log_id?: string;
-  previous_state?: Record<string, unknown>;
-  new_state?: Record<string, unknown>;
-  error?: string;
-}> {
+): Promise<Record<string, unknown>> {
   const {
     decision_id,
     action_type,
@@ -418,12 +414,9 @@ async function executeAction(
 
 async function rollbackAction(
   req: ExecuteActionRequest,
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   user: unknown
-): Promise<{
-  success: boolean;
-  error?: string;
-}> {
+): Promise<Record<string, unknown>> {
   const { action_log_id } = req;
   const userId = (user as { id: string }).id;
 
