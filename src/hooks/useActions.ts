@@ -44,10 +44,10 @@ export function useActions(): UseActionsReturn {
 
         const { data, error } = await supabase.functions.invoke('execute-action', {
           body: {
-            decisionId,
-            actionType,
-            targetType,
-            targetMetaId,
+            decision_id: decisionId,
+            action_type: actionType,
+            target_type: targetType,
+            target_meta_id: targetMetaId,
             params,
           },
         });

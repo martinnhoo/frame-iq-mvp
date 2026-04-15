@@ -244,24 +244,35 @@ async function executeAction(
       break;
 
     case "increase_budget":
-      // Get current budget
-      const { data: budgetData, error: budgetError } = await supabase
-        .from("ad_snapshots")
-        .select("daily_budget")
-        .eq("meta_id", target_meta_id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+    case "decrease_budget": {
+      // Get current budget from Meta API snapshot (already captured above)
+      const snapshotBudget = previousState.daily_budget
+        ? Number(previousState.daily_budget)
+        : 0;
 
-      if (budgetError) {
+      // Fallback: try ad_snapshots table if snapshot didn't have budget
+      let currentBudget = snapshotBudget;
+      if (!currentBudget) {
+        const { data: budgetData } = await supabase
+          .from("ad_snapshots")
+          .select("daily_budget")
+          .eq("meta_id", target_meta_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        currentBudget = budgetData?.daily_budget ? Number(budgetData.daily_budget) : 0;
+      }
+
+      // Safety: never set budget to zero or negative
+      if (!currentBudget || currentBudget <= 0) {
         throw new Error(
-          `Failed to fetch current budget: ${budgetError.message}`
+          "Cannot adjust budget: current budget is unknown or zero. Check the campaign in Ads Manager."
         );
       }
 
-      const currentBudget = budgetData?.daily_budget || 0;
-      const multiplier = (params.multiplier as number) || 1.2;
-      const newBudget = Math.round(currentBudget * multiplier);
+      const defaultMultiplier = action_type === "increase_budget" ? 1.5 : 0.7;
+      const multiplier = (params.multiplier as number) || defaultMultiplier;
+      const newBudget = Math.max(100, Math.round(currentBudget * multiplier)); // min 100 cents ($1)
 
       metaApiResult = await callMetaApi(target_meta_id, metaAccessToken, {
         daily_budget: newBudget,
@@ -271,11 +282,10 @@ async function executeAction(
         newState = { ...previousState, daily_budget: newBudget };
       }
       break;
+    }
 
-    case "duplicate_ad":
-      // Duplicate ad by creating copies
-      metaApiResult = await callMetaApi(target_meta_id, metaAccessToken, {});
-      // For copies endpoint, append /copies to the URL
+    case "duplicate_ad": {
+      // Use Meta Ads API /copies endpoint directly
       const copiesUrl = `https://graph.facebook.com/${metaGraphApiVersion}/${target_meta_id}/copies`;
 
       const formData = new URLSearchParams();
@@ -300,6 +310,16 @@ async function executeAction(
         };
       }
       break;
+    }
+
+    case "generate_hook":
+    case "generate_variation": {
+      // These are creative generation actions — no Meta API call needed.
+      // Mark as success; the frontend navigates to the appropriate generator.
+      metaApiResult = { success: true };
+      newState = { ...previousState, action: action_type, note: "Creative generation triggered" };
+      break;
+    }
 
     default:
       throw new Error(`Unknown action type: ${action_type}`);

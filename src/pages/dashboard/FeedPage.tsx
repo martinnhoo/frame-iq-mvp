@@ -1636,10 +1636,31 @@ const FeedPage: React.FC = () => {
       return;
     }
 
+    // Creative generation actions → navigate to generator, don't call Meta
+    if (action.meta_api_action === 'generate_hook') {
+      navigate('/dashboard/hooks', { state: { fromDecision: decision } });
+      return;
+    }
+    if (action.meta_api_action === 'generate_variation') {
+      navigate('/dashboard/boards/new', { state: { fromDecision: decision } });
+      return;
+    }
+
+    // Actions without meta_api_action that aren't insight/alert → just navigate
+    if (!action.meta_api_action) {
+      return;
+    }
+
     const metaId = decision?.ad?.meta_ad_id || '';
-    const targetType = action.meta_api_action?.includes('adset') ? 'adset'
-      : action.meta_api_action?.includes('campaign') ? 'campaign' : 'ad';
-    const result = await executeAction(decisionId, action.meta_api_action || action.type, targetType, metaId, action.params);
+    const targetType = action.meta_api_action.includes('adset') ? 'adset'
+      : action.meta_api_action.includes('campaign') ? 'campaign' : 'ad';
+
+    // Safety: don't call Meta without a valid target ID
+    if (!metaId) {
+      throw new Error('Anúncio sem ID do Meta — não é possível executar esta ação');
+    }
+
+    const result = await executeAction(decisionId, action.meta_api_action, targetType, metaId, action.params);
     if (!result.success) throw new Error(result.error || 'Erro ao executar ação');
   };
 
