@@ -70,6 +70,7 @@ const ReferralPage     = lazy(() => import("./pages/dashboard/ReferralPage"));
 
 // V2 Decision Engine pages
 const FeedPage         = lazy(() => import("./pages/dashboard/FeedPage"));
+const PatternsPage     = lazy(() => import("./pages/dashboard/PatternsPage"));
 const HistoryPage      = lazy(() => import("./pages/dashboard/HistoryPage"));
 const OnboardingPage   = lazy(() => import("./pages/dashboard/OnboardingPage"));
 const CriarHub         = lazy(() => import("./pages/dashboard/CriarHub"));
@@ -158,6 +159,7 @@ const App = () => (
                 <Route path="criar" element={<CriarHub />} />
                 <Route path="ai" element={<AdBriefAI />} />
                 <Route path="intelligence" element={<IntelligencePage />} />
+                <Route path="patterns" element={<PatternsPage />} />
                 <Route path="diary" element={<AdDiary />} />
                 <Route path="analyses" element={<AnalysesList />} />
                 <Route path="analyses/new" element={<ToolGate><NewAnalysis /></ToolGate>} />

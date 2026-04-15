@@ -25,7 +25,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { action, user_id, variables, analysis_data } = body;
+    const { action, user_id, variables, analysis_data, persona_id } = body;
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
@@ -92,16 +92,23 @@ serve(async (req) => {
     // ── ACTION: get_context ──
     // Retrieve accumulated learning context for use in generators
     if (action === "get_context") {
-      const [memoriesRes, patternsRes, profileRes, chatMemoryRes] = await Promise.all([
+      const fetches: Promise<Response>[] = [
         supaFetch(`creative_memory?user_id=eq.${user_id}&select=*&order=created_at.desc&limit=50`),
         supaFetch(`learned_patterns?user_id=eq.${user_id}&is_winner=eq.true&select=*&order=confidence.desc&limit=10`),
         supaFetch(`user_ai_profile?user_id=eq.${user_id}&select=*&limit=1`),
         supaFetch(`chat_memory?user_id=eq.${user_id}&select=memory_text,memory_type,importance&order=importance.desc&limit=15`),
-      ]);
+      ];
+      // Also fetch persona-specific patterns from detect-patterns system
+      if (persona_id) {
+        fetches.push(
+          supaFetch(`learned_patterns?user_id=eq.${user_id}&persona_id=eq.${persona_id}&select=*&order=confidence.desc&limit=10`)
+        );
+      }
+      const [memoriesRes, patternsRes, profileRes, chatMemoryRes, personaPatternsRes] = await Promise.all(fetches);
 
-      const [memories, patterns, profiles, chatMemories] = await Promise.all([
-        memoriesRes.json(), patternsRes.json(), profileRes.json(), chatMemoryRes.json(),
-      ]);
+      const jsonPromises: Promise<any>[] = [memoriesRes.json(), patternsRes.json(), profileRes.json(), chatMemoryRes.json()];
+      if (personaPatternsRes) jsonPromises.push(personaPatternsRes.json());
+      const [memories, patterns, profiles, chatMemories, personaPatterns] = await Promise.all(jsonPromises);
 
       const profile = profiles?.[0] || null;
 
@@ -146,6 +153,21 @@ serve(async (req) => {
         }
       }
 
+      // ── persona-specific patterns from detect-patterns system ──────────
+      const pPatterns = Array.isArray(personaPatterns) ? personaPatterns : [];
+      if (pPatterns.length > 0) {
+        contextLines.push(`\nPERSONA-SPECIFIC PATTERNS (from ad diary analysis):`);
+        for (const p of pPatterns.slice(0, 5)) {
+          const ft = p.variables?.feature_type || "";
+          const fv = p.variables?.feature_value || "";
+          const ctr = p.avg_ctr ? `CTR ${(p.avg_ctr * 100).toFixed(2)}%` : "";
+          const roas = p.avg_roas ? `ROAS ${p.avg_roas.toFixed(1)}x` : "";
+          const winner = p.is_winner ? " [WINNER]" : "";
+          contextLines.push(`- ${ft}:${fv} → ${[ctr, roas].filter(Boolean).join(", ")} (${p.sample_size} ads, ${(p.confidence * 100).toFixed(0)}% confidence)${winner}`);
+          if (p.insight_text) contextLines.push(`  Insight: ${p.insight_text}`);
+        }
+      }
+
       if (profile?.ai_summary) {
         contextLines.push(`\nAI PROFILE: ${profile.ai_summary}`);
       }
@@ -166,8 +188,9 @@ serve(async (req) => {
         context: contextLines.join("\n"),
         memories_count: memories?.length || 0,
         patterns_count: patterns?.length || 0,
+        persona_patterns_count: pPatterns.length,
         chat_memory_count: relevantMems.length,
-        has_data: (memories?.length || 0) > 0 || (patterns?.length || 0) > 0 || relevantMems.length > 0,
+        has_data: (memories?.length || 0) > 0 || (patterns?.length || 0) > 0 || pPatterns.length > 0 || relevantMems.length > 0,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

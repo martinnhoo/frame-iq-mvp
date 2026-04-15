@@ -9,6 +9,7 @@ import { useMoneyTracker } from '../../hooks/useMoneyTracker';
 import { useActions } from '../../hooks/useActions';
 import { supabase } from '@/integrations/supabase/client';
 import type { Decision, DecisionAction } from '../../types/v2-database';
+import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
@@ -1205,6 +1206,7 @@ const FeedPage: React.FC = () => {
 
   const { activeAccount, metaConnected, accountResolving } = ctx;
   const userId = (ctx as any).user?.id as string | undefined;
+  const personaId = (ctx as any).selectedPersona?.id as string | undefined;
   const accountId = activeAccount?.id ?? null;
 
   const [period, setPeriod] = useState<PeriodKey>('7d');
@@ -1616,6 +1618,19 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'no-critical' ? (
           <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} />
         ) : null}
+
+        {/* Patterns panel — detected creative patterns from ad_diary */}
+        {metaConnected && !isDemo && userId && personaId && (
+          <div style={{ marginTop: 16 }}>
+            <PatternsPanel
+              userId={userId}
+              personaId={personaId}
+              onGenerateVariation={(pattern) => {
+                navigate('/dashboard/hooks', { state: { fromPattern: pattern } });
+              }}
+            />
+          </div>
+        )}
 
         {/* Telegram connection card — shown when Meta is connected */}
         {metaConnected && !isDemo && userId && <TelegramCard userId={userId} />}
