@@ -473,14 +473,9 @@ const BoardDetail = () => {
               <div className="px-5 pb-5 space-y-3">
                 {abVariants.map((v, i) => {
                   const exp = abExpanded === i;
-                  const scoreColor = v.predicted_score >= 8 ? "text-green-400" : v.predicted_score >= 6.5 ? "text-yellow-400" : "text-white/50";
                   return (
                     <div key={i} className="rounded-xl border border-white/[0.13] bg-[#0a0a0a] overflow-hidden">
                       <div className="flex items-start gap-3 p-4">
-                        <div className="shrink-0 text-center w-10">
-                          <div className={`text-sm font-bold font-mono ${scoreColor}`}>{v.predicted_score?.toFixed(1)}</div>
-                          <div className="text-[9px] text-white/40 uppercase">/10</div>
-                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-bold text-white" style={{fontFamily:"'Syne',sans-serif"}}>{v.angle}</span>
