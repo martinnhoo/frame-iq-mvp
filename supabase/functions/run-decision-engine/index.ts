@@ -94,6 +94,7 @@ interface FeedItem {
   confidence: Confidence;
   impact_basis: string;
   metrics_snapshot: Record<string, unknown>;
+  metrics?: MetricPill[];
   actions: ActionDef[];
   // AI-generated (populated after clustering)
   action_recommendation?: string | null;
@@ -112,6 +113,13 @@ interface ActionDef {
   type: "destructive" | "constructive" | "neutral";
   requires_confirmation: boolean;
   meta_api_action?: string;
+}
+
+interface MetricPill {
+  key: string;
+  value: string;
+  context: string;
+  trend: "up" | "down" | "stable";
 }
 
 // ================================================================
@@ -493,6 +501,102 @@ function buildMetricsSnapshot(ad: AggregatedMetrics, baseline: AccountBaseline):
     baseline_cpa: baseline.baseline_median_cpa,
     baseline_roas: baseline.baseline_median_roas,
   };
+}
+
+// ── Build structured metric pills from snapshot for the feed card ──
+function buildMetricPills(item: FeedItem): MetricPill[] {
+  const ms = item.metrics_snapshot as any;
+  if (!ms) return [];
+  const pills: MetricPill[] = [];
+  const fmtPct = (v: number) => `${(v * 100).toFixed(2)}%`;
+
+  if (item.type === "kill" || item.type === "fix") {
+    // CTR
+    if (ms.ctr > 0) {
+      pills.push({
+        key: "CTR", value: fmtPct(ms.ctr),
+        context: ms.baseline_ctr > 0 ? `baseline ${fmtPct(ms.baseline_ctr)}` : "",
+        trend: ms.ctr < (ms.baseline_ctr || 0) ? "down" : "up",
+      });
+    }
+    // CPA
+    if (ms.cpa_cents > 0) {
+      pills.push({
+        key: "CPA", value: formatMoney(ms.cpa_cents),
+        context: ms.baseline_cpa > 0 ? `baseline ${formatMoney(ms.baseline_cpa)}` : "",
+        trend: ms.cpa_cents > (ms.baseline_cpa || 0) ? "down" : "up",
+      });
+    }
+    // Spend
+    if (ms.spend_cents > 0) {
+      pills.push({
+        key: "Gasto", value: formatMoney(ms.spend_cents),
+        context: ms.days_active ? `${ms.days_active}d` : "",
+        trend: "stable",
+      });
+    }
+    // Conversions
+    if (ms.conversions !== undefined) {
+      pills.push({
+        key: "Conv.", value: String(ms.conversions), context: "",
+        trend: ms.conversions === 0 ? "down" : ms.conversions >= 3 ? "stable" : "down",
+      });
+    }
+    // Frequency (if high)
+    if (ms.frequency > 2.5) {
+      pills.push({
+        key: "Freq.", value: `${ms.frequency.toFixed(1)}x`, context: "",
+        trend: ms.frequency > 3.0 ? "down" : "stable",
+      });
+    }
+  } else if (item.type === "scale") {
+    if (ms.roas > 0) {
+      pills.push({
+        key: "ROAS", value: `${ms.roas.toFixed(1)}x`,
+        context: ms.baseline_roas > 0 ? `baseline ${ms.baseline_roas.toFixed(1)}x` : "",
+        trend: "up",
+      });
+    }
+    if (ms.cpa_cents > 0) {
+      pills.push({
+        key: "CPA", value: formatMoney(ms.cpa_cents),
+        context: ms.baseline_cpa > 0 ? `baseline ${formatMoney(ms.baseline_cpa)}` : "",
+        trend: ms.cpa_cents < (ms.baseline_cpa || Infinity) ? "up" : "down",
+      });
+    }
+    if (ms.conversions > 0) {
+      pills.push({
+        key: "Conv.", value: String(ms.conversions),
+        context: ms.days_active ? `${ms.days_active}d` : "",
+        trend: "up",
+      });
+    }
+  } else if (item.type === "pattern") {
+    // Pattern pills from snapshot
+    if (ms.avg_ctr) {
+      pills.push({
+        key: "CTR médio", value: fmtPct(ms.avg_ctr),
+        context: ms.baseline_ctr > 0 ? `baseline ${fmtPct(ms.baseline_ctr)}` : "",
+        trend: ms.avg_ctr > (ms.baseline_ctr || 0) ? "up" : "down",
+      });
+    }
+    if (ms.avg_cpa_cents) {
+      pills.push({
+        key: "CPA médio", value: formatMoney(ms.avg_cpa_cents),
+        context: ms.baseline_cpa > 0 ? `baseline ${formatMoney(ms.baseline_cpa)}` : "",
+        trend: ms.avg_cpa_cents < (ms.baseline_cpa || Infinity) ? "up" : "down",
+      });
+    }
+    if (ms.sample_size) {
+      pills.push({
+        key: "Amostra", value: `${ms.sample_size} ads`,
+        context: ms.total_spend_cents ? formatMoney(ms.total_spend_cents) : "",
+        trend: "stable",
+      });
+    }
+  }
+
+  return pills;
 }
 
 // ================================================================
@@ -1156,6 +1260,7 @@ async function persistDecisions(accountId: string, items: FeedItem[]): Promise<v
     impact_confidence: item.confidence,
     impact_basis: item.impact_basis,
     metrics_snapshot: item.metrics_snapshot,
+    metrics: item.metrics || [],
     actions: item.actions,
     action_recommendation: item.action_recommendation,
     group_note: item.group_note,
@@ -1296,11 +1401,15 @@ serve(async (req: Request) => {
     // 3. Prioritize by financial impact
     allItems = prioritize(allItems);
 
-    // 4. Set account_id + generate recommendations + group notes
+    // 4. Set account_id + generate recommendations + metrics pills + group notes
     for (const item of allItems) {
       item.account_id = account_id;
       item.action_recommendation = item.action_recommendation || generateActionRecommendation(item);
       item.group_note = item.group_note || null;
+      // Build structured metrics from snapshot (if not already set by pattern engine)
+      if (!item.metrics || item.metrics.length === 0) {
+        item.metrics = buildMetricPills(item);
+      }
     }
     enrichWithGroupNotes(allItems);
 
