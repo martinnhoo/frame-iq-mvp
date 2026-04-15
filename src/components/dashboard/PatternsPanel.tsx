@@ -80,28 +80,50 @@ function humanizeTextDensity(raw: string): string {
 
 /** Detect if insight_text is raw/debug data that should NOT be shown */
 function isRawInsightText(text: string): boolean {
-  // Patterns that indicate raw debug output:
-  // "urgency em meta: CTR 7.909774, ROAS null"
-  // "question em meta: CTR 2.068966, ROAS null"
-  // Contains raw numbers with many decimals, "null", "em meta:", etc.
   if (/CTR \d+\.\d{4,}/.test(text)) return true;
   if (/ROAS null/i.test(text)) return true;
   if (/em meta:/i.test(text)) return true;
   if (/\bnull\b/.test(text)) return true;
-  // Raw pattern_key format like "hook_type:urgency"
   if (/^[a-z_]+:[a-z_]+$/i.test(text.trim())) return true;
   return false;
 }
 
-function humanizePatternLabel(p: DetectedPattern): string {
-  // Only use insight_text if it's actually a good human-written insight
-  if (p.insight_text && p.insight_text.length > 10 && !isRawInsightText(p.insight_text)) {
-    let cleaned = p.insight_text;
-    if (cleaned.length > 100) cleaned = cleaned.slice(0, 97) + "...";
-    return cleaned;
+/**
+ * Parse AI-generated insight_text.
+ * Format from detect-patterns: "TITLE || INSIGHT" or legacy plain text.
+ */
+function parseAiInsight(insightText: string | null): { title: string | null; explanation: string | null } {
+  if (!insightText || insightText.length < 5 || isRawInsightText(insightText)) {
+    return { title: null, explanation: null };
   }
+  // New format: "Title || Explanation"
+  if (insightText.includes(" || ")) {
+    const [title, ...rest] = insightText.split(" || ");
+    const explanation = rest.join(" || ").trim();
+    const cleanTitle = title.trim();
+    if (cleanTitle.length > 5 && !isRawInsightText(cleanTitle)) {
+      return {
+        title: cleanTitle.length > 80 ? cleanTitle.slice(0, 77) + "..." : cleanTitle,
+        explanation: explanation.length > 5 && !isRawInsightText(explanation) ? explanation : null,
+      };
+    }
+  }
+  // Legacy: plain text — use as explanation if short, or title if very short
+  if (insightText.length <= 80 && !isRawInsightText(insightText)) {
+    return { title: insightText, explanation: null };
+  }
+  if (!isRawInsightText(insightText)) {
+    return { title: null, explanation: insightText.length > 200 ? insightText.slice(0, 197) + "..." : insightText };
+  }
+  return { title: null, explanation: null };
+}
 
-  // Always fall through to structured humanization — ALWAYS descriptive, never generic
+function humanizePatternLabel(p: DetectedPattern): string {
+  // 1. AI-generated title is ALWAYS preferred — it explains the WHY
+  const ai = parseAiInsight(p.insight_text);
+  if (ai.title) return ai.title;
+
+  // 2. Structured fallback per feature_type (still descriptive)
   const featureType = p.feature_type || p.variables?.feature_type || "";
   const featureValue = p.feature_value || p.variables?.feature_value || "";
   const ctrStr = p.avg_ctr != null && p.avg_ctr > 0 ? ` — CTR ${formatCtr(p.avg_ctr)}` : "";
@@ -129,14 +151,7 @@ function humanizePatternLabel(p: DetectedPattern): string {
     }
     case "status": return `Status: ${featureValue}`;
     default: {
-      // Reject generic/empty labels
-      const cleanLabel = p.label && p.label !== "Padrão" && p.label.length > 3 && !isRawInsightText(p.label)
-        ? p.label.replace(/\bads\b/gi, "anúncios").replace(/\bAds\b/g, "Anúncios")
-            .replace(/\bHook:\s*/gi, "Hook: ").replace(/\bText density:\s*/gi, "Densidade de texto: ")
-        : null;
-      if (cleanLabel) return cleanLabel;
-
-      // Try to extract meaning from pattern_key (e.g. "account:persona:hook_type:urgency")
+      // Try pattern_key extraction
       if (p.pattern_key) {
         const parts = p.pattern_key.split(":");
         if (parts.length >= 4) {
@@ -149,17 +164,19 @@ function humanizePatternLabel(p: DetectedPattern): string {
           if (ft && fv) return `${ft.replace(/_/g, " ")}: ${fv.replace(/_/g, " ")}`;
         }
       }
-
-      // Last resort — always descriptive
-      if (p.is_winner && p.avg_ctr != null && p.avg_ctr > 0) return `Criativo com CTR acima da média da conta`;
-      if (p.avg_ctr != null && p.avg_ctr > 0) return `Sinal detectado em ${pluralAds(p.sample_size)}`;
-      return `Sinal identificado em ${pluralAds(p.sample_size)}`;
+      if (p.is_winner && p.avg_ctr != null && p.avg_ctr > 0) return `Padrão vencedor em ${pluralAds(p.sample_size)}`;
+      return `Sinal detectado em ${pluralAds(p.sample_size)}`;
     }
   }
 }
 
-/** Generate a short why-it-matters explanation for a pattern */
+/** Generate explanation — prefers AI insight, falls back to structured */
 function patternExplanation(p: DetectedPattern): string | null {
+  // 1. AI explanation is preferred
+  const ai = parseAiInsight(p.insight_text);
+  if (ai.explanation) return ai.explanation;
+
+  // 2. Structured fallback
   const featureType = p.feature_type || p.variables?.feature_type || "";
   const impactNum = parseFloat(p.impact_ctr_pct || "0");
   const impactStr = impactNum > 0 ? `+${p.impact_ctr_pct} acima da média` : impactNum < 0 ? `${p.impact_ctr_pct} abaixo da média` : "";

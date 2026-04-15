@@ -646,16 +646,44 @@ serve(async (req) => {
 
       // 5. Generate AI insights for top patterns
       if (ANTHROPIC_API_KEY && topPatterns.length > 0) {
-        const prompt = `Você é um analista sênior de Meta Ads. Analise estes padrões criativos detectados de dados reais de uma conta de anúncios.
+        // Build rich context string per pattern for the AI
+        const patternDetails = topPatterns.map((p, i) => {
+          const lines: string[] = [];
+          lines.push(`${i + 1}. Tipo: ${p.feature_type} | Valor: ${p.feature_value}`);
+          lines.push(`   Label: ${p.label}`);
+          lines.push(`   CTR: ${p.avg_ctr ? (p.avg_ctr * 100).toFixed(2) : "?"}% (${p.impact_ctr_pct} vs baseline)`);
+          if (p.avg_roas != null && p.avg_roas > 0) lines.push(`   ROAS: ${p.avg_roas.toFixed(2)}x`);
+          if (p.avg_cpc != null && p.avg_cpc > 0) lines.push(`   CPC: R$${p.avg_cpc.toFixed(2)}`);
+          lines.push(`   Amostra: ${p.sample_size} anúncios | Confiança: ${(p.confidence * 100).toFixed(0)}% | Consistência: ${Math.round(p.consistency * 100)}%`);
+          if (p.is_winner) lines.push(`   STATUS: VENCEDOR`);
+          if (p.top_ads && p.top_ads.length > 0) {
+            const topAdsStr = p.top_ads.map(a =>
+              `"${a.ad_name || a.ad_id}" (CTR ${(a.ctr * 100).toFixed(2)}%)`
+            ).join(", ");
+            lines.push(`   Top anúncios: ${topAdsStr}`);
+          }
+          if (p.impact_roas_pct) lines.push(`   Impacto ROAS: ${p.impact_roas_pct}`);
+          return lines.join("\n");
+        }).join("\n\n");
+
+        const prompt = `Você é um analista sênior de Meta Ads. Analise estes padrões criativos detectados de dados REAIS de uma conta de anúncios.
 
 Baseline da conta: CTR ${(baselineCtr * 100).toFixed(2)}%${baselineRoas ? `, ROAS ${baselineRoas.toFixed(1)}x` : ""}${baselineCpc ? `, CPC R$${baselineCpc.toFixed(2)}` : ""} (${ads.length} anúncios analisados)
 
-Padrões detectados:
-${topPatterns.map((p, i) => `${i + 1}. ${p.label} — CTR ${p.avg_ctr ? (p.avg_ctr * 100).toFixed(2) : "?"}% (${p.impact_ctr_pct} vs baseline), ${p.sample_size} anúncios, confiança ${(p.confidence * 100).toFixed(0)}%${p.is_winner ? " [VENCEDOR]" : ""}`).join("\n")}
+${patternDetails}
 
-Para cada padrão, escreva 1 frase específica e acionável EM PORTUGUÊS DO BRASIL explicando POR QUE esse padrão performa assim e o que o anunciante deve FAZER. Referencie os números reais. Seja direto, sem enrolação.
+Para CADA padrão, escreva EM PORTUGUÊS DO BRASIL:
+- "title": Um título curto (máx 60 chars) que EXPLICA o padrão, NÃO apenas repete a métrica. Diga O QUE funciona e POR QUÊ. Ex: "Hooks de urgência geram 2x mais cliques nos primeiros 3s", "Vídeo curto com pouco texto domina esta conta", "Carrossel + hook direto: combo vencedor com CTR 4.2%"
+- "insight": 1-2 frases explicando POR QUE este padrão funciona na prática e O QUE FAZER para replicar ou melhorar. Use os nomes dos top anúncios quando relevante. Seja específico e acionável.
 
-Retorne um array JSON: [{"index": 0, "insight": "..."}, ...]`;
+REGRAS:
+- NUNCA escreva títulos genéricos como "CTR acima da média" ou "Performance superior"
+- O título deve explicar a CAUSA, não o efeito
+- Referencie dados reais (nomes de anúncios, CTR específico, formato)
+- Para padrões de gap: sugira o que testar
+- Para desvios: explique o que diferencia esse anúncio
+
+Retorne um array JSON: [{"index": 0, "title": "...", "insight": "..."}, ...]`;
 
         try {
           const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
@@ -667,7 +695,7 @@ Retorne um array JSON: [{"index": 0, "insight": "..."}, ...]`;
             },
             body: JSON.stringify({
               model: "claude-haiku-4-5-20251001",
-              max_tokens: 1024,
+              max_tokens: 2048,
               messages: [{ role: "user", content: prompt }],
             }),
           });
@@ -678,10 +706,16 @@ Retorne um array JSON: [{"index": 0, "insight": "..."}, ...]`;
             try {
               const jsonMatch = raw.match(/\[[\s\S]*\]/);
               if (jsonMatch) {
-                const insights: { index: number; insight: string }[] = JSON.parse(jsonMatch[0]);
+                const insights: { index: number; title?: string; insight: string }[] = JSON.parse(jsonMatch[0]);
                 for (const ins of insights) {
                   if (topPatterns[ins.index]) {
-                    topPatterns[ins.index].insight_text = ins.insight;
+                    // Store title + insight as structured string: "TITLE || INSIGHT"
+                    // Frontend can split on " || " to use title as label and insight as explanation
+                    const title = ins.title || "";
+                    const insight = ins.insight || "";
+                    topPatterns[ins.index].insight_text = title && insight
+                      ? `${title} || ${insight}`
+                      : insight || title;
                   }
                 }
               }

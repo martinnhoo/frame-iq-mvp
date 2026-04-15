@@ -221,14 +221,36 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** Parse AI insight_text: "TITLE || INSIGHT" format or legacy plain text */
+function parseAiInsight(insightText: string | null): { title: string | null; explanation: string | null } {
+  if (!insightText || insightText.length < 5) return { title: null, explanation: null };
+  // Filter raw debug data
+  if (/CTR \d+\.\d{4,}/.test(insightText) || /ROAS null/i.test(insightText) || /\bnull\b/.test(insightText)) {
+    return { title: null, explanation: null };
+  }
+  if (insightText.includes(" || ")) {
+    const [title, ...rest] = insightText.split(" || ");
+    const explanation = rest.join(" || ").trim();
+    return {
+      title: title.trim().length > 5 ? (title.trim().length > 80 ? title.trim().slice(0, 77) + "..." : title.trim()) : null,
+      explanation: explanation.length > 5 ? explanation : null,
+    };
+  }
+  if (insightText.length <= 80) return { title: insightText, explanation: null };
+  return { title: null, explanation: insightText.length > 200 ? insightText.slice(0, 197) + "..." : insightText };
+}
+
 function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; navigate: any }) {
   const [hov, setHov] = useState(false);
 
-  // Parse label from pattern_key
-  const parts = p.pattern_key?.split(":") || [];
-  const featureType = p.variables?.feature_type || parts[2] || "";
-  const featureValue = p.variables?.feature_value || parts[3] || "";
-  const label = featureValue ? `${featureType}: ${featureValue}` : p.pattern_key;
+  // Parse AI insight for title + explanation
+  const ai = parseAiInsight(p.insight_text);
+
+  // Build label: AI title > structured > raw
+  const featureType = p.variables?.feature_type || "";
+  const featureValue = p.variables?.feature_value || "";
+  const label = ai.title
+    || (featureType && featureValue ? `${featureType.replace(/_/g, " ")}: ${featureValue}` : p.pattern_key);
 
   // Impact calculation from baseline
   const ctrDisplay = p.avg_ctr ? (p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100).toFixed(2) : null;
@@ -247,49 +269,52 @@ function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; n
     >
       {/* Header row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0 }}>
           {p.is_winner && (
             <span style={{
               fontSize: 9, fontWeight: 700, color: "#9f7aea",
               background: "rgba(159,122,234,0.12)", padding: "2px 6px",
-              borderRadius: 4, letterSpacing: "0.04em", fontFamily: F,
+              borderRadius: 4, letterSpacing: "0.04em", fontFamily: F, flexShrink: 0,
             }}>
               WINNER
             </span>
           )}
-          <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.60)", fontFamily: F }}>
+          <span style={{
+            fontSize: 13, fontWeight: 600, color: ai.title ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.60)",
+            fontFamily: F, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
             {label}
           </span>
         </div>
-        <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.25)", fontFamily: M }}>
+        <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.25)", fontFamily: M, flexShrink: 0, marginLeft: 8 }}>
           {p.sample_size} ads · {(p.confidence * 100).toFixed(0)}% conf
         </span>
       </div>
 
-      {/* Insight */}
-      {p.insight_text && (
+      {/* AI explanation (or legacy insight) */}
+      {ai.explanation && (
         <p style={{
-          fontSize: 13, color: "rgba(255,255,255,0.70)", lineHeight: 1.5,
+          fontSize: 13, color: "rgba(255,255,255,0.60)", lineHeight: 1.5,
           margin: "0 0 8px", fontFamily: F,
         }}>
-          {p.insight_text}
+          {ai.explanation}
         </p>
       )}
 
       {/* Metrics */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: p.is_winner ? 10 : 0 }}>
         {ctrDisplay && (
-          <span style={{ fontSize: 12, color: p.is_winner ? "#34d399" : "rgba(255,255,255,0.45)", fontFamily: M }}>
+          <span style={{ fontSize: 12, color: p.is_winner ? "#34d399" : "rgba(255,255,255,0.45)", fontFamily: M, fontVariant: "tabular-nums" }}>
             CTR {ctrDisplay}%
           </span>
         )}
         {p.avg_roas != null && p.avg_roas > 0 && (
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.40)", fontFamily: M }}>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.40)", fontFamily: M, fontVariant: "tabular-nums" }}>
             ROAS {p.avg_roas.toFixed(1)}x
           </span>
         )}
         {p.avg_cpc != null && p.avg_cpc > 0 && (
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.40)", fontFamily: M }}>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.40)", fontFamily: M, fontVariant: "tabular-nums" }}>
             CPC ${p.avg_cpc.toFixed(2)}
           </span>
         )}
@@ -299,7 +324,7 @@ function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; n
       {p.is_winner && (
         <button
           onClick={() => {
-            const ft = p.feature_type || p.variables?.feature_type || "";
+            const ft = p.variables?.feature_type || featureType;
             const st = { state: { fromPattern: p } };
             if (ft === "hook_type" || ft === "hook_presence") navigate("/dashboard/hooks", st);
             else if (ft === "format" || ft === "combination" || ft === "text_density" || ft === "gap") navigate("/dashboard/boards/new", st);
@@ -321,7 +346,7 @@ function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; n
         >
           <Sparkles size={12} color="#9f7aea" />
           <span style={{ fontSize: 12, fontWeight: 600, color: "#9f7aea", fontFamily: F }}>
-            Generate variation based on this pattern
+            Gerar variação baseada neste padrão
           </span>
           <ChevronRight size={12} color="#9f7aea" style={{ marginLeft: "auto" }} />
         </button>
