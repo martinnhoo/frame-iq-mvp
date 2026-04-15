@@ -1117,13 +1117,6 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   const primaryAction = actions[0];
   const secondaryActions = actions.slice(1);
 
-  const content = block.content || "";
-  const hasRealData = /R\$[\d,]+|CTR\s[\d,.]+%|\$[\d,]+\s(spent|gastos|gastados)/i.test(content);
-  const spendMatch = content.match(/R\$(\d+[\d.,]*)\s*(gastos|spent|gastados)/i) || content.match(/\$(\d+[\d.,]*)\s*(spent|gastos|gastados)/i);
-  const ctrMatch = content.match(/CTR\s(?:médio\s|promedio\s|avg\s)?(\d+[.,]\d+)%/i) || content.match(/(\d+[.,]\d+)%\s*(?:avg\s)?CTR/i);
-  const spend = spendMatch?.[1];
-  const ctr = ctrMatch?.[1];
-
   const subtitle = hasData
     ? (lang === "pt" ? "Meta Ads conectado. Escolha uma ação." : lang === "es" ? "Meta Ads conectado. Elige una acción." : "Meta Ads connected. Choose an action.")
     : (lang === "pt" ? "Escolha uma ação para começar." : lang === "es" ? "Elige una acción para empezar." : "Choose an action to start.");
@@ -1188,29 +1181,7 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
           {block.title}
         </h1>
 
-        {/* KPI badges — stagger 3 */}
-        {hasRealData && (spend || ctr) && (
-          <div style={{
-            display: "flex", gap: 8, marginBottom: 10, justifyContent: "center", flexWrap: "wrap" as const,
-            animation: mounted ? "pb-fadeUp 0.3s ease-out 0.18s both" : "none",
-            opacity: 0,
-          }}>
-            {spend && (
-              <div style={{ padding: "5px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.30)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{lang === "pt" ? "Gasto" : "Spend"}</span>
-                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>{lang === "en" ? "$" : "R$"}{spend}</span>
-              </div>
-            )}
-            {ctr && (
-              <div style={{ padding: "5px 12px", borderRadius: 8, background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.10)", display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.30)", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>CTR</span>
-                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#34d399", letterSpacing: "-0.02em" }}>{ctr}%</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Subtitle — stagger 4 */}
+        {/* Subtitle — stagger 3 */}
         <p style={{
           fontFamily: M, fontSize: 12.5, color: "rgba(192,198,207,0.80)", lineHeight: 1.45,
           margin: "0 0 16px", maxWidth: 300,
