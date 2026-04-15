@@ -51,13 +51,13 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
               <span style={{
                 fontSize: 28, fontWeight: 700, color: '#fff',
-                fontFamily: M, letterSpacing: '-0.04em', lineHeight: 1,
+                fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
               }}>
                 {formatMoney(leaking)}
               </span>
               <span style={{
                 fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.40)',
-                fontFamily: M, letterSpacing: '-0.02em',
+                fontFamily: F, letterSpacing: '-0.02em',
               }}>
                 /dia
               </span>
@@ -106,7 +106,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
           </div>
           <div style={{
             fontSize: 22, fontWeight: 700, color: '#fff',
-            fontFamily: M, letterSpacing: '-0.04em', lineHeight: 1,
+            fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
           }}>
             {formatMoney(capturable)}
           </div>
@@ -126,7 +126,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
           </div>
           <div style={{
             fontSize: 22, fontWeight: 700, color: '#fff',
-            fontFamily: M, letterSpacing: '-0.04em', lineHeight: 1,
+            fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
           }}>
             {formatMoney(displayedSaved)}
           </div>

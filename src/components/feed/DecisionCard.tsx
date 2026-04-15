@@ -184,7 +184,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
               color: 'rgba(255,255,255,0.30)',
               fontSize: 10,
               fontWeight: 600,
-              fontFamily: M,
+              fontFamily: F,
             }}>
               {Math.round(decision.score)}
             </span>
@@ -225,8 +225,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
           <span style={{
             fontSize: 26, fontWeight: 700,
             color: '#fff',
-            fontFamily: M,
-            letterSpacing: '-0.04em',
+            fontFamily: F,
+            letterSpacing: '-0.03em',
             lineHeight: 1,
           }}>
             {formatMoney(decision.impact_daily)}
@@ -234,7 +234,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
           <span style={{
             fontSize: 14, fontWeight: 600,
             color: 'rgba(255,255,255,0.45)',
-            fontFamily: M,
+            fontFamily: F,
             letterSpacing: '-0.02em',
             marginLeft: 4,
           }}>
@@ -242,7 +242,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
           </span>
           <div style={{
             fontSize: 11, fontWeight: 500,
-            color: 'rgba(255,255,255,0.28)',
+            color: 'rgba(255,255,255,0.35)',
             marginTop: 2,
           }}>
             {cfg.impactLabel}
@@ -263,7 +263,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
         <div style={{ marginBottom: 10 }}>
           {reasonLines.map((line, i) => (
             <div key={i} style={{
-              fontSize: 12, color: 'rgba(255,255,255,0.38)',
+              fontSize: 12, color: 'rgba(255,255,255,0.55)',
               lineHeight: 1.6, fontFamily: F,
             }}>
               {line}
@@ -289,7 +289,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
               <span style={{ color: 'rgba(255,255,255,0.32)', fontWeight: 500 }}>{m.key}</span>
               <span style={{
                 color: m.trend === 'down' ? '#e53e3e' : m.trend === 'up' ? '#48bb78' : 'rgba(255,255,255,0.65)',
-                fontWeight: 600, fontFamily: M,
+                fontWeight: 600, fontFamily: F,
                 fontSize: 11.5,
               }}>
                 {m.value}

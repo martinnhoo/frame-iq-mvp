@@ -40,7 +40,7 @@ function Pill({ count, label, impact, color, hoverBorder, type }: PillProps) {
       <span style={{
         fontSize: 13, fontWeight: 700,
         color: color,
-        fontFamily: M,
+        fontFamily: F,
       }}>
         {count}
       </span>
@@ -50,7 +50,7 @@ function Pill({ count, label, impact, color, hoverBorder, type }: PillProps) {
       {impact > 0 && (
         <span style={{
           fontSize: 11, fontWeight: 600,
-          color: 'rgba(255,255,255,0.40)', fontFamily: M,
+          color: 'rgba(255,255,255,0.40)', fontFamily: F,
           marginLeft: 2,
         }}>
           {formatMoney(impact)}
