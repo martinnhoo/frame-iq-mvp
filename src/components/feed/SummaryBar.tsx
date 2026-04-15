@@ -3,7 +3,6 @@ import type { Decision } from '../../types/v2-database';
 import { formatMoney } from '../../lib/format';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
-const M = "'Space Grotesk', 'Inter', system-ui, sans-serif";
 
 interface SummaryBarProps {
   decisions: Decision[];
@@ -31,9 +30,9 @@ function Pill({ count, label, impact, color, hoverBorder, type }: PillProps) {
       style={{
         background: 'rgba(255,255,255,0.015)',
         border: `1px solid ${hov ? hoverBorder : 'rgba(255,255,255,0.04)'}`,
-        borderRadius: 4, padding: '6px 10px',
+        borderRadius: 3, padding: '5px 9px',
         cursor: 'pointer', fontFamily: F,
-        display: 'flex', alignItems: 'center', gap: 7,
+        display: 'flex', alignItems: 'center', gap: 6,
         transition: 'border-color 0.1s',
       }}
     >

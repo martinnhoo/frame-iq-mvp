@@ -45,8 +45,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       <div style={{
         background: '#111318',
         border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 6,
-        padding: '24px 28px',
+        borderRadius: 4,
+        padding: '20px 24px',
         maxWidth: 420, width: '100%',
         fontFamily: F,
       }}>
@@ -71,7 +71,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               background: 'rgba(255,255,255,0.04)',
               color: 'rgba(255,255,255,0.50)',
               border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 4, padding: '8px 16px',
+              borderRadius: 3, padding: '7px 14px',
               fontSize: 12, fontWeight: 600,
               cursor: loading ? 'not-allowed' : 'pointer',
               fontFamily: F,
@@ -86,7 +86,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               background: confirmColor,
               color: '#fff',
               border: 'none',
-              borderRadius: 4, padding: '8px 20px',
+              borderRadius: 3, padding: '7px 18px',
               fontSize: 12, fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
               fontFamily: F,

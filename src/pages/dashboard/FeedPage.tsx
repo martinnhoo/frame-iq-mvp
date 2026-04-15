@@ -47,8 +47,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       actions: [
         { id: "d1a", label: "Pausar anúncio", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
-        // #5: specific action rec
-        { id: "d1b", label: "Testar novo criativo", type: "neutral", requires_confirmation: false },
+        { id: "d1b", label: "Abrir briefing", type: "neutral", requires_confirmation: false },
       ],
       // #5: action recommendation hint
       action_recommendation: "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC",
@@ -91,7 +90,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       actions: [
         { id: "d2a", label: "Pausar agora", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d2b", label: "Revisar segmentação", type: "neutral", requires_confirmation: false },
+        { id: "d2b", label: "Criar novo teste", type: "neutral", requires_confirmation: false },
       ],
       action_recommendation: "Considerar novo público: Lookalike 1% baseado em compradores dos últimos 30 dias",
       ad: {
@@ -130,8 +129,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       actions: [
         { id: "d3a", label: "Pausar 3 dias", type: "neutral", requires_confirmation: true, meta_api_action: "pause_ad" },
-        // #5: specific rec
-        { id: "d3b", label: "Trocar criativo", type: "constructive", requires_confirmation: false },
+        { id: "d3b", label: "Gerar variação", type: "constructive", requires_confirmation: false },
       ],
       action_recommendation: "Rotacionar criativo: manter copy atual, trocar visual por formato carrossel ou UGC",
       ad: {
@@ -169,9 +167,8 @@ function buildDemoDecisions(): Decision[] {
         { key: "CPA", value: "R$38", context: "baseline R$28", trend: "down" },
       ],
       actions: [
-        // #5: specific rec
-        { id: "d4a", label: "Otimizar landing page", type: "neutral", requires_confirmation: false },
-        { id: "d4b", label: "Revisar dados", type: "constructive", requires_confirmation: false },
+        { id: "d4a", label: "Abrir briefing LP", type: "neutral", requires_confirmation: false },
+        { id: "d4b", label: "Ver detalhes", type: "constructive", requires_confirmation: false },
       ],
       action_recommendation: "Testar LP com: headline alinhado ao hook, prova social acima do fold, CTA mais direto",
       ad: {
@@ -454,8 +451,8 @@ const FeedPage: React.FC = () => {
           <div style={{
             background: 'rgba(255,255,255,0.015)',
             border: '1px solid rgba(255,255,255,0.05)',
-            borderRadius: 4, padding: '12px 16px',
-            marginBottom: 14,
+            borderRadius: 3, padding: '10px 14px',
+            marginBottom: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             gap: 16,
           }}>
@@ -469,7 +466,7 @@ const FeedPage: React.FC = () => {
               onClick={() => navigate('/dashboard/accounts')}
               style={{
                 background: '#2b6cb0', color: '#fff', border: 'none',
-                borderRadius: 4, padding: '8px 16px',
+                borderRadius: 3, padding: '7px 14px',
                 fontSize: 12, fontWeight: 700, fontFamily: F,
                 cursor: 'pointer', whiteSpace: 'nowrap',
                 transition: 'background 0.1s',
@@ -531,7 +528,7 @@ const FeedPage: React.FC = () => {
 
         {/* Decision cards */}
         {pendingDecisions.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {pendingDecisions.map(decision => (
               <DecisionCard key={decision.id} decision={decision} onAction={handleAction} isDemo={isDemo} />
             ))}

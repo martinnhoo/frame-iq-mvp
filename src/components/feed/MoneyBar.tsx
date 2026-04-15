@@ -43,7 +43,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
           background: 'rgba(197,48,48,0.06)',
           border: '1px solid rgba(197,48,48,0.12)',
           borderLeft: '3px solid #c53030',
-          borderRadius: 4, padding: '12px 16px',
+          borderRadius: 3, padding: '10px 14px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: 10,
         }}>
@@ -74,14 +74,14 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
                 fontSize: 10.5, fontWeight: 600, color: 'rgba(229,62,62,0.65)',
                 marginTop: 4,
               }}>
-                {urgentCount} decisão{urgentCount !== 1 ? 'ões' : ''} urgente{urgentCount !== 1 ? 's' : ''} requer{urgentCount === 1 ? '' : 'em'} ação
+                {urgentCount} decisão{urgentCount !== 1 ? 'ões' : ''} urgente{urgentCount !== 1 ? 's' : ''} pode{urgentCount === 1 ? '' : 'm'} reduzir perdas agora
               </div>
             )}
           </div>
           {onStopLosses && (
             <button onClick={onStopLosses} style={{
               background: '#c53030', color: '#fff', border: 'none',
-              borderRadius: 4, padding: '9px 18px',
+              borderRadius: 3, padding: '8px 16px',
               fontSize: 12, fontWeight: 700, fontFamily: F,
               cursor: 'pointer', whiteSpace: 'nowrap',
               transition: 'background 0.1s',
@@ -105,7 +105,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
         <div style={{
           background: 'rgba(255,255,255,0.015)',
           border: '1px solid rgba(255,255,255,0.04)',
-          borderRadius: 4, padding: '12px 14px',
+          borderRadius: 3, padding: '10px 12px',
         }}>
           <div style={{
             fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.28)',
@@ -125,7 +125,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
         <div style={{
           background: 'rgba(255,255,255,0.015)',
           border: '1px solid rgba(255,255,255,0.04)',
-          borderRadius: 4, padding: '12px 14px',
+          borderRadius: 3, padding: '10px 12px',
         }}>
           <div style={{
             fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.28)',
@@ -146,7 +146,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
           <div style={{
             background: 'rgba(39,103,73,0.04)',
             border: '1px solid rgba(39,103,73,0.10)',
-            borderRadius: 4, padding: '12px 14px',
+            borderRadius: 3, padding: '10px 12px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <div>
@@ -163,7 +163,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             {onResolve && (
               <button onClick={onResolve} style={{
                 background: '#276749', color: '#fff', border: 'none',
-                borderRadius: 4, padding: '6px 12px',
+                borderRadius: 3, padding: '5px 10px',
                 fontSize: 11, fontWeight: 700, fontFamily: F,
                 cursor: 'pointer', whiteSpace: 'nowrap',
                 transition: 'background 0.1s',
