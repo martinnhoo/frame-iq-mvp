@@ -2,17 +2,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import { formatMoney } from '../../lib/format';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
-const M = "'Space Grotesk', 'Inter', system-ui, sans-serif";
 
 interface MoneyBarProps {
   leaking: number;
   capturable: number;
   totalSaved: number;
+  urgentCount?: number; // #13: how many decisions need action
   onStopLosses?: () => void;
   onResolve?: () => void;
 }
 
-export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSaved, onStopLosses, onResolve }) => {
+export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSaved, urgentCount = 0, onStopLosses, onResolve }) => {
   const [displayedSaved, setDisplayedSaved] = useState(totalSaved);
   const prevSavedRef = useRef(totalSaved);
   const animationFrameRef = useRef<number | null>(null);
@@ -68,6 +68,15 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             }}>
               perda potencial identificada
             </div>
+            {/* #13: Action direction */}
+            {urgentCount > 0 && (
+              <div style={{
+                fontSize: 10.5, fontWeight: 600, color: 'rgba(229,62,62,0.65)',
+                marginTop: 4,
+              }}>
+                {urgentCount} decisão{urgentCount !== 1 ? 'ões' : ''} urgente{urgentCount !== 1 ? 's' : ''} requer{urgentCount === 1 ? '' : 'em'} ação
+              </div>
+            )}
           </div>
           {onStopLosses && (
             <button onClick={onStopLosses} style={{
@@ -102,13 +111,13 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.28)',
             textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
           }}>
-            Oportunidade
+            Possível recuperação
           </div>
           <div style={{
             fontSize: 22, fontWeight: 700, color: '#fff',
             fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
           }}>
-            {formatMoney(capturable)}
+            +{formatMoney(capturable)}
           </div>
         </div>
 

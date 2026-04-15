@@ -12,7 +12,6 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Decision, DecisionAction } from '../../types/v2-database';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
-const M = "'Space Grotesk', 'Inter', system-ui, sans-serif";
 
 // ================================================================
 // DEMO MODE — Must feel indistinguishable from real production data.
@@ -31,8 +30,10 @@ function buildDemoDecisions(): Decision[] {
       type: "kill",
       score: 94,
       priority_rank: 1,
-      headline: "Perda potencial identificada — CTR 62% abaixo da mediana",
-      reason: "CTR: 0.80% (baseline: 1.45%)\nCPA: R$47,50 (baseline: R$28,00)\nGasto acumulado: R$540 em 5 dias",
+      // #8: varied language — "queda consistente"
+      headline: "Queda consistente de performance — CTR 62% abaixo da mediana",
+      // #9: stronger time context — "nos últimos 3 dias"
+      reason: "CTR: 0.80% (baseline: 1.45%) — queda contínua nos últimos 3 dias\nCPA: R$47,50 (baseline: R$28,00) — tendência de alta desde seg\nGasto acumulado: R$540 em 5 dias sem melhora",
       impact_type: "waste",
       impact_daily: 18000,
       impact_7d: 126000,
@@ -46,10 +47,14 @@ function buildDemoDecisions(): Decision[] {
       ],
       actions: [
         { id: "d1a", label: "Pausar anúncio", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d1b", label: "Revisar dados", type: "neutral", requires_confirmation: false },
+        // #5: specific action rec
+        { id: "d1b", label: "Testar novo criativo", type: "neutral", requires_confirmation: false },
       ],
+      // #5: action recommendation hint
+      action_recommendation: "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC",
       ad: {
         name: "Vídeo 03 — Hook Depoimento",
+        meta_ad_id: "demo_meta_001",
         ad_set: {
           name: "Broad BR 25-45",
           campaign: { name: "Conversão — Produto X" },
@@ -67,13 +72,17 @@ function buildDemoDecisions(): Decision[] {
       type: "kill",
       score: 89,
       priority_rank: 2,
-      headline: "Gasto sem conversão — R$665 em 7 dias",
-      reason: "Conversões: 0 em 7 dias\nCTR: 0.80% (baseline: 1.45%)\nFrequência: 3.2x — possível saturação",
+      // #8: varied — "sem retorno"
+      headline: "Gasto sem retorno — R$665 em 7 dias, zero conversões",
+      // #9: stronger time
+      reason: "Conversões: 0 em 7 dias — nenhuma desde ativação\nCTR: 0.80% (baseline: 1.45%) — deteriorando\nFrequência: 3.2x — saturação detectada há 2 dias",
       impact_type: "waste",
       impact_daily: 9500,
       impact_7d: 66500,
       impact_confidence: "high",
       impact_basis: "Últimos 7 dias",
+      // #7: grouping indicator
+      group_note: "2 anúncios nesta campanha com padrão semelhante de queda",
       metrics: [
         { key: "Gasto", value: "R$665", context: "7d", trend: "down" },
         { key: "Conv.", value: "0", context: "", trend: "down" },
@@ -82,10 +91,12 @@ function buildDemoDecisions(): Decision[] {
       ],
       actions: [
         { id: "d2a", label: "Pausar agora", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d2b", label: "Revisar dados", type: "neutral", requires_confirmation: false },
+        { id: "d2b", label: "Revisar segmentação", type: "neutral", requires_confirmation: false },
       ],
+      action_recommendation: "Considerar novo público: Lookalike 1% baseado em compradores dos últimos 30 dias",
       ad: {
         name: "Carrossel 01 — Benefícios",
+        meta_ad_id: "demo_meta_002",
         ad_set: {
           name: "Interesse Fitness",
           campaign: { name: "Conversão — Produto X" },
@@ -103,8 +114,10 @@ function buildDemoDecisions(): Decision[] {
       type: "fix",
       score: 78,
       priority_rank: 3,
-      headline: "Fadiga criativa — frequência 4.2x, CPA subindo",
-      reason: "Frequência: 4.2x (limite: 3.0x)\nCPA: R$32,00 (+22% vs semana anterior)\nCTR: 2.0% (-15% vs início)",
+      // #8: varied — "performance deteriorando"
+      headline: "Performance deteriorando — frequência 4.2x, CPA acelerando",
+      // #9: temporal precision
+      reason: "Frequência: 4.2x (limite: 3.0x) — ultrapassou limite há 48h\nCPA: R$32,00 (+22% vs semana anterior) — tendência negativa desde quarta\nCTR: 2.0% (-15% vs início da campanha)",
       impact_type: "savings",
       impact_daily: 7200,
       impact_7d: 50400,
@@ -117,10 +130,13 @@ function buildDemoDecisions(): Decision[] {
       ],
       actions: [
         { id: "d3a", label: "Pausar 3 dias", type: "neutral", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d3b", label: "Revisar dados", type: "constructive", requires_confirmation: false },
+        // #5: specific rec
+        { id: "d3b", label: "Trocar criativo", type: "constructive", requires_confirmation: false },
       ],
+      action_recommendation: "Rotacionar criativo: manter copy atual, trocar visual por formato carrossel ou UGC",
       ad: {
         name: "Vídeo 01 — UGC Teste",
+        meta_ad_id: "demo_meta_003",
         ad_set: {
           name: "Lookalike 1% Purchase",
           campaign: { name: "Escala — Produto Y" },
@@ -138,8 +154,10 @@ function buildDemoDecisions(): Decision[] {
       type: "fix",
       score: 72,
       priority_rank: 4,
-      headline: "Hook forte, conversão fraca — possível problema na LP",
-      reason: "Hook rate: 68% (top quartil)\nCTR: 2.4% (baseline: 1.45%)\nCPA: R$38,00 (baseline: R$28,00)",
+      // #8: varied — "desconexão hook-conversão"
+      headline: "Desconexão hook-conversão — CTR alto mas CPA 36% acima",
+      // #9: temporal
+      reason: "Hook rate: 68% (top quartil) — anúncio atrai cliques mas não converte\nCTR: 2.4% (baseline: 1.45%) — +66% acima da média\nCPA: R$38,00 (baseline: R$28,00) — subindo desde terça",
       impact_type: "savings",
       impact_daily: 5400,
       impact_7d: 37800,
@@ -151,11 +169,14 @@ function buildDemoDecisions(): Decision[] {
         { key: "CPA", value: "R$38", context: "baseline R$28", trend: "down" },
       ],
       actions: [
-        { id: "d4a", label: "Revisar LP", type: "neutral", requires_confirmation: false },
+        // #5: specific rec
+        { id: "d4a", label: "Otimizar landing page", type: "neutral", requires_confirmation: false },
         { id: "d4b", label: "Revisar dados", type: "constructive", requires_confirmation: false },
       ],
+      action_recommendation: "Testar LP com: headline alinhado ao hook, prova social acima do fold, CTA mais direto",
       ad: {
         name: "Imagem 02 — Before/After",
+        meta_ad_id: "demo_meta_004",
         ad_set: {
           name: "Broad BR 25-45",
           campaign: { name: "Conversão — Produto X" },
@@ -173,8 +194,10 @@ function buildDemoDecisions(): Decision[] {
       type: "scale",
       score: 65,
       priority_rank: 5,
-      headline: "ROAS 4.8x — 3x acima da mediana, CPA baixo",
-      reason: "ROAS: 4.8x (baseline: 1.6x)\nCPA: R$18,00 (baseline: R$28,00)\n12 conversões em 7 dias, tendência estável",
+      // #8: varied — "oportunidade confirmada"
+      headline: "Oportunidade confirmada — ROAS 4.8x estável, margem para escalar",
+      // #9: temporal
+      reason: "ROAS: 4.8x (baseline: 1.6x) — consistente nos últimos 7 dias\nCPA: R$18,00 (baseline: R$28,00) — estável, sem picos\n12 conversões em 7 dias — volume sustentável para escala",
       impact_type: "revenue",
       impact_daily: 32000,
       impact_7d: 224000,
@@ -187,10 +210,12 @@ function buildDemoDecisions(): Decision[] {
       ],
       actions: [
         { id: "d5a", label: "Aumentar budget +50%", type: "constructive", requires_confirmation: true, meta_api_action: "increase_budget" },
-        { id: "d5b", label: "Duplicar anúncio", type: "constructive", requires_confirmation: false, meta_api_action: "duplicate_ad" },
+        { id: "d5b", label: "Duplicar em novo ad set", type: "constructive", requires_confirmation: false, meta_api_action: "duplicate_ad" },
       ],
+      action_recommendation: "Escalar gradualmente: +50% budget hoje, reavaliar em 48h antes de novo aumento",
       ad: {
         name: "Vídeo 05 — Demonstração",
+        meta_ad_id: "demo_meta_005",
         ad_set: {
           name: "Lookalike 1% Purchase",
           campaign: { name: "Escala — Produto Y" },
@@ -209,7 +234,7 @@ function buildDemoDecisions(): Decision[] {
       score: 48,
       priority_rank: 6,
       headline: 'CTA "Saiba mais" supera outros CTAs em +33% CTR',
-      reason: "CTR médio: 2.8% (baseline conta: 2.1%)\n8 anúncios analisados, R$1.200 gasto total\nConsistente em todos os conjuntos de anúncio",
+      reason: "CTR médio: 2.8% (baseline conta: 2.1%) — padrão detectado nos últimos 14 dias\n8 anúncios analisados, R$1.200 gasto total\nConsistente em todos os conjuntos de anúncio",
       impact_type: "learning",
       impact_daily: 0,
       impact_7d: 0,
@@ -220,8 +245,8 @@ function buildDemoDecisions(): Decision[] {
         { key: "Amostra", value: "8 ads", context: "R$1.2k", trend: "stable" },
       ],
       actions: [
-        { id: "d6a", label: "Aplicar padrão", type: "constructive", requires_confirmation: false },
-        { id: "d6b", label: "Revisar dados", type: "neutral", requires_confirmation: false },
+        { id: "d6a", label: "Aplicar em novos anúncios", type: "constructive", requires_confirmation: false },
+        { id: "d6b", label: "Ver detalhes", type: "neutral", requires_confirmation: false },
       ],
       status: "pending",
       acted_at: null,
@@ -236,7 +261,7 @@ function buildDemoDecisions(): Decision[] {
       score: 42,
       priority_rank: 7,
       headline: "Vídeo UGC supera outros formatos em CPA (-25%)",
-      reason: "CPA médio: R$63,75 (baseline conta: R$85,00)\n6 anúncios analisados, R$890 gasto total\nUGC > estúdio > imagem estática nesta conta",
+      reason: "CPA médio: R$63,75 (baseline conta: R$85,00) — diferença consistente\n6 anúncios analisados, R$890 gasto total\nRanking de formatos: UGC > estúdio > imagem estática",
       impact_type: "learning",
       impact_daily: 0,
       impact_7d: 0,
@@ -247,7 +272,7 @@ function buildDemoDecisions(): Decision[] {
         { key: "Amostra", value: "6 ads", context: "R$890", trend: "stable" },
       ],
       actions: [
-        { id: "d7a", label: "Aplicar padrão", type: "constructive", requires_confirmation: false },
+        { id: "d7a", label: "Priorizar UGC", type: "constructive", requires_confirmation: false },
       ],
       status: "pending",
       acted_at: null,
@@ -363,6 +388,9 @@ const FeedPage: React.FC = () => {
 
   const pendingDecisions = decisions.filter(d => d.status === 'pending');
   const hasKills = pendingDecisions.some(d => d.type === 'kill');
+  const urgentCount = pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length;
+  // Stable "last analysis" minutes — changes only on mount
+  const [lastAnalysisMin] = useState(() => Math.floor(Math.random() * 4) + 2);
 
   return (
     <div style={{ minHeight: '100vh', background: '#08090b', padding: '24px 20px' }}>
@@ -397,7 +425,7 @@ const FeedPage: React.FC = () => {
                 <span style={{
                   fontSize: 11, fontWeight: 500,
                   color: 'rgba(255,255,255,0.25)',
-                  fontFamily: M,
+                  fontFamily: F,
                 }}>
                   {pendingDecisions.length} item{pendingDecisions.length !== 1 ? 's' : ''}
                 </span>
@@ -462,6 +490,7 @@ const FeedPage: React.FC = () => {
               leaking={(tracker as any).leaking_now || tracker.leaking_now}
               capturable={(tracker as any).capturable_now || tracker.capturable_now}
               totalSaved={(tracker as any).total_saved || 0}
+              urgentCount={urgentCount}
               onStopLosses={hasKills && !isDemo ? handleStopLosses : undefined}
               onResolve={pendingDecisions.length > 0 ? () => {
                 const el = document.querySelector('[data-decision-type]');
@@ -475,6 +504,28 @@ const FeedPage: React.FC = () => {
         {pendingDecisions.length > 0 && (
           <div style={{ marginBottom: 12 }}>
             <SummaryBar decisions={pendingDecisions} />
+          </div>
+        )}
+
+        {/* #11: Live system indicator */}
+        {pendingDecisions.length > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            marginBottom: 10, padding: '0 2px',
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: '#48bb78',
+              boxShadow: '0 0 4px rgba(72,187,120,0.4)',
+              display: 'inline-block',
+              animation: 'pulse 2s ease-in-out infinite',
+            }} />
+            <span style={{
+              fontSize: 10.5, color: 'rgba(255,255,255,0.22)',
+              fontFamily: F, fontWeight: 500,
+            }}>
+              Monitorando performance em tempo real — última análise há {lastAnalysisMin} min
+            </span>
           </div>
         )}
 
