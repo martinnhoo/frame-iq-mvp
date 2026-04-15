@@ -34,7 +34,7 @@ const corsHeaders = {
 
 async function getAuthUser(
   req: Request,
-  supabase: ReturnType<typeof createClient>
+  supabase: SupabaseClient
 ) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
@@ -52,7 +52,7 @@ async function getAuthUser(
 }
 
 async function getAdAccountMetaToken(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   adAccountId: string,
   userId: string
 ) {
@@ -134,15 +134,9 @@ async function callMetaApi(
 
 async function executeAction(
   req: ExecuteActionRequest,
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   user: unknown
-): Promise<{
-  success: boolean;
-  action_log_id?: string;
-  previous_state?: Record<string, unknown>;
-  new_state?: Record<string, unknown>;
-  error?: string;
-}> {
+): Promise<Record<string, unknown>> {
   const {
     decision_id,
     action_type,
@@ -420,7 +414,7 @@ async function executeAction(
 
 async function rollbackAction(
   req: ExecuteActionRequest,
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   user: unknown
 ): Promise<{
   success: boolean;
