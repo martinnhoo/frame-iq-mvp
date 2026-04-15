@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatMoney } from '../../lib/format';
 
@@ -198,6 +198,146 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   const allDone = step >= STEPS.length;
   const progress = allDone ? 100 : Math.min((step / STEPS.length) * 100, 90);
 
+  // ── All done → show two-block entry state instead of dead-end ──
+  if (allDone) {
+    return (
+      <div style={{ fontFamily: F }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h2 style={{
+            fontSize: 18, fontWeight: 700, color: '#fff',
+            margin: '0 0 6px', letterSpacing: '-0.02em',
+          }}>
+            Pronto para começar
+          </h2>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.5 }}>
+            Escolha por onde quer iniciar
+          </p>
+        </div>
+
+        {/* Two-block grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: 12,
+        }}>
+          {/* Block 1 — Secondary: Começar pelos criativos */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 12,
+            padding: '28px 24px',
+            display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 10,
+              background: 'rgba(139,92,246,0.08)',
+              border: '1px solid rgba(139,92,246,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>
+              💬
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: 15, fontWeight: 700, color: '#fff',
+                margin: '0 0 6px', letterSpacing: '-0.01em',
+              }}>
+                Começar pelos criativos
+              </h3>
+              <p style={{
+                fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
+                margin: 0, lineHeight: 1.5,
+              }}>
+                Explore ideias iniciais de anúncios antes de rodar campanhas
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/ai')}
+              style={{
+                background: 'transparent',
+                color: 'rgba(255,255,255,0.60)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                padding: '9px 20px', borderRadius: 8,
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: F,
+                marginTop: 'auto',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)';
+                e.currentTarget.style.color = '#fff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                e.currentTarget.style.color = 'rgba(255,255,255,0.60)';
+              }}
+            >
+              Falar com a IA
+            </button>
+          </div>
+
+          {/* Block 2 — Primary: Analisar campanhas */}
+          <div style={{
+            background: 'rgba(14,165,233,0.04)',
+            border: '1px solid rgba(14,165,233,0.12)',
+            borderRadius: 12,
+            padding: '28px 24px',
+            display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 10,
+              background: 'rgba(14,165,233,0.08)',
+              border: '1px solid rgba(14,165,233,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>
+              📡
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: 15, fontWeight: 700, color: '#fff',
+                margin: '0 0 6px', letterSpacing: '-0.01em',
+              }}>
+                Analisar campanhas
+              </h3>
+              <p style={{
+                fontSize: 12.5, color: 'rgba(255,255,255,0.35)',
+                margin: 0, lineHeight: 1.5,
+              }}>
+                Conecte sua conta e identifique perdas e oportunidades
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/accounts')}
+              style={{
+                background: '#0ea5e9',
+                color: '#fff',
+                border: 'none',
+                padding: '9px 20px', borderRadius: 8,
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: F,
+                marginTop: 'auto',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#0d94d1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#0ea5e9';
+              }}
+            >
+              Conectar Meta Ads
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Still scanning — progress bar + steps ──
   return (
     <div style={{
       background: 'rgba(255,255,255,0.03)',
@@ -209,40 +349,31 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <div style={{
           width: 56, height: 56, borderRadius: 14,
-          background: allDone ? 'rgba(16,185,129,0.06)' : 'rgba(14,165,233,0.06)',
-          border: `1px solid ${allDone ? 'rgba(16,185,129,0.12)' : 'rgba(14,165,233,0.12)'}`,
+          background: 'rgba(14,165,233,0.06)',
+          border: '1px solid rgba(14,165,233,0.12)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           margin: '0 auto 16px', position: 'relative',
           transition: 'all 0.5s ease',
         }}>
-          {allDone ? (
-            /* Completed — green check */
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M5 13l4 4L19 7" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          ) : (
-            /* Radar — clean SVG approach */
-            <svg width="28" height="28" viewBox="0 0 28 28" style={{ animation: 'es-radar-rotate 2.5s linear infinite' }}>
-              <circle cx="14" cy="14" r="12" fill="none" stroke="rgba(14,165,233,0.15)" strokeWidth="1.5"/>
-              <circle cx="14" cy="14" r="7" fill="none" stroke="rgba(14,165,233,0.08)" strokeWidth="1"/>
-              <circle cx="14" cy="14" r="2.5" fill="#0ea5e9"/>
-              {/* Sweep wedge */}
-              <path
-                d="M14 14 L14 2 A12 12 0 0 1 24.39 8.0 Z"
-                fill="rgba(14,165,233,0.25)"
-              />
-              <line x1="14" y1="14" x2="14" y2="2" stroke="rgba(14,165,233,0.5)" strokeWidth="1"/>
-            </svg>
-          )}
+          {/* Radar — clean SVG approach */}
+          <svg width="28" height="28" viewBox="0 0 28 28" style={{ animation: 'es-radar-rotate 2.5s linear infinite' }}>
+            <circle cx="14" cy="14" r="12" fill="none" stroke="rgba(14,165,233,0.15)" strokeWidth="1.5"/>
+            <circle cx="14" cy="14" r="7" fill="none" stroke="rgba(14,165,233,0.08)" strokeWidth="1"/>
+            <circle cx="14" cy="14" r="2.5" fill="#0ea5e9"/>
+            {/* Sweep wedge */}
+            <path
+              d="M14 14 L14 2 A12 12 0 0 1 24.39 8.0 Z"
+              fill="rgba(14,165,233,0.25)"
+            />
+            <line x1="14" y1="14" x2="14" y2="2" stroke="rgba(14,165,233,0.5)" strokeWidth="1"/>
+          </svg>
         </div>
 
         <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
-          {allDone ? 'Análise concluída' : 'Analisando sua conta'}
+          Analisando sua conta
         </h2>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0, lineHeight: 1.5 }}>
-          {allDone
-            ? 'Aguardando o próximo ciclo para gerar decisões'
-            : 'Processando dados para gerar as primeiras decisões'}
+          Processando dados para gerar as primeiras decisões
         </p>
       </div>
 
@@ -255,9 +386,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       }}>
         <div style={{
           height: '100%', borderRadius: 2,
-          background: allDone ? '#34d399' : '#0ea5e9',
+          background: '#0ea5e9',
           width: `${progress}%`,
-          transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease',
+          transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
         }} />
       </div>
 
@@ -268,7 +399,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       }}>
         {STEPS.map((label, i) => {
           const isDone = i < step;
-          const isActive = i === step && !allDone;
+          const isActive = i === step;
 
           return (
             <div key={i} style={{
@@ -337,14 +468,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         })}
       </div>
 
-      {/* Tip — different message when all done */}
+      {/* Tip */}
       <p style={{
         textAlign: 'center', fontSize: 11.5, color: 'rgba(255,255,255,0.20)',
         margin: '24px 0 0', lineHeight: 1.5,
       }}>
-        {allDone
-          ? 'As decisões aparecerão aqui automaticamente no próximo sync.'
-          : 'Isso leva menos de um minuto.'}
+        Isso leva menos de um minuto.
       </p>
 
       <style>{`
