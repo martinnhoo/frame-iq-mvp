@@ -60,9 +60,9 @@ const TYPE_CONFIG: Record<string, {
 };
 
 const CONFIDENCE_CONFIG: Record<string, { dot: string; text: string; label: string }> = {
-  high: { dot: '#2D9B6E', text: 'rgba(230,237,243,0.50)', label: 'Alta' },
-  medium: { dot: '#C8922A', text: 'rgba(230,237,243,0.40)', label: 'Média' },
-  low: { dot: 'rgba(230,237,243,0.25)', text: 'rgba(230,237,243,0.30)', label: 'Baixa' },
+  high: { dot: '#2D9B6E', text: 'rgba(230,237,243,0.60)', label: 'Alta' },
+  medium: { dot: '#C8922A', text: 'rgba(230,237,243,0.55)', label: 'Média' },
+  low: { dot: '#8B949E', text: 'rgba(230,237,243,0.50)', label: 'Baixa' },
 };
 
 // PART 4: Direct ranking signal — clear severity
@@ -235,7 +235,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
 
         {/* #7: Confidence + basis — top line */}
         <div style={{
-          fontSize: 10, color: 'rgba(255,255,255,0.30)',
+          fontSize: 10, color: confCfg.text,
           marginBottom: 6,
           display: 'flex', alignItems: 'center', gap: 4,
         }}>
@@ -268,7 +268,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
               {cfg.label}
             </span>
             {decision.score > 0 && (
-              <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: 600 }}>
+              <span style={{ color: cfg.badgeText, fontSize: 10, fontWeight: 600, opacity: 0.7 }}>
                 {Math.round(decision.score)}
               </span>
             )}

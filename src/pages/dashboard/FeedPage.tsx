@@ -600,7 +600,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
           boxShadow: '0 0 4px rgba(45,155,110,0.4)',
           animation: 'st2-pulse 2s ease-in-out infinite',
         }} />
-        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.45)', fontWeight: 500 }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.70)', fontWeight: 500 }}>
           Monitorando em tempo real — análise atualiza automaticamente
         </span>
       </div>
@@ -787,7 +787,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 2px' }}>
-        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)' }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.70)' }}>
           Monitorando performance em tempo real
         </span>
         <ActionButton label="Criar novo criativo com IA →" onClick={() => navigate('/dashboard/ai')} variant="ghost" />
@@ -1142,7 +1142,7 @@ const FeedPage: React.FC = () => {
                   boxShadow: '0 0 4px rgba(45,155,110,0.4)',
                   animation: 'pulse 2s ease-in-out infinite',
                 }} />
-                <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.50)', fontFamily: F, fontWeight: 500 }}>
+                <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.70)', fontFamily: F, fontWeight: 500 }}>
                   Monitorando performance em tempo real — última análise há {lastAnalysisMin} min
                 </span>
               </div>

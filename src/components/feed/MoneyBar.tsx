@@ -98,7 +98,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
       {/* Metrics row */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: hasLoss ? '1fr 1fr' : '1fr 1fr 1fr',
+        gridTemplateColumns: '1fr 1fr',
         gap: 8,
       }}>
         {/* Opportunity */}
@@ -142,43 +142,42 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             {formatMoney(displayedSaved)}
           </div>
         </div>
-
-        {/* No loss — show status */}
-        {!hasLoss && (
-          <div style={{
-            background: 'rgba(27,110,87,0.05)',
-            border: '1px solid rgba(27,110,87,0.12)',
-            borderRadius: 3, padding: '10px 12px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}>
-            <div>
-              <div style={{
-                fontSize: 10, fontWeight: 600, color: '#8B949E',
-                textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
-                opacity: 0.6,
-              }}>
-                Status
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#2D9B6E' }}>
-                Sem perdas detectadas
-              </div>
-            </div>
-            {onResolve && (
-              <button onClick={onResolve} style={{
-                background: '#1B6E57', color: '#fff', border: 'none',
-                borderRadius: 3, padding: '5px 10px',
-                fontSize: 11, fontWeight: 700, fontFamily: F,
-                cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'background 0.1s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#145443'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#1B6E57'; }}>
-                Ver feed
-              </button>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* No loss — clean inline status */}
+      {!hasLoss && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginTop: 8, padding: '8px 10px',
+          background: 'rgba(27,110,87,0.04)',
+          border: '1px solid rgba(27,110,87,0.10)',
+          borderRadius: 3,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: '#2D9B6E', display: 'inline-block',
+              boxShadow: '0 0 4px rgba(45,155,110,0.40)',
+            }} />
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: '#2D9B6E' }}>
+              Sem perdas detectadas
+            </span>
+          </div>
+          {onResolve && (
+            <button onClick={onResolve} style={{
+              background: 'transparent', color: '#8B949E', border: 'none',
+              fontSize: 10.5, fontWeight: 600, fontFamily: F,
+              cursor: 'pointer', whiteSpace: 'nowrap',
+              transition: 'color 0.1s',
+              padding: 0,
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#E6EDF3'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8B949E'; }}>
+              Ver feed →
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
