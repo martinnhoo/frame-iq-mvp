@@ -936,6 +936,138 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
 };
 
 // ================================================================
+// PERFORMANCE SUMMARY — shown when ads are running fine, no kills/fixes
+// Makes the feed feel useful even when nothing is "wrong"
+// ================================================================
+const PerformanceSummary: React.FC<{
+  ads: AdSummary[];
+  totalAds: number;
+  metrics: AdMetricsSummary | null;
+  periodLabel: string;
+  metaAccountId?: string;
+}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId }) => {
+  const navigate = useNavigate();
+  const hasMetrics = metrics && metrics.daysOfData > 0;
+
+  // Convert from integer storage: CTR basis pts → %, spend centavos → R$, CPA centavos → R$
+  const ctrPct = hasMetrics ? (metrics.avgCtr / 100).toFixed(2) : null;
+  const spendReais = hasMetrics ? (metrics.totalSpend / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
+  const cpaReais = hasMetrics && metrics.avgCpa > 0 ? (metrics.avgCpa / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
+
+  const adsManagerUrl = metaAccountId
+    ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${metaAccountId.replace('act_', '')}`
+    : null;
+
+  return (
+    <div style={{
+      background: '#0F141A', border: '1px solid rgba(45,155,110,0.10)',
+      borderRadius: 4, padding: '16px 18px', fontFamily: F, marginBottom: 8,
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <span style={{
+          width: 7, height: 7, borderRadius: '50%', background: '#2D9B6E',
+          boxShadow: '0 0 5px rgba(45,155,110,0.5)',
+          animation: 'perf-pulse 2s ease-in-out infinite',
+        }} />
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.01em' }}>
+          Seus anúncios estão saudáveis
+        </span>
+      </div>
+
+      <p style={{ fontSize: 12, color: '#8B949E', margin: '0 0 14px', lineHeight: 1.5 }}>
+        {totalAds} {totalAds === 1 ? 'anúncio monitorado' : 'anúncios monitorados'} nos últimos {periodLabel} — nenhuma ação urgente necessária.
+      </p>
+
+      {/* Metrics grid */}
+      {hasMetrics && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+          gap: 6, marginBottom: 14,
+        }}>
+          {[
+            { label: 'Investido', value: `R$${spendReais}`, sub: `${metrics.daysOfData} dias` },
+            { label: 'CTR médio', value: `${ctrPct}%`, sub: ctrPct && parseFloat(ctrPct) >= 1 ? 'Bom' : 'Baixo' },
+            { label: 'CPA médio', value: cpaReais ? `R$${cpaReais}` : '—', sub: metrics.totalConversions > 0 ? `${metrics.totalConversions} conv.` : 'Sem conv.' },
+          ].map((m, i) => (
+            <div key={i} style={{
+              background: 'rgba(230,237,243,0.025)', borderRadius: 3,
+              padding: '10px 10px 8px', textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 10, color: 'rgba(139,148,158,0.60)', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {m.label}
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.02em' }}>
+                {m.value}
+              </div>
+              <div style={{ fontSize: 9.5, color: 'rgba(139,148,158,0.45)', marginTop: 2 }}>
+                {m.sub}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Ad list */}
+      {ads.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(139,148,158,0.50)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+            Anúncios ativos
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {ads.slice(0, 5).map((ad, i) => (
+              <div key={ad.meta_ad_id || i} style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px',
+                background: 'rgba(230,237,243,0.015)', borderRadius: 3,
+              }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#2D9B6E', opacity: 0.6, flexShrink: 0 }} />
+                <span style={{
+                  fontSize: 11.5, color: 'rgba(230,237,243,0.65)', fontWeight: 500,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+                }}>
+                  {ad.name}
+                </span>
+                {ad.ad_set?.campaign?.name && (
+                  <span style={{ fontSize: 9.5, color: 'rgba(139,148,158,0.30)', whiteSpace: 'nowrap' }}>
+                    {ad.ad_set.campaign.name}
+                  </span>
+                )}
+              </div>
+            ))}
+            {totalAds > 5 && (
+              <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.30)', padding: '2px 8px' }}>
+                + {totalAds - 5} monitorados
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{
+            width: 5, height: 5, borderRadius: '50%', background: '#2D9B6E',
+            animation: 'perf-pulse 2s ease-in-out infinite',
+          }} />
+          <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.60)', fontWeight: 500 }}>
+            Monitoramento ativo 24/7
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {adsManagerUrl && (
+            <ActionButton label="Ads Manager" onClick={() => window.open(adsManagerUrl, '_blank', 'noopener')} variant="ghost" />
+          )}
+          <ActionButton label="Criar com IA →" onClick={() => navigate('/dashboard/criar')} variant="ghost" />
+        </div>
+      </div>
+
+      <style>{`@keyframes perf-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}`}</style>
+    </div>
+  );
+};
+
+// ================================================================
 // FEED PAGE — Main component
 // ================================================================
 const FeedPage: React.FC = () => {
@@ -1310,7 +1442,18 @@ const FeedPage: React.FC = () => {
               </div>
             )}
 
-            {pendingDecisions.length > 0 && (
+            {/* Performance summary when no critical issues — shows ad health + metrics */}
+            {!isDemo && !hasCritical && totalAdCount > 0 && (
+              <PerformanceSummary
+                ads={userAds}
+                totalAds={totalAdCount}
+                metrics={adMetrics}
+                periodLabel={PERIODS.find(p => p.key === period)!.label}
+                metaAccountId={metaAccountId}
+              />
+            )}
+
+            {pendingDecisions.length > 0 && hasCritical && (
               <div style={{ marginBottom: 12 }}>
                 <SummaryBar decisions={pendingDecisions} />
               </div>
