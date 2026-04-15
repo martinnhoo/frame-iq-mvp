@@ -144,37 +144,44 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
         </div>
       </div>
 
-      {/* No loss — clean inline status */}
+      {/* No loss — stability indicator + growth focus */}
       {!hasLoss && (
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginTop: 8, padding: '8px 10px',
-          background: 'rgba(27,110,87,0.04)',
-          border: '1px solid rgba(27,110,87,0.10)',
+          marginTop: 8, padding: '10px 12px',
+          background: 'rgba(230,237,243,0.02)',
+          border: '1px solid rgba(230,237,243,0.05)',
           borderRadius: 3,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: '#2D9B6E', display: 'inline-block',
-              boxShadow: '0 0 4px rgba(45,155,110,0.40)',
-            }} />
-            <span style={{ fontSize: 11.5, fontWeight: 600, color: '#2D9B6E' }}>
-              Sem perdas detectadas
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: capturable > 0 ? 6 : 0 }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3', marginBottom: 2 }}>
+                Performance estável
+              </div>
+              <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.60)' }}>
+                {capturable > 0
+                  ? `+${formatMoney(capturable)} potencial de otimização identificado`
+                  : 'Sem perdas — foco em crescimento'}
+              </div>
+            </div>
+            {onResolve && (
+              <button onClick={onResolve} style={{
+                background: 'rgba(230,237,243,0.04)', color: '#8B949E',
+                border: '1px solid rgba(230,237,243,0.06)',
+                fontSize: 10.5, fontWeight: 600, fontFamily: F,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'all 0.1s', borderRadius: 3,
+                padding: '5px 10px',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#E6EDF3'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,237,243,0.12)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8B949E'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,237,243,0.06)'; }}>
+                Criar com IA →
+              </button>
+            )}
           </div>
-          {onResolve && (
-            <button onClick={onResolve} style={{
-              background: 'transparent', color: '#8B949E', border: 'none',
-              fontSize: 10.5, fontWeight: 600, fontFamily: F,
-              cursor: 'pointer', whiteSpace: 'nowrap',
-              transition: 'color 0.1s',
-              padding: 0,
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#E6EDF3'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8B949E'; }}>
-              Criar com IA →
-            </button>
+          {capturable > 0 && (
+            <div style={{ fontSize: 10, color: 'rgba(139,148,158,0.40)', marginTop: 2 }}>
+              Oportunidades de melhoria identificadas abaixo
+            </div>
           )}
         </div>
       )}
