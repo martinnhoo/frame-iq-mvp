@@ -137,7 +137,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC",
       ad: { name: "Vídeo 03 — Hook Depoimento", meta_ad_id: "demo_meta_001",
-        ad_set: { name: "Broad BR 25-45", campaign: { name: "Conversão — Produto X" } } },
+        ad_set: { name: "Broad BR 25-45", campaign: { name: "Conversão — Produto X" } as any } as any } as any,
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(12),
     },
     {
@@ -158,7 +158,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Considerar novo público: Lookalike 1% baseado em compradores dos últimos 30 dias",
       ad: { name: "Carrossel 01 — Benefícios", meta_ad_id: "demo_meta_002",
-        ad_set: { name: "Interesse Fitness", campaign: { name: "Conversão — Produto X" } } },
+        ad_set: { name: "Interesse Fitness", campaign: { name: "Conversão — Produto X" } as any } as any } as any,
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(18),
     },
     {
@@ -177,7 +177,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Rotacionar criativo: manter copy atual, trocar visual por formato carrossel ou UGC",
       ad: { name: "Vídeo 01 — UGC Teste", meta_ad_id: "demo_meta_003",
-        ad_set: { name: "Lookalike 1% Purchase", campaign: { name: "Escala — Produto Y" } } },
+        ad_set: { name: "Lookalike 1% Purchase", campaign: { name: "Escala — Produto Y" } as any } as any } as any,
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(25),
     },
     {
@@ -196,7 +196,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Testar LP com: headline alinhado ao hook, prova social acima do fold, CTA mais direto",
       ad: { name: "Imagem 02 — Before/After", meta_ad_id: "demo_meta_004",
-        ad_set: { name: "Broad BR 25-45", campaign: { name: "Conversão — Produto X" } } },
+        ad_set: { name: "Broad BR 25-45", campaign: { name: "Conversão — Produto X" } as any } as any } as any,
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(32),
     },
     {
@@ -215,7 +215,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Escalar gradualmente: +50% budget hoje, reavaliar em 48h antes de novo aumento",
       ad: { name: "Vídeo 05 — Demonstração", meta_ad_id: "demo_meta_005",
-        ad_set: { name: "Lookalike 1% Purchase", campaign: { name: "Escala — Produto Y" } } },
+        ad_set: { name: "Lookalike 1% Purchase", campaign: { name: "Escala — Produto Y" } as any } as any } as any,
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(8),
     },
     {
@@ -231,6 +231,7 @@ function buildDemoDecisions(): Decision[] {
         { id: "d6a", label: "Aplicar em novos anúncios", type: "constructive", requires_confirmation: false },
         { id: "d6b", label: "Ver detalhes", type: "neutral", requires_confirmation: false },
       ],
+      action_recommendation: null, group_note: null,
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(45),
     },
     {
@@ -243,6 +244,7 @@ function buildDemoDecisions(): Decision[] {
         { key: "Amostra", value: "6 ads", context: "R$890", trend: "stable" },
       ],
       actions: [{ id: "d7a", label: "Priorizar UGC", type: "constructive", requires_confirmation: false }],
+      action_recommendation: null, group_note: null,
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(52),
     },
   ];
