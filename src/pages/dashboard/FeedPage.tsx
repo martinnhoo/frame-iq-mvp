@@ -156,7 +156,7 @@ function buildDemoDecisions(): Decision[] {
         { id: "d2a", label: "Pausar agora", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
         { id: "d2b", label: "Criar novo teste", type: "neutral", requires_confirmation: false },
       ],
-      action_recommendation: "Considerar novo público: Lookalike 1% baseado em compradores dos últimos 30 dias", group_note: null,
+      action_recommendation: "Considerar novo público: Lookalike 1% baseado em compradores dos últimos 30 dias",
       ad: { name: "Carrossel 01 — Benefícios", meta_ad_id: "demo_meta_002",
         ad_set: { name: "Interesse Fitness", campaign: { name: "Conversão — Produto X" } as any } as any } as any,
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(18),
