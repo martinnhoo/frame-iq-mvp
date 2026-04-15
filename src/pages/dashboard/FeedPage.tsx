@@ -1872,6 +1872,8 @@ const FeedPage: React.FC = () => {
                 metrics={adMetrics}
                 periodLabel={PERIODS.find(p => p.key === period)!.label}
                 metaAccountId={metaAccountId}
+                onLoadMoreAds={loadMoreAds}
+                loadingMoreAds={adsLoadingMore}
               />
             )}
 
