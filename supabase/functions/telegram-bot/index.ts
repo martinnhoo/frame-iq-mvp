@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
         `<b>Comandos disponíveis:</b>\n` +
         `/status — resumo da conta agora\n` +
         `/alertas — ver alertas ativos\n` +
-        `/pausar [nome do ad] — pausar um criativo\n` +
+        `/pausar — listar e pausar anúncios\n` +
         `/ajuda — ver todos os comandos\n\n` +
         `Tudo que você fizer aqui será registrado no seu AdBrief.`
       );
@@ -149,17 +149,18 @@ Deno.serve(async (req) => {
       const [action, ...params] = cq.data.split(":");
 
       if (action === "pause_confirm") {
-        const ad_id = params[0];
-        const ad_name = params[1] ? decodeURIComponent(params[1]) : ad_id;
+        const ad_meta_id = params[0];
+        const ad_name = params[1] ? decodeURIComponent(params[1]) : ad_meta_id;
 
-        // Call meta-actions to pause
+        // Call meta-actions to pause — use correct action name "pause"
         const { data: metaResult, error } = await supabase.functions.invoke("meta-actions", {
-          body: { action: "pause_ad", ad_id, user_id },
+          body: { action: "pause", target_id: ad_meta_id, target_type: "ad", user_id },
         });
 
         if (error || metaResult?.error) {
+          const errMsg = metaResult?.error || (error as any)?.message || "Erro desconhecido";
           await sendMessage(TELEGRAM_TOKEN, chat_id,
-            `❌ Erro ao pausar <b>${ad_name}</b>.\n\nVerifique em adbrief.pro ou tente novamente.`
+            `❌ Erro ao pausar <b>${ad_name}</b>.\n<code>${errMsg}</code>\n\nVerifique em adbrief.pro ou tente novamente.`
           );
         } else {
           const now = new Date().toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -167,7 +168,7 @@ Deno.serve(async (req) => {
             `✅ <b>${ad_name}</b> pausado com sucesso.\n📅 ${now}\n\nRegistrado no seu AdBrief.`
           );
 
-          // Register action in account_alerts (appears in chat with timestamp)
+          // Register action in account_alerts
           await (supabase as any).from("account_alerts").insert({
             user_id,
             type: "action",
@@ -177,16 +178,6 @@ Deno.serve(async (req) => {
             action_suggestion: "Considere criar uma variação com hook diferente.",
             created_at: new Date().toISOString(),
           });
-
-          // Save to learned_patterns — this ad was paused due to low performance
-          await (supabase as any).from("learned_patterns").upsert({
-            user_id,
-            pattern_key: `paused_via_telegram:${ad_id}`,
-            is_winner: false,
-            confidence: 0.7,
-            insight_text: `Ad "${ad_name}" foi pausado via Telegram por baixa performance.`,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: "user_id,pattern_key" });
         }
         return new Response("ok", { headers: cors });
       }
@@ -213,7 +204,8 @@ Deno.serve(async (req) => {
         `<b>AdBrief Alerts — Comandos</b>\n\n` +
         `/status — resumo da conta agora\n` +
         `/alertas — ver alertas ativos\n` +
-        `/pausar [nome] — pausar criativo (pede confirmação)\n` +
+        `/pausar — lista anúncios ativos (responda com o número)\n` +
+        `/pausar [nome] — busca e pausa por nome\n` +
         `/desconectar — remover esta conexão\n\n` +
         `Tudo que você fizer aqui é registrado no AdBrief com data e hora.`
       );
@@ -271,43 +263,165 @@ Deno.serve(async (req) => {
       return new Response("ok", { headers: cors });
     }
 
-    // /pausar [nome do ad]
-    if (text.startsWith("/pausar ")) {
-      const adName = text.replace("/pausar ", "").trim();
-      if (!adName) {
-        await sendMessage(TELEGRAM_TOKEN, chat_id, `❓ Use: /pausar [nome do criativo]\n\nEx: /pausar Creative_042`);
+    // /pausar — list active ads or search by name
+    if (text === "/pausar" || text.startsWith("/pausar ")) {
+      const searchArg = text.replace("/pausar", "").trim();
+
+      // Fetch active ads from the ads table (real data, not just snapshots)
+      const { data: adAccounts } = await (supabase as any)
+        .from("ad_accounts")
+        .select("id")
+        .eq("user_id", user_id)
+        .eq("status", "active");
+
+      const accountIds = (adAccounts || []).map((a: any) => a.id);
+      let activeAds: any[] = [];
+
+      if (accountIds.length > 0) {
+        const { data: ads } = await (supabase as any)
+          .from("ads")
+          .select("meta_ad_id, name, status, effective_status, ad_set:ad_sets(name, campaign:campaigns(name))")
+          .in("account_id", accountIds)
+          .in("effective_status", ["ACTIVE", "CAMPAIGN_PAUSED", "ADSET_PAUSED", "PENDING_REVIEW", "PREAPPROVED"])
+          .order("name")
+          .limit(30);
+        activeAds = ads || [];
+      }
+
+      // Fallback: also check daily_snapshots top_ads
+      if (activeAds.length === 0) {
+        const { data: snap } = await (supabase as any)
+          .from("daily_snapshots")
+          .select("top_ads")
+          .eq("user_id", user_id)
+          .order("date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const topAds = (snap?.top_ads as any[]) || [];
+        activeAds = topAds.map((a: any) => ({
+          meta_ad_id: a.id || a.meta_ad_id,
+          name: a.name,
+          status: "ACTIVE",
+          effective_status: "ACTIVE",
+        }));
+      }
+
+      if (activeAds.length === 0) {
+        await sendMessage(TELEGRAM_TOKEN, chat_id,
+          `📭 Nenhum anúncio ativo encontrado.\n\nConecte ou sincronize sua conta Meta em adbrief.pro.`
+        );
         return new Response("ok", { headers: cors });
       }
 
-      // Find the ad in daily_snapshots top_ads
-      const { data: snap } = await (supabase as any)
-        .from("daily_snapshots")
-        .select("top_ads")
-        .eq("user_id", user_id)
-        .order("date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // If search argument provided, filter by name
+      let filteredAds = activeAds;
+      if (searchArg) {
+        filteredAds = activeAds.filter((a: any) =>
+          a.name?.toLowerCase().includes(searchArg.toLowerCase())
+        );
+        if (filteredAds.length === 0) {
+          await sendMessage(TELEGRAM_TOKEN, chat_id,
+            `❓ Nenhum anúncio encontrado com "<b>${searchArg}</b>".\n\nEnvie /pausar sem argumento para ver a lista completa.`
+          );
+          return new Response("ok", { headers: cors });
+        }
+      }
 
-      const topAds = (snap?.top_ads as any[]) || [];
-      const match = topAds.find((a: any) =>
-        a.name?.toLowerCase().includes(adName.toLowerCase())
-      );
+      // If only 1 result, show confirmation directly
+      if (filteredAds.length === 1) {
+        const ad = filteredAds[0];
+        const metaId = ad.meta_ad_id;
+        const displayName = ad.name || metaId;
+        const campaign = ad.ad_set?.campaign?.name || "";
+        const info = campaign ? `\nCampanha: ${campaign}` : "";
 
-      const adId = match?.id || adName;
-      const adDisplayName = match?.name || adName;
-      const ctr = match?.ctr ? `CTR ${((match.ctr) * 100).toFixed(2)}%` : "";
-      const spend = match?.spend ? ` | R$${match.spend.toFixed(0)} gasto` : "";
+        await sendMessage(TELEGRAM_TOKEN, chat_id,
+          `⚠️ <b>Confirmar pausa</b>\n\n<b>${displayName}</b>${info}\n\nEssa ação será executada no Meta Ads.`,
+          {
+            inline_keyboard: [[
+              { text: "⏸ Pausar", callback_data: `pause_confirm:${metaId}:${encodeURIComponent(displayName)}` },
+              { text: "❌ Cancelar", callback_data: `pause_cancel::${encodeURIComponent(displayName)}` },
+            ]],
+          }
+        );
+        return new Response("ok", { headers: cors });
+      }
+
+      // Multiple results: show numbered list
+      const listLines = filteredAds.slice(0, 20).map((ad: any, i: number) => {
+        const campaign = ad.ad_set?.campaign?.name;
+        const ctx = campaign ? ` <i>(${campaign})</i>` : "";
+        return `<b>${i + 1}.</b> ${ad.name || ad.meta_ad_id}${ctx}`;
+      });
+
+      // Store the list in a temp cache so we can match the number reply
+      await (supabase as any).from("telegram_pairing_tokens").upsert({
+        user_id,
+        token: `pausar_list_${chat_id}`,
+        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 min
+        // Store ad list as JSON in a metadata trick: reuse the token field
+      }, { onConflict: "token" });
+
+      // Store the actual ad list in account_alerts as a temporary entry
+      await (supabase as any).from("account_alerts").upsert({
+        id: `tg_pausar_${user_id}`,
+        user_id,
+        type: "system",
+        urgency: "low",
+        detail: JSON.stringify(filteredAds.slice(0, 20).map((a: any) => ({
+          id: a.meta_ad_id,
+          name: a.name || a.meta_ad_id,
+        }))),
+        created_at: new Date().toISOString(),
+      }, { onConflict: "id" });
+
+      const moreText = filteredAds.length > 20 ? `\n\n<i>+${filteredAds.length - 20} não mostrados. Use /pausar [nome] para filtrar.</i>` : "";
 
       await sendMessage(TELEGRAM_TOKEN, chat_id,
-        `⚠️ <b>Confirmar ação</b>\n\nPausar: <b>${adDisplayName}</b>\n${ctr}${spend}\n\nEssa ação será executada no Meta Ads e registrada no AdBrief.`,
-        {
-          inline_keyboard: [[
-            { text: "✅ Pausar", callback_data: `pause_confirm:${adId}:${encodeURIComponent(adDisplayName)}` },
-            { text: "❌ Cancelar", callback_data: `pause_cancel::${encodeURIComponent(adDisplayName)}` },
-          ]],
-        }
+        `⏸ <b>Qual anúncio pausar?</b>\n\n${listLines.join("\n")}${moreText}\n\n<b>Responda com o número</b> (ex: <code>3</code>)`
       );
       return new Response("ok", { headers: cors });
+    }
+
+    // ── Number reply — user selecting ad from /pausar list ───────────────────
+    const num = parseInt(text.trim());
+    if (!isNaN(num) && num >= 1 && num <= 20) {
+      // Check if there's an active pausar list for this user
+      const { data: listEntry } = await (supabase as any)
+        .from("account_alerts")
+        .select("detail, created_at")
+        .eq("id", `tg_pausar_${user_id}`)
+        .maybeSingle();
+
+      if (listEntry) {
+        // Check if list is still fresh (5 min)
+        const listAge = Date.now() - new Date(listEntry.created_at).getTime();
+        if (listAge < 5 * 60 * 1000) {
+          try {
+            const adList = JSON.parse(listEntry.detail);
+            const selected = adList[num - 1];
+            if (selected) {
+              // Clean up the temp list
+              await (supabase as any).from("account_alerts").delete().eq("id", `tg_pausar_${user_id}`);
+
+              // Show confirmation
+              await sendMessage(TELEGRAM_TOKEN, chat_id,
+                `⚠️ <b>Confirmar pausa</b>\n\n<b>${selected.name}</b>\n\nEssa ação será executada no Meta Ads.`,
+                {
+                  inline_keyboard: [[
+                    { text: "⏸ Pausar", callback_data: `pause_confirm:${selected.id}:${encodeURIComponent(selected.name)}` },
+                    { text: "❌ Cancelar", callback_data: `pause_cancel::${encodeURIComponent(selected.name)}` },
+                  ]],
+                }
+              );
+              return new Response("ok", { headers: cors });
+            }
+          } catch { /* JSON parse fail — ignore */ }
+        } else {
+          // List expired, clean up
+          await (supabase as any).from("account_alerts").delete().eq("id", `tg_pausar_${user_id}`);
+        }
+      }
     }
 
     // /desconectar
