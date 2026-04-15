@@ -616,8 +616,8 @@ function getAdStatusDisplay(ad: AdSummary): { label: string; color: string; dotC
     return { label: 'Aprendizado', color: 'rgba(200,146,42,0.50)', dotColor: 'rgba(200,146,42,0.30)' };
   if (s === 'ARCHIVED' || s === 'DELETED')
     return { label: 'Arquivado', color: 'rgba(139,148,158,0.35)', dotColor: 'rgba(139,148,158,0.20)' };
-  // ACTIVE or unknown → healthy
-  return { label: 'Saudável', color: 'rgba(14,165,233,0.40)', dotColor: 'rgba(14,165,233,0.25)' };
+  // ACTIVE or unknown → healthy (green)
+  return { label: 'Saudável', color: 'rgba(34,163,163,0.55)', dotColor: 'rgba(34,163,163,0.35)' };
 }
 
 interface AdMetricsSummary {
