@@ -923,6 +923,9 @@ const FeedPage: React.FC = () => {
       }
       console.log('[sync-meta-data] Success:', syncData);
 
+      // Mark auto-sync as successful so it doesn't re-trigger
+      try { localStorage.setItem(`adbrief_autosync_ok_${accountId}`, new Date().toISOString()); } catch {}
+
       // Step 2: Run decision engine on the freshly synced data
       const { error: engineErr } = await supabase.functions.invoke('run-decision-engine', {
         body: { account_id: accountId },
@@ -947,15 +950,18 @@ const FeedPage: React.FC = () => {
   const handleSyncRef = useRef(handleSync);
   handleSyncRef.current = handleSync;
 
+  const autoSyncFired = useRef(false);
   useEffect(() => {
     if (!accountId || !metaConnected || !adsLoaded || totalAdCount > 0 || syncing || isDemo) return;
+    if (autoSyncFired.current) return;
 
-    const key = `adbrief_autosync_${accountId}`;
+    // Check localStorage — only skip if sync previously SUCCEEDED for this account
+    const key = `adbrief_autosync_ok_${accountId}`;
     if (localStorage.getItem(key)) return;
 
-    localStorage.setItem(key, new Date().toISOString());
+    autoSyncFired.current = true;
     const t = setTimeout(() => handleSyncRef.current(), 600);
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); autoSyncFired.current = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId, metaConnected, adsLoaded, totalAdCount]);
 
