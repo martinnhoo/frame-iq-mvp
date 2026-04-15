@@ -1612,8 +1612,22 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   const hasMeta   = connections.includes("meta");
   // hasGoogle — disabled (see GOOGLE_ADS_BACKUP.md)
 
+  // ── Context lock: block stale async responses from previous persona/account ──
+  const contextRef = React.useRef<string>("");
+  const selectedAccId = storage.get(`meta_sel_${selectedPersona?.id}`, "") || "";
+  const currentCtx = `${selectedPersona?.id}_${selectedAccId}`;
+
+  // Hard clear on persona/account change — zero flash of old data
+  React.useEffect(() => {
+    if (contextRef.current && contextRef.current !== currentCtx) {
+      setPd(null); setTs(null); setFail(null); setBusy(false);
+    }
+    contextRef.current = currentCtx;
+  }, [currentCtx]);
+
   const load = React.useCallback(async () => {
     if (!user?.id || !selectedPersona?.id) return;
+    const loadCtx = currentCtx; // snapshot context at call time
     setBusy(true); setFail(null);
     try {
       const days = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / 86400000) + 1;
@@ -1660,11 +1674,18 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           adapted.meta.at_risk = adapted.meta.top_ads.filter((a: any) => a.isRisk).slice(0, 5);
         }
         // google result handling — disabled (see GOOGLE_ADS_BACKUP.md)
-        setPd(adapted); setTs(new Date());
+        // Context lock: only apply if still on the same persona+account
+        if (loadCtx === contextRef.current) {
+          setPd(adapted); setTs(new Date());
+        }
       } else throw new Error(r?.error || "Resposta inválida");
-    } catch (e: any) { setFail(e.message || "Falha"); }
-    finally { setBusy(false); }
-  }, [user?.id, selectedPersona?.id, connections.join(","), dateRange.from.getTime(), dateRange.to.getTime()]);
+    } catch (e: any) {
+      if (loadCtx === contextRef.current) setFail(e.message || "Falha");
+    }
+    finally {
+      if (loadCtx === contextRef.current) setBusy(false);
+    }
+  }, [user?.id, selectedPersona?.id, connections.join(","), dateRange.from.getTime(), dateRange.to.getTime(), currentCtx]);
 
   React.useEffect(() => { load(); }, [load]);
 
@@ -3379,6 +3400,8 @@ Return ONLY this JSON (no markdown, no other text):
       setChatImage(null);
     }
     if(!msg||loading)return;
+    // Context lock: snapshot persona at send time to block stale responses
+    const sendPersonaId = selectedPersona?.id || null;
     // userText = what shows in the chat bubble (clean, no AI prefixes)
     const userText = displayText ?? (pendingImage
       ? (cleanUserMsg || (lang==="pt"?"Analise este criativo":lang==="es"?"Analiza este creativo":"Analyze this creative"))
@@ -3814,6 +3837,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       });
 
       const aid=Date.now()+1;
+      // Context lock: discard response if persona changed during request
+      if (sendPersonaId !== (selectedPersona?.id || null)) {
+        console.warn("[AdBrief] Discarding stale AI response — persona changed during request");
+        setLoading(false); return;
+      }
       setMessages(prev=>[...prev,{role:"assistant",blocks,ts:aid,id:aid}]);
       // Trigger streaming effect for this message
       setStreamingMsgId(aid);
