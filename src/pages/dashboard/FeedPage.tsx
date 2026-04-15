@@ -255,7 +255,7 @@ function buildDemoMoneyTracker() {
 }
 
 // ================================================================
-// STAGED SYNC OVERLAY — 4-step progression + final confirmation
+// INLINE SYNC BANNER — compact progress bar (no full-page overlay)
 // ================================================================
 const SYNC_STEPS = [
   'Conectando ao Meta Ads...',
@@ -264,121 +264,101 @@ const SYNC_STEPS = [
   'Gerando decisões...',
 ];
 
-const SyncingOverlay: React.FC = () => {
+const SyncBanner: React.FC = () => {
   const [step, setStep] = useState(0);
-  const [done, setDone] = useState(false);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setStep(1), 800),
-      setTimeout(() => setStep(2), 2000),
-      setTimeout(() => setStep(3), 3200),
-      setTimeout(() => setDone(true), 4200),
+      setTimeout(() => setStep(1), 1200),
+      setTimeout(() => setStep(2), 2800),
+      setTimeout(() => setStep(3), 4500),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
 
   return (
     <div style={{
-      background: '#0F141A', border: '1px solid rgba(230,237,243,0.06)',
-      borderRadius: 4, padding: '36px 28px', fontFamily: F,
+      background: '#0F141A', border: '1px solid rgba(34,163,163,0.12)',
+      borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 12,
     }}>
-      {/* Radar icon */}
-      <div style={{
-        width: 48, height: 48, borderRadius: 12,
-        background: 'rgba(34,163,163,0.06)', border: '1px solid rgba(34,163,163,0.12)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        margin: '0 auto 20px',
-      }}>
-        <svg width="24" height="24" viewBox="0 0 28 28" style={{ animation: done ? 'none' : 'sync-spin 2s linear infinite' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+        <svg width="16" height="16" viewBox="0 0 28 28" style={{ animation: 'sync-spin 2s linear infinite', flexShrink: 0 }}>
           <circle cx="14" cy="14" r="12" fill="none" stroke="rgba(34,163,163,0.15)" strokeWidth="1.5"/>
-          <circle cx="14" cy="14" r="2.5" fill={done ? '#2D9B6E' : '#22A3A3'}/>
-          {!done && (
-            <>
-              <path d="M14 14 L14 2 A12 12 0 0 1 24.39 8.0 Z" fill="rgba(34,163,163,0.25)"/>
-              <line x1="14" y1="14" x2="14" y2="2" stroke="rgba(34,163,163,0.5)" strokeWidth="1"/>
-            </>
-          )}
-          {done && (
-            <path d="M9 14 L12.5 17.5 L19 10" stroke="#2D9B6E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-          )}
+          <circle cx="14" cy="14" r="2.5" fill="#22A3A3"/>
+          <path d="M14 14 L14 2 A12 12 0 0 1 24.39 8.0 Z" fill="rgba(34,163,163,0.25)"/>
+          <line x1="14" y1="14" x2="14" y2="2" stroke="rgba(34,163,163,0.5)" strokeWidth="1"/>
         </svg>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3' }}>
+          {SYNC_STEPS[step] || SYNC_STEPS[SYNC_STEPS.length - 1]}
+        </span>
       </div>
-
-      {/* Progress bar */}
       <div style={{
-        maxWidth: 340, margin: '0 auto 22px', height: 3, borderRadius: 2,
+        height: 3, borderRadius: 2,
         background: 'rgba(230,237,243,0.06)', overflow: 'hidden',
       }}>
         <div style={{
-          height: '100%', borderRadius: 2,
-          background: done ? '#2D9B6E' : '#22A3A3',
-          width: done ? '100%' : `${((step + 1) / SYNC_STEPS.length) * 90}%`,
-          transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1), background 0.3s',
+          height: '100%', borderRadius: 2, background: '#22A3A3',
+          width: `${((step + 1) / SYNC_STEPS.length) * 90}%`,
+          transition: 'width 1s cubic-bezier(0.4,0,0.2,1)',
         }} />
       </div>
-
-      {/* Steps list */}
-      <div style={{ maxWidth: 340, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {SYNC_STEPS.map((label, i) => {
-          const isDone = done || i < step;
-          const isActive = !done && i === step;
-          return (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '7px 12px', borderRadius: 4,
-              background: isActive ? 'rgba(34,163,163,0.05)' : 'transparent',
-              transition: 'all 0.3s',
-            }}>
-              <div style={{
-                width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: isDone ? 'rgba(45,155,110,0.12)' : isActive ? 'rgba(34,163,163,0.12)' : 'rgba(230,237,243,0.03)',
-                border: `1.5px solid ${isDone ? '#1B6E57' : isActive ? '#22A3A3' : 'rgba(230,237,243,0.06)'}`,
-                transition: 'all 0.3s',
-              }}>
-                {isDone ? (
-                  <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
-                    <path d="M2.5 6L5 8.5L9.5 3.5" stroke="#1B6E57" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                ) : isActive ? (
-                  <div style={{
-                    width: 5, height: 5, borderRadius: '50%', background: '#22A3A3',
-                    animation: 'sync-blink 1s ease-in-out infinite',
-                  }} />
-                ) : null}
-              </div>
-              <span style={{
-                fontSize: 12.5, fontWeight: isDone || isActive ? 500 : 400,
-                color: isDone ? 'rgba(230,237,243,0.45)' : isActive ? '#E6EDF3' : 'rgba(230,237,243,0.20)',
-                transition: 'color 0.3s',
-              }}>
-                {label}
-              </span>
-              {isDone && (
-                <span style={{ marginLeft: 'auto', fontSize: 9, color: '#1B6E57', fontWeight: 600 }}>✓</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Final line */}
-      {done && (
-        <p style={{
-          textAlign: 'center', fontSize: 12, fontWeight: 600,
-          color: '#2D9B6E', margin: '18px 0 0', letterSpacing: '-0.01em',
-          animation: 'sync-fadein 0.5s ease',
-        }}>
-          Análise baseada nos seus dados reais
-        </p>
-      )}
-
       <style>{`
         @keyframes sync-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        @keyframes sync-blink{0%,100%{opacity:1}50%{opacity:.3}}
-        @keyframes sync-fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
       `}</style>
+    </div>
+  );
+};
+
+// ================================================================
+// TELEGRAM CONNECTION CARD
+// ================================================================
+const TelegramCard: React.FC = () => {
+  const [hov, setHov] = useState(false);
+  return (
+    <div style={{
+      background: '#0F141A', border: '1px solid rgba(230,237,243,0.06)',
+      borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 8,
+      display: 'flex', alignItems: 'center', gap: 14,
+    }}>
+      {/* Telegram SVG icon */}
+      <div style={{
+        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+        background: 'rgba(42,171,238,0.08)', border: '1px solid rgba(42,171,238,0.12)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <svg width="20" height="20" viewBox="0 0 1000 1000" fill="none">
+          <defs>
+            <linearGradient id="tg-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stopColor="#2AABEE"/>
+              <stop offset="100%" stopColor="#229ED9"/>
+            </linearGradient>
+          </defs>
+          <circle cx="500" cy="500" r="500" fill="url(#tg-grad)"/>
+          <path d="M226.328419,494.722069 C372.088573,431.216685 469.284839,389.350049 517.917216,369.122161 C656.772535,311.36743 685.625481,301.334815 704.431427,301.003532 C708.567621,300.93067 717.815839,301.955743 723.806446,306.816707 C728.864797,310.92121 730.256552,316.46581 730.922551,320.357329 C731.588551,324.248848 732.417879,333.113828 731.758626,340.040666 C724.234007,419.102486 691.675104,610.964674 675.110982,699.515267 C668.10208,736.984342 654.301336,749.547532 640.940618,750.777006 C611.904684,753.448938 589.856115,731.588035 561.733393,713.153237 C517.726886,684.306416 492.866009,666.349181 450.150074,638.200013 C400.78442,605.66878 432.786119,587.789048 460.919462,558.568563 C468.282091,550.921423 596.21508,434.556479 598.691227,424.000355 C599.00091,422.680135 599.288312,417.758981 596.36474,415.160431 C593.441168,412.561881 589.126229,413.450484 586.012448,414.157198 C581.598758,415.158943 511.297793,461.625274 375.109553,553.556189 C355.154858,567.258623 337.080515,573.934908 320.886524,573.585046 C303.033948,573.199351 268.692754,563.490928 243.163606,555.192408 C211.851067,545.013936 186.964484,539.632504 189.131547,522.346309 C190.260287,513.342589 202.659244,504.134509 226.328419,494.722069 Z" fill="#FFFFFF"/>
+        </svg>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#E6EDF3', marginBottom: 2 }}>
+          Alertas no Telegram
+        </div>
+        <div style={{ fontSize: 11, color: '#8B949E', lineHeight: 1.4 }}>
+          Receba decisões urgentes direto no Telegram — kills e alertas em tempo real.
+        </div>
+      </div>
+      <button
+        onClick={() => window.open('https://t.me/AdBriefBot', '_blank', 'noopener')}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          background: hov ? 'rgba(42,171,238,0.12)' : 'rgba(42,171,238,0.06)',
+          color: '#2AABEE', border: '1px solid rgba(42,171,238,0.15)',
+          borderRadius: 3, padding: '6px 12px', fontSize: 11, fontWeight: 700,
+          cursor: 'pointer', fontFamily: F, whiteSpace: 'nowrap',
+          transition: 'background 0.15s',
+        }}
+      >
+        Conectar
+      </button>
     </div>
   );
 };
@@ -900,7 +880,11 @@ const FeedPage: React.FC = () => {
 
   const decisions = isDemo ? buildDemoDecisions() : realDecisions;
   const tracker = isDemo ? buildDemoMoneyTracker() : realTracker;
-  const isLoading = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
+  // Only show skeleton on the very first load — not after sync finishes (prevents flash)
+  const hasSyncedRef = useRef(false);
+  if (syncing) hasSyncedRef.current = true;
+  const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
+  const isLoading = isFirstLoad && !hasSyncedRef.current;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
   const handleSync = useCallback(async () => {
@@ -1074,19 +1058,7 @@ const FeedPage: React.FC = () => {
     );
   }
 
-  // ── Syncing — staged loading overlay ──
-  if (syncing) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
-        <div style={{ maxWidth: 760, margin: '0 auto' }}>
-          <div style={{ marginBottom: 18 }}>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>Feed</h1>
-          </div>
-          <SyncingOverlay />
-        </div>
-      </div>
-    );
-  }
+  // Syncing is now an inline banner — no full-page overlay
 
   return (
     <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
@@ -1163,6 +1135,9 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
+        {/* Inline sync progress banner */}
+        {syncing && <SyncBanner />}
+
         {/* STATE 5 — Full data: money tracker + summary + cards */}
         {feedState === 'full' || feedState === 'demo' ? (
           <>
@@ -1213,6 +1188,9 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'no-critical' ? (
           <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} />
         ) : null}
+
+        {/* Telegram connection card — shown when Meta is connected */}
+        {metaConnected && !isDemo && <TelegramCard />}
       </div>
     </div>
   );
