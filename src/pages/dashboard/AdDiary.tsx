@@ -293,7 +293,26 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
     const { data } = await (supabase as any).from("ad_diary")
       .select("*").eq("user_id", user.id).eq("persona_id", personaId)
       .order("spend", { ascending: false }).limit(500);
-    setEntries((data || []) as Entry[]);
+    let rows = (data || []) as Entry[];
+
+    // Enrich missing thumbnails via ads→creatives join (ads.meta_ad_id matches ad_diary.ad_id)
+    const missing = rows.filter(e => !e.thumbnail_url && e.ad_id);
+    if (missing.length > 0) {
+      const adIds = missing.map(e => e.ad_id);
+      const { data: adsWithThumb } = await (supabase as any).from("ads")
+        .select("meta_ad_id, creative:creatives(thumbnail_url)")
+        .in("meta_ad_id", adIds.slice(0, 100));
+      if (adsWithThumb?.length) {
+        const thumbMap: Record<string, string> = {};
+        for (const a of adsWithThumb) {
+          const url = a.creative?.thumbnail_url;
+          if (url) thumbMap[a.meta_ad_id] = url;
+        }
+        rows = rows.map(e => e.thumbnail_url ? e : { ...e, thumbnail_url: thumbMap[e.ad_id] || null });
+      }
+    }
+
+    setEntries(rows);
     if (data?.length) setLastSync(new Date((data[0] as any).synced_at));
     setLoading(false);
   }, [user?.id, personaId]);

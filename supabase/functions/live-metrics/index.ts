@@ -122,16 +122,23 @@ serve(async (req) => {
             thumbnail_url: null as string | null,
           }));
 
-          // Fetch creative thumbnails in batch for top ads
+          // Fetch creative thumbnails — use ads endpoint with field expansion
+          // The insights endpoint doesn't return creative data, so we fetch ads separately
           const adIds = topAdsRaw.map((a: any) => a.id).filter(Boolean);
           if (adIds.length > 0) {
             try {
-              const thumbRes = await fetch(`https://graph.facebook.com/v21.0/?ids=${adIds.join(",")}&fields=creative{thumbnail_url}&access_token=${token}`);
+              // Fetch ads with creative thumbnail using filtering
+              const filterParam = encodeURIComponent(JSON.stringify([{ field: "id", operator: "IN", value: adIds }]));
+              const thumbUrl = `https://graph.facebook.com/v21.0/${acc.id}/ads?filtering=${filterParam}&fields=id,creative{thumbnail_url}&limit=25&access_token=${token}`;
+              const thumbRes = await fetch(thumbUrl);
               const thumbData = await thumbRes.json();
-              for (const ad of topAdsRaw) {
-                const thumbInfo = thumbData?.[ad.id];
-                if (thumbInfo?.creative?.thumbnail_url) {
-                  ad.thumbnail_url = thumbInfo.creative.thumbnail_url;
+              if (thumbData.data) {
+                const thumbMap: Record<string, string> = {};
+                for (const ad of thumbData.data) {
+                  if (ad.creative?.thumbnail_url) thumbMap[ad.id] = ad.creative.thumbnail_url;
+                }
+                for (const ad of topAdsRaw) {
+                  if (thumbMap[ad.id]) ad.thumbnail_url = thumbMap[ad.id];
                 }
               }
             } catch { /* thumbnail fetch is optional — don't block on failure */ }
