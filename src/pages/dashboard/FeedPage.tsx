@@ -310,54 +310,203 @@ const SyncBanner: React.FC = () => {
 };
 
 // ================================================================
-// TELEGRAM CONNECTION CARD
+// TELEGRAM CONNECTION CARD — two states: disconnected / connected
 // ================================================================
-const TelegramCard: React.FC = () => {
-  const [hov, setHov] = useState(false);
+
+/** Shared Telegram icon */
+const TelegramIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 1000 1000" fill="none">
+    <defs>
+      <linearGradient id="tg-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%" stopColor="#2AABEE"/>
+        <stop offset="100%" stopColor="#229ED9"/>
+      </linearGradient>
+    </defs>
+    <circle cx="500" cy="500" r="500" fill="url(#tg-grad)"/>
+    <path d="M226.328419,494.722069 C372.088573,431.216685 469.284839,389.350049 517.917216,369.122161 C656.772535,311.36743 685.625481,301.334815 704.431427,301.003532 C708.567621,300.93067 717.815839,301.955743 723.806446,306.816707 C728.864797,310.92121 730.256552,316.46581 730.922551,320.357329 C731.588551,324.248848 732.417879,333.113828 731.758626,340.040666 C724.234007,419.102486 691.675104,610.964674 675.110982,699.515267 C668.10208,736.984342 654.301336,749.547532 640.940618,750.777006 C611.904684,753.448938 589.856115,731.588035 561.733393,713.153237 C517.726886,684.306416 492.866009,666.349181 450.150074,638.200013 C400.78442,605.66878 432.786119,587.789048 460.919462,558.568563 C468.282091,550.921423 596.21508,434.556479 598.691227,424.000355 C599.00091,422.680135 599.288312,417.758981 596.36474,415.160431 C593.441168,412.561881 589.126229,413.450484 586.012448,414.157198 C581.598758,415.158943 511.297793,461.625274 375.109553,553.556189 C355.154858,567.258623 337.080515,573.934908 320.886524,573.585046 C303.033948,573.199351 268.692754,563.490928 243.163606,555.192408 C211.851067,545.013936 186.964484,539.632504 189.131547,522.346309 C190.260287,513.342589 202.659244,504.134509 226.328419,494.722069 Z" fill="#FFFFFF"/>
+  </svg>
+);
+
+interface TelegramConn {
+  chat_id: string;
+  telegram_username: string | null;
+  connected_at: string;
+}
+
+const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
+  const [conn, setConn] = useState<TelegramConn | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [pairingLink, setPairingLink] = useState<string | null>(null);
+  const [btnHov, setBtnHov] = useState(false);
+
+  // Check connection status
+  useEffect(() => {
+    if (!userId) return;
+    (supabase as any).from('telegram_connections')
+      .select('chat_id, telegram_username, connected_at')
+      .eq('user_id', userId).eq('active', true).maybeSingle()
+      .then(({ data }: any) => { setConn(data || null); setLoading(false); });
+  }, [userId]);
+
+  // Generate pairing link & open bot
+  const handleConnect = async () => {
+    setGenerating(true);
+    try {
+      const tok = Math.random().toString(36).slice(2,8) + Math.random().toString(36).slice(2,8);
+      await (supabase as any).from('telegram_pairing_tokens').insert({
+        user_id: userId, token: tok,
+        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      });
+      const link = `https://t.me/AdBriefAlertsBot?start=${tok}`;
+      setPairingLink(link);
+      window.open(link, '_blank', 'noopener');
+    } catch (e) { console.error('[TelegramCard]', e); }
+    setGenerating(false);
+  };
+
+  // Poll for connection after link is generated (user opened bot)
+  useEffect(() => {
+    if (!pairingLink || conn) return;
+    const interval = setInterval(async () => {
+      const { data } = await (supabase as any).from('telegram_connections')
+        .select('chat_id, telegram_username, connected_at')
+        .eq('user_id', userId).eq('active', true).maybeSingle();
+      if (data) { setConn(data); setPairingLink(null); }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [pairingLink, conn, userId]);
+
+  if (loading) return null;
+
+  // ── CONNECTED STATE ──
+  if (conn) {
+    return (
+      <div style={{
+        background: '#0F141A', border: '1px solid rgba(45,155,110,0.12)',
+        borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 8,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            background: 'rgba(45,155,110,0.06)', border: '1px solid rgba(45,155,110,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <TelegramIcon size={20} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: '#E6EDF3' }}>Telegram conectado</span>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', background: '#2D9B6E',
+                boxShadow: '0 0 4px rgba(45,155,110,0.5)',
+              }} />
+            </div>
+            <div style={{ fontSize: 11, color: '#8B949E', marginTop: 1 }}>
+              {conn.telegram_username ? `@${conn.telegram_username}` : 'Conta vinculada'}
+              {' · @AdBriefAlertsBot'}
+            </div>
+          </div>
+        </div>
+        {/* What's active */}
+        <div style={{
+          background: 'rgba(45,155,110,0.04)', border: '1px solid rgba(45,155,110,0.08)',
+          borderRadius: 3, padding: '10px 12px',
+        }}>
+          <div style={{ fontSize: 11, color: 'rgba(230,237,243,0.70)', lineHeight: 1.6, marginBottom: 0 }}>
+            <span style={{ fontWeight: 600, color: '#2D9B6E' }}>Alertas ativos:</span>{' '}
+            Kills urgentes, alertas de performance, resumo diário e confirmação de ações.
+            Você também pode pausar anúncios direto pelo Telegram.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── DISCONNECTED STATE ──
+  // After generating link, show "waiting for authorization"
+  if (pairingLink) {
+    return (
+      <div style={{
+        background: '#0F141A', border: '1px solid rgba(42,171,238,0.12)',
+        borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 8,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            background: 'rgba(42,171,238,0.06)', border: '1px solid rgba(42,171,238,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <TelegramIcon size={20} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#E6EDF3' }}>Aguardando autorização...</div>
+            <div style={{ fontSize: 11, color: '#8B949E', marginTop: 2, lineHeight: 1.4 }}>
+              Abra o bot no Telegram e toque em <strong style={{ color: '#E6EDF3' }}>Iniciar</strong> para conectar.
+            </div>
+          </div>
+        </div>
+        <div style={{
+          height: 2, borderRadius: 1, background: 'rgba(42,171,238,0.10)', overflow: 'hidden',
+        }}>
+          <div style={{
+            height: '100%', background: '#2AABEE', width: '60%',
+            animation: 'tg-progress 1.5s ease-in-out infinite alternate',
+          }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
+          <button onClick={() => window.open(pairingLink, '_blank', 'noopener')}
+            style={{
+              background: 'rgba(42,171,238,0.08)', color: '#2AABEE',
+              border: '1px solid rgba(42,171,238,0.15)', borderRadius: 3,
+              padding: '5px 10px', fontSize: 11, fontWeight: 600,
+              cursor: 'pointer', fontFamily: F,
+            }}>
+            Reabrir bot
+          </button>
+          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.50)' }}>Link expira em 10 min</span>
+        </div>
+        <style>{`@keyframes tg-progress{from{transform:translateX(-40%)}to{transform:translateX(80%)}}`}</style>
+      </div>
+    );
+  }
+
+  // ── DEFAULT: not connected, no link yet ──
   return (
     <div style={{
       background: '#0F141A', border: '1px solid rgba(230,237,243,0.06)',
       borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 8,
       display: 'flex', alignItems: 'center', gap: 14,
     }}>
-      {/* Telegram SVG icon */}
       <div style={{
         width: 36, height: 36, borderRadius: 10, flexShrink: 0,
         background: 'rgba(42,171,238,0.08)', border: '1px solid rgba(42,171,238,0.12)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <svg width="20" height="20" viewBox="0 0 1000 1000" fill="none">
-          <defs>
-            <linearGradient id="tg-grad" x1="50%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%" stopColor="#2AABEE"/>
-              <stop offset="100%" stopColor="#229ED9"/>
-            </linearGradient>
-          </defs>
-          <circle cx="500" cy="500" r="500" fill="url(#tg-grad)"/>
-          <path d="M226.328419,494.722069 C372.088573,431.216685 469.284839,389.350049 517.917216,369.122161 C656.772535,311.36743 685.625481,301.334815 704.431427,301.003532 C708.567621,300.93067 717.815839,301.955743 723.806446,306.816707 C728.864797,310.92121 730.256552,316.46581 730.922551,320.357329 C731.588551,324.248848 732.417879,333.113828 731.758626,340.040666 C724.234007,419.102486 691.675104,610.964674 675.110982,699.515267 C668.10208,736.984342 654.301336,749.547532 640.940618,750.777006 C611.904684,753.448938 589.856115,731.588035 561.733393,713.153237 C517.726886,684.306416 492.866009,666.349181 450.150074,638.200013 C400.78442,605.66878 432.786119,587.789048 460.919462,558.568563 C468.282091,550.921423 596.21508,434.556479 598.691227,424.000355 C599.00091,422.680135 599.288312,417.758981 596.36474,415.160431 C593.441168,412.561881 589.126229,413.450484 586.012448,414.157198 C581.598758,415.158943 511.297793,461.625274 375.109553,553.556189 C355.154858,567.258623 337.080515,573.934908 320.886524,573.585046 C303.033948,573.199351 268.692754,563.490928 243.163606,555.192408 C211.851067,545.013936 186.964484,539.632504 189.131547,522.346309 C190.260287,513.342589 202.659244,504.134509 226.328419,494.722069 Z" fill="#FFFFFF"/>
-        </svg>
+        <TelegramIcon size={20} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, color: '#E6EDF3', marginBottom: 2 }}>
           Alertas no Telegram
         </div>
         <div style={{ fontSize: 11, color: '#8B949E', lineHeight: 1.4 }}>
-          Receba decisões urgentes direto no Telegram — kills e alertas em tempo real.
+          Receba kills e alertas urgentes em tempo real. Pause anúncios direto pelo bot.
         </div>
       </div>
       <button
-        onClick={() => window.open('https://t.me/AdBriefBot', '_blank', 'noopener')}
-        onMouseEnter={() => setHov(true)}
-        onMouseLeave={() => setHov(false)}
+        onClick={handleConnect}
+        disabled={generating}
+        onMouseEnter={() => setBtnHov(true)}
+        onMouseLeave={() => setBtnHov(false)}
         style={{
-          background: hov ? 'rgba(42,171,238,0.12)' : 'rgba(42,171,238,0.06)',
+          background: btnHov ? 'rgba(42,171,238,0.12)' : 'rgba(42,171,238,0.06)',
           color: '#2AABEE', border: '1px solid rgba(42,171,238,0.15)',
           borderRadius: 3, padding: '6px 12px', fontSize: 11, fontWeight: 700,
-          cursor: 'pointer', fontFamily: F, whiteSpace: 'nowrap',
-          transition: 'background 0.15s',
+          cursor: generating ? 'wait' : 'pointer', fontFamily: F, whiteSpace: 'nowrap',
+          transition: 'background 0.15s', opacity: generating ? 0.6 : 1,
         }}
       >
-        Conectar
+        {generating ? 'Gerando...' : 'Conectar'}
       </button>
     </div>
   );
@@ -794,6 +943,7 @@ const FeedPage: React.FC = () => {
   const navigate = useNavigate();
 
   const { activeAccount, metaConnected, accountResolving } = ctx;
+  const userId = (ctx as any).user?.id as string | undefined;
   const accountId = activeAccount?.id ?? null;
 
   const { decisions: realDecisions, isLoading: decisionsLoading, refetch: refetchDecisions } = useDecisions(accountId);
@@ -1190,7 +1340,7 @@ const FeedPage: React.FC = () => {
         ) : null}
 
         {/* Telegram connection card — shown when Meta is connected */}
-        {metaConnected && !isDemo && <TelegramCard />}
+        {metaConnected && !isDemo && userId && <TelegramCard userId={userId} />}
       </div>
     </div>
   );
