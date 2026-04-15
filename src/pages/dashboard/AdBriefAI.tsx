@@ -2226,10 +2226,11 @@ export default function AdBriefAI() {
           setSessionGoal("");
         }
       } catch { setSessionGoal(""); }
-      // Reset account-specific UI state
+      // Reset account-specific UI state — strict persona isolation
       setShowOnboardingWelcome(false);
       setOnboardingStep(null);
       proactiveFired.current = false;
+      demoMessagesRef.current = null; // clear stale demo messages from previous persona
       onboardingSessionDone.current = false; // new persona = check onboarding again
       // Load skill for the newly selected persona only
       const savedSkill = newId
@@ -3583,11 +3584,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       const isTrendReq = /roas.*tempo|ctr.*tempo|evolu|tendên|trend|histórico.*performance|30.*dias|semanas?.*performance|performance.*semana|como.*está.*indo/i.test(msg);
       if (isTrendReq && user?.id) {
         // Fire and forget — load snapshots and prepend trend block
-        (supabase as any).from("daily_snapshots")
+        const _trendQ = (supabase as any).from("daily_snapshots")
           .select("date,avg_ctr,avg_roas,total_spend")
           .eq("user_id", user.id)
           .order("date", { ascending: true })
-          .limit(30)
+          .limit(30);
+        // Strict persona isolation — only show trends for current persona
+        (selectedPersona?.id ? _trendQ.eq("persona_id", selectedPersona.id) : _trendQ.is("persona_id", null))
           .then((r: any) => {
             const rows = (r.data || []).filter((d: any) => d.date);
             if (rows.length >= 2) {
