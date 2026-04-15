@@ -47,7 +47,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       actions: [
         { id: "d1a", label: "Pausar anúncio", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d1b", label: "Abrir briefing", type: "neutral", requires_confirmation: false },
+        { id: "d1b", label: "Abrir briefing baseado neste padrão", type: "neutral", requires_confirmation: false },
       ],
       // #5: action recommendation hint
       action_recommendation: "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC",
@@ -167,7 +167,7 @@ function buildDemoDecisions(): Decision[] {
         { key: "CPA", value: "R$38", context: "baseline R$28", trend: "down" },
       ],
       actions: [
-        { id: "d4a", label: "Abrir briefing LP", type: "neutral", requires_confirmation: false },
+        { id: "d4a", label: "Abrir briefing baseado neste padrão", type: "neutral", requires_confirmation: false },
         { id: "d4b", label: "Ver detalhes", type: "constructive", requires_confirmation: false },
       ],
       action_recommendation: "Testar LP com: headline alinhado ao hook, prova social acima do fold, CTA mais direto",

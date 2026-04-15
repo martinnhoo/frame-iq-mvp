@@ -229,7 +229,30 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         )}
 
-        {/* Badge row: type + score + confidence + time */}
+        {/* #7: Confidence + basis — top line */}
+        <div style={{
+          fontSize: 10, color: 'rgba(255,255,255,0.30)',
+          marginBottom: 6,
+          display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{
+              width: 5, height: 5, borderRadius: '50%',
+              background: confCfg.dot, display: 'inline-block',
+            }} />
+            Confiança: {confCfg.label}
+          </span>
+          <span style={{ color: 'rgba(255,255,255,0.12)' }}>·</span>
+          <span>Baseado em {basisText.toLowerCase()}</span>
+          {createdAgo && (
+            <>
+              <span style={{ color: 'rgba(255,255,255,0.12)' }}>·</span>
+              <span style={{ color: 'rgba(255,255,255,0.20)' }}>{createdAgo}</span>
+            </>
+          )}
+        </div>
+
+        {/* Badge row: type + score + active status */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{
@@ -245,35 +268,16 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                 {Math.round(decision.score)}
               </span>
             )}
-            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <span style={{
-                width: 5, height: 5, borderRadius: '50%',
-                background: confCfg.dot, display: 'inline-block',
-              }} />
-              <span style={{ fontSize: 10, color: confCfg.text, fontWeight: 500 }}>
-                {confCfg.label}
-              </span>
-            </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {/* Active indicator */}
-            {isActiveAd && decision.status === 'pending' && (
-              <span style={{
-                fontSize: 9, color: 'rgba(229,62,62,0.65)',
-                fontWeight: 600,
-              }}>
-                Ativo
-              </span>
-            )}
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)' }}>
-              {basisText}
+          {/* #2: Active indicator — stronger */}
+          {isActiveAd && decision.status === 'pending' && (
+            <span style={{
+              fontSize: 9.5, color: 'rgba(229,62,62,0.70)',
+              fontWeight: 600,
+            }}>
+              Ativo — gasto contínuo
             </span>
-            {createdAgo && (
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)' }}>
-                {createdAgo}
-              </span>
-            )}
-          </div>
+          )}
         </div>
 
         {/* ═══ PART 9: HIERARCHY — Money FIRST ═══ */}
@@ -389,24 +393,25 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         )}
 
-        {/* PART 2: Action recommendation — visually distinct block */}
+        {/* Action recommendation — "decision box" */}
         {recItems.length > 0 && (
           <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            borderLeft: `2px solid ${cfg.border}`,
-            borderRadius: 2,
-            padding: '8px 10px',
+            background: 'rgba(255,255,255,0.035)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderLeft: `3px solid ${cfg.border}`,
+            borderRadius: 3,
+            padding: '10px 12px',
             marginBottom: 10,
           }}>
             <div style={{
-              fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)',
-              letterSpacing: '0.06em', marginBottom: 5,
+              fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)',
+              letterSpacing: '0.06em', marginBottom: 6,
             }}>
               PRÓXIMA AÇÃO RECOMENDADA
             </div>
             {recItems.map((item, i) => (
               <div key={i} style={{
-                fontSize: 11.5, color: 'rgba(255,255,255,0.55)',
+                fontSize: 11.5, color: 'rgba(255,255,255,0.60)',
                 lineHeight: 1.6, paddingLeft: 2,
               }}>
                 · {item}
@@ -454,13 +459,13 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
             <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.18)' }}>Sem ações</span>
           )}
 
-          {/* PART 7: Reactivation reassurance — always visible near action */}
+          {/* Reassurance — always visible near destructive actions */}
           {isDestructive && !actionFeedback && (
             <span style={{
-              fontSize: 10, color: 'rgba(255,255,255,0.18)',
+              fontSize: 10, color: 'rgba(255,255,255,0.20)',
               marginLeft: 4,
             }}>
-              Reversível
+              Pode ser desfeito a qualquer momento
             </span>
           )}
 

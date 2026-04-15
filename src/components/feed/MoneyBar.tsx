@@ -74,7 +74,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
                 fontSize: 10.5, fontWeight: 600, color: 'rgba(229,62,62,0.65)',
                 marginTop: 4,
               }}>
-                {urgentCount} {urgentCount === 1 ? 'decisão urgente pode' : 'decisões urgentes podem'} reduzir perdas agora
+                {urgentCount} {urgentCount === 1 ? 'decisão pode' : 'decisões podem'} reduzir perdas imediatamente
               </div>
             )}
           </div>
