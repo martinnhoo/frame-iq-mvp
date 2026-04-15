@@ -577,9 +577,29 @@ async function syncFast(accountId: string, token: string, metaAccountId?: string
     (ad) => ad.status === "ACTIVE" && ad.effective_status === "ACTIVE"
   );
 
-  // Fetch insights for all active ads
+  // Resolve ad UUIDs — we need them for ad_metrics
+  const adMetaIds = activeAds.map((a) => a.id);
+  const adUuidMap: Record<string, string> = {};
+  if (adMetaIds.length > 0) {
+    for (let i = 0; i < adMetaIds.length; i += 500) {
+      const chunk = adMetaIds.slice(i, i + 500);
+      const { data: adRows } = await supabase
+        .from("ads")
+        .select("id, meta_ad_id")
+        .eq("account_id", accountId)
+        .in("meta_ad_id", chunk);
+      for (const row of adRows || []) {
+        adUuidMap[row.meta_ad_id] = row.id;
+      }
+    }
+  }
+
+  // Only process ads that exist in our DB
+  const knownAds = activeAds.filter((ad) => adUuidMap[ad.id]);
+
+  // Fetch insights for all known active ads
   const adInsights: Record<string, MetaInsights[]> = {};
-  for (const ad of activeAds) {
+  for (const ad of knownAds) {
     const insights = await fetchInsights(ad.id, token, dateRange);
     if (insights.length > 0) {
       adInsights[ad.id] = insights;
@@ -587,7 +607,7 @@ async function syncFast(accountId: string, token: string, metaAccountId?: string
   }
 
   // Filter ads with spend > 0 and get top 50
-  const adsWithSpend = activeAds
+  const adsWithSpend = knownAds
     .filter((ad) => {
       const insights = adInsights[ad.id] || [];
       return insights.some((i) => parseFloat(i.spend || "0") > 0);
@@ -605,12 +625,12 @@ async function syncFast(accountId: string, token: string, metaAccountId?: string
     })
     .slice(0, 50);
 
-  // Upsert metrics
+  // Upsert metrics using UUID ad_id
   const metrics: unknown[] = [];
   for (const ad of adsWithSpend) {
     const insights = adInsights[ad.id] || [];
     for (const insight of insights) {
-      metrics.push(normalizeMetrics(insight, ad.id));
+      metrics.push(normalizeMetrics(insight, adUuidMap[ad.id], accountId));
     }
   }
 
@@ -640,94 +660,24 @@ async function syncFull(accountId: string, token: string, metaAccountId?: string
 
   const dateRange = getDateRange("full");
 
-  // Fetch all campaigns, ad sets, ads — use metaId for Meta API calls
+  // Fetch all campaigns, ad sets, ads
   const [campaigns, adSets, ads] = await Promise.all([
     fetchCampaigns(metaId, token),
     fetchAdSets(metaId, token),
-    fetchAds(metaId, token, true), // Include creatives
+    fetchAds(metaId, token, true),
   ]);
 
-  // Prepare upsert data
-  const campaignRecords = campaigns.map((c) => ({
-    id: c.id,
-    account_id: accountId,
-    name: c.name,
-    objective: c.objective,
-    status: c.status,
-    daily_budget: c.daily_budget ? dollarsToCentavos(c.daily_budget) : null,
-    lifetime_budget: c.lifetime_budget
-      ? dollarsToCentavos(c.lifetime_budget)
-      : null,
-  }));
+  // Upsert hierarchy and get ad UUID map
+  const adUuidMap = await upsertHierarchy(accountId, campaigns, adSets, ads);
 
-  const adSetRecords = adSets.map((s) => ({
-    id: s.id,
-    account_id: accountId,
-    campaign_id: s.campaign_id,
-    name: s.name,
-    status: s.status,
-    daily_budget: s.daily_budget ? dollarsToCentavos(s.daily_budget) : null,
-    targeting: s.targeting,
-    optimization_goal: s.optimization_goal,
-  }));
-
-  const adRecords = ads.map((a) => ({
-    id: a.id,
-    account_id: accountId,
-    adset_id: a.adset_id,
-    name: a.name,
-    status: a.status,
-    effective_status: a.effective_status,
-  }));
-
-  const creativeRecords = ads
-    .filter((a) => a.creative)
-    .map((a) => ({
-      id: a.creative!.id,
-      ad_id: a.id,
-      account_id: accountId,
-      thumbnail_url: a.creative!.thumbnail_url,
-      body: a.creative!.body,
-      title: a.creative!.title,
-      cta_type: a.creative!.call_to_action_type,
-    }));
-
-  // Fetch insights for all ads
+  // Fetch insights for all ads using Meta IDs, but store with UUID ad_ids
   const metrics: unknown[] = [];
   for (const ad of ads) {
+    if (!adUuidMap[ad.id]) continue;
     const insights = await fetchInsights(ad.id, token, dateRange);
     for (const insight of insights) {
-      metrics.push(normalizeMetrics(insight, ad.id));
+      metrics.push(normalizeMetrics(insight, adUuidMap[ad.id], accountId));
     }
-  }
-
-  // Upsert all tables
-  if (campaignRecords.length > 0) {
-    const { error } = await supabase
-      .from("campaigns")
-      .upsert(campaignRecords, { onConflict: "id" });
-    if (error) throw new Error(`Failed to upsert campaigns: ${error.message}`);
-  }
-
-  if (adSetRecords.length > 0) {
-    const { error } = await supabase
-      .from("ad_sets")
-      .upsert(adSetRecords, { onConflict: "id" });
-    if (error) throw new Error(`Failed to upsert ad_sets: ${error.message}`);
-  }
-
-  if (adRecords.length > 0) {
-    const { error } = await supabase
-      .from("ads")
-      .upsert(adRecords, { onConflict: "id" });
-    if (error) throw new Error(`Failed to upsert ads: ${error.message}`);
-  }
-
-  if (creativeRecords.length > 0) {
-    const { error } = await supabase
-      .from("creatives")
-      .upsert(creativeRecords, { onConflict: "id" });
-    if (error) throw new Error(`Failed to upsert creatives: ${error.message}`);
   }
 
   if (metrics.length > 0) {
@@ -758,94 +708,24 @@ async function syncDeep(accountId: string, token: string, metaAccountId?: string
 
   const dateRange = getDateRange("deep");
 
-  // Fetch all campaigns, ad sets, ads — use metaId for Meta API calls
+  // Fetch all campaigns, ad sets, ads
   const [campaigns, adSets, ads] = await Promise.all([
     fetchCampaigns(metaId, token),
     fetchAdSets(metaId, token),
-    fetchAds(metaId, token, true), // Include creatives
+    fetchAds(metaId, token, true),
   ]);
 
-  // Prepare upsert data (same as FULL)
-  const campaignRecords = campaigns.map((c) => ({
-    id: c.id,
-    account_id: accountId,
-    name: c.name,
-    objective: c.objective,
-    status: c.status,
-    daily_budget: c.daily_budget ? dollarsToCentavos(c.daily_budget) : null,
-    lifetime_budget: c.lifetime_budget
-      ? dollarsToCentavos(c.lifetime_budget)
-      : null,
-  }));
-
-  const adSetRecords = adSets.map((s) => ({
-    id: s.id,
-    account_id: accountId,
-    campaign_id: s.campaign_id,
-    name: s.name,
-    status: s.status,
-    daily_budget: s.daily_budget ? dollarsToCentavos(s.daily_budget) : null,
-    targeting: s.targeting,
-    optimization_goal: s.optimization_goal,
-  }));
-
-  const adRecords = ads.map((a) => ({
-    id: a.id,
-    account_id: accountId,
-    adset_id: a.adset_id,
-    name: a.name,
-    status: a.status,
-    effective_status: a.effective_status,
-  }));
-
-  const creativeRecords = ads
-    .filter((a) => a.creative)
-    .map((a) => ({
-      id: a.creative!.id,
-      ad_id: a.id,
-      account_id: accountId,
-      thumbnail_url: a.creative!.thumbnail_url,
-      body: a.creative!.body,
-      title: a.creative!.title,
-      cta_type: a.creative!.call_to_action_type,
-    }));
+  // Upsert hierarchy and get ad UUID map
+  const adUuidMap = await upsertHierarchy(accountId, campaigns, adSets, ads);
 
   // Fetch insights for all ads (30 days)
   const metrics: unknown[] = [];
   for (const ad of ads) {
+    if (!adUuidMap[ad.id]) continue;
     const insights = await fetchInsights(ad.id, token, dateRange);
     for (const insight of insights) {
-      metrics.push(normalizeMetrics(insight, ad.id));
+      metrics.push(normalizeMetrics(insight, adUuidMap[ad.id], accountId));
     }
-  }
-
-  // Upsert all tables
-  if (campaignRecords.length > 0) {
-    const { error } = await supabase
-      .from("campaigns")
-      .upsert(campaignRecords, { onConflict: "id" });
-    if (error) throw new Error(`Failed to upsert campaigns: ${error.message}`);
-  }
-
-  if (adSetRecords.length > 0) {
-    const { error } = await supabase
-      .from("ad_sets")
-      .upsert(adSetRecords, { onConflict: "id" });
-    if (error) throw new Error(`Failed to upsert ad_sets: ${error.message}`);
-  }
-
-  if (adRecords.length > 0) {
-    const { error } = await supabase
-      .from("ads")
-      .upsert(adRecords, { onConflict: "id" });
-    if (error) throw new Error(`Failed to upsert ads: ${error.message}`);
-  }
-
-  if (creativeRecords.length > 0) {
-    const { error } = await supabase
-      .from("creatives")
-      .upsert(creativeRecords, { onConflict: "id" });
-    if (error) throw new Error(`Failed to upsert creatives: ${error.message}`);
   }
 
   if (metrics.length > 0) {
@@ -883,7 +763,6 @@ async function syncDeep(accountId: string, token: string, metaAccountId?: string
       last_deep_sync_at: new Date().toISOString(),
       last_full_sync_at: new Date().toISOString(),
       total_ads_synced: ads.length,
-      maturity_level: "established", // Could be calculated based on account age/activity
     })
     .eq("id", accountId);
 
