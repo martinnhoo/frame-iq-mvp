@@ -3001,6 +3001,10 @@ export type Database = {
         }
         Returns: Json
       }
+      increment_money_tracker: {
+        Args: { p_account_id: string; p_amount: number; p_field: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
