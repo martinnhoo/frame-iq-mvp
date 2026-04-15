@@ -1077,9 +1077,10 @@ CTA: ${persona.cta_style}`;
                     setLoadingSaved(false);
                   });
               }}
-              className="p-2 rounded-lg bg-white/[0.06] text-white/40 hover:text-white transition-colors"
+              disabled={loadingSaved}
+              className="p-2 rounded-lg bg-white/[0.06] text-white/40 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className={`h-4 w-4${loadingSaved ? " animate-spin" : ""}`} />
             </button>
           </div>
         </div>

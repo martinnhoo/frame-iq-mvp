@@ -1850,17 +1850,20 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           </div>
         )}
 
-        {/* ── Loading skeleton ── */}
-        {busy && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, marginLeft: 12 }}>
-            {[0,1,2].map(i => (
-              <div key={i} style={{
-                width: 56, height: 22, borderRadius: 999,
-                background: "rgba(255,255,255,0.04)",
-                animation: `skPulse 1.4s ease-in-out ${i * 0.15}s infinite`,
-              }}/>
-            ))}
-          </div>
+        {/* ── Loading skeleton shimmer ── */}
+        {busy && metrics.length === 0 && (
+          <>
+            <style>{`@keyframes skPulse{0%,100%{opacity:0.3}50%{opacity:0.7}}`}</style>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, marginLeft: 12 }}>
+              {[0,1,2].map(i => (
+                <div key={i} style={{
+                  width: 56 + i * 8, height: 22, borderRadius: 999,
+                  background: "rgba(255,255,255,0.06)",
+                  animation: `skPulse 1.4s ease-in-out ${i * 0.15}s infinite`,
+                }}/>
+              ))}
+            </div>
+          </>
         )}
 
         {/* ── Error ── */}
@@ -2254,10 +2257,11 @@ export default function AdBriefAI() {
       proactiveFired.current = false;
       demoMessagesRef.current = null; // clear stale demo messages from previous persona
       onboardingSessionDone.current = false; // new persona = check onboarding again
-      // Kill any in-flight streaming animation from previous persona
+      // Kill any in-flight streaming/loading from previous persona
       setStreamingMsgId(null);
       if (streamTimerRef.current) { clearTimeout(streamTimerRef.current); streamTimerRef.current = null; }
       setLoading(false); // cancel any pending send spinner
+      setProactiveLoading(false); // cancel any pending proactive greeting
       // Load skill for the newly selected persona only
       const savedSkill = newId
         ? storage.get(`adbrief_skill_${newId}`, "") || null

@@ -121,15 +121,15 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
       setExecutingId(action.id);
       setActionFeedback(null);
       await onAction(decision.id, action);
-      let feedbackMsg = 'Ação executada';
+      let feedbackMsg = 'Ação enviada ao Meta';
       if (action.meta_api_action === 'pause_ad' || action.label.toLowerCase().includes('pausar')) {
         feedbackMsg = decision.impact_daily > 0
-          ? `Anúncio pausado · ≈${formatMoney(decision.impact_daily)}/dia em perdas interrompidas`
-          : 'Anúncio pausado';
+          ? `Pausa enviada · ≈${formatMoney(decision.impact_daily)}/dia em perdas serão interrompidas`
+          : 'Pausa enviada ao Meta';
       } else if (action.meta_api_action === 'increase_budget') {
-        feedbackMsg = 'Budget atualizado';
+        feedbackMsg = 'Ajuste de budget enviado ao Meta';
       } else if (action.meta_api_action === 'duplicate_ad') {
-        feedbackMsg = 'Anúncio duplicado';
+        feedbackMsg = 'Duplicação enviada ao Meta';
       }
       setActionFeedback({ type: 'success', msg: feedbackMsg });
       setTimeout(() => setActionFeedback(null), 5000);
