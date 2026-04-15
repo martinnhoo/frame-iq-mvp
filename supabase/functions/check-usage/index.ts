@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
 
     // Get profile
     const { data: profile } = await supabase
-      .from('profiles').select('plan, email, subscription_status').eq('id', user_id).single();
+      .from('profiles').select('plan, email, subscription_status').eq('id', user_id).maybeSingle();
 
     const plan = getEffectivePlan(profile?.plan, profile?.email);
     const isTrialing = profile?.subscription_status === 'trialing';
