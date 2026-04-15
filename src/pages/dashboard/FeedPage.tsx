@@ -256,9 +256,9 @@ function buildDemoMoneyTracker() {
 // STAGED SYNC OVERLAY — 4-step progression + final confirmation
 // ================================================================
 const SYNC_STEPS = [
-  'Conectando conta...',
-  'Importando campanhas...',
-  'Analisando performance...',
+  'Conectando ao Meta Ads...',
+  'Importando campanhas e anúncios...',
+  'Calculando métricas e baselines...',
   'Gerando decisões...',
 ];
 
@@ -898,7 +898,7 @@ const FeedPage: React.FC = () => {
   const tracker = isDemo ? buildDemoMoneyTracker() : realTracker;
   const isLoading = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
 
-  // ── Sync handler ──
+  // ── Sync handler: sync Meta data FIRST, then run decision engine ──
   const handleSync = useCallback(async () => {
     if (!accountId || syncing) return;
     dismissDemoToday();
@@ -907,13 +907,27 @@ const FeedPage: React.FC = () => {
     setSyncError(null);
 
     try {
-      const { error } = await supabase.functions.invoke('run-decision-engine', {
+      // Step 1: Import campaigns/ads/metrics from Meta API → Supabase tables
+      const { error: syncErr } = await supabase.functions.invoke('sync-meta-data', {
+        body: { account_id: accountId, sync_type: 'full' },
+      });
+      if (syncErr) {
+        console.error('Meta sync failed:', syncErr);
+        setSyncError('Falha ao importar dados do Meta. Tente novamente.');
+        setSyncing(false);
+        return;
+      }
+
+      // Step 2: Run decision engine on the freshly synced data
+      const { error: engineErr } = await supabase.functions.invoke('run-decision-engine', {
         body: { account_id: accountId },
       });
-      if (error) {
-        console.error('Engine invocation failed:', error);
+      if (engineErr) {
+        console.error('Engine invocation failed:', engineErr);
         setSyncError('Falha na análise. Tente novamente.');
       }
+
+      // Refetch decisions + ads (data changed)
       await refetchDecisions();
     } catch (err) {
       console.error('Sync error:', err);
