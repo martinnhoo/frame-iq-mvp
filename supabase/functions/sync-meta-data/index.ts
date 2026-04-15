@@ -398,20 +398,16 @@ function normalizeMetrics(insight: MetaInsights, adUuid: string, accountUuid: st
     );
   }
 
+  // ctr and roas are numeric columns — decimals OK
   const ctr =
     impressions > 0 ? Math.round((clicks / impressions) * 10000) / 100 : 0;
+  // cpc and cpa are integer columns — must be whole numbers (stored in centavos)
   const cpc =
-    clicks > 0 ? Math.round((spend / clicks) * 100) / 100 : 0;
-  const cpm =
-    impressions > 0
-      ? Math.round((spend / (impressions / 1000)) * 100) / 100
-      : 0;
+    clicks > 0 ? Math.round(spend / clicks) : 0;
   const roas =
     spend > 0 ? Math.round((actionValue / spend) * 10000) / 10000 : 0;
   const cpa =
-    conversions > 0
-      ? Math.round((spend / conversions) * 100) / 100
-      : 0;
+    conversions > 0 ? Math.round(spend / conversions) : 0;
 
   return {
     ad_id: adUuid,
