@@ -726,7 +726,12 @@ function sortAdsByStatus(ads: AdSummary[]): AdSummary[] {
 /** Collapsible ad list — shows 5 by default, expand/collapse when >5 */
 const AD_LIST_PREVIEW = 3; // show 3 ads collapsed, rest hidden
 
-const AdList: React.FC<{ ads: AdSummary[]; totalAds: number }> = ({ ads, totalAds }) => {
+const AdList: React.FC<{
+  ads: AdSummary[];
+  totalAds: number;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+}> = ({ ads, totalAds, onLoadMore, loadingMore }) => {
   const [open, setOpen] = useState(false);
   const sorted = sortAdsByStatus(ads);
 
@@ -739,12 +744,7 @@ const AdList: React.FC<{ ads: AdSummary[]; totalAds: number }> = ({ ads, totalAd
   const summaryParts = Object.entries(statusCounts).map(([label, count]) => `${count} ${label.toLowerCase()}`);
   const summaryText = summaryParts.join(', ') || `${totalAds} anúncios`;
 
-  // When open, show max 20 at a time (for 500+ ads, don't render all)
-  const PAGE_SIZE = 20;
-  const [page, setPage] = useState(1);
-  const visibleWhenOpen = sorted.slice(0, page * PAGE_SIZE);
-  const hasMorePages = sorted.length > page * PAGE_SIZE;
-  const remainingInDb = totalAds - sorted.length;
+  const hasMore = totalAds > ads.length;
 
   return (
     <div style={{ fontFamily: F }}>
@@ -777,7 +777,7 @@ const AdList: React.FC<{ ads: AdSummary[]; totalAds: number }> = ({ ads, totalAd
 
       <FeedExpandable open={open}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 2 }}>
-          {visibleWhenOpen.map((ad, i) => {
+          {sorted.map((ad, i) => {
             const st = getAdStatusDisplay(ad);
             return (
               <div key={ad.meta_ad_id || i} style={{
@@ -796,23 +796,24 @@ const AdList: React.FC<{ ads: AdSummary[]; totalAds: number }> = ({ ads, totalAd
               </div>
             );
           })}
-          {/* Load more button (pagination for 500+ ads) */}
-          {hasMorePages && (
-            <button onClick={(e) => { e.stopPropagation(); setPage(p => p + 1); }} style={{
-              background: 'none', border: 'none', padding: '6px 2px',
-              fontSize: 10.5, color: 'rgba(14,165,233,0.55)', fontWeight: 600,
-              cursor: 'pointer', fontFamily: F, textAlign: 'left',
-              transition: 'color 0.1s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.color = 'rgba(14,165,233,0.75)'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(14,165,233,0.55)'; }}>
-              + Carregar mais {Math.min(PAGE_SIZE, sorted.length - page * PAGE_SIZE)} anúncios ▾
+          {/* Load more from DB */}
+          {hasMore && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onLoadMore?.(); }}
+              disabled={loadingMore}
+              style={{
+                background: 'none', border: 'none', padding: '6px 2px',
+                fontSize: 10.5, color: 'rgba(14,165,233,0.55)', fontWeight: 600,
+                cursor: loadingMore ? 'default' : 'pointer', fontFamily: F, textAlign: 'left',
+                transition: 'color 0.1s', opacity: loadingMore ? 0.5 : 1,
+              }}
+              onMouseEnter={e => { if (!loadingMore) e.currentTarget.style.color = 'rgba(14,165,233,0.75)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(14,165,233,0.55)'; }}
+            >
+              {loadingMore
+                ? 'Carregando...'
+                : `+ Carregar mais ${Math.min(40, totalAds - ads.length)} anúncios`}
             </button>
-          )}
-          {remainingInDb > 0 && (
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.20)', padding: '2px 2px' }}>
-              + {remainingInDb} não carregados
-            </span>
           )}
         </div>
       </FeedExpandable>
@@ -1054,7 +1055,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string }> = ({ totalAds, ads, periodLabel, metaAccountId }) => {
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean }> = ({ totalAds, ads, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds }) => {
   const navigate = useNavigate();
   const [oppHov, setOppHov] = useState(false);
   return (
@@ -1095,7 +1096,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         </div>
 
         {/* Ad list — sorted by status, collapsible when >5 */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} />}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE — data-driven, not generic ── */}
@@ -1235,7 +1236,7 @@ const PerformanceSummary: React.FC<{
         )}
 
         {/* Ad list — sorted by status, collapsible when >5 */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} />}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE — data-driven ── */}
@@ -1463,25 +1464,36 @@ const FeedPage: React.FC = () => {
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
 
-  // Ads fetch — refetchable
-  const fetchAds = useCallback(async () => {
+  // Ads fetch — paginated, refetchable
+  const ADS_PAGE_SIZE = 40;
+  const [adsLoadingMore, setAdsLoadingMore] = useState(false);
+
+  const fetchAds = useCallback(async (offset = 0, append = false) => {
     if (!accountId) {
       setUserAds([]); setTotalAdCount(0); setAdsLoaded(true);
       return;
     }
+    if (offset > 0) setAdsLoadingMore(true);
     try {
       const { data, count } = await (supabase
         .from('ads' as any)
         .select('name, meta_ad_id, status, effective_status, ad_set:ad_sets(name, campaign:campaigns(name))', { count: 'exact' })
         .eq('account_id', accountId)
-        .limit(20) as any);
-      setUserAds((data || []) as AdSummary[]);
-      setTotalAdCount(count ?? (data?.length ?? 0));
+        .range(offset, offset + ADS_PAGE_SIZE - 1) as any);
+      const newAds = (data || []) as AdSummary[];
+      setUserAds(prev => append ? [...prev, ...newAds] : newAds);
+      setTotalAdCount(count ?? (append ? userAds.length + newAds.length : newAds.length));
       setAdsLoaded(true);
     } catch {
       setAdsLoaded(true);
+    } finally {
+      setAdsLoadingMore(false);
     }
   }, [accountId]);
+
+  const loadMoreAds = useCallback(() => {
+    fetchAds(userAds.length, true);
+  }, [fetchAds, userAds.length]);
 
   useEffect(() => { fetchAds(); }, [fetchAds]);
 
@@ -1869,7 +1881,7 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'few-data' ? (
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
-          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} />
+          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} />
         ) : null}
 
         {/* Intelligence — collapsible, always available */}

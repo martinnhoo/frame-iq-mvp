@@ -386,21 +386,24 @@ serve(async (req) => {
         }
       }
 
-      // 2. Join creative metadata where available
+      // 2. Join creative metadata where available (batch in chunks of 80 for URL length safety)
       const adIds = [...adMap.keys()].filter(Boolean);
       let creativeMap: Record<string, any> = {};
       if (adIds.length > 0) {
-        // Fetch creatives by matching ad IDs through the ads table
+        const CHUNK_SIZE = 80;
         try {
-          const creativesRes = await supaFetch(
-            `creatives?select=id,format,has_hook,hook_timing_ms,text_density,dominant_colors` +
-              `&id=in.(${adIds.slice(0, 100).map((id) => `"${id}"`).join(",")})` +
-              `&limit=100`,
-          );
-          const creatives = await creativesRes.json();
-          if (Array.isArray(creatives)) {
-            for (const c of creatives) {
-              creativeMap[c.id] = c;
+          for (let i = 0; i < adIds.length; i += CHUNK_SIZE) {
+            const chunk = adIds.slice(i, i + CHUNK_SIZE);
+            const creativesRes = await supaFetch(
+              `creatives?select=id,format,has_hook,hook_timing_ms,text_density,dominant_colors` +
+                `&id=in.(${chunk.map((id) => `"${id}"`).join(",")})` +
+                `&limit=${CHUNK_SIZE}`,
+            );
+            const creatives = await creativesRes.json();
+            if (Array.isArray(creatives)) {
+              for (const c of creatives) {
+                creativeMap[c.id] = c;
+              }
             }
           }
         } catch {
