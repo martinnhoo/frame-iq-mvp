@@ -386,47 +386,28 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
         background: '#0F141A', border: '1px solid rgba(45,155,110,0.12)',
         borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 8,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
             background: 'rgba(45,155,110,0.06)', border: '1px solid rgba(45,155,110,0.12)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <TelegramIcon size={20} />
+            <TelegramIcon size={18} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: '#E6EDF3' }}>Telegram conectado</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3' }}>Telegram</span>
               <span style={{
-                width: 6, height: 6, borderRadius: '50%', background: '#2D9B6E',
+                width: 5, height: 5, borderRadius: '50%', background: '#2D9B6E',
                 boxShadow: '0 0 4px rgba(45,155,110,0.5)',
               }} />
+              <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.50)' }}>
+                {conn.telegram_username ? `@${conn.telegram_username}` : 'conectado'}
+              </span>
             </div>
-            <div style={{ fontSize: 11, color: '#8B949E', marginTop: 1 }}>
-              {conn.telegram_username ? `@${conn.telegram_username}` : 'Conta vinculada'}
-              {' · @AdBriefAlertsBot'}
+            <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)', marginTop: 2 }}>
+              Alertas: perdas · escala · ações recomendadas
             </div>
-          </div>
-        </div>
-        {/* What's active — sell the feature */}
-        <div style={{
-          background: 'rgba(230,237,243,0.02)', border: '1px solid rgba(230,237,243,0.04)',
-          borderRadius: 3, padding: '10px 12px',
-        }}>
-          <div style={{
-            fontSize: 9.5, fontWeight: 700, color: 'rgba(139,148,158,0.45)',
-            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 7,
-          }}>
-            Alertas ativos
-          </div>
-          <div style={{ fontSize: 11, color: 'rgba(230,237,243,0.55)', lineHeight: 1.7 }}>
-            <div style={{ marginBottom: 1 }}>Você será notificado imediatamente quando:</div>
-            <div style={{ marginBottom: 1, paddingLeft: 2 }}>• perdas forem detectadas</div>
-            <div style={{ marginBottom: 1, paddingLeft: 2 }}>• oportunidades de escala surgirem</div>
-            <div style={{ paddingLeft: 2 }}>• ações forem recomendadas</div>
-          </div>
-          <div style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)', marginTop: 6 }}>
-            Controle direto via Telegram · pausar anúncios, ver status, receber resumos
           </div>
         </div>
       </div>
@@ -1282,7 +1263,12 @@ const FeedPage: React.FC = () => {
   };
 
   // ── State detection ──
-  const pendingDecisions = isDemo ? decisions.filter(d => d.status === 'pending') : decisions.filter(d => d.status === 'pending');
+  const pendingDecisions = (isDemo ? decisions : decisions).filter(d => {
+    if (d.status !== 'pending') return false;
+    // Remove onboarding/placeholder insights when account already has real ads
+    if (totalAdCount > 0 && d.type === 'insight' && !d.ad_id && d.impact_daily === 0) return false;
+    return true;
+  });
   const hasKills = pendingDecisions.some(d => d.type === 'kill');
   const hasCritical = pendingDecisions.some(d => d.type === 'kill' || d.type === 'fix');
   const urgentCount = pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length;
