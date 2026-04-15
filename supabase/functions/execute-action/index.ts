@@ -211,6 +211,7 @@ async function executeAction(
       action_type,
       target_type,
       target_meta_id,
+      target_name: (previousState.name as string) || decisionData.headline || null,
       previous_state: previousState,
       new_state: null,
       result: "pending",

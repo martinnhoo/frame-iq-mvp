@@ -124,20 +124,25 @@ const HistoryPage: React.FC = () => {
     }
   };
 
-  const timeAgo = (dateStr: string): string => {
-    const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-    const intervals: [string, number][] = [
-      ['ano', 31536000], ['mês', 2592000], ['semana', 604800],
-      ['dia', 86400], ['hora', 3600], ['minuto', 60],
-    ];
-    for (const [name, secs] of intervals) {
-      const interval = Math.floor(seconds / secs);
-      if (interval >= 1) {
-        const plural = interval > 1 ? (name === 'mês' ? 'es' : 's') : '';
-        return `${interval} ${name}${plural} atrás`;
-      }
-    }
-    return 'Agora';
+  const formatDate = (dateStr: string): string => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    if (diffMin < 1) return `Agora · ${time}`;
+    if (diffMin < 60) return `${diffMin}min atrás · ${time}`;
+
+    const isToday = d.toDateString() === now.toDateString();
+    const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+
+    if (isToday) return `Hoje · ${time}`;
+    if (isYesterday) return `Ontem · ${time}`;
+
+    const date = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+    return `${date} · ${time}`;
   };
 
   const formatCentavos = (v: number) => `R$ ${(v / 100).toFixed(2)}`;
@@ -284,7 +289,9 @@ const HistoryPage: React.FC = () => {
                     </div>
 
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '0 0 10px' }}>
-                      {getActionLabel(entry.action_type)} · {timeAgo(entry.executed_at)}
+                      {getActionLabel(entry.action_type)}
+                      {entry.target_type && ` · ${entry.target_type === 'campaign' ? 'Campanha' : entry.target_type === 'adset' ? 'Conjunto' : 'Anúncio'}`}
+                      {' · '}{formatDate(entry.executed_at)}
                     </p>
 
                     {/* Impact row */}
