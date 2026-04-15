@@ -306,6 +306,8 @@ const FeedPage: React.FC = () => {
   const { executeAction } = useActions();
 
   const [isDemo, setIsDemo] = useState(false);
+  // Stable "last analysis" minutes — changes only on mount (#11)
+  const [lastAnalysisMin] = useState(() => Math.floor(Math.random() * 4) + 2);
   const hasRealData = realDecisions.length > 0;
   const showDemo = metaConnected && !hasRealData && !decisionsLoading && !trackerLoading && !accountResolving;
 
@@ -389,8 +391,6 @@ const FeedPage: React.FC = () => {
   const pendingDecisions = decisions.filter(d => d.status === 'pending');
   const hasKills = pendingDecisions.some(d => d.type === 'kill');
   const urgentCount = pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length;
-  // Stable "last analysis" minutes — changes only on mount
-  const [lastAnalysisMin] = useState(() => Math.floor(Math.random() * 4) + 2);
 
   return (
     <div style={{ minHeight: '100vh', background: '#08090b', padding: '24px 20px' }}>
