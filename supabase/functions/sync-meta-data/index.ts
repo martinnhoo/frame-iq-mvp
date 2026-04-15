@@ -373,13 +373,12 @@ async function fetchInsights(
 }
 
 // Process and normalize metrics
-function normalizeMetrics(insight: MetaInsights, adId: string) {
+function normalizeMetrics(insight: MetaInsights, adUuid: string, accountUuid: string) {
   const spend = dollarsToCentavos(insight.spend || "0");
   const impressions = parseInt(insight.impressions || "0", 10);
   const clicks = parseInt(insight.clicks || "0", 10);
   const reach = parseInt(insight.reach || "0", 10);
 
-  // Parse actions and action_values
   let conversions = 0;
   let actionValue = 0;
 
@@ -399,7 +398,6 @@ function normalizeMetrics(insight: MetaInsights, adId: string) {
     );
   }
 
-  // Calculate derived metrics
   const ctr =
     impressions > 0 ? Math.round((clicks / impressions) * 10000) / 100 : 0;
   const cpc =
@@ -416,21 +414,154 @@ function normalizeMetrics(insight: MetaInsights, adId: string) {
       : 0;
 
   return {
-    ad_id: adId,
+    ad_id: adUuid,
+    account_id: accountUuid,
     date: insight.date_start,
     spend,
     impressions,
     clicks,
     conversions,
-    action_value: actionValue,
+    revenue: actionValue,
     ctr,
     cpc,
-    cpm,
     roas,
     cpa,
     frequency: parseFloat(insight.frequency || "0"),
     reach,
   };
+}
+
+// ── Shared upsert logic for campaigns/ad_sets/ads/creatives ──────────────────
+// Upserts using meta_*_id columns and resolves UUID FKs for dependent tables.
+async function upsertHierarchy(
+  accountId: string,
+  campaigns: MetaCampaign[],
+  adSets: MetaAdSet[],
+  ads: MetaAd[],
+) {
+  // 1. Upsert campaigns
+  if (campaigns.length > 0) {
+    const campaignRecords = campaigns.map((c) => ({
+      account_id: accountId,
+      meta_campaign_id: c.id,
+      name: c.name,
+      objective: c.objective || null,
+      status: c.status,
+      daily_budget: c.daily_budget ? dollarsToCentavos(c.daily_budget) : null,
+      lifetime_budget: c.lifetime_budget ? dollarsToCentavos(c.lifetime_budget) : null,
+    }));
+    const { error } = await supabase
+      .from("campaigns")
+      .upsert(campaignRecords, { onConflict: "account_id,meta_campaign_id" });
+    if (error) throw new Error(`Failed to upsert campaigns: ${error.message}`);
+  }
+
+  // 2. Resolve campaign UUIDs for ad_sets
+  const campaignMetaIds = [...new Set(adSets.map((s) => s.campaign_id))];
+  const campaignUuidMap: Record<string, string> = {};
+  if (campaignMetaIds.length > 0) {
+    const { data: campRows } = await supabase
+      .from("campaigns")
+      .select("id, meta_campaign_id")
+      .eq("account_id", accountId)
+      .in("meta_campaign_id", campaignMetaIds);
+    for (const row of campRows || []) {
+      campaignUuidMap[row.meta_campaign_id] = row.id;
+    }
+  }
+
+  // 3. Upsert ad_sets
+  if (adSets.length > 0) {
+    const adSetRecords = adSets
+      .filter((s) => campaignUuidMap[s.campaign_id]) // skip if campaign not found
+      .map((s) => ({
+        account_id: accountId,
+        meta_adset_id: s.id,
+        campaign_id: campaignUuidMap[s.campaign_id],
+        name: s.name,
+        status: s.status,
+        daily_budget: s.daily_budget ? dollarsToCentavos(s.daily_budget) : null,
+        targeting: s.targeting || {},
+        optimization_goal: s.optimization_goal || null,
+      }));
+    if (adSetRecords.length > 0) {
+      const { error } = await supabase
+        .from("ad_sets")
+        .upsert(adSetRecords, { onConflict: "account_id,meta_adset_id" });
+      if (error) throw new Error(`Failed to upsert ad_sets: ${error.message}`);
+    }
+  }
+
+  // 4. Resolve adset UUIDs for ads
+  const adsetMetaIds = [...new Set(ads.map((a) => a.adset_id))];
+  const adsetUuidMap: Record<string, string> = {};
+  if (adsetMetaIds.length > 0) {
+    const { data: adsetRows } = await supabase
+      .from("ad_sets")
+      .select("id, meta_adset_id")
+      .eq("account_id", accountId)
+      .in("meta_adset_id", adsetMetaIds);
+    for (const row of adsetRows || []) {
+      adsetUuidMap[row.meta_adset_id] = row.id;
+    }
+  }
+
+  // 5. Upsert ads
+  if (ads.length > 0) {
+    const adRecords = ads
+      .filter((a) => adsetUuidMap[a.adset_id])
+      .map((a) => ({
+        account_id: accountId,
+        meta_ad_id: a.id,
+        ad_set_id: adsetUuidMap[a.adset_id],
+        name: a.name,
+        status: a.status,
+        effective_status: a.effective_status,
+      }));
+    if (adRecords.length > 0) {
+      const { error } = await supabase
+        .from("ads")
+        .upsert(adRecords, { onConflict: "account_id,meta_ad_id" });
+      if (error) throw new Error(`Failed to upsert ads: ${error.message}`);
+    }
+  }
+
+  // 6. Resolve ad UUIDs (meta_ad_id → UUID) for metrics/creatives
+  const adMetaIds = ads.map((a) => a.id);
+  const adUuidMap: Record<string, string> = {};
+  if (adMetaIds.length > 0) {
+    // Batch in chunks of 500
+    for (let i = 0; i < adMetaIds.length; i += 500) {
+      const chunk = adMetaIds.slice(i, i + 500);
+      const { data: adRows } = await supabase
+        .from("ads")
+        .select("id, meta_ad_id")
+        .eq("account_id", accountId)
+        .in("meta_ad_id", chunk);
+      for (const row of adRows || []) {
+        adUuidMap[row.meta_ad_id] = row.id;
+      }
+    }
+  }
+
+  // 7. Upsert creatives (linked to ads via creative_id FK)
+  const creativeAds = ads.filter((a) => a.creative && adUuidMap[a.id]);
+  if (creativeAds.length > 0) {
+    const creativeRecords = creativeAds.map((a) => ({
+      account_id: accountId,
+      meta_creative_id: a.creative!.id,
+      thumbnail_url: a.creative!.thumbnail_url || null,
+      body: a.creative!.body || null,
+      title: a.creative!.title || null,
+      cta_type: a.creative!.call_to_action_type || null,
+    }));
+    const { error } = await supabase
+      .from("creatives")
+      .upsert(creativeRecords, { onConflict: "id", ignoreDuplicates: true });
+    if (error) console.error(`Creatives upsert warning: ${error.message}`);
+  }
+
+  return adUuidMap;
 }
 
 // Fast sync: active ads with spend > 0, last 7 days, top 50
