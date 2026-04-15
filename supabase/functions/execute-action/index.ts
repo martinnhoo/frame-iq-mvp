@@ -75,7 +75,11 @@ async function snapshotAdState(
   targetType: string,
   metaAccessToken: string
 ): Promise<Record<string, unknown>> {
-  const url = `https://graph.facebook.com/${metaGraphApiVersion}/${adId}?fields=status,daily_budget,name&access_token=${metaAccessToken}`;
+  // daily_budget only exists on campaigns and adsets, NOT on individual ads
+  const fields = targetType === "ad"
+    ? "status,name"
+    : "status,daily_budget,name";
+  const url = `https://graph.facebook.com/${metaGraphApiVersion}/${adId}?fields=${fields}&access_token=${metaAccessToken}`;
 
   const response = await fetch(url);
   const data = await response.json();
