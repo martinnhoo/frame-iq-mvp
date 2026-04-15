@@ -287,6 +287,9 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
 
   const personaId = selectedPersona?.id || null;
 
+  // Clear stale error/state from previous persona
+  useEffect(() => { setSyncError(null); setSyncing(null); setFilter("all"); setExpanded(null); }, [personaId]);
+
   const load = useCallback(async () => {
     if (!user?.id || !personaId) { setLoading(false); return; }
     const loadPersonaId = personaId;

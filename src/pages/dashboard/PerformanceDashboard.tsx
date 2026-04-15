@@ -309,6 +309,7 @@ export default function PerformanceDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const loadingRef = useRef(false);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date|null>(null);
   const [visibleSections, setVisibleSections] = useState<Set<SectionKey>>(new Set(["cards","trend"]));
@@ -317,6 +318,8 @@ export default function PerformanceDashboard() {
 
   const load = useCallback(async(showSpinner=false)=>{
     if(!user||!selectedPersona) { setLoading(false); return; }
+    if(loadingRef.current) return; // debounce: skip if already in-flight
+    loadingRef.current = true;
     const loadPersonaId = selectedPersona.id;
     if(showSpinner) setRefreshing(true); else setLoading(true);
     setError("");
@@ -331,7 +334,7 @@ export default function PerformanceDashboard() {
     } catch(e){
       const msg=String(e);
       setError(msg.includes("CORS")||msg.includes("fetch")||msg.includes("ERR_")?"__connection__":msg);
-    } finally { setLoading(false); setRefreshing(false); }
+    } finally { setLoading(false); setRefreshing(false); loadingRef.current = false; }
   },[user,selectedPersona,dateRange]);
 
   useEffect(()=>{ load(); },[load]);

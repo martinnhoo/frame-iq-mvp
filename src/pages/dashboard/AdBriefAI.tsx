@@ -2168,6 +2168,7 @@ export default function AdBriefAI() {
   const [contextReady,setContextReady]=useState(false);
   const [context,setContext]=useState("");
   const [connections,setConnections]=useState<string[]>([]);
+  const [connectionsLoading,setConnectionsLoading]=useState(false);
   const [feedback,setFeedback]=useState<Record<number,"like"|"dislike"|null>>({});
   const [copiedId,setCopiedId]=useState<number|null>(null);
   const [activeTool,setActiveTool]=useState<string|null>(null);
@@ -2253,6 +2254,10 @@ export default function AdBriefAI() {
       proactiveFired.current = false;
       demoMessagesRef.current = null; // clear stale demo messages from previous persona
       onboardingSessionDone.current = false; // new persona = check onboarding again
+      // Kill any in-flight streaming animation from previous persona
+      setStreamingMsgId(null);
+      if (streamTimerRef.current) { clearTimeout(streamTimerRef.current); streamTimerRef.current = null; }
+      setLoading(false); // cancel any pending send spinner
       // Load skill for the newly selected persona only
       const savedSkill = newId
         ? storage.get(`adbrief_skill_${newId}`, "") || null
@@ -2269,21 +2274,25 @@ export default function AdBriefAI() {
   // Load connections — runs on persona change AND when tab becomes visible
   // (user may have connected/disconnected in Accounts tab)
   const loadConnections = React.useCallback(() => {
-    if(!user?.id) { setConnections([]); return; }
+    if(!user?.id) { setConnections([]); setConnectionsLoading(false); return; }
     const pid = selectedPersona?.id || null;
-    if(!pid) { setConnections([]); return; }
+    if(!pid) { setConnections([]); setConnectionsLoading(false); return; }
+    setConnectionsLoading(true);
     supabase.functions.invoke("meta-oauth", {
       body: { action: "get_connections", user_id: user.id }
     }).then(({ data }: any) => {
+      // Context guard: discard if persona changed during fetch
+      if ((selectedPersona?.id || null) !== pid) return;
       const all = (data?.connections || []) as any[];
       const scoped = all.filter((c: any) => c.persona_id === pid && c.status === "active");
       setConnections(scoped.map((c: any) => c.platform));
+      setConnectionsLoading(false);
       // Save ad_accounts list to localStorage for account switcher in LivePanel
       const metaConn = scoped.find((c: any) => c.platform === "meta");
       if (metaConn?.ad_accounts?.length) {
         storage.setJSON(`meta_accounts_${pid}`, metaConn.ad_accounts);
       }
-    }).catch(() => setConnections([]));
+    }).catch(() => { if ((selectedPersona?.id || null) === pid) { setConnections([]); setConnectionsLoading(false); } });
   }, [user?.id, selectedPersona?.id]);
 
   useEffect(() => {
@@ -3399,7 +3408,7 @@ Return ONLY this JSON (no markdown, no other text):
 }`;
       setChatImage(null);
     }
-    if(!msg||loading)return;
+    if(!msg||loading||!contextReady)return;
     // Context lock: snapshot persona at send time to block stale responses
     const sendPersonaId = selectedPersona?.id || null;
     // userText = what shows in the chat bubble (clean, no AI prefixes)
@@ -3920,8 +3929,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:80,background:"linear-gradient(to top,var(--bg-main),transparent)"}}/>
       </div>
 
-      {/* ── LivePanel compact bar — show when Meta is connected ── */}
-      {connections.includes("meta") && (
+      {/* ── LivePanel compact bar — show when Meta is connected (or loading connections) ── */}
+      {(connections.includes("meta") || connectionsLoading) && (
         <LivePanel user={user} selectedPersona={selectedPersona} connections={connections} lang={lang} onSend={send} />
       )}
 

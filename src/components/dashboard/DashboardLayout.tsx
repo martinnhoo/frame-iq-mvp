@@ -364,13 +364,27 @@ export default function DashboardLayout() {
         if (credited) {
           toast.success(capMsg, { duration: 5000 });
         } else {
-          // Webhook delayed — warn user instead of fake success
+          // Webhook delayed — warn user, then background retry for 2 more minutes
           const delayMsg = lang === "es"
             ? "Pago recibido · los créditos aparecerán en breve"
             : lang === "en"
             ? "Payment received · credits will appear shortly"
             : "Pagamento recebido · créditos aparecerão em breve";
           toast.info(delayMsg, { duration: 8000 });
+          // Background retry: poll every 10s for 2 more minutes
+          (async () => {
+            for (let j = 0; j < 12; j++) {
+              await new Promise(r => setTimeout(r, 10000));
+              try {
+                const { data: bg } = await supabase.functions.invoke("check-usage", { body: { user_id: session.user.id } });
+                if (bg?.credits?.bonus > baselineBonus) {
+                  window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
+                  toast.success(capMsg, { duration: 5000 });
+                  return;
+                }
+              } catch { /* continue */ }
+            }
+          })();
         }
         window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
       }

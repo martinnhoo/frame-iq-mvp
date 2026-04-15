@@ -183,6 +183,9 @@ export default function CampaignBuilder() {
   const debRef = useRef<any>(null);
   const pc = accent; // google color removed
 
+  // Reset form when persona changes — prevent stale draft from wrong persona
+  useEffect(() => { setForm(DFLT); setError(""); setSuccess(false); setConnsReady(false); }, [persona?.id]);
+
   const set = (k: keyof Form, v: any) => {
     setForm(f=>({...f,[k]:v}));
     clearTimeout(debRef.current);
