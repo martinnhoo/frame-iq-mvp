@@ -6,7 +6,7 @@
  * If the v2 `ad_accounts` row doesn't exist, it auto-creates it by calling
  * an upsert so the decision engine can reference it.
  */
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ActiveAccount {
@@ -48,6 +48,8 @@ export function useActiveAccount(
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const prevAccountRef = useRef<string | null>(null);
+  const handlingEventRef = useRef(false);
 
   const resolve = useCallback(async () => {
     if (!userId || !personaId) {
@@ -111,14 +113,25 @@ export function useActiveAccount(
         return;
       }
 
-      setAccount({
+      const newAccount: ActiveAccount = {
         id: v2AccountId,
         metaAccountId: selectedMeta.id,
         name: selectedMeta.name || selectedMeta.id,
         currency: selectedMeta.currency || 'BRL',
         accessToken: metaConn.access_token,
         allAccounts: adAccounts,
-      });
+      };
+      setAccount(newAccount);
+
+      // Dispatch event when the resolved account actually changed
+      // so all listening components re-fetch their data.
+      // Skip if we're already handling an incoming event (avoid infinite loop).
+      if (prevAccountRef.current !== null && prevAccountRef.current !== v2AccountId && !handlingEventRef.current) {
+        window.dispatchEvent(new CustomEvent('meta-account-changed', {
+          detail: { personaId, accountId: selectedMeta.id },
+        }));
+      }
+      prevAccountRef.current = v2AccountId;
     } catch (err) {
       console.error('[useActiveAccount]', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -132,9 +145,13 @@ export function useActiveAccount(
     resolve();
   }, [resolve]);
 
-  // Listen for account changes from AccountsPage
+  // Listen for account changes from AccountsPage (e.g. switchAccount from another component)
+  // Use handlingEventRef to avoid re-dispatching the event when we're already handling one
   useEffect(() => {
-    const handler = () => { resolve(); };
+    const handler = () => {
+      handlingEventRef.current = true;
+      resolve().finally(() => { handlingEventRef.current = false; });
+    };
     window.addEventListener('meta-account-changed', handler);
     return () => window.removeEventListener('meta-account-changed', handler);
   }, [resolve]);

@@ -288,7 +288,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
         .eq("user_id", user.id)
         .order("date", { ascending: false }).limit(7),
     ]).then(([patterns, memory, aiProfile, snaps]) => {
-      setIntel({ patterns: patterns.data || [], memory: memory.data || [], profile: aiProfile.data, snaps: snaps.data || [] });
+      // Normalize CTR: old data stored as percentage (>1), new data as decimal
+      const normSnaps = (snaps.data || []).map((s: any) => ({ ...s, avg_ctr: s.avg_ctr > 1 ? s.avg_ctr / 100 : s.avg_ctr }));
+      setIntel({ patterns: patterns.data || [], memory: memory.data || [], profile: aiProfile.data, snaps: normSnaps });
       // Load existing instructions
       const rawNotes = aiProfile.data?.pain_point as string | null;
       if (rawNotes) {

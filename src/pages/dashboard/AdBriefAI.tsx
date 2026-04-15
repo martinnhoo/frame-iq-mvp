@@ -1141,9 +1141,9 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   return (
     <div style={{
       width: "100%", maxWidth: 600, margin: "auto",
-      padding: "clamp(10px,2vw,16px) clamp(16px,4vw,28px) 16px",
+      padding: "clamp(16px,3vw,24px) clamp(16px,4vw,28px) 24px",
       display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-      marginTop: "-4%",
+      marginTop: "clamp(8px, 2vw, 16px)",
     }}>
       <style>{`
         @keyframes pb-fadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
@@ -2357,8 +2357,17 @@ export default function AdBriefAI() {
           .limit(5);
         return pid ? q.eq("persona_id", pid) : q.is("persona_id", null);
       };
+      // Normalize CTR from daily_snapshots — old data stored as percentage (7.818),
+      // new data (after fix) stored as decimal (0.07818). If >1, it's percentage → divide by 100.
+      const normSnap = (s: any) => {
+        if (!s) return s;
+        if (s.avg_ctr > 1) s.avg_ctr = s.avg_ctr / 100;
+        if (s.yesterday_ctr > 1) s.yesterday_ctr = s.yesterday_ctr / 100;
+        if (Array.isArray(s.top_ads)) s.top_ads = s.top_ads.map((a: any) => ({ ...a, ctr: a.ctr > 1 ? a.ctr / 100 : a.ctr }));
+        return s;
+      };
       buildSnapQuery().then((r:any)=>{
-          const snap = (r.data || [])[0] || null;
+          const snap = normSnap((r.data || [])[0] || null);
           const hasMetaConn = connections.includes("meta");
           const hasGoogleConn = false /* google disabled */;
           const hasAnyConn = hasMetaConn || hasGoogleConn;
@@ -2368,7 +2377,7 @@ export default function AdBriefAI() {
             supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id,persona_id:pid}})
               .then(()=>{
                 buildSnapQuery().then((r2:any)=>{
-                    const snap2 = (r2.data || [])[0] || null;
+                    const snap2 = normSnap((r2.data || [])[0] || null);
                     if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn);
                   })
                   .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
@@ -2434,7 +2443,8 @@ export default function AdBriefAI() {
       entries.forEach((e:any)=>{if(e.editor){if(!byEd[e.editor])byEd[e.editor]={ctr:[],roas:[],n:0};byEd[e.editor].n++;if(e.ctr)byEd[e.editor].ctr.push(e.ctr);if(e.roas)byEd[e.editor].roas.push(e.roas);}});
       const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
       // Recent snapshots — already filtered server-side
-      const snaps=(snapRes.data||[]) as any[];
+      // Normalize CTR: old data stored as percentage (>1), new data as decimal (<1)
+      const snaps=((snapRes.data||[]) as any[]).map((s:any)=>({...s, avg_ctr: s.avg_ctr > 1 ? s.avg_ctr / 100 : s.avg_ctr}));
       const memories=(memoriesRes.data||[]) as any[];
       const memoriesStr = memories.length
         ? memories.map((m:any) => `[${m.memory_type}] ${m.memory_text}`).join("\n")
@@ -3611,7 +3621,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 title: lang === "pt" ? "Evolução da conta" : lang === "es" ? "Evolución de cuenta" : "Account evolution",
                 trend: {
                   dates: rows.map((d: any) => d.date.slice(5)), // MM-DD
-                  ctr: rows.map((d: any) => d.avg_ctr || 0),
+                  ctr: rows.map((d: any) => { const v = d.avg_ctr || 0; return v > 1 ? v / 100 : v; }),
                   roas: rows.map((d: any) => d.avg_roas || 0),
                   spend: rows.map((d: any) => d.total_spend || 0),
                 }

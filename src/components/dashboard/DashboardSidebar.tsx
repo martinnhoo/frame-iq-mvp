@@ -178,14 +178,38 @@ export function DashboardSidebar({
           const rows = data || [];
           const latest = rows[0], prev = rows[1];
           if (!latest || (latest.total_spend === 0 && latest.avg_ctr === 0)) return;
-          const ctr = (latest.avg_ctr || 0) * 100;
-          const prevCtr = prev ? (prev.avg_ctr || 0) * 100 : null;
+          // Normalize CTR: old data stored as percentage (>1), new data as decimal
+          const rawCtr = latest.avg_ctr || 0;
+          const ctr = (rawCtr > 1 ? rawCtr : rawCtr * 100);
+          const rawPrevCtr = prev ? (prev.avg_ctr || 0) : null;
+          const prevCtr = rawPrevCtr !== null ? (rawPrevCtr > 1 ? rawPrevCtr : rawPrevCtr * 100) : null;
           const trend = prevCtr !== null && prevCtr > 0
             ? ctr > prevCtr * 1.05 ? "up" : ctr < prevCtr * 0.95 ? "down" : "flat"
             : null;
           setKpi({ spend: latest.total_spend || 0, ctr, ads: latest.active_ads || 0, trend });
         });
     }).catch(() => setKpi(null));
+  }, [user?.id, selectedPersona?.id]);
+
+  // Reload KPI when Meta ad account changes
+  useEffect(() => {
+    const handler = () => {
+      if (!user?.id || !selectedPersona?.id) return;
+      (supabase as any).from("daily_snapshots")
+        .select("total_spend, avg_ctr, active_ads")
+        .eq("user_id", user.id).eq("persona_id", selectedPersona.id)
+        .order("date", { ascending: false }).limit(2)
+        .then(({ data }: any) => {
+          const rows = data || [];
+          const latest = rows[0];
+          if (!latest || (latest.total_spend === 0 && latest.avg_ctr === 0)) return;
+          const rawCtr = latest.avg_ctr || 0;
+          const ctr = (rawCtr > 1 ? rawCtr : rawCtr * 100);
+          setKpi({ spend: latest.total_spend || 0, ctr, ads: latest.active_ads || 0, trend: null });
+        });
+    };
+    window.addEventListener('meta-account-changed', handler);
+    return () => window.removeEventListener('meta-account-changed', handler);
   }, [user?.id, selectedPersona?.id]);
 
   const perfActive = isAt("/dashboard/performance") || isAt("/dashboard/diary");

@@ -284,6 +284,13 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
 
   useEffect(() => { load(); }, [load]);
 
+  // Re-fetch when Meta ad account changes
+  useEffect(() => {
+    const handler = () => { load(); };
+    window.addEventListener('meta-account-changed', handler);
+    return () => window.removeEventListener('meta-account-changed', handler);
+  }, [load]);
+
   // Auto-sync disabled — prevents infinite loop when embedded. User clicks Sync manually.
 
   const syncAccount = async (personaId: string) => {

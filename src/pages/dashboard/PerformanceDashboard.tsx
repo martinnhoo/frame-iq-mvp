@@ -333,6 +333,13 @@ export default function PerformanceDashboard() {
 
   useEffect(()=>{ load(); },[load]);
 
+  // Re-fetch when Meta ad account changes (within same persona)
+  useEffect(() => {
+    const handler = () => { load(true); };
+    window.addEventListener('meta-account-changed', handler);
+    return () => window.removeEventListener('meta-account-changed', handler);
+  }, [load]);
+
   const hasMeta=data?.meta&&!data.meta.error;
 
   const validMetrics = useMemo(()=>{

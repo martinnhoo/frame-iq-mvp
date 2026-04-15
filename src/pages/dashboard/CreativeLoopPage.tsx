@@ -287,7 +287,7 @@ export default function CreativeLoopPage() {
                   </div>
                   {p.insight_text && <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5, marginBottom: 5 }}>{p.insight_text}</p>}
                   <div style={{ display: "flex", gap: 12 }}>
-                    {p.avg_ctr && <span style={{ ...m, fontSize: 12, color: "#34d399" }}>CTR {(p.avg_ctr*100).toFixed(2)}%</span>}
+                    {p.avg_ctr && <span style={{ ...m, fontSize: 12, color: "#34d399" }}>CTR {(p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr*100).toFixed(2)}%</span>}
                     {p.avg_roas && <span style={{ ...m, fontSize: 12, color: "#fbbf24" }}>ROAS {p.avg_roas.toFixed(1)}x</span>}
                     <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{p.sample_size} amostras</span>
                     <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{(p.confidence*100).toFixed(0)}% confiança</span>
@@ -327,7 +327,7 @@ export default function CreativeLoopPage() {
                       </div>
                     </td>
                     <td style={{ ...m, fontSize: 12, color: p.avg_ctr ? "#34d399" : "rgba(255,255,255,0.2)", padding: "10px" }}>
-                      {p.avg_ctr ? `${(p.avg_ctr*100).toFixed(2)}%` : "—"}
+                      {p.avg_ctr ? `${(p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr*100).toFixed(2)}%` : "—"}
                     </td>
                     <td style={{ ...m, fontSize: 12, color: p.avg_roas ? "#fbbf24" : "rgba(255,255,255,0.2)", padding: "10px" }}>
                       {p.avg_roas ? `${p.avg_roas.toFixed(1)}x` : "—"}

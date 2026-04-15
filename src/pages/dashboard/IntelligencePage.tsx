@@ -101,7 +101,7 @@ function PatternRow({ p, showLess, showMore }: { p: Pattern; showLess:string; sh
       </div>
       {p.avg_ctr > 0 && (
         <div style={{ flexShrink:0, textAlign:"right" as const }}>
-          <div style={{ fontFamily:M, fontSize:12, color:"#34d399" }}>{(p.avg_ctr*100).toFixed(2)}%</div>
+          <div style={{ fontFamily:M, fontSize:12, color:"#34d399" }}>{(p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr*100).toFixed(2)}%</div>
           <div style={{ fontFamily:F, fontSize:10, color:"rgba(255,255,255,0.25)" }}>CTR</div>
         </div>
       )}
