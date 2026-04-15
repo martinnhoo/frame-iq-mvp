@@ -180,6 +180,64 @@ function formatCtr(value: number): string {
   return pct.toFixed(1) + "%";
 }
 
+/** Pick the ONE metric that best represents why this pattern matters.
+ *  The metric must make sense with the pattern type:
+ *  - hook patterns → retenção / CTR (captures attention)
+ *  - format patterns → ROAS or CPC (efficiency)
+ *  - campaign/adset → ROAS or CPA (ROI)
+ *  - combinations → best available
+ *  - fallback → whatever is strongest
+ */
+function pickHeroMetric(p: DetectedPattern): { label: string; value: string; color: string } | null {
+  const ft = p.feature_type || p.variables?.feature_type || "";
+  const ctr = p.avg_ctr != null && p.avg_ctr > 0 ? (p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100) : 0;
+  const roas = p.avg_roas != null && p.avg_roas > 0 ? p.avg_roas : 0;
+  const cpc = p.avg_cpc != null && p.avg_cpc > 0 ? p.avg_cpc : 0;
+  const impactCtr = parseFloat(p.impact_ctr_pct || "0");
+
+  // Hook patterns → retention / attention metric
+  if (ft === "hook_type" || ft === "hook_presence") {
+    if (impactCtr > 0) return { label: "Retenção", value: `+${p.impact_ctr_pct}`, color: "#4ADE80" };
+    if (ctr >= 2.0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "#4ADE80" };
+    if (ctr > 0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "rgba(255,255,255,0.55)" };
+    return null;
+  }
+
+  // Format patterns → efficiency (ROAS > CPC > CTR)
+  if (ft === "format" || ft === "combination") {
+    if (roas >= 2.0) return { label: "ROAS", value: `${roas.toFixed(1)}x`, color: "#4ADE80" };
+    if (cpc > 0) return { label: "CPC", value: `R$${(cpc / 100).toFixed(2)}`, color: "#38BDF8" };
+    if (impactCtr > 0) return { label: "Impacto", value: `+${p.impact_ctr_pct}`, color: "#4ADE80" };
+    if (ctr >= 2.0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "#4ADE80" };
+    return null;
+  }
+
+  // Campaign / adset → ROI metric
+  if (ft === "campaign" || ft === "adset") {
+    if (roas >= 1.5) return { label: "ROAS", value: `${roas.toFixed(1)}x`, color: "#4ADE80" };
+    if (cpc > 0) return { label: "CPC", value: `R$${(cpc / 100).toFixed(2)}`, color: "#38BDF8" };
+    if (ctr >= 2.0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "#4ADE80" };
+    return null;
+  }
+
+  // Text density → CTR makes sense
+  if (ft === "text_density") {
+    if (ctr > 0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: ctr >= 2.0 ? "#4ADE80" : "rgba(255,255,255,0.55)" };
+    return null;
+  }
+
+  // Gap → no metric, it's an opportunity
+  if (ft === "gap") return null;
+
+  // Fallback: pick the strongest signal
+  if (roas >= 2.0) return { label: "ROAS", value: `${roas.toFixed(1)}x`, color: "#4ADE80" };
+  if (impactCtr > 0) return { label: "Impacto", value: `+${p.impact_ctr_pct}`, color: "#4ADE80" };
+  if (ctr >= 2.0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "#4ADE80" };
+  if (cpc > 0) return { label: "CPC", value: `R$${(cpc / 100).toFixed(2)}`, color: "#38BDF8" };
+  if (ctr > 0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "rgba(255,255,255,0.55)" };
+  return null;
+}
+
 function formatConfidence(confidence: number): { label: string; color: string } {
   const pct = Math.round(confidence * 100);
   if (pct >= 70) return { label: "Alta confiança", color: "#4ADE80" };
@@ -256,22 +314,38 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
 
   if (!userId || !personaId) return null;
 
-  // Only show patterns that are actually GOOD — "O que funciona" means winners only.
-  // Filter out: low CTR (<2%), low confidence (<0.2), or tiny samples (<2 ads)
+  // Only show patterns that actually prove "what works".
+  // A pattern earns its spot by excelling in ANY key metric — not just CTR.
   const worthShowing = patterns.filter((p) => {
     // Winners validated by the engine always pass
     if (p.is_winner) return true;
-    // Gap patterns (untested formats) are useful intel
+
+    // Gap patterns (untested formats) = useful intel
     const ft = p.feature_type || p.variables?.feature_type || "";
     if (ft === "gap") return true;
-    // For metric-based patterns: CTR must be decent
+
+    // Positive impact vs account average = proof it works
+    const impactCtr = parseFloat(p.impact_ctr_pct || "0");
+    const impactRoas = parseFloat(p.impact_roas_pct || "0");
+    if (impactCtr > 0 || impactRoas > 0) return true;
+
+    // Strong ROAS = worth showing regardless of CTR
+    if (p.avg_roas != null && p.avg_roas >= 2.0) return true;
+
+    // Low CPC relative to account = efficient pattern
+    if (p.avg_cpc != null && p.avg_cpc > 0 && p.avg_cpc < 200) return true;
+
+    // Decent CTR (≥2%) = acceptable standalone signal
     if (p.avg_ctr != null && p.avg_ctr > 0) {
       const ctr = p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100;
-      if (ctr < 2.0) return false; // bad CTR = not "what works"
+      if (ctr >= 2.0) return true;
     }
-    // Very low confidence with tiny sample = noise
-    if (p.confidence < 0.2 && p.sample_size < 3) return false;
-    return true;
+
+    // High confidence + reasonable sample = the engine trusts it
+    if (p.confidence >= 0.5 && p.sample_size >= 5) return true;
+
+    // Nothing good to show → filter out
+    return false;
   });
 
   const displayPatterns = compact ? worthShowing.slice(0, 3) : worthShowing.slice(0, 5);
@@ -321,15 +395,21 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
         </button>
       </div>
 
-      {/* Alignment Score — inline, no orb */}
+      {/* Alignment Score */}
       {alignment && alignment.score > 0 && patterns.length > 0 && (
         <div style={{
           padding: "0 2px 12px",
-          display: "flex", alignItems: "center", gap: 6,
+          display: "flex", alignItems: "center", gap: 7,
         }}>
           <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: "#A78BFA",
+            boxShadow: "0 0 8px rgba(167,139,250,0.40)",
+            flexShrink: 0,
+          }} />
+          <span style={{
             fontSize: 11, fontWeight: 700, fontFamily: M,
-            color: alignment.score >= 70 ? "#4ADE80" : alignment.score >= 40 ? "#FBBF24" : "rgba(255,255,255,0.45)",
+            color: alignment.score >= 70 ? "#4ADE80" : alignment.score >= 40 ? "#FBBF24" : "rgba(255,255,255,0.50)",
           }}>
             {alignment.score}%
           </span>
@@ -462,11 +542,6 @@ function PatternRow({
   const explanation = patternExplanation(p);
   const conf = formatConfidence(p.confidence);
 
-  // CTR quality: only highlight as positive if above ~2.5% (reasonable threshold)
-  const ctrValue = p.avg_ctr != null ? (p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100) : 0;
-  const ctrIsGood = ctrValue >= 2.5;
-  const ctrColor = ctrIsGood ? "#4ADE80" : ctrValue >= 1.5 ? "rgba(255,255,255,0.60)" : "#F87171";
-
   const hasTopAds = p.top_ads && p.top_ads.length > 0;
   const hasExtraMetrics = (p.avg_cpc != null && p.avg_cpc > 0) ||
     (p.avg_roas != null && p.avg_roas > 0) ||
@@ -525,50 +600,55 @@ function PatternRow({
         </div>
       </div>
 
-      {/* ── ROW 2: Key metrics — context-aware colors ── */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-        marginTop: 8, marginBottom: explanation ? 6 : 0,
-      }}>
-        {/* CTR — colored by quality */}
-        {p.avg_ctr != null && p.avg_ctr > 0 && (
-          <span style={{
-            fontSize: 12, fontWeight: 700, color: ctrColor,
-            fontFamily: M,
-          }}>
-            CTR {formatCtr(p.avg_ctr)}
-          </span>
-        )}
-
-        {/* Impact badge */}
-        {p.impact_ctr_pct && p.impact_ctr_pct !== "?" && (
+      {/* ── ROW 2: Smart hero metric + context ── */}
+      {(() => {
+        const hero = pickHeroMetric(p);
+        return (
           <div style={{
-            display: "inline-flex", alignItems: "center", gap: 3,
-            background: isPositive ? "rgba(74,222,128,0.10)" : "rgba(248,113,113,0.10)",
-            padding: "2px 7px", borderRadius: 3,
+            display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+            marginTop: 8, marginBottom: explanation ? 6 : 0,
           }}>
-            {isPositive
-              ? <TrendingUp size={10} color={impactColor} />
-              : <TrendingDown size={10} color={impactColor} />
-            }
-            <span style={{ fontSize: 11, fontWeight: 700, color: impactColor, fontFamily: M }}>
-              {p.impact_ctr_pct}
+            {/* Hero metric — context-aware per pattern type */}
+            {hero && (
+              <span style={{
+                fontSize: 12, fontWeight: 700, color: hero.color,
+                fontFamily: M,
+              }}>
+                {hero.label} {hero.value}
+              </span>
+            )}
+
+            {/* Impact badge — only if not already shown as hero */}
+            {p.impact_ctr_pct && p.impact_ctr_pct !== "?" && (!hero || (hero.label !== "Retenção" && hero.label !== "Impacto CTR")) && (
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 3,
+                background: isPositive ? "rgba(74,222,128,0.10)" : "rgba(248,113,113,0.10)",
+                padding: "2px 7px", borderRadius: 3,
+              }}>
+                {isPositive
+                  ? <TrendingUp size={10} color={impactColor} />
+                  : <TrendingDown size={10} color={impactColor} />
+                }
+                <span style={{ fontSize: 11, fontWeight: 700, color: impactColor, fontFamily: M }}>
+                  {p.impact_ctr_pct}
+                </span>
+              </div>
+            )}
+
+            <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
+
+            <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", fontFamily: M, fontWeight: 500 }}>
+              {pluralAds(p.sample_size)}
+            </span>
+
+            <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
+
+            <span style={{ fontSize: 10.5, color: conf.color, fontFamily: M, fontWeight: 600 }}>
+              {conf.label}
             </span>
           </div>
-        )}
-
-        <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
-
-        <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", fontFamily: M, fontWeight: 500 }}>
-          {pluralAds(p.sample_size)}
-        </span>
-
-        <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
-
-        <span style={{ fontSize: 10.5, color: conf.color, fontFamily: M, fontWeight: 600 }}>
-          {conf.label}
-        </span>
-      </div>
+        );
+      })()}
 
       {/* ── ROW 3: Explanation — why it matters ── */}
       {explanation && (
@@ -594,7 +674,7 @@ function PatternRow({
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov || expanded ? "0.8" : "0.4"; }}
           >
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#38BDF8", fontFamily: F }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
               Gerar variações →
             </span>
           </button>
