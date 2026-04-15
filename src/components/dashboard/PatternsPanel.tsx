@@ -101,18 +101,22 @@ function humanizePatternLabel(p: DetectedPattern): string {
     return cleaned;
   }
 
-  // Always fall through to structured humanization
+  // Always fall through to structured humanization — ALWAYS descriptive, never generic
   const featureType = p.feature_type || p.variables?.feature_type || "";
   const featureValue = p.feature_value || p.variables?.feature_value || "";
+  const ctrStr = p.avg_ctr != null && p.avg_ctr > 0 ? ` — CTR ${formatCtr(p.avg_ctr)}` : "";
+
   switch (featureType) {
-    case "hook_type": return `Hook com ${humanizeHookType(featureValue).toLowerCase()} se destaca`;
-    case "hook_presence": return featureValue === "with_hook" ? "Anúncios com hook performam melhor" : "Anúncios sem hook nesta conta";
-    case "format": return `Formato ${humanizeFormat(featureValue)} se destaca`;
-    case "text_density": return `${humanizeTextDensity(featureValue)} nos criativos`;
-    case "campaign": return `Campanha: ${featureValue}`;
-    case "adset": return `Público: ${featureValue}`;
-    case "gap": return `Formato ${humanizeFormat(featureValue)} ainda não testado`;
-    case "deviation": return p.label || "Desvio detectado";
+    case "hook_type": return `Hook com ${humanizeHookType(featureValue).toLowerCase()} performa melhor${ctrStr}`;
+    case "hook_presence": return featureValue === "with_hook"
+      ? `Anúncios com hook geram mais cliques${ctrStr}`
+      : `Anúncios sem hook nesta conta${ctrStr}`;
+    case "format": return `${humanizeFormat(featureValue)} supera outros formatos${ctrStr}`;
+    case "text_density": return `${humanizeTextDensity(featureValue)} gera mais resultado${ctrStr}`;
+    case "campaign": return `Campanha "${featureValue}" se destaca${ctrStr}`;
+    case "adset": return `Público "${featureValue}" converte melhor${ctrStr}`;
+    case "gap": return `Formato ${humanizeFormat(featureValue)} ainda não testado — oportunidade`;
+    case "deviation": return p.label || `Desvio de performance detectado${ctrStr}`;
     case "combination": {
       const parts = featureValue.split("+");
       const formatted = parts.map((part) => {
@@ -121,7 +125,7 @@ function humanizePatternLabel(p: DetectedPattern): string {
         if (trimmed === "no_hook") return "sem hook";
         return humanizeFormat(trimmed);
       });
-      return `Combinação: ${formatted.join(" + ")}`;
+      return `${formatted.join(" + ")} é a combinação vencedora${ctrStr}`;
     }
     case "status": return `Status: ${featureValue}`;
     default:
@@ -129,8 +133,27 @@ function humanizePatternLabel(p: DetectedPattern): string {
         return p.label.replace(/\bads\b/gi, "anúncios").replace(/\bAds\b/g, "Anúncios")
           .replace(/\bHook:\s*/gi, "Hook: ").replace(/\bText density:\s*/gi, "Densidade de texto: ");
       }
-      return "Padrão detectado";
+      // NEVER return generic "Padrão detectado" — generate from what we know
+      if (p.avg_ctr != null && p.avg_ctr > 0) return `Padrão com CTR ${formatCtr(p.avg_ctr)} identificado em ${pluralAds(p.sample_size)}`;
+      return `Padrão validado em ${pluralAds(p.sample_size)}`;
   }
+}
+
+/** Generate a short why-it-matters explanation for a pattern */
+function patternExplanation(p: DetectedPattern): string | null {
+  const featureType = p.feature_type || p.variables?.feature_type || "";
+  const impactNum = parseFloat(p.impact_ctr_pct || "0");
+  const impactStr = impactNum > 0 ? `+${p.impact_ctr_pct} acima da média` : impactNum < 0 ? `${p.impact_ctr_pct} abaixo da média` : "";
+
+  if (featureType === "hook_type") return impactStr ? `Tende a gerar mais cliques nos primeiros segundos · ${impactStr}` : "Tende a gerar mais cliques nos primeiros segundos";
+  if (featureType === "hook_presence") return "Hooks capturam atenção e aumentam taxa de clique";
+  if (featureType === "format") return impactStr ? `Este formato se destaca na sua conta · ${impactStr}` : "Este formato tem performance superior na sua conta";
+  if (featureType === "text_density") return "A densidade de texto influencia diretamente o CTR";
+  if (featureType === "gap") return "Testar este formato pode revelar novas oportunidades";
+  if (featureType === "combination") return impactStr ? `Esta combinação supera outras · ${impactStr}` : "Esta combinação tem performance acima das demais";
+  if (featureType === "campaign" || featureType === "adset") return impactStr || "Performance consistente acima da média da conta";
+  if (impactStr) return impactStr;
+  return null;
 }
 
 function formatCtr(value: number): string {
@@ -404,7 +427,7 @@ function PPExpandable({ open, children }: { open: boolean; children: React.React
   );
 }
 
-// ── Pattern Row — high contrast, expandable ──
+// ── Pattern Row — premium clarity, descriptive, expandable ──
 
 function PatternRow({
   pattern: p,
@@ -422,6 +445,7 @@ function PatternRow({
   const isPositive = impactNum > 0;
   const impactColor = isPositive ? "#4ADE80" : "#F87171";
   const displayLabel = humanizePatternLabel(p);
+  const explanation = patternExplanation(p);
   const conf = formatConfidence(p.confidence);
 
   const hasTopAds = p.top_ads && p.top_ads.length > 0;
@@ -440,49 +464,42 @@ function PatternRow({
         if (hasExpandable) setExpanded(prev => !prev);
       }}
       style={{
-        padding: "14px 12px",
-        borderRadius: 4,
-        background: hov ? "rgba(255,255,255,0.03)" : "transparent",
-        transition: "background 0.15s ease",
+        padding: "14px 14px",
+        borderRadius: 6,
+        background: hov ? "rgba(255,255,255,0.035)" : "transparent",
+        transition: "all 0.18s ease",
         borderTop: isFirst ? "none" : "1px solid rgba(255,255,255,0.06)",
         cursor: hasExpandable ? "pointer" : "default",
+        transform: hov ? "translateX(2px)" : "translateX(0)",
       }}
     >
-      {/* Meta row: badge + sample + impact + chevron */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      {/* ── ROW 1: Pattern name — L1, bold, the main thing you read ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: 13.5, fontWeight: 700, color: L1, lineHeight: 1.4,
+            fontFamily: F, letterSpacing: "-0.01em",
+          }}>
+            {displayLabel}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginTop: 2 }}>
           {p.is_winner && (
             <span style={{
               fontSize: 8.5, fontWeight: 800, color: "#A78BFA",
-              background: "rgba(167,139,250,0.12)", padding: "2px 6px",
-              borderRadius: 2, letterSpacing: "0.08em", fontFamily: F,
+              background: "rgba(167,139,250,0.15)", padding: "2px 7px",
+              borderRadius: 3, letterSpacing: "0.08em", fontFamily: F,
             }}>
               VALIDADO
             </span>
           )}
-          <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
-            {pluralAds(p.sample_size)}
-          </span>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {p.impact_ctr_pct && p.impact_ctr_pct !== "?" && (
-            <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-              {isPositive
-                ? <TrendingUp size={10} color={impactColor} />
-                : <TrendingDown size={10} color={impactColor} />
-              }
-              <span style={{ fontSize: 11, fontWeight: 700, color: impactColor, fontFamily: M }}>
-                {p.impact_ctr_pct}
-              </span>
-            </div>
-          )}
           {hasExpandable && (
             <span style={{
-              fontSize: 14, color: L3, lineHeight: 1,
-              transition: "transform 0.2s ease, opacity 0.15s",
+              fontSize: 14, color: "rgba(255,255,255,0.50)", lineHeight: 1,
+              transition: "transform 0.2s ease, color 0.15s",
               transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
-              opacity: hov ? 0.8 : 0.3,
+              color: hov ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.30)",
             }}>
               ›
             </span>
@@ -490,81 +507,114 @@ function PatternRow({
         </div>
       </div>
 
-      {/* Insight — L2 contrast, always visible (collapsed summary) */}
+      {/* ── ROW 2: Key metrics — highlighted, immediately scannable ── */}
       <div style={{
-        fontSize: 13, color: L2, lineHeight: 1.5,
-        margin: "0 0 8px", fontFamily: F,
+        display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+        marginTop: 8, marginBottom: explanation ? 6 : 0,
       }}>
-        {displayLabel}
-      </div>
-
-      {/* Collapsed metrics row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        {/* CTR — the hero metric */}
         {p.avg_ctr != null && p.avg_ctr > 0 && (
-          <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
-            CTR <span style={{ color: L2, fontWeight: 600 }}>{formatCtr(p.avg_ctr)}</span>
+          <span style={{
+            fontSize: 13, fontWeight: 800, color: "#38BDF8",
+            fontFamily: M, letterSpacing: "-0.02em",
+          }}>
+            CTR {formatCtr(p.avg_ctr)}
           </span>
         )}
-        <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
-        <span style={{ fontSize: 10.5, color: conf.color, fontFamily: M, fontWeight: 500 }}>
-          {conf.label}
+
+        {/* Impact badge */}
+        {p.impact_ctr_pct && p.impact_ctr_pct !== "?" && (
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 3,
+            background: isPositive ? "rgba(74,222,128,0.10)" : "rgba(248,113,113,0.10)",
+            padding: "2px 7px", borderRadius: 3,
+          }}>
+            {isPositive
+              ? <TrendingUp size={10} color={impactColor} />
+              : <TrendingDown size={10} color={impactColor} />
+            }
+            <span style={{ fontSize: 11, fontWeight: 700, color: impactColor, fontFamily: M }}>
+              {p.impact_ctr_pct}
+            </span>
+          </div>
+        )}
+
+        <span style={{ fontSize: 7, color: "rgba(255,255,255,0.12)" }}>·</span>
+
+        <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.50)", fontFamily: M, fontWeight: 500 }}>
+          {pluralAds(p.sample_size)}
         </span>
 
-        {/* Inline action — visible on hover or when expanded */}
-        {p.is_winner && onGenerateVariation && (
-          <>
-            <span style={{ flex: 1 }} />
-            <button
-              onClick={() => onGenerateVariation(p)}
-              style={{
-                display: "flex", alignItems: "center", gap: 4,
-                background: "none", border: "none",
-                cursor: "pointer", padding: "2px 0",
-                transition: "opacity 0.15s",
-                opacity: hov || expanded ? 0.8 : 0.4,
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov || expanded ? "0.8" : "0.4"; }}
-            >
-              <Zap size={11} color="#A78BFA" />
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
-                Gerar variações
-              </span>
-            </button>
-          </>
-        )}
+        <span style={{ fontSize: 7, color: "rgba(255,255,255,0.12)" }}>·</span>
+
+        <span style={{ fontSize: 10.5, color: conf.color, fontFamily: M, fontWeight: 600 }}>
+          {conf.label}
+        </span>
       </div>
+
+      {/* ── ROW 3: Explanation — why it matters ── */}
+      {explanation && (
+        <div style={{
+          fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.5,
+          fontFamily: F,
+        }}>
+          {explanation}
+        </div>
+      )}
+
+      {/* ── Action row ── */}
+      {p.is_winner && onGenerateVariation && (
+        <div style={{ marginTop: 8 }}>
+          <button
+            onClick={() => onGenerateVariation(p)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.15)",
+              borderRadius: 4, cursor: "pointer", padding: "5px 10px",
+              transition: "all 0.15s",
+              opacity: hov || expanded ? 1 : 0.6,
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(167,139,250,0.14)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.25)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(167,139,250,0.08)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(167,139,250,0.15)"; }}
+          >
+            <Zap size={11} color="#A78BFA" />
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
+              Gerar variações
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* ═══ EXPANDED CONTENT ═══ */}
       <PPExpandable open={expanded}>
         <div style={{ paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 10 }}>
           {/* Extra metrics */}
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: hasTopAds ? 10 : 0 }}>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: hasTopAds ? 12 : 0 }}>
             {p.avg_roas != null && p.avg_roas > 0 && (
-              <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
-                ROAS <span style={{ color: L2, fontWeight: 600 }}>{p.avg_roas.toFixed(1)}x</span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: M }}>
+                ROAS <span style={{ color: "#4ADE80", fontWeight: 700, fontSize: 12 }}>{p.avg_roas.toFixed(1)}x</span>
               </span>
             )}
             {p.avg_cpc != null && p.avg_cpc > 0 && (
-              <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
-                CPC <span style={{ color: L2, fontWeight: 600 }}>R${(p.avg_cpc / 100).toFixed(2)}</span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: M }}>
+                CPC <span style={{ color: L1, fontWeight: 700, fontSize: 12 }}>R${(p.avg_cpc / 100).toFixed(2)}</span>
               </span>
             )}
             {p.impact_roas_pct && p.impact_roas_pct !== "?" && (
-              <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
-                ROAS impact <span style={{ color: parseFloat(p.impact_roas_pct) > 0 ? "#4ADE80" : "#F87171", fontWeight: 600 }}>{p.impact_roas_pct}</span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: M }}>
+                ROAS <span style={{ color: parseFloat(p.impact_roas_pct) > 0 ? "#4ADE80" : "#F87171", fontWeight: 700, fontSize: 12 }}>{p.impact_roas_pct}</span>
               </span>
             )}
-            <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
-              Confiança <span style={{ color: L2, fontWeight: 600 }}>{Math.round(p.confidence * 100)}%</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: M }}>
+              Confiança <span style={{ color: L1, fontWeight: 700, fontSize: 12 }}>{Math.round(p.confidence * 100)}%</span>
             </span>
           </div>
 
           {/* Full insight text if different from display label */}
           {hasInsightText && p.insight_text !== displayLabel && (
             <div style={{
-              fontSize: 12, color: L2, lineHeight: 1.55,
-              borderLeft: "2px solid rgba(167,139,250,0.25)",
+              fontSize: 12.5, color: "rgba(255,255,255,0.65)", lineHeight: 1.55,
+              borderLeft: "2px solid rgba(167,139,250,0.30)",
               paddingLeft: 10, marginBottom: 10,
             }}>
               {p.insight_text}
@@ -575,7 +625,7 @@ function PatternRow({
           {hasTopAds && (
             <div>
               <div style={{
-                fontSize: 9.5, fontWeight: 700, color: L3,
+                fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.45)",
                 letterSpacing: "0.08em", marginBottom: 6,
               }}>
                 MELHORES ANÚNCIOS
@@ -583,17 +633,17 @@ function PatternRow({
               {p.top_ads!.slice(0, 3).map((ad, i) => (
                 <div key={ad.ad_id || i} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "4px 0",
-                  borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none",
+                  padding: "5px 0",
+                  borderTop: i > 0 ? "1px solid rgba(255,255,255,0.04)" : "none",
                 }}>
                   <span style={{
-                    fontSize: 11, color: L2, fontWeight: 500,
+                    fontSize: 11.5, color: "rgba(255,255,255,0.70)", fontWeight: 500,
                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     flex: 1, marginRight: 8,
                   }}>
                     {ad.ad_name || "Anúncio"}
                   </span>
-                  <span style={{ fontSize: 10.5, color: "#38BDF8", fontWeight: 600, fontFamily: M, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: "#38BDF8", fontWeight: 700, fontFamily: M, flexShrink: 0 }}>
                     CTR {formatCtr(ad.ctr)}
                   </span>
                 </div>

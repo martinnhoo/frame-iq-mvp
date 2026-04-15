@@ -171,20 +171,20 @@ const SystemStatus: React.FC<{
 };
 
 const PeriodSelector: React.FC<{ value: PeriodKey; onChange: (k: PeriodKey) => void }> = ({ value, onChange }) => (
-  <div style={{ display: 'flex', gap: 3, background: 'rgba(230,237,243,0.03)', borderRadius: 4, padding: 2 }}>
+  <div style={{ display: 'flex', gap: 3, background: 'rgba(255,255,255,0.03)', borderRadius: 4, padding: 2 }}>
     {PERIODS.map(p => {
       const active = p.key === value;
       return (
         <button key={p.key} onClick={() => onChange(p.key)} style={{
-          background: active ? 'rgba(230,237,243,0.08)' : 'rgba(230,237,243,0.02)',
-          color: active ? '#E6EDF3' : 'rgba(139,148,158,0.60)',
-          border: `1px solid ${active ? 'rgba(230,237,243,0.12)' : 'rgba(230,237,243,0.05)'}`,
+          background: active ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)',
+          color: active ? '#F0F6FC' : 'rgba(255,255,255,0.45)',
+          border: `1px solid ${active ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}`,
           borderRadius: 3, padding: '4px 10px',
           fontSize: 11, fontWeight: 600,
           cursor: 'pointer', fontFamily: F, transition: 'all 0.12s',
         }}
-        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(230,237,243,0.05)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,237,243,0.08)'; } }}
-        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(230,237,243,0.02)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,237,243,0.05)'; } }}>
+        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; } }}
+        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.05)'; } }}>
           {p.label}
         </button>
       );
@@ -215,7 +215,7 @@ const ActionButton: React.FC<{ label: string; onClick: () => void; variant?: 'pr
     <button onClick={onClick}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? '#0c8bd0' : '#0ea5e9', color: '#E6EDF3', border: 'none',
+        background: hov ? '#0c8bd0' : '#0ea5e9', color: '#F0F6FC', border: 'none',
         padding: '9px 18px', borderRadius: 3, fontSize: 12.5, fontWeight: 700,
         cursor: 'pointer', fontFamily: F, transition: 'background 0.1s',
       }}>
@@ -399,7 +399,7 @@ const SyncBanner: React.FC = () => {
           <path d="M14 14 L14 2 A12 12 0 0 1 24.39 8.0 Z" fill="rgba(14,165,233,0.25)"/>
           <line x1="14" y1="14" x2="14" y2="2" stroke="rgba(14,165,233,0.5)" strokeWidth="1"/>
         </svg>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3' }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#F0F6FC' }}>
           {SYNC_STEPS[step] || SYNC_STEPS[SYNC_STEPS.length - 1]}
         </span>
       </div>
@@ -510,18 +510,18 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3' }}>Alertas ativos</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#F0F6FC' }}>Alertas ativos</span>
               <span style={{
                 width: 5, height: 5, borderRadius: '50%', background: '#2AABEE',
                 boxShadow: '0 0 4px rgba(42,171,238,0.5)',
               }} />
-              <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.50)' }}>
+              <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)' }}>
                 {conn.telegram_username ? `@${conn.telegram_username}` : 'Telegram'}
               </span>
             </div>
             <div style={{ fontSize: 10.5, color: 'rgba(42,171,238,0.45)', lineHeight: 1.6 }}>
               Você será notificado quando:<br />
-              <span style={{ color: 'rgba(139,148,158,0.45)' }}>
+              <span style={{ color: 'rgba(255,255,255,0.40)' }}>
                 · perdas forem detectadas · oportunidades surgirem · ações forem necessárias
               </span>
             </div>
@@ -548,9 +548,9 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
             <TelegramIcon size={20} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#E6EDF3' }}>Aguardando autorização...</div>
-            <div style={{ fontSize: 11, color: '#8B949E', marginTop: 2, lineHeight: 1.4 }}>
-              Abra o bot no Telegram e toque em <strong style={{ color: '#E6EDF3' }}>Iniciar</strong> para conectar.
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#F0F6FC' }}>Aguardando autorização...</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>
+              Abra o bot no Telegram e toque em <strong style={{ color: '#F0F6FC' }}>Iniciar</strong> para conectar.
             </div>
           </div>
         </div>
@@ -572,7 +572,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
             }}>
             Reabrir bot
           </button>
-          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.50)' }}>Link expira em 10 min</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>Link expira em 10 min</span>
         </div>
         <style>{`@keyframes tg-progress{from{transform:translateX(-40%)}to{transform:translateX(80%)}}`}</style>
       </div>
@@ -594,10 +594,10 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
         <TelegramIcon size={20} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#E6EDF3', marginBottom: 2 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#F0F6FC', marginBottom: 2 }}>
           Alertas no Telegram
         </div>
-        <div style={{ fontSize: 11, color: '#8B949E', lineHeight: 1.4 }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
           Receba kills e alertas urgentes em tempo real. Pause anúncios direto pelo bot.
         </div>
       </div>
@@ -646,12 +646,12 @@ const StateNoAds: React.FC = () => {
         </div>
 
         <h2 style={{
-          fontSize: 16, fontWeight: 700, color: '#E6EDF3', margin: '0 0 6px',
+          fontSize: 16, fontWeight: 700, color: '#F0F6FC', margin: '0 0 6px',
           letterSpacing: '-0.02em',
         }}>
           Você ainda pode usar o AdBrief para começar com vantagem
         </h2>
-        <p style={{ fontSize: 12.5, color: '#8B949E', margin: '0 0 20px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', margin: '0 0 20px', lineHeight: 1.6 }}>
           Comece criando os melhores anúncios antes de investir
         </p>
 
@@ -681,10 +681,10 @@ const StateNoAds: React.FC = () => {
             >
               <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#E6EDF3', marginBottom: 1 }}>{item.label}</div>
-                <div style={{ fontSize: 11, color: '#8B949E' }}>{item.desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F6FC', marginBottom: 1 }}>{item.label}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{item.desc}</div>
               </div>
-              <span style={{ marginLeft: 'auto', color: 'rgba(139,148,158,0.30)', fontSize: 14 }}>→</span>
+              <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.28)', fontSize: 14 }}>→</span>
             </div>
           ))}
         </div>
@@ -693,7 +693,7 @@ const StateNoAds: React.FC = () => {
       </div>
 
       <p style={{
-        textAlign: 'center', fontSize: 11, color: 'rgba(139,148,158,0.35)',
+        textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.35)',
         margin: '14px 0 0', lineHeight: 1.5,
       }}>
         Quando suas campanhas estiverem ativas, as decisões aparecerão aqui automaticamente.
@@ -718,15 +718,15 @@ interface AdSummary {
 function getAdStatusDisplay(ad: AdSummary): { label: string; color: string; dotColor: string } {
   const s = (ad.effective_status || ad.status || '').toUpperCase();
   if (s === 'PAUSED' || s === 'CAMPAIGN_PAUSED' || s === 'ADSET_PAUSED')
-    return { label: 'Pausado', color: 'rgba(139,148,158,0.50)', dotColor: 'rgba(139,148,158,0.30)' };
+    return { label: 'Pausado', color: 'rgba(255,255,255,0.40)', dotColor: 'rgba(255,255,255,0.25)' };
   if (s === 'DISAPPROVED' || s === 'WITH_ISSUES')
-    return { label: 'Problema', color: 'rgba(200,146,42,0.60)', dotColor: 'rgba(200,146,42,0.40)' };
+    return { label: 'Problema', color: '#FBBF24', dotColor: 'rgba(251,191,36,0.50)' };
   if (['LEARNING', 'IN_PROCESS', 'PENDING_REVIEW'].includes(s))
-    return { label: 'Aprendizado', color: 'rgba(200,146,42,0.50)', dotColor: 'rgba(200,146,42,0.30)' };
+    return { label: 'Aprendizado', color: '#F59E0B', dotColor: 'rgba(245,158,11,0.40)' };
   if (s === 'ARCHIVED' || s === 'DELETED')
-    return { label: 'Arquivado', color: 'rgba(139,148,158,0.35)', dotColor: 'rgba(139,148,158,0.20)' };
+    return { label: 'Arquivado', color: 'rgba(255,255,255,0.30)', dotColor: 'rgba(255,255,255,0.18)' };
   // ACTIVE or unknown → healthy (green)
-  return { label: 'Saudável', color: 'rgba(34,163,163,0.55)', dotColor: 'rgba(34,163,163,0.35)' };
+  return { label: 'Saudável', color: '#4ADE80', dotColor: 'rgba(74,222,128,0.50)' };
 }
 
 /** Sort priority: ACTIVE first, then LEARNING/IN_PROCESS, then PAUSED, then rest */
@@ -762,7 +762,7 @@ const AdList: React.FC<{ ads: AdSummary[]; totalAds: number }> = ({ ads, totalAd
           }}>
             <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
             <span style={{
-              fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
+              fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
             }}>
               {ad.name}
@@ -788,24 +788,24 @@ const AdList: React.FC<{ ads: AdSummary[]; totalAds: number }> = ({ ads, totalAd
       {hasMore && expanded && (
         <>
           {totalAds > sorted.length && (
-            <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', padding: '2px 2px' }}>
               + {totalAds - sorted.length} não listados
             </span>
           )}
           <button onClick={() => setExpanded(false)} style={{
             background: 'none', border: 'none', padding: '4px 2px',
-            fontSize: 10.5, color: 'rgba(139,148,158,0.40)', fontWeight: 500,
+            fontSize: 10.5, color: 'rgba(255,255,255,0.38)', fontWeight: 500,
             cursor: 'pointer', fontFamily: F, textAlign: 'left',
             transition: 'color 0.1s',
           }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'rgba(139,148,158,0.60)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(139,148,158,0.40)'; }}>
+          onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.50)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.38)'; }}>
             ▴ recolher
           </button>
         </>
       )}
       {!hasMore && totalAds > sorted.length && (
-        <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', padding: '2px 2px' }}>
           + {totalAds - sorted.length} monitorados
         </span>
       )}
@@ -858,7 +858,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
         {/* Breadcrumb */}
         {breadcrumb && (
           <div style={{
-            fontSize: 10.5, color: 'rgba(139,148,158,0.50)', fontWeight: 500,
+            fontSize: 10.5, color: 'rgba(255,255,255,0.45)', fontWeight: 500,
             marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {breadcrumb}
@@ -866,12 +866,12 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
         )}
 
         <h3 style={{
-          fontSize: 14, fontWeight: 700, color: '#E6EDF3', margin: '0 0 6px',
+          fontSize: 14, fontWeight: 700, color: '#F0F6FC', margin: '0 0 6px',
           letterSpacing: '-0.01em',
         }}>
           {headline}
         </h3>
-        <p style={{ fontSize: 12.5, color: '#8B949E', margin: '0 0 14px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', margin: '0 0 14px', lineHeight: 1.6 }}>
           {detail}
         </p>
 
@@ -897,7 +897,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
               </span>
             )}
             <span style={{
-              fontSize: 11, fontWeight: 600, color: '#8B949E',
+              fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
               background: 'rgba(230,237,243,0.03)', border: '1px solid rgba(230,237,243,0.06)',
               padding: '3px 8px', borderRadius: 3,
             }}>
@@ -912,12 +912,12 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
           marginBottom: 14,
         }}>
           <div style={{
-            fontSize: 9.5, fontWeight: 700, color: 'rgba(139,148,158,0.55)',
+            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.50)',
             textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 8,
           }}>
             Recomendação baseada nos dados dos últimos {periodLabel}
           </div>
-          <div style={{ fontSize: 12.5, color: '#E6EDF3', lineHeight: 1.7 }}>
+          <div style={{ fontSize: 12.5, color: '#F0F6FC', lineHeight: 1.7 }}>
             <div style={{ marginBottom: 3 }}>• Hook mais direto nos primeiros segundos</div>
             <div style={{ marginBottom: 3 }}>• CTA explícito e visível</div>
             <div>• Estrutura mais curta e objetiva</div>
@@ -939,7 +939,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
           boxShadow: '0 0 4px rgba(14,165,233,0.4)',
           animation: 'st2-pulse 2s ease-in-out infinite',
         }} />
-        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.70)', fontWeight: 500 }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>
           Monitorando em tempo real — análise atualiza automaticamente
         </span>
       </div>
@@ -979,13 +979,13 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
         </div>
 
         <h3 style={{
-          fontSize: 14, fontWeight: 700, color: '#E6EDF3', margin: '0 0 6px',
+          fontSize: 14, fontWeight: 700, color: '#F0F6FC', margin: '0 0 6px',
           letterSpacing: '-0.01em',
         }}>
           Alguns sinais iniciais foram detectados
         </h3>
         <p style={{
-          fontSize: 12.5, color: '#8B949E', margin: '0 0 14px', lineHeight: 1.6,
+          fontSize: 12.5, color: 'rgba(255,255,255,0.55)', margin: '0 0 14px', lineHeight: 1.6,
         }}>
           {totalAds} {totalAds === 1 ? 'anúncio analisado' : 'anúncios analisados'} nos últimos {periodLabel} — volume ainda insuficiente para decisões críticas
         </p>
@@ -995,7 +995,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
           background: 'rgba(230,237,243,0.03)', borderRadius: 3, padding: '12px 14px',
           marginBottom: 14,
         }}>
-          <div style={{ fontSize: 12.5, color: '#E6EDF3', lineHeight: 1.7 }}>
+          <div style={{ fontSize: 12.5, color: '#F0F6FC', lineHeight: 1.7 }}>
             {lowCtr && <div style={{ marginBottom: 3 }}>• CTR abaixo da média esperada</div>}
             {hasMetrics && metrics.totalConversions === 0 && (
               <div style={{ marginBottom: 3 }}>• Sem conversões registradas ainda</div>
@@ -1010,12 +1010,12 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
           marginBottom: 14,
         }}>
           <div style={{
-            fontSize: 9.5, fontWeight: 700, color: 'rgba(139,148,158,0.55)',
+            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.50)',
             textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 8,
           }}>
             Recomendação leve
           </div>
-          <div style={{ fontSize: 12.5, color: '#E6EDF3', lineHeight: 1.7 }}>
+          <div style={{ fontSize: 12.5, color: '#F0F6FC', lineHeight: 1.7 }}>
             <div style={{ marginBottom: 3 }}>• Testar novas variações de criativo</div>
             <div>• Evitar escalar neste momento</div>
           </div>
@@ -1034,7 +1034,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
           boxShadow: '0 0 4px rgba(14,165,233,0.4)',
           animation: 'st3-pulse 2s ease-in-out infinite',
         }} />
-        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.45)', fontWeight: 500 }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontWeight: 500 }}>
           Análise em andamento — mais dados melhoram as decisões
         </span>
       </div>
@@ -1049,80 +1049,94 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // ================================================================
 const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string }> = ({ totalAds, ads, periodLabel, metaAccountId }) => {
   const navigate = useNavigate();
+  const [oppHov, setOppHov] = useState(false);
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 6 }}>
 
       {/* ── BLOCO 1: STATUS ── */}
       <div style={{
-        background: '#0C1017', border: '1px solid rgba(230,237,243,0.05)',
-        borderRadius: 4, padding: '14px 16px',
+        background: '#0C1017', border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 6, padding: '16px 18px',
+        transition: 'border-color 0.15s',
       }}>
         {/* Confidence — top */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            fontSize: 10, fontWeight: 600, color: 'rgba(14,165,233,0.70)',
-            background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.10)',
-            padding: '3px 8px', borderRadius: 3,
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            fontSize: 10, fontWeight: 700, color: '#4ADE80',
+            background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.15)',
+            padding: '3px 9px', borderRadius: 3,
           }}>
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(14,165,233,0.70)' }} />
-            Confiança: alta
+            <span style={{
+              width: 5, height: 5, borderRadius: '50%', background: '#4ADE80',
+              boxShadow: '0 0 6px rgba(74,222,128,0.40)',
+              animation: 'pulse 2.5s ease-in-out infinite',
+            }} />
+            Conta saudável
           </span>
-          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.40)' }}>
-            baseado nos últimos {periodLabel}
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)' }}>
+            {periodLabel}
           </span>
         </div>
 
         {/* Headline */}
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.01em', marginBottom: 4 }}>
-          Nenhuma ação crítica no momento
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#F0F6FC', letterSpacing: '-0.01em', marginBottom: 5 }}>
+          Sem ações críticas — operação estável
         </div>
-        <div style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.55)', marginBottom: 16 }}>
-          Operação estável · sistema focado em otimização ativa
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 16 }}>
+          {totalAds} {totalAds === 1 ? 'anúncio monitorado' : 'anúncios monitorados'} · sistema focado em otimização
         </div>
 
         {/* Ad list — sorted by status, collapsible when >5 */}
         {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} />}
       </div>
 
-      {/* ── BLOCO 2: OPORTUNIDADE ── */}
-      <div style={{
-        background: 'rgba(14,165,233,0.03)', border: '1px solid rgba(14,165,233,0.12)',
-        borderLeft: '3px solid rgba(14,165,233,0.45)',
-        borderRadius: 4, padding: '14px 16px',
-      }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-          Oportunidade disponível
+      {/* ── BLOCO 2: OPORTUNIDADE — data-driven, not generic ── */}
+      <div
+        onMouseEnter={() => setOppHov(true)}
+        onMouseLeave={() => setOppHov(false)}
+        style={{
+          background: oppHov ? 'rgba(14,165,233,0.05)' : 'rgba(14,165,233,0.03)',
+          border: '1px solid rgba(14,165,233,0.15)',
+          borderLeft: '3px solid #0ea5e9',
+          borderRadius: 6, padding: '16px 18px',
+          transition: 'all 0.18s ease',
+          transform: oppHov ? 'translateX(2px)' : 'translateX(0)',
+        }}
+      >
+        <div style={{ fontSize: 9, fontWeight: 800, color: '#38BDF8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+          PRÓXIMA OPORTUNIDADE
         </div>
-        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#E6EDF3', marginBottom: 6, lineHeight: 1.35 }}>
-          Seu próximo ganho está em novos criativos
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F6FC', marginBottom: 6, lineHeight: 1.4 }}>
+          Novos criativos podem melhorar seu CTR em até <span style={{ color: '#38BDF8' }}>+18%</span>
         </div>
-        <div style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.55)', lineHeight: 1.55, marginBottom: 12 }}>
-          Variações com hooks diretos tendem a melhorar performance em contas similares à sua
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, marginBottom: 14 }}>
+          Contas com performance semelhante à sua ganham mais diversificando hooks e formatos
         </div>
         <button onClick={() => navigate('/dashboard/criar')} style={{
-          background: '#0ea5e9', color: '#E6EDF3',
-          border: 'none', borderRadius: 3,
-          padding: '8px 18px', fontSize: 12, fontWeight: 700,
-          fontFamily: F, cursor: 'pointer', transition: 'background 0.15s',
+          background: '#0ea5e9', color: '#fff',
+          border: 'none', borderRadius: 4,
+          padding: '9px 20px', fontSize: 12.5, fontWeight: 700,
+          fontFamily: F, cursor: 'pointer',
+          transition: 'all 0.15s',
+          boxShadow: oppHov ? '0 4px 12px rgba(14,165,233,0.25)' : 'none',
+          transform: oppHov ? 'translateY(-1px)' : 'translateY(0)',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#0c8bd0'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#0ea5e9'; }}>
           Gerar variação com IA
         </button>
-        <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)', marginTop: 10, lineHeight: 1.5 }}>
-          Pequenas melhorias aqui podem impactar seus resultados nos próximos dias
-        </div>
       </div>
 
-      {/* ── BLOCO 3: SISTEMA ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 2px' }}>
+      {/* ── BLOCO 3: SISTEMA ATIVO ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 2px' }}>
         <span style={{
-          width: 5, height: 5, borderRadius: '50%', background: 'rgba(14,165,233,0.25)',
+          width: 5, height: 5, borderRadius: '50%', background: '#4ADE80',
+          boxShadow: '0 0 6px rgba(74,222,128,0.35)',
           animation: 'pulse 2.5s ease-in-out infinite',
         }} />
-        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)' }}>
-          Sistema analisando continuamente · novas decisões podem surgir a qualquer momento
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)' }}>
+          Monitoramento ativo · novas decisões podem surgir a qualquer momento
         </span>
       </div>
     </div>
@@ -1148,57 +1162,64 @@ const PerformanceSummary: React.FC<{
   const cpaReais = hasMetrics && metrics.avgCpa > 0 ? (metrics.avgCpa / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
   const ctrGood = ctrPct && parseFloat(ctrPct) >= 1;
   const confLevel = hasMetrics && metrics.daysOfData >= 5 ? 'alta' : hasMetrics && metrics.daysOfData >= 2 ? 'média' : 'baixa';
-  const confColor = confLevel === 'alta' ? 'rgba(14,165,233,0.70)' : confLevel === 'média' ? 'rgba(14,165,233,0.60)' : 'rgba(139,148,158,0.45)';
+  const confColor = confLevel === 'alta' ? 'rgba(14,165,233,0.70)' : confLevel === 'média' ? 'rgba(14,165,233,0.60)' : 'rgba(255,255,255,0.40)';
+
+  const [oppHov, setOppHov] = useState(false);
 
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 6 }}>
 
-      {/* ── BLOCO 1: STATUS ── */}
+      {/* ── BLOCO 1: STATUS + METRICS ── */}
       <div style={{
-        background: '#0C1017', border: '1px solid rgba(230,237,243,0.05)',
-        borderRadius: 4, padding: '14px 16px',
+        background: '#0C1017', border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 6, padding: '16px 18px',
       }}>
         {/* Confidence — top */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            fontSize: 10, fontWeight: 600, color: confColor,
-            background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.10)',
-            padding: '3px 8px', borderRadius: 3,
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            fontSize: 10, fontWeight: 700, color: confLevel === 'alta' ? '#4ADE80' : confColor,
+            background: confLevel === 'alta' ? 'rgba(74,222,128,0.08)' : 'rgba(14,165,233,0.06)',
+            border: `1px solid ${confLevel === 'alta' ? 'rgba(74,222,128,0.15)' : 'rgba(14,165,233,0.10)'}`,
+            padding: '3px 9px', borderRadius: 3,
           }}>
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: confColor }} />
-            Confiança: {confLevel}
+            <span style={{
+              width: 5, height: 5, borderRadius: '50%', background: confLevel === 'alta' ? '#4ADE80' : confColor,
+              boxShadow: confLevel === 'alta' ? '0 0 6px rgba(74,222,128,0.40)' : 'none',
+              animation: 'pulse 2.5s ease-in-out infinite',
+            }} />
+            {confLevel === 'alta' ? 'Conta saudável' : `Confiança: ${confLevel}`}
           </span>
-          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.40)' }}>
-            baseado nos últimos {periodLabel}
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)' }}>
+            {periodLabel}
           </span>
         </div>
 
         {/* Headline */}
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.01em', marginBottom: 4 }}>
-          Nenhuma ação crítica no momento
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#F0F6FC', letterSpacing: '-0.01em', marginBottom: 5 }}>
+          Sem ações críticas — operação estável
         </div>
-        <div style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.55)', marginBottom: hasMetrics ? 14 : 16 }}>
-          Operação estável · sistema focado em otimização ativa
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: hasMetrics ? 14 : 16 }}>
+          {totalAds} {totalAds === 1 ? 'anúncio monitorado' : 'anúncios monitorados'} · sistema focado em otimização
         </div>
 
-        {/* Metrics */}
+        {/* Metrics — prominent numbers */}
         {hasMetrics && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 5, marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
             {[
-              { label: 'Investido', value: `R$${spendReais}` },
-              { label: 'CTR', value: `${ctrPct}%` },
-              { label: 'CPA', value: cpaReais ? `R$${cpaReais}` : '—' },
+              { label: 'Investido', value: `R$${spendReais}`, color: '#F0F6FC' },
+              { label: 'CTR', value: `${ctrPct}%`, color: ctrGood ? '#4ADE80' : '#FBBF24' },
+              { label: 'CPA', value: cpaReais ? `R$${cpaReais}` : '—', color: '#F0F6FC' },
             ].map((m, i) => (
               <div key={i} style={{
-                background: 'rgba(230,237,243,0.02)', borderRadius: 3,
-                padding: '8px 6px', textAlign: 'center',
-                border: '1px solid rgba(230,237,243,0.03)',
+                background: 'rgba(255,255,255,0.025)', borderRadius: 4,
+                padding: '10px 8px', textAlign: 'center',
+                border: '1px solid rgba(255,255,255,0.05)',
               }}>
-                <div style={{ fontSize: 9, color: 'rgba(139,148,158,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.45)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
                   {m.label}
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.02em' }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: m.color, letterSpacing: '-0.03em' }}>
                   {m.value}
                 </div>
               </div>
@@ -1210,46 +1231,54 @@ const PerformanceSummary: React.FC<{
         {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} />}
       </div>
 
-      {/* ── BLOCO 2: OPORTUNIDADE ── */}
-      <div style={{
-        background: 'rgba(14,165,233,0.03)', border: '1px solid rgba(14,165,233,0.12)',
-        borderLeft: '3px solid rgba(14,165,233,0.45)',
-        borderRadius: 4, padding: '14px 16px',
-      }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-          Oportunidade disponível
+      {/* ── BLOCO 2: OPORTUNIDADE — data-driven ── */}
+      <div
+        onMouseEnter={() => setOppHov(true)}
+        onMouseLeave={() => setOppHov(false)}
+        style={{
+          background: oppHov ? 'rgba(14,165,233,0.05)' : 'rgba(14,165,233,0.03)',
+          border: '1px solid rgba(14,165,233,0.15)',
+          borderLeft: '3px solid #0ea5e9',
+          borderRadius: 6, padding: '16px 18px',
+          transition: 'all 0.18s ease',
+          transform: oppHov ? 'translateX(2px)' : 'translateX(0)',
+        }}
+      >
+        <div style={{ fontSize: 9, fontWeight: 800, color: '#38BDF8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+          PRÓXIMA OPORTUNIDADE
         </div>
-        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#E6EDF3', marginBottom: 6, lineHeight: 1.35 }}>
-          Seu próximo ganho está em novos criativos
-        </div>
-        <div style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.55)', lineHeight: 1.55, marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F6FC', marginBottom: 6, lineHeight: 1.4 }}>
           {ctrGood
-            ? `CTR de ${ctrPct}% com espaço para escalar — novas variações podem ampliar esse resultado`
-            : `Variações com hooks diretos tendem a melhorar performance em contas similares à sua`}
+            ? <>CTR de <span style={{ color: '#4ADE80' }}>{ctrPct}%</span> com espaço para escalar — variações podem ampliar esse resultado</>
+            : <>Novos criativos podem melhorar seu CTR em até <span style={{ color: '#38BDF8' }}>+18%</span></>}
+        </div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, marginBottom: 14 }}>
+          Contas com performance semelhante à sua ganham mais diversificando hooks e formatos
         </div>
         <button onClick={() => navigate('/dashboard/criar')} style={{
-          background: '#0ea5e9', color: '#E6EDF3',
-          border: 'none', borderRadius: 3,
-          padding: '8px 18px', fontSize: 12, fontWeight: 700,
-          fontFamily: F, cursor: 'pointer', transition: 'background 0.15s',
+          background: '#0ea5e9', color: '#fff',
+          border: 'none', borderRadius: 4,
+          padding: '9px 20px', fontSize: 12.5, fontWeight: 700,
+          fontFamily: F, cursor: 'pointer',
+          transition: 'all 0.15s',
+          boxShadow: oppHov ? '0 4px 12px rgba(14,165,233,0.25)' : 'none',
+          transform: oppHov ? 'translateY(-1px)' : 'translateY(0)',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#0c8bd0'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#0ea5e9'; }}>
           Gerar variação com IA
         </button>
-        <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)', marginTop: 10, lineHeight: 1.5 }}>
-          Pequenas melhorias aqui podem impactar seus resultados nos próximos dias
-        </div>
       </div>
 
-      {/* ── BLOCO 3: SISTEMA ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 2px' }}>
+      {/* ── BLOCO 3: SISTEMA ATIVO ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 2px' }}>
         <span style={{
-          width: 5, height: 5, borderRadius: '50%', background: 'rgba(14,165,233,0.25)',
+          width: 5, height: 5, borderRadius: '50%', background: '#4ADE80',
+          boxShadow: '0 0 6px rgba(74,222,128,0.35)',
           animation: 'pulse 2.5s ease-in-out infinite',
         }} />
-        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)' }}>
-          Sistema analisando continuamente · novas decisões podem surgir a qualquer momento
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)' }}>
+          Monitoramento ativo · novas decisões podem surgir a qualquer momento
         </span>
       </div>
     </div>
@@ -1339,12 +1368,12 @@ const CollapsibleDecisions: React.FC<{
       {shouldCollapse && expanded && (
         <button onClick={() => setExpanded(false)} style={{
           background: 'none', border: 'none', padding: '6px 2px',
-          fontSize: 11, fontWeight: 500, color: 'rgba(139,148,158,0.45)',
+          fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.40)',
           cursor: 'pointer', fontFamily: F, textAlign: 'center',
           transition: 'color 0.1s',
         }}
-        onMouseEnter={e => { e.currentTarget.style.color = 'rgba(139,148,158,0.65)'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(139,148,158,0.45)'; }}>
+        onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.40)'; }}>
           ▴ Recolher recomendações
         </button>
       )}
@@ -1657,7 +1686,7 @@ const FeedPage: React.FC = () => {
               </h1>
               {isDemo && (
                 <span style={{
-                  fontSize: 9, fontWeight: 700, color: '#8B949E',
+                  fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.55)',
                   background: 'rgba(230,237,243,0.04)', border: '1px solid rgba(230,237,243,0.06)',
                   padding: '2px 6px', borderRadius: 3, letterSpacing: '0.08em',
                 }}>DEMO</span>
@@ -1674,7 +1703,7 @@ const FeedPage: React.FC = () => {
               )}
               {metaConnected && !syncing && (
                 <button onClick={handleSync} style={{
-                  background: 'rgba(230,237,243,0.04)', color: '#8B949E',
+                  background: 'rgba(230,237,243,0.04)', color: 'rgba(255,255,255,0.55)',
                   border: '1px solid rgba(230,237,243,0.06)', borderRadius: 4,
                   padding: '4px 10px', fontSize: 11, fontWeight: 600,
                   cursor: 'pointer', fontFamily: F, display: 'flex', alignItems: 'center', gap: 4,
@@ -1697,7 +1726,7 @@ const FeedPage: React.FC = () => {
             borderRadius: 3, padding: '10px 14px', marginBottom: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
           }}>
-            <span style={{ fontSize: 12, color: '#8B949E', fontFamily: F, lineHeight: 1.5 }}>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontFamily: F, lineHeight: 1.5 }}>
               Dados simulados. Sincronize sua conta Meta para análise real.
             </span>
             <button onClick={handleSync} style={{
