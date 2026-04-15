@@ -62,18 +62,20 @@ const PERIODS: { key: PeriodKey; label: string; days: number }[] = [
 ];
 
 const PeriodSelector: React.FC<{ value: PeriodKey; onChange: (k: PeriodKey) => void }> = ({ value, onChange }) => (
-  <div style={{ display: 'flex', gap: 2, background: 'rgba(230,237,243,0.03)', borderRadius: 3, padding: 2 }}>
+  <div style={{ display: 'flex', gap: 3, background: 'rgba(230,237,243,0.03)', borderRadius: 4, padding: 2 }}>
     {PERIODS.map(p => {
       const active = p.key === value;
       return (
         <button key={p.key} onClick={() => onChange(p.key)} style={{
-          background: active ? 'rgba(230,237,243,0.08)' : 'transparent',
-          color: active ? '#E6EDF3' : 'rgba(139,148,158,0.50)',
-          border: active ? '1px solid rgba(230,237,243,0.10)' : '1px solid transparent',
-          borderRadius: 2, padding: '3px 8px',
-          fontSize: 10.5, fontWeight: active ? 600 : 500,
-          cursor: 'pointer', fontFamily: F, transition: 'all 0.1s',
-        }}>
+          background: active ? 'rgba(230,237,243,0.08)' : 'rgba(230,237,243,0.02)',
+          color: active ? '#E6EDF3' : 'rgba(139,148,158,0.60)',
+          border: `1px solid ${active ? 'rgba(230,237,243,0.12)' : 'rgba(230,237,243,0.05)'}`,
+          borderRadius: 3, padding: '4px 10px',
+          fontSize: 11, fontWeight: 600,
+          cursor: 'pointer', fontFamily: F, transition: 'all 0.12s',
+        }}
+        onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(230,237,243,0.05)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,237,243,0.08)'; } }}
+        onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(230,237,243,0.02)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,237,243,0.05)'; } }}>
           {p.label}
         </button>
       );
@@ -721,8 +723,8 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
         display: 'flex', alignItems: 'center', gap: 6, padding: '6px 2px',
       }}>
         <span style={{
-          width: 5, height: 5, borderRadius: '50%', background: '#2D9B6E',
-          boxShadow: '0 0 4px rgba(45,155,110,0.4)',
+          width: 5, height: 5, borderRadius: '50%', background: '#22A3A3',
+          boxShadow: '0 0 4px rgba(34,163,163,0.4)',
           animation: 'st2-pulse 2s ease-in-out infinite',
         }} />
         <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.70)', fontWeight: 500 }}>
@@ -816,8 +818,8 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
       {/* Monitoring */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 2px' }}>
         <span style={{
-          width: 5, height: 5, borderRadius: '50%', background: '#2D9B6E',
-          boxShadow: '0 0 4px rgba(45,155,110,0.4)',
+          width: 5, height: 5, borderRadius: '50%', background: '#22A3A3',
+          boxShadow: '0 0 4px rgba(34,163,163,0.4)',
           animation: 'st3-pulse 2s ease-in-out infinite',
         }} />
         <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.45)', fontWeight: 500 }}>
@@ -956,7 +958,7 @@ const PerformanceSummary: React.FC<{
   const cpaReais = hasMetrics && metrics.avgCpa > 0 ? (metrics.avgCpa / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
   const ctrGood = ctrPct && parseFloat(ctrPct) >= 1;
   const confLevel = hasMetrics && metrics.daysOfData >= 5 ? 'alta' : hasMetrics && metrics.daysOfData >= 2 ? 'média' : 'baixa';
-  const confColor = confLevel === 'alta' ? 'rgba(45,155,110,0.60)' : confLevel === 'média' ? 'rgba(34,163,163,0.60)' : 'rgba(139,148,158,0.45)';
+  const confColor = confLevel === 'alta' ? 'rgba(34,163,163,0.70)' : confLevel === 'média' ? 'rgba(34,163,163,0.60)' : 'rgba(139,148,158,0.45)';
 
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 6 }}>
@@ -1496,8 +1498,8 @@ const FeedPage: React.FC = () => {
             {pendingDecisions.length > 0 && hasCritical && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '0 2px' }}>
                 <span style={{
-                  width: 6, height: 6, borderRadius: '50%', background: '#2D9B6E',
-                  boxShadow: '0 0 4px rgba(45,155,110,0.4)',
+                  width: 6, height: 6, borderRadius: '50%', background: '#22A3A3',
+                  boxShadow: '0 0 4px rgba(34,163,163,0.4)',
                   animation: 'pulse 2s ease-in-out infinite',
                 }} />
                 <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.70)', fontFamily: F, fontWeight: 500 }}>

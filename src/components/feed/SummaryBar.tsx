@@ -83,7 +83,7 @@ export const SummaryBar: React.FC<SummaryBarProps> = ({ decisions }) => {
       )}
       {scaleDecisions.length > 0 && (
         <Pill count={scaleDecisions.length} label="escalar" impact={scaleImpact}
-          color="#2D9B6E" hoverBorder="rgba(27,110,87,0.40)" type="scale" />
+          color="#22A3A3" hoverBorder="rgba(34,163,163,0.40)" type="scale" />
       )}
       {patternDecisions.length > 0 && (
         <Pill count={patternDecisions.length}

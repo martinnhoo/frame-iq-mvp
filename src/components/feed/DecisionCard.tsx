@@ -34,10 +34,10 @@ const TYPE_CONFIG: Record<string, {
     accent: '#C8922A', impactLabel: 'recuperável', confirmTitle: 'Confirmar ação',
   },
   scale: {
-    border: '#1B6E57', badgeBg: 'rgba(27,110,87,0.18)', badgeText: '#2D9B6E',
-    label: 'ESCALAR', btnBg: '#1B6E57', btnHover: '#145443',
-    secondaryBg: 'rgba(27,110,87,0.07)', secondaryBorder: 'rgba(27,110,87,0.20)',
-    accent: '#2D9B6E', impactLabel: 'oportunidade', confirmTitle: 'Confirmar escala',
+    border: '#1B8A8A', badgeBg: 'rgba(34,163,163,0.18)', badgeText: '#22A3A3',
+    label: 'ESCALAR', btnBg: '#1B8A8A', btnHover: '#17807F',
+    secondaryBg: 'rgba(34,163,163,0.07)', secondaryBorder: 'rgba(34,163,163,0.20)',
+    accent: '#22A3A3', impactLabel: 'oportunidade', confirmTitle: 'Confirmar escala',
   },
   pattern: {
     border: '#553c9a', badgeBg: 'rgba(85,60,154,0.18)', badgeText: '#9f7aea',
@@ -60,7 +60,7 @@ const TYPE_CONFIG: Record<string, {
 };
 
 const CONFIDENCE_CONFIG: Record<string, { dot: string; text: string; label: string }> = {
-  high: { dot: '#2D9B6E', text: 'rgba(230,237,243,0.60)', label: 'Alta' },
+  high: { dot: '#22A3A3', text: 'rgba(230,237,243,0.60)', label: 'Alta' },
   medium: { dot: '#C8922A', text: 'rgba(230,237,243,0.55)', label: 'Média' },
   low: { dot: '#8B949E', text: 'rgba(230,237,243,0.50)', label: 'Baixa' },
 };
@@ -317,7 +317,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           <div style={{
             fontSize: 11, fontWeight: 500, marginBottom: 8,
             color: decision.type === 'scale'
-              ? 'rgba(45,155,110,0.80)'
+              ? 'rgba(34,163,163,0.80)'
               : 'rgba(214,59,59,0.75)',
           }}>
             Impacto projetado (7 dias): {decision.type === 'scale' ? '+' : '-'}{formatMoney(decision.impact_7d)}
@@ -382,7 +382,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
               }}>
                 <span style={{ color: '#8B949E', fontWeight: 500 }}>{m.key}</span>
                 <span style={{
-                  color: m.trend === 'down' ? '#D63B3B' : m.trend === 'up' ? '#2D9B6E' : '#8B949E',
+                  color: m.trend === 'down' ? '#D63B3B' : m.trend === 'up' ? '#22A3A3' : '#8B949E',
                   fontWeight: 600, fontSize: 11,
                 }}>
                   {m.value}
@@ -487,7 +487,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           {actionFeedback && (
             <span style={{
               fontSize: 11, fontWeight: 500, marginLeft: 4,
-              color: actionFeedback.type === 'success' ? '#2D9B6E' : '#D63B3B',
+              color: actionFeedback.type === 'success' ? '#22A3A3' : '#D63B3B',
             }}>
               {actionFeedback.msg}
             </span>

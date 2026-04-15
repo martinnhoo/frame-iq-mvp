@@ -233,15 +233,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       }}>
         <div style={{
           width: 48, height: 48, borderRadius: 12,
-          background: 'rgba(16,185,129,0.06)',
-          border: '1px solid rgba(16,185,129,0.12)',
+          background: 'rgba(34,163,163,0.06)',
+          border: '1px solid rgba(34,163,163,0.12)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           margin: '0 auto 20px',
         }}>
           <div style={{
             width: 10, height: 10, borderRadius: '50%',
-            background: '#2D9B6E',
-            boxShadow: '0 0 8px rgba(52,211,153,0.4)',
+            background: '#22A3A3',
+            boxShadow: '0 0 8px rgba(34,163,163,0.4)',
             animation: 'es-pulse 2s ease-in-out infinite',
           }} />
         </div>
@@ -267,7 +267,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           </h3>
           {hasSaved && (
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: hasActivity ? 12 : 0 }}>
-              <span style={{ fontSize: 20, fontWeight: 800, color: '#2D9B6E', fontFamily: F, letterSpacing: '-0.02em' }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: '#22A3A3', fontFamily: F, letterSpacing: '-0.02em' }}>
                 {formatMoney(todaySummary.savedToday)}
               </span>
               <span style={{ fontSize: 12, color: '#8B949E' }}>economizado hoje</span>
@@ -474,18 +474,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: isDone
-                  ? 'rgba(16,185,129,0.15)'
+                  ? 'rgba(34,163,163,0.15)'
                   : isActive
                     ? 'rgba(14,165,233,0.15)'
                     : 'rgba(230,237,243,0.04)',
                 border: `1.5px solid ${
-                  isDone ? '#1B6E57' : isActive ? '#22A3A3' : 'rgba(230,237,243,0.08)'
+                  isDone ? '#1B8A8A' : isActive ? '#22A3A3' : 'rgba(230,237,243,0.08)'
                 }`,
                 transition: 'all 0.4s ease',
               }}>
                 {isDone ? (
                   <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                    <path d="M2.5 6L5 8.5L9.5 3.5" stroke="#1B6E57" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2.5 6L5 8.5L9.5 3.5" stroke="#1B8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 ) : isActive ? (
                   <div style={{
@@ -518,7 +518,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               {isDone && (
                 <span style={{
                   marginLeft: 'auto', fontSize: 10, fontWeight: 500,
-                  color: '#1B6E57', opacity: 0.7,
+                  color: '#1B8A8A', opacity: 0.7,
                 }}>
                   ✓
                 </span>
