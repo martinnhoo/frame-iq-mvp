@@ -19,9 +19,9 @@ const PLANS = [
     accent: "text-blue-400",
     badge: null,
     features: {
-      pt: ["1.000 créditos/mês", "1 conta de anúncios", "Todas as ferramentas"],
-      es: ["1.000 créditos/mes", "1 cuenta de anuncios", "Todas las herramientas"],
-      en: ["1,000 credits/mo", "1 ad account", "All tools"],
+      pt: ["1 conta de anúncios", "Ferramentas de criação", "Suporte a decisões básico"],
+      es: ["1 cuenta de anuncios", "Herramientas de creación", "Soporte a decisiones básico"],
+      en: ["1 ad account", "Creative tools", "Basic decision support"],
     },
   },
   {
@@ -33,9 +33,9 @@ const PLANS = [
     accent: "text-sky-400",
     badge: { pt: "Mais popular", es: "Más popular", en: "Most Popular" },
     features: {
-      pt: ["2.500 créditos/mês", "3 contas de anúncios", "Todas as ferramentas", "Multi-mercado"],
-      es: ["2.500 créditos/mes", "3 cuentas de anuncios", "Todas las herramientas", "Multi-mercado"],
-      en: ["2,500 credits/mo", "3 ad accounts", "All tools", "Multi-market"],
+      pt: ["3 contas de anúncios", "Decision engine completo", "Monitoramento em tempo real", "Multi-mercado"],
+      es: ["3 cuentas de anuncios", "Decision engine completo", "Monitoreo en tiempo real", "Multi-mercado"],
+      en: ["3 ad accounts", "Full decision engine", "Real-time monitoring", "Multi-market"],
     },
   },
   {
@@ -47,9 +47,9 @@ const PLANS = [
     accent: "text-pink-400",
     badge: { pt: "Melhor valor", es: "Mejor valor", en: "Best value" },
     features: {
-      pt: ["9.000 créditos/mês", "Contas ilimitadas", "Todas as ferramentas", "Workspace agência", "Suporte prioritário"],
-      es: ["9.000 créditos/mes", "Cuentas ilimitadas", "Todas las herramientas", "Workspace agencia", "Soporte prioritario"],
-      en: ["9,000 credits/mo", "Unlimited accounts", "All tools", "Agency workspace", "Priority support"],
+      pt: ["Contas ilimitadas", "Análise acelerada", "Processamento prioritário", "Workspace agência", "Suporte prioritário"],
+      es: ["Cuentas ilimitadas", "Análisis acelerado", "Procesamiento prioritario", "Workspace agencia", "Soporte prioritario"],
+      en: ["Unlimited accounts", "Faster analysis", "Priority processing", "Agency workspace", "Priority support"],
     },
   },
 ];

@@ -1,5 +1,6 @@
 /**
- * CreditBar — Simple inline credit bar for sidebar footer.
+ * UsageBar — Inline usage bar for sidebar footer.
+ * Shows execution capacity, NOT credits.
  * Clean startup style. No boxes, no borders. Just text + bar.
  */
 import { useState, useEffect, useCallback } from "react";
@@ -7,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getPlanCredits } from "@/lib/planLimits";
 
-interface CreditData {
+interface UsageData {
   total: number;
   used: number;
   bonus: number;
@@ -20,20 +21,23 @@ interface Props {
   plan?: string;
 }
 
-export function CreditBar({ userId, plan }: Props) {
-  const [credits, setCredits] = useState<CreditData | null>(null);
+/** @deprecated Use UsageBar instead */
+export const CreditBar = UsageBar;
+
+export function UsageBar({ userId, plan }: Props) {
+  const [usage, setUsage] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
   const { language } = useLanguage();
   const pt = language === "pt";
   const es = language === "es";
 
-  const fetchCredits = useCallback(async () => {
+  const fetchUsage = useCallback(async () => {
     if (!userId) return;
     try {
       const { data } = await supabase.functions.invoke("check-usage", {
         body: { user_id: userId },
       });
-      if (data?.credits) setCredits(data.credits);
+      if (data?.credits) setUsage(data.credits);
     } catch {
       // silent
     } finally {
@@ -42,21 +46,21 @@ export function CreditBar({ userId, plan }: Props) {
   }, [userId]);
 
   useEffect(() => {
-    fetchCredits();
-    const interval = setInterval(fetchCredits, 60_000);
+    fetchUsage();
+    const interval = setInterval(fetchUsage, 60_000);
     return () => clearInterval(interval);
-  }, [fetchCredits]);
+  }, [fetchUsage]);
 
   useEffect(() => {
-    const handler = () => fetchCredits();
+    const handler = () => fetchUsage();
     window.addEventListener("adbrief:credits-updated", handler);
     return () => window.removeEventListener("adbrief:credits-updated", handler);
-  }, [fetchCredits]);
+  }, [fetchUsage]);
 
-  // Fallback: if API returned 0/0, use plan's credit pool
+  // Fallback: if API returned 0/0, use plan's pool
   const planPool = getPlanCredits(plan);
-  const total = (credits && credits.total > 0) ? credits.total : planPool;
-  const remaining = (credits && credits.total > 0) ? credits.remaining : planPool;
+  const total = (usage && usage.total > 0) ? usage.total : planPool;
+  const remaining = (usage && usage.total > 0) ? usage.remaining : planPool;
   const used = total - remaining;
   const usedPct = total > 0 ? (used / total) * 100 : 0;
   const isEmpty = remaining <= 0 && total > 0;
@@ -67,7 +71,7 @@ export function CreditBar({ userId, plan }: Props) {
   const countColor = isEmpty ? "#ef4444" : isCritical ? "#ef4444" : isLow ? "#eab308" : "rgba(255,255,255,0.9)";
   const barFill = isEmpty ? "#ef4444" : isCritical ? "#ef4444" : isLow ? "#eab308" : "#0ea5e9";
 
-  if (loading && !credits) {
+  if (loading && !usage) {
     return (
       <div style={{ padding: "8px 14px", margin: "0 6px" }}>
         <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.04)" }} />
@@ -86,7 +90,7 @@ export function CreditBar({ userId, plan }: Props) {
           fontSize: 12, fontWeight: 500,
           color: "rgba(255,255,255,0.5)",
         }}>
-          {pt ? "Créditos" : es ? "Créditos" : "Credits"}
+          {pt ? "Uso mensal" : es ? "Uso mensual" : "Monthly usage"}
         </span>
         <span style={{
           fontSize: 12, fontWeight: 600,
@@ -112,15 +116,15 @@ export function CreditBar({ userId, plan }: Props) {
         }} />
       </div>
 
-      {/* Warnings — just text, no boxes */}
+      {/* Warnings */}
       {isCritical && !isEmpty && (
         <p style={{ margin: "6px 0 0", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
-          {pt ? "Créditos quase esgotados" : es ? "Créditos casi agotados" : "Credits running low"}
+          {pt ? "Uso se aproximando do limite" : es ? "Uso acercándose al límite" : "Usage approaching monthly limit"}
         </p>
       )}
       {isEmpty && (
         <p style={{ margin: "6px 0 0", fontSize: 11, fontWeight: 600, color: "#ef4444" }}>
-          {pt ? "Sem créditos — faça upgrade" : es ? "Sin créditos — mejora tu plan" : "No credits left — upgrade"}
+          {pt ? "Limite mensal atingido" : es ? "Límite mensual alcanzado" : "Monthly limit reached"}
         </p>
       )}
     </div>

@@ -77,8 +77,12 @@ export function getCreditCost(action: string): number {
   return CREDIT_COSTS[action] ?? 0;
 }
 
-/** Format credit cost as readable label */
+/** @deprecated Use actionLabel instead */
 export function creditLabel(action: string): string {
-  const cost = getCreditCost(action);
-  return cost === 1 ? "1 crédito" : `${cost} créditos`;
+  return actionLabel(action);
+}
+
+/** Format action cost as a user-facing label (never exposes "credits") */
+export function actionLabel(_action: string): string {
+  return "1 ação";
 }

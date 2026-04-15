@@ -66,43 +66,43 @@ const PLANS: Record<string, { name: string; price: string; badge?: string; featu
   en: [
     {
       key: "maker", name: "Maker", price: "$19/mo", highlight: false, action: "/signup?plan=maker",
-      features: { en: ["1,000 credits/mo", "1 ad account", "All tools", "1 ad account"] },
+      features: { en: ["1 ad account", "Creative tools", "Basic decision support"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mo", badge: "Most popular", highlight: true, action: "/signup?plan=pro",
-      features: { en: ["2,500 credits/mo", "3 ad accounts", "All tools", "Unlimited accounts", "Multi-market"] },
+      features: { en: ["3 ad accounts", "Full decision engine", "Real-time monitoring", "Multi-market"] },
     },
     {
       key: "studio", name: "Studio", price: "$149/mo", highlight: false, action: "/signup?plan=studio",
-      features: { en: ["9,000 credits/mo", "Unlimited accounts", "All tools", "Agency workspace", "Priority support"] },
+      features: { en: ["Unlimited accounts", "Faster analysis", "Priority processing", "Agency workspace"] },
     },
   ],
   pt: [
     {
       key: "maker", name: "Maker", price: "$19/mês", highlight: false, action: "/signup?plan=maker",
-      features: { pt: ["1.000 créditos/mês", "1 conta de anúncios", "Todas as ferramentas", "1 ad account"] },
+      features: { pt: ["1 conta de anúncios", "Ferramentas de criação", "Suporte a decisões básico"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mês", badge: "Mais popular", highlight: true, action: "/signup?plan=pro",
-      features: { pt: ["2.500 créditos/mês", "3 contas de anúncios", "Todas as ferramentas", "Contas ilimitadas", "Multi-mercado"] },
+      features: { pt: ["3 contas de anúncios", "Decision engine completo", "Monitoramento em tempo real", "Multi-mercado"] },
     },
     {
       key: "studio", name: "Studio", price: "$149/mês", highlight: false, action: "/signup?plan=studio",
-      features: { pt: ["9.000 créditos/mês", "Contas ilimitadas", "Todas as ferramentas", "Workspace agência", "Suporte prioritário"] },
+      features: { pt: ["Contas ilimitadas", "Análise acelerada", "Processamento prioritário", "Workspace agência"] },
     },
   ],
   es: [
     {
       key: "maker", name: "Maker", price: "$19/mes", highlight: false, action: "/signup?plan=maker",
-      features: { es: ["1.000 créditos/mes", "1 cuenta de anuncios", "Todas las herramientas", "1 ad account"] },
+      features: { es: ["1 cuenta de anuncios", "Herramientas de creación", "Soporte a decisiones básico"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mes", badge: "Más popular", highlight: true, action: "/signup?plan=pro",
-      features: { es: ["2.500 créditos/mes", "3 cuentas de anuncios", "Todas las herramientas", "Contas ilimitadas", "Multi-mercado"] },
+      features: { es: ["3 cuentas de anuncios", "Decision engine completo", "Monitoreo en tiempo real", "Multi-mercado"] },
     },
     {
       key: "studio", name: "Studio", price: "$149/mes", highlight: false, action: "/signup?plan=studio",
-      features: { es: ["9.000 créditos/mes", "Cuentas ilimitadas", "Todas las herramientas", "Workspace agencia", "Soporte prioritario"] },
+      features: { es: ["Cuentas ilimitadas", "Análisis acelerado", "Procesamiento prioritario", "Workspace agencia"] },
     },
   ],
 };
