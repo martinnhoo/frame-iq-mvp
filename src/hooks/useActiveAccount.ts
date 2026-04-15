@@ -205,7 +205,14 @@ async function ensureV2Account(
       .eq('meta_account_id', metaAccount.id)
       .maybeSingle() as any);
 
-    if (existing?.id) return existing.id;
+    if (existing?.id) {
+      // Ensure access token is always up-to-date
+      await (supabase
+        .from('ad_accounts' as any)
+        .update({ access_token_encrypted: accessToken })
+        .eq('id', existing.id) as any);
+      return existing.id;
+    }
 
     // Create v2 ad_accounts row — column is access_token_encrypted (NOT NULL)
     const { data: created, error: insertErr } = await (supabase
