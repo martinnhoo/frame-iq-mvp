@@ -1,7 +1,11 @@
-// adbrief-ai-chat v20.1 — tom livre, fix toneMap removido
+// adbrief-ai-chat v21.0 — stability + context size fix
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
+
+// ── Timing helper ──
+const _t0 = Date.now();
+const _lap = (label: string) => console.log(`[ai-chat] ${label}: ${Date.now() - _t0}ms`);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -528,31 +532,31 @@ Deno.serve(async (req) => {
       { data: activeTrends },
       { data: trendBaseline },
     ] = await Promise.all([
-      // 1. Recent analyses — scoped to this persona/account
+      // 1. Recent analyses — scoped to this persona/account (limit 5 for context size)
       persona_id
         ? (supabase.from("analyses" as any) as any)
-            .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
+            .select("id, created_at, title, result, hook_strength, status")
             .eq("user_id", user_id)
             .eq("persona_id", persona_id)
             .eq("status", "completed")
             .order("created_at", { ascending: false })
-            .limit(15)
+            .limit(5)
         : (supabase.from("analyses" as any) as any)
-            .select("id, created_at, title, result, hook_strength, status, improvement_suggestions")
+            .select("id, created_at, title, result, hook_strength, status")
             .eq("user_id", user_id)
             .eq("status", "completed")
             .is("persona_id", null)
             .order("created_at", { ascending: false })
-            .limit(15),
+            .limit(5),
       // 2. AI profile
       (supabase as any).from("user_ai_profile").select("*").eq("user_id", user_id).maybeSingle(),
-      // 3. Creative memory
+      // 3. Creative memory (limit 10)
       (supabase as any)
         .from("creative_memory")
         .select("hook_type, hook_score, platform, notes, created_at")
         .eq("user_id", user_id)
         .order("created_at", { ascending: false })
-        .limit(20),
+        .limit(10),
       // 4. Platform connections — STRICT persona scope
       supabase
         .from("platform_connections" as any)
@@ -585,23 +589,22 @@ Deno.serve(async (req) => {
       persona_id
         ? supabase.from("personas").select("result").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
-      // 7. Learned patterns
+      // 7. Learned patterns (limit 20 — trimmed further in context building)
       (supabase as any)
         .from("learned_patterns")
-        .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, variables, persona_id")
+        .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, persona_id")
         .eq("user_id", user_id)
         .order("confidence", { ascending: false })
-        .limit(60),
-      // 7b. Global benchmarks — anonymous aggregate patterns from all accounts (user_id=null)
-      // These are what the AI uses as market benchmarks — never reveals source accounts
+        .limit(20),
+      // 7b. Global benchmarks — limit 8 for context size
       (supabase as any)
         .from("learned_patterns")
-        .select("pattern_key, avg_ctr, avg_roas, is_winner, confidence, insight_text, variables")
+        .select("pattern_key, avg_ctr, avg_roas, is_winner, confidence, insight_text")
         .is("user_id", null)
         .like("pattern_key", "global_benchmark::%")
         .gte("confidence", 0.3)
         .order("avg_ctr", { ascending: false })
-        .limit(20)
+        .limit(8)
         .then((r: any) => (r.error ? { data: [] } : r)),
       // 7c. Global market summary — synthesized narrative from aggregate-intelligence
       (supabase as any)
@@ -612,32 +615,32 @@ Deno.serve(async (req) => {
         .maybeSingle()
         .then((r: any) => (r.error ? { data: null } : r)),
       // 8. Daily snapshots
-      // 8. Daily snapshots — filter at DB level
+      // 8. Daily snapshots — limit 3 for context size (was 7)
       persona_id
         ? (supabase as any)
             .from("daily_snapshots")
             .select(
-              "date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period",
+              "date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr",
             )
             .eq("user_id", user_id)
             .eq("persona_id", persona_id)
             .order("date", { ascending: false })
-            .limit(7)
+            .limit(3)
         : (supabase as any)
             .from("daily_snapshots")
             .select(
-              "date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr, raw_period",
+              "date, account_name, total_spend, avg_ctr, active_ads, top_ads, ai_insight, yesterday_spend, yesterday_ctr",
             )
             .eq("user_id", user_id)
             .order("date", { ascending: false })
-            .limit(7),
-      // 9. Preflight history
+            .limit(3),
+      // 9. Preflight history (limit 5)
       (supabase as any)
         .from("preflight_results")
         .select("created_at, score, verdict, platform, market, format")
         .eq("user_id", user_id)
         .order("created_at", { ascending: false })
-        .limit(10)
+        .limit(5)
         .then((r: any) => (r.error ? { data: [] } : r)),
       // 10. Active account alerts
       (supabase as any)
@@ -672,21 +675,21 @@ Deno.serve(async (req) => {
                 data: (r.data || []).filter((p: any) => p.persona_id !== persona_id),
               },
         ),
-      // 12. Chat memory — fetch all user memories, scoped by persona when available
+      // 12. Chat memory (limit 15 for context size)
       persona_id
         ? (supabase as any)
             .from("chat_memory")
-            .select("memory_text, memory_type, importance, created_at, persona_id")
+            .select("memory_text, memory_type, importance")
             .eq("user_id", user_id)
             .or(`persona_id.eq.${persona_id},persona_id.is.null`)
             .order("importance", { ascending: false })
-            .limit(30)
+            .limit(15)
         : (supabase as any)
             .from("chat_memory")
-            .select("memory_text, memory_type, importance, created_at, persona_id")
+            .select("memory_text, memory_type, importance")
             .eq("user_id", user_id)
             .order("importance", { ascending: false })
-            .limit(30),
+            .limit(15),
       // 13. Few-shot examples
       (supabase as any)
         .from("chat_examples")
@@ -700,7 +703,7 @@ Deno.serve(async (req) => {
             : all.filter((e: any) => !e.persona_id);
           return { data: scoped.sort((a: any, b: any) => (b.quality_score || 0) - (a.quality_score || 0)).slice(0, 3) };
         }),
-      // 15. Active trends — direct DB read, no invoke needed
+      // 15. Active trends (limit 5 for context size)
       (supabase as any)
         .from("trend_intelligence")
         .select("term,angle,ad_angle,niches,category,days_active,appearances,last_volume,peak_volume")
@@ -708,7 +711,7 @@ Deno.serve(async (req) => {
         .eq("is_blocked", false)
         .lt("risk_score", 7)
         .order("last_volume", { ascending: false })
-        .limit(10)
+        .limit(5)
         .then((r: any) => (r.error ? { data: [] } : r)),
       // 16. Trend baseline
       (supabase as any)
@@ -720,6 +723,7 @@ Deno.serve(async (req) => {
         .maybeSingle()
         .then((r: any) => (r.error ? { data: null } : r)),
     ]);
+    _lap("db-queries-done");
 
     // ── 4. Build context ──────────────────────────────────────────────────────
     const analyses = (recentAnalyses || []) as any[];
@@ -752,10 +756,10 @@ Deno.serve(async (req) => {
     const memorySummary = persistentMemories.length
       ? persistentMemories
           .sort((a: any, b: any) => (b.importance || 0) - (a.importance || 0))
-          .slice(0, 30)
+          .slice(0, 10)
           .map((m: any) => {
-            const imp = m.importance >= 5 ? "🔴" : m.importance >= 4 ? "🟡" : "⚪";
-            return `${imp} [${m.memory_type || "context"}] ${m.memory_text}`;
+            const imp = (m.importance || 0) >= 5 ? "🔴" : (m.importance || 0) >= 4 ? "🟡" : "⚪";
+            return `${imp} [${m.memory_type || "ctx"}] ${(m.memory_text || "").slice(0, 150)}`;
           })
           .join("\n")
       : null;
@@ -776,21 +780,14 @@ Deno.serve(async (req) => {
       .map(([type, d]) => `${type} (avg ${(d.total / d.count).toFixed(1)}, ${d.count} uses)`);
 
     const recentSummary = analyses
-      .slice(0, 5)
+      .slice(0, 3)
       .map((a: any) => {
-        const r = a.result as any;
-        return [
-          `  - "${a.title || r?.market_guess || "untitled"}"`,
-          `score:${r?.hook_score ?? "—"}`,
-          `hook_type:${r?.hook_type || a.hook_strength || "—"}`,
-          `format:${r?.format || "—"}`,
-          `market:${r?.market_guess || "—"}`,
-          r?.summary ? `summary:"${String(r.summary).slice(0, 80)}"` : "",
-          `date:${a.created_at?.split("T")[0]}`,
-        ]
-          .filter(Boolean)
-          .join(" | ");
+        try {
+          const r = (a?.result as any) || {};
+          return `  - "${(a?.title || r?.market_guess || "untitled").slice(0, 40)}" score:${r?.hook_score ?? "—"} hook:${r?.hook_type || a?.hook_strength || "—"} date:${a?.created_at?.split("T")[0] || "?"}`;
+        } catch { return ""; }
       })
+      .filter(Boolean)
       .join("\n");
 
     const connectedPlatforms = connections.map((c: any) => {
@@ -826,21 +823,20 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
     // Scope patterns to this persona — prefer persona-specific, include global (null persona_id), exclude other personas
     const allRawPatterns = (learnedPatterns || []) as any[];
     const patterns = persona_id
-      ? allRawPatterns.filter((p: any) => p.persona_id === persona_id || p.persona_id === null).slice(0, 30)
-      : allRawPatterns.filter((p: any) => p.persona_id === null).slice(0, 30);
-    const winners = patterns.filter((p) => p.is_winner && p.confidence > 0.2);
-    // Business profile — permanent account intelligence (who this company really is)
-    const businessProfile = patterns.find((p) => p.pattern_key.startsWith("business_profile_"));
-    const competitors = patterns.filter((p) => p.pattern_key.startsWith("competitor_"));
-    const perfPatterns = patterns.filter((p) => p.pattern_key.startsWith("perf_"));
-    const preflightPatterns = patterns.filter((p) => p.pattern_key.startsWith("preflight_"));
-    const actionPatterns = patterns.filter((p) => p.pattern_key.startsWith("action_"));
-    // Market intelligence patterns — from Google Trends + Meta Ads Library
+      ? allRawPatterns.filter((p: any) => p.persona_id === persona_id || p.persona_id === null).slice(0, 15)
+      : allRawPatterns.filter((p: any) => p.persona_id === null).slice(0, 15);
+    // CRITICAL: limit each category to max 3 for context size
+    const winners = patterns.filter((p) => p.is_winner && p.confidence > 0.2).slice(0, 3);
+    const businessProfile = patterns.find((p) => p.pattern_key?.startsWith("business_profile_")) || null;
+    const competitors = patterns.filter((p) => p.pattern_key?.startsWith("competitor_")).slice(0, 3);
+    const perfPatterns = patterns.filter((p) => p.pattern_key?.startsWith("perf_")).slice(0, 3);
+    const preflightPatterns = patterns.filter((p) => p.pattern_key?.startsWith("preflight_")).slice(0, 2);
+    const actionPatterns = patterns.filter((p) => p.pattern_key?.startsWith("action_")).slice(0, 2);
     const marketPatterns = patterns
-      .filter((p) => p.pattern_key.startsWith("market_intel_") || p.pattern_key.startsWith("market_competitor_"))
-      .sort((a: any, b: any) => new Date(b.last_updated || 0).getTime() - new Date(a.last_updated || 0).getTime());
-    const latestMarket = marketPatterns.find((p) => p.pattern_key.startsWith("market_intel_"));
-    const competitorSignals = marketPatterns.filter((p) => p.pattern_key.startsWith("market_competitor_")).slice(0, 5);
+      .filter((p) => p.pattern_key?.startsWith("market_intel_") || p.pattern_key?.startsWith("market_competitor_"))
+      .slice(0, 5);
+    const latestMarket = marketPatterns.find((p) => p.pattern_key?.startsWith("market_intel_")) || null;
+    const competitorSignals = marketPatterns.filter((p) => p.pattern_key?.startsWith("market_competitor_")).slice(0, 3);
 
     // ── Trend intelligence — já carregado no Promise.all acima ──────────────
     let trendContext = "";
@@ -924,56 +920,42 @@ Esta conta ainda não tem padrões validados com dados suficientes.
 - NUNCA inclua estimativas financeiras sem base em dados reais.
 ═══════════════════════════════════`,
       winners.length
-        ? `PADRÕES VENCEDORES (usar como base para toda recomendação):\n${winners
-            .slice(0, 5)
-            .map((p) => `  ✓ ${p.insight_text} (confiança: ${(p.confidence * 100).toFixed(0)}%, ${p.sample_size || "?"} ads)`)
+        ? `PADRÕES VENCEDORES:\n${winners
+            .map((p) => `  ✓ ${(p.insight_text || "").slice(0, 120)} (conf: ${((p.confidence || 0) * 100).toFixed(0)}%)`)
             .join("\n")}`
         : "",
       perfPatterns.length
-        ? `PERFORMANCE HISTÓRICA:\n${perfPatterns
-            .slice(0, 5)
-            .map((p) => `  - ${p.insight_text}`)
+        ? `PERFORMANCE:\n${perfPatterns
+            .map((p) => `  - ${(p.insight_text || "").slice(0, 100)}`)
             .join("\n")}`
         : "",
       competitors.length
-        ? `CONCORRENTES ANALISADOS:\n${competitors
-            .slice(0, 5)
-            .map((p) => `  - ${p.insight_text}`)
+        ? `CONCORRENTES:\n${competitors
+            .map((p) => `  - ${(p.insight_text || "").slice(0, 100)}`)
             .join("\n")}`
         : "",
       preflightPatterns.length
-        ? `QUALIDADE DE SCRIPT (preflight):\n${preflightPatterns
-            .slice(0, 3)
-            .map((p) => `  - ${p.insight_text}`)
+        ? `PREFLIGHT:\n${preflightPatterns
+            .map((p) => `  - ${(p.insight_text || "").slice(0, 80)}`)
             .join("\n")}`
         : "",
       actionPatterns.length
-        ? `AÇÕES EXECUTADAS:\n${actionPatterns
-            .slice(0, 3)
-            .map((p) => `  - ${p.insight_text}`)
+        ? `AÇÕES:\n${actionPatterns
+            .map((p) => `  - ${(p.insight_text || "").slice(0, 80)}`)
             .join("\n")}`
         : "",
-      // Global benchmarks — anonymous aggregates from all accounts across the platform
-      // Use as market benchmarks. NEVER mention "other clients" — phrase as "dados do setor" or "mercado"
+      // Global benchmarks — limit 5 lines for context size
       (() => {
-        const globals = (globalBenchmarks || []) as any[];
-        if (!globals.length) return "";
-        const persona = personaRow as any;
-        const niche = (persona?.result as any)?.niche || (persona?.result as any)?.industry || "";
-        const market = (persona?.result as any)?.preferred_market || "BR";
-        // Prioritize benchmarks matching this account's niche/market
-        const relevant = globals
-          .filter((g) => {
-            const vars = (g.variables as any) || {};
-            return (vars.niche === "all" || vars.niche === niche) && (vars.market === "all" || vars.market === market);
-          })
-          .slice(0, 8);
-        if (!relevant.length) return "";
-        const summary = (marketSummaryRow as any)?.insight_text || "";
-        const lines = relevant
-          .map((g) => `  - ${g.insight_text}${g.avg_ctr ? ` (benchmark: CTR ${(g.avg_ctr * 100).toFixed(2)}%)` : ""}`)
-          .join("\n");
-        return `=== BENCHMARKS DO SETOR (dados agregados, anônimos) ===\n${summary ? `${summary}\n` : ""}${lines}\n(Use como referência de mercado. Fraseie como "dados do setor" ou "em campanhas similares". Nunca revele que são dados de outras contas.)`;
+        try {
+          const globals = (globalBenchmarks || []) as any[];
+          if (!globals.length) return "";
+          const relevant = globals.slice(0, 5);
+          const summary = (marketSummaryRow as any)?.insight_text || "";
+          const lines = relevant
+            .map((g) => `  - ${(g.insight_text || "").slice(0, 100)}${g.avg_ctr ? ` (CTR ${(g.avg_ctr * 100).toFixed(2)}%)` : ""}`)
+            .join("\n");
+          return `BENCHMARKS DO SETOR:\n${summary ? `${summary.slice(0, 150)}\n` : ""}${lines}`;
+        } catch { return ""; }
       })(),
       // Business profile — simplified, no auto-generated compliance rules
       businessProfile
@@ -1128,31 +1110,31 @@ Esta conta ainda não tem padrões validados com dados suficientes.
             } else {
               // Comprehensive Meta Ads data fetch: 90 days + lifetime top performers
               const fields =
-                "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
+                "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency";
               const [r1, r2, r3, r4, r5, r6] = await Promise.allSettled([
-                // 90-day ad insights sorted by spend
+                // 90-day ad insights — limit 25 (was 100)
                 fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=100&access_token=${token}`,
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=25&access_token=${token}`,
                 ),
-                // All campaigns including paused/ended — full history
+                // Campaigns — limit 30 (was 100)
                 fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status,created_time,start_time,stop_time&limit=100&access_token=${token}`,
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=30&access_token=${token}`,
                 ),
-                // Adsets with targeting + budget + status
+                // Adsets — limit 20, trimmed fields (was 100 with targeting)
                 fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,optimization_goal,bid_strategy,bid_amount,campaign_id&limit=100&access_token=${token}`,
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,optimization_goal&limit=20&access_token=${token}`,
                 ),
-                // Monthly time series — last 90 days daily
+                // Monthly time series
                 fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm,actions&time_range={"since":"${since}","until":"${until}"}&time_increment=monthly&limit=12&access_token=${token}`,
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${until}"}&time_increment=monthly&limit=6&access_token=${token}`,
                 ),
-                // Placement breakdown 90 days
+                // Placement breakdown — limit 10 (was 20)
                 fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=20&access_token=${token}`,
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=10&access_token=${token}`,
                 ),
-                // Lifetime top ads — all-time best performers (3 years)
+                // Lifetime top ads — limit 15 (was 50)
                 fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${lifetimeSince}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`,
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${lifetimeSince}","until":"${until}"}&sort=spend_descending&limit=15&access_token=${token}`,
                 ),
               ]);
               adsRaw = r1.status === "fulfilled" ? await r1.value.json() : null;
@@ -1162,6 +1144,7 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               placementRaw = r5.status === "fulfilled" ? await r5.value.json() : null;
               lifetimeAdsRaw = r6.status === "fulfilled" ? await r6.value.json() : null;
 
+              _lap("meta-api-done");
               // Cache results — evict stale entries first to prevent unbounded growth
               const metaCache = (globalThis as any).__metaCache;
               for (const k of Object.keys(metaCache)) {
@@ -1181,7 +1164,7 @@ Esta conta ainda não tem padrões validados com dados suficientes.
                 : `CAMPAIGNS: Error — ${campsRaw.error.message}. Answer based on this error, do NOT emit list_campaigns tool_call.\n`;
             } else if (campsRaw?.data?.length) {
               const lines = campsRaw.data
-                .slice(0, 30)
+                .slice(0, 15)
                 .map(
                   (c: any) =>
                     `  ${c.name}: ${c.effective_status || c.status} | budget=${c.daily_budget ? `$${(parseInt(c.daily_budget) / 100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget) / 100).toFixed(0)} total` : "no budget"} | ${c.objective}`,
@@ -1192,26 +1175,15 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               liveMetaData += `CAMPAIGNS: Nenhuma campanha encontrada.\n`;
             }
 
-            // FIX 4: Adsets with targeting intel
+            // Adsets — compact (no targeting to reduce size)
             if (adsetsRaw?.data?.length) {
               const adsetLines = adsetsRaw.data
-                .slice(0, 20)
+                .slice(0, 10)
                 .map((s: any) => {
-                  const age =
-                    s.targeting?.age_min && s.targeting?.age_max
-                      ? `${s.targeting.age_min}-${s.targeting.age_max}`
-                      : null;
-                  const interests = (s.targeting?.flexible_spec?.[0]?.interests || [])
-                    .slice(0, 3)
-                    .map((i: any) => i.name)
-                    .join(", ");
-                  const geos = (s.targeting?.geo_locations?.countries || []).join(",");
                   const budget = s.daily_budget
                     ? `$${(parseInt(s.daily_budget) / 100).toFixed(0)}/day`
-                    : s.lifetime_budget
-                      ? `$${(parseInt(s.lifetime_budget) / 100).toFixed(0)} total`
-                      : "no budget";
-                  return `  ${s.name}: ${s.effective_status || s.status} | ${budget} | ${s.optimization_goal || ""}${age ? ` | age ${age}` : ""}${geos ? ` | geo:${geos}` : ""}${interests ? ` | interests:${interests}` : ""}`;
+                    : "—";
+                  return `  ${(s.name || "?").slice(0, 40)}: ${s.effective_status || s.status} | ${budget} | ${s.optimization_goal || ""}`;
                 })
                 .join("\n");
               liveMetaData += `ADSETS (${adsetsRaw.data.length}):\n${adsetLines}\n`;
@@ -1229,9 +1201,9 @@ Esta conta ainda não tem padrões validados com dados suficientes.
                 ? `ADS: Token expirado — diga ao usuário para reconectar o Meta Ads em Contas.\n`
                 : `ADS: Erro ao buscar dados — ${adsRaw.error.message}\n`;
             } else if (adsRaw?.data?.length) {
-              // FIX 1: Show all 50 with smarter truncation
+              // Top 20 ads by spend
               const adLines = adsRaw.data
-                .slice(0, 50)
+                .slice(0, 20)
                 .map((ad: any) => {
                   const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
                   const leads = ad.actions?.find((a: any) => a.action_type === "lead")?.value || "";
@@ -1248,10 +1220,10 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               liveMetaData += `ADS: Nenhum gasto de anúncio no período.\n`;
             }
 
-            // ALL-TIME TOP PERFORMERS (3 years lifetime)
+            // ALL-TIME TOP PERFORMERS (limit 10)
             if (lifetimeAdsRaw?.data?.length) {
               const lifetimeLines = lifetimeAdsRaw.data
-                .slice(0, 20)
+                .slice(0, 10)
                 .map((ad: any) => {
                   const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
                   const conv = purchases !== "0" ? ` purch=${purchases}` : "";
@@ -1301,11 +1273,11 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               }
             }
 
-            // FIX 2: Placement breakdown
+            // Placement breakdown — limit 5
             if (placementRaw?.data?.length) {
               const placements = placementRaw.data
                 .filter((p: any) => parseFloat(p.spend || 0) > 0)
-                .slice(0, 10)
+                .slice(0, 5)
                 .map(
                   (p: any) =>
                     `  ${p.publisher_platform || ""}/${p.platform_position || ""}: spend=$${parseFloat(p.spend || 0).toFixed(0)} ctr=${parseFloat(p.ctr || 0).toFixed(2)}% cpm=$${parseFloat(p.cpm || 0).toFixed(1)}`,
@@ -1378,7 +1350,9 @@ Não use regras fixas. Use os dados reais acima e raciocine sobre o que está ac
         .join("\n");
     })();
 
-    const richContext = [
+    let richContext: string[];
+    try {
+    richContext = [
       // ── Identidade do usuário — SEMPRE primeiro ───────────────────────────
       (() => {
         const planLabel = planKey === "studio" ? "Studio ($149/mês — 9000 créditos/mês)"
@@ -1401,67 +1375,29 @@ REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre pl
       learnedCtx
         ? `=== APRENDIZADO DA CONTA ===\n${learnedCtx}\n(Use esses padrões para personalizar hooks, scripts e recomendações)`
         : "",
+      // Daily intelligence — compact version
       (() => {
-        const snaps = (dailySnapshots || []) as any[];
-        if (!snaps.length) return "";
-        const latest = snaps[0];
-        const prev = snaps[1];
-        const ctrDelta = prev
-          ? (((latest.avg_ctr - prev.avg_ctr) / Math.max(prev.avg_ctr, 0.001)) * 100).toFixed(1)
-          : null;
-        const spendDelta =
-          prev && prev.total_spend > 0
-            ? (((latest.total_spend - prev.total_spend) / prev.total_spend) * 100).toFixed(1)
+        try {
+          const snaps = (dailySnapshots || []) as any[];
+          if (!snaps.length) return "";
+          const latest = snaps[0];
+          if (!latest) return "";
+          const prev = snaps[1] || null;
+          const ctrDelta = prev?.avg_ctr
+            ? ((((latest.avg_ctr || 0) - prev.avg_ctr) / Math.max(prev.avg_ctr, 0.001)) * 100).toFixed(1)
             : null;
-        const topAds = (latest.top_ads as any[]) || [];
-        const toScale = topAds.filter((a: any) => a.isScalable).slice(0, 3);
-        const toPause = topAds.filter((a: any) => a.needsPause).slice(0, 3);
-        const fatigued = topAds.filter((a: any) => a.isFatigued).slice(0, 3);
-        const aiActions = ((latest.raw_period as any)?.actions || []) as any[];
-        return [
-          `=== INTELLIGENCE DIÁRIA — ${latest.date} (${latest.account_name || "conta"}) ===`,
-          `Spend 7d: R$${(latest.total_spend || 0).toFixed(0)} | CTR médio: ${((latest.avg_ctr || 0) * 100).toFixed(2)}% | ${latest.active_ads || 0} anúncios entregando${(latest.active_ads || 0) === 0 ? " (NENHUM anúncio rodando agora)" : ""}`,
-          ctrDelta
-            ? `Vs semana anterior: CTR ${parseFloat(ctrDelta) > 0 ? "+" : ""}${ctrDelta}% | Spend ${parseFloat(spendDelta || "0") > 0 ? "+" : ""}${spendDelta || "0"}%`
-            : "",
-          latest.yesterday_spend > 0
-            ? `Ontem: R$${(latest.yesterday_spend || 0).toFixed(0)} spend | CTR ${((latest.yesterday_ctr || 0) * 100).toFixed(2)}%`
-            : "",
-          toScale.length
-            ? `ESCALAR AGORA (alta performance): ${toScale.map((a: any) => `"${a.name?.slice(0, 35)}" CTR ${(a.ctr * 100)?.toFixed(2)}%`).join(" | ")}`
-            : "",
-          toPause.length
-            ? `PAUSAR (gastando sem retorno): ${toPause.map((a: any) => `"${a.name?.slice(0, 35)}" CTR ${(a.ctr * 100)?.toFixed(2)}% R$${a.spend?.toFixed(0)}`).join(" | ")}`
-            : "",
-          fatigued.length
-            ? `FADIGA CRIATIVA (freq alta): ${fatigued.map((a: any) => `"${a.name?.slice(0, 30)}" freq ${a.frequency?.toFixed(1)}`).join(" | ")}`
-            : "",
-          topAds.slice(0, 5).length
-            ? `TOP ADS:
-${topAds
-  .slice(0, 5)
-  .map(
-    (a: any, i: number) =>
-      `  ${i + 1}. "${a.name?.slice(0, 40)}" | CTR ${(a.ctr * 100)?.toFixed(2)}% | R$${a.spend?.toFixed(0)} spend${a.conversions > 0 ? ` | ${a.conversions} conv` : ""}${a.deltaCtr ? ` | ${parseFloat(a.deltaCtr?.toFixed(1)) > 0 ? "+" : ""}${a.deltaCtr?.toFixed(1)}% vs sem. ant` : ""}`,
-  )
-  .join("\n")}`
-            : "",
-          aiActions.length
-            ? `AÇÕES RECOMENDADAS:\n${aiActions.map((a: any) => `  [${a.urgencia?.toUpperCase()}] ${a.tipo?.toUpperCase()}: "${a.anuncio?.slice(0, 35)}" — ${a.motivo}`).join("\n")}`
-            : "",
-          latest.ai_insight ? `\nINSIGHT DO DIA: ${latest.ai_insight}` : "",
-          snaps.length > 1
-            ? `\nHISTÓRICO:\n${snaps
-                .slice(0, 7)
-                .map(
-                  (s: any) =>
-                    `  ${s.date}: CTR ${((s.avg_ctr || 0) * 100).toFixed(2)}% / R$${(s.total_spend || 0).toFixed(0)} / ${s.active_ads || 0} ads`,
-                )
-                .join("\n")}`
-            : "",
-        ]
-          .filter(Boolean)
-          .join("\n");
+          const topAds = Array.isArray(latest.top_ads) ? (latest.top_ads as any[]) : [];
+          const toScale = topAds.filter((a: any) => a?.isScalable).slice(0, 2);
+          const toPause = topAds.filter((a: any) => a?.needsPause).slice(0, 2);
+          return [
+            `INTELLIGENCE DIÁRIA — ${latest.date || "hoje"}`,
+            `Spend 7d: R$${(latest.total_spend || 0).toFixed(0)} | CTR: ${((latest.avg_ctr || 0) * 100).toFixed(2)}% | ${latest.active_ads || 0} ads`,
+            ctrDelta ? `Vs anterior: CTR ${parseFloat(ctrDelta) > 0 ? "+" : ""}${ctrDelta}%` : "",
+            toScale.length ? `ESCALAR: ${toScale.map((a: any) => `"${(a.name || "?").slice(0, 30)}" CTR ${((a.ctr || 0) * 100).toFixed(2)}%`).join(" | ")}` : "",
+            toPause.length ? `PAUSAR: ${toPause.map((a: any) => `"${(a.name || "?").slice(0, 30)}" R$${(a.spend || 0).toFixed(0)}`).join(" | ")}` : "",
+            latest.ai_insight ? `INSIGHT: ${String(latest.ai_insight).slice(0, 150)}` : "",
+          ].filter(Boolean).join("\n");
+        } catch { return ""; }
       })(),
       pfCtx || "",
       (() => {
@@ -1557,6 +1493,11 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
     ]
       .filter(Boolean)
       .join("\n");
+    } catch (ctxErr) {
+      console.error("[ai-chat] context build error:", String(ctxErr));
+      richContext = ["Context build error — proceeding with minimal context."];
+    }
+    _lap("context-built");
 
     // ── 5. Language ───────────────────────────────────────────────────────────
     const LANG_NAMES: Record<string, string> = {
@@ -2029,6 +1970,12 @@ PROIBIDO:
         ]
       : [{ type: "text" as const, text: systemPrompt + prefStr }];
 
+    // Log context size before AI call
+    const systemTextSize = systemBlocks.reduce((s, b) => s + (b.text?.length || 0), 0);
+    const historyTextSize = aiMessages.reduce((s, m) => s + (typeof m.content === "string" ? m.content.length : JSON.stringify(m.content).length), 0);
+    console.log(`[ai-chat] context: system=${systemTextSize} chars, history=${historyTextSize} chars, messages=${aiMessages.length}`);
+    _lap("pre-anthropic");
+
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -2068,16 +2015,27 @@ PROIBIDO:
       }),
     });
 
+    _lap("anthropic-response");
+
     if (!anthropicRes.ok) {
       const errText = await anthropicRes.text();
-      console.error("Anthropic error:", anthropicRes.status, errText);
-      // Return 200 with error block so frontend can display nicely
-      if (body.image_base64 && anthropicRes.status === 413) {
-        return new Response(JSON.stringify({ blocks: [{ type: "text", text: "Imagem muito grande. Tente uma imagem menor (max 5MB)." }] }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`Anthropic ${anthropicRes.status}: ${errText.slice(0, 200)}`);
+      console.error(`[ai-chat] Anthropic error: status=${anthropicRes.status} body=${errText.slice(0, 500)}`);
+      // Return 200 with user-friendly error block
+      const status = anthropicRes.status;
+      const userMsg =
+        status === 413 ? "Payload muito grande. Tente uma mensagem menor."
+        : status === 429 ? "Muitas requisições. Aguarde alguns segundos e tente novamente."
+        : status === 529 ? "API temporariamente sobrecarregada. Tente novamente em instantes."
+        : status >= 500 ? "Erro temporário na IA. Tente novamente."
+        : `Erro ao processar (${status}). Tente novamente.`;
+      return new Response(JSON.stringify({
+        blocks: [{ type: "warning", title: "Erro temporário", content: userMsg }],
+        error: `anthropic_${status}`,
+        _debug: { status, body: errText.slice(0, 200), elapsed_ms: Date.now() - _t0 },
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const anthropicResult = await anthropicRes.json();
@@ -2171,6 +2129,7 @@ PROIBIDO:
       }
     })().catch(() => {});
 
+    _lap("response-ready");
     const usagePayload = {
       remaining_credits: creditCheck.remaining ?? 0,
       total_credits: creditCheck.total ?? 0,
@@ -2180,22 +2139,37 @@ PROIBIDO:
     return new Response(JSON.stringify({
       blocks: finalBlocks,
       usage: usagePayload,
-      _debug: { has_meta: !!liveMetaData && liveMetaData.length > 50, meta_len: liveMetaData?.length || 0 }
+      _debug: {
+        has_meta: !!liveMetaData && liveMetaData.length > 50,
+        meta_len: liveMetaData?.length || 0,
+        system_chars: systemBlocks.reduce((s, b) => s + (b.text?.length || 0), 0),
+        elapsed_ms: Date.now() - _t0,
+      },
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("adbrief-ai-chat error:", String(e));
-    // Return 200 with error block so SDK doesn't throw "non-2xx" — frontend handles gracefully
+    const elapsed = Date.now() - _t0;
     const errMsg = String(e) || "internal_error";
-    const userFriendly = errMsg.includes("Anthropic 4") ? "Erro temporário na IA. Tente novamente." : errMsg.slice(0, 150);
-    return new Response(JSON.stringify({ blocks: [{ type: "text", text: userFriendly }], error: errMsg }), {
+    console.error(`[ai-chat] FATAL: ${errMsg} (elapsed: ${elapsed}ms)`);
+    // Return 200 with structured error block
+    const userFriendly =
+      errMsg.includes("Anthropic 4") || errMsg.includes("Anthropic 5")
+        ? "Erro temporário na IA. Tente novamente."
+        : errMsg.includes("timeout") || elapsed > 25000
+          ? "A resposta demorou demais. Tente novamente com uma pergunta mais curta."
+          : "Algo deu errado. Tente novamente.";
+    return new Response(JSON.stringify({
+      blocks: [{ type: "warning", title: "Erro", content: userFriendly }],
+      error: errMsg.slice(0, 200),
+      _debug: { elapsed_ms: elapsed },
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
-// redeploy 202604051700
+// redeploy v21.0 — 20260415
 
 // force-sync 2026-03-24T23:23:48Z
 // force-redeploy 2026-03-27T14:52:19Z
