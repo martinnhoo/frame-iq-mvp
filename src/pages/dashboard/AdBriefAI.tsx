@@ -15,7 +15,6 @@ import {
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
   Zap, Clapperboard, ScanEye, LayoutDashboard, X, Sparkles, Target,
   TrendingUp, TrendingDown, BarChart2, BarChart3, Stethoscope,
-  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Calendar,
 } from "lucide-react";
 // v20: removed unused — Sparkles, Brain, Upload, FileText, Activity, ExternalLink,
 //      DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
@@ -1617,15 +1616,15 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   const [pd,   setPd]   = React.useState<any>(null);
   const [busy, setBusy] = React.useState(false);
   const [fail, setFail] = React.useState<string | null>(null);
-  const [open, setOpen] = React.useState(false);
   const [tab,  setTab]  = React.useState<"meta" | "google">("meta"); // google disabled
   const [ts,   setTs]   = React.useState<Date | null>(null);
   const today = React.useMemo(()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; },[]);
   const addDaysAI = (d: Date, n: number) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
   const fmtAI = (d: Date) => d.toISOString().split("T")[0];
   const fmtLabelAI = (d: Date) => d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short" });
-  const PRESETS_AI = [{label:"7D",days:7},{label:"14D",days:14},{label:"30D",days:30},{label:"60D",days:60},{label:"90D",days:90}];
-  const [dateRange, setDateRange] = React.useState({ from: addDaysAI(today,-59), to: today });
+  const PRESETS_AI = [{label:"7D",days:7},{label:"30D",days:30},{label:"90D",days:90}];
+  const [dateRange, setDateRange] = React.useState({ from: addDaysAI(today,-6), to: today });
+  const [activePreset, setActivePreset] = React.useState("7D");
   const [showCal, setShowCal] = React.useState(false);
   const [calDraft, setCalDraft] = React.useState<{from:Date|null;to:Date|null}>({from:null,to:null});
   const [calView, setCalView] = React.useState(new Date(today.getFullYear(),today.getMonth(),1));
@@ -1726,7 +1725,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   // COLLAPSED TOOLBAR v3 — Completely rewritten from scratch
   // Designed as a real toolbar: generous spacing, clear hierarchy, click to expand
   // ══════════════════════════════════════════════════════════════════════════
-  if (!open) {
+  {
     const cur = data?.currency_symbol || "R$";
     const metrics = data && !data.error && !busy ? [
       k.spend       && { lbl: lang==="pt"?"Gasto":lang==="es"?"Gasto":"Spend", val: `${cur}${parseFloat(k.spend||0).toLocaleString(undefined,{maximumFractionDigits:0})}`, warn: false, tr: sTr },
@@ -1737,24 +1736,18 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       k.conversions && k.conversions !== "0" && { lbl: "Conv", val: k.conversions, warn: false, tr: "flat" as const },
       k.roas && parseFloat(k.roas) > 0 && { lbl: "ROAS", val: `${parseFloat(k.roas).toFixed(2)}x`, warn: parseFloat(k.roas) < 1, tr: "flat" as const },
     ].filter(Boolean) : [];
-    const warnCount = alerts.filter((a: any) => a.t === "warn").length;
-    const scaleCount = (data?.winners || []).length;
     const isLive = !busy && !fail;
 
     return (
-      <div className="lp lp-bar" onClick={() => setOpen(true)} style={{
+      <div className="lp lp-bar" style={{
         ...I, display: "flex", alignItems: "center", height: 48,
-        padding: "0 20px", cursor: "pointer", userSelect: "none" as const,
+        padding: "0 20px", userSelect: "none" as const,
         background: "rgba(8,10,14,0.65)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         gap: 0,
-        transition: "background 0.15s",
-      }}
-        onMouseEnter={e => e.currentTarget.style.background = "rgba(8,10,14,0.80)"}
-        onMouseLeave={e => e.currentTarget.style.background = "rgba(8,10,14,0.65)"}
-      >
+      }}>
 
         {/* ── Live status chip ── */}
         <div style={{
@@ -1763,7 +1756,6 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           background: "rgba(255,255,255,0.04)",
           border: "1px solid rgba(255,255,255,0.08)",
           flexShrink: 0, marginRight: 14,
-          transition: "all 0.15s",
         }}>
           {/* Meta mini logo */}
           <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
@@ -1836,7 +1828,6 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
-                onClick={e => e.stopPropagation()}
               >
                 <span style={{
                   fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.40)",
@@ -1891,459 +1882,134 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           </span>
         )}
 
-        {/* ── Right side: badges + expand arrow ── */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 12 }}>
-          {/* Alert chip */}
-          {warnCount > 0 && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 4,
-              padding: "3px 8px", borderRadius: 999,
-              background: "rgba(248,113,113,0.08)",
-              border: "1px solid rgba(248,113,113,0.15)",
-            }}>
-              <span style={{ fontSize: 10, color: "#f87171" }}>⚠</span>
-              <span style={{
-                fontSize: 11, fontWeight: 700, color: "#f87171",
-                fontFamily: F,
-              }}>
-                {warnCount}
-              </span>
-            </div>
-          )}
-
-          {/* Diagnostic button */}
-          <button
-            onClick={e => { e.stopPropagation(); window.location.href = "/dashboard/diagnostic"; }}
-            title={lang === "pt" ? "Diagnóstico da conta" : lang === "es" ? "Diagnóstico de cuenta" : "Account Diagnostic"}
-            style={{
-              display: "flex", alignItems: "center", gap: 5,
-              padding: "4px 10px", borderRadius: 999,
-              background: "rgba(59,130,246,0.10)",
-              border: "1px solid rgba(59,130,246,0.20)",
-              cursor: "pointer", transition: "all 0.15s",
-              fontFamily: F,
+        {/* ── Right side: date presets + calendar ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 12, position: "relative" as const }}>
+          {PRESETS_AI.map(p => (
+            <button key={p.label} onClick={() => {
+              setActivePreset(p.label);
+              setDateRange({ from: addDaysAI(today, -(p.days - 1)), to: today });
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.18)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.35)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.10)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.20)"; }}
+              style={{
+                padding: "4px 10px", borderRadius: 999, border: "none",
+                background: activePreset === p.label ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)",
+                color: activePreset === p.label ? "#0ea5e9" : "rgba(255,255,255,0.40)",
+                fontSize: 10, fontWeight: 700, fontFamily: F,
+                letterSpacing: "0.02em", cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}}
+              onMouseLeave={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.40)"; }}}
+            >
+              {p.label}
+            </button>
+          ))}
+
+          {/* Calendar icon for custom date */}
+          <button onClick={() => setShowCal(!showCal)}
+            style={{
+              width: 28, height: 28, borderRadius: 999, border: "none",
+              background: showCal ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { if (!showCal) e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+            onMouseLeave={e => { if (!showCal) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+            title={lang === "pt" ? "Escolher datas" : "Pick dates"}
           >
-            <Stethoscope size={12} color="#60a5fa" />
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#60a5fa", letterSpacing: "-0.01em" }}>
-              {lang === "pt" ? "Diagnóstico" : lang === "es" ? "Diagnóstico" : "Diagnostic"}
-            </span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={showCal ? "#0ea5e9" : "rgba(255,255,255,0.40)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
           </button>
 
-          {/* Expand chevron */}
-          <ChevronDown size={14} style={{ color: "rgba(255,255,255,0.25)", transition: "color 0.15s" }}/>
+          {/* Calendar dropdown */}
+          {showCal && (
+            <div ref={calRef} style={{
+              position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 100,
+              background: "rgba(15,17,22,0.98)", border: "1px solid rgba(255,255,255,0.10)",
+              borderRadius: 14, padding: 16, minWidth: 260,
+              boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+              backdropFilter: "blur(16px)",
+            }}>
+              {/* Month nav */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() - 1, 1))}
+                  style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: 16, padding: "2px 6px" }}>
+                  ‹
+                </button>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: F }}>
+                  {calView.toLocaleDateString(lang === "pt" ? "pt-BR" : "en-US", { month: "long", year: "numeric" })}
+                </span>
+                <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() + 1, 1))}
+                  style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: 16, padding: "2px 6px" }}>
+                  ›
+                </button>
+              </div>
+              {/* Day headers */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
+                {(lang === "pt" ? ["D","S","T","Q","Q","S","S"] : ["S","M","T","W","T","F","S"]).map((d, i) => (
+                  <div key={i} style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.25)", textAlign: "center", padding: 4, fontFamily: F }}>{d}</div>
+                ))}
+              </div>
+              {/* Calendar days */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
+                {(() => {
+                  const first = new Date(calView.getFullYear(), calView.getMonth(), 1);
+                  const last = new Date(calView.getFullYear(), calView.getMonth() + 1, 0);
+                  const cells: React.ReactNode[] = [];
+                  for (let i = 0; i < first.getDay(); i++) cells.push(<div key={`e${i}`} />);
+                  for (let d = 1; d <= last.getDate(); d++) {
+                    const dt = new Date(calView.getFullYear(), calView.getMonth(), d);
+                    const isFrom = calDraft.from && dt.toDateString() === calDraft.from.toDateString();
+                    const isTo = calDraft.to && dt.toDateString() === calDraft.to.toDateString();
+                    const inRange = calDraft.from && calDraft.to && dt >= calDraft.from && dt <= calDraft.to;
+                    const isFuture = dt > today;
+                    cells.push(
+                      <button key={d} disabled={isFuture} onClick={() => {
+                        if (calSel === "from") {
+                          setCalDraft({ from: dt, to: null });
+                          setCalSel("to");
+                        } else {
+                          const from = calDraft.from!;
+                          const finalFrom = dt < from ? dt : from;
+                          const finalTo = dt < from ? from : dt;
+                          setCalDraft({ from: finalFrom, to: finalTo });
+                          setActivePreset("");
+                          setDateRange({ from: finalFrom, to: finalTo });
+                          setShowCal(false);
+                          setCalSel("from");
+                        }
+                      }}
+                        style={{
+                          width: "100%", aspectRatio: "1", border: "none", borderRadius: 8,
+                          background: isFrom || isTo ? "rgba(14,165,233,0.3)" : inRange ? "rgba(14,165,233,0.08)" : "transparent",
+                          color: isFuture ? "rgba(255,255,255,0.12)" : isFrom || isTo ? "#0ea5e9" : "#fff",
+                          fontSize: 11, fontWeight: isFrom || isTo ? 700 : 500, fontFamily: F,
+                          cursor: isFuture ? "default" : "pointer",
+                          transition: "all 0.1s",
+                        }}
+                      >
+                        {d}
+                      </button>
+                    );
+                  }
+                  return cells;
+                })()}
+              </div>
+              {/* Current range label */}
+              <div style={{ marginTop: 10, fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", fontFamily: F }}>
+                {fmtLabelAI(dateRange.from)} — {fmtLabelAI(dateRange.to)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // ── Expanded ───────────────────────────────────────────────────────────────
-  return (
-    <div className="lp lp-expanded" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "var(--bg-main)", animation: "lp-in 0.18s ease" }}>
-      {/* ── Header ── */}
-      <div className="lp-expanded-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {/* Platform tabs */}
-          {[hasMeta && "meta"].filter(Boolean).map((p: any) => {
-            const active = tab === p;
-            const cfg = tcfg[p];
-            const hasErr = pd?.[p]?.error;
-            return (
-              <button key={p} className="lp-tab" onClick={() => setTab(p)} style={{
-                ...I, display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 8,
-                border: active ? `1px solid ${cfg.c}22` : "1px solid transparent",
-                background: active ? `${cfg.c}0d` : "transparent",
-                color: active ? "#e2e8f0" : "rgba(255,255,255,0.3)",
-                fontSize: 12, fontWeight: active ? 500 : 400, cursor: "pointer", transition: "all 0.15s",
-              }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: busy ? "rgba(255,255,255,0.15)" : hasErr ? "#fb7185" : active ? cfg.c : "rgba(255,255,255,0.15)", boxShadow: active && !hasErr && !busy ? `0 0 7px ${cfg.c}80` : "none", transition: "all 0.2s" }} />
-                {cfg.label}
-              </button>
-            );
-          })}
-          {/* Account switcher — click to switch ad account */}
-          {accName && (() => {
-            const pid = selectedPersona?.id;
-            const rawAccounts = pid ? storage.get(`meta_accounts_${pid}`, "") : "";
-            const accounts: any[] = (() => {
-              if (!rawAccounts) return [];
-              try {
-                const parsed = JSON.parse(rawAccounts);
-                return Array.isArray(parsed) ? parsed : [];
-              } catch {
-                return [];
-              }
-            })();
-            const selId = pid ? storage.get(`meta_sel_${pid}`, "") : "";
-            if (accounts.length <= 1) {
-              return <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)", marginLeft: 8 }}>· {accName}</span>;
-            }
-            return (
-              <div style={{ position: "relative", marginLeft: 8 }} className="acc-switcher">
-                <button
-                  onClick={() => {
-                    const el = document.querySelector(".acc-switcher-menu") as HTMLElement;
-                    if (el) el.style.display = el.style.display === "none" ? "block" : "none";
-                  }}
-                  style={{ ...I, background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: "2px 6px", borderRadius: 6, color: "rgba(255,255,255,0.45)", fontSize: 12, transition: "background 0.15s" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "none"}
-                >
-                  · {accName}
-                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 2.5L4 5.5L7 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                </button>
-                <div className="acc-switcher-menu" style={{ display: "none", position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 100, background: "#111827", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "6px 4px", minWidth: 200, boxShadow: "0 8px 32px rgba(0,0,0,0.6)" }}>
-                  {accounts.map((acc: any) => {
-                    const isSel = acc.id === selId || (!selId && acc === accounts[0]);
-                    return (
-                      <button key={acc.id} onClick={async () => {
-                        if (pid) {
-                          storage.set(`meta_sel_${pid}`, acc.id);
-                          // Update DB via adbrief-ai-chat service_role — so live-metrics picks up the change
-                          supabase.functions.invoke("adbrief-ai-chat", {
-                            body: { update_selected_account: true, user_id: user.id, persona_id: pid, account_id: acc.id }
-                          }).then(() => {
-                            window.dispatchEvent(new CustomEvent("meta-account-changed", { detail: { personaId: pid, accountId: acc.id } }));
-                          });
-                        }
-                        const el = document.querySelector(".acc-switcher-menu") as HTMLElement;
-                        if (el) el.style.display = "none";
-                      }}
-                      style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", borderRadius: 7, background: isSel ? "rgba(14,162,231,0.12)" : "transparent", border: "none", cursor: "pointer", color: isSel ? "#38bdf8" : "rgba(255,255,255,0.7)", fontSize: 12, fontFamily: "inherit", textAlign: "left", transition: "background 0.12s" }}
-                      onMouseEnter={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
-                      onMouseLeave={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                      >
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: isSel ? "#0da2e7" : "rgba(255,255,255,0.2)", flexShrink: 0 }} />
-                        <div>
-                          <div style={{ fontWeight: isSel ? 600 : 400 }}>{acc.name || acc.id}</div>
-                          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 1 }}>{acc.id}</div>
-                        </div>
-                        {isSel && <svg style={{ marginLeft: "auto", flexShrink: 0 }} width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="#0da2e7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* Right controls */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            {busy
-              ? <Loader2 size={9} style={{ color: "#475569", animation: "lp-spin 1s linear infinite" }} />
-              : <span style={{ width: 5, height: 5, borderRadius: "50%", background: fail ? "#fb7185" : "#34d399", boxShadow: !fail ? "0 0 5px rgba(52,211,153,0.5)" : "none", animation: !fail ? "lp-glow 2.5s ease-in-out infinite" : "none" }} />
-            }
-            <span style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
-              {busy
-                ? (lang==="pt"?"atualizando...":lang==="es"?"actualizando...":"updating...")
-                : ts
-                  ? ts.toLocaleTimeString(lang==="pt"?"pt-BR":lang==="es"?"es-MX":"en-US", { hour: "2-digit", minute: "2-digit" })
-                  : (lang==="pt"?"ao vivo":lang==="es"?"en vivo":"live")}
-            </span>
-          </div>
-          {/* Date range picker */}
-          <div style={{ position: "relative" }}>
-            <button onClick={() => { setShowCal(s=>!s); setCalDraft({from:dateRange.from,to:dateRange.to}); setCalSel("from"); }}
-              style={{ ...I, display:"flex", alignItems:"center", gap:5, padding:"4px 10px", borderRadius:8,
-                border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.04)",
-                color:"rgba(255,255,255,0.6)", fontSize:12, cursor:"pointer", transition:"all 0.15s" }}
-              onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)"}
-              onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)"}>
-              <Calendar size={11}/>
-              {(() => {
-                const diff = Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1;
-                const preset = PRESETS_AI.find(p=>p.days===diff && fmtAI(dateRange.to)===fmtAI(today));
-                return preset ? `Últimos ${preset.label}` : `${fmtLabelAI(dateRange.from)} → ${fmtLabelAI(dateRange.to)}`;
-              })()}
-            </button>
-            {showCal && (
-              <div ref={calRef} style={{
-                position:"fixed", top:"auto", right:"auto", zIndex:9999,
-                background:"var(--bg-elevated)", border:"1px solid var(--border-default)", borderRadius:16,
-                boxShadow:"0 20px 60px rgba(0,0,0,0.7)",
-                padding:"clamp(12px,3vw,20px)",
-                width:"min(540px, calc(100vw - 24px))",
-                maxWidth:"calc(100vw - 24px)",
-                display:"flex", flexDirection:"column", gap:16,
-                left:"50%", transform:"translateX(-50%)",
-                marginTop:8,
-              }}>
-                {/* Presets */}
-                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                  {PRESETS_AI.map(p=>{
-                    const from = addDaysAI(today,-p.days+1);
-                    const active = fmtAI(dateRange.from)===fmtAI(from) && fmtAI(dateRange.to)===fmtAI(today);
-                    return (
-                      <button key={p.days} onClick={()=>{ setDateRange({from,to:today}); setShowCal(false); }}
-                        style={{...I,fontSize:12,fontWeight:600,padding:"5px 12px",borderRadius:8,
-                          border:`1px solid ${active?"#0ea5e9":"rgba(255,255,255,0.1)"}`,
-                          background:active?"rgba(14,165,233,0.12)":"transparent",
-                          color:active?"#0ea5e9":"rgba(255,255,255,0.4)",cursor:"pointer",transition:"all 0.15s"}}>
-                        Últimos {p.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* Calendar — 2 months */}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
-                  {[calView, new Date(calView.getFullYear(),calView.getMonth()+1,1)].map((base,mi)=>{
-                    const y=base.getFullYear(),m=base.getMonth();
-                    const dim=new Date(y,m+1,0).getDate(),fd=new Date(y,m,1).getDay();
-                    const cells:Array<Date|null>=[];
-                    for(let i=0;i<fd;i++) cells.push(null);
-                    for(let d=1;d<=dim;d++) cells.push(new Date(y,m,d));
-                    const inR=(d:Date)=>{
-                      const f=calDraft.from,t=calDraft.to||calHover;
-                      if(!f||!t) return false;
-                      const lo=f<t?f:t,hi=f<t?t:f;
-                      return d>lo&&d<hi;
-                    };
-                    const isE=(d:Date)=>(calDraft.from&&fmtAI(d)===fmtAI(calDraft.from))||(calDraft.to&&fmtAI(d)===fmtAI(calDraft.to));
-                    return (
-                      <div key={mi}>
-                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-                          {mi===0?<button onClick={()=>setCalView(new Date(y,m-1,1))} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",display:"flex"}}><ChevronLeft size={16}/></button>:<div/>}
-                          <span style={{...I,fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{base.toLocaleDateString("pt-BR",{month:"long",year:"numeric"})}</span>
-                          {mi===1?<button onClick={()=>setCalView(new Date(y,m-1,1))} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",display:"flex"}}><ChevronRight size={16}/></button>:<div/>}
-                        </div>
-                        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
-                          {["D","S","T","Q","Q","S","S"].map((d,i)=>(
-                            <div key={i} style={{textAlign:"center",fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.3)",padding:"4px 0",fontFamily:"inherit"}}>{d}</div>
-                          ))}
-                          {cells.map((d,i)=>{
-                            if(!d) return <div key={i}/>;
-                            const isFuture=d>today,inRange=inR(d),isEnd=isE(d);
-                            return (
-                              <div key={i}
-                                onClick={()=>{
-                                  if(isFuture) return;
-                                  if(calSel==="from"||(calDraft.from&&d<calDraft.from)){
-                                    setCalDraft({from:d,to:null}); setCalSel("to");
-                                  } else {
-                                    const r={from:calDraft.from!,to:d};
-                                    setCalDraft(r); setDateRange(r); setShowCal(false);
-                                  }
-                                }}
-                                onMouseEnter={()=>!isFuture&&setCalHover(d)}
-                                onMouseLeave={()=>setCalHover(null)}
-                                style={{textAlign:"center",padding:"6px 0",borderRadius:8,
-                                  cursor:isFuture?"default":"pointer",fontSize:12,fontFamily:"inherit",
-                                  fontWeight:isEnd?700:400,
-                                  background:isEnd?"#0ea5e9":inRange?"rgba(14,165,233,0.15)":"transparent",
-                                  color:isEnd?"#fff":isFuture?"rgba(255,255,255,0.12)":inRange?"#0ea5e9":"#e2e8f0",
-                                  transition:"all 0.1s"}}>
-                                {d.getDate()}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <span style={{...I,fontSize:12,color:"rgba(255,255,255,0.3)"}}>{calSel==="from"?"Selecione a data inicial":"Selecione a data final"}</span>
-                  {calDraft.from&&<span style={{...I,fontSize:12,color:"#e2e8f0",fontWeight:600}}>{fmtLabelAI(calDraft.from)} {calDraft.to?`→ ${fmtLabelAI(calDraft.to)}`:""}</span>}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <button onClick={(e) => { e.stopPropagation(); load(); }} disabled={busy} className="lp-btn"
-            style={{ background: "none", border: "none", cursor: busy ? "wait" : "pointer", color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, transition: "all 0.15s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; }}>
-            <RefreshCw size={13} style={{ animation: busy ? "lp-spin 1s linear infinite" : "none" }} />
-          </button>
-          <button onClick={() => setOpen(false)} className="lp-btn"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.55)", display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, transition: "all 0.15s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.9)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}>
-            <ChevronUp size={15} />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Body ── */}
-      <div className="lp-expanded-body" style={{ padding: "14px 20px 18px" }}>
-
-        {/* Skeleton */}
-        {busy && !pd && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} style={{ flex: 1, height: 88, borderRadius: 12, background: "rgba(255,255,255,0.025)", animation: `lp-sk 1.5s ${i * 0.1}s ease-in-out infinite` }} />
-              ))}
-            </div>
-            <div style={{ height: 36, borderRadius: 10, background: "rgba(255,255,255,0.02)", animation: "lp-sk 1.5s 0.5s ease-in-out infinite" }} />
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
-              {[1, 2].map(i => <div key={i} style={{ height: 110, borderRadius: 10, background: "rgba(255,255,255,0.015)", animation: `lp-sk 1.5s ${0.6 + i * 0.1}s ease-in-out infinite` }} />)}
-            </div>
-          </div>
-        )}
-
-        {/* Error */}
-        {fail && !busy && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: 10, background: "rgba(251,113,133,0.04)", border: "1px solid rgba(251,113,133,0.1)" }}>
-            <span style={{ ...I, fontSize: 12, color: "#f87171" }}>{fail}</span>
-            <button onClick={load} style={{ ...I, fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 7, background: "rgba(251,113,133,0.08)", border: "1px solid rgba(251,113,133,0.15)", color: "#f87171", cursor: "pointer" }}>
-              {lang==="pt"?"Tentar novamente":lang==="es"?"Reintentar":"Retry"}
-            </button>
-          </div>
-        )}
-
-        {/* Special errors */}
-        {data?.error === "token_expired" && (
-          <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(251,146,60,0.04)", border: "1px solid rgba(251,146,60,0.12)" }}>
-            <span style={{ ...I, fontSize: 12, color: "#fb923c" }}>
-              {lang==="pt"?"Token expirado":lang==="es"?"Token expirado":"Token expired"} — <a href="/dashboard/accounts" style={{ color: "#fb923c", fontWeight: 500 }}>{lang==="pt"?"reconecte em Contas →":lang==="es"?"reconecta en Cuentas →":"reconnect in Accounts →"}</a>
-            </span>
-          </div>
-        )}
-        {data?.error === "no_account_selected" && (
-          <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-            <span style={{ ...I, fontSize: 12, color: "#475569" }}>
-              {lang==="pt"?"Nenhuma conta selecionada":lang==="es"?"Ninguna cuenta seleccionada":"No account selected"} — <a href="/dashboard/accounts" style={{ color: "#6366f1" }}>{lang==="pt"?"configure em Contas →":lang==="es"?"configura en Cuentas →":"configure in Accounts →"}</a>
-            </span>
-          </div>
-        )}
-
-        {/* ── Real data ── */}
-        {data && !data.error && !fail && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-            {/* Alerts — destaque máximo, aparecem primeiro */}
-            {alerts.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {alerts.map((a, i) => <Alert key={i} a={a} ask={onSend} />)}
-              </div>
-            )}
-
-            {/* KPIs — sem border box individual, top accent bar */}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }} className="lp-kpis-row">
-              {tab === "meta" ? (
-                <>
-                  <Kpi label={lang==="pt"?`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} dias`:lang==="es"?`Gasto ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} días`:`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} days`} value={`${data.currency_symbol||"R$"}${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#0ea5e9" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : sTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} />
-                  <Kpi label="CTR" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} trend={cTr} spark={cS} color="#0ea5e9" sub={cTr === "up" ? (lang==="pt"?"subindo":lang==="es"?"subiendo":"rising") : cTr === "down" ? (lang==="pt"?"caindo":lang==="es"?"bajando":"falling") : (lang==="pt"?"estável":lang==="es"?"estable":"stable")} warn={parseFloat(k.ctr || 0) < 0.5 && parseFloat(k.spend || 0) > 20} />
-                  <Kpi label="CPM" value={`${data.currency_symbol||"R$"}${parseFloat(k.cpm || 0).toFixed(1)}`} color="#0ea5e9" sub={lang==="pt"?"por mil impr.":lang==="es"?"por mil impr.":"per 1k impr."} />
-                  <Kpi label={lang==="pt"?"Frequência":lang==="es"?"Frecuencia":"Frequency"} value={`${parseFloat(k.frequency || 0).toFixed(1)}x`} warn={parseFloat(k.frequency || 0) > 3.5} sub={parseFloat(k.frequency || 0) > 3.5 ? (lang==="pt"?"fadiga próxima":lang==="es"?"fatiga próxima":"fatigue close") : parseFloat(k.frequency || 0) > 2.5 ? (lang==="pt"?"monitorar":lang==="es"?"monitorear":"monitor") : (lang==="pt"?"saudável":lang==="es"?"saludable":"healthy")} />
-                  <Kpi label={lang==="pt"?"Conversões":lang==="es"?"Conversiones":"Conversions"} value={k.conversions || "0"} color="#34d399" sub={`${k.active_ads || 0} ${lang==="pt"?"ads ativos":lang==="es"?"ads activos":"active ads"}`} />
-                </>
-              ) : (
-                <>
-                  <Kpi label={lang==="pt"?`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} dias`:lang==="es"?`Gasto ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} días`:`Spend ${Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1} days`} value={`$${parseFloat(k.spend || 0).toFixed(0)}`} trend={sTr} spark={spS} color="#3b82f6" sub={sTr === "up" ? (lang==="pt"?"crescendo":lang==="es"?"creciendo":"growing") : (lang==="pt"?"caindo":lang==="es"?"cayendo":"falling")} />
-                  <Kpi label="CTR" value={`${parseFloat(k.ctr || 0).toFixed(2)}%`} spark={cS} color="#34d399" />
-                  <Kpi label="CPC" value={`$${parseFloat(k.cpc || 0).toFixed(2)}`} color="#f59e0b" />
-                  <Kpi label={lang==="pt"?"Conversões":lang==="es"?"Conversiones":"Conversions"} value={k.conversions || "0"} color="#34d399" />
-                  <Kpi label={lang==="pt"?"Campanhas":lang==="es"?"Campañas":"Campaigns"} value={k.active_campaigns || "0"} color="#6366f1" sub={lang==="pt"?"ativas":lang==="es"?"activas":"active"} />
-                </>
-              )}
-            </div>
-
-            {/* Empty state */}
-            {isEmpty && (
-              <div style={{ padding: "24px 16px", textAlign: "center" }}>
-                <p style={{ ...I, fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.45)", margin: "0 0 6px" }}>
-                  {lang==="pt"?"Nenhuma campanha ativa nos últimos 60 dias":lang==="es"?"Sin campañas activas en los últimos 60 días":"No active campaigns in the last 60 days"}
-                </p>
-                {accName && <p style={{ ...I, fontSize: 12, color: "rgba(255,255,255,0.22)", margin: "0 0 16px" }}>{accName}</p>}
-                <button onClick={() => onSend(lang==="pt"?"O que devo fazer para reativar minhas campanhas?":lang==="es"?"¿Qué debo hacer para reactivar mis campañas?":"What should I do to reactivate my campaigns?")}
-                  style={{ ...I, fontSize: 12, fontWeight: 500, padding: "7px 16px", borderRadius: 8, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", color: "rgba(14,165,233,0.8)", cursor: "pointer", transition: "all 0.15s" }}
-                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.14)"}}
-                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.08)"}}>
-                  {lang==="pt"?"Pedir orientação à IA →":lang==="es"?"Pedir orientación →":"Ask AI for guidance →"}
-                </button>
-              </div>
-            )}
-
-            {/* Criativos + Campanhas */}
-            {!isEmpty && (
-              <>
-                <Div />
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
-
-                  {/* Criativos */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {tab === "meta" && (data.winners || []).length > 0 && (
-                      <div>
-                        <Sec c="#34d399">{lang==="pt"?"▲ Escalar agora":lang==="es"?"▲ Escalar ahora":"▲ Scale now"}</Sec>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                          {(data.winners || []).slice(0, 4).map((a: any, i: number) => <AdRow key={i} a={a} kind="winner" ask={onSend} />)}
-                        </div>
-                      </div>
-                    )}
-                    {tab === "meta" && (data.at_risk || []).length > 0 && (
-                      <div>
-                        <Sec c="#fb7185">{lang==="pt"?"▼ Risco de fadiga":lang==="es"?"▼ Riesgo de fatiga":"▼ Fatigue risk"}</Sec>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                          {(data.at_risk || []).slice(0, 4).map((a: any, i: number) => <AdRow key={i} a={a} kind="risk" ask={onSend} />)}
-                        </div>
-                      </div>
-                    )}
-                    {(!(data.winners?.length) && !(data.at_risk?.length)) && (data.top_ads || []).length > 0 && (
-                      <div>
-                        <Sec c="#475569">{lang==="pt"?"Top anúncios":lang==="es"?"Top anuncios":"Top ads"}</Sec>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                          {(data.top_ads || []).slice(0, 5).map((a: any, i: number) => <AdRow key={i} a={{ ...a, freq: undefined }} kind="normal" ask={onSend} />)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Campanhas */}
-                  {(data.campaigns || []).length > 0 && (
-                    <div>
-                      <Sec c="#475569">{lang==="pt"?"Campanhas":lang==="es"?"Campañas":"Campaigns"}</Sec>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                        {(data.campaigns || []).slice(0, 7).map((c: any, i: number) => <CampRow key={i} c={c} />)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* Quick actions */}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingTop: 4 }}>
-              {(lang === "pt" ? [
-                { l: "Resumo da semana",  q: "Qual o resumo da minha conta essa semana?" },
-                { l: "O que escalar?",    q: "O que posso escalar agora com segurança?" },
-                { l: "O que pausar?",     q: "O que devo pausar hoje e por quê?" },
-                { l: "Próximo criativo",  q: "Com base nos meus winners, o que criar agora?" },
-                { l: "Por que caiu?",     q: "Por que meu ROAS caiu? Qual a causa raiz?" },
-              ] : lang === "es" ? [
-                { l: "Resumen semana",    q: "¿Cuál es el resumen de mi cuenta esta semana?" },
-                { l: "¿Qué escalar?",     q: "¿Qué puedo escalar ahora con seguridad?" },
-                { l: "¿Qué pausar?",      q: "¿Qué debo pausar hoy y por qué?" },
-                { l: "Próximo creativo",  q: "Basado en mis winners, ¿qué crear ahora?" },
-                { l: "¿Por qué bajó?",    q: "¿Por qué bajó mi ROAS? ¿Cuál es la causa raíz?" },
-              ] : [
-                { l: "Week summary",      q: "What's my account summary this week?" },
-                { l: "What to scale?",    q: "What can I safely scale right now?" },
-                { l: "What to pause?",    q: "What should I pause today and why?" },
-                { l: "Next creative",     q: "Based on my winners, what should I create now?" },
-                { l: "Why did it drop?",  q: "Why did my ROAS drop? What's the root cause?" },
-              ]).map(({ l, q }) => (
-                <button key={q} className="lp-chip" onClick={() => onSend(q)} style={{
-                  ...I, fontSize: 11, fontWeight: 500, padding: "5px 11px", borderRadius: 20,
-                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)",
-                  color: "rgba(255,255,255,0.5)", cursor: "pointer", transition: "all 0.15s",
-                }}>
-                  {l}
-                </button>
-              ))}
-            </div>
-
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  // LivePanel — compact bar only (no expanded panel)
+  return null;
 }
+
 
 
 
@@ -4236,6 +3902,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div style={{position:"absolute",top:0,left:0,right:0,height:60,background:"linear-gradient(to bottom,var(--bg-main),transparent)"}}/>
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:80,background:"linear-gradient(to top,var(--bg-main),transparent)"}}/>
       </div>
+
+      {/* ── LivePanel compact bar — show when Meta is connected ── */}
+      {connections.includes("meta") && (
+        <LivePanel user={user} selectedPersona={selectedPersona} connections={connections} lang={lang} onSend={send} />
+      )}
 
       {/* ── Creative Skills Panel — shown when chat is empty ── */}
       {messages.length===0&&contextReady&&hasData&&!proactiveLoading&&(

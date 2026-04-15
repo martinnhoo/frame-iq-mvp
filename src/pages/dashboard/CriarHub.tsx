@@ -4,13 +4,13 @@ import {
   MessageSquare,
   ScanEye,
   Zap,
-  FileText,
   BarChart3,
   Target,
   Clapperboard,
   Languages,
   Stethoscope,
-  Sparkles,
+  Layers,
+  Lock,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -23,18 +23,10 @@ interface ToolCard {
   color: string;
   route: string;
   tag?: string;
+  disabled?: boolean;
 }
 
 const TOOLS: ToolCard[] = [
-  {
-    id: 'brief-ai',
-    label: 'Brief AI',
-    desc: 'Prompts completos e detalhados para IA criar seus anúncios',
-    icon: Sparkles,
-    color: '#10b981',
-    route: '/dashboard/brief',
-    tag: 'IA',
-  },
   {
     id: 'roteiros',
     label: 'Roteiros & Produção',
@@ -69,11 +61,21 @@ const TOOLS: ToolCard[] = [
   },
   {
     id: 'analyses',
-    label: 'Análises',
-    desc: 'Relatórios detalhados de performance',
+    label: 'Análise de Criativos',
+    desc: 'Upload de vídeo com score de hook, insights visuais e recomendações de melhoria',
     icon: BarChart3,
     color: '#06b6d4',
     route: '/dashboard/analyses',
+  },
+  {
+    id: 'patterns',
+    label: 'Padrões',
+    desc: 'Padrões vencedores aprendidos dos seus dados — em breve',
+    icon: Layers,
+    color: '#a78bfa',
+    route: '',
+    disabled: true,
+    tag: 'EM BREVE',
   },
   {
     id: 'translate',
@@ -108,15 +110,16 @@ function ToolCardComponent({ tool, onClick }: { tool: ToolCard; onClick: () => v
 
   return (
     <button
-      onClick={onClick}
+      onClick={tool.disabled ? undefined : onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${hov ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)'}`,
+        background: hov && !tool.disabled ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${hov && !tool.disabled ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)'}`,
         borderRadius: 12,
         padding: '20px 18px',
-        cursor: 'pointer',
+        cursor: tool.disabled ? 'default' : 'pointer',
+        opacity: tool.disabled ? 0.45 : 1,
         textAlign: 'left',
         fontFamily: F,
         transition: 'all 0.15s',

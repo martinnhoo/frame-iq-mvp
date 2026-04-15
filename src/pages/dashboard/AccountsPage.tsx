@@ -415,16 +415,54 @@ function PlatformRow({ p, userId, accountId, t }: {
       {/* Expanded panel */}
       {isConnected && expanded && (
         <div style={{ borderTop:`1px solid ${pc}18`, padding:"16px 16px 18px", background:"rgba(0,0,0,0.15)" }}>
-          {/* Ad accounts — shown as info only; switch account from LivePanel */}
+          {/* Ad accounts — select active account */}
           {ads.length > 0 && p.id === "meta" && (
             <div style={{ marginBottom: 12 }}>
               <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
-                textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 6px" }}>
-                {ads.length} {lang==="pt"?"contas disponíveis":lang==="es"?"cuentas disponibles":"accounts available"}
+                textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 8px" }}>
+                {lang==="pt"?"Conta de anúncios ativa":lang==="es"?"Cuenta de anuncios activa":"Active ad account"}
               </p>
-              <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)", margin:0 }}>
-                {lang==="pt"?"Troque de conta direto no painel do IA Chat →":lang==="es"?"Cambia de cuenta en el panel del IA Chat →":"Switch accounts directly in the IA Chat panel →"}
-              </p>
+              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                {ads.map((acc: any) => {
+                  const isActive = acc.id === selId;
+                  return (
+                    <button key={acc.id} onClick={() => selectAcc(acc.id)}
+                      style={{
+                        display:"flex", alignItems:"center", gap:10, padding:"10px 12px",
+                        borderRadius:10, border: isActive ? `1px solid ${pc}40` : "1px solid rgba(255,255,255,0.08)",
+                        background: isActive ? `${pc}12` : "rgba(255,255,255,0.03)",
+                        cursor:"pointer", textAlign:"left", transition:"all 0.15s", width:"100%",
+                      }}>
+                      <div style={{
+                        width:18, height:18, borderRadius:"50%", border: isActive ? `2px solid ${pc}` : "2px solid rgba(255,255,255,0.15)",
+                        display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0,
+                        background: isActive ? pc : "transparent",
+                      }}>
+                        {isActive && <Check size={10} color="#fff" strokeWidth={3} />}
+                      </div>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ fontFamily:F, fontSize:13, fontWeight: isActive ? 600 : 400,
+                          color: isActive ? "#f0f2f8" : "rgba(255,255,255,0.55)", margin:0,
+                          overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                          {acc.name || acc.id}
+                        </p>
+                        {acc.currency && (
+                          <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)", margin:"2px 0 0" }}>
+                            ID: {acc.id}{acc.currency ? ` · ${acc.currency}` : ""}
+                          </p>
+                        )}
+                      </div>
+                      {isActive && (
+                        <span style={{ fontFamily:F, fontSize:10, fontWeight:700, color:pc,
+                          background:`${pc}15`, border:`1px solid ${pc}28`, borderRadius:99,
+                          padding:"2px 8px", letterSpacing:"0.04em", flexShrink:0 }}>
+                          {lang==="pt"?"ATIVO":lang==="es"?"ACTIVO":"ACTIVE"}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
