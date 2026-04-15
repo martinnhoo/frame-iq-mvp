@@ -92,6 +92,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: 12, padding: '48px 32px',
         textAlign: 'center', fontFamily: F,
+        minHeight: 280,
       }}>
         <div style={{
           width: 48, height: 48, borderRadius: 12,
@@ -201,7 +202,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   // ── All done → show two-block entry state instead of dead-end ──
   if (allDone) {
     return (
-      <div style={{ fontFamily: F }}>
+      <div style={{ fontFamily: F, minHeight: 280 }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <h2 style={{
@@ -344,6 +345,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       border: '1px solid rgba(255,255,255,0.06)',
       borderRadius: 12, padding: '36px 32px',
       fontFamily: F,
+      minHeight: 280,
     }}>
       {/* Header with scanning animation */}
       <div style={{ textAlign: 'center', marginBottom: 28 }}>

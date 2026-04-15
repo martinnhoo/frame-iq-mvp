@@ -58,29 +58,22 @@ const FeedPage: React.FC = () => {
     return (
       <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          {/* Header skeleton — matches actual header */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ width: 130, height: 20, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 6 }} />
+            <div style={{ width: 260, height: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }} />
+          </div>
+          {/* Empty state placeholder — matches EmptyState card height */}
           <div style={{
             background: 'rgba(255,255,255,0.03)', borderRadius: 12,
-            border: '1px solid rgba(255,255,255,0.06)', padding: 24, marginBottom: 24,
+            border: '1px solid rgba(255,255,255,0.06)', padding: '48px 32px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+            minHeight: 220,
           }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              {[0, 1].map(i => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ width: 120, height: 36, background: 'rgba(255,255,255,0.05)', borderRadius: 8, marginBottom: 8 }} />
-                  <div style={{ width: 80, height: 12, background: 'rgba(255,255,255,0.04)', borderRadius: 6 }} />
-                </div>
-              ))}
-            </div>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.04)' }} />
+            <div style={{ width: 200, height: 18, background: 'rgba(255,255,255,0.04)', borderRadius: 6 }} />
+            <div style={{ width: 280, height: 13, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }} />
           </div>
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{
-              background: 'rgba(255,255,255,0.03)', borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.06)', padding: 24, marginBottom: 16,
-            }}>
-              <div style={{ width: '40%', height: 18, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 12 }} />
-              <div style={{ width: '75%', height: 14, background: 'rgba(255,255,255,0.04)', borderRadius: 6, marginBottom: 8 }} />
-              <div style={{ width: '50%', height: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }} />
-            </div>
-          ))}
         </div>
       </div>
     );

@@ -82,6 +82,14 @@ export default function AnalysesList() {
 
   if (loading) return (
     <div style={{ padding: "clamp(16px,4vw,32px)", maxWidth: 900, margin: "0 auto" }}>
+      {/* Header skeleton */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <div>
+          <div style={{ width: 180, height: 22, background: "rgba(255,255,255,0.05)", borderRadius: 6, marginBottom: 6 }} />
+          <div style={{ width: 60, height: 12, background: "rgba(255,255,255,0.03)", borderRadius: 6 }} />
+        </div>
+        <div style={{ width: 120, height: 36, background: "rgba(255,255,255,0.04)", borderRadius: 10 }} />
+      </div>
       {[1,2,3].map(i => <div key={i} className="animate-pulse" style={{ height: 72, background: "rgba(255,255,255,0.04)", borderRadius: 14, marginBottom: 8 }} />)}
     </div>
   );

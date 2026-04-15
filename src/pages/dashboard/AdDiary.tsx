@@ -538,14 +538,14 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       )}
 
       {loading && (
-        <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
+        <div style={{ display: "flex", justifyContent: "center", padding: "48px 0", minHeight: 140 }}>
           <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid rgba(14,165,233,0.15)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />
         </div>
       )}
 
       {/* Syncing empty */}
       {!loading && syncing && entries.length === 0 && (
-        <div style={{ textAlign: "center", padding: "80px 0" }}>
+        <div style={{ textAlign: "center", padding: "48px 20px", minHeight: 140 }}>
           <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid rgba(14,165,233,0.15)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, margin: 0 }}>{t.importing}</p>
           <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 12, marginTop: 5 }}>{t.importing_sub}</p>
@@ -554,7 +554,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
 
       {/* No account selected */}
       {!loading && selectedIds.length === 0 && (
-        <div style={{ textAlign: "center", padding: "80px 20px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.07)" }}>
+        <div style={{ textAlign: "center", padding: "48px 20px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.07)", minHeight: 140 }}>
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>{t.select_account}</p>
           <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, margin: 0 }}>{t.select_sub}</p>
         </div>
@@ -562,7 +562,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
 
       {/* Empty */}
       {!loading && !syncing && entries.length === 0 && selectedIds.length > 0 && (
-        <div style={{ textAlign: "center", padding: "80px 20px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.07)" }}>
+        <div style={{ textAlign: "center", padding: "48px 20px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.07)", minHeight: 140 }}>
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, fontWeight: 600, margin: "0 0 6px" }}>{t.no_ads}</p>
           <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, margin: "0 0 20px" }}>{t.no_ads_sub}</p>
           <button onClick={syncAll} style={{ padding: "10px 24px", borderRadius: 9, background: "#0ea5e9", color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
