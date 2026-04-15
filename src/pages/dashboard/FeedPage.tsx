@@ -944,7 +944,7 @@ const FeedPage: React.FC = () => {
   }, [accountId, syncing, refetchDecisions]);
 
   // Meta Ads Manager URL for the connected account
-  const metaAccountId = activeAccount?.meta_account_id || '';
+  const metaAccountId = activeAccount?.metaAccountId || '';
   const adsManagerUrl = metaAccountId
     ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${metaAccountId.replace('act_', '')}`
     : 'https://adsmanager.facebook.com/';
