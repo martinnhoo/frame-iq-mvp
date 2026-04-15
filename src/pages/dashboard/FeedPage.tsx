@@ -88,13 +88,14 @@ const VisibleWin: React.FC<{
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, rgba(52,211,153,0.06) 0%, rgba(14,165,233,0.04) 100%)',
-      border: '1px solid rgba(52,211,153,0.15)',
-      borderRadius: 6, padding: '14px 16px', marginBottom: 14,
+      background: '#0C1017',
+      border: '1px solid rgba(52,211,153,0.08)',
+      borderLeft: '3px solid rgba(52,211,153,0.40)',
+      borderRadius: 4, padding: '14px 16px', marginBottom: 12,
     }}>
       <div style={{
-        fontSize: 9.5, fontWeight: 800, color: '#34d399',
-        letterSpacing: '0.10em', marginBottom: 6,
+        fontSize: 9, fontWeight: 800, color: 'rgba(52,211,153,0.60)',
+        letterSpacing: '0.12em', marginBottom: 6,
       }}>RESULTADO ALCANÇADO</div>
 
       {bestWin && (
@@ -136,19 +137,19 @@ const SystemStatus: React.FC<{
 
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.02)',
-      border: '1px solid rgba(255,255,255,0.05)',
-      borderRadius: 6, padding: '12px 14px', marginBottom: 14,
+      background: '#0C1017',
+      border: '1px solid rgba(255,255,255,0.03)',
+      borderRadius: 4, padding: '12px 14px', marginBottom: 12,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{
-          width: 7, height: 7, borderRadius: '50%', background: '#34d399',
-          boxShadow: '0 0 6px rgba(52,211,153,0.40)',
+          width: 6, height: 6, borderRadius: '50%', background: '#34d399',
+          boxShadow: '0 0 6px rgba(52,211,153,0.30)',
           animation: 'pulse 2.5s ease-in-out infinite',
         }} />
         <div>
-          <div style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.60)', fontFamily: F }}>
+          <div style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.50)', fontFamily: F }}>
             Sistema ativo
           </div>
           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: F, marginTop: 1 }}>
@@ -391,7 +392,7 @@ const SyncBanner: React.FC = () => {
 
   return (
     <div style={{
-      background: '#0F141A', border: '1px solid rgba(14,165,233,0.12)',
+      background: '#0C1017', border: '1px solid rgba(14,165,233,0.12)',
       borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 12,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -496,7 +497,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
   if (conn) {
     return (
       <div style={{
-        background: '#0F141A', border: '1px solid rgba(42,171,238,0.10)',
+        background: '#0C1017', border: '1px solid rgba(42,171,238,0.10)',
         borderRadius: 4, padding: '12px 14px', fontFamily: F, marginBottom: 8,
         transition: 'border-color 0.15s',
       }}
@@ -538,7 +539,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
   if (pairingLink) {
     return (
       <div style={{
-        background: '#0F141A', border: '1px solid rgba(42,171,238,0.12)',
+        background: '#0C1017', border: '1px solid rgba(42,171,238,0.12)',
         borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 8,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
@@ -584,7 +585,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
   // ── DEFAULT: not connected, no link yet ──
   return (
     <div style={{
-      background: '#0F141A', border: '1px solid rgba(230,237,243,0.06)',
+      background: '#0C1017', border: '1px solid rgba(230,237,243,0.06)',
       borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 8,
       display: 'flex', alignItems: 'center', gap: 14,
     }}>
@@ -631,7 +632,7 @@ const StateNoAds: React.FC = () => {
   return (
     <div style={{ fontFamily: F }}>
       <div style={{
-        background: '#0F141A', border: '1px solid rgba(230,237,243,0.06)',
+        background: '#0C1017', border: '1px solid rgba(230,237,243,0.06)',
         borderRadius: 4, padding: '28px 24px',
       }}>
         {/* Status pill */}
@@ -852,7 +853,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
     <div style={{ fontFamily: F }}>
       {/* Analysis card */}
       <div style={{
-        background: '#0F141A', border: '1px solid rgba(230,237,243,0.06)',
+        background: '#0C1017', border: '1px solid rgba(230,237,243,0.06)',
         borderLeft: '3px solid #0ea5e9',
         borderRadius: 4, padding: '20px 20px 18px',
         marginBottom: 8,
@@ -962,7 +963,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
   return (
     <div style={{ fontFamily: F }}>
       <div style={{
-        background: '#0F141A', border: '1px solid rgba(230,237,243,0.06)',
+        background: '#0C1017', border: '1px solid rgba(230,237,243,0.06)',
         borderLeft: '3px solid #0ea5e9',
         borderRadius: 4, padding: '20px 20px 18px',
         marginBottom: 8,
@@ -1056,7 +1057,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
 
       {/* ── BLOCO 1: STATUS ── */}
       <div style={{
-        background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
+        background: '#0C1017', border: '1px solid rgba(230,237,243,0.05)',
         borderRadius: 4, padding: '14px 16px',
       }}>
         {/* Confidence — top */}
@@ -1157,7 +1158,7 @@ const PerformanceSummary: React.FC<{
 
       {/* ── BLOCO 1: STATUS ── */}
       <div style={{
-        background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
+        background: '#0C1017', border: '1px solid rgba(230,237,243,0.05)',
         borderRadius: 4, padding: '14px 16px',
       }}>
         {/* Confidence — top */}
@@ -1273,11 +1274,43 @@ const CollapsibleDecisions: React.FC<{
   const visible = shouldCollapse && !expanded ? decisions.slice(0, DECISIONS_COLLAPSE_THRESHOLD) : decisions;
   const hiddenCount = decisions.length - DECISIONS_COLLAPSE_THRESHOLD;
 
+  // Split into critical (kill/fix) and other (scale/pattern/insight)
+  const critical = visible.filter(d => d.type === 'kill' || d.type === 'fix');
+  const other = visible.filter(d => d.type !== 'kill' && d.type !== 'fix');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {visible.map(decision => (
-        <DecisionCard key={decision.id} decision={decision} onAction={onAction} isDemo={isDemo} />
-      ))}
+      {/* LEVEL 1+2: Critical decisions with section label */}
+      {critical.length > 0 && (
+        <>
+          <div style={{
+            fontSize: 9.5, fontWeight: 800, color: 'rgba(220,38,38,0.50)',
+            letterSpacing: '0.12em', padding: '0 2px', marginBottom: 2,
+          }}>
+            AÇÃO IMEDIATA
+          </div>
+          {critical.map((decision, idx) => (
+            <DecisionCard key={decision.id} decision={decision} onAction={onAction} isDemo={isDemo} isHero={idx === 0} />
+          ))}
+        </>
+      )}
+
+      {/* LEVEL 3: Other recommendations */}
+      {other.length > 0 && (
+        <>
+          {critical.length > 0 && (
+            <div style={{
+              fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.18)',
+              letterSpacing: '0.12em', padding: '0 2px', marginTop: 8, marginBottom: 2,
+            }}>
+              RECOMENDAÇÕES
+            </div>
+          )}
+          {other.map(decision => (
+            <DecisionCard key={decision.id} decision={decision} onAction={onAction} isDemo={isDemo} />
+          ))}
+        </>
+      )}
       {shouldCollapse && !expanded && (
         <button onClick={() => setExpanded(true)} style={{
           background: 'rgba(230,237,243,0.03)', border: '1px solid rgba(230,237,243,0.06)',
@@ -1554,16 +1587,16 @@ const FeedPage: React.FC = () => {
   // ── Loading skeleton ──
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
+      <div style={{ minHeight: '100vh', background: '#08090D', padding: '24px 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <div style={{ width: 100, height: 16, background: 'rgba(230,237,243,0.04)', borderRadius: 3, marginBottom: 6 }} />
-            <div style={{ width: 200, height: 10, background: 'rgba(230,237,243,0.02)', borderRadius: 3 }} />
+            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 3, marginBottom: 6 }} />
+            <div style={{ width: 200, height: 10, background: 'rgba(255,255,255,0.02)', borderRadius: 3 }} />
           </div>
           {[1,2,3].map(i => (
             <div key={i} style={{
-              background: '#0F141A', borderRadius: 4,
-              border: '1px solid rgba(255,255,255,0.04)', padding: 16,
+              background: '#0C1017', borderRadius: 4,
+              border: '1px solid rgba(255,255,255,0.03)', padding: 16,
               marginBottom: 8, height: 120,
             }} />
           ))}
@@ -1575,10 +1608,10 @@ const FeedPage: React.FC = () => {
   // ── No Meta connection — special entry screen ──
   if (!metaConnected) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
+      <div style={{ minHeight: '100vh', background: '#08090D', padding: '24px 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>Feed</h1>
+            <h1 style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.50)', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>DECISÕES</h1>
           </div>
           <StateNoAds />
         </div>
@@ -1589,14 +1622,14 @@ const FeedPage: React.FC = () => {
   // Syncing is now an inline banner — no full-page overlay
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
+    <div style={{ minHeight: '100vh', background: '#08090D', padding: '24px 20px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <h1 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>
-                Feed
+              <h1 style={{ fontSize: 14, fontWeight: 800, color: 'rgba(255,255,255,0.50)', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>
+                DECISÕES
               </h1>
               {isDemo && (
                 <span style={{
@@ -1636,7 +1669,7 @@ const FeedPage: React.FC = () => {
         {/* Demo banner */}
         {isDemo && (
           <div style={{
-            background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
+            background: '#0C1017', border: '1px solid rgba(230,237,243,0.05)',
             borderRadius: 3, padding: '10px 14px', marginBottom: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
           }}>

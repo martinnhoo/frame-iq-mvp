@@ -108,7 +108,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         }}>
           {/* Block 1 — Começar pelos criativos */}
           <div style={{
-            background: '#0F141A',
+            background: '#0C1017',
             border: '1px solid rgba(230,237,243,0.06)',
             borderRadius: 12,
             padding: '28px 24px',
@@ -226,7 +226,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   if (hasActivity || hasSaved) {
     return (
       <div style={{
-        background: '#0F141A',
+        background: '#0C1017',
         border: '1px solid rgba(230,237,243,0.06)',
         borderRadius: 12, padding: '40px 32px',
         textAlign: 'center', fontFamily: F,
@@ -333,7 +333,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
         {/* Single box — Criativos */}
         <div style={{
-          background: '#0F141A',
+          background: '#0C1017',
           border: '1px solid rgba(230,237,243,0.06)',
           borderRadius: 12,
           padding: '28px 24px',
@@ -399,7 +399,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   // ── Still scanning — progress bar + steps ──
   return (
     <div style={{
-      background: '#0F141A',
+      background: '#0C1017',
       border: '1px solid rgba(230,237,243,0.06)',
       borderRadius: 12, padding: '36px 32px',
       fontFamily: F,
