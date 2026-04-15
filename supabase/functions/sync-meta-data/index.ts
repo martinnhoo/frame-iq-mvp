@@ -109,19 +109,22 @@ async function fetchWithRetry(
   throw new Error(`Failed after ${maxRetries} retries due to rate limiting`);
 }
 
-// Get Meta access token for account
-async function getAccessToken(accountId: string): Promise<string> {
+// Get Meta access token + meta_account_id for account
+async function getAccountCredentials(accountId: string): Promise<{ token: string; metaAccountId: string }> {
   const { data, error } = await supabase
     .from("ad_accounts")
-    .select("access_token_encrypted")
+    .select("access_token_encrypted, meta_account_id")
     .eq("id", accountId)
     .single();
 
-  if (error || !data?.access_token_encrypted) {
-    throw new Error(`Failed to fetch access token for account ${accountId}`);
+  if (error || !data?.access_token_encrypted || !data?.meta_account_id) {
+    throw new Error(`Failed to fetch credentials for account ${accountId}`);
   }
 
-  return data.access_token_encrypted;
+  return {
+    token: data.access_token_encrypted,
+    metaAccountId: data.meta_account_id,
+  };
 }
 
 // Convert dollar string to centavos
@@ -379,11 +382,12 @@ function normalizeMetrics(insight: MetaInsights, adId: string) {
 }
 
 // Fast sync: active ads with spend > 0, last 7 days, top 50
-async function syncFast(accountId: string, token: string): Promise<void> {
-  console.log(`Starting FAST sync for account ${accountId}`);
+async function syncFast(accountId: string, token: string, metaAccountId?: string): Promise<void> {
+  const metaId = metaAccountId || accountId;
+  console.log(`Starting FAST sync for account ${accountId} (meta: ${metaId})`);
 
   const dateRange = getDateRange("fast");
-  const ads = await fetchAds(accountId, token, false);
+  const ads = await fetchAds(metaId, token, false);
 
   // Filter only active ads
   const activeAds = ads.filter(
@@ -447,16 +451,17 @@ async function syncFast(accountId: string, token: string): Promise<void> {
 }
 
 // Full sync: all campaigns/ad sets/ads, last 7 days, includes creatives
-async function syncFull(accountId: string, token: string): Promise<void> {
-  console.log(`Starting FULL sync for account ${accountId}`);
+async function syncFull(accountId: string, token: string, metaAccountId?: string): Promise<void> {
+  const metaId = metaAccountId || accountId;
+  console.log(`Starting FULL sync for account ${accountId} (meta: ${metaId})`);
 
   const dateRange = getDateRange("full");
 
-  // Fetch all campaigns, ad sets, ads
+  // Fetch all campaigns, ad sets, ads — use metaId for Meta API calls
   const [campaigns, adSets, ads] = await Promise.all([
-    fetchCampaigns(accountId, token),
-    fetchAdSets(accountId, token),
-    fetchAds(accountId, token, true), // Include creatives
+    fetchCampaigns(metaId, token),
+    fetchAdSets(metaId, token),
+    fetchAds(metaId, token, true), // Include creatives
   ]);
 
   // Prepare upsert data
@@ -564,16 +569,17 @@ async function syncFull(accountId: string, token: string): Promise<void> {
 }
 
 // Deep sync: everything in FULL + 30-day insights + calculate baselines + update maturity
-async function syncDeep(accountId: string, token: string): Promise<void> {
-  console.log(`Starting DEEP sync for account ${accountId}`);
+async function syncDeep(accountId: string, token: string, metaAccountId?: string): Promise<void> {
+  const metaId = metaAccountId || accountId;
+  console.log(`Starting DEEP sync for account ${accountId} (meta: ${metaId})`);
 
   const dateRange = getDateRange("deep");
 
-  // Fetch all campaigns, ad sets, ads
+  // Fetch all campaigns, ad sets, ads — use metaId for Meta API calls
   const [campaigns, adSets, ads] = await Promise.all([
-    fetchCampaigns(accountId, token),
-    fetchAdSets(accountId, token),
-    fetchAds(accountId, token, true), // Include creatives
+    fetchCampaigns(metaId, token),
+    fetchAdSets(metaId, token),
+    fetchAds(metaId, token, true), // Include creatives
   ]);
 
   // Prepare upsert data (same as FULL)
@@ -720,20 +726,20 @@ serve(async (req: Request) => {
       );
     }
 
-    const token = await getAccessToken(account_id);
+    const { token, metaAccountId } = await getAccountCredentials(account_id);
 
     switch (sync_type) {
       case "fast":
-        await syncFast(account_id, token);
+        await syncFast(account_id, token, metaAccountId);
         break;
       case "full":
-        await syncFull(account_id, token);
+        await syncFull(account_id, token, metaAccountId);
         break;
       case "deep":
-        await syncDeep(account_id, token);
+        await syncDeep(account_id, token, metaAccountId);
         break;
       case "on_demand":
-        await syncFull(account_id, token);
+        await syncFull(account_id, token, metaAccountId);
         break;
       default:
         return new Response(
