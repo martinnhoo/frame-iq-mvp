@@ -601,7 +601,23 @@ interface AdSummary {
   name: string;
   meta_ad_id: string;
   status?: string;
+  effective_status?: string;
   ad_set?: { name: string; campaign?: { name: string } };
+}
+
+/** Resolve display label + color for an ad's status */
+function getAdStatusDisplay(ad: AdSummary): { label: string; color: string; dotColor: string } {
+  const s = (ad.effective_status || ad.status || '').toUpperCase();
+  if (s === 'PAUSED' || s === 'CAMPAIGN_PAUSED' || s === 'ADSET_PAUSED')
+    return { label: 'Pausado', color: 'rgba(139,148,158,0.50)', dotColor: 'rgba(139,148,158,0.30)' };
+  if (s === 'DISAPPROVED' || s === 'WITH_ISSUES')
+    return { label: 'Problema', color: 'rgba(200,146,42,0.60)', dotColor: 'rgba(200,146,42,0.40)' };
+  if (['LEARNING', 'IN_PROCESS', 'PENDING_REVIEW'].includes(s))
+    return { label: 'Aprendizado', color: 'rgba(200,146,42,0.50)', dotColor: 'rgba(200,146,42,0.30)' };
+  if (s === 'ARCHIVED' || s === 'DELETED')
+    return { label: 'Arquivado', color: 'rgba(139,148,158,0.35)', dotColor: 'rgba(139,148,158,0.20)' };
+  // ACTIVE or unknown → healthy
+  return { label: 'Saudável', color: 'rgba(14,165,233,0.40)', dotColor: 'rgba(14,165,233,0.25)' };
 }
 
 interface AdMetricsSummary {
@@ -872,25 +888,28 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
           Operação estável · sistema focado em otimização ativa
         </div>
 
-        {/* Ad list */}
+        {/* Ad list — shows real status (Saudável / Pausado / etc.) */}
         {ads.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {ads.slice(0, 5).map((ad, i) => (
-              <div key={ad.meta_ad_id || i} style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
-              }}>
-                <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(14,165,233,0.25)', flexShrink: 0 }} />
-                <span style={{
-                  fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+            {ads.slice(0, 5).map((ad, i) => {
+              const st = getAdStatusDisplay(ad);
+              return (
+                <div key={ad.meta_ad_id || i} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
                 }}>
-                  {ad.name}
-                </span>
-                <span style={{ fontSize: 10, color: 'rgba(14,165,233,0.40)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                  Saudável
-                </span>
-              </div>
-            ))}
+                  <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
+                  <span style={{
+                    fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+                  }}>
+                    {ad.name}
+                  </span>
+                  <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                    {st.label}
+                  </span>
+                </div>
+              );
+            })}
             {totalAds > 5 && (
               <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
                 + {totalAds - 5} monitorados
@@ -1021,25 +1040,28 @@ const PerformanceSummary: React.FC<{
           </div>
         )}
 
-        {/* Ad list */}
+        {/* Ad list — shows real status (Saudável / Pausado / etc.) */}
         {ads.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {ads.slice(0, 5).map((ad, i) => (
-              <div key={ad.meta_ad_id || i} style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
-              }}>
-                <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(14,165,233,0.25)', flexShrink: 0 }} />
-                <span style={{
-                  fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+            {ads.slice(0, 5).map((ad, i) => {
+              const st = getAdStatusDisplay(ad);
+              return (
+                <div key={ad.meta_ad_id || i} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
                 }}>
-                  {ad.name}
-                </span>
-                <span style={{ fontSize: 10, color: 'rgba(14,165,233,0.40)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                  Saudável
-                </span>
-              </div>
-            ))}
+                  <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
+                  <span style={{
+                    fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+                  }}>
+                    {ad.name}
+                  </span>
+                  <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                    {st.label}
+                  </span>
+                </div>
+              );
+            })}
             {totalAds > 5 && (
               <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
                 + {totalAds - 5} monitorados
@@ -1135,7 +1157,7 @@ const FeedPage: React.FC = () => {
     try {
       const { data, count } = await (supabase
         .from('ads' as any)
-        .select('name, meta_ad_id, status, ad_set:ad_sets(name, campaign:campaigns(name))', { count: 'exact' })
+        .select('name, meta_ad_id, status, effective_status, ad_set:ad_sets(name, campaign:campaigns(name))', { count: 'exact' })
         .eq('account_id', accountId)
         .limit(8) as any);
       setUserAds((data || []) as AdSummary[]);
