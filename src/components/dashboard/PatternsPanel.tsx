@@ -9,12 +9,12 @@
  * - Colors at full signal strength
  */
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { TrendingUp, TrendingDown, ChevronRight, Loader2, RefreshCw } from "lucide-react";
+import { ChevronRight, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 const F = "'Inter', 'Plus Jakarta Sans', sans-serif";
-const M = "'DM Mono', 'SF Mono', monospace";
+const M = "'Inter', 'Plus Jakarta Sans', sans-serif"; // metrics use same clean typeface, tabular-nums via style
 
 // ── Text hierarchy constants ──
 const L1 = "#F0F6FC";          // titles, key info — bright white
@@ -180,62 +180,152 @@ function formatCtr(value: number): string {
   return pct.toFixed(1) + "%";
 }
 
-/** Pick the ONE metric that best represents why this pattern matters.
- *  The metric must make sense with the pattern type:
- *  - hook patterns → retenção / CTR (captures attention)
- *  - format patterns → ROAS or CPC (efficiency)
- *  - campaign/adset → ROAS or CPA (ROI)
- *  - combinations → best available
- *  - fallback → whatever is strongest
+// ── Performance status — every metric gets judged ──
+type MetricStatus = "forte" | "bom" | "neutro";
+
+interface HeroMetric {
+  label: string;       // "Retenção", "ROAS", "CPC", "CTR"
+  value: string;       // "+23%", "3.2x", "R$1.40", "4.1%"
+  context: string;     // "acima da média da conta", "retorno sólido", etc.
+  status: MetricStatus;
+  color: string;       // semantic: green=forte, soft-green=bom, amber=neutro
+}
+
+const STATUS_COLORS: Record<MetricStatus, string> = {
+  forte: "#4ADE80",    // strong green
+  bom: "#86EFAC",      // soft green
+  neutro: "#FBBF24",   // amber
+};
+
+const STATUS_LABELS: Record<MetricStatus, string> = {
+  forte: "forte",
+  bom: "bom",
+  neutro: "neutro",
+};
+
+/** Evaluate the ONE hero metric for a pattern — returns null if not worth showing.
+ *
+ * INTELLIGENCE LAYER:
+ * 1. Select the right metric for this pattern type
+ * 2. Judge its quality against account context (impact_pct = deviation from avg)
+ * 3. If weak → return null → pattern won't display a metric
+ * 4. Always include comparison context so the user understands WHY
  */
-function pickHeroMetric(p: DetectedPattern): { label: string; value: string; color: string } | null {
+function evaluateHeroMetric(p: DetectedPattern): HeroMetric | null {
   const ft = p.feature_type || p.variables?.feature_type || "";
   const ctr = p.avg_ctr != null && p.avg_ctr > 0 ? (p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100) : 0;
   const roas = p.avg_roas != null && p.avg_roas > 0 ? p.avg_roas : 0;
   const cpc = p.avg_cpc != null && p.avg_cpc > 0 ? p.avg_cpc : 0;
   const impactCtr = parseFloat(p.impact_ctr_pct || "0");
+  const impactRoas = parseFloat(p.impact_roas_pct || "0");
 
-  // Hook patterns → retention / attention metric
+  // ── Helper: classify impact strength ──
+  function classifyImpact(pct: number): MetricStatus | null {
+    if (pct >= 20) return "forte";
+    if (pct >= 5) return "bom";
+    if (pct > 0) return "neutro";
+    return null; // negative or zero = not worth showing
+  }
+
+  function classifyRoas(val: number): MetricStatus | null {
+    if (val >= 4.0) return "forte";
+    if (val >= 2.0) return "bom";
+    if (val >= 1.0) return "neutro";
+    return null;
+  }
+
+  function classifyCtr(val: number): MetricStatus | null {
+    if (val >= 4.0) return "forte";
+    if (val >= 2.5) return "bom";
+    if (val >= 1.5) return "neutro";
+    return null;
+  }
+
+  function impactContext(pct: number): string {
+    if (pct >= 20) return "muito acima da média da conta";
+    if (pct >= 5) return "acima da média da conta";
+    if (pct > 0) return "levemente acima da média";
+    return "";
+  }
+
+  // ── Hook patterns → retention / attention ──
   if (ft === "hook_type" || ft === "hook_presence") {
-    if (impactCtr > 0) return { label: "Retenção", value: `+${p.impact_ctr_pct}`, color: "#4ADE80" };
-    if (ctr >= 2.0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "#4ADE80" };
-    if (ctr > 0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "rgba(255,255,255,0.55)" };
-    return null;
+    if (impactCtr > 0) {
+      const status = classifyImpact(impactCtr);
+      if (!status) return null;
+      return { label: "Retenção", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
+    }
+    const ctrStatus = classifyCtr(ctr);
+    if (!ctrStatus || ctrStatus === "neutro") return null; // only strong CTR for hooks
+    return { label: "CTR", value: formatCtr(p.avg_ctr!), context: ctr >= 4.0 ? "taxa de clique excelente" : "boa taxa de clique", status: ctrStatus, color: STATUS_COLORS[ctrStatus] };
   }
 
-  // Format patterns → efficiency (ROAS > CPC > CTR)
+  // ── Format / combination → efficiency (ROAS > CPC > impact) ──
   if (ft === "format" || ft === "combination") {
-    if (roas >= 2.0) return { label: "ROAS", value: `${roas.toFixed(1)}x`, color: "#4ADE80" };
-    if (cpc > 0) return { label: "CPC", value: `R$${(cpc / 100).toFixed(2)}`, color: "#38BDF8" };
-    if (impactCtr > 0) return { label: "Impacto", value: `+${p.impact_ctr_pct}`, color: "#4ADE80" };
-    if (ctr >= 2.0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "#4ADE80" };
+    if (roas > 0) {
+      const status = classifyRoas(roas);
+      if (!status) return null;
+      const ctx = roas >= 4.0 ? "retorno excepcional" : roas >= 2.0 ? "retorno sólido" : "retorno positivo";
+      return { label: "ROAS", value: `${roas.toFixed(1)}x`, context: ctx, status, color: STATUS_COLORS[status] };
+    }
+    if (impactRoas > 0) {
+      const status = classifyImpact(impactRoas);
+      if (!status) return null;
+      return { label: "ROAS", value: `+${p.impact_roas_pct}`, context: impactContext(impactRoas), status, color: STATUS_COLORS[status] };
+    }
+    if (impactCtr > 0) {
+      const status = classifyImpact(impactCtr);
+      if (!status) return null;
+      return { label: "Impacto", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
+    }
     return null;
   }
 
-  // Campaign / adset → ROI metric
+  // ── Campaign / adset → ROI ──
   if (ft === "campaign" || ft === "adset") {
-    if (roas >= 1.5) return { label: "ROAS", value: `${roas.toFixed(1)}x`, color: "#4ADE80" };
-    if (cpc > 0) return { label: "CPC", value: `R$${(cpc / 100).toFixed(2)}`, color: "#38BDF8" };
-    if (ctr >= 2.0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "#4ADE80" };
+    if (roas > 0) {
+      const status = classifyRoas(roas);
+      if (!status) return null;
+      const ctx = roas >= 4.0 ? "ROI excepcional" : roas >= 2.0 ? "ROI sólido" : "ROI positivo";
+      return { label: "ROAS", value: `${roas.toFixed(1)}x`, context: ctx, status, color: STATUS_COLORS[status] };
+    }
+    if (impactCtr > 0) {
+      const status = classifyImpact(impactCtr);
+      if (!status) return null;
+      return { label: "Performance", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
+    }
     return null;
   }
 
-  // Text density → CTR makes sense
+  // ── Text density → CTR ──
   if (ft === "text_density") {
-    if (ctr > 0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: ctr >= 2.0 ? "#4ADE80" : "rgba(255,255,255,0.55)" };
-    return null;
+    if (impactCtr > 0) {
+      const status = classifyImpact(impactCtr);
+      if (!status) return null;
+      return { label: "CTR", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
+    }
+    const ctrStatus = classifyCtr(ctr);
+    if (!ctrStatus || ctrStatus === "neutro") return null;
+    return { label: "CTR", value: formatCtr(p.avg_ctr!), context: "boa taxa de clique", status: ctrStatus, color: STATUS_COLORS[ctrStatus] };
   }
 
-  // Gap → no metric, it's an opportunity
+  // ── Gap → opportunity, no metric needed ──
   if (ft === "gap") return null;
 
-  // Fallback: pick the strongest signal
-  if (roas >= 2.0) return { label: "ROAS", value: `${roas.toFixed(1)}x`, color: "#4ADE80" };
-  if (impactCtr > 0) return { label: "Impacto", value: `+${p.impact_ctr_pct}`, color: "#4ADE80" };
-  if (ctr >= 2.0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "#4ADE80" };
-  if (cpc > 0) return { label: "CPC", value: `R$${(cpc / 100).toFixed(2)}`, color: "#38BDF8" };
-  if (ctr > 0) return { label: "CTR", value: formatCtr(p.avg_ctr!), color: "rgba(255,255,255,0.55)" };
-  return null;
+  // ── Fallback: pick strongest signal that's actually good ──
+  if (roas >= 2.0) {
+    const status = classifyRoas(roas)!;
+    return { label: "ROAS", value: `${roas.toFixed(1)}x`, context: roas >= 4.0 ? "retorno excepcional" : "retorno sólido", status, color: STATUS_COLORS[status] };
+  }
+  if (impactCtr >= 5) {
+    const status = classifyImpact(impactCtr)!;
+    return { label: "Impacto", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
+  }
+  if (ctr >= 2.5) {
+    const status = classifyCtr(ctr)!;
+    return { label: "CTR", value: formatCtr(p.avg_ctr!), context: "taxa de clique acima da média", status, color: STATUS_COLORS[status] };
+  }
+  return null; // nothing strong enough to show
 }
 
 function formatConfidence(confidence: number): { label: string; color: string } {
@@ -314,37 +404,30 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
 
   if (!userId || !personaId) return null;
 
-  // Only show patterns that actually prove "what works".
-  // A pattern earns its spot by excelling in ANY key metric — not just CTR.
+  // ── INTELLIGENCE FILTER ──
+  // A pattern earns its spot ONLY if it has a strong metric or is actionable.
+  // No weak signals. No "showing numbers without meaning."
+  // Every pattern that passes MUST be able to answer: "Is this actually good?"
   const worthShowing = patterns.filter((p) => {
-    // Winners validated by the engine always pass
-    if (p.is_winner) return true;
-
-    // Gap patterns (untested formats) = useful intel
     const ft = p.feature_type || p.variables?.feature_type || "";
+
+    // Gap patterns (untested formats) = always useful — they're opportunities, not metrics
     if (ft === "gap") return true;
 
-    // Positive impact vs account average = proof it works
-    const impactCtr = parseFloat(p.impact_ctr_pct || "0");
-    const impactRoas = parseFloat(p.impact_roas_pct || "0");
-    if (impactCtr > 0 || impactRoas > 0) return true;
+    // Evaluate the hero metric — this IS the quality gate
+    const hero = evaluateHeroMetric(p);
 
-    // Strong ROAS = worth showing regardless of CTR
-    if (p.avg_roas != null && p.avg_roas >= 2.0) return true;
+    // Winners validated by engine pass IF they have a metric to show
+    // (even validated patterns shouldn't show if their numbers are weak)
+    if (p.is_winner && hero) return true;
 
-    // Low CPC relative to account = efficient pattern
-    if (p.avg_cpc != null && p.avg_cpc > 0 && p.avg_cpc < 200) return true;
-
-    // Decent CTR (≥2%) = acceptable standalone signal
-    if (p.avg_ctr != null && p.avg_ctr > 0) {
-      const ctr = p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100;
-      if (ctr >= 2.0) return true;
+    // Strong or good signals pass — neutro only with high confidence
+    if (hero) {
+      if (hero.status === "forte" || hero.status === "bom") return true;
+      if (hero.status === "neutro" && p.confidence >= 0.5 && p.sample_size >= 5) return true;
     }
 
-    // High confidence + reasonable sample = the engine trusts it
-    if (p.confidence >= 0.5 && p.sample_size >= 5) return true;
-
-    // Nothing good to show → filter out
+    // Nothing strong enough → filter out
     return false;
   });
 
@@ -408,7 +491,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
             flexShrink: 0,
           }} />
           <span style={{
-            fontSize: 11, fontWeight: 700, fontFamily: M,
+            fontSize: 11, fontWeight: 700, fontFamily: F, fontVariant: "tabular-nums",
             color: alignment.score >= 70 ? "#4ADE80" : alignment.score >= 40 ? "#FBBF24" : "rgba(255,255,255,0.50)",
           }}>
             {alignment.score}%
@@ -440,7 +523,9 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
             fontSize: 12.5, color: L3, fontFamily: F,
             margin: 0, lineHeight: 1.55,
           }}>
-            Dados insuficientes para gerar padrões. Eles aparecem automaticamente conforme seus anúncios acumulam dados.
+            {patterns.length > 0
+              ? "Nenhum padrão forte identificado ainda. Sinais fracos foram filtrados — só mostramos o que realmente funciona."
+              : "Dados insuficientes para gerar padrões. Eles aparecem automaticamente conforme seus anúncios acumulam dados."}
           </p>
         </div>
       )}
@@ -535,9 +620,6 @@ function PatternRow({
   const [hov, setHov] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  const impactNum = parseFloat(p.impact_ctr_pct || "0");
-  const isPositive = impactNum > 0;
-  const impactColor = isPositive ? "#4ADE80" : "#F87171";
   const displayLabel = humanizePatternLabel(p);
   const explanation = patternExplanation(p);
   const conf = formatConfidence(p.confidence);
@@ -600,50 +682,65 @@ function PatternRow({
         </div>
       </div>
 
-      {/* ── ROW 2: Smart hero metric + context ── */}
+      {/* ── ROW 2: Intelligent metric — value + context + status ── */}
       {(() => {
-        const hero = pickHeroMetric(p);
+        const hero = evaluateHeroMetric(p);
+        const ft = p.feature_type || p.variables?.feature_type || "";
+        const isGap = ft === "gap";
         return (
           <div style={{
             display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
             marginTop: 8, marginBottom: explanation ? 6 : 0,
           }}>
-            {/* Hero metric — context-aware per pattern type */}
+            {/* Hero metric with context — the core intelligence */}
             {hero && (
-              <span style={{
-                fontSize: 12, fontWeight: 700, color: hero.color,
-                fontFamily: M,
-              }}>
-                {hero.label} {hero.value}
-              </span>
-            )}
-
-            {/* Impact badge — only if not already shown as hero */}
-            {p.impact_ctr_pct && p.impact_ctr_pct !== "?" && (!hero || (hero.label !== "Retenção" && hero.label !== "Impacto CTR")) && (
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 3,
-                background: isPositive ? "rgba(74,222,128,0.10)" : "rgba(248,113,113,0.10)",
-                padding: "2px 7px", borderRadius: 3,
-              }}>
-                {isPositive
-                  ? <TrendingUp size={10} color={impactColor} />
-                  : <TrendingDown size={10} color={impactColor} />
-                }
-                <span style={{ fontSize: 11, fontWeight: 700, color: impactColor, fontFamily: M }}>
-                  {p.impact_ctr_pct}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{
+                  fontSize: 12.5, fontWeight: 700, color: hero.color,
+                  fontFamily: F, fontVariant: "tabular-nums",
+                  letterSpacing: "-0.01em",
+                }}>
+                  {hero.label} {hero.value}
+                </span>
+                {hero.context && (
+                  <span style={{
+                    fontSize: 10.5, color: "rgba(255,255,255,0.45)",
+                    fontFamily: F, fontWeight: 400,
+                  }}>
+                    · {hero.context}
+                  </span>
+                )}
+                {/* Status pill — forte/bom */}
+                <span style={{
+                  fontSize: 9, fontWeight: 700,
+                  color: hero.color,
+                  letterSpacing: "0.03em",
+                  opacity: 0.8,
+                }}>
+                  {STATUS_LABELS[hero.status]}
                 </span>
               </div>
             )}
 
+            {/* Gap opportunity — no metric, just label */}
+            {isGap && !hero && (
+              <span style={{
+                fontSize: 11, fontWeight: 600, color: "#A78BFA",
+                fontFamily: F,
+              }}>
+                oportunidade
+              </span>
+            )}
+
             <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
 
-            <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", fontFamily: M, fontWeight: 500 }}>
+            <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", fontFamily: F, fontWeight: 500, fontVariant: "tabular-nums" }}>
               {pluralAds(p.sample_size)}
             </span>
 
             <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
 
-            <span style={{ fontSize: 10.5, color: conf.color, fontFamily: M, fontWeight: 600 }}>
+            <span style={{ fontSize: 10.5, color: conf.color, fontFamily: F, fontWeight: 600 }}>
               {conf.label}
             </span>
           </div>
