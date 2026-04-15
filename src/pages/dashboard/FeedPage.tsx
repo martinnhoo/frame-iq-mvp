@@ -942,22 +942,21 @@ const FeedPage: React.FC = () => {
   }, [accountId, syncing, refetchDecisions, fetchAds]);
 
   // ── Auto-sync: trigger first sync when account connected but no ads imported yet ──
-  const autoSyncTriggered = useRef(false);
+  // Uses localStorage to ensure it only fires once per account (even across remounts)
+  const handleSyncRef = useRef(handleSync);
+  handleSyncRef.current = handleSync;
+
   useEffect(() => {
-    if (
-      accountId &&
-      metaConnected &&
-      adsLoaded &&
-      totalAdCount === 0 &&
-      !syncing &&
-      !isDemo &&
-      !autoSyncTriggered.current
-    ) {
-      autoSyncTriggered.current = true;
-      const t = setTimeout(() => handleSync(), 500);
-      return () => clearTimeout(t);
-    }
-  }, [accountId, metaConnected, adsLoaded, totalAdCount, syncing, isDemo, handleSync]);
+    if (!accountId || !metaConnected || !adsLoaded || totalAdCount > 0 || syncing || isDemo) return;
+
+    const key = `adbrief_autosync_${accountId}`;
+    if (localStorage.getItem(key)) return;
+
+    localStorage.setItem(key, new Date().toISOString());
+    const t = setTimeout(() => handleSyncRef.current(), 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountId, metaConnected, adsLoaded, totalAdCount]);
 
   // Meta Ads Manager URL for the connected account
   const metaAccountId = activeAccount?.metaAccountId || '';
