@@ -1829,7 +1829,20 @@ const FeedPage: React.FC = () => {
               userId={userId}
               personaId={personaId}
               onGenerateVariation={(pattern) => {
-                navigate('/dashboard/hooks', { state: { fromPattern: pattern } });
+                // Route to the right tool based on pattern type
+                const ft = pattern.feature_type || pattern.variables?.feature_type || "";
+                const state = { state: { fromPattern: pattern } };
+                if (ft === "hook_type" || ft === "hook_presence") {
+                  navigate('/dashboard/hooks', state);
+                } else if (ft === "format" || ft === "combination" || ft === "text_density") {
+                  navigate('/dashboard/boards/new', state);
+                } else if (ft === "campaign" || ft === "adset") {
+                  navigate('/dashboard/brief', state);
+                } else if (ft === "gap") {
+                  navigate('/dashboard/boards/new', state);
+                } else {
+                  navigate('/dashboard/hooks', state);
+                }
               }}
               onPatternsLoaded={(count: number) => setPatternsCount(count)}
             />

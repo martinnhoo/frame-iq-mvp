@@ -298,7 +298,14 @@ function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; n
       {/* CTA for winners */}
       {p.is_winner && (
         <button
-          onClick={() => navigate("/dashboard/hooks", { state: { fromPattern: p } })}
+          onClick={() => {
+            const ft = p.feature_type || p.variables?.feature_type || "";
+            const st = { state: { fromPattern: p } };
+            if (ft === "hook_type" || ft === "hook_presence") navigate("/dashboard/hooks", st);
+            else if (ft === "format" || ft === "combination" || ft === "text_density" || ft === "gap") navigate("/dashboard/boards/new", st);
+            else if (ft === "campaign" || ft === "adset") navigate("/dashboard/brief", st);
+            else navigate("/dashboard/hooks", st);
+          }}
           style={{
             display: "flex", alignItems: "center", gap: 6,
             background: "rgba(159,122,234,0.08)", border: "1px solid rgba(159,122,234,0.20)",

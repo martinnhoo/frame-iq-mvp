@@ -757,26 +757,35 @@ function PatternRow({
         </div>
       )}
 
-      {/* ── Action — plain text link, no box, no icon ── */}
-      {p.is_winner && onGenerateVariation && (
-        <div style={{ marginTop: 8 }}>
-          <button
-            onClick={() => onGenerateVariation(p)}
-            style={{
-              background: "none", border: "none",
-              cursor: "pointer", padding: 0,
-              transition: "opacity 0.15s",
-              opacity: hov || expanded ? 0.8 : 0.4,
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov || expanded ? "0.8" : "0.4"; }}
-          >
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
-              Gerar variações →
-            </span>
-          </button>
-        </div>
-      )}
+      {/* ── Action — context-aware CTA ── */}
+      {p.is_winner && onGenerateVariation && (() => {
+        const ft = p.feature_type || p.variables?.feature_type || "";
+        const ctaLabel =
+          ft === "hook_type" || ft === "hook_presence" ? "Gerar hooks similares →" :
+          ft === "format" || ft === "combination" || ft === "text_density" ? "Criar roteiro →" :
+          ft === "campaign" || ft === "adset" ? "Criar brief →" :
+          ft === "gap" ? "Explorar formato →" :
+          "Gerar variações →";
+        return (
+          <div style={{ marginTop: 8 }}>
+            <button
+              onClick={() => onGenerateVariation(p)}
+              style={{
+                background: "none", border: "none",
+                cursor: "pointer", padding: 0,
+                transition: "opacity 0.15s",
+                opacity: hov || expanded ? 0.8 : 0.4,
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov || expanded ? "0.8" : "0.4"; }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
+                {ctaLabel}
+              </span>
+            </button>
+          </div>
+        );
+      })()}
 
       {/* ═══ EXPANDED CONTENT ═══ */}
       <PPExpandable open={expanded}>
