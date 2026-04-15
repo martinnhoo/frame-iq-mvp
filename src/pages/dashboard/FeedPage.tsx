@@ -401,17 +401,17 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3' }}>Telegram</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3' }}>Alertas ativos</span>
               <span style={{
                 width: 5, height: 5, borderRadius: '50%', background: '#2AABEE',
                 boxShadow: '0 0 4px rgba(42,171,238,0.5)',
               }} />
               <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.50)' }}>
-                {conn.telegram_username ? `@${conn.telegram_username}` : 'ativo'}
+                {conn.telegram_username ? `@${conn.telegram_username}` : 'Telegram'}
               </span>
             </div>
-            <div style={{ fontSize: 10.5, color: 'rgba(42,171,238,0.45)', marginTop: 2 }}>
-              Alertas: perdas · escala · ações recomendadas
+            <div style={{ fontSize: 10.5, color: 'rgba(42,171,238,0.50)', marginTop: 2 }}>
+              Notificado quando: perdas detectadas · oportunidades · ações necessárias
             </div>
           </div>
         </div>
@@ -843,15 +843,23 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
         borderRadius: 4, padding: '14px 16px',
       }}>
-        {/* Visual hook */}
-        <div style={{
-          fontSize: 9, fontWeight: 700, color: 'rgba(14,165,233,0.65)',
-          textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 8,
-        }}>
-          Oportunidade disponível
+        {/* Confidence — top position for authority */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: 10, fontWeight: 600, color: 'rgba(14,165,233,0.70)',
+            background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.10)',
+            padding: '3px 8px', borderRadius: 3,
+          }}>
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(14,165,233,0.70)' }} />
+            Confiança: alta
+          </span>
+          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)' }}>
+            baseado nos últimos {periodLabel}
+          </span>
         </div>
 
-        {/* Header — blue bullet */}
+        {/* Header — blue bullet + active subtitle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
           <span style={{
             width: 7, height: 7, borderRadius: '50%',
@@ -862,12 +870,12 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
           </span>
         </div>
         <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', marginLeft: 14, marginBottom: 14 }}>
-          Sistema focado em otimização · {totalAds} {totalAds === 1 ? 'anúncio' : 'anúncios'} nos últimos {periodLabel}
+          Sistema focado em otimização ativa · {totalAds} {totalAds === 1 ? 'anúncio' : 'anúncios'}
         </div>
 
         {/* Ad list */}
         {ads.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 10 }}>
             {ads.slice(0, 4).map((ad, i) => (
               <div key={ad.meta_ad_id || i} style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '3px 6px',
@@ -892,16 +900,10 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
           </div>
         )}
 
-        {/* Confidence — blue */}
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 4,
-          fontSize: 10.5, fontWeight: 600, color: '#0ea5e9',
-          background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.12)',
-          padding: '3px 8px', borderRadius: 3,
-        }}>
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#0ea5e9' }} />
-          Confiança: alta
-        </span>
+        {/* Micro pressure */}
+        <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.45)', lineHeight: 1.5 }}>
+          Pequenas melhorias aqui podem impactar seus resultados nos próximos dias
+        </div>
       </div>
 
       {/* Opportunity card — BLUE */}
@@ -910,11 +912,19 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         borderLeft: '3px solid rgba(14,165,233,0.45)',
         borderRadius: 4, padding: '14px 16px',
       }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
-          Oportunidade identificada
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Oportunidade disponível
+          </div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(14,165,233,0.45)', letterSpacing: '0.04em' }}>
+            Potencial de crescimento ativo
+          </div>
         </div>
-        <div style={{ fontSize: 12.5, color: '#E6EDF3', lineHeight: 1.5, marginBottom: 10 }}>
-          Testar novas variações para escalar performance
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', marginBottom: 4, lineHeight: 1.35 }}>
+          Seu próximo ganho está em novos criativos
+        </div>
+        <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', lineHeight: 1.5, marginBottom: 10 }}>
+          Variações com hooks mais diretos tendem a melhorar em contas similares à sua.
         </div>
         <button onClick={() => navigate('/dashboard/criar')} style={{
           background: '#0ea5e9', color: '#E6EDF3',
@@ -924,7 +934,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#0c8bd0'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#0ea5e9'; }}>
-          Criar com IA
+          Gerar variação com IA
         </button>
       </div>
 
@@ -932,7 +942,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 2px' }}>
         <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(14,165,233,0.30)' }} />
         <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)' }}>
-          Monitorando em tempo real · novas decisões ao detectar mudanças
+          Análise em andamento — mais dados melhoram as decisões
         </span>
       </div>
     </div>
@@ -968,15 +978,23 @@ const PerformanceSummary: React.FC<{
         background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
         borderRadius: 4, padding: '14px 16px',
       }}>
-        {/* Visual hook — blue accent */}
-        <div style={{
-          fontSize: 9, fontWeight: 700, color: 'rgba(14,165,233,0.65)',
-          textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 8,
-        }}>
-          Oportunidade disponível
+        {/* Confidence + hook — top position for authority */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: 10, fontWeight: 600, color: confColor,
+            background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.10)',
+            padding: '3px 8px', borderRadius: 3,
+          }}>
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: confColor }} />
+            Confiança: {confLevel}
+          </span>
+          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)' }}>
+            baseado nos últimos {periodLabel}
+          </span>
         </div>
 
-        {/* Header — blue bullet + subtitle */}
+        {/* Header — blue bullet + active subtitle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
           <span style={{
             width: 7, height: 7, borderRadius: '50%',
@@ -987,7 +1005,7 @@ const PerformanceSummary: React.FC<{
           </span>
         </div>
         <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', marginLeft: 14, marginBottom: hasMetrics ? 10 : 0 }}>
-          Sistema focado em otimização · {totalAds} {totalAds === 1 ? 'anúncio' : 'anúncios'} nos últimos {periodLabel}
+          Sistema focado em otimização ativa · {totalAds} {totalAds === 1 ? 'anúncio' : 'anúncios'}
           {hasMetrics ? ` · ${metrics.daysOfData}d de dados` : ''}
         </div>
 
@@ -1042,17 +1060,9 @@ const PerformanceSummary: React.FC<{
           </div>
         )}
 
-        {/* Confidence — blue accent */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            fontSize: 10.5, fontWeight: 600, color: '#0ea5e9',
-            background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.12)',
-            padding: '3px 8px', borderRadius: 3,
-          }}>
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#0ea5e9' }} />
-            Confiança: {confLevel}
-          </span>
+        {/* Micro pressure — creates movement */}
+        <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.45)', marginTop: 6, lineHeight: 1.5 }}>
+          Pequenas melhorias aqui podem impactar seus resultados nos próximos dias
         </div>
       </div>
 
@@ -1062,18 +1072,21 @@ const PerformanceSummary: React.FC<{
         borderLeft: '3px solid rgba(14,165,233,0.45)',
         borderRadius: 4, padding: '14px 16px',
       }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
-          Oportunidade principal hoje
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Oportunidade disponível
+          </div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(14,165,233,0.45)', letterSpacing: '0.04em' }}>
+            Potencial de crescimento ativo
+          </div>
         </div>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', marginBottom: 4, lineHeight: 1.35 }}>
-          {ctrGood
-            ? 'Seu melhor criativo pode ser escalado'
-            : 'Novos hooks podem destravar performance'}
+          Seu próximo ganho está em novos criativos
         </div>
         <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', lineHeight: 1.5, marginBottom: 10 }}>
           {ctrGood
-            ? `CTR de ${ctrPct}% com espaço para aumentar investimento mantendo eficiência.`
-            : `CTR atual de ${ctrPct || '—'}% — variações com hooks mais diretos tendem a melhorar em contas similares.`}
+            ? `CTR de ${ctrPct}% com espaço para escalar — novas variações podem ampliar esse resultado.`
+            : `Variações com hooks mais diretos tendem a melhorar em contas similares à sua.`}
         </div>
         <button onClick={() => navigate('/dashboard/criar')} style={{
           background: '#0ea5e9', color: '#E6EDF3',
@@ -1083,7 +1096,7 @@ const PerformanceSummary: React.FC<{
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#0c8bd0'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#0ea5e9'; }}>
-          {ctrGood ? 'Escalar campanha' : 'Criar com IA'}
+          Gerar variação com IA
         </button>
       </div>
 
@@ -1091,7 +1104,7 @@ const PerformanceSummary: React.FC<{
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 2px' }}>
         <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(14,165,233,0.30)' }} />
         <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)' }}>
-          Monitorando em tempo real · novas decisões ao detectar mudanças
+          Análise em andamento — mais dados melhoram as decisões
         </span>
       </div>
     </div>
