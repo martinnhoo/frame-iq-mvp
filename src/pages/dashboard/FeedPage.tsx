@@ -708,8 +708,11 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string }> = ({ totalAds, ads, periodLabel }) => {
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string }> = ({ totalAds, ads, periodLabel, metaAccountId }) => {
   const navigate = useNavigate();
+  const adsManagerUrl = metaAccountId
+    ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${metaAccountId.replace('act_', '')}`
+    : null;
   return (
     <div style={{ fontFamily: F }}>
       <div style={{
@@ -782,7 +785,10 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <ConfidenceBadge level="alta" />
-          <ActionButton label="Criar novo teste" onClick={() => navigate('/dashboard/ai')} />
+          <ActionButton label="Criar campanha" onClick={() => {
+            if (adsManagerUrl) window.open(adsManagerUrl, '_blank', 'noopener');
+            else window.open('https://adsmanager.facebook.com/', '_blank', 'noopener');
+          }} />
         </div>
       </div>
 
@@ -790,7 +796,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.70)' }}>
           Monitorando performance em tempo real
         </span>
-        <ActionButton label="Criar novo criativo com IA →" onClick={() => navigate('/dashboard/ai')} variant="ghost" />
+        <ActionButton label="Criar com IA →" onClick={() => navigate('/dashboard/criar')} variant="ghost" />
       </div>
 
       <style>{`@keyframes st4-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}`}</style>
@@ -937,8 +943,21 @@ const FeedPage: React.FC = () => {
     }
   }, [accountId, syncing, refetchDecisions]);
 
+  // Meta Ads Manager URL for the connected account
+  const metaAccountId = activeAccount?.meta_account_id || '';
+  const adsManagerUrl = metaAccountId
+    ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${metaAccountId.replace('act_', '')}`
+    : 'https://adsmanager.facebook.com/';
+
   const handleAction = async (decisionId: string, action: DecisionAction) => {
     const decision = decisions.find(d => d.id === decisionId);
+
+    // Insight/alert cards with no real Meta API action → open Ads Manager
+    if (!action.meta_api_action && (decision?.type === 'insight' || decision?.type === 'alert')) {
+      window.open(adsManagerUrl, '_blank', 'noopener');
+      return;
+    }
+
     const metaId = decision?.ad?.meta_ad_id || '';
     const targetType = action.meta_api_action?.includes('adset') ? 'adset'
       : action.meta_api_action?.includes('campaign') ? 'campaign' : 'ad';
@@ -1121,10 +1140,7 @@ const FeedPage: React.FC = () => {
                   totalSaved={(tracker as any).total_saved || 0}
                   urgentCount={urgentCount}
                   onStopLosses={hasKills && !isDemo ? handleStopLosses : undefined}
-                  onResolve={pendingDecisions.length > 0 ? () => {
-                    const el = document.querySelector('[data-decision-type]');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  } : undefined}
+                  onResolve={() => navigate('/dashboard/criar')}
                 />
               </div>
             )}
@@ -1161,7 +1177,7 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'few-data' ? (
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
-          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} />
+          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} />
         ) : null}
       </div>
     </div>

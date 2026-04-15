@@ -173,7 +173,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#E6EDF3'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8B949E'; }}>
-              Ver feed →
+              Criar com IA →
             </button>
           )}
         </div>
