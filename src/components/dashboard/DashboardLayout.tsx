@@ -666,7 +666,7 @@ export default function DashboardLayout() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0 dashboard-content-area" style={{ overflowX: "hidden", overflowY: "hidden", maxWidth: "100%", minHeight: 0, width: "100%" }}>
+      <div className="flex-1 flex flex-col min-w-0 dashboard-content-area" style={{ overflowX: "hidden", overflowY: "auto", maxWidth: "100%", minHeight: 0, width: "100%" }}>
 
         {/* ══════════════════════════════════════════════════════════════════
             TOPBAR v3 — Completely rewritten from scratch
