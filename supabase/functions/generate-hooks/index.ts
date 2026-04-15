@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     }
     const verified_user_id = authUser.id;
 
-    const { product, niche, market, platform, tone, persona_id, count = 10, persona_context, funnel_stage = "tofu", context, angle } = await req.json();
+    const { product, niche, market, platform, tone, persona_id, count = 10, persona_context, funnel_stage = "tofu", context, angle, winning_pattern } = await req.json();
     const user_id = verified_user_id; // always use verified id, never trust body
 
     // Credit check — must have credits before proceeding
@@ -322,7 +322,19 @@ Generate ${effectiveCount} hooks for:
 - Tone: ${tone && tone !== 'aggressive, urgent, direct' ? tone : 'human, credible, specific'}
 ${angle ? `- Angle: ${angle}` : ''}
 ${context ? `- Context/account patterns: ${context}` : ''}
-
+${winning_pattern ? `
+═══ WINNING PATTERN — REPLICATE THIS ═══
+This user clicked "generate variations" on a PROVEN pattern from their account.
+Your hooks MUST be inspired by and build upon this winning signal:
+- What works: ${winning_pattern.feature_type} = ${winning_pattern.feature_value}
+- Performance: CTR ${winning_pattern.avg_ctr || 'N/A'}${winning_pattern.avg_roas ? `, ROAS ${winning_pattern.avg_roas}x` : ''}${winning_pattern.impact_ctr_pct ? `, Impact: +${winning_pattern.impact_ctr_pct} vs account avg` : ''}
+${winning_pattern.insight_text ? `- Insight: ${winning_pattern.insight_text}` : ''}
+${winning_pattern.top_ads?.length ? `- Top ads using this pattern: ${winning_pattern.top_ads.join(' | ')}` : ''}
+CRITICAL: Generate ${count} variations that USE this winning ${winning_pattern.feature_type} approach.
+Every hook must apply the "${winning_pattern.feature_value}" technique in a different way.
+Do NOT generate generic hooks — every hook must clearly be a variation of what already works.
+═══════════════════════════════════════════
+` : ''}
 WHAT ACTUALLY WORKS (use these angles):
 - Specificity of experience: "Ferida que não cicatriza há meses?" (they recognize themselves)
 - Earned credibility: "60 anos tratando esse tipo de caso na Zona Sul"

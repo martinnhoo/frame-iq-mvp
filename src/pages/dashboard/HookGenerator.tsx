@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useOutletContext, useSearchParams } from "react-router-dom";
+import { useOutletContext, useSearchParams, useLocation } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { supabase } from "@/integrations/supabase/client";
@@ -130,6 +130,61 @@ export default function HookGenerator() {
     const pl = searchParams.get("platform"); if (pl) setPlatform(pl);
   }, []);
 
+  // ── Pre-fill from winning pattern (from Feed → "Gerar hooks similares") ──
+  const location = useLocation();
+  const [patternApplied, setPatternApplied] = useState(false);
+  useEffect(() => {
+    const fromPattern = (location.state as any)?.fromPattern;
+    if (!fromPattern || patternApplied) return;
+    setPatternApplied(true);
+
+    // Map pattern hook_type → tone
+    const hookTypeToTone: Record<string, string> = {
+      urgency: "Aggressive / Urgent",
+      question: "Conversational / Friendly",
+      curiosity: "Conversational / Friendly",
+      social_proof: "Educational / Expert",
+      benefit: "Conversational / Friendly",
+      pain_point: "Emotional / Inspiring",
+      storytelling: "Emotional / Inspiring",
+      statistic: "Educational / Expert",
+      testimonial: "Conversational / Friendly",
+      humor: "Humorous / Playful",
+      controversy: "Controversial / Bold",
+      fear: "Aggressive / Urgent",
+      authority: "Educational / Expert",
+      scarcity: "Aggressive / Urgent",
+      newness: "Conversational / Friendly",
+      comparison: "Educational / Expert",
+      emotional: "Emotional / Inspiring",
+    };
+
+    const fv = fromPattern.feature_value || fromPattern.variables?.feature_value || "";
+    const ft = fromPattern.feature_type || fromPattern.variables?.feature_type || "";
+
+    // Set tone from hook type
+    if (ft === "hook_type" && fv && hookTypeToTone[fv.toLowerCase()]) {
+      setTone(hookTypeToTone[fv.toLowerCase()]);
+    }
+
+    // If pattern has top_ads, extract context for product description
+    if (fromPattern.top_ads?.length && fromPattern.top_ads[0]?.ad_name) {
+      const adContext = fromPattern.top_ads.slice(0, 3).map((a: any) => a.ad_name).join(", ");
+      if (!product && adContext.length > 5) {
+        // Don't overwrite existing product, but add pattern context
+        setProduct((prev: string) => prev || adContext);
+      }
+    }
+
+    // Show toast so user knows what happened
+    const hookLabel = fv ? fv.replace(/_/g, " ") : "";
+    const patternLabel = fromPattern.insight_text?.slice(0, 60) || fromPattern.label?.slice(0, 60) || "";
+    toast.success(
+      `Padrão aplicado: ${hookLabel || patternLabel || "variação do que funciona"}`,
+      { description: "Estilo e tom ajustados. Clique em gerar!", duration: 4000 }
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   const generate = async () => {
     if (!product.trim()) { toast.error(language === "pt" ? "Descreva seu produto primeiro" : language === "es" ? "Describe tu producto primero" : "Describe your product first"); return; }
@@ -137,10 +192,23 @@ export default function HookGenerator() {
     setHooks([]);
     setExpandedIdx(null);
     try {
+      // Build pattern context if coming from a winning pattern
+      const fromPattern = (location.state as any)?.fromPattern;
+      const patternContext = fromPattern ? {
+        feature_type: fromPattern.feature_type || fromPattern.variables?.feature_type,
+        feature_value: fromPattern.feature_value || fromPattern.variables?.feature_value,
+        avg_ctr: fromPattern.avg_ctr,
+        avg_roas: fromPattern.avg_roas,
+        impact_ctr_pct: fromPattern.impact_ctr_pct,
+        insight_text: fromPattern.insight_text,
+        top_ads: fromPattern.top_ads?.slice(0, 3)?.map((a: any) => a.ad_name) || [],
+      } : null;
+
       const { data, error } = await supabase.functions.invoke("generate-hooks", {
         body: { product, niche, market, platform, tone, user_id: user.id, count: hookCount,
           persona_id: selectedPersona?.id || null,
           funnel_stage: funnelStage,
+          winning_pattern: patternContext,
           persona_context: selectedPersona ? {
             name: selectedPersona.name, age: selectedPersona.age, gender: selectedPersona.gender,
             pains: selectedPersona.pains, desires: selectedPersona.desires, triggers: selectedPersona.triggers,
