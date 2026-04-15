@@ -104,7 +104,10 @@ export function useActiveAccount(
       }
 
       // 3. Ensure v2 ad_accounts row exists (upsert)
-      const v2AccountId = await ensureV2Account(userId, selectedMeta, metaConn.access_token);
+      // Note: metaConn.access_token may be undefined since get_connections
+      // doesn't return it for security. The token is handled server-side
+      // by sync-meta-data which falls back to platform_connections.
+      const v2AccountId = await ensureV2Account(userId, selectedMeta);
 
       if (!v2AccountId) {
         setError('Failed to sync account');
