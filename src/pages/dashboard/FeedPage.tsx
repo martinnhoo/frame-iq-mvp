@@ -450,8 +450,8 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
   const [generating, setGenerating] = useState(false);
   const [pairingLink, setPairingLink] = useState<string | null>(null);
   const [btnHov, setBtnHov] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  // Check connection status
   useEffect(() => {
     if (!userId) return;
     (supabase as any).from('telegram_connections')
@@ -460,7 +460,6 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
       .then(({ data }: any) => { setConn(data || null); setLoading(false); });
   }, [userId]);
 
-  // Generate pairing link & open bot
   const handleConnect = async () => {
     setGenerating(true);
     try {
@@ -476,7 +475,6 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
     setGenerating(false);
   };
 
-  // Poll for connection after link is generated (user opened bot)
   useEffect(() => {
     if (!pairingLink || conn) return;
     const interval = setInterval(async () => {
@@ -490,132 +488,113 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
 
   if (loading) return null;
 
-  // ── CONNECTED STATE ──
-  if (conn) {
-    return (
-      <div style={{
-        background: '#0C1017', border: '1px solid rgba(42,171,238,0.10)',
-        borderRadius: 4, padding: '12px 14px', fontFamily: F, marginBottom: 8,
-        transition: 'border-color 0.15s',
-      }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(42,171,238,0.22)'; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(42,171,238,0.10)'; }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-            background: 'rgba(42,171,238,0.06)', border: '1px solid rgba(42,171,238,0.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <TelegramIcon size={18} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#F0F6FC' }}>Alertas ativos</span>
-              <span style={{
-                width: 5, height: 5, borderRadius: '50%', background: '#2AABEE',
-                boxShadow: '0 0 4px rgba(42,171,238,0.5)',
-              }} />
-              <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.45)' }}>
-                {conn.telegram_username ? `@${conn.telegram_username}` : 'Telegram'}
-              </span>
-            </div>
-            <div style={{ fontSize: 10.5, color: 'rgba(42,171,238,0.45)', lineHeight: 1.6 }}>
-              Você será notificado quando:<br />
-              <span style={{ color: 'rgba(255,255,255,0.40)' }}>
-                · perdas forem detectadas · oportunidades surgirem · ações forem necessárias
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Summary line for collapsed state
+  const summaryText = conn
+    ? `Alertas ativos${conn.telegram_username ? ` · @${conn.telegram_username}` : ''}`
+    : pairingLink ? 'Aguardando autorização...' : 'Não conectado';
+  const summaryColor = conn ? '#2AABEE' : pairingLink ? '#FBBF24' : 'rgba(255,255,255,0.40)';
 
-  // ── DISCONNECTED STATE ──
-  // After generating link, show "waiting for authorization"
-  if (pairingLink) {
-    return (
-      <div style={{
-        background: '#0C1017', border: '1px solid rgba(42,171,238,0.12)',
-        borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 8,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-            background: 'rgba(42,171,238,0.06)', border: '1px solid rgba(42,171,238,0.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <TelegramIcon size={20} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#F0F6FC' }}>Aguardando autorização...</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.4 }}>
-              Abra o bot no Telegram e toque em <strong style={{ color: '#F0F6FC' }}>Iniciar</strong> para conectar.
-            </div>
-          </div>
-        </div>
-        <div style={{
-          height: 2, borderRadius: 1, background: 'rgba(42,171,238,0.10)', overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%', background: '#2AABEE', width: '60%',
-            animation: 'tg-progress 1.5s ease-in-out infinite alternate',
-          }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
-          <button onClick={() => window.open(pairingLink, '_blank', 'noopener')}
-            style={{
-              background: 'rgba(42,171,238,0.08)', color: '#2AABEE',
-              border: '1px solid rgba(42,171,238,0.15)', borderRadius: 3,
-              padding: '5px 10px', fontSize: 11, fontWeight: 600,
-              cursor: 'pointer', fontFamily: F,
-            }}>
-            Reabrir bot
-          </button>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>Link expira em 10 min</span>
-        </div>
-        <style>{`@keyframes tg-progress{from{transform:translateX(-40%)}to{transform:translateX(80%)}}`}</style>
-      </div>
-    );
-  }
-
-  // ── DEFAULT: not connected, no link yet ──
   return (
-    <div style={{
-      background: '#0C1017', border: '1px solid rgba(230,237,243,0.06)',
-      borderRadius: 4, padding: '14px 16px', fontFamily: F, marginBottom: 8,
-      display: 'flex', alignItems: 'center', gap: 14,
-    }}>
-      <div style={{
-        width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-        background: 'rgba(42,171,238,0.08)', border: '1px solid rgba(42,171,238,0.12)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <TelegramIcon size={20} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#F0F6FC', marginBottom: 2 }}>
-          Alertas no Telegram
-        </div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
-          Receba kills e alertas urgentes em tempo real. Pause anúncios direto pelo bot.
-        </div>
-      </div>
-      <button
-        onClick={handleConnect}
-        disabled={generating}
-        onMouseEnter={() => setBtnHov(true)}
-        onMouseLeave={() => setBtnHov(false)}
+    <div style={{ fontFamily: F, marginBottom: 8 }}>
+      {/* ── Collapsible header ── */}
+      <div
+        onClick={() => setOpen(prev => !prev)}
         style={{
-          background: btnHov ? 'rgba(42,171,238,0.12)' : 'rgba(42,171,238,0.06)',
-          color: '#2AABEE', border: '1px solid rgba(42,171,238,0.15)',
-          borderRadius: 3, padding: '6px 12px', fontSize: 11, fontWeight: 700,
-          cursor: generating ? 'wait' : 'pointer', fontFamily: F, whiteSpace: 'nowrap',
-          transition: 'background 0.15s', opacity: generating ? 0.6 : 1,
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '8px 2px', cursor: 'pointer', userSelect: 'none',
         }}
       >
-        {generating ? 'Gerando...' : 'Conectar'}
-      </button>
+        <span style={{
+          fontSize: 14, lineHeight: 1,
+          color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
+          transition: 'transform 0.2s ease, color 0.15s',
+          transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+        }}>›</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#F0F6FC', letterSpacing: '-0.01em' }}>
+          Telegram
+        </span>
+        {conn && (
+          <span style={{
+            width: 5, height: 5, borderRadius: '50%', background: '#2AABEE',
+            boxShadow: '0 0 4px rgba(42,171,238,0.5)',
+          }} />
+        )}
+        <span style={{ fontSize: 10.5, fontWeight: 500, color: summaryColor }}>
+          {summaryText}
+        </span>
+      </div>
+
+      {/* ── Collapsible body ── */}
+      <FeedExpandable open={open}>
+        <div>
+          {/* CONNECTED */}
+          {conn && (
+            <div style={{
+              background: '#0C1017', border: '1px solid rgba(42,171,238,0.10)',
+              borderRadius: 4, padding: '12px 14px',
+            }}>
+              <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', lineHeight: 1.6 }}>
+                Você será notificado quando: perdas forem detectadas, oportunidades surgirem, ações forem necessárias.
+              </div>
+            </div>
+          )}
+
+          {/* PAIRING */}
+          {!conn && pairingLink && (
+            <div style={{
+              background: '#0C1017', border: '1px solid rgba(42,171,238,0.12)',
+              borderRadius: 4, padding: '14px 16px',
+            }}>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, marginBottom: 10 }}>
+                Abra o bot no Telegram e toque em <strong style={{ color: '#F0F6FC' }}>Iniciar</strong> para conectar.
+              </div>
+              <div style={{ height: 2, borderRadius: 1, background: 'rgba(42,171,238,0.10)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: '#2AABEE', width: '60%', animation: 'tg-progress 1.5s ease-in-out infinite alternate' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
+                <button onClick={() => window.open(pairingLink, '_blank', 'noopener')}
+                  style={{
+                    background: 'rgba(42,171,238,0.08)', color: '#2AABEE',
+                    border: '1px solid rgba(42,171,238,0.15)', borderRadius: 3,
+                    padding: '5px 10px', fontSize: 11, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: F,
+                  }}>Reabrir bot</button>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>Link expira em 10 min</span>
+              </div>
+              <style>{`@keyframes tg-progress{from{transform:translateX(-40%)}to{transform:translateX(80%)}}`}</style>
+            </div>
+          )}
+
+          {/* NOT CONNECTED */}
+          {!conn && !pairingLink && (
+            <div style={{
+              background: '#0C1017', border: '1px solid rgba(230,237,243,0.06)',
+              borderRadius: 4, padding: '14px 16px',
+              display: 'flex', alignItems: 'center', gap: 14,
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
+                  Receba kills e alertas urgentes em tempo real. Pause anúncios direto pelo bot.
+                </div>
+              </div>
+              <button
+                onClick={handleConnect}
+                disabled={generating}
+                onMouseEnter={() => setBtnHov(true)}
+                onMouseLeave={() => setBtnHov(false)}
+                style={{
+                  background: btnHov ? 'rgba(42,171,238,0.12)' : 'rgba(42,171,238,0.06)',
+                  color: '#2AABEE', border: '1px solid rgba(42,171,238,0.15)',
+                  borderRadius: 3, padding: '6px 12px', fontSize: 11, fontWeight: 700,
+                  cursor: generating ? 'wait' : 'pointer', fontFamily: F, whiteSpace: 'nowrap',
+                  transition: 'background 0.15s', opacity: generating ? 0.6 : 1,
+                }}>
+                {generating ? 'Gerando...' : 'Conectar'}
+              </button>
+            </div>
+          )}
+        </div>
+      </FeedExpandable>
     </div>
   );
 };
@@ -745,70 +724,98 @@ function sortAdsByStatus(ads: AdSummary[]): AdSummary[] {
 }
 
 /** Collapsible ad list — shows 5 by default, expand/collapse when >5 */
+const AD_LIST_PREVIEW = 3; // show 3 ads collapsed, rest hidden
+
 const AdList: React.FC<{ ads: AdSummary[]; totalAds: number }> = ({ ads, totalAds }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
   const sorted = sortAdsByStatus(ads);
-  const hasMore = sorted.length > 5;
-  const visible = expanded ? sorted : sorted.slice(0, 5);
-  const hiddenCount = totalAds - 5;
+
+  // Group by status for summary
+  const statusCounts: Record<string, number> = {};
+  sorted.forEach(ad => {
+    const st = getAdStatusDisplay(ad);
+    statusCounts[st.label] = (statusCounts[st.label] || 0) + 1;
+  });
+  const summaryParts = Object.entries(statusCounts).map(([label, count]) => `${count} ${label.toLowerCase()}`);
+  const summaryText = summaryParts.join(', ') || `${totalAds} anúncios`;
+
+  // When open, show max 20 at a time (for 500+ ads, don't render all)
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
+  const visibleWhenOpen = sorted.slice(0, page * PAGE_SIZE);
+  const hasMorePages = sorted.length > page * PAGE_SIZE;
+  const remainingInDb = totalAds - sorted.length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {visible.map((ad, i) => {
-        const st = getAdStatusDisplay(ad);
-        return (
-          <div key={ad.meta_ad_id || i} style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
-          }}>
-            <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
-            <span style={{
-              fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
-            }}>
-              {ad.name}
-            </span>
-            <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
-              {st.label}
-            </span>
-          </div>
-        );
-      })}
-      {hasMore && !expanded && (
-        <button onClick={() => setExpanded(true)} style={{
-          background: 'none', border: 'none', padding: '4px 2px',
-          fontSize: 10.5, color: 'rgba(14,165,233,0.50)', fontWeight: 600,
-          cursor: 'pointer', fontFamily: F, textAlign: 'left',
-          transition: 'color 0.1s',
+    <div style={{ fontFamily: F }}>
+      {/* Collapsible header — status summary always visible */}
+      <div
+        onClick={() => setOpen(prev => !prev)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '6px 2px', cursor: 'pointer', userSelect: 'none',
         }}
-        onMouseEnter={e => { e.currentTarget.style.color = 'rgba(14,165,233,0.75)'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(14,165,233,0.50)'; }}>
-          + {hiddenCount > 0 ? hiddenCount : sorted.length - 5} monitorados · ver todos ▾
-        </button>
-      )}
-      {hasMore && expanded && (
-        <>
-          {totalAds > sorted.length && (
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', padding: '2px 2px' }}>
-              + {totalAds - sorted.length} não listados
+      >
+        <span style={{
+          fontSize: 14, lineHeight: 1,
+          color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
+          transition: 'transform 0.2s ease, color 0.15s',
+          transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+        }}>›</span>
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: '#F0F6FC' }}>
+          Anúncios
+        </span>
+        <span style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>
+          {totalAds}
+        </span>
+        {!open && (
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', fontWeight: 400 }}>
+            · {summaryText}
+          </span>
+        )}
+      </div>
+
+      <FeedExpandable open={open}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 2 }}>
+          {visibleWhenOpen.map((ad, i) => {
+            const st = getAdStatusDisplay(ad);
+            return (
+              <div key={ad.meta_ad_id || i} style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
+              }}>
+                <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
+                <span style={{
+                  fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+                }}>
+                  {ad.name}
+                </span>
+                <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                  {st.label}
+                </span>
+              </div>
+            );
+          })}
+          {/* Load more button (pagination for 500+ ads) */}
+          {hasMorePages && (
+            <button onClick={(e) => { e.stopPropagation(); setPage(p => p + 1); }} style={{
+              background: 'none', border: 'none', padding: '6px 2px',
+              fontSize: 10.5, color: 'rgba(14,165,233,0.55)', fontWeight: 600,
+              cursor: 'pointer', fontFamily: F, textAlign: 'left',
+              transition: 'color 0.1s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'rgba(14,165,233,0.75)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(14,165,233,0.55)'; }}>
+              + Carregar mais {Math.min(PAGE_SIZE, sorted.length - page * PAGE_SIZE)} anúncios ▾
+            </button>
+          )}
+          {remainingInDb > 0 && (
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.20)', padding: '2px 2px' }}>
+              + {remainingInDb} não carregados
             </span>
           )}
-          <button onClick={() => setExpanded(false)} style={{
-            background: 'none', border: 'none', padding: '4px 2px',
-            fontSize: 10.5, color: 'rgba(255,255,255,0.38)', fontWeight: 500,
-            cursor: 'pointer', fontFamily: F, textAlign: 'left',
-            transition: 'color 0.1s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.50)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.38)'; }}>
-            ▴ recolher
-          </button>
-        </>
-      )}
-      {!hasMore && totalAds > sorted.length && (
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', padding: '2px 2px' }}>
-          + {totalAds - sorted.length} monitorados
-        </span>
-      )}
+        </div>
+      </FeedExpandable>
     </div>
   );
 };
