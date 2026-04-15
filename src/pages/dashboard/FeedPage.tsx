@@ -912,17 +912,28 @@ const FeedPage: React.FC = () => {
 
     try {
       // Step 1: Import campaigns/ads/metrics from Meta API → Supabase tables
-      const { data: syncData, error: syncErr } = await supabase.functions.invoke('sync-meta-data', {
-        body: { account_id: accountId, sync_type: 'full' },
+      // Use raw fetch to get full error details (supabase.functions.invoke swallows error bodies)
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const syncRes = await fetch(`${supabaseUrl}/functions/v1/sync-meta-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || supabaseKey}`,
+          'apikey': supabaseKey,
+        },
+        body: JSON.stringify({ account_id: accountId, sync_type: 'full' }),
       });
-      if (syncErr) {
-        const errDetail = syncData?.error || syncErr?.message || syncErr?.context?.message || JSON.stringify(syncErr);
-        console.error('Meta sync failed:', syncErr, 'Data:', syncData, 'Detail:', errDetail);
+      const syncBody = await syncRes.json().catch(() => null);
+      if (!syncRes.ok) {
+        const errDetail = syncBody?.error || `HTTP ${syncRes.status}`;
+        console.error('Meta sync failed:', syncRes.status, syncBody);
         setSyncError(`Falha ao importar: ${errDetail}`);
         setSyncing(false);
         return;
       }
-      console.log('[sync-meta-data] Success:', syncData);
+      console.log('[sync-meta-data] Success:', syncBody);
 
       // Mark auto-sync as successful so it doesn't re-trigger
       try { localStorage.setItem(`adbrief_autosync_ok_${accountId}`, new Date().toISOString()); } catch {}
