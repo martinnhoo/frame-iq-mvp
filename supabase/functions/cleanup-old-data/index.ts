@@ -36,17 +36,11 @@ Deno.serve(async (req) => {
     const results: Record<string, number> = {};
 
     // 1. credit_transactions > 12 months
-    const { count: txCount } = await supabase
-      .from("credit_transactions")
-      .delete()
-      .lt("created_at", new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
-      .select("*", { count: "exact", head: true });
-    // Actually delete
     const { error: txErr } = await supabase
       .from("credit_transactions")
       .delete()
       .lt("created_at", new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString());
-    results.credit_transactions = txErr ? -1 : (txCount ?? 0);
+    results.credit_transactions = txErr ? -1 : 0;
     logStep("credit_transactions", { deleted: results.credit_transactions, error: txErr?.message });
 
     // 2. action_log > 12 months
