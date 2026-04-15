@@ -8,7 +8,7 @@
  * - Content bg: #0D1117 (elevated from page #06080C)
  * - Colors at full signal strength
  */
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { TrendingUp, TrendingDown, ChevronRight, Loader2, RefreshCw, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -370,7 +370,41 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
   );
 }
 
-// ── Pattern Row — high contrast, readable ──
+// ── Expandable wrapper ──
+function PPExpandable({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [h, setH] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (open) {
+      const full = el.scrollHeight;
+      setH(0);
+      requestAnimationFrame(() => requestAnimationFrame(() => setH(full)));
+      const t = setTimeout(() => setH(-1), 250);
+      return () => clearTimeout(t);
+    } else {
+      setH(el.scrollHeight);
+      requestAnimationFrame(() => requestAnimationFrame(() => setH(0)));
+    }
+  }, [open]);
+
+  const isAuto = open && h === -1;
+  return (
+    <div style={{
+      height: isAuto ? "auto" : h,
+      overflow: "hidden",
+      transition: isAuto ? "none" : "height 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease",
+      opacity: open ? 1 : 0,
+      pointerEvents: open ? "auto" : "none",
+    }}>
+      <div ref={ref}>{children}</div>
+    </div>
+  );
+}
+
+// ── Pattern Row — high contrast, expandable ──
 
 function PatternRow({
   pattern: p,
@@ -382,6 +416,7 @@ function PatternRow({
   isFirst: boolean;
 }) {
   const [hov, setHov] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const impactNum = parseFloat(p.impact_ctr_pct || "0");
   const isPositive = impactNum > 0;
@@ -389,19 +424,31 @@ function PatternRow({
   const displayLabel = humanizePatternLabel(p);
   const conf = formatConfidence(p.confidence);
 
+  const hasTopAds = p.top_ads && p.top_ads.length > 0;
+  const hasExtraMetrics = (p.avg_cpc != null && p.avg_cpc > 0) ||
+    (p.avg_roas != null && p.avg_roas > 0) ||
+    (p.impact_roas_pct && p.impact_roas_pct !== "?");
+  const hasInsightText = p.insight_text && p.insight_text.length > 10 && !isRawInsightText(p.insight_text);
+  const hasExpandable = hasTopAds || hasExtraMetrics || hasInsightText;
+
   return (
     <div
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button")) return;
+        if (hasExpandable) setExpanded(prev => !prev);
+      }}
       style={{
         padding: "14px 12px",
         borderRadius: 4,
         background: hov ? "rgba(255,255,255,0.03)" : "transparent",
         transition: "background 0.15s ease",
         borderTop: isFirst ? "none" : "1px solid rgba(255,255,255,0.06)",
+        cursor: hasExpandable ? "pointer" : "default",
       }}
     >
-      {/* Meta row: badge + sample + impact */}
+      {/* Meta row: badge + sample + impact + chevron */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {p.is_winner && (
@@ -418,20 +465,32 @@ function PatternRow({
           </span>
         </div>
 
-        {p.impact_ctr_pct && p.impact_ctr_pct !== "?" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-            {isPositive
-              ? <TrendingUp size={10} color={impactColor} />
-              : <TrendingDown size={10} color={impactColor} />
-            }
-            <span style={{ fontSize: 11, fontWeight: 700, color: impactColor, fontFamily: M }}>
-              {p.impact_ctr_pct}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {p.impact_ctr_pct && p.impact_ctr_pct !== "?" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+              {isPositive
+                ? <TrendingUp size={10} color={impactColor} />
+                : <TrendingDown size={10} color={impactColor} />
+              }
+              <span style={{ fontSize: 11, fontWeight: 700, color: impactColor, fontFamily: M }}>
+                {p.impact_ctr_pct}
+              </span>
+            </div>
+          )}
+          {hasExpandable && (
+            <span style={{
+              fontSize: 14, color: L3, lineHeight: 1,
+              transition: "transform 0.2s ease, opacity 0.15s",
+              transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+              opacity: hov ? 0.8 : 0.3,
+            }}>
+              ›
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Insight — L2 contrast, clearly readable */}
+      {/* Insight — L2 contrast, always visible (collapsed summary) */}
       <div style={{
         fontSize: 13, color: L2, lineHeight: 1.5,
         margin: "0 0 8px", fontFamily: F,
@@ -439,27 +498,19 @@ function PatternRow({
         {displayLabel}
       </div>
 
-      {/* Metrics row */}
+      {/* Collapsed metrics row */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         {p.avg_ctr != null && p.avg_ctr > 0 && (
           <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
             CTR <span style={{ color: L2, fontWeight: 600 }}>{formatCtr(p.avg_ctr)}</span>
           </span>
         )}
-        {p.avg_roas != null && p.avg_roas > 0 && (
-          <>
-            <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
-            <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
-              ROAS <span style={{ color: L2, fontWeight: 600 }}>{p.avg_roas.toFixed(1)}x</span>
-            </span>
-          </>
-        )}
         <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
         <span style={{ fontSize: 10.5, color: conf.color, fontFamily: M, fontWeight: 500 }}>
           {conf.label}
         </span>
 
-        {/* Inline action */}
+        {/* Inline action — visible on hover or when expanded */}
         {p.is_winner && onGenerateVariation && (
           <>
             <span style={{ flex: 1 }} />
@@ -470,10 +521,10 @@ function PatternRow({
                 background: "none", border: "none",
                 cursor: "pointer", padding: "2px 0",
                 transition: "opacity 0.15s",
-                opacity: hov ? 0.8 : 0.5,
+                opacity: hov || expanded ? 0.8 : 0.4,
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov ? "0.8" : "0.5"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov || expanded ? "0.8" : "0.4"; }}
             >
               <Zap size={11} color="#A78BFA" />
               <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
@@ -483,6 +534,74 @@ function PatternRow({
           </>
         )}
       </div>
+
+      {/* ═══ EXPANDED CONTENT ═══ */}
+      <PPExpandable open={expanded}>
+        <div style={{ paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 10 }}>
+          {/* Extra metrics */}
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: hasTopAds ? 10 : 0 }}>
+            {p.avg_roas != null && p.avg_roas > 0 && (
+              <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
+                ROAS <span style={{ color: L2, fontWeight: 600 }}>{p.avg_roas.toFixed(1)}x</span>
+              </span>
+            )}
+            {p.avg_cpc != null && p.avg_cpc > 0 && (
+              <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
+                CPC <span style={{ color: L2, fontWeight: 600 }}>R${(p.avg_cpc / 100).toFixed(2)}</span>
+              </span>
+            )}
+            {p.impact_roas_pct && p.impact_roas_pct !== "?" && (
+              <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
+                ROAS impact <span style={{ color: parseFloat(p.impact_roas_pct) > 0 ? "#4ADE80" : "#F87171", fontWeight: 600 }}>{p.impact_roas_pct}</span>
+              </span>
+            )}
+            <span style={{ fontSize: 10.5, color: L3, fontFamily: M }}>
+              Confiança <span style={{ color: L2, fontWeight: 600 }}>{Math.round(p.confidence * 100)}%</span>
+            </span>
+          </div>
+
+          {/* Full insight text if different from display label */}
+          {hasInsightText && p.insight_text !== displayLabel && (
+            <div style={{
+              fontSize: 12, color: L2, lineHeight: 1.55,
+              borderLeft: "2px solid rgba(167,139,250,0.25)",
+              paddingLeft: 10, marginBottom: 10,
+            }}>
+              {p.insight_text}
+            </div>
+          )}
+
+          {/* Top performing ads */}
+          {hasTopAds && (
+            <div>
+              <div style={{
+                fontSize: 9.5, fontWeight: 700, color: L3,
+                letterSpacing: "0.08em", marginBottom: 6,
+              }}>
+                MELHORES ANÚNCIOS
+              </div>
+              {p.top_ads!.slice(0, 3).map((ad, i) => (
+                <div key={ad.ad_id || i} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "4px 0",
+                  borderTop: i > 0 ? "1px solid rgba(255,255,255,0.03)" : "none",
+                }}>
+                  <span style={{
+                    fontSize: 11, color: L2, fontWeight: 500,
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    flex: 1, marginRight: 8,
+                  }}>
+                    {ad.ad_name || "Anúncio"}
+                  </span>
+                  <span style={{ fontSize: 10.5, color: "#38BDF8", fontWeight: 600, fontFamily: M, flexShrink: 0 }}>
+                    CTR {formatCtr(ad.ctr)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </PPExpandable>
     </div>
   );
 }
