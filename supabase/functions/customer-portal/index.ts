@@ -28,14 +28,46 @@ Deno.serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2024-12-18.acacia" });
 
-    if (customers.data.length === 0) {
-      throw new Error("No Stripe customer found for this user");
+    // Try finding customer by email first
+    let customerId: string | null = null;
+
+    // 1) Check if user has stripe_customer_id in profiles
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.stripe_customer_id) {
+      customerId = profile.stripe_customer_id;
+    } else {
+      // 2) Search Stripe by email
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+        // Save for next time
+        await supabase
+          .from("profiles")
+          .update({ stripe_customer_id: customerId })
+          .eq("id", user.id);
+      }
     }
 
-    const customerId = customers.data[0].id;
+    if (!customerId) {
+      // 3) Create a new Stripe customer so the portal works
+      const newCustomer = await stripe.customers.create({
+        email: user.email,
+        metadata: { supabase_user_id: user.id },
+      });
+      customerId = newCustomer.id;
+      await supabase
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", user.id);
+    }
+
     const origin = req.headers.get("origin") || "https://adbrief.pro";
 
     const portal = await stripe.billingPortal.sessions.create({

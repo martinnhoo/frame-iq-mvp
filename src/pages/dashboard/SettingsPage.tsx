@@ -67,18 +67,20 @@ const SettingsPage = () => {
     setPortalLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
+      console.log("[billing-portal] response:", { data, error });
+      if (error) throw new Error(typeof error === "string" ? error : error?.message || JSON.stringify(error));
       if (data?.error) throw new Error(data.error);
       if (data?.url) {
-        window.location.href = data.url;
+        window.open(data.url, "_blank");
       } else {
         toast.error("Não foi possível abrir o portal de cobrança. Tente novamente.");
       }
     } catch (e: any) {
       console.error("Billing portal error:", e);
-      toast.error(e?.message?.includes("No Stripe customer")
+      const msg = e?.message || "";
+      toast.error(msg.includes("No Stripe customer") || msg.includes("customer")
         ? "Nenhum cliente Stripe encontrado. Faça upgrade primeiro."
-        : "Não foi possível abrir o portal de cobrança. Tente novamente.");
+        : `Erro ao abrir portal: ${msg.slice(0, 100)}`);
     } finally {
       setPortalLoading(false);
     }
