@@ -757,11 +757,11 @@ function PatternRow({
         </div>
       )}
 
-      {/* ── Action — context-aware CTA ── */}
+      {/* ── Action ── */}
       {p.is_winner && onGenerateVariation && (() => {
         const ft = p.feature_type || p.variables?.feature_type || "";
         const ctaLabel =
-          ft === "hook_type" || ft === "hook_presence" ? "Gerar hooks similares →" :
+          ft === "hook_type" || ft === "hook_presence" ? "Gerar novos hooks →" :
           ft === "format" || ft === "combination" || ft === "text_density" ? "Criar roteiro →" :
           ft === "campaign" || ft === "adset" ? "Criar brief →" :
           ft === "gap" ? "Explorar formato →" :

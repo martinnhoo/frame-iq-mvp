@@ -130,7 +130,7 @@ export default function HookGenerator() {
     const pl = searchParams.get("platform"); if (pl) setPlatform(pl);
   }, []);
 
-  // ── Pre-fill from winning pattern (from Feed → "Gerar hooks similares") ──
+  // ── Pre-fill from winning pattern (from Feed → "Gerar novos hooks") ──
   const location = useLocation();
   const [patternApplied, setPatternApplied] = useState(false);
   useEffect(() => {
@@ -138,25 +138,25 @@ export default function HookGenerator() {
     if (!fromPattern || patternApplied) return;
     setPatternApplied(true);
 
-    // Map pattern hook_type → tone
     const hookTypeToTone: Record<string, string> = {
-      urgency: "Aggressive / Urgent",
-      question: "Conversational / Friendly",
-      curiosity: "Conversational / Friendly",
-      social_proof: "Educational / Expert",
-      benefit: "Conversational / Friendly",
-      pain_point: "Emotional / Inspiring",
-      storytelling: "Emotional / Inspiring",
-      statistic: "Educational / Expert",
-      testimonial: "Conversational / Friendly",
-      humor: "Humorous / Playful",
-      controversy: "Controversial / Bold",
-      fear: "Aggressive / Urgent",
-      authority: "Educational / Expert",
-      scarcity: "Aggressive / Urgent",
-      newness: "Conversational / Friendly",
-      comparison: "Educational / Expert",
+      urgency: "Aggressive / Urgent", question: "Conversational / Friendly",
+      curiosity: "Conversational / Friendly", social_proof: "Educational / Expert",
+      benefit: "Conversational / Friendly", pain_point: "Emotional / Inspiring",
+      storytelling: "Emotional / Inspiring", statistic: "Educational / Expert",
+      testimonial: "Conversational / Friendly", humor: "Humorous / Playful",
+      controversy: "Controversial / Bold", fear: "Aggressive / Urgent",
+      authority: "Educational / Expert", scarcity: "Aggressive / Urgent",
+      newness: "Conversational / Friendly", comparison: "Educational / Expert",
       emotional: "Emotional / Inspiring",
+    };
+
+    const hookTypeLabels: Record<string, string> = {
+      urgency: "Urgência", question: "Pergunta", curiosity: "Curiosidade",
+      social_proof: "Prova social", benefit: "Benefício", pain_point: "Dor do cliente",
+      storytelling: "Storytelling", statistic: "Estatística", testimonial: "Depoimento",
+      humor: "Humor", controversy: "Controvérsia", fear: "Medo",
+      authority: "Autoridade", scarcity: "Escassez", newness: "Novidade",
+      comparison: "Comparação", emotional: "Emocional",
     };
 
     const fv = fromPattern.feature_value || fromPattern.variables?.feature_value || "";
@@ -167,21 +167,11 @@ export default function HookGenerator() {
       setTone(hookTypeToTone[fv.toLowerCase()]);
     }
 
-    // If pattern has top_ads, extract context for product description
-    if (fromPattern.top_ads?.length && fromPattern.top_ads[0]?.ad_name) {
-      const adContext = fromPattern.top_ads.slice(0, 3).map((a: any) => a.ad_name).join(", ");
-      if (!product && adContext.length > 5) {
-        // Don't overwrite existing product, but add pattern context
-        setProduct((prev: string) => prev || adContext);
-      }
-    }
-
-    // Show toast so user knows what happened
-    const hookLabel = fv ? fv.replace(/_/g, " ") : "";
-    const patternLabel = fromPattern.insight_text?.slice(0, 60) || fromPattern.label?.slice(0, 60) || "";
+    // Clean toast — human-readable, no raw data
+    const humanLabel = hookTypeLabels[fv.toLowerCase()] || fv.replace(/_/g, " ");
     toast.success(
-      `Padrão aplicado: ${hookLabel || patternLabel || "variação do que funciona"}`,
-      { description: "Estilo e tom ajustados. Clique em gerar!", duration: 4000 }
+      `Tom ajustado: ${humanLabel}`,
+      { description: "Baseado no padrão que funciona na sua conta. Gere!", duration: 3000 }
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
