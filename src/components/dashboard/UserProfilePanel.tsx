@@ -506,9 +506,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                 <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Idioma" : language === "es" ? "Idioma" : "Language"}</label>
                 <select value={lang} onChange={e => setLang(e.target.value)}
                   style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "#1a2032", border: "1px solid rgba(255,255,255,0.10)", color: "#eef0f6", fontFamily: M, fontSize: 13, outline: "none", boxSizing: "border-box" as const, cursor: "pointer" }}>
-                  <option value="pt">🇧🇷 Português</option>
-                  <option value="en">🇺🇸 English</option>
-                  <option value="es">🇲🇽 Español</option>
+                  <option value="pt">Português</option>
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
                 </select>
               </div>
               <button onClick={handleSave} disabled={saving}

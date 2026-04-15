@@ -92,6 +92,11 @@ function detectMarketFromPersona(style: string): string {
 
 const NewBoard = () => {
   const { user, refreshUsage, selectedPersona } = useOutletContext<DashboardContext>();
+  const navigate = useNavigate();
+  const { language } = useLanguage();
+  const dt = useDashT(language);
+  const location = useLocation();
+  const state = location.state as LocationState | null;
 
   if (!user) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
@@ -99,11 +104,6 @@ const NewBoard = () => {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
-  const navigate = useNavigate();
-  const { language } = useLanguage();
-  const dt = useDashT(language);
-  const location = useLocation();
-  const state = location.state as LocationState | null;
 
   const personaMarket = selectedPersona ? detectMarketFromPersona(selectedPersona.language_style) : "ANY";
 
@@ -150,7 +150,7 @@ const NewBoard = () => {
 
   const handleGenerate = async () => {
     if (!prompt.trim() || prompt.trim().length < 10) {
-      toast.error("Please describe your video idea in more detail (minimum 10 characters)");
+      toast.error("Descreva sua ideia de vídeo com mais detalhes (mínimo 10 caracteres)");
       return;
     }
 
@@ -162,13 +162,13 @@ const NewBoard = () => {
     setPendingGenerate(false);
 
     setGenerating(true);
-    setProgress("Validating and analyzing your brief...");
+    setProgress("Validando e analisando seu brief...");
 
     try {
       const { data: session } = await supabase.auth.getSession();
       const token = session.session?.access_token;
 
-      setProgress("Generating creative strategy...");
+      setProgress("Gerando estratégia criativa...");
 
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-board`,
@@ -206,15 +206,15 @@ const NewBoard = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to generate board");
+        throw new Error(data.error || "Falha ao gerar board");
       }
 
       await refreshUsage();
-      toast.success("Board generated successfully!");
+      toast.success("Board gerado com sucesso!");
       navigate(`/dashboard/boards/${data.board_id}`);
     } catch (err) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : "Failed to generate board");
+      toast.error(err instanceof Error ? err.message : "Falha ao gerar board");
     } finally {
       setGenerating(false);
       setProgress("");
