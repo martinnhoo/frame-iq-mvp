@@ -38,10 +38,11 @@ interface PatternsPanelProps {
   userId: string | undefined;
   personaId: string | undefined;
   onGenerateVariation?: (pattern: DetectedPattern) => void;
+  onPatternsLoaded?: (count: number) => void;
   compact?: boolean;
 }
 
-export function PatternsPanel({ userId, personaId, onGenerateVariation, compact = false }: PatternsPanelProps) {
+export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatternsLoaded, compact = false }: PatternsPanelProps) {
   const [patterns, setPatterns] = useState<DetectedPattern[]>([]);
   const [loading, setLoading] = useState(false);
   const [detecting, setDetecting] = useState(false);
@@ -72,6 +73,8 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, compact 
       setPatterns(mapped);
       // Update alignment score from response
       if (data?.alignment) setAlignment(data.alignment);
+      // Notify parent of pattern count
+      onPatternsLoaded?.(mapped.length);
     } catch (err) {
       console.error("PatternsPanel fetch error:", err);
       setError("Failed to load patterns");

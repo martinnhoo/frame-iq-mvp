@@ -62,6 +62,116 @@ const PERIODS: { key: PeriodKey; label: string; days: number }[] = [
   { key: '30d', label: '30 dias', days: 30 },
 ];
 
+// ── VISIBLE WIN — Celebrate results with dopamine ──
+const VisibleWin: React.FC<{
+  decisions: Decision[];
+  tracker: any;
+}> = ({ decisions, tracker }) => {
+  // Find actioned decisions (status = 'actioned' or 'resolved')
+  const actioned = decisions.filter((d: any) =>
+    d.status === 'actioned' || d.status === 'resolved'
+  );
+  const totalSaved = (tracker?.total_saved || 0);
+
+  // Show win block if there's saved money OR actioned decisions
+  if (totalSaved <= 0 && actioned.length === 0) return null;
+
+  // Calculate best win from actioned decisions
+  const bestWin = actioned.length > 0
+    ? actioned.reduce((best: any, d: any) =>
+        (d.impact_daily || 0) > (best.impact_daily || 0) ? d : best
+      , actioned[0])
+    : null;
+
+  const totalImpact = actioned.reduce((s: number, d: any) => s + (d.impact_daily || 0), 0);
+  const monthlyImpact = totalImpact * 30;
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(52,211,153,0.06) 0%, rgba(14,165,233,0.04) 100%)',
+      border: '1px solid rgba(52,211,153,0.15)',
+      borderRadius: 6, padding: '14px 16px', marginBottom: 14,
+    }}>
+      <div style={{
+        fontSize: 9.5, fontWeight: 800, color: '#34d399',
+        letterSpacing: '0.10em', marginBottom: 6,
+      }}>RESULTADO ALCANÇADO</div>
+
+      {bestWin && (
+        <div style={{ marginBottom: 6 }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: '#34d399', fontFamily: F }}>
+            {bestWin.type === 'kill' ? '-' : '+'}R${Math.round(Math.abs(totalImpact) / 100).toLocaleString('pt-BR')}
+          </span>
+          <span style={{ fontSize: 12, color: 'rgba(52,211,153,0.60)', marginLeft: 4, fontWeight: 600 }}>/dia</span>
+        </div>
+      )}
+
+      {monthlyImpact > 0 && (
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontFamily: F, marginBottom: 4 }}>
+          Impacto projetado: <span style={{ color: '#34d399', fontWeight: 600 }}>
+            +R${Math.round(monthlyImpact / 100).toLocaleString('pt-BR')}/mês
+          </span>
+        </div>
+      )}
+
+      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.25)', fontFamily: F }}>
+        → baseado nos seus dados reais de performance · {actioned.length} {actioned.length === 1 ? 'otimização aplicada' : 'otimizações aplicadas'}
+      </div>
+    </div>
+  );
+};
+
+// ── SYSTEM STATUS — "Sistema ativo" confidence block ──
+const SystemStatus: React.FC<{
+  decisions: Decision[];
+  tracker: any;
+  patternsCount?: number;
+}> = ({ decisions, tracker, patternsCount = 0 }) => {
+  const actioned = decisions.filter((d: any) => d.status === 'actioned' || d.status === 'resolved');
+  const totalCapture = (tracker?.capturable_now || 0) + (tracker?.leaking_now || 0);
+  const monthlyEstimate = Math.round(totalCapture * 30 / 100);
+
+  // Only show when there's meaningful activity
+  if (patternsCount === 0 && actioned.length === 0 && totalCapture === 0) return null;
+
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px solid rgba(255,255,255,0.05)',
+      borderRadius: 6, padding: '12px 14px', marginBottom: 14,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{
+          width: 7, height: 7, borderRadius: '50%', background: '#34d399',
+          boxShadow: '0 0 6px rgba(52,211,153,0.40)',
+          animation: 'pulse 2.5s ease-in-out infinite',
+        }} />
+        <div>
+          <div style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.60)', fontFamily: F }}>
+            Sistema ativo
+          </div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: F, marginTop: 1 }}>
+            {patternsCount > 0 && `${patternsCount} padrões validados`}
+            {patternsCount > 0 && actioned.length > 0 && ' · '}
+            {actioned.length > 0 && `${actioned.length} ${actioned.length === 1 ? 'otimização aplicada' : 'otimizações aplicadas'}`}
+          </div>
+        </div>
+      </div>
+      {monthlyEstimate > 0 && (
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#0ea5e9', fontFamily: F }}>
+            +R${monthlyEstimate.toLocaleString('pt-BR')}
+          </div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.20)', fontFamily: F }}>
+            impacto projetado/mês
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PeriodSelector: React.FC<{ value: PeriodKey; onChange: (k: PeriodKey) => void }> = ({ value, onChange }) => (
   <div style={{ display: 'flex', gap: 3, background: 'rgba(230,237,243,0.03)', borderRadius: 4, padding: 2 }}>
     {PERIODS.map(p => {
@@ -1220,6 +1330,7 @@ const FeedPage: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastAnalysisMin] = useState(() => Math.floor(Math.random() * 4) + 2);
+  const [patternsCount, setPatternsCount] = useState(0);
 
   // ── Fetch user's actual ads ──
   const [userAds, setUserAds] = useState<AdSummary[]>([]);
@@ -1577,6 +1688,12 @@ const FeedPage: React.FC = () => {
               </div>
             )}
 
+            {/* Visible Win — celebrate results when actions have been taken */}
+            {!isDemo && <VisibleWin decisions={decisions} tracker={tracker} />}
+
+            {/* System Status — "Sistema ativo" confidence block */}
+            {!isDemo && <SystemStatus decisions={decisions} tracker={tracker} patternsCount={patternsCount} />}
+
             {/* Performance summary when no critical issues — shows ad health + metrics */}
             {!isDemo && !hasCritical && totalAdCount > 0 && (
               <PerformanceSummary
@@ -1628,6 +1745,7 @@ const FeedPage: React.FC = () => {
               onGenerateVariation={(pattern) => {
                 navigate('/dashboard/hooks', { state: { fromPattern: pattern } });
               }}
+              onPatternsLoaded={(count: number) => setPatternsCount(count)}
             />
           </div>
         )}

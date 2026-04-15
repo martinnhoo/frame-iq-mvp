@@ -31,7 +31,7 @@ const T: Record<Lang, Record<string, any>> = {
     feature_1_tag: "AI",
     feature_1_title: "Hook Generator",
     feature_1_headline: "Test 10 hook angles before committing a dollar to production.",
-    feature_1_desc: "Stop producing ads with weak hooks. Generate 10 hook variations in 30 seconds, each with a predicted CTR score based on your account data.",
+    feature_1_desc: "Stop producing ads with weak hooks. Generate 10 hook variations in 30 seconds, each with a predicted CTR score based on your performance data.",
     feature_1_bullet_1: "10 hooks per generation with predicted CTR",
     feature_1_bullet_2: "Calibrated to your market and platform",
     feature_1_bullet_3: "Curiosity, social proof, pain, transformation angles",

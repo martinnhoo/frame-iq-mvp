@@ -209,13 +209,13 @@ function generatePrediction(
     // Money explanation
     item.money_explanation = item.type === "kill"
       ? `Gasto atual: ${formatMoney(ms.spend_cents || 0)} em ${ms.days_active || "?"} dias → ${formatMoney(item.impact_daily_cents)}/dia. Projeção mensal: ${formatMoney(monthlyImpact)}`
-      : `Se CTR atingir mediana (${(baselineCtr * 100).toFixed(2)}%): ganho estimado de ${formatMoney(monthlyImpact)}/mês baseado no spend atual`;
+      : `Se CTR atingir mediana (${(baselineCtr * 100).toFixed(2)}%): ganho projetado de ${formatMoney(monthlyImpact)}/mês com base no spend atual`;
 
     // Urgency — cost of inaction
     if (item.type === "kill" && item.impact_daily_cents > 0) {
       item.urgency = {
         daily_cost: item.impact_daily_cents,
-        message: `Potencial de ${formatMoney(item.impact_daily_cents)}/dia não otimizado enquanto ativo`,
+        message: `${formatMoney(item.impact_daily_cents)}/dia em perda projetada enquanto ativo`,
       };
     }
   }
@@ -233,7 +233,7 @@ function generatePrediction(
       basis: `${ms.conversions || 0} conversões em ${ms.days_active || "?"} dias`,
     };
 
-    item.money_explanation = `ROAS atual ${currentRoas.toFixed(2)}x × aumento de 50% no budget = receita incremental estimada de ${formatMoney(monthlyGain)}/mês`;
+    item.money_explanation = `ROAS atual ${currentRoas.toFixed(2)}x × aumento de 50% no budget = receita incremental projetada de ${formatMoney(monthlyGain)}/mês`;
   }
 
   if (item.type === "pattern") {
@@ -435,7 +435,7 @@ function detectProblems(
           account_id: "",
           type: "kill",
           score: calculateKillScore(ad, baseline),
-          headline: `${formatMoney(dailyWaste)}/dia em perda potencial identificada`,
+          headline: `${formatMoney(dailyWaste)}/dia em em perda projetada`,
           reason: `CTR ${(ad.ctr * 100).toFixed(2)}% — ${Math.round((1 - ad.ctr / baseline.baseline_median_ctr) * 100)}% abaixo da mediana\nGasto: ${formatMoney(ad.spend_cents)} em ${ad.days_active} dias sem retorno proporcional`,
           impact_type: "waste",
           impact_daily_cents: dailyWaste,
@@ -460,13 +460,13 @@ function detectProblems(
           account_id: "",
           type: "kill",
           score: clamp(85 + Math.min((ad.spend_cents / baseline.cpa_target_cents) * 5, 15), 85, 100),
-          headline: `Estimativa de ${formatMoney(dailyWaste)}/dia sem conversão`,
+          headline: `${formatMoney(dailyWaste)}/dia sem conversão detectada`,
           reason: `Gasto: ${formatMoney(ad.spend_cents)} nos últimos ${ad.days_active} dias\nConversões: 0 — orçamento melhor alocado em anúncios que convertem`,
           impact_type: "waste",
           impact_daily_cents: dailyWaste,
           impact_7d_cents: dailyWaste * 7,
           confidence: "high",
-          impact_basis: "Baseado em zero conversões com gasto significativo",
+          impact_basis: "Zero conversões com gasto significativo detectado",
           metrics_snapshot: buildMetricsSnapshot(ad, baseline),
           actions: [
             { id: uuid(), label: "Pausar agora", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
@@ -486,12 +486,12 @@ function detectProblems(
           type: "kill",
           score: clamp(85 + Math.min((ad.cpa_cents / baseline.baseline_median_cpa - 2) * 5, 15), 85, 100),
           headline: `CPA ${(ad.cpa_cents / baseline.baseline_median_cpa).toFixed(1)}x acima da mediana`,
-          reason: `CPA: ${formatMoney(ad.cpa_cents)} vs mediana ${formatMoney(baseline.baseline_median_cpa)}\nBaseado em ${ad.conversions} conversões — tendência insustentável`,
+          reason: `CPA: ${formatMoney(ad.cpa_cents)} vs mediana ${formatMoney(baseline.baseline_median_cpa)}\n${ad.conversions} conversões analisadas — tendência insustentável`,
           impact_type: "waste",
           impact_daily_cents: excessDaily,
           impact_7d_cents: excessDaily * 7,
           confidence: ad.conversions >= 3 ? "high" : "medium",
-          impact_basis: `Baseado em ${ad.conversions} conversões nos últimos ${ad.days_active} dias`,
+          impact_basis: `${ad.conversions} conversões em ${ad.days_active} dias analisados`,
           metrics_snapshot: buildMetricsSnapshot(ad, baseline),
           actions: [
             { id: uuid(), label: "Pausar anúncio", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
@@ -687,13 +687,13 @@ function generateActionRecommendation(item: FeedItem): string | null {
   if (item.type === "kill") {
     const ms = item.metrics_snapshot as any;
     if (ms.conversions === 0) {
-      return "Considerar: testar novo criativo com hook diferente, ajustar público-alvo, ou realocar budget para anúncios que convertem";
+      return "Próximo passo recomendado: testar novo criativo com hook diferente, ajustar público-alvo, ou realocar budget para anúncios que convertem";
     }
     if (ms.ctr < (ms.baseline_ctr || 0.01) * 0.5) {
       return "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC";
     }
     if (ms.cpa_cents > (ms.baseline_cpa || 100) * 2) {
-      return "Considerar: novo público lookalike baseado em compradores recentes, ou testar criativo com abordagem diferente";
+      return "Recomendado: novo público lookalike com base em compradores recentes, ou testar criativo com abordagem diferente";
     }
     return "Pausar e realocar budget para criativos com melhor performance";
   }
@@ -707,7 +707,7 @@ function generateActionRecommendation(item: FeedItem): string | null {
       return "Testar LP com: headline alinhado ao hook, prova social acima do fold, CTA mais direto";
     }
     if (ms.cpm_cents > 0) {
-      return "Considerar: expandir público com lookalike 1-2%, ou testar interesse diferente para reduzir CPM";
+      return "Próximo passo recomendado: expandir público com lookalike 1-2%, ou testar interesse diferente para reduzir CPM";
     }
     return "Ajustar criativo ou público para recuperar performance";
   }
@@ -947,7 +947,7 @@ function detectPatterns(
         impact_daily_cents: Math.round(totalSpend / Math.max(group.ads[0]?.days_active || 7, 7) * 0.1),
         impact_7d_cents: Math.round(totalSpend * 0.1),
         confidence,
-        impact_basis: `Baseado em ${sampleSize} anúncios com ${formatMoney(totalSpend)} de gasto total`,
+        impact_basis: `${sampleSize} anúncios analisados · ${formatMoney(totalSpend)} de gasto total`,
         metrics_snapshot: {
           avg_ctr: avgCtr,
           avg_cpa: avgCpa,
@@ -982,7 +982,7 @@ function detectPatterns(
         impact_daily_cents: Math.round(totalSpend / Math.max(group.ads[0]?.days_active || 7, 7) * 0.15),
         impact_7d_cents: Math.round(totalSpend * 0.15),
         confidence,
-        impact_basis: `Baseado em ${sampleSize} anúncios com ${formatMoney(totalSpend)} de gasto total`,
+        impact_basis: `${sampleSize} anúncios analisados · ${formatMoney(totalSpend)} de gasto total`,
         metrics_snapshot: {
           avg_ctr: avgCtr,
           avg_cpa: avgCpa,
@@ -1095,7 +1095,7 @@ function generateLowDataInsights(
           impact_daily_cents: ad.daily_spend_cents,
           impact_7d_cents: ad.daily_spend_cents * 7,
           confidence: "low",
-          impact_basis: "Baseado em benchmarks gerais do mercado",
+          impact_basis: "Referência: benchmarks de mercado por nicho",
           metrics_snapshot: buildSimpleSnapshot(ad),
           actions: [
             { id: uuid(), label: "Testar novo criativo", type: "constructive", requires_confirmation: false },
@@ -1326,7 +1326,7 @@ function generateDemoFeed(accountId: string): FeedItem[] {
       impact_daily_cents: 9500,
       impact_7d_cents: 66500,
       confidence: "high",
-      impact_basis: "Baseado em zero conversões com gasto significativo",
+      impact_basis: "Zero conversões com gasto significativo detectado",
       metrics_snapshot: {
         impressions: 18200, clicks: 145, spend_cents: 66500,
         conversions: 0, ctr: 0.008, cpa_cents: 999999,
@@ -1423,7 +1423,7 @@ function generateDemoFeed(accountId: string): FeedItem[] {
       impact_daily_cents: 4500,
       impact_7d_cents: 31500,
       confidence: "medium",
-      impact_basis: "Baseado em 8 anúncios com R$1.200 de gasto total",
+      impact_basis: "8 anúncios analisados · R$1.200 de gasto total",
       metrics_snapshot: {
         avg_ctr: 0.028, avg_cpa: 6200,
         baseline_ctr: 0.021, baseline_cpa: 8500,
@@ -1449,7 +1449,7 @@ function generateDemoFeed(accountId: string): FeedItem[] {
       impact_daily_cents: 3200,
       impact_7d_cents: 22400,
       confidence: "medium",
-      impact_basis: "Baseado em 6 anúncios com R$890 de gasto total",
+      impact_basis: "6 anúncios analisados · R$890 de gasto total",
       metrics_snapshot: {
         avg_ctr: 0.023, avg_cpa: 6375,
         baseline_ctr: 0.021, baseline_cpa: 8500,
@@ -1802,7 +1802,7 @@ serve(async (req: Request) => {
           impact_daily_cents: 0,
           impact_7d_cents: 0,
           confidence: "medium",
-          impact_basis: `Baseado em ${learnedPatterns.length} padrões detectados`,
+          impact_basis: `${learnedPatterns.length} padrões detectados e validados`,
           metrics_snapshot: {},
           actions: [
             { id: uuid(), label: "Ver padrões", type: "neutral", requires_confirmation: false },
