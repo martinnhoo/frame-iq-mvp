@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Decision, DecisionAction } from '../../types/v2-database';
 
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'DM Mono', 'JetBrains Mono', monospace";
+const M = "'Space Grotesk', 'Plus Jakarta Sans', sans-serif";
 
 // ================================================================
 // DEMO MODE — Realistic sample feed for when no real data exists
@@ -29,22 +29,22 @@ function buildDemoDecisions(): Decision[] {
       type: "kill",
       score: 94,
       priority_rank: 1,
-      headline: "Você está perdendo R$180/dia aqui",
-      reason: "CTR caiu 34% nos últimos 3 dias. CPA subiu 28% para R$47,50. Esse anúncio já ultrapassou o ponto de retorno.",
+      headline: "R$180/dia em perda potencial identificada",
+      reason: "CTR 0.80% — 62% abaixo da mediana\nCPA R$47,50 — 2.8x acima da mediana\nGasto: R$540 em 5 dias sem retorno proporcional",
       impact_type: "waste",
       impact_daily: 18000,
       impact_7d: 126000,
       impact_confidence: "high",
       impact_basis: "Baseado nos últimos 5 dias de performance",
       metrics: [
-        { key: "CTR", value: "0.80%", context: "62% abaixo da média", trend: "down" },
-        { key: "CPA", value: "R$47,50", context: "2.8x acima da mediana", trend: "down" },
-        { key: "Gasto", value: "R$540", context: "últimos 7 dias", trend: "stable" },
+        { key: "CTR", value: "0.80%", context: "-62% vs mediana", trend: "down" },
+        { key: "CPA", value: "R$47,50", context: "2.8x acima", trend: "down" },
+        { key: "Gasto", value: "R$540", context: "5 dias", trend: "stable" },
         { key: "Conversões", value: "2", context: "", trend: "down" },
       ],
       actions: [
         { id: "d1a", label: "Pausar anúncio", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d1b", label: "Analisar gasto", type: "neutral", requires_confirmation: false },
+        { id: "d1b", label: "Ver detalhes", type: "neutral", requires_confirmation: false },
       ],
       status: "pending",
       acted_at: null,
@@ -58,8 +58,8 @@ function buildDemoDecisions(): Decision[] {
       type: "kill",
       score: 89,
       priority_rank: 2,
-      headline: "Anúncio sugando R$95/dia sem retorno",
-      reason: "Gastou R$665 nos últimos 7 dias e 0 conversões. Orçamento melhor alocado em anúncios que convertem.",
+      headline: "Estimativa de R$95/dia sem conversão",
+      reason: "Gasto: R$665 em 7 dias\nConversões: 0\nCTR 0.80% — abaixo da mediana da conta",
       impact_type: "waste",
       impact_daily: 9500,
       impact_7d: 66500,
@@ -68,12 +68,12 @@ function buildDemoDecisions(): Decision[] {
       metrics: [
         { key: "Gasto", value: "R$665", context: "7 dias", trend: "down" },
         { key: "Conversões", value: "0", context: "", trend: "down" },
-        { key: "CTR", value: "0.80%", context: "", trend: "down" },
+        { key: "CTR", value: "0.80%", context: "-58% vs mediana", trend: "down" },
         { key: "Frequência", value: "3.2x", context: "", trend: "down" },
       ],
       actions: [
         { id: "d2a", label: "Pausar agora", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d2b", label: "Revisar segmentação", type: "neutral", requires_confirmation: false },
+        { id: "d2b", label: "Ver detalhes", type: "neutral", requires_confirmation: false },
       ],
       status: "pending",
       acted_at: null,
@@ -87,8 +87,8 @@ function buildDemoDecisions(): Decision[] {
       type: "fix",
       score: 78,
       priority_rank: 3,
-      headline: "Desgaste já visível — frequência 4.2x",
-      reason: "Cada pessoa viu 4.2x em média. CPA subiu para R$32,00. Pausa alguns dias ou renova o criativo para recuperar.",
+      headline: "Fadiga criativa detectada — frequência 4.2x",
+      reason: "Frequência: 4.2x — acima do limite recomendado\nCPA R$32,00 — subindo nos últimos 3 dias\nCTR 2.0% — em queda vs início da campanha",
       impact_type: "savings",
       impact_daily: 7200,
       impact_7d: 50400,
@@ -96,12 +96,12 @@ function buildDemoDecisions(): Decision[] {
       impact_basis: "Frequência 4.2x — estimativa de 30% de perda por fadiga",
       metrics: [
         { key: "Frequência", value: "4.2x", context: "acima do limite", trend: "down" },
-        { key: "CPA", value: "R$32,00", context: "subindo", trend: "down" },
-        { key: "CTR", value: "2.0%", context: "caindo", trend: "down" },
+        { key: "CPA", value: "R$32,00", context: "+22% vs semana anterior", trend: "down" },
+        { key: "CTR", value: "2.0%", context: "-15% vs início", trend: "down" },
       ],
       actions: [
         { id: "d3a", label: "Pausar 3 dias", type: "neutral", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d3b", label: "Gerar novo hook", type: "constructive", requires_confirmation: false, meta_api_action: "generate_hook" },
+        { id: "d3b", label: "Entender impacto", type: "constructive", requires_confirmation: false },
       ],
       status: "pending",
       acted_at: null,
@@ -115,8 +115,8 @@ function buildDemoDecisions(): Decision[] {
       type: "fix",
       score: 72,
       priority_rank: 4,
-      headline: "Ótimo engajamento, mas conversão fraca",
-      reason: "Hook rate 68% é top. CTR 2.4% está bom. Mas CPA R$38,00 está caro. Problema na oferta ou landing page.",
+      headline: "Engajamento alto, conversão abaixo do esperado",
+      reason: "Hook rate 68% — top quartil da conta\nCTR 2.4% — acima da mediana\nCPA R$38,00 — 2.2x acima da mediana (possível problema na oferta ou LP)",
       impact_type: "savings",
       impact_daily: 5400,
       impact_7d: 37800,
@@ -124,12 +124,12 @@ function buildDemoDecisions(): Decision[] {
       impact_basis: "Baseado na diferença de CPA vs mediana da conta",
       metrics: [
         { key: "Hook rate", value: "68%", context: "top quartil", trend: "up" },
-        { key: "CTR", value: "2.4%", context: "bom", trend: "up" },
-        { key: "CPA", value: "R$38,00", context: "2.2x acima da mediana", trend: "down" },
+        { key: "CTR", value: "2.4%", context: "+18% vs mediana", trend: "up" },
+        { key: "CPA", value: "R$38,00", context: "2.2x acima", trend: "down" },
       ],
       actions: [
-        { id: "d4a", label: "Revisar oferta", type: "neutral", requires_confirmation: false },
-        { id: "d4b", label: "Testar novo CTA", type: "constructive", requires_confirmation: false },
+        { id: "d4a", label: "Entender impacto", type: "neutral", requires_confirmation: false },
+        { id: "d4b", label: "Revisar dados", type: "constructive", requires_confirmation: false },
       ],
       status: "pending",
       acted_at: null,
@@ -143,8 +143,8 @@ function buildDemoDecisions(): Decision[] {
       type: "scale",
       score: 65,
       priority_rank: 5,
-      headline: "ROAS 4.8x acima da base — joga mais grana",
-      reason: "Esse anúncio tá voando. ROAS 4.8x. Mediana é 1.6x. CPA R$18,00 muito abaixo do teto. Aumenta budget.",
+      headline: "ROAS 4.8x acima da base — oportunidade de escala",
+      reason: "ROAS 4.8x — 3x acima da mediana (1.6x)\nCPA R$18,00 — 79% abaixo do teto da conta\n12 conversões em 7 dias com tendência estável",
       impact_type: "revenue",
       impact_daily: 32000,
       impact_7d: 224000,
@@ -152,7 +152,7 @@ function buildDemoDecisions(): Decision[] {
       impact_basis: "Projeção com +50% de budget (12 conversões atuais)",
       metrics: [
         { key: "ROAS", value: "4.8x", context: "3x acima da mediana", trend: "up" },
-        { key: "CPA", value: "R$18,00", context: "79% abaixo do teto", trend: "up" },
+        { key: "CPA", value: "R$18,00", context: "-79% vs teto", trend: "up" },
         { key: "Conversões", value: "12", context: "7 dias", trend: "up" },
       ],
       actions: [
@@ -171,11 +171,11 @@ function buildDemoDecisions(): Decision[] {
       type: "pattern",
       score: 48,
       priority_rank: 6,
-      headline: 'Padrão identificado: CTA "Saiba mais"',
-      reason: "+33% CTR vs baseline da conta (8 anúncios analisados). Seus anúncios com esse CTA consistentemente superam os demais.",
-      impact_type: "waste",
-      impact_daily: 4500,
-      impact_7d: 31500,
+      headline: 'Padrão: CTA "Saiba mais" supera outros CTAs',
+      reason: "CTR médio 2.8% — +33% vs baseline da conta\n8 anúncios analisados com R$1.200 de gasto total\nPerformance consistente acima da média em todos os conjuntos",
+      impact_type: "learning",
+      impact_daily: 0,
+      impact_7d: 0,
       impact_confidence: "medium",
       impact_basis: "Baseado em 8 anúncios com R$1.200 de gasto total",
       metrics: [
@@ -184,7 +184,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       actions: [
         { id: "d6a", label: "Priorizar esse padrão", type: "constructive", requires_confirmation: false },
-        { id: "d6b", label: "Ver anúncios", type: "neutral", requires_confirmation: false },
+        { id: "d6b", label: "Ver detalhes", type: "neutral", requires_confirmation: false },
       ],
       status: "pending",
       acted_at: null,
@@ -198,11 +198,11 @@ function buildDemoDecisions(): Decision[] {
       type: "pattern",
       score: 42,
       priority_rank: 7,
-      headline: "Padrão identificado: vídeo UGC",
-      reason: "CPA 25% menor vs baseline (6 anúncios). Formato UGC está superando estúdio e imagem estática na sua conta.",
-      impact_type: "waste",
-      impact_daily: 3200,
-      impact_7d: 22400,
+      headline: "Padrão: vídeo UGC supera outros formatos",
+      reason: "CPA médio R$63,75 — 25% menor vs baseline da conta\n6 anúncios analisados com R$890 de gasto total\nFormato UGC superando estúdio e imagem estática",
+      impact_type: "learning",
+      impact_daily: 0,
+      impact_7d: 0,
       impact_confidence: "medium",
       impact_basis: "Baseado em 6 anúncios com R$890 de gasto total",
       metrics: [
@@ -378,6 +378,10 @@ const FeedPage: React.FC = () => {
               capturable={(tracker as any).capturable_now || tracker.capturable_now}
               totalSaved={(tracker as any).total_saved || 0}
               onStopLosses={hasKills && !isDemo ? handleStopLosses : undefined}
+              onResolve={pendingDecisions.length > 0 ? () => {
+                const el = document.querySelector('[data-decision-type]');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } : undefined}
             />
           </div>
         )}
@@ -400,8 +404,8 @@ const FeedPage: React.FC = () => {
           }}>
             <div>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0, fontFamily: F, lineHeight: 1.5 }}>
-                Estes são exemplos de decisões reais. Quando o motor de análise rodar na sua conta,
-                as decisões serão baseadas nos seus dados.
+                <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Conecte sua conta para identificar perdas na sua operação.</strong>
+                {' '}Estes são exemplos do tipo de decisão que o motor gera com dados reais.
               </p>
             </div>
             <button

@@ -9,9 +9,10 @@ interface MoneyBarProps {
   capturable: number;
   totalSaved: number;
   onStopLosses?: () => void;
+  onResolve?: () => void;
 }
 
-export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSaved, onStopLosses }) => {
+export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSaved, onStopLosses, onResolve }) => {
   const [displayedSaved, setDisplayedSaved] = useState(totalSaved);
   const prevSavedRef = useRef(totalSaved);
   const animationFrameRef = useRef<number | null>(null);
@@ -68,7 +69,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#dc2626'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#ef4444'; }}>
-              Parar perdas agora
+              Resolver agora
             </button>
           )}
         </div>
@@ -112,13 +113,29 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             background: 'rgba(16,185,129,0.04)',
             border: '1px solid rgba(16,185,129,0.10)',
             borderRadius: 10, padding: '16px 20px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-              Status
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                Status
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#34d399' }}>
+                Nenhuma perda potencial
+              </div>
             </div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#34d399' }}>
-              Nenhuma perda potencial
-            </div>
+            {onResolve && (
+              <button onClick={onResolve} style={{
+                background: '#10b981', color: '#fff', border: 'none',
+                borderRadius: 8, padding: '8px 16px',
+                fontSize: 12, fontWeight: 700, fontFamily: F,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#059669'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#10b981'; }}>
+                Resolver agora
+              </button>
+            )}
           </div>
         )}
       </div>

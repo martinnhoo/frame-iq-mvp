@@ -176,13 +176,22 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
           <span style={{
             background: confCfg.bg,
             color: confCfg.text,
-            fontSize: 9.5,
+            fontSize: 11,
             fontWeight: 600,
-            padding: '2px 7px',
-            borderRadius: 5,
+            padding: '3px 10px',
+            borderRadius: 6,
             letterSpacing: '0.02em',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
           }}>
-            {confCfg.label}
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: confCfg.text,
+              display: 'inline-block',
+              flexShrink: 0,
+            }} />
+            Confiança: {confCfg.label}
           </span>
         </div>
         {createdAgo && (
