@@ -1350,7 +1350,7 @@ Não use regras fixas. Use os dados reais acima e raciocine sobre o que está ac
         .join("\n");
     })();
 
-    let richContext: any[] = [];
+    let richContext: any = [];
     try {
     richContext = [
       // ── Identidade do usuário — SEMPRE primeiro ───────────────────────────
