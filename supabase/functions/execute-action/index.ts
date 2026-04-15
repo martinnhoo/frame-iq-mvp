@@ -172,7 +172,7 @@ async function executeAction(
   // Get the ad account ID and headline from the decision
   const { data: decisionData, error: decisionError } = await supabase
     .from("decisions")
-    .select("ad_account_id, estimated_daily_impact, headline, type")
+    .select("ad_account_id, impact_daily, headline, type")
     .eq("id", decision_id)
     .eq("user_id", userId)
     .single();
@@ -183,7 +183,7 @@ async function executeAction(
     );
   }
 
-  const { ad_account_id: adAccountId, estimated_daily_impact } = decisionData;
+  const { ad_account_id: adAccountId, impact_daily: estimated_daily_impact } = decisionData;
 
   // Get Meta access token
   const metaAccessToken = await getAdAccountMetaToken(
@@ -286,6 +286,7 @@ async function executeAction(
     // Log failed action
     const { error: logError } = await supabase.from("action_log").insert({
       decision_id,
+      account_id: adAccountId,
       user_id: userId,
       action_type,
       target_type,
@@ -294,6 +295,7 @@ async function executeAction(
       new_state: null,
       result: "error",
       error_message: metaApiResult.error?.message || "Unknown error",
+      estimated_daily_impact: estimated_daily_impact || 0,
     });
 
     if (logError) {
@@ -319,6 +321,7 @@ async function executeAction(
     .from("action_log")
     .insert({
       decision_id,
+      account_id: adAccountId,
       user_id: userId,
       action_type,
       target_type,
@@ -326,6 +329,7 @@ async function executeAction(
       previous_state: previousState,
       new_state: newState,
       result: "success",
+      estimated_daily_impact: estimated_daily_impact || 0,
       rollback_expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     })
     .select()
@@ -346,44 +350,19 @@ async function executeAction(
     console.error("Failed to update decision status:", updateError);
   }
 
-  // Update money_tracker
+  // Update money_tracker — atomic increment via raw SQL (upsert + increment)
   if (estimated_daily_impact) {
-    // Determine if this is revenue capture or savings based on action type
     const isRevenueCaptureAction = ["increase_budget"].includes(action_type);
+    const field = isRevenueCaptureAction ? "total_revenue_captured" : "total_saved";
 
-    if (isRevenueCaptureAction) {
-      const { error: trackerError } = await supabase
-        .from("money_tracker")
-        .update({
-          total_revenue_captured: supabase.rpc(
-            "increment_money_tracker_field",
-            {
-              amount: estimated_daily_impact,
-              field: "total_revenue_captured",
-            }
-          ),
-        })
-        .eq("ad_account_id", adAccountId)
-        .eq("user_id", userId);
+    const { error: trackerError } = await supabase.rpc("increment_money_tracker", {
+      p_account_id: adAccountId,
+      p_field: field,
+      p_amount: estimated_daily_impact,
+    });
 
-      if (trackerError) {
-        console.error("Failed to update money tracker revenue:", trackerError);
-      }
-    } else {
-      const { error: trackerError } = await supabase
-        .from("money_tracker")
-        .update({
-          total_saved: supabase.rpc("increment_money_tracker_field", {
-            amount: estimated_daily_impact,
-            field: "total_saved",
-          }),
-        })
-        .eq("ad_account_id", adAccountId)
-        .eq("user_id", userId);
-
-      if (trackerError) {
-        console.error("Failed to update money tracker savings:", trackerError);
-      }
+    if (trackerError) {
+      console.error(`Failed to update money_tracker.${field}:`, trackerError);
     }
   }
 
@@ -396,8 +375,7 @@ async function executeAction(
     const { data: tracker } = await supabase
       .from("money_tracker")
       .select("total_saved")
-      .eq("ad_account_id", adAccountId)
-      .eq("user_id", userId)
+      .eq("account_id", adAccountId)
       .maybeSingle();
 
     await supabase.functions.invoke("send-telegram", {
