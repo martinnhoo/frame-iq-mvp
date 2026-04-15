@@ -288,14 +288,14 @@ export function AppLayout() {
             }
           </div>
 
-          {/* Name + Meta ad account + connection status */}
+          {/* Name + connection status */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
               margin: 0, fontSize: 13, fontWeight: 600,
               color: selectedPersona ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.30)',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
-              {selectedPersona?.name || 'Selecionar conta'}
+              {activeAccount?.name || selectedPersona?.name || 'Selecionar conta'}
             </p>
             {selectedPersona && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
@@ -311,11 +311,9 @@ export function AppLayout() {
                 }}>
                   {accountResolving
                     ? 'Conectando...'
-                    : activeAccount
-                      ? activeAccount.name
-                      : metaConnected
-                        ? 'Conectado'
-                        : 'Não conectado'}
+                    : metaConnected
+                      ? 'Meta Ads conectado'
+                      : 'Não conectado'}
                 </span>
               </div>
             )}
