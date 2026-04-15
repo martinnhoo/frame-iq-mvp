@@ -1237,13 +1237,19 @@ const FeedPage: React.FC = () => {
                   {pendingDecisions.length} {pendingDecisions.length === 1 ? 'item' : 'itens'}
                 </span>
               )}
-              {isDemo && (
+              {metaConnected && !syncing && (
                 <button onClick={handleSync} style={{
                   background: 'rgba(230,237,243,0.04)', color: '#8B949E',
                   border: '1px solid rgba(230,237,243,0.06)', borderRadius: 4,
                   padding: '4px 10px', fontSize: 11, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: F,
-                }}>Sincronizar</button>
+                  cursor: 'pointer', fontFamily: F, display: 'flex', alignItems: 'center', gap: 4,
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.6 }}>
+                    <path d="M14 8A6 6 0 1 1 8 2" stroke="#8B949E" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M8 0v4l3-2" stroke="#8B949E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Sincronizar
+                </button>
               )}
             </div>
           </div>
