@@ -9,8 +9,6 @@ import {
   Clapperboard,
   Languages,
   Stethoscope,
-  Layers,
-  Lock,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -66,16 +64,6 @@ const TOOLS: ToolCard[] = [
     icon: BarChart3,
     color: '#06b6d4',
     route: '/dashboard/analyses',
-  },
-  {
-    id: 'patterns',
-    label: 'Padrões',
-    desc: 'Padrões vencedores aprendidos dos seus dados — em breve',
-    icon: Layers,
-    color: '#a78bfa',
-    route: '',
-    disabled: true,
-    tag: 'EM BREVE',
   },
   {
     id: 'translate',
