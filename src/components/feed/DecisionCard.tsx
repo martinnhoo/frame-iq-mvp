@@ -76,50 +76,46 @@ function buildConfirmDesc(decision: Decision, action: DecisionAction): string {
 }
 
 // ── Animated expand/collapse wrapper ──
+// Always renders children (hidden when collapsed) so ref is always available
 const Expandable: React.FC<{ open: boolean; children: React.ReactNode }> = ({ open, children }) => {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number | 'auto'>(open ? 'auto' : 0);
-  const [visible, setVisible] = useState(open);
+  const [height, setHeight] = useState(0);
+  const [settled, setSettled] = useState(!open); // true when fully collapsed
 
   useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+
     if (open) {
-      setVisible(true);
-      // Measure content height for smooth transition
-      const el = contentRef.current;
-      if (el) {
-        const h = el.scrollHeight;
-        setHeight(0);
-        // Force reflow, then animate to measured height
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => setHeight(h));
-        });
-        // After transition, set to auto for dynamic content
-        const timer = setTimeout(() => setHeight('auto'), 220);
-        return () => clearTimeout(timer);
-      }
+      setSettled(false);
+      // Measure → animate to full height → settle at auto
+      const h = el.scrollHeight;
+      setHeight(0);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setHeight(h));
+      });
+      const timer = setTimeout(() => setHeight(-1), 250); // -1 = "auto" sentinel
+      return () => clearTimeout(timer);
     } else {
-      // Animate from current height to 0
-      const el = contentRef.current;
-      if (el) {
-        setHeight(el.scrollHeight);
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => setHeight(0));
-        });
-        const timer = setTimeout(() => setVisible(false), 220);
-        return () => clearTimeout(timer);
-      }
+      // Capture current height → animate to 0 → mark settled
+      setHeight(el.scrollHeight);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setHeight(0));
+      });
+      const timer = setTimeout(() => setSettled(true), 250);
+      return () => clearTimeout(timer);
     }
   }, [open]);
 
-  if (!visible && !open) return null;
+  const isAuto = open && height === -1;
 
   return (
     <div style={{
-      height: height === 'auto' ? 'auto' : height,
+      height: isAuto ? 'auto' : height,
       overflow: 'hidden',
-      transition: 'height 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      transition: isAuto ? 'none' : 'height 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease',
       opacity: open ? 1 : 0,
-      ...(height !== 'auto' ? { transition: 'height 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease' } : {}),
+      pointerEvents: open ? 'auto' : 'none',
     }}>
       <div ref={contentRef}>
         {children}
