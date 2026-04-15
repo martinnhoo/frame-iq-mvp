@@ -293,11 +293,23 @@ const FeedPage: React.FC = () => {
   const isLoading = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
 
   const handleAction = async (decisionId: string, action: DecisionAction) => {
-    if (isDemo) return;
-    try {
-      await executeAction(decisionId, action.meta_api_action || action.type, 'ad', '');
-    } catch (err) {
-      console.error('Action failed:', err);
+    // Resolve the meta ID from the decision's ad data
+    const decision = decisions.find(d => d.id === decisionId);
+    const metaId = decision?.ad?.meta_ad_id || '';
+    const targetType = action.meta_api_action?.includes('adset') ? 'adset'
+      : action.meta_api_action?.includes('campaign') ? 'campaign'
+      : 'ad';
+
+    const result = await executeAction(
+      decisionId,
+      action.meta_api_action || action.type,
+      targetType,
+      metaId,
+      action.params,
+    );
+
+    if (!result.success) {
+      throw new Error(result.error || 'Action failed');
     }
   };
 
@@ -470,7 +482,7 @@ const FeedPage: React.FC = () => {
         {pendingDecisions.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pendingDecisions.map(decision => (
-              <DecisionCard key={decision.id} decision={decision} onAction={handleAction} />
+              <DecisionCard key={decision.id} decision={decision} onAction={handleAction} isDemo={isDemo} />
             ))}
           </div>
         ) : (
