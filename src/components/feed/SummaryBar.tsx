@@ -27,28 +27,27 @@ function Pill({ count, label, impact, color, type }: PillProps) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? 'rgba(255,255,255,0.04)' : '#0C1017',
-        border: `1px solid ${hov ? color + '33' : 'rgba(255,255,255,0.03)'}`,
-        borderRadius: 4, padding: '6px 12px',
+        background: hov ? 'rgba(255,255,255,0.03)' : 'transparent',
+        border: 'none',
+        borderRadius: 3, padding: '4px 10px',
         cursor: 'pointer', fontFamily: F,
-        display: 'flex', alignItems: 'center', gap: 8,
-        transition: 'all 0.15s ease',
-        transform: hov ? 'translateY(-1px)' : 'none',
+        display: 'flex', alignItems: 'center', gap: 6,
+        transition: 'background 0.15s ease',
       }}
     >
       <span style={{
-        fontSize: 16, fontWeight: 800, color,
+        fontSize: 15, fontWeight: 800, color,
         fontFamily: F, lineHeight: 1,
       }}>
         {count}
       </span>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
-        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.50)', fontWeight: 600 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontWeight: 600 }}>
           {label}
         </span>
         {impact > 0 && (
           <span style={{
-            fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.30)',
+            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.22)',
             fontFamily: F,
           }}>
             {formatMoney(impact)}/dia
@@ -70,7 +69,7 @@ export const SummaryBar: React.FC<SummaryBarProps> = ({ decisions }) => {
   const scaleImpact = scaleDecisions.reduce((s, d) => s + (d.impact_daily || 0), 0);
 
   return (
-    <div style={{ display: 'flex', gap: 6, fontFamily: F, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 4, fontFamily: F, flexWrap: 'wrap' }}>
       {killDecisions.length > 0 && (
         <Pill count={killDecisions.length} label="stop loss" impact={killImpact}
           color="#DC2626" type="kill" />

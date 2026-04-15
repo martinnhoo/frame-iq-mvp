@@ -88,13 +88,11 @@ const VisibleWin: React.FC<{
 
   return (
     <div style={{
-      background: '#0C1017',
-      border: '1px solid rgba(52,211,153,0.08)',
-      borderLeft: '3px solid rgba(52,211,153,0.40)',
-      borderRadius: 4, padding: '14px 16px', marginBottom: 12,
+      borderLeft: '2px solid rgba(52,211,153,0.30)',
+      padding: '12px 16px', marginBottom: 14,
     }}>
       <div style={{
-        fontSize: 9, fontWeight: 800, color: 'rgba(52,211,153,0.60)',
+        fontSize: 9, fontWeight: 800, color: 'rgba(52,211,153,0.50)',
         letterSpacing: '0.12em', marginBottom: 6,
       }}>RESULTADO ALCANÇADO</div>
 
@@ -137,9 +135,7 @@ const SystemStatus: React.FC<{
 
   return (
     <div style={{
-      background: '#0C1017',
-      border: '1px solid rgba(255,255,255,0.03)',
-      borderRadius: 4, padding: '12px 14px', marginBottom: 12,
+      padding: '10px 2px', marginBottom: 12,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1279,35 +1275,43 @@ const CollapsibleDecisions: React.FC<{
   const other = visible.filter(d => d.type !== 'kill' && d.type !== 'fix');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {/* LEVEL 1+2: Critical decisions with section label */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {/* LEVEL 1+2: Critical decisions — continuous flow */}
       {critical.length > 0 && (
         <>
           <div style={{
-            fontSize: 9.5, fontWeight: 800, color: 'rgba(220,38,38,0.50)',
-            letterSpacing: '0.12em', padding: '0 2px', marginBottom: 2,
+            fontSize: 9.5, fontWeight: 800, color: 'rgba(220,38,38,0.45)',
+            letterSpacing: '0.12em', padding: '0 2px', marginBottom: 6,
           }}>
             AÇÃO IMEDIATA
           </div>
           {critical.map((decision, idx) => (
-            <DecisionCard key={decision.id} decision={decision} onAction={onAction} isDemo={isDemo} isHero={idx === 0} />
+            <div key={decision.id} style={{
+              borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.025)' : 'none',
+            }}>
+              <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} isHero={idx === 0} />
+            </div>
           ))}
         </>
       )}
 
-      {/* LEVEL 3: Other recommendations */}
+      {/* LEVEL 3: Other recommendations — lighter section */}
       {other.length > 0 && (
         <>
           {critical.length > 0 && (
             <div style={{
-              fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.18)',
-              letterSpacing: '0.12em', padding: '0 2px', marginTop: 8, marginBottom: 2,
+              fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.15)',
+              letterSpacing: '0.12em', padding: '0 2px', marginTop: 16, marginBottom: 6,
             }}>
               RECOMENDAÇÕES
             </div>
           )}
-          {other.map(decision => (
-            <DecisionCard key={decision.id} decision={decision} onAction={onAction} isDemo={isDemo} />
+          {other.map((decision, idx) => (
+            <div key={decision.id} style={{
+              borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.025)' : 'none',
+            }}>
+              <DecisionCard decision={decision} onAction={onAction} isDemo={isDemo} />
+            </div>
           ))}
         </>
       )}
@@ -1769,9 +1773,9 @@ const FeedPage: React.FC = () => {
           <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} />
         ) : null}
 
-        {/* Patterns panel — detected creative patterns from ad_diary */}
+        {/* Patterns panel — the brain of the system */}
         {metaConnected && !isDemo && userId && personaId && (
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.025)', paddingTop: 8 }}>
             <PatternsPanel
               userId={userId}
               personaId={personaId}

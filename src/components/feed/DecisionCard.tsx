@@ -9,47 +9,42 @@ interface DecisionCardProps {
   decision: Decision;
   onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
   isDemo?: boolean;
-  isHero?: boolean; // Level 1 — highest priority card
+  isHero?: boolean;
 }
 
-// ── Color system: minimal, signal-only ──
-// Red = financial risk / loss
-// Green = gain / positive outcome
-// Blue = action / opportunity
-// Amber = caution / fix
-// Neutral = everything else
+// ── Color system: signal-only, minimal ──
 const TYPE_CONFIG: Record<string, {
-  accentColor: string; label: string; labelBg: string;
+  accentColor: string; label: string;
   btnBg: string; btnHover: string;
   confirmTitle: string; impactLabel: string;
 }> = {
   kill: {
-    accentColor: '#DC2626', label: 'STOP LOSS', labelBg: 'rgba(220,38,38,0.12)',
+    accentColor: '#DC2626', label: 'STOP LOSS',
     btnBg: '#DC2626', btnHover: '#B91C1C',
     confirmTitle: 'Confirmar pausa', impactLabel: 'perda/dia',
   },
   fix: {
-    accentColor: '#D97706', label: 'CORRIGIR', labelBg: 'rgba(217,119,6,0.12)',
+    accentColor: '#D97706', label: 'CORRIGIR',
     btnBg: '#D97706', btnHover: '#B45309',
     confirmTitle: 'Confirmar ação', impactLabel: 'recuperável/dia',
   },
   scale: {
-    accentColor: '#0EA5E9', label: 'ESCALAR', labelBg: 'rgba(14,165,233,0.12)',
+    accentColor: '#0EA5E9', label: 'ESCALAR',
     btnBg: '#0EA5E9', btnHover: '#0284C7',
     confirmTitle: 'Confirmar escala', impactLabel: 'oportunidade/dia',
   },
   pattern: {
-    accentColor: '#8B5CF6', label: 'PADRÃO', labelBg: 'rgba(139,92,246,0.12)',
+    accentColor: '#8B5CF6', label: 'PADRÃO',
     btnBg: '#8B5CF6', btnHover: '#7C3AED',
     confirmTitle: 'Confirmar ação', impactLabel: '',
   },
   insight: {
-    accentColor: '#64748B', label: 'INSIGHT', labelBg: 'rgba(100,116,139,0.12)',
+    accentColor: '#64748B', label: 'INSIGHT',
     btnBg: '#475569', btnHover: '#334155',
     confirmTitle: 'Confirmar ação', impactLabel: '',
   },
   alert: {
-    accentColor: '#F59E0B', label: 'ALERTA', labelBg: 'rgba(245,158,11,0.12)',
+    accentColor: '#F59E0B', label: 'ALERTA',
     btnBg: '#F59E0B', btnHover: '#D97706',
     confirmTitle: 'Confirmar ação', impactLabel: '',
   },
@@ -136,7 +131,6 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
   const actionRec = decision.action_recommendation;
   const groupNote = decision.group_note;
 
-  // Parse recommendation
   const recItems: string[] = [];
   if (actionRec) {
     const colonIdx = actionRec.indexOf(':');
@@ -148,9 +142,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
   }
 
   // Hero sizing
-  const moneySize = isHero ? 30 : 22;
-  const headlineSize = isHero ? 15 : 13.5;
-  const cardPadding = isHero ? '18px 20px' : '14px 16px';
+  const moneySize = isHero ? 28 : 22;
+  const headlineSize = isHero ? 14.5 : 13.5;
 
   return (
     <>
@@ -168,75 +161,62 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
       <div
         data-decision-type={decision.type}
         style={{
-          background: hovered ? '#0E1319' : '#0C1017',
-          border: `1px solid ${hovered ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)'}`,
-          borderLeft: `3px solid ${cfg.accentColor}`,
-          borderRadius: 4,
-          padding: cardPadding,
+          background: hovered ? 'rgba(255,255,255,0.015)' : 'transparent',
+          borderLeft: `2px solid ${cfg.accentColor}`,
+          padding: isHero ? '16px 18px' : '14px 16px',
           fontFamily: F,
-          transition: 'all 0.18s ease',
-          transform: hovered ? 'translateY(-1px)' : 'none',
-          boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.20)' : 'none',
+          transition: 'background 0.15s ease',
           position: 'relative',
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        {/* ── ROW 1: Context breadcrumb + confidence ── */}
+        {/* ── ROW 1: Context + confidence — minimal ── */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: 8,
+          marginBottom: 6,
         }}>
-          {contextLine && (
-            <div style={{
-              fontSize: 10, color: 'rgba(255,255,255,0.20)',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              flex: 1, marginRight: 8,
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{
+              fontSize: 9, fontWeight: 800, color: cfg.accentColor,
+              letterSpacing: '0.10em', lineHeight: '14px',
+              opacity: 0.75,
             }}>
-              {contextLine}
-            </div>
-          )}
+              {cfg.label}
+            </span>
+            {decision.score > 0 && (
+              <span style={{ color: 'rgba(255,255,255,0.12)', fontSize: 10, fontWeight: 600 }}>
+                {Math.round(decision.score)}
+              </span>
+            )}
+          </div>
           <div style={{
-            fontSize: 9.5, color: 'rgba(255,255,255,0.20)',
+            fontSize: 9.5, color: 'rgba(255,255,255,0.18)',
             display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
           }}>
             <span style={{
               width: 4, height: 4, borderRadius: '50%',
               background: confidence === 'high' ? '#0EA5E9' : confidence === 'medium' ? '#D97706' : '#64748B',
+              opacity: 0.6,
             }} />
             {basisText.toLowerCase()}
           </div>
         </div>
 
-        {/* ── ROW 2: Type badge + active indicator ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{
-              background: cfg.labelBg, color: cfg.accentColor,
-              fontSize: 9, fontWeight: 800,
-              padding: '3px 7px', borderRadius: 3,
-              letterSpacing: '0.10em', lineHeight: '14px',
-            }}>
-              {cfg.label}
-            </span>
-            {decision.score > 0 && (
-              <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10, fontWeight: 600 }}>
-                {Math.round(decision.score)}
-              </span>
-            )}
+        {/* Context breadcrumb */}
+        {contextLine && (
+          <div style={{
+            fontSize: 10, color: 'rgba(255,255,255,0.16)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            marginBottom: 8,
+          }}>
+            {contextLine}
           </div>
-          {isDestructive && decision.status === 'pending' && (
-            <span style={{
-              fontSize: 9.5, color: 'rgba(220,38,38,0.55)', fontWeight: 600,
-            }}>
-              gasto contínuo
-            </span>
-          )}
-        </div>
+        )}
 
-        {/* ── ROW 3: MONEY — the dominant signal ── */}
+        {/* ── MONEY — the dominant signal ── */}
         {decision.impact_daily > 0 && (
-          <div style={{ marginBottom: 8 }}>
+          <div style={{ marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
               <span style={{
                 fontSize: moneySize, fontWeight: 800,
@@ -246,7 +226,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                 {decision.type === 'scale' ? '+' : '-'}{formatMoney(decision.impact_daily)}
               </span>
               <span style={{
-                fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.25)',
+                fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.20)',
                 fontFamily: F,
               }}>
                 /{cfg.impactLabel}
@@ -254,8 +234,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
             </div>
             {has7dProjection && (
               <div style={{
-                fontSize: 11, fontWeight: 500, marginTop: 4,
-                color: 'rgba(255,255,255,0.20)',
+                fontSize: 10.5, fontWeight: 500, marginTop: 3,
+                color: 'rgba(255,255,255,0.16)',
               }}>
                 7d: {decision.type === 'scale' ? '+' : '-'}{formatMoney(decision.impact_7d)}
               </div>
@@ -263,43 +243,41 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         )}
 
-        {/* ── ROW 4: HEADLINE — what's happening ── */}
+        {/* ── HEADLINE ── */}
         <div style={{
           fontSize: headlineSize, fontWeight: 700, color: '#E6EDF3',
-          margin: '0 0 6px', lineHeight: 1.35, letterSpacing: '-0.01em',
+          margin: '0 0 5px', lineHeight: 1.35, letterSpacing: '-0.01em',
         }}>
           {decision.headline}
         </div>
 
         {/* Group note */}
         {groupNote && (
-          <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.18)', marginBottom: 6 }}>
+          <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.16)', marginBottom: 5 }}>
             {groupNote}
           </div>
         )}
 
-        {/* ── ROW 5: STRUCTURED EVIDENCE ── */}
+        {/* ── STRUCTURED EVIDENCE — lighter, no heavy boxes ── */}
         {((decision as any).pattern_ref || (decision as any).prediction) ? (
-          <div style={{ marginBottom: 10 }}>
-            {/* Problem line */}
+          <div style={{ marginBottom: 8 }}>
             {reasonLines[0] && (
               <div style={{
-                fontSize: 11.5, color: 'rgba(255,255,255,0.40)', lineHeight: 1.55, marginBottom: 6,
+                fontSize: 11.5, color: 'rgba(255,255,255,0.35)', lineHeight: 1.55, marginBottom: 5,
               }}>
                 {reasonLines[0]}
               </div>
             )}
 
-            {/* Pattern ref */}
+            {/* Pattern ref — subtle accent, no box */}
             {(decision as any).pattern_ref && (
               <div style={{
-                background: 'rgba(139,92,246,0.05)',
-                border: '1px solid rgba(139,92,246,0.10)',
-                borderRadius: 3, padding: '8px 10px', marginBottom: 6,
+                borderLeft: '2px solid rgba(139,92,246,0.20)',
+                paddingLeft: 10, marginBottom: 5,
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
                   <span style={{
-                    fontSize: 8.5, fontWeight: 800, color: '#8B5CF6',
+                    fontSize: 8.5, fontWeight: 800, color: 'rgba(139,92,246,0.50)',
                     letterSpacing: '0.10em',
                   }}>PADRÃO</span>
                   {(decision as any).pattern_ref.impact_pct && (
@@ -311,27 +289,26 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                     </span>
                   )}
                 </div>
-                <div style={{ fontSize: 11.5, color: '#8B5CF6', fontWeight: 600, lineHeight: 1.4 }}>
+                <div style={{ fontSize: 11.5, color: 'rgba(139,92,246,0.60)', fontWeight: 600, lineHeight: 1.4 }}>
                   {(decision as any).pattern_ref.insight}
                 </div>
               </div>
             )}
 
-            {/* Prediction */}
+            {/* Prediction — subtle accent, no box */}
             {(decision as any).prediction && (
               <div style={{
-                background: 'rgba(14,165,233,0.04)',
-                border: '1px solid rgba(14,165,233,0.08)',
-                borderRadius: 3, padding: '8px 10px', marginBottom: 6,
+                borderLeft: '2px solid rgba(14,165,233,0.20)',
+                paddingLeft: 10, marginBottom: 5,
               }}>
-                <div style={{ fontSize: 8.5, fontWeight: 800, color: '#0EA5E9', letterSpacing: '0.10em', marginBottom: 4 }}>
+                <div style={{ fontSize: 8.5, fontWeight: 800, color: 'rgba(14,165,233,0.50)', letterSpacing: '0.10em', marginBottom: 3 }}>
                   PREVISÃO
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.30)' }}>
                     {(decision as any).prediction.current_value}
                   </span>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.12)' }}>→</span>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.10)' }}>→</span>
                   <span style={{ fontSize: 11.5, color: '#0EA5E9', fontWeight: 700 }}>
                     {(decision as any).prediction.expected_value}
                   </span>
@@ -348,7 +325,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
             {(decision as any).priority_position && (decision as any).priority_position <= 3 && (
               <div style={{
                 fontSize: 10.5, fontWeight: 700, marginBottom: 4,
-                color: (decision as any).priority_position === 1 ? '#F59E0B' : 'rgba(255,255,255,0.35)',
+                color: (decision as any).priority_position === 1 ? '#F59E0B' : 'rgba(255,255,255,0.30)',
               }}>
                 #{(decision as any).priority_position}
                 {(decision as any).priority_position === 1 && ' — Ação mais importante agora'}
@@ -357,35 +334,33 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
 
             {/* Urgency */}
             {(decision as any).urgency && (
-              <div style={{ fontSize: 10.5, color: 'rgba(220,38,38,0.50)', fontWeight: 500, marginBottom: 4 }}>
+              <div style={{ fontSize: 10.5, color: 'rgba(220,38,38,0.45)', fontWeight: 500, marginBottom: 4 }}>
                 {(decision as any).urgency.message}
               </div>
             )}
 
             {/* Remaining reason lines */}
             {reasonLines.length > 1 && (
-              <div style={{ marginTop: 4 }}>
+              <div style={{ marginTop: 3 }}>
                 {reasonLines.slice(1).filter(l => !l.startsWith('Padrão detectado:')).map((line, i) => (
-                  <div key={i} style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', lineHeight: 1.55 }}>
+                  <div key={i} style={{ fontSize: 11, color: 'rgba(255,255,255,0.30)', lineHeight: 1.55 }}>
                     {line}
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Money explanation */}
             {(decision as any).money_explanation && (
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)', marginTop: 4, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.12)', marginTop: 3, lineHeight: 1.4 }}>
                 {(decision as any).money_explanation}
               </div>
             )}
           </div>
         ) : (
-          /* Fallback reason lines */
           reasonLines.length > 0 && (
             <div style={{ marginBottom: 8 }}>
               {reasonLines.map((line, i) => (
-                <div key={i} style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.40)', lineHeight: 1.55 }}>
+                <div key={i} style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', lineHeight: 1.55 }}>
                   {line}
                 </div>
               ))}
@@ -393,67 +368,62 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           )
         )}
 
-        {/* ── METRICS ROW ── */}
+        {/* ── METRICS ROW — cleaner, no boxes ── */}
         {decision.metrics && decision.metrics.length > 0 && (
           <div style={{
-            display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10,
-            borderTop: '1px solid rgba(255,255,255,0.03)',
-            paddingTop: 10,
+            display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 10,
+            paddingTop: 8,
           }}>
             {decision.metrics.map((m, i) => (
               <div key={i} style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.03)',
-                borderRadius: 3, padding: '4px 8px', fontSize: 10.5,
+                fontSize: 10.5,
                 display: 'flex', alignItems: 'baseline', gap: 4,
               }}>
-                <span style={{ color: 'rgba(255,255,255,0.30)', fontWeight: 500 }}>{m.key}</span>
+                <span style={{ color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>{m.key}</span>
                 <span style={{
-                  color: m.trend === 'down' ? '#DC2626' : m.trend === 'up' ? '#0EA5E9' : 'rgba(255,255,255,0.50)',
+                  color: m.trend === 'down' ? '#DC2626' : m.trend === 'up' ? '#0EA5E9' : 'rgba(255,255,255,0.45)',
                   fontWeight: 700, fontSize: 11.5,
                 }}>
                   {m.value}
                 </span>
                 {m.context && (
-                  <span style={{ color: 'rgba(255,255,255,0.12)', fontSize: 9.5 }}>{m.context}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.10)', fontSize: 9.5 }}>{m.context}</span>
                 )}
               </div>
             ))}
           </div>
         )}
 
-        {/* ── RECOMMENDED ACTION BOX ── */}
+        {/* ── NEXT STEP — subtle left-border accent, no box ── */}
         {recItems.length > 0 && (
           <div style={{
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.04)',
-            borderLeft: `2px solid ${cfg.accentColor}`,
-            borderRadius: 3, padding: '10px 12px', marginBottom: 10,
+            borderLeft: `2px solid ${cfg.accentColor}22`,
+            paddingLeft: 10, marginBottom: 8,
           }}>
             <div style={{
-              fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.30)',
-              letterSpacing: '0.10em', marginBottom: 6,
+              fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.22)',
+              letterSpacing: '0.10em', marginBottom: 4,
             }}>
               PRÓXIMO PASSO
             </div>
             {recItems.map((item, i) => (
-              <div key={i} style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
+              <div key={i} style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
                 {item}
               </div>
             ))}
           </div>
         )}
 
-        {/* Kill urgency micro-trigger */}
+        {/* Kill urgency */}
         {isDestructive && decision.status === 'pending' && decision.impact_daily > 0 && (
           <div style={{
-            fontSize: 10, color: 'rgba(220,38,38,0.35)', fontWeight: 500, marginBottom: 8,
+            fontSize: 10, color: 'rgba(220,38,38,0.30)', fontWeight: 500, marginBottom: 6,
           }}>
             Cada hora ativo mantém esse nível de perda
           </div>
         )}
 
-        {/* ── ACTION BUTTONS ── */}
+        {/* ── ACTIONS — compact, integrated ── */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           {decision.actions && decision.actions.length > 0 ? (
             decision.actions.map((action, idx) => {
@@ -465,40 +435,33 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                   onClick={() => handleButtonClick(action)}
                   disabled={executingId !== null}
                   style={{
-                    background: isPrimary ? cfg.btnBg : 'rgba(255,255,255,0.03)',
-                    color: isPrimary ? '#fff' : 'rgba(255,255,255,0.45)',
-                    border: isPrimary ? 'none' : '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: 4,
-                    padding: isPrimary ? (isHero ? '10px 24px' : '8px 18px') : '6px 12px',
-                    fontSize: isPrimary ? 12.5 : 11,
+                    background: isPrimary ? cfg.btnBg : 'transparent',
+                    color: isPrimary ? '#fff' : 'rgba(255,255,255,0.40)',
+                    border: isPrimary ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: 3,
+                    padding: isPrimary ? '7px 16px' : '5px 10px',
+                    fontSize: isPrimary ? 11.5 : 10.5,
                     fontWeight: isPrimary ? 700 : 600,
                     cursor: executingId !== null ? 'not-allowed' : 'pointer',
                     opacity: executingId !== null && !isRunning ? 0.4 : 1,
                     fontFamily: F,
                     transition: 'all 0.15s ease',
                     letterSpacing: '-0.01em',
-                    transform: 'translateY(0)',
                   }}
                   onMouseEnter={e => {
                     if (!executingId) {
                       if (isPrimary) {
                         (e.currentTarget as HTMLElement).style.background = cfg.btnHover;
-                        (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
-                        (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 12px ${cfg.accentColor}33`;
                       } else {
-                        (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
-                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.10)';
+                        (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
                       }
                     }
                   }}
                   onMouseLeave={e => {
                     if (isPrimary) {
                       (e.currentTarget as HTMLElement).style.background = cfg.btnBg;
-                      (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                      (e.currentTarget as HTMLElement).style.boxShadow = 'none';
                     } else {
-                      (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
-                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)';
+                      (e.currentTarget as HTMLElement).style.background = 'transparent';
                     }
                   }}
                 >
@@ -507,18 +470,18 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
               );
             })
           ) : (
-            <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.12)' }}>Sem ações</span>
+            <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.10)' }}>Sem ações</span>
           )}
 
           {isDestructive && !actionFeedback && (
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)', marginLeft: 4 }}>
+            <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.12)', marginLeft: 2 }}>
               Reversível
             </span>
           )}
 
           {actionFeedback && (
             <span style={{
-              fontSize: 11, fontWeight: 500, marginLeft: 4,
+              fontSize: 10.5, fontWeight: 500, marginLeft: 4,
               color: actionFeedback.type === 'success' ? '#34D399' : '#DC2626',
             }}>
               {actionFeedback.msg}
