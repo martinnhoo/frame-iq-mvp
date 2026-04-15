@@ -833,31 +833,27 @@ const FeedPage: React.FC = () => {
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
 
-  // Ads fetch — only runs once per accountId
-  useEffect(() => {
+  // Ads fetch — refetchable
+  const fetchAds = useCallback(async () => {
     if (!accountId) {
       setUserAds([]); setTotalAdCount(0); setAdsLoaded(true);
       return;
     }
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data, count } = await (supabase
-          .from('ads' as any)
-          .select('name, meta_ad_id, status, ad_set:ad_sets(name, campaign:campaigns(name))', { count: 'exact' })
-          .eq('account_id', accountId)
-          .limit(8) as any);
-        if (!cancelled) {
-          setUserAds((data || []) as AdSummary[]);
-          setTotalAdCount(count ?? (data?.length ?? 0));
-          setAdsLoaded(true);
-        }
-      } catch {
-        if (!cancelled) setAdsLoaded(true);
-      }
-    })();
-    return () => { cancelled = true; };
+    try {
+      const { data, count } = await (supabase
+        .from('ads' as any)
+        .select('name, meta_ad_id, status, ad_set:ad_sets(name, campaign:campaigns(name))', { count: 'exact' })
+        .eq('account_id', accountId)
+        .limit(8) as any);
+      setUserAds((data || []) as AdSummary[]);
+      setTotalAdCount(count ?? (data?.length ?? 0));
+      setAdsLoaded(true);
+    } catch {
+      setAdsLoaded(true);
+    }
   }, [accountId]);
+
+  useEffect(() => { fetchAds(); }, [fetchAds]);
 
   // Metrics fetch — re-runs when period or accountId changes
   useEffect(() => {
@@ -933,15 +929,33 @@ const FeedPage: React.FC = () => {
         setSyncError('Falha na análise. Tente novamente.');
       }
 
-      // Refetch decisions + ads (data changed)
-      await refetchDecisions();
+      // Refetch decisions + ads (data changed after sync)
+      await Promise.all([refetchDecisions(), fetchAds()]);
     } catch (err) {
       console.error('Sync error:', err);
       setSyncError('Falha na conexão. Tente novamente.');
     } finally {
       setSyncing(false);
     }
-  }, [accountId, syncing, refetchDecisions]);
+  }, [accountId, syncing, refetchDecisions, fetchAds]);
+
+  // ── Auto-sync: trigger first sync when account connected but no ads imported yet ──
+  const autoSyncTriggered = useRef(false);
+  useEffect(() => {
+    if (
+      accountId &&
+      metaConnected &&
+      adsLoaded &&
+      totalAdCount === 0 &&
+      !syncing &&
+      !isDemo &&
+      !autoSyncTriggered.current
+    ) {
+      autoSyncTriggered.current = true;
+      const t = setTimeout(() => handleSync(), 500);
+      return () => clearTimeout(t);
+    }
+  }, [accountId, metaConnected, adsLoaded, totalAdCount, syncing, isDemo, handleSync]);
 
   // Meta Ads Manager URL for the connected account
   const metaAccountId = activeAccount?.metaAccountId || '';
