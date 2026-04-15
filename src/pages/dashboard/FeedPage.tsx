@@ -135,7 +135,7 @@ function buildDemoDecisions(): Decision[] {
         { id: "d1a", label: "Pausar anúncio", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
         { id: "d1b", label: "Abrir briefing baseado neste padrão", type: "neutral", requires_confirmation: false },
       ],
-      action_recommendation: "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC",
+      action_recommendation: "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC", group_note: null,
       ad: { name: "Vídeo 03 — Hook Depoimento", meta_ad_id: "demo_meta_001",
         ad_set: { name: "Broad BR 25-45", campaign: { name: "Conversão — Produto X" } as any } as any } as any,
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(12),
