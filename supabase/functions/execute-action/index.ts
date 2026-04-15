@@ -330,19 +330,26 @@ async function executeAction(
     );
   }
 
-  // Update log to success with new state
-  const { error: logError } = await supabase
+  // Update log to success with new state (retry once on failure)
+  let logError = (await supabase
     .from("action_log")
     .update({
       new_state: newState,
       result: "success",
       rollback_expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     })
-    .eq("id", logId);
+    .eq("id", logId)).error;
 
   if (logError) {
-    console.error("Failed to update action log to success:", logError);
-    // Action already executed — don't throw, just log the error
+    console.warn("[execute-action] Log update failed, retrying in 500ms...", logError.message);
+    await new Promise(r => setTimeout(r, 500));
+    logError = (await supabase
+      .from("action_log")
+      .update({ new_state: newState, result: "success", rollback_expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() })
+      .eq("id", logId)).error;
+    if (logError) {
+      console.error("[execute-action] Log update FAILED after retry — pending log orphaned:", logError.message);
+    }
   }
 
   // Update decision status to 'acted'
@@ -355,19 +362,20 @@ async function executeAction(
     console.error("Failed to update decision status:", updateError);
   }
 
-  // Update money_tracker — atomic increment via raw SQL (upsert + increment)
+  // Update money_tracker — atomic increment with 1 retry
   if (estimated_daily_impact) {
     const isRevenueCaptureAction = ["increase_budget"].includes(action_type);
     const field = isRevenueCaptureAction ? "total_revenue_captured" : "total_saved";
+    const rpcParams = { p_account_id: adAccountId, p_field: field, p_amount: estimated_daily_impact };
 
-    const { error: trackerError } = await supabase.rpc("increment_money_tracker", {
-      p_account_id: adAccountId,
-      p_field: field,
-      p_amount: estimated_daily_impact,
-    });
-
+    let trackerError = (await supabase.rpc("increment_money_tracker", rpcParams)).error;
     if (trackerError) {
-      console.error(`Failed to update money_tracker.${field}:`, trackerError);
+      console.warn(`[execute-action] money_tracker.${field} failed, retrying...`, trackerError.message);
+      await new Promise(r => setTimeout(r, 500));
+      trackerError = (await supabase.rpc("increment_money_tracker", rpcParams)).error;
+      if (trackerError) {
+        console.error(`[execute-action] money_tracker.${field} FAILED after retry:`, trackerError.message);
+      }
     }
   }
 
