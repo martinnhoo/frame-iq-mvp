@@ -104,7 +104,10 @@ export function useActiveAccount(
       }
 
       // 3. Ensure v2 ad_accounts row exists (upsert)
-      const v2AccountId = await ensureV2Account(userId, selectedMeta, metaConn.access_token);
+      // Note: metaConn.access_token may be undefined since get_connections
+      // doesn't return it for security. The token is handled server-side
+      // by sync-meta-data which falls back to platform_connections.
+      const v2AccountId = await ensureV2Account(userId, selectedMeta);
 
       if (!v2AccountId) {
         setError('Failed to sync account');
@@ -194,7 +197,6 @@ export function useActiveAccount(
 async function ensureV2Account(
   userId: string,
   metaAccount: MetaAdAccount,
-  accessToken: string,
 ): Promise<string | null> {
   try {
     // Check if row already exists
@@ -206,15 +208,10 @@ async function ensureV2Account(
       .maybeSingle() as any);
 
     if (existing?.id) {
-      // Ensure access token is always up-to-date
-      await (supabase
-        .from('ad_accounts' as any)
-        .update({ access_token_encrypted: accessToken })
-        .eq('id', existing.id) as any);
       return existing.id;
     }
 
-    // Create v2 ad_accounts row — column is access_token_encrypted (NOT NULL)
+    // Create v2 ad_accounts row — token is backfilled server-side by sync-meta-data
     const { data: created, error: insertErr } = await (supabase
       .from('ad_accounts' as any)
       .insert({
@@ -224,7 +221,6 @@ async function ensureV2Account(
         currency: metaAccount.currency || 'BRL',
         timezone: 'America/Sao_Paulo',
         status: 'active',
-        access_token_encrypted: accessToken,
         total_ads_synced: 0,
         total_spend_30d: 0,
       })

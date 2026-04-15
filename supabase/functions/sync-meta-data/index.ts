@@ -113,7 +113,7 @@ async function fetchWithRetry(
 async function getAccountCredentials(accountId: string): Promise<{ token: string; metaAccountId: string }> {
   const { data, error } = await supabase
     .from("ad_accounts")
-    .select("access_token_encrypted, meta_account_id")
+    .select("access_token_encrypted, meta_account_id, user_id")
     .eq("id", accountId)
     .single();
 
@@ -126,14 +126,55 @@ async function getAccountCredentials(accountId: string): Promise<{ token: string
   if (!data.meta_account_id) {
     throw new Error(`ad_account ${accountId} has no meta_account_id`);
   }
-  if (!data.access_token_encrypted) {
-    throw new Error(`ad_account ${accountId} has no access token (token is null)`);
+
+  let token = data.access_token_encrypted;
+
+  // Fallback: if token is null, fetch from platform_connections
+  if (!token && data.user_id) {
+    console.log(`[getAccountCredentials] token null, falling back to platform_connections for meta_account_id=${data.meta_account_id}`);
+    const { data: conns } = await supabase
+      .from("platform_connections")
+      .select("access_token, ad_accounts")
+      .eq("user_id", data.user_id)
+      .eq("platform", "meta")
+      .eq("status", "active");
+
+    if (conns && conns.length > 0) {
+      // Find the connection that has this meta_account_id in its ad_accounts
+      for (const conn of conns) {
+        const accounts = (conn.ad_accounts || []) as any[];
+        const hasAccount = accounts.some((a: any) => a.id === data.meta_account_id || a.id === `act_${data.meta_account_id}`);
+        if (hasAccount && conn.access_token) {
+          token = conn.access_token;
+          // Backfill the ad_accounts row so future calls work directly
+          await supabase
+            .from("ad_accounts")
+            .update({ access_token_encrypted: conn.access_token })
+            .eq("id", accountId);
+          console.log(`[getAccountCredentials] backfilled token from platform_connections`);
+          break;
+        }
+      }
+      // If no specific match, use first connection's token
+      if (!token && conns[0]?.access_token) {
+        token = conns[0].access_token;
+        await supabase
+          .from("ad_accounts")
+          .update({ access_token_encrypted: conns[0].access_token })
+          .eq("id", accountId);
+        console.log(`[getAccountCredentials] backfilled token from first active connection`);
+      }
+    }
   }
 
-  console.log(`[getAccountCredentials] account=${accountId}, meta_id=${data.meta_account_id}, token_length=${data.access_token_encrypted.length}`);
+  if (!token) {
+    throw new Error(`Failed to fetch credentials for account ${accountId}`);
+  }
+
+  console.log(`[getAccountCredentials] account=${accountId}, meta_id=${data.meta_account_id}, token_length=${token.length}`);
 
   return {
-    token: data.access_token_encrypted,
+    token,
     metaAccountId: data.meta_account_id,
   };
 }
