@@ -428,6 +428,7 @@ export type Database = {
           spend: number | null
           status: string | null
           synced_at: string | null
+          thumbnail_url: string | null
           user_id: string
           verdict: string | null
           verdict_reason: string | null
@@ -457,6 +458,7 @@ export type Database = {
           spend?: number | null
           status?: string | null
           synced_at?: string | null
+          thumbnail_url?: string | null
           user_id: string
           verdict?: string | null
           verdict_reason?: string | null
@@ -486,6 +488,7 @@ export type Database = {
           spend?: number | null
           status?: string | null
           synced_at?: string | null
+          thumbnail_url?: string | null
           user_id?: string
           verdict?: string | null
           verdict_reason?: string | null
