@@ -1161,7 +1161,9 @@ const PerformanceSummary: React.FC<{
   metrics: AdMetricsSummary | null;
   periodLabel: string;
   metaAccountId?: string;
-}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId }) => {
+  onLoadMoreAds?: () => void;
+  loadingMoreAds?: boolean;
+}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds }) => {
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
 
@@ -1870,6 +1872,8 @@ const FeedPage: React.FC = () => {
                 metrics={adMetrics}
                 periodLabel={PERIODS.find(p => p.key === period)!.label}
                 metaAccountId={metaAccountId}
+                onLoadMoreAds={loadMoreAds}
+                loadingMoreAds={adsLoadingMore}
               />
             )}
 
