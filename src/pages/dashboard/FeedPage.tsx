@@ -912,15 +912,16 @@ const FeedPage: React.FC = () => {
 
     try {
       // Step 1: Import campaigns/ads/metrics from Meta API → Supabase tables
-      const { error: syncErr } = await supabase.functions.invoke('sync-meta-data', {
+      const { data: syncData, error: syncErr } = await supabase.functions.invoke('sync-meta-data', {
         body: { account_id: accountId, sync_type: 'full' },
       });
       if (syncErr) {
-        console.error('Meta sync failed:', syncErr);
-        setSyncError('Falha ao importar dados do Meta. Tente novamente.');
+        console.error('Meta sync failed:', syncErr, 'Response:', syncData);
+        setSyncError(`Falha ao importar dados do Meta: ${syncData?.error || syncErr.message || 'erro desconhecido'}`);
         setSyncing(false);
         return;
       }
+      console.log('[sync-meta-data] Success:', syncData);
 
       // Step 2: Run decision engine on the freshly synced data
       const { error: engineErr } = await supabase.functions.invoke('run-decision-engine', {
