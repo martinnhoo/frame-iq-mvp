@@ -43,6 +43,19 @@ Deno.serve(async (req) => {
     const today = new Date().toISOString().split("T")[0];
     const since = new Date(Date.now() - 14 * 24 * 3600000).toISOString().split("T")[0];
 
+    // ── LOAD LEARNED PATTERNS for pattern-aware interpretation ────────────
+    let learnedPatterns: any[] = [];
+    try {
+      const { data: pats } = await supabase
+        .from("learned_patterns")
+        .select("pattern_key, variables, confidence, impact_pct, is_winner, ai_insight")
+        .eq("persona_id", persona_id)
+        .gte("confidence", 0.2)
+        .order("impact_pct", { ascending: false })
+        .limit(30);
+      learnedPatterns = pats || [];
+    } catch { /* patterns are optional enhancement */ }
+
     // ── META ADS ──────────────────────────────────────────────────────────────
     if (platforms?.includes("meta")) {
       const { data: metaConn } = await supabase
@@ -134,6 +147,85 @@ Deno.serve(async (req) => {
               objective: c.objective,
             }));
 
+            // ── Pattern-aware ad enrichment ──────────────────────────────
+            // Match each ad against learned patterns for interpretation
+            const winnerPatterns = learnedPatterns.filter((p: any) => p.is_winner);
+            const antiPatterns = learnedPatterns.filter((p: any) => !p.is_winner && p.impact_pct < -10);
+
+            const enrichAdWithPattern = (ad: any) => {
+              const matchedPatterns: any[] = [];
+              for (const pat of learnedPatterns) {
+                const vars = pat.variables || {};
+                const key = pat.pattern_key || "";
+                // Match by format
+                if (key.startsWith("format:") && ad.name?.toLowerCase().includes(vars.format?.toLowerCase())) {
+                  matchedPatterns.push(pat);
+                }
+                // Match by campaign
+                if (key.startsWith("campaign:") && ad.campaign?.toLowerCase() === vars.campaign_name?.toLowerCase()) {
+                  matchedPatterns.push(pat);
+                }
+              }
+              if (matchedPatterns.length > 0) {
+                const best = matchedPatterns.sort((a: any, b: any) => Math.abs(b.impact_pct) - Math.abs(a.impact_pct))[0];
+                return {
+                  ...ad,
+                  pattern_match: {
+                    pattern_key: best.pattern_key,
+                    insight: best.ai_insight,
+                    impact_pct: best.impact_pct,
+                    is_winner: best.is_winner,
+                    follows_pattern: best.is_winner,
+                  },
+                };
+              }
+              return { ...ad, pattern_match: null };
+            };
+
+            const enrichedAds = adsWithMetrics.map(enrichAdWithPattern);
+            const enrichedWinners = enrichedAds.filter((a: any) => a.isWinner).slice(0, 5);
+            const enrichedAtRisk = enrichedAds.filter((a: any) => a.isRisk).slice(0, 5);
+
+            // Expected vs Actual — pattern deviation in real time
+            const expectedVsActual: any[] = [];
+            for (const ad of enrichedAds.slice(0, 10)) {
+              if (ad.pattern_match && ad.pattern_match.is_winner) {
+                const expectedCtr = learnedPatterns.find((p: any) => p.pattern_key === ad.pattern_match.pattern_key)?.avg_ctr;
+                if (expectedCtr && ad.ctr) {
+                  const actualCtr = parseFloat(ad.ctr) / 100; // Meta returns CTR as %
+                  const deviation = expectedCtr > 0 ? Math.round(((actualCtr - expectedCtr) / expectedCtr) * 100) : 0;
+                  expectedVsActual.push({
+                    ad_name: ad.name,
+                    pattern_key: ad.pattern_match.pattern_key,
+                    expected_ctr: (expectedCtr * 100).toFixed(2) + "%",
+                    actual_ctr: (actualCtr * 100).toFixed(2) + "%",
+                    deviation_pct: deviation,
+                    status: Math.abs(deviation) <= 15 ? "on_track" : deviation > 15 ? "above" : "below",
+                  });
+                }
+              }
+            }
+
+            // Pattern health summary
+            const patternHealth = {
+              total_patterns: learnedPatterns.length,
+              winner_patterns: winnerPatterns.length,
+              anti_patterns: antiPatterns.length,
+              top_winner: winnerPatterns[0] ? {
+                key: winnerPatterns[0].pattern_key,
+                impact: `+${winnerPatterns[0].impact_pct}%`,
+                insight: winnerPatterns[0].ai_insight,
+              } : null,
+              top_risk: antiPatterns[0] ? {
+                key: antiPatterns[0].pattern_key,
+                impact: `${antiPatterns[0].impact_pct}%`,
+                insight: antiPatterns[0].ai_insight,
+              } : null,
+              ads_without_pattern: enrichedAds.filter((a: any) => !a.pattern_match).length,
+              ads_against_pattern: enrichedAds.filter((a: any) => a.pattern_match && !a.pattern_match.is_winner).length,
+              expected_vs_actual: expectedVsActual,
+            };
+
             result.meta = {
               account_name: account.name || accId,
               period: `${since} → ${today}`,
@@ -145,11 +237,12 @@ Deno.serve(async (req) => {
                 conversions: totalConversions.toFixed(0),
                 active_ads: adsData.length,
               },
-              winners: adsWithMetrics.filter((a: any) => a.isWinner).slice(0, 5),
-              at_risk: adsWithMetrics.filter((a: any) => a.isRisk).slice(0, 5),
-              top_ads: adsWithMetrics.slice(0, 10),
+              winners: enrichedWinners,
+              at_risk: enrichedAtRisk,
+              top_ads: enrichedAds.slice(0, 10),
               campaigns,
               time_series: timeSeries,
+              pattern_health: patternHealth,
             };
           }
         } else {

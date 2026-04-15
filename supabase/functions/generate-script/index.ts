@@ -50,10 +50,53 @@ Deno.serve(async (req) => {
 
     // ── Load full account intelligence in parallel ──────────────────────────
     let loopContext = "";
+    let patternConstraintBlock = "";
     if (effectiveUserId) {
       const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
       const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
       const restHeaders = { apikey: svcKey, Authorization: `Bearer ${svcKey}` };
+
+      // ── Load learned patterns for constraint ──
+      try {
+        const winnersRes = await fetch(
+          `${supabaseUrl}/rest/v1/learned_patterns?is_winner=eq.true&confidence=gte.0.25&order=impact_pct.desc&limit=10`,
+          { headers: restHeaders }
+        );
+        const antiRes = await fetch(
+          `${supabaseUrl}/rest/v1/learned_patterns?is_winner=eq.false&impact_pct=lt.-10&confidence=gte.0.25&order=impact_pct.asc&limit=5`,
+          { headers: restHeaders }
+        );
+        const winners = winnersRes.ok ? await winnersRes.json() : [];
+        const antis = antiRes.ok ? await antiRes.json() : [];
+
+        if (winners.length > 0 || antis.length > 0) {
+          patternConstraintBlock = `\n\n════════════════════════════════════════
+PATTERN CONSTRAINT — MANDATORY
+════════════════════════════════════════
+
+PROVEN WINNING PATTERNS (from real account data):
+${winners.map((w: any) => `• ${w.pattern_key}: ${w.ai_insight || ''} (impact: +${w.impact_pct}%, confidence: ${w.confidence}, samples: ${w.sample_size || '?'})`).join('\n')}
+
+${antis.length > 0 ? `ANTI-PATTERNS (proven to underperform):
+${antis.map((a: any) => `• AVOID: ${a.pattern_key}: ${a.ai_insight || ''} (impact: ${a.impact_pct}%)`).join('\n')}` : ''}
+
+RULES:
+1. At least 2 of the 3 scripts MUST directly apply a winning pattern in their structure, hook style, or format approach.
+2. Each script's "notes" field MUST cite which pattern it follows (or explain why it deviates).
+3. Scripts that follow anti-patterns are PROHIBITED.
+4. If no winning pattern fits the requested format, say so in notes and use best creative judgment.
+════════════════════════════════════════`;
+        } else {
+          patternConstraintBlock = `\n\n════════════════════════════════════════
+NO PROVEN PATTERNS YET
+════════════════════════════════════════
+This account has no statistically validated patterns yet.
+Write scripts based on general best practices for the format and market.
+Be transparent: do NOT claim pattern-based optimization.
+════════════════════════════════════════`;
+        }
+      } catch { /* patterns optional */ }
+
       try {
         const [profileRes, snapshotRes, loopFetch, memoryFetch] = await Promise.allSettled([
           fetch(`${supabaseUrl}/rest/v1/user_ai_profile?user_id=eq.${effectiveUserId}&select=industry,pain_point,avg_hook_score,creative_style,top_performing_models`, { headers: restHeaders }),
@@ -105,6 +148,11 @@ Deno.serve(async (req) => {
           }
         }
       } catch { /* context is optional */ }
+    }
+
+    // Inject pattern constraint into loopContext
+    if (patternConstraintBlock) {
+      loopContext += patternConstraintBlock;
     }
 
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";

@@ -202,12 +202,156 @@ serve(async (req) => {
           `&order=is_winner.desc,confidence.desc&limit=10`,
       );
       const patterns = await res.json();
+      const patternList = Array.isArray(patterns) ? patterns : [];
+
+      // Calculate alignment score for sidebar
+      let alignmentScore = 0;
+      let alignmentLabel = "Sem dados";
+      const winners = patternList.filter((p: any) => p.is_winner);
+      if (winners.length > 0 && patternList.length > 0) {
+        const avgConf = patternList.reduce((s: number, p: any) => s + (p.confidence || 0), 0) / patternList.length;
+        alignmentScore = Math.round(avgConf * 100);
+        if (alignmentScore >= 70) alignmentLabel = "Excelente";
+        else if (alignmentScore >= 50) alignmentLabel = "Bom";
+        else if (alignmentScore >= 30) alignmentLabel = "Moderado";
+        else alignmentLabel = "Em desenvolvimento";
+      }
 
       return new Response(
         JSON.stringify({
-          patterns: Array.isArray(patterns) ? patterns : [],
+          patterns: patternList,
           persona_id,
+          alignment: { score: alignmentScore, label: alignmentLabel },
+          winners_count: winners.length,
+          total_count: patternList.length,
         }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ── ACTION: track_result — compare actual vs predicted after action ──
+    if (action === "track_result") {
+      const { pattern_key, expected_impact_pct, actual_ctr, period_days = 7 } = body;
+      if (!pattern_key) throw new Error("Missing pattern_key for track_result");
+
+      // Fetch the pattern
+      const patRes = await supaFetch(
+        `learned_patterns?user_id=eq.${user_id}&pattern_key=eq.${encodeURIComponent(pattern_key)}&select=*&limit=1`,
+      );
+      const pats = await patRes.json();
+      const pattern = Array.isArray(pats) ? pats[0] : null;
+
+      if (!pattern) {
+        return new Response(
+          JSON.stringify({ error: "Pattern not found", pattern_key }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const expectedCtr = pattern.avg_ctr || 0;
+      const actualCtrNum = Number(actual_ctr) || 0;
+      const deviation = expectedCtr > 0
+        ? Math.round(((actualCtrNum - expectedCtr) / expectedCtr) * 100)
+        : 0;
+
+      let status: string;
+      if (Math.abs(deviation) <= 15) status = "within_expected";
+      else if (deviation > 15) status = "above_expected";
+      else status = "below_expected";
+
+      // Result message
+      const resultMessage = status === "within_expected"
+        ? `Resultado dentro do esperado (desvio: ${deviation > 0 ? "+" : ""}${deviation}%)`
+        : status === "above_expected"
+        ? `Resultado acima do esperado (+${deviation}%) — padrão fortalecido`
+        : `Resultado abaixo do esperado (${deviation}%) — padrão enfraquecido`;
+
+      // Strengthen or weaken the pattern based on result
+      const confAdjust = status === "above_expected" ? 0.05
+        : status === "below_expected" ? -0.08
+        : 0.02; // within range slightly strengthens
+
+      const newConfidence = Math.max(0.1, Math.min(1.0, (pattern.confidence || 0.5) + confAdjust));
+
+      await supaFetch(
+        `learned_patterns?user_id=eq.${user_id}&pattern_key=eq.${encodeURIComponent(pattern_key)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            confidence: newConfidence,
+            last_updated: new Date().toISOString(),
+          }),
+          headers: { Prefer: "return=minimal" },
+        },
+      );
+
+      return new Response(
+        JSON.stringify({
+          pattern_key,
+          expected_ctr: expectedCtr,
+          actual_ctr: actualCtrNum,
+          deviation_pct: deviation,
+          status,
+          result_message: resultMessage,
+          new_confidence: newConfidence,
+          confidence_change: confAdjust > 0 ? `+${(confAdjust * 100).toFixed(0)}%` : `${(confAdjust * 100).toFixed(0)}%`,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ── ACTION: evolve — decay old patterns, strengthen validated ones ──
+    if (action === "evolve") {
+      const res = await supaFetch(
+        `learned_patterns?user_id=eq.${user_id}&persona_id=eq.${persona_id}&select=*`,
+      );
+      const allPatterns = await res.json();
+      if (!Array.isArray(allPatterns) || allPatterns.length === 0) {
+        return new Response(
+          JSON.stringify({ evolved: 0, message: "No patterns to evolve" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      let evolved = 0;
+      const now = Date.now();
+      for (const p of allPatterns) {
+        const lastUpdated = new Date(p.last_updated || p.created_at || now).getTime();
+        const daysSinceUpdate = (now - lastUpdated) / (1000 * 60 * 60 * 24);
+
+        // Time decay: patterns lose confidence over time if not revalidated
+        // 0.5% per day after 14 days of no update
+        let newConf = p.confidence || 0.5;
+        if (daysSinceUpdate > 14) {
+          const decayDays = daysSinceUpdate - 14;
+          newConf = Math.max(0.1, newConf - (decayDays * 0.005));
+        }
+
+        // Weak patterns (conf < 0.2) get removed
+        if (newConf < 0.15) {
+          await supaFetch(
+            `learned_patterns?id=eq.${p.id}`,
+            { method: "DELETE" },
+          );
+          evolved++;
+          continue;
+        }
+
+        if (Math.abs(newConf - (p.confidence || 0)) > 0.01) {
+          await supaFetch(
+            `learned_patterns?id=eq.${p.id}`,
+            {
+              method: "PATCH",
+              body: JSON.stringify({ confidence: Math.round(newConf * 100) / 100 }),
+              headers: { Prefer: "return=minimal" },
+            },
+          );
+          evolved++;
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ evolved, total: allPatterns.length, message: `${evolved} patterns evolved` }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -379,6 +523,115 @@ serve(async (req) => {
         });
       }
 
+      // ── GAP PATTERNS — what's missing ──
+      // Check if common high-performing formats/features are absent
+      const allFormats = new Set(ads.filter(a => a.format).map(a => a.format!));
+      const commonHighPerformers = ["video", "carousel", "ugc"];
+      for (const fmt of commonHighPerformers) {
+        if (!allFormats.has(fmt)) {
+          // This format is not being tested at all — it's a gap
+          const existingWinner = validPatterns.find(p => p.is_winner && p.feature_type === "format");
+          if (existingWinner) {
+            validPatterns.push({
+              pattern_key: `persona:${persona_id}:gap:${fmt}`,
+              label: `Gap: formato "${fmt}" não testado`,
+              feature_type: "gap",
+              feature_value: fmt,
+              variables: { persona_id, feature_type: "gap", feature_value: fmt },
+              avg_ctr: null,
+              avg_cpc: null,
+              avg_roas: null,
+              sample_size: 0,
+              confidence: 0.2,
+              is_winner: false,
+              impact_ctr_pct: "?",
+              impact_roas_pct: "",
+              consistency: 0,
+              insight_text: `Formato "${fmt}" nunca foi testado nesta conta. Contas similares têm bom desempenho com este formato.`,
+              top_ads: [],
+            });
+          }
+        }
+      }
+
+      // ── DEVIATION DETECTION — ads performing far from their pattern group ──
+      for (const group of groups) {
+        if (group.ads.length < 3) continue;
+        const groupCtr = weightedAvg(group.ads, "ctr");
+        if (!groupCtr) continue;
+        // Find outliers: ads deviating > 50% from their group average
+        for (const ad of group.ads) {
+          if (!ad.ctr || ad.impressions < 500) continue;
+          const deviation = Math.abs((ad.ctr - groupCtr) / groupCtr);
+          if (deviation > 0.5) {
+            const isOver = ad.ctr > groupCtr;
+            validPatterns.push({
+              pattern_key: `persona:${persona_id}:deviation:${ad.ad_id}`,
+              label: `Desvio: "${ad.ad_name}" ${isOver ? "acima" : "abaixo"} do grupo`,
+              feature_type: "deviation",
+              feature_value: ad.ad_id,
+              variables: { persona_id, feature_type: "deviation", feature_value: ad.ad_id, group_key: group.key },
+              avg_ctr: ad.ctr,
+              avg_cpc: ad.cpc || null,
+              avg_roas: ad.roas || null,
+              sample_size: 1,
+              confidence: 0.3,
+              is_winner: isOver,
+              impact_ctr_pct: impactPct(ad.ctr, groupCtr),
+              impact_roas_pct: "",
+              consistency: 0,
+              insight_text: `"${ad.ad_name}" desvia ${Math.round(deviation * 100)}% do grupo "${group.label}". ${isOver ? "Investigar o que o diferencia para replicar." : "Considerar pausar ou ajustar."}`,
+              top_ads: [{ ad_id: ad.ad_id, ad_name: ad.ad_name, ctr: ad.ctr, thumbnail_url: ad.thumbnail_url }],
+            });
+          }
+        }
+      }
+
+      // ── COMBINATION PATTERNS — e.g. format + hook type ──
+      const combos: Record<string, AdEntry[]> = {};
+      for (const ad of ads) {
+        if (ad.format && ad.has_hook != null) {
+          const key = `${ad.format}+${ad.has_hook ? "hook" : "no_hook"}`;
+          if (!combos[key]) combos[key] = [];
+          combos[key].push(ad);
+        }
+      }
+      for (const [comboKey, comboAds] of Object.entries(combos)) {
+        if (comboAds.length < 3) continue;
+        const comboCtr = weightedAvg(comboAds, "ctr");
+        if (!comboCtr || !baselineCtr) continue;
+        const cv = coefficientOfVariation(comboAds, "ctr");
+        if (cv > 1.5) continue;
+        const delta = Math.abs((comboCtr - baselineCtr) / baselineCtr);
+        if (delta < 0.15) continue;
+
+        const sampleConf = Math.min(comboAds.length / 10, 1);
+        const consistencyConf = Math.max(0, 1 - cv);
+        const impactConf = Math.min(delta / 0.5, 1);
+        const confidence = Math.round((sampleConf * 0.4 + consistencyConf * 0.3 + impactConf * 0.3) * 100) / 100;
+        const isWinner = comboCtr > baselineCtr * 1.15 && confidence >= 0.25;
+
+        validPatterns.push({
+          pattern_key: `persona:${persona_id}:combo:${comboKey}`,
+          label: `Combinação: ${comboKey.replace("+", " + ")}`,
+          feature_type: "combination",
+          feature_value: comboKey,
+          variables: { persona_id, feature_type: "combination", feature_value: comboKey },
+          avg_ctr: comboCtr,
+          avg_cpc: weightedAvg(comboAds, "cpc"),
+          avg_roas: weightedAvg(comboAds, "roas"),
+          sample_size: comboAds.length,
+          confidence,
+          is_winner: isWinner,
+          impact_ctr_pct: impactPct(comboCtr, baselineCtr),
+          impact_roas_pct: "",
+          consistency: Math.round((1 - cv) * 100) / 100,
+          insight_text: null,
+          top_ads: [...comboAds].sort((a, b) => (b.ctr || 0) - (a.ctr || 0)).slice(0, 3)
+            .map(a => ({ ad_id: a.ad_id, ad_name: a.ad_name, ctr: a.ctr, thumbnail_url: a.thumbnail_url })),
+        });
+      }
+
       // Sort: winners first, then by absolute impact
       validPatterns.sort((a, b) => {
         if (a.is_winner !== b.is_winner) return a.is_winner ? -1 : 1;
@@ -387,8 +640,8 @@ serve(async (req) => {
         return impB - impA;
       });
 
-      // Take top 10 patterns
-      const topPatterns = validPatterns.slice(0, 10);
+      // Take top 15 patterns (increased from 10 to include gaps/deviations/combos)
+      const topPatterns = validPatterns.slice(0, 15);
 
       // 5. Generate AI insights for top patterns
       if (ANTHROPIC_API_KEY && topPatterns.length > 0) {

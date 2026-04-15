@@ -106,6 +106,30 @@ interface FeedItem {
   pattern_type?: string;
   pattern_sample_size?: number;
   pattern_impact_pct?: number;
+  // Pattern reference — links this decision to a learned pattern
+  pattern_ref?: {
+    pattern_key: string;
+    insight: string;
+    impact_pct: string;
+    is_winner: boolean;
+  } | null;
+  // Prediction — data-anchored expected outcome
+  prediction?: {
+    current_value: string;      // e.g. "CTR: 0.82%"
+    expected_value: string;     // e.g. "CTR: 1.02% (+24%)"
+    estimated_impact: string;   // e.g. "+R$2.300/mês"
+    confidence: Confidence;
+    basis: string;              // e.g. "12 criativos em 30 dias"
+  } | null;
+  // Priority rank (1 = most important)
+  priority_position?: number;
+  // Urgency — cost of inaction per day
+  urgency?: {
+    daily_cost: number;         // cents lost per day of inaction
+    message: string;            // human-readable urgency
+  } | null;
+  // Money explanation — transparent estimate logic
+  money_explanation?: string | null;
 }
 
 interface ActionDef {
@@ -147,14 +171,210 @@ function uuid(): string {
 }
 
 // ================================================================
+// PREDICTION ENGINE — data-anchored predictions on every decision
+// ================================================================
+
+function generatePrediction(
+  item: FeedItem,
+  baseline: AccountBaseline | null,
+  learnedPatterns: any[],
+): void {
+  if (!baseline) return;
+  const ms = item.metrics_snapshot as any;
+  if (!ms) return;
+
+  const baselineCtr = baseline.baseline_median_ctr || 0;
+  const monthlyBudget = baseline.monthly_budget_cents || 300000;
+
+  if (item.type === "kill" || item.type === "fix") {
+    const currentCtr = ms.ctr || 0;
+    // Prediction: if fixed/replaced, CTR should reach at least median
+    const expectedCtr = baselineCtr;
+    const ctrImprovement = baselineCtr > 0 && currentCtr > 0
+      ? Math.round(((expectedCtr - currentCtr) / currentCtr) * 100)
+      : 0;
+    // Financial impact: daily savings * 30
+    const monthlyImpact = item.impact_daily_cents * 30;
+
+    item.prediction = {
+      current_value: `CTR: ${(currentCtr * 100).toFixed(2)}%`,
+      expected_value: `CTR: ${(expectedCtr * 100).toFixed(2)}% (${ctrImprovement > 0 ? "+" : ""}${ctrImprovement}%)`,
+      estimated_impact: monthlyImpact > 0
+        ? `${item.type === "kill" ? "-" : "+"}${formatMoney(monthlyImpact)}/mês (${item.type === "kill" ? "perda evitada" : "potencial"})`
+        : "",
+      confidence: item.confidence,
+      basis: `${ms.impressions ? Math.round(ms.impressions / 1000) + "k impressões" : ""} em ${ms.days_active || "?"} dias`,
+    };
+
+    // Money explanation
+    item.money_explanation = item.type === "kill"
+      ? `Gasto atual: ${formatMoney(ms.spend_cents || 0)} em ${ms.days_active || "?"} dias → ${formatMoney(item.impact_daily_cents)}/dia. Projeção mensal: ${formatMoney(monthlyImpact)}`
+      : `Se CTR atingir mediana (${(baselineCtr * 100).toFixed(2)}%): ganho estimado de ${formatMoney(monthlyImpact)}/mês baseado no spend atual`;
+
+    // Urgency — cost of inaction
+    if (item.type === "kill" && item.impact_daily_cents > 0) {
+      item.urgency = {
+        daily_cost: item.impact_daily_cents,
+        message: `Potencial de ${formatMoney(item.impact_daily_cents)}/dia não otimizado enquanto ativo`,
+      };
+    }
+  }
+
+  if (item.type === "scale") {
+    const currentRoas = ms.roas || 0;
+    const additionalBudget = Math.round(item.impact_daily_cents);
+    const monthlyGain = additionalBudget * 30;
+
+    item.prediction = {
+      current_value: `ROAS: ${currentRoas.toFixed(2)}x`,
+      expected_value: `ROAS mantido com +50% budget`,
+      estimated_impact: `+${formatMoney(monthlyGain)}/mês (potencial)`,
+      confidence: item.confidence,
+      basis: `${ms.conversions || 0} conversões em ${ms.days_active || "?"} dias`,
+    };
+
+    item.money_explanation = `ROAS atual ${currentRoas.toFixed(2)}x × aumento de 50% no budget = receita incremental estimada de ${formatMoney(monthlyGain)}/mês`;
+  }
+
+  if (item.type === "pattern") {
+    // Find the matching learned pattern for prediction
+    const winnerPattern = learnedPatterns.find((p: any) => p.is_winner && p.avg_ctr > baselineCtr);
+    if (winnerPattern) {
+      const patCtr = winnerPattern.avg_ctr || 0;
+      const ctrLift = baselineCtr > 0 ? Math.round(((patCtr - baselineCtr) / baselineCtr) * 100) : 0;
+      // Estimate: applying this pattern across budget
+      const estimatedMonthlyGain = Math.round(monthlyBudget * (ctrLift / 100) * 0.3); // conservative 30% of theoretical
+
+      item.prediction = {
+        current_value: `CTR base: ${(baselineCtr * 100).toFixed(2)}%`,
+        expected_value: `CTR esperado: ${(patCtr * 100).toFixed(2)}% (+${ctrLift}%)`,
+        estimated_impact: estimatedMonthlyGain > 0 ? `+${formatMoney(estimatedMonthlyGain)}/mês (potencial)` : "",
+        confidence: (winnerPattern.confidence || 0) > 0.5 ? "high" : "medium",
+        basis: `${winnerPattern.sample_size || "?"} criativos analisados`,
+      };
+    }
+  }
+}
+
+// ================================================================
+// URGENCY SYSTEM — cost of inaction
+// ================================================================
+
+function enrichWithUrgency(items: FeedItem[]): void {
+  for (const item of items) {
+    if (item.urgency) continue; // already set by prediction engine
+    if (item.type === "kill" && item.impact_daily_cents > 0) {
+      item.urgency = {
+        daily_cost: item.impact_daily_cents,
+        message: `Desempenho abaixo do padrão: potencial de ${formatMoney(item.impact_daily_cents)}/dia não capturado`,
+      };
+    } else if (item.type === "fix" && item.impact_daily_cents > 0) {
+      item.urgency = {
+        daily_cost: item.impact_daily_cents,
+        message: `Oportunidade não capturada: ~${formatMoney(item.impact_daily_cents)}/dia`,
+      };
+    }
+  }
+}
+
+// ================================================================
+// ALIGNMENT SCORE — how aligned is the account with patterns
+// ================================================================
+
+function calculateAlignmentScore(
+  ads: AggregatedMetrics[],
+  learnedPatterns: any[],
+  baseline: AccountBaseline | null,
+): { score: number; label: string; detail: string } {
+  if (!learnedPatterns.length || !baseline || ads.length === 0) {
+    return { score: 0, label: "Sem dados", detail: "Dados insuficientes para calcular alinhamento" };
+  }
+
+  const winnerPatterns = learnedPatterns.filter((p: any) => p.is_winner);
+  if (winnerPatterns.length === 0) {
+    return { score: 0, label: "Sem padrões", detail: "Nenhum padrão vencedor detectado ainda" };
+  }
+
+  let aligned = 0;
+  let total = 0;
+  const baselineCtr = baseline.baseline_median_ctr || 0;
+
+  for (const ad of ads) {
+    if (ad.impressions < 200) continue; // skip very new ads
+    total++;
+    // Check if ad follows any winner pattern
+    for (const p of winnerPatterns) {
+      const vars = p.variables || {};
+      const ft = vars.feature_type || "";
+      const fv = vars.feature_value || "";
+      if (
+        (ft === "format" && ad.creative_format === fv) ||
+        (ft === "hook_presence" && ((fv === "with_hook" && ad.has_hook) || (fv === "no_hook" && !ad.has_hook))) ||
+        (ft === "campaign" && ad.campaign_name === fv) ||
+        (ft === "adset" && ad.adset_name === fv)
+      ) {
+        // Ad follows a winner pattern AND performs above baseline
+        if (ad.ctr >= baselineCtr * 0.85) aligned++;
+        break;
+      }
+    }
+  }
+
+  const score = total > 0 ? Math.round((aligned / total) * 100) : 0;
+  let label: string;
+  if (score >= 80) label = "Excelente — conta altamente otimizada";
+  else if (score >= 60) label = "Bom — maioria dos criativos segue padrões";
+  else if (score >= 40) label = "Moderado — oportunidade clara de crescimento";
+  else if (score >= 20) label = "Baixo — muitos criativos fora dos padrões";
+  else label = "Crítico — conta desalinhada dos padrões detectados";
+
+  return {
+    score,
+    label,
+    detail: `${aligned} de ${total} anúncios ativos seguem padrões vencedores`,
+  };
+}
+
+// ================================================================
 // PART 1 — DECISION ENGINE (PROBLEMS)
 // ================================================================
 
 function detectProblems(
   ads: AggregatedMetrics[],
-  baseline: AccountBaseline
+  baseline: AccountBaseline,
+  learnedPatterns: any[] = [],
 ): FeedItem[] {
   const items: FeedItem[] = [];
+
+  // ── Pattern matching helper — find relevant pattern for this ad's features ──
+  function findMatchingPattern(ad: AggregatedMetrics): { pattern_key: string; insight: string; impact_pct: string; is_winner: boolean } | null {
+    if (!learnedPatterns.length) return null;
+    // Match by format, hook, campaign, or adset
+    for (const p of learnedPatterns) {
+      const vars = p.variables || {};
+      const fv = vars.feature_value || "";
+      const ft = vars.feature_type || "";
+      if (
+        (ft === "format" && ad.creative_format === fv) ||
+        (ft === "hook_presence" && ((fv === "with_hook" && ad.has_hook) || (fv === "no_hook" && !ad.has_hook))) ||
+        (ft === "campaign" && ad.campaign_name === fv) ||
+        (ft === "adset" && ad.adset_name === fv)
+      ) {
+        const baselineCtr = baseline.baseline_median_ctr || 0;
+        const patCtr = p.avg_ctr || 0;
+        const impactPct = baselineCtr > 0
+          ? `${patCtr > baselineCtr ? "+" : ""}${Math.round(((patCtr - baselineCtr) / baselineCtr) * 100)}%`
+          : "";
+        return {
+          pattern_key: p.pattern_key,
+          insight: p.insight_text || `${ft}: ${fv} → CTR ${(patCtr * 100).toFixed(2)}%`,
+          impact_pct: impactPct,
+          is_winner: !!p.is_winner,
+        };
+      }
+    }
+    return null;
+  }
 
   for (const ad of ads) {
     // ── LEARNING PHASE PROTECTION ─────────────────────────────────
@@ -965,6 +1185,87 @@ function clusterAndDeduplicate(items: FeedItem[]): FeedItem[] {
 }
 
 // ================================================================
+// PATTERN ENRICHMENT — every decision references learned patterns
+// Data → Pattern → Decision → Action
+// ================================================================
+
+function enrichWithPatternRefs(
+  items: FeedItem[],
+  learnedPatterns: any[],
+  baseline: AccountBaseline | null,
+): FeedItem[] {
+  if (!learnedPatterns.length || !baseline) return items;
+
+  // Build lookup maps from patterns
+  const patternsByFormat: Record<string, any> = {};
+  const patternsByCampaign: Record<string, any> = {};
+  const patternsByAdset: Record<string, any> = {};
+  const patternsByHook: Record<string, any> = {};
+  const winnerPatterns: any[] = [];
+
+  for (const p of learnedPatterns) {
+    const vars = p.variables || {};
+    const ft = vars.feature_type || "";
+    const fv = vars.feature_value || "";
+    if (ft === "format") patternsByFormat[fv] = p;
+    else if (ft === "campaign") patternsByCampaign[fv] = p;
+    else if (ft === "adset") patternsByAdset[fv] = p;
+    else if (ft === "hook_presence") patternsByHook[fv] = p;
+    if (p.is_winner) winnerPatterns.push(p);
+  }
+
+  const bestWinner = winnerPatterns[0] || null;
+
+  for (const item of items) {
+    // Skip items that already have pattern refs (pattern type items)
+    if (item.pattern_ref) continue;
+    if (item.type === "pattern") continue;
+
+    const snap = item.metrics_snapshot || {};
+    const adCampaign = snap.campaign_name as string || "";
+    const adAdset = snap.adset_name as string || "";
+    const adFormat = snap.creative_format as string || "";
+    const adHasHook = snap.has_hook as boolean;
+
+    // Try to find a matching pattern for this ad
+    let match: any = null;
+    if (adFormat && patternsByFormat[adFormat]) match = patternsByFormat[adFormat];
+    else if (adCampaign && patternsByCampaign[adCampaign]) match = patternsByCampaign[adCampaign];
+    else if (adAdset && patternsByAdset[adAdset]) match = patternsByAdset[adAdset];
+    else if (adHasHook != null) {
+      const hookKey = adHasHook ? "with_hook" : "no_hook";
+      if (patternsByHook[hookKey]) match = patternsByHook[hookKey];
+    }
+
+    // If no specific match, use the strongest winner pattern as context
+    if (!match && bestWinner) match = bestWinner;
+
+    if (match) {
+      const baselineCtr = baseline.baseline_median_ctr || 0;
+      const patCtr = match.avg_ctr || 0;
+      const impactPct = baselineCtr > 0
+        ? `${patCtr > baselineCtr ? "+" : ""}${Math.round(((patCtr - baselineCtr) / baselineCtr) * 100)}%`
+        : "";
+
+      item.pattern_ref = {
+        pattern_key: match.pattern_key || "",
+        insight: match.insight_text || `Pattern: ${(match.variables?.feature_type || "")}:${(match.variables?.feature_value || "")}`,
+        impact_pct: impactPct,
+        is_winner: !!match.is_winner,
+      };
+
+      // Enrich reason with pattern context (Problem → Pattern → Action structure)
+      if (match.insight_text) {
+        const patternLine = `\nPadrão detectado: ${match.insight_text}`;
+        item.reason = item.reason + patternLine;
+      }
+    }
+  }
+
+  return items;
+}
+
+// ================================================================
 // PRIORITIZATION — RANKED BY FINANCIAL IMPACT
 // ================================================================
 
@@ -1416,28 +1717,41 @@ serve(async (req: Request) => {
 
     // ── REAL MODE ──────────────────────────────────────────────────
 
-    // 1. Fetch data
-    const [ads, baseline] = await Promise.all([
+    // 1. Fetch data + learned patterns (patterns are the core decision engine)
+    const [ads, baseline, learnedPatternsRes] = await Promise.all([
       fetchAdsWithMetrics(account_id),
       fetchAccountBaseline(account_id),
+      // Load account-level patterns for pattern-driven decisions
+      supabase
+        .from("learned_patterns")
+        .select("pattern_key, variables, avg_ctr, avg_cpc, avg_roas, confidence, is_winner, insight_text, sample_size")
+        .or(`user_id.eq.${account_id}`)
+        .order("confidence", { ascending: false })
+        .limit(20)
+        .then((r: any) => r.data || [])
+        .catch(() => []),
     ]);
+    const learnedPatterns: any[] = Array.isArray(learnedPatternsRes) ? learnedPatternsRes : [];
 
     let allItems: FeedItem[] = [];
 
     if (ads.length >= 3 && baseline) {
-      // Full analysis mode
-      const problems = detectProblems(ads, baseline);
+      // Full analysis mode — patterns drive all decisions
+      const problems = detectProblems(ads, baseline, learnedPatterns);
       const patterns = detectPatterns(ads, baseline);
       allItems = [...problems, ...patterns];
     } else if (ads.length > 0 && baseline) {
-      // Some data — run problems only, add low data insights
-      const problems = detectProblems(ads, baseline);
+      // Some data — run problems with pattern context
+      const problems = detectProblems(ads, baseline, learnedPatterns);
       const lowData = generateLowDataInsights(ads, baseline, account_id);
       allItems = [...problems, ...lowData];
     } else {
       // Low data mode — still provide value
       allItems = generateLowDataInsights(ads, baseline, account_id);
     }
+
+    // 1b. Pattern enrichment — every decision references the relevant pattern
+    allItems = enrichWithPatternRefs(allItems, learnedPatterns, baseline);
 
     // 2. Anti-spam clustering
     allItems = clusterAndDeduplicate(allItems);
@@ -1454,29 +1768,74 @@ serve(async (req: Request) => {
       if (!item.metrics || item.metrics.length === 0) {
         item.metrics = buildMetricPills(item);
       }
+      // Generate prediction — data-anchored expected outcome for every decision
+      generatePrediction(item, baseline, learnedPatterns);
     }
     enrichWithGroupNotes(allItems);
 
-    // 5. FEED NEVER EMPTY guarantee
+    // 4b. Urgency system — cost of inaction on every actionable item
+    enrichWithUrgency(allItems);
+
+    // 4c. Priority positions — rank number for top items
+    allItems.forEach((item, idx) => {
+      item.priority_position = idx + 1;
+    });
+
+    // 4d. Alignment score — how aligned is the account with patterns
+    const alignmentScore = calculateAlignmentScore(ads, learnedPatterns, baseline);
+
+    // 5. FEED NEVER EMPTY guarantee — pattern-aware fallback
     if (allItems.length === 0) {
-      allItems.push({
-        ad_id: null,
-        account_id: account_id,
-        type: "insight",
-        score: 10,
-        headline: "Conta saudável — nenhum problema detectado",
-        reason: "Suas campanhas estão rodando dentro dos parâmetros esperados. Continue monitorando.",
-        impact_type: "learning",
-        impact_daily_cents: 0,
-        impact_7d_cents: 0,
-        confidence: "medium",
-        impact_basis: "Baseado na análise completa da conta",
-        metrics_snapshot: {},
-        actions: [
-          { id: uuid(), label: "Ver métricas", type: "neutral", requires_confirmation: false },
-        ],
-        cluster_key: "insight_healthy",
-      });
+      if (learnedPatterns.length > 0) {
+        // Has patterns but no problems — show pattern health
+        const topPattern = learnedPatterns.find((p: any) => p.is_winner) || learnedPatterns[0];
+        allItems.push({
+          ad_id: null,
+          account_id: account_id,
+          type: "pattern",
+          score: 30,
+          headline: "Conta saudável — padrões ativos funcionando",
+          reason: topPattern?.insight_text
+            ? `Padrão principal ativo: ${topPattern.insight_text}\nSuas campanhas estão alinhadas com os padrões detectados.`
+            : "Padrões detectados estão guiando suas campanhas. Continue monitorando.",
+          impact_type: "learning",
+          impact_daily_cents: 0,
+          impact_7d_cents: 0,
+          confidence: "medium",
+          impact_basis: `Baseado em ${learnedPatterns.length} padrões detectados`,
+          metrics_snapshot: {},
+          actions: [
+            { id: uuid(), label: "Ver padrões", type: "neutral", requires_confirmation: false },
+          ],
+          cluster_key: "pattern_healthy",
+          pattern_ref: topPattern ? {
+            pattern_key: topPattern.pattern_key,
+            insight: topPattern.insight_text || "Pattern active",
+            impact_pct: "",
+            is_winner: !!topPattern.is_winner,
+          } : null,
+        });
+      } else {
+        // No patterns yet — honest fallback
+        allItems.push({
+          ad_id: null,
+          account_id: account_id,
+          type: "insight",
+          score: 10,
+          headline: "Dados insuficientes para detectar padrões",
+          reason: "Ainda não há dados suficientes para identificar padrões fortes na sua conta. Continue rodando suas campanhas — os padrões aparecem automaticamente.",
+          impact_type: "learning",
+          impact_daily_cents: 0,
+          impact_7d_cents: 0,
+          confidence: "low",
+          impact_basis: "Aguardando acúmulo de dados de performance",
+          metrics_snapshot: {},
+          actions: [
+            { id: uuid(), label: "Ver métricas", type: "neutral", requires_confirmation: false },
+          ],
+          cluster_key: "insight_no_patterns",
+        });
+      }
     }
 
     // 6. Persist
@@ -1544,6 +1903,13 @@ serve(async (req: Request) => {
           leaking_now: allItems.filter(d => d.type === "kill").reduce((s, d) => s + d.impact_daily_cents, 0),
           capturable_now: allItems.filter(d => d.type === "fix" || d.type === "scale").reduce((s, d) => s + d.impact_daily_cents, 0),
         },
+        alignment: alignmentScore,
+        top_opportunity: allItems.length > 0 ? {
+          headline: allItems[0].headline,
+          type: allItems[0].type,
+          estimated_impact: allItems[0].prediction?.estimated_impact || formatMoney(allItems[0].impact_daily_cents * 30) + "/mês",
+          priority: 1,
+        } : null,
       }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
     );

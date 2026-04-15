@@ -194,33 +194,47 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Winner hook types from learned_patterns — highest priority signal
+      // Winner hook types from learned_patterns — HIGHEST PRIORITY — patterns control generation
       const allPatterns = winnersRes.status === 'fulfilled' ? winnersRes.value.data || [] : [];
       if (allPatterns.length > 0) {
         const winnerPatterns = allPatterns.filter((p: any) => p.is_winner && p.confidence > 0.3);
         const loserPatterns = allPatterns.filter((p: any) => !p.is_winner && p.confidence > 0.3);
-        
+
         if (winnerPatterns.length > 0) {
           const lines = winnerPatterns.filter((p: any) => p.insight_text).map((p: any) => {
             const ctr = p.avg_ctr ? ` CTR ${(p.avg_ctr * 100).toFixed(2)}%` : '';
             const roas = p.avg_roas ? ` ROAS ${p.avg_roas.toFixed(1)}x` : '';
-            // Extract conversion data from variables if available
             const vars = (p.variables as any) || {};
             const lastEntry = vars.history?.[0] || {};
             const conv = lastEntry.conversions > 0 ? ` | ${lastEntry.conversions} conv` : '';
             const cpa = lastEntry.cpa ? ` | CPA R$${lastEntry.cpa.toFixed(0)}` : '';
             return `✓ ${p.insight_text}${ctr}${roas}${conv}${cpa}`;
           }).join('\n');
-          userContext += `\n\n=== WHAT WORKS FOR THIS ACCOUNT (real performance) ===\n${lines}\nGenerate hooks that build on these proven angles. Prioritize angles with conversions and ROAS > 1.`;
+          userContext += `\n\n═══════════════════════════════════════════════════════════
+PATTERN CONSTRAINT — MANDATORY
+═══════════════════════════════════════════════════════════
+These patterns are PROVEN by real data from this account.
+EVERY hook MUST be derived from or aligned with these patterns.
+Do NOT generate free-form hooks that ignore these patterns.
+
+WINNING PATTERNS (generate variations based on these):
+${lines}
+
+RULE: At least 70% of generated hooks must directly reference one of these patterns.
+Each hook's "why" field must cite which pattern it follows.
+═══════════════════════════════════════════════════════════`;
         }
-        
+
         if (loserPatterns.length > 0) {
           const lines = loserPatterns.filter((p: any) => p.insight_text).slice(0, 5).map((p: any) => {
             const ctr = p.avg_ctr ? ` CTR ${(p.avg_ctr * 100).toFixed(2)}%` : '';
             return `✗ ${p.insight_text}${ctr}`;
           }).join('\n');
-          userContext += `\n\n=== WHAT DOES NOT WORK — AVOID THESE ANGLES ===\n${lines}`;
+          userContext += `\n\n=== ANTI-PATTERNS — NEVER USE THESE ANGLES ===\n${lines}\nHooks that follow these losing patterns MUST score below 4.0.`;
         }
+      } else {
+        // No patterns — be transparent
+        userContext += `\n\n=== NO PROVEN PATTERNS YET ===\nThis account does not have enough data to identify strong patterns.\nGenerate hooks based on available account data. Do NOT pretend patterns exist.`;
       }
     }
 

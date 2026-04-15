@@ -38,13 +38,54 @@ Deno.serve(async (req) => {
 
     // Fetch accumulated creative context from the loop
     let loopContext = "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const restHeaders = { apikey: svcKey, Authorization: `Bearer ${svcKey}` };
+
+    // ── Load learned patterns for constraint ──
+    let patternConstraintBlock = "";
     try {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      const [winnersRes, antiRes] = await Promise.all([
+        fetch(`${supabaseUrl}/rest/v1/learned_patterns?is_winner=eq.true&confidence=gte.0.25&order=impact_pct.desc&limit=10`, { headers: restHeaders }),
+        fetch(`${supabaseUrl}/rest/v1/learned_patterns?is_winner=eq.false&impact_pct=lt.-10&confidence=gte.0.25&order=impact_pct.asc&limit=5`, { headers: restHeaders }),
+      ]);
+      const winners = winnersRes.ok ? await winnersRes.json() : [];
+      const antis = antiRes.ok ? await antiRes.json() : [];
+
+      if (winners.length > 0 || antis.length > 0) {
+        patternConstraintBlock = `\n\n════════════════════════════════════════
+PATTERN CONSTRAINT — MANDATORY FOR BRIEF
+════════════════════════════════════════
+
+PROVEN WINNING PATTERNS (from real account data):
+${winners.map((w: any) => `• ${w.pattern_key}: ${w.ai_insight || ''} (impact: +${w.impact_pct}%, confidence: ${w.confidence}, samples: ${w.sample_size || '?'})`).join('\n')}
+
+${antis.length > 0 ? `ANTI-PATTERNS (proven to underperform):
+${antis.map((a: any) => `• AVOID: ${a.pattern_key}: ${a.ai_insight || ''} (impact: ${a.impact_pct}%)`).join('\n')}` : ''}
+
+RULES FOR BRIEF:
+1. "formats" MUST prioritize formats that match winning patterns. Cite which pattern supports each format choice.
+2. "visual_direction" MUST incorporate visual elements from winning patterns.
+3. "do_not" MUST include all anti-patterns explicitly.
+4. "key_messages" MUST align with proven messaging patterns when they exist.
+5. If no pattern fits a recommendation, state it transparently in the field.
+════════════════════════════════════════`;
+      } else {
+        patternConstraintBlock = `\n\n════════════════════════════════════════
+NO PROVEN PATTERNS YET
+════════════════════════════════════════
+This account has no statistically validated patterns yet.
+Build the brief on general best practices. Be transparent about this.
+════════════════════════════════════════`;
+      }
+    } catch { /* patterns optional */ }
+
+    try {
         const loopRes = await fetch(`${supabaseUrl}/functions/v1/creative-loop`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
+            Authorization: `Bearer ${svcKey}`,
           },
           body: JSON.stringify({ action: "get_context", user_id }),
         });
@@ -55,6 +96,9 @@ Deno.serve(async (req) => {
           }
         }
       } catch { /* loop context is optional */ }
+
+    // Inject pattern constraint
+    loopContext += patternConstraintBlock;
 
     const client = new Anthropic({ apiKey: Deno.env.get("ANTHROPIC_API_KEY") ?? "" });
 

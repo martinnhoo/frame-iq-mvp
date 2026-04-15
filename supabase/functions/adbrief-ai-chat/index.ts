@@ -891,11 +891,42 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
       console.error("[trend-ctx error]", String(trendErr));
     }
 
+    // ── PATTERN-LOCK: patterns are the primary decision engine ──
+    // When patterns exist, they MUST be the foundation of all advice
+    const hasPatterns = winners.length > 0 || perfPatterns.length > 0;
+
     const learnedCtx = [
+      // PATTERN PRIORITY BLOCK — must be first in context
+      hasPatterns
+        ? `═══════════════════════════════════
+PADRÕES DA CONTA — PRIORIDADE MÁXIMA
+═══════════════════════════════════
+REGRA: Padrões detectados são a BASE de toda recomendação.
+- Toda sugestão de hook, criativo, copy ou estratégia DEVE referenciar um padrão.
+- NUNCA dê conselho genérico quando há padrões disponíveis.
+- Formato obrigatório: cite o padrão, explique o porquê, recomende ação.
+- Se o usuário pedir algo que contradiz um padrão: avise antes de prosseguir.
+
+PREVISÕES — regras obrigatórias:
+- Toda recomendação DEVE incluir uma previsão baseada em dados reais.
+- Formato: "CTR atual: X% → Esperado: Y% (+Z%). Impacto estimado: +R$X/mês"
+- NUNCA invente números. Use os dados dos padrões (avg_ctr, sample_size, confidence).
+- Sempre mostre: baseline → esperado → impacto financeiro → confiança → base de dados.
+- Se a confiança for baixa, diga: "Previsão com confiança baixa — X ads analisados"
+═══════════════════════════════════`
+        : `═══════════════════════════════════
+SEM PADRÕES FORTES DETECTADOS
+═══════════════════════════════════
+Esta conta ainda não tem padrões validados com dados suficientes.
+- Seja honesto: "Ainda não há dados suficientes para gerar previsões confiáveis."
+- NÃO invente padrões, previsões, ou dê conselhos genéricos como se fossem da conta.
+- Trabalhe com os dados reais disponíveis, sem extrapolar.
+- NUNCA inclua estimativas financeiras sem base em dados reais.
+═══════════════════════════════════`,
       winners.length
-        ? `PADRÕES VENCEDORES:\n${winners
+        ? `PADRÕES VENCEDORES (usar como base para toda recomendação):\n${winners
             .slice(0, 5)
-            .map((p) => `  - ${p.insight_text} (confiança: ${(p.confidence * 100).toFixed(0)}%)`)
+            .map((p) => `  ✓ ${p.insight_text} (confiança: ${(p.confidence * 100).toFixed(0)}%, ${p.sample_size || "?"} ads)`)
             .join("\n")}`
         : "",
       perfPatterns.length

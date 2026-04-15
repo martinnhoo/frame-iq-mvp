@@ -352,18 +352,160 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         )}
 
-        {/* Reason lines — supporting data */}
-        {reasonLines.length > 0 && (
-          <div style={{ marginBottom: 6 }}>
-            {reasonLines.map((line, i) => (
-              <div key={i} style={{
-                fontSize: 11.5, color: 'rgba(255,255,255,0.50)',
-                lineHeight: 1.55,
+        {/* ═══ PROBLEM → PATTERN → PREDICTION → PRIORITY → ACTION ═══ */}
+        {(decision as any).pattern_ref || (decision as any).prediction ? (
+          <div style={{ marginBottom: 8 }}>
+            {/* PROBLEM */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4,
+            }}>
+              <span style={{
+                fontSize: 8.5, fontWeight: 800, color: 'rgba(255,255,255,0.35)',
+                letterSpacing: '0.10em', minWidth: 65,
+              }}>PROBLEMA</span>
+              <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
+                {reasonLines[0] || decision.headline}
+              </span>
+            </div>
+
+            {/* PATTERN */}
+            {(decision as any).pattern_ref && (
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: 5, marginBottom: 4,
+                background: 'rgba(85,60,154,0.08)',
+                border: '1px solid rgba(85,60,154,0.15)',
+                borderRadius: 2, padding: '4px 6px',
               }}>
-                {line}
+                <span style={{
+                  fontSize: 8.5, fontWeight: 800, color: '#9f7aea',
+                  letterSpacing: '0.10em', minWidth: 65, paddingTop: 1,
+                }}>PADRÃO</span>
+                <div>
+                  <div style={{ fontSize: 11.5, color: '#9f7aea', fontWeight: 600, lineHeight: 1.4 }}>
+                    {(decision as any).pattern_ref.insight}
+                  </div>
+                  {(decision as any).pattern_ref.impact_pct && (
+                    <span style={{
+                      fontSize: 10,
+                      color: (decision as any).pattern_ref.is_winner ? '#0ea5e9' : '#D63B3B',
+                      fontWeight: 600,
+                    }}>
+                      Impacto: {(decision as any).pattern_ref.impact_pct}
+                    </span>
+                  )}
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* PREDICTION */}
+            {(decision as any).prediction && (
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: 5, marginBottom: 4,
+                background: 'rgba(14,165,233,0.06)',
+                border: '1px solid rgba(14,165,233,0.12)',
+                borderRadius: 2, padding: '4px 6px',
+              }}>
+                <span style={{
+                  fontSize: 8.5, fontWeight: 800, color: '#0ea5e9',
+                  letterSpacing: '0.10em', minWidth: 65, paddingTop: 1,
+                }}>PREVISÃO</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+                    <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)' }}>
+                      {(decision as any).prediction.current_value}
+                    </span>
+                    <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.15)' }}>→</span>
+                    <span style={{ fontSize: 10.5, color: '#0ea5e9', fontWeight: 600 }}>
+                      {(decision as any).prediction.expected_value}
+                    </span>
+                  </div>
+                  {(decision as any).prediction.estimated_impact && (
+                    <div style={{ fontSize: 11.5, color: '#0ea5e9', fontWeight: 700, lineHeight: 1.4 }}>
+                      {(decision as any).prediction.estimated_impact}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.25)', marginTop: 1 }}>
+                    Confiança: {(decision as any).prediction.confidence === 'high' ? 'Alta' : (decision as any).prediction.confidence === 'medium' ? 'Média' : 'Baixa'}
+                    {' · '}{(decision as any).prediction.basis}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PRIORITY */}
+            {(decision as any).priority_position && (decision as any).priority_position <= 5 && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4,
+              }}>
+                <span style={{
+                  fontSize: 8.5, fontWeight: 800, color: 'rgba(255,255,255,0.35)',
+                  letterSpacing: '0.10em', minWidth: 65,
+                }}>PRIORIDADE</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 700,
+                  color: (decision as any).priority_position === 1 ? '#f59e0b' : 'rgba(255,255,255,0.50)',
+                }}>
+                  #{(decision as any).priority_position}
+                  {(decision as any).priority_position === 1 && ' — Ação mais importante agora'}
+                </span>
+              </div>
+            )}
+
+            {/* URGENCY */}
+            {(decision as any).urgency && (
+              <div style={{
+                fontSize: 10.5, color: 'rgba(214,59,59,0.65)', fontWeight: 500,
+                marginBottom: 4, paddingLeft: 70,
+              }}>
+                {(decision as any).urgency.message}
+              </div>
+            )}
+
+            {/* ACTION (remaining reason lines) */}
+            {reasonLines.length > 1 && (
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: 5,
+              }}>
+                <span style={{
+                  fontSize: 8.5, fontWeight: 800, color: 'rgba(255,255,255,0.35)',
+                  letterSpacing: '0.10em', minWidth: 65, paddingTop: 1,
+                }}>AÇÃO</span>
+                <div>
+                  {reasonLines.slice(1).filter(l => !l.startsWith('Padrão detectado:')).map((line, i) => (
+                    <div key={i} style={{
+                      fontSize: 11.5, color: 'rgba(255,255,255,0.50)', lineHeight: 1.55,
+                    }}>
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MONEY EXPLANATION */}
+            {(decision as any).money_explanation && (
+              <div style={{
+                fontSize: 10, color: 'rgba(255,255,255,0.20)',
+                marginTop: 4, paddingLeft: 70, lineHeight: 1.4,
+              }}>
+                {(decision as any).money_explanation}
+              </div>
+            )}
           </div>
+        ) : (
+          /* Fallback: original reason lines when no pattern_ref or prediction */
+          reasonLines.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              {reasonLines.map((line, i) => (
+                <div key={i} style={{
+                  fontSize: 11.5, color: 'rgba(255,255,255,0.50)',
+                  lineHeight: 1.55,
+                }}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          )
         )}
 
         {/* 4. SUPPORTING DATA — metrics */}

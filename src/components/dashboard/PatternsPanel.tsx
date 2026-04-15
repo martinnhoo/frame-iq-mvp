@@ -46,6 +46,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, compact 
   const [loading, setLoading] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [alignment, setAlignment] = useState<{ score: number; label: string } | null>(null);
   const navigate = useNavigate();
 
   // Fetch cached patterns
@@ -69,6 +70,8 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, compact 
         feature_value: p.variables?.feature_value,
       }));
       setPatterns(mapped);
+      // Update alignment score from response
+      if (data?.alignment) setAlignment(data.alignment);
     } catch (err) {
       console.error("PatternsPanel fetch error:", err);
       setError("Failed to load patterns");
@@ -138,7 +141,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, compact 
             fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)",
             letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: F,
           }}>
-            Patterns
+            What works
           </span>
           {patterns.length > 0 && (
             <span style={{
@@ -183,6 +186,36 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, compact 
         </div>
       )}
 
+      {/* Alignment Score */}
+      {alignment && alignment.score > 0 && patterns.length > 0 && (
+        <div style={{
+          padding: "4px 14px 8px",
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: "50%",
+            background: `conic-gradient(${alignment.score >= 70 ? "#34d399" : alignment.score >= 40 ? "#f59e0b" : "#f87171"} ${alignment.score * 3.6}deg, rgba(255,255,255,0.06) 0deg)`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <div style={{
+              width: 24, height: 24, borderRadius: "50%", background: "#0F141A",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.60)", fontFamily: M,
+            }}>
+              {alignment.score}%
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.50)", fontFamily: F }}>
+              Pattern Alignment
+            </div>
+            <div style={{ fontSize: 9.5, color: "rgba(255,255,255,0.25)", fontFamily: F }}>
+              {alignment.label}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Empty state */}
       {isEmpty && (
         <div style={{ padding: "8px 14px 16px" }}>
@@ -190,7 +223,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, compact 
             fontSize: 12, color: "rgba(255,255,255,0.30)", fontFamily: F,
             margin: 0, lineHeight: 1.5,
           }}>
-            No patterns detected yet. Patterns appear automatically as your ads accumulate performance data.
+            Not enough data to generate reliable predictions yet. Patterns appear automatically as your ads accumulate performance data.
           </p>
         </div>
       )}
