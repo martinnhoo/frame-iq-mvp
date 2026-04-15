@@ -1,7 +1,13 @@
 /**
  * UsageBar — Inline usage bar for sidebar footer.
- * Shows execution capacity, NOT credits.
- * Clean startup style. No boxes, no borders. Just text + bar.
+ * Shows execution capacity as PERCENTAGE + ascending action count.
+ * Never exposes raw credit numbers. Premium performance feel.
+ *
+ * Display logic:
+ *  Normal (<75%):  "Uso mensal"  ██████░░░░  42%
+ *  Warning (75-89%): "Uso mensal"  ████████░░  78% + warning text
+ *  Critical (90%+):  "Uso mensal"  █████████░  94% + critical text
+ *  Empty (100%):     "Uso mensal"  ██████████  100% + limit reached
  */
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,14 +68,15 @@ export function UsageBar({ userId, plan }: Props) {
   const total = (usage && usage.total > 0) ? usage.total : planPool;
   const remaining = (usage && usage.total > 0) ? usage.remaining : planPool;
   const used = total - remaining;
-  const usedPct = total > 0 ? (used / total) * 100 : 0;
+  const usedPct = total > 0 ? Math.round((used / total) * 100) : 0;
   const isEmpty = remaining <= 0 && total > 0;
   const isLow = usedPct >= 75 && !isEmpty;
   const isCritical = usedPct >= 90 && !isEmpty;
 
   // Colors
-  const countColor = isEmpty ? "#ef4444" : isCritical ? "#ef4444" : isLow ? "#eab308" : "rgba(255,255,255,0.9)";
+  const pctColor = isEmpty ? "#ef4444" : isCritical ? "#ef4444" : isLow ? "#eab308" : "rgba(255,255,255,0.55)";
   const barFill = isEmpty ? "#ef4444" : isCritical ? "#ef4444" : isLow ? "#eab308" : "#0ea5e9";
+  const labelColor = isEmpty ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.4)";
 
   if (loading && !usage) {
     return (
@@ -81,24 +88,23 @@ export function UsageBar({ userId, plan }: Props) {
 
   return (
     <div style={{ padding: "10px 14px 8px", margin: "0 6px" }}>
-      {/* Label + numbers */}
+      {/* Label + percentage */}
       <div style={{
         display: "flex", alignItems: "baseline", justifyContent: "space-between",
         marginBottom: 6,
       }}>
         <span style={{
-          fontSize: 12, fontWeight: 500,
-          color: "rgba(255,255,255,0.5)",
+          fontSize: 11.5, fontWeight: 500,
+          color: labelColor,
         }}>
           {pt ? "Uso mensal" : es ? "Uso mensual" : "Monthly usage"}
         </span>
         <span style={{
           fontSize: 12, fontWeight: 600,
-          color: countColor,
+          color: pctColor,
           fontVariantNumeric: "tabular-nums",
         }}>
-          {remaining.toLocaleString()}
-          <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 400 }}> / {total.toLocaleString()}</span>
+          {usedPct}%
         </span>
       </div>
 
@@ -116,17 +122,20 @@ export function UsageBar({ userId, plan }: Props) {
         }} />
       </div>
 
-      {/* Warnings */}
-      {isCritical && !isEmpty && (
-        <p style={{ margin: "6px 0 0", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
-          {pt ? "Uso se aproximando do limite" : es ? "Uso acercándose al límite" : "Usage approaching monthly limit"}
-        </p>
-      )}
-      {isEmpty && (
-        <p style={{ margin: "6px 0 0", fontSize: 11, fontWeight: 600, color: "#ef4444" }}>
+      {/* Status text — contextual */}
+      {isEmpty ? (
+        <p style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 600, color: "#ef4444", lineHeight: 1.4 }}>
           {pt ? "Limite mensal atingido" : es ? "Límite mensual alcanzado" : "Monthly limit reached"}
         </p>
-      )}
+      ) : isCritical ? (
+        <p style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 500, color: "#ef4444", lineHeight: 1.4 }}>
+          {pt ? "Quase no limite — considere expandir" : es ? "Casi en el límite — considere expandir" : "Near limit — consider expanding"}
+        </p>
+      ) : isLow ? (
+        <p style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 500, color: "rgba(234,179,8,0.7)", lineHeight: 1.4 }}>
+          {pt ? "Uso elevado este mês" : es ? "Uso elevado este mes" : "High usage this month"}
+        </p>
+      ) : null}
     </div>
   );
 }

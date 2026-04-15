@@ -113,6 +113,31 @@ const FOOTER: Record<string, string> = {
   en: "Card required · No charge for 3 days · Cancel anytime",
 };
 
+// ── Extra capacity packs ────────────────────────────────────────────────────
+const CAPACITY_PACKS = [
+  { actions: 100, price: "$29", id: "pack_100" },
+  { actions: 300, price: "$79", id: "pack_300" },
+  { actions: 1000, price: "$197", id: "pack_1000" },
+];
+
+const CAPACITY_LABEL: Record<string, Record<string, string>> = {
+  title: {
+    pt: "Ou adicione capacidade extra",
+    es: "O agrega capacidad extra",
+    en: "Or add extra capacity",
+  },
+  subtitle: {
+    pt: "Sem mudar de plano · uso imediato",
+    es: "Sin cambiar de plan · uso inmediato",
+    en: "No plan change · instant access",
+  },
+  actions_label: {
+    pt: "ações",
+    es: "acciones",
+    en: "actions",
+  },
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function UpgradeWall({ onClose, trigger = "chat", inline = false }: UpgradeWallProps) {
   const navigate = useNavigate();
@@ -224,6 +249,26 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
           ))}
         </div>
 
+        {/* Extra capacity packs */}
+        <div style={{ marginTop: 20, padding: "16px 0 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", textAlign: "center", marginBottom: 4 }}>
+            {CAPACITY_LABEL.title[lang] || CAPACITY_LABEL.title.en}
+          </p>
+          <p style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center", marginBottom: 12 }}>
+            {CAPACITY_LABEL.subtitle[lang] || CAPACITY_LABEL.subtitle.en}
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            {CAPACITY_PACKS.map(pack => (
+              <button key={pack.id} onClick={() => handlePlan(pack.id, `/dashboard?pack=${pack.id}`)} disabled={!!loading}
+                style={{ flex: 1, padding: "10px 6px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", textAlign: "center", transition: "all 0.15s", opacity: loading && loading !== pack.id ? 0.5 : 1 }}>
+                <p style={{ fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>+{pack.actions.toLocaleString()}</p>
+                <p style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>{CAPACITY_LABEL.actions_label[lang] || "actions"}</p>
+                <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "#0ea5e9" }}>{pack.price}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Footer */}
         <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.2)", textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>
           {FOOTER[lang] || FOOTER.en}
@@ -296,7 +341,32 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
         ))}
       </div>
 
-      <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.18)", textAlign: "center" }}>
+      {/* Extra capacity packs */}
+      <div style={{ marginTop: 16, padding: "16px 0 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+          <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.45)" }}>
+            {CAPACITY_LABEL.title[lang] || CAPACITY_LABEL.title.en}
+          </span>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>·</span>
+          <span style={{ fontFamily: M, fontSize: 11, color: "rgba(255,255,255,0.22)" }}>
+            {CAPACITY_LABEL.subtitle[lang] || CAPACITY_LABEL.subtitle.en}
+          </span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+          {CAPACITY_PACKS.map(pack => (
+            <button key={pack.id} onClick={() => handlePlan(pack.id, `/dashboard?pack=${pack.id}`)} disabled={!!loading}
+              style={{ padding: "12px 8px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", cursor: "pointer", textAlign: "center", transition: "all 0.15s", opacity: loading && loading !== pack.id ? 0.5 : 1 }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.background = "rgba(14,165,233,0.04)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}>
+              <p style={{ fontFamily: F, fontSize: 16, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em" }}>+{pack.actions.toLocaleString()}</p>
+              <p style={{ fontFamily: M, fontSize: 10, color: "rgba(255,255,255,0.30)", marginBottom: 3 }}>{CAPACITY_LABEL.actions_label[lang] || "actions"}</p>
+              <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#0ea5e9" }}>{pack.price}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.18)", textAlign: "center", marginTop: 12 }}>
         {FOOTER[lang] || FOOTER.en}
       </p>
     </div>

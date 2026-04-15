@@ -472,7 +472,7 @@ const APIAccessDemo = () => (
         { label: "Latency", value: "3.2s" },
         { label: "Ads Processed", value: "24" },
         { label: "Rate Limit", value: "847/1000" },
-        { label: "Credits Used", value: "24" },
+        { label: "Actions", value: "24" },
       ].map(s => (
         <div key={s.label} className="p-3 rounded-xl text-center" style={{ background: '#0f0f0f', border: '1px solid #1a1a1a' }}>
           <div style={{ color: '#666', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 4 }}>{s.label}</div>

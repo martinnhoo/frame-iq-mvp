@@ -213,7 +213,7 @@ export default function Onboarding() {
           toast.error(msg);
         } else if (claimResult?.success) {
           setReferralClaimed(true);
-          toast.success(lang === "pt" ? `+${claimResult.bonus} créditos bônus!` : lang === "es" ? `+${claimResult.bonus} créditos bonus!` : `+${claimResult.bonus} bonus credits!`);
+          toast.success(lang === "pt" ? `+${claimResult.bonus} de capacidade extra!` : lang === "es" ? `+${claimResult.bonus} de capacidad extra!` : `+${claimResult.bonus} extra capacity!`);
         } else if (claimResult?.error) {
           // Edge function returned 200 but with error field (shouldn't happen, safety net)
           const errCode = claimResult.error;
