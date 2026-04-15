@@ -117,9 +117,20 @@ async function getAccountCredentials(accountId: string): Promise<{ token: string
     .eq("id", accountId)
     .single();
 
-  if (error || !data?.access_token_encrypted || !data?.meta_account_id) {
-    throw new Error(`Failed to fetch credentials for account ${accountId}`);
+  if (error) {
+    throw new Error(`DB error fetching account ${accountId}: ${error.message} (code: ${error.code})`);
   }
+  if (!data) {
+    throw new Error(`No ad_account found with id ${accountId}`);
+  }
+  if (!data.meta_account_id) {
+    throw new Error(`ad_account ${accountId} has no meta_account_id`);
+  }
+  if (!data.access_token_encrypted) {
+    throw new Error(`ad_account ${accountId} has no access token (token is null)`);
+  }
+
+  console.log(`[getAccountCredentials] account=${accountId}, meta_id=${data.meta_account_id}, token_length=${data.access_token_encrypted.length}`);
 
   return {
     token: data.access_token_encrypted,

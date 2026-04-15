@@ -916,8 +916,9 @@ const FeedPage: React.FC = () => {
         body: { account_id: accountId, sync_type: 'full' },
       });
       if (syncErr) {
-        console.error('Meta sync failed:', syncErr, 'Response:', syncData);
-        setSyncError(`Falha ao importar dados do Meta: ${syncData?.error || syncErr.message || 'erro desconhecido'}`);
+        const errDetail = syncData?.error || syncErr?.message || syncErr?.context?.message || JSON.stringify(syncErr);
+        console.error('Meta sync failed:', syncErr, 'Data:', syncData, 'Detail:', errDetail);
+        setSyncError(`Falha ao importar: ${errDetail}`);
         setSyncing(false);
         return;
       }
