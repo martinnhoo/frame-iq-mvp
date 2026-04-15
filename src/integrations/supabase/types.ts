@@ -1528,11 +1528,13 @@ export type Database = {
         Row: {
           account_id: string
           acted_at: string | null
+          action_recommendation: string | null
           actions: Json | null
           ad_id: string | null
           created_at: string | null
           dismissed_at: string | null
           expires_at: string | null
+          group_note: string | null
           headline: string
           id: string
           impact_7d: number | null
@@ -1552,11 +1554,13 @@ export type Database = {
         Insert: {
           account_id: string
           acted_at?: string | null
+          action_recommendation?: string | null
           actions?: Json | null
           ad_id?: string | null
           created_at?: string | null
           dismissed_at?: string | null
           expires_at?: string | null
+          group_note?: string | null
           headline: string
           id?: string
           impact_7d?: number | null
@@ -1576,11 +1580,13 @@ export type Database = {
         Update: {
           account_id?: string
           acted_at?: string | null
+          action_recommendation?: string | null
           actions?: Json | null
           ad_id?: string | null
           created_at?: string | null
           dismissed_at?: string | null
           expires_at?: string | null
+          group_note?: string | null
           headline?: string
           id?: string
           impact_7d?: number | null
