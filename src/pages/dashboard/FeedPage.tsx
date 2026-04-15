@@ -1161,7 +1161,9 @@ const PerformanceSummary: React.FC<{
   metrics: AdMetricsSummary | null;
   periodLabel: string;
   metaAccountId?: string;
-}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId }) => {
+  onLoadMoreAds?: () => void;
+  loadingMoreAds?: boolean;
+}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds }) => {
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
 
