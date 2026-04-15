@@ -113,7 +113,7 @@ const VideoAnalysisDemo = () => (
         </div>
       </div>
       <div className="px-3 py-1.5 rounded-full" style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.3)' }}>
-        <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: 500 }}>● Analysis Complete</span>
+        <span style={{ fontSize: '12px', color: '#2ECECE', fontWeight: 500 }}>● Analysis Complete</span>
       </div>
     </div>
 
@@ -127,13 +127,13 @@ const VideoAnalysisDemo = () => (
       </div>
       <div>
         <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>Hook Score</div>
-        <span style={{ color: '#4ade80', fontSize: '28px', fontWeight: 700 }}>8.7</span>
+        <span style={{ color: '#2ECECE', fontSize: '28px', fontWeight: 700 }}>8.7</span>
         <span style={{ color: '#444', fontSize: '14px' }}> / 10</span>
       </div>
       <div>
         <div style={{ color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '8px' }}>Predicted CTR</div>
         <span style={{ color: '#fff', fontSize: '28px', fontWeight: 700 }}>4.1%</span>
-        <span style={{ color: '#4ade80', fontSize: '12px', marginLeft: 4 }}>↑ 62%</span>
+        <span style={{ color: '#2ECECE', fontSize: '12px', marginLeft: 4 }}>↑ 62%</span>
       </div>
     </div>
 
@@ -215,7 +215,7 @@ const AutoTranslationDemo = () => (
   <div style={{ background: 'linear-gradient(180deg, #0c0c0c, #080808)', padding: '28px' }}>
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #22c55e, #059669)' }}>
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #22A3A3, #1B8A8A)' }}>
           <Globe className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -224,7 +224,7 @@ const AutoTranslationDemo = () => (
         </div>
       </div>
       <div className="px-3 py-1.5 rounded-full" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
-        <span style={{ fontSize: '12px', color: '#4ade80', fontWeight: 500 }}>● Translated</span>
+        <span style={{ fontSize: '12px', color: '#2ECECE', fontWeight: 500 }}>● Translated</span>
       </div>
     </div>
 
@@ -246,7 +246,7 @@ const AutoTranslationDemo = () => (
       <div className="p-4 rounded-xl" style={{ background: '#0f0f0f', border: '1px solid rgba(34, 197, 94, 0.15)' }}>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">🇺🇸</span>
-          <span style={{ color: '#4ade80', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 600 }}>Translated (EN)</span>
+          <span style={{ color: '#2ECECE', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 600 }}>Translated (EN)</span>
         </div>
         <div className="space-y-3" style={{ fontFamily: '"DM Mono", monospace', fontSize: '12px', lineHeight: 1.7 }}>
           <p style={{ color: '#e5e5e5' }}><span style={{ color: '#555', fontSize: '10px' }}>00:00</span> "You're not ready for what I'm about to tell you."</p>
@@ -278,12 +278,12 @@ const CreativeIntelligenceDemo = () => {
     { label: "UGC Testimonial", pct: 34, color: '#0ea5e9' },
     { label: "Product Demo", pct: 28, color: '#60a5fa' },
     { label: "Problem-Solution", pct: 18, color: '#06b6d4' },
-    { label: "Comparison", pct: 12, color: '#4ade80' },
+    { label: "Comparison", pct: 12, color: '#2ECECE' },
     { label: "Listicle", pct: 8, color: '#fbbf24' },
   ];
   const hooks = [
-    { type: "Curiosity Gap", count: 127, trend: "↑ 15%", trendColor: '#4ade80' },
-    { type: "Pattern Interrupt", count: 94, trend: "↑ 8%", trendColor: '#4ade80' },
+    { type: "Curiosity Gap", count: 127, trend: "↑ 15%", trendColor: '#2ECECE' },
+    { type: "Pattern Interrupt", count: 94, trend: "↑ 8%", trendColor: '#2ECECE' },
     { type: "Direct Benefit", count: 81, trend: "→ 0%", trendColor: '#888' },
     { type: "Social Proof", count: 63, trend: "↓ 5%", trendColor: '#ef4444' },
   ];
@@ -447,20 +447,20 @@ const APIAccessDemo = () => (
     {/* Code block */}
     <div className="rounded-xl overflow-hidden mb-4" style={{ border: '1px solid #1a1a1a' }}>
       <div className="px-4 py-2 flex items-center gap-2" style={{ background: '#141414', borderBottom: '1px solid #1a1a1a' }}>
-        <span className="w-2 h-2 rounded-full" style={{ background: '#4ade80' }} />
+        <span className="w-2 h-2 rounded-full" style={{ background: '#2ECECE' }} />
         <span style={{ color: '#666', fontSize: '11px', fontFamily: '"DM Mono", monospace' }}>response.json</span>
       </div>
       <pre className="p-4 overflow-x-auto" style={{ background: '#0a0a0a', margin: 0 }}>
         <code style={{ fontFamily: '"DM Mono", monospace', fontSize: '12px', lineHeight: 1.8 }}>
 {`{
-  `}<span style={{ color: '#0ea5e9' }}>"batch_id"</span>{`: `}<span style={{ color: '#4ade80' }}>"batch_stake_q1_2026"</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"batch_id"</span>{`: `}<span style={{ color: '#2ECECE' }}>"batch_stake_q1_2026"</span>{`,
   `}<span style={{ color: '#0ea5e9' }}>"total_ads"</span>{`: `}<span style={{ color: '#fbbf24' }}>24</span>{`,
   `}<span style={{ color: '#0ea5e9' }}>"avg_hook_score"</span>{`: `}<span style={{ color: '#fbbf24' }}>8.1</span>{`,
-  `}<span style={{ color: '#0ea5e9' }}>"top_creative_model"</span>{`: `}<span style={{ color: '#4ade80' }}>"UGC Sports Promo"</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"top_creative_model"</span>{`: `}<span style={{ color: '#2ECECE' }}>"UGC Sports Promo"</span>{`,
   `}<span style={{ color: '#0ea5e9' }}>"winning_hooks"</span>{`: `}<span style={{ color: '#fbbf24' }}>3</span>{`,
   `}<span style={{ color: '#0ea5e9' }}>"underperforming"</span>{`: `}<span style={{ color: '#fbbf24' }}>6</span>{`,
-  `}<span style={{ color: '#0ea5e9' }}>"recommendation"</span>{`: `}<span style={{ color: '#4ade80' }}>"Pause 6 ads, scale 3 winners"</span>{`,
-  `}<span style={{ color: '#0ea5e9' }}>"markets"</span>{`: [`}<span style={{ color: '#4ade80' }}>"BR"</span>{`, `}<span style={{ color: '#4ade80' }}>"LATAM"</span>{`, `}<span style={{ color: '#4ade80' }}>"EU"</span>{`, `}<span style={{ color: '#4ade80' }}>"US"</span>{`]
+  `}<span style={{ color: '#0ea5e9' }}>"recommendation"</span>{`: `}<span style={{ color: '#2ECECE' }}>"Pause 6 ads, scale 3 winners"</span>{`,
+  `}<span style={{ color: '#0ea5e9' }}>"markets"</span>{`: [`}<span style={{ color: '#2ECECE' }}>"BR"</span>{`, `}<span style={{ color: '#2ECECE' }}>"LATAM"</span>{`, `}<span style={{ color: '#2ECECE' }}>"EU"</span>{`, `}<span style={{ color: '#2ECECE' }}>"US"</span>{`]
 }`}
         </code>
       </pre>
@@ -594,7 +594,7 @@ const FeatureDetail = () => {
                   <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28c840' }} />
                 </div>
                 <div className="flex-1 text-center mx-12" style={{ background: '#0a0a0a', borderRadius: '8px', padding: '6px 16px', fontSize: '12px', color: '#666', fontFamily: '"DM Mono", monospace', border: '1px solid #222' }}>
-                  <span style={{ color: '#4ade80' }}></span> app.adbrief.pro
+                  <span style={{ color: '#2ECECE' }}></span> app.adbrief.pro
                 </div>
                 <div className="w-16" />
               </div>

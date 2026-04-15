@@ -224,7 +224,7 @@ export default function ReferralPage() {
             display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
             background: copied ? "rgba(34,197,94,0.15)" : "rgba(14,165,233,0.12)",
             border: `1px solid ${copied ? "rgba(34,197,94,0.3)" : "rgba(14,165,233,0.25)"}`,
-            borderRadius: 8, cursor: "pointer", color: copied ? "#22c55e" : "#0ea5e9",
+            borderRadius: 8, cursor: "pointer", color: copied ? "#22A3A3" : "#0ea5e9",
             fontSize: 13, fontWeight: 500, fontFamily: F, transition: "all 0.2s",
           }}>
             {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -321,7 +321,7 @@ export default function ReferralPage() {
           borderRadius: 10, padding: "14px 20px", marginBottom: 24,
           display: "flex", alignItems: "center", gap: 8,
         }}>
-          <Check size={16} color="#22c55e" />
+          <Check size={16} color="#22A3A3" />
           <span style={{ fontSize: 13, color: "rgba(34,197,94,0.7)", fontFamily: F }}>{tx.alreadyReferred}</span>
         </div>
       )}

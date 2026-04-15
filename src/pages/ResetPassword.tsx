@@ -30,7 +30,7 @@ function getStrength(pw: string) {
     { label: "", color: "#ef4444" },
     { label: "", color: "#f59e0b" },
     { label: "", color: "#3b82f6" },
-    { label: "", color: "#22c55e" },
+    { label: "", color: "#22A3A3" },
   ];
   const l = levels[Math.min(score, 4) - 1] || levels[0];
   return { score, color: l.color };
@@ -120,7 +120,7 @@ export default function ResetPassword() {
       <Page>
         <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
           <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-            <CheckCircle size={28} style={{ color: "#22c55e" }} />
+            <CheckCircle size={28} style={{ color: "#22A3A3" }} />
           </div>
           <h2 style={{ fontFamily: F, fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 10, letterSpacing: "-0.03em" }}>
             {t("reset_success_title")}
@@ -256,7 +256,7 @@ export default function ResetPassword() {
             <p style={{ fontFamily: M, fontSize: 12, color: "#ef4444", marginTop: 5 }}>{t("reset_no_match")}</p>
           )}
           {confirm.length > 0 && !mismatch && (
-            <p style={{ fontFamily: M, fontSize: 12, color: "#22c55e", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
+            <p style={{ fontFamily: M, fontSize: 12, color: "#22A3A3", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
               <CheckCircle size={10} /> {language === "pt" ? "Senhas iguais" : language === "es" ? "Contraseñas iguales" : "Passwords match"}
             </p>
           )}

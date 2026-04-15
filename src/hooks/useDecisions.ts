@@ -9,7 +9,7 @@ interface UseDecisionsReturn {
   refetch: () => Promise<void>;
 }
 
-export function useDecisions(accountId: string | null): UseDecisionsReturn {
+export function useDecisions(accountId: string | null, periodDays: number = 7): UseDecisionsReturn {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,11 +23,13 @@ export function useDecisions(accountId: string | null): UseDecisionsReturn {
 
     try {
       setIsLoading(true);
+      const since = new Date(Date.now() - periodDays * 86400000).toISOString();
       const { data, error: fetchError } = await (supabase
         .from('decisions' as any)
         .select('*, ad:ads(name, meta_ad_id, ad_set:ad_sets(name, campaign:campaigns(name)))')
         .eq('account_id', accountId)
         .eq('status', 'pending')
+        .gte('created_at', since)
         .order('created_at', { ascending: false }) as any);
 
       if (fetchError) throw fetchError;
@@ -58,7 +60,7 @@ export function useDecisions(accountId: string | null): UseDecisionsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [accountId]);
+  }, [accountId, periodDays]);
 
   // Initial fetch
   useEffect(() => {

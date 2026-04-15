@@ -5,7 +5,7 @@ export const ADBRIEF_TOKENS = {
   accentBorder: 'rgba(13,162,231,0.18)',
 
   // Semântico
-  green:  '#10b981',
+  green:  '#22A3A3',
   amber:  '#f59e0b',
   red:    '#ef4444',
   purple: '#a855f7',

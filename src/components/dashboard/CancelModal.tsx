@@ -320,9 +320,9 @@ export function CancelModal({ open, onClose, plan, onCancelled }: Props) {
                 background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)",
                 borderRadius: 10, marginBottom: 16,
               }}>
-                <Percent size={24} color="#22c55e" />
+                <Percent size={24} color="#22A3A3" />
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "#22c55e", margin: 0, fontFamily: F }}>30% off</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "#22A3A3", margin: 0, fontFamily: F }}>30% off</p>
                   <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "2px 0 0", fontFamily: F }}>
                     {lang === "pt" ? "Por 3 meses" : lang === "es" ? "Por 3 meses" : "For 3 months"}
                   </p>
@@ -331,7 +331,7 @@ export function CancelModal({ open, onClose, plan, onCancelled }: Props) {
               <button onClick={handleDiscount} disabled={loading} style={{
                 width: "100%", padding: "12px", borderRadius: 8,
                 background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)",
-                color: "#22c55e", fontSize: 14, fontWeight: 600, fontFamily: F, cursor: "pointer",
+                color: "#22A3A3", fontSize: 14, fontWeight: 600, fontFamily: F, cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 marginBottom: 10, transition: "all 0.15s",
               }}>

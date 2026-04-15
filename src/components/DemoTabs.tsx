@@ -194,7 +194,7 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
               </div>
               <div className="demo-live-badge">
                 <div className="demo-live-dot" />
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", letterSpacing: "0.12em" }}>LIVE</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#2ECECE", letterSpacing: "0.12em" }}>LIVE</span>
               </div>
             </div>
 
@@ -343,7 +343,7 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
         }
         .demo-live-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: #22c55e;
+          background: #22A3A3;
           box-shadow: 0 0 8px rgba(34,197,94,0.8);
           animation: demoLivePulse 2s ease-in-out infinite;
         }

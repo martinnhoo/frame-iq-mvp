@@ -1679,7 +1679,7 @@ const getCatAccent = (cat: string): string => {
     app: "#a3e635", b2b: "#818cf8", seasonal: "#2dd4bf", ecommerce: "#facc15",
     finance: "#34d399", health: "#fb7185", beauty: "#e879f9", food: "#fb923c",
     gaming: "#c084fc", real_estate: "#38bdf8", education: "#93c5fd", travel: "#67e8f9",
-    igaming: "#c084fc", fintech: "#6ee7b7", saas: "#60a5fa", fitness: "#4ade80",
+    igaming: "#c084fc", fintech: "#6ee7b7", saas: "#60a5fa", fitness: "#2ECECE",
     fashion: "#f9a8d4", automotive: "#a1a1aa", crypto: "#fde047", insurance: "#94a3b8",
     hr: "#0ea5e9", ngo: "#fda4af", pet: "#fcd34d",
   };

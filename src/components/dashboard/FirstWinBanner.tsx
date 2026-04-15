@@ -9,7 +9,7 @@ const STORAGE_KEY = "adbrief_first_win_dismissed";
 
 const C = {
   accent: "#0da2e7",
-  green: "#22c55e",
+  green: "#22A3A3",
   amber: "#f97316",
   text: "#fff",
   textSoft: "rgba(255,255,255,0.6)",

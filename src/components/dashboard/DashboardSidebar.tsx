@@ -315,7 +315,7 @@ export function DashboardSidebar({
                 <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
                   <span style={{
                     width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
-                    background: "#10b981",
+                    background: "#22A3A3",
                     boxShadow: "0 0 4px rgba(16,185,129,0.6)",
                   }} />
                   <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", fontFamily: F, fontWeight: 500 }}>
@@ -326,7 +326,7 @@ export function DashboardSidebar({
                       <span style={{ fontSize: 9, color: "rgba(255,255,255,0.12)" }}>·</span>
                       <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.35)", fontFamily: "'DM Mono',monospace" }}>
                         {kpi.ctr.toFixed(1)}%
-                        {kpi.trend === "up" && <span style={{ color: "#10b981", marginLeft: 2 }}>↑</span>}
+                        {kpi.trend === "up" && <span style={{ color: "#22A3A3", marginLeft: 2 }}>↑</span>}
                         {kpi.trend === "down" && <span style={{ color: "#ef4444", marginLeft: 2 }}>↓</span>}
                       </span>
                     </>

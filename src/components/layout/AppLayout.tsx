@@ -301,7 +301,7 @@ export function AppLayout() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
                 <span style={{
                   width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                  background: metaConnected ? '#10b981' : 'rgba(255,255,255,0.15)',
+                  background: metaConnected ? '#22A3A3' : 'rgba(255,255,255,0.15)',
                   boxShadow: metaConnected ? '0 0 4px rgba(16,185,129,0.6)' : 'none',
                 }} />
                 <span style={{
@@ -374,7 +374,7 @@ export function AppLayout() {
                         {p.name}
                       </span>
                       {isActive && (
-                        <span style={{ fontSize: 8, fontWeight: 700, color: '#10b981', letterSpacing: '0.06em' }}>ATIVO</span>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: '#22A3A3', letterSpacing: '0.06em' }}>ATIVO</span>
                       )}
                     </button>
                   );

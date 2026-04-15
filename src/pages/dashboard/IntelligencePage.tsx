@@ -19,7 +19,7 @@ interface Pattern { id:string; pattern_key:string; insight_text:string; avg_ctr:
 const TYPE_COLOR: Record<string,string> = {
   preference: "#38bdf8", // Sky blue (visual)
   decision: "#a78bfa", // Purple (strategic)
-  rule: T.green, // #22c55e (positive)
+  rule: T.green, // #22A3A3 (positive)
   context: T.amber, // #eab308 (informational)
 };
 const TYPE_LABEL: Record<string,Record<string,string>> = {

@@ -72,7 +72,7 @@ export default function EmailConfirmed() {
           margin: "0 auto 24px",
           animation: "ringScale 0.35s ease-out",
         }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22A3A3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 13l4 4L19 7" style={{ strokeDasharray: 24, strokeDashoffset: 0, animation: "checkDraw 0.4s ease-out 0.15s both" }} />
           </svg>
         </div>

@@ -1109,7 +1109,10 @@ const FeedPage: React.FC = () => {
   const userId = (ctx as any).user?.id as string | undefined;
   const accountId = activeAccount?.id ?? null;
 
-  const { decisions: realDecisions, isLoading: decisionsLoading, refetch: refetchDecisions } = useDecisions(accountId);
+  const [period, setPeriod] = useState<PeriodKey>('7d');
+  const periodDays = PERIODS.find(p => p.key === period)!.days;
+
+  const { decisions: realDecisions, isLoading: decisionsLoading, refetch: refetchDecisions } = useDecisions(accountId, periodDays);
   const { tracker: realTracker, isLoading: trackerLoading } = useMoneyTracker(accountId);
   const { executeAction } = useActions();
 
@@ -1117,8 +1120,6 @@ const FeedPage: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastAnalysisMin] = useState(() => Math.floor(Math.random() * 4) + 2);
-  const [period, setPeriod] = useState<PeriodKey>('7d');
-  const periodDays = PERIODS.find(p => p.key === period)!.days;
 
   // ── Fetch user's actual ads ──
   const [userAds, setUserAds] = useState<AdSummary[]>([]);

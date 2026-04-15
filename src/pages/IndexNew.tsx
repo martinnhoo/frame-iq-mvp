@@ -2027,8 +2027,8 @@ function HeroDemo({ lang, onCTA }: { lang: Lang; onCTA: () => void }) {
           <div style={{ display:'flex', alignItems:'center', gap:5 }}>
             <MetaBadge />
             <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 8px', borderRadius:20, border:'1px solid rgba(34,197,94,0.25)', background:'rgba(34,197,94,0.06)' }}>
-              <div style={{ width:5, height:5, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 6px rgba(34,197,94,0.8)', animation:'pulse 2s ease-in-out infinite' }} />
-              <span style={{ fontFamily:F, fontSize: 12, color:'#4ade80', letterSpacing:'0.06em', textTransform:'uppercase' as const, fontWeight:600 }}>live</span>
+              <div style={{ width:5, height:5, borderRadius:'50%', background:'#22A3A3', boxShadow:'0 0 6px rgba(34,197,94,0.8)', animation:'pulse 2s ease-in-out infinite' }} />
+              <span style={{ fontFamily:F, fontSize: 12, color:'#2ECECE', letterSpacing:'0.06em', textTransform:'uppercase' as const, fontWeight:600 }}>live</span>
             </div>
           </div>
         </div>

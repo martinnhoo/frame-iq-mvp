@@ -155,13 +155,13 @@ const ALL_MARKETS = [
 ];
 
 const VERDICT_CFG = {
-  READY:   { color: "#10b981", bg: "rgba(16,185,129,0.1)",  border: "rgba(16,185,129,0.22)", label: "Aprovado" },
+  READY:   { color: "#22A3A3", bg: "rgba(16,185,129,0.1)",  border: "rgba(16,185,129,0.22)", label: "Aprovado" },
   REVIEW:  { color: "#f59e0b", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.22)", label: "Revisar" },
   BLOCKED: { color: "#ef4444", bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.22)",  label: "Bloqueado" },
 };
 
 const METRIC_COLORS = {
-  green: "#10b981",
+  green: "#22A3A3",
   amber: "#f59e0b",
   red:   "#ef4444",
   blue:  "#0da2e7",
@@ -191,7 +191,7 @@ function renderDiagnosis(text: string) {
       const isOk   = /forte|correto|aprovado|excelente|funciona/i.test(inner);
       return (
         <strong key={i} style={{
-          color: isRisk ? "#f59e0b" : isOk ? "#10b981" : "#0da2e7",
+          color: isRisk ? "#f59e0b" : isOk ? "#22A3A3" : "#0da2e7",
           fontWeight: 700,
         }}>
           {inner}
@@ -385,7 +385,7 @@ function ResultCard({ result, onReset }: { result: CheckResult; onReset: () => v
               <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12.5 }}>
                 <span style={{ color: "#ef4444", textDecoration: "line-through", ...M }}>{s.found}</span>
                 <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>→</span>
-                <span style={{ color: "#10b981", ...M }}>{s.fix}</span>
+                <span style={{ color: "#22A3A3", ...M }}>{s.fix}</span>
               </span>
             ))}
           </div>
@@ -420,7 +420,7 @@ function ResultCard({ result, onReset }: { result: CheckResult; onReset: () => v
             </p>
             {result.strengths.map((s, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: i < result.strengths.length - 1 ? 9 : 0 }}>
-                <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#10b981", marginTop: 9, flexShrink: 0 }} />
+                <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#22A3A3", marginTop: 9, flexShrink: 0 }} />
                 <span style={{ fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.65, fontFamily: F }}>{s}</span>
               </div>
             ))}

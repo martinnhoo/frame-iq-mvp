@@ -25,7 +25,7 @@ const BG = T.surface0; // #070d1a
 const TX = T.textPrimary; // #f0f2f8
 const MT = T.textMuted; // rgba(255,255,255,0.45)
 const A = T.accent; // #0ea5e9
-const GREEN = T.green; // #22c55e
+const GREEN = T.green; // #22A3A3
 const RED = T.red; // #ef4444
 const AMBER = T.amber; // #eab308
 

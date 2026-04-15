@@ -22,7 +22,7 @@ const C = {
   textSoft: "rgba(255,255,255,0.6)",
   textMuted: TEXT_MUTED,
   accent: BRAND,
-  green: "#22c55e",
+  green: "#22A3A3",
   amber: "#f97316",
   red: "#ef4444",
 };

@@ -256,7 +256,7 @@ const Signup = () => {
                         <div key={level} style={{
                           height: 3, flex: 1, borderRadius: 99,
                           background: level <= strength.score
-                            ? (strength.score === 1 ? '#ef4444' : strength.score === 2 ? '#eab308' : strength.score === 3 ? '#3b82f6' : '#22c55e')
+                            ? (strength.score === 1 ? '#ef4444' : strength.score === 2 ? '#eab308' : strength.score === 3 ? '#3b82f6' : '#22A3A3')
                             : 'rgba(255,255,255,0.1)',
                           transition: 'background 0.3s'
                         }} />

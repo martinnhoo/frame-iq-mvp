@@ -137,7 +137,7 @@ export function ReferralPopup({ userId }: Props) {
                 background: copied ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.03)",
                 border: "none", borderLeft: "1px solid rgba(255,255,255,0.06)",
                 cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
-                color: copied ? "#10b981" : "rgba(255,255,255,0.40)",
+                color: copied ? "#22A3A3" : "rgba(255,255,255,0.40)",
                 fontSize: 11, fontWeight: 600, fontFamily: F,
                 transition: "all 0.15s",
               }}

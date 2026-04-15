@@ -139,7 +139,7 @@ const NICHES = [
   { value: "beauty",    label: "Beleza",       icon: "", color: "#f472b6" },
   { value: "education", label: "Educação",     icon: "", color: "#a78bfa" },
   { value: "food",      label: "Food & Resto", icon: "", color: "#fb923c" },
-  { value: "health",    label: "Saúde",        icon: "", color: "#4ade80" },
+  { value: "health",    label: "Saúde",        icon: "", color: "#2ECECE" },
   { value: "other",     label: "Outro",        icon: "", color: "#94a3b8" },
 ];
 

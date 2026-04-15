@@ -35,7 +35,7 @@ export const DESIGN_TOKENS = {
 
   // Status
   red: '#ef4444',
-  green: '#22c55e',
+  green: '#22A3A3',
   amber: '#eab308',
 
   // Text

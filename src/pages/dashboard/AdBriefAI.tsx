@@ -115,7 +115,7 @@ Você está no modo Creative Director. Ao analisar dados:
     id: "copywriter",
     name: "Copywriter DR",
     icon: "",
-    color: T.green, // #22c55e — unified design system
+    color: T.green, // #22A3A3 — unified design system
     desc: {
       pt: "Copy de alta conversão, PAS/AIDA, scripts e CTAs irresistíveis",
       en: "High-conversion copy, PAS/AIDA, scripts and CTAs",
@@ -380,17 +380,17 @@ function DashboardBlock({block}:{block:Block}) {
         return(
           <div style={{padding:"16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
             <div style={{display:"flex",gap:16,marginBottom:10}}>
-              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>CTR {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{(lastCtr*100).toFixed(2)}%</span><span style={{...m,fontSize:12,color:ctrDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{ctrDelta>=0?"+":""}{ctrDelta.toFixed(1)}%</span></div>
-              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>ROAS {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{lastRoas.toFixed(2)}x</span><span style={{...m,fontSize:12,color:roasDelta>=0?"#4ade80":"#f87171",marginLeft:4}}>{roasDelta>=0?"+":""}{roasDelta.toFixed(1)}%</span></div>
+              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>CTR {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{(lastCtr*100).toFixed(2)}%</span><span style={{...m,fontSize:12,color:ctrDelta>=0?"#2ECECE":"#f87171",marginLeft:4}}>{ctrDelta>=0?"+":""}{ctrDelta.toFixed(1)}%</span></div>
+              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>ROAS {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{lastRoas.toFixed(2)}x</span><span style={{...m,fontSize:12,color:roasDelta>=0?"#2ECECE":"#f87171",marginLeft:4}}>{roasDelta>=0?"+":""}{roasDelta.toFixed(1)}%</span></div>
               <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>Spend {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>${totalSpend.toFixed(0)}</span></div>
             </div>
             <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{display:"block",maxWidth:W}}>
               {d.ctr.some(v=>v>0)&&path(d.ctr,"#0ea5e9")}
-              {d.roas.some(v=>v>0)&&path(d.roas.map(v=>v/Math.max(...d.roas)),"#4ade80")}
+              {d.roas.some(v=>v>0)&&path(d.roas.map(v=>v/Math.max(...d.roas)),"#2ECECE")}
             </svg>
             <div style={{display:"flex",gap:12,marginTop:6}}>
               <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#0369a1",display:"inline-block",borderRadius:1}}/> CTR</span>
-              {d.roas.some(v=>v>0)&&<span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#4ade80",display:"inline-block",borderRadius:1}}/> ROAS (norm.)</span>}
+              {d.roas.some(v=>v>0)&&<span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#2ECECE",display:"inline-block",borderRadius:1}}/> ROAS (norm.)</span>}
               <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.25)",marginLeft:"auto"}}>{d.dates[0]} → {d.dates[n-1]}</span>
             </div>
           </div>
@@ -793,11 +793,11 @@ function SkillSelector({
 
 
 const CC_VERDICT = {
-  READY:   { color: "#10b981", bg: "rgba(16,185,129,0.1)",  border: "rgba(16,185,129,0.22)", label: "Aprovado" },
+  READY:   { color: "#22A3A3", bg: "rgba(16,185,129,0.1)",  border: "rgba(16,185,129,0.22)", label: "Aprovado" },
   REVIEW:  { color: "#f59e0b", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.22)", label: "Revisar"  },
   BLOCKED: { color: "#ef4444", bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.22)",  label: "Bloqueado"},
 };
-const CC_METRIC_COLORS: Record<string,string> = { green:"#10b981", amber:"#f59e0b", red:"#ef4444", blue:"#0da2e7" };
+const CC_METRIC_COLORS: Record<string,string> = { green:"#22A3A3", amber:"#f59e0b", red:"#ef4444", blue:"#0da2e7" };
 
 function getCCMetrics(raw: any) {
   const m: Array<{label:string;value:string;delta?:string;color:"green"|"amber"|"red"|"blue"}> = [];
@@ -823,7 +823,7 @@ function renderCCDiagnosis(text: string) {
       const inner = part.slice(2,-2);
       const isRisk = /risco|bloqueado|problem|erro|evite|cuidado/i.test(inner);
       const isOk   = /forte|correto|aprovado|excelente|funciona/i.test(inner);
-      return <strong key={i} style={{ color: isRisk?"#f59e0b":isOk?"#10b981":"#0da2e7", fontWeight:700 }}>{inner}</strong>;
+      return <strong key={i} style={{ color: isRisk?"#f59e0b":isOk?"#22A3A3":"#0da2e7", fontWeight:700 }}>{inner}</strong>;
     }
     return <span key={i}>{part}</span>;
   });
@@ -919,7 +919,7 @@ function CreativeCheckCard({ block }: { block: any }) {
               <span key={i} style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:12 }}>
                 <span style={{ color:"#ef4444", textDecoration:"line-through", ...M }}>{s.found}</span>
                 <span style={{ color:"rgba(255,255,255,0.2)", fontSize:10 }}>→</span>
-                <span style={{ color:"#10b981", ...M }}>{s.fix}</span>
+                <span style={{ color:"#22A3A3", ...M }}>{s.fix}</span>
               </span>
             ))}
           </div>
@@ -948,7 +948,7 @@ function CreativeCheckCard({ block }: { block: any }) {
             <p style={{ margin:"0 0 10px", fontSize:11.5, fontWeight:600, color:"rgba(255,255,255,0.35)" }}>Funcionando</p>
             {strengths.map((s:string,i:number) => (
               <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, marginBottom:i<strengths.length-1?8:0 }}>
-                <div style={{ width:4, height:4, borderRadius:"50%", background:"#10b981", marginTop:8, flexShrink:0 }} />
+                <div style={{ width:4, height:4, borderRadius:"50%", background:"#22A3A3", marginTop:8, flexShrink:0 }} />
                 <span style={{ fontSize:12.5, color:"rgba(255,255,255,0.62)", lineHeight:1.65 }}>{s}</span>
               </div>
             ))}
@@ -1766,7 +1766,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           {/* Live dot + label */}
           <span style={{
             width: 6, height: 6, borderRadius: "50%",
-            background: busy ? "rgba(255,255,255,0.2)" : fail ? "#f87171" : "#22c55e",
+            background: busy ? "rgba(255,255,255,0.2)" : fail ? "#f87171" : "#22A3A3",
             boxShadow: isLive ? "0 0 8px rgba(34,197,94,0.4)" : "none",
             animation: isLive ? "pulse 2s ease-in-out infinite" : "none",
             flexShrink: 0,

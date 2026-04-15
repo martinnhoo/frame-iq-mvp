@@ -49,7 +49,7 @@ const T = {
   display: "'Syne', 'Plus Jakarta Sans', system-ui, sans-serif",
   surface0: "#070d1a", surface1: "#0d1117", surface2: "#111620", surface3: "#161c2a",
   accent: "#0ea5e9", accentGlow: "rgba(14,165,233,.1)",
-  red: "#ef4444", green: "#22c55e", amber: "#eab308",
+  red: "#ef4444", green: "#22A3A3", amber: "#eab308",
   textPrimary: "#f0f2f8", textSecondary: "rgba(255,255,255,.65)", textMuted: "rgba(255,255,255,.45)",
   borderSubtle: "rgba(255,255,255,.04)", borderLight: "rgba(255,255,255,.08)", borderTopLight: "rgba(255,255,255,.12)",
   r: 12,

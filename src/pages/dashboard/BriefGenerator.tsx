@@ -124,7 +124,7 @@ export default function BriefGenerator() {
     <div className="tool-page-wrap max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3 mb-2">
         <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(16,185,129,0.15)" }}>
-          <Sparkles className="h-5 w-5" style={{ color: "#10b981" }} />
+          <Sparkles className="h-5 w-5" style={{ color: "#22A3A3" }} />
         </div>
         <div>
           <h1 className="text-xl font-bold text-foreground" style={syne}>Brief AI</h1>
@@ -197,7 +197,7 @@ export default function BriefGenerator() {
           <Textarea placeholder="Diretrizes de marca, compliance, aprendizados de campanhas anteriores..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
-        <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}>
+        <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #22A3A3, #1B8A8A)" }}>
           <Sparkles className="h-4 w-4" />
           {loading ? "Gerando prompts detalhados..." : "Gerar Brief AI"}
         </Button>

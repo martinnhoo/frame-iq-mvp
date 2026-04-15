@@ -110,7 +110,7 @@ const T = {
 };
 
 const V_STYLE = {
-  winner:  { bg: "rgba(34,197,94,0.06)",  border: "rgba(34,197,94,0.18)",  bar: "#22c55e", num: "#4ade80", badge: "rgba(34,197,94,0.12)" },
+  winner:  { bg: "rgba(34,197,94,0.06)",  border: "rgba(34,197,94,0.18)",  bar: "#22A3A3", num: "#2ECECE", badge: "rgba(34,197,94,0.12)" },
   scaled:  { bg: "rgba(14,165,233,0.06)", border: "rgba(14,165,233,0.18)", bar: "#0ea5e9", num: "#38bdf8", badge: "rgba(14,165,233,0.12)" },
   testing: { bg: "rgba(251,191,36,0.05)", border: "rgba(251,191,36,0.15)", bar: "#fbbf24", num: "#fcd34d", badge: "rgba(251,191,36,0.10)" },
   loser:   { bg: "rgba(239,68,68,0.05)",  border: "rgba(239,68,68,0.15)",  bar: "#ef4444", num: "#f87171", badge: "rgba(239,68,68,0.10)" },
@@ -188,7 +188,7 @@ const DiaryRow = React.memo(function DiaryRow({ entry, expanded, onToggle, t, la
             </div>
             {entry.roas && entry.roas > 0 ? (
               <div style={{ textAlign: "right", minWidth: 40 }}>
-                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: isPos ? "#4ade80" : "#f87171", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{entry.roas.toFixed(1)}×</p>
+                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: isPos ? "#2ECECE" : "#f87171", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{entry.roas.toFixed(1)}×</p>
                 <p style={{ margin: "1px 0 0", fontSize: 9, color: "rgba(255,255,255,0.22)", fontFamily: F, letterSpacing: "0.08em", textTransform: "uppercase" }}>ROAS</p>
               </div>
             ) : (
@@ -555,7 +555,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
           {/* Win rate */}
           <div style={{ flex: "1 1 0", minWidth: 120, padding: "12px 14px", borderRadius: 12, background: stats.winRate >= 40 ? "rgba(34,197,94,0.06)" : "rgba(255,255,255,0.03)", border: `1px solid ${stats.winRate >= 40 ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)"}` }}>
             <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t.win_rate}</p>
-            <p style={{ margin: "4px 0 1px", fontSize: 26, fontWeight: 700, color: stats.winRate >= 40 ? "#4ade80" : stats.winRate >= 20 ? "#fcd34d" : "#f87171", fontFamily: M, letterSpacing: "-0.04em", lineHeight: 1 }}>{stats.winRate}%</p>
+            <p style={{ margin: "4px 0 1px", fontSize: 26, fontWeight: 700, color: stats.winRate >= 40 ? "#2ECECE" : stats.winRate >= 20 ? "#fcd34d" : "#f87171", fontFamily: M, letterSpacing: "-0.04em", lineHeight: 1 }}>{stats.winRate}%</p>
             <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{t.winners_of(stats.winners, entries.length)}</p>
           </div>
           {/* Invested */}
@@ -566,7 +566,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
           {/* ROAS */}
           <div style={{ flex: "1 1 0", minWidth: 100, padding: "12px 14px", borderRadius: 12, background: stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.05)" : "rgba(255,255,255,0.03)", border: `1px solid ${stats.overallRoas && stats.overallRoas >= 1 ? "rgba(34,197,94,0.10)" : "rgba(255,255,255,0.06)"}` }}>
             <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{stats.overallRoas ? t.roas_label : t.return_label}</p>
-            <p style={{ margin: "4px 0 1px", fontSize: 22, fontWeight: 700, color: stats.overallRoas && stats.overallRoas >= 2 ? "#4ade80" : stats.overallRoas && stats.overallRoas >= 1 ? "#fcd34d" : "rgba(255,255,255,0.38)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>
+            <p style={{ margin: "4px 0 1px", fontSize: 22, fontWeight: 700, color: stats.overallRoas && stats.overallRoas >= 2 ? "#2ECECE" : stats.overallRoas && stats.overallRoas >= 1 ? "#fcd34d" : "rgba(255,255,255,0.38)", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>
               {stats.overallRoas ? `${stats.overallRoas.toFixed(2)}×` : stats.totalReturn > 0 ? money(stats.totalReturn, language) : "—"}
             </p>
             <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.22)" }}>{stats.overallRoas ? `${money(stats.totalReturn, language)} ${t.return_suffix}` : t.no_conv}</p>
