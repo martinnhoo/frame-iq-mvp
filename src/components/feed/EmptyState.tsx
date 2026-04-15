@@ -198,7 +198,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <button
               onClick={() => navigate('/dashboard/accounts')}
               style={{
-                background: '#22A3A3',
+                background: '#0ea5e9',
                 color: '#E6EDF3',
                 border: 'none',
                 padding: '9px 20px', borderRadius: 8,
@@ -208,10 +208,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 transition: 'all 0.15s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#1B8A8A';
+                e.currentTarget.style.background = '#0c8bd0';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#22A3A3';
+                e.currentTarget.style.background = '#0ea5e9';
               }}
             >
               Conectar Meta Ads
@@ -233,15 +233,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       }}>
         <div style={{
           width: 48, height: 48, borderRadius: 12,
-          background: 'rgba(34,163,163,0.06)',
-          border: '1px solid rgba(34,163,163,0.12)',
+          background: 'rgba(14,165,233,0.06)',
+          border: '1px solid rgba(14,165,233,0.12)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           margin: '0 auto 20px',
         }}>
           <div style={{
             width: 10, height: 10, borderRadius: '50%',
-            background: '#22A3A3',
-            boxShadow: '0 0 8px rgba(34,163,163,0.4)',
+            background: '#0ea5e9',
+            boxShadow: '0 0 8px rgba(14,165,233,0.4)',
             animation: 'es-pulse 2s ease-in-out infinite',
           }} />
         </div>
@@ -267,7 +267,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           </h3>
           {hasSaved && (
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: hasActivity ? 12 : 0 }}>
-              <span style={{ fontSize: 20, fontWeight: 800, color: '#22A3A3', fontFamily: F, letterSpacing: '-0.02em' }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: '#0ea5e9', fontFamily: F, letterSpacing: '-0.02em' }}>
                 {formatMoney(todaySummary.savedToday)}
               </span>
               <span style={{ fontSize: 12, color: '#8B949E' }}>economizado hoje</span>
@@ -366,7 +366,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           <button
             onClick={() => navigate('/dashboard/ai')}
             style={{
-              background: '#22A3A3',
+              background: '#0ea5e9',
               color: '#E6EDF3',
               border: 'none',
               padding: '10px 20px', borderRadius: 8,
@@ -375,10 +375,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               transition: 'all 0.15s',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#1B8A8A';
+              e.currentTarget.style.background = '#0c8bd0';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#22A3A3';
+              e.currentTarget.style.background = '#0ea5e9';
             }}
           >
             Falar com a IA
@@ -419,7 +419,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           <svg width="28" height="28" viewBox="0 0 28 28" style={{ animation: 'es-radar-rotate 2.5s linear infinite' }}>
             <circle cx="14" cy="14" r="12" fill="none" stroke="rgba(14,165,233,0.15)" strokeWidth="1.5"/>
             <circle cx="14" cy="14" r="7" fill="none" stroke="rgba(14,165,233,0.08)" strokeWidth="1"/>
-            <circle cx="14" cy="14" r="2.5" fill="#22A3A3"/>
+            <circle cx="14" cy="14" r="2.5" fill="#0ea5e9"/>
             {/* Sweep wedge */}
             <path
               d="M14 14 L14 2 A12 12 0 0 1 24.39 8.0 Z"
@@ -446,7 +446,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       }}>
         <div style={{
           height: '100%', borderRadius: 2,
-          background: '#22A3A3',
+          background: '#0ea5e9',
           width: `${progress}%`,
           transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
         }} />
@@ -474,23 +474,23 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: isDone
-                  ? 'rgba(34,163,163,0.15)'
+                  ? 'rgba(14,165,233,0.15)'
                   : isActive
                     ? 'rgba(14,165,233,0.15)'
                     : 'rgba(230,237,243,0.04)',
                 border: `1.5px solid ${
-                  isDone ? '#1B8A8A' : isActive ? '#22A3A3' : 'rgba(230,237,243,0.08)'
+                  isDone ? '#0c8bd0' : isActive ? '#0ea5e9' : 'rgba(230,237,243,0.08)'
                 }`,
                 transition: 'all 0.4s ease',
               }}>
                 {isDone ? (
                   <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                    <path d="M2.5 6L5 8.5L9.5 3.5" stroke="#1B8A8A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2.5 6L5 8.5L9.5 3.5" stroke="#0c8bd0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 ) : isActive ? (
                   <div style={{
                     width: 6, height: 6, borderRadius: '50%',
-                    background: '#22A3A3',
+                    background: '#0ea5e9',
                     animation: 'es-blink 1.2s ease-in-out infinite',
                   }} />
                 ) : (
@@ -518,7 +518,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               {isDone && (
                 <span style={{
                   marginLeft: 'auto', fontSize: 10, fontWeight: 500,
-                  color: '#1B8A8A', opacity: 0.7,
+                  color: '#0c8bd0', opacity: 0.7,
                 }}>
                   ✓
                 </span>

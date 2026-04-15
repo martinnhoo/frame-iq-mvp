@@ -34,10 +34,10 @@ const TYPE_CONFIG: Record<string, {
     accent: '#C8922A', impactLabel: 'recuperável', confirmTitle: 'Confirmar ação',
   },
   scale: {
-    border: '#1B8A8A', badgeBg: 'rgba(34,163,163,0.18)', badgeText: '#22A3A3',
-    label: 'ESCALAR', btnBg: '#1B8A8A', btnHover: '#17807F',
-    secondaryBg: 'rgba(34,163,163,0.07)', secondaryBorder: 'rgba(34,163,163,0.20)',
-    accent: '#22A3A3', impactLabel: 'oportunidade', confirmTitle: 'Confirmar escala',
+    border: '#0c8bd0', badgeBg: 'rgba(14,165,233,0.18)', badgeText: '#0ea5e9',
+    label: 'ESCALAR', btnBg: '#0c8bd0', btnHover: '#17807F',
+    secondaryBg: 'rgba(14,165,233,0.07)', secondaryBorder: 'rgba(14,165,233,0.20)',
+    accent: '#0ea5e9', impactLabel: 'oportunidade', confirmTitle: 'Confirmar escala',
   },
   pattern: {
     border: '#553c9a', badgeBg: 'rgba(85,60,154,0.18)', badgeText: '#9f7aea',
@@ -46,21 +46,21 @@ const TYPE_CONFIG: Record<string, {
     accent: '#9f7aea', impactLabel: '', confirmTitle: 'Confirmar ação',
   },
   insight: {
-    border: '#1F3A5F', badgeBg: 'rgba(34,163,163,0.14)', badgeText: '#22A3A3',
+    border: '#1F3A5F', badgeBg: 'rgba(14,165,233,0.14)', badgeText: '#0ea5e9',
     label: 'INSIGHT', btnBg: '#1F3A5F', btnHover: '#162C48',
-    secondaryBg: 'rgba(34,163,163,0.06)', secondaryBorder: 'rgba(34,163,163,0.18)',
-    accent: '#22A3A3', impactLabel: '', confirmTitle: 'Confirmar ação',
+    secondaryBg: 'rgba(14,165,233,0.06)', secondaryBorder: 'rgba(14,165,233,0.18)',
+    accent: '#0ea5e9', impactLabel: '', confirmTitle: 'Confirmar ação',
   },
   alert: {
-    border: '#1F3A5F', badgeBg: 'rgba(34,163,163,0.14)', badgeText: '#22A3A3',
+    border: '#1F3A5F', badgeBg: 'rgba(14,165,233,0.14)', badgeText: '#0ea5e9',
     label: 'ALERTA', btnBg: '#1F3A5F', btnHover: '#162C48',
-    secondaryBg: 'rgba(34,163,163,0.06)', secondaryBorder: 'rgba(34,163,163,0.18)',
-    accent: '#22A3A3', impactLabel: '', confirmTitle: 'Confirmar ação',
+    secondaryBg: 'rgba(14,165,233,0.06)', secondaryBorder: 'rgba(14,165,233,0.18)',
+    accent: '#0ea5e9', impactLabel: '', confirmTitle: 'Confirmar ação',
   },
 };
 
 const CONFIDENCE_CONFIG: Record<string, { dot: string; text: string; label: string }> = {
-  high: { dot: '#22A3A3', text: 'rgba(230,237,243,0.60)', label: 'Alta' },
+  high: { dot: '#0ea5e9', text: 'rgba(230,237,243,0.60)', label: 'Alta' },
   medium: { dot: '#C8922A', text: 'rgba(230,237,243,0.55)', label: 'Média' },
   low: { dot: '#8B949E', text: 'rgba(230,237,243,0.50)', label: 'Baixa' },
 };
@@ -317,7 +317,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           <div style={{
             fontSize: 11, fontWeight: 500, marginBottom: 8,
             color: decision.type === 'scale'
-              ? 'rgba(34,163,163,0.80)'
+              ? 'rgba(14,165,233,0.80)'
               : 'rgba(214,59,59,0.75)',
           }}>
             Impacto projetado (7 dias): {decision.type === 'scale' ? '+' : '-'}{formatMoney(decision.impact_7d)}
@@ -382,7 +382,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
               }}>
                 <span style={{ color: '#8B949E', fontWeight: 500 }}>{m.key}</span>
                 <span style={{
-                  color: m.trend === 'down' ? '#D63B3B' : m.trend === 'up' ? '#22A3A3' : '#8B949E',
+                  color: m.trend === 'down' ? '#D63B3B' : m.trend === 'up' ? '#0ea5e9' : '#8B949E',
                   fontWeight: 600, fontSize: 11,
                 }}>
                   {m.value}
@@ -487,7 +487,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           {actionFeedback && (
             <span style={{
               fontSize: 11, fontWeight: 500, marginLeft: 4,
-              color: actionFeedback.type === 'success' ? '#22A3A3' : '#D63B3B',
+              color: actionFeedback.type === 'success' ? '#0ea5e9' : '#D63B3B',
             }}>
               {actionFeedback.msg}
             </span>
