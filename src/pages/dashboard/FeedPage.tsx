@@ -400,7 +400,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
             <TelegramIcon size={18} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3' }}>Alertas ativos</span>
               <span style={{
                 width: 5, height: 5, borderRadius: '50%', background: '#2AABEE',
@@ -410,8 +410,11 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
                 {conn.telegram_username ? `@${conn.telegram_username}` : 'Telegram'}
               </span>
             </div>
-            <div style={{ fontSize: 10.5, color: 'rgba(42,171,238,0.50)', marginTop: 2 }}>
-              Notificado quando: perdas detectadas · oportunidades · ações necessárias
+            <div style={{ fontSize: 10.5, color: 'rgba(42,171,238,0.45)', lineHeight: 1.6 }}>
+              Você será notificado quando:<br />
+              <span style={{ color: 'rgba(139,148,158,0.45)' }}>
+                · perdas forem detectadas · oportunidades surgirem · ações forem necessárias
+              </span>
             </div>
           </div>
         </div>
@@ -839,12 +842,14 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
   const navigate = useNavigate();
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 6 }}>
+
+      {/* ── BLOCO 1: STATUS ── */}
       <div style={{
         background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
         borderRadius: 4, padding: '14px 16px',
       }}>
-        {/* Confidence — top position for authority */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        {/* Confidence — top */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
             fontSize: 10, fontWeight: 600, color: 'rgba(14,165,233,0.70)',
@@ -854,95 +859,85 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
             <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(14,165,233,0.70)' }} />
             Confiança: alta
           </span>
-          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)' }}>
+          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.40)' }}>
             baseado nos últimos {periodLabel}
           </span>
         </div>
 
-        {/* Header — blue bullet + active subtitle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
-          <span style={{
-            width: 7, height: 7, borderRadius: '50%',
-            background: '#0ea5e9', boxShadow: '0 0 5px rgba(14,165,233,0.35)',
-          }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.01em' }}>
-            Nenhuma ação crítica no momento
-          </span>
+        {/* Headline */}
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.01em', marginBottom: 4 }}>
+          Nenhuma ação crítica no momento
         </div>
-        <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', marginLeft: 14, marginBottom: 14 }}>
-          Sistema focado em otimização ativa · {totalAds} {totalAds === 1 ? 'anúncio' : 'anúncios'}
+        <div style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.55)', marginBottom: 16 }}>
+          Operação estável · sistema focado em otimização ativa
         </div>
 
         {/* Ad list */}
         {ads.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 10 }}>
-            {ads.slice(0, 4).map((ad, i) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {ads.slice(0, 5).map((ad, i) => (
               <div key={ad.meta_ad_id || i} style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '3px 6px',
+                display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
               }}>
-                <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(139,148,158,0.20)', flexShrink: 0 }} />
+                <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(14,165,233,0.25)', flexShrink: 0 }} />
                 <span style={{
-                  fontSize: 10.5, color: 'rgba(230,237,243,0.45)', fontWeight: 500,
+                  fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
                 }}>
                   {ad.name}
                 </span>
-                <span style={{ fontSize: 9.5, color: 'rgba(139,148,158,0.35)', whiteSpace: 'nowrap' }}>
-                  Estável
+                <span style={{ fontSize: 10, color: 'rgba(14,165,233,0.40)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                  Saudável
                 </span>
               </div>
             ))}
-            {totalAds > 4 && (
-              <span style={{ fontSize: 9.5, color: 'rgba(139,148,158,0.20)', padding: '1px 6px' }}>
-                + {totalAds - 4} monitorados
+            {totalAds > 5 && (
+              <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
+                + {totalAds - 5} monitorados
               </span>
             )}
           </div>
         )}
-
-        {/* Micro pressure */}
-        <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.45)', lineHeight: 1.5 }}>
-          Pequenas melhorias aqui podem impactar seus resultados nos próximos dias
-        </div>
       </div>
 
-      {/* Opportunity card — BLUE */}
+      {/* ── BLOCO 2: OPORTUNIDADE ── */}
       <div style={{
         background: 'rgba(14,165,233,0.03)', border: '1px solid rgba(14,165,233,0.12)',
         borderLeft: '3px solid rgba(14,165,233,0.45)',
         borderRadius: 4, padding: '14px 16px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Oportunidade disponível
-          </div>
-          <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(14,165,233,0.45)', letterSpacing: '0.04em' }}>
-            Potencial de crescimento ativo
-          </div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+          Oportunidade disponível
         </div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', marginBottom: 4, lineHeight: 1.35 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#E6EDF3', marginBottom: 6, lineHeight: 1.35 }}>
           Seu próximo ganho está em novos criativos
         </div>
-        <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', lineHeight: 1.5, marginBottom: 10 }}>
-          Variações com hooks mais diretos tendem a melhorar em contas similares à sua.
+        <div style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.55)', lineHeight: 1.55, marginBottom: 12 }}>
+          Variações com hooks diretos tendem a melhorar performance em contas similares à sua
         </div>
         <button onClick={() => navigate('/dashboard/criar')} style={{
           background: '#0ea5e9', color: '#E6EDF3',
           border: 'none', borderRadius: 3,
-          padding: '8px 16px', fontSize: 12, fontWeight: 700,
+          padding: '8px 18px', fontSize: 12, fontWeight: 700,
           fontFamily: F, cursor: 'pointer', transition: 'background 0.15s',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#0c8bd0'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#0ea5e9'; }}>
           Gerar variação com IA
         </button>
+        <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)', marginTop: 10, lineHeight: 1.5 }}>
+          Pequenas melhorias aqui podem impactar seus resultados nos próximos dias
+        </div>
       </div>
 
-      {/* Monitoring */}
+      {/* ── BLOCO 3: SISTEMA ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 2px' }}>
-        <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(14,165,233,0.30)' }} />
-        <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)' }}>
-          Análise em andamento — mais dados melhoram as decisões
+        <span style={{
+          width: 5, height: 5, borderRadius: '50%', background: 'rgba(14,165,233,0.25)',
+          animation: 'pulse 2.5s ease-in-out infinite',
+        }} />
+        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)' }}>
+          Sistema analisando continuamente · novas decisões podem surgir a qualquer momento
         </span>
       </div>
     </div>
@@ -973,13 +968,13 @@ const PerformanceSummary: React.FC<{
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 6 }}>
 
-      {/* ── BLOCK 1: Status + Metrics + Ads ── */}
+      {/* ── BLOCO 1: STATUS ── */}
       <div style={{
         background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
         borderRadius: 4, padding: '14px 16px',
       }}>
-        {/* Confidence + hook — top position for authority */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        {/* Confidence — top */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
             fontSize: 10, fontWeight: 600, color: confColor,
@@ -989,29 +984,22 @@ const PerformanceSummary: React.FC<{
             <span style={{ width: 4, height: 4, borderRadius: '50%', background: confColor }} />
             Confiança: {confLevel}
           </span>
-          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)' }}>
+          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.40)' }}>
             baseado nos últimos {periodLabel}
           </span>
         </div>
 
-        {/* Header — blue bullet + active subtitle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
-          <span style={{
-            width: 7, height: 7, borderRadius: '50%',
-            background: '#0ea5e9', boxShadow: '0 0 5px rgba(14,165,233,0.35)',
-          }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.01em' }}>
-            Nenhuma ação crítica no momento
-          </span>
+        {/* Headline */}
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.01em', marginBottom: 4 }}>
+          Nenhuma ação crítica no momento
         </div>
-        <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', marginLeft: 14, marginBottom: hasMetrics ? 10 : 0 }}>
-          Sistema focado em otimização ativa · {totalAds} {totalAds === 1 ? 'anúncio' : 'anúncios'}
-          {hasMetrics ? ` · ${metrics.daysOfData}d de dados` : ''}
+        <div style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.55)', marginBottom: hasMetrics ? 14 : 16 }}>
+          Operação estável · sistema focado em otimização ativa
         </div>
 
         {/* Metrics */}
         {hasMetrics && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 5, marginBottom: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 5, marginBottom: 14 }}>
             {[
               { label: 'Investido', value: `R$${spendReais}` },
               { label: 'CTR', value: `${ctrPct}%` },
@@ -1033,78 +1021,74 @@ const PerformanceSummary: React.FC<{
           </div>
         )}
 
-        {/* Ad list — compact */}
+        {/* Ad list */}
         {ads.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginBottom: 10 }}>
-            {ads.slice(0, 4).map((ad, i) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {ads.slice(0, 5).map((ad, i) => (
               <div key={ad.meta_ad_id || i} style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '3px 6px',
+                display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
               }}>
-                <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(139,148,158,0.20)', flexShrink: 0 }} />
+                <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(14,165,233,0.25)', flexShrink: 0 }} />
                 <span style={{
-                  fontSize: 10.5, color: 'rgba(230,237,243,0.45)', fontWeight: 500,
+                  fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
                 }}>
                   {ad.name}
                 </span>
-                <span style={{ fontSize: 9.5, color: 'rgba(139,148,158,0.35)', whiteSpace: 'nowrap' }}>
-                  Estável
+                <span style={{ fontSize: 10, color: 'rgba(14,165,233,0.40)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                  Saudável
                 </span>
               </div>
             ))}
-            {totalAds > 4 && (
-              <span style={{ fontSize: 9.5, color: 'rgba(139,148,158,0.20)', padding: '1px 6px' }}>
-                + {totalAds - 4} monitorados
+            {totalAds > 5 && (
+              <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
+                + {totalAds - 5} monitorados
               </span>
             )}
           </div>
         )}
-
-        {/* Micro pressure — creates movement */}
-        <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.45)', marginTop: 6, lineHeight: 1.5 }}>
-          Pequenas melhorias aqui podem impactar seus resultados nos próximos dias
-        </div>
       </div>
 
-      {/* ── BLOCK 2: Opportunity — BLUE card (the money hook) ── */}
+      {/* ── BLOCO 2: OPORTUNIDADE ── */}
       <div style={{
         background: 'rgba(14,165,233,0.03)', border: '1px solid rgba(14,165,233,0.12)',
         borderLeft: '3px solid rgba(14,165,233,0.45)',
         borderRadius: 4, padding: '14px 16px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Oportunidade disponível
-          </div>
-          <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(14,165,233,0.45)', letterSpacing: '0.04em' }}>
-            Potencial de crescimento ativo
-          </div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+          Oportunidade disponível
         </div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', marginBottom: 4, lineHeight: 1.35 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#E6EDF3', marginBottom: 6, lineHeight: 1.35 }}>
           Seu próximo ganho está em novos criativos
         </div>
-        <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', lineHeight: 1.5, marginBottom: 10 }}>
+        <div style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.55)', lineHeight: 1.55, marginBottom: 12 }}>
           {ctrGood
-            ? `CTR de ${ctrPct}% com espaço para escalar — novas variações podem ampliar esse resultado.`
-            : `Variações com hooks mais diretos tendem a melhorar em contas similares à sua.`}
+            ? `CTR de ${ctrPct}% com espaço para escalar — novas variações podem ampliar esse resultado`
+            : `Variações com hooks diretos tendem a melhorar performance em contas similares à sua`}
         </div>
         <button onClick={() => navigate('/dashboard/criar')} style={{
           background: '#0ea5e9', color: '#E6EDF3',
           border: 'none', borderRadius: 3,
-          padding: '8px 16px', fontSize: 12, fontWeight: 700,
+          padding: '8px 18px', fontSize: 12, fontWeight: 700,
           fontFamily: F, cursor: 'pointer', transition: 'background 0.15s',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#0c8bd0'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#0ea5e9'; }}>
           Gerar variação com IA
         </button>
+        <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)', marginTop: 10, lineHeight: 1.5 }}>
+          Pequenas melhorias aqui podem impactar seus resultados nos próximos dias
+        </div>
       </div>
 
-      {/* ── Single monitoring line ── */}
+      {/* ── BLOCO 3: SISTEMA ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 2px' }}>
-        <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(14,165,233,0.30)' }} />
-        <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)' }}>
-          Análise em andamento — mais dados melhoram as decisões
+        <span style={{
+          width: 5, height: 5, borderRadius: '50%', background: 'rgba(14,165,233,0.25)',
+          animation: 'pulse 2.5s ease-in-out infinite',
+        }} />
+        <span style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.40)' }}>
+          Sistema analisando continuamente · novas decisões podem surgir a qualquer momento
         </span>
       </div>
     </div>
