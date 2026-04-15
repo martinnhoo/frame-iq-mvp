@@ -1791,6 +1791,33 @@ const FeedPage: React.FC = () => {
               />
             )}
 
+            {/* Intelligence — always visible before decisions */}
+            {metaConnected && !isDemo && userId && personaId && (
+              <div style={{ marginBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 4 }}>
+                <PatternsPanel
+                  userId={userId}
+                  personaId={personaId}
+                  onGenerateVariation={(pattern) => {
+                    const ft = pattern.feature_type || pattern.variables?.feature_type || "";
+                    const state = { state: { fromPattern: pattern } };
+                    if (ft === "hook_type" || ft === "hook_presence") {
+                      navigate('/dashboard/hooks', state);
+                    } else if (ft === "format" || ft === "combination" || ft === "text_density") {
+                      navigate('/dashboard/boards/new', state);
+                    } else if (ft === "campaign" || ft === "adset") {
+                      navigate('/dashboard/brief', state);
+                    } else if (ft === "gap") {
+                      navigate('/dashboard/boards/new', state);
+                    } else {
+                      navigate('/dashboard/hooks', state);
+                    }
+                  }}
+                  onPatternsLoaded={(count: number) => setPatternsCount(count)}
+                  compact
+                />
+              </div>
+            )}
+
             {pendingDecisions.length > 0 && hasCritical && (
               <div style={{ marginBottom: 12 }}>
                 <SummaryBar decisions={pendingDecisions} />
@@ -1822,27 +1849,20 @@ const FeedPage: React.FC = () => {
           <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} />
         ) : null}
 
-        {/* Patterns panel — the brain of the system */}
-        {metaConnected && !isDemo && userId && personaId && (
+        {/* Intelligence for non-critical states (critical state has it above decisions) */}
+        {metaConnected && !isDemo && userId && personaId && feedState !== 'full' && (
           <div style={{ marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
             <PatternsPanel
               userId={userId}
               personaId={personaId}
               onGenerateVariation={(pattern) => {
-                // Route to the right tool based on pattern type
                 const ft = pattern.feature_type || pattern.variables?.feature_type || "";
                 const state = { state: { fromPattern: pattern } };
-                if (ft === "hook_type" || ft === "hook_presence") {
-                  navigate('/dashboard/hooks', state);
-                } else if (ft === "format" || ft === "combination" || ft === "text_density") {
-                  navigate('/dashboard/boards/new', state);
-                } else if (ft === "campaign" || ft === "adset") {
-                  navigate('/dashboard/brief', state);
-                } else if (ft === "gap") {
-                  navigate('/dashboard/boards/new', state);
-                } else {
-                  navigate('/dashboard/hooks', state);
-                }
+                if (ft === "hook_type" || ft === "hook_presence") navigate('/dashboard/hooks', state);
+                else if (ft === "format" || ft === "combination" || ft === "text_density") navigate('/dashboard/boards/new', state);
+                else if (ft === "campaign" || ft === "adset") navigate('/dashboard/brief', state);
+                else if (ft === "gap") navigate('/dashboard/boards/new', state);
+                else navigate('/dashboard/hooks', state);
               }}
               onPatternsLoaded={(count: number) => setPatternsCount(count)}
             />
