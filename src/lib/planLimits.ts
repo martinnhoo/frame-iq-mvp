@@ -15,7 +15,7 @@ export const CREDIT_COSTS: Record<string, number> = {
   translation: 1,
   persona:     1,
   competitor:  2,
-  video:       3,
+  video:       5,
 };
 
 // Plan credit pools (monthly)

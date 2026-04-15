@@ -314,7 +314,7 @@ export default function DashboardLayout() {
         setTimeout(() => toast.success(msg, { duration: 6000 }), 800);
       }
 
-      // Capacity pack purchase success — show toast, refresh usage
+      // Capacity pack purchase success — poll until webhook processes, then toast
       const capacityResult = new URLSearchParams(window.location.search).get("capacity");
       if (capacityResult === "success") {
         const lang = profileData?.preferred_language || storage.get("adbrief_language") || "pt";
@@ -323,14 +323,46 @@ export default function DashboardLayout() {
           : lang === "en"
           ? "Capacity expanded · you can continue"
           : "Capacidade expandida · pode continuar";
+        const capPending = lang === "es"
+          ? "Procesando pago..."
+          : lang === "en"
+          ? "Processing payment..."
+          : "Processando pagamento...";
         const url = new URL(window.location.href);
         url.searchParams.delete("capacity");
         url.searchParams.delete("pack");
         window.history.replaceState({}, "", url.toString());
-        setTimeout(() => {
+
+        // Get baseline usage before polling
+        const { data: baselineUsage } = await supabase.functions.invoke("check-usage", {
+          body: { user_id: session.user.id },
+        });
+        const baselineBonus = baselineUsage?.credits?.bonus ?? 0;
+
+        // Poll every 2s for up to 30s waiting for webhook to add credits
+        let credited = false;
+        const pendingToast = toast.loading(capPending);
+        for (let i = 0; i < 15; i++) {
+          await new Promise(r => setTimeout(r, 2000));
+          try {
+            const { data: poll } = await supabase.functions.invoke("check-usage", {
+              body: { user_id: session.user.id },
+            });
+            if (poll?.credits?.bonus > baselineBonus) {
+              credited = true;
+              break;
+            }
+          } catch { /* continue polling */ }
+        }
+
+        toast.dismiss(pendingToast);
+        if (credited) {
           toast.success(capMsg, { duration: 5000 });
-          window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
-        }, 800);
+        } else {
+          // Webhook may still be delayed — show toast anyway, credits will appear soon
+          toast.success(capMsg, { duration: 5000 });
+        }
+        window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
       }
       if (mounted) setLoading(false);
     };

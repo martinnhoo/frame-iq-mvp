@@ -74,28 +74,61 @@ export async function requireCredits(
     .maybeSingle();
 
   if (!profile) {
-    console.warn('[deduct_credits] No profile found for user:', userId);
-    return { allowed: true }; // fail open — don't block if profile missing
+    console.error('[deduct_credits] No profile found for user:', userId);
+    return {
+      allowed: false,
+      error: {
+        error: 'system_error',
+        code: 'PROFILE_NOT_FOUND',
+        remaining: 0,
+        upgrade_needed: false,
+      },
+    };
   }
 
   const plan = getEffectivePlan(profile?.plan, profile?.email);
   const isTrialing = profile?.subscription_status === 'trialing';
   const creditPool = getPlanCreditPool(plan, isTrialing);
 
-  // Deduct via atomic RPC
-  const { data, error } = await supabase.rpc('deduct_credits', {
+  // Deduct via atomic RPC — fail-closed with 1 retry
+  const rpcParams = {
     p_user_id: userId,
     p_action: action,
     p_credits: cost,
     p_total_credits: creditPool,
     p_bonus_credits: 0,
     p_metadata: metadata ? JSON.stringify(metadata) : null,
-  });
+  };
+
+  let data: any = null;
+  let error: any = null;
+
+  // Attempt 1
+  const attempt1 = await supabase.rpc('deduct_credits', rpcParams);
+  data = attempt1.data;
+  error = attempt1.error;
+
+  // Retry once on transient error (network, timeout, lock contention)
+  if (error) {
+    console.warn('[deduct_credits] RPC error on attempt 1, retrying...', error.message);
+    await new Promise(r => setTimeout(r, 500)); // 500ms backoff
+    const attempt2 = await supabase.rpc('deduct_credits', rpcParams);
+    data = attempt2.data;
+    error = attempt2.error;
+  }
 
   if (error) {
-    console.error('[deduct_credits] RPC error:', error);
-    // On error, allow the action (fail open) to not block users
-    return { allowed: true };
+    console.error('[deduct_credits] RPC error after 2 attempts — BLOCKING action:', error);
+    // Fail closed — do NOT allow free usage on system error
+    return {
+      allowed: false,
+      error: {
+        error: 'system_error',
+        code: 'CREDIT_SYSTEM_UNAVAILABLE',
+        remaining: 0,
+        upgrade_needed: false,
+      },
+    };
   }
 
   if (!data?.allowed) {

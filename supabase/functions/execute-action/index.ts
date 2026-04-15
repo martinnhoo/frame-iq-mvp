@@ -151,6 +151,24 @@ async function executeAction(
 
   const userId = (user as { id: string }).id;
 
+  // ── Idempotency guard — prevent double execution of same decision ────
+  const { data: existingAction } = await supabase
+    .from("action_log")
+    .select("id, result, executed_at")
+    .eq("decision_id", decision_id)
+    .eq("action_type", action_type)
+    .eq("result", "success")
+    .maybeSingle();
+
+  if (existingAction) {
+    console.log(`[execute-action] Already executed: decision=${decision_id} action=${action_type} log=${existingAction.id}`);
+    return {
+      success: true,
+      already_executed: true,
+      action_log_id: existingAction.id,
+    };
+  }
+
   // Get the ad account ID and headline from the decision
   const { data: decisionData, error: decisionError } = await supabase
     .from("decisions")

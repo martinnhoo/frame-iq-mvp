@@ -122,23 +122,70 @@ function buildMessage(payload: TelegramPayload): string {
 
 async function sendTelegramMessage(chatId: string, text: string) {
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: "Markdown",
-      disable_web_page_preview: true,
-    }),
-  });
+  const MAX_RETRIES = 3;
+  const BACKOFF_MS = [0, 1000, 2000]; // immediate, 1s, 2s
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Telegram API error: ${JSON.stringify(error)}`);
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      console.warn(`[send-telegram] Retry ${attempt}/${MAX_RETRIES - 1} after ${BACKOFF_MS[attempt]}ms`);
+      await new Promise(r => setTimeout(r, BACKOFF_MS[attempt]));
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: "Markdown",
+          disable_web_page_preview: true,
+        }),
+      });
+
+      clearTimeout(timeout);
+
+      if (response.ok) {
+        return response.json();
+      }
+
+      // Telegram rate limit (429) — respect retry_after header
+      if (response.status === 429) {
+        const body = await response.json().catch(() => ({}));
+        const retryAfter = body?.parameters?.retry_after || 5;
+        console.warn(`[send-telegram] Rate limited, waiting ${retryAfter}s`);
+        await new Promise(r => setTimeout(r, retryAfter * 1000));
+        continue;
+      }
+
+      // 5xx = transient, retry; 4xx (except 429) = permanent, stop
+      if (response.status >= 500) {
+        console.warn(`[send-telegram] Server error ${response.status}, retrying...`);
+        continue;
+      }
+
+      // 4xx permanent error — don't retry
+      const error = await response.json().catch(() => ({}));
+      throw new Error(`Telegram API error ${response.status}: ${JSON.stringify(error)}`);
+
+    } catch (e: any) {
+      // AbortError = timeout, network errors = transient → retry
+      if (e.name === "AbortError" || e.message?.includes("fetch")) {
+        console.warn(`[send-telegram] Attempt ${attempt + 1} failed: ${e.message}`);
+        if (attempt === MAX_RETRIES - 1) {
+          throw new Error(`Telegram send failed after ${MAX_RETRIES} attempts: ${e.message}`);
+        }
+        continue;
+      }
+      throw e; // permanent error
+    }
   }
 
-  return response.json();
+  throw new Error("Telegram send failed: exhausted retries");
 }
 
 serve(async (req) => {
