@@ -416,10 +416,7 @@ async function rollbackAction(
   req: ExecuteActionRequest,
   supabase: SupabaseClient,
   user: unknown
-): Promise<{
-  success: boolean;
-  error?: string;
-}> {
+): Promise<Record<string, unknown>> {
   const { action_log_id } = req;
   const userId = (user as { id: string }).id;
 
