@@ -3,7 +3,7 @@ import type { Decision } from '../../types/v2-database';
 import { formatMoney } from '../../lib/format';
 
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'DM Mono', 'JetBrains Mono', monospace";
+const M = "'Space Grotesk', 'Plus Jakarta Sans', sans-serif";
 
 interface SummaryBarProps {
   decisions: Decision[];

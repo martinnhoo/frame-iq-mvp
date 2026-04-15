@@ -3,7 +3,7 @@ import type { Decision, DecisionAction, ImpactConfidence } from '../../types/v2-
 import { formatMoney, timeAgo } from '../../lib/format';
 
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'DM Mono', 'JetBrains Mono', monospace";
+const M = "'Space Grotesk', 'Plus Jakarta Sans', sans-serif";
 
 interface DecisionCardProps {
   decision: Decision;
@@ -196,10 +196,10 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
       {decision.impact_daily > 0 && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
           <span style={{
-            fontSize: 22, fontWeight: 800,
-            color: cfg.accent,
+            fontSize: 22, fontWeight: 700,
+            color: '#fff',
             fontFamily: M,
-            letterSpacing: '-0.02em',
+            letterSpacing: '-0.03em',
           }}>
             {formatMoney(decision.impact_daily)}/dia
           </span>

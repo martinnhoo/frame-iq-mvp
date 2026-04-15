@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { formatMoney } from '../../lib/format';
 
 const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'DM Mono', 'JetBrains Mono', monospace";
+const M = "'Space Grotesk', 'Plus Jakarta Sans', sans-serif";
 
 interface MoneyBarProps {
   leaking: number;
@@ -47,7 +47,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontSize: 24, fontWeight: 800, color: '#f87171', fontFamily: M, letterSpacing: '-0.02em' }}>
+              <span style={{ fontSize: 24, fontWeight: 700, color: '#fff', fontFamily: M, letterSpacing: '-0.03em' }}>
                 {formatMoney(leaking)}/dia
               </span>
               <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.45)' }}>
@@ -87,7 +87,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
           <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
             Oportunidade identificada
           </div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#34d399', fontFamily: M, letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: M, letterSpacing: '-0.03em' }}>
             {formatMoney(capturable)}
           </div>
         </div>
@@ -101,7 +101,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
           <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
             Total economizado
           </div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#0da2e7', fontFamily: M, letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: M, letterSpacing: '-0.03em' }}>
             {formatMoney(displayedSaved)}
           </div>
         </div>
