@@ -424,7 +424,7 @@ const FeedPage: React.FC = () => {
                   color: 'rgba(255,255,255,0.25)',
                   fontFamily: F,
                 }}>
-                  {pendingDecisions.length} item{pendingDecisions.length !== 1 ? 's' : ''}
+                  {pendingDecisions.length} {pendingDecisions.length === 1 ? 'item' : 'itens'}
                 </span>
               )}
               {isDemo && (
