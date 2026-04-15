@@ -620,6 +620,90 @@ function getAdStatusDisplay(ad: AdSummary): { label: string; color: string; dotC
   return { label: 'Saudável', color: 'rgba(34,163,163,0.55)', dotColor: 'rgba(34,163,163,0.35)' };
 }
 
+/** Sort priority: ACTIVE first, then LEARNING/IN_PROCESS, then PAUSED, then rest */
+function getAdSortOrder(ad: AdSummary): number {
+  const s = (ad.effective_status || ad.status || '').toUpperCase();
+  if (s === 'ACTIVE') return 0;
+  if (['LEARNING', 'IN_PROCESS', 'PENDING_REVIEW'].includes(s)) return 1;
+  if (s === 'DISAPPROVED' || s === 'WITH_ISSUES') return 2;
+  if (s === 'PAUSED' || s === 'CAMPAIGN_PAUSED' || s === 'ADSET_PAUSED') return 3;
+  if (s === 'ARCHIVED' || s === 'DELETED') return 4;
+  return 0; // unknown → treat as active
+}
+
+function sortAdsByStatus(ads: AdSummary[]): AdSummary[] {
+  return [...ads].sort((a, b) => getAdSortOrder(a) - getAdSortOrder(b));
+}
+
+/** Collapsible ad list — shows 5 by default, expand/collapse when >5 */
+const AdList: React.FC<{ ads: AdSummary[]; totalAds: number }> = ({ ads, totalAds }) => {
+  const [expanded, setExpanded] = useState(false);
+  const sorted = sortAdsByStatus(ads);
+  const hasMore = sorted.length > 5;
+  const visible = expanded ? sorted : sorted.slice(0, 5);
+  const hiddenCount = totalAds - 5;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {visible.map((ad, i) => {
+        const st = getAdStatusDisplay(ad);
+        return (
+          <div key={ad.meta_ad_id || i} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
+          }}>
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
+            <span style={{
+              fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+            }}>
+              {ad.name}
+            </span>
+            <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
+              {st.label}
+            </span>
+          </div>
+        );
+      })}
+      {hasMore && !expanded && (
+        <button onClick={() => setExpanded(true)} style={{
+          background: 'none', border: 'none', padding: '4px 2px',
+          fontSize: 10.5, color: 'rgba(14,165,233,0.50)', fontWeight: 600,
+          cursor: 'pointer', fontFamily: F, textAlign: 'left',
+          transition: 'color 0.1s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = 'rgba(14,165,233,0.75)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(14,165,233,0.50)'; }}>
+          + {hiddenCount > 0 ? hiddenCount : sorted.length - 5} monitorados · ver todos ▾
+        </button>
+      )}
+      {hasMore && expanded && (
+        <>
+          {totalAds > sorted.length && (
+            <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
+              + {totalAds - sorted.length} não listados
+            </span>
+          )}
+          <button onClick={() => setExpanded(false)} style={{
+            background: 'none', border: 'none', padding: '4px 2px',
+            fontSize: 10.5, color: 'rgba(139,148,158,0.40)', fontWeight: 500,
+            cursor: 'pointer', fontFamily: F, textAlign: 'left',
+            transition: 'color 0.1s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'rgba(139,148,158,0.60)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(139,148,158,0.40)'; }}>
+            ▴ recolher
+          </button>
+        </>
+      )}
+      {!hasMore && totalAds > sorted.length && (
+        <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
+          + {totalAds - sorted.length} monitorados
+        </span>
+      )}
+    </div>
+  );
+};
+
 interface AdMetricsSummary {
   totalSpend: number;    // centavos
   totalConversions: number;
@@ -888,35 +972,8 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
           Operação estável · sistema focado em otimização ativa
         </div>
 
-        {/* Ad list — shows real status (Saudável / Pausado / etc.) */}
-        {ads.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {ads.slice(0, 5).map((ad, i) => {
-              const st = getAdStatusDisplay(ad);
-              return (
-                <div key={ad.meta_ad_id || i} style={{
-                  display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
-                }}>
-                  <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
-                  <span style={{
-                    fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
-                  }}>
-                    {ad.name}
-                  </span>
-                  <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
-                    {st.label}
-                  </span>
-                </div>
-              );
-            })}
-            {totalAds > 5 && (
-              <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
-                + {totalAds - 5} monitorados
-              </span>
-            )}
-          </div>
-        )}
+        {/* Ad list — sorted by status, collapsible when >5 */}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE ── */}
@@ -1040,35 +1097,8 @@ const PerformanceSummary: React.FC<{
           </div>
         )}
 
-        {/* Ad list — shows real status (Saudável / Pausado / etc.) */}
-        {ads.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {ads.slice(0, 5).map((ad, i) => {
-              const st = getAdStatusDisplay(ad);
-              return (
-                <div key={ad.meta_ad_id || i} style={{
-                  display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
-                }}>
-                  <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
-                  <span style={{
-                    fontSize: 11, color: 'rgba(230,237,243,0.50)', fontWeight: 500,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
-                  }}>
-                    {ad.name}
-                  </span>
-                  <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
-                    {st.label}
-                  </span>
-                </div>
-              );
-            })}
-            {totalAds > 5 && (
-              <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.25)', padding: '2px 2px' }}>
-                + {totalAds - 5} monitorados
-              </span>
-            )}
-          </div>
-        )}
+        {/* Ad list — sorted by status, collapsible when >5 */}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE ── */}
@@ -1118,6 +1148,55 @@ const PerformanceSummary: React.FC<{
 };
 
 // ================================================================
+// COLLAPSIBLE DECISIONS — shows first 5, expand to see all
+// ================================================================
+const DECISIONS_COLLAPSE_THRESHOLD = 5;
+
+const CollapsibleDecisions: React.FC<{
+  decisions: Decision[];
+  onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
+  isDemo: boolean;
+}> = ({ decisions, onAction, isDemo }) => {
+  const [expanded, setExpanded] = useState(false);
+  const shouldCollapse = decisions.length > DECISIONS_COLLAPSE_THRESHOLD;
+  const visible = shouldCollapse && !expanded ? decisions.slice(0, DECISIONS_COLLAPSE_THRESHOLD) : decisions;
+  const hiddenCount = decisions.length - DECISIONS_COLLAPSE_THRESHOLD;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {visible.map(decision => (
+        <DecisionCard key={decision.id} decision={decision} onAction={onAction} isDemo={isDemo} />
+      ))}
+      {shouldCollapse && !expanded && (
+        <button onClick={() => setExpanded(true)} style={{
+          background: 'rgba(230,237,243,0.03)', border: '1px solid rgba(230,237,243,0.06)',
+          borderRadius: 4, padding: '10px 16px',
+          fontSize: 12, fontWeight: 600, color: '#0ea5e9',
+          cursor: 'pointer', fontFamily: F, textAlign: 'center',
+          transition: 'all 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(14,165,233,0.06)'; e.currentTarget.style.borderColor = 'rgba(14,165,233,0.15)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(230,237,243,0.03)'; e.currentTarget.style.borderColor = 'rgba(230,237,243,0.06)'; }}>
+          Ver mais {hiddenCount} {hiddenCount === 1 ? 'recomendação' : 'recomendações'} ▾
+        </button>
+      )}
+      {shouldCollapse && expanded && (
+        <button onClick={() => setExpanded(false)} style={{
+          background: 'none', border: 'none', padding: '6px 2px',
+          fontSize: 11, fontWeight: 500, color: 'rgba(139,148,158,0.45)',
+          cursor: 'pointer', fontFamily: F, textAlign: 'center',
+          transition: 'color 0.1s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = 'rgba(139,148,158,0.65)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(139,148,158,0.45)'; }}>
+          ▴ Recolher recomendações
+        </button>
+      )}
+    </div>
+  );
+};
+
+// ================================================================
 // FEED PAGE — Main component
 // ================================================================
 const FeedPage: React.FC = () => {
@@ -1159,7 +1238,7 @@ const FeedPage: React.FC = () => {
         .from('ads' as any)
         .select('name, meta_ad_id, status, effective_status, ad_set:ad_sets(name, campaign:campaigns(name))', { count: 'exact' })
         .eq('account_id', accountId)
-        .limit(8) as any);
+        .limit(20) as any);
       setUserAds((data || []) as AdSummary[]);
       setTotalAdCount(count ?? (data?.length ?? 0));
       setAdsLoaded(true);
@@ -1526,11 +1605,7 @@ const FeedPage: React.FC = () => {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {pendingDecisions.map(decision => (
-                <DecisionCard key={decision.id} decision={decision} onAction={handleAction} isDemo={isDemo} />
-              ))}
-            </div>
+            <CollapsibleDecisions decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} />
           </>
         ) : feedState === 'no-ads' ? (
           <StateNoAds />
