@@ -359,8 +359,13 @@ export default function DashboardLayout() {
         if (credited) {
           toast.success(capMsg, { duration: 5000 });
         } else {
-          // Webhook may still be delayed — show toast anyway, credits will appear soon
-          toast.success(capMsg, { duration: 5000 });
+          // Webhook delayed — warn user instead of fake success
+          const delayMsg = lang === "es"
+            ? "Pago recibido · los créditos aparecerán en breve"
+            : lang === "en"
+            ? "Payment received · credits will appear shortly"
+            : "Pagamento recebido · créditos aparecerão em breve";
+          toast.info(delayMsg, { duration: 8000 });
         }
         window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
       }

@@ -152,16 +152,17 @@ async function executeAction(
   const userId = (user as { id: string }).id;
 
   // ── Idempotency guard — prevent double execution of same decision ────
+  // Check for both "success" and "pending" (in-flight) to block double-clicks
   const { data: existingAction } = await supabase
     .from("action_log")
     .select("id, result, executed_at")
     .eq("decision_id", decision_id)
     .eq("action_type", action_type)
-    .eq("result", "success")
+    .in("result", ["success", "pending"])
     .maybeSingle();
 
   if (existingAction) {
-    console.log(`[execute-action] Already executed: decision=${decision_id} action=${action_type} log=${existingAction.id}`);
+    console.log(`[execute-action] Already ${existingAction.result}: decision=${decision_id} action=${action_type} log=${existingAction.id}`);
     return {
       success: true,
       already_executed: true,
@@ -198,6 +199,32 @@ async function executeAction(
     target_type,
     metaAccessToken
   );
+
+  // ── Log-first pattern: create pending log BEFORE calling Meta API ────
+  // This prevents the "action executed but never logged" scenario
+  const { data: logData, error: pendingLogError } = await supabase
+    .from("action_log")
+    .insert({
+      decision_id,
+      account_id: adAccountId,
+      user_id: userId,
+      action_type,
+      target_type,
+      target_meta_id,
+      previous_state: previousState,
+      new_state: null,
+      result: "pending",
+      estimated_daily_impact: estimated_daily_impact || 0,
+    })
+    .select()
+    .single();
+
+  if (pendingLogError || !logData) {
+    console.error("Failed to create pending action log:", pendingLogError);
+    throw new Error(`Failed to create action log: ${pendingLogError?.message}`);
+  }
+
+  const logId = logData.id;
 
   let metaApiResult: MetaApiResponse;
   let newState: Record<string, unknown> | null = null;
@@ -283,24 +310,11 @@ async function executeAction(
   }
 
   if (!metaApiResult.success) {
-    // Log failed action
-    const { error: logError } = await supabase.from("action_log").insert({
-      decision_id,
-      account_id: adAccountId,
-      user_id: userId,
-      action_type,
-      target_type,
-      target_meta_id,
-      previous_state: previousState,
-      new_state: null,
+    // Update log to error status
+    await supabase.from("action_log").update({
       result: "error",
       error_message: metaApiResult.error?.message || "Unknown error",
-      estimated_daily_impact: estimated_daily_impact || 0,
-    });
-
-    if (logError) {
-      console.error("Failed to log action error:", logError);
-    }
+    }).eq("id", logId);
 
     throw new Error(
       `Meta API call failed: ${metaApiResult.error?.message || "Unknown error"}`
@@ -316,28 +330,19 @@ async function executeAction(
     );
   }
 
-  // Log successful action
-  const { data: logData, error: logError } = await supabase
+  // Update log to success with new state
+  const { error: logError } = await supabase
     .from("action_log")
-    .insert({
-      decision_id,
-      account_id: adAccountId,
-      user_id: userId,
-      action_type,
-      target_type,
-      target_meta_id,
-      previous_state: previousState,
+    .update({
       new_state: newState,
       result: "success",
-      estimated_daily_impact: estimated_daily_impact || 0,
       rollback_expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     })
-    .select()
-    .single();
+    .eq("id", logId);
 
   if (logError) {
-    console.error("Failed to log action:", logError);
-    throw new Error(`Failed to log action: ${logError.message}`);
+    console.error("Failed to update action log to success:", logError);
+    // Action already executed — don't throw, just log the error
   }
 
   // Update decision status to 'acted'
@@ -397,7 +402,7 @@ async function executeAction(
 
   return {
     success: true,
-    action_log_id: logData?.id,
+    action_log_id: logId,
     previous_state: previousState,
     new_state: newState,
   };
