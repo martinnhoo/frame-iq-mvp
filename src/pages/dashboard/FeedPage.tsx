@@ -946,8 +946,8 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
 };
 
 // ================================================================
-// PERFORMANCE SUMMARY — high-value "no urgent actions" state
-// Shifts from "fixing" → "optimizing" mindset
+// PERFORMANCE SUMMARY — compressed, each block unique function
+// 1. Status + metrics  2. Opportunity (the one strong insight)  3. Next action
 // ================================================================
 const PerformanceSummary: React.FC<{
   ads: AdSummary[];
@@ -959,199 +959,116 @@ const PerformanceSummary: React.FC<{
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
 
-  // Convert from integer storage
   const ctrPct = hasMetrics ? (metrics.avgCtr / 100).toFixed(2) : null;
   const spendReais = hasMetrics ? (metrics.totalSpend / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
   const cpaReais = hasMetrics && metrics.avgCpa > 0 ? (metrics.avgCpa / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
   const ctrGood = ctrPct && parseFloat(ctrPct) >= 1;
-
-  const adsManagerUrl = metaAccountId
-    ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${metaAccountId.replace('act_', '')}`
-    : null;
-
-  // Confidence based on data volume
   const confLevel = hasMetrics && metrics.daysOfData >= 5 ? 'alta' : hasMetrics && metrics.daysOfData >= 2 ? 'média' : 'baixa';
-  const confColor = confLevel === 'alta' ? 'rgba(45,155,110,0.70)' : confLevel === 'média' ? 'rgba(34,163,163,0.70)' : 'rgba(139,148,158,0.50)';
+  const confColor = confLevel === 'alta' ? 'rgba(45,155,110,0.60)' : confLevel === 'média' ? 'rgba(34,163,163,0.60)' : 'rgba(139,148,158,0.45)';
 
   return (
-    <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+    <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 6 }}>
 
-      {/* ── CARD 1: Status + Metrics ── */}
+      {/* ── BLOCK 1: Status + Metrics + Ads (single card) ── */}
       <div style={{
         background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
-        borderRadius: 4, padding: '16px 18px',
+        borderRadius: 4, padding: '14px 16px',
       }}>
-        {/* Header — neutral/technical, not celebratory */}
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.01em', marginBottom: 3 }}>
-            Seus anúncios estão performando dentro do esperado
-          </div>
-          <div style={{ fontSize: 11.5, color: 'rgba(139,148,158,0.60)', lineHeight: 1.4 }}>
-            {totalAds} {totalAds === 1 ? 'anúncio analisado' : 'anúncios analisados'} nos últimos {periodLabel}
-            {hasMetrics ? ` · ${metrics.daysOfData} dias de dados` : ''}
-          </div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.01em', marginBottom: 2 }}>
+          Performance estável
+        </div>
+        <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', marginBottom: hasMetrics ? 10 : 0 }}>
+          {totalAds} {totalAds === 1 ? 'anúncio' : 'anúncios'} nos últimos {periodLabel}
+          {hasMetrics ? ` · ${metrics.daysOfData}d de dados` : ''}
+          {' · '}
+          <span style={{ color: confColor, fontWeight: 600 }}>Confiança {confLevel}</span>
         </div>
 
-        {/* Metrics grid */}
+        {/* Metrics */}
         {hasMetrics && (
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-            gap: 6, marginBottom: 12,
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 5, marginBottom: 10 }}>
             {[
-              { label: 'Investido', value: `R$${spendReais}`, sub: `${metrics.daysOfData}d` },
-              { label: 'CTR médio', value: `${ctrPct}%`, sub: ctrGood ? 'Dentro da média' : 'Abaixo da média' },
-              { label: 'CPA médio', value: cpaReais ? `R$${cpaReais}` : '—', sub: metrics.totalConversions > 0 ? `${metrics.totalConversions} conv.` : 'Sem conv.' },
+              { label: 'Investido', value: `R$${spendReais}` },
+              { label: 'CTR', value: `${ctrPct}%` },
+              { label: 'CPA', value: cpaReais ? `R$${cpaReais}` : '—' },
             ].map((m, i) => (
               <div key={i} style={{
                 background: 'rgba(230,237,243,0.02)', borderRadius: 3,
-                padding: '9px 8px 7px', textAlign: 'center',
+                padding: '8px 6px', textAlign: 'center',
                 border: '1px solid rgba(230,237,243,0.03)',
               }}>
-                <div style={{ fontSize: 9.5, color: 'rgba(139,148,158,0.50)', fontWeight: 600, marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <div style={{ fontSize: 9, color: 'rgba(139,148,158,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
                   {m.label}
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.02em' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#E6EDF3', letterSpacing: '-0.02em' }}>
                   {m.value}
-                </div>
-                <div style={{ fontSize: 9, color: 'rgba(139,148,158,0.40)', marginTop: 2 }}>
-                  {m.sub}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Ad list */}
+        {/* Ad list — compact */}
         {ads.length > 0 && (
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(139,148,158,0.40)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>
-              Anúncios monitorados
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {ads.slice(0, 5).map((ad, i) => (
-                <div key={ad.meta_ad_id || i} style={{
-                  display: 'flex', alignItems: 'center', gap: 7, padding: '4px 8px',
-                  background: 'rgba(230,237,243,0.012)', borderRadius: 2,
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {ads.slice(0, 4).map((ad, i) => (
+              <div key={ad.meta_ad_id || i} style={{
+                display: 'flex', alignItems: 'center', gap: 6, padding: '3px 6px',
+              }}>
+                <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(139,148,158,0.20)', flexShrink: 0 }} />
+                <span style={{
+                  fontSize: 10.5, color: 'rgba(230,237,243,0.45)', fontWeight: 500,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
-                  <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(139,148,158,0.25)', flexShrink: 0 }} />
-                  <span style={{
-                    fontSize: 11, color: 'rgba(230,237,243,0.55)', fontWeight: 500,
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
-                  }}>
-                    {ad.name}
-                  </span>
-                  {ad.ad_set?.campaign?.name && (
-                    <span style={{ fontSize: 9, color: 'rgba(139,148,158,0.25)', whiteSpace: 'nowrap' }}>
-                      {ad.ad_set.campaign.name}
-                    </span>
-                  )}
-                </div>
-              ))}
-              {totalAds > 5 && (
-                <span style={{ fontSize: 9.5, color: 'rgba(139,148,158,0.25)', padding: '2px 8px' }}>
-                  + {totalAds - 5} monitorados
+                  {ad.name}
                 </span>
-              )}
-            </div>
+              </div>
+            ))}
+            {totalAds > 4 && (
+              <span style={{ fontSize: 9.5, color: 'rgba(139,148,158,0.20)', padding: '1px 6px' }}>
+                + {totalAds - 4} monitorados
+              </span>
+            )}
           </div>
         )}
-
-        {/* Confidence + status */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              fontSize: 10, fontWeight: 600, color: confColor,
-              background: `${confColor}10`, border: `1px solid ${confColor}20`,
-              padding: '2px 7px', borderRadius: 3,
-            }}>
-              <span style={{ width: 4, height: 4, borderRadius: '50%', background: confColor }} />
-              Confiança: {confLevel}
-            </span>
-          </div>
-          {adsManagerUrl && (
-            <button onClick={() => window.open(adsManagerUrl, '_blank', 'noopener')} style={{
-              background: 'none', border: 'none', color: 'rgba(139,148,158,0.50)',
-              fontSize: 10.5, fontWeight: 500, fontFamily: F, cursor: 'pointer',
-              padding: 0, transition: 'color 0.1s',
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#8B949E'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(139,148,158,0.50)'; }}>
-              Ads Manager →
-            </button>
-          )}
-        </div>
       </div>
 
-      {/* ── CARD 2: Growth Insight ── */}
-      {hasMetrics && (
-        <div style={{
-          background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
-          borderRadius: 4, padding: '14px 18px',
-        }}>
-          <div style={{
-            fontSize: 9.5, fontWeight: 700, color: 'rgba(34,163,163,0.55)',
-            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8,
-          }}>
-            Oportunidade identificada
-          </div>
-          <div style={{ fontSize: 12.5, fontWeight: 600, color: '#E6EDF3', marginBottom: 4, lineHeight: 1.4 }}>
-            {ctrGood
-              ? 'Criativos com CTR acima da média podem ser escalados'
-              : 'CTR abaixo da média — testar novos hooks pode melhorar performance'}
-          </div>
-          <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', lineHeight: 1.5, marginBottom: 0 }}>
-            {ctrGood
-              ? 'Baseado no seu histórico, há espaço para aumentar volume mantendo eficiência.'
-              : 'Variações de criativo com hooks mais diretos tendem a aumentar CTR em contas similares.'}
-          </div>
-        </div>
-      )}
-
-      {/* ── CARD 3: Next Steps ── */}
+      {/* ── BLOCK 2: The ONE strong insight — "tem dinheiro aqui" ── */}
       <div style={{
-        background: '#0F141A', border: '1px solid rgba(230,237,243,0.05)',
-        borderRadius: 4, padding: '14px 18px',
+        background: '#0F141A', border: '1px solid rgba(34,163,163,0.08)',
+        borderLeft: '3px solid rgba(34,163,163,0.30)',
+        borderRadius: 4, padding: '14px 16px',
       }}>
-        <div style={{
-          fontSize: 9.5, fontWeight: 700, color: 'rgba(139,148,158,0.40)',
-          textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8,
-        }}>
-          Próximo passo recomendado
+        <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(34,163,163,0.50)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+          Oportunidade principal hoje
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(230,237,243,0.65)', lineHeight: 1.7, marginBottom: 12 }}>
-          <div style={{ marginBottom: 2 }}>• Testar novas variações de criativo</div>
-          <div style={{ marginBottom: 2 }}>• Explorar novos ângulos de hook</div>
-          <div>• Preparar campanhas para escala</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#E6EDF3', marginBottom: 4, lineHeight: 1.35 }}>
+          {ctrGood
+            ? 'Seu melhor criativo pode ser escalado'
+            : 'Novos hooks podem destravar performance'}
+        </div>
+        <div style={{ fontSize: 11, color: 'rgba(139,148,158,0.55)', lineHeight: 1.5, marginBottom: 10 }}>
+          {ctrGood
+            ? `CTR de ${ctrPct}% com espaço para aumentar investimento mantendo eficiência.`
+            : `CTR atual de ${ctrPct || '—'}% — variações com hooks mais diretos tendem a melhorar em contas similares.`}
         </div>
         <button onClick={() => navigate('/dashboard/criar')} style={{
           background: 'rgba(34,163,163,0.08)', color: '#22A3A3',
           border: '1px solid rgba(34,163,163,0.15)', borderRadius: 3,
           padding: '7px 14px', fontSize: 11.5, fontWeight: 700,
-          fontFamily: F, cursor: 'pointer', transition: 'all 0.15s',
+          fontFamily: F, cursor: 'pointer', transition: 'background 0.15s',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(34,163,163,0.12)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(34,163,163,0.08)'; }}>
-          Criar nova variação
+          {ctrGood ? 'Escalar campanha' : 'Criar nova variação'}
         </button>
       </div>
 
-      {/* ── System status line ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '6px 4px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{
-            width: 4, height: 4, borderRadius: '50%', background: 'rgba(139,148,158,0.35)',
-          }} />
-          <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.40)', fontWeight: 500 }}>
-            Sistema monitorando mudanças em tempo real
-          </span>
-        </div>
-        <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.30)' }}>
-          Novas decisões serão geradas ao detectar mudanças
+      {/* ── Single monitoring line ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 2px' }}>
+        <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(139,148,158,0.25)' }} />
+        <span style={{ fontSize: 10, color: 'rgba(139,148,158,0.35)' }}>
+          Monitorando em tempo real · novas decisões ao detectar mudanças
         </span>
       </div>
     </div>
@@ -1550,7 +1467,7 @@ const FeedPage: React.FC = () => {
               </div>
             )}
 
-            {pendingDecisions.length > 0 && (
+            {pendingDecisions.length > 0 && hasCritical && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '0 2px' }}>
                 <span style={{
                   width: 6, height: 6, borderRadius: '50%', background: '#2D9B6E',

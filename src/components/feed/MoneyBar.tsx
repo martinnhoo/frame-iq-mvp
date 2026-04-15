@@ -95,93 +95,78 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
         </div>
       )}
 
-      {/* Metrics row */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: 8,
-      }}>
-        {/* Opportunity */}
+      {/* Metrics row — only when there are actual losses/savings */}
+      {hasLoss && (
         <div style={{
-          background: '#0F141A',
-          border: '1px solid rgba(230,237,243,0.04)',
-          borderRadius: 3, padding: '10px 12px',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 8,
         }}>
           <div style={{
-            fontSize: 10, fontWeight: 600, color: '#8B949E',
-            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
-            opacity: 0.6,
+            background: '#0F141A',
+            border: '1px solid rgba(230,237,243,0.04)',
+            borderRadius: 3, padding: '10px 12px',
           }}>
-            Possível recuperação
+            <div style={{
+              fontSize: 10, fontWeight: 600, color: '#8B949E',
+              textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
+              opacity: 0.6,
+            }}>
+              Possível recuperação
+            </div>
+            <div style={{
+              fontSize: 22, fontWeight: 700, color: '#E6EDF3',
+              fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
+            }}>
+              +{formatMoney(capturable)}
+            </div>
           </div>
           <div style={{
-            fontSize: 22, fontWeight: 700, color: '#E6EDF3',
-            fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
+            background: '#0F141A',
+            border: '1px solid rgba(230,237,243,0.04)',
+            borderRadius: 3, padding: '10px 12px',
           }}>
-            +{formatMoney(capturable)}
+            <div style={{
+              fontSize: 10, fontWeight: 600, color: '#8B949E',
+              textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
+              opacity: 0.6,
+            }}>
+              Economizado
+            </div>
+            <div style={{
+              fontSize: 22, fontWeight: 700, color: '#E6EDF3',
+              fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
+            }}>
+              {formatMoney(displayedSaved)}
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Total saved */}
-        <div style={{
-          background: '#0F141A',
-          border: '1px solid rgba(230,237,243,0.04)',
-          borderRadius: 3, padding: '10px 12px',
-        }}>
-          <div style={{
-            fontSize: 10, fontWeight: 600, color: '#8B949E',
-            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
-            opacity: 0.6,
-          }}>
-            Economizado
-          </div>
-          <div style={{
-            fontSize: 22, fontWeight: 700, color: '#E6EDF3',
-            fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
-          }}>
-            {formatMoney(displayedSaved)}
-          </div>
-        </div>
-      </div>
-
-      {/* No loss — stability indicator + growth focus */}
+      {/* No loss — single clean status line, no R$0 grid */}
       {!hasLoss && (
         <div style={{
-          marginTop: 8, padding: '10px 12px',
-          background: 'rgba(230,237,243,0.02)',
-          border: '1px solid rgba(230,237,243,0.05)',
-          borderRadius: 3,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '8px 0',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: capturable > 0 ? 6 : 0 }}>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#E6EDF3', marginBottom: 2 }}>
-                Performance estável
-              </div>
-              <div style={{ fontSize: 10.5, color: 'rgba(139,148,158,0.60)' }}>
-                {capturable > 0
-                  ? `+${formatMoney(capturable)} potencial de otimização identificado`
-                  : 'Sem perdas — foco em crescimento'}
-              </div>
-            </div>
-            {onResolve && (
-              <button onClick={onResolve} style={{
-                background: 'rgba(230,237,243,0.04)', color: '#8B949E',
-                border: '1px solid rgba(230,237,243,0.06)',
-                fontSize: 10.5, fontWeight: 600, fontFamily: F,
-                cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'all 0.1s', borderRadius: 3,
-                padding: '5px 10px',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#E6EDF3'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,237,243,0.12)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8B949E'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,237,243,0.06)'; }}>
-                Criar com IA →
-              </button>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#E6EDF3' }}>
+              Sem perdas detectadas
+            </span>
+            <span style={{ fontSize: 11, color: 'rgba(139,148,158,0.45)' }}>
+              · Foco atual: crescimento
+            </span>
           </div>
-          {capturable > 0 && (
-            <div style={{ fontSize: 10, color: 'rgba(139,148,158,0.40)', marginTop: 2 }}>
-              Oportunidades de melhoria identificadas abaixo
-            </div>
+          {onResolve && (
+            <button onClick={onResolve} style={{
+              background: 'none', color: 'rgba(139,148,158,0.50)', border: 'none',
+              fontSize: 10.5, fontWeight: 600, fontFamily: F,
+              cursor: 'pointer', padding: 0, transition: 'color 0.1s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#8B949E'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(139,148,158,0.50)'; }}>
+              Criar com IA →
+            </button>
           )}
         </div>
       )}
