@@ -1389,7 +1389,7 @@ REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre pl
         const aiActions = ((latest.raw_period as any)?.actions || []) as any[];
         return [
           `=== INTELLIGENCE DIÁRIA — ${latest.date} (${latest.account_name || "conta"}) ===`,
-          `Spend 7d: R$${(latest.total_spend || 0).toFixed(0)} | CTR médio: ${((latest.avg_ctr || 0) * 100).toFixed(2)}% | ${latest.active_ads || 0} ads ativos`,
+          `Spend 7d: R$${(latest.total_spend || 0).toFixed(0)} | CTR médio: ${((latest.avg_ctr || 0) * 100).toFixed(2)}% | ${latest.active_ads || 0} anúncios entregando${(latest.active_ads || 0) === 0 ? " (NENHUM anúncio rodando agora)" : ""}`,
           ctrDelta
             ? `Vs semana anterior: CTR ${parseFloat(ctrDelta) > 0 ? "+" : ""}${ctrDelta}% | Spend ${parseFloat(spendDelta || "0") > 0 ? "+" : ""}${spendDelta || "0"}%`
             : "",
@@ -1655,14 +1655,18 @@ REGRAS QUE NUNCA QUEBRAM
 
 ZERO ALUCINAÇÃO DE MÉTRICAS
 Nunca escreva CTR, ROAS, CPM, CPC, conversões ou qualquer número que não esteja explicitamente nos dados do contexto.
-Spend $0 ativo = conta pausada ou nova. Mas CAMPAIGNS e histórico ainda são dados reais — use-os.
-NUNCA diga "não vejo dados" se há campanhas no contexto, mesmo pausadas. Diga o que você vê.
-Se o histórico da conversa mostra dados (tabela de campanhas, CTR mencionado), USE esses dados. Não ignore o que foi dito antes.
 Dado real do contexto > qualquer generalização.
 
+DISTINÇÃO CRÍTICA — CAMPANHAS vs ANÚNCIOS:
+- "active_ads" = anúncios que tiveram impressões no período. Se active_ads = 0, NÃO há anúncios rodando.
+- Uma CAMPANHA pode ter status "ACTIVE" mas 0 anúncios entregando. Isso significa: campanha existe mas está parada (sem criativos ativos, sem budget, ou ad sets pausados).
+- NUNCA diga "você tem X anúncios ativos" se active_ads = 0, mesmo que existam campanhas com status ACTIVE.
+- Se active_ads = 0 e spend = 0: a conta NÃO está rodando nada. Seja claro sobre isso.
+- Se há campanhas mas 0 ads: "Sua campanha existe mas não tem anúncios entregando. Quer ativar ou criar novos criativos?"
+
 POSTURA COM DADOS PARCIAIS:
-Quando há algum dado (mesmo pausado, mesmo histórico antigo): raciocine com o que tem.
-"Ford Fiesta pausada com CTR 10.53% — isso é sinal forte. A pergunta não é se escalar, é quando reativar e com qual budget."
+Quando há histórico (mesmo antigo): raciocine com o que tem. Use dados passados como referência.
+Mas NUNCA confunda dados históricos com situação atual. Se hoje tem 0 ads e 0 spend, diga isso claramente.
 Nunca diga "preciso de mais dados" quando já tem algum dado. Trabalhe com o que está no contexto.
 
 ZERO CLAIMS INVERIFICÁVEIS
