@@ -3,7 +3,7 @@
 // Auto-maps to Supabase schema
 // ================================================================
 
-export type DecisionType = 'kill' | 'fix' | 'scale' | 'alert' | 'insight';
+export type DecisionType = 'kill' | 'fix' | 'scale' | 'pattern' | 'alert' | 'insight';
 export type DecisionStatus = 'pending' | 'acted' | 'dismissed' | 'expired';
 export type ImpactType = 'waste' | 'savings' | 'revenue';
 export type ImpactConfidence = 'high' | 'medium' | 'low';

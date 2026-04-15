@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Decision, DecisionAction } from '../../types/v2-database';
+import type { Decision, DecisionAction, ImpactConfidence } from '../../types/v2-database';
 import { formatMoney, timeAgo } from '../../lib/format';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -10,7 +10,11 @@ interface DecisionCardProps {
   onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
 }
 
-const TYPE_CONFIG = {
+const TYPE_CONFIG: Record<string, {
+  border: string; badgeBg: string; badgeText: string; label: string;
+  btnBg: string; btnHover: string; secondaryBg: string; secondaryBorder: string;
+  accent: string; impactLabel: string; icon: string;
+}> = {
   kill: {
     border: 'rgba(239,68,68,0.5)',
     badgeBg: 'rgba(239,68,68,0.12)',
@@ -22,6 +26,7 @@ const TYPE_CONFIG = {
     secondaryBorder: 'rgba(239,68,68,0.20)',
     accent: '#f87171',
     impactLabel: 'em perda potencial',
+    icon: '🛑',
   },
   fix: {
     border: 'rgba(245,158,11,0.5)',
@@ -34,6 +39,7 @@ const TYPE_CONFIG = {
     secondaryBorder: 'rgba(245,158,11,0.20)',
     accent: '#fbbf24',
     impactLabel: 'recuperável com ajuste',
+    icon: '🔧',
   },
   scale: {
     border: 'rgba(16,185,129,0.5)',
@@ -46,6 +52,20 @@ const TYPE_CONFIG = {
     secondaryBorder: 'rgba(16,185,129,0.20)',
     accent: '#34d399',
     impactLabel: 'em oportunidade identificada',
+    icon: '🚀',
+  },
+  pattern: {
+    border: 'rgba(139,92,246,0.5)',
+    badgeBg: 'rgba(139,92,246,0.12)',
+    badgeText: '#a78bfa',
+    label: 'PADRÃO',
+    btnBg: '#8b5cf6',
+    btnHover: '#7c3aed',
+    secondaryBg: 'rgba(139,92,246,0.08)',
+    secondaryBorder: 'rgba(139,92,246,0.20)',
+    accent: '#a78bfa',
+    impactLabel: 'baseado nos dados',
+    icon: '🧠',
   },
   insight: {
     border: 'rgba(13,162,231,0.5)',
@@ -58,6 +78,7 @@ const TYPE_CONFIG = {
     secondaryBorder: 'rgba(13,162,231,0.20)',
     accent: '#0da2e7',
     impactLabel: '',
+    icon: '💡',
   },
   alert: {
     border: 'rgba(13,162,231,0.5)',
@@ -70,7 +91,14 @@ const TYPE_CONFIG = {
     secondaryBorder: 'rgba(13,162,231,0.20)',
     accent: '#0da2e7',
     impactLabel: '',
+    icon: '⚡',
   },
+};
+
+const CONFIDENCE_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
+  high: { bg: 'rgba(16,185,129,0.10)', text: '#34d399', label: 'Alta' },
+  medium: { bg: 'rgba(245,158,11,0.10)', text: '#fbbf24', label: 'Média' },
+  low: { bg: 'rgba(255,255,255,0.04)', text: 'rgba(255,255,255,0.35)', label: 'Baixa' },
 };
 
 export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }) => {
@@ -93,11 +121,15 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
   const contextParts: string[] = [];
   if (campaignName) contextParts.push(campaignName);
   if (adName) contextParts.push(adName);
-  const contextLine = contextParts.join(' → ') || decision.reason || '';
+  const contextLine = contextParts.join(' \u2192 ') || '';
 
   // Time reference
   const createdAgo = decision.created_at ? timeAgo(decision.created_at) : '';
   const basisText = decision.impact_basis || 'Baseado nos últimos 3 dias';
+
+  // Confidence badge
+  const confidence = (decision.impact_confidence as ImpactConfidence) || 'medium';
+  const confCfg = CONFIDENCE_CONFIG[confidence] || CONFIDENCE_CONFIG.medium;
 
   return (
     <div
@@ -115,7 +147,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Row 1: Badge + time */}
+      {/* Row 1: Badge + confidence + time */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
@@ -129,15 +161,28 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
           }}>
             {cfg.label}
           </span>
+          {decision.score > 0 && (
+            <span style={{
+              background: 'rgba(255,255,255,0.04)',
+              color: 'rgba(255,255,255,0.35)',
+              fontSize: 10,
+              fontWeight: 600,
+              padding: '3px 8px',
+              borderRadius: 6,
+            }}>
+              Score {Math.round(decision.score)}
+            </span>
+          )}
           <span style={{
-            background: 'rgba(255,255,255,0.04)',
-            color: 'rgba(255,255,255,0.35)',
-            fontSize: 10,
+            background: confCfg.bg,
+            color: confCfg.text,
+            fontSize: 9.5,
             fontWeight: 600,
-            padding: '3px 8px',
-            borderRadius: 6,
+            padding: '2px 7px',
+            borderRadius: 5,
+            letterSpacing: '0.02em',
           }}>
-            Score {Math.round(decision.score)}
+            {confCfg.label}
           </span>
         </div>
         {createdAgo && (
@@ -147,7 +192,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
         )}
       </div>
 
-      {/* Row 2: Financial impact — DOMINANT */}
+      {/* Row 2: Financial impact — DOMINANT (skip for insights/patterns with 0 impact) */}
       {decision.impact_daily > 0 && (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
           <span style={{
@@ -172,19 +217,24 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
         {decision.headline}
       </h3>
 
-      {/* Row 4: Campaign context */}
+      {/* Row 4: Reason (the "why") */}
+      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.50)', margin: '0 0 4px', lineHeight: 1.5 }}>
+        {decision.reason}
+      </p>
+
+      {/* Row 5: Campaign context (if ad-specific) */}
       {contextLine && (
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.30)', margin: '0 0 4px' }}>
+        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: '0 0 4px' }}>
           {contextLine}
         </p>
       )}
 
-      {/* Row 5: Time basis */}
+      {/* Row 6: Time basis */}
       <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.20)', margin: '0 0 14px' }}>
         {basisText}
       </p>
 
-      {/* Row 6: Metrics */}
+      {/* Row 7: Metrics pills */}
       {decision.metrics && decision.metrics.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
           {decision.metrics.map((m, i) => (
@@ -210,7 +260,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
         </div>
       )}
 
-      {/* Row 7: Actions */}
+      {/* Row 8: Actions — ONE primary, secondaries don't compete */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {decision.actions && decision.actions.length > 0 ? (
           decision.actions.map((action, idx) => {
@@ -225,8 +275,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
                   background: isPrimary ? cfg.btnBg : cfg.secondaryBg,
                   color: isPrimary ? '#fff' : cfg.accent,
                   border: isPrimary ? 'none' : `1px solid ${cfg.secondaryBorder}`,
-                  borderRadius: 8, padding: '9px 20px',
-                  fontSize: 13, fontWeight: 700,
+                  borderRadius: 8, padding: isPrimary ? '9px 20px' : '7px 14px',
+                  fontSize: isPrimary ? 13 : 12, fontWeight: isPrimary ? 700 : 600,
                   cursor: executingId !== null ? 'not-allowed' : 'pointer',
                   opacity: executingId !== null && !isRunning ? 0.5 : 1,
                   fontFamily: F, transition: 'all 0.12s',

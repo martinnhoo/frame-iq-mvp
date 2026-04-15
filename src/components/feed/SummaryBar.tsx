@@ -64,6 +64,7 @@ export const SummaryBar: React.FC<SummaryBarProps> = ({ decisions }) => {
   const killDecisions = decisions.filter(d => d.type === 'kill');
   const fixDecisions = decisions.filter(d => d.type === 'fix');
   const scaleDecisions = decisions.filter(d => d.type === 'scale');
+  const patternDecisions = decisions.filter(d => d.type === 'pattern');
 
   const killImpact = killDecisions.reduce((s, d) => s + (d.impact_daily || 0), 0);
   const fixImpact = fixDecisions.reduce((s, d) => s + (d.impact_daily || 0), 0);
@@ -101,6 +102,16 @@ export const SummaryBar: React.FC<SummaryBarProps> = ({ decisions }) => {
           color="#34d399"
           hoverColor="#6ee7b7"
           type="scale"
+        />
+      )}
+      {patternDecisions.length > 0 && (
+        <Pill
+          count={patternDecisions.length}
+          label={patternDecisions.length === 1 ? 'padrão' : 'padrões'}
+          impact={0}
+          color="#a78bfa"
+          hoverColor="#c4b5fd"
+          type="pattern"
         />
       )}
     </div>

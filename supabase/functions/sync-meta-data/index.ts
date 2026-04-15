@@ -113,15 +113,15 @@ async function fetchWithRetry(
 async function getAccessToken(accountId: string): Promise<string> {
   const { data, error } = await supabase
     .from("ad_accounts")
-    .select("meta_access_token")
+    .select("access_token_encrypted")
     .eq("id", accountId)
     .single();
 
-  if (error || !data?.meta_access_token) {
+  if (error || !data?.access_token_encrypted) {
     throw new Error(`Failed to fetch access token for account ${accountId}`);
   }
 
-  return data.meta_access_token;
+  return data.access_token_encrypted;
 }
 
 // Convert dollar string to centavos
