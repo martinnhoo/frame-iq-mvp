@@ -50,6 +50,7 @@ interface AggregatedMetrics {
   adset_name: string;
   ad_status: string;
   effective_status: string;
+  created_time: string | null;  // ISO timestamp from Meta
   // Creative features
   cta_type: string | null;
   creative_format: string | null;
@@ -156,8 +157,46 @@ function detectProblems(
   const items: FeedItem[] = [];
 
   for (const ad of ads) {
+    // ── LEARNING PHASE PROTECTION ─────────────────────────────────
+    // Meta marks ads as LEARNING / IN_PROCESS during initial optimization.
+    // We also check created_time: ads < 5 days old are in learning phase.
+    // NEVER generate kill/fix for learning ads — only insights.
+    const metaLearning = ["LEARNING", "IN_PROCESS", "PENDING_REVIEW", "WITH_ISSUES"]
+      .includes(ad.effective_status?.toUpperCase?.() || "");
+    const adAgeDays = ad.created_time
+      ? Math.floor((Date.now() - new Date(ad.created_time).getTime()) / 86400000)
+      : ad.days_active;
+    const isLearning = metaLearning || adAgeDays < 5;
+
+    if (isLearning) {
+      const reasonParts: string[] = [];
+      if (metaLearning) reasonParts.push(`Status Meta: ${ad.effective_status}`);
+      if (adAgeDays < 5) reasonParts.push(`Criado há ${adAgeDays} dia(s) — mínimo recomendado: 5 dias`);
+      reasonParts.push(`Impressões: ${ad.impressions.toLocaleString("pt-BR")} · Gasto: ${formatMoney(ad.spend_cents)}`);
+
+      items.push({
+        ad_id: ad.ad_id,
+        account_id: "",
+        type: "insight",
+        score: 20,
+        headline: "Anúncio em fase de aprendizado",
+        reason: reasonParts.join("\n"),
+        impact_type: "learning",
+        impact_daily_cents: ad.daily_spend_cents,
+        impact_7d_cents: ad.daily_spend_cents * 7,
+        confidence: "low",
+        impact_basis: `Aguardar pelo menos ${Math.max(1, 5 - adAgeDays)} dia(s) para análise confiável`,
+        metrics_snapshot: buildMetricsSnapshot(ad, baseline),
+        actions: [
+          { id: uuid(), label: "Aguardar aprendizado", type: "neutral", requires_confirmation: false },
+        ],
+        cluster_key: `insight_learning_${ad.ad_id}`,
+      });
+      continue; // Skip ALL kill/fix/scale for this ad
+    }
+
     // Skip ads with too little data for KILL/FIX (but not for insights)
-    const hasMinData = ad.impressions >= 500 && ad.days_active >= 2;
+    const hasMinData = ad.impressions >= 500 && ad.days_active >= 3;
 
     // ── KILL CONDITIONS ──────────────────────────────────────────
     if (hasMinData) {
@@ -168,7 +207,7 @@ function detectProblems(
       if (
         ad.ctr < baseline.baseline_p25_ctr &&
         ad.spend_cents > 5000 &&
-        ad.days_active >= 3
+        ad.days_active >= 5
       ) {
         const dailyWaste = ad.daily_spend_cents;
         items.push({
@@ -490,6 +529,8 @@ function buildMetricsSnapshot(ad: AggregatedMetrics, baseline: AccountBaseline):
   return {
     ad_name: ad.ad_name,
     campaign_name: ad.campaign_name,
+    effective_status: ad.effective_status,
+    created_time: ad.created_time,
     impressions: ad.impressions,
     clicks: ad.clicks,
     spend_cents: ad.spend_cents,
@@ -1176,6 +1217,7 @@ async function fetchAdsWithMetrics(accountId: string): Promise<AggregatedMetrics
       adset_name: adset?.name || "",
       ad_status: ad.status || "UNKNOWN",
       effective_status: ad.effective_status || "UNKNOWN",
+      created_time: ad.created_time || null,
       cta_type: creative?.cta_type || null,
       creative_format: creative?.format || null,
       body_text: creative?.body || null,
