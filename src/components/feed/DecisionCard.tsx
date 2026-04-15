@@ -2,103 +2,104 @@ import React, { useState } from 'react';
 import type { Decision, DecisionAction, ImpactConfidence } from '../../types/v2-database';
 import { formatMoney, timeAgo } from '../../lib/format';
 
-const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Space Grotesk', 'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+const M = "'Space Grotesk', 'Inter', system-ui, sans-serif";
 
 interface DecisionCardProps {
   decision: Decision;
   onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
 }
 
+// ── Financial-grade muted palette ──
 const TYPE_CONFIG: Record<string, {
   border: string; badgeBg: string; badgeText: string; label: string;
   btnBg: string; btnHover: string; secondaryBg: string; secondaryBorder: string;
-  accent: string; impactLabel: string; icon: string;
+  accent: string; impactColor: string; impactLabel: string;
 }> = {
   kill: {
-    border: 'rgba(239,68,68,0.5)',
-    badgeBg: 'rgba(239,68,68,0.12)',
-    badgeText: '#f87171',
+    border: '#c53030',
+    badgeBg: 'rgba(197,48,48,0.14)',
+    badgeText: '#e53e3e',
     label: 'STOP LOSS',
-    btnBg: '#ef4444',
-    btnHover: '#dc2626',
-    secondaryBg: 'rgba(239,68,68,0.08)',
-    secondaryBorder: 'rgba(239,68,68,0.20)',
-    accent: '#f87171',
-    impactLabel: 'em perda potencial',
-    icon: '🛑',
+    btnBg: '#c53030',
+    btnHover: '#9b2c2c',
+    secondaryBg: 'rgba(197,48,48,0.06)',
+    secondaryBorder: 'rgba(197,48,48,0.18)',
+    accent: '#e53e3e',
+    impactColor: '#fc8181',
+    impactLabel: 'perda potencial',
   },
   fix: {
-    border: 'rgba(245,158,11,0.5)',
-    badgeBg: 'rgba(245,158,11,0.12)',
-    badgeText: '#fbbf24',
+    border: '#b7791f',
+    badgeBg: 'rgba(183,121,31,0.14)',
+    badgeText: '#d69e2e',
     label: 'CORRIGIR',
-    btnBg: '#f59e0b',
-    btnHover: '#d97706',
-    secondaryBg: 'rgba(245,158,11,0.08)',
-    secondaryBorder: 'rgba(245,158,11,0.20)',
-    accent: '#fbbf24',
-    impactLabel: 'recuperável com ajuste',
-    icon: '🔧',
+    btnBg: '#b7791f',
+    btnHover: '#975a16',
+    secondaryBg: 'rgba(183,121,31,0.06)',
+    secondaryBorder: 'rgba(183,121,31,0.18)',
+    accent: '#d69e2e',
+    impactColor: '#f6e05e',
+    impactLabel: 'recuperável',
   },
   scale: {
-    border: 'rgba(16,185,129,0.5)',
-    badgeBg: 'rgba(16,185,129,0.12)',
-    badgeText: '#34d399',
+    border: '#276749',
+    badgeBg: 'rgba(39,103,73,0.14)',
+    badgeText: '#48bb78',
     label: 'ESCALAR',
-    btnBg: '#10b981',
-    btnHover: '#059669',
-    secondaryBg: 'rgba(16,185,129,0.08)',
-    secondaryBorder: 'rgba(16,185,129,0.20)',
-    accent: '#34d399',
-    impactLabel: 'em oportunidade identificada',
-    icon: '🚀',
+    btnBg: '#276749',
+    btnHover: '#22543d',
+    secondaryBg: 'rgba(39,103,73,0.06)',
+    secondaryBorder: 'rgba(39,103,73,0.18)',
+    accent: '#48bb78',
+    impactColor: '#9ae6b4',
+    impactLabel: 'oportunidade',
   },
   pattern: {
-    border: 'rgba(139,92,246,0.5)',
-    badgeBg: 'rgba(139,92,246,0.12)',
-    badgeText: '#a78bfa',
+    border: '#553c9a',
+    badgeBg: 'rgba(85,60,154,0.14)',
+    badgeText: '#9f7aea',
     label: 'PADRÃO',
-    btnBg: '#8b5cf6',
-    btnHover: '#7c3aed',
-    secondaryBg: 'rgba(139,92,246,0.08)',
-    secondaryBorder: 'rgba(139,92,246,0.20)',
-    accent: '#a78bfa',
-    impactLabel: 'baseado nos dados',
-    icon: '🧠',
+    btnBg: '#553c9a',
+    btnHover: '#44337a',
+    secondaryBg: 'rgba(85,60,154,0.06)',
+    secondaryBorder: 'rgba(85,60,154,0.18)',
+    accent: '#9f7aea',
+    impactColor: '#d6bcfa',
+    impactLabel: '',
   },
   insight: {
-    border: 'rgba(13,162,231,0.5)',
-    badgeBg: 'rgba(13,162,231,0.12)',
-    badgeText: '#0da2e7',
+    border: '#2b6cb0',
+    badgeBg: 'rgba(43,108,176,0.14)',
+    badgeText: '#63b3ed',
     label: 'INSIGHT',
-    btnBg: '#0da2e7',
-    btnHover: '#0284c7',
-    secondaryBg: 'rgba(13,162,231,0.08)',
-    secondaryBorder: 'rgba(13,162,231,0.20)',
-    accent: '#0da2e7',
+    btnBg: '#2b6cb0',
+    btnHover: '#2c5282',
+    secondaryBg: 'rgba(43,108,176,0.06)',
+    secondaryBorder: 'rgba(43,108,176,0.18)',
+    accent: '#63b3ed',
+    impactColor: '#90cdf4',
     impactLabel: '',
-    icon: '💡',
   },
   alert: {
-    border: 'rgba(13,162,231,0.5)',
-    badgeBg: 'rgba(13,162,231,0.12)',
-    badgeText: '#0da2e7',
+    border: '#2b6cb0',
+    badgeBg: 'rgba(43,108,176,0.14)',
+    badgeText: '#63b3ed',
     label: 'ALERTA',
-    btnBg: '#0da2e7',
-    btnHover: '#0284c7',
-    secondaryBg: 'rgba(13,162,231,0.08)',
-    secondaryBorder: 'rgba(13,162,231,0.20)',
-    accent: '#0da2e7',
+    btnBg: '#2b6cb0',
+    btnHover: '#2c5282',
+    secondaryBg: 'rgba(43,108,176,0.06)',
+    secondaryBorder: 'rgba(43,108,176,0.18)',
+    accent: '#63b3ed',
+    impactColor: '#90cdf4',
     impactLabel: '',
-    icon: '⚡',
   },
 };
 
-const CONFIDENCE_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  high: { bg: 'rgba(16,185,129,0.10)', text: '#34d399', label: 'Alta' },
-  medium: { bg: 'rgba(245,158,11,0.10)', text: '#fbbf24', label: 'Média' },
-  low: { bg: 'rgba(255,255,255,0.04)', text: 'rgba(255,255,255,0.35)', label: 'Baixa' },
+const CONFIDENCE_CONFIG: Record<string, { dot: string; text: string; label: string }> = {
+  high: { dot: '#48bb78', text: 'rgba(255,255,255,0.50)', label: 'Alta' },
+  medium: { dot: '#d69e2e', text: 'rgba(255,255,255,0.40)', label: 'Média' },
+  low: { dot: 'rgba(255,255,255,0.25)', text: 'rgba(255,255,255,0.30)', label: 'Baixa' },
 };
 
 export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }) => {
@@ -115,152 +116,186 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
     }
   };
 
-  // Build campaign context line
+  // Build campaign context breadcrumb
   const campaignName = decision.ad?.ad_set?.campaign?.name;
+  const adSetName = decision.ad?.ad_set?.name;
   const adName = decision.ad?.name;
   const contextParts: string[] = [];
   if (campaignName) contextParts.push(campaignName);
+  if (adSetName) contextParts.push(adSetName);
   if (adName) contextParts.push(adName);
-  const contextLine = contextParts.join(' \u2192 ') || '';
+  const contextLine = contextParts.join(' → ') || '';
 
   // Time reference
   const createdAgo = decision.created_at ? timeAgo(decision.created_at) : '';
-  const basisText = decision.impact_basis || 'Baseado nos últimos 3 dias';
+  const basisText = decision.impact_basis || 'Últimos 3 dias';
 
-  // Confidence badge
+  // Confidence
   const confidence = (decision.impact_confidence as ImpactConfidence) || 'medium';
   const confCfg = CONFIDENCE_CONFIG[confidence] || CONFIDENCE_CONFIG.medium;
+
+  // Split reason into lines (engine outputs \n-separated metric lines)
+  const reasonLines = (decision.reason || '').split('\n').filter(Boolean);
 
   return (
     <div
       data-decision-type={decision.type}
       style={{
-        background: hovered ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: hovered ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.015)',
+        border: `1px solid ${hovered ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)'}`,
         borderLeft: `3px solid ${cfg.border}`,
-        borderRadius: 12,
-        padding: '20px 24px',
+        borderRadius: 4,
+        padding: '14px 16px',
         fontFamily: F,
-        transition: 'all 0.15s',
+        transition: 'border-color 0.12s, background 0.12s',
         position: 'relative',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Row 1: Badge + confidence + time */}
+      {/* Row 1: Campaign context (the "realness" layer) */}
+      {contextLine && (
+        <div style={{
+          fontSize: 11, color: 'rgba(255,255,255,0.28)', fontFamily: F,
+          marginBottom: 8, letterSpacing: '0.01em',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {contextLine}
+        </div>
+      )}
+
+      {/* Row 2: Badge row — type + score + confidence + time */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{
             background: cfg.badgeBg,
             color: cfg.badgeText,
-            fontSize: 10.5,
+            fontSize: 10,
             fontWeight: 700,
-            padding: '3px 10px',
-            borderRadius: 6,
-            letterSpacing: '0.06em',
+            padding: '2px 7px',
+            borderRadius: 3,
+            letterSpacing: '0.08em',
+            lineHeight: '16px',
           }}>
             {cfg.label}
           </span>
           {decision.score > 0 && (
             <span style={{
-              background: 'rgba(255,255,255,0.04)',
-              color: 'rgba(255,255,255,0.35)',
+              color: 'rgba(255,255,255,0.30)',
               fontSize: 10,
               fontWeight: 600,
-              padding: '3px 8px',
-              borderRadius: 6,
+              fontFamily: M,
             }}>
-              Score {Math.round(decision.score)}
+              {Math.round(decision.score)}
             </span>
           )}
+          {/* Confidence dot + label */}
           <span style={{
-            background: confCfg.bg,
-            color: confCfg.text,
-            fontSize: 11,
-            fontWeight: 600,
-            padding: '3px 10px',
-            borderRadius: 6,
-            letterSpacing: '0.02em',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
+            display: 'flex', alignItems: 'center', gap: 4,
+            marginLeft: 2,
           }}>
             <span style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: confCfg.text,
+              width: 5, height: 5, borderRadius: '50%',
+              background: confCfg.dot,
               display: 'inline-block',
-              flexShrink: 0,
             }} />
-            Confiança: {confCfg.label}
+            <span style={{
+              fontSize: 10, color: confCfg.text,
+              fontWeight: 500,
+            }}>
+              {confCfg.label}
+            </span>
           </span>
         </div>
-        {createdAgo && (
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
-            {createdAgo}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.20)', fontFamily: M }}>
+            {basisText}
           </span>
-        )}
+          {createdAgo && (
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)' }}>
+              {createdAgo}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Row 2: Financial impact — DOMINANT (skip for insights/patterns with 0 impact) */}
+      {/* Row 3: Financial impact — DOMINANT, split number/label */}
       {decision.impact_daily > 0 && (
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
+        <div style={{ marginBottom: 8 }}>
           <span style={{
-            fontSize: 22, fontWeight: 700,
+            fontSize: 26, fontWeight: 700,
             color: '#fff',
             fontFamily: M,
-            letterSpacing: '-0.03em',
+            letterSpacing: '-0.04em',
+            lineHeight: 1,
           }}>
-            {formatMoney(decision.impact_daily)}/dia
+            {formatMoney(decision.impact_daily)}
           </span>
-          <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>
+          <span style={{
+            fontSize: 14, fontWeight: 600,
+            color: 'rgba(255,255,255,0.45)',
+            fontFamily: M,
+            letterSpacing: '-0.02em',
+            marginLeft: 4,
+          }}>
+            /dia
+          </span>
+          <div style={{
+            fontSize: 11, fontWeight: 500,
+            color: 'rgba(255,255,255,0.28)',
+            marginTop: 2,
+          }}>
             {cfg.impactLabel}
-          </span>
+          </div>
         </div>
       )}
 
-      {/* Row 3: Headline */}
-      <h3 style={{
-        fontSize: 15, fontWeight: 700, color: '#fff',
-        margin: '0 0 4px', lineHeight: 1.4, letterSpacing: '-0.01em',
+      {/* Row 4: Headline */}
+      <div style={{
+        fontSize: 13.5, fontWeight: 600, color: 'rgba(255,255,255,0.88)',
+        margin: '0 0 6px', lineHeight: 1.35, letterSpacing: '-0.01em',
       }}>
         {decision.headline}
-      </h3>
+      </div>
 
-      {/* Row 4: Reason (the "why") */}
-      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.50)', margin: '0 0 4px', lineHeight: 1.5 }}>
-        {decision.reason}
-      </p>
-
-      {/* Row 5: Campaign context (if ad-specific) */}
-      {contextLine && (
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: '0 0 4px' }}>
-          {contextLine}
-        </p>
+      {/* Row 5: Reason — rendered as metric lines, not paragraph */}
+      {reasonLines.length > 0 && (
+        <div style={{ marginBottom: 10 }}>
+          {reasonLines.map((line, i) => (
+            <div key={i} style={{
+              fontSize: 12, color: 'rgba(255,255,255,0.38)',
+              lineHeight: 1.6, fontFamily: F,
+            }}>
+              {line}
+            </div>
+          ))}
+        </div>
       )}
 
-      {/* Row 6: Time basis */}
-      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.20)', margin: '0 0 14px' }}>
-        {basisText}
-      </p>
-
-      {/* Row 7: Metrics pills */}
+      {/* Row 6: Metrics — inline data blocks */}
       {decision.metrics && decision.metrics.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12,
+          borderTop: '1px solid rgba(255,255,255,0.04)',
+          paddingTop: 10,
+        }}>
           {decision.metrics.map((m, i) => (
             <div key={i} style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: 6, padding: '5px 10px', fontSize: 11.5,
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.04)',
+              borderRadius: 3, padding: '4px 8px', fontSize: 11,
+              display: 'flex', alignItems: 'baseline', gap: 4,
             }}>
-              <span style={{ color: 'rgba(255,255,255,0.40)' }}>{m.key}: </span>
+              <span style={{ color: 'rgba(255,255,255,0.32)', fontWeight: 500 }}>{m.key}</span>
               <span style={{
-                color: m.trend === 'down' ? '#f87171' : m.trend === 'up' ? '#34d399' : 'rgba(255,255,255,0.75)',
+                color: m.trend === 'down' ? '#e53e3e' : m.trend === 'up' ? '#48bb78' : 'rgba(255,255,255,0.65)',
                 fontWeight: 600, fontFamily: M,
+                fontSize: 11.5,
               }}>
                 {m.value}
               </span>
               {m.context && (
-                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, marginLeft: 4 }}>
+                <span style={{ color: 'rgba(255,255,255,0.20)', fontSize: 10 }}>
                   {m.context}
                 </span>
               )}
@@ -269,8 +304,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
         </div>
       )}
 
-      {/* Row 8: Actions — ONE primary, secondaries don't compete */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {/* Row 7: Actions */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {decision.actions && decision.actions.length > 0 ? (
           decision.actions.map((action, idx) => {
             const isPrimary = idx === 0;
@@ -284,12 +319,20 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
                   background: isPrimary ? cfg.btnBg : cfg.secondaryBg,
                   color: isPrimary ? '#fff' : cfg.accent,
                   border: isPrimary ? 'none' : `1px solid ${cfg.secondaryBorder}`,
-                  borderRadius: 8, padding: isPrimary ? '9px 20px' : '7px 14px',
-                  fontSize: isPrimary ? 13 : 12, fontWeight: isPrimary ? 700 : 600,
+                  borderRadius: 4,
+                  padding: isPrimary ? '8px 18px' : '6px 12px',
+                  fontSize: isPrimary ? 12 : 11,
+                  fontWeight: isPrimary ? 700 : 600,
                   cursor: executingId !== null ? 'not-allowed' : 'pointer',
-                  opacity: executingId !== null && !isRunning ? 0.5 : 1,
-                  fontFamily: F, transition: 'all 0.12s',
+                  opacity: executingId !== null && !isRunning ? 0.4 : 1,
+                  fontFamily: F, transition: 'all 0.1s',
                   letterSpacing: '-0.01em',
+                }}
+                onMouseEnter={e => {
+                  if (isPrimary && !executingId) (e.currentTarget as HTMLElement).style.background = cfg.btnHover;
+                }}
+                onMouseLeave={e => {
+                  if (isPrimary) (e.currentTarget as HTMLElement).style.background = cfg.btnBg;
                 }}
               >
                 {isRunning ? 'Executando...' : action.label}
@@ -297,7 +340,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction }
             );
           })
         ) : (
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Sem ações disponíveis</span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.20)' }}>Sem ações</span>
         )}
       </div>
     </div>

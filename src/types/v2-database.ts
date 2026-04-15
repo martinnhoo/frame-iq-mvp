@@ -5,7 +5,7 @@
 
 export type DecisionType = 'kill' | 'fix' | 'scale' | 'pattern' | 'alert' | 'insight';
 export type DecisionStatus = 'pending' | 'acted' | 'dismissed' | 'expired';
-export type ImpactType = 'waste' | 'savings' | 'revenue';
+export type ImpactType = 'waste' | 'savings' | 'revenue' | 'learning';
 export type ImpactConfidence = 'high' | 'medium' | 'low';
 export type AccountMaturity = 'new' | 'establishing' | 'mature';
 export type ActionType =

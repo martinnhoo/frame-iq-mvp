@@ -11,16 +11,18 @@ import { useActions } from '../../hooks/useActions';
 import { supabase } from '@/integrations/supabase/client';
 import type { Decision, DecisionAction } from '../../types/v2-database';
 
-const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Space Grotesk', 'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+const M = "'Space Grotesk', 'Inter', system-ui, sans-serif";
 
 // ================================================================
-// DEMO MODE — Realistic sample feed for when no real data exists
-// Must look like real production output, NOT fake placeholder.
+// DEMO MODE — Must feel indistinguishable from real production data.
+// Campaign names, ad set names, ad names — all realistic.
 // ================================================================
 
 function buildDemoDecisions(): Decision[] {
   const now = new Date().toISOString();
+  const ago = (min: number) => new Date(Date.now() - min * 60000).toISOString();
+
   return [
     {
       id: "demo_kill_1",
@@ -29,27 +31,34 @@ function buildDemoDecisions(): Decision[] {
       type: "kill",
       score: 94,
       priority_rank: 1,
-      headline: "R$180/dia em perda potencial identificada",
-      reason: "CTR 0.80% — 62% abaixo da mediana\nCPA R$47,50 — 2.8x acima da mediana\nGasto: R$540 em 5 dias sem retorno proporcional",
+      headline: "Perda potencial identificada — CTR 62% abaixo da mediana",
+      reason: "CTR: 0.80% (baseline: 1.45%)\nCPA: R$47,50 (baseline: R$28,00)\nGasto acumulado: R$540 em 5 dias",
       impact_type: "waste",
       impact_daily: 18000,
       impact_7d: 126000,
       impact_confidence: "high",
-      impact_basis: "Baseado nos últimos 5 dias de performance",
+      impact_basis: "Últimos 5 dias",
       metrics: [
-        { key: "CTR", value: "0.80%", context: "-62% vs mediana", trend: "down" },
-        { key: "CPA", value: "R$47,50", context: "2.8x acima", trend: "down" },
-        { key: "Gasto", value: "R$540", context: "5 dias", trend: "stable" },
-        { key: "Conversões", value: "2", context: "", trend: "down" },
+        { key: "CTR", value: "0.80%", context: "baseline 1.45%", trend: "down" },
+        { key: "CPA", value: "R$47,50", context: "baseline R$28", trend: "down" },
+        { key: "Gasto", value: "R$540", context: "5d", trend: "stable" },
+        { key: "Conv.", value: "2", context: "", trend: "down" },
       ],
       actions: [
         { id: "d1a", label: "Pausar anúncio", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d1b", label: "Ver detalhes", type: "neutral", requires_confirmation: false },
+        { id: "d1b", label: "Revisar dados", type: "neutral", requires_confirmation: false },
       ],
+      ad: {
+        name: "Vídeo 03 — Hook Depoimento",
+        ad_set: {
+          name: "Broad BR 25-45",
+          campaign: { name: "Conversão — Produto X" },
+        },
+      },
       status: "pending",
       acted_at: null,
       dismissed_at: null,
-      created_at: now,
+      created_at: ago(12),
     },
     {
       id: "demo_kill_2",
@@ -58,27 +67,34 @@ function buildDemoDecisions(): Decision[] {
       type: "kill",
       score: 89,
       priority_rank: 2,
-      headline: "Estimativa de R$95/dia sem conversão",
-      reason: "Gasto: R$665 em 7 dias\nConversões: 0\nCTR 0.80% — abaixo da mediana da conta",
+      headline: "Gasto sem conversão — R$665 em 7 dias",
+      reason: "Conversões: 0 em 7 dias\nCTR: 0.80% (baseline: 1.45%)\nFrequência: 3.2x — possível saturação",
       impact_type: "waste",
       impact_daily: 9500,
       impact_7d: 66500,
       impact_confidence: "high",
-      impact_basis: "Baseado em zero conversões com gasto significativo",
+      impact_basis: "Últimos 7 dias",
       metrics: [
-        { key: "Gasto", value: "R$665", context: "7 dias", trend: "down" },
-        { key: "Conversões", value: "0", context: "", trend: "down" },
-        { key: "CTR", value: "0.80%", context: "-58% vs mediana", trend: "down" },
-        { key: "Frequência", value: "3.2x", context: "", trend: "down" },
+        { key: "Gasto", value: "R$665", context: "7d", trend: "down" },
+        { key: "Conv.", value: "0", context: "", trend: "down" },
+        { key: "CTR", value: "0.80%", context: "baseline 1.45%", trend: "down" },
+        { key: "Freq.", value: "3.2x", context: "", trend: "down" },
       ],
       actions: [
         { id: "d2a", label: "Pausar agora", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d2b", label: "Ver detalhes", type: "neutral", requires_confirmation: false },
+        { id: "d2b", label: "Revisar dados", type: "neutral", requires_confirmation: false },
       ],
+      ad: {
+        name: "Carrossel 01 — Benefícios",
+        ad_set: {
+          name: "Interesse Fitness",
+          campaign: { name: "Conversão — Produto X" },
+        },
+      },
       status: "pending",
       acted_at: null,
       dismissed_at: null,
-      created_at: now,
+      created_at: ago(18),
     },
     {
       id: "demo_fix_1",
@@ -87,26 +103,33 @@ function buildDemoDecisions(): Decision[] {
       type: "fix",
       score: 78,
       priority_rank: 3,
-      headline: "Fadiga criativa detectada — frequência 4.2x",
-      reason: "Frequência: 4.2x — acima do limite recomendado\nCPA R$32,00 — subindo nos últimos 3 dias\nCTR 2.0% — em queda vs início da campanha",
+      headline: "Fadiga criativa — frequência 4.2x, CPA subindo",
+      reason: "Frequência: 4.2x (limite: 3.0x)\nCPA: R$32,00 (+22% vs semana anterior)\nCTR: 2.0% (-15% vs início)",
       impact_type: "savings",
       impact_daily: 7200,
       impact_7d: 50400,
       impact_confidence: "medium",
-      impact_basis: "Frequência 4.2x — estimativa de 30% de perda por fadiga",
+      impact_basis: "Últimos 5 dias",
       metrics: [
-        { key: "Frequência", value: "4.2x", context: "acima do limite", trend: "down" },
-        { key: "CPA", value: "R$32,00", context: "+22% vs semana anterior", trend: "down" },
-        { key: "CTR", value: "2.0%", context: "-15% vs início", trend: "down" },
+        { key: "Freq.", value: "4.2x", context: "limite 3.0x", trend: "down" },
+        { key: "CPA", value: "R$32", context: "+22%", trend: "down" },
+        { key: "CTR", value: "2.0%", context: "-15%", trend: "down" },
       ],
       actions: [
         { id: "d3a", label: "Pausar 3 dias", type: "neutral", requires_confirmation: true, meta_api_action: "pause_ad" },
-        { id: "d3b", label: "Entender impacto", type: "constructive", requires_confirmation: false },
+        { id: "d3b", label: "Revisar dados", type: "constructive", requires_confirmation: false },
       ],
+      ad: {
+        name: "Vídeo 01 — UGC Teste",
+        ad_set: {
+          name: "Lookalike 1% Purchase",
+          campaign: { name: "Escala — Produto Y" },
+        },
+      },
       status: "pending",
       acted_at: null,
       dismissed_at: null,
-      created_at: now,
+      created_at: ago(25),
     },
     {
       id: "demo_fix_2",
@@ -115,26 +138,33 @@ function buildDemoDecisions(): Decision[] {
       type: "fix",
       score: 72,
       priority_rank: 4,
-      headline: "Engajamento alto, conversão abaixo do esperado",
-      reason: "Hook rate 68% — top quartil da conta\nCTR 2.4% — acima da mediana\nCPA R$38,00 — 2.2x acima da mediana (possível problema na oferta ou LP)",
+      headline: "Hook forte, conversão fraca — possível problema na LP",
+      reason: "Hook rate: 68% (top quartil)\nCTR: 2.4% (baseline: 1.45%)\nCPA: R$38,00 (baseline: R$28,00)",
       impact_type: "savings",
       impact_daily: 5400,
       impact_7d: 37800,
       impact_confidence: "medium",
-      impact_basis: "Baseado na diferença de CPA vs mediana da conta",
+      impact_basis: "Últimos 5 dias",
       metrics: [
-        { key: "Hook rate", value: "68%", context: "top quartil", trend: "up" },
-        { key: "CTR", value: "2.4%", context: "+18% vs mediana", trend: "up" },
-        { key: "CPA", value: "R$38,00", context: "2.2x acima", trend: "down" },
+        { key: "Hook", value: "68%", context: "p90", trend: "up" },
+        { key: "CTR", value: "2.4%", context: "+66%", trend: "up" },
+        { key: "CPA", value: "R$38", context: "baseline R$28", trend: "down" },
       ],
       actions: [
-        { id: "d4a", label: "Entender impacto", type: "neutral", requires_confirmation: false },
+        { id: "d4a", label: "Revisar LP", type: "neutral", requires_confirmation: false },
         { id: "d4b", label: "Revisar dados", type: "constructive", requires_confirmation: false },
       ],
+      ad: {
+        name: "Imagem 02 — Before/After",
+        ad_set: {
+          name: "Broad BR 25-45",
+          campaign: { name: "Conversão — Produto X" },
+        },
+      },
       status: "pending",
       acted_at: null,
       dismissed_at: null,
-      created_at: now,
+      created_at: ago(32),
     },
     {
       id: "demo_scale_1",
@@ -143,26 +173,33 @@ function buildDemoDecisions(): Decision[] {
       type: "scale",
       score: 65,
       priority_rank: 5,
-      headline: "ROAS 4.8x acima da base — oportunidade de escala",
-      reason: "ROAS 4.8x — 3x acima da mediana (1.6x)\nCPA R$18,00 — 79% abaixo do teto da conta\n12 conversões em 7 dias com tendência estável",
+      headline: "ROAS 4.8x — 3x acima da mediana, CPA baixo",
+      reason: "ROAS: 4.8x (baseline: 1.6x)\nCPA: R$18,00 (baseline: R$28,00)\n12 conversões em 7 dias, tendência estável",
       impact_type: "revenue",
       impact_daily: 32000,
       impact_7d: 224000,
       impact_confidence: "high",
-      impact_basis: "Projeção com +50% de budget (12 conversões atuais)",
+      impact_basis: "Últimos 7 dias",
       metrics: [
-        { key: "ROAS", value: "4.8x", context: "3x acima da mediana", trend: "up" },
-        { key: "CPA", value: "R$18,00", context: "-79% vs teto", trend: "up" },
-        { key: "Conversões", value: "12", context: "7 dias", trend: "up" },
+        { key: "ROAS", value: "4.8x", context: "baseline 1.6x", trend: "up" },
+        { key: "CPA", value: "R$18", context: "baseline R$28", trend: "up" },
+        { key: "Conv.", value: "12", context: "7d", trend: "up" },
       ],
       actions: [
         { id: "d5a", label: "Aumentar budget +50%", type: "constructive", requires_confirmation: true, meta_api_action: "increase_budget" },
         { id: "d5b", label: "Duplicar anúncio", type: "constructive", requires_confirmation: false, meta_api_action: "duplicate_ad" },
       ],
+      ad: {
+        name: "Vídeo 05 — Demonstração",
+        ad_set: {
+          name: "Lookalike 1% Purchase",
+          campaign: { name: "Escala — Produto Y" },
+        },
+      },
       status: "pending",
       acted_at: null,
       dismissed_at: null,
-      created_at: now,
+      created_at: ago(8),
     },
     {
       id: "demo_pattern_1",
@@ -171,25 +208,25 @@ function buildDemoDecisions(): Decision[] {
       type: "pattern",
       score: 48,
       priority_rank: 6,
-      headline: 'Padrão: CTA "Saiba mais" supera outros CTAs',
-      reason: "CTR médio 2.8% — +33% vs baseline da conta\n8 anúncios analisados com R$1.200 de gasto total\nPerformance consistente acima da média em todos os conjuntos",
+      headline: 'CTA "Saiba mais" supera outros CTAs em +33% CTR',
+      reason: "CTR médio: 2.8% (baseline conta: 2.1%)\n8 anúncios analisados, R$1.200 gasto total\nConsistente em todos os conjuntos de anúncio",
       impact_type: "learning",
       impact_daily: 0,
       impact_7d: 0,
       impact_confidence: "medium",
-      impact_basis: "Baseado em 8 anúncios com R$1.200 de gasto total",
+      impact_basis: "8 anúncios, últimos 14 dias",
       metrics: [
-        { key: "CTR médio", value: "2.8%", context: "+33% vs baseline", trend: "up" },
-        { key: "Amostra", value: "8 anúncios", context: "", trend: "stable" },
+        { key: "CTR médio", value: "2.8%", context: "baseline 2.1%", trend: "up" },
+        { key: "Amostra", value: "8 ads", context: "R$1.2k", trend: "stable" },
       ],
       actions: [
-        { id: "d6a", label: "Priorizar esse padrão", type: "constructive", requires_confirmation: false },
-        { id: "d6b", label: "Ver detalhes", type: "neutral", requires_confirmation: false },
+        { id: "d6a", label: "Aplicar padrão", type: "constructive", requires_confirmation: false },
+        { id: "d6b", label: "Revisar dados", type: "neutral", requires_confirmation: false },
       ],
       status: "pending",
       acted_at: null,
       dismissed_at: null,
-      created_at: now,
+      created_at: ago(45),
     },
     {
       id: "demo_pattern_2",
@@ -198,54 +235,51 @@ function buildDemoDecisions(): Decision[] {
       type: "pattern",
       score: 42,
       priority_rank: 7,
-      headline: "Padrão: vídeo UGC supera outros formatos",
-      reason: "CPA médio R$63,75 — 25% menor vs baseline da conta\n6 anúncios analisados com R$890 de gasto total\nFormato UGC superando estúdio e imagem estática",
+      headline: "Vídeo UGC supera outros formatos em CPA (-25%)",
+      reason: "CPA médio: R$63,75 (baseline conta: R$85,00)\n6 anúncios analisados, R$890 gasto total\nUGC > estúdio > imagem estática nesta conta",
       impact_type: "learning",
       impact_daily: 0,
       impact_7d: 0,
       impact_confidence: "medium",
-      impact_basis: "Baseado em 6 anúncios com R$890 de gasto total",
+      impact_basis: "6 anúncios, últimos 14 dias",
       metrics: [
-        { key: "CPA médio", value: "R$63,75", context: "-25% vs baseline", trend: "up" },
-        { key: "Amostra", value: "6 anúncios", context: "", trend: "stable" },
+        { key: "CPA médio", value: "R$63,75", context: "baseline R$85", trend: "up" },
+        { key: "Amostra", value: "6 ads", context: "R$890", trend: "stable" },
       ],
       actions: [
-        { id: "d7a", label: "Priorizar esse formato", type: "constructive", requires_confirmation: false },
+        { id: "d7a", label: "Aplicar padrão", type: "constructive", requires_confirmation: false },
       ],
       status: "pending",
       acted_at: null,
       dismissed_at: null,
-      created_at: now,
+      created_at: ago(52),
     },
   ];
 }
 
 function buildDemoMoneyTracker() {
   return {
-    leaking_now: 27500,   // R$275/dia
-    capturable_now: 44600, // R$446/dia
+    leaking_now: 27500,
+    capturable_now: 44600,
     total_saved: 0,
   };
 }
 
 /**
- * FeedPage — Copilot Feed: Decision Cards (KILL / FIX / SCALE / PATTERN / INSIGHT)
- * The brain of AdBrief. Prioritized feed of decisions ranked by financial impact.
+ * FeedPage — Copilot Feed
+ * Prioritized decisions ranked by financial impact.
  */
 const FeedPage: React.FC = () => {
   const ctx = useOutletContext<DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean }>();
   const navigate = useNavigate();
 
   const { activeAccount, metaConnected, accountResolving } = ctx;
-
-  // Use the v2 ad_accounts UUID for queries
   const accountId = activeAccount?.id ?? null;
 
   const { decisions: realDecisions, isLoading: decisionsLoading } = useDecisions(accountId);
   const { tracker: realTracker, isLoading: trackerLoading } = useMoneyTracker(accountId);
   const { executeAction } = useActions();
 
-  // Demo mode: show when connected but no real decisions yet
   const [isDemo, setIsDemo] = useState(false);
   const hasRealData = realDecisions.length > 0;
   const showDemo = metaConnected && !hasRealData && !decisionsLoading && !trackerLoading && !accountResolving;
@@ -256,14 +290,10 @@ const FeedPage: React.FC = () => {
 
   const decisions = isDemo ? buildDemoDecisions() : realDecisions;
   const tracker = isDemo ? buildDemoMoneyTracker() : realTracker;
-
   const isLoading = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
 
   const handleAction = async (decisionId: string, action: DecisionAction) => {
-    if (isDemo) {
-      // In demo mode, dismiss the card visually (no real action)
-      return;
-    }
+    if (isDemo) return;
     try {
       await executeAction(decisionId, action.meta_api_action || action.type, 'ad', '');
     } catch (err) {
@@ -276,47 +306,41 @@ const FeedPage: React.FC = () => {
     for (const decision of killDecisions) {
       const primaryAction = decision.actions?.[0];
       if (primaryAction) {
-        try {
-          await handleAction(decision.id, primaryAction);
-        } catch (err) {
-          console.error('Stop loss failed for', decision.id, err);
-        }
+        try { await handleAction(decision.id, primaryAction); }
+        catch (err) { console.error('Stop loss failed for', decision.id, err); }
       }
     }
   };
 
-  // ── Loading ──
+  // ── Loading skeleton ──
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ width: 130, height: 20, background: 'rgba(255,255,255,0.05)', borderRadius: 6, marginBottom: 6 }} />
-            <div style={{ width: 260, height: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }} />
+      <div style={{ minHeight: '100vh', background: '#08090b', padding: '24px 20px' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.04)', borderRadius: 3, marginBottom: 6 }} />
+            <div style={{ width: 200, height: 10, background: 'rgba(255,255,255,0.02)', borderRadius: 3 }} />
           </div>
-          <div style={{
-            background: 'rgba(255,255,255,0.03)', borderRadius: 12,
-            border: '1px solid rgba(255,255,255,0.06)', padding: '48px 32px',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
-            minHeight: 220,
-          }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.04)' }} />
-            <div style={{ width: 200, height: 18, background: 'rgba(255,255,255,0.04)', borderRadius: 6 }} />
-            <div style={{ width: 280, height: 13, background: 'rgba(255,255,255,0.03)', borderRadius: 6 }} />
-          </div>
+          {[1,2,3].map(i => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.015)', borderRadius: 4,
+              border: '1px solid rgba(255,255,255,0.04)', padding: 16,
+              marginBottom: 8, height: 120,
+            }} />
+          ))}
         </div>
       </div>
     );
   }
 
-  // ── No Meta connection — nudge to connect ──
+  // ── No Meta connection ──
   if (!metaConnected) {
     return (
-      <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>
-              Copilot Feed
+      <div style={{ minHeight: '100vh', background: '#08090b', padding: '24px 20px' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <div style={{ marginBottom: 18 }}>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: 'rgba(255,255,255,0.85)', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>
+              Feed
             </h1>
           </div>
           <EmptyState totalAds={0} nextSyncMinutes={0} todaySummary={{ paused: 0, scaled: 0, savedToday: 0, revenueToday: 0 }} />
@@ -329,42 +353,57 @@ const FeedPage: React.FC = () => {
   const hasKills = pendingDecisions.some(d => d.type === 'kill');
 
   return (
-    <div style={{ minHeight: '100vh', background: '#060709', padding: 32 }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
+    <div style={{ minHeight: '100vh', background: '#08090b', padding: '24px 20px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+        {/* Header — minimal */}
+        <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <h1 style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>
-                Copilot Feed
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h1 style={{
+                fontSize: 16, fontWeight: 700,
+                color: 'rgba(255,255,255,0.85)',
+                fontFamily: F, letterSpacing: '-0.02em', margin: 0,
+              }}>
+                Feed
               </h1>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.30)', margin: '4px 0 0', fontFamily: F }}>
-                Decisões baseadas no desempenho real da sua conta
-              </p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {isDemo && (
                 <span style={{
-                  fontSize: 10.5, fontWeight: 700,
-                  color: '#fbbf24',
-                  background: 'rgba(245,158,11,0.10)',
-                  border: '1px solid rgba(245,158,11,0.20)',
-                  padding: '3px 10px',
-                  borderRadius: 6,
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase',
+                  fontSize: 9, fontWeight: 700,
+                  color: 'rgba(255,255,255,0.35)',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  padding: '2px 6px',
+                  borderRadius: 3,
+                  letterSpacing: '0.08em',
                 }}>
                   DEMO
                 </span>
               )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {pendingDecisions.length > 0 && (
                 <span style={{
-                  fontSize: 11, fontWeight: 600,
-                  color: 'rgba(255,255,255,0.30)',
-                  fontFamily: F,
+                  fontSize: 11, fontWeight: 500,
+                  color: 'rgba(255,255,255,0.25)',
+                  fontFamily: M,
                 }}>
-                  {pendingDecisions.length} pendente{pendingDecisions.length !== 1 ? 's' : ''}
+                  {pendingDecisions.length} item{pendingDecisions.length !== 1 ? 's' : ''}
                 </span>
+              )}
+              {isDemo && (
+                <button
+                  onClick={() => navigate('/dashboard/accounts')}
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    color: 'rgba(255,255,255,0.45)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: 4, padding: '4px 10px',
+                    fontSize: 11, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: F,
+                  }}
+                >
+                  Conectar conta
+                </button>
               )}
             </div>
           </div>
@@ -372,7 +411,7 @@ const FeedPage: React.FC = () => {
 
         {/* Money tracker */}
         {tracker && (
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 16 }}>
             <MoneyBar
               leaking={(tracker as any).leaking_now || tracker.leaking_now}
               capturable={(tracker as any).capturable_now || tracker.capturable_now}
@@ -388,46 +427,14 @@ const FeedPage: React.FC = () => {
 
         {/* Summary pills */}
         {pendingDecisions.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 12 }}>
             <SummaryBar decisions={pendingDecisions} />
-          </div>
-        )}
-
-        {/* Demo banner — explains what this is */}
-        {isDemo && (
-          <div style={{
-            background: 'rgba(245,158,11,0.04)',
-            border: '1px solid rgba(245,158,11,0.12)',
-            borderRadius: 10, padding: '14px 20px',
-            marginBottom: 20,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}>
-            <div>
-              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', margin: 0, fontFamily: F, lineHeight: 1.5 }}>
-                <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Conecte sua conta para identificar perdas na sua operação.</strong>
-                {' '}Estes são exemplos do tipo de decisão que o motor gera com dados reais.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/dashboard/accounts')}
-              style={{
-                background: 'rgba(14,165,233,0.10)',
-                color: '#38bdf8',
-                border: '1px solid rgba(14,165,233,0.20)',
-                borderRadius: 8, padding: '8px 16px',
-                fontSize: 12, fontWeight: 600,
-                cursor: 'pointer', fontFamily: F,
-                whiteSpace: 'nowrap', marginLeft: 16,
-              }}
-            >
-              Sincronizar conta
-            </button>
           </div>
         )}
 
         {/* Decision cards */}
         {pendingDecisions.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pendingDecisions.map(decision => (
               <DecisionCard key={decision.id} decision={decision} onAction={handleAction} />
             ))}

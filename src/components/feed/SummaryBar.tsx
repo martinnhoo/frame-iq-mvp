@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import type { Decision } from '../../types/v2-database';
 import { formatMoney } from '../../lib/format';
 
-const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Space Grotesk', 'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+const M = "'Space Grotesk', 'Inter', system-ui, sans-serif";
 
 interface SummaryBarProps {
   decisions: Decision[];
@@ -14,11 +14,11 @@ interface PillProps {
   label: string;
   impact: number;
   color: string;
-  hoverColor: string;
+  hoverBorder: string;
   type: string;
 }
 
-function Pill({ count, label, impact, color, hoverColor, type }: PillProps) {
+function Pill({ count, label, impact, color, hoverBorder, type }: PillProps) {
   const [hov, setHov] = useState(false);
   return (
     <button
@@ -29,29 +29,29 @@ function Pill({ count, label, impact, color, hoverColor, type }: PillProps) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 8, padding: '8px 14px',
+        background: 'rgba(255,255,255,0.015)',
+        border: `1px solid ${hov ? hoverBorder : 'rgba(255,255,255,0.04)'}`,
+        borderRadius: 4, padding: '6px 10px',
         cursor: 'pointer', fontFamily: F,
-        display: 'flex', alignItems: 'center', gap: 10,
-        transition: 'all 0.12s',
+        display: 'flex', alignItems: 'center', gap: 7,
+        transition: 'border-color 0.1s',
       }}
     >
       <span style={{
         fontSize: 13, fontWeight: 700,
-        color: hov ? hoverColor : color,
-        transition: 'color 0.12s',
+        color: color,
+        fontFamily: M,
       }}>
         {count}
       </span>
-      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)' }}>
+      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.32)', fontWeight: 500 }}>
         {label}
       </span>
       {impact > 0 && (
         <span style={{
           fontSize: 11, fontWeight: 600,
-          color: color, fontFamily: M,
-          marginLeft: 'auto',
+          color: 'rgba(255,255,255,0.40)', fontFamily: M,
+          marginLeft: 2,
         }}>
           {formatMoney(impact)}
         </span>
@@ -72,47 +72,24 @@ export const SummaryBar: React.FC<SummaryBarProps> = ({ decisions }) => {
 
   return (
     <div style={{
-      display: 'flex', gap: 8, fontFamily: F, flexWrap: 'wrap',
+      display: 'flex', gap: 6, fontFamily: F, flexWrap: 'wrap',
     }}>
       {killDecisions.length > 0 && (
-        <Pill
-          count={killDecisions.length}
-          label="para parar"
-          impact={killImpact}
-          color="#f87171"
-          hoverColor="#fca5a5"
-          type="kill"
-        />
+        <Pill count={killDecisions.length} label="stop loss" impact={killImpact}
+          color="#e53e3e" hoverBorder="rgba(197,48,48,0.35)" type="kill" />
       )}
       {fixDecisions.length > 0 && (
-        <Pill
-          count={fixDecisions.length}
-          label="para corrigir"
-          impact={fixImpact}
-          color="#fbbf24"
-          hoverColor="#fde68a"
-          type="fix"
-        />
+        <Pill count={fixDecisions.length} label="corrigir" impact={fixImpact}
+          color="#d69e2e" hoverBorder="rgba(183,121,31,0.35)" type="fix" />
       )}
       {scaleDecisions.length > 0 && (
-        <Pill
-          count={scaleDecisions.length}
-          label="para escalar"
-          impact={scaleImpact}
-          color="#34d399"
-          hoverColor="#6ee7b7"
-          type="scale"
-        />
+        <Pill count={scaleDecisions.length} label="escalar" impact={scaleImpact}
+          color="#48bb78" hoverBorder="rgba(39,103,73,0.35)" type="scale" />
       )}
       {patternDecisions.length > 0 && (
-        <Pill
-          count={patternDecisions.length}
+        <Pill count={patternDecisions.length}
           label={patternDecisions.length === 1 ? 'padrão' : 'padrões'}
-          impact={0}
-          color="#a78bfa"
-          hoverColor="#c4b5fd"
-          type="pattern"
-        />
+          impact={0} color="#9f7aea" hoverBorder="rgba(85,60,154,0.35)" type="pattern" />
       )}
     </div>
   );

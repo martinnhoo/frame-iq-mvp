@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { formatMoney } from '../../lib/format';
 
-const F = "'Plus Jakarta Sans', sans-serif";
-const M = "'Space Grotesk', 'Plus Jakarta Sans', sans-serif";
+const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+const M = "'Space Grotesk', 'Inter', system-ui, sans-serif";
 
 interface MoneyBarProps {
   leaking: number;
@@ -37,72 +37,97 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
 
   return (
     <div style={{ fontFamily: F }}>
-      {/* Primary: financial impact headline */}
+      {/* Primary: loss alert */}
       {hasLoss && (
         <div style={{
-          background: 'rgba(239,68,68,0.06)',
-          border: '1px solid rgba(239,68,68,0.12)',
-          borderRadius: 10, padding: '16px 20px',
+          background: 'rgba(197,48,48,0.06)',
+          border: '1px solid rgba(197,48,48,0.12)',
+          borderLeft: '3px solid #c53030',
+          borderRadius: 4, padding: '12px 16px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: 16,
+          marginBottom: 10,
         }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontSize: 24, fontWeight: 700, color: '#fff', fontFamily: M, letterSpacing: '-0.03em' }}>
-                {formatMoney(leaking)}/dia
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+              <span style={{
+                fontSize: 28, fontWeight: 700, color: '#fff',
+                fontFamily: M, letterSpacing: '-0.04em', lineHeight: 1,
+              }}>
+                {formatMoney(leaking)}
               </span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.45)' }}>
-                em perda potencial
+              <span style={{
+                fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.40)',
+                fontFamily: M, letterSpacing: '-0.02em',
+              }}>
+                /dia
               </span>
             </div>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.30)', margin: '4px 0 0' }}>
-              Baseado no desempenho recente da conta
-            </p>
+            <div style={{
+              fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.28)',
+              marginTop: 3,
+            }}>
+              perda potencial identificada
+            </div>
           </div>
           {onStopLosses && (
             <button onClick={onStopLosses} style={{
-              background: '#ef4444', color: '#fff', border: 'none',
-              borderRadius: 8, padding: '10px 20px',
-              fontSize: 13, fontWeight: 700, fontFamily: F,
+              background: '#c53030', color: '#fff', border: 'none',
+              borderRadius: 4, padding: '9px 18px',
+              fontSize: 12, fontWeight: 700, fontFamily: F,
               cursor: 'pointer', whiteSpace: 'nowrap',
-              transition: 'background 0.15s',
+              transition: 'background 0.1s',
+              letterSpacing: '-0.01em',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#dc2626'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#ef4444'; }}>
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#9b2c2c'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#c53030'; }}>
               Resolver agora
             </button>
           )}
         </div>
       )}
 
-      {/* Secondary: metrics row */}
+      {/* Metrics row */}
       <div style={{
-        display: 'grid', gridTemplateColumns: hasLoss ? '1fr 1fr' : '1fr 1fr 1fr', gap: 12,
+        display: 'grid',
+        gridTemplateColumns: hasLoss ? '1fr 1fr' : '1fr 1fr 1fr',
+        gap: 8,
       }}>
         {/* Opportunity */}
         <div style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 10, padding: '16px 20px',
+          background: 'rgba(255,255,255,0.015)',
+          border: '1px solid rgba(255,255,255,0.04)',
+          borderRadius: 4, padding: '12px 14px',
         }}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-            Oportunidade identificada
+          <div style={{
+            fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.28)',
+            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
+          }}>
+            Oportunidade
           </div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: M, letterSpacing: '-0.03em' }}>
+          <div style={{
+            fontSize: 22, fontWeight: 700, color: '#fff',
+            fontFamily: M, letterSpacing: '-0.04em', lineHeight: 1,
+          }}>
             {formatMoney(capturable)}
           </div>
         </div>
 
         {/* Total saved */}
         <div style={{
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 10, padding: '16px 20px',
+          background: 'rgba(255,255,255,0.015)',
+          border: '1px solid rgba(255,255,255,0.04)',
+          borderRadius: 4, padding: '12px 14px',
         }}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-            Total economizado
+          <div style={{
+            fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.28)',
+            textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
+          }}>
+            Economizado
           </div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: M, letterSpacing: '-0.03em' }}>
+          <div style={{
+            fontSize: 22, fontWeight: 700, color: '#fff',
+            fontFamily: M, letterSpacing: '-0.04em', lineHeight: 1,
+          }}>
             {formatMoney(displayedSaved)}
           </div>
         </div>
@@ -110,30 +135,33 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
         {/* No loss — show status */}
         {!hasLoss && (
           <div style={{
-            background: 'rgba(16,185,129,0.04)',
-            border: '1px solid rgba(16,185,129,0.10)',
-            borderRadius: 10, padding: '16px 20px',
+            background: 'rgba(39,103,73,0.04)',
+            border: '1px solid rgba(39,103,73,0.10)',
+            borderRadius: 4, padding: '12px 14px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              <div style={{
+                fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.28)',
+                textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
+              }}>
                 Status
               </div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#34d399' }}>
-                Nenhuma perda potencial
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#48bb78' }}>
+                Sem perdas detectadas
               </div>
             </div>
             {onResolve && (
               <button onClick={onResolve} style={{
-                background: '#10b981', color: '#fff', border: 'none',
-                borderRadius: 8, padding: '8px 16px',
-                fontSize: 12, fontWeight: 700, fontFamily: F,
+                background: '#276749', color: '#fff', border: 'none',
+                borderRadius: 4, padding: '6px 12px',
+                fontSize: 11, fontWeight: 700, fontFamily: F,
                 cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'background 0.15s',
+                transition: 'background 0.1s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#059669'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#10b981'; }}>
-                Resolver agora
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#22543d'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#276749'; }}>
+                Ver feed
               </button>
             )}
           </div>
