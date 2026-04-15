@@ -505,11 +505,11 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   const enriched = curr.map((ad: any) => {
     const p = prevMap[ad.ad_name || ad.ad_id];
     const spend = parseN(ad.spend);
-    const ctr = parseN(ad.ctr);
+    const ctr = parseN(ad.ctr) / 100;   // Meta returns CTR as percentage string — normalize to decimal
     const cpc = parseN(ad.cpc);
     const impressions = parseN(ad.impressions);
     const frequency = parseN(ad.frequency);
-    const prevCtr = p ? parseN(p.ctr) : null;
+    const prevCtr = p ? parseN(p.ctr) / 100 : null;  // Also normalize previous period CTR
     const conversions = getConversions(ad);
     const video = getVideoRetention(ad);
 
@@ -568,7 +568,7 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         const pRoas = (p.website_purchase_roas || [])[0]?.value;
         return pRoas ? parseN(pRoas) : null;
       }
-      return p.ctr ? parseN(p.ctr) : null;
+      return p.ctr ? parseN(p.ctr) / 100 : null;
     })() : null;
 
     const isFatigued = frequency > 3.5 || (prevCtr !== null && prevCtr > 0 && ctr / prevCtr < 0.7);
@@ -617,7 +617,7 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
     ? enriched.reduce((s: number, a: any) => s + a.ctr * a.spend, 0) / totalSpend
     : 0;
   const ydSpend = yest.reduce((s: number, a: any) => s + parseN(a.spend), 0);
-  const ydCtr = yest.length ? yest.reduce((s: number, a: any) => s + parseN(a.ctr), 0) / yest.length : 0;
+  const ydCtr = yest.length ? yest.reduce((s: number, a: any) => s + parseN(a.ctr) / 100, 0) / yest.length : 0;
 
   const scalable = enriched.filter((a: any) => a.isScalable);
   const fatigued = enriched.filter((a: any) => a.isFatigued);
@@ -804,7 +804,7 @@ Retorne JSON:
   const snapshot = {
     user_id, persona_id: persona_id || null, date: today,
     account_id: account.id, account_name: personaName,
-    total_spend: totalSpend, avg_ctr: avgCtr, total_clicks: enriched.reduce((s: number, a: any) => s + parseInt(a.impressions > 0 ? String(a.ctr * a.impressions / 100) : '0'), 0),
+    total_spend: totalSpend, avg_ctr: avgCtr, total_clicks: enriched.reduce((s: number, a: any) => s + parseInt(a.impressions > 0 ? String(a.ctr * a.impressions) : '0'), 0),
     active_ads: curr.length, winners_count: scalable.length, losers_count: toPause.length,
     yesterday_spend: ydSpend, yesterday_ctr: ydCtr,
     top_ads: enriched.slice(0, 15).map((a: any) => ({

@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
               const enriched = adsData
                 .map((a: any) => {
                   const spend = parseFloat(a.spend || 0),
-                    ctr = parseFloat(a.ctr || 0) * 100,
+                    ctr = parseFloat(a.ctr || 0),  // Meta returns CTR as percentage string (e.g. 7.81 = 7.81%)
                     freq = parseFloat(a.frequency || 0);
                   const hookRate = () => {
                     const plays = a.video_play_actions?.find((x: any) => x.action_type === "video_play")?.value;
@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
                   .map((d: any) => ({
                     date: d.date_start,
                     spend: parseFloat(d.spend || 0),
-                    ctr: parseFloat(d.ctr || 0) * 100,
+                    ctr: parseFloat(d.ctr || 0),  // Already percentage from Meta API
                     cpm: parseFloat(d.cpm || 0),
                   })),
               };
