@@ -13,6 +13,25 @@ import type { Decision, DecisionAction } from '../../types/v2-database';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
+// ── localStorage helpers for demo dismiss (once per day) ──
+const DEMO_DISMISS_KEY = 'adbrief_demo_dismissed';
+
+function isDemoDismissedToday(): boolean {
+  try {
+    const val = localStorage.getItem(DEMO_DISMISS_KEY);
+    if (!val) return false;
+    const today = new Date().toISOString().slice(0, 10);
+    return val === today;
+  } catch { return false; }
+}
+
+function dismissDemoToday(): void {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem(DEMO_DISMISS_KEY, today);
+  } catch { /* noop */ }
+}
+
 // ================================================================
 // DEMO MODE — Must feel indistinguishable from real production data.
 // Campaign names, ad set names, ad names — all realistic.
@@ -30,9 +49,7 @@ function buildDemoDecisions(): Decision[] {
       type: "kill",
       score: 94,
       priority_rank: 1,
-      // #8: varied language — "queda consistente"
       headline: "Queda consistente de performance — CTR 62% abaixo da mediana",
-      // #9: stronger time context — "nos últimos 3 dias"
       reason: "CTR: 0.80% (baseline: 1.45%) — queda consistente nos últimos 3 dias\nCPA: R$47,50 (baseline: R$28,00) — tendência de alta desde seg\nGasto acumulado: R$540 em 5 dias sem melhora",
       impact_type: "waste",
       impact_daily: 18000,
@@ -49,7 +66,6 @@ function buildDemoDecisions(): Decision[] {
         { id: "d1a", label: "Pausar anúncio", type: "destructive", requires_confirmation: true, meta_api_action: "pause_ad" },
         { id: "d1b", label: "Abrir briefing baseado neste padrão", type: "neutral", requires_confirmation: false },
       ],
-      // #5: action recommendation hint
       action_recommendation: "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC",
       ad: {
         name: "Vídeo 03 — Hook Depoimento",
@@ -71,16 +87,13 @@ function buildDemoDecisions(): Decision[] {
       type: "kill",
       score: 89,
       priority_rank: 2,
-      // #8: varied — "sem retorno"
       headline: "Gasto sem retorno — R$665 em 7 dias, zero conversões",
-      // #9: stronger time
       reason: "Conversões: 0 em 7 dias — nenhuma desde ativação\nCTR: 0.80% (baseline: 1.45%) — deteriorando\nFrequência: 3.2x — saturação detectada há 2 dias",
       impact_type: "waste",
       impact_daily: 9500,
       impact_7d: 66500,
       impact_confidence: "high",
       impact_basis: "Últimos 7 dias",
-      // #7: grouping indicator
       group_note: "2 anúncios nesta campanha com padrão semelhante de queda",
       metrics: [
         { key: "Gasto", value: "R$665", context: "7d", trend: "down" },
@@ -113,9 +126,7 @@ function buildDemoDecisions(): Decision[] {
       type: "fix",
       score: 78,
       priority_rank: 3,
-      // #8: varied — "performance deteriorando"
       headline: "Performance deteriorando — frequência 4.2x, CPA acelerando",
-      // #9: temporal precision
       reason: "Frequência: 4.2x (limite: 3.0x) — ultrapassou limite há 48h\nCPA: R$32,00 (+22% vs semana anterior) — tendência negativa desde quarta\nCTR: 2.0% (-15% vs início da campanha)",
       impact_type: "savings",
       impact_daily: 7200,
@@ -152,9 +163,7 @@ function buildDemoDecisions(): Decision[] {
       type: "fix",
       score: 72,
       priority_rank: 4,
-      // #8: varied — "desconexão hook-conversão"
       headline: "Desconexão hook-conversão — CTR alto mas CPA 36% acima",
-      // #9: temporal
       reason: "Hook rate: 68% (top quartil) — anúncio atrai cliques mas não converte\nCTR: 2.4% (baseline: 1.45%) — +66% acima da média\nCPA: R$38,00 (baseline: R$28,00) — subindo desde terça",
       impact_type: "savings",
       impact_daily: 5400,
@@ -191,9 +200,7 @@ function buildDemoDecisions(): Decision[] {
       type: "scale",
       score: 65,
       priority_rank: 5,
-      // #8: varied — "oportunidade confirmada"
       headline: "Oportunidade confirmada — ROAS 4.8x estável, margem para escalar",
-      // #9: temporal
       reason: "ROAS: 4.8x (baseline: 1.6x) — consistente nos últimos 7 dias\nCPA: R$18,00 (baseline: R$28,00) — estável, sem picos\n12 conversões em 7 dias — volume sustentável para escala",
       impact_type: "revenue",
       impact_daily: 32000,
@@ -287,6 +294,203 @@ function buildDemoMoneyTracker() {
   };
 }
 
+// ================================================================
+// MonitoringState — user has ads but no actionable decisions yet
+// Shows a professional "everything is being watched" view
+// ================================================================
+interface AdSummary {
+  name: string;
+  meta_ad_id: string;
+  status?: string;
+  ad_set?: { name: string; campaign?: { name: string } };
+}
+
+const MonitoringState: React.FC<{ ads: AdSummary[]; totalAds: number }> = ({ ads, totalAds }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div style={{ fontFamily: F }}>
+      {/* Status header */}
+      <div style={{
+        background: '#0F141A',
+        border: '1px solid rgba(230,237,243,0.06)',
+        borderRadius: 4, padding: '20px 20px 18px',
+        marginBottom: 8,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%',
+            background: '#2D9B6E',
+            boxShadow: '0 0 6px rgba(45,155,110,0.5)',
+            display: 'inline-block',
+            animation: 'mon-pulse 2s ease-in-out infinite',
+          }} />
+          <span style={{
+            fontSize: 14, fontWeight: 700, color: '#E6EDF3',
+            letterSpacing: '-0.01em',
+          }}>
+            Monitoramento ativo
+          </span>
+        </div>
+        <p style={{
+          fontSize: 12.5, color: '#8B949E', margin: 0, lineHeight: 1.6,
+        }}>
+          {totalAds === 1
+            ? 'Seu anúncio está sendo monitorado em tempo real. Quando houver uma ação necessária, ela aparecerá aqui automaticamente.'
+            : `Seus ${totalAds} anúncios estão sendo monitorados em tempo real. Quando houver ações necessárias, elas aparecerão aqui automaticamente.`
+          }
+        </p>
+      </div>
+
+      {/* Ad cards — show actual user ads */}
+      {ads.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {ads.map((ad, i) => {
+            const campaign = ad.ad_set?.campaign?.name;
+            const adSet = ad.ad_set?.name;
+            const breadcrumb = [campaign, adSet, ad.name].filter(Boolean).join(' → ');
+
+            return (
+              <div key={ad.meta_ad_id || i} style={{
+                background: '#0F141A',
+                border: '1px solid rgba(230,237,243,0.04)',
+                borderLeft: '3px solid rgba(45,155,110,0.25)',
+                borderRadius: 3, padding: '12px 14px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 12,
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  {/* Breadcrumb */}
+                  {breadcrumb && (
+                    <div style={{
+                      fontSize: 10.5, color: 'rgba(139,148,158,0.55)',
+                      fontFamily: F, fontWeight: 500,
+                      marginBottom: 3,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {breadcrumb}
+                    </div>
+                  )}
+                  <div style={{
+                    fontSize: 12.5, fontWeight: 600, color: '#E6EDF3',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {ad.name}
+                  </div>
+                </div>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  flexShrink: 0,
+                }}>
+                  <span style={{
+                    width: 5, height: 5, borderRadius: '50%',
+                    background: 'rgba(45,155,110,0.50)',
+                    display: 'inline-block',
+                  }} />
+                  <span style={{
+                    fontSize: 10.5, color: 'rgba(139,148,158,0.50)',
+                    fontWeight: 500,
+                  }}>
+                    Monitorando
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+          {totalAds > ads.length && (
+            <div style={{
+              fontSize: 11, color: 'rgba(139,148,158,0.40)',
+              textAlign: 'center', padding: '6px 0',
+              fontFamily: F,
+            }}>
+              + {totalAds - ads.length} {totalAds - ads.length === 1 ? 'anúncio' : 'anúncios'} monitorados
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bottom hint + CTA */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginTop: 12, padding: '0 2px',
+      }}>
+        <span style={{
+          fontSize: 11, color: 'rgba(139,148,158,0.40)',
+          fontFamily: F,
+        }}>
+          Próxima análise em breve
+        </span>
+        <button
+          onClick={() => navigate('/dashboard/ai')}
+          style={{
+            background: 'transparent',
+            color: '#22A3A3',
+            border: 'none', padding: '4px 0',
+            fontSize: 11, fontWeight: 600,
+            cursor: 'pointer', fontFamily: F,
+            transition: 'opacity 0.1s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+        >
+          Criar novo criativo com IA →
+        </button>
+      </div>
+
+      <style>{`@keyframes mon-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}`}</style>
+    </div>
+  );
+};
+
+// ================================================================
+// SyncingOverlay — shown while engine is running
+// ================================================================
+const SyncingOverlay: React.FC = () => (
+  <div style={{
+    background: '#0F141A',
+    border: '1px solid rgba(230,237,243,0.06)',
+    borderRadius: 4, padding: '40px 24px',
+    textAlign: 'center', fontFamily: F,
+  }}>
+    <div style={{
+      width: 48, height: 48, borderRadius: 12,
+      background: 'rgba(34,163,163,0.06)',
+      border: '1px solid rgba(34,163,163,0.12)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      margin: '0 auto 18px',
+    }}>
+      <svg width="24" height="24" viewBox="0 0 28 28" style={{ animation: 'sync-spin 2s linear infinite' }}>
+        <circle cx="14" cy="14" r="12" fill="none" stroke="rgba(34,163,163,0.15)" strokeWidth="1.5"/>
+        <circle cx="14" cy="14" r="2.5" fill="#22A3A3"/>
+        <path
+          d="M14 14 L14 2 A12 12 0 0 1 24.39 8.0 Z"
+          fill="rgba(34,163,163,0.25)"
+        />
+        <line x1="14" y1="14" x2="14" y2="2" stroke="rgba(34,163,163,0.5)" strokeWidth="1"/>
+      </svg>
+    </div>
+    <h2 style={{
+      fontSize: 16, fontWeight: 700, color: '#E6EDF3',
+      margin: '0 0 6px', letterSpacing: '-0.02em',
+    }}>
+      Analisando sua conta
+    </h2>
+    <p style={{
+      fontSize: 12.5, color: '#8B949E', margin: '0 0 4px',
+      lineHeight: 1.5,
+    }}>
+      Processando dados e gerando decisões...
+    </p>
+    <p style={{
+      fontSize: 11, color: 'rgba(139,148,158,0.40)',
+      margin: 0,
+    }}>
+      Isso leva menos de um minuto.
+    </p>
+    <style>{`@keyframes sync-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+  </div>
+);
+
 /**
  * FeedPage — Copilot Feed
  * Prioritized decisions ranked by financial impact.
@@ -298,15 +502,53 @@ const FeedPage: React.FC = () => {
   const { activeAccount, metaConnected, accountResolving } = ctx;
   const accountId = activeAccount?.id ?? null;
 
-  const { decisions: realDecisions, isLoading: decisionsLoading } = useDecisions(accountId);
+  const { decisions: realDecisions, isLoading: decisionsLoading, refetch: refetchDecisions } = useDecisions(accountId);
   const { tracker: realTracker, isLoading: trackerLoading } = useMoneyTracker(accountId);
   const { executeAction } = useActions();
 
   const [isDemo, setIsDemo] = useState(false);
-  // Stable "last analysis" minutes — changes only on mount (#11)
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  // Stable "last analysis" minutes — changes only on mount
   const [lastAnalysisMin] = useState(() => Math.floor(Math.random() * 4) + 2);
+
+  // ── Fetch user's actual ads for monitoring state ──
+  const [userAds, setUserAds] = useState<AdSummary[]>([]);
+  const [totalAdCount, setTotalAdCount] = useState<number>(0);
+  const [adsLoaded, setAdsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!accountId) {
+      setUserAds([]);
+      setTotalAdCount(0);
+      setAdsLoaded(true);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, count } = await (supabase
+          .from('ads' as any)
+          .select('name, meta_ad_id, status, ad_set:ad_sets(name, campaign:campaigns(name))', { count: 'exact' })
+          .eq('account_id', accountId)
+          .limit(6) as any);
+        if (!cancelled) {
+          setUserAds((data || []) as AdSummary[]);
+          setTotalAdCount(count ?? (data?.length ?? 0));
+          setAdsLoaded(true);
+        }
+      } catch {
+        if (!cancelled) setAdsLoaded(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [accountId]);
+
   const hasRealData = realDecisions.length > 0;
-  const showDemo = metaConnected && !hasRealData && !decisionsLoading && !trackerLoading && !accountResolving;
+  const demoDismissed = isDemoDismissedToday();
+
+  // Show demo only if: Meta connected, no real decisions, not loading, NOT already dismissed today
+  const showDemo = metaConnected && !hasRealData && !decisionsLoading && !trackerLoading && !accountResolving && !demoDismissed && !syncing;
 
   useEffect(() => {
     setIsDemo(showDemo);
@@ -316,8 +558,38 @@ const FeedPage: React.FC = () => {
   const tracker = isDemo ? buildDemoMoneyTracker() : realTracker;
   const isLoading = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
 
+  // ── Sync handler: dismiss demo + invoke engine + refetch ──
+  const handleSync = useCallback(async () => {
+    if (!accountId || syncing) return;
+
+    // Dismiss demo immediately
+    dismissDemoToday();
+    setIsDemo(false);
+    setSyncing(true);
+    setSyncError(null);
+
+    try {
+      // Invoke the decision engine edge function
+      const { error } = await supabase.functions.invoke('run-decision-engine', {
+        body: { account_id: accountId },
+      });
+
+      if (error) {
+        console.error('Engine invocation failed:', error);
+        setSyncError('Falha na análise. Tente novamente.');
+      }
+
+      // Refetch decisions regardless (engine might have generated some)
+      await refetchDecisions();
+    } catch (err) {
+      console.error('Sync error:', err);
+      setSyncError('Falha na conexão. Tente novamente.');
+    } finally {
+      setSyncing(false);
+    }
+  }, [accountId, syncing, refetchDecisions]);
+
   const handleAction = async (decisionId: string, action: DecisionAction) => {
-    // Resolve the meta ID from the decision's ad data
     const decision = decisions.find(d => d.id === decisionId);
     const metaId = decision?.ad?.meta_ad_id || '';
     const targetType = action.meta_api_action?.includes('adset') ? 'adset'
@@ -385,9 +657,28 @@ const FeedPage: React.FC = () => {
     );
   }
 
+  // ── Syncing state — engine is running ──
+  if (syncing) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <div style={{ marginBottom: 18 }}>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: '#E6EDF3', fontFamily: F, letterSpacing: '-0.02em', margin: 0 }}>
+              Feed
+            </h1>
+          </div>
+          <SyncingOverlay />
+        </div>
+      </div>
+    );
+  }
+
   const pendingDecisions = decisions.filter(d => d.status === 'pending');
   const hasKills = pendingDecisions.some(d => d.type === 'kill');
   const urgentCount = pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length;
+
+  // ── Connected, demo dismissed, but no decisions → monitoring or empty state ──
+  const showMonitoring = metaConnected && !isDemo && pendingDecisions.length === 0 && adsLoaded;
 
   return (
     <div style={{ minHeight: '100vh', background: '#0B0F14', padding: '24px 20px' }}>
@@ -429,7 +720,7 @@ const FeedPage: React.FC = () => {
               )}
               {isDemo && (
                 <button
-                  onClick={() => navigate('/dashboard/accounts')}
+                  onClick={handleSync}
                   style={{
                     background: 'rgba(230,237,243,0.04)',
                     color: '#8B949E',
@@ -463,7 +754,7 @@ const FeedPage: React.FC = () => {
               Dados simulados. Sincronize sua conta Meta para análise real.
             </span>
             <button
-              onClick={() => navigate('/dashboard/accounts')}
+              onClick={handleSync}
               style={{
                 background: '#1F3A5F', color: '#fff', border: 'none',
                 borderRadius: 3, padding: '7px 14px',
@@ -480,8 +771,34 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
+        {/* Sync error toast */}
+        {syncError && (
+          <div style={{
+            background: 'rgba(180,35,42,0.08)',
+            border: '1px solid rgba(180,35,42,0.20)',
+            borderRadius: 3, padding: '8px 14px',
+            marginBottom: 12,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <span style={{ fontSize: 12, color: '#D63B3B', fontFamily: F }}>
+              {syncError}
+            </span>
+            <button
+              onClick={handleSync}
+              style={{
+                background: '#B4232A', color: '#fff', border: 'none',
+                borderRadius: 3, padding: '5px 12px',
+                fontSize: 11, fontWeight: 700, fontFamily: F,
+                cursor: 'pointer',
+              }}
+            >
+              Tentar novamente
+            </button>
+          </div>
+        )}
+
         {/* Money tracker */}
-        {tracker && (
+        {!showMonitoring && tracker && (
           <div style={{ marginBottom: 16 }}>
             <MoneyBar
               leaking={(tracker as any).leaking_now || tracker.leaking_now}
@@ -504,7 +821,7 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* #11: Live system indicator */}
+        {/* Live system indicator */}
         {pendingDecisions.length > 0 && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6,
@@ -526,15 +843,33 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Decision cards */}
+        {/* Decision cards OR monitoring/empty state */}
         {pendingDecisions.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {pendingDecisions.map(decision => (
               <DecisionCard key={decision.id} decision={decision} onAction={handleAction} isDemo={isDemo} />
             ))}
           </div>
+        ) : showMonitoring ? (
+          totalAdCount > 0 ? (
+            // 1+ ads, no decisions → professional monitoring state
+            <MonitoringState ads={userAds} totalAds={totalAdCount} />
+          ) : (
+            // 0 ads → beautiful empty state directing to creative tool
+            <EmptyState
+              totalAds={0}
+              nextSyncMinutes={0}
+              connected={metaConnected}
+              todaySummary={{ paused: 0, scaled: 0, savedToday: 0, revenueToday: 0 }}
+            />
+          )
         ) : (
-          <EmptyState totalAds={0} nextSyncMinutes={0} connected={metaConnected} todaySummary={{ paused: 0, scaled: 0, savedToday: 0, revenueToday: 0 }} />
+          <EmptyState
+            totalAds={totalAdCount}
+            nextSyncMinutes={0}
+            connected={metaConnected}
+            todaySummary={{ paused: 0, scaled: 0, savedToday: 0, revenueToday: 0 }}
+          />
         )}
       </div>
     </div>
