@@ -289,10 +289,13 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
 
   const load = useCallback(async () => {
     if (!user?.id || !personaId) { setLoading(false); return; }
+    const loadPersonaId = personaId;
     setLoading(true);
     const { data } = await (supabase as any).from("ad_diary")
-      .select("*").eq("user_id", user.id).eq("persona_id", personaId)
+      .select("*").eq("user_id", user.id).eq("persona_id", loadPersonaId)
       .order("spend", { ascending: false }).limit(500);
+    // Context guard: discard if persona changed during fetch
+    if (loadPersonaId !== personaId) { setLoading(false); return; }
     let rows = (data || []) as Entry[];
 
     // Enrich missing thumbnails via ads→creatives join (ads.meta_ad_id matches ad_diary.ad_id)
@@ -302,6 +305,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       const { data: adsWithThumb } = await (supabase as any).from("ads")
         .select("meta_ad_id, creative:creatives(thumbnail_url)")
         .in("meta_ad_id", adIds.slice(0, 100));
+      if (loadPersonaId !== personaId) { setLoading(false); return; }
       if (adsWithThumb?.length) {
         const thumbMap: Record<string, string> = {};
         for (const a of adsWithThumb) {
@@ -328,15 +332,18 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
 
   const syncAccount = async () => {
     if (!user?.id || !personaId) return;
-    setSyncing(personaId);
+    const syncPersonaId = personaId;
+    setSyncing(syncPersonaId);
     setSyncError(null);
     try {
       const days = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / 86400000) + 1;
       const period = days <= 7 ? "7d" : days <= 14 ? "14d" : days <= 30 ? "30d" : days <= 60 ? "60d" : "90d";
       const { data: res, error } = await supabase.functions.invoke("live-metrics", {
-        body: { user_id: user.id, persona_id: personaId, period, date_from: fmtD(dateRange.from), date_to: fmtD(dateRange.to) }
+        body: { user_id: user.id, persona_id: syncPersonaId, period, date_from: fmtD(dateRange.from), date_to: fmtD(dateRange.to) }
       });
       if (error) { setSyncError(`Erro: ${error.message}`); setSyncing(null); return; }
+      // Context guard: discard if persona changed during sync
+      if (syncPersonaId !== personaId) { setSyncing(null); return; }
 
       const metaAds: any[] = res?.meta?.top_ads || [];
       if (!metaAds.length) { setSyncError("0 anúncios encontrados"); setSyncing(null); return; }

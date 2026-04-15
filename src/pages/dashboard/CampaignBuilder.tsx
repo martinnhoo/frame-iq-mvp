@@ -191,9 +191,12 @@ export default function CampaignBuilder() {
 
   useEffect(()=>{
     if(!userId||!persona?.id) return;
+    const loadPersonaId = persona.id;
     supabase.functions.invoke("meta-oauth", {
       body: { action: "get_connections", user_id: userId }
     }).then(({data}: any) => {
+      // Context guard: discard if persona changed during fetch
+      if (loadPersonaId !== persona?.id) return;
       const conns = (data?.connections || []).filter((c:any) => c.status === "active");
       setConns(conns as any[]);
       setConnsReady(true);

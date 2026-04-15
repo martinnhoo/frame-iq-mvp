@@ -234,10 +234,12 @@ export default function DashboardLayout() {
       ]);
 
       // check-subscription fires after render — sync plan from Stripe
+      const subUserId = session.user.id;
       Promise.race([
         supabase.functions.invoke("check-subscription"),
         new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
       ]).then((res: any) => {
+        if (!mounted) return; // component unmounted
         const subData = res?.data;
         if (subData?.plan && profileData && subData.plan !== profileData.plan) {
           setProfile(prev => prev ? { ...prev, plan: subData.plan } : prev);

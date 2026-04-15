@@ -1053,12 +1053,15 @@ CTA: ${persona.cta_style}`;
             <button
               onClick={() => {
                 setLoadingSaved(true);
+                const refreshUserId = user.id;
                 supabase
                   .from("personas")
                   .select("*")
-                  .eq("user_id", user.id)
+                  .eq("user_id", refreshUserId)
                   .order("created_at", { ascending: false })
                   .then(({ data }) => {
+                    // Context guard: discard if user changed
+                    if (refreshUserId !== user?.id) { setLoadingSaved(false); return; }
                     if (data)
                       setSaved(
                         data

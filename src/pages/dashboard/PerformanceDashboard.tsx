@@ -317,13 +317,16 @@ export default function PerformanceDashboard() {
 
   const load = useCallback(async(showSpinner=false)=>{
     if(!user||!selectedPersona) { setLoading(false); return; }
+    const loadPersonaId = selectedPersona.id;
     if(showSpinner) setRefreshing(true); else setLoading(true);
     setError("");
     try {
       const days=Math.round((dateRange.to.getTime()-dateRange.from.getTime())/86400000)+1;
       const period=days<=7?"7d":days<=14?"14d":days<=30?"30d":days<=60?"60d":"90d";
-      const res=await supabase.functions.invoke("live-metrics",{body:{user_id:user.id,persona_id:selectedPersona.id,period,date_from:fmt(dateRange.from),date_to:fmt(dateRange.to)}});
+      const res=await supabase.functions.invoke("live-metrics",{body:{user_id:user.id,persona_id:loadPersonaId,period,date_from:fmt(dateRange.from),date_to:fmt(dateRange.to)}});
       if(res.error) throw new Error(res.error.message);
+      // Context guard: discard stale response if persona changed during fetch
+      if(loadPersonaId !== selectedPersona?.id) { setLoading(false); setRefreshing(false); return; }
       setData(res.data); setLastUpdated(new Date());
     } catch(e){
       const msg=String(e);
