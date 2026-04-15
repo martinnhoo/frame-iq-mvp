@@ -122,18 +122,27 @@ export function UsageBar({ userId, plan }: Props) {
         }} />
       </div>
 
-      {/* Status text — contextual */}
+      {/* Status text — contextual, with capacity hint at 80%+ */}
       {isEmpty ? (
-        <p style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 600, color: "#ef4444", lineHeight: 1.4 }}>
-          {pt ? "Limite mensal atingido" : es ? "Límite mensual alcanzado" : "Monthly limit reached"}
+        <p
+          onClick={() => window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"))}
+          style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 600, color: "#ef4444", lineHeight: 1.4, cursor: "pointer" }}
+        >
+          {pt ? "Limite atingido — adicionar capacidade" : es ? "Límite alcanzado — agregar capacidad" : "Limit reached — add capacity"}
         </p>
       ) : isCritical ? (
-        <p style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 500, color: "#ef4444", lineHeight: 1.4 }}>
-          {pt ? "Quase no limite — considere expandir" : es ? "Casi en el límite — considere expandir" : "Near limit — consider expanding"}
+        <p
+          onClick={() => window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"))}
+          style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 500, color: "#ef4444", lineHeight: 1.4, cursor: "pointer" }}
+        >
+          {pt ? "Quase no limite — expandir capacidade" : es ? "Casi en el límite — expandir capacidad" : "Near limit — expand capacity"}
         </p>
       ) : isLow ? (
-        <p style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 500, color: "rgba(234,179,8,0.7)", lineHeight: 1.4 }}>
-          {pt ? "Uso elevado este mês" : es ? "Uso elevado este mes" : "High usage this month"}
+        <p
+          onClick={() => window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"))}
+          style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 500, color: "rgba(234,179,8,0.7)", lineHeight: 1.4, cursor: "pointer" }}
+        >
+          {pt ? "Uso elevado — expandir capacidade" : es ? "Uso elevado — expandir capacidad" : "High usage — expand capacity"}
         </p>
       ) : null}
     </div>

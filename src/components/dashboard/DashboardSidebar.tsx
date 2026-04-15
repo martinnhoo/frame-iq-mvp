@@ -9,6 +9,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PlanUpgradeModal } from "./PlanUpgradeModal";
+import { CapacityPackModal } from "./CapacityPackModal";
 import { ReferralPopup } from "./ReferralPopup";
 import { CreditBar } from "./CreditBar";
 
@@ -151,6 +152,14 @@ export function DashboardSidebar({
   const [accountsOpen, setAccountsOpen] = useState(false);
   const [kpi, setKpi] = useState<{ spend: number; ctr: number; ads: number; trend: "up" | "down" | "flat" | null } | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [capacityOpen, setCapacityOpen] = useState(false);
+
+  // Listen for capacity modal open events (from UsageBar click)
+  useEffect(() => {
+    const handler = () => setCapacityOpen(true);
+    window.addEventListener("adbrief:open-capacity-modal", handler);
+    return () => window.removeEventListener("adbrief:open-capacity-modal", handler);
+  }, []);
 
   const plan = profile?.plan || "free";
   // lifetime removed
@@ -504,6 +513,16 @@ export function DashboardSidebar({
       </aside>
 
       <PlanUpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} currentPlan={plan} language={language} />
+      <CapacityPackModal
+        open={capacityOpen}
+        onClose={() => setCapacityOpen(false)}
+        plan={plan}
+        onUpgrade={() => { setCapacityOpen(false); setUpgradeOpen(true); }}
+        onSuccess={() => {
+          setCapacityOpen(false);
+          window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
+        }}
+      />
     </>
   );
 }

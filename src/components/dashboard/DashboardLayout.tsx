@@ -313,6 +313,25 @@ export default function DashboardLayout() {
         window.history.replaceState({}, "", url.toString());
         setTimeout(() => toast.success(msg, { duration: 6000 }), 800);
       }
+
+      // Capacity pack purchase success — show toast, refresh usage
+      const capacityResult = new URLSearchParams(window.location.search).get("capacity");
+      if (capacityResult === "success") {
+        const lang = profileData?.preferred_language || storage.get("adbrief_language") || "pt";
+        const capMsg = lang === "es"
+          ? "Capacidad expandida · puedes continuar"
+          : lang === "en"
+          ? "Capacity expanded · you can continue"
+          : "Capacidade expandida · pode continuar";
+        const url = new URL(window.location.href);
+        url.searchParams.delete("capacity");
+        url.searchParams.delete("pack");
+        window.history.replaceState({}, "", url.toString());
+        setTimeout(() => {
+          toast.success(capMsg, { duration: 5000 });
+          window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
+        }, 800);
+      }
       if (mounted) setLoading(false);
     };
     // Safety timeout — if init takes >6s on mobile, force show dashboard

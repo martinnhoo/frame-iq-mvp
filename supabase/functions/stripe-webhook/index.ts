@@ -43,8 +43,35 @@ Deno.serve(async (req) => {
         const session = event.data.object as Stripe.Checkout.Session;
         const customerId = session.customer as string;
         const customerEmail = session.customer_email || session.customer_details?.email;
-        logStep("Checkout completed", { customerId, customerEmail });
+        logStep("Checkout completed", { customerId, customerEmail, mode: session.mode });
 
+        // ── Capacity pack (one-time payment) ─────────────────────────────────
+        if (session.metadata?.type === "capacity_pack") {
+          const userId = session.metadata.user_id;
+          const credits = parseInt(session.metadata.credits || "0", 10);
+          const pack = session.metadata.pack || "unknown";
+
+          if (userId && credits > 0) {
+            // Call add_bonus_credits RPC to add capacity
+            const { error: rpcError } = await supabase.rpc("add_bonus_credits", {
+              p_user_id: userId,
+              p_credits: credits,
+              p_reason: "capacity_pack",
+              p_total_credits: 0,
+            });
+
+            if (rpcError) {
+              logStep("ERROR adding bonus credits", { userId, credits, error: rpcError.message });
+            } else {
+              logStep("Capacity pack applied", { userId, pack, credits });
+            }
+          } else {
+            logStep("Capacity pack missing data", { userId, credits, pack });
+          }
+          break;
+        }
+
+        // ── Subscription checkout (existing flow) ────────────────────────────
         if (customerEmail) {
           const { data: profiles } = await supabase
             .from("profiles")

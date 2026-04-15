@@ -212,28 +212,6 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free", language
             })}
           </div>
 
-          {/* Extra capacity packs */}
-          <div className="px-6 pb-4">
-            <div className="border-t border-white/[0.06] pt-4">
-              <p className="text-xs font-semibold text-white/30 text-center mb-3">
-                {lang === "pt" ? "Ou adicione capacidade extra" : lang === "es" ? "O agrega capacidad extra" : "Or add extra capacity"}
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: "+100", actions: "ações", price: "$29" },
-                  { label: "+300", actions: "ações", price: "$79" },
-                  { label: "+1,000", actions: "ações", price: "$197" },
-                ].map(pack => (
-                  <div key={pack.label} className="text-center rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-3 cursor-pointer hover:border-sky-500/20 hover:bg-sky-500/[0.03] transition-all">
-                    <p className="text-sm font-black text-white">{pack.label}</p>
-                    <p className="text-[10px] text-white/25 mb-0.5">{lang === "pt" ? "ações" : lang === "es" ? "acciones" : "actions"}</p>
-                    <p className="text-xs font-bold text-sky-400">{pack.price}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
           <div className="px-7 pb-5 text-center">
             <p className="text-[11px] text-white/15">{t.footer}</p>
           </div>

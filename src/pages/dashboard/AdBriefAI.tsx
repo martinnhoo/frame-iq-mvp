@@ -3530,7 +3530,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           // Last resort: try parsing the error message itself
           try { parsedErr = JSON.parse(error?.message || "{}"); } catch {}
         }
-        if(parsedErr?.error==="daily_limit"){setShowUpgradeWall(true);setLoading(false);return;}
+        if(parsedErr?.error==="daily_limit"){
+          if(profile?.plan&&profile.plan!=="free"){window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));}else{setShowUpgradeWall(true);}
+          setLoading(false);return;
+        }
         if(parsedErr?.error==="dashboard_limit"){setShowDashboardLimit(true);setLoading(false);return;}
         if(parsedErr?.error==="monthly_softcap"){
           const aid=Date.now()+1;
@@ -3558,7 +3561,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       }
 
       // Show upgrade popup on daily limit (in case returned with 200)
-      if(data?.error==="daily_limit"){setShowUpgradeWall(true);setLoading(false);return;}
+      if(data?.error==="daily_limit"){
+        if(profile?.plan&&profile.plan!=="free"){window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));}else{setShowUpgradeWall(true);}
+        setLoading(false);return;
+      }
       if(data?.error==="dashboard_limit"){setShowDashboardLimit(true);setLoading(false);return;}
 
       // Strip all markdown from text fields
@@ -4462,7 +4468,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   </button>
                 )}
                 <button onClick={()=>{
-                  if(creditBalance&&creditBalance.remaining<=0){setShowUpgradeWall(true);return;}
+                  if(creditBalance&&creditBalance.remaining<=0){
+                    if(profile?.plan&&profile.plan!=="free"){window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));}else{setShowUpgradeWall(true);}
+                    return;
+                  }
                   send();
                 }} disabled={!input.trim()||loading||!contextReady}
                   style={{
