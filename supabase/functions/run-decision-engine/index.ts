@@ -1728,8 +1728,7 @@ serve(async (req: Request) => {
         .or(`user_id.eq.${account_id}`)
         .order("confidence", { ascending: false })
         .limit(20)
-        .then((r: any) => r.data || [])
-        .catch(() => []),
+        .then((r: any) => r.data || []),
     ]);
     const learnedPatterns: any[] = Array.isArray(learnedPatternsRes) ? learnedPatternsRes : [];
 
