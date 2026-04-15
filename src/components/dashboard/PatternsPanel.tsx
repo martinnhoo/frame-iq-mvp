@@ -256,7 +256,25 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
 
   if (!userId || !personaId) return null;
 
-  const displayPatterns = compact ? patterns.slice(0, 3) : patterns.slice(0, 5);
+  // Only show patterns that are actually GOOD — "O que funciona" means winners only.
+  // Filter out: low CTR (<2%), low confidence (<0.2), or tiny samples (<2 ads)
+  const worthShowing = patterns.filter((p) => {
+    // Winners validated by the engine always pass
+    if (p.is_winner) return true;
+    // Gap patterns (untested formats) are useful intel
+    const ft = p.feature_type || p.variables?.feature_type || "";
+    if (ft === "gap") return true;
+    // For metric-based patterns: CTR must be decent
+    if (p.avg_ctr != null && p.avg_ctr > 0) {
+      const ctr = p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100;
+      if (ctr < 2.0) return false; // bad CTR = not "what works"
+    }
+    // Very low confidence with tiny sample = noise
+    if (p.confidence < 0.2 && p.sample_size < 3) return false;
+    return true;
+  });
+
+  const displayPatterns = compact ? worthShowing.slice(0, 3) : worthShowing.slice(0, 5);
   const isEmpty = !loading && !detecting && displayPatterns.length === 0;
 
   return (
@@ -273,12 +291,12 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
           }}>
             Inteligência
           </span>
-          {patterns.length > 0 && (
+          {worthShowing.length > 0 && (
             <span style={{
               fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.40)",
               fontFamily: F,
             }}>
-              {patterns.length} {patterns.length === 1 ? "padrão" : "padrões"}
+              {worthShowing.length} {worthShowing.length === 1 ? "padrão" : "padrões"}
             </span>
           )}
         </div>
@@ -362,7 +380,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
       )}
 
       {/* View all */}
-      {patterns.length > displayPatterns.length && (
+      {worthShowing.length > displayPatterns.length && (
         <button
           onClick={() => navigate("/dashboard/intelligence")}
           style={{
