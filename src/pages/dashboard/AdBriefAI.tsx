@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { storage } from "@/lib/storage";
 import { SectionBoundary } from "@/components/SectionBoundary";
-import { useOutletContext, useNavigate, useSearchParams } from "react-router-dom";
+import { useOutletContext, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
@@ -2062,6 +2062,7 @@ export default function AdBriefAI() {
   const lang=(["pt","es"].includes(language)?language:"en") as "pt"|"es"|"en";
   const navigate=useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   // SK scoped per persona — each account has its own persistent chat history
   const SK=`adbrief_chat_v1_${selectedPersona?.id||"default"}`;
 
@@ -2148,9 +2149,18 @@ export default function AdBriefAI() {
     }
   }, [selectedPersona?.id]);
 
-  // Support ?tracking_diagnostic= — auto-inject and send diagnostic message
-  const trackingDiagParam = useRef(searchParams.get("tracking_diagnostic"));
-  const trackingDiagSent = useRef(false);
+  // Support diagnostic injection via navigation state (from FeedPage tracking/metric alerts)
+  // Also handles legacy ?tracking_diagnostic= and ?metric_diagnostic= query params as fallback
+  const diagnosticStateRef = useRef<any>(
+    location.state?.type === 'diagnostic_start'
+      ? location.state
+      : searchParams.get('tracking_diagnostic')
+        ? { type: 'diagnostic_start', payload: { message: decodeURIComponent(searchParams.get('tracking_diagnostic')!), mode: 'tracking_diagnostic' } }
+        : searchParams.get('metric_diagnostic')
+          ? { type: 'diagnostic_start', payload: { message: decodeURIComponent(searchParams.get('metric_diagnostic')!), mode: 'metric_diagnostic' } }
+          : null
+  );
+  const diagnosticInjected = useRef(false);
 
   // Session goal — persists 7 days, resets automatically
   const GOAL_KEY = `adbrief_goal_${selectedPersona?.id || "default"}`;
@@ -3932,21 +3942,59 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     }
   };
 
-  // Auto-send tracking diagnostic message from Feed CTA
+  // ── Diagnostic injection via navigation state (tracking + metric alerts from FeedPage) ──
+  // Step 1: Inject assistant message immediately on mount (user sees context right away)
+  const diagnosticMsgRef = useRef<string | null>(null);
   useEffect(() => {
-    if (trackingDiagParam.current && !trackingDiagSent.current && selectedPersona?.id && !loading) {
-      trackingDiagSent.current = true;
-      const msg = decodeURIComponent(trackingDiagParam.current);
-      searchParams.delete("tracking_diagnostic");
-      setSearchParams(searchParams, { replace: true });
-      trackingDiagParam.current = null;
-      // Small delay to ensure chat is ready
-      setTimeout(() => {
-        send(msg);
-        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 300);
-      }, 500);
-    }
-  }, [selectedPersona?.id, loading]);
+    if (!diagnosticStateRef.current || diagnosticInjected.current) return;
+    if (!selectedPersona?.id) return;
+
+    diagnosticInjected.current = true;
+    // Prevent proactive greeting from firing and overwriting diagnostic
+    proactiveFired.current = true;
+    const { payload } = diagnosticStateRef.current;
+    const diagMsg = payload?.message || '';
+    const mode = payload?.mode || 'diagnostic';
+
+    // Clear navigation state + legacy query params so it doesn't repeat on re-render or back-nav
+    window.history.replaceState({}, '', location.pathname);
+    searchParams.delete('tracking_diagnostic');
+    searchParams.delete('metric_diagnostic');
+    setSearchParams(searchParams, { replace: true });
+    diagnosticStateRef.current = null;
+
+    if (!diagMsg) return;
+
+    // Store message for step 2 (auto-send once contextReady)
+    diagnosticMsgRef.current = diagMsg;
+
+    // Inject assistant message immediately — user sees context right away
+    const systemTitle = mode === 'tracking_diagnostic'
+      ? (lang === 'pt' ? 'Diagnóstico de rastreamento' : lang === 'es' ? 'Diagnóstico de rastreo' : 'Tracking Diagnostic')
+      : (lang === 'pt' ? 'Diagnóstico de métrica' : lang === 'es' ? 'Diagnóstico de métrica' : 'Metric Diagnostic');
+
+    const aid = Date.now();
+    const injectedMsg: AIMessage = {
+      role: 'assistant',
+      blocks: [{ type: 'insight' as any, title: systemTitle, content: diagMsg }],
+      ts: aid,
+      id: aid,
+    };
+
+    setMessages(prev => [...prev, injectedMsg]);
+    requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: 'instant' }));
+  }, [selectedPersona?.id]);
+
+  // Step 2: Auto-send diagnostic to AI once context is ready (separate effect so it reacts to contextReady)
+  useEffect(() => {
+    if (!diagnosticMsgRef.current || !contextReady || loading) return;
+    const msg = diagnosticMsgRef.current;
+    diagnosticMsgRef.current = null; // consume — only send once
+    setTimeout(() => {
+      send(msg);
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
+    }, 300);
+  }, [contextReady, loading]);
 
     const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
   const hasData=connections.length>0;

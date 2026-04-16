@@ -2739,10 +2739,18 @@ const FeedPage: React.FC = () => {
     setMetricEntry(accountId, period, alert.id, entry);
     setMetricEntries(prev => ({ ...prev, [alert.id]: entry }));
     addMetricHistory(accountId, { metric: alert.id, action: 'investigating', date: new Date().toISOString() });
-    // RULE 5: inject system state context into AI chat
+    // RULE 5: inject system state context into AI chat via navigation state
     const stateCtx = buildAiStateContext();
-    const msg = encodeURIComponent(alert.chatMsg + stateCtx);
-    navigate(`/dashboard/ai?metric_diagnostic=${msg}`);
+    navigate('/dashboard/ai', {
+      state: {
+        type: 'diagnostic_start',
+        payload: {
+          message: alert.chatMsg + stateCtx,
+          mode: 'metric_diagnostic',
+          alertId: alert.id,
+        },
+      },
+    });
   }, [accountId, period, navigate, buildAiStateContext]);
 
   const resetMetricAlert = useCallback((alertId: MetricAlertId) => {
@@ -3446,10 +3454,18 @@ const FeedPage: React.FC = () => {
                 className="feed-cta"
                 onClick={() => {
                   startTrackingInvestigation();
-                  // RULE 5: inject system state into tracking diagnostic
+                  // RULE 5: inject system state into tracking diagnostic via navigation state
                   const stateCtx = buildAiStateContext();
-                  const msg = encodeURIComponent(trackingHealth.chatMsg + stateCtx);
-                  navigate(`/dashboard/ai?tracking_diagnostic=${msg}`);
+                  navigate('/dashboard/ai', {
+                    state: {
+                      type: 'diagnostic_start',
+                      payload: {
+                        message: trackingHealth.chatMsg + stateCtx,
+                        mode: 'tracking_diagnostic',
+                        trackingStatus: trackingUserStatus,
+                      },
+                    },
+                  });
                 }}
                 style={{
                   flex: 1, background: T.blue, color: T.text1,
