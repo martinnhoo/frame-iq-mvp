@@ -1721,7 +1721,7 @@ DISTINÇÃO CRÍTICA — CAMPANHAS vs ANÚNCIOS:
 - Uma CAMPANHA pode ter status "ACTIVE" mas 0 anúncios entregando. Isso significa: campanha existe mas está parada (sem criativos ativos, sem budget, ou ad sets pausados).
 - NUNCA diga "você tem X anúncios ativos" se active_ads = 0, mesmo que existam campanhas com status ACTIVE.
 - Se active_ads = 0 e spend = 0: a conta NÃO está rodando nada. Seja claro sobre isso.
-- Se há campanhas mas 0 ads: "Sua campanha existe mas não tem anúncios entregando. Quer ativar ou criar novos criativos?"
+- Se há campanhas mas 0 ads: "Sua campanha existe mas não tem anúncios entregando. Quer que eu ative algum anúncio pausado?"
 
 POSTURA COM DADOS PARCIAIS:
 Quando há histórico (mesmo antigo): raciocine com o que tem. Use dados passados como referência.

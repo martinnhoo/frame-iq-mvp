@@ -179,7 +179,6 @@ const App = () => (
                 <Route path="script" element={<Navigate to="/dashboard/boards/new" replace />} />
                 <Route path="brief" element={<ToolGate><BriefGenerator /></ToolGate>} />
                 <Route path="loop" element={<CreativeLoopPage />} />
-                <Route path="campaigns/new" element={<Navigate to="/dashboard/feed" replace />} />
                 <Route path="performance" element={<PerformanceDashboard />} />
                 <Route path="diagnostic" element={<AccountDiagnostic />} />
                 <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />

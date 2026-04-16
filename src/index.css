@@ -913,22 +913,6 @@ input, textarea, select {
   }
 }
 
-/* ── CampaignBuilder: AI panel stacks below form on mobile ──────────────── */
-@media (max-width: 767px) {
-  .campaign-body {
-    flex-direction: column !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-  }
-  .campaign-ai-panel {
-    width: 100% !important;
-    border-left: none !important;
-    border-top: 1px solid rgba(255,255,255,0.07) !important;
-    max-height: 280px !important;
-    flex-shrink: 0 !important;
-  }
-}
-
 /* ── PerformanceDashboard: actions wrap on mobile ────────────────────────── */
 @media (max-width: 767px) {
   .perf-actions {

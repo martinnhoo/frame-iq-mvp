@@ -42,14 +42,5 @@ verify_jwt = false
 [functions.telegram-bot]
 verify_jwt = false
 
-[functions.campaign-copilot]
-verify_jwt = false
-
-[functions.create-campaign]
-verify_jwt = false
-
-[functions.create-campaign-google]
-verify_jwt = false
-
 [functions.live-metrics]
 verify_jwt = false
