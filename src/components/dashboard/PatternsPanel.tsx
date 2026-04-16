@@ -649,7 +649,7 @@ function PPExpandable({ open, children }: { open: boolean; children: React.React
   return (
     <div style={{
       height: isAuto ? "auto" : h,
-      overflow: "hidden",
+      overflow: isAuto ? "visible" : "hidden",
       transition: isAuto ? "none" : "height 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease",
       opacity: open ? 1 : 0,
       pointerEvents: open ? "auto" : "none",

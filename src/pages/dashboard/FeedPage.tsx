@@ -779,12 +779,13 @@ const AdList: React.FC<{
         <span style={{ fontSize: 11.5, fontWeight: 700, color: '#F0F6FC' }}>
           Anúncios
         </span>
-        <span style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>
-          {totalAds}
-        </span>
-        {!open && (
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.30)', fontWeight: 400 }}>
-            · {summaryText}
+        {!open ? (
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+            {summaryText}
+          </span>
+        ) : (
+          <span style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>
+            {totalAds}
           </span>
         )}
       </div>
@@ -1401,7 +1402,7 @@ const FeedExpandable: React.FC<{ open: boolean; children: React.ReactNode }> = (
   return (
     <div style={{
       height: isAuto ? 'auto' : h,
-      overflow: 'hidden',
+      overflow: isAuto ? 'visible' : 'hidden',
       transition: isAuto ? 'none' : 'height 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease',
       opacity: open ? 1 : 0,
       pointerEvents: open ? 'auto' : 'none',
@@ -2108,6 +2109,21 @@ const FeedPage: React.FC = () => {
     return () => { cancelled = true; };
   }, [userId]);
 
+  // ── Stable callbacks for PatternsPanel to avoid re-render flicker ──
+  const handleGenerateVariation = useCallback((pattern: any) => {
+    const ft = pattern.feature_type || pattern.variables?.feature_type || "";
+    const state = { state: { fromPattern: pattern } };
+    if (ft === "hook_type" || ft === "hook_presence") navigate('/dashboard/hooks', state);
+    else if (ft === "format" || ft === "combination" || ft === "text_density") navigate('/dashboard/boards/new', state);
+    else if (ft === "campaign" || ft === "adset") navigate('/dashboard/brief', state);
+    else if (ft === "gap") navigate('/dashboard/boards/new', state);
+    else navigate('/dashboard/hooks', state);
+  }, [navigate]);
+
+  const handlePatternsLoaded = useCallback((count: number) => {
+    setPatternsCount(count);
+  }, []);
+
   // ── Ad toggle (pause/activate) from Feed ──
   const [togglingAd, setTogglingAd] = useState<string | null>(null);
   const [toggleRequest, setToggleRequest] = useState<ToggleRequest | null>(null);
@@ -2272,7 +2288,7 @@ const FeedPage: React.FC = () => {
   // ── No Meta connection — special entry screen ──
   if (!metaConnected) {
     return (
-      <div style={{ minHeight: '100vh', background: '#06080C', padding: '24px 20px' }}>
+      <div style={{ minHeight: '100vh', background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 20px 24px 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
             <h1 style={{ fontSize: 14, fontWeight: 800, color: '#F0F6FC', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>DECISÕES</h1>
@@ -2286,7 +2302,7 @@ const FeedPage: React.FC = () => {
   // Syncing is now an inline banner — no full-page overlay
 
   return (
-    <div style={{ minHeight: '100vh', background: '#06080C', padding: '24px 20px' }}>
+    <div style={{ minHeight: '100vh', background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 20px 24px 20px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 16 }}>
@@ -2457,16 +2473,8 @@ const FeedPage: React.FC = () => {
             <PatternsPanel
               userId={userId}
               personaId={personaId}
-              onGenerateVariation={(pattern) => {
-                const ft = pattern.feature_type || pattern.variables?.feature_type || "";
-                const state = { state: { fromPattern: pattern } };
-                if (ft === "hook_type" || ft === "hook_presence") navigate('/dashboard/hooks', state);
-                else if (ft === "format" || ft === "combination" || ft === "text_density") navigate('/dashboard/boards/new', state);
-                else if (ft === "campaign" || ft === "adset") navigate('/dashboard/brief', state);
-                else if (ft === "gap") navigate('/dashboard/boards/new', state);
-                else navigate('/dashboard/hooks', state);
-              }}
-              onPatternsLoaded={(count: number) => setPatternsCount(count)}
+              onGenerateVariation={handleGenerateVariation}
+              onPatternsLoaded={handlePatternsLoaded}
             />
           </div>
         )}
