@@ -1523,13 +1523,21 @@ const AdToggleModal: React.FC<{
         const adSetName = request.ad.ad_set?.name || '';
         const campName = request.ad.ad_set?.campaign?.name || '';
 
+        // Calculate how many distinct days the ad has been running
+        const uniqueDates = new Set(m.map((r: any) => r.date).filter(Boolean));
+        const daysRunning = uniqueDates.size;
+        const firstDate = m.length > 0 ? m[m.length - 1]?.date : null;
+        const daysSinceStart = firstDate ? Math.ceil((Date.now() - new Date(firstDate).getTime()) / 86400000) : 0;
+
         const prompt = `Analise rapidamente se devo ${isPause ? 'pausar' : 'ativar'} o anúncio "${request.ad.name}"` +
           (campName ? ` (campanha: ${campName}` + (adSetName ? `, conjunto: ${adSetName})` : ')') : '') + '. ' +
           (days > 0
-            ? `Dados dos últimos ${days} dias: Spend R$${totalSpend.toFixed(2)}, ${totalConv} conversões, CTR ${ctr.toFixed(2)}%, CPA R$${(cpa/100).toFixed(2)}, ${totalImps} impressões, ${totalClicks} cliques. `
+            ? `Dados disponíveis: ${daysRunning} dias com dados nos últimos ${daysSinceStart} dias. ` +
+              `Spend total R$${(totalSpend / 100).toFixed(2)}, ${totalConv} conversões, CTR ${ctr.toFixed(2)}%, CPA R$${(cpa/100).toFixed(2)}, ${totalImps} impressões, ${totalClicks} cliques. `
             : 'Sem dados de performance disponíveis para este anúncio. ') +
           `Status atual: ${request.ad.effective_status || request.ad.status || 'desconhecido'}. ` +
-          `Responda APENAS com 2-3 frases curtas e diretas. Sem formatação, sem bullet points. Recomende se deve ou não ${isPause ? 'pausar' : 'ativar'} e por quê.`;
+          `IMPORTANTE: Leve em consideração quantos dias o anúncio rodou. Se rodou poucos dias (menos de 3-4), o Meta ainda está na fase de aprendizado e pausar/reativar prematuramente pode prejudicar a otimização do algoritmo. ` +
+          `Responda APENAS com 2-3 frases curtas e diretas em texto puro. NÃO use markdown, asteriscos, negrito ou formatação. Recomende se deve ou não ${isPause ? 'pausar' : 'ativar'} e por quê.`;
 
         // Call adbrief-ai-chat — returns { blocks: [...] }
         const { data: aiData, error: aiErr } = await supabase.functions.invoke('adbrief-ai-chat', {
@@ -1542,13 +1550,18 @@ const AdToggleModal: React.FC<{
 
         if (cancelled) return;
 
-        // Extract text from blocks array
+        // Extract text from blocks array and strip markdown
         let opinion = '';
         if (aiData?.blocks && Array.isArray(aiData.blocks)) {
           opinion = aiData.blocks
             .map((b: any) => b.content || b.text || '')
             .filter(Boolean)
             .join(' ')
+            .replace(/\*\*/g, '')    // strip bold **
+            .replace(/\*/g, '')      // strip italic *
+            .replace(/__/g, '')      // strip __
+            .replace(/`/g, '')       // strip backticks
+            .replace(/#{1,3}\s/g, '') // strip headers
             .trim();
         }
 
@@ -1618,13 +1631,14 @@ const AdToggleModal: React.FC<{
 
         {/* AI Opinion */}
         <div style={{
-          background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)',
+          background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.18)',
+          borderLeft: '3px solid #38BDF8',
           borderRadius: 6, padding: '12px 14px', marginBottom: 18,
           minHeight: 50,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, color: '#A78BFA', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Opinião da IA
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              ad<span style={{ fontWeight: 800 }}>brief</span> · opinião da IA
             </span>
             {loadingAi && (
               <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.30)' }}>analisando...</span>
@@ -1660,13 +1674,21 @@ const AdToggleModal: React.FC<{
             disabled={loading}
             style={{
               flex: 1, padding: '10px 14px', borderRadius: 6,
-              background: isPause ? 'rgba(251,191,36,0.15)' : 'rgba(74,222,128,0.15)',
-              border: `1px solid ${isPause ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.25)'}`,
-              color: isPause ? '#FBBF24' : '#4ADE80',
+              background: isPause
+                ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                : 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)',
+              border: 'none',
+              color: '#fff',
               fontSize: 13, fontWeight: 700,
               cursor: loading ? 'default' : 'pointer', fontFamily: F,
-              opacity: loading ? 0.5 : 1,
+              opacity: loading ? 0.6 : 1,
+              transition: 'opacity 0.15s, transform 0.1s',
+              boxShadow: isPause
+                ? '0 2px 8px rgba(245,158,11,0.25)'
+                : '0 2px 8px rgba(34,197,94,0.30)',
             }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'scale(1.02)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
           >
             {loading ? 'Executando...' : isPause ? 'Pausar' : 'Ativar'}
           </button>
