@@ -3492,167 +3492,53 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Tracking — confirmed no conversions state (neutral, with reversal) */}
-        {metaConnected && !isDemo && !trackingHealth && trackingUserStatus === 'confirmed_no_conversion' && (
+        {/* Tracking status — inline signal, not a card */}
+        {metaConnected && !isDemo && trackingUserStatus !== 'unknown' && (
           <div style={{
-            background: T.bg1,
-            border: `1px solid ${T.border1}`,
-            borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            gap: 10, flexWrap: 'wrap',
-            animation: 'feed-fadeUp 0.3s ease',
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '0 2px', marginBottom: 8,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-              <span style={{ fontSize: 12, color: T.text3 }}>✓</span>
-              <span style={{ fontSize: 11.5, color: T.text3, fontWeight: 500 }}>
-                Sem conversões registradas neste período
-              </span>
-            </div>
-            <button
-              onClick={resetTrackingStatus}
-              style={{
-                background: 'transparent', color: T.blue,
-                border: 'none', cursor: 'pointer',
-                fontSize: 11, fontWeight: 600,
-                padding: '4px 0',
-                transition: 'opacity 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-            >
-              Verificar rastreamento novamente
-            </button>
-          </div>
-        )}
-
-        {/* Tracking — investigating state (minimal reminder) */}
-        {metaConnected && !isDemo && trackingUserStatus === 'investigating' && (
-          <div style={{
-            background: T.bg1,
-            border: `1px solid ${T.border1}`,
-            borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            gap: 10, flexWrap: 'wrap',
-            animation: 'feed-fadeUp 0.3s ease',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-              <span style={{ fontSize: 12, color: T.yellow }}>◉</span>
-              <span style={{ fontSize: 11.5, color: T.text2, fontWeight: 500 }}>
-                Verificação de rastreamento em andamento
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span style={{
+              width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+              background: trackingUserStatus === 'verified_ok' ? T.green
+                : trackingUserStatus === 'verified_issue' ? T.red
+                : trackingUserStatus === 'investigating' ? T.yellow
+                : T.text3,
+            }} />
+            <span style={{ fontSize: 11, color: T.text3, fontWeight: 500, fontFamily: F }}>
+              {trackingUserStatus === 'verified_ok' ? 'Rastreamento ativo'
+                : trackingUserStatus === 'verified_issue' ? 'Rastreamento com problema'
+                : trackingUserStatus === 'investigating' ? 'Verificando rastreamento'
+                : 'Sem conversões confirmadas'}
+            </span>
+            {(trackingUserStatus === 'verified_issue' || trackingUserStatus === 'investigating') && (
               <button
                 onClick={() => navigate('/dashboard/ai')}
                 style={{
-                  background: 'transparent', color: T.blue,
-                  border: 'none', cursor: 'pointer',
-                  fontSize: 11, fontWeight: 600,
-                  padding: '4px 0',
-                  transition: 'opacity 0.15s',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 11, fontWeight: 600, color: T.blue, padding: 0,
+                  fontFamily: F, transition: 'opacity 0.15s',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
                 onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
               >
-                Continuar no chat
+                Verificar
               </button>
+            )}
+            {trackingUserStatus !== 'investigating' && (
               <button
                 onClick={resetTrackingStatus}
                 style={{
-                  background: 'transparent', color: T.text3,
-                  border: 'none', cursor: 'pointer',
-                  fontSize: 11, fontWeight: 500,
-                  padding: '4px 0',
-                  transition: 'opacity 0.15s',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 10, color: T.text3, padding: 0,
+                  fontFamily: F, opacity: 0.5, transition: 'opacity 0.15s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; }}
               >
-                Resetar
+                ×
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Tracking — verified issue (diagnostic found a problem) */}
-        {metaConnected && !isDemo && trackingUserStatus === 'verified_issue' && (
-          <div style={{
-            background: T.bg1,
-            border: `1px solid rgba(248,113,113,0.15)`,
-            borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            gap: 10, flexWrap: 'wrap',
-            animation: 'feed-fadeUp 0.3s ease',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-              <span style={{ fontSize: 12, color: T.red }}>◉</span>
-              <span style={{ fontSize: 11.5, color: T.text2, fontWeight: 500 }}>
-                Problema de rastreamento identificado — corrija o pixel/evento para registrar conversões
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button
-                onClick={() => navigate('/dashboard/ai')}
-                style={{
-                  background: 'transparent', color: T.blue,
-                  border: 'none', cursor: 'pointer',
-                  fontSize: 11, fontWeight: 600,
-                  padding: '4px 0',
-                  transition: 'opacity 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-              >
-                Ver diagnóstico
-              </button>
-              <button
-                onClick={resetTrackingStatus}
-                style={{
-                  background: 'transparent', color: T.text3,
-                  border: 'none', cursor: 'pointer',
-                  fontSize: 11, fontWeight: 500,
-                  padding: '4px 0',
-                  transition: 'opacity 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-              >
-                Resetar
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Tracking — verified OK (diagnostic confirmed tracking is fine) */}
-        {metaConnected && !isDemo && trackingUserStatus === 'verified_ok' && (
-          <div style={{
-            background: T.bg1,
-            border: `1px solid rgba(74,222,128,0.12)`,
-            borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            gap: 10, flexWrap: 'wrap',
-            animation: 'feed-fadeUp 0.3s ease',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-              <span style={{ fontSize: 12, color: T.green }}>✓</span>
-              <span style={{ fontSize: 11.5, color: T.text3, fontWeight: 500 }}>
-                Rastreamento verificado — sem problemas detectados
-              </span>
-            </div>
-            <button
-              onClick={resetTrackingStatus}
-              style={{
-                background: 'transparent', color: T.text3,
-                border: 'none', cursor: 'pointer',
-                fontSize: 11, fontWeight: 500,
-                padding: '4px 0',
-                transition: 'opacity 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-            >
-              Resetar
-            </button>
+            )}
           </div>
         )}
 
