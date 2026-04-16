@@ -247,7 +247,7 @@ const HistoryPage: React.FC = () => {
               Nenhuma ação registrada ainda
             </h2>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-              Quando você executar ações nas decisões do Feed, elas aparecerão aqui.
+              Quando você executar ações pelo Feed ou pelo Chat, elas aparecerão aqui.
             </p>
           </div>
         )}
@@ -256,7 +256,8 @@ const HistoryPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {history.map(entry => {
             const status = getStatusConfig(entry.result);
-            const canRollback = entry.rollback_available
+            const canRollback = entry.decision_id
+              && entry.rollback_available
               && entry.result === 'success'
               && (!entry.rollback_expires_at || new Date(entry.rollback_expires_at) > new Date());
 

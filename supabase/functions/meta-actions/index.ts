@@ -1,4 +1,5 @@
-// meta-actions v1 — pause/activate/budget/publish/duplicate via Meta Marketing API v19
+// meta-actions v2 — pause/activate/budget/publish/duplicate via Meta Marketing API v21
+// Now also writes to action_log so every action appears in Histórico
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -10,8 +11,79 @@ const BASE = "https://graph.facebook.com/v21.0";
 function ok(data: object) {
   return new Response(JSON.stringify(data), { headers: { ...cors, "Content-Type": "application/json" } });
 }
-function err(msg: string, status = 400) {
+function errResp(msg: string, status = 400) {
   return new Response(JSON.stringify({ error: msg }), { status, headers: { ...cors, "Content-Type": "application/json" } });
+}
+
+// Map meta-actions action names to action_log action_type format
+function mapActionType(action: string, targetType: string): string {
+  const t = targetType || "ad";
+  switch (action) {
+    case "pause": return `pause_${t}`;
+    case "enable":
+    case "publish": return `reactivate_${t}`;
+    case "update_budget": return `increase_budget`; // will refine below if decrease
+    case "duplicate": return `duplicate_${t}`;
+    default: return action;
+  }
+}
+
+// Fetch target name from Meta API (fire-and-forget safe)
+async function fetchTargetName(targetId: string, targetType: string, token: string): Promise<string | null> {
+  try {
+    const fields = targetType === "ad" ? "name" : "name";
+    const r = await fetch(`${BASE}/${targetId}?fields=${fields}&access_token=${token}`);
+    const d = await r.json();
+    return d.name || null;
+  } catch {
+    return null;
+  }
+}
+
+// Write to action_log so it appears in Histórico de Ações
+async function logToActionHistory(
+  supabase: any,
+  userId: string,
+  action: string,
+  targetId: string,
+  targetType: string,
+  targetName: string | null,
+  previousState: object | null,
+  newState: object | null,
+) {
+  try {
+    // Get user's ad_account id (our internal UUID)
+    const { data: adAccount } = await supabase
+      .from("ad_accounts")
+      .select("id")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (!adAccount?.id) {
+      console.warn("[meta-actions] No ad_account found for user, skipping action_log");
+      return;
+    }
+
+    const actionType = mapActionType(action, targetType);
+
+    await supabase.from("action_log").insert({
+      account_id: adAccount.id,
+      user_id: userId,
+      action_type: actionType,
+      target_type: targetType || "ad",
+      target_meta_id: targetId,
+      target_name: targetName,
+      previous_state: previousState || {},
+      new_state: newState || {},
+      result: "success",
+      executed_at: new Date().toISOString(),
+      rollback_expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+    });
+  } catch (e) {
+    // Never block the response because of logging failure
+    console.error("[meta-actions] Failed to write action_log:", e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -23,16 +95,15 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, user_id, persona_id, target_id, target_type, value } = body;
 
-    if (!user_id || !action) return err("missing user_id or action");
+    if (!user_id || !action) return errResp("missing user_id or action");
 
     // ── JWT auth — prevent user_id spoofing on write actions ──────────────
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) return err("unauthorized", 401);
+    if (!authHeader?.startsWith("Bearer ")) return errResp("unauthorized", 401);
     const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
-    if (!authUser || authUser.id !== user_id) return err("unauthorized", 401);
+    if (!authUser || authUser.id !== user_id) return errResp("unauthorized", 401);
 
     // Get token — scoped to persona if provided
-    // NOTE: Supabase builder is immutable — must chain conditionally, not mutate
     const connQuery = persona_id
       ? supabase.from("platform_connections" as any)
           .select("access_token, ad_accounts")
@@ -42,7 +113,7 @@ Deno.serve(async (req) => {
           .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
     const { data: conn } = await connQuery.maybeSingle();
 
-    if (!conn?.access_token) return err("Meta Ads not connected.");
+    if (!conn?.access_token) return errResp("Meta Ads not connected.");
     const token = conn.access_token;
 
     const post = async (path: string, payload: object) => {
@@ -59,65 +130,97 @@ Deno.serve(async (req) => {
       return r.json();
     };
 
+    // ── Write actions (pause, enable, budget, publish, duplicate) ────────
+
     if (action === "pause" || action === "enable") {
       const status = action === "pause" ? "PAUSED" : "ACTIVE";
+      // Fetch name before action for logging
+      const targetName = body.target_name || await fetchTargetName(target_id, target_type || "ad", token);
       const d = await post(target_id, { status });
-      if (d.error) return err(d.error.message);
-      return ok({ success: true, status, target_id, message: `${target_type || "Ad"} ${action === "pause" ? "pausado" : "ativado"} com sucesso.` });
+      if (d.error) return errResp(d.error.message);
+
+      // Log to action_log (non-blocking)
+      logToActionHistory(supabase, user_id, action, target_id, target_type || "ad", targetName,
+        { status: action === "pause" ? "ACTIVE" : "PAUSED" },
+        { status }
+      );
+
+      const label = target_type === "campaign" ? "Campanha" : target_type === "adset" ? "Conjunto" : "Anúncio";
+      return ok({ success: true, status, target_id, message: `${label} ${action === "pause" ? "pausado" : "ativado"} com sucesso.` });
     }
 
     if (action === "update_budget") {
-      if (!value) return err("value required");
+      if (!value) return errResp("value required");
       const cents = Math.round(parseFloat(String(value)) * 100);
-      // Use lifetime_budget field if target_type hints at it, otherwise daily_budget
       const budgetField = (body.budget_type === "lifetime") ? "lifetime_budget" : "daily_budget";
+      const targetName = body.target_name || await fetchTargetName(target_id, target_type || "campaign", token);
       const d = await post(target_id, { [budgetField]: cents });
-      if (d.error) return err(d.error.message);
+      if (d.error) return errResp(d.error.message);
+
+      logToActionHistory(supabase, user_id, action, target_id, target_type || "campaign", targetName,
+        {},
+        { [budgetField]: cents }
+      );
+
       const label = budgetField === "lifetime_budget" ? "vitalício" : "/dia";
       return ok({ success: true, target_id, new_budget: value, message: `Orçamento atualizado para R$${value}${label}.` });
     }
 
     if (action === "publish") {
+      const targetName = body.target_name || await fetchTargetName(target_id, target_type || "ad", token);
       const d = await post(target_id, { status: "ACTIVE" });
-      if (d.error) return err(d.error.message);
+      if (d.error) return errResp(d.error.message);
+
+      logToActionHistory(supabase, user_id, action, target_id, target_type || "ad", targetName,
+        { status: "PAUSED" },
+        { status: "ACTIVE" }
+      );
+
       return ok({ success: true, target_id, message: `Publicado e definido como ATIVO.` });
     }
 
     if (action === "duplicate") {
-      // Meta API: /copies works for adsets and ads, not campaigns
-      // For campaigns, use /copies with campaign_id; for ads use ad copies endpoint
-      const copyEndpoint = target_type === "ad" ? `${target_id}/copies` : `${target_id}/copies`;
+      const targetName = body.target_name || await fetchTargetName(target_id, target_type || "ad", token);
+      const copyEndpoint = `${target_id}/copies`;
       const d = await post(copyEndpoint, { deep_copy: true, status_option: "PAUSED" });
-      if (d.error) return err(d.error.message);
+      if (d.error) return errResp(d.error.message);
       const newId = d.copied_adset_id || d.copied_ad_id || d.id;
+
+      logToActionHistory(supabase, user_id, action, target_id, target_type || "ad", targetName,
+        {},
+        { new_id: newId, status: "PAUSED" }
+      );
+
       return ok({ success: true, new_id: newId, message: `Duplicado e pausado. Novo ID: ${newId}` });
     }
+
+    // ── Read-only actions (no logging needed) ────────────────────────────
 
     if (action === "list_campaigns") {
       const accs = (conn.ad_accounts as any[]) || [];
       const acc = accs.find((a: any) => a.account_status === 1) || accs[0];
-      if (!acc) return err("No active ad account");
+      if (!acc) return errResp("No active ad account");
       const accId = acc.id.startsWith("act_") ? acc.id : `act_${acc.id}`;
       const d = await get(`${accId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,effective_status&limit=30`);
-      if (d.error) return err(d.error.message);
+      if (d.error) return errResp(d.error.message);
       return ok({ success: true, campaigns: d.data || [] });
     }
 
     if (action === "list_adsets") {
       const d = await get(`${target_id}/adsets?fields=id,name,status,daily_budget,effective_status&limit=30`);
-      if (d.error) return err(d.error.message);
+      if (d.error) return errResp(d.error.message);
       return ok({ success: true, adsets: d.data || [] });
     }
 
     if (action === "list_ads") {
       const d = await get(`${target_id}/ads?fields=id,name,status,effective_status&limit=30`);
-      if (d.error) return err(d.error.message);
+      if (d.error) return errResp(d.error.message);
       return ok({ success: true, ads: d.data || [] });
     }
 
-    return err(`Unknown action: ${action}`);
+    return errResp(`Unknown action: ${action}`);
 
   } catch (e: any) {
-    return err(e.message || "internal error");
+    return errResp(e.message || "internal error");
   }
 });
