@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Globe, Upload, Loader2, X, CheckCircle2, Link2, AlertCircle, Check, ChevronDown, Building2, Save, Pencil } from "lucide-react";
+import { Plus, Trash2, Globe, Upload, Loader2, X, CheckCircle2, Link2, AlertCircle, Check, ChevronDown, Building2, Save, Pencil, Target, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
@@ -501,6 +501,305 @@ function PlatformRow({ p, userId, accountId, t }: {
             </div>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ── Goal objectives (reuse from GoalSetup) ──────────────────────────────────
+const GOAL_OBJECTIVES = [
+  {
+    key: 'leads' as const, label: 'Leads / Cadastros', icon: '🎯',
+    metric: 'cpa' as const, metricLabel: 'CPA',
+    events: [
+      { value: 'lead', label: 'Lead (formulário)' },
+      { value: 'complete_registration', label: 'Cadastro completo' },
+      { value: 'contact', label: 'Contato (WhatsApp/chat)' },
+      { value: 'schedule', label: 'Agendamento' },
+      { value: 'submit_application', label: 'Envio de aplicação' },
+    ],
+    unit: 'R$',
+    formatTarget: (v: number) => `R$ ${(v / 100).toFixed(2)}`,
+  },
+  {
+    key: 'sales' as const, label: 'Vendas / E-commerce', icon: '💰',
+    metric: 'roas' as const, metricLabel: 'ROAS',
+    events: [
+      { value: 'purchase', label: 'Compra' },
+      { value: 'initiate_checkout', label: 'Início de checkout' },
+      { value: 'add_to_cart', label: 'Adicionou ao carrinho' },
+    ],
+    unit: 'x',
+    formatTarget: (v: number) => `${(v / 10000).toFixed(1)}x`,
+  },
+  {
+    key: 'traffic' as const, label: 'Tráfego / Visitas', icon: '🔗',
+    metric: 'cpc' as const, metricLabel: 'CPC',
+    events: [
+      { value: 'link_click', label: 'Clique no link' },
+      { value: 'landing_page_view', label: 'Visualização da página' },
+    ],
+    unit: 'R$',
+    formatTarget: (v: number) => `R$ ${(v / 100).toFixed(2)}`,
+  },
+];
+
+// ── Goal section (per account) ──────────────────────────────────────────────
+function GoalSection({ userId, personaId }: { userId: string; personaId: string }) {
+  const [goalData, setGoalData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [v2AccountId, setV2AccountId] = useState<string | null>(null);
+  const [noMetaConn, setNoMetaConn] = useState(false);
+
+  // Edit state
+  const [editObj, setEditObj] = useState<string | null>(null);
+  const [editEvent, setEditEvent] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+
+  const loadGoal = useCallback(async () => {
+    setLoading(true);
+    try {
+      // 1. Find Meta platform_connection for this persona
+      const { data: connRes } = await supabase.functions.invoke("meta-oauth", {
+        body: { action: "get_connections", user_id: userId }
+      });
+      const conns = (connRes?.connections || []) as any[];
+      const metaConn = conns.find((c: any) => c.platform === "meta" && c.persona_id === personaId && c.status === "active");
+      if (!metaConn) { setNoMetaConn(true); setLoading(false); return; }
+
+      const ads = (metaConn.ad_accounts || []) as any[];
+      const selId = localStorage.getItem(`meta_sel_${personaId}`) || metaConn.selected_account_id || ads[0]?.id;
+      if (!selId) { setNoMetaConn(true); setLoading(false); return; }
+
+      // 2. Find v2 ad_accounts row
+      const { data: accRow } = await (supabase
+        .from('ad_accounts' as any)
+        .select('id, goal_objective, goal_primary_metric, goal_conversion_event, goal_target_value, goal_configured_at')
+        .eq('user_id', userId)
+        .eq('meta_account_id', selId)
+        .maybeSingle() as any);
+
+      if (accRow?.id) {
+        setV2AccountId(accRow.id);
+        setGoalData(accRow.goal_objective ? accRow : null);
+        // Pre-fill edit state
+        if (accRow.goal_objective) {
+          setEditObj(accRow.goal_objective);
+          setEditEvent(accRow.goal_conversion_event);
+          const obj = GOAL_OBJECTIVES.find(o => o.key === accRow.goal_objective);
+          if (obj && accRow.goal_target_value) {
+            const display = obj.metric === 'roas'
+              ? (accRow.goal_target_value / 10000).toString()
+              : (accRow.goal_target_value / 100).toString();
+            setEditTarget(display);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[GoalSection] load error:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, personaId]);
+
+  useEffect(() => { loadGoal(); }, [loadGoal]);
+
+  const handleSave = async () => {
+    if (!v2AccountId || !editObj || !editEvent) return;
+    setSaving(true);
+    const obj = GOAL_OBJECTIVES.find(o => o.key === editObj);
+    if (!obj) { setSaving(false); return; }
+
+    let targetCentavos = 0;
+    const raw = parseFloat(editTarget);
+    if (!isNaN(raw) && raw > 0) {
+      targetCentavos = obj.metric === 'roas' ? Math.round(raw * 10000) : Math.round(raw * 100);
+    }
+
+    try {
+      await (supabase.from('ad_accounts' as any).update({
+        goal_objective: editObj,
+        goal_primary_metric: obj.metric,
+        goal_conversion_event: editEvent,
+        goal_target_value: targetCentavos > 0 ? targetCentavos : null,
+        goal_configured_at: new Date().toISOString(),
+      }).eq('id', v2AccountId) as any);
+
+      toast.success('Objetivo atualizado');
+      setEditing(false);
+      loadGoal();
+    } catch (e: any) {
+      toast.error('Erro ao salvar: ' + (e?.message || ''));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return (
+    <div style={{ height: 48, borderRadius: 10, background: "rgba(255,255,255,0.03)", animation: "pulse 1.5s ease-in-out infinite" }} />
+  );
+  if (noMetaConn) return null; // No Meta connection — don't show goal section
+
+  const obj = goalData ? GOAL_OBJECTIVES.find(o => o.key === goalData.goal_objective) : null;
+  const eventLabel = obj?.events.find(e => e.value === goalData?.goal_conversion_event)?.label;
+
+  // ── Edit mode ──
+  if (editing) {
+    const selObj = GOAL_OBJECTIVES.find(o => o.key === editObj);
+    return (
+      <div>
+        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
+          textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px" }}>
+          Objetivo de Performance
+        </p>
+        <div style={{
+          background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.15)",
+          borderRadius: 12, padding: "16px 16px 18px",
+        }}>
+          {/* Step 1: Objective */}
+          <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", margin: "0 0 8px" }}>
+            Objetivo
+          </p>
+          <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+            {GOAL_OBJECTIVES.map(o => (
+              <button key={o.key} onClick={() => { setEditObj(o.key); setEditEvent(null); setEditTarget(''); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 8,
+                  background: editObj === o.key ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.04)",
+                  border: editObj === o.key ? "1px solid rgba(56,189,248,0.35)" : "1px solid rgba(255,255,255,0.08)",
+                  color: editObj === o.key ? "#38BDF8" : "rgba(255,255,255,0.55)",
+                  fontFamily: F, fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                }}>
+                <span style={{ fontSize: 14 }}>{o.icon}</span>{o.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Step 2: Conversion Event */}
+          {selObj && (
+            <>
+              <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", margin: "0 0 8px" }}>
+                Evento de conversão
+              </p>
+              <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+                {selObj.events.map(ev => (
+                  <button key={ev.value} onClick={() => setEditEvent(ev.value)}
+                    style={{
+                      padding: "7px 12px", borderRadius: 7,
+                      background: editEvent === ev.value ? "rgba(56,189,248,0.10)" : "rgba(255,255,255,0.03)",
+                      border: editEvent === ev.value ? "1px solid rgba(56,189,248,0.30)" : "1px solid rgba(255,255,255,0.08)",
+                      color: editEvent === ev.value ? "#38BDF8" : "rgba(255,255,255,0.50)",
+                      fontFamily: F, fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
+                    }}>
+                    {ev.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Step 3: Target */}
+              <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", margin: "0 0 8px" }}>
+                Meta de {selObj.metricLabel}
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)" }}>{selObj.unit}</span>
+                <input type="number" step="0.01" min="0"
+                  placeholder={selObj.metric === 'roas' ? 'Ex: 3.0' : 'Ex: 20.00'}
+                  value={editTarget} onChange={e => setEditTarget(e.target.value)}
+                  style={{
+                    flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 8, padding: "9px 12px", color: "#F0F6FC", fontSize: 13, fontWeight: 600,
+                    fontFamily: F, outline: "none", fontVariant: "tabular-nums",
+                  }}
+                  onFocus={e => e.currentTarget.style.borderColor = "rgba(56,189,248,0.40)"}
+                  onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={handleSave} disabled={saving || !editObj || !editEvent}
+              style={{
+                flex: 1, padding: "9px 14px", borderRadius: 8,
+                background: (editObj && editEvent) ? "linear-gradient(135deg, #38BDF8 0%, #0EA5E9 100%)" : "rgba(255,255,255,0.06)",
+                border: "none", color: (editObj && editEvent) ? "#fff" : "rgba(255,255,255,0.25)",
+                fontFamily: F, fontSize: 12, fontWeight: 700, cursor: (editObj && editEvent) ? "pointer" : "not-allowed",
+                boxShadow: (editObj && editEvent) ? "0 3px 10px rgba(56,189,248,0.25)" : "none",
+              }}>
+              {saving ? 'Salvando...' : 'Salvar'}
+            </button>
+            <button onClick={() => setEditing(false)}
+              style={{
+                padding: "9px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)",
+                fontFamily: F, fontSize: 12, fontWeight: 500, cursor: "pointer",
+              }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Display mode ──
+  return (
+    <div>
+      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
+        textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
+        display: "flex", alignItems: "center", gap: 6 }}>
+        <Target size={11} /> Objetivo de Performance
+      </p>
+
+      {goalData && obj ? (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+          background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.12)",
+          borderRadius: 10, justifyContent: "space-between",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>{obj.icon}</span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "#F0F6FC" }}>
+                {obj.label}
+              </div>
+              <div style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 2,
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {eventLabel || goalData.goal_conversion_event}
+                {goalData.goal_target_value ? ` · Meta: ${obj.formatTarget(goalData.goal_target_value)}` : ''}
+                {' · '}{obj.metricLabel}
+              </div>
+            </div>
+          </div>
+          <button onClick={() => setEditing(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 5, padding: "6px 10px", borderRadius: 7,
+              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)",
+              color: "rgba(255,255,255,0.50)", fontFamily: F, fontSize: 11, fontWeight: 500,
+              cursor: "pointer", flexShrink: 0, transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}>
+            <Settings2 size={11} /> Alterar
+          </button>
+        </div>
+      ) : (
+        <button onClick={() => setEditing(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 8, padding: "11px 14px", borderRadius: 10,
+            background: "rgba(56,189,248,0.03)", border: "1px dashed rgba(56,189,248,0.18)",
+            cursor: "pointer", width: "100%", textAlign: "left", transition: "all 0.15s",
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(56,189,248,0.35)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(56,189,248,0.18)"; }}>
+          <Target size={13} color="rgba(56,189,248,0.40)" />
+          <span style={{ fontFamily: F, fontSize: 12, color: "rgba(56,189,248,0.55)" }}>
+            Configurar objetivo de performance
+          </span>
+        </button>
       )}
     </div>
   );
@@ -1006,6 +1305,9 @@ export default function AccountsPage() {
                           ))}
                         </div>
                       </div>
+
+                      {/* Performance goal */}
+                      <GoalSection userId={user.id} personaId={acc.id} />
 
                     </div>
                   )}

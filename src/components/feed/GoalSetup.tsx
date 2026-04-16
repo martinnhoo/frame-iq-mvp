@@ -348,7 +348,7 @@ export const GoalSetup: React.FC<GoalSetupProps> = ({ accountId, onComplete }) =
         <div style={{
           marginTop: 14, fontSize: 10.5, color: 'rgba(255,255,255,0.30)', lineHeight: 1.5,
         }}>
-          Você pode alterar isso depois em Configurações. A IA vai usar essa meta como referência para todas as análises.
+          Você pode alterar isso depois em Contas. A IA vai usar essa meta como referência para todas as análises.
         </div>
       </div>
     );
