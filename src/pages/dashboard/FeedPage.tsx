@@ -1636,8 +1636,8 @@ const AdToggleModal: React.FC<{
               flexShrink: 0,
             }}>
               {isPause
-                ? <Pause size={18} style={{ color: accentColor }} />
-                : <Play size={18} style={{ color: accentColor }} />
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="6,3 20,12 6,21" /></svg>
               }
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -1673,9 +1673,13 @@ const AdToggleModal: React.FC<{
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, position: 'relative' }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: '#38BDF8', letterSpacing: '-0.03em' }}>
-                ad<span style={{ color: '#7DD3FC' }}>brief</span>
-              </span>
+              <img
+                src="/ab-avatar.png"
+                alt="AdBrief"
+                width={18}
+                height={18}
+                style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'cover', display: 'block' }}
+              />
               <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(56,189,248,0.30)' }} />
               <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(56,189,248,0.60)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {loadingAi ? 'Analisando performance...' : 'Opinião da IA'}
