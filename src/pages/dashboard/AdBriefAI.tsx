@@ -1356,6 +1356,20 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
     </div>
   );
 
+  // ── UPGRADE CTA — conversion-optimized block for plan upgrades ──
+  if(block.type==="upgrade_cta") return(
+    <div style={{margin:"4px 0 12px",padding:"16px 18px",borderRadius:10,background:"linear-gradient(135deg, rgba(14,165,233,0.08), rgba(14,165,233,0.03))",border:"1px solid rgba(14,165,233,0.15)"}}>
+      <div style={{fontSize:14,fontWeight:700,color:"rgba(14,165,233,0.95)",fontFamily:F,marginBottom:6,letterSpacing:"-0.01em"}}>{block.title}</div>
+      <div style={{fontSize:12.5,color:"rgba(255,255,255,0.55)",fontFamily:F,lineHeight:1.55,marginBottom:14}}>{block.content}</div>
+      <button onClick={()=>onNavigate("/pricing")}
+        style={{fontFamily:F,fontSize:13,fontWeight:700,padding:"10px 24px",borderRadius:8,background:"#0ea5e9",color:"#fff",border:"none",cursor:"pointer",letterSpacing:"-0.01em",transition:"all 0.18s",boxShadow:"0 4px 14px rgba(14,165,233,0.25)"}}
+        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="#0284c7";(e.currentTarget as HTMLElement).style.boxShadow="0 6px 20px rgba(14,165,233,0.35)"}}
+        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="#0ea5e9";(e.currentTarget as HTMLElement).style.boxShadow="0 4px 14px rgba(14,165,233,0.25)"}}>
+        Ver planos →
+      </button>
+    </div>
+  );
+
   // ── HOOKS — inspirado em Claude.ai: lista limpa, sem caixas ──
   if(block.type==="hooks") return(
     <div style={{marginBottom:4}}>
@@ -3959,6 +3973,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         }
         if(parsedErr?.error==="daily_limit"){
           if(profile?.plan&&profile.plan!=="free"){window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));}else{setShowUpgradeWall(true);}
+          setLoading(false);return;
+        }
+        // Credits exhausted — show upgrade wall for free users, inline blocks for paid
+        if(parsedErr?.error==="insufficient_credits"||parsedErr?.type==="credits_exhausted"){
+          if(parsedErr?.blocks){
+            const aid=Date.now()+1;
+            setMessages(prev=>[...prev,{role:"assistant",blocks:parsedErr.blocks,ts:aid,id:aid}]);
+          }
+          if(profile?.plan&&profile.plan!=="free"){
+            window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));
+          }else{
+            setShowUpgradeWall(true);
+          }
           setLoading(false);return;
         }
         if(parsedErr?.error==="dashboard_limit"){setShowDashboardLimit(true);setLoading(false);return;}
