@@ -749,7 +749,7 @@ export default function DashboardLayout() {
 
 
 
-        <main className="flex-1 dashboard-main" style={{ background: "var(--bg-main)", display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden" }}>
+        <main className="flex-1 dashboard-main" style={{ background: "var(--bg-main)", display: "flex", flexDirection: "column", minHeight: 0 }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

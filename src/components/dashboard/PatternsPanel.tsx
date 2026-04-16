@@ -364,6 +364,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
   const [error, setError] = useState<string | null>(null);
   const [alignment, setAlignment] = useState<{ score: number; label: string } | null>(null);
   const [sectionOpen, setSectionOpen] = useState(true);
+  const triedDetect = useRef(false);
   const navigate = useNavigate();
 
   const fetchPatterns = useCallback(async () => {
@@ -412,9 +413,10 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
     } finally { setDetecting(false); }
   }, [userId, personaId, detecting]);
 
-  useEffect(() => { fetchPatterns(); }, [fetchPatterns]);
+  useEffect(() => { triedDetect.current = false; fetchPatterns(); }, [fetchPatterns]);
   useEffect(() => {
-    if (!loading && patterns.length === 0 && userId && personaId && !detecting && !error) {
+    if (!loading && patterns.length === 0 && userId && personaId && !detecting && !error && !triedDetect.current) {
+      triedDetect.current = true;
       const t = setTimeout(runDetection, 800);
       return () => clearTimeout(t);
     }

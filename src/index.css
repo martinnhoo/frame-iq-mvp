@@ -668,7 +668,7 @@ input, textarea, select {
 }
 
 /* Smooth momentum scroll on iOS */
-.dashboard-main,
+.dashboard-content-area,
 .chat-messages-area {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -714,9 +714,9 @@ input, textarea, select {
   }
 
   /* Dashboard main content fills full width (sidebar is off-screen) */
+  /* Scroll is handled by .dashboard-content-area parent — no double overflow */
   .dashboard-main {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: visible !important;
     width: 100% !important;
     min-width: 0 !important;
   }
