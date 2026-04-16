@@ -511,7 +511,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
 
           {/* Empty */}
           {isEmpty && (
-            <div style={{ padding: "4px 2px 16px" }}>
+            <div style={{ padding: "0 2px 8px" }}>
               <p style={{
                 fontSize: 12.5, color: L3, fontFamily: F,
                 margin: 0, lineHeight: 1.55,

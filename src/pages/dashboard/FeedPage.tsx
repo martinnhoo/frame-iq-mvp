@@ -902,15 +902,15 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
       {/* ── Collapsible body ── */}
       <FeedExpandable open={open}>
         <div>
-          {/* CONNECTED */}
+          {/* CONNECTED — plain text, same style as Intelligence empty state */}
           {conn && (
-            <div style={{
-              background: T.bg1, border: `1px solid ${T.border1}`,
-              borderRadius: 4, padding: '12px 14px',
-            }}>
-              <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.60)', lineHeight: 1.6 }}>
+            <div style={{ padding: '4px 2px 16px' }}>
+              <p style={{
+                fontSize: 12.5, color: 'rgba(255,255,255,0.40)', fontFamily: F,
+                margin: 0, lineHeight: 1.55,
+              }}>
                 Você será notificado quando: perdas forem detectadas, oportunidades surgirem, ações forem necessárias.
-              </div>
+              </p>
             </div>
           )}
 
