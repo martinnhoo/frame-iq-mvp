@@ -52,29 +52,35 @@ const TRACKING_STATUS_KEY = 'adbrief_tracking_v2';
 
 type TrackingStatus = 'unknown' | 'confirmed_no_conversion' | 'investigating' | 'verified_ok' | 'verified_issue';
 
-/** Tracking status: scoped per account + per date range.
- *  Stored as JSON: { "7d": "confirmed_no_conversion", "14d": "unknown", ... }
- *  Auto-resets to 'unknown' when conversions appear (data-driven). */
-function getTrackingStatusMap(accountId: string): Record<string, TrackingStatus> {
+const VALID_TRACKING: TrackingStatus[] = ['confirmed_no_conversion', 'investigating', 'verified_ok', 'verified_issue'];
+
+/** Tracking status: scoped per account (GLOBAL — NOT per date range).
+ *  Stored as a plain string value, e.g. "investigating".
+ *  Auto-resets to 'unknown' when conversions appear (data-driven).
+ *  Migration: if legacy JSON map is found, promotes the most advanced status. */
+function getTrackingStatus(accountId: string): TrackingStatus {
   try {
     const raw = localStorage.getItem(`${TRACKING_STATUS_KEY}_${accountId}`);
-    if (raw) return JSON.parse(raw);
+    if (!raw) return 'unknown';
+    // Migration from legacy per-range JSON map → global scalar
+    if (raw.startsWith('{')) {
+      const map: Record<string, string> = JSON.parse(raw);
+      const vals = Object.values(map).filter((v): v is TrackingStatus => VALID_TRACKING.includes(v as TrackingStatus));
+      // Promote the "most active" status: investigating > verified_issue > confirmed_no_conversion > verified_ok
+      const priority: TrackingStatus[] = ['investigating', 'verified_issue', 'confirmed_no_conversion', 'verified_ok'];
+      const best = priority.find(p => vals.includes(p)) ?? 'unknown';
+      // Persist migrated scalar and drop the map
+      localStorage.setItem(`${TRACKING_STATUS_KEY}_${accountId}`, best);
+      return best;
+    }
+    if (VALID_TRACKING.includes(raw as TrackingStatus)) return raw as TrackingStatus;
   } catch {}
-  return {};
-}
-
-function getTrackingStatus(accountId: string, range: string): TrackingStatus {
-  const map = getTrackingStatusMap(accountId);
-  const val = map[range];
-  if (val === 'confirmed_no_conversion' || val === 'investigating' || val === 'verified_ok' || val === 'verified_issue') return val;
   return 'unknown';
 }
 
-function setTrackingStatusForRange(accountId: string, range: string, status: TrackingStatus): void {
+function setTrackingStatus(accountId: string, status: TrackingStatus): void {
   try {
-    const map = getTrackingStatusMap(accountId);
-    map[range] = status;
-    localStorage.setItem(`${TRACKING_STATUS_KEY}_${accountId}`, JSON.stringify(map));
+    localStorage.setItem(`${TRACKING_STATUS_KEY}_${accountId}`, status);
   } catch {}
 }
 
@@ -2539,42 +2545,42 @@ const FeedPage: React.FC = () => {
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
 
-  // ── Tracking status — persisted per account + per date range ──
+  // ── Tracking status — persisted per account (GLOBAL, not per date range) ──
   const [trackingUserStatus, setTrackingUserStatus] = useState<TrackingStatus>(() =>
-    accountId ? getTrackingStatus(accountId, period) : 'unknown'
+    accountId ? getTrackingStatus(accountId) : 'unknown'
   );
 
-  // Sync when account or period changes
+  // Sync when account changes (NOT on period change — tracking is account-global)
   useEffect(() => {
-    if (accountId) setTrackingUserStatus(getTrackingStatus(accountId, period));
-  }, [accountId, period]);
+    if (accountId) setTrackingUserStatus(getTrackingStatus(accountId));
+  }, [accountId]);
 
   // AUTO-RESET: when conversions appear, the "confirmed_no_conversion" is stale → reset
   useEffect(() => {
     if (!accountId || !adMetrics) return;
     if (trackingUserStatus === 'confirmed_no_conversion' && adMetrics.totalConversions > 0) {
-      setTrackingStatusForRange(accountId, period, 'unknown');
+      setTrackingStatus(accountId, 'unknown');
       setTrackingUserStatus('unknown');
     }
-  }, [accountId, period, adMetrics, trackingUserStatus]);
+  }, [accountId, adMetrics, trackingUserStatus]);
 
   const confirmNoConversion = useCallback(() => {
     if (!accountId) return;
-    setTrackingStatusForRange(accountId, period, 'confirmed_no_conversion');
+    setTrackingStatus(accountId, 'confirmed_no_conversion');
     setTrackingUserStatus('confirmed_no_conversion');
-  }, [accountId, period]);
+  }, [accountId]);
 
   const startTrackingInvestigation = useCallback(() => {
     if (!accountId) return;
-    setTrackingStatusForRange(accountId, period, 'investigating');
+    setTrackingStatus(accountId, 'investigating');
     setTrackingUserStatus('investigating');
-  }, [accountId, period]);
+  }, [accountId]);
 
   const resetTrackingStatus = useCallback(() => {
     if (!accountId) return;
-    setTrackingStatusForRange(accountId, period, 'unknown');
+    setTrackingStatus(accountId, 'unknown');
     setTrackingUserStatus('unknown');
-  }, [accountId, period]);
+  }, [accountId]);
 
   // ── Tracking health — fact-based, no assumptions ──
   const trackingHealth = useMemo(() => {
