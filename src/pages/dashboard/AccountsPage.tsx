@@ -698,9 +698,12 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
                 ))}
               </div>
 
-              {/* Step 3: Target */}
-              <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", margin: "0 0 8px" }}>
-                Meta de {selObj.metricLabel}
+              {/* Step 3: Target (optional) */}
+              <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", margin: "0 0 4px" }}>
+                Meta de {selObj.metricLabel} <span style={{ fontWeight: 400, color: "rgba(255,255,255,0.30)" }}>(opcional)</span>
+              </p>
+              <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.30)", margin: "0 0 8px" }}>
+                Deixe vazio se não souber — a IA analisa sem meta fixa.
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)" }}>{selObj.unit}</span>
@@ -1224,6 +1227,11 @@ export default function AccountsPage() {
                       <AccountForm account={acc} userId={user.id} t={t}
                         onSave={() => { load(); setEditingId(null); }}
                         onCancel={() => setEditingId(null)}/>
+
+                      {/* Goal stays visible even in edit mode */}
+                      <div style={{ marginTop: 20 }}>
+                        <GoalSection userId={user.id} personaId={acc.id} />
+                      </div>
                     </div>
                   ) : (
                     /* Detail view */

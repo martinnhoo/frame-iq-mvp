@@ -279,10 +279,10 @@ export const GoalSetup: React.FC<GoalSetupProps> = ({ accountId, onComplete }) =
         </div>
 
         <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F6FC', marginBottom: 4 }}>
-          Defina sua meta de {selectedObj.metricLabel.split(' ')[0]}
+          Defina sua meta de {selectedObj.metricLabel.split(' ')[0]} <span style={{ fontWeight: 400, fontSize: 12, color: 'rgba(255,255,255,0.30)' }}>(opcional)</span>
         </div>
         <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', marginBottom: 16 }}>
-          {selectedObj.help}
+          {selectedObj.help} Não sabe? Sem problema — pule e a IA analisa sem meta fixa.
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -341,7 +341,7 @@ export const GoalSetup: React.FC<GoalSetupProps> = ({ accountId, onComplete }) =
               boxShadow: '0 4px 12px rgba(56,189,248,0.25)',
             }}
           >
-            {saving ? 'Salvando...' : targetValue ? 'Ativar Inteligência' : 'Pular meta (definir depois)'}
+            {saving ? 'Salvando...' : targetValue ? 'Ativar Inteligência' : 'Ativar sem meta fixa'}
           </button>
         </div>
 
