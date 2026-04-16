@@ -11,6 +11,7 @@
  * Design: matches Feed dark theme (#06080C / #0C1017)
  */
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
@@ -75,7 +76,11 @@ interface GoalSetupProps {
   onComplete: () => void; // callback after save
 }
 
+// Events that need Meta Pixel / CAPI on the website
+const NEEDS_PIXEL = new Set(['complete_registration', 'contact', 'schedule', 'submit_application', 'purchase', 'initiate_checkout', 'add_to_cart']);
+
 export const GoalSetup: React.FC<GoalSetupProps> = ({ accountId, onComplete }) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [objective, setObjective] = useState<ObjectiveKey | null>(null);
   const [conversionEvent, setConversionEvent] = useState<string | null>(null);
@@ -310,6 +315,32 @@ export const GoalSetup: React.FC<GoalSetupProps> = ({ accountId, onComplete }) =
             autoFocus
           />
         </div>
+
+        {/* Pixel hint — only for events that require it */}
+        {conversionEvent && NEEDS_PIXEL.has(conversionEvent) && (
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 14,
+            padding: '10px 12px', borderRadius: 6,
+            background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)',
+          }}>
+            <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>⚡</span>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.50)', lineHeight: 1.55 }}>
+              Este evento precisa do <strong style={{ color: 'rgba(255,255,255,0.70)' }}>Pixel do Meta</strong> instalado no seu site.
+              {' '}
+              <button
+                onClick={() => navigate('/dashboard/ai?prompt=' + encodeURIComponent('Preciso instalar o Pixel do Meta no meu site para rastrear conversões. Me ajude passo a passo.'))}
+                style={{
+                  background: 'none', border: 'none', padding: 0,
+                  color: '#38BDF8', fontSize: 11, fontWeight: 600,
+                  cursor: 'pointer', fontFamily: F, textDecoration: 'underline',
+                  textUnderlineOffset: '2px',
+                }}
+              >
+                A IA te ajuda a instalar →
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div style={{ fontSize: 11, color: '#EF4444', marginBottom: 10 }}>{error}</div>

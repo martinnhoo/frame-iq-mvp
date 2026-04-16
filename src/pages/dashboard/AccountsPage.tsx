@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -506,6 +506,9 @@ function PlatformRow({ p, userId, accountId, t }: {
   );
 }
 
+// Events that need Meta Pixel / CAPI on the website
+const NEEDS_PIXEL = new Set(['complete_registration', 'contact', 'schedule', 'submit_application', 'purchase', 'initiate_checkout', 'add_to_cart']);
+
 // ── Goal objectives (reuse from GoalSetup) ──────────────────────────────────
 const GOAL_OBJECTIVES = [
   {
@@ -546,6 +549,7 @@ const GOAL_OBJECTIVES = [
 
 // ── Goal section (per account) ──────────────────────────────────────────────
 function GoalSection({ userId, personaId }: { userId: string; personaId: string }) {
+  const navigate = useNavigate();
   const [goalData, setGoalData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -720,6 +724,32 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
                 />
               </div>
             </>
+          )}
+
+          {/* Pixel hint */}
+          {editEvent && NEEDS_PIXEL.has(editEvent) && (
+            <div style={{
+              display: "flex", alignItems: "flex-start", gap: 8,
+              padding: "9px 12px", borderRadius: 7, marginBottom: 2,
+              background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.12)",
+            }}>
+              <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>⚡</span>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.55 }}>
+                Precisa do <strong style={{ color: "rgba(255,255,255,0.65)" }}>Pixel do Meta</strong> no site.
+                {" "}
+                <button
+                  onClick={() => navigate("/dashboard/ai?prompt=" + encodeURIComponent("Preciso instalar o Pixel do Meta no meu site para rastrear conversões. Me ajude passo a passo."))}
+                  style={{
+                    background: "none", border: "none", padding: 0,
+                    color: "#38BDF8", fontSize: 11, fontWeight: 600,
+                    cursor: "pointer", fontFamily: F, textDecoration: "underline",
+                    textUnderlineOffset: "2px",
+                  }}
+                >
+                  A IA te ajuda →
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Actions */}

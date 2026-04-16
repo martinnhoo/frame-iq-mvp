@@ -2137,6 +2137,16 @@ export default function AdBriefAI() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [chatDragOver,setChatDragOver]=useState(false);
   const [input,setInput]=useState("");
+  // Support ?prompt= query param — pre-fill input from URL
+  const promptParam = useRef(searchParams.get("prompt"));
+  useEffect(() => {
+    if (promptParam.current && selectedPersona?.id) {
+      setInput(promptParam.current);
+      searchParams.delete("prompt");
+      setSearchParams(searchParams, { replace: true });
+      promptParam.current = null;
+    }
+  }, [selectedPersona?.id]);
 
   // Session goal — persists 7 days, resets automatically
   const GOAL_KEY = `adbrief_goal_${selectedPersona?.id || "default"}`;
