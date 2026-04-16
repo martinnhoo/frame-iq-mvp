@@ -209,6 +209,313 @@ interface AIMessage {
 }
 
 
+// ── TrackingDiagnosticFlow — product-grade guided diagnostic ─────────────────
+// Replaces chat injection with a structured step-based experience.
+// Feels like a tool solving a problem, not a conversation.
+type DiagStep = 'question' | 'pixel_check' | 'no_conversions' | 'unsure_check' | 'result';
+type DiagResult = 'tracking_issue' | 'performance_issue' | 'needs_investigation' | null;
+
+interface TrackingDiagnosticProps {
+  clicks: number;
+  spend: string; // already formatted, e.g. "R$87,39"
+  conversions: number;
+  lang: string;
+  onClose: () => void;
+  onDeepDiagnosis: (summary: string) => void; // triggers AI analysis with context
+}
+
+function TrackingDiagnosticFlow({ clicks, spend, conversions, lang, onClose, onDeepDiagnosis }: TrackingDiagnosticProps) {
+  const [step, setStep] = useState<DiagStep>('question');
+  const [result, setResult] = useState<DiagResult>(null);
+  const [fadeIn, setFadeIn] = useState(true);
+
+  const TX: Record<string, Record<string, string>> = {
+    title: { pt: 'Verificação de rastreamento', es: 'Verificación de rastreo', en: 'Tracking verification' },
+    subtitle: {
+      pt: 'Encontramos tráfego sem conversões. Vamos identificar o motivo.',
+      es: 'Encontramos tráfico sin conversiones. Vamos a identificar el motivo.',
+      en: 'We found traffic with no conversions. Let\'s identify why.',
+    },
+    q1: { pt: 'Você já teve conversões reais fora da plataforma?', es: '¿Ya tuviste conversiones reales fuera de la plataforma?', en: 'Have you had real conversions outside the platform?' },
+    yes: { pt: 'Sim, tive conversões', es: 'Sí, tuve conversiones', en: 'Yes, I had conversions' },
+    no: { pt: 'Não tive conversões', es: 'No tuve conversiones', en: 'No conversions' },
+    unsure: { pt: 'Não tenho certeza', es: 'No estoy seguro', en: 'Not sure' },
+    step_of: { pt: 'Etapa', es: 'Paso', en: 'Step' },
+    of: { pt: 'de', es: 'de', en: 'of' },
+    // Step 2 — pixel check
+    pixel_title: { pt: 'O problema provavelmente é no rastreamento.', es: 'El problema probablemente es en el rastreo.', en: 'The issue is likely in tracking.' },
+    pixel_q: { pt: 'Seu pixel está instalado no site?', es: '¿Tu pixel está instalado en el sitio?', en: 'Is your pixel installed on your site?' },
+    pixel_yes: { pt: 'Sim, está instalado', es: 'Sí, está instalado', en: 'Yes, it\'s installed' },
+    pixel_no: { pt: 'Não / Não sei', es: 'No / No sé', en: 'No / Not sure' },
+    // No conversions path
+    no_conv_title: { pt: 'Sem conversões reais — o problema é performance.', es: 'Sin conversiones reales — el problema es rendimiento.', en: 'No real conversions — the issue is performance.' },
+    no_conv_body: { pt: 'Ainda não há conversões reais — vamos focar em melhorar isso.', es: 'Aún no hay conversiones reales — enfoquémonos en mejorar.', en: 'No real conversions yet — let\'s focus on improving that.' },
+    // Unsure path
+    unsure_title: { pt: 'Vamos verificar rapidamente.', es: 'Vamos a verificar rápidamente.', en: 'Let\'s quickly verify.' },
+    unsure_body: { pt: 'Cheque se houve vendas, leads ou cadastros fora da plataforma Meta nos últimos dias.', es: 'Verifica si hubo ventas, leads o registros fuera de Meta en los últimos días.', en: 'Check if you had sales, leads, or signups outside Meta in the last few days.' },
+    unsure_had: { pt: 'Sim, houve', es: 'Sí, hubo', en: 'Yes, there were' },
+    unsure_no: { pt: 'Não houve nada', es: 'No hubo nada', en: 'There was nothing' },
+    // Results
+    res_tracking: { pt: 'Diagnóstico: problema de rastreamento', es: 'Diagnóstico: problema de rastreo', en: 'Diagnosis: tracking issue' },
+    res_tracking_body: { pt: 'Pixel instalado mas sem conversões registradas — o evento de conversão provavelmente não está configurado corretamente.', es: 'Pixel instalado pero sin conversiones — el evento probablemente no está configurado correctamente.', en: 'Pixel installed but no conversions tracked — the conversion event is likely misconfigured.' },
+    res_pixel: { pt: 'Diagnóstico: pixel não configurado', es: 'Diagnóstico: pixel no configurado', en: 'Diagnosis: pixel not configured' },
+    res_pixel_body: { pt: 'Sem pixel, nenhuma conversão será registrada. Instale o Meta Pixel no seu site antes de continuar investindo.', es: 'Sin pixel, ninguna conversión será registrada. Instala el Meta Pixel antes de seguir invirtiendo.', en: 'Without a pixel, no conversions will be tracked. Install Meta Pixel on your site before continuing to invest.' },
+    res_perf: { pt: 'Diagnóstico: problema de performance', es: 'Diagnóstico: problema de rendimiento', en: 'Diagnosis: performance issue' },
+    res_perf_body: { pt: 'O rastreamento está ok — o problema é que o anúncio ainda não está convertendo. Foco: criativo, oferta e audiência.', es: 'El rastreo está ok — el problema es que el anuncio aún no convierte. Foco: creativo, oferta y audiencia.', en: 'Tracking is ok — the ad just isn\'t converting yet. Focus: creative, offer, and audience.' },
+    deep_analysis: { pt: 'Análise aprofundada →', es: 'Análisis profundo →', en: 'Deep analysis →' },
+    back_to_feed: { pt: '← Voltar ao feed', es: '← Volver al feed', en: '← Back to feed' },
+    done: { pt: 'Concluir', es: 'Concluir', en: 'Done' },
+  };
+  const t = (key: string) => TX[key]?.[lang] || TX[key]?.en || key;
+
+  const transition = (next: DiagStep, res?: DiagResult) => {
+    setFadeIn(false);
+    setTimeout(() => { setStep(next); if (res) setResult(res); setFadeIn(true); }, 180);
+  };
+
+  const stepNum = step === 'question' ? 1 : step === 'result' || step === 'no_conversions' ? 3 : 2;
+  const totalSteps = step === 'no_conversions' ? 2 : 3;
+  const effectiveStepNum = step === 'no_conversions' ? 2 : stepNum;
+
+  const S = {
+    card: {
+      maxWidth: 520, width: '100%', margin: '0 auto',
+      background: '#0D1117', border: '1px solid rgba(255,255,255,0.06)',
+      borderRadius: 16, overflow: 'hidden' as const,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)',
+    } as React.CSSProperties,
+    header: {
+      padding: '28px 28px 0', display: 'flex', flexDirection: 'column' as const, gap: 4,
+    } as React.CSSProperties,
+    title: {
+      fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, fontWeight: 800,
+      color: '#f0f2f8', letterSpacing: '-0.03em', margin: 0,
+    } as React.CSSProperties,
+    subtitle: {
+      fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 400,
+      color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, margin: 0,
+    } as React.CSSProperties,
+    context: {
+      fontFamily: "'Space Grotesk', monospace", fontSize: 12, fontWeight: 500,
+      color: 'rgba(255,255,255,0.30)', padding: '12px 28px 0',
+      letterSpacing: '-0.01em',
+    } as React.CSSProperties,
+    body: {
+      padding: '24px 28px 28px',
+      opacity: fadeIn ? 1 : 0, transform: fadeIn ? 'translateY(0)' : 'translateY(6px)',
+      transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+    } as React.CSSProperties,
+    question: {
+      fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, fontWeight: 700,
+      color: '#f0f2f8', margin: '0 0 20px', lineHeight: 1.4,
+    } as React.CSSProperties,
+    btnGroup: {
+      display: 'flex', flexDirection: 'column' as const, gap: 8,
+    } as React.CSSProperties,
+    btnPrimary: {
+      fontFamily: "'Plus Jakarta Sans', sans-serif", width: '100%', padding: '14px 20px',
+      borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700,
+      background: '#0ea5e9', color: '#fff', transition: 'all 0.15s',
+      boxShadow: '0 2px 12px rgba(14,165,233,0.25)',
+    } as React.CSSProperties,
+    btnSecondary: {
+      fontFamily: "'Plus Jakarta Sans', sans-serif", width: '100%', padding: '14px 20px',
+      borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer',
+      fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.03)',
+      color: 'rgba(255,255,255,0.65)', transition: 'all 0.15s',
+    } as React.CSSProperties,
+    btnGhost: {
+      fontFamily: "'Plus Jakarta Sans', sans-serif", background: 'none', border: 'none',
+      cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.30)',
+      padding: '8px 0', transition: 'color 0.15s',
+    } as React.CSSProperties,
+    progress: {
+      fontFamily: "'Space Grotesk', monospace", fontSize: 11, fontWeight: 500,
+      color: 'rgba(255,255,255,0.20)', padding: '16px 28px 0',
+      display: 'flex', alignItems: 'center', gap: 8,
+    } as React.CSSProperties,
+    progressBar: {
+      flex: 1, height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 1,
+      overflow: 'hidden' as const,
+    } as React.CSSProperties,
+    progressFill: {
+      height: '100%', background: '#0ea5e9', borderRadius: 1,
+      transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
+    } as React.CSSProperties,
+    resultIcon: {
+      width: 44, height: 44, borderRadius: 12, display: 'flex',
+      alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 16,
+    } as React.CSSProperties,
+    resultTitle: {
+      fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 800,
+      color: '#f0f2f8', margin: '0 0 8px', letterSpacing: '-0.02em',
+    } as React.CSSProperties,
+    resultBody: {
+      fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 400,
+      color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, margin: '0 0 24px',
+    } as React.CSSProperties,
+  };
+
+  const hover = (e: React.MouseEvent, bg: string, border?: string) => {
+    const t = e.currentTarget as HTMLElement;
+    t.style.background = bg;
+    if (border) t.style.borderColor = border;
+  };
+
+  // ── Render steps ──
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '24px 16px' }}>
+      <div style={S.card}>
+        {/* Progress */}
+        <div style={S.progress}>
+          <span>{t('step_of')} {effectiveStepNum} {t('of')} {totalSteps}</span>
+          <div style={S.progressBar}>
+            <div style={{ ...S.progressFill, width: `${(effectiveStepNum / totalSteps) * 100}%` }} />
+          </div>
+        </div>
+
+        {/* Header */}
+        <div style={S.header}>
+          <h2 style={S.title}>{step === 'result' ? (
+            result === 'tracking_issue' ? t('res_tracking') : result === 'performance_issue' ? t('res_perf') : t('res_pixel')
+          ) : step === 'no_conversions' ? t('no_conv_title') : step === 'pixel_check' ? t('pixel_title') : step === 'unsure_check' ? t('unsure_title') : t('title')}</h2>
+          {step === 'question' && <p style={S.subtitle}>{t('subtitle')}</p>}
+        </div>
+
+        {/* Context line */}
+        {step === 'question' && (
+          <div style={S.context}>{clicks.toLocaleString()} cliques · {spend} {lang === 'pt' ? 'investidos' : lang === 'es' ? 'invertidos' : 'invested'}</div>
+        )}
+
+        {/* Body — animated transitions */}
+        <div style={S.body}>
+          {/* STEP 1: Main question */}
+          {step === 'question' && (
+            <>
+              <p style={S.question}>{t('q1')}</p>
+              <div style={S.btnGroup}>
+                <button style={S.btnPrimary} onClick={() => transition('pixel_check')}
+                  onMouseEnter={e => hover(e, '#0c8bd0')} onMouseLeave={e => hover(e, '#0ea5e9')}>
+                  {t('yes')}
+                </button>
+                <button style={S.btnSecondary} onClick={() => transition('no_conversions', 'performance_issue')}
+                  onMouseEnter={e => hover(e, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.14)')}
+                  onMouseLeave={e => hover(e, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.08)')}>
+                  {t('no')}
+                </button>
+                <button style={S.btnSecondary} onClick={() => transition('unsure_check')}
+                  onMouseEnter={e => hover(e, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.14)')}
+                  onMouseLeave={e => hover(e, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.08)')}>
+                  {t('unsure')}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* STEP 2a: Pixel check (had conversions) */}
+          {step === 'pixel_check' && (
+            <>
+              <p style={S.question}>{t('pixel_q')}</p>
+              <div style={S.btnGroup}>
+                <button style={S.btnPrimary} onClick={() => transition('result', 'tracking_issue')}
+                  onMouseEnter={e => hover(e, '#0c8bd0')} onMouseLeave={e => hover(e, '#0ea5e9')}>
+                  {t('pixel_yes')}
+                </button>
+                <button style={S.btnSecondary} onClick={() => transition('result', 'needs_investigation')}
+                  onMouseEnter={e => hover(e, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.14)')}
+                  onMouseLeave={e => hover(e, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.08)')}>
+                  {t('pixel_no')}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* STEP 2b: Unsure path */}
+          {step === 'unsure_check' && (
+            <>
+              <p style={{ ...S.resultBody, margin: '0 0 20px' }}>{t('unsure_body')}</p>
+              <div style={S.btnGroup}>
+                <button style={S.btnPrimary} onClick={() => transition('pixel_check')}
+                  onMouseEnter={e => hover(e, '#0c8bd0')} onMouseLeave={e => hover(e, '#0ea5e9')}>
+                  {t('unsure_had')}
+                </button>
+                <button style={S.btnSecondary} onClick={() => transition('no_conversions', 'performance_issue')}
+                  onMouseEnter={e => hover(e, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.14)')}
+                  onMouseLeave={e => hover(e, 'rgba(255,255,255,0.03)', 'rgba(255,255,255,0.08)')}>
+                  {t('unsure_no')}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* TERMINAL: No conversions — end flow */}
+          {step === 'no_conversions' && (
+            <>
+              <p style={S.resultBody}>{t('no_conv_body')}</p>
+              <div style={S.btnGroup}>
+                <button style={S.btnPrimary}
+                  onClick={() => onDeepDiagnosis(lang === 'pt'
+                    ? `Meu anúncio tem ${clicks} cliques e ${spend} investidos mas zero conversões reais. O usuário confirmou que não houve conversões fora da plataforma. Analise a performance e sugira melhorias no criativo, oferta e audiência.`
+                    : `My ad has ${clicks} clicks and ${spend} spent but zero real conversions. User confirmed no off-platform conversions. Analyze performance and suggest creative, offer, and audience improvements.`
+                  )}
+                  onMouseEnter={e => hover(e, '#0c8bd0')} onMouseLeave={e => hover(e, '#0ea5e9')}>
+                  {t('deep_analysis')}
+                </button>
+                <button style={S.btnGhost} onClick={onClose}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.50)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.30)'; }}>
+                  {t('done')}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* TERMINAL: Result with diagnosis */}
+          {step === 'result' && (
+            <>
+              <div style={{
+                ...S.resultIcon,
+                background: result === 'tracking_issue' ? 'rgba(248,113,113,0.10)' : result === 'needs_investigation' ? 'rgba(251,191,36,0.10)' : 'rgba(74,222,128,0.10)',
+                border: `1px solid ${result === 'tracking_issue' ? 'rgba(248,113,113,0.20)' : result === 'needs_investigation' ? 'rgba(251,191,36,0.20)' : 'rgba(74,222,128,0.20)'}`,
+              }}>
+                {result === 'tracking_issue' ? '🔴' : result === 'needs_investigation' ? '🟡' : '🟢'}
+              </div>
+              <h3 style={S.resultTitle}>
+                {result === 'tracking_issue' ? t('res_tracking') : result === 'needs_investigation' ? t('res_pixel') : t('res_perf')}
+              </h3>
+              <p style={S.resultBody}>
+                {result === 'tracking_issue' ? t('res_tracking_body') : result === 'needs_investigation' ? t('res_pixel_body') : t('res_perf_body')}
+              </p>
+              <div style={S.btnGroup}>
+                <button style={S.btnPrimary}
+                  onClick={() => {
+                    const diag = result === 'tracking_issue' ? 'evento_conversao' : result === 'needs_investigation' ? 'pixel_ausente' : 'performance';
+                    onDeepDiagnosis(lang === 'pt'
+                      ? `Diagnóstico de rastreamento concluído: ${diag}. ${clicks} cliques, ${spend} investidos, ${conversions} conversões. Quero uma análise aprofundada e passos específicos para resolver.`
+                      : `Tracking diagnosis complete: ${diag}. ${clicks} clicks, ${spend} spent, ${conversions} conversions. I want a deep analysis and specific steps to fix this.`
+                    );
+                  }}
+                  onMouseEnter={e => hover(e, '#0c8bd0')} onMouseLeave={e => hover(e, '#0ea5e9')}>
+                  {t('deep_analysis')}
+                </button>
+                <button style={S.btnGhost} onClick={onClose}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.50)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.30)'; }}>
+                  {t('done')}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Keyframe for entrance */}
+      <style>{`@keyframes diagSlideIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes diagFadeIn{from{opacity:0}to{opacity:1}}`}</style>
+    </div>
+  );
+}
+
 // ── InlineToolPanel ──────────────────────────────────────────────────────────────
 function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
   action: string; onClose: () => void; onSend: (msg: string, displayText?: string) => void; lang: string;
@@ -2162,6 +2469,17 @@ export default function AdBriefAI() {
   );
   const diagnosticInjected = useRef(false);
 
+  // ── Tracking diagnostic flow (structured, not chat-based) ──
+  const [trackingDiagActive, setTrackingDiagActive] = useState<{
+    clicks: number; spend: string; conversions: number;
+  } | null>(() => {
+    if (diagnosticStateRef.current?.payload?.mode === 'tracking_diagnostic') {
+      const p = diagnosticStateRef.current.payload;
+      return { clicks: p.clicks || 0, spend: p.spendFormatted || 'R$0', conversions: p.conversions || 0 };
+    }
+    return null;
+  });
+
   // Session goal — persists 7 days, resets automatically
   const GOAL_KEY = `adbrief_goal_${selectedPersona?.id || "default"}`;
   // Active skill — persisted per persona in localStorage
@@ -3943,36 +4261,42 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   };
 
   // ── Diagnostic injection via navigation state (tracking + metric alerts from FeedPage) ──
-  // Step 1: Inject assistant message immediately on mount (user sees context right away)
+  // tracking_diagnostic → structured guided flow (TrackingDiagnosticFlow component)
+  // metric_diagnostic → chat-based injection (legacy behavior)
   const diagnosticMsgRef = useRef<string | null>(null);
   useEffect(() => {
     if (!diagnosticStateRef.current || diagnosticInjected.current) return;
     if (!selectedPersona?.id) return;
 
     diagnosticInjected.current = true;
-    // Prevent proactive greeting from firing and overwriting diagnostic
     proactiveFired.current = true;
     const { payload } = diagnosticStateRef.current;
-    const diagMsg = payload?.message || '';
     const mode = payload?.mode || 'diagnostic';
 
-    // Clear navigation state + legacy query params so it doesn't repeat on re-render or back-nav
+    // Clear navigation state + legacy query params
     window.history.replaceState({}, '', location.pathname);
     searchParams.delete('tracking_diagnostic');
     searchParams.delete('metric_diagnostic');
     setSearchParams(searchParams, { replace: true });
     diagnosticStateRef.current = null;
 
+    // ── TRACKING DIAGNOSTIC: structured flow, no chat injection ──
+    if (mode === 'tracking_diagnostic') {
+      setTrackingDiagActive({
+        clicks: payload?.clicks || 0,
+        spend: payload?.spendFormatted || 'R$0',
+        conversions: payload?.conversions || 0,
+      });
+      return; // No chat messages — the flow component handles everything
+    }
+
+    // ── METRIC DIAGNOSTIC: chat-based injection (legacy) ──
+    const diagMsg = payload?.message || '';
     if (!diagMsg) return;
 
-    // Store message for step 2 (auto-send once contextReady)
     diagnosticMsgRef.current = diagMsg;
 
-    // Inject assistant message immediately — user sees context right away
-    const systemTitle = mode === 'tracking_diagnostic'
-      ? (lang === 'pt' ? 'Diagnóstico de rastreamento' : lang === 'es' ? 'Diagnóstico de rastreo' : 'Tracking Diagnostic')
-      : (lang === 'pt' ? 'Diagnóstico de métrica' : lang === 'es' ? 'Diagnóstico de métrica' : 'Metric Diagnostic');
-
+    const systemTitle = lang === 'pt' ? 'Diagnóstico de métrica' : lang === 'es' ? 'Diagnóstico de métrica' : 'Metric Diagnostic';
     const aid = Date.now();
     const injectedMsg: AIMessage = {
       role: 'assistant',
@@ -3985,11 +4309,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior: 'instant' }));
   }, [selectedPersona?.id]);
 
-  // Step 2: Auto-send diagnostic to AI once context is ready (separate effect so it reacts to contextReady)
+  // Step 2: Auto-send metric diagnostic to AI once context is ready
   useEffect(() => {
     if (!diagnosticMsgRef.current || !contextReady || loading) return;
     const msg = diagnosticMsgRef.current;
-    diagnosticMsgRef.current = null; // consume — only send once
+    diagnosticMsgRef.current = null;
     setTimeout(() => {
       send(msg);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
@@ -4021,12 +4345,27 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── LivePanel compact bar — show when Meta is connected (or loading connections) ── */}
-      {(connections.includes("meta") || connectionsLoading) && (
+      {(connections.includes("meta") || connectionsLoading) && !trackingDiagActive && (
         <LivePanel user={user} selectedPersona={selectedPersona} connections={connections} lang={lang} onSend={send} />
       )}
 
+      {/* ── TRACKING DIAGNOSTIC FLOW — structured guided experience ── */}
+      {trackingDiagActive && (
+        <TrackingDiagnosticFlow
+          clicks={trackingDiagActive.clicks}
+          spend={trackingDiagActive.spend}
+          conversions={trackingDiagActive.conversions}
+          lang={lang}
+          onClose={() => { setTrackingDiagActive(null); navigate('/dashboard/feed'); }}
+          onDeepDiagnosis={(summary) => {
+            setTrackingDiagActive(null);
+            send(summary);
+          }}
+        />
+      )}
+
       {/* ── Creative Skills Panel — shown when chat is empty ── */}
-      {messages.length===0&&contextReady&&hasData&&!proactiveLoading&&(
+      {messages.length===0&&contextReady&&hasData&&!proactiveLoading&&!trackingDiagActive&&(
         <div style={{position:"relative",zIndex:2,flexShrink:0,maxWidth:720,margin:"0 auto",width:"100%",padding:"24px 16px 0"}}>
           <div style={{marginBottom:8}}>
             <h2 style={{...j,fontSize:18,fontWeight:700,color:"#fff",margin:"0 0 4px",letterSpacing:"-0.02em"}}>
@@ -4064,7 +4403,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       )}
 
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8}}>
+      <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:trackingDiagActive?"none":"flex",flexDirection:"column" as const,paddingTop:8}}>
         
         {/* ── Persistent Account Alerts — survive chat clear ── */}
         {accountAlerts.length > 0 && (
@@ -4364,7 +4703,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       </div>
 
       {/* ── Input area ── */}
-      <div style={{flexShrink:0,position:"relative" as const,zIndex:2}}>
+      <div style={{flexShrink:0,position:"relative" as const,zIndex:2,display:trackingDiagActive?"none":undefined}}>
 
         {/* Fade from chat → input */}
         <div style={{height:40,background:"linear-gradient(to bottom,transparent,rgba(9,12,20,0.98))",pointerEvents:"none",marginBottom:-1}}/>

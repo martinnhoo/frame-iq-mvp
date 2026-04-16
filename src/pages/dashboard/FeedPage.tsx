@@ -3460,14 +3460,16 @@ const FeedPage: React.FC = () => {
                 className="feed-cta"
                 onClick={() => {
                   startTrackingInvestigation();
-                  // RULE 5: inject system state into tracking diagnostic via navigation state
-                  const stateCtx = buildAiStateContext();
+                  // Structured payload for the guided diagnostic flow
                   navigate('/dashboard/ai', {
                     state: {
                       type: 'diagnostic_start',
                       payload: {
-                        message: trackingHealth.chatMsg + stateCtx,
                         mode: 'tracking_diagnostic',
+                        clicks: trackingHealth.clicks,
+                        spend: trackingHealth.spend, // centavos
+                        spendFormatted: fmtReais(trackingHealth.spend),
+                        conversions: trackingHealth.conversions,
                         trackingStatus: trackingUserStatus,
                       },
                     },
