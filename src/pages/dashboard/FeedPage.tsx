@@ -48,6 +48,335 @@ const T = {
 
 // ── localStorage helpers ──
 const DEMO_DISMISS_KEY = 'adbrief_demo_dismissed';
+const TRACKING_STATUS_KEY = 'adbrief_tracking_v2';
+
+type TrackingStatus = 'unknown' | 'confirmed_no_conversion' | 'investigating' | 'verified_ok' | 'verified_issue';
+
+/** Tracking status: scoped per account + per date range.
+ *  Stored as JSON: { "7d": "confirmed_no_conversion", "14d": "unknown", ... }
+ *  Auto-resets to 'unknown' when conversions appear (data-driven). */
+function getTrackingStatusMap(accountId: string): Record<string, TrackingStatus> {
+  try {
+    const raw = localStorage.getItem(`${TRACKING_STATUS_KEY}_${accountId}`);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+
+function getTrackingStatus(accountId: string, range: string): TrackingStatus {
+  const map = getTrackingStatusMap(accountId);
+  const val = map[range];
+  if (val === 'confirmed_no_conversion' || val === 'investigating' || val === 'verified_ok' || val === 'verified_issue') return val;
+  return 'unknown';
+}
+
+function setTrackingStatusForRange(accountId: string, range: string, status: TrackingStatus): void {
+  try {
+    const map = getTrackingStatusMap(accountId);
+    map[range] = status;
+    localStorage.setItem(`${TRACKING_STATUS_KEY}_${accountId}`, JSON.stringify(map));
+  } catch {}
+}
+
+// ── Unified Metric Intelligence Engine v2 ──
+// Adaptive: baselines from account data (median), no fixed thresholds.
+// Priority-scored, anti-spam cooldowns, impact estimation, light history.
+const METRIC_STATE_KEY = 'adbrief_metric_v2';
+type MetricAlertId = 'cpa_no_data' | 'cpa_deviation' | 'ctr_deviation' | 'roas_deviation';
+type MetricAlertAction = 'unknown' | 'acknowledged' | 'investigating';
+
+interface MetricStateEntry {
+  action: MetricAlertAction;
+  dismissedAt?: number;      // timestamp of last dismiss
+  cooldownDays?: number;     // how many days cooldown
+}
+
+interface MetricHistoryEntry {
+  metric: MetricAlertId;
+  action: 'dismissed' | 'investigating';
+  date: string; // ISO date
+}
+
+const COOLDOWN_DAYS: Record<MetricAlertId, number> = {
+  cpa_no_data: 5,
+  cpa_deviation: 5,
+  ctr_deviation: 7,
+  roas_deviation: 5,
+};
+
+/** Per-account, per-range, per-metric persistence.
+ *  Shape: { "7d": { "ctr_deviation": { action: "acknowledged", dismissedAt: 1713... } }, ... } */
+function getMetricStateMap(accountId: string): Record<string, Record<string, MetricStateEntry>> {
+  try {
+    const raw = localStorage.getItem(`${METRIC_STATE_KEY}_${accountId}`);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+
+function getMetricEntry(accountId: string, range: string, alertId: MetricAlertId): MetricStateEntry {
+  const map = getMetricStateMap(accountId);
+  return map[range]?.[alertId] || { action: 'unknown' };
+}
+
+function setMetricEntry(accountId: string, range: string, alertId: MetricAlertId, entry: MetricStateEntry): void {
+  try {
+    const map = getMetricStateMap(accountId);
+    if (!map[range]) map[range] = {};
+    map[range][alertId] = entry;
+    localStorage.setItem(`${METRIC_STATE_KEY}_${accountId}`, JSON.stringify(map));
+  } catch {}
+}
+
+function resetMetricState(accountId: string, range: string, alertId: MetricAlertId): void {
+  setMetricEntry(accountId, range, alertId, { action: 'unknown' });
+}
+
+/** Light history — last 20 actions across all metrics. */
+const METRIC_HISTORY_KEY = 'adbrief_metric_history';
+function getMetricHistory(accountId: string): MetricHistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(`${METRIC_HISTORY_KEY}_${accountId}`);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+
+function addMetricHistory(accountId: string, entry: MetricHistoryEntry): void {
+  try {
+    const history = getMetricHistory(accountId);
+    history.unshift(entry); // newest first
+    if (history.length > 20) history.length = 20;
+    localStorage.setItem(`${METRIC_HISTORY_KEY}_${accountId}`, JSON.stringify(history));
+  } catch {}
+}
+
+function daysSinceLastDismiss(accountId: string, alertId: MetricAlertId): number | null {
+  const history = getMetricHistory(accountId);
+  const last = history.find(h => h.metric === alertId && h.action === 'dismissed');
+  if (!last) return null;
+  return Math.floor((Date.now() - new Date(last.date).getTime()) / 86400000);
+}
+
+/** Check if alert is in cooldown (dismissed within cooldown period). */
+function isInCooldown(entry: MetricStateEntry, alertId: MetricAlertId): boolean {
+  if (entry.action !== 'acknowledged' || !entry.dismissedAt) return false;
+  const cooldownMs = (entry.cooldownDays || COOLDOWN_DAYS[alertId]) * 86400000;
+  return Date.now() - entry.dismissedAt < cooldownMs;
+}
+
+/** Minimum confidence threshold — RULE 2 invariant.
+ *  Any alert below this confidence is NEVER shown, period. */
+const MIN_CONFIDENCE_THRESHOLD = 0.25;
+
+/** Adaptive metric alert detection v4 — drift-protected, coupling-aware, freshness-gated. */
+interface MetricAlert {
+  id: MetricAlertId;
+  label: string;
+  fact: string;
+  context: string;
+  ambiguity: string;
+  impact: string;           // Estimated impact — (baseline - current) * volume
+  trustLine: string;        // "Baseado nos últimos X dias da sua conta"
+  confidenceLabel: string;  // "Alta confiança" | "Confiança moderada" | "Dados ainda instáveis"
+  dismissLabel: string;
+  investigateLabel: string;
+  chatMsg: string;
+  priority: number;         // impact * confidence (0-100)
+  historyNote?: string;     // e.g. "Você ignorou isso há 3 dias"
+}
+
+/** Structured confidence: f(days, spend, events, volatility, freshness).
+ *  Returns 0-1 where 1 = maximum confidence in the signal. */
+function computeConfidence(
+  daysOfData: number,
+  totalSpend: number,   // centavos
+  events: number,       // relevant events (clicks for CTR, conversions for CPA/ROAS)
+  volatility: number,   // coefficient of variation of the metric, 0-1+
+  freshness: number,    // fraction of data from last 24h (0-1). High = premature data.
+): number {
+  const timeFactor = Math.min(daysOfData / 7, 1);
+  const spendFactor = Math.min(totalSpend / 10000, 1);
+  const eventFactor = Math.min(events / 10, 1);
+  const stabilityFactor = Math.max(0.3, 1 - volatility * 0.7);
+  // Freshness penalty: if > 50% of data is from last 24h, reduce confidence
+  // (conversions may still be attributing, ROAS incomplete)
+  const freshnessPenalty = freshness > 0.5 ? Math.max(0.5, 1 - (freshness - 0.5) * 0.8) : 1;
+  const raw = timeFactor * 0.22 + spendFactor * 0.18 + eventFactor * 0.28 + stabilityFactor * 0.22 + 0.10;
+  return raw * freshnessPenalty;
+}
+
+function confidenceLabel(conf: number): string {
+  if (conf >= 0.7) return 'Alta confiança';
+  if (conf >= 0.4) return 'Confiança moderada';
+  return 'Dados ainda instáveis';
+}
+
+// RULE 3: Pure function — no side effects, no localStorage reads.
+// Same inputs ALWAYS produce same outputs.
+function detectMetricAlerts(
+  m: AdMetricsSummary,
+  _accountId: string, // kept for call-site compat, unused inside
+  goalMetric?: string | null,
+): MetricAlert[] {
+  const alerts: MetricAlert[] = [];
+
+  // ── BEGINNER MODE ──
+  if (m.daysOfData < 3 || m.totalClicks < 30 || m.totalSpend < 2000) return alerts;
+
+  // ── Helpers ──
+  const goalBoost = (metric: string): number => {
+    if (!goalMetric) return 1;
+    if (goalMetric === metric) return 1.5;
+    if (goalMetric === 'cpc' && metric === 'ctr') return 1.3;
+    return 1;
+  };
+  // RULE 3: histNote moved out of detection — it reads localStorage (side effect).
+  // Detection must be a pure function of its inputs for determinism.
+  const trustLine = m.hasAnchorBaseline
+    ? `Baseado nos últimos ${m.daysOfData} dias da sua conta (com referência de 30 dias)`
+    : `Baseado nos últimos ${m.daysOfData} dias da sua conta`;
+
+  // ── CPA: no data ──
+  if (m.totalSpend > 0 && m.totalConversions < 3 && m.avgCpa === 0 && !(m.totalSpend > 5000 && m.totalClicks > 20)) {
+    const conf = computeConfidence(m.daysOfData, m.totalSpend, m.totalClicks, 0, m.freshnessFactor);
+    // RULE 2: low confidence → suppress
+    if (conf >= MIN_CONFIDENCE_THRESHOLD) alerts.push({
+      id: 'cpa_no_data', label: 'CPA',
+      fact: 'Sem dados suficientes de CPA',
+      context: `${m.daysOfData} dias de dados · ${m.totalConversions < 3 ? 'menos de 3 conversões' : 'nenhuma conversão'}`,
+      ambiguity: 'CPA requer conversões para ser calculado. O sistema ainda não tem dados suficientes para análise.',
+      impact: m.totalClicks > 50
+        ? `${m.totalClicks} cliques sem conversão atribuída — pode haver perda de rastreamento`
+        : 'Volume ainda baixo para análise de impacto',
+      trustLine,
+      confidenceLabel: confidenceLabel(conf),
+      dismissLabel: 'Entendido',
+      investigateLabel: 'Investigar conversões',
+      chatMsg: `Sem dados de CPA\n\n${m.daysOfData} dias · ${m.totalClicks} cliques · ${fmtReais(m.totalSpend)} investidos · ${m.totalConversions} conversões\n\nPreciso entender por que há poucas conversões registradas.`,
+      priority: Math.round(40 * conf * goalBoost('cpa')),
+    });
+  }
+
+  // ── CPA: deviation ──
+  if (m.baselineCpa !== null && m.baselineCpa > 100 && m.avgCpa > 0 && m.totalConversions >= 3) {
+    const cpaRatio = m.avgCpa / m.baselineCpa;
+    // RULE 4: improving metric NEVER fires — CPA at or below baseline = good
+    if (cpaRatio <= 1.0) { /* metric improving — no alert, ever */ }
+    else if (cpaRatio > 1.3) {
+      const devPct = Math.round((cpaRatio - 1) * 100);
+      const conf = computeConfidence(m.daysOfData, m.totalSpend, m.totalConversions, m.volatilityCpa, m.freshnessFactor);
+      const extraCost = Math.round((m.avgCpa - m.baselineCpa) * m.totalConversions * 0.7);
+      // RULE 2: low confidence → suppress
+      if (conf >= MIN_CONFIDENCE_THRESHOLD) alerts.push({
+        id: 'cpa_deviation', label: 'CPA',
+        fact: `CPA ${devPct}% acima do padrão da sua conta`,
+        context: `Atual: ${fmtReais(m.avgCpa)} · Padrão: ${fmtReais(m.baselineCpa)}`,
+        ambiguity: m.volatilityCpa > 0.4
+          ? 'Seu CPA tem variado bastante — esse desvio pode ser ruído temporário.'
+          : m.freshnessFactor > 0.5
+            ? 'Dados recentes podem estar incompletos — conversões podem ainda estar sendo atribuídas.'
+            : 'Desvio pode ser temporário (novos públicos), sazonal, ou indicar necessidade de otimização.',
+        impact: extraCost > 0
+          ? `Estimativa: ~${fmtReais(extraCost)} a mais do que o esperado no período`
+          : `~${devPct}% a mais por conversão do que o habitual`,
+        trustLine,
+        confidenceLabel: confidenceLabel(conf),
+        dismissLabel: 'CPA está adequado',
+        investigateLabel: 'Otimizar CPA →',
+        chatMsg: `CPA acima do padrão da conta\n\nAtual: ${fmtReais(m.avgCpa)} · Baseline: ${fmtReais(m.baselineCpa)} (${devPct}% acima)\n${m.totalConversions} conversões · ${fmtReais(m.totalSpend)} investidos\n${confidenceLabel(conf)}${m.volatilityCpa > 0.4 ? ' · CPA volátil' : ''}\n\nVamos analisar o que pode estar elevando o custo por conversão.`,
+        priority: Math.round(80 * conf * goalBoost('cpa')),
+      });
+    }
+  }
+
+  // ── CTR: deviation ──
+  if (m.baselineCtr !== null && m.baselineCtr > 10 && m.avgCtr > 0) {
+    const ctrRatio = m.avgCtr / m.baselineCtr;
+    // RULE 4: improving metric NEVER fires — CTR at or above baseline = good
+    if (ctrRatio >= 1.0) { /* metric improving — no alert, ever */ }
+    else if (ctrRatio < 0.75) {
+      const dropPct = Math.round((1 - ctrRatio) * 100);
+      const conf = computeConfidence(m.daysOfData, m.totalSpend, m.totalClicks, m.volatilityCtr, m.freshnessFactor);
+      const baseDec = m.baselineCtr / 10000;
+      const currDec = m.avgCtr / 10000;
+      const lostClicks = m.totalImpressions > 0
+        ? Math.round((baseDec - currDec) * m.totalImpressions * 0.7)
+        : 0;
+      // RULE 2: low confidence → suppress
+      if (conf >= MIN_CONFIDENCE_THRESHOLD) alerts.push({
+        id: 'ctr_deviation', label: 'CTR',
+        fact: `Seu CTR está ${dropPct}% abaixo do padrão da sua conta`,
+        context: `Atual: ${fmtPct(m.avgCtr)} · Padrão: ${fmtPct(m.baselineCtr)}`,
+        ambiguity: m.volatilityCtr > 0.4
+          ? 'Seu CTR tem variado bastante — esse desvio pode ser ruído temporário.'
+          : 'Queda pode ser por: fadiga do criativo, público novo, ou mudança sazonal.',
+        impact: lostClicks > 0
+          ? `Estimativa: ~${lostClicks.toLocaleString('pt-BR')} cliques perdidos no período`
+          : `~${Math.min(dropPct, 40)}% menos cliques em relação ao seu padrão`,
+        trustLine,
+        confidenceLabel: confidenceLabel(conf),
+        dismissLabel: 'CTR aceitável',
+        investigateLabel: 'Melhorar CTR →',
+        chatMsg: `CTR abaixo do padrão da conta\n\nAtual: ${fmtPct(m.avgCtr)} · Baseline: ${fmtPct(m.baselineCtr)} (${dropPct}% abaixo)\n${m.totalClicks} cliques · ${fmtReais(m.totalSpend)} investidos${lostClicks > 0 ? `\n~${lostClicks} cliques perdidos` : ''}\n${confidenceLabel(conf)}\n\nVamos analisar por que o CTR caiu.`,
+        priority: Math.round(60 * conf * goalBoost('ctr')),
+      });
+    }
+  }
+
+  // ── ROAS: deviation ──
+  if (m.baselineRoas !== null && m.baselineRoas > 0.1 && m.avgRoas > 0 && m.totalRevenue > 0 && m.totalSpend > 5000) {
+    const roasRatio = m.avgRoas / m.baselineRoas;
+    // RULE 4: improving metric NEVER fires — ROAS at or above baseline = good
+    if (roasRatio >= 1.0) { /* metric improving — no alert, ever */ }
+    else if (roasRatio < 0.75) {
+      const dropPct = Math.round((1 - roasRatio) * 100);
+      const conf = computeConfidence(m.daysOfData, m.totalSpend, m.totalConversions, 0, m.freshnessFactor);
+      const lostRev = Math.round(m.totalSpend * (m.baselineRoas - m.avgRoas) * 0.7);
+      // RULE 2: low confidence → suppress
+      if (conf >= MIN_CONFIDENCE_THRESHOLD) alerts.push({
+        id: 'roas_deviation', label: 'ROAS',
+        fact: `ROAS ${dropPct}% abaixo do padrão da sua conta`,
+        context: `Atual: ${m.avgRoas.toFixed(2).replace('.', ',')}x · Padrão: ${m.baselineRoas.toFixed(2).replace('.', ',')}x`,
+        ambiguity: m.freshnessFactor > 0.5
+          ? 'Dados recentes podem estar incompletos — ROAS costuma ser recalculado com atraso.'
+          : 'Queda pode ser por: atribuição incompleta, ciclo de compra longo, ou desalinhamento criativo-público.',
+        impact: lostRev > 0
+          ? `Estimativa: ~${fmtReais(lostRev)} de receita potencial não capturada`
+          : 'Retorno abaixo do padrão — margem para otimização',
+        trustLine,
+        confidenceLabel: confidenceLabel(conf),
+        dismissLabel: 'ROAS está correto',
+        investigateLabel: 'Investigar ROAS →',
+        chatMsg: `ROAS abaixo do padrão da conta\n\nAtual: ${m.avgRoas.toFixed(2)}x · Baseline: ${m.baselineRoas.toFixed(2)}x (${dropPct}% abaixo)\n${fmtReais(m.totalRevenue)} receita · ${fmtReais(m.totalSpend)} investidos${lostRev > 0 ? `\n~${fmtReais(lostRev)} receita perdida` : ''}\n${confidenceLabel(conf)}\n\nVamos verificar o retorno.`,
+        priority: Math.round(70 * conf * goalBoost('roas')),
+      });
+    }
+  }
+
+  // ── CONFLICT RESOLUTION + METRIC COUPLING ──
+  const hasCpa = alerts.find(a => a.id === 'cpa_deviation');
+  const hasCtr = alerts.find(a => a.id === 'ctr_deviation');
+  const hasRoas = alerts.find(a => a.id === 'roas_deviation');
+
+  // Direct conflict: CPA + CTR
+  if (hasCpa && hasCtr) {
+    if (goalMetric === 'cpa') hasCtr.priority = Math.round(hasCtr.priority * 0.5);
+    else if (!goalMetric) hasCtr.priority = Math.round(hasCtr.priority * 0.7);
+  }
+
+  // Indirect coupling: CTR improved but goal (CPA/ROAS) worsened → deprioritize CTR
+  if (hasCtr && m.baselineCtr !== null && m.avgCtr > m.baselineCtr) {
+    // CTR is actually ABOVE baseline (improved), but CPA/ROAS worsened — bad traffic
+    if (hasCpa || hasRoas) {
+      hasCtr.priority = Math.round(hasCtr.priority * 0.3); // strongly deprioritize
+    }
+  }
+
+  // Sort by priority descending, limit to max 2
+  alerts.sort((a, b) => b.priority - a.priority);
+  return alerts.slice(0, 2);
+}
 
 function isDemoDismissedToday(): boolean {
   try {
@@ -900,15 +1229,50 @@ const AdList: React.FC<{
 };
 
 interface AdMetricsSummary {
-  totalSpend: number;    // centavos
+  totalSpend: number;        // centavos
   totalConversions: number;
-  totalRevenue: number;  // centavos
+  totalRevenue: number;      // centavos
   totalClicks: number;
+  totalImpressions: number;
   avgCtr: number;
-  avgCpa: number;        // centavos
-  avgRoas: number;       // ratio (e.g. 3.0)
-  avgCpc: number;        // centavos
+  avgCpa: number;            // centavos
+  avgRoas: number;           // ratio (e.g. 3.0)
+  avgCpc: number;            // centavos
   daysOfData: number;
+  // Baselines — drift-protected: max(recent, anchor * 0.8)
+  // "recent" = robust median of selected period. "anchor" = robust median of 30d.
+  baselineCtr: number | null;   // drift-protected CTR baseline (basis points)
+  baselineCpa: number | null;   // drift-protected CPA baseline (centavos)
+  baselineRoas: number | null;  // drift-protected ROAS baseline (ratio)
+  // Volatility — coefficient of variation (stddev/mean), 0-1+
+  volatilityCtr: number;
+  volatilityCpa: number;
+  // Data freshness: fraction of data from last 24h (0-1). High = recent/incomplete data.
+  freshnessFactor: number;
+  // Whether 30d anchor data was available (for trust messaging)
+  hasAnchorBaseline: boolean;
+}
+
+/** Robust median: filters P5-P95 outliers, then computes median.
+ *  Returns null for < 3 data points after filtering. */
+function robustMedian(arr: number[]): number | null {
+  if (arr.length < 3) return null;
+  const sorted = [...arr].sort((a, b) => a - b);
+  // Remove bottom 5% and top 5%
+  const trimCount = Math.max(1, Math.floor(sorted.length * 0.05));
+  const trimmed = sorted.slice(trimCount, sorted.length - trimCount);
+  if (trimmed.length < 2) return sorted[Math.floor(sorted.length / 2)]; // fallback to simple median
+  const mid = Math.floor(trimmed.length / 2);
+  return trimmed.length % 2 === 0 ? (trimmed[mid - 1] + trimmed[mid]) / 2 : trimmed[mid];
+}
+
+/** Coefficient of variation: stddev / mean. Returns 0 if not enough data. */
+function coefficientOfVariation(arr: number[]): number {
+  if (arr.length < 3) return 0;
+  const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+  if (mean === 0) return 0;
+  const variance = arr.reduce((sum, v) => sum + (v - mean) ** 2, 0) / arr.length;
+  return Math.sqrt(variance) / Math.abs(mean);
 }
 
 const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null; periodLabel: string }> = ({ ad, metrics, periodLabel }) => {
@@ -2160,41 +2524,217 @@ const FeedPage: React.FC = () => {
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
 
-  // ── Tracking health — derived from adMetrics ──
+  // ── Tracking status — persisted per account + per date range ──
+  const [trackingUserStatus, setTrackingUserStatus] = useState<TrackingStatus>(() =>
+    accountId ? getTrackingStatus(accountId, period) : 'unknown'
+  );
+
+  // Sync when account or period changes
+  useEffect(() => {
+    if (accountId) setTrackingUserStatus(getTrackingStatus(accountId, period));
+  }, [accountId, period]);
+
+  // AUTO-RESET: when conversions appear, the "confirmed_no_conversion" is stale → reset
+  useEffect(() => {
+    if (!accountId || !adMetrics) return;
+    if (trackingUserStatus === 'confirmed_no_conversion' && adMetrics.totalConversions > 0) {
+      setTrackingStatusForRange(accountId, period, 'unknown');
+      setTrackingUserStatus('unknown');
+    }
+  }, [accountId, period, adMetrics, trackingUserStatus]);
+
+  const confirmNoConversion = useCallback(() => {
+    if (!accountId) return;
+    setTrackingStatusForRange(accountId, period, 'confirmed_no_conversion');
+    setTrackingUserStatus('confirmed_no_conversion');
+  }, [accountId, period]);
+
+  const startTrackingInvestigation = useCallback(() => {
+    if (!accountId) return;
+    setTrackingStatusForRange(accountId, period, 'investigating');
+    setTrackingUserStatus('investigating');
+  }, [accountId, period]);
+
+  const resetTrackingStatus = useCallback(() => {
+    if (!accountId) return;
+    setTrackingStatusForRange(accountId, period, 'unknown');
+    setTrackingUserStatus('unknown');
+  }, [accountId, period]);
+
+  // ── Tracking health — fact-based, no assumptions ──
   const trackingHealth = useMemo(() => {
     if (!adMetrics) return null;
-    const s = adMetrics.totalSpend / 100; // centavos → reais
-    const c = adMetrics.totalConversions;
-    const cl = adMetrics.totalClicks;
-    if (s > 50 && cl > 20 && c === 0) {
+    // User confirmed no conversions for this range → suppress card
+    if (trackingUserStatus === 'confirmed_no_conversion' || trackingUserStatus === 'verified_ok') return null;
+
+    const spend = adMetrics.totalSpend; // centavos
+    const clicks = adMetrics.totalClicks;
+    const conversions = adMetrics.totalConversions;
+
+    // Fact: meaningful traffic + zero conversions
+    if (spend > 5000 && clicks > 20 && conversions === 0) {
       return {
-        status: 'broken' as const,
-        problem: `Campanhas gerando tráfego (${cl} cliques, R$${s.toFixed(0)} investidos) mas nenhuma conversão registrada`,
-        causes: [
-          'Evento de conversão não está disparando no site',
-          'Evento selecionado não corresponde à ação real do usuário',
-          'Landing page com problema impedindo a conversão',
-        ],
-        impact: 'AdBrief não consegue calcular CPA. Otimização de performance está limitada.',
-        chatMsg: `Diagnóstico de Tracking\n\nMinhas campanhas estão gerando tráfego (${cl} cliques, R$${s.toFixed(0)} investidos) mas nenhuma conversão está sendo registrada.\n\nPreciso diagnosticar o que está errado com o tracking. Em qual plataforma meu site foi construído?`,
+        status: 'no_conversions' as const,
+        clicks,
+        spend,
+        conversions: 0,
+        chatMsg: `Nenhuma conversão registrada\n\n${clicks} cliques · ${fmtReais(spend)} investidos\n\nVamos verificar o rastreamento em alguns passos rápidos.`,
       };
     }
-    if (s > 100 && c > 0 && c < cl * 0.005) {
-      const rate = cl > 0 ? (c / cl * 100).toFixed(2) : '0';
+    // Fact: conversions exist but extremely low rate
+    if (spend > 10000 && conversions > 0 && clicks > 0 && conversions < clicks * 0.005) {
+      const rate = (conversions / clicks * 100).toFixed(2);
       return {
-        status: 'uncertain' as const,
-        problem: `${c} conversões em ${cl} cliques (${rate}%) — abaixo do esperado`,
-        causes: [
-          'Evento pode estar disparando na página errada',
-          'Tracking parcial — parte das conversões não registrada',
-          'Evento duplicado descartado pelo Meta',
-        ],
-        impact: 'CPA pode estar inflado. Otimização de campanha pode ser imprecisa.',
-        chatMsg: `Diagnóstico de Tracking\n\nMinhas campanhas estão com taxa de conversão muito baixa (${rate}%). Tenho ${c} conversões em ${cl} cliques com R$${s.toFixed(0)} de investimento.\n\nIsso pode ser problema de tracking? Me ajuda a diagnosticar.`,
+        status: 'low_conversions' as const,
+        clicks,
+        spend,
+        conversions,
+        rate,
+        chatMsg: `${conversions} conversões em ${clicks} cliques (${rate}%)\n\n${fmtReais(spend)} investidos\n\nVamos verificar se o rastreamento está registrando todas as conversões.`,
       };
     }
-    return { status: 'healthy' as const, problem: '', causes: [] as string[], impact: '', chatMsg: '' };
+    return null;
+  }, [adMetrics, trackingUserStatus]);
+
+  // ── Metric Intelligence Engine v2 — adaptive, anti-spam, priority-scored ──
+  const [metricEntries, setMetricEntries] = useState<Record<MetricAlertId, MetricStateEntry>>(() => {
+    if (!accountId) return {} as Record<MetricAlertId, MetricStateEntry>;
+    const map = getMetricStateMap(accountId);
+    return (map[period] || {}) as Record<MetricAlertId, MetricStateEntry>;
+  });
+
+  // Sync when account or period changes
+  useEffect(() => {
+    if (accountId) {
+      const map = getMetricStateMap(accountId);
+      setMetricEntries((map[period] || {}) as Record<MetricAlertId, MetricStateEntry>);
+    }
+  }, [accountId, period]);
+
+  // Beginner mode flag — shown in JSX when data is too low for analysis
+  const beginnerMode = useMemo(() => {
+    if (!adMetrics) return false;
+    return adMetrics.daysOfData < 3 || adMetrics.totalClicks < 30 || adMetrics.totalSpend < 2000;
   }, [adMetrics]);
+
+  // Detect active metric alerts — filtered by cooldowns + user state
+  // INVARIANT RULES 1-4 enforced here as hard gates
+  const metricAlerts = useMemo(() => {
+    if (!adMetrics || !accountId || beginnerMode) return [];
+    const raw = detectMetricAlerts(adMetrics, accountId, goalData?.metric);
+    return raw.filter(a => {
+      const entry = metricEntries[a.id] || { action: 'unknown' };
+
+      // ── RULE 1: dismissed_alert NEVER appears during cooldown ──
+      // Hard gate — even if detectMetricAlerts somehow returns it, it dies here.
+      if (entry.action === 'acknowledged') {
+        if (isInCooldown(entry, a.id)) return false;
+        // Also check history as fallback — belt AND suspenders
+        const daysSince = daysSinceLastDismiss(accountId, a.id);
+        if (daysSince !== null && daysSince < (COOLDOWN_DAYS[a.id] || 5)) return false;
+      }
+
+      // Filter out: investigating (show investigating strip instead)
+      if (entry.action === 'investigating') return false;
+
+      return true;
+    }).map(a => {
+      // RULE 3: historyNote hydrated here (outside pure detection) — reads localStorage
+      const d = daysSinceLastDismiss(accountId, a.id);
+      return { ...a, historyNote: d !== null ? `Você ignorou isso há ${d} dia${d !== 1 ? 's' : ''}` : undefined };
+    });
+  }, [adMetrics, accountId, metricEntries, beginnerMode, goalData]);
+
+  // AUTO-RESET metric states — ratio-based (adaptive to account baselines)
+  useEffect(() => {
+    if (!accountId || !adMetrics) return;
+    const map = getMetricStateMap(accountId);
+    const rangeMap = map[period] || {};
+    let changed = false;
+
+    // CPA no data: conversions appeared → reset
+    const cpaNoData = rangeMap['cpa_no_data'];
+    if (cpaNoData?.action === 'acknowledged' && adMetrics.totalConversions >= 3) {
+      rangeMap['cpa_no_data'] = { action: 'unknown' };
+      changed = true;
+    }
+    // CPA deviation: CPA returned within 10% of baseline → reset
+    if (rangeMap['cpa_deviation']?.action === 'acknowledged' && adMetrics.baselineCpa !== null && adMetrics.avgCpa > 0) {
+      if (adMetrics.avgCpa / adMetrics.baselineCpa <= 1.1) {
+        rangeMap['cpa_deviation'] = { action: 'unknown' };
+        changed = true;
+      }
+    }
+    // CTR deviation: CTR recovered within 10% of baseline → reset
+    if (rangeMap['ctr_deviation']?.action === 'acknowledged' && adMetrics.baselineCtr !== null && adMetrics.avgCtr > 0) {
+      if (adMetrics.avgCtr / adMetrics.baselineCtr >= 0.9) {
+        rangeMap['ctr_deviation'] = { action: 'unknown' };
+        changed = true;
+      }
+    }
+    // ROAS deviation: ROAS recovered within baseline → reset
+    if (rangeMap['roas_deviation']?.action === 'acknowledged' && adMetrics.baselineRoas !== null && adMetrics.avgRoas > 0) {
+      if (adMetrics.avgRoas / adMetrics.baselineRoas >= 1.0) {
+        rangeMap['roas_deviation'] = { action: 'unknown' };
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      map[period] = rangeMap;
+      try { localStorage.setItem(`${METRIC_STATE_KEY}_${accountId}`, JSON.stringify(map)); } catch {}
+      setMetricEntries({ ...(rangeMap as Record<MetricAlertId, MetricStateEntry>) });
+    }
+  }, [accountId, period, adMetrics]);
+
+  const acknowledgeMetricAlert = useCallback((alertId: MetricAlertId) => {
+    if (!accountId) return;
+    const entry: MetricStateEntry = { action: 'acknowledged', dismissedAt: Date.now(), cooldownDays: COOLDOWN_DAYS[alertId] };
+    setMetricEntry(accountId, period, alertId, entry);
+    setMetricEntries(prev => ({ ...prev, [alertId]: entry }));
+    addMetricHistory(accountId, { metric: alertId, action: 'dismissed', date: new Date().toISOString() });
+  }, [accountId, period]);
+
+  // RULE 5: Build AI context string — tells AI what user has already decided
+  // so AI never contradicts system state (e.g. re-alerting a dismissed metric).
+  const buildAiStateContext = useCallback((): string => {
+    const lines: string[] = [];
+    const allIds: MetricAlertId[] = ['cpa_no_data', 'cpa_deviation', 'ctr_deviation', 'roas_deviation'];
+    for (const id of allIds) {
+      const entry = metricEntries[id];
+      if (!entry || entry.action === 'unknown') continue;
+      if (entry.action === 'acknowledged') {
+        const inCooldown = isInCooldown(entry, id);
+        lines.push(`[${id}]: usuário dispensou${inCooldown ? ' (em cooldown — NÃO re-alertar)' : ''}`);
+      } else if (entry.action === 'investigating') {
+        lines.push(`[${id}]: em investigação pelo usuário`);
+      }
+    }
+    if (trackingUserStatus !== 'unknown') {
+      lines.push(`[tracking]: ${trackingUserStatus}`);
+    }
+    return lines.length > 0
+      ? `\n\n--- Estado atual do sistema ---\n${lines.join('\n')}\nIMPORTANTE: Respeite as decisões do usuário acima. Não re-alerte métricas dispensadas.`
+      : '';
+  }, [metricEntries, trackingUserStatus]);
+
+  const investigateMetricAlert = useCallback((alert: MetricAlert) => {
+    if (!accountId) return;
+    const entry: MetricStateEntry = { action: 'investigating' };
+    setMetricEntry(accountId, period, alert.id, entry);
+    setMetricEntries(prev => ({ ...prev, [alert.id]: entry }));
+    addMetricHistory(accountId, { metric: alert.id, action: 'investigating', date: new Date().toISOString() });
+    // RULE 5: inject system state context into AI chat
+    const stateCtx = buildAiStateContext();
+    const msg = encodeURIComponent(alert.chatMsg + stateCtx);
+    navigate(`/dashboard/ai?metric_diagnostic=${msg}`);
+  }, [accountId, period, navigate, buildAiStateContext]);
+
+  const resetMetricAlert = useCallback((alertId: MetricAlertId) => {
+    if (!accountId) return;
+    resetMetricState(accountId, period, alertId);
+    setMetricEntries(prev => ({ ...prev, [alertId]: { action: 'unknown' } }));
+  }, [accountId, period]);
 
   // Ads fetch — paginated, refetchable
   const ADS_PAGE_SIZE = 40;
@@ -2230,39 +2770,117 @@ const FeedPage: React.FC = () => {
   useEffect(() => { fetchAds(); }, [fetchAds]);
 
   // Metrics fetch — re-runs when period or accountId changes
+  // Fetches both selected period + 30d anchor for drift-protected baselines
   useEffect(() => {
     if (!accountId) { setAdMetrics(null); return; }
     let cancelled = false;
     (async () => {
       try {
         const since = new Date(Date.now() - periodDays * 86400000).toISOString().slice(0, 10);
-        const { data: mData } = await (supabase
+        const anchorSince = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+        // Fetch both: selected period + 30d anchor (single round-trip if period <= 30d)
+        const needsAnchor = periodDays < 30;
+        const fetchPeriod = supabase
           .from('ad_metrics' as any)
-          .select('spend, conversions, revenue, clicks, ctr, cpa, cpc, roas, date')
+          .select('spend, conversions, revenue, clicks, impressions, ctr, cpa, cpc, roas, date')
           .eq('account_id', accountId)
-          .gte('date', since) as any);
-        if (!cancelled && mData && mData.length > 0) {
-          const totalSpend = mData.reduce((s: number, r: any) => s + (r.spend || 0), 0);
-          const totalConversions = mData.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
-          const totalRevenue = mData.reduce((s: number, r: any) => s + (r.revenue || 0), 0);
-          const totalClicks = mData.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
-          const ctrVals = mData.filter((r: any) => r.ctr != null).map((r: any) => Number(r.ctr));
-          const cpaVals = mData.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
-          const uniqueDates = new Set(mData.map((r: any) => r.date));
-          setAdMetrics({
-            totalSpend,
-            totalConversions,
-            totalRevenue,
-            totalClicks,
-            avgCtr: ctrVals.length > 0 ? ctrVals.reduce((a: number, b: number) => a + b, 0) / ctrVals.length : 0,
-            avgCpa: cpaVals.length > 0 ? cpaVals.reduce((a: number, b: number) => a + b, 0) / cpaVals.length : 0,
-            avgRoas: totalSpend > 0 && totalRevenue > 0 ? totalRevenue / totalSpend : 0,
-            avgCpc: totalClicks > 0 ? totalSpend / totalClicks : 0,
-            daysOfData: uniqueDates.size,
-          });
-        } else if (!cancelled) {
-          setAdMetrics(null);
+          .gte('date', since) as any;
+        const fetchAnchor = needsAnchor ? (supabase
+          .from('ad_metrics' as any)
+          .select('spend, ctr, cpa, roas, date')
+          .eq('account_id', accountId)
+          .gte('date', anchorSince) as any) : null;
+
+        const [{ data: mData }, anchorResult] = await Promise.all([
+          fetchPeriod,
+          fetchAnchor ? fetchAnchor : Promise.resolve({ data: null }),
+        ]);
+
+        if (cancelled) return;
+        if (!mData || mData.length === 0) { setAdMetrics(null); return; }
+
+        const totalSpend = mData.reduce((s: number, r: any) => s + (r.spend || 0), 0);
+        const totalConversions = mData.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
+        const totalRevenue = mData.reduce((s: number, r: any) => s + (r.revenue || 0), 0);
+        const totalClicks = mData.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
+        const totalImpressions = mData.reduce((s: number, r: any) => s + (r.impressions || 0), 0);
+        const ctrVals = mData.filter((r: any) => r.ctr != null).map((r: any) => Number(r.ctr));
+        const cpaVals = mData.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
+        const uniqueDates = new Set(mData.map((r: any) => r.date));
+
+        // ── Robust baselines: filter low-spend days, remove P5/P95 outliers ──
+        const avgDailySpend = totalSpend / Math.max(uniqueDates.size, 1);
+        const minDaySpend = avgDailySpend * 0.1;
+        const significantRows = mData.filter((r: any) => (r.spend || 0) >= minDaySpend);
+
+        const dailyCtrVals = significantRows.filter((r: any) => r.ctr != null && r.ctr > 0).map((r: any) => Number(r.ctr));
+        const dailyCpaVals = significantRows.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
+        const roasVals = significantRows.filter((r: any) => r.roas != null && r.roas > 0).map((r: any) => Number(r.roas));
+
+        // Recent baselines (selected period)
+        const recentCtr = robustMedian(dailyCtrVals);
+        const recentCpa = robustMedian(dailyCpaVals);
+        const recentRoas = robustMedian(roasVals);
+
+        // ── 30d anchor baselines (drift protection) ──
+        let anchorCtr: number | null = null;
+        let anchorCpa: number | null = null;
+        let anchorRoas: number | null = null;
+        let hasAnchor = false;
+
+        const anchorData = needsAnchor ? anchorResult?.data : mData;
+        if (anchorData && anchorData.length > 0) {
+          const anchorAvgSpend = anchorData.reduce((s: number, r: any) => s + (r.spend || 0), 0) / anchorData.length;
+          const anchorMinSpend = anchorAvgSpend * 0.1;
+          const anchorSig = anchorData.filter((r: any) => (r.spend || 0) >= anchorMinSpend);
+          const aCtr = anchorSig.filter((r: any) => r.ctr != null && r.ctr > 0).map((r: any) => Number(r.ctr));
+          const aCpa = anchorSig.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
+          const aRoas = anchorSig.filter((r: any) => r.roas != null && r.roas > 0).map((r: any) => Number(r.roas));
+          anchorCtr = robustMedian(aCtr);
+          anchorCpa = robustMedian(aCpa);
+          anchorRoas = robustMedian(aRoas);
+          hasAnchor = anchorCtr !== null || anchorCpa !== null;
         }
+
+        // Drift-protected baseline = max(recent, anchor * 0.8)
+        // For CTR (higher=better): use max to prevent "normalizing decline"
+        // For CPA (lower=better): use min to prevent "normalizing increase"
+        // For ROAS (higher=better): use max
+        const driftCtr = (recentCtr !== null && anchorCtr !== null)
+          ? Math.max(recentCtr, anchorCtr * 0.8)
+          : recentCtr;
+        const driftCpa = (recentCpa !== null && anchorCpa !== null)
+          ? Math.min(recentCpa, anchorCpa * 1.2) // CPA: min because lower CPA = better
+          : recentCpa;
+        const driftRoas = (recentRoas !== null && anchorRoas !== null)
+          ? Math.max(recentRoas, anchorRoas * 0.8)
+          : recentRoas;
+
+        // ── Data freshness: what fraction of rows are from last 24h ──
+        const recentRows = mData.filter((r: any) => r.date >= yesterday).length;
+        const freshnessFactor = mData.length > 0 ? recentRows / mData.length : 0;
+
+        setAdMetrics({
+          totalSpend,
+          totalConversions,
+          totalRevenue,
+          totalClicks,
+          totalImpressions,
+          avgCtr: ctrVals.length > 0 ? ctrVals.reduce((a: number, b: number) => a + b, 0) / ctrVals.length : 0,
+          avgCpa: cpaVals.length > 0 ? cpaVals.reduce((a: number, b: number) => a + b, 0) / cpaVals.length : 0,
+          avgRoas: totalSpend > 0 && totalRevenue > 0 ? totalRevenue / totalSpend : 0,
+          avgCpc: totalClicks > 0 ? totalSpend / totalClicks : 0,
+          daysOfData: uniqueDates.size,
+          baselineCtr: driftCtr,
+          baselineCpa: driftCpa,
+          baselineRoas: driftRoas,
+          volatilityCtr: coefficientOfVariation(dailyCtrVals),
+          volatilityCpa: coefficientOfVariation(dailyCpaVals),
+          freshnessFactor,
+          hasAnchorBaseline: hasAnchor,
+        });
       } catch {
         // noop
       }
@@ -2734,82 +3352,366 @@ const FeedPage: React.FC = () => {
               return s === 'ACTIVE' || s === '';
             }).length,
             totalAds: totalAdCount,
-          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth?.status === 'broken' || trackingHealth?.status === 'uncertain'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
+          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
         )}
 
-        {/* Tracking Health — decision card when issues detected */}
-        {metaConnected && !isDemo && trackingHealth && trackingHealth.status !== 'healthy' && (
+        {/* Tracking Health — fact-based decision card */}
+        {metaConnected && !isDemo && trackingHealth && (
           <div className="feed-card-lift" style={{
             background: T.bg1,
             border: `1px solid ${T.border1}`,
             borderRadius: 8, padding: 'clamp(12px, 2.5vw, 16px)', marginBottom: 12,
-            borderLeft: `3px solid ${trackingHealth.status === 'broken' ? T.red : T.yellow}`,
+            borderLeft: `3px solid ${T.yellow}`,
             animation: 'feed-fadeUp 0.3s ease',
           }}>
-            {/* Header — inline status */}
+            {/* Header — neutral label */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
               <span style={{
                 width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                background: trackingHealth.status === 'broken' ? T.red : T.yellow,
-                boxShadow: `0 0 6px ${trackingHealth.status === 'broken' ? `${T.red}50` : `${T.yellow}50`}`,
+                background: T.yellow,
+                boxShadow: `0 0 6px ${T.yellow}50`,
               }} />
               <span style={{
                 fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
                 color: T.labelColor,
               }}>
-                {trackingHealth.status === 'broken' ? 'Tracking com problema' : 'Tracking incerto'}
+                {trackingHealth.status === 'no_conversions' ? 'Conversões' : 'Taxa de conversão'}
               </span>
             </div>
 
-            {/* Problem — primary text */}
-            <p style={{ fontSize: 13, color: T.text1, fontWeight: 600, margin: '0 0 10px', lineHeight: 1.5 }}>
-              {trackingHealth.problem}
+            {/* Fact — primary text, no assumptions */}
+            <p style={{ fontSize: 13, color: T.text1, fontWeight: 600, margin: '0 0 6px', lineHeight: 1.5 }}>
+              {trackingHealth.status === 'no_conversions'
+                ? 'Nenhuma conversão registrada'
+                : `${trackingHealth.conversions} conversões em ${trackingHealth.clicks} cliques (${trackingHealth.rate}%)`
+              }
             </p>
 
-            {/* Causes — inset surface */}
-            {trackingHealth.causes.length > 0 && (
-              <div style={{
-                background: T.bg2, borderRadius: 6,
-                padding: '10px 12px', marginBottom: 10,
-              }}>
-                <div style={{ fontSize: 9, color: T.labelColor, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
-                  Possíveis causas
-                </div>
-                {trackingHealth.causes.map((cause, i) => (
-                  <div key={i} style={{ fontSize: 11.5, color: T.text2, lineHeight: 1.6, paddingLeft: 8 }}>
-                    • {cause}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Impact — secondary text */}
-            <p style={{ fontSize: 11, color: T.text3, margin: '0 0 12px', lineHeight: 1.5 }}>
-              <span style={{ fontWeight: 600, color: T.text2 }}>Impacto:</span> {trackingHealth.impact}
+            {/* Context — secondary data */}
+            <p style={{ fontSize: 11.5, color: T.text2, margin: '0 0 10px', lineHeight: 1.5 }}>
+              {trackingHealth.clicks} cliques · {fmtReais(trackingHealth.spend)} investidos
             </p>
 
-            {/* CTA — solid blue, dominant */}
+            {/* Ambiguity — honest uncertainty */}
+            <div style={{
+              background: T.bg2, borderRadius: 6,
+              padding: '10px 12px', marginBottom: 12,
+            }}>
+              <p style={{ fontSize: 11, color: T.text3, margin: 0, lineHeight: 1.6 }}>
+                Não é possível determinar se:{' '}
+                {trackingHealth.status === 'no_conversions'
+                  ? 'não houve conversões ou se os eventos não foram registrados.'
+                  : 'a taxa é real ou se alguns eventos não foram registrados.'
+                }
+              </p>
+            </div>
+
+            {/* Two action buttons — user decides */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              {/* Confirm: no conversions */}
+              <button
+                onClick={confirmNoConversion}
+                style={{
+                  flex: 1, background: T.bg2, color: T.text2,
+                  border: `1px solid ${T.border1}`,
+                  borderRadius: 6, padding: '9px 10px', cursor: 'pointer',
+                  fontSize: 11.5, fontWeight: 600,
+                  transition: 'all 0.18s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.bg1; e.currentTarget.style.borderColor = T.text3; }}
+                onMouseLeave={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border1; }}
+              >
+                {trackingHealth.status === 'no_conversions' ? 'Não houve conversões' : 'Taxa está correta'}
+              </button>
+
+              {/* Investigate: open chat */}
+              <button
+                className="feed-cta"
+                onClick={() => {
+                  startTrackingInvestigation();
+                  // RULE 5: inject system state into tracking diagnostic
+                  const stateCtx = buildAiStateContext();
+                  const msg = encodeURIComponent(trackingHealth.chatMsg + stateCtx);
+                  navigate(`/dashboard/ai?tracking_diagnostic=${msg}`);
+                }}
+                style={{
+                  flex: 1, background: T.blue, color: T.text1,
+                  border: 'none',
+                  borderRadius: 6, padding: '9px 10px', cursor: 'pointer',
+                  fontSize: 11.5, fontWeight: 700,
+                  transition: 'all 0.18s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.blueHover; e.currentTarget.style.boxShadow = `0 4px 14px ${T.blue}30`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = T.blue; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                Verificar rastreamento →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tracking — confirmed no conversions state (neutral, with reversal) */}
+        {metaConnected && !isDemo && !trackingHealth && trackingUserStatus === 'confirmed_no_conversion' && (
+          <div style={{
+            background: T.bg1,
+            border: `1px solid ${T.border1}`,
+            borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 12,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 10, flexWrap: 'wrap',
+            animation: 'feed-fadeUp 0.3s ease',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+              <span style={{ fontSize: 12, color: T.text3 }}>✓</span>
+              <span style={{ fontSize: 11.5, color: T.text3, fontWeight: 500 }}>
+                Sem conversões registradas neste período
+              </span>
+            </div>
             <button
-              className="feed-cta"
-              onClick={() => {
-                const msg = encodeURIComponent(trackingHealth.chatMsg);
-                navigate(`/dashboard/ai?tracking_diagnostic=${msg}`);
-              }}
+              onClick={resetTrackingStatus}
               style={{
-                background: T.blue, color: T.text1,
-                border: 'none',
-                borderRadius: 6, padding: '9px 14px', cursor: 'pointer',
-                fontSize: 12, fontWeight: 700,
-                width: '100%',
-                transition: 'all 0.18s',
+                background: 'transparent', color: T.blue,
+                border: 'none', cursor: 'pointer',
+                fontSize: 11, fontWeight: 600,
+                padding: '4px 0',
+                transition: 'opacity 0.15s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.blueHover; (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 14px ${T.blue}30`; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.blue; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
             >
-              Diagnosticar e corrigir tracking →
+              Verificar rastreamento novamente
             </button>
           </div>
         )}
+
+        {/* Tracking — investigating state (minimal reminder) */}
+        {metaConnected && !isDemo && trackingUserStatus === 'investigating' && (
+          <div style={{
+            background: T.bg1,
+            border: `1px solid ${T.border1}`,
+            borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 12,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 10, flexWrap: 'wrap',
+            animation: 'feed-fadeUp 0.3s ease',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+              <span style={{ fontSize: 12, color: T.yellow }}>◉</span>
+              <span style={{ fontSize: 11.5, color: T.text2, fontWeight: 500 }}>
+                Verificação de rastreamento em andamento
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                onClick={() => navigate('/dashboard/ai')}
+                style={{
+                  background: 'transparent', color: T.blue,
+                  border: 'none', cursor: 'pointer',
+                  fontSize: 11, fontWeight: 600,
+                  padding: '4px 0',
+                  transition: 'opacity 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+              >
+                Continuar no chat
+              </button>
+              <button
+                onClick={resetTrackingStatus}
+                style={{
+                  background: 'transparent', color: T.text3,
+                  border: 'none', cursor: 'pointer',
+                  fontSize: 11, fontWeight: 500,
+                  padding: '4px 0',
+                  transition: 'opacity 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+              >
+                Resetar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Beginner Mode — data still collecting, no alerts */}
+        {metaConnected && !isDemo && beginnerMode && adMetrics && adMetrics.daysOfData > 0 && (
+          <div style={{
+            background: T.bg1, border: `1px solid ${T.border1}`,
+            borderRadius: 8, padding: 'clamp(12px, 2.5vw, 16px)', marginBottom: 10,
+            animation: 'feed-fadeUp 0.3s ease',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, background: T.blue, opacity: 0.6 }} />
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
+                Coletando dados
+              </span>
+            </div>
+            <p style={{ fontSize: 13, color: T.text1, fontWeight: 600, margin: '0 0 4px', lineHeight: 1.5 }}>
+              Dados ainda insuficientes para análise
+            </p>
+            <p style={{ fontSize: 11.5, color: T.text3, margin: 0, lineHeight: 1.5 }}>
+              {adMetrics.daysOfData} dia{adMetrics.daysOfData !== 1 ? 's' : ''} de dados · {adMetrics.totalClicks} cliques · O sistema precisa de mais dados para gerar insights confiáveis.
+            </p>
+          </div>
+        )}
+
+        {/* Silent Mode — everything within baseline, no alerts */}
+        {metaConnected && !isDemo && !beginnerMode && adMetrics && adMetrics.daysOfData >= 3
+          && metricAlerts.length === 0 && !trackingHealth && trackingUserStatus !== 'investigating'
+          && (adMetrics.baselineCtr !== null || adMetrics.baselineCpa !== null) && (
+          <div style={{
+            background: T.bg1, border: `1px solid ${T.border1}`,
+            borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 10,
+            display: 'flex', alignItems: 'center', gap: 8,
+            animation: 'feed-fadeUp 0.3s ease',
+          }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, background: T.green, boxShadow: `0 0 6px ${T.green}40` }} />
+            <span style={{ fontSize: 11.5, color: T.text2, fontWeight: 500 }}>
+              Tudo dentro do esperado · métricas estáveis
+            </span>
+          </div>
+        )}
+
+        {/* Metric Alerts — adaptive, priority-scored, max 2 */}
+        {metaConnected && !isDemo && metricAlerts.length > 0 && metricAlerts.map(alert => (
+          <div key={alert.id} className="feed-card-lift" style={{
+            background: T.bg1,
+            border: `1px solid ${T.border1}`,
+            borderRadius: 8, padding: 'clamp(12px, 2.5vw, 16px)', marginBottom: 10,
+            borderLeft: `3px solid ${T.blue}`,
+            animation: 'feed-fadeUp 0.3s ease',
+          }}>
+            {/* Header + confidence label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, background: T.blue, boxShadow: `0 0 6px ${T.blue}50` }} />
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
+                  {alert.label}
+                </span>
+              </div>
+              <span style={{
+                fontSize: 9, fontWeight: 600, letterSpacing: '0.04em',
+                color: alert.confidenceLabel === 'Alta confiança' ? 'rgba(74,222,128,0.60)'
+                  : alert.confidenceLabel === 'Confiança moderada' ? 'rgba(14,165,233,0.50)'
+                  : 'rgba(251,191,36,0.50)',
+              }}>
+                {alert.confidenceLabel}
+              </span>
+            </div>
+
+            {/* Fact + context */}
+            <p style={{ fontSize: 13, color: T.text1, fontWeight: 600, margin: '0 0 4px', lineHeight: 1.5 }}>
+              {alert.fact}
+            </p>
+            <p style={{ fontSize: 11.5, color: T.text2, margin: '0 0 8px', lineHeight: 1.5 }}>
+              {alert.context}
+            </p>
+
+            {/* Impact estimation */}
+            <div style={{
+              background: 'rgba(14,165,233,0.06)', borderRadius: 6,
+              padding: '8px 12px', marginBottom: 8,
+              borderLeft: `2px solid ${T.blue}30`,
+            }}>
+              <p style={{ fontSize: 11, color: T.text2, margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
+                {alert.impact}
+              </p>
+            </div>
+
+            {/* Ambiguity */}
+            <div style={{ background: T.bg2, borderRadius: 6, padding: '8px 12px', marginBottom: 8 }}>
+              <p style={{ fontSize: 10.5, color: T.text3, margin: 0, lineHeight: 1.6 }}>
+                {alert.ambiguity}
+              </p>
+            </div>
+
+            {/* Trust line + history note */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 4 }}>
+              <span style={{ fontSize: 9.5, color: T.text3, fontWeight: 500 }}>
+                {alert.trustLine}
+              </span>
+              {alert.historyNote && (
+                <span style={{ fontSize: 9.5, color: T.text3, fontStyle: 'italic' }}>
+                  {alert.historyNote}
+                </span>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => acknowledgeMetricAlert(alert.id)}
+                style={{
+                  flex: 1, background: T.bg2, color: T.text2,
+                  border: `1px solid ${T.border1}`,
+                  borderRadius: 6, padding: '9px 10px', cursor: 'pointer',
+                  fontSize: 11.5, fontWeight: 600, transition: 'all 0.18s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.bg1; e.currentTarget.style.borderColor = T.text3; }}
+                onMouseLeave={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border1; }}
+              >
+                {alert.dismissLabel}
+              </button>
+              <button
+                className="feed-cta"
+                onClick={() => investigateMetricAlert(alert)}
+                style={{
+                  flex: 1, background: T.blue, color: T.text1,
+                  border: 'none', borderRadius: 6, padding: '9px 10px', cursor: 'pointer',
+                  fontSize: 11.5, fontWeight: 700, transition: 'all 0.18s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.blueHover; e.currentTarget.style.boxShadow = `0 4px 14px ${T.blue}30`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = T.blue; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                {alert.investigateLabel}
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {/* Metric investigating states — minimal reminders */}
+        {metaConnected && !isDemo && (['cpa_no_data', 'cpa_deviation', 'ctr_deviation', 'roas_deviation'] as MetricAlertId[])
+          .filter(id => metricEntries[id]?.action === 'investigating')
+          .map(id => {
+            const labels: Record<MetricAlertId, string> = {
+              cpa_no_data: 'CPA — investigando conversões',
+              cpa_deviation: 'CPA — investigando custo',
+              ctr_deviation: 'CTR — investigando performance',
+              roas_deviation: 'ROAS — investigando retorno',
+            };
+            return (
+              <div key={`inv-${id}`} style={{
+                background: T.bg1, border: `1px solid ${T.border1}`,
+                borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 10,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 10, flexWrap: 'wrap',
+                animation: 'feed-fadeUp 0.3s ease',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                  <span style={{ fontSize: 12, color: T.blue }}>◉</span>
+                  <span style={{ fontSize: 11.5, color: T.text2, fontWeight: 500 }}>{labels[id]}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button
+                    onClick={() => navigate('/dashboard/ai')}
+                    style={{ background: 'transparent', color: T.blue, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, padding: '4px 0', transition: 'opacity 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                  >
+                    Continuar no chat
+                  </button>
+                  <button
+                    onClick={() => resetMetricAlert(id)}
+                    style={{ background: 'transparent', color: T.text3, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 500, padding: '4px 0', transition: 'opacity 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                  >
+                    Resetar
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        }
 
         {/* Goal Setup — show when Meta is connected but no goal configured */}
         {metaConnected && !isDemo && goalConfigured === false && accountId && (
@@ -2855,7 +3757,7 @@ const FeedPage: React.FC = () => {
                 onRequestToggle={handleRequestToggle}
                 onLoadMoreAds={loadMoreAds}
                 loadingMoreAds={adsLoadingMore}
-                trackingIssue={trackingHealth?.status !== 'healthy' && trackingHealth?.status !== undefined}
+                trackingIssue={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'}
               />
             )}
 
