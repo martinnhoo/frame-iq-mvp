@@ -485,51 +485,58 @@ const VisibleWin: React.FC<{
 };
 
 // ── SYSTEM STATUS — "Sistema ativo" confidence block ──
+/**
+ * UnifiedSystemStatus — single global health indicator.
+ * Consolidates: tracking, metrics, account health, system activity.
+ * ONE dot. ONE line. User glances and moves on.
+ */
 const SystemStatus: React.FC<{
   decisions: Decision[];
   tracker: any;
   patternsCount?: number;
-}> = ({ decisions, tracker, patternsCount = 0 }) => {
-  const actioned = decisions.filter((d: any) => d.status === 'actioned' || d.status === 'resolved');
-  const totalCapture = (tracker?.capturable_now || 0) + (tracker?.leaking_now || 0);
-  const monthlyEstimate = Math.round(totalCapture * 30 / 100);
+  trackingStatus?: TrackingStatus;
+  hasMetricAlerts?: boolean;
+  trackingHasIssue?: boolean;
+}> = ({ decisions, tracker, patternsCount = 0, trackingStatus = 'unknown', hasMetricAlerts = false, trackingHasIssue = false }) => {
+  // Determine global state — worst signal wins
+  const hasIssue = trackingStatus === 'verified_issue' || trackingHasIssue;
+  const needsAttention = hasMetricAlerts || trackingStatus === 'investigating';
+  const isHealthy = !hasIssue && !needsAttention;
 
-  // Only show when there's meaningful activity
-  if (patternsCount === 0 && actioned.length === 0 && totalCapture === 0) return null;
+  const dotColor = hasIssue ? T.red : needsAttention ? T.yellow : T.green;
+  const label = hasIssue ? 'Problema detectado'
+    : needsAttention ? 'Atenção necessária'
+    : 'Sistema saudável';
+
+  // Build secondary detail fragments — max 3, separated by " · "
+  const details: string[] = [];
+  if (trackingStatus === 'verified_ok') details.push('rastreamento ativo');
+  else if (trackingStatus === 'verified_issue') details.push('rastreamento com problema');
+  else if (trackingStatus === 'investigating') details.push('verificando rastreamento');
+  if (isHealthy && !hasMetricAlerts) details.push('métricas estáveis');
+  if (hasMetricAlerts) details.push('métricas requerem atenção');
+  const actioned = decisions.filter((d: any) => d.status === 'actioned' || d.status === 'resolved');
+  if (actioned.length > 0) details.push(`${actioned.length} ${actioned.length === 1 ? 'otimização' : 'otimizações'}`);
+
+  const detailStr = details.slice(0, 3).join(' · ');
 
   return (
     <div style={{
-      padding: '8px 2px', marginBottom: 10,
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      flexWrap: 'wrap', gap: '6px 12px',
+      display: 'flex', alignItems: 'center', gap: 6,
+      padding: '4px 2px', marginBottom: 10,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-        <span style={{
-          width: 5, height: 5, borderRadius: '50%', background: T.green,
-          boxShadow: `0 0 6px ${T.green}50`,
-          animation: 'pulse 2.5s ease-in-out infinite',
-          flexShrink: 0,
-        }} />
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: T.text2, fontFamily: F }}>
-            Sistema ativo
-          </div>
-          <div style={{ fontSize: 10, color: T.text3, fontFamily: F, marginTop: 1, overflowWrap: 'break-word' }}>
-            {patternsCount > 0 && `${patternsCount} padrões`}
-            {patternsCount > 0 && actioned.length > 0 && ' · '}
-            {actioned.length > 0 && `${actioned.length} ${actioned.length === 1 ? 'otimização' : 'otimizações'}`}
-          </div>
-        </div>
-      </div>
-      {monthlyEstimate > 0 && (
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: T.text1, fontFamily: F }}>
-            +R${monthlyEstimate.toLocaleString('pt-BR')}
-          </div>
-          <div style={{ fontSize: 9, color: T.text3, fontFamily: F }}>
-            projetado/mês
-          </div>
-        </div>
+      <span style={{
+        width: 5, height: 5, borderRadius: '50%', background: dotColor,
+        boxShadow: `0 0 6px ${dotColor}40`,
+        flexShrink: 0,
+      }} />
+      <span style={{ fontSize: 11, fontWeight: 600, color: T.text2, fontFamily: F }}>
+        {label}
+      </span>
+      {detailStr && (
+        <span style={{ fontSize: 10.5, color: T.text3, fontFamily: F }}>
+          · {detailStr}
+        </span>
       )}
     </div>
   );
@@ -1520,38 +1527,15 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-      {/* ── BLOCO 1: STATUS — minimal, not a card-looking element ── */}
-      <div style={{
-        background: T.bg1, border: `1px solid ${T.border1}`,
-        borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
-      }}>
-        {/* Status — inline, minimal */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-          <span style={{
-            width: 5, height: 5, borderRadius: '50%', background: T.green,
-            boxShadow: `0 0 6px ${T.green}50`,
-            animation: 'pulse 2.5s ease-in-out infinite',
-          }} />
-          <span style={{ fontSize: 10.5, fontWeight: 600, color: T.text3 }}>
-            Conta saudável
-          </span>
-          <span style={{ fontSize: 10, color: T.text3 }}>·</span>
-          <span style={{ fontSize: 10, color: T.text3 }}>
-            {periodLabel}
-          </span>
+      {/* ── BLOCO 1: ADS — status handled by unified SystemStatus ── */}
+      {ads.length > 0 && (
+        <div style={{
+          background: T.bg1, border: `1px solid ${T.border1}`,
+          borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
+        }}>
+          <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
         </div>
-
-        {/* Headline */}
-        <div style={{ fontSize: 15, fontWeight: 700, color: T.text1, letterSpacing: '-0.01em', marginBottom: 4 }}>
-          Conta estável · Nenhum risco imediato detectado
-        </div>
-        <div style={{ fontSize: 12, color: T.text3, marginBottom: 14 }}>
-          Sistema monitorando · próxima análise em breve
-        </div>
-
-        {/* Ad list */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />}
-      </div>
+      )}
 
       {/* ── BLOCO 2: OPORTUNIDADE — left border accent, neutral surface ── */}
       <div
@@ -1588,17 +1572,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         </button>
       </div>
 
-      {/* ── BLOCO 3: SISTEMA ATIVO — minimal footer ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 2px', animation: 'feed-fadeIn 0.4s ease' }}>
-        <span style={{
-          width: 4, height: 4, borderRadius: '50%', background: T.green,
-          boxShadow: `0 0 5px ${T.green}40`,
-          animation: 'pulse 2.5s ease-in-out infinite',
-        }} />
-        <span style={{ fontSize: 10, color: T.text3 }}>
-          Monitoramento ativo · sistema operando
-        </span>
-      </div>
+      {/* Footer absorbed into unified SystemStatus */}
     </div>
   );
 };
@@ -1629,41 +1603,18 @@ const PerformanceSummary: React.FC<{
   const spendReais = hasMetrics ? fmtReais(metrics.totalSpend) : null;
   const cpaReais = hasMetrics && metrics.avgCpa > 0 ? fmtReais(metrics.avgCpa) : null;
   const ctrGood = hasMetrics && (metrics.avgCtr / 100) >= 1;
-  const confLevel = hasMetrics && metrics.daysOfData >= 5 ? 'alta' : hasMetrics && metrics.daysOfData >= 2 ? 'média' : 'baixa';
-  const confColor = confLevel === 'alta' ? 'rgba(14,165,233,0.70)' : confLevel === 'média' ? 'rgba(14,165,233,0.60)' : 'rgba(255,255,255,0.40)';
+  // confLevel/confColor removed — status handled by unified SystemStatus
 
   const [oppHov, setOppHov] = useState(false);
 
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 6 }}>
 
-      {/* ── BLOCO 1: STATUS + METRICS ── */}
+      {/* ── BLOCO 1: METRICS — status handled by unified SystemStatus ── */}
       <div style={{
         background: T.bg1, border: `1px solid ${T.border1}`,
         borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
       }}>
-        {/* Status — inline minimal */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-          <span style={{
-            width: 5, height: 5, borderRadius: '50%',
-            background: confLevel === 'alta' ? T.green : confLevel === 'média' ? T.blue : T.yellow,
-            boxShadow: confLevel === 'alta' ? `0 0 6px ${T.green}50` : 'none',
-            animation: 'pulse 2.5s ease-in-out infinite',
-          }} />
-          <span style={{ fontSize: 10.5, fontWeight: 600, color: T.text3 }}>
-            {confLevel === 'alta' ? 'Conta saudável' : `Confiança: ${confLevel}`}
-          </span>
-          <span style={{ fontSize: 10, color: T.text3 }}>· {periodLabel}</span>
-        </div>
-
-        {/* Headline */}
-        <div style={{ fontSize: 15, fontWeight: 700, color: T.text1, letterSpacing: '-0.01em', marginBottom: 4 }}>
-          Conta estável · Nenhum risco imediato detectado
-        </div>
-        <div style={{ fontSize: 12, color: T.text3, marginBottom: hasMetrics ? 14 : 14 }}>
-          Sistema monitorando · próxima análise em breve
-        </div>
-
         {/* Metrics — clean grid, no heavy borders */}
         {hasMetrics && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
@@ -3492,55 +3443,7 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Tracking status — inline signal, not a card */}
-        {metaConnected && !isDemo && trackingUserStatus !== 'unknown' && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '0 2px', marginBottom: 8,
-          }}>
-            <span style={{
-              width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-              background: trackingUserStatus === 'verified_ok' ? T.green
-                : trackingUserStatus === 'verified_issue' ? T.red
-                : trackingUserStatus === 'investigating' ? T.yellow
-                : T.text3,
-            }} />
-            <span style={{ fontSize: 11, color: T.text3, fontWeight: 500, fontFamily: F }}>
-              {trackingUserStatus === 'verified_ok' ? 'Rastreamento ativo'
-                : trackingUserStatus === 'verified_issue' ? 'Rastreamento com problema'
-                : trackingUserStatus === 'investigating' ? 'Verificando rastreamento'
-                : 'Sem conversões confirmadas'}
-            </span>
-            {(trackingUserStatus === 'verified_issue' || trackingUserStatus === 'investigating') && (
-              <button
-                onClick={() => navigate('/dashboard/ai')}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 11, fontWeight: 600, color: T.blue, padding: 0,
-                  fontFamily: F, transition: 'opacity 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-              >
-                Verificar
-              </button>
-            )}
-            {trackingUserStatus !== 'investigating' && (
-              <button
-                onClick={resetTrackingStatus}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 10, color: T.text3, padding: 0,
-                  fontFamily: F, opacity: 0.5, transition: 'opacity 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        )}
+        {/* Tracking status absorbed into SystemStatus — no separate indicator */}
 
         {/* Beginner Mode — data still collecting, no alerts */}
         {metaConnected && !isDemo && beginnerMode && adMetrics && adMetrics.daysOfData > 0 && (
@@ -3564,22 +3467,7 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Silent Mode — everything within baseline, no alerts */}
-        {metaConnected && !isDemo && !beginnerMode && adMetrics && adMetrics.daysOfData >= 3
-          && metricAlerts.length === 0 && !trackingHealth && trackingUserStatus !== 'investigating'
-          && (adMetrics.baselineCtr !== null || adMetrics.baselineCpa !== null) && (
-          <div style={{
-            background: T.bg1, border: `1px solid ${T.border1}`,
-            borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 10,
-            display: 'flex', alignItems: 'center', gap: 8,
-            animation: 'feed-fadeUp 0.3s ease',
-          }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, background: T.green, boxShadow: `0 0 6px ${T.green}40` }} />
-            <span style={{ fontSize: 11.5, color: T.text2, fontWeight: 500 }}>
-              Tudo dentro do esperado · métricas estáveis
-            </span>
-          </div>
-        )}
+        {/* Silent Mode absorbed into SystemStatus — no separate card */}
 
         {/* Metric Alerts — adaptive, priority-scored, max 2 */}
         {metaConnected && !isDemo && metricAlerts.length > 0 && metricAlerts.map(alert => (
@@ -3751,7 +3639,7 @@ const FeedPage: React.FC = () => {
             {!isDemo && <VisibleWin decisions={decisions} tracker={tracker} />}
 
             {/* System Status — "Sistema ativo" confidence block */}
-            {!isDemo && <SystemStatus decisions={decisions} tracker={tracker} patternsCount={patternsCount} />}
+            {!isDemo && <SystemStatus decisions={decisions} tracker={tracker} patternsCount={patternsCount} trackingStatus={trackingUserStatus} hasMetricAlerts={metricAlerts.length > 0} trackingHasIssue={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} />}
 
             {/* Performance summary when no critical issues — shows ad health + metrics */}
             {!isDemo && !hasCritical && totalAdCount > 0 && (
