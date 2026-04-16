@@ -57,55 +57,53 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
               background: 'linear-gradient(90deg, transparent, rgba(180,35,42,0.40), transparent)',
             }} />
 
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-              <div>
-                {/* Micro label */}
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  marginBottom: 10,
+            <div>
+              {/* Micro label */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                marginBottom: 10,
+              }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: '#B4232A',
+                  boxShadow: '0 0 8px rgba(180,35,42,0.50)',
+                  animation: 'mb-pulse 2s ease-in-out infinite',
+                }} />
+                <span style={{
+                  fontSize: 10, fontWeight: 700, color: '#EF4444',
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
                 }}>
-                  <span style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: '#B4232A',
-                    boxShadow: '0 0 8px rgba(180,35,42,0.50)',
-                    animation: 'mb-pulse 2s ease-in-out infinite',
-                  }} />
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, color: '#EF4444',
-                    letterSpacing: '0.08em', textTransform: 'uppercase',
-                  }}>
-                    Perda ativa
-                  </span>
-                </div>
-
-                {/* HERO NUMBER */}
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-                  <span style={{
-                    fontSize: 36, fontWeight: 800, color: '#fff',
-                    fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
-                  }}>
-                    {formatMoney(leaking)}
-                  </span>
-                  <span style={{
-                    fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.45)',
-                    fontFamily: F, letterSpacing: '-0.02em',
-                  }}>
-                    /dia
-                  </span>
-                </div>
-
-                {/* Urgent count */}
-                {urgentCount > 0 && (
-                  <div style={{
-                    fontSize: 11.5, fontWeight: 600, color: '#F87171',
-                    marginTop: 8,
-                  }}>
-                    {urgentCount} {urgentCount === 1 ? 'decisão pode' : 'decisões podem'} reduzir perdas agora
-                  </div>
-                )}
+                  Perda ativa
+                </span>
               </div>
 
-              {/* CTA */}
+              {/* HERO NUMBER */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, flexWrap: 'wrap' }}>
+                <span style={{
+                  fontSize: 'clamp(28px, 8vw, 36px)', fontWeight: 800, color: '#fff',
+                  fontFamily: F, letterSpacing: '-0.04em', lineHeight: 1,
+                }}>
+                  {formatMoney(leaking)}
+                </span>
+                <span style={{
+                  fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.45)',
+                  fontFamily: F, letterSpacing: '-0.02em',
+                }}>
+                  /dia
+                </span>
+              </div>
+
+              {/* Urgent count */}
+              {urgentCount > 0 && (
+                <div style={{
+                  fontSize: 11.5, fontWeight: 600, color: '#F87171',
+                  marginTop: 8,
+                }}>
+                  {urgentCount} {urgentCount === 1 ? 'decisão pode' : 'decisões podem'} reduzir perdas agora
+                </div>
+              )}
+
+              {/* CTA — stacks below on mobile */}
               {onStopLosses && (
                 <button
                   onClick={onStopLosses}
@@ -121,7 +119,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
                     transform: btnHov ? 'translateY(-1px) scale(1.02)' : 'none',
                     boxShadow: btnHov ? '0 4px 12px rgba(180,35,42,0.30)' : 'none',
                     letterSpacing: '-0.01em',
-                    flexShrink: 0, marginTop: 8,
+                    marginTop: 14, width: '100%',
                   }}
                 >
                   Resolver agora
@@ -176,12 +174,12 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
         /* No loss — clean status */
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 0',
+          padding: '10px 0', flexWrap: 'wrap', gap: '6px 8px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flexWrap: 'wrap' }}>
             <span style={{
               width: 6, height: 6, borderRadius: '50%', background: '#4ADE80',
-              boxShadow: '0 0 8px rgba(74,222,128,0.40)',
+              boxShadow: '0 0 8px rgba(74,222,128,0.40)', flexShrink: 0,
             }} />
             <span style={{ fontSize: 13, fontWeight: 600, color: '#F0F6FC' }}>
               Sem perdas detectadas

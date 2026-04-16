@@ -320,6 +320,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         <div style={{
           fontSize: headlineSize, fontWeight: 700, color: L1,
           margin: '0 0 5px', lineHeight: 1.35, letterSpacing: '-0.01em',
+          overflowWrap: 'break-word', wordBreak: 'break-word',
         }}>
           {decision.headline}
         </div>
@@ -493,8 +494,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
 
         {/* ACTIONS — visible on hover (desktop) or always (touch) */}
         <div style={{
-          display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center',
-          opacity: hovered || expanded || executingId !== null || actionFeedback ? 1 : 0.5,
+          display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center',
+          opacity: hovered || expanded || executingId !== null || actionFeedback ? 1 : 0.7,
           transition: 'opacity 0.15s ease',
         }}>
           {decision.actions && decision.actions.length > 0 ? (
@@ -511,8 +512,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                     color: isPrimary ? '#fff' : L2,
                     border: isPrimary ? 'none' : '1px solid rgba(255,255,255,0.08)',
                     borderRadius: 4,
-                    padding: isPrimary ? '7px 16px' : '5px 12px',
-                    fontSize: isPrimary ? 12 : 11,
+                    padding: isPrimary ? '9px 18px' : '7px 14px',
+                    fontSize: isPrimary ? 12.5 : 11.5,
                     fontWeight: isPrimary ? 700 : 600,
                     cursor: executingId !== null ? 'not-allowed' : 'pointer',
                     opacity: executingId !== null && !isRunning ? 0.4 : 1,

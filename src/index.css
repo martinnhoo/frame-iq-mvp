@@ -796,6 +796,18 @@ input, textarea, select {
     padding: 10px 12px !important;
   }
 
+  /* ── Feed KPI bar: 2×2 grid on mobile ── */
+  .feed-kpi-bar > div {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── Feed: prevent any horizontal overflow ── */
+  .feed-kpi-bar,
+  .feed-kpi-bar * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
   /* ── Chat input ── */
   .chat-input-wrap { padding: 0 12px !important; }
   .chat-messages   { padding: 10px 12px 8px !important; }
@@ -879,6 +891,10 @@ input, textarea, select {
     flex: 1 1 calc(33.33% - 6px) !important;
     min-width: calc(33.33% - 6px) !important;
   }
+  /* Feed KPI: 4 columns on tablet */
+  .feed-kpi-bar > div {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
 }
 
 
@@ -889,6 +905,10 @@ input, textarea, select {
   input, textarea, select { font-size: inherit; }
   /* Restore min-height for desktop */
   button, a, [role="button"] { min-height: unset; }
+  /* Feed KPI: 4 columns on desktop */
+  .feed-kpi-bar > div {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
 }
 
 @media (min-width: 1280px) { :root { --sidebar-w: 224px; } }

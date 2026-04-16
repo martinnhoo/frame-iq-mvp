@@ -116,7 +116,7 @@ const VisibleWin: React.FC<{
         </div>
       )}
 
-      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontFamily: F }}>
+      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontFamily: F, overflowWrap: 'break-word' }}>
         → baseado nos seus dados reais de performance · {actioned.length} {actioned.length === 1 ? 'otimização aplicada' : 'otimizações aplicadas'}
       </div>
     </div>
@@ -140,18 +140,20 @@ const SystemStatus: React.FC<{
     <div style={{
       padding: '10px 2px', marginBottom: 12,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      flexWrap: 'wrap', gap: '6px 12px',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
         <span style={{
           width: 6, height: 6, borderRadius: '50%', background: '#4ADE80',
           boxShadow: '0 0 8px rgba(74,222,128,0.40)',
           animation: 'pulse 2.5s ease-in-out infinite',
+          flexShrink: 0,
         }} />
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 11.5, fontWeight: 600, color: '#F0F6FC', fontFamily: F }}>
             Sistema ativo
           </div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)', fontFamily: F, marginTop: 1 }}>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)', fontFamily: F, marginTop: 1, overflowWrap: 'break-word' }}>
             {patternsCount > 0 && `${patternsCount} padrões validados`}
             {patternsCount > 0 && actioned.length > 0 && ' · '}
             {actioned.length > 0 && `${actioned.length} ${actioned.length === 1 ? 'otimização aplicada' : 'otimizações aplicadas'}`}
@@ -159,7 +161,7 @@ const SystemStatus: React.FC<{
         </div>
       </div>
       {monthlyEstimate > 0 && (
-        <div style={{ textAlign: 'right' }}>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: '#38BDF8', fontFamily: F }}>
             +R${monthlyEstimate.toLocaleString('pt-BR')}
           </div>
@@ -513,16 +515,16 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
           transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
         }}>›</span>
         <TelegramIcon size={16} />
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#F0F6FC', letterSpacing: '-0.01em' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#F0F6FC', letterSpacing: '-0.01em', flexShrink: 0 }}>
           Telegram
         </span>
         {conn && (
           <span style={{
             width: 5, height: 5, borderRadius: '50%', background: '#2AABEE',
-            boxShadow: '0 0 4px rgba(42,171,238,0.5)',
+            boxShadow: '0 0 4px rgba(42,171,238,0.5)', flexShrink: 0,
           }} />
         )}
-        <span style={{ fontSize: 10.5, fontWeight: 500, color: summaryColor }}>
+        <span style={{ fontSize: 10.5, fontWeight: 500, color: summaryColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
           {summaryText}
         </span>
       </div>
@@ -801,16 +803,16 @@ const AdList: React.FC<{
             const isToggling = togglingAd === ad.meta_ad_id;
             return (
               <div key={ad.meta_ad_id || i} style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '5px 2px',
+                display: 'flex', alignItems: 'center', gap: 6, padding: '6px 2px', minWidth: 0,
               }}>
                 <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
                 <span style={{
                   fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0,
                 }}>
                   {ad.name}
                 </span>
-                <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
                   {st.label}
                 </span>
                 {canToggle && (
@@ -914,6 +916,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
           <div style={{
             fontSize: 10.5, color: 'rgba(255,255,255,0.45)', fontWeight: 500,
             marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            maxWidth: '100%',
           }}>
             {breadcrumb}
           </div>
@@ -978,7 +981,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 12px' }}>
           <ConfidenceBadge level="baixa" />
           <ActionButton label="Criar variação" onClick={() => navigate('/dashboard/ai')} />
         </div>
@@ -1234,7 +1237,7 @@ const PerformanceSummary: React.FC<{
         borderRadius: 6, padding: '16px 18px',
       }}>
         {/* Confidence — top */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
             fontSize: 10, fontWeight: 700, color: confLevel === 'alta' ? '#4ADE80' : confColor,
@@ -1832,9 +1835,9 @@ const PerformancePulse: React.FC<{
   ];
 
   return (
-    <div style={{ marginBottom: 16, fontFamily: F }}>
+    <div className="feed-kpi-bar" style={{ marginBottom: 16, fontFamily: F }}>
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
+        display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6,
       }}>
         {kpis.map(k => (
           <div key={k.label} style={{
@@ -2358,8 +2361,8 @@ const FeedPage: React.FC = () => {
   // ── No Meta connection — special entry screen ──
   if (!metaConnected) {
     return (
-      <div style={{ minHeight: '100vh', background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 20px 24px 20px' }}>
-        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+      <div style={{ minHeight: '100vh', background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto', overflow: 'hidden' }}>
           <div style={{ marginBottom: 18 }}>
             <h1 style={{ fontSize: 14, fontWeight: 800, color: '#F0F6FC', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>DECISÕES</h1>
           </div>
@@ -2372,12 +2375,12 @@ const FeedPage: React.FC = () => {
   // Syncing is now an inline banner — no full-page overlay
 
   return (
-    <div style={{ minHeight: '100vh', background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 20px 24px 20px' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
-        {/* Header */}
+    <div style={{ minHeight: '100vh', background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', overflow: 'hidden' }}>
+        {/* Header — wraps on mobile */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <h1 style={{ fontSize: 14, fontWeight: 800, color: '#F0F6FC', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>
                 DECISÕES
               </h1>
@@ -2389,7 +2392,7 @@ const FeedPage: React.FC = () => {
                 }}>DEMO</span>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               {!isDemo && metaConnected && (
                 <PeriodSelector value={period} onChange={setPeriod} />
               )}
@@ -2421,9 +2424,9 @@ const FeedPage: React.FC = () => {
           <div style={{
             background: '#0C1017', border: '1px solid rgba(230,237,243,0.05)',
             borderRadius: 3, padding: '10px 14px', marginBottom: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 16px',
           }}>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontFamily: F, lineHeight: 1.5 }}>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontFamily: F, lineHeight: 1.5, minWidth: 0 }}>
               Dados simulados. Sincronize sua conta Meta para análise real.
             </span>
             <button onClick={handleSync} style={{
@@ -2442,9 +2445,9 @@ const FeedPage: React.FC = () => {
           <div style={{
             background: 'rgba(180,35,42,0.08)', border: '1px solid rgba(180,35,42,0.20)',
             borderRadius: 3, padding: '8px 14px', marginBottom: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px 12px',
           }}>
-            <span style={{ fontSize: 12, color: '#D63B3B', fontFamily: F }}>{syncError}</span>
+            <span style={{ fontSize: 12, color: '#D63B3B', fontFamily: F, minWidth: 0, wordBreak: 'break-word' }}>{syncError}</span>
             <button onClick={handleSync} style={{
               background: '#B4232A', color: '#fff', border: 'none', borderRadius: 3,
               padding: '5px 12px', fontSize: 11, fontWeight: 700, fontFamily: F, cursor: 'pointer',
