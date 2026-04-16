@@ -90,106 +90,143 @@ function isRawInsightText(text: string): boolean {
 
 /**
  * Parse AI-generated insight_text.
- * Format from detect-patterns: "TITLE || INSIGHT" or legacy plain text.
+ * New format: "TITLE || REASON || INSIGHT"
+ * Legacy format: "TITLE || INSIGHT" or plain text.
  */
-function parseAiInsight(insightText: string | null): { title: string | null; explanation: string | null } {
+function parseAiInsight(insightText: string | null): {
+  title: string | null;
+  reason: string | null;
+  explanation: string | null;
+} {
   if (!insightText || insightText.length < 5 || isRawInsightText(insightText)) {
-    return { title: null, explanation: null };
+    return { title: null, reason: null, explanation: null };
   }
-  // New format: "Title || Explanation"
+  // New format: "Title || Reason || Insight"
   if (insightText.includes(" || ")) {
-    const [title, ...rest] = insightText.split(" || ");
-    const explanation = rest.join(" || ").trim();
-    const cleanTitle = title.trim();
-    if (cleanTitle.length > 5 && !isRawInsightText(cleanTitle)) {
-      return {
-        title: cleanTitle.length > 80 ? cleanTitle.slice(0, 77) + "..." : cleanTitle,
-        explanation: explanation.length > 5 && !isRawInsightText(explanation) ? explanation : null,
-      };
+    const parts = insightText.split(" || ").map(s => s.trim());
+    if (parts.length >= 3) {
+      // 3-part: title, reason, insight
+      const title = parts[0].length > 5 && !isRawInsightText(parts[0])
+        ? (parts[0].length > 80 ? parts[0].slice(0, 77) + "..." : parts[0]) : null;
+      const reason = parts[1].length > 3 && !isRawInsightText(parts[1]) ? parts[1] : null;
+      const explanation = parts[2].length > 5 && !isRawInsightText(parts[2]) ? parts[2] : null;
+      return { title, reason, explanation };
+    }
+    if (parts.length === 2) {
+      // Legacy 2-part: title, insight (no reason)
+      const title = parts[0].length > 5 && !isRawInsightText(parts[0])
+        ? (parts[0].length > 80 ? parts[0].slice(0, 77) + "..." : parts[0]) : null;
+      const explanation = parts[1].length > 5 && !isRawInsightText(parts[1]) ? parts[1] : null;
+      return { title, reason: null, explanation };
     }
   }
-  // Legacy: plain text — use as explanation if short, or title if very short
+  // Legacy: plain text
   if (insightText.length <= 80 && !isRawInsightText(insightText)) {
-    return { title: insightText, explanation: null };
+    return { title: insightText, reason: null, explanation: null };
   }
   if (!isRawInsightText(insightText)) {
-    return { title: null, explanation: insightText.length > 200 ? insightText.slice(0, 197) + "..." : insightText };
+    return { title: null, reason: null, explanation: insightText.length > 200 ? insightText.slice(0, 197) + "..." : insightText };
   }
-  return { title: null, explanation: null };
+  return { title: null, reason: null, explanation: null };
+}
+
+/** BLOCKLIST — generic phrases that must never appear in displayed intelligence */
+const GENERIC_BLOCKLIST = [
+  "ctr acima da média", "acima da média", "performance superior",
+  "padrão vencedor", "alta confiança", "bom desempenho",
+  "desempenho superior", "resultado positivo", "resultado forte",
+  "excelente resultado", "boa performance",
+];
+
+function containsGenericPhrase(text: string): boolean {
+  const lower = text.toLowerCase();
+  return GENERIC_BLOCKLIST.some(phrase => lower.includes(phrase));
 }
 
 function humanizePatternLabel(p: DetectedPattern): string {
-  // 1. AI-generated title is ALWAYS preferred — it explains the WHY
+  // 1. AI-generated title — preferred, but filtered for generics
   const ai = parseAiInsight(p.insight_text);
-  if (ai.title) return ai.title;
+  if (ai.title && !containsGenericPhrase(ai.title)) return ai.title;
 
-  // 2. Structured fallback per feature_type (still descriptive)
+  // 2. Structured fallback — factual, no adjectives
   const featureType = p.feature_type || p.variables?.feature_type || "";
   const featureValue = p.feature_value || p.variables?.feature_value || "";
-  const ctrStr = p.avg_ctr != null && p.avg_ctr > 0 ? ` — CTR ${formatCtr(p.avg_ctr)}` : "";
 
   switch (featureType) {
-    case "hook_type": return `Hook com ${humanizeHookType(featureValue).toLowerCase()} performa melhor${ctrStr}`;
-    case "hook_presence": return featureValue === "with_hook"
-      ? `Anúncios com hook geram mais cliques${ctrStr}`
-      : `Anúncios sem hook nesta conta${ctrStr}`;
-    case "format": return `${humanizeFormat(featureValue)} supera outros formatos${ctrStr}`;
-    case "text_density": return `${humanizeTextDensity(featureValue)} gera mais resultado${ctrStr}`;
-    case "campaign": return `Campanha "${featureValue}" se destaca${ctrStr}`;
-    case "adset": return `Público "${featureValue}" converte melhor${ctrStr}`;
-    case "gap": return `Formato ${humanizeFormat(featureValue)} ainda não testado — oportunidade`;
-    case "deviation": return p.label || `Desvio de performance detectado${ctrStr}`;
+    case "hook_type": return `Hook: ${humanizeHookType(featureValue)}`;
+    case "hook_presence": return featureValue === "with_hook" ? "Anúncios com hook" : "Anúncios sem hook";
+    case "format": return `Formato: ${humanizeFormat(featureValue)}`;
+    case "text_density": return `Texto: ${humanizeTextDensity(featureValue)}`;
+    case "campaign": return `Campanha: "${featureValue}"`;
+    case "adset": return `Público: "${featureValue}"`;
+    case "gap": return `Não testado: ${humanizeFormat(featureValue)}`;
+    case "deviation": return p.label || "Desvio detectado";
     case "combination": {
       const parts = featureValue.split("+");
       const formatted = parts.map((part) => {
         const trimmed = part.trim();
-        if (trimmed === "hook") return "com hook";
+        if (trimmed === "hook") return "hook";
         if (trimmed === "no_hook") return "sem hook";
         return humanizeFormat(trimmed);
       });
-      return `${formatted.join(" + ")} é a combinação vencedora${ctrStr}`;
+      return `Combo: ${formatted.join(" + ")}`;
     }
     case "status": return `Status: ${featureValue}`;
     default: {
-      // Try pattern_key extraction
       if (p.pattern_key) {
         const parts = p.pattern_key.split(":");
         if (parts.length >= 4) {
           const ft = parts[2] || "";
           const fv = parts[3] || "";
-          if (ft === "hook_type") return `Hook com ${humanizeHookType(fv).toLowerCase()} se destaca`;
-          if (ft === "format") return `Formato ${humanizeFormat(fv)} se destaca`;
-          if (ft === "hook_presence") return fv === "with_hook" ? "Anúncios com hook performam melhor" : "Anúncios sem hook";
-          if (ft === "text_density") return `${humanizeTextDensity(fv)} gera mais resultado`;
+          if (ft === "hook_type") return `Hook: ${humanizeHookType(fv)}`;
+          if (ft === "format") return `Formato: ${humanizeFormat(fv)}`;
+          if (ft === "hook_presence") return fv === "with_hook" ? "Anúncios com hook" : "Anúncios sem hook";
+          if (ft === "text_density") return `Texto: ${humanizeTextDensity(fv)}`;
           if (ft && fv) return `${ft.replace(/_/g, " ")}: ${fv.replace(/_/g, " ")}`;
         }
       }
-      if (p.is_winner && p.avg_ctr != null && p.avg_ctr > 0) return `Padrão vencedor em ${pluralAds(p.sample_size)}`;
-      return `Sinal detectado em ${pluralAds(p.sample_size)}`;
+      return `Padrão identificado`;
     }
   }
 }
 
-/** Generate explanation — prefers AI insight, falls back to structured */
-function patternExplanation(p: DetectedPattern): string | null {
-  // 1. AI explanation is preferred
+/** Get the quoted reason WHY a pattern works */
+function patternReason(p: DetectedPattern): string | null {
   const ai = parseAiInsight(p.insight_text);
-  if (ai.explanation) return ai.explanation;
-
-  // 2. Structured fallback
-  const featureType = p.feature_type || p.variables?.feature_type || "";
-  const impactNum = parseFloat(p.impact_ctr_pct || "0");
-  const impactStr = impactNum > 0 ? `+${p.impact_ctr_pct} acima da média` : impactNum < 0 ? `${p.impact_ctr_pct} abaixo da média` : "";
-
-  if (featureType === "hook_type") return impactStr ? `Tende a gerar mais cliques nos primeiros segundos · ${impactStr}` : "Tende a gerar mais cliques nos primeiros segundos";
-  if (featureType === "hook_presence") return "Hooks capturam atenção e aumentam taxa de clique";
-  if (featureType === "format") return impactStr ? `Este formato se destaca na sua conta · ${impactStr}` : "Este formato tem performance superior na sua conta";
-  if (featureType === "text_density") return "A densidade de texto influencia diretamente o CTR";
-  if (featureType === "gap") return "Testar este formato pode revelar novas oportunidades";
-  if (featureType === "combination") return impactStr ? `Esta combinação supera outras · ${impactStr}` : "Esta combinação tem performance acima das demais";
-  if (featureType === "campaign" || featureType === "adset") return impactStr || "Performance consistente acima da média da conta";
-  if (impactStr) return impactStr;
+  if (ai.reason && !containsGenericPhrase(ai.reason)) return ai.reason;
   return null;
+}
+
+/** Get actionable insight — what to DO with this pattern */
+function patternAction(p: DetectedPattern): string | null {
+  const ai = parseAiInsight(p.insight_text);
+  if (ai.explanation && !containsGenericPhrase(ai.explanation)) return ai.explanation;
+  return null;
+}
+
+/** Check if pattern has a real, explainable reason */
+function hasRealIntelligence(p: DetectedPattern): boolean {
+  const ai = parseAiInsight(p.insight_text);
+  const ft = p.feature_type || p.variables?.feature_type || "";
+
+  // Gap patterns are always actionable (they suggest what to test)
+  if (ft === "gap") return true;
+
+  // If AI provided a non-generic reason, it's real
+  if (ai.reason && !containsGenericPhrase(ai.reason)) return true;
+
+  // If AI provided a non-generic title that implies causation, accept
+  if (ai.title && !containsGenericPhrase(ai.title)) {
+    // Check if title contains causal language
+    const causalSignals = ["porque", "quando", "com ", "sem ", "usando", "direto", "pergunta", "urgência", "número", "emocional", "promessa", "chamada"];
+    if (causalSignals.some(s => ai.title!.toLowerCase().includes(s))) return true;
+  }
+
+  // Hook types inherently carry a reason (the hook type IS the reason)
+  if (ft === "hook_type") return true;
+
+  // Everything else needs an explicit reason
+  return false;
 }
 
 function formatCtr(value: number): string {
@@ -197,160 +234,68 @@ function formatCtr(value: number): string {
   return pct.toFixed(1) + "%";
 }
 
-// ── Performance status — every metric gets judged ──
-type MetricStatus = "forte" | "bom" | "neutro";
+// ── Hero metric — just the number, no judgment words ──
 
 interface HeroMetric {
-  label: string;       // "Retenção", "ROAS", "CPC", "CTR"
-  value: string;       // "+23%", "3.2x", "R$1.40", "4.1%"
-  context: string;     // "acima da média da conta", "retorno sólido", etc.
-  status: MetricStatus;
-  color: string;       // semantic: green=forte, soft-green=bom, amber=neutro
+  label: string;       // "CTR", "ROAS", "Impacto"
+  value: string;       // "7.9%", "3.2x", "+23%"
 }
 
-const STATUS_COLORS: Record<MetricStatus, string> = {
-  forte: "#4ADE80",    // strong green
-  bom: "#86EFAC",      // soft green
-  neutro: "#FBBF24",   // amber
-};
-
-const STATUS_LABELS: Record<MetricStatus, string> = {
-  forte: "forte",
-  bom: "bom",
-  neutro: "neutro",
-};
-
-/** Evaluate the ONE hero metric for a pattern — returns null if not worth showing.
- *
- * INTELLIGENCE LAYER:
- * 1. Select the right metric for this pattern type
- * 2. Judge its quality against account context (impact_pct = deviation from avg)
- * 3. If weak → return null → pattern won't display a metric
- * 4. Always include comparison context so the user understands WHY
+/**
+ * Extract the ONE hero metric for display.
+ * Returns raw metric — no "forte", "bom", or status labels.
  */
 function evaluateHeroMetric(p: DetectedPattern): HeroMetric | null {
   const ft = p.feature_type || p.variables?.feature_type || "";
   const ctr = p.avg_ctr != null && p.avg_ctr > 0 ? (p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100) : 0;
   const roas = p.avg_roas != null && p.avg_roas > 0 ? p.avg_roas : 0;
-  const cpc = p.avg_cpc != null && p.avg_cpc > 0 ? p.avg_cpc : 0;
   const impactCtr = parseFloat(p.impact_ctr_pct || "0");
   const impactRoas = parseFloat(p.impact_roas_pct || "0");
 
-  // ── Helper: classify impact strength ──
-  function classifyImpact(pct: number): MetricStatus | null {
-    if (pct >= 20) return "forte";
-    if (pct >= 5) return "bom";
-    if (pct > 0) return "neutro";
-    return null; // negative or zero = not worth showing
-  }
-
-  function classifyRoas(val: number): MetricStatus | null {
-    if (val >= 4.0) return "forte";
-    if (val >= 2.0) return "bom";
-    if (val >= 1.0) return "neutro";
-    return null;
-  }
-
-  function classifyCtr(val: number): MetricStatus | null {
-    if (val >= 4.0) return "forte";
-    if (val >= 2.5) return "bom";
-    if (val >= 1.5) return "neutro";
-    return null;
-  }
-
-  function impactContext(pct: number): string {
-    if (pct >= 20) return "muito acima da média da conta";
-    if (pct >= 5) return "acima da média da conta";
-    if (pct > 0) return "levemente acima da média";
-    return "";
-  }
-
-  // ── Hook patterns → retention / attention ──
-  if (ft === "hook_type" || ft === "hook_presence") {
-    if (impactCtr > 0) {
-      const status = classifyImpact(impactCtr);
-      if (!status) return null;
-      return { label: "Retenção", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
-    }
-    const ctrStatus = classifyCtr(ctr);
-    if (!ctrStatus || ctrStatus === "neutro") return null; // only strong CTR for hooks
-    return { label: "CTR", value: formatCtr(p.avg_ctr!), context: ctr >= 4.0 ? "taxa de clique excelente" : "boa taxa de clique", status: ctrStatus, color: STATUS_COLORS[ctrStatus] };
-  }
-
-  // ── Format / combination → efficiency (ROAS > CPC > impact) ──
-  if (ft === "format" || ft === "combination") {
-    if (roas > 0) {
-      const status = classifyRoas(roas);
-      if (!status) return null;
-      const ctx = roas >= 4.0 ? "retorno excepcional" : roas >= 2.0 ? "retorno sólido" : "retorno positivo";
-      return { label: "ROAS", value: `${roas.toFixed(1)}x`, context: ctx, status, color: STATUS_COLORS[status] };
-    }
-    if (impactRoas > 0) {
-      const status = classifyImpact(impactRoas);
-      if (!status) return null;
-      return { label: "ROAS", value: `+${p.impact_roas_pct}`, context: impactContext(impactRoas), status, color: STATUS_COLORS[status] };
-    }
-    if (impactCtr > 0) {
-      const status = classifyImpact(impactCtr);
-      if (!status) return null;
-      return { label: "Impacto", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
-    }
-    return null;
-  }
-
-  // ── Campaign / adset → ROI ──
-  if (ft === "campaign" || ft === "adset") {
-    if (roas > 0) {
-      const status = classifyRoas(roas);
-      if (!status) return null;
-      const ctx = roas >= 4.0 ? "ROI excepcional" : roas >= 2.0 ? "ROI sólido" : "ROI positivo";
-      return { label: "ROAS", value: `${roas.toFixed(1)}x`, context: ctx, status, color: STATUS_COLORS[status] };
-    }
-    if (impactCtr > 0) {
-      const status = classifyImpact(impactCtr);
-      if (!status) return null;
-      return { label: "Performance", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
-    }
-    return null;
-  }
-
-  // ── Text density → CTR ──
-  if (ft === "text_density") {
-    if (impactCtr > 0) {
-      const status = classifyImpact(impactCtr);
-      if (!status) return null;
-      return { label: "CTR", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
-    }
-    const ctrStatus = classifyCtr(ctr);
-    if (!ctrStatus || ctrStatus === "neutro") return null;
-    return { label: "CTR", value: formatCtr(p.avg_ctr!), context: "boa taxa de clique", status: ctrStatus, color: STATUS_COLORS[ctrStatus] };
-  }
-
-  // ── Gap → opportunity, no metric needed ──
   if (ft === "gap") return null;
 
-  // ── Fallback: pick strongest signal that's actually good ──
-  if (roas >= 2.0) {
-    const status = classifyRoas(roas)!;
-    return { label: "ROAS", value: `${roas.toFixed(1)}x`, context: roas >= 4.0 ? "retorno excepcional" : "retorno sólido", status, color: STATUS_COLORS[status] };
+  // Hook patterns → CTR or impact
+  if (ft === "hook_type" || ft === "hook_presence") {
+    if (impactCtr > 0) return { label: "CTR", value: `+${p.impact_ctr_pct} vs média` };
+    if (ctr >= 1.5) return { label: "CTR", value: formatCtr(p.avg_ctr!) };
+    return null;
   }
-  if (impactCtr >= 5) {
-    const status = classifyImpact(impactCtr)!;
-    return { label: "Impacto", value: `+${p.impact_ctr_pct}`, context: impactContext(impactCtr), status, color: STATUS_COLORS[status] };
+
+  // Format / combination → ROAS preferred, then impact
+  if (ft === "format" || ft === "combination") {
+    if (roas >= 1.0) return { label: "ROAS", value: `${roas.toFixed(1)}x` };
+    if (impactRoas > 0) return { label: "ROAS", value: `+${p.impact_roas_pct} vs média` };
+    if (impactCtr > 0) return { label: "CTR", value: `+${p.impact_ctr_pct} vs média` };
+    return null;
   }
-  if (ctr >= 2.5) {
-    const status = classifyCtr(ctr)!;
-    return { label: "CTR", value: formatCtr(p.avg_ctr!), context: "taxa de clique acima da média", status, color: STATUS_COLORS[status] };
+
+  // Campaign / adset → ROAS or impact
+  if (ft === "campaign" || ft === "adset") {
+    if (roas >= 1.0) return { label: "ROAS", value: `${roas.toFixed(1)}x` };
+    if (impactCtr > 0) return { label: "CTR", value: `+${p.impact_ctr_pct} vs média` };
+    return null;
   }
-  return null; // nothing strong enough to show
+
+  // Text density → CTR
+  if (ft === "text_density") {
+    if (impactCtr > 0) return { label: "CTR", value: `+${p.impact_ctr_pct} vs média` };
+    if (ctr >= 1.5) return { label: "CTR", value: formatCtr(p.avg_ctr!) };
+    return null;
+  }
+
+  // Fallback: strongest signal
+  if (roas >= 2.0) return { label: "ROAS", value: `${roas.toFixed(1)}x` };
+  if (impactCtr >= 5) return { label: "CTR", value: `+${p.impact_ctr_pct} vs média` };
+  if (ctr >= 2.5) return { label: "CTR", value: formatCtr(p.avg_ctr!) };
+  return null;
 }
 
-function formatConfidence(confidence: number): { label: string; color: string } {
-  const pct = Math.round(confidence * 100);
-  if (pct >= 70) return { label: "Alta confiança", color: "#4ADE80" };
-  if (pct >= 40) return { label: "Confiança moderada", color: "#FBBF24" };
-  if (pct >= 20) return { label: "Poucos dados", color: L3 };
-  return { label: "Dados iniciais", color: L3 };
+/** Low-data indicator — only shown for early signals, never fake confidence */
+function dataMaturity(p: DetectedPattern): string | null {
+  if (p.sample_size <= 1) return "Sinal inicial — ainda precisa de mais dados";
+  if (p.sample_size <= 3 || p.confidence < 0.3) return "Dados iniciais";
+  // Sufficient data — no label needed (the metric speaks for itself)
+  return null;
 }
 
 function pluralAds(count: number): string {
@@ -425,30 +370,25 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
   if (!userId || !personaId) return null;
 
   // ── INTELLIGENCE FILTER ──
-  // A pattern earns its spot ONLY if it has a strong metric or is actionable.
-  // No weak signals. No "showing numbers without meaning."
-  // Every pattern that passes MUST be able to answer: "Is this actually good?"
+  // CORE RULE: If the system does NOT know WHY something worked, do NOT show it.
+  // Every pattern must pass: (1) has real intelligence, (2) has metric or is gap.
   const worthShowing = patterns.filter((p) => {
     const ft = p.feature_type || p.variables?.feature_type || "";
 
-    // Gap patterns (untested formats) = always useful — they're opportunities, not metrics
+    // Gap patterns — always actionable (suggest what to test)
     if (ft === "gap") return true;
 
-    // Evaluate the hero metric — this IS the quality gate
+    // NO-INVENTION RULE: Pattern must have an explainable reason
+    if (!hasRealIntelligence(p)) return false;
+
+    // Must have a metric to show (or be a gap)
     const hero = evaluateHeroMetric(p);
+    if (!hero) return false;
 
-    // Winners validated by engine pass IF they have a metric to show
-    // (even validated patterns shouldn't show if their numbers are weak)
-    if (p.is_winner && hero) return true;
+    // Minimum bar: at least some data
+    if (p.sample_size < 2) return false;
 
-    // Strong or good signals pass — neutro only with high confidence
-    if (hero) {
-      if (hero.status === "forte" || hero.status === "bom") return true;
-      if (hero.status === "neutro" && p.confidence >= 0.5 && p.sample_size >= 5) return true;
-    }
-
-    // Nothing strong enough → filter out
-    return false;
+    return true;
   });
 
   const displayPatterns = compact ? worthShowing.slice(0, 3) : worthShowing.slice(0, 5);
@@ -676,15 +616,21 @@ function PatternRow({
   const [expanded, setExpanded] = useState(false);
 
   const displayLabel = humanizePatternLabel(p);
-  const explanation = patternExplanation(p);
-  const conf = formatConfidence(p.confidence);
+  const reason = patternReason(p);
+  const action = patternAction(p);
+  const hero = evaluateHeroMetric(p);
+  const maturity = dataMaturity(p);
+  const ft = p.feature_type || p.variables?.feature_type || "";
+  const isGap = ft === "gap";
+
+  // For hook_type patterns, the type itself is the reason if AI didn't provide one
+  const implicitReason = ft === "hook_type"
+    ? `${humanizeHookType(p.feature_value || p.variables?.feature_value || "").toLowerCase()} no início`
+    : null;
+  const displayReason = reason || implicitReason;
 
   const hasTopAds = p.top_ads && p.top_ads.length > 0;
-  const hasExtraMetrics = (p.avg_cpc != null && p.avg_cpc > 0) ||
-    (p.avg_roas != null && p.avg_roas > 0) ||
-    (p.impact_roas_pct && p.impact_roas_pct !== "?");
-  const hasInsightText = p.insight_text && p.insight_text.length > 10 && !isRawInsightText(p.insight_text);
-  const hasExpandable = hasTopAds || hasExtraMetrics || hasInsightText;
+  const hasExpandable = hasTopAds || !!action;
 
   return (
     <div
@@ -704,7 +650,7 @@ function PatternRow({
         transform: hov ? "translateX(2px)" : "translateX(0)",
       }}
     >
-      {/* ── ROW 1: Pattern name + validated indicator ── */}
+      {/* ── ROW 1: Title ── */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
@@ -714,167 +660,101 @@ function PatternRow({
             {displayLabel}
           </div>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginTop: 2 }}>
-          {p.is_winner && (
-            <span style={{
-              fontSize: 9, fontWeight: 700, color: "#4ADE80",
-              letterSpacing: "0.04em", fontFamily: F,
-            }}>
-              ✓ validado
-            </span>
-          )}
-          {hasExpandable && (
-            <span style={{
-              fontSize: 14, lineHeight: 1,
-              transition: "transform 0.2s ease, color 0.15s",
-              transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
-              color: hov ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.30)",
-            }}>
-              ›
-            </span>
-          )}
-        </div>
+        {hasExpandable && (
+          <span style={{
+            fontSize: 14, lineHeight: 1, marginTop: 2, flexShrink: 0,
+            transition: "transform 0.2s ease, color 0.15s",
+            transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+            color: hov ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.30)",
+          }}>
+            ›
+          </span>
+        )}
       </div>
 
-      {/* ── ROW 2: Intelligent metric — value + context + status ── */}
-      {(() => {
-        const hero = evaluateHeroMetric(p);
-        const ft = p.feature_type || p.variables?.feature_type || "";
-        const isGap = ft === "gap";
-        return (
-          <div style={{
-            display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-            marginTop: 8, marginBottom: explanation ? 6 : 0,
+      {/* ── ROW 2: Metric + sample size ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+        marginTop: 6,
+      }}>
+        {hero && (
+          <span style={{
+            fontSize: 12.5, fontWeight: 700, color: "#38BDF8",
+            fontFamily: F, fontVariant: "tabular-nums",
+            letterSpacing: "-0.01em",
           }}>
-            {/* Hero metric with context — the core intelligence */}
-            {hero && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{
-                  fontSize: 12.5, fontWeight: 700, color: hero.color,
-                  fontFamily: F, fontVariant: "tabular-nums",
-                  letterSpacing: "-0.01em",
-                }}>
-                  {hero.label} {hero.value}
-                </span>
-                {hero.context && (
-                  <span style={{
-                    fontSize: 10.5, color: "rgba(255,255,255,0.65)",
-                    fontFamily: F, fontWeight: 400,
-                  }}>
-                    · {hero.context}
-                  </span>
-                )}
-                {/* Status pill — forte/bom */}
-                <span style={{
-                  fontSize: 9, fontWeight: 700,
-                  color: hero.color,
-                  letterSpacing: "0.03em",
-                  opacity: 0.8,
-                }}>
-                  {STATUS_LABELS[hero.status]}
-                </span>
-              </div>
-            )}
+            {hero.label} {hero.value}
+          </span>
+        )}
+        {isGap && !hero && (
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
+            não testado
+          </span>
+        )}
 
-            {/* Gap opportunity — no metric, just label */}
-            {isGap && !hero && (
-              <span style={{
-                fontSize: 11, fontWeight: 600, color: "#A78BFA",
-                fontFamily: F,
-              }}>
-                oportunidade
-              </span>
-            )}
+        <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
 
+        <span style={{ fontSize: 10.5, color: L3, fontFamily: F, fontWeight: 500, fontVariant: "tabular-nums" }}>
+          {pluralAds(p.sample_size)}
+        </span>
+
+        {maturity && (
+          <>
             <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
-
-            <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.65)", fontFamily: F, fontWeight: 500, fontVariant: "tabular-nums" }}>
-              {pluralAds(p.sample_size)}
+            <span style={{ fontSize: 10.5, color: L3, fontFamily: F, fontWeight: 500, fontStyle: "italic" }}>
+              {maturity}
             </span>
+          </>
+        )}
+      </div>
 
-            <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
-
-            <span style={{ fontSize: 10.5, color: conf.color, fontFamily: F, fontWeight: 600 }}>
-              {conf.label}
-            </span>
-          </div>
-        );
-      })()}
-
-      {/* ── ROW 3: Explanation — why it matters ── */}
-      {explanation && (
+      {/* ── ROW 3: Quoted reason — the WHY ── */}
+      {displayReason && (
         <div style={{
-          fontSize: 12, color: "rgba(255,255,255,0.50)", lineHeight: 1.5,
+          marginTop: 8,
+          fontSize: 12, color: "rgba(255,255,255,0.60)", lineHeight: 1.5,
           fontFamily: F,
         }}>
-          {explanation}
+          <span style={{ color: L3, fontSize: 10.5, fontWeight: 600 }}>Motivo: </span>
+          <span style={{ fontStyle: "italic" }}>"{displayReason}"</span>
         </div>
       )}
 
-      {/* ── Action ── */}
-      {p.is_winner && onGenerateVariation && (() => {
-        const ft = p.feature_type || p.variables?.feature_type || "";
-        const ctaLabel =
-          ft === "hook_type" || ft === "hook_presence" ? "Gerar novos hooks →" :
-          ft === "format" || ft === "combination" || ft === "text_density" ? "Criar roteiro →" :
-          ft === "campaign" || ft === "adset" ? "Criar brief →" :
-          ft === "gap" ? "Explorar formato →" :
-          "Gerar variações →";
-        return (
-          <div style={{ marginTop: 8 }}>
-            <button
-              onClick={() => onGenerateVariation(p)}
-              style={{
-                background: "none", border: "none",
-                cursor: "pointer", padding: 0,
-                transition: "opacity 0.15s",
-                opacity: hov || expanded ? 0.8 : 0.4,
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov || expanded ? "0.8" : "0.4"; }}
-            >
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
-                {ctaLabel}
-              </span>
-            </button>
-          </div>
-        );
-      })()}
+      {/* ── CTA — actionable, always visible for winners ── */}
+      {onGenerateVariation && (
+        <div style={{ marginTop: 8 }}>
+          <button
+            onClick={() => onGenerateVariation(p)}
+            style={{
+              background: "none", border: "none",
+              cursor: "pointer", padding: 0,
+              transition: "opacity 0.15s",
+              opacity: hov || expanded ? 0.8 : 0.4,
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = hov || expanded ? "0.8" : "0.4"; }}
+          >
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#A78BFA", fontFamily: F }}>
+              {ft === "hook_type" || ft === "hook_presence" ? "Gerar hooks similares →" :
+               ft === "format" || ft === "combination" || ft === "text_density" ? "Criar roteiro →" :
+               ft === "gap" ? "Testar formato →" :
+               "Aplicar padrão →"}
+            </span>
+          </button>
+        </div>
+      )}
 
-      {/* ═══ EXPANDED CONTENT ═══ */}
+      {/* ═══ EXPANDED — top ads + action insight ═══ */}
       <PPExpandable open={expanded}>
         <div style={{ paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 10 }}>
-          {/* Extra metrics */}
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: hasTopAds ? 12 : 0 }}>
-            {p.avg_roas != null && p.avg_roas > 0 && (
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: M }}>
-                ROAS <span style={{ color: "#4ADE80", fontWeight: 700, fontSize: 12 }}>{p.avg_roas.toFixed(1)}x</span>
-              </span>
-            )}
-            {p.avg_cpc != null && p.avg_cpc > 0 && (
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: M }}>
-                CPC <span style={{ color: L1, fontWeight: 700, fontSize: 12 }}>R${(p.avg_cpc / 100).toFixed(2)}</span>
-              </span>
-            )}
-            {p.impact_roas_pct && p.impact_roas_pct !== "?" && (
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: M }}>
-                ROAS <span style={{ color: parseFloat(p.impact_roas_pct) > 0 ? "#4ADE80" : "#F87171", fontWeight: 700, fontSize: 12 }}>{p.impact_roas_pct}</span>
-              </span>
-            )}
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", fontFamily: M }}>
-              Confiança <span style={{ color: L1, fontWeight: 700, fontSize: 12 }}>{Math.round(p.confidence * 100)}%</span>
-            </span>
-          </div>
-
-          {/* Full insight text if different from display label */}
-          {hasInsightText && p.insight_text !== displayLabel && (
+          {/* Actionable insight */}
+          {action && (
             <div style={{
-              fontSize: 12.5, color: "rgba(255,255,255,0.65)", lineHeight: 1.55,
-              borderLeft: "2px solid rgba(167,139,250,0.30)",
-              paddingLeft: 10, marginBottom: 10,
+              fontSize: 12.5, color: "rgba(255,255,255,0.60)", lineHeight: 1.55,
+              borderLeft: "2px solid rgba(167,139,250,0.25)",
+              paddingLeft: 10, marginBottom: hasTopAds ? 12 : 0,
             }}>
-              {p.insight_text}
+              {action}
             </div>
           )}
 
@@ -882,10 +762,10 @@ function PatternRow({
           {hasTopAds && (
             <div>
               <div style={{
-                fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.65)",
+                fontSize: 9.5, fontWeight: 700, color: L3,
                 letterSpacing: "0.08em", marginBottom: 6,
               }}>
-                MELHORES ANÚNCIOS
+                ANÚNCIOS NESTE PADRÃO
               </div>
               {p.top_ads!.slice(0, 3).map((ad, i) => (
                 <div key={ad.ad_id || i} style={{
@@ -900,7 +780,7 @@ function PatternRow({
                   }}>
                     {ad.ad_name || "Anúncio"}
                   </span>
-                  <span style={{ fontSize: 11, color: "#38BDF8", fontWeight: 700, fontFamily: M, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: "#38BDF8", fontWeight: 700, fontFamily: F, fontVariant: "tabular-nums", flexShrink: 0 }}>
                     CTR {formatCtr(ad.ctr)}
                   </span>
                 </div>

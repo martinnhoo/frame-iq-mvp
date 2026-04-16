@@ -669,24 +669,26 @@ serve(async (req) => {
           return lines.join("\n");
         }).join("\n\n");
 
-        const prompt = `Você é um analista sênior de Meta Ads. Analise estes padrões criativos detectados de dados REAIS de uma conta de anúncios.
+        const prompt = `Você é um analista sênior de Meta Ads. Analise estes padrões de dados REAIS.
 
-Baseline da conta: CTR ${(baselineCtr * 100).toFixed(2)}%${baselineRoas ? `, ROAS ${baselineRoas.toFixed(1)}x` : ""}${baselineCpc ? `, CPC R$${baselineCpc.toFixed(2)}` : ""} (${ads.length} anúncios analisados)
+Baseline: CTR ${(baselineCtr * 100).toFixed(2)}%${baselineRoas ? `, ROAS ${baselineRoas.toFixed(1)}x` : ""}${baselineCpc ? `, CPC R$${baselineCpc.toFixed(2)}` : ""} (${ads.length} anúncios)
 
 ${patternDetails}
 
-Para CADA padrão, escreva EM PORTUGUÊS DO BRASIL:
-- "title": Um título curto (máx 60 chars) que EXPLICA o padrão, NÃO apenas repete a métrica. Diga O QUE funciona e POR QUÊ. Ex: "Hooks de urgência geram 2x mais cliques nos primeiros 3s", "Vídeo curto com pouco texto domina esta conta", "Carrossel + hook direto: combo vencedor com CTR 4.2%"
-- "insight": 1-2 frases explicando POR QUE este padrão funciona na prática e O QUE FAZER para replicar ou melhorar. Use os nomes dos top anúncios quando relevante. Seja específico e acionável.
+Para CADA padrão, retorne EM PORTUGUÊS DO BRASIL:
+- "title": Máx 60 chars. Descreva o padrão identificado sem adjetivos genéricos.
+- "reason": UMA frase curta entre aspas explicando POR QUE funcionou. A razão deve vir de algo OBSERVÁVEL: tipo de hook, estrutura do texto, formato, primeiros segundos, promessa clara, tipo de chamada emocional, etc. Ex: "Pergunta direta no início", "Urgência no primeiro segundo", "Promessa clara de ganho", "Uso de número específico", "Chamada emocional".
+- "insight": 1 frase acionável: o que o usuário pode COPIAR, REPLICAR ou APLICAR imediatamente.
 
-REGRAS:
-- NUNCA escreva títulos genéricos como "CTR acima da média" ou "Performance superior"
-- O título deve explicar a CAUSA, não o efeito
-- Referencie dados reais (nomes de anúncios, CTR específico, formato)
-- Para padrões de gap: sugira o que testar
-- Para desvios: explique o que diferencia esse anúncio
+REGRAS CRÍTICAS:
+1. Se você NÃO consegue identificar uma razão clara e observável para o padrão, retorne "reason": null — o padrão será removido.
+2. NUNCA use: "CTR acima da média", "forte", "validado", "padrão vencedor", "performance superior", "alta confiança", "bom desempenho".
+3. A reason DEVE ser algo que um humano entenderia em 1 segundo como resposta a "Por que isso funcionou?"
+4. Se só há 1 anúncio ou dados insuficientes, retorne "reason": null.
+5. Máximo 1-2 razões. Não sobrecarregue.
+6. O insight deve ser ACIONÁVEL — algo que o usuário pode fazer agora.
 
-Retorne um array JSON: [{"index": 0, "title": "...", "insight": "..."}, ...]`;
+Retorne JSON: [{"index": 0, "title": "...", "reason": "..." ou null, "insight": "..."}, ...]`;
 
         try {
           const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
@@ -709,16 +711,17 @@ Retorne um array JSON: [{"index": 0, "title": "...", "insight": "..."}, ...]`;
             try {
               const jsonMatch = raw.match(/\[[\s\S]*\]/);
               if (jsonMatch) {
-                const insights: { index: number; title?: string; insight: string }[] = JSON.parse(jsonMatch[0]);
+                const insights: { index: number; title?: string; reason?: string | null; insight: string }[] = JSON.parse(jsonMatch[0]);
                 for (const ins of insights) {
                   if (topPatterns[ins.index]) {
-                    // Store title + insight as structured string: "TITLE || INSIGHT"
-                    // Frontend can split on " || " to use title as label and insight as explanation
                     const title = ins.title || "";
+                    const reason = ins.reason || "";
                     const insight = ins.insight || "";
-                    topPatterns[ins.index].insight_text = title && insight
-                      ? `${title} || ${insight}`
-                      : insight || title;
+                    // Format: "TITLE || REASON || INSIGHT"
+                    // Frontend splits on " || " — reason is the quoted WHY
+                    // If reason is null/empty, pattern may be filtered out by frontend
+                    const parts = [title, reason, insight].filter(Boolean);
+                    topPatterns[ins.index].insight_text = parts.join(" || ");
                   }
                 }
               }
