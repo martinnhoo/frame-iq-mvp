@@ -454,9 +454,16 @@ function TrackingDiagnosticFlow({ clicks, spend, conversions, lang, onClose, onD
               <p style={S.resultBody}>{t('no_conv_body')}</p>
               <div style={S.btnGroup}>
                 <button style={S.btnPrimary}
-                  onClick={() => onDeepDiagnosis(lang === 'pt'
-                    ? `Meu anúncio tem ${clicks} cliques e ${spend} investidos mas zero conversões reais. O usuário confirmou que não houve conversões fora da plataforma. Analise a performance e sugira melhorias no criativo, oferta e audiência.`
-                    : `My ad has ${clicks} clicks and ${spend} spent but zero real conversions. User confirmed no off-platform conversions. Analyze performance and suggest creative, offer, and audience improvements.`
+                  onClick={() => onDeepDiagnosis(`[TRACKING_DIAGNOSTIC_COMPLETE] diagnosis=performance_issue
+Dados: ${clicks} cliques, ${spend} investidos, 0 conversões.
+O usuário já confirmou: NÃO houve conversões fora da plataforma. O rastreamento NÃO é o problema.
+
+INSTRUÇÃO: O diagnóstico de rastreamento já foi feito — NÃO repita. O problema é performance do anúncio.
+Analise os dados da conta e dê:
+1. Hipótese principal (criativo fraco? oferta fraca? audiência errada?)
+2. Top 3 ações específicas e priorizadas para melhorar conversões
+3. Se houver criativos ativos, indique qual escalar e qual pausar
+Seja direto. Sem introdução. Sem repetir o diagnóstico.`
                   )}
                   onMouseEnter={e => hover(e, '#0c8bd0')} onMouseLeave={e => hover(e, '#0ea5e9')}>
                   {t('deep_analysis')}
@@ -489,11 +496,44 @@ function TrackingDiagnosticFlow({ clicks, spend, conversions, lang, onClose, onD
               <div style={S.btnGroup}>
                 <button style={S.btnPrimary}
                   onClick={() => {
-                    const diag = result === 'tracking_issue' ? 'evento_conversao' : result === 'needs_investigation' ? 'pixel_ausente' : 'performance';
-                    onDeepDiagnosis(lang === 'pt'
-                      ? `Diagnóstico de rastreamento concluído: ${diag}. ${clicks} cliques, ${spend} investidos, ${conversions} conversões. Quero uma análise aprofundada e passos específicos para resolver.`
-                      : `Tracking diagnosis complete: ${diag}. ${clicks} clicks, ${spend} spent, ${conversions} conversions. I want a deep analysis and specific steps to fix this.`
-                    );
+                    const diagMap: Record<string, { tag: string; instruction: string }> = {
+                      tracking_issue: {
+                        tag: 'evento_conversao_incorreto',
+                        instruction: `O pixel ESTÁ instalado mas conversões NÃO estão sendo registradas.
+INSTRUÇÃO: O diagnóstico já identificou que o evento de conversão está mal configurado.
+Dê passos específicos para corrigir:
+1. Como verificar quais eventos o pixel está disparando (Meta Events Manager)
+2. Qual evento configurar (Purchase, Lead, CompleteRegistration — baseado no tipo de negócio)
+3. Como testar se o evento está funcionando após correção
+Seja direto. Sem introdução. Sem repetir o diagnóstico.`,
+                      },
+                      needs_investigation: {
+                        tag: 'pixel_nao_instalado',
+                        instruction: `O pixel NÃO está instalado ou o usuário não sabe.
+INSTRUÇÃO: O diagnóstico já identificou pixel ausente como a causa raiz.
+Dê passos específicos:
+1. Como instalar o Meta Pixel (método mais simples para o tipo de site do usuário)
+2. Quais eventos configurar
+3. Como validar que está funcionando (Meta Pixel Helper, Test Events)
+4. Alerta: enquanto o pixel não estiver ativo, todo investimento em anúncio é sem rastreamento
+Seja direto. Sem introdução. Sem repetir o diagnóstico.`,
+                      },
+                      performance_issue: {
+                        tag: 'performance',
+                        instruction: `O rastreamento está OK — o problema é que o anúncio não converte.
+INSTRUÇÃO: O diagnóstico de rastreamento já foi concluído — NÃO repita.
+Analise os dados da conta e dê:
+1. Hipótese principal (criativo fraco? oferta fraca? audiência errada?)
+2. Top 3 ações específicas priorizadas
+3. Se houver criativos ativos, indique qual escalar e qual pausar
+Seja direto. Sem introdução. Sem repetir o diagnóstico.`,
+                      },
+                    };
+                    const d = diagMap[result || 'performance_issue'];
+                    onDeepDiagnosis(`[TRACKING_DIAGNOSTIC_COMPLETE] diagnosis=${d.tag}
+Dados: ${clicks} cliques, ${spend} investidos, ${conversions} conversões.
+
+${d.instruction}`);
                   }}
                   onMouseEnter={e => hover(e, '#0c8bd0')} onMouseLeave={e => hover(e, '#0ea5e9')}>
                   {t('deep_analysis')}
@@ -4359,7 +4399,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           onClose={() => { setTrackingDiagActive(null); navigate('/dashboard/feed'); }}
           onDeepDiagnosis={(summary) => {
             setTrackingDiagActive(null);
-            send(summary);
+            // Extract the diagnosis tag for clean display
+            const diagMatch = summary.match(/diagnosis=(\S+)/);
+            const diagLabel: Record<string, Record<string, string>> = {
+              performance_issue: { pt: 'Análise de performance solicitada', es: 'Análisis de rendimiento solicitado', en: 'Performance analysis requested' },
+              evento_conversao_incorreto: { pt: 'Análise: evento de conversão incorreto', es: 'Análisis: evento de conversión incorrecto', en: 'Analysis: incorrect conversion event' },
+              pixel_nao_instalado: { pt: 'Análise: pixel não instalado', es: 'Análisis: pixel no instalado', en: 'Analysis: pixel not installed' },
+              performance: { pt: 'Análise de performance solicitada', es: 'Análisis de rendimiento solicitado', en: 'Performance analysis requested' },
+            };
+            const tag = diagMatch?.[1] || 'performance';
+            const display = diagLabel[tag]?.[lang] || diagLabel[tag]?.en || tag;
+            send(summary, display);
           }}
         />
       )}
