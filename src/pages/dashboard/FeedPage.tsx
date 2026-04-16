@@ -1592,106 +1592,169 @@ const AdToggleModal: React.FC<{
     return () => { cancelled = true; };
   }, [request.ad.meta_ad_id, request.action, userId, personaId]);
 
+  const accentColor = isPause ? '#F59E0B' : '#22C55E';
+  const accentGlow = isPause ? 'rgba(245,158,11,0.20)' : 'rgba(34,197,94,0.20)';
+
   return (
     <div
       onClick={onCancel}
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,0.70)', backdropFilter: 'blur(4px)',
+        background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 20, fontFamily: F,
+        animation: 'modal-overlay-in 0.2s ease-out',
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#0C1017', border: '1px solid rgba(255,255,255,0.10)',
-          borderRadius: 10, padding: '24px 22px', maxWidth: 420, width: '100%',
-          animation: 'feed-fadeUp 0.2s ease-out',
+          background: 'linear-gradient(180deg, #111827 0%, #0C1017 100%)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 14, padding: 0, maxWidth: 440, width: '100%',
+          animation: 'modal-card-in 0.3s cubic-bezier(0.16,1,0.3,1)',
+          overflow: 'hidden',
+          boxShadow: `0 24px 48px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,255,255,0.05), 0 0 80px ${accentGlow}`,
         }}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 6,
-            background: isPause ? 'rgba(251,191,36,0.10)' : 'rgba(74,222,128,0.10)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {isPause ? <Pause size={16} style={{ color: '#FBBF24' }} /> : <Play size={16} style={{ color: '#4ADE80' }} />}
-          </div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F6FC' }}>
-              {isPause ? 'Pausar anúncio?' : 'Ativar anúncio?'}
-            </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.40)', marginTop: 1 }}>
-              {request.ad.name}
-            </div>
-          </div>
-        </div>
-
-        {/* AI Opinion */}
+        {/* Top accent bar */}
         <div style={{
-          background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.18)',
-          borderLeft: '3px solid #38BDF8',
-          borderRadius: 6, padding: '12px 14px', marginBottom: 18,
-          minHeight: 50,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              ad<span style={{ fontWeight: 800 }}>brief</span> · opinião da IA
-            </span>
+          height: 3,
+          background: `linear-gradient(90deg, ${accentColor} 0%, transparent 100%)`,
+          opacity: 0.6,
+        }} />
+
+        <div style={{ padding: '22px 24px 24px' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 10,
+              background: `linear-gradient(135deg, ${accentColor}18 0%, ${accentColor}08 100%)`,
+              border: `1px solid ${accentColor}25`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              {isPause
+                ? <Pause size={18} style={{ color: accentColor }} />
+                : <Play size={18} style={{ color: accentColor }} />
+              }
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F6FC', letterSpacing: '-0.02em' }}>
+                {isPause ? 'Pausar anúncio?' : 'Ativar anúncio?'}
+              </div>
+              <div style={{
+                fontSize: 12, color: 'rgba(255,255,255,0.40)', marginTop: 2,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {request.ad.name}
+              </div>
+            </div>
+          </div>
+
+          {/* AI Opinion */}
+          <div style={{
+            background: 'rgba(56,189,248,0.04)',
+            border: '1px solid rgba(56,189,248,0.12)',
+            borderLeft: '3px solid #38BDF8',
+            borderRadius: 8, padding: '14px 16px', marginBottom: 22,
+            minHeight: 60,
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            {/* Loading shimmer overlay */}
             {loadingAi && (
-              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.30)' }}>analisando...</span>
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(90deg, transparent 0%, rgba(56,189,248,0.06) 50%, transparent 100%)',
+                animation: 'modal-shimmer 2s ease-in-out infinite',
+              }} />
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, position: 'relative' }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: '#38BDF8', letterSpacing: '-0.03em' }}>
+                ad<span style={{ color: '#7DD3FC' }}>brief</span>
+              </span>
+              <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(56,189,248,0.30)' }} />
+              <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(56,189,248,0.60)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {loadingAi ? 'Analisando performance...' : 'Opinião da IA'}
+              </span>
+            </div>
+
+            {loadingAi ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative' }}>
+                <div style={{
+                  width: '95%', height: 11, borderRadius: 3,
+                  background: 'linear-gradient(90deg, rgba(56,189,248,0.08) 0%, rgba(56,189,248,0.03) 50%, rgba(56,189,248,0.08) 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'modal-text-shimmer 1.8s ease-in-out infinite',
+                }} />
+                <div style={{
+                  width: '80%', height: 11, borderRadius: 3,
+                  background: 'linear-gradient(90deg, rgba(56,189,248,0.08) 0%, rgba(56,189,248,0.03) 50%, rgba(56,189,248,0.08) 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'modal-text-shimmer 1.8s ease-in-out infinite',
+                  animationDelay: '0.15s',
+                }} />
+                <div style={{
+                  width: '60%', height: 11, borderRadius: 3,
+                  background: 'linear-gradient(90deg, rgba(56,189,248,0.08) 0%, rgba(56,189,248,0.03) 50%, rgba(56,189,248,0.08) 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'modal-text-shimmer 1.8s ease-in-out infinite',
+                  animationDelay: '0.3s',
+                }} />
+              </div>
+            ) : (
+              <div style={{
+                fontSize: 12.5, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6,
+                animation: 'modal-text-in 0.4s ease-out',
+                position: 'relative',
+              }}>
+                {aiOpinion}
+              </div>
             )}
           </div>
-          {loadingAi ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <div style={{ width: '90%', height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 2, animation: 'feed-shimmer 1.5s ease-in-out infinite' }} />
-              <div style={{ width: '70%', height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 2, animation: 'feed-shimmer 1.5s ease-in-out infinite', animationDelay: '0.1s' }} />
-            </div>
-          ) : (
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.70)', lineHeight: 1.55 }}>
-              {aiOpinion}
-            </div>
-          )}
-        </div>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={onCancel}
-            style={{
-              flex: 1, padding: '10px 14px', borderRadius: 6,
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-              color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', fontFamily: F,
-            }}
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            style={{
-              flex: 1, padding: '10px 14px', borderRadius: 6,
-              background: isPause
-                ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
-                : 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)',
-              border: 'none',
-              color: '#fff',
-              fontSize: 13, fontWeight: 700,
-              cursor: loading ? 'default' : 'pointer', fontFamily: F,
-              opacity: loading ? 0.6 : 1,
-              transition: 'opacity 0.15s, transform 0.1s',
-              boxShadow: isPause
-                ? '0 2px 8px rgba(245,158,11,0.25)'
-                : '0 2px 8px rgba(34,197,94,0.30)',
-            }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'scale(1.02)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-          >
-            {loading ? 'Executando...' : isPause ? 'Pausar' : 'Ativar'}
-          </button>
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={onCancel}
+              style={{
+                flex: 1, padding: '12px 16px', borderRadius: 8,
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: F,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              style={{
+                flex: 1, padding: '12px 16px', borderRadius: 8,
+                background: isPause
+                  ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                  : 'linear-gradient(135deg, #34D399 0%, #10B981 50%, #059669 100%)',
+                border: 'none',
+                color: '#fff',
+                fontSize: 13, fontWeight: 700, letterSpacing: '-0.01em',
+                cursor: loading ? 'default' : 'pointer', fontFamily: F,
+                opacity: loading ? 0.6 : 1,
+                transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+                boxShadow: isPause
+                  ? '0 4px 12px rgba(245,158,11,0.30), inset 0 1px 0 rgba(255,255,255,0.15)'
+                  : '0 4px 12px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.15)',
+              }}
+              onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = isPause ? '0 6px 20px rgba(245,158,11,0.40), inset 0 1px 0 rgba(255,255,255,0.15)' : '0 6px 20px rgba(16,185,129,0.45), inset 0 1px 0 rgba(255,255,255,0.15)'; } }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isPause ? '0 4px 12px rgba(245,158,11,0.30), inset 0 1px 0 rgba(255,255,255,0.15)' : '0 4px 12px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.15)'; }}
+            >
+              {loading ? 'Executando...' : isPause ? 'Pausar' : 'Ativar'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2417,6 +2480,11 @@ const FeedPage: React.FC = () => {
         @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
         @keyframes feed-fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes feed-shimmer{0%,100%{opacity:1}50%{opacity:0.5}}
+        @keyframes modal-overlay-in{from{opacity:0}to{opacity:1}}
+        @keyframes modal-card-in{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+        @keyframes modal-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+        @keyframes modal-text-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @keyframes modal-text-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
       `}</style>
 
       {/* Ad toggle confirmation modal */}
