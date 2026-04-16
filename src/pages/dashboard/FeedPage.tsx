@@ -36,21 +36,21 @@ function dismissDemoToday(): void {
 
 /** Confidence badge — always visible per spec */
 const ConfidenceBadge: React.FC<{ level: 'baixa' | 'média' | 'alta' }> = ({ level }) => {
-  const cfg = {
-    baixa: { color: '#FBBF24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.15)' },
-    média: { color: '#38BDF8', bg: 'rgba(56,189,248,0.08)', border: 'rgba(56,189,248,0.15)' },
-    alta:  { color: '#4ADE80', bg: 'rgba(74,222,128,0.06)', border: 'rgba(74,222,128,0.12)' },
+  const dotColor = {
+    baixa: '#FBBF24',
+    média: '#38BDF8',
+    alta:  '#4ADE80',
   }[level];
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
-      fontSize: 10.5, fontWeight: 600, color: cfg.color,
-      background: cfg.bg, border: `1px solid ${cfg.border}`,
+      fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.72)',
+      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
       padding: '3px 8px', borderRadius: 3, fontFamily: F,
     }}>
       <span style={{
-        width: 5, height: 5, borderRadius: '50%', background: cfg.color,
-        boxShadow: `0 0 6px ${cfg.color}40`,
+        width: 5, height: 5, borderRadius: '50%', background: dotColor,
+        boxShadow: `0 0 6px ${dotColor}40`,
       }} />
       Confiança: {level}
     </span>
@@ -91,32 +91,32 @@ const VisibleWin: React.FC<{
 
   return (
     <div style={{
-      borderLeft: '2px solid rgba(74,222,128,0.40)',
+      borderLeft: '2px solid rgba(74,222,128,0.30)',
       padding: '12px 16px', marginBottom: 14,
     }}>
       <div style={{
-        fontSize: 9, fontWeight: 800, color: '#4ADE80',
+        fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.50)',
         letterSpacing: '0.12em', marginBottom: 6,
       }}>RESULTADO ALCANÇADO</div>
 
       {bestWin && (
         <div style={{ marginBottom: 6 }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: '#4ADE80', fontFamily: F }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: '#F0F6FC', fontFamily: F }}>
             {bestWin.type === 'kill' ? '-' : '+'}R${Math.round(Math.abs(totalImpact) / 100).toLocaleString('pt-BR')}
           </span>
-          <span style={{ fontSize: 12, color: 'rgba(74,222,128,0.70)', marginLeft: 4, fontWeight: 600 }}>/dia</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.50)', marginLeft: 4, fontWeight: 600 }}>/dia</span>
         </div>
       )}
 
       {monthlyImpact > 0 && (
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.70)', fontFamily: F, marginBottom: 4 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.60)', fontFamily: F, marginBottom: 4 }}>
           Impacto projetado: <span style={{ color: '#4ADE80', fontWeight: 600 }}>
             +R${Math.round(monthlyImpact / 100).toLocaleString('pt-BR')}/mês
           </span>
         </div>
       )}
 
-      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.60)', fontFamily: F, overflowWrap: 'break-word' }}>
+      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.50)', fontFamily: F, overflowWrap: 'break-word' }}>
         → baseado nos seus dados reais de performance · {actioned.length} {actioned.length === 1 ? 'otimização aplicada' : 'otimizações aplicadas'}
       </div>
     </div>
@@ -1121,8 +1121,8 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
-            fontSize: 10, fontWeight: 700, color: '#4ADE80',
-            background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.15)',
+            fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.72)',
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
             padding: '3px 9px', borderRadius: 3,
           }}>
             <span style={{
@@ -1154,15 +1154,15 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         onMouseEnter={() => setOppHov(true)}
         onMouseLeave={() => setOppHov(false)}
         style={{
-          background: oppHov ? 'rgba(14,165,233,0.05)' : 'rgba(14,165,233,0.03)',
-          border: '1px solid rgba(14,165,233,0.15)',
+          background: oppHov ? 'rgba(255,255,255,0.03)' : '#0C1017',
+          border: '1px solid rgba(255,255,255,0.09)',
           borderLeft: '3px solid #0ea5e9',
           borderRadius: 6, padding: 'clamp(12px, 3vw, 18px)',
           transition: 'all 0.18s ease',
           transform: oppHov ? 'translateX(2px)' : 'translateX(0)',
         }}
       >
-        <div style={{ fontSize: 9, fontWeight: 800, color: '#38BDF8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+        <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.50)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
           PRÓXIMA OPORTUNIDADE
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F6FC', marginBottom: 6, lineHeight: 1.4 }}>
@@ -1242,13 +1242,14 @@ const PerformanceSummary: React.FC<{
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
-            fontSize: 10, fontWeight: 700, color: confLevel === 'alta' ? '#4ADE80' : confColor,
-            background: confLevel === 'alta' ? 'rgba(74,222,128,0.08)' : 'rgba(14,165,233,0.06)',
-            border: `1px solid ${confLevel === 'alta' ? 'rgba(74,222,128,0.15)' : 'rgba(14,165,233,0.10)'}`,
+            fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.72)',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
             padding: '3px 9px', borderRadius: 3,
           }}>
             <span style={{
-              width: 5, height: 5, borderRadius: '50%', background: confLevel === 'alta' ? '#4ADE80' : confColor,
+              width: 5, height: 5, borderRadius: '50%',
+              background: confLevel === 'alta' ? '#4ADE80' : confLevel === 'média' ? '#38BDF8' : '#FBBF24',
               boxShadow: confLevel === 'alta' ? '0 0 6px rgba(74,222,128,0.40)' : 'none',
               animation: 'pulse 2.5s ease-in-out infinite',
             }} />
@@ -1307,15 +1308,15 @@ const PerformanceSummary: React.FC<{
         onMouseEnter={() => setOppHov(true)}
         onMouseLeave={() => setOppHov(false)}
         style={{
-          background: oppHov ? 'rgba(14,165,233,0.05)' : 'rgba(14,165,233,0.03)',
-          border: '1px solid rgba(14,165,233,0.15)',
+          background: oppHov ? 'rgba(255,255,255,0.03)' : '#0C1017',
+          border: '1px solid rgba(255,255,255,0.09)',
           borderLeft: '3px solid #0ea5e9',
           borderRadius: 6, padding: 'clamp(12px, 3vw, 18px)',
           transition: 'all 0.18s ease',
           transform: oppHov ? 'translateX(2px)' : 'translateX(0)',
         }}
       >
-        <div style={{ fontSize: 9, fontWeight: 800, color: '#38BDF8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+        <div style={{ fontSize: 9, fontWeight: 800, color: 'rgba(255,255,255,0.50)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
           PRÓXIMA OPORTUNIDADE
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F6FC', marginBottom: 6, lineHeight: 1.4 }}>
@@ -1876,13 +1877,13 @@ const PerformancePulse: React.FC<{
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
           marginTop: 8, padding: '6px 10px',
-          background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.10)',
+          background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)',
           borderRadius: 5,
         }}>
           <span style={{ fontSize: 10, color: '#4ADE80', fontWeight: 700 }}>↓</span>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
             Decisões do AdBrief economizaram{' '}
-            <span style={{ color: '#4ADE80', fontWeight: 700 }}>
+            <span style={{ color: '#F0F6FC', fontWeight: 700 }}>
               R${(savings / 100) >= 1000 ? ((savings / 100) / 1000).toFixed(1) + 'k' : (savings / 100).toFixed(0)}
             </span>
             {' '}este mês
@@ -2527,16 +2528,20 @@ const FeedPage: React.FC = () => {
         {metaConnected && !isDemo && trackingHealth && trackingHealth.status !== 'healthy' && (
           <div style={{
             background: '#0C1017',
-            border: `1px solid ${trackingHealth.status === 'broken' ? 'rgba(248,113,113,0.18)' : 'rgba(251,191,36,0.18)'}`,
+            border: '1px solid rgba(255,255,255,0.09)',
             borderRadius: 8, padding: 'clamp(12px, 3vw, 16px)', marginBottom: 12,
             borderLeft: `3px solid ${trackingHealth.status === 'broken' ? '#F87171' : '#FBBF24'}`,
           }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-              <span style={{ fontSize: 12 }}>{trackingHealth.status === 'broken' ? '🔴' : '🟡'}</span>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                background: trackingHealth.status === 'broken' ? '#F87171' : '#FBBF24',
+                boxShadow: `0 0 6px ${trackingHealth.status === 'broken' ? 'rgba(248,113,113,0.40)' : 'rgba(251,191,36,0.40)'}`,
+              }} />
               <span style={{
                 fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-                color: trackingHealth.status === 'broken' ? '#F87171' : '#FBBF24',
+                color: 'rgba(255,255,255,0.55)',
               }}>
                 {trackingHealth.status === 'broken' ? 'Tracking com problema' : 'Tracking incerto'}
               </span>
@@ -2576,13 +2581,15 @@ const FeedPage: React.FC = () => {
                 navigate(`/dashboard/ai?tracking_diagnostic=${msg}`);
               }}
               style={{
-                background: trackingHealth.status === 'broken' ? 'rgba(248,113,113,0.12)' : 'rgba(251,191,36,0.10)',
-                border: `1px solid ${trackingHealth.status === 'broken' ? 'rgba(248,113,113,0.25)' : 'rgba(251,191,36,0.22)'}`,
-                borderRadius: 6, padding: '8px 14px', cursor: 'pointer',
-                fontSize: 11.5, fontWeight: 600,
-                color: trackingHealth.status === 'broken' ? '#F87171' : '#FBBF24',
+                background: '#0ea5e9', color: '#F0F6FC',
+                border: 'none',
+                borderRadius: 6, padding: '9px 14px', cursor: 'pointer',
+                fontSize: 12, fontWeight: 700,
                 width: '100%',
+                transition: 'background 0.12s',
               }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#0c8bd0'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#0ea5e9'; }}
             >
               Diagnosticar e corrigir tracking →
             </button>
