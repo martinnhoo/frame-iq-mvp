@@ -311,7 +311,7 @@ const T: Record<Lang, Record<string, any>> = {
 const PLANS = {
   maker:  { product_id: "prod_U88ul5IK0HHW19", price_id: "price_1T9sd1Dr9So14XztT3Mqddch" },
   pro:    { product_id: "prod_U88v5WVcy2NZV7", price_id: "price_1T9sdfDr9So14XztPR3tI14Y" },
-  studio: { product_id: "prod_U88wpX4Bphfifi", price_id: "price_1T9seMDr9So14Xzt0vEJNQIX" },
+  studio: { product_id: "prod_U88wpX4Bphfifi", price_id: "price_1TMzhCDr9So14Xzt1rUmfs7h" },
 };
 
 /* ── Component ────────────────────────────────────────────────────────────── */

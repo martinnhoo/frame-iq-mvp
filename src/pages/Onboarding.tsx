@@ -313,7 +313,7 @@ export default function Onboarding() {
       }
     } catch {}
     if (checkoutPlan) {
-      const PRICES: Record<string,string> = { maker:"price_1T9sd1Dr9So14XztT3Mqddch", pro:"price_1T9sdfDr9So14XztPR3tI14Y", studio:"price_1T9seMDr9So14Xzt0vEJNQIX" };
+      const PRICES: Record<string,string> = { maker:"price_1T9sd1Dr9So14XztT3Mqddch", pro:"price_1T9sdfDr9So14XztPR3tI14Y", studio:"price_1TMzhCDr9So14Xzt1rUmfs7h" };
       const priceId = PRICES[checkoutPlan];
       if (priceId) {
         const { data } = await supabase.functions.invoke("create-checkout", { body: { price_id: priceId, billing: checkoutBilling || undefined } }).catch(() => ({ data: null }));

@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
     const ANNUAL_PRICES: Record<string, string> = {
       "price_1T9sd1Dr9So14XztT3Mqddch": Deno.env.get("ANNUAL_PRICE_MAKER") || "price_1T9sd1Dr9So14XztT3Mqddch",
       "price_1T9sdfDr9So14XztPR3tI14Y": Deno.env.get("ANNUAL_PRICE_PRO")   || "price_1T9sdfDr9So14XztPR3tI14Y",
-      "price_1T9seMDr9So14Xzt0vEJNQIX": Deno.env.get("ANNUAL_PRICE_STUDIO") || "price_1T9seMDr9So14Xzt0vEJNQIX",
+      "price_1TMzhCDr9So14Xzt1rUmfs7h": Deno.env.get("ANNUAL_PRICE_STUDIO") || "price_1TMzhCDr9So14XztE4jqWz9c",
     };
     const effective_price_id = billing === "annual" ? (ANNUAL_PRICES[price_id] || price_id) : price_id;
     logStep("Price ID resolved", { price_id, effective_price_id, billing });

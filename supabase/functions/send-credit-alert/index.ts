@@ -24,7 +24,7 @@ const STRIPE_KEY = Deno.env.get("STRIPE_SECRET_KEY") || "";
 const PLAN_PRICE_IDS: Record<string, string> = {
   free:  Deno.env.get("PRICE_MAKER") || "price_1T9sd1Dr9So14XztT3Mqddch",
   maker: Deno.env.get("PRICE_PRO")   || "price_1T9sdfDr9So14XztPR3tI14Y",
-  pro:   Deno.env.get("PRICE_STUDIO") || "price_1T9seMDr9So14Xzt0vEJNQIX",
+  pro:   Deno.env.get("PRICE_STUDIO") || "price_1TMzhCDr9So14Xzt1rUmfs7h",
 };
 
 // Next plan names
