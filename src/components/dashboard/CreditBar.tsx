@@ -97,7 +97,7 @@ export function UsageBar({ userId, plan }: Props) {
           fontSize: 11.5, fontWeight: 500,
           color: labelColor,
         }}>
-          {pt ? "Uso mensal" : es ? "Uso mensual" : "Monthly usage"}
+          {{ pt: "Uso mensal", es: "Uso mensual", fr: "Utilisation mensuelle", de: "Monatliche Nutzung", zh: "月度用量", ar: "الاستخدام الشهري", en: "Monthly usage" }[language] || "Monthly usage"}
         </span>
         <span style={{
           fontSize: 12, fontWeight: 600,
@@ -128,21 +128,21 @@ export function UsageBar({ userId, plan }: Props) {
           onClick={() => window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"))}
           style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 600, color: "#ef4444", lineHeight: 1.4, cursor: "pointer" }}
         >
-          {pt ? "Limite atingido — adicionar capacidade" : es ? "Límite alcanzado — agregar capacidad" : "Limit reached — add capacity"}
+          {{ pt: "Limite atingido — adicionar capacidade", es: "Límite alcanzado — agregar capacidad", fr: "Limite atteinte — ajouter de la capacité", de: "Limit erreicht — Kapazität hinzufügen", zh: "已达上限 — 增加容量", ar: "تم بلوغ الحد — إضافة سعة", en: "Limit reached — add capacity" }[language] || "Limit reached — add capacity"}
         </p>
       ) : isCritical ? (
         <p
           onClick={() => window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"))}
           style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 500, color: "#ef4444", lineHeight: 1.4, cursor: "pointer" }}
         >
-          {pt ? "Quase no limite — expandir capacidade" : es ? "Casi en el límite — expandir capacidad" : "Near limit — expand capacity"}
+          {{ pt: "Quase no limite — expandir capacidade", es: "Casi en el límite — expandir capacidad", fr: "Presque à la limite — étendre la capacité", de: "Fast am Limit — Kapazität erweitern", zh: "接近上限 — 扩展容量", ar: "قريب من الحد — توسيع السعة", en: "Near limit — expand capacity" }[language] || "Near limit — expand capacity"}
         </p>
       ) : isLow ? (
         <p
           onClick={() => window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"))}
           style={{ margin: "6px 0 0", fontSize: 10.5, fontWeight: 500, color: "rgba(234,179,8,0.7)", lineHeight: 1.4, cursor: "pointer" }}
         >
-          {pt ? "Uso elevado — expandir capacidade" : es ? "Uso elevado — expandir capacidad" : "High usage — expand capacity"}
+          {{ pt: "Uso elevado — expandir capacidade", es: "Uso elevado — expandir capacidad", fr: "Utilisation élevée — étendre la capacité", de: "Hohe Nutzung — Kapazität erweitern", zh: "用量较高 — 扩展容量", ar: "استخدام مرتفع — توسيع السعة", en: "High usage — expand capacity" }[language] || "High usage — expand capacity"}
         </p>
       ) : null}
     </div>
