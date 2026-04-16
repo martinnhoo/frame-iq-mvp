@@ -493,7 +493,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         )}
 
         {/* ACTIONS — visible on hover (desktop) or always (touch) */}
-        <div style={{
+        <div className="feed-micro-btn" style={{
           display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center',
           opacity: hovered || expanded || executingId !== null || actionFeedback ? 1 : 0.7,
           transition: 'opacity 0.15s ease',

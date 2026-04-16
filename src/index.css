@@ -721,13 +721,19 @@ input, textarea, select {
     min-width: 0 !important;
   }
 
-  /* Touch targets — Apple HIG minimum 44×44px */
+  /* Touch targets — Apple HIG minimum 44×44px (exclude feed micro-buttons) */
   button,
   a,
   [role="button"],
   [role="tab"],
   select {
     min-height: 44px;
+  }
+  .feed-micro-btn,
+  .feed-micro-btn button,
+  .feed-micro-btn a,
+  .feed-micro-btn [role="button"] {
+    min-height: unset !important;
   }
 
   /* ── Tool page padding ── */
@@ -855,6 +861,13 @@ input, textarea, select {
   textarea { resize: none !important; }
 }
 
+
+/* ── 1b. LARGER PHONES — 420px+ (Pro Max, Plus, Android XL) ──────────────── */
+@media (min-width: 420px) and (max-width: 767px) {
+  .feed-kpi-bar > div {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
 
 /* ── 2. SMALL PHONES — ≤ 375px (iPhone SE, 13 mini) ─────────────────────── */
 

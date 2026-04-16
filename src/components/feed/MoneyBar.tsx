@@ -45,7 +45,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             background: '#0C1017',
             border: '1px solid rgba(180,35,42,0.12)',
             borderRadius: 6,
-            padding: '20px 22px',
+            padding: 'clamp(14px, 4vw, 22px)',
             marginBottom: 8,
             position: 'relative',
             overflow: 'hidden',

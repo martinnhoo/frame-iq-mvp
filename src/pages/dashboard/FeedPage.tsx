@@ -175,7 +175,7 @@ const SystemStatus: React.FC<{
 };
 
 const PeriodSelector: React.FC<{ value: PeriodKey; onChange: (k: PeriodKey) => void }> = ({ value, onChange }) => (
-  <div style={{ display: 'flex', gap: 3, background: 'rgba(255,255,255,0.03)', borderRadius: 4, padding: 2 }}>
+  <div className="feed-micro-btn" style={{ display: 'flex', gap: 3, background: 'rgba(255,255,255,0.03)', borderRadius: 4, padding: 2 }}>
     {PERIODS.map(p => {
       const active = p.key === value;
       return (
@@ -802,7 +802,7 @@ const AdList: React.FC<{
             const canToggle = onRequestToggle && ad.meta_ad_id && (isPaused || isActive);
             const isToggling = togglingAd === ad.meta_ad_id;
             return (
-              <div key={ad.meta_ad_id || i} style={{
+              <div key={ad.meta_ad_id || i} className="feed-micro-btn" style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '6px 2px', minWidth: 0,
               }}>
                 <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
@@ -1113,7 +1113,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
       {/* ── BLOCO 1: STATUS ── */}
       <div style={{
         background: '#0C1017', border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 6, padding: '16px 18px',
+        borderRadius: 6, padding: 'clamp(12px, 3vw, 18px)',
         transition: 'border-color 0.15s',
       }}>
         {/* Confidence — top */}
@@ -1156,7 +1156,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
           background: oppHov ? 'rgba(14,165,233,0.05)' : 'rgba(14,165,233,0.03)',
           border: '1px solid rgba(14,165,233,0.15)',
           borderLeft: '3px solid #0ea5e9',
-          borderRadius: 6, padding: '16px 18px',
+          borderRadius: 6, padding: 'clamp(12px, 3vw, 18px)',
           transition: 'all 0.18s ease',
           transform: oppHov ? 'translateX(2px)' : 'translateX(0)',
         }}
@@ -1234,7 +1234,7 @@ const PerformanceSummary: React.FC<{
       {/* ── BLOCO 1: STATUS + METRICS ── */}
       <div style={{
         background: '#0C1017', border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 6, padding: '16px 18px',
+        borderRadius: 6, padding: 'clamp(12px, 3vw, 18px)',
       }}>
         {/* Confidence — top */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
@@ -1301,7 +1301,7 @@ const PerformanceSummary: React.FC<{
           background: oppHov ? 'rgba(14,165,233,0.05)' : 'rgba(14,165,233,0.03)',
           border: '1px solid rgba(14,165,233,0.15)',
           borderLeft: '3px solid #0ea5e9',
-          borderRadius: 6, padding: '16px 18px',
+          borderRadius: 6, padding: 'clamp(12px, 3vw, 18px)',
           transition: 'all 0.18s ease',
           transform: oppHov ? 'translateX(2px)' : 'translateX(0)',
         }}
@@ -1633,7 +1633,7 @@ const AdToggleModal: React.FC<{
           opacity: 0.6,
         }} />
 
-        <div style={{ padding: '22px 24px 24px' }}>
+        <div style={{ padding: 'clamp(14px, 4vw, 22px) clamp(16px, 4vw, 24px) clamp(16px, 4vw, 24px)' }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
             <div style={{
