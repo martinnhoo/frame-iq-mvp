@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Decision, DecisionAction } from '../../types/v2-database';
 import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
 import { GoalSetup } from '../../components/feed/GoalSetup';
-import { TrendingUp, TrendingDown, Minus, Pause, Play } from 'lucide-react';
+import { Pause, Play } from 'lucide-react';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
@@ -1791,18 +1791,51 @@ const AdToggleModal: React.FC<{
   );
 };
 
-// ── Performance Pulse — KPI bar with trend arrows ──
-const TrendArrow: React.FC<{ current: number; previous: number; invert?: boolean }> = ({ current, previous, invert }) => {
-  if (!previous || previous === 0) return <Minus size={10} style={{ color: 'rgba(255,255,255,0.65)' }} />;
-  const pct = ((current - previous) / previous) * 100;
-  const up = pct > 2;
-  const down = pct < -2;
-  // invert: for spend, up = bad; for CTR, up = good
-  const good = invert ? down : up;
-  const bad = invert ? up : down;
-  if (up) return <TrendingUp size={10} style={{ color: good ? '#4ADE80' : '#EF4444' }} />;
-  if (down) return <TrendingDown size={10} style={{ color: bad ? '#EF4444' : '#4ADE80' }} />;
-  return <Minus size={10} style={{ color: 'rgba(255,255,255,0.65)' }} />;
+// ── Performance Pulse — KPI bar (rebuilt) ──
+
+// Format currency: centavos → clean display. Never show long decimals.
+const fmtCurrency = (centavos: number): string => {
+  const v = centavos / 100;
+  if (v >= 1000) return `R$${(v / 1000).toFixed(1)}k`;
+  if (v >= 100) return `R$${Math.round(v)}`;
+  if (v > 0) return `R$${v.toFixed(2).replace('.', ',')}`;
+  return '—';
+};
+
+// Compute trend percentage. Returns null if no baseline.
+const trendPct = (current: number, previous: number): number | null => {
+  if (!previous || previous === 0 || !current) return null;
+  return ((current - previous) / previous) * 100;
+};
+
+// Inline trend badge: ▲ +12% or ▼ -8%
+const TrendBadge: React.FC<{ current: number; previous: number; invert?: boolean }> = ({ current, previous, invert }) => {
+  const pct = trendPct(current, previous);
+  if (pct === null || Math.abs(pct) < 2) return null;
+  const isUp = pct > 0;
+  // invert: for spend/CPA, up = bad; for CTR/ROAS, up = good
+  const isGood = invert ? !isUp : isUp;
+  const color = isGood ? T.green : T.red;
+  const arrow = isUp ? '▲' : '▼';
+  return (
+    <span style={{
+      fontSize: 9.5, fontWeight: 700, color,
+      display: 'inline-flex', alignItems: 'center', gap: 2,
+      marginTop: 3,
+      animation: 'feed-fadeIn 0.3s ease',
+    }}>
+      {arrow} {isUp ? '+' : ''}{pct.toFixed(0)}%
+    </span>
+  );
+};
+
+type KpiItem = {
+  label: string;
+  value: string;
+  trend?: React.ReactNode;
+  empty?: boolean;       // no data — show disabled state
+  emptyMsg?: string;     // message when empty
+  primary?: boolean;     // is this the hero KPI
 };
 
 const PerformancePulse: React.FC<{
@@ -1811,87 +1844,190 @@ const PerformancePulse: React.FC<{
     spendPrev: number; ctrPrev: number;
   };
   savings: number;
-  goalMetric?: string | null; // 'cpa' | 'roas' | 'cpc' | null
+  goalMetric?: string | null;
   adMetrics?: AdMetricsSummary | null;
   trackingBroken?: boolean;
 }> = ({ data, savings, goalMetric, adMetrics, trackingBroken }) => {
   const ctrDisplay = data.ctr7d < 1 ? data.ctr7d * 100 : data.ctr7d;
+  const ctrPrevDisplay = data.ctrPrev < 1 ? data.ctrPrev * 100 : data.ctrPrev;
   const pausedAds = (data.totalAds || 0) - data.activeAds;
+  const [hovIdx, setHovIdx] = useState<number | null>(null);
 
-  // Dynamic primary metric based on account goal
-  const buildPrimaryKpi = (): { label: string; value: string; sublabel?: string; trend: React.ReactNode } => {
-    if (goalMetric === 'cpa' && adMetrics) {
-      const cpa = adMetrics.avgCpa; // centavos
-      const display = cpa > 0 ? `R$${(cpa / 100).toFixed(2)}` : '—';
-      const sublabel = display === '—' && trackingBroken ? 'Sem dados de conversão' : undefined;
-      return { label: 'CPA', value: display, sublabel, trend: null };
-    }
-    if (goalMetric === 'roas' && adMetrics) {
-      const roas = adMetrics.avgRoas;
-      const display = roas > 0 ? `${roas.toFixed(1)}x` : '—';
-      const sublabel = display === '—' && trackingBroken ? 'Sem dados de conversão' : undefined;
-      return { label: 'ROAS', value: display, sublabel, trend: null };
-    }
-    if (goalMetric === 'cpc' && adMetrics) {
-      const cpc = adMetrics.avgCpc; // centavos
-      const display = cpc > 0 ? `R$${(cpc / 100).toFixed(2)}` : '—';
-      return { label: 'CPC', value: display, trend: null };
-    }
-    // Fallback: CTR
-    return {
-      label: 'CTR',
-      value: data.spend7d > 0 ? `${ctrDisplay.toFixed(2)}%` : '—',
-      trend: data.spend7d > 0 ? <TrendArrow current={data.ctr7d} previous={data.ctrPrev} /> : null,
-    };
-  };
+  // ── Build KPI list with hierarchy ──
+  const kpis: KpiItem[] = [];
 
-  const primaryKpi = buildPrimaryKpi();
+  // 1. SPEND — always primary when no goal metric, otherwise secondary
+  // spend7d is in reais (not centavos) — convert to centavos for fmtCurrency
+  const spendIsPrimary = !goalMetric || goalMetric === 'cpc';
+  kpis.push({
+    label: 'Investido',
+    value: fmtCurrency(Math.round(data.spend7d * 100)),
+    trend: data.spendPrev > 0 ? <TrendBadge current={data.spend7d} previous={data.spendPrev} invert /> : undefined,
+    primary: spendIsPrimary,
+  });
 
-  const kpis = [
-    { label: 'Spend 7d', value: `R$${data.spend7d >= 1000 ? (data.spend7d / 1000).toFixed(1) + 'k' : data.spend7d.toFixed(0)}` },
-    { label: primaryKpi.label, value: primaryKpi.value, sublabel: primaryKpi.sublabel },
-    { label: 'Ativos', value: String(data.activeAds) },
-    { label: 'Pausados', value: String(pausedAds > 0 ? pausedAds : 0) },
-  ];
+  // 2. GOAL METRIC — primary when set
+  if (goalMetric === 'cpa' && adMetrics) {
+    const hasData = adMetrics.avgCpa > 0;
+    kpis.push({
+      label: 'CPA',
+      value: hasData ? fmtCurrency(adMetrics.avgCpa) : '',
+      primary: true,
+      empty: !hasData,
+      emptyMsg: trackingBroken ? 'Sem conversões rastreadas' : 'Dados insuficientes',
+    });
+  } else if (goalMetric === 'roas' && adMetrics) {
+    const hasData = adMetrics.avgRoas > 0;
+    kpis.push({
+      label: 'ROAS',
+      value: hasData ? `${adMetrics.avgRoas.toFixed(1)}x` : '',
+      primary: true,
+      empty: !hasData,
+      emptyMsg: trackingBroken ? 'Sem conversões rastreadas' : 'Dados insuficientes',
+    });
+  } else if (goalMetric === 'cpc' && adMetrics) {
+    const hasData = adMetrics.avgCpc > 0;
+    kpis.push({
+      label: 'CPC',
+      value: hasData ? fmtCurrency(adMetrics.avgCpc) : '',
+      empty: !hasData,
+      emptyMsg: 'Dados insuficientes',
+    });
+  }
+
+  // 3. CTR — always present
+  const hasCtr = data.spend7d > 0;
+  kpis.push({
+    label: 'CTR',
+    value: hasCtr ? `${ctrDisplay.toFixed(2)}%` : '',
+    trend: hasCtr && ctrPrevDisplay > 0 ? <TrendBadge current={ctrDisplay} previous={ctrPrevDisplay} /> : undefined,
+    primary: !goalMetric && !spendIsPrimary,
+    empty: !hasCtr,
+    emptyMsg: 'Sem impressões',
+  });
+
+  // 4. AD STATUS — compact, always secondary
+  kpis.push({
+    label: 'Anúncios',
+    value: `${data.activeAds}`,
+    trend: pausedAds > 0 ? (
+      <span style={{ fontSize: 9, color: T.text3, marginTop: 2 }}>{pausedAds} pausado{pausedAds > 1 ? 's' : ''}</span>
+    ) : undefined,
+  });
+
+  // Ensure exactly one primary
+  const hasPrimary = kpis.some(k => k.primary);
+  if (!hasPrimary && kpis.length > 0) kpis[0].primary = true;
 
   return (
-    <div className="feed-kpi-bar" style={{ marginBottom: 14, fontFamily: F, animation: 'feed-fadeUp 0.3s ease' }}>
+    <div className="feed-kpi-bar" style={{ marginBottom: 14, fontFamily: F }}>
+      {/* Context line */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 8, padding: '0 2px',
+        animation: 'feed-fadeIn 0.3s ease',
       }}>
-        {kpis.map((k, idx) => (
-          <div key={k.label} style={{
-            background: T.bg1, borderRadius: 8,
-            padding: '10px 10px 8px', textAlign: 'center',
-            border: `1px solid ${T.border1}`,
-            animation: `feed-fadeUp 0.3s ease ${idx * 0.05}s both`,
-          }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: T.labelColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
-              {k.label}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 17, fontWeight: 800, color: T.text1, fontVariant: 'tabular-nums', letterSpacing: '-0.03em' }}>
-                {k.value}
-              </span>
-            </div>
-            {k.sublabel && (
-              <div style={{ fontSize: 8.5, color: `${T.red}B0`, marginTop: 2, fontWeight: 500 }}>
-                {k.sublabel}
-              </div>
-            )}
-          </div>
-        ))}
+        <span style={{ fontSize: 10, fontWeight: 600, color: T.text3 }}>
+          Últimos 7 dias
+        </span>
+        {data.spendPrev > 0 && (
+          <span style={{ fontSize: 9.5, color: T.text3 }}>
+            vs. 7 dias anteriores
+          </span>
+        )}
       </div>
+
+      {/* KPI Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: kpis.length <= 3 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+        gap: 6,
+      }}>
+        {kpis.map((k, idx) => {
+          const isHovered = hovIdx === idx;
+          return (
+            <div
+              key={k.label}
+              onMouseEnter={() => setHovIdx(idx)}
+              onMouseLeave={() => setHovIdx(null)}
+              style={{
+                background: isHovered ? T.bg2 : T.bg1,
+                borderRadius: 10,
+                padding: k.primary ? '14px 12px 12px' : '12px 10px 10px',
+                textAlign: 'center',
+                border: `1px solid ${isHovered ? T.border2 : T.border1}`,
+                gridColumn: k.primary && kpis.length === 4 ? 'span 2' : undefined,
+                transition: 'all 0.2s ease',
+                transform: isHovered ? 'translateY(-1px)' : 'none',
+                boxShadow: isHovered ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
+                opacity: k.empty ? 0.55 : 1,
+                animation: `feed-fadeUp 0.35s ease ${idx * 0.08}s both`,
+                cursor: 'default',
+              }}
+            >
+              {/* Label */}
+              <div style={{
+                fontSize: k.primary ? 10 : 9,
+                fontWeight: 700,
+                color: T.labelColor,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                marginBottom: k.primary ? 6 : 4,
+              }}>
+                {k.label}
+              </div>
+
+              {/* Value */}
+              {k.empty ? (
+                <div style={{ marginTop: 2 }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 600, color: T.text3,
+                    lineHeight: 1.4,
+                  }}>
+                    {k.emptyMsg || 'Dados insuficientes'}
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  fontSize: k.primary ? 26 : 17,
+                  fontWeight: 800,
+                  color: T.text1,
+                  fontVariant: 'tabular-nums',
+                  letterSpacing: '-0.03em',
+                  lineHeight: 1.1,
+                }}>
+                  {k.value}
+                </div>
+              )}
+
+              {/* Trend */}
+              {k.trend && !k.empty && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
+                  {k.trend}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Savings line */}
       {savings > 0 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          marginTop: 8, padding: '6px 10px',
+          marginTop: 10, padding: '6px 10px',
+          background: 'rgba(74,222,128,0.04)',
+          borderRadius: 6,
+          animation: 'feed-fadeIn 0.4s ease 0.3s both',
         }}>
-          <span style={{ fontSize: 10, color: T.green, fontWeight: 700 }}>↓</span>
-          <span style={{ fontSize: 11, color: T.text3, fontWeight: 500 }}>
+          <span style={{
+            width: 5, height: 5, borderRadius: '50%', background: T.green,
+            boxShadow: `0 0 4px ${T.green}40`, flexShrink: 0,
+          }} />
+          <span style={{ fontSize: 11, color: T.text2, fontWeight: 500 }}>
             Decisões economizaram{' '}
             <span style={{ color: T.text1, fontWeight: 700 }}>
-              R${(savings / 100) >= 1000 ? ((savings / 100) / 1000).toFixed(1) + 'k' : (savings / 100).toFixed(0)}
+              {fmtCurrency(savings)}
             </span>
             {' '}este mês
           </span>
