@@ -1825,10 +1825,10 @@ const PerformancePulse: React.FC<{
   const primaryKpi = buildPrimaryKpi();
 
   const kpis = [
-    { label: 'Spend 7d', value: `R$${data.spend7d >= 1000 ? (data.spend7d / 1000).toFixed(1) + 'k' : data.spend7d.toFixed(0)}`, trend: <TrendArrow current={data.spend7d} previous={data.spendPrev} invert /> },
-    primaryKpi,
-    { label: 'Ativos', value: String(data.activeAds), trend: null },
-    { label: 'Pausados', value: String(pausedAds > 0 ? pausedAds : 0), trend: null },
+    { label: 'Spend 7d', value: `R$${data.spend7d >= 1000 ? (data.spend7d / 1000).toFixed(1) + 'k' : data.spend7d.toFixed(0)}` },
+    { label: primaryKpi.label, value: primaryKpi.value },
+    { label: 'Ativos', value: String(data.activeAds) },
+    { label: 'Pausados', value: String(pausedAds > 0 ? pausedAds : 0) },
   ];
 
   return (
@@ -1844,11 +1844,10 @@ const PerformancePulse: React.FC<{
             <div style={{ fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
               {k.label}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: 17, fontWeight: 800, color: '#F0F6FC', fontVariant: 'tabular-nums', letterSpacing: '-0.03em' }}>
                 {k.value}
               </span>
-              {k.trend}
             </div>
           </div>
         ))}
