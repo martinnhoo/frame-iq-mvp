@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
 import { MoneyBar } from '../../components/feed/MoneyBar';
@@ -10,6 +10,7 @@ import { useActions } from '../../hooks/useActions';
 import { supabase } from '@/integrations/supabase/client';
 import type { Decision, DecisionAction } from '../../types/v2-database';
 import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
+import { TrendingUp, TrendingDown, Minus, Pause, Play } from 'lucide-react';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
@@ -731,7 +732,9 @@ const AdList: React.FC<{
   totalAds: number;
   onLoadMore?: () => void;
   loadingMore?: boolean;
-}> = ({ ads, totalAds, onLoadMore, loadingMore }) => {
+  onToggleAd?: (adId: string, action: 'pause' | 'activate') => void;
+  togglingAd?: string | null;
+}> = ({ ads, totalAds, onLoadMore, loadingMore, onToggleAd, togglingAd }) => {
   const [open, setOpen] = useState(false);
   const sorted = sortAdsByStatus(ads);
 
@@ -741,7 +744,16 @@ const AdList: React.FC<{
     const st = getAdStatusDisplay(ad);
     statusCounts[st.label] = (statusCounts[st.label] || 0) + 1;
   });
-  const summaryParts = Object.entries(statusCounts).map(([label, count]) => `${count} ${label.toLowerCase()}`);
+  const pluralize = (lbl: string, n: number) => {
+    if (n <= 1) return lbl.toLowerCase();
+    // Portuguese plurals: pausado→pausados, saudável→saudáveis, etc.
+    const l = lbl.toLowerCase();
+    if (l.endsWith('vel')) return l.slice(0, -3) + 'veis';
+    if (l.endsWith('do') || l.endsWith('da') || l.endsWith('vo') || l.endsWith('va')) return l + 's';
+    if (l.endsWith('a') || l.endsWith('o') || l.endsWith('e')) return l + 's';
+    return l + 's';
+  };
+  const summaryParts = Object.entries(statusCounts).map(([label, count]) => `${count} ${pluralize(label, count)}`);
   const summaryText = summaryParts.join(', ') || `${totalAds} anúncios`;
 
   const hasMore = totalAds > ads.length;
@@ -779,6 +791,10 @@ const AdList: React.FC<{
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 2 }}>
           {sorted.map((ad, i) => {
             const st = getAdStatusDisplay(ad);
+            const isPaused = st.label === 'Pausado';
+            const isActive = st.label === 'Ativo' || st.label === 'Saudável';
+            const canToggle = onToggleAd && ad.meta_ad_id && (isPaused || isActive);
+            const isToggling = togglingAd === ad.meta_ad_id;
             return (
               <div key={ad.meta_ad_id || i} style={{
                 display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
@@ -790,6 +806,29 @@ const AdList: React.FC<{
                 }}>
                   {ad.name}
                 </span>
+                {canToggle && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onToggleAd!(ad.meta_ad_id, isPaused ? 'activate' : 'pause'); }}
+                    disabled={isToggling}
+                    title={isPaused ? 'Ativar anúncio' : 'Pausar anúncio'}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: 22, height: 22, borderRadius: 4, border: 'none',
+                      background: isToggling ? 'rgba(255,255,255,0.04)' : isPaused ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.04)',
+                      cursor: isToggling ? 'default' : 'pointer',
+                      opacity: isToggling ? 0.4 : 0.7,
+                      transition: 'opacity 0.15s, background 0.15s',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={e => { if (!isToggling) e.currentTarget.style.opacity = '1'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = isToggling ? '0.4' : '0.7'; }}
+                  >
+                    {isPaused
+                      ? <Play size={10} style={{ color: '#4ADE80' }} />
+                      : <Pause size={10} style={{ color: 'rgba(255,255,255,0.50)' }} />
+                    }
+                  </button>
+                )}
                 <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
                   {st.label}
                 </span>
@@ -1055,7 +1094,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean }> = ({ totalAds, ads, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds }) => {
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null }> = ({ totalAds, ads, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd }) => {
   const navigate = useNavigate();
   const [oppHov, setOppHov] = useState(false);
   return (
@@ -1096,7 +1135,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         </div>
 
         {/* Ad list — sorted by status, collapsible when >5 */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} />}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE — data-driven, not generic ── */}
@@ -1163,7 +1202,9 @@ const PerformanceSummary: React.FC<{
   metaAccountId?: string;
   onLoadMoreAds?: () => void;
   loadingMoreAds?: boolean;
-}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds }) => {
+  onToggleAd?: (adId: string, action: 'pause' | 'activate') => void;
+  togglingAd?: string | null;
+}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd }) => {
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
 
@@ -1238,7 +1279,7 @@ const PerformanceSummary: React.FC<{
         )}
 
         {/* Ad list — sorted by status, collapsible when >5 */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} />}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE — data-driven ── */}
@@ -1427,6 +1468,77 @@ const CollapsibleDecisions: React.FC<{
               ))}
             </div>
           </FeedExpandable>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Performance Pulse — KPI bar with trend arrows ──
+const TrendArrow: React.FC<{ current: number; previous: number; invert?: boolean }> = ({ current, previous, invert }) => {
+  if (!previous || previous === 0) return <Minus size={10} style={{ color: 'rgba(255,255,255,0.25)' }} />;
+  const pct = ((current - previous) / previous) * 100;
+  const up = pct > 2;
+  const down = pct < -2;
+  // invert: for spend, up = bad; for CTR, up = good
+  const good = invert ? down : up;
+  const bad = invert ? up : down;
+  if (up) return <TrendingUp size={10} style={{ color: good ? '#4ADE80' : '#EF4444' }} />;
+  if (down) return <TrendingDown size={10} style={{ color: bad ? '#EF4444' : '#4ADE80' }} />;
+  return <Minus size={10} style={{ color: 'rgba(255,255,255,0.25)' }} />;
+};
+
+const PerformancePulse: React.FC<{
+  data: {
+    spend7d: number; ctr7d: number; conversions7d: number; activeAds: number;
+    spendPrev: number; ctrPrev: number;
+  };
+  savings: number;
+}> = ({ data, savings }) => {
+  const kpis = [
+    { label: 'Spend 7d', value: `R$${data.spend7d >= 1000 ? (data.spend7d / 1000).toFixed(1) + 'k' : data.spend7d.toFixed(0)}`, trend: <TrendArrow current={data.spend7d} previous={data.spendPrev} invert /> },
+    { label: 'CTR', value: `${(data.ctr7d * 100).toFixed(2)}%`, trend: <TrendArrow current={data.ctr7d} previous={data.ctrPrev} /> },
+    { label: 'Conversões', value: data.conversions7d.toLocaleString('pt-BR'), trend: null },
+    { label: 'Ativos', value: String(data.activeAds), trend: null },
+  ];
+
+  return (
+    <div style={{ marginBottom: 16, fontFamily: F }}>
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
+      }}>
+        {kpis.map(k => (
+          <div key={k.label} style={{
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 6, padding: '10px 10px 8px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+              {k.label}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <span style={{ fontSize: 17, fontWeight: 800, color: '#F0F6FC', fontVariant: 'tabular-nums', letterSpacing: '-0.03em' }}>
+                {k.value}
+              </span>
+              {k.trend}
+            </div>
+          </div>
+        ))}
+      </div>
+      {savings > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          marginTop: 8, padding: '6px 10px',
+          background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.10)',
+          borderRadius: 5,
+        }}>
+          <span style={{ fontSize: 10, color: '#4ADE80', fontWeight: 700 }}>↓</span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>
+            Decisões do AdBrief economizaram{' '}
+            <span style={{ color: '#4ADE80', fontWeight: 700 }}>
+              R${savings >= 1000 ? (savings / 1000).toFixed(1) + 'k' : savings.toFixed(0)}
+            </span>
+            {' '}este mês
+          </span>
         </div>
       )}
     </div>
@@ -1622,6 +1734,143 @@ const FeedPage: React.FC = () => {
     return () => { clearTimeout(t); autoSyncFired.current = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId, metaConnected, adsLoaded, totalAdCount]);
+
+  // ── Performance Pulse: daily_snapshots + savings ──
+  const [pulseData, setPulseData] = useState<{
+    spend7d: number; ctr7d: number; conversions7d: number; activeAds: number;
+    spendYesterday: number; ctrYesterday: number;
+    spendPrev: number; ctrPrev: number;
+  } | null>(null);
+  const [savingsTotal, setSavingsTotal] = useState<number>(0);
+
+  useEffect(() => {
+    if (!userId || !personaId) { setPulseData(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const sevenAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+        const fourteenAgo = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
+
+        // Last 7 days snapshots
+        const { data: snaps } = await (supabase
+          .from('daily_snapshots' as any)
+          .select('date, total_spend, avg_ctr, active_ads, yesterday_spend, yesterday_ctr')
+          .eq('user_id', userId)
+          .eq('persona_id', personaId)
+          .gte('date', sevenAgo)
+          .order('date', { ascending: false }) as any);
+
+        // Previous 7 days for trend comparison
+        const { data: prevSnaps } = await (supabase
+          .from('daily_snapshots' as any)
+          .select('date, total_spend, avg_ctr')
+          .eq('user_id', userId)
+          .eq('persona_id', personaId)
+          .gte('date', fourteenAgo)
+          .lt('date', sevenAgo)
+          .order('date', { ascending: false }) as any);
+
+        if (cancelled) return;
+        if (snaps && snaps.length > 0) {
+          const spend7d = (snaps as any[]).reduce((s: number, r: any) => s + (r.total_spend || 0), 0);
+          const totalSpendW = spend7d || 1;
+          const ctr7d = (snaps as any[]).reduce((s: number, r: any) => s + (r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendW;
+          const activeAds = (snaps as any[])[0]?.active_ads || 0;
+
+          const spendPrev = (prevSnaps || []).reduce((s: number, r: any) => s + (r.total_spend || 0), 0);
+          const totalSpendP = spendPrev || 1;
+          const ctrPrev = (prevSnaps || []).reduce((s: number, r: any) => s + (r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendP;
+
+          setPulseData({
+            spend7d, ctr7d, conversions7d: 0, activeAds,
+            spendYesterday: (snaps as any[])[0]?.yesterday_spend || 0,
+            ctrYesterday: (snaps as any[])[0]?.yesterday_ctr || 0,
+            spendPrev, ctrPrev,
+          });
+        } else {
+          setPulseData(null);
+        }
+      } catch { if (!cancelled) setPulseData(null); }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, personaId]);
+
+  // Fetch conversions from ad_metrics (daily_snapshots doesn't have them)
+  useEffect(() => {
+    if (!accountId || !pulseData) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const sevenAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+        const { data } = await (supabase
+          .from('ad_metrics' as any)
+          .select('conversions')
+          .eq('account_id', accountId)
+          .gte('date', sevenAgo) as any);
+        if (cancelled) return;
+        const total = (data || []).reduce((s: number, r: any) => s + (r.conversions || 0), 0);
+        setPulseData(prev => prev ? { ...prev, conversions7d: total } : prev);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [accountId, pulseData?.spend7d]);
+
+  // Fetch savings from action_log
+  useEffect(() => {
+    if (!userId) { setSavingsTotal(0); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+        const { data } = await (supabase
+          .from('action_log' as any)
+          .select('estimated_daily_impact')
+          .eq('user_id', userId)
+          .gte('created_at', monthStart)
+          .like('action_type', 'pause%') as any);
+        if (cancelled) return;
+        const total = (data || []).reduce((s: number, r: any) => s + (r.estimated_daily_impact || 0), 0);
+        setSavingsTotal(total);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // ── Ad toggle (pause/activate) from Feed ──
+  const [togglingAd, setTogglingAd] = useState<string | null>(null);
+
+  const handleToggleAd = useCallback(async (adId: string, action: 'pause' | 'activate') => {
+    if (togglingAd) return;
+    setTogglingAd(adId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(`${supabaseUrl}/functions/v1/meta-actions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || supabaseKey}`,
+          'apikey': supabaseKey,
+        },
+        body: JSON.stringify({
+          action: action === 'pause' ? 'pause_ad' : 'activate_ad',
+          target_id: adId,
+          target_type: 'ad',
+          account_id: accountId,
+        }),
+      });
+      if (res.ok) {
+        // Refresh ads list to show updated status
+        fetchAds();
+      }
+    } catch (e) {
+      console.error('Toggle ad error:', e);
+    } finally {
+      setTogglingAd(null);
+    }
+  }, [togglingAd, accountId, fetchAds]);
 
   // Meta Ads Manager URL for the connected account
   const metaAccountId = activeAccount?.metaAccountId || '';
@@ -1842,6 +2091,11 @@ const FeedPage: React.FC = () => {
         {/* Inline sync progress banner */}
         {syncing && <SyncBanner />}
 
+        {/* Performance Pulse — KPI bar */}
+        {metaConnected && !isDemo && pulseData && (
+          <PerformancePulse data={pulseData} savings={savingsTotal} />
+        )}
+
         {/* STATE 5 — Full data: money tracker + summary + cards */}
         {feedState === 'full' || feedState === 'demo' ? (
           <>
@@ -1872,6 +2126,8 @@ const FeedPage: React.FC = () => {
                 metrics={adMetrics}
                 periodLabel={PERIODS.find(p => p.key === period)!.label}
                 metaAccountId={metaAccountId}
+                onToggleAd={handleToggleAd}
+                togglingAd={togglingAd}
                 onLoadMoreAds={loadMoreAds}
                 loadingMoreAds={adsLoadingMore}
               />
@@ -1906,7 +2162,7 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'few-data' ? (
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
-          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} />
+          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleToggleAd} togglingAd={togglingAd} />
         ) : null}
 
         {/* Intelligence — collapsible, always available */}
