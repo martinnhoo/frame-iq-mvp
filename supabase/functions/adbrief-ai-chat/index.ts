@@ -172,20 +172,62 @@ Deno.serve(async (req) => {
                   };
                 })
                 .sort((a: any, b: any) => b.spend - a.spend);
-              // Compute tracking health for panel_data
+              // Compute tracking health for panel_data — structured Problem/Cause/Impact
               let panelTrackingStatus: "healthy" | "uncertain" | "broken" = "uncertain";
               let panelTrackingLabel = "";
+              let panelTrackingProblem = "";
+              let panelTrackingCauses: string[] = [];
+              let panelTrackingImpact = "";
+              let panelTrackingCase = ""; // case1 | case2 | case3 | none
+              let panelTrackingChatMsg = ""; // auto-inject into AI chat on CTA click
+
               if (totalConv > 0) {
-                panelTrackingStatus = "healthy";
-                panelTrackingLabel = "Tracking ativo";
+                // Check for event mismatch even when conversions exist
+                const goalEvt = (() => {
+                  try {
+                    const { data: gd } = (result as any).__goalData || {};
+                    return null; // goalData not accessible here; mismatch checked via low conv rate
+                  } catch { return null; }
+                })();
+                const convRate = totalClicks > 0 ? totalConv / totalClicks : 0;
+                if (totalSpend > 100 && convRate < 0.005) {
+                  // Case 2: high spend + very low conversions
+                  panelTrackingStatus = "uncertain";
+                  panelTrackingCase = "case2";
+                  panelTrackingLabel = "Taxa de conversão muito baixa";
+                  panelTrackingProblem = `${totalConv} conversões em ${totalClicks} cliques (${(convRate * 100).toFixed(2)}%) — abaixo do esperado`;
+                  panelTrackingCauses = [
+                    "Evento de conversão pode estar disparando na página errada",
+                    "Tracking parcial — apenas parte das conversões é registrada",
+                    "Evento duplicado sendo descartado pelo Meta",
+                  ];
+                  panelTrackingImpact = "CPA pode estar inflado. Otimização de campanha pode ser imprecisa.";
+                  panelTrackingChatMsg = `Diagnóstico de Tracking\n\nMinhas campanhas estão com taxa de conversão muito baixa (${(convRate * 100).toFixed(2)}%). Tenho ${totalConv} conversões em ${totalClicks} cliques com $${totalSpend.toFixed(0)} de investimento.\n\nIsso pode ser problema de tracking? Me ajuda a diagnosticar.`;
+                } else {
+                  panelTrackingStatus = "healthy";
+                  panelTrackingLabel = "Tracking ativo";
+                  panelTrackingCase = "none";
+                }
               } else if (totalSpend > 50 && totalClicks > 20 && totalConv === 0) {
+                // Case 1: traffic flowing but zero conversions
                 panelTrackingStatus = "broken";
-                panelTrackingLabel = "Possível problema de tracking";
+                panelTrackingCase = "case1";
+                panelTrackingLabel = "Nenhuma conversão detectada";
+                panelTrackingProblem = `Campanhas gerando tráfego (${totalClicks} cliques, $${totalSpend.toFixed(0)} investidos) mas nenhuma conversão registrada`;
+                panelTrackingCauses = [
+                  "Evento de conversão não está disparando no site",
+                  "Evento selecionado não corresponde à ação real do usuário",
+                  "Landing page com problema impedindo a conversão",
+                ];
+                panelTrackingImpact = "AdBrief não consegue calcular CPA. Otimização de performance está limitada.";
+                panelTrackingChatMsg = `Diagnóstico de Tracking\n\nMinhas campanhas estão gerando tráfego (${totalClicks} cliques, $${totalSpend.toFixed(0)} investidos) mas nenhuma conversão está sendo registrada.\n\nPreciso diagnosticar o que está errado com o tracking. Em qual plataforma meu site foi construído?`;
               } else if (totalSpend === 0) {
                 panelTrackingStatus = "uncertain";
+                panelTrackingCase = "none";
                 panelTrackingLabel = "Sem dados suficientes";
               } else {
                 panelTrackingStatus = "uncertain";
+                panelTrackingCase = "none";
                 panelTrackingLabel = "Avaliando tracking";
               }
 
@@ -205,6 +247,11 @@ Deno.serve(async (req) => {
                 tracking_health: {
                   status: panelTrackingStatus,
                   label: panelTrackingLabel,
+                  case: panelTrackingCase,
+                  problem: panelTrackingProblem || undefined,
+                  causes: panelTrackingCauses.length > 0 ? panelTrackingCauses : undefined,
+                  impact: panelTrackingImpact || undefined,
+                  chat_message: panelTrackingChatMsg || undefined,
                 },
                 winners: enriched.filter((a: any) => a.isWinner).slice(0, 5),
                 at_risk: enriched.filter((a: any) => a.isRisk).slice(0, 5),
@@ -1453,14 +1500,31 @@ Esta conta ainda não tem padrões validados com dados suficientes.
                 }
               }
 
-              // Inject tracking diagnostic into context
+              // Inject structured tracking diagnostic into context
               const statusEmoji = trackingStatus === "healthy" ? "🟢" : trackingStatus === "uncertain" ? "🟡" : "🔴";
               liveMetaData += `\n═══ TRACKING DIAGNOSTIC ═══\n`;
               liveMetaData += `STATUS: ${statusEmoji} ${trackingStatus.toUpperCase()} (confiança: ${trackingConfidence})\n`;
-              liveMetaData += `DIAGNÓSTICO: ${trackingDiagnosis}\n`;
-              if (eventMismatch) liveMetaData += `${eventMismatch}\n`;
-              if (trackingStatus !== "healthy") {
+
+              if (trackingStatus === "healthy") {
+                liveMetaData += `DIAGNÓSTICO: ${trackingDiagnosis}\n`;
+              } else {
+                // Structured Problem → Cause → Impact
+                liveMetaData += `PROBLEMA: ${trackingDiagnosis}\n`;
+
+                // Specific case causes
+                if (!hasPixel) {
+                  liveMetaData += `CAUSAS PROVÁVEIS:\n  - Pixel nunca foi adicionado à conta\n  - Pixel pode ter sido deletado\n`;
+                } else if (!pixelFired) {
+                  liveMetaData += `CAUSAS PROVÁVEIS:\n  - Código do pixel não está no site\n  - Pixel instalado no domínio errado\n  - Bloqueador de scripts impedindo o disparo\n`;
+                } else if (totalSpend > 50 && totalClicks > 20 && totalConversions === 0) {
+                  liveMetaData += `CAUSAS PROVÁVEIS:\n  - Evento de conversão não está disparando no site\n  - Evento selecionado não corresponde à ação real do usuário\n  - Landing page com problema impedindo a conversão\n`;
+                } else if (totalConversions > 0 && totalConversions < totalClicks * 0.005) {
+                  liveMetaData += `CAUSAS PROVÁVEIS:\n  - Tracking parcial — apenas parte das conversões registrada\n  - Evento configurado em página errada\n  - Evento duplicado descartado pelo Meta\n`;
+                }
+
+                if (eventMismatch) liveMetaData += `EVENT MISMATCH: ${eventMismatch}\n`;
                 liveMetaData += `IMPACTO: AdBrief ${trackingStatus === "broken" ? "NÃO PODE" : "pode ter dificuldade para"} calcular CPA real, identificar o que converte, ou otimizar com base em resultados reais.\n`;
+                liveMetaData += `DADOS DISPONÍVEIS: spend=$${totalSpend.toFixed(0)}, clicks=${totalClicks}, impressions=${totalImpressions}, conversions=${totalConversions}\n`;
               }
               liveMetaData += `═══ FIM TRACKING ═══\n`;
             } catch (trackErr) {

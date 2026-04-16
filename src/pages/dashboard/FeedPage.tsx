@@ -1216,7 +1216,8 @@ const PerformanceSummary: React.FC<{
   onToggleAd?: (adId: string, action: 'pause' | 'activate') => void;
   togglingAd?: string | null;
   onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
-}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, onRequestToggle }) => {
+  trackingIssue?: boolean;
+}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, onRequestToggle, trackingIssue }) => {
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
 
@@ -1287,6 +1288,13 @@ const PerformanceSummary: React.FC<{
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Tracking caveat when conversion data is limited */}
+        {trackingIssue && hasMetrics && (
+          <div style={{ fontSize: 10.5, color: 'rgba(251,191,36,0.65)', fontStyle: 'italic', marginBottom: 10, paddingLeft: 2 }}>
+            Insights baseados em dados limitados de conversão
           </div>
         )}
 
@@ -1797,21 +1805,24 @@ const PerformancePulse: React.FC<{
   savings: number;
   goalMetric?: string | null; // 'cpa' | 'roas' | 'cpc' | null
   adMetrics?: AdMetricsSummary | null;
-}> = ({ data, savings, goalMetric, adMetrics }) => {
+  trackingBroken?: boolean;
+}> = ({ data, savings, goalMetric, adMetrics, trackingBroken }) => {
   const ctrDisplay = data.ctr7d < 1 ? data.ctr7d * 100 : data.ctr7d;
   const pausedAds = (data.totalAds || 0) - data.activeAds;
 
   // Dynamic primary metric based on account goal
-  const buildPrimaryKpi = (): { label: string; value: string; trend: React.ReactNode } => {
+  const buildPrimaryKpi = (): { label: string; value: string; sublabel?: string; trend: React.ReactNode } => {
     if (goalMetric === 'cpa' && adMetrics) {
       const cpa = adMetrics.avgCpa; // centavos
       const display = cpa > 0 ? `R$${(cpa / 100).toFixed(2)}` : '—';
-      return { label: 'CPA', value: display, trend: null };
+      const sublabel = display === '—' && trackingBroken ? 'Sem dados de conversão' : undefined;
+      return { label: 'CPA', value: display, sublabel, trend: null };
     }
     if (goalMetric === 'roas' && adMetrics) {
       const roas = adMetrics.avgRoas;
       const display = roas > 0 ? `${roas.toFixed(1)}x` : '—';
-      return { label: 'ROAS', value: display, trend: null };
+      const sublabel = display === '—' && trackingBroken ? 'Sem dados de conversão' : undefined;
+      return { label: 'ROAS', value: display, sublabel, trend: null };
     }
     if (goalMetric === 'cpc' && adMetrics) {
       const cpc = adMetrics.avgCpc; // centavos
@@ -1830,7 +1841,7 @@ const PerformancePulse: React.FC<{
 
   const kpis = [
     { label: 'Spend 7d', value: `R$${data.spend7d >= 1000 ? (data.spend7d / 1000).toFixed(1) + 'k' : data.spend7d.toFixed(0)}` },
-    { label: primaryKpi.label, value: primaryKpi.value },
+    { label: primaryKpi.label, value: primaryKpi.value, sublabel: primaryKpi.sublabel },
     { label: 'Ativos', value: String(data.activeAds) },
     { label: 'Pausados', value: String(pausedAds > 0 ? pausedAds : 0) },
   ];
@@ -1853,6 +1864,11 @@ const PerformancePulse: React.FC<{
                 {k.value}
               </span>
             </div>
+            {k.sublabel && (
+              <div style={{ fontSize: 8.5, color: 'rgba(248,113,113,0.70)', marginTop: 2, fontWeight: 500 }}>
+                {k.sublabel}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -1935,6 +1951,42 @@ const FeedPage: React.FC = () => {
 
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
+
+  // ── Tracking health — derived from adMetrics ──
+  const trackingHealth = useMemo(() => {
+    if (!adMetrics) return null;
+    const s = adMetrics.totalSpend / 100; // centavos → reais
+    const c = adMetrics.totalConversions;
+    const cl = adMetrics.totalClicks;
+    if (s > 50 && cl > 20 && c === 0) {
+      return {
+        status: 'broken' as const,
+        problem: `Campanhas gerando tráfego (${cl} cliques, R$${s.toFixed(0)} investidos) mas nenhuma conversão registrada`,
+        causes: [
+          'Evento de conversão não está disparando no site',
+          'Evento selecionado não corresponde à ação real do usuário',
+          'Landing page com problema impedindo a conversão',
+        ],
+        impact: 'AdBrief não consegue calcular CPA. Otimização de performance está limitada.',
+        chatMsg: `Diagnóstico de Tracking\n\nMinhas campanhas estão gerando tráfego (${cl} cliques, R$${s.toFixed(0)} investidos) mas nenhuma conversão está sendo registrada.\n\nPreciso diagnosticar o que está errado com o tracking. Em qual plataforma meu site foi construído?`,
+      };
+    }
+    if (s > 100 && c > 0 && c < cl * 0.005) {
+      const rate = cl > 0 ? (c / cl * 100).toFixed(2) : '0';
+      return {
+        status: 'uncertain' as const,
+        problem: `${c} conversões em ${cl} cliques (${rate}%) — abaixo do esperado`,
+        causes: [
+          'Evento pode estar disparando na página errada',
+          'Tracking parcial — parte das conversões não registrada',
+          'Evento duplicado descartado pelo Meta',
+        ],
+        impact: 'CPA pode estar inflado. Otimização de campanha pode ser imprecisa.',
+        chatMsg: `Diagnóstico de Tracking\n\nMinhas campanhas estão com taxa de conversão muito baixa (${rate}%). Tenho ${c} conversões em ${cl} cliques com R$${s.toFixed(0)} de investimento.\n\nIsso pode ser problema de tracking? Me ajuda a diagnosticar.`,
+      };
+    }
+    return { status: 'healthy' as const, problem: '', causes: [] as string[], impact: '', chatMsg: '' };
+  }, [adMetrics]);
 
   // Ads fetch — paginated, refetchable
   const ADS_PAGE_SIZE = 40;
@@ -2468,50 +2520,74 @@ const FeedPage: React.FC = () => {
               return s === 'ACTIVE' || s === '';
             }).length,
             totalAds: totalAdCount,
-          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} />
+          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth?.status === 'broken' || trackingHealth?.status === 'uncertain'} />
         )}
 
-        {/* Tracking Health Indicator — subtle banner when tracking issues detected */}
-        {metaConnected && !isDemo && adMetrics && (() => {
-          const s = adMetrics.totalSpend / 100; // to reais
-          const c = adMetrics.totalConversions;
-          const cl = adMetrics.totalClicks;
-          let status: 'healthy' | 'uncertain' | 'broken' = 'healthy';
-          let label = '';
-          if (s > 50 && cl > 20 && c === 0) {
-            status = 'broken';
-            label = 'Tracking pode estar com problema — 0 conversões registradas';
-          } else if (s > 100 && c > 0 && c < cl * 0.005) {
-            status = 'uncertain';
-            label = 'Taxa de conversão muito baixa — verifique o tracking';
-          }
-          if (status === 'healthy') return null;
-          const color = status === 'broken' ? '#F87171' : '#FBBF24';
-          const emoji = status === 'broken' ? '🔴' : '🟡';
-          return (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 12px', marginBottom: 12,
-              background: status === 'broken' ? 'rgba(248,113,113,0.06)' : 'rgba(251,191,36,0.06)',
-              border: `1px solid ${status === 'broken' ? 'rgba(248,113,113,0.15)' : 'rgba(251,191,36,0.15)'}`,
-              borderRadius: 8,
-            }}>
-              <span style={{ fontSize: 11 }}>{emoji}</span>
-              <span style={{ fontSize: 11, color, fontWeight: 600, flex: 1 }}>{label}</span>
-              <button
-                className="feed-micro-btn"
-                onClick={() => navigate('/dashboard/ai')}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 500,
-                  textDecoration: 'underline', padding: 0,
-                }}
-              >
-                Ver diagnóstico
-              </button>
+        {/* Tracking Health — decision card when issues detected */}
+        {metaConnected && !isDemo && trackingHealth && trackingHealth.status !== 'healthy' && (
+          <div style={{
+            background: '#0C1017',
+            border: `1px solid ${trackingHealth.status === 'broken' ? 'rgba(248,113,113,0.18)' : 'rgba(251,191,36,0.18)'}`,
+            borderRadius: 8, padding: 'clamp(12px, 3vw, 16px)', marginBottom: 12,
+            borderLeft: `3px solid ${trackingHealth.status === 'broken' ? '#F87171' : '#FBBF24'}`,
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <span style={{ fontSize: 12 }}>{trackingHealth.status === 'broken' ? '🔴' : '🟡'}</span>
+              <span style={{
+                fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                color: trackingHealth.status === 'broken' ? '#F87171' : '#FBBF24',
+              }}>
+                {trackingHealth.status === 'broken' ? 'Tracking com problema' : 'Tracking incerto'}
+              </span>
             </div>
-          );
-        })()}
+
+            {/* Problem */}
+            <p style={{ fontSize: 12.5, color: '#F0F6FC', fontWeight: 600, margin: '0 0 8px', lineHeight: 1.5 }}>
+              {trackingHealth.problem}
+            </p>
+
+            {/* Causes */}
+            {trackingHealth.causes.length > 0 && (
+              <div style={{
+                background: 'rgba(255,255,255,0.02)', borderRadius: 5,
+                padding: '8px 10px', marginBottom: 8,
+              }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.50)', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
+                  Possíveis causas
+                </div>
+                {trackingHealth.causes.map((cause, i) => (
+                  <div key={i} style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.72)', lineHeight: 1.6, paddingLeft: 10 }}>
+                    • {cause}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Impact */}
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', margin: '0 0 10px', lineHeight: 1.5 }}>
+              <span style={{ fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>Impacto:</span> {trackingHealth.impact}
+            </p>
+
+            {/* CTA */}
+            <button
+              onClick={() => {
+                const msg = encodeURIComponent(trackingHealth.chatMsg);
+                navigate(`/dashboard/ai?tracking_diagnostic=${msg}`);
+              }}
+              style={{
+                background: trackingHealth.status === 'broken' ? 'rgba(248,113,113,0.12)' : 'rgba(251,191,36,0.10)',
+                border: `1px solid ${trackingHealth.status === 'broken' ? 'rgba(248,113,113,0.25)' : 'rgba(251,191,36,0.22)'}`,
+                borderRadius: 6, padding: '8px 14px', cursor: 'pointer',
+                fontSize: 11.5, fontWeight: 600,
+                color: trackingHealth.status === 'broken' ? '#F87171' : '#FBBF24',
+                width: '100%',
+              }}
+            >
+              Diagnosticar e corrigir tracking →
+            </button>
+          </div>
+        )}
 
         {/* Goal Setup — show when Meta is connected but no goal configured */}
         {metaConnected && !isDemo && goalConfigured === false && accountId && (
@@ -2556,6 +2632,7 @@ const FeedPage: React.FC = () => {
                 onRequestToggle={handleRequestToggle}
                 onLoadMoreAds={loadMoreAds}
                 loadingMoreAds={adsLoadingMore}
+                trackingIssue={trackingHealth?.status !== 'healthy' && trackingHealth?.status !== undefined}
               />
             )}
 

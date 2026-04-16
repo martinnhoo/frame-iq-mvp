@@ -2148,6 +2148,10 @@ export default function AdBriefAI() {
     }
   }, [selectedPersona?.id]);
 
+  // Support ?tracking_diagnostic= — auto-inject and send diagnostic message
+  const trackingDiagParam = useRef(searchParams.get("tracking_diagnostic"));
+  const trackingDiagSent = useRef(false);
+
   // Session goal — persists 7 days, resets automatically
   const GOAL_KEY = `adbrief_goal_${selectedPersona?.id || "default"}`;
   // Active skill — persisted per persona in localStorage
@@ -3927,6 +3931,22 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       setLoading(false);
     }
   };
+
+  // Auto-send tracking diagnostic message from Feed CTA
+  useEffect(() => {
+    if (trackingDiagParam.current && !trackingDiagSent.current && selectedPersona?.id && !loading) {
+      trackingDiagSent.current = true;
+      const msg = decodeURIComponent(trackingDiagParam.current);
+      searchParams.delete("tracking_diagnostic");
+      setSearchParams(searchParams, { replace: true });
+      trackingDiagParam.current = null;
+      // Small delay to ensure chat is ready
+      setTimeout(() => {
+        send(msg);
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 300);
+      }, 500);
+    }
+  }, [selectedPersona?.id, loading]);
 
     const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
   const hasData=connections.length>0;
