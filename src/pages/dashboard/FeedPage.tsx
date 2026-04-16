@@ -754,8 +754,9 @@ const AdList: React.FC<{
   loadingMore?: boolean;
   onToggleAd?: (adId: string, action: 'pause' | 'activate') => void;
   togglingAd?: string | null;
+  toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
   onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
-}> = ({ ads, totalAds, onLoadMore, loadingMore, onToggleAd, togglingAd, onRequestToggle }) => {
+}> = ({ ads, totalAds, onLoadMore, loadingMore, onToggleAd, togglingAd, toggleSuccess, onRequestToggle }) => {
   const [open, setOpen] = useState(false);
   const sorted = sortAdsByStatus(ads);
 
@@ -817,6 +818,7 @@ const AdList: React.FC<{
             const isActive = st.label === 'Saudável' || st.label === 'Aprendizado';
             const canToggle = onRequestToggle && ad.meta_ad_id && (isPaused || isActive);
             const isToggling = togglingAd === ad.meta_ad_id;
+            const justSucceeded = toggleSuccess?.id === ad.meta_ad_id;
             return (
               <div key={ad.meta_ad_id || i} className="feed-micro-btn" style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '6px 2px', minWidth: 0,
@@ -832,6 +834,19 @@ const AdList: React.FC<{
                   {st.label}
                 </span>
                 {canToggle && (
+                  justSucceeded ? (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '3px 8px', borderRadius: 3,
+                      background: 'rgba(74,222,128,0.08)',
+                      color: T.green,
+                      fontSize: 10, fontWeight: 600, fontFamily: F,
+                      flexShrink: 0,
+                      animation: 'feed-success 0.3s ease forwards',
+                    }}>
+                      ✓ {toggleSuccess.action === 'pause' ? 'Pausado' : 'Ativado'}
+                    </span>
+                  ) : (
                   <button
                     onClick={(e) => { e.stopPropagation(); onRequestToggle!(ad, isPaused ? 'activate' : 'pause'); }}
                     disabled={isToggling}
@@ -849,9 +864,12 @@ const AdList: React.FC<{
                     onMouseEnter={e => { if (!isToggling) { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.08)'; } }}
                     onMouseLeave={e => { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)'; }}
                   >
-                    {isPaused ? <Play size={9} /> : <Pause size={9} />}
-                    {isPaused ? 'Ativar' : 'Pausar'}
+                    {isToggling ? (
+                      <span style={{ width: 9, height: 9, border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'inline-block', animation: 'feed-shimmer 0.8s linear infinite' }} />
+                    ) : isPaused ? <Play size={9} /> : <Pause size={9} />}
+                    {isToggling ? '...' : isPaused ? 'Ativar' : 'Pausar'}
                   </button>
+                  )
                 )}
               </div>
             );
@@ -1111,7 +1129,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void }> = ({ totalAds, ads, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, onRequestToggle }) => {
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void }> = ({ totalAds, ads, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, toggleSuccess, onRequestToggle }) => {
   const navigate = useNavigate();
   const [oppHov, setOppHov] = useState(false);
   return (
@@ -1140,18 +1158,19 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
 
         {/* Headline */}
         <div style={{ fontSize: 15, fontWeight: 700, color: T.text1, letterSpacing: '-0.01em', marginBottom: 4 }}>
-          Sem ações críticas — operação estável
+          Conta estável · Nenhum risco imediato detectado
         </div>
         <div style={{ fontSize: 12, color: T.text3, marginBottom: 14 }}>
-          Sistema focado em otimização
+          Sistema monitorando · próxima análise em breve
         </div>
 
         {/* Ad list */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} onRequestToggle={onRequestToggle} />}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE — left border accent, neutral surface ── */}
       <div
+        className="feed-card-lift"
         onMouseEnter={() => setOppHov(true)}
         onMouseLeave={() => setOppHov(false)}
         style={{
@@ -1159,24 +1178,23 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
           border: `1px solid ${T.border1}`,
           borderLeft: `3px solid ${T.blue}`,
           borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
-          transition: 'background 0.18s ease',
         }}
       >
         <div style={{ fontSize: 9, fontWeight: 700, color: T.labelColor, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
           PRÓXIMA OPORTUNIDADE
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: T.text1, marginBottom: 6, lineHeight: 1.4 }}>
-          Novos criativos podem melhorar seu CTR em até <span style={{ color: T.blue }}>+18%</span>
+          Seu próximo ganho vem de novos criativos · <span style={{ color: T.blue }}>+18% CTR potencial</span>
         </div>
         <div style={{ fontSize: 12, color: T.text2, lineHeight: 1.55, marginBottom: 14 }}>
-          Contas com performance semelhante ganham mais diversificando hooks e formatos
+          Contas com performance semelhante escalam diversificando hooks e formatos
         </div>
-        <button onClick={() => navigate('/dashboard/criar')} style={{
+        <button onClick={() => navigate('/dashboard/criar')} className="feed-cta" style={{
           background: T.blue, color: T.text1,
           border: 'none', borderRadius: 6,
           padding: '9px 20px', fontSize: 12.5, fontWeight: 700,
           fontFamily: F, cursor: 'pointer',
-          transition: 'all 0.15s',
+          transition: 'all 0.18s',
           boxShadow: oppHov ? `0 4px 14px ${T.blue}30` : 'none',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.blueHover; }}
@@ -1186,14 +1204,14 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
       </div>
 
       {/* ── BLOCO 3: SISTEMA ATIVO — minimal footer ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 2px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 2px', animation: 'feed-fadeIn 0.4s ease' }}>
         <span style={{
           width: 4, height: 4, borderRadius: '50%', background: T.green,
           boxShadow: `0 0 5px ${T.green}40`,
           animation: 'pulse 2.5s ease-in-out infinite',
         }} />
         <span style={{ fontSize: 10, color: T.text3 }}>
-          Monitoramento ativo
+          Monitoramento ativo · sistema operando
         </span>
       </div>
     </div>
@@ -1214,9 +1232,10 @@ const PerformanceSummary: React.FC<{
   loadingMoreAds?: boolean;
   onToggleAd?: (adId: string, action: 'pause' | 'activate') => void;
   togglingAd?: string | null;
+  toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
   onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
   trackingIssue?: boolean;
-}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, onRequestToggle, trackingIssue }) => {
+}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, toggleSuccess, onRequestToggle, trackingIssue }) => {
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
 
@@ -1253,10 +1272,10 @@ const PerformanceSummary: React.FC<{
 
         {/* Headline */}
         <div style={{ fontSize: 15, fontWeight: 700, color: T.text1, letterSpacing: '-0.01em', marginBottom: 4 }}>
-          Sem ações críticas — operação estável
+          Conta estável · Nenhum risco imediato detectado
         </div>
         <div style={{ fontSize: 12, color: T.text3, marginBottom: hasMetrics ? 14 : 14 }}>
-          Sistema focado em otimização
+          Sistema monitorando · próxima análise em breve
         </div>
 
         {/* Metrics — clean grid, no heavy borders */}
@@ -1290,11 +1309,12 @@ const PerformanceSummary: React.FC<{
         )}
 
         {/* Ad list */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} onRequestToggle={onRequestToggle} />}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE ── */}
       <div
+        className="feed-card-lift"
         onMouseEnter={() => setOppHov(true)}
         onMouseLeave={() => setOppHov(false)}
         style={{
@@ -1302,7 +1322,6 @@ const PerformanceSummary: React.FC<{
           border: `1px solid ${T.border1}`,
           borderLeft: `3px solid ${T.blue}`,
           borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
-          transition: 'background 0.18s ease',
         }}
       >
         <div style={{ fontSize: 9, fontWeight: 700, color: T.labelColor, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
@@ -1310,18 +1329,18 @@ const PerformanceSummary: React.FC<{
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: T.text1, marginBottom: 6, lineHeight: 1.4 }}>
           {ctrGood
-            ? <>CTR de <span style={{ color: T.green }}>{ctrPct}%</span> com espaço para escalar</>
-            : <>Novos criativos podem melhorar seu CTR em até <span style={{ color: T.blue }}>+18%</span></>}
+            ? <>CTR de <span style={{ color: T.green }}>{ctrPct}%</span> — espaço para escalar com novos criativos</>
+            : <>Seu próximo ganho vem de novos criativos · <span style={{ color: T.blue }}>+18% CTR potencial</span></>}
         </div>
         <div style={{ fontSize: 12, color: T.text2, lineHeight: 1.55, marginBottom: 14 }}>
-          Contas com performance semelhante ganham mais diversificando hooks e formatos
+          Contas com performance semelhante escalam diversificando hooks e formatos
         </div>
-        <button onClick={() => navigate('/dashboard/criar')} style={{
+        <button onClick={() => navigate('/dashboard/criar')} className="feed-cta" style={{
           background: T.blue, color: T.text1,
           border: 'none', borderRadius: 6,
           padding: '9px 20px', fontSize: 12.5, fontWeight: 700,
           fontFamily: F, cursor: 'pointer',
-          transition: 'all 0.15s',
+          transition: 'all 0.18s',
           boxShadow: oppHov ? `0 4px 14px ${T.blue}30` : 'none',
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.blueHover; }}
@@ -1331,14 +1350,14 @@ const PerformanceSummary: React.FC<{
       </div>
 
       {/* ── BLOCO 3: SISTEMA ATIVO ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 2px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 2px', animation: 'feed-fadeIn 0.4s ease' }}>
         <span style={{
           width: 4, height: 4, borderRadius: '50%', background: T.green,
           boxShadow: `0 0 5px ${T.green}40`,
           animation: 'pulse 2.5s ease-in-out infinite',
         }} />
         <span style={{ fontSize: 10, color: T.text3 }}>
-          Monitoramento ativo
+          Monitoramento ativo · sistema operando
         </span>
       </div>
     </div>
@@ -1836,15 +1855,16 @@ const PerformancePulse: React.FC<{
   ];
 
   return (
-    <div className="feed-kpi-bar" style={{ marginBottom: 14, fontFamily: F }}>
+    <div className="feed-kpi-bar" style={{ marginBottom: 14, fontFamily: F, animation: 'feed-fadeUp 0.3s ease' }}>
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6,
       }}>
-        {kpis.map(k => (
+        {kpis.map((k, idx) => (
           <div key={k.label} style={{
             background: T.bg1, borderRadius: 8,
             padding: '10px 10px 8px', textAlign: 'center',
             border: `1px solid ${T.border1}`,
+            animation: `feed-fadeUp 0.3s ease ${idx * 0.05}s both`,
           }}>
             <div style={{ fontSize: 9, fontWeight: 700, color: T.labelColor, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
               {k.label}
@@ -2240,6 +2260,7 @@ const FeedPage: React.FC = () => {
 
   // ── Ad toggle (pause/activate) from Feed ──
   const [togglingAd, setTogglingAd] = useState<string | null>(null);
+  const [toggleSuccess, setToggleSuccess] = useState<{ id: string; action: 'pause' | 'activate' } | null>(null);
   const [toggleRequest, setToggleRequest] = useState<ToggleRequest | null>(null);
 
   const handleRequestToggle = useCallback((ad: AdSummary, action: 'pause' | 'activate') => {
@@ -2270,6 +2291,8 @@ const FeedPage: React.FC = () => {
         }),
       });
       if (res.ok) {
+        setToggleSuccess({ id: ad.meta_ad_id, action });
+        setTimeout(() => setToggleSuccess(null), 2400);
         fetchAds();
       }
     } catch (e) {
@@ -2516,11 +2539,12 @@ const FeedPage: React.FC = () => {
 
         {/* Tracking Health — decision card when issues detected */}
         {metaConnected && !isDemo && trackingHealth && trackingHealth.status !== 'healthy' && (
-          <div style={{
+          <div className="feed-card-lift" style={{
             background: T.bg1,
             border: `1px solid ${T.border1}`,
-            borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)', marginBottom: 12,
+            borderRadius: 8, padding: 'clamp(12px, 2.5vw, 16px)', marginBottom: 12,
             borderLeft: `3px solid ${trackingHealth.status === 'broken' ? T.red : T.yellow}`,
+            animation: 'feed-fadeUp 0.3s ease',
           }}>
             {/* Header — inline status */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
@@ -2566,6 +2590,7 @@ const FeedPage: React.FC = () => {
 
             {/* CTA — solid blue, dominant */}
             <button
+              className="feed-cta"
               onClick={() => {
                 const msg = encodeURIComponent(trackingHealth.chatMsg);
                 navigate(`/dashboard/ai?tracking_diagnostic=${msg}`);
@@ -2576,7 +2601,7 @@ const FeedPage: React.FC = () => {
                 borderRadius: 6, padding: '9px 14px', cursor: 'pointer',
                 fontSize: 12, fontWeight: 700,
                 width: '100%',
-                transition: 'all 0.15s',
+                transition: 'all 0.18s',
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.blueHover; (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 14px ${T.blue}30`; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.blue; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
@@ -2626,6 +2651,7 @@ const FeedPage: React.FC = () => {
                 metaAccountId={metaAccountId}
                 onToggleAd={handleConfirmToggle}
                 togglingAd={togglingAd}
+                toggleSuccess={toggleSuccess}
                 onRequestToggle={handleRequestToggle}
                 onLoadMoreAds={loadMoreAds}
                 loadingMoreAds={adsLoadingMore}
@@ -2662,7 +2688,7 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'few-data' ? (
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
-          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} onRequestToggle={handleRequestToggle} />
+          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} />
         ) : null}
 
         {/* Intelligence — collapsible, always available */}
@@ -2685,12 +2711,22 @@ const FeedPage: React.FC = () => {
       <style>{`
         @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
         @keyframes feed-fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes feed-fadeIn{from{opacity:0}to{opacity:1}}
         @keyframes feed-shimmer{0%,100%{opacity:1}50%{opacity:0.5}}
+        @keyframes feed-success{0%{opacity:0;transform:scale(0.9)}40%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+        @keyframes feed-btn-press{0%{transform:scale(1)}50%{transform:scale(0.96)}100%{transform:scale(1)}}
         @keyframes modal-overlay-in{from{opacity:0}to{opacity:1}}
         @keyframes modal-card-in{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
         @keyframes modal-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
         @keyframes modal-text-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
         @keyframes modal-text-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+        .feed-card-lift{transition:background 0.18s ease,transform 0.18s ease,box-shadow 0.18s ease}
+        .feed-card-lift:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.25)}
+        .feed-micro-btn button{transition:all 0.15s ease}
+        .feed-micro-btn button:active:not(:disabled){animation:feed-btn-press 0.15s ease}
+        .feed-cta{transition:all 0.18s ease}
+        .feed-cta:hover{box-shadow:0 4px 14px rgba(14,165,233,0.25) !important}
+        .feed-cta:active{transform:scale(0.97);transition:transform 0.08s ease}
       `}</style>
 
       {/* Ad toggle confirmation modal */}
