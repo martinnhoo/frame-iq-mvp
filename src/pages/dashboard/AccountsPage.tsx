@@ -1227,11 +1227,6 @@ export default function AccountsPage() {
                       <AccountForm account={acc} userId={user.id} t={t}
                         onSave={() => { load(); setEditingId(null); }}
                         onCancel={() => setEditingId(null)}/>
-
-                      {/* Goal stays visible even in edit mode */}
-                      <div style={{ marginTop: 20 }}>
-                        <GoalSection userId={user.id} personaId={acc.id} />
-                      </div>
                     </div>
                   ) : (
                     /* Detail view */
@@ -1301,24 +1296,25 @@ export default function AccountsPage() {
                           </a>
                         </div>
                       )}
-
-                      {/* Platform connections */}
-                      <div>
-                        <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
-                          textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 10px" }}>{t.platforms}</p>
-                        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                          {PLATFORMS.map(p => (
-                            <PlatformRow key={`${p.id}-${acc.id}-${platformRefreshKey}`} p={p}
-                              userId={user.id} accountId={acc.id} t={t}/>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Performance goal */}
-                      <GoalSection userId={user.id} personaId={acc.id} />
-
                     </div>
                   )}
+
+                  {/* Platform connections + Goal — always visible when expanded */}
+                  <div style={{ padding:"0 18px 22px", display:"flex", flexDirection:"column", gap:20 }}>
+                    <div>
+                      <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
+                        textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 10px" }}>{t.platforms}</p>
+                      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                        {PLATFORMS.map(p => (
+                          <PlatformRow key={`${p.id}-${acc.id}-${platformRefreshKey}`} p={p}
+                            userId={user.id} accountId={acc.id} t={t}/>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Performance goal */}
+                    <GoalSection userId={user.id} personaId={acc.id} />
+                  </div>
                 </div>
               )}
             </div>
