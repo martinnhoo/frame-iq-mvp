@@ -220,8 +220,8 @@ interface TrackingDiagnosticProps {
   spend: string; // already formatted, e.g. "R$87,39"
   conversions: number;
   lang: string;
-  onClose: () => void;
-  onDeepDiagnosis: (summary: string) => void; // triggers AI analysis with context
+  onClose: (diagResult: DiagResult) => void;
+  onDeepDiagnosis: (summary: string, diagResult: DiagResult) => void;
 }
 
 function TrackingDiagnosticFlow({ clicks, spend, conversions, lang, onClose, onDeepDiagnosis }: TrackingDiagnosticProps) {
@@ -463,12 +463,13 @@ Analise os dados da conta e dê:
 1. Hipótese principal (criativo fraco? oferta fraca? audiência errada?)
 2. Top 3 ações específicas e priorizadas para melhorar conversões
 3. Se houver criativos ativos, indique qual escalar e qual pausar
-Seja direto. Sem introdução. Sem repetir o diagnóstico.`
+Seja direto. Sem introdução. Sem repetir o diagnóstico.`,
+                    'performance_issue'
                   )}
                   onMouseEnter={e => hover(e, '#0c8bd0')} onMouseLeave={e => hover(e, '#0ea5e9')}>
                   {t('deep_analysis')}
                 </button>
-                <button style={S.btnGhost} onClick={onClose}
+                <button style={S.btnGhost} onClick={() => onClose('performance_issue')}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.50)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.30)'; }}>
                   {t('done')}
@@ -533,12 +534,12 @@ Seja direto. Sem introdução. Sem repetir o diagnóstico.`,
                     onDeepDiagnosis(`[TRACKING_DIAGNOSTIC_COMPLETE] diagnosis=${d.tag}
 Dados: ${clicks} cliques, ${spend} investidos, ${conversions} conversões.
 
-${d.instruction}`);
+${d.instruction}`, result);
                   }}
                   onMouseEnter={e => hover(e, '#0c8bd0')} onMouseLeave={e => hover(e, '#0ea5e9')}>
                   {t('deep_analysis')}
                 </button>
-                <button style={S.btnGhost} onClick={onClose}
+                <button style={S.btnGhost} onClick={() => onClose(result)}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.50)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.30)'; }}>
                   {t('done')}
@@ -2511,11 +2512,11 @@ export default function AdBriefAI() {
 
   // ── Tracking diagnostic flow (structured, not chat-based) ──
   const [trackingDiagActive, setTrackingDiagActive] = useState<{
-    clicks: number; spend: string; conversions: number;
+    clicks: number; spend: string; conversions: number; accountId: string | null;
   } | null>(() => {
     if (diagnosticStateRef.current?.payload?.mode === 'tracking_diagnostic') {
       const p = diagnosticStateRef.current.payload;
-      return { clicks: p.clicks || 0, spend: p.spendFormatted || 'R$0', conversions: p.conversions || 0 };
+      return { clicks: p.clicks || 0, spend: p.spendFormatted || 'R$0', conversions: p.conversions || 0, accountId: p.accountId || null };
     }
     return null;
   });
@@ -4326,6 +4327,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         clicks: payload?.clicks || 0,
         spend: payload?.spendFormatted || 'R$0',
         conversions: payload?.conversions || 0,
+        accountId: payload?.accountId || null,
       });
       return; // No chat messages — the flow component handles everything
     }
@@ -4390,29 +4392,61 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       )}
 
       {/* ── TRACKING DIAGNOSTIC FLOW — structured guided experience ── */}
-      {trackingDiagActive && (
-        <TrackingDiagnosticFlow
-          clicks={trackingDiagActive.clicks}
-          spend={trackingDiagActive.spend}
-          conversions={trackingDiagActive.conversions}
-          lang={lang}
-          onClose={() => { setTrackingDiagActive(null); navigate('/dashboard/feed'); }}
-          onDeepDiagnosis={(summary) => {
-            setTrackingDiagActive(null);
-            // Extract the diagnosis tag for clean display
-            const diagMatch = summary.match(/diagnosis=(\S+)/);
-            const diagLabel: Record<string, Record<string, string>> = {
-              performance_issue: { pt: 'Análise de performance solicitada', es: 'Análisis de rendimiento solicitado', en: 'Performance analysis requested' },
-              evento_conversao_incorreto: { pt: 'Análise: evento de conversão incorreto', es: 'Análisis: evento de conversión incorrecto', en: 'Analysis: incorrect conversion event' },
-              pixel_nao_instalado: { pt: 'Análise: pixel não instalado', es: 'Análisis: pixel no instalado', en: 'Analysis: pixel not installed' },
-              performance: { pt: 'Análise de performance solicitada', es: 'Análisis de rendimiento solicitado', en: 'Performance analysis requested' },
-            };
-            const tag = diagMatch?.[1] || 'performance';
-            const display = diagLabel[tag]?.[lang] || diagLabel[tag]?.en || tag;
-            send(summary, display);
-          }}
-        />
-      )}
+      {trackingDiagActive && (() => {
+        // Resolve tracking status from diagnosis result
+        const resolveTracking = (diagResult: DiagResult) => {
+          const acctId = trackingDiagActive.accountId;
+          if (!acctId) return;
+          // Map diagnosis → tracking status
+          const newStatus = diagResult === 'performance_issue' ? 'verified_ok' : 'verified_issue';
+          try { localStorage.setItem(`adbrief_tracking_v2_${acctId}`, newStatus); } catch {}
+          // Save to AI memory — fire-and-forget
+          if (user?.id) {
+            const diagLabel = diagResult === 'tracking_issue' ? 'evento_conversao_incorreto'
+              : diagResult === 'needs_investigation' ? 'pixel_nao_instalado' : 'performance_ok';
+            supabase.functions.invoke('capture-learning', { body: {
+              user_id: user.id,
+              event_type: 'tracking_diagnostic_complete',
+              data: {
+                diagnosis: diagLabel,
+                tracking_status: newStatus,
+                clicks: trackingDiagActive.clicks,
+                spend: trackingDiagActive.spend,
+                conversions: trackingDiagActive.conversions,
+                account_id: acctId,
+                persona_id: selectedPersona?.id || null,
+              },
+            }}).catch(() => {});
+          }
+        };
+        return (
+          <TrackingDiagnosticFlow
+            clicks={trackingDiagActive.clicks}
+            spend={trackingDiagActive.spend}
+            conversions={trackingDiagActive.conversions}
+            lang={lang}
+            onClose={(diagResult) => {
+              resolveTracking(diagResult);
+              setTrackingDiagActive(null);
+              navigate('/dashboard/feed');
+            }}
+            onDeepDiagnosis={(summary, diagResult) => {
+              resolveTracking(diagResult);
+              setTrackingDiagActive(null);
+              const diagMatch = summary.match(/diagnosis=(\S+)/);
+              const diagLabel: Record<string, Record<string, string>> = {
+                performance_issue: { pt: 'Análise de performance solicitada', es: 'Análisis de rendimiento solicitado', en: 'Performance analysis requested' },
+                evento_conversao_incorreto: { pt: 'Análise: evento de conversão incorreto', es: 'Análisis: evento de conversión incorrecto', en: 'Analysis: incorrect conversion event' },
+                pixel_nao_instalado: { pt: 'Análise: pixel não instalado', es: 'Análisis: pixel no instalado', en: 'Analysis: pixel not installed' },
+                performance: { pt: 'Análise de performance solicitada', es: 'Análisis de rendimiento solicitado', en: 'Performance analysis requested' },
+              };
+              const tag = diagMatch?.[1] || 'performance';
+              const display = diagLabel[tag]?.[lang] || diagLabel[tag]?.en || tag;
+              send(summary, display);
+            }}
+          />
+        );
+      })()}
 
       {/* ── Creative Skills Panel — shown when chat is empty ── */}
       {messages.length===0&&contextReady&&hasData&&!proactiveLoading&&!trackingDiagActive&&(
