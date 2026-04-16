@@ -35,7 +35,7 @@ const Terms = () => (
         <p>To access certain features, you must create an account with accurate and complete information. You are responsible for maintaining the confidentiality of your credentials and for all activity under your account.</p>
 
         <h2 className="text-lg font-semibold text-foreground">5. Subscription Plans & Billing</h2>
-        <p>AdBrief offers the following paid plans: Maker ($19/mo), Pro ($49/mo), and Studio ($149/mo). All plans include a 3-day free trial with a valid payment method required. Paid plans are billed monthly or annually. You authorize us to charge the payment method on file. Prices are in USD and may be subject to applicable taxes.</p>
+        <p>AdBrief offers the following paid plans: Maker ($19/mo), Pro ($49/mo), and Studio ($299/mo). All plans include a 3-day free trial with a valid payment method required. Paid plans are billed monthly or annually. You authorize us to charge the payment method on file. Prices are in USD and may be subject to applicable taxes.</p>
         <p>We reserve the right to change pricing with 30 days' notice. Changes will apply at the next billing cycle.</p>
 
         <h2 className="text-lg font-semibold text-foreground">6. Free Trial</h2>

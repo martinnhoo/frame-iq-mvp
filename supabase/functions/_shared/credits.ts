@@ -40,7 +40,18 @@ export const PLAN_CREDITS: Record<string, number> = {
   free:   15,
   maker:  1000,
   pro:    2500,
-  studio: 9000,
+  studio: 99999,  // unlimited (effectively uncapped)
+};
+
+// ── Improvement (melhoria) cost per plan ──────────────────────────────────────
+// "Melhorias" = real actions on ad account: pause, scale, activate, budget, etc.
+// Higher plans get cheaper improvements → natural upgrade incentive.
+// Free = 0 (upgrade wall), Studio = 0 (unlimited, no credit cost).
+export const IMPROVEMENT_COSTS: Record<string, number> = {
+  free:   0,
+  maker:  30,   // ~33 improvements/month from 1000 credits
+  pro:    15,   // ~166 improvements/month from 2500 credits (50% off)
+  studio: 0,    // unlimited
 };
 
 // ── Ad accounts per plan ──────────────────────────────────────────────────────
@@ -56,7 +67,7 @@ export const TRIAL_CREDITS: Record<string, number> = {
   free:   15,
   maker:  400,
   pro:    1000,
-  studio: 3600,
+  studio: 99999,  // Studio trial = full access
 };
 
 // ── Referral bonus ────────────────────────────────────────────────────────────
@@ -88,6 +99,12 @@ export function getPlanCreditPool(plan: string, isTrialing = false): number {
 /** Get credit cost for an action. Returns 0 if action unknown. */
 export function getCreditCost(action: string): number {
   return CREDIT_COSTS[action] ?? 0;
+}
+
+/** Get improvement cost for a plan. 0 = free/unlimited or upgrade wall. */
+export function getImprovementCost(plan: string): number {
+  const p = normalizePlan(plan);
+  return IMPROVEMENT_COSTS[p] ?? 0;
 }
 
 /** Get ad account limit for a plan. -1 = unlimited. */

@@ -23,7 +23,16 @@ export const PLAN_CREDITS: Record<string, number> = {
   free:   15,
   maker:  1000,
   pro:    2500,
-  studio: 9000,
+  studio: 99999,  // unlimited
+};
+
+// Improvement (melhoria) cost per plan in credits
+// Higher plans = cheaper improvements → upgrade incentive
+export const IMPROVEMENT_COSTS: Record<string, number> = {
+  free:   0,      // upgrade wall
+  maker:  30,     // ~33/month
+  pro:    15,     // ~166/month (50% off)
+  studio: 0,      // unlimited
 };
 
 // Ad accounts per plan (-1 = unlimited)
@@ -36,10 +45,10 @@ export const PLAN_AD_ACCOUNTS: Record<string, number> = {
 
 // Plan metadata
 export const PLAN_LIMITS = {
-  free:   { credits: 15,   ad_accounts: 0,  label: "Free"   },
-  maker:  { credits: 1000, ad_accounts: 1,  label: "Maker"  },
-  pro:    { credits: 2500, ad_accounts: 3,  label: "Pro"    },
-  studio: { credits: 9000, ad_accounts: -1, label: "Studio" },
+  free:   { credits: 15,    ad_accounts: 0,  label: "Free",   improvement_cost: 0  },
+  maker:  { credits: 1000,  ad_accounts: 1,  label: "Maker",  improvement_cost: 30 },
+  pro:    { credits: 2500,  ad_accounts: 3,  label: "Pro",    improvement_cost: 15 },
+  studio: { credits: 99999, ad_accounts: -1, label: "Studio", improvement_cost: 0  },
 } as const;
 
 // Legacy plan aliases
@@ -75,6 +84,12 @@ export function getAdAccountLimit(plan: string | null | undefined): number {
 
 export function getCreditCost(action: string): number {
   return CREDIT_COSTS[action] ?? 0;
+}
+
+export function getImprovementCost(plan: string | null | undefined): number {
+  const raw = plan || "free";
+  const key = (PLAN_ALIAS[raw] || raw) as string;
+  return IMPROVEMENT_COSTS[key] ?? 0;
 }
 
 /** @deprecated Use actionLabel instead */

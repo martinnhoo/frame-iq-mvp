@@ -75,13 +75,13 @@ const LANGUAGES = [
 ];
 
 const PLAN_INFO: Record<string, { label: string; color: string; desc: string; price: string }> = {
-  free:    { label: "Free",    color: "rgba(255,255,255,0.35)", desc: "5 mensagens grátis · todas as tools · conecte Meta Ads", price: "$0" },
-  maker:   { label: "Maker",   color: "rgba(255,255,255,0.45)", desc: "50 mensagens/dia · 1 conta · ferramentas básicas", price: "$19/mo" },
-  pro:     { label: "Pro",     color: "rgba(255,255,255,0.45)", desc: "200 mensagens/dia · 3 contas · todas as tools",   price: "$49/mo" },
-  studio:  { label: "Studio",  color: "rgba(255,255,255,0.50)", desc: "Mensagens ilimitadas · contas ilimitadas · agência", price: "$149/mo" },
-  creator: { label: "Maker",   color: "rgba(255,255,255,0.45)", desc: "50 mensagens/dia · 1 conta",                      price: "$19/mo" },
-  starter: { label: "Pro",     color: "rgba(255,255,255,0.45)", desc: "200 mensagens/dia · 3 contas",                    price: "$49/mo" },
-  scale:   { label: "Studio",  color: "rgba(255,255,255,0.50)", desc: "Mensagens ilimitadas · agência",                  price: "$149/mo" },
+  free:    { label: "Free",    color: "rgba(255,255,255,0.35)", desc: "15 créditos · todas as tools · conecte Meta Ads", price: "$0" },
+  maker:   { label: "Maker",   color: "rgba(255,255,255,0.45)", desc: "1.000 créditos · 1 conta · ~33 melhorias/mês", price: "$19/mo" },
+  pro:     { label: "Pro",     color: "rgba(255,255,255,0.45)", desc: "2.500 créditos · 3 contas · ~166 melhorias/mês", price: "$49/mo" },
+  studio:  { label: "Studio",  color: "rgba(255,255,255,0.50)", desc: "Ilimitado · contas ilimitadas · agência", price: "$299/mo" },
+  creator: { label: "Maker",   color: "rgba(255,255,255,0.45)", desc: "1.000 créditos · 1 conta",                      price: "$19/mo" },
+  starter: { label: "Pro",     color: "rgba(255,255,255,0.45)", desc: "2.500 créditos · 3 contas",                    price: "$49/mo" },
+  scale:   { label: "Studio",  color: "rgba(255,255,255,0.50)", desc: "Ilimitado · agência",                          price: "$299/mo" },
 };
 
 // ── Persona Detail View (Editable) ─────────────────────────────────────────────
@@ -543,9 +543,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             const features = FEATURES[planKey] || FEATURES.free;
 
             const NEXT_PLAN: Record<string, { key: string; label: string; price: string; pitch: string }> = {
-              free:   { key: "maker",  label: "Maker",  price: "$19/mo", pitch: language==="pt"?"50 mensagens/dia e uso ilimitado das tools":"50 messages/day and unlimited tool usage" },
-              maker:  { key: "pro",    label: "Pro",    price: "$49/mo", pitch: language==="pt"?"3 contas, todas as tools, multi-mercado — tudo desbloqueado":"3 accounts, all tools, multi-market" },
-              pro:    { key: "studio", label: "Studio", price: "$149/mo", pitch: language==="pt"?"Ilimitado. Para agências e times que produzem todos os dias":"Unlimited. For agencies that produce every day" },
+              free:   { key: "maker",  label: "Maker",  price: "$19/mo", pitch: language==="pt"?"1 conta, ~33 melhorias/mês, todas as ferramentas":"1 account, ~33 improvements/mo, all tools" },
+              maker:  { key: "pro",    label: "Pro",    price: "$49/mo", pitch: language==="pt"?"3 contas, ~166 melhorias/mês, ações 50% mais baratas":"3 accounts, ~166 improvements/mo, 50% off actions" },
+              pro:    { key: "studio", label: "Studio", price: "$299/mo", pitch: language==="pt"?"Tudo ilimitado. Para agências e times em escala":"Everything unlimited. For agencies at scale" },
             };
             const next = NEXT_PLAN[planKey];
 

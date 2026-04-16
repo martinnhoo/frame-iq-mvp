@@ -66,43 +66,43 @@ const PLANS: Record<string, { name: string; price: string; badge?: string; featu
   en: [
     {
       key: "maker", name: "Maker", price: "$19/mo", highlight: false, action: "/signup?plan=maker",
-      features: { en: ["1 ad account", "Creative tools", "Basic decision support"] },
+      features: { en: ["1 ad account", "~33 improvements/mo", "All AI tools", "30 credits per improvement"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mo", badge: "Most popular", highlight: true, action: "/signup?plan=pro",
-      features: { en: ["3 ad accounts", "Full decision engine", "Real-time monitoring", "Multi-market"] },
+      features: { en: ["3 ad accounts", "~166 improvements/mo", "All AI tools", "50% off per action"] },
     },
     {
-      key: "studio", name: "Studio", price: "$149/mo", highlight: false, action: "/signup?plan=studio",
-      features: { en: ["Unlimited accounts", "Faster analysis", "Priority processing", "Agency workspace"] },
+      key: "studio", name: "Studio", price: "$299/mo", highlight: false, action: "/signup?plan=studio",
+      features: { en: ["Unlimited accounts", "Unlimited improvements", "Unlimited credits", "Priority support"] },
     },
   ],
   pt: [
     {
       key: "maker", name: "Maker", price: "$19/mês", highlight: false, action: "/signup?plan=maker",
-      features: { pt: ["1 conta de anúncios", "Ferramentas de criação", "Suporte a decisões básico"] },
+      features: { pt: ["1 conta de anúncios", "~33 melhorias/mês", "Todas as ferramentas IA", "30 créditos por melhoria"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mês", badge: "Mais popular", highlight: true, action: "/signup?plan=pro",
-      features: { pt: ["3 contas de anúncios", "Decision engine completo", "Monitoramento em tempo real", "Multi-mercado"] },
+      features: { pt: ["3 contas de anúncios", "~166 melhorias/mês", "Todas as ferramentas IA", "50% off por ação"] },
     },
     {
-      key: "studio", name: "Studio", price: "$149/mês", highlight: false, action: "/signup?plan=studio",
-      features: { pt: ["Contas ilimitadas", "Análise acelerada", "Processamento prioritário", "Workspace agência"] },
+      key: "studio", name: "Studio", price: "$299/mês", highlight: false, action: "/signup?plan=studio",
+      features: { pt: ["Contas ilimitadas", "Melhorias ilimitadas", "Créditos ilimitados", "Suporte prioritário"] },
     },
   ],
   es: [
     {
       key: "maker", name: "Maker", price: "$19/mes", highlight: false, action: "/signup?plan=maker",
-      features: { es: ["1 cuenta de anuncios", "Herramientas de creación", "Soporte a decisiones básico"] },
+      features: { es: ["1 cuenta de anuncios", "~33 mejoras/mes", "Todas las herramientas IA", "30 créditos por mejora"] },
     },
     {
       key: "pro", name: "Pro", price: "$49/mes", badge: "Más popular", highlight: true, action: "/signup?plan=pro",
-      features: { es: ["3 cuentas de anuncios", "Decision engine completo", "Monitoreo en tiempo real", "Multi-mercado"] },
+      features: { es: ["3 cuentas de anuncios", "~166 mejoras/mes", "Todas las herramientas IA", "50% off por acción"] },
     },
     {
-      key: "studio", name: "Studio", price: "$149/mes", highlight: false, action: "/signup?plan=studio",
-      features: { es: ["Cuentas ilimitadas", "Análisis acelerado", "Procesamiento prioritario", "Workspace agencia"] },
+      key: "studio", name: "Studio", price: "$299/mes", highlight: false, action: "/signup?plan=studio",
+      features: { es: ["Cuentas ilimitadas", "Mejoras ilimitadas", "Créditos ilimitados", "Soporte prioritario"] },
     },
   ],
 };

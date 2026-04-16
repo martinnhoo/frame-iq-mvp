@@ -456,7 +456,7 @@ Deno.serve(async (req) => {
       const NEXT_PLAN: Record<string, { name: string; credits: number; price: string } | null> = {
         free: { name: "Maker", credits: 1000, price: "$19/mo" },
         maker: { name: "Pro", credits: 2500, price: "$49/mo" },
-        pro: { name: "Studio", credits: 9000, price: "$149/mo" },
+        pro: { name: "Studio", credits: 99999, price: "$299/mo" },
         studio: null,
       };
 
@@ -470,9 +470,9 @@ Deno.serve(async (req) => {
           type: "credits_exhausted_free",
           plan: "free",
           plans: [
-            { name: "Maker", price: "$19/mo", credits: "1,000 credits", highlight: "1 ad account" },
-            { name: "Pro", price: "$49/mo", credits: "2,500 credits", highlight: "3 ad accounts", recommended: true },
-            { name: "Studio", price: "$149/mo", credits: "9,000 credits", highlight: "Unlimited accounts" },
+            { name: "Maker", price: "$19/mo", credits: "~33 improvements", highlight: "1 ad account" },
+            { name: "Pro", price: "$49/mo", credits: "~166 improvements", highlight: "3 ad accounts", recommended: true },
+            { name: "Studio", price: "$299/mo", credits: "Unlimited", highlight: "Unlimited accounts" },
           ],
         });
       } else if (planKey === "studio") {
@@ -1656,9 +1656,9 @@ Não use regras fixas. Use os dados reais acima e raciocine sobre o que está ac
     richContext = [
       // ── Identidade do usuário — SEMPRE primeiro ───────────────────────────
       (() => {
-        const planLabel = planKey === "studio" ? "Studio ($149/mês — 9000 créditos/mês)"
-          : planKey === "pro"    ? "Pro ($49/mês — 2500 créditos/mês)"
-          : planKey === "maker"  ? "Maker ($19/mês — 1000 créditos/mês)"
+        const planLabel = planKey === "studio" ? "Studio ($299/mês — ilimitado)"
+          : planKey === "pro"    ? "Pro ($49/mês — 2500 créditos/mês, ~166 melhorias)"
+          : planKey === "maker"  ? "Maker ($19/mês — 1000 créditos/mês, ~33 melhorias)"
           : "Free (15 créditos/mês)";
         return `PLANO DO USUÁRIO: ${planLabel}
 IDIOMA DO USUÁRIO: ${uiLang === "pt" ? "Português — responda SEMPRE em português" : uiLang === "es" ? "Español — responde SIEMPRE en español" : "English — always respond in English"}
@@ -2188,7 +2188,7 @@ A cada 4-6 trocas, se houver lacunas importantes no negócio do usuário, faça 
 PLANOS
 ═══════════════════════════════════
 
-Free: 3 msgs/dia | Maker $19/mês: 50 msgs/dia | Pro $49/mês: 200 msgs/dia | Studio $149/mês: 500 msgs/dia
+Free: 15 créditos | Maker $19/mês: 1000 créditos, ~33 melhorias | Pro $49/mês: 2500 créditos, ~166 melhorias | Studio $299/mês: ilimitado
 Trial: 3 dias com cartão, acesso completo.
 
 Quando o usuário perguntar sobre o próprio plano ("qual é meu plano?", "quantas mensagens tenho?", "qual é meu limite?"):
