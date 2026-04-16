@@ -883,8 +883,9 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
 
   // Build analysis text from real metrics or use heuristic
   const hasMetrics = metrics && metrics.daysOfData > 0;
-  const lowCtr = hasMetrics && metrics.avgCtr < 0.015;
-  const highCpa = hasMetrics && metrics.avgCpa > 3500;
+  // avgCtr is in basis points (93 = 0.93%), avgCpa is in centavos
+  const lowCtr = hasMetrics && metrics.avgCtr < 150; // < 1.5% CTR
+  const highCpa = hasMetrics && metrics.avgCpa > 3500; // > R$35.00
   const noConversions = hasMetrics && metrics.totalConversions === 0;
 
   let headline = 'Análise inicial disponível';
@@ -941,7 +942,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
                 background: 'rgba(230,237,243,0.03)', border: '1px solid rgba(230,237,243,0.06)',
                 padding: '3px 8px', borderRadius: 3,
               }}>
-                CTR {(metrics.avgCtr * 100).toFixed(2)}%
+                CTR {(metrics.avgCtr / 100).toFixed(2)}%
               </span>
             )}
             {metrics.avgCpa > 0 && (
@@ -1012,7 +1013,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
 const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | null; periodLabel: string }> = ({ totalAds, metrics, periodLabel }) => {
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
-  const lowCtr = hasMetrics && metrics.avgCtr < 0.015;
+  const lowCtr = hasMetrics && metrics.avgCtr < 150; // basis points: < 1.5% CTR
 
   return (
     <div style={{ fontFamily: F }}>
@@ -1579,8 +1580,8 @@ const AdToggleModal: React.FC<{
         } else if (days > 0) {
           // Fallback with actual data
           const verdict = isPause
-            ? (totalConv > 0 ? `Este anúncio gerou ${totalConv} conversões com R$${totalSpend.toFixed(0)} de spend. Considere se o CPA de R$${(cpa/100).toFixed(2)} está dentro do aceitável antes de pausar.`
-              : totalSpend > 0 ? `R$${totalSpend.toFixed(0)} investidos sem conversões em ${days} dias. Pausar pode ser uma boa decisão para realocar o budget.`
+            ? (totalConv > 0 ? `Este anúncio gerou ${totalConv} conversões com R$${(totalSpend / 100).toFixed(2)} de spend. Considere se o CPA de R$${(cpa/100).toFixed(2)} está dentro do aceitável antes de pausar.`
+              : totalSpend > 0 ? `R$${(totalSpend / 100).toFixed(2)} investidos sem conversões em ${days} dias. Pausar pode ser uma boa decisão para realocar o budget.`
               : 'Sem investimento recente. Pausar não terá impacto no orçamento atual.')
             : (totalConv > 0 ? `Histórico positivo: ${totalConv} conversões com CTR de ${ctr.toFixed(2)}%. Reativar pode trazer resultados.`
               : 'Sem conversões no histórico recente. Considere otimizar o criativo antes de ativar.');
@@ -1866,7 +1867,7 @@ const PerformancePulse: React.FC<{
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>
             Decisões do AdBrief economizaram{' '}
             <span style={{ color: '#4ADE80', fontWeight: 700 }}>
-              R${savings >= 1000 ? (savings / 1000).toFixed(1) + 'k' : savings.toFixed(0)}
+              R${(savings / 100) >= 1000 ? ((savings / 100) / 1000).toFixed(1) + 'k' : (savings / 100).toFixed(0)}
             </span>
             {' '}este mês
           </span>

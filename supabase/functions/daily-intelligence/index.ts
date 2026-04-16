@@ -505,6 +505,7 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
   const enriched = curr.map((ad: any) => {
     const p = prevMap[ad.ad_name || ad.ad_id];
     const spend = parseN(ad.spend);
+    const clicks = parseN(ad.clicks);
     const ctr = parseN(ad.ctr) / 100;   // Meta returns CTR as percentage string — normalize to decimal
     const cpc = parseN(ad.cpc);
     const impressions = parseN(ad.impressions);
@@ -600,7 +601,7 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
       id: ad.ad_id, name: ad.ad_name || 'Sem nome',
       adset: ad.adset_name, campaign: ad.campaign_name,
       objective, kpiPrimary: kpiCfg.primary, kpiLabel: kpiCfg.primaryLabel, kpiValue,
-      spend, ctr, cpc, cpm: parseN(ad.cpm), impressions, frequency,
+      spend, clicks, ctr, cpc, cpm: parseN(ad.cpm), impressions, frequency,
       conversions, roas, cpa,
       hookRate, thruPlayRate, avgWatch, engagementRate,
       prevCtr, deltaCtr,
@@ -804,7 +805,7 @@ Retorne JSON:
   const snapshot = {
     user_id, persona_id: persona_id || null, date: today,
     account_id: account.id, account_name: personaName,
-    total_spend: totalSpend, avg_ctr: avgCtr, total_clicks: enriched.reduce((s: number, a: any) => s + parseInt(a.impressions > 0 ? String(a.ctr * a.impressions) : '0'), 0),
+    total_spend: totalSpend, avg_ctr: avgCtr, total_clicks: enriched.reduce((s: number, a: any) => s + (a.clicks || 0), 0),
     active_ads: curr.length, winners_count: scalable.length, losers_count: toPause.length,
     yesterday_spend: ydSpend, yesterday_ctr: ydCtr,
     top_ads: enriched.slice(0, 15).map((a: any) => ({
