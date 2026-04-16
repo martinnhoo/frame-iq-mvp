@@ -231,9 +231,9 @@ Deno.serve(async (req) => {
           const newRoas = roas ? ((ex.avg_roas||0)*n + roas)/(n+1) : ex.avg_roas;
           const entries = ((ex.variables as any)?.entries || []);
           entries.unshift({ text: hook_text?.slice(0,100), ctr, roas, market, date: new Date().toISOString().split('T')[0] });
-          await (sb as any).from('learned_patterns').update({ sample_size: n+1, avg_ctr: newCtr, avg_roas: newRoas, is_winner: (newCtr||0)>0.015||(newRoas||0)>2, confidence: Math.min(1,(n+1)/10), insight_text: `${hook_type} em ${platform}: CTR médio ${(newCtr||0).toFixed(3)}, ROAS médio ${(newRoas||0).toFixed(2)}`, last_updated: new Date().toISOString(), variables: { entries: entries.slice(0,20) } }).eq('id', ex.id);
+          await (sb as any).from('learned_patterns').update({ sample_size: n+1, avg_ctr: newCtr, avg_roas: newRoas, is_winner: (newCtr||0)>0.015||(newRoas||0)>2, confidence: Math.min(1,(n+1)/10), insight_text: `${hook_type} em ${platform}: CTR médio ${((newCtr||0)*100).toFixed(2)}%, ROAS médio ${(newRoas||0).toFixed(2)}`, last_updated: new Date().toISOString(), variables: { entries: entries.slice(0,20) } }).eq('id', ex.id);
         } else {
-          await (sb as any).from('learned_patterns').insert({ user_id, persona_id: perfPersonaId || null, pattern_key: key, sample_size: 1, avg_ctr: ctr||null, avg_roas: roas||null, is_winner: (ctr||0)>0.015||(roas||0)>2, confidence: 0.1, insight_text: `${hook_type} em ${platform}: CTR ${ctr}, ROAS ${roas}`, variables: { entries: [{ text: hook_text?.slice(0,100), ctr, roas, market, date: new Date().toISOString().split('T')[0] }] } });
+          await (sb as any).from('learned_patterns').insert({ user_id, persona_id: perfPersonaId || null, pattern_key: key, sample_size: 1, avg_ctr: ctr||null, avg_roas: roas||null, is_winner: (ctr||0)>0.015||(roas||0)>2, confidence: 0.1, insight_text: `${hook_type} em ${platform}: CTR ${((ctr||0)*100).toFixed(2)}%, ROAS ${roas}`, variables: { entries: [{ text: hook_text?.slice(0,100), ctr, roas, market, date: new Date().toISOString().split('T')[0] }] } });
         }
         break;
       }

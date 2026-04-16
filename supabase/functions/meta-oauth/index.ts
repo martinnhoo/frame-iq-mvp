@@ -168,9 +168,10 @@ Deno.serve(async (req) => {
         const withCtr = ads.filter((a: any) => parseFloat(a.ctr || 0) > 0);
         if (!withCtr.length) return;
 
-        const avgCtr = withCtr.reduce((s: number, a: any) => s + parseFloat(a.ctr), 0) / withCtr.length;
-        const winners = withCtr.filter((a: any) => parseFloat(a.ctr) > avgCtr * 1.5).slice(0, 10);
-        const losers = withCtr.filter((a: any) => parseFloat(a.ctr) < avgCtr * 0.5 && parseFloat(a.spend || 0) > 20).slice(0, 5);
+        // Meta returns CTR as percentage string ("2.5" = 2.5%) — normalize to decimal for consistency
+        const avgCtr = withCtr.reduce((s: number, a: any) => s + parseFloat(a.ctr) / 100, 0) / withCtr.length;
+        const winners = withCtr.filter((a: any) => parseFloat(a.ctr) / 100 > avgCtr * 1.5).slice(0, 10);
+        const losers = withCtr.filter((a: any) => parseFloat(a.ctr) / 100 < avgCtr * 0.5 && parseFloat(a.spend || 0) > 20).slice(0, 5);
         const topSpend = ads.slice(0, 5).map((a: any) =>
           `${a.ad_name?.slice(0, 40)}: CTR ${parseFloat(a.ctr).toFixed(2)}% spend $${parseFloat(a.spend || 0).toFixed(0)}`
         );
@@ -185,7 +186,7 @@ Deno.serve(async (req) => {
           confidence: 0.7,
           avg_ctr: avgCtr,
           sample_size: ads.length,
-          insight_text: `Histórico 90d: ${ads.length} anúncios. CTR médio ${avgCtr.toFixed(2)}%. ${winners.length} vencedores, ${losers.length} perdedores.`,
+          insight_text: `Histórico 90d: ${ads.length} anúncios. CTR médio ${(avgCtr * 100).toFixed(2)}%. ${winners.length} vencedores, ${losers.length} perdedores.`,
           variables: {
             account_name: firstActive.name || firstActive.id,
             period: { since: since90, until: today },
