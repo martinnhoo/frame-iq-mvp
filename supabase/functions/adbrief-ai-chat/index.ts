@@ -1179,7 +1179,33 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               metaCache[cacheKey] = { ts: now_ts, adsRaw, campsRaw, adsetsRaw, timeSeriesRaw, placementRaw };
             }
 
+            // ── Pixel detection (lightweight, cached separately) ──
+            let pixelInfo = "";
+            try {
+              const pixelCacheKey = `pixel:${activeAcc.id}`;
+              const cachedPixel = (globalThis as any).__metaCache?.[pixelCacheKey];
+              if (cachedPixel && now_ts - cachedPixel.ts < CACHE_TTL) {
+                pixelInfo = cachedPixel.info;
+              } else {
+                const pixelRes = await fetch(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/adspixels?fields=id,name,last_fired_time,is_created_by_business&limit=5&access_token=${token}`
+                );
+                const pixelData = await pixelRes.json();
+                if (pixelData?.data?.length) {
+                  const pixels = pixelData.data.map((p: any) =>
+                    `Pixel "${p.name}" (ID: ${p.id})${p.last_fired_time ? ` — último disparo: ${p.last_fired_time}` : " — NUNCA disparou"}`
+                  ).join("; ");
+                  pixelInfo = `PIXELS INSTALADOS: ${pixels}`;
+                } else {
+                  pixelInfo = "PIXELS: Nenhum pixel encontrado nesta conta. O usuário PRECISA criar e instalar um pixel para rastrear conversões no site.";
+                }
+                if (!(globalThis as any).__metaCache) (globalThis as any).__metaCache = {};
+                (globalThis as any).__metaCache[pixelCacheKey] = { ts: now_ts, info: pixelInfo };
+              }
+            } catch { pixelInfo = ""; }
+
             liveMetaData = `${historicalSince ? "HISTORICAL" : "LIVE"} META ADS — Account: ${activeAcc.name || activeAcc.id} (${since} to ${until})${historicalSince ? " [período solicitado]" : ""}\n`;
+            if (pixelInfo) liveMetaData += pixelInfo + "\n";
 
             // Campaigns
             if (campsRaw?.error) {
@@ -1806,6 +1832,31 @@ CTR baixo → hook não está funcionando, não o público
 CPC alto → CTR baixo ou CPM alto — são problemas diferentes
 Conversões zeradas → cheque pixel e página de destino ANTES de mexer no criativo
 ROAS caindo → fadiga criativa ou saturação de público — cheque frequência primeiro
+
+═══════════════════════════════════
+META PIXEL — GUIA DE INSTALAÇÃO
+═══════════════════════════════════
+
+VOCÊ TEM ACESSO AOS DADOS DE PIXEL DO USUÁRIO no contexto (seção "PIXELS INSTALADOS" ou "PIXELS: Nenhum pixel encontrado").
+
+QUANDO O USUÁRIO PERGUNTAR SOBRE PIXEL:
+1. PRIMEIRO: Verifique os dados de pixel no contexto — se já tem pixel, diga qual é e se está disparando
+2. Se tem pixel mas nunca disparou → o problema é a instalação no site, não criar um novo
+3. Se NÃO tem pixel → guie passo a passo para criar E instalar
+
+GUIA PERSONALIZADO DE INSTALAÇÃO:
+- Use o SITE do usuário (disponível no contexto do workspace) para dar instruções específicas
+- Se o site é WordPress/WooCommerce → recomende plugin "PixelYourSite" ou "Facebook for WooCommerce"
+- Se é Shopify → App "Facebook & Instagram" nativo
+- Se é site customizado → código manual no <head>
+- SEMPRE dê o código exato do evento que o usuário configurou como conversão (disponível em "Conversão rastreada" no objetivo)
+  Exemplo: se conversão = complete_registration → fbq('track', 'CompleteRegistration');
+  Se conversão = purchase → fbq('track', 'Purchase', {value: VALOR, currency: 'BRL'});
+  Se conversão = lead → fbq('track', 'Lead');
+- SEMPRE mencione o Facebook Pixel Helper (extensão Chrome) para teste
+- Se o evento do Meta não bate com o nome fbq: lead→Lead, purchase→Purchase, complete_registration→CompleteRegistration, contact→Contact, schedule→Schedule, add_to_cart→AddToCart, initiate_checkout→InitiateCheckout
+
+NUNCA dê resposta genérica sobre pixel. Use os dados reais: nome do pixel, ID, site do usuário, evento de conversão configurado.
 
 ═══════════════════════════════════
 META ADS — SINAIS E BENCHMARKS
