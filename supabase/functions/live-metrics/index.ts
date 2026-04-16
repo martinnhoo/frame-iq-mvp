@@ -62,6 +62,16 @@ serve(async (req) => {
           const token = metaConn.access_token;
           const fields = "spend,impressions,clicks,ctr,cpc,cpm,reach,actions,action_values,website_purchase_roas,date_start";
 
+          // Load user's goal conversion event (if configured)
+          let goalEvent: string | null = null;
+          try {
+            const { data: accRow } = await sb.from("ad_accounts" as any)
+              .select("goal_conversion_event")
+              .eq("user_id", user_id).eq("meta_account_id", acc.id.replace("act_", ""))
+              .maybeSingle();
+            goalEvent = (accRow as any)?.goal_conversion_event || null;
+          } catch { /* ignore — fallback to purchase */ }
+
           const [currRes, prevRes, breakdownRes] = await Promise.all([
             // Current period — account level
             fetch(`https://graph.facebook.com/v21.0/${acc.id}/insights?level=account&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&access_token=${token}`),
@@ -76,16 +86,17 @@ serve(async (req) => {
           const c = curr.data?.[0] || {};
           const p = prev.data?.[0] || {};
 
-          // Extract conversions from actions
+          // Extract conversions from actions — use goal event if configured, else purchase
+          const convEvent = goalEvent || "purchase";
           const getConversions = (d: any) => {
             const actions = d.actions || [];
-            const purchases = actions.find((a: any) => a.action_type === "purchase");
-            return purchases ? parseN(purchases.value) : 0;
+            const match = actions.find((a: any) => a.action_type === convEvent);
+            return match ? parseN(match.value) : 0;
           };
           const getConvValue = (d: any) => {
             const vals = d.action_values || [];
-            const purchases = vals.find((a: any) => a.action_type === "purchase");
-            return purchases ? parseN(purchases.value) : 0;
+            const match = vals.find((a: any) => a.action_type === convEvent);
+            return match ? parseN(match.value) : 0;
           };
 
           const metaSpend = parseN(c.spend);

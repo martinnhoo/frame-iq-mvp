@@ -10,6 +10,7 @@ import { useActions } from '../../hooks/useActions';
 import { supabase } from '@/integrations/supabase/client';
 import type { Decision, DecisionAction } from '../../types/v2-database';
 import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
+import { GoalSetup } from '../../components/feed/GoalSetup';
 import { TrendingUp, TrendingDown, Minus, Pause, Play } from 'lucide-react';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
@@ -1864,6 +1865,22 @@ const FeedPage: React.FC = () => {
   const [lastAnalysisMin] = useState(() => Math.floor(Math.random() * 4) + 2);
   const [patternsCount, setPatternsCount] = useState(0);
 
+  // ── Account goal (Conversion Intelligence) ──
+  const [goalConfigured, setGoalConfigured] = useState<boolean | null>(null); // null = loading
+  useEffect(() => {
+    if (!accountId) { setGoalConfigured(null); return; }
+    (async () => {
+      try {
+        const { data } = await (supabase
+          .from('ad_accounts' as any)
+          .select('goal_objective')
+          .eq('id', accountId)
+          .maybeSingle() as any);
+        setGoalConfigured(!!data?.goal_objective);
+      } catch { setGoalConfigured(null); }
+    })();
+  }, [accountId]);
+
   // ── Fetch user's actual ads ──
   const [userAds, setUserAds] = useState<AdSummary[]>([]);
   const [totalAdCount, setTotalAdCount] = useState<number>(0);
@@ -2399,6 +2416,14 @@ const FeedPage: React.FC = () => {
             }).length,
             totalAds: totalAdCount,
           }} savings={savingsTotal} />
+        )}
+
+        {/* Goal Setup — show when Meta is connected but no goal configured */}
+        {metaConnected && !isDemo && goalConfigured === false && accountId && (
+          <GoalSetup
+            accountId={accountId}
+            onComplete={() => setGoalConfigured(true)}
+          />
         )}
 
         {/* STATE 5 — Full data: money tracker + summary + cards */}

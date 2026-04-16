@@ -109,11 +109,11 @@ async function fetchWithRetry(
   throw new Error(`Failed after ${maxRetries} retries due to rate limiting`);
 }
 
-// Get Meta access token + meta_account_id for account
-async function getAccountCredentials(accountId: string): Promise<{ token: string; metaAccountId: string }> {
+// Get Meta access token + meta_account_id + goal settings for account
+async function getAccountCredentials(accountId: string): Promise<{ token: string; metaAccountId: string; goalConversionEvent: string | null }> {
   const { data, error } = await supabase
     .from("ad_accounts")
-    .select("access_token_encrypted, meta_account_id, user_id")
+    .select("access_token_encrypted, meta_account_id, user_id, goal_conversion_event")
     .eq("id", accountId)
     .single();
 
@@ -176,6 +176,7 @@ async function getAccountCredentials(accountId: string): Promise<{ token: string
   return {
     token,
     metaAccountId: data.meta_account_id,
+    goalConversionEvent: (data as any).goal_conversion_event || null,
   };
 }
 
@@ -373,7 +374,8 @@ async function fetchInsights(
 }
 
 // Process and normalize metrics — all stored as integers (centavos/basis points)
-function normalizeMetrics(insight: MetaInsights, adUuid: string, accountUuid: string) {
+// goalConversionEvent: if set, only count that specific action_type as a conversion
+function normalizeMetrics(insight: MetaInsights, adUuid: string, accountUuid: string, goalConversionEvent: string | null = null) {
   const spend = dollarsToCentavos(insight.spend || "0");
   const impressions = parseInt(insight.impressions || "0", 10);
   const clicks = parseInt(insight.clicks || "0", 10);
@@ -383,19 +385,35 @@ function normalizeMetrics(insight: MetaInsights, adUuid: string, accountUuid: st
   let actionValue = 0;
 
   if (Array.isArray(insight.actions)) {
-    conversions = insight.actions.reduce(
-      (sum, action) => sum + parseInt(action.value || "0", 10),
-      0
-    );
+    if (goalConversionEvent) {
+      // Filter to ONLY the user's selected conversion event
+      const matched = insight.actions.find(
+        (a) => a.action_type === goalConversionEvent
+      );
+      conversions = matched ? parseInt(matched.value || "0", 10) : 0;
+    } else {
+      // Legacy: sum all actions (backwards compatible)
+      conversions = insight.actions.reduce(
+        (sum, action) => sum + parseInt(action.value || "0", 10),
+        0
+      );
+    }
   }
 
   if (Array.isArray(insight.action_values)) {
-    actionValue = dollarsToCentavos(
-      insight.action_values.reduce(
-        (sum, action) => sum + parseFloat(action.value || "0"),
-        0
-      )
-    );
+    if (goalConversionEvent) {
+      const matched = insight.action_values.find(
+        (a) => a.action_type === goalConversionEvent
+      );
+      actionValue = matched ? dollarsToCentavos(parseFloat(matched.value || "0")) : 0;
+    } else {
+      actionValue = dollarsToCentavos(
+        insight.action_values.reduce(
+          (sum, action) => sum + parseFloat(action.value || "0"),
+          0
+        )
+      );
+    }
   }
 
   // CTR: stored as basis points (0.93% → 93)
@@ -563,7 +581,7 @@ async function upsertHierarchy(
 }
 
 // Fast sync: active ads with spend > 0, last 7 days, top 50
-async function syncFast(accountId: string, token: string, metaAccountId?: string): Promise<void> {
+async function syncFast(accountId: string, token: string, metaAccountId?: string, goalConversionEvent?: string | null): Promise<void> {
   const metaId = metaAccountId || accountId;
   console.log(`Starting FAST sync for account ${accountId} (meta: ${metaId})`);
 
@@ -628,7 +646,7 @@ async function syncFast(accountId: string, token: string, metaAccountId?: string
   for (const ad of adsWithSpend) {
     const insights = adInsights[ad.id] || [];
     for (const insight of insights) {
-      metrics.push(normalizeMetrics(insight, adUuidMap[ad.id], accountId));
+      metrics.push(normalizeMetrics(insight, adUuidMap[ad.id], accountId, goalConversionEvent));
     }
   }
 
@@ -652,7 +670,7 @@ async function syncFast(accountId: string, token: string, metaAccountId?: string
 }
 
 // Full sync: all campaigns/ad sets/ads, last 7 days, includes creatives
-async function syncFull(accountId: string, token: string, metaAccountId?: string): Promise<void> {
+async function syncFull(accountId: string, token: string, metaAccountId?: string, goalConversionEvent?: string | null): Promise<void> {
   const metaId = metaAccountId || accountId;
   console.log(`Starting FULL sync for account ${accountId} (meta: ${metaId})`);
 
@@ -674,7 +692,7 @@ async function syncFull(accountId: string, token: string, metaAccountId?: string
     if (!adUuidMap[ad.id]) continue;
     const insights = await fetchInsights(ad.id, token, dateRange);
     for (const insight of insights) {
-      metrics.push(normalizeMetrics(insight, adUuidMap[ad.id], accountId));
+      metrics.push(normalizeMetrics(insight, adUuidMap[ad.id], accountId, goalConversionEvent));
     }
   }
 
@@ -700,7 +718,7 @@ async function syncFull(accountId: string, token: string, metaAccountId?: string
 }
 
 // Deep sync: everything in FULL + 30-day insights + calculate baselines + update maturity
-async function syncDeep(accountId: string, token: string, metaAccountId?: string): Promise<void> {
+async function syncDeep(accountId: string, token: string, metaAccountId?: string, goalConversionEvent?: string | null): Promise<void> {
   const metaId = metaAccountId || accountId;
   console.log(`Starting DEEP sync for account ${accountId} (meta: ${metaId})`);
 
@@ -722,7 +740,7 @@ async function syncDeep(accountId: string, token: string, metaAccountId?: string
     if (!adUuidMap[ad.id]) continue;
     const insights = await fetchInsights(ad.id, token, dateRange);
     for (const insight of insights) {
-      metrics.push(normalizeMetrics(insight, adUuidMap[ad.id], accountId));
+      metrics.push(normalizeMetrics(insight, adUuidMap[ad.id], accountId, goalConversionEvent));
     }
   }
 
@@ -798,17 +816,17 @@ serve(async (req: Request) => {
       );
     }
 
-    const { token, metaAccountId } = await getAccountCredentials(account_id);
+    const { token, metaAccountId, goalConversionEvent } = await getAccountCredentials(account_id);
 
     switch (sync_type) {
       case "fast":
-        await syncFast(account_id, token, metaAccountId);
+        await syncFast(account_id, token, metaAccountId, goalConversionEvent);
         break;
       case "full":
-        await syncFull(account_id, token, metaAccountId);
+        await syncFull(account_id, token, metaAccountId, goalConversionEvent);
         break;
       case "deep":
-        await syncDeep(account_id, token, metaAccountId);
+        await syncDeep(account_id, token, metaAccountId, goalConversionEvent);
         break;
       case "on_demand":
         await syncFull(account_id, token, metaAccountId);

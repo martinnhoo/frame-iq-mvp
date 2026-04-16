@@ -56,6 +56,16 @@ Deno.serve(async (req) => {
         const acc = (conn.selected_account_id && accs.find((a: any) => a.id === conn.selected_account_id)) || accs[0];
         if (!acc?.id) continue;
 
+        // Load goal conversion event
+        let goalEvent = "purchase";
+        try {
+          const { data: accRow } = await sb.from("ad_accounts" as any)
+            .select("goal_conversion_event")
+            .eq("user_id", user_id).eq("meta_account_id", acc.id.replace("act_", ""))
+            .maybeSingle();
+          if ((accRow as any)?.goal_conversion_event) goalEvent = (accRow as any).goal_conversion_event;
+        } catch { /* fallback to purchase */ }
+
         const insFields = "ad_id,ad_name,campaign_name,adset_name,spend,impressions,clicks,ctr,cpc,actions,action_values,frequency";
         const adsRes = await fetch(
           `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${insFields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=200&access_token=${token}`
@@ -81,8 +91,8 @@ Deno.serve(async (req) => {
           const impressions = parseInt(ins.impressions || "0");
           const clicks = parseInt(ins.clicks || "0");
           const freq = parseFloat(ins.frequency || "0");
-          const conv = (ins.actions || []).find((a: any) => a.action_type === "purchase")?.value || 0;
-          const convVal = (ins.action_values || []).find((a: any) => a.action_type === "purchase")?.value || 0;
+          const conv = (ins.actions || []).find((a: any) => a.action_type === goalEvent)?.value || 0;
+          const convVal = (ins.action_values || []).find((a: any) => a.action_type === goalEvent)?.value || 0;
           const roas = spend > 0 && parseFloat(convVal) > 0 ? parseFloat(convVal) / spend : null;
           const status = ad.status?.toLowerCase() || "unknown";
           const launched = ad.created_time?.split("T")[0] || null;

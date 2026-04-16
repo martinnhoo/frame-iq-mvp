@@ -801,6 +801,32 @@ Deno.serve(async (req) => {
     // Extract business goal if set
     const businessGoal = (aiProfile as any)?.ai_recommendations?.business_goal || null;
 
+    // ── Load user-defined account goal (Conversion Intelligence) ──
+    let accountGoal: { objective: string; primary_metric: string; conversion_event: string; target_value: number | null } | null = null;
+    try {
+      const metaConn = (platformConns || []).find((c: any) => c.platform === "meta" && c.ad_accounts?.length);
+      if (metaConn) {
+        const accs = (metaConn.ad_accounts || []) as any[];
+        const selId = metaConn.selected_account_id || accs[0]?.id;
+        if (selId) {
+          const { data: goalRow } = await (supabase as any)
+            .from("ad_accounts")
+            .select("goal_objective, goal_primary_metric, goal_conversion_event, goal_target_value")
+            .eq("user_id", user_id)
+            .eq("meta_account_id", String(selId).replace("act_", ""))
+            .maybeSingle();
+          if (goalRow?.goal_objective) {
+            accountGoal = {
+              objective: goalRow.goal_objective,
+              primary_metric: goalRow.goal_primary_metric,
+              conversion_event: goalRow.goal_conversion_event,
+              target_value: goalRow.goal_target_value,
+            };
+          }
+        }
+      }
+    } catch (e) { console.error("[adbrief-ai-chat] accountGoal load error:", e); }
+
     const persona = personaRow as any;
     const personaName = (persona?.result as any)?.name || "";
     const personaCtx = persona?.result
@@ -1405,9 +1431,19 @@ REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre pl
         if (!profile) return "";
         const directive = profile?.ai_recommendations?.weekly_directive;
         const lines = [
-          // Business goal — highest priority context
-          businessGoal
-            ? `=== OBJETIVO DE NEGÓCIO ===\nMeta: ${businessGoal.goal}\nBudget: ${businessGoal.budget || "?"}\nCPA alvo: ${businessGoal.target_cpa || "?"}\nProgresso: ${businessGoal.progress || "sem dados"}`
+          // Account goal (user-configured) — HIGHEST PRIORITY
+          accountGoal
+            ? `=== OBJETIVO DEFINIDO PELO USUÁRIO (PRIORIDADE MÁXIMA) ===
+Objetivo: ${accountGoal.objective === "leads" ? "Gerar leads/cadastros" : accountGoal.objective === "sales" ? "Vendas/E-commerce" : accountGoal.objective === "traffic" ? "Tráfego/Visitas" : accountGoal.objective}
+MÉTRICA PRINCIPAL: ${accountGoal.primary_metric.toUpperCase()} — TODAS as análises de performance DEVEM usar essa métrica como referência principal. CTR é apenas complemento.
+Conversão rastreada: ${accountGoal.conversion_event} (evento do Pixel do Meta)
+${accountGoal.target_value ? `Meta: ${accountGoal.primary_metric === "roas" ? (accountGoal.target_value / 10000).toFixed(1) + "x ROAS" : "R$" + (accountGoal.target_value / 100).toFixed(2) + " " + accountGoal.primary_metric.toUpperCase()}` : "Sem meta definida — pergunte ao usuário se quiser definir"}
+REGRA: Quando comparar campanhas ou julgar performance, use ${accountGoal.primary_metric.toUpperCase()} como critério principal. Se conversões = 0, isso é SEMPRE o diagnóstico #1.`
+            : `=== SEM OBJETIVO DEFINIDO ===
+O usuário NÃO configurou objetivo de negócio ainda. Quando perguntarem "qual campanha é melhor?" ou pedirem análise de performance, PERGUNTE PRIMEIRO: "Qual é o objetivo — leads, vendas, tráfego?" Sem isso, qualquer veredito é incompleto.`,
+          // Business goal from AI (secondary — inferred, not user-confirmed)
+          businessGoal && !accountGoal
+            ? `OBJETIVO INFERIDO (não confirmado pelo usuário): ${businessGoal.goal}${businessGoal.target_cpa ? ` | CPA sugerido: ${businessGoal.target_cpa}` : ""}${businessGoal.budget ? ` | Budget: ${businessGoal.budget}` : ""}`
             : "",
           profile.ai_summary ? `PERFIL DO USUÁRIO: ${profile.ai_summary}` : "",
           directive?.proximo_teste ? `DIRETIVA SEMANAL (Creative Director): ${directive.proximo_teste}` : "",
@@ -1620,6 +1656,31 @@ Sem headers. Parágrafo direto com **negrito** nos pontos-chave.\\n\\n Segunda l
 3. **negrito** obrigatório em: números reais, nomes de campanha, CTAs de ação
 4. Nunca tudo em um bloco só — "\\n\\n" entre parágrafos sempre
 5. Respostas longas (3+ seções) sempre com "##" headers
+
+═══════════════════════════════════
+INTELIGÊNCIA DE CONVERSÃO (PRIMARY METRIC)
+═══════════════════════════════════
+
+O contexto contém "OBJETIVO DEFINIDO PELO USUÁRIO" ou "SEM OBJETIVO DEFINIDO".
+
+SE OBJETIVO DEFINIDO:
+- A MÉTRICA PRINCIPAL está explícita (CPA, ROAS, CPC). USE-A como base de TODA análise.
+- Quando comparar campanhas: use a métrica principal, não CTR.
+- "Campanha A é melhor" = "Campanha A tem melhor CPA/ROAS/CPC" — NUNCA "melhor CTR".
+- Se conversões = 0 com spend > 0: esse é SEMPRE o diagnóstico #1. Tudo mais é irrelevante.
+- Cite CTR apenas como complemento ("CTR está bom, mas sem conversões não importa").
+
+SE SEM OBJETIVO:
+- Quando o usuário perguntar "qual é melhor?", "como tá a performance?": PERGUNTE o objetivo PRIMEIRO.
+- Frase: "Antes de comparar: qual é o objetivo — gerar leads, vendas, tráfego? Sem isso, CTR alto pode significar zero resultado real."
+- Após saber o objetivo, analise pela métrica correta.
+
+HIERARQUIA DE MÉTRICAS (sempre nessa ordem):
+1. Conversões (0 = problema grave)
+2. CPA/ROAS (métrica principal)
+3. CPC (eficiência de clique)
+4. CPM (custo de entrega)
+5. CTR (engajamento — NUNCA como veredito principal)
 
 ═══════════════════════════════════
 REGRAS QUE NUNCA QUEBRAM
