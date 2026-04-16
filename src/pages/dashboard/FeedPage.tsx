@@ -866,8 +866,12 @@ const AdList: React.FC<{
 interface AdMetricsSummary {
   totalSpend: number;    // centavos
   totalConversions: number;
+  totalRevenue: number;  // centavos
+  totalClicks: number;
   avgCtr: number;
   avgCpa: number;        // centavos
+  avgRoas: number;       // ratio (e.g. 3.0)
+  avgCpc: number;        // centavos
   daysOfData: number;
 }
 
@@ -1787,12 +1791,42 @@ const PerformancePulse: React.FC<{
     spendPrev: number; ctrPrev: number;
   };
   savings: number;
-}> = ({ data, savings }) => {
+  goalMetric?: string | null; // 'cpa' | 'roas' | 'cpc' | null
+  adMetrics?: AdMetricsSummary | null;
+}> = ({ data, savings, goalMetric, adMetrics }) => {
   const ctrDisplay = data.ctr7d < 1 ? data.ctr7d * 100 : data.ctr7d;
   const pausedAds = (data.totalAds || 0) - data.activeAds;
+
+  // Dynamic primary metric based on account goal
+  const buildPrimaryKpi = (): { label: string; value: string; trend: React.ReactNode } => {
+    if (goalMetric === 'cpa' && adMetrics) {
+      const cpa = adMetrics.avgCpa; // centavos
+      const display = cpa > 0 ? `R$${(cpa / 100).toFixed(2)}` : '—';
+      return { label: 'CPA', value: display, trend: null };
+    }
+    if (goalMetric === 'roas' && adMetrics) {
+      const roas = adMetrics.avgRoas;
+      const display = roas > 0 ? `${roas.toFixed(1)}x` : '—';
+      return { label: 'ROAS', value: display, trend: null };
+    }
+    if (goalMetric === 'cpc' && adMetrics) {
+      const cpc = adMetrics.avgCpc; // centavos
+      const display = cpc > 0 ? `R$${(cpc / 100).toFixed(2)}` : '—';
+      return { label: 'CPC', value: display, trend: null };
+    }
+    // Fallback: CTR
+    return {
+      label: 'CTR',
+      value: data.spend7d > 0 ? `${ctrDisplay.toFixed(2)}%` : '—',
+      trend: data.spend7d > 0 ? <TrendArrow current={data.ctr7d} previous={data.ctrPrev} /> : null,
+    };
+  };
+
+  const primaryKpi = buildPrimaryKpi();
+
   const kpis = [
     { label: 'Spend 7d', value: `R$${data.spend7d >= 1000 ? (data.spend7d / 1000).toFixed(1) + 'k' : data.spend7d.toFixed(0)}`, trend: <TrendArrow current={data.spend7d} previous={data.spendPrev} invert /> },
-    { label: 'CTR', value: data.spend7d > 0 ? `${ctrDisplay.toFixed(2)}%` : '—', trend: data.spend7d > 0 ? <TrendArrow current={data.ctr7d} previous={data.ctrPrev} /> : null },
+    primaryKpi,
     { label: 'Ativos', value: String(data.activeAds), trend: null },
     { label: 'Pausados', value: String(pausedAds > 0 ? pausedAds : 0), trend: null },
   ];
@@ -1867,17 +1901,27 @@ const FeedPage: React.FC = () => {
 
   // ── Account goal (Conversion Intelligence) ──
   const [goalConfigured, setGoalConfigured] = useState<boolean | null>(null); // null = loading
+  const [goalData, setGoalData] = useState<{ objective: string; metric: string; target: number | null } | null>(null);
   useEffect(() => {
-    if (!accountId) { setGoalConfigured(null); return; }
+    if (!accountId) { setGoalConfigured(null); setGoalData(null); return; }
     (async () => {
       try {
         const { data } = await (supabase
           .from('ad_accounts' as any)
-          .select('goal_objective')
+          .select('goal_objective, goal_primary_metric, goal_target_value')
           .eq('id', accountId)
           .maybeSingle() as any);
         setGoalConfigured(!!data?.goal_objective);
-      } catch { setGoalConfigured(null); }
+        if (data?.goal_objective) {
+          setGoalData({
+            objective: data.goal_objective,
+            metric: data.goal_primary_metric,
+            target: data.goal_target_value,
+          });
+        } else {
+          setGoalData(null);
+        }
+      } catch { setGoalConfigured(null); setGoalData(null); }
     })();
   }, [accountId]);
 
@@ -1931,20 +1975,26 @@ const FeedPage: React.FC = () => {
         const since = new Date(Date.now() - periodDays * 86400000).toISOString().slice(0, 10);
         const { data: mData } = await (supabase
           .from('ad_metrics' as any)
-          .select('spend, conversions, ctr, cpa, date')
+          .select('spend, conversions, revenue, clicks, ctr, cpa, cpc, roas, date')
           .eq('account_id', accountId)
           .gte('date', since) as any);
         if (!cancelled && mData && mData.length > 0) {
           const totalSpend = mData.reduce((s: number, r: any) => s + (r.spend || 0), 0);
           const totalConversions = mData.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
+          const totalRevenue = mData.reduce((s: number, r: any) => s + (r.revenue || 0), 0);
+          const totalClicks = mData.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
           const ctrVals = mData.filter((r: any) => r.ctr != null).map((r: any) => Number(r.ctr));
           const cpaVals = mData.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
           const uniqueDates = new Set(mData.map((r: any) => r.date));
           setAdMetrics({
             totalSpend,
             totalConversions,
+            totalRevenue,
+            totalClicks,
             avgCtr: ctrVals.length > 0 ? ctrVals.reduce((a: number, b: number) => a + b, 0) / ctrVals.length : 0,
             avgCpa: cpaVals.length > 0 ? cpaVals.reduce((a: number, b: number) => a + b, 0) / cpaVals.length : 0,
+            avgRoas: totalSpend > 0 && totalRevenue > 0 ? totalRevenue / totalSpend : 0,
+            avgCpc: totalClicks > 0 ? totalSpend / totalClicks : 0,
             daysOfData: uniqueDates.size,
           });
         } else if (!cancelled) {
@@ -2415,7 +2465,7 @@ const FeedPage: React.FC = () => {
               return s === 'ACTIVE' || s === '';
             }).length,
             totalAds: totalAdCount,
-          }} savings={savingsTotal} />
+          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} />
         )}
 
         {/* Goal Setup — show when Meta is connected but no goal configured */}
