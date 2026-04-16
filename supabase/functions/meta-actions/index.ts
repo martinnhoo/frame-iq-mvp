@@ -28,13 +28,41 @@ function mapActionType(action: string, targetType: string): string {
   }
 }
 
-// Fetch target name from Meta API (fire-and-forget safe)
-async function fetchTargetName(targetId: string, targetType: string, token: string): Promise<string | null> {
+// Fetch target info from Meta API
+async function fetchTargetInfo(targetId: string, targetType: string, token: string): Promise<{ name: string | null; daily_budget: number | null }> {
   try {
-    const fields = targetType === "ad" ? "name" : "name";
+    const fields = targetType === "ad" ? "name,adset_id" : "name,daily_budget";
     const r = await fetch(`${BASE}/${targetId}?fields=${fields}&access_token=${token}`);
     const d = await r.json();
-    return d.name || null;
+    const budget = d.daily_budget ? Number(d.daily_budget) / 100 : null; // cents → reais
+    return { name: d.name || null, daily_budget: budget };
+  } catch {
+    return { name: null, daily_budget: null };
+  }
+}
+
+// For ads: estimate proportional daily impact from parent adset
+async function estimateAdDailyImpact(targetId: string, token: string): Promise<number | null> {
+  try {
+    // Get parent adset_id
+    const r1 = await fetch(`${BASE}/${targetId}?fields=adset_id&access_token=${token}`);
+    const d1 = await r1.json();
+    if (!d1.adset_id) return null;
+
+    // Get adset daily_budget + count active ads
+    const [budgetRes, adsRes] = await Promise.all([
+      fetch(`${BASE}/${d1.adset_id}?fields=daily_budget&access_token=${token}`),
+      fetch(`${BASE}/${d1.adset_id}/ads?fields=effective_status&limit=50&access_token=${token}`),
+    ]);
+    const budgetData = await budgetRes.json();
+    const adsData = await adsRes.json();
+
+    if (!budgetData.daily_budget) return null;
+    const adsetBudget = Number(budgetData.daily_budget) / 100;
+    const activeAds = (adsData.data || []).filter((a: any) => a.effective_status === "ACTIVE").length;
+    if (activeAds <= 0) return null;
+
+    return Math.round((adsetBudget / activeAds) * 100) / 100; // proportional share
   } catch {
     return null;
   }
@@ -50,6 +78,7 @@ async function logToActionHistory(
   targetName: string | null,
   previousState: object | null,
   newState: object | null,
+  estimatedDailyImpact: number | null = null,
 ) {
   try {
     // Get user's ad_account id (our internal UUID)
@@ -67,7 +96,7 @@ async function logToActionHistory(
 
     const actionType = mapActionType(action, targetType);
 
-    await supabase.from("action_log").insert({
+    const row: Record<string, any> = {
       account_id: adAccount.id,
       user_id: userId,
       action_type: actionType,
@@ -79,7 +108,11 @@ async function logToActionHistory(
       result: "success",
       executed_at: new Date().toISOString(),
       rollback_expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-    });
+    };
+    if (estimatedDailyImpact && estimatedDailyImpact > 0) {
+      row.estimated_daily_impact = estimatedDailyImpact;
+    }
+    await supabase.from("action_log").insert(row);
   } catch (e) {
     // Never block the response because of logging failure
     console.error("[meta-actions] Failed to write action_log:", e);
@@ -148,15 +181,30 @@ Deno.serve(async (req) => {
 
     if (action === "pause" || action === "enable") {
       const status = action === "pause" ? "PAUSED" : "ACTIVE";
-      // Fetch name before action for logging
-      const targetName = body.target_name || await fetchTargetName(target_id, target_type || "ad", token);
+      const tType = target_type || "ad";
+
+      // Fetch info before action
+      const info = await fetchTargetInfo(target_id, tType, token);
+      const targetName = body.target_name || info.name;
+
+      // Estimate daily impact for pause actions
+      let dailyImpact: number | null = null;
+      if (action === "pause") {
+        if (tType === "ad") {
+          dailyImpact = await estimateAdDailyImpact(target_id, token);
+        } else {
+          dailyImpact = info.daily_budget; // campaign/adset: direct budget
+        }
+      }
+
       const d = await post(target_id, { status });
       if (d.error) return errResp(d.error.message);
 
       // Log to action_log (non-blocking)
-      logToActionHistory(supabase, user_id, action, target_id, target_type || "ad", targetName,
+      logToActionHistory(supabase, user_id, action, target_id, tType, targetName,
         { status: action === "pause" ? "ACTIVE" : "PAUSED" },
-        { status }
+        { status },
+        dailyImpact,
       );
 
       const label = target_type === "campaign" ? "Campanha" : target_type === "adset" ? "Conjunto" : "Anúncio";
@@ -167,7 +215,8 @@ Deno.serve(async (req) => {
       if (!value) return errResp("value required");
       const cents = Math.round(parseFloat(String(value)) * 100);
       const budgetField = (body.budget_type === "lifetime") ? "lifetime_budget" : "daily_budget";
-      const targetName = body.target_name || await fetchTargetName(target_id, target_type || "campaign", token);
+      const info = await fetchTargetInfo(target_id, target_type || "campaign", token);
+      const targetName = body.target_name || info.name;
       const d = await post(target_id, { [budgetField]: cents });
       if (d.error) return errResp(d.error.message);
 
@@ -181,7 +230,8 @@ Deno.serve(async (req) => {
     }
 
     if (action === "publish") {
-      const targetName = body.target_name || await fetchTargetName(target_id, target_type || "ad", token);
+      const info = await fetchTargetInfo(target_id, target_type || "ad", token);
+      const targetName = body.target_name || info.name;
       const d = await post(target_id, { status: "ACTIVE" });
       if (d.error) return errResp(d.error.message);
 
@@ -194,7 +244,8 @@ Deno.serve(async (req) => {
     }
 
     if (action === "duplicate") {
-      const targetName = body.target_name || await fetchTargetName(target_id, target_type || "ad", token);
+      const info = await fetchTargetInfo(target_id, target_type || "ad", token);
+      const targetName = body.target_name || info.name;
       const copyEndpoint = `${target_id}/copies`;
       const d = await post(copyEndpoint, { deep_copy: true, status_option: "PAUSED" });
       if (d.error) return errResp(d.error.message);
