@@ -1356,19 +1356,95 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
     </div>
   );
 
-  // ── UPGRADE CTA — conversion-optimized block for plan upgrades ──
-  if(block.type==="upgrade_cta") return(
-    <div style={{margin:"4px 0 12px",padding:"16px 18px",borderRadius:10,background:"linear-gradient(135deg, rgba(14,165,233,0.08), rgba(14,165,233,0.03))",border:"1px solid rgba(14,165,233,0.15)"}}>
-      <div style={{fontSize:14,fontWeight:700,color:"rgba(14,165,233,0.95)",fontFamily:F,marginBottom:6,letterSpacing:"-0.01em"}}>{block.title}</div>
-      <div style={{fontSize:12.5,color:"rgba(255,255,255,0.55)",fontFamily:F,lineHeight:1.55,marginBottom:14}}>{block.content}</div>
-      <button onClick={()=>onNavigate("/pricing")}
-        style={{fontFamily:F,fontSize:13,fontWeight:700,padding:"10px 24px",borderRadius:8,background:"#0ea5e9",color:"#fff",border:"none",cursor:"pointer",letterSpacing:"-0.01em",transition:"all 0.18s",boxShadow:"0 4px 14px rgba(14,165,233,0.25)"}}
-        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="#0284c7";(e.currentTarget as HTMLElement).style.boxShadow="0 6px 20px rgba(14,165,233,0.35)"}}
-        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="#0ea5e9";(e.currentTarget as HTMLElement).style.boxShadow="0 4px 14px rgba(14,165,233,0.25)"}}>
-        Ver planos →
-      </button>
-    </div>
-  );
+  // ── CREDITS EXHAUSTED (FREE) — plan cards ──
+  if(block.type==="credits_exhausted_free") {
+    const plans = (block as any).plans || [];
+    return(
+      <div style={{margin:"4px 0 12px"}}>
+        <div style={{fontSize:13,color:"rgba(255,255,255,0.50)",fontFamily:F,marginBottom:12,lineHeight:1.5}}>
+          Seus créditos gratuitos acabaram. Escolha um plano para continuar:
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          {plans.map((p:any,i:number)=>(
+            <div key={i} onClick={()=>onNavigate("/pricing")} style={{
+              padding:"14px 16px",borderRadius:10,cursor:"pointer",transition:"all 0.18s",
+              background: p.recommended ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)",
+              border: p.recommended ? "1px solid rgba(14,165,233,0.25)" : "1px solid rgba(255,255,255,0.06)",
+            }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background=p.recommended?"rgba(14,165,233,0.12)":"rgba(255,255,255,0.05)"}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=p.recommended?"rgba(14,165,233,0.08)":"rgba(255,255,255,0.03)"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:14,fontWeight:700,color:p.recommended?"#0ea5e9":"#F0F6FC",fontFamily:F}}>{p.name}</span>
+                  {p.recommended&&<span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>RECOMENDADO</span>}
+                </div>
+                <span style={{fontSize:13,fontWeight:700,color:"#F0F6FC",fontFamily:F}}>{p.price}</span>
+              </div>
+              <div style={{fontSize:11.5,color:"rgba(255,255,255,0.45)",fontFamily:F}}>
+                {p.credits} · {p.highlight}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── CREDITS EXHAUSTED (PAID) — buy credits and/or upgrade ──
+  if(block.type==="credits_exhausted_paid") {
+    const planName = (block as any).plan_name || "";
+    const totalCredits = (block as any).total_credits || 0;
+    const nextPlan = (block as any).next_plan;
+    const options: string[] = (block as any).options || [];
+    const showUpgrade = options.includes("upgrade") && nextPlan;
+    const showCredits = options.includes("buy_credits");
+    return(
+      <div style={{margin:"4px 0 12px"}}>
+        <div style={{fontSize:13,color:"rgba(255,255,255,0.50)",fontFamily:F,marginBottom:12,lineHeight:1.5}}>
+          Você usou todos os {totalCredits.toLocaleString("pt-BR")} créditos do plano {planName} este mês.
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {/* Buy credits */}
+          {showCredits&&(
+            <div onClick={()=>onNavigate("/pricing")} style={{
+              padding:"14px 16px",borderRadius:10,cursor:"pointer",transition:"all 0.18s",
+              background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",
+              display:"flex",alignItems:"center",justifyContent:"space-between",
+            }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)"}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)"}}>
+              <div>
+                <div style={{fontSize:13.5,fontWeight:700,color:"#F0F6FC",fontFamily:F,marginBottom:3}}>Comprar créditos extras</div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.40)",fontFamily:F}}>Receba mais créditos sem mudar de plano</div>
+              </div>
+              <span style={{fontSize:16,color:"rgba(255,255,255,0.30)"}}>→</span>
+            </div>
+          )}
+          {/* Upgrade plan */}
+          {showUpgrade&&(
+            <div onClick={()=>onNavigate("/pricing")} style={{
+              padding:"14px 16px",borderRadius:10,cursor:"pointer",transition:"all 0.18s",
+              background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.20)",
+              display:"flex",alignItems:"center",justifyContent:"space-between",
+            }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.12)"}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.08)"}}>
+              <div>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                  <span style={{fontSize:13.5,fontWeight:700,color:"#0ea5e9",fontFamily:F}}>Subir para {nextPlan.name}</span>
+                  <span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>+{((nextPlan.credits/totalCredits-1)*100).toFixed(0)}% créditos</span>
+                </div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.45)",fontFamily:F}}>
+                  {nextPlan.credits.toLocaleString("pt-BR")} créditos · {nextPlan.price}
+                </div>
+              </div>
+              <span style={{fontSize:16,color:"rgba(14,165,233,0.50)"}}>→</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // ── HOOKS — inspirado em Claude.ai: lista limpa, sem caixas ──
   if(block.type==="hooks") return(
@@ -3975,16 +4051,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           if(profile?.plan&&profile.plan!=="free"){window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));}else{setShowUpgradeWall(true);}
           setLoading(false);return;
         }
-        // Credits exhausted — show upgrade wall for free users, inline blocks for paid
+        // Credits exhausted — show tier-specific inline blocks
         if(parsedErr?.error==="insufficient_credits"||parsedErr?.type==="credits_exhausted"){
           if(parsedErr?.blocks){
             const aid=Date.now()+1;
             setMessages(prev=>[...prev,{role:"assistant",blocks:parsedErr.blocks,ts:aid,id:aid}]);
-          }
-          if(profile?.plan&&profile.plan!=="free"){
-            window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));
-          }else{
-            setShowUpgradeWall(true);
           }
           setLoading(false);return;
         }

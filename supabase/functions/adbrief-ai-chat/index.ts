@@ -444,51 +444,62 @@ Deno.serve(async (req) => {
     const creditCheck = await requireCredits(supabase, user_id, "chat");
     if (!creditCheck.allowed) {
       const uLang = (user_language as string) || "pt";
-      const isFree = creditCheck.error?.upgrade_needed;
-      const remaining = creditCheck.remaining ?? 0;
       const total = creditCheck.total ?? 0;
 
-      // Build conversion-optimized response blocks
-      const blocks = isFree ? [
-        {
-          type: "warning",
-          title: uLang === "pt" ? "Créditos esgotados"
-            : uLang === "es" ? "Créditos agotados"
-            : "Credits exhausted",
-          content: uLang === "pt"
-            ? "Você usou todos os créditos do plano gratuito este mês. Faça upgrade para continuar usando a IA sem interrupção."
-            : uLang === "es"
-            ? "Has usado todos los créditos del plan gratuito este mes. Actualiza para seguir usando la IA sin interrupción."
-            : "You've used all free plan credits this month. Upgrade to keep using AI without interruption.",
-        },
-        {
-          type: "upgrade_cta",
-          title: uLang === "pt" ? "Desbloquear acesso completo"
-            : uLang === "es" ? "Desbloquear acceso completo"
-            : "Unlock full access",
-          content: uLang === "pt"
-            ? "A partir de R$47/mês · 1.000 créditos · Análise ilimitada de anúncios · Sem limite de conversas"
-            : uLang === "es"
-            ? "Desde R$47/mes · 1.000 créditos · Análisis ilimitado · Sin límite de conversaciones"
-            : "From R$47/mo · 1,000 credits · Unlimited ad analysis · No conversation limit",
-        },
-      ] : [
-        {
-          type: "warning",
-          title: uLang === "pt" ? "Créditos do mês esgotados"
-            : uLang === "es" ? "Créditos del mes agotados"
-            : "Monthly credits exhausted",
-          content: uLang === "pt"
-            ? `Você usou ${total} créditos do plano ${planKey}. Os créditos renovam no início do próximo mês, ou faça upgrade para mais.`
-            : uLang === "es"
-            ? `Has usado ${total} créditos del plan ${planKey}. Los créditos se renuevan al inicio del próximo mes, o actualiza para más.`
-            : `You've used ${total} credits on the ${planKey} plan. Credits renew next month, or upgrade for more.`,
-        },
-      ];
+      // Tier-specific response blocks:
+      //   free   → show plans only (upgrade wall)
+      //   maker  → buy credits OR upgrade to Pro
+      //   pro    → buy credits OR upgrade to Studio
+      //   studio → buy credits only (already max plan)
+
+      const PLAN_NAMES: Record<string, string> = { free: "Free", maker: "Maker", pro: "Pro", studio: "Studio" };
+      const NEXT_PLAN: Record<string, { name: string; credits: number; price: string } | null> = {
+        free: { name: "Maker", credits: 1000, price: "R$47/mês" },
+        maker: { name: "Pro", credits: 2500, price: "R$97/mês" },
+        pro: { name: "Studio", credits: 9000, price: "R$197/mês" },
+        studio: null,
+      };
+
+      const planName = PLAN_NAMES[planKey] || planKey;
+      const next = NEXT_PLAN[planKey] ?? null;
+      const blocks: any[] = [];
+
+      if (planKey === "free") {
+        // FREE → plans only, no credit option
+        blocks.push({
+          type: "credits_exhausted_free",
+          plan: "free",
+          plans: [
+            { name: "Maker", price: "R$47/mês", credits: "1.000 créditos", highlight: "1 conta de anúncios" },
+            { name: "Pro", price: "R$97/mês", credits: "2.500 créditos", highlight: "3 contas de anúncios", recommended: true },
+            { name: "Studio", price: "R$197/mês", credits: "9.000 créditos", highlight: "Contas ilimitadas" },
+          ],
+        });
+      } else if (planKey === "studio") {
+        // STUDIO → credits only (already top plan)
+        blocks.push({
+          type: "credits_exhausted_paid",
+          plan: planKey,
+          plan_name: planName,
+          total_credits: total,
+          options: ["buy_credits"],
+        });
+      } else {
+        // MAKER / PRO → credits OR upgrade
+        blocks.push({
+          type: "credits_exhausted_paid",
+          plan: planKey,
+          plan_name: planName,
+          total_credits: total,
+          next_plan: next,
+          options: ["buy_credits", "upgrade"],
+        });
+      }
 
       return new Response(JSON.stringify({
         ...creditCheck.error,
         type: "credits_exhausted",
+        plan: planKey,
         blocks,
       }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
