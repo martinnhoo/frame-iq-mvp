@@ -2470,6 +2470,48 @@ const FeedPage: React.FC = () => {
           }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} />
         )}
 
+        {/* Tracking Health Indicator — subtle banner when tracking issues detected */}
+        {metaConnected && !isDemo && adMetrics && (() => {
+          const s = adMetrics.totalSpend / 100; // to reais
+          const c = adMetrics.totalConversions;
+          const cl = adMetrics.totalClicks;
+          let status: 'healthy' | 'uncertain' | 'broken' = 'healthy';
+          let label = '';
+          if (s > 50 && cl > 20 && c === 0) {
+            status = 'broken';
+            label = 'Tracking pode estar com problema — 0 conversões registradas';
+          } else if (s > 100 && c > 0 && c < cl * 0.005) {
+            status = 'uncertain';
+            label = 'Taxa de conversão muito baixa — verifique o tracking';
+          }
+          if (status === 'healthy') return null;
+          const color = status === 'broken' ? '#F87171' : '#FBBF24';
+          const emoji = status === 'broken' ? '🔴' : '🟡';
+          return (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 12px', marginBottom: 12,
+              background: status === 'broken' ? 'rgba(248,113,113,0.06)' : 'rgba(251,191,36,0.06)',
+              border: `1px solid ${status === 'broken' ? 'rgba(248,113,113,0.15)' : 'rgba(251,191,36,0.15)'}`,
+              borderRadius: 8,
+            }}>
+              <span style={{ fontSize: 11 }}>{emoji}</span>
+              <span style={{ fontSize: 11, color, fontWeight: 600, flex: 1 }}>{label}</span>
+              <button
+                className="feed-micro-btn"
+                onClick={() => navigate('/dashboard/ai')}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 500,
+                  textDecoration: 'underline', padding: 0,
+                }}
+              >
+                Ver diagnóstico
+              </button>
+            </div>
+          );
+        })()}
+
         {/* Goal Setup — show when Meta is connected but no goal configured */}
         {metaConnected && !isDemo && goalConfigured === false && accountId && (
           <GoalSetup

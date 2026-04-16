@@ -172,6 +172,23 @@ Deno.serve(async (req) => {
                   };
                 })
                 .sort((a: any, b: any) => b.spend - a.spend);
+              // Compute tracking health for panel_data
+              let panelTrackingStatus: "healthy" | "uncertain" | "broken" = "uncertain";
+              let panelTrackingLabel = "";
+              if (totalConv > 0) {
+                panelTrackingStatus = "healthy";
+                panelTrackingLabel = "Tracking ativo";
+              } else if (totalSpend > 50 && totalClicks > 20 && totalConv === 0) {
+                panelTrackingStatus = "broken";
+                panelTrackingLabel = "Possível problema de tracking";
+              } else if (totalSpend === 0) {
+                panelTrackingStatus = "uncertain";
+                panelTrackingLabel = "Sem dados suficientes";
+              } else {
+                panelTrackingStatus = "uncertain";
+                panelTrackingLabel = "Avaliando tracking";
+              }
+
               result.meta = {
                 account_name: acc.name || acc.id,
                 period: `${since} → ${today}`,
@@ -184,6 +201,10 @@ Deno.serve(async (req) => {
                   frequency: avgFreq.toFixed(1),
                   conversions: totalConv.toFixed(0),
                   active_ads: adsData.length,
+                },
+                tracking_health: {
+                  status: panelTrackingStatus,
+                  label: panelTrackingLabel,
                 },
                 winners: enriched.filter((a: any) => a.isWinner).slice(0, 5),
                 at_risk: enriched.filter((a: any) => a.isRisk).slice(0, 5),
@@ -1337,6 +1358,115 @@ Esta conta ainda não tem padrões validados com dados suficientes.
                 .join("\n");
               if (placements) liveMetaData += `PLACEMENT BREAKDOWN:\n${placements}\n`;
             }
+
+            // ── TRACKING DIAGNOSTIC SYSTEM ──────────────────────────────
+            // Automatically classify tracking health from real data
+            try {
+              const allAds = adsRaw?.data || [];
+              const totalSpend = allAds.reduce((s: number, a: any) => s + parseFloat(a.spend || 0), 0);
+              const totalClicks = allAds.reduce((s: number, a: any) => s + parseInt(a.clicks || 0), 0);
+              const totalImpressions = allAds.reduce((s: number, a: any) => s + parseInt(a.impressions || 0), 0);
+
+              // Count ALL conversion action types across ads
+              const convActionTypes: Record<string, number> = {};
+              let totalConversions = 0;
+              for (const ad of allAds) {
+                const actions = ad.actions || [];
+                for (const act of actions) {
+                  const t = act.action_type;
+                  const v = parseFloat(act.value || 0);
+                  // Only count conversion-level actions (not clicks, impressions, etc.)
+                  if (["purchase", "lead", "complete_registration", "contact", "schedule",
+                       "add_to_cart", "initiate_checkout", "subscribe", "submit_application",
+                       "offsite_conversion.fb_pixel_purchase", "offsite_conversion.fb_pixel_lead",
+                       "offsite_conversion.fb_pixel_complete_registration"].includes(t)) {
+                    convActionTypes[t] = (convActionTypes[t] || 0) + v;
+                    totalConversions += v;
+                  }
+                }
+              }
+
+              // Pixel health from pixelInfo already computed above
+              const hasPixel = pixelInfo.includes("Pixel") && !pixelInfo.includes("Nenhum pixel");
+              const pixelFired = pixelInfo.includes("último disparo") && !pixelInfo.includes("NUNCA disparou");
+
+              // Classify tracking health
+              let trackingStatus: "healthy" | "uncertain" | "broken" = "broken";
+              let trackingDiagnosis = "";
+              let trackingConfidence = "low"; // low | medium | high
+
+              if (!hasPixel) {
+                // No pixel at all
+                trackingStatus = "broken";
+                trackingDiagnosis = "Nenhum pixel instalado. Sem rastreamento de conversões.";
+                trackingConfidence = "high";
+              } else if (!pixelFired) {
+                // Pixel exists but never fired
+                trackingStatus = "broken";
+                trackingDiagnosis = "Pixel instalado mas NUNCA disparou. O código pode não estar no site.";
+                trackingConfidence = "high";
+              } else if (totalSpend > 50 && totalClicks > 20 && totalConversions === 0) {
+                // Money spent, clicks happening, but ZERO conversions → likely tracking issue
+                trackingStatus = "uncertain";
+                const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions * 100) : 0;
+                trackingDiagnosis = `Spend $${totalSpend.toFixed(0)} com ${totalClicks} cliques (CTR ${avgCtr.toFixed(2)}%) mas 0 conversões. ` +
+                  `Possíveis causas: evento de conversão não dispara no site, landing page com problema, ou evento selecionado não corresponde à ação real do usuário.`;
+                trackingConfidence = "medium";
+              } else if (totalSpend > 100 && totalConversions > 0 && totalConversions < totalClicks * 0.005) {
+                // Conversions exist but suspiciously low relative to clicks (<0.5% conv rate)
+                trackingStatus = "uncertain";
+                const convRate = totalClicks > 0 ? (totalConversions / totalClicks * 100) : 0;
+                trackingDiagnosis = `Conversões detectadas (${totalConversions}) mas taxa muito baixa (${convRate.toFixed(2)}% dos cliques). ` +
+                  `Pode indicar: tracking parcial, evento duplicado descartado, ou evento configurado em página errada.`;
+                trackingConfidence = "medium";
+              } else if (totalConversions > 0) {
+                // Conversions flowing — tracking seems healthy
+                trackingStatus = "healthy";
+                const eventList = Object.entries(convActionTypes)
+                  .filter(([, v]) => v > 0)
+                  .map(([k, v]) => `${k}=${v}`)
+                  .join(", ");
+                trackingDiagnosis = `Tracking ativo. Eventos: ${eventList}. Dados de conversão confiáveis para otimização.`;
+                trackingConfidence = "high";
+              } else if (totalSpend === 0) {
+                // No spend — can't evaluate tracking
+                trackingStatus = "uncertain";
+                trackingDiagnosis = "Sem gasto no período — não é possível avaliar tracking. Conversões serão verificadas quando campanhas estiverem rodando.";
+                trackingConfidence = "low";
+              } else {
+                // Low spend, no conversions — might be too early
+                trackingStatus = "uncertain";
+                trackingDiagnosis = `Spend baixo ($${totalSpend.toFixed(0)}) e sem conversões. Pode ser muito cedo para avaliar tracking — acompanhar quando volume aumentar.`;
+                trackingConfidence = "low";
+              }
+
+              // Check for event mismatch (user configured one event but another is firing)
+              let eventMismatch = "";
+              if (accountGoal?.conversion_event && totalConversions > 0) {
+                const configuredEvent = accountGoal.conversion_event;
+                const configuredCount = convActionTypes[configuredEvent] || 0;
+                const otherEvents = Object.entries(convActionTypes)
+                  .filter(([k, v]) => k !== configuredEvent && v > 0);
+                if (configuredCount === 0 && otherEvents.length > 0) {
+                  eventMismatch = `ALERTA: Evento configurado "${configuredEvent}" tem 0 conversões, mas outros eventos estão disparando: ${otherEvents.map(([k, v]) => `${k}=${v}`).join(", ")}. O evento de otimização pode estar errado.`;
+                  if (trackingStatus === "healthy") trackingStatus = "uncertain";
+                }
+              }
+
+              // Inject tracking diagnostic into context
+              const statusEmoji = trackingStatus === "healthy" ? "🟢" : trackingStatus === "uncertain" ? "🟡" : "🔴";
+              liveMetaData += `\n═══ TRACKING DIAGNOSTIC ═══\n`;
+              liveMetaData += `STATUS: ${statusEmoji} ${trackingStatus.toUpperCase()} (confiança: ${trackingConfidence})\n`;
+              liveMetaData += `DIAGNÓSTICO: ${trackingDiagnosis}\n`;
+              if (eventMismatch) liveMetaData += `${eventMismatch}\n`;
+              if (trackingStatus !== "healthy") {
+                liveMetaData += `IMPACTO: AdBrief ${trackingStatus === "broken" ? "NÃO PODE" : "pode ter dificuldade para"} calcular CPA real, identificar o que converte, ou otimizar com base em resultados reais.\n`;
+              }
+              liveMetaData += `═══ FIM TRACKING ═══\n`;
+            } catch (trackErr) {
+              console.error("[tracking-diagnostic error]", String(trackErr));
+            }
+
           } else {
             liveMetaData = `META CONNECTED — no ad account selected. Tell user to go to Contas and select an ad account.`;
           }
@@ -1857,6 +1987,37 @@ GUIA PERSONALIZADO DE INSTALAÇÃO:
 - Se o evento do Meta não bate com o nome fbq: lead→Lead, purchase→Purchase, complete_registration→CompleteRegistration, contact→Contact, schedule→Schedule, add_to_cart→AddToCart, initiate_checkout→InitiateCheckout
 
 NUNCA dê resposta genérica sobre pixel. Use os dados reais: nome do pixel, ID, site do usuário, evento de conversão configurado.
+
+═══════════════════════════════════
+TRACKING DIAGNOSTIC — INTELIGÊNCIA AUTOMÁTICA
+═══════════════════════════════════
+
+O contexto contém um bloco "═══ TRACKING DIAGNOSTIC ═══" com STATUS (🟢 HEALTHY / 🟡 UNCERTAIN / 🔴 BROKEN), DIAGNÓSTICO e IMPACTO.
+
+COMO USAR ESSA INFORMAÇÃO:
+
+1. **HEALTHY (🟢)**: Dados de conversão confiáveis. Analise normalmente com base em CPA, ROAS, conversões.
+
+2. **UNCERTAIN (🟡)**: Dados parcialmente confiáveis. REGRAS:
+   - REDUZA a confiança de qualquer análise de performance baseada em conversões
+   - Quando citar CPA/ROAS, adicione: "_esse número pode estar impreciso — tracking incerto_"
+   - Se o usuário perguntar "como tá a performance?": mencione o tracking como ressalva ANTES de dar números
+   - Se houver ALERTA de event mismatch: mencione isso como prioridade antes de analisar performance
+
+3. **BROKEN (🔴)**: Dados de conversão NÃO CONFIÁVEIS. REGRAS:
+   - NUNCA calcule CPA ou ROAS — os números não significam nada sem tracking
+   - Se o usuário perguntar sobre performance: "Antes de analisar performance, precisamos resolver o tracking. Sem pixel funcionando, qualquer CPA/ROAS que eu calcular seria fictício."
+   - Foque em métricas de entrega (CTR, CPM, CPC) como proxy, deixando claro que são proxies
+   - PRIORIZE resolver o tracking acima de qualquer outra recomendação
+   - Use o guia de instalação de Pixel acima para orientar
+
+DIAGNÓSTICOS INTELIGENTES (use quando os dados indicarem):
+- **CTR alto + 0 conversões + spend significativo**: "Seus anúncios estão gerando cliques mas nenhuma conversão está sendo registrada. Isso é quase certamente um problema de tracking, não de campanha."
+- **Conversões muito baixas vs cliques (<0.5%)**: "A taxa de conversão está anormalmente baixa. Pode ser tracking parcial — verifique se o evento está disparando em todas as páginas corretas."
+- **Event mismatch**: "O evento configurado não está disparando, mas outros eventos sim. Isso significa que o Meta está otimizando para o evento errado."
+
+REGRA DE OURO: Tracking é pré-requisito para análise de performance. Se tracking está quebrado, todo o resto é teatro.
+NÃO seja invasivo: só mencione tracking quando for relevante para a pergunta do usuário OU quando for 🔴 BROKEN (nesse caso, sempre mencione).
 
 ═══════════════════════════════════
 META ADS — SINAIS E BENCHMARKS
