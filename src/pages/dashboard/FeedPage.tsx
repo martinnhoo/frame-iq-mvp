@@ -975,7 +975,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
                 fontSize: 11, fontWeight: 600, color: lowCtr ? T.yellow : T.text2,
                 background: T.bg2, padding: '3px 8px', borderRadius: 4,
               }}>
-                CTR {(metrics.avgCtr / 100).toFixed(2)}%
+                CTR {fmtPct(metrics.avgCtr)}
               </span>
             )}
             {metrics.avgCpa > 0 && (
@@ -983,7 +983,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
                 fontSize: 11, fontWeight: 600, color: highCpa ? T.yellow : T.text2,
                 background: T.bg2, padding: '3px 8px', borderRadius: 4,
               }}>
-                CPA R${(metrics.avgCpa / 100).toFixed(2)}
+                CPA {fmtReais(metrics.avgCpa)}
               </span>
             )}
             <span style={{
@@ -1239,10 +1239,11 @@ const PerformanceSummary: React.FC<{
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
 
-  const ctrPct = hasMetrics ? (metrics.avgCtr / 100).toFixed(2) : null;
-  const spendReais = hasMetrics ? (metrics.totalSpend / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
-  const cpaReais = hasMetrics && metrics.avgCpa > 0 ? (metrics.avgCpa / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
-  const ctrGood = ctrPct && parseFloat(ctrPct) >= 1;
+  // Use unified formatters (same source as KPI bar)
+  const ctrPct = hasMetrics ? fmtPct(metrics.avgCtr) : null;
+  const spendReais = hasMetrics ? fmtReais(metrics.totalSpend) : null;
+  const cpaReais = hasMetrics && metrics.avgCpa > 0 ? fmtReais(metrics.avgCpa) : null;
+  const ctrGood = hasMetrics && (metrics.avgCtr / 100) >= 1;
   const confLevel = hasMetrics && metrics.daysOfData >= 5 ? 'alta' : hasMetrics && metrics.daysOfData >= 2 ? 'média' : 'baixa';
   const confColor = confLevel === 'alta' ? 'rgba(14,165,233,0.70)' : confLevel === 'média' ? 'rgba(14,165,233,0.60)' : 'rgba(255,255,255,0.40)';
 
@@ -1282,9 +1283,9 @@ const PerformanceSummary: React.FC<{
         {hasMetrics && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
             {[
-              { label: 'Investido', value: `R$${spendReais}`, color: T.text1 },
-              { label: 'CTR', value: `${ctrPct}%`, color: ctrGood ? T.green : T.yellow },
-              { label: 'CPA', value: cpaReais ? `R$${cpaReais}` : '—', color: T.text1 },
+              { label: 'Investido', value: spendReais || '—', color: T.text1 },
+              { label: 'CTR', value: ctrPct || '—', color: ctrGood ? T.green : T.yellow },
+              { label: 'CPA', value: cpaReais || '—', color: T.text1 },
             ].map((m, i) => (
               <div key={i} style={{
                 background: T.bg2, borderRadius: 6,
@@ -1329,7 +1330,7 @@ const PerformanceSummary: React.FC<{
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: T.text1, marginBottom: 6, lineHeight: 1.4 }}>
           {ctrGood
-            ? <>CTR de <span style={{ color: T.green }}>{ctrPct}%</span> — espaço para escalar com novos criativos</>
+            ? <>CTR de <span style={{ color: T.green }}>{ctrPct}</span> — espaço para escalar com novos criativos</>
             : <>Seu próximo ganho vem de novos criativos · <span style={{ color: T.blue }}>+18% CTR potencial</span></>}
         </div>
         <div style={{ fontSize: 12, color: T.text2, lineHeight: 1.55, marginBottom: 14 }}>
@@ -1791,32 +1792,40 @@ const AdToggleModal: React.FC<{
   );
 };
 
-// ── Performance Pulse — KPI bar (rebuilt) ──
+// ================================================================
+// UNIFIED FORMATTERS — single source of truth for number display
+// Used by: KPI bar, PerformanceSummary, tracking card, state cards
+// ================================================================
 
-// Format currency: centavos → clean display. Never show long decimals.
-const fmtCurrency = (centavos: number): string => {
+/** Format centavos → R$XX,XX. Never long decimals. */
+const fmtReais = (centavos: number): string => {
   const v = centavos / 100;
-  if (v >= 1000) return `R$${(v / 1000).toFixed(1)}k`;
-  if (v >= 100) return `R$${Math.round(v)}`;
+  if (v >= 10000) return `R$${(v / 1000).toFixed(0)}k`;
+  if (v >= 1000) return `R$${(v / 1000).toFixed(1).replace('.', ',')}k`;
+  if (v >= 100) return `R$${Math.round(v).toLocaleString('pt-BR')}`;
   if (v > 0) return `R$${v.toFixed(2).replace('.', ',')}`;
   return '—';
 };
 
-// Compute trend percentage. Returns null if no baseline.
-const trendPct = (current: number, previous: number): number | null => {
-  if (!previous || previous === 0 || !current) return null;
-  return ((current - previous) / previous) * 100;
+/** Format basis-point CTR (93 = 0.93%) → X,XX% */
+const fmtPct = (basisPoints: number): string => {
+  const v = basisPoints / 100;
+  return `${v.toFixed(2).replace('.', ',')}%`;
 };
 
-// Inline trend badge: ▲ +12% or ▼ -8%
-const TrendBadge: React.FC<{ current: number; previous: number; invert?: boolean }> = ({ current, previous, invert }) => {
-  const pct = trendPct(current, previous);
-  if (pct === null || Math.abs(pct) < 2) return null;
+/** Compute trend %. Returns null if no baseline or ±<2%. */
+const calcTrend = (current: number, previous: number): number | null => {
+  if (!previous || previous === 0 || !current) return null;
+  const pct = ((current - previous) / previous) * 100;
+  return Math.abs(pct) < 2 ? null : pct;
+};
+
+/** Inline trend badge: ▲ +12% or ▼ -8% */
+const TrendBadge: React.FC<{ pct: number | null; invert?: boolean }> = ({ pct, invert }) => {
+  if (pct === null) return null;
   const isUp = pct > 0;
-  // invert: for spend/CPA, up = bad; for CTR/ROAS, up = good
   const isGood = invert ? !isUp : isUp;
   const color = isGood ? T.green : T.red;
-  const arrow = isUp ? '▲' : '▼';
   return (
     <span style={{
       fontSize: 9.5, fontWeight: 700, color,
@@ -1824,18 +1833,24 @@ const TrendBadge: React.FC<{ current: number; previous: number; invert?: boolean
       marginTop: 3,
       animation: 'feed-fadeIn 0.3s ease',
     }}>
-      {arrow} {isUp ? '+' : ''}{pct.toFixed(0)}%
+      {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{pct.toFixed(0)}%
     </span>
   );
 };
+
+// ================================================================
+// PERFORMANCE PULSE — KPI bar
+// Data source: adMetrics (ad_metrics table) = SINGLE SOURCE OF TRUTH
+// Trend source: pulseData (daily_snapshots) = comparison only
+// ================================================================
 
 type KpiItem = {
   label: string;
   value: string;
   trend?: React.ReactNode;
-  empty?: boolean;       // no data — show disabled state
-  emptyMsg?: string;     // message when empty
-  primary?: boolean;     // is this the hero KPI
+  empty?: boolean;
+  emptyMsg?: string;
+  primary?: boolean;
 };
 
 const PerformancePulse: React.FC<{
@@ -1847,66 +1862,119 @@ const PerformancePulse: React.FC<{
   goalMetric?: string | null;
   adMetrics?: AdMetricsSummary | null;
   trackingBroken?: boolean;
-}> = ({ data, savings, goalMetric, adMetrics, trackingBroken }) => {
-  const ctrDisplay = data.ctr7d < 1 ? data.ctr7d * 100 : data.ctr7d;
-  const ctrPrevDisplay = data.ctrPrev < 1 ? data.ctrPrev * 100 : data.ctrPrev;
+  periodLabel?: string;
+}> = ({ data, savings, goalMetric, adMetrics, trackingBroken, periodLabel }) => {
   const pausedAds = (data.totalAds || 0) - data.activeAds;
   const [hovIdx, setHovIdx] = useState<number | null>(null);
 
-  // ── Build KPI list with hierarchy ──
+  // ── Use adMetrics as single source of truth ──
+  // This is the SAME data source that PerformanceSummary and tracking card use.
+  const hasMetrics = adMetrics && adMetrics.daysOfData > 0;
+  const hasConversions = hasMetrics && adMetrics.totalConversions > 0;
+
+  // Spend: use adMetrics.totalSpend (centavos) — NOT pulseData.spend7d
+  const spendDisplay = hasMetrics ? fmtReais(adMetrics.totalSpend) : '—';
+  // Trend: compare against pulseData previous period (different table but OK for trend direction)
+  const spendReaisCurrent = hasMetrics ? adMetrics.totalSpend / 100 : 0;
+  const spendTrend = calcTrend(spendReaisCurrent, data.spendPrev);
+
+  // CTR: use adMetrics.avgCtr (basis points) — NOT pulseData.ctr7d
+  const ctrDisplay = hasMetrics && adMetrics.avgCtr > 0 ? fmtPct(adMetrics.avgCtr) : '';
+  const ctrCurrent = hasMetrics ? adMetrics.avgCtr / 100 : 0; // to percentage
+  const ctrPrevPct = data.ctrPrev < 1 ? data.ctrPrev * 100 : data.ctrPrev;
+  const ctrTrend = calcTrend(ctrCurrent, ctrPrevPct);
+
+  // ── Determine primary KPI: conversions exist → CPA/ROAS; otherwise → Spend ──
+  const goalIsPrimary = !!goalMetric && goalMetric !== 'cpc';
+
+  // ── Build 4 KPIs for 2×2 grid ──
   const kpis: KpiItem[] = [];
 
-  // 1. SPEND — always primary when no goal metric, otherwise secondary
-  // spend7d is in reais (not centavos) — convert to centavos for fmtCurrency
-  const spendIsPrimary = !goalMetric || goalMetric === 'cpc';
+  // Slot 1: SPEND
   kpis.push({
     label: 'Investido',
-    value: fmtCurrency(Math.round(data.spend7d * 100)),
-    trend: data.spendPrev > 0 ? <TrendBadge current={data.spend7d} previous={data.spendPrev} invert /> : undefined,
-    primary: spendIsPrimary,
+    value: spendDisplay,
+    trend: <TrendBadge pct={spendTrend} invert />,
+    primary: !goalIsPrimary,
+    empty: !hasMetrics || adMetrics.totalSpend === 0,
+    emptyMsg: 'Sem investimento',
   });
 
-  // 2. GOAL METRIC — primary when set
-  if (goalMetric === 'cpa' && adMetrics) {
-    const hasData = adMetrics.avgCpa > 0;
+  // Slot 2: GOAL METRIC (CPA / ROAS / CPC) or CTR as fallback
+  if (goalMetric === 'cpa') {
+    const hasData = hasMetrics && adMetrics.avgCpa > 0;
     kpis.push({
       label: 'CPA',
-      value: hasData ? fmtCurrency(adMetrics.avgCpa) : '',
+      value: hasData ? fmtReais(adMetrics!.avgCpa) : '',
       primary: true,
       empty: !hasData,
       emptyMsg: trackingBroken ? 'Sem conversões rastreadas' : 'Dados insuficientes',
     });
-  } else if (goalMetric === 'roas' && adMetrics) {
-    const hasData = adMetrics.avgRoas > 0;
+  } else if (goalMetric === 'roas') {
+    const hasData = hasMetrics && adMetrics.avgRoas > 0;
     kpis.push({
       label: 'ROAS',
-      value: hasData ? `${adMetrics.avgRoas.toFixed(1)}x` : '',
+      value: hasData ? `${adMetrics!.avgRoas.toFixed(1)}x` : '',
       primary: true,
       empty: !hasData,
       emptyMsg: trackingBroken ? 'Sem conversões rastreadas' : 'Dados insuficientes',
     });
-  } else if (goalMetric === 'cpc' && adMetrics) {
-    const hasData = adMetrics.avgCpc > 0;
+  } else if (goalMetric === 'cpc') {
+    const hasData = hasMetrics && adMetrics.avgCpc > 0;
     kpis.push({
       label: 'CPC',
-      value: hasData ? fmtCurrency(adMetrics.avgCpc) : '',
+      value: hasData ? fmtReais(adMetrics!.avgCpc) : '',
       empty: !hasData,
       emptyMsg: 'Dados insuficientes',
     });
+  } else {
+    // No goal → show CPA if conversions exist, otherwise CTR
+    if (hasConversions) {
+      kpis.push({
+        label: 'CPA',
+        value: fmtReais(adMetrics!.avgCpa),
+        primary: true,
+      });
+    } else {
+      kpis.push({
+        label: 'CTR',
+        value: ctrDisplay || '',
+        trend: <TrendBadge pct={ctrTrend} />,
+        empty: !ctrDisplay,
+        emptyMsg: 'Sem impressões',
+      });
+    }
   }
 
-  // 3. CTR — always present
-  const hasCtr = data.spend7d > 0;
-  kpis.push({
-    label: 'CTR',
-    value: hasCtr ? `${ctrDisplay.toFixed(2)}%` : '',
-    trend: hasCtr && ctrPrevDisplay > 0 ? <TrendBadge current={ctrDisplay} previous={ctrPrevDisplay} /> : undefined,
-    primary: !goalMetric && !spendIsPrimary,
-    empty: !hasCtr,
-    emptyMsg: 'Sem impressões',
-  });
+  // Slot 3: CTR (if not already shown in slot 2)
+  const ctrAlreadyShown = kpis.some(k => k.label === 'CTR');
+  if (!ctrAlreadyShown) {
+    kpis.push({
+      label: 'CTR',
+      value: ctrDisplay || '',
+      trend: <TrendBadge pct={ctrTrend} />,
+      empty: !ctrDisplay,
+      emptyMsg: 'Sem impressões',
+    });
+  } else {
+    // Show CPA as third if we showed CTR in slot 2 (no-goal, no-conversions case)
+    if (hasConversions) {
+      kpis.push({
+        label: 'CPA',
+        value: fmtReais(adMetrics!.avgCpa),
+      });
+    } else {
+      // No conversions + CTR already shown → show Clicks
+      kpis.push({
+        label: 'Cliques',
+        value: hasMetrics ? adMetrics.totalClicks.toLocaleString('pt-BR') : '—',
+        empty: !hasMetrics || adMetrics.totalClicks === 0,
+        emptyMsg: 'Sem cliques',
+      });
+    }
+  }
 
-  // 4. AD STATUS — compact, always secondary
+  // Slot 4: AD STATUS — always
   kpis.push({
     label: 'Anúncios',
     value: `${data.activeAds}`,
@@ -1916,8 +1984,7 @@ const PerformancePulse: React.FC<{
   });
 
   // Ensure exactly one primary
-  const hasPrimary = kpis.some(k => k.primary);
-  if (!hasPrimary && kpis.length > 0) kpis[0].primary = true;
+  if (!kpis.some(k => k.primary) && kpis.length > 0) kpis[0].primary = true;
 
   return (
     <div className="feed-kpi-bar" style={{ marginBottom: 14, fontFamily: F }}>
@@ -1928,22 +1995,22 @@ const PerformancePulse: React.FC<{
         animation: 'feed-fadeIn 0.3s ease',
       }}>
         <span style={{ fontSize: 10, fontWeight: 600, color: T.text3 }}>
-          Últimos 7 dias
+          {periodLabel ? `Últimos ${periodLabel}` : 'Últimos 7 dias'}
         </span>
         {data.spendPrev > 0 && (
           <span style={{ fontSize: 9.5, color: T.text3 }}>
-            vs. 7 dias anteriores
+            vs. período anterior
           </span>
         )}
       </div>
 
-      {/* KPI Grid */}
+      {/* 2×2 KPI Grid — always symmetrical */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: kpis.length <= 3 ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+        gridTemplateColumns: 'repeat(2, 1fr)',
         gap: 6,
       }}>
-        {kpis.map((k, idx) => {
+        {kpis.slice(0, 4).map((k, idx) => {
           const isHovered = hovIdx === idx;
           return (
             <div
@@ -1956,7 +2023,6 @@ const PerformancePulse: React.FC<{
                 padding: k.primary ? '14px 12px 12px' : '12px 10px 10px',
                 textAlign: 'center',
                 border: `1px solid ${isHovered ? T.border2 : T.border1}`,
-                gridColumn: k.primary && kpis.length === 4 ? 'span 2' : undefined,
                 transition: 'all 0.2s ease',
                 transform: isHovered ? 'translateY(-1px)' : 'none',
                 boxShadow: isHovered ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
@@ -1967,7 +2033,7 @@ const PerformancePulse: React.FC<{
             >
               {/* Label */}
               <div style={{
-                fontSize: k.primary ? 10 : 9,
+                fontSize: k.primary ? 11 : 9,
                 fontWeight: 700,
                 color: T.labelColor,
                 textTransform: 'uppercase',
@@ -1979,20 +2045,18 @@ const PerformancePulse: React.FC<{
 
               {/* Value */}
               {k.empty ? (
-                <div style={{ marginTop: 2 }}>
-                  <div style={{
-                    fontSize: 11, fontWeight: 600, color: T.text3,
-                    lineHeight: 1.4,
-                  }}>
-                    {k.emptyMsg || 'Dados insuficientes'}
-                  </div>
+                <div style={{
+                  fontSize: 11, fontWeight: 600, color: T.text3,
+                  lineHeight: 1.4, marginTop: 2,
+                }}>
+                  {k.emptyMsg || 'Dados insuficientes'}
                 </div>
               ) : (
                 <div style={{
-                  fontSize: k.primary ? 26 : 17,
-                  fontWeight: 800,
+                  fontSize: k.primary ? 28 : 18,
+                  fontWeight: k.primary ? 700 : 800,
                   color: T.text1,
-                  fontVariant: 'tabular-nums',
+                  fontVariantNumeric: 'tabular-nums',
                   letterSpacing: '-0.03em',
                   lineHeight: 1.1,
                 }}>
@@ -2027,7 +2091,7 @@ const PerformancePulse: React.FC<{
           <span style={{ fontSize: 11, color: T.text2, fontWeight: 500 }}>
             Decisões economizaram{' '}
             <span style={{ color: T.text1, fontWeight: 700 }}>
-              {fmtCurrency(savings)}
+              {fmtReais(savings)}
             </span>
             {' '}este mês
           </span>
@@ -2670,7 +2734,7 @@ const FeedPage: React.FC = () => {
               return s === 'ACTIVE' || s === '';
             }).length,
             totalAds: totalAdCount,
-          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth?.status === 'broken' || trackingHealth?.status === 'uncertain'} />
+          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth?.status === 'broken' || trackingHealth?.status === 'uncertain'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
         )}
 
         {/* Tracking Health — decision card when issues detected */}
