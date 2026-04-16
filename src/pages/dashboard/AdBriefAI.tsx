@@ -3229,8 +3229,20 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
 
   const executeMetaAction=async(block:Block)=>{
     const{data,error}=await supabase.functions.invoke("meta-actions",{
-      body:{action:block.meta_action,user_id:user.id,persona_id:selectedPersona?.id||null,target_id:block.target_id,target_type:block.target_type,value:block.value}
+      body:{action:block.meta_action,user_id:user.id,persona_id:selectedPersona?.id||null,target_id:block.target_id,target_type:block.target_type,target_name:block.target_name||null,value:block.value}
     });
+
+    // Parse real error from edge function response (supabase SDK hides it)
+    let realError: string|null = null;
+    if(error){
+      try{
+        const ctx=(error as any).context;
+        if(ctx instanceof Response){const t=await ctx.clone().text();const p=JSON.parse(t);realError=p?.error||null;}
+        else if(typeof ctx==="string"){realError=JSON.parse(ctx)?.error||null;}
+        else if(ctx&&typeof ctx==="object"){realError=(ctx as any).error||null;}
+      }catch{}
+      if(!realError) realError=error?.message||"Erro desconhecido";
+    }
 
     // ── Audit log — registra toda ação executada ──
     const actionRecord={
@@ -3242,14 +3254,15 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       value:block.value||null,
       title:block.title,
       success:!(error||data?.error),
-      error_msg:data?.error||error?.message||null,
+      error_msg:data?.error||realError||null,
       executed_at:new Date().toISOString(),
     };
     supabase.from("ai_action_log" as any).insert(actionRecord).then(()=>{});
 
     if(error||data?.error){
       const id=Date.now();
-      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"warning",title:"Falha",content:data?.error||error?.message||"Tente novamente."}]}]);
+      const errMsg=data?.error||realError||"Tente novamente.";
+      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"warning",title:"Falha na ação",content:errMsg}]}]);
       return;
     }
 

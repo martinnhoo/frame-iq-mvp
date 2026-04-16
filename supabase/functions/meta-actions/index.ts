@@ -103,17 +103,25 @@ Deno.serve(async (req) => {
     const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
     if (!authUser || authUser.id !== user_id) return errResp("unauthorized", 401);
 
-    // Get token — scoped to persona if provided
-    const connQuery = persona_id
-      ? supabase.from("platform_connections" as any)
-          .select("access_token, ad_accounts")
-          .eq("user_id", user_id).eq("platform", "meta").eq("status", "active").eq("persona_id", persona_id)
-      : supabase.from("platform_connections" as any)
-          .select("access_token, ad_accounts")
-          .eq("user_id", user_id).eq("platform", "meta").eq("status", "active");
-    const { data: conn } = await connQuery.maybeSingle();
+    // Get token — scoped to persona if provided, with fallback to any active connection
+    let conn: any = null;
+    if (persona_id) {
+      const { data } = await supabase.from("platform_connections" as any)
+        .select("access_token, ad_accounts")
+        .eq("user_id", user_id).eq("platform", "meta").eq("status", "active").eq("persona_id", persona_id)
+        .maybeSingle();
+      conn = data;
+    }
+    // Fallback: try without persona filter (covers persona mismatch or legacy connections)
+    if (!conn?.access_token) {
+      const { data } = await supabase.from("platform_connections" as any)
+        .select("access_token, ad_accounts")
+        .eq("user_id", user_id).eq("platform", "meta").eq("status", "active")
+        .limit(1).maybeSingle();
+      conn = data;
+    }
 
-    if (!conn?.access_token) return errResp("Meta Ads not connected.");
+    if (!conn?.access_token) return errResp("Meta Ads não conectado. Conecte sua conta em Contas.");
     const token = conn.access_token;
 
     const post = async (path: string, payload: object) => {
