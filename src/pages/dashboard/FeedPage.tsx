@@ -511,6 +511,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
           transition: 'transform 0.2s ease, color 0.15s',
           transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
         }}>›</span>
+        <TelegramIcon size={16} />
         <span style={{ fontSize: 13, fontWeight: 700, color: '#F0F6FC', letterSpacing: '-0.01em' }}>
           Telegram
         </span>
@@ -734,7 +735,8 @@ const AdList: React.FC<{
   loadingMore?: boolean;
   onToggleAd?: (adId: string, action: 'pause' | 'activate') => void;
   togglingAd?: string | null;
-}> = ({ ads, totalAds, onLoadMore, loadingMore, onToggleAd, togglingAd }) => {
+  onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
+}> = ({ ads, totalAds, onLoadMore, loadingMore, onToggleAd, togglingAd, onRequestToggle }) => {
   const [open, setOpen] = useState(false);
   const sorted = sortAdsByStatus(ads);
 
@@ -792,12 +794,12 @@ const AdList: React.FC<{
           {sorted.map((ad, i) => {
             const st = getAdStatusDisplay(ad);
             const isPaused = st.label === 'Pausado';
-            const isActive = st.label === 'Ativo' || st.label === 'Saudável';
-            const canToggle = onToggleAd && ad.meta_ad_id && (isPaused || isActive);
+            const isActive = st.label === 'Saudável';
+            const canToggle = onRequestToggle && ad.meta_ad_id && (isPaused || isActive);
             const isToggling = togglingAd === ad.meta_ad_id;
             return (
               <div key={ad.meta_ad_id || i} style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px',
+                display: 'flex', alignItems: 'center', gap: 8, padding: '5px 2px',
               }}>
                 <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
                 <span style={{
@@ -806,32 +808,31 @@ const AdList: React.FC<{
                 }}>
                   {ad.name}
                 </span>
-                {canToggle && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onToggleAd!(ad.meta_ad_id, isPaused ? 'activate' : 'pause'); }}
-                    disabled={isToggling}
-                    title={isPaused ? 'Ativar anúncio' : 'Pausar anúncio'}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      width: 22, height: 22, borderRadius: 4, border: 'none',
-                      background: isToggling ? 'rgba(255,255,255,0.04)' : isPaused ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.04)',
-                      cursor: isToggling ? 'default' : 'pointer',
-                      opacity: isToggling ? 0.4 : 0.7,
-                      transition: 'opacity 0.15s, background 0.15s',
-                      flexShrink: 0,
-                    }}
-                    onMouseEnter={e => { if (!isToggling) e.currentTarget.style.opacity = '1'; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = isToggling ? '0.4' : '0.7'; }}
-                  >
-                    {isPaused
-                      ? <Play size={10} style={{ color: '#4ADE80' }} />
-                      : <Pause size={10} style={{ color: 'rgba(255,255,255,0.50)' }} />
-                    }
-                  </button>
-                )}
                 <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap' }}>
                   {st.label}
                 </span>
+                {canToggle && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onRequestToggle!(ad, isPaused ? 'activate' : 'pause'); }}
+                    disabled={isToggling}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '3px 8px', borderRadius: 3, border: 'none',
+                      background: isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)',
+                      color: isPaused ? '#4ADE80' : 'rgba(255,255,255,0.40)',
+                      fontSize: 10, fontWeight: 600, fontFamily: F,
+                      cursor: isToggling ? 'default' : 'pointer',
+                      opacity: isToggling ? 0.4 : 1,
+                      transition: 'all 0.15s',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={e => { if (!isToggling) { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.08)'; } }}
+                    onMouseLeave={e => { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)'; }}
+                  >
+                    {isPaused ? <Play size={9} /> : <Pause size={9} />}
+                    {isPaused ? 'Ativar' : 'Pausar'}
+                  </button>
+                )}
               </div>
             );
           })}
@@ -1094,7 +1095,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null }> = ({ totalAds, ads, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd }) => {
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void }> = ({ totalAds, ads, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, onRequestToggle }) => {
   const navigate = useNavigate();
   const [oppHov, setOppHov] = useState(false);
   return (
@@ -1131,11 +1132,11 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
           Sem ações críticas — operação estável
         </div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 16 }}>
-          {totalAds} {totalAds === 1 ? 'anúncio monitorado' : 'anúncios monitorados'} · sistema focado em otimização
+          Sistema focado em otimização
         </div>
 
         {/* Ad list — sorted by status, collapsible when >5 */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} />}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} onRequestToggle={onRequestToggle} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE — data-driven, not generic ── */}
@@ -1204,7 +1205,8 @@ const PerformanceSummary: React.FC<{
   loadingMoreAds?: boolean;
   onToggleAd?: (adId: string, action: 'pause' | 'activate') => void;
   togglingAd?: string | null;
-}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd }) => {
+  onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
+}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, onRequestToggle }) => {
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
 
@@ -1251,7 +1253,7 @@ const PerformanceSummary: React.FC<{
           Sem ações críticas — operação estável
         </div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: hasMetrics ? 14 : 16 }}>
-          {totalAds} {totalAds === 1 ? 'anúncio monitorado' : 'anúncios monitorados'} · sistema focado em otimização
+          Sistema focado em otimização
         </div>
 
         {/* Metrics — prominent numbers */}
@@ -1279,7 +1281,7 @@ const PerformanceSummary: React.FC<{
         )}
 
         {/* Ad list — sorted by status, collapsible when >5 */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} />}
+        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} onRequestToggle={onRequestToggle} />}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE — data-driven ── */}
@@ -1474,6 +1476,174 @@ const CollapsibleDecisions: React.FC<{
   );
 };
 
+// ── Ad Toggle Confirmation Modal with AI opinion ──
+interface ToggleRequest {
+  ad: AdSummary;
+  action: 'pause' | 'activate';
+}
+
+const AdToggleModal: React.FC<{
+  request: ToggleRequest;
+  accountId: string | null;
+  onConfirm: () => void;
+  onCancel: () => void;
+  loading: boolean;
+}> = ({ request, accountId, onConfirm, onCancel, loading }) => {
+  const [aiOpinion, setAiOpinion] = useState<string | null>(null);
+  const [loadingAi, setLoadingAi] = useState(true);
+  const isPause = request.action === 'pause';
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingAi(true);
+    setAiOpinion(null);
+    (async () => {
+      try {
+        // Fetch ad metrics for AI context
+        const { data: metrics } = await (supabase
+          .from('ad_metrics' as any)
+          .select('spend, conversions, ctr, cpa, impressions, clicks, date')
+          .eq('meta_ad_id', request.ad.meta_ad_id)
+          .order('date', { ascending: false })
+          .limit(14) as any);
+
+        if (cancelled) return;
+
+        // Build context for AI
+        const m = metrics || [];
+        const totalSpend = m.reduce((s: number, r: any) => s + (r.spend || 0), 0);
+        const totalConv = m.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
+        const totalImps = m.reduce((s: number, r: any) => s + (r.impressions || 0), 0);
+        const totalClicks = m.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
+        const ctr = totalImps > 0 ? (totalClicks / totalImps * 100) : 0;
+        const cpa = totalConv > 0 ? totalSpend / totalConv : 0;
+        const days = m.length;
+
+        // Get AI opinion via adbrief-ai-chat
+        const { data: aiData } = await supabase.functions.invoke('adbrief-ai-chat', {
+          body: {
+            message: `Analise rapidamente se devo ${isPause ? 'pausar' : 'ativar'} o anúncio "${request.ad.name}". ` +
+              `Dados dos últimos ${days} dias: Spend R$${totalSpend.toFixed(2)}, ` +
+              `${totalConv} conversões, CTR ${ctr.toFixed(2)}%, CPA R$${cpa.toFixed(2)}, ` +
+              `${totalImps} impressões, ${totalClicks} cliques. ` +
+              `Status atual: ${request.ad.effective_status || request.ad.status || 'desconhecido'}. ` +
+              `Responda em 2-3 frases curtas com sua recomendação. Seja direto e prático.`,
+            context: 'feed_toggle',
+            max_tokens: 200,
+          },
+        });
+
+        if (cancelled) return;
+        const opinion = aiData?.reply || aiData?.message || aiData?.response;
+        setAiOpinion(opinion || `${isPause ? 'Pausar' : 'Ativar'} este anúncio pode impactar sua performance. Spend acumulado: R$${totalSpend.toFixed(0)}, ${totalConv} conversões em ${days} dias.`);
+      } catch {
+        if (!cancelled) setAiOpinion(isPause
+          ? 'Não foi possível consultar a IA. Ao pausar, o anúncio para de gastar imediatamente.'
+          : 'Não foi possível consultar a IA. Ao ativar, o anúncio volta a competir nos leilões.');
+      } finally {
+        if (!cancelled) setLoadingAi(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [request.ad.meta_ad_id, request.action]);
+
+  return (
+    <div
+      onClick={onCancel}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.70)', backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20, fontFamily: F,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: '#0C1017', border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: 10, padding: '24px 22px', maxWidth: 420, width: '100%',
+          animation: 'feed-fadeUp 0.2s ease-out',
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 6,
+            background: isPause ? 'rgba(251,191,36,0.10)' : 'rgba(74,222,128,0.10)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {isPause ? <Pause size={16} style={{ color: '#FBBF24' }} /> : <Play size={16} style={{ color: '#4ADE80' }} />}
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F6FC' }}>
+              {isPause ? 'Pausar anúncio?' : 'Ativar anúncio?'}
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.40)', marginTop: 1 }}>
+              {request.ad.name}
+            </div>
+          </div>
+        </div>
+
+        {/* AI Opinion */}
+        <div style={{
+          background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.15)',
+          borderRadius: 6, padding: '12px 14px', marginBottom: 18,
+          minHeight: 50,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#A78BFA', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Opinião da IA
+            </span>
+            {loadingAi && (
+              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.30)' }}>analisando...</span>
+            )}
+          </div>
+          {loadingAi ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ width: '90%', height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 2, animation: 'feed-shimmer 1.5s ease-in-out infinite' }} />
+              <div style={{ width: '70%', height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 2, animation: 'feed-shimmer 1.5s ease-in-out infinite', animationDelay: '0.1s' }} />
+            </div>
+          ) : (
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.70)', lineHeight: 1.55 }}>
+              {aiOpinion}
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex: 1, padding: '10px 14px', borderRadius: 6,
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', fontFamily: F,
+            }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            style={{
+              flex: 1, padding: '10px 14px', borderRadius: 6,
+              background: isPause ? 'rgba(251,191,36,0.15)' : 'rgba(74,222,128,0.15)',
+              border: `1px solid ${isPause ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.25)'}`,
+              color: isPause ? '#FBBF24' : '#4ADE80',
+              fontSize: 13, fontWeight: 700,
+              cursor: loading ? 'default' : 'pointer', fontFamily: F,
+              opacity: loading ? 0.5 : 1,
+            }}
+          >
+            {loading ? 'Executando...' : isPause ? 'Pausar' : 'Ativar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Performance Pulse — KPI bar with trend arrows ──
 const TrendArrow: React.FC<{ current: number; previous: number; invert?: boolean }> = ({ current, previous, invert }) => {
   if (!previous || previous === 0) return <Minus size={10} style={{ color: 'rgba(255,255,255,0.25)' }} />;
@@ -1497,8 +1667,8 @@ const PerformancePulse: React.FC<{
 }> = ({ data, savings }) => {
   const kpis = [
     { label: 'Spend 7d', value: `R$${data.spend7d >= 1000 ? (data.spend7d / 1000).toFixed(1) + 'k' : data.spend7d.toFixed(0)}`, trend: <TrendArrow current={data.spend7d} previous={data.spendPrev} invert /> },
-    { label: 'CTR', value: `${(data.ctr7d * 100).toFixed(2)}%`, trend: <TrendArrow current={data.ctr7d} previous={data.ctrPrev} /> },
-    { label: 'Conversões', value: data.conversions7d.toLocaleString('pt-BR'), trend: null },
+    { label: 'CTR', value: `${(data.ctr7d < 1 ? data.ctr7d * 100 : data.ctr7d).toFixed(2)}%`, trend: <TrendArrow current={data.ctr7d} previous={data.ctrPrev} /> },
+    { label: 'Conversões', value: data.conversions7d > 0 ? data.conversions7d.toLocaleString('pt-BR') : '—', trend: null },
     { label: 'Ativos', value: String(data.activeAds), trend: null },
   ];
 
@@ -1775,12 +1945,14 @@ const FeedPage: React.FC = () => {
         if (snaps && snaps.length > 0) {
           const spend7d = (snaps as any[]).reduce((s: number, r: any) => s + (r.total_spend || 0), 0);
           const totalSpendW = spend7d || 1;
-          const ctr7d = (snaps as any[]).reduce((s: number, r: any) => s + (r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendW;
+          // avg_ctr should be decimal (0.025) but legacy data may be percentage (2.5) — normalize
+          const normCtr = (v: number) => v > 1 ? v / 100 : v;
+          const ctr7d = (snaps as any[]).reduce((s: number, r: any) => s + normCtr(r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendW;
           const activeAds = (snaps as any[])[0]?.active_ads || 0;
 
           const spendPrev = (prevSnaps || []).reduce((s: number, r: any) => s + (r.total_spend || 0), 0);
           const totalSpendP = spendPrev || 1;
-          const ctrPrev = (prevSnaps || []).reduce((s: number, r: any) => s + (r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendP;
+          const ctrPrev = (prevSnaps || []).reduce((s: number, r: any) => s + normCtr(r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendP;
 
           setPulseData({
             spend7d, ctr7d, conversions7d: 0, activeAds,
@@ -1797,8 +1969,9 @@ const FeedPage: React.FC = () => {
   }, [userId, personaId]);
 
   // Fetch conversions from ad_metrics (daily_snapshots doesn't have them)
+  const [pulseConversions, setPulseConversions] = useState<number>(0);
   useEffect(() => {
-    if (!accountId || !pulseData) return;
+    if (!accountId) return;
     let cancelled = false;
     (async () => {
       try {
@@ -1809,12 +1982,11 @@ const FeedPage: React.FC = () => {
           .eq('account_id', accountId)
           .gte('date', sevenAgo) as any);
         if (cancelled) return;
-        const total = (data || []).reduce((s: number, r: any) => s + (r.conversions || 0), 0);
-        setPulseData(prev => prev ? { ...prev, conversions7d: total } : prev);
+        setPulseConversions((data || []).reduce((s: number, r: any) => s + (r.conversions || 0), 0));
       } catch {}
     })();
     return () => { cancelled = true; };
-  }, [accountId, pulseData?.spend7d]);
+  }, [accountId]);
 
   // Fetch savings from action_log
   useEffect(() => {
@@ -1839,10 +2011,16 @@ const FeedPage: React.FC = () => {
 
   // ── Ad toggle (pause/activate) from Feed ──
   const [togglingAd, setTogglingAd] = useState<string | null>(null);
+  const [toggleRequest, setToggleRequest] = useState<ToggleRequest | null>(null);
 
-  const handleToggleAd = useCallback(async (adId: string, action: 'pause' | 'activate') => {
-    if (togglingAd) return;
-    setTogglingAd(adId);
+  const handleRequestToggle = useCallback((ad: AdSummary, action: 'pause' | 'activate') => {
+    setToggleRequest({ ad, action });
+  }, []);
+
+  const handleConfirmToggle = useCallback(async () => {
+    if (!toggleRequest || togglingAd) return;
+    const { ad, action } = toggleRequest;
+    setTogglingAd(ad.meta_ad_id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -1855,22 +2033,23 @@ const FeedPage: React.FC = () => {
           'apikey': supabaseKey,
         },
         body: JSON.stringify({
-          action: action === 'pause' ? 'pause_ad' : 'activate_ad',
-          target_id: adId,
+          action: action === 'pause' ? 'pause' : 'enable',
+          user_id: userId,
+          persona_id: personaId,
+          target_id: ad.meta_ad_id,
           target_type: 'ad',
-          account_id: accountId,
         }),
       });
       if (res.ok) {
-        // Refresh ads list to show updated status
         fetchAds();
       }
     } catch (e) {
       console.error('Toggle ad error:', e);
     } finally {
       setTogglingAd(null);
+      setToggleRequest(null);
     }
-  }, [togglingAd, accountId, fetchAds]);
+  }, [toggleRequest, togglingAd, userId, personaId, fetchAds]);
 
   // Meta Ads Manager URL for the connected account
   const metaAccountId = activeAccount?.metaAccountId || '';
@@ -2093,7 +2272,7 @@ const FeedPage: React.FC = () => {
 
         {/* Performance Pulse — KPI bar */}
         {metaConnected && !isDemo && pulseData && (
-          <PerformancePulse data={pulseData} savings={savingsTotal} />
+          <PerformancePulse data={{ ...pulseData, conversions7d: pulseConversions }} savings={savingsTotal} />
         )}
 
         {/* STATE 5 — Full data: money tracker + summary + cards */}
@@ -2126,8 +2305,9 @@ const FeedPage: React.FC = () => {
                 metrics={adMetrics}
                 periodLabel={PERIODS.find(p => p.key === period)!.label}
                 metaAccountId={metaAccountId}
-                onToggleAd={handleToggleAd}
+                onToggleAd={handleConfirmToggle}
                 togglingAd={togglingAd}
+                onRequestToggle={handleRequestToggle}
                 onLoadMoreAds={loadMoreAds}
                 loadingMoreAds={adsLoadingMore}
               />
@@ -2162,7 +2342,7 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'few-data' ? (
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
-          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleToggleAd} togglingAd={togglingAd} />
+          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} onRequestToggle={handleRequestToggle} />
         ) : null}
 
         {/* Intelligence — collapsible, always available */}
@@ -2193,7 +2373,19 @@ const FeedPage: React.FC = () => {
       <style>{`
         @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
         @keyframes feed-fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes feed-shimmer{0%,100%{opacity:1}50%{opacity:0.5}}
       `}</style>
+
+      {/* Ad toggle confirmation modal */}
+      {toggleRequest && (
+        <AdToggleModal
+          request={toggleRequest}
+          accountId={accountId}
+          onConfirm={handleConfirmToggle}
+          onCancel={() => setToggleRequest(null)}
+          loading={!!togglingAd}
+        />
+      )}
     </div>
   );
 };

@@ -363,6 +363,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
   const [detecting, setDetecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [alignment, setAlignment] = useState<{ score: number; label: string } | null>(null);
+  const [sectionOpen, setSectionOpen] = useState(true);
   const navigate = useNavigate();
 
   const fetchPatterns = useCallback(async () => {
@@ -450,7 +451,6 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
 
   const displayPatterns = compact ? worthShowing.slice(0, 3) : worthShowing.slice(0, 5);
   const isEmpty = !loading && !detecting && displayPatterns.length === 0;
-  const [sectionOpen, setSectionOpen] = useState(true);
   const hasContent = displayPatterns.length > 0 || (loading || detecting) || isEmpty;
 
   return (
