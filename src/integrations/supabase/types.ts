@@ -350,6 +350,11 @@ export type Database = {
           access_token_encrypted: string | null
           created_at: string | null
           currency: string | null
+          goal_configured_at: string | null
+          goal_conversion_event: string | null
+          goal_objective: string | null
+          goal_primary_metric: string | null
+          goal_target_value: number | null
           id: string
           last_deep_sync_at: string | null
           last_fast_sync_at: string | null
@@ -368,6 +373,11 @@ export type Database = {
           access_token_encrypted?: string | null
           created_at?: string | null
           currency?: string | null
+          goal_configured_at?: string | null
+          goal_conversion_event?: string | null
+          goal_objective?: string | null
+          goal_primary_metric?: string | null
+          goal_target_value?: number | null
           id?: string
           last_deep_sync_at?: string | null
           last_fast_sync_at?: string | null
@@ -386,6 +396,11 @@ export type Database = {
           access_token_encrypted?: string | null
           created_at?: string | null
           currency?: string | null
+          goal_configured_at?: string | null
+          goal_conversion_event?: string | null
+          goal_objective?: string | null
+          goal_primary_metric?: string | null
+          goal_target_value?: number | null
           id?: string
           last_deep_sync_at?: string | null
           last_fast_sync_at?: string | null
