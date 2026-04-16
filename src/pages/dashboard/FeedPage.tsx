@@ -284,7 +284,7 @@ function detectMetricAlerts(
         confidenceLabel: confidenceLabel(conf),
         dismissLabel: 'CPA está adequado',
         investigateLabel: 'Otimizar CPA →',
-        chatMsg: `CPA acima do padrão da conta\n\nAtual: ${fmtReais(m.avgCpa)} · Baseline: ${fmtReais(m.baselineCpa)} (${devPct}% acima)\n${m.totalConversions} conversões · ${fmtReais(m.totalSpend)} investidos\n${confidenceLabel(conf)}${m.volatilityCpa > 0.4 ? ' · CPA volátil' : ''}\n\nVamos analisar o que pode estar elevando o custo por conversão.`,
+        chatMsg: `CPA acima do padrão da conta\n\nAtual: ${fmtReais(m.avgCpa)} · Padrão: ${fmtReais(m.baselineCpa)} (${devPct}% acima)\n${m.totalConversions} conversões · ${fmtReais(m.totalSpend)} investidos\n${confidenceLabel(conf)}${m.volatilityCpa > 0.4 ? ' · CPA volátil' : ''}\n\nVamos analisar o que pode estar elevando o custo por conversão.`,
         priority: Math.round(80 * conf * goalBoost('cpa')),
       });
     }
@@ -318,7 +318,7 @@ function detectMetricAlerts(
         confidenceLabel: confidenceLabel(conf),
         dismissLabel: 'CTR aceitável',
         investigateLabel: 'Melhorar CTR →',
-        chatMsg: `CTR abaixo do padrão da conta\n\nAtual: ${fmtPct(m.avgCtr)} · Baseline: ${fmtPct(m.baselineCtr)} (${dropPct}% abaixo)\n${m.totalClicks} cliques · ${fmtReais(m.totalSpend)} investidos${lostClicks > 0 ? `\n~${lostClicks} cliques perdidos` : ''}\n${confidenceLabel(conf)}\n\nVamos analisar por que o CTR caiu.`,
+        chatMsg: `CTR abaixo do padrão da conta\n\nAtual: ${fmtPct(m.avgCtr)} · Padrão: ${fmtPct(m.baselineCtr)} (${dropPct}% abaixo)\n${m.totalClicks} cliques · ${fmtReais(m.totalSpend)} investidos${lostClicks > 0 ? `\n~${lostClicks} cliques perdidos` : ''}\n${confidenceLabel(conf)}\n\nVamos analisar por que o CTR caiu.`,
         priority: Math.round(60 * conf * goalBoost('ctr')),
       });
     }
@@ -348,7 +348,7 @@ function detectMetricAlerts(
         confidenceLabel: confidenceLabel(conf),
         dismissLabel: 'ROAS está correto',
         investigateLabel: 'Investigar ROAS →',
-        chatMsg: `ROAS abaixo do padrão da conta\n\nAtual: ${m.avgRoas.toFixed(2)}x · Baseline: ${m.baselineRoas.toFixed(2)}x (${dropPct}% abaixo)\n${fmtReais(m.totalRevenue)} receita · ${fmtReais(m.totalSpend)} investidos${lostRev > 0 ? `\n~${fmtReais(lostRev)} receita perdida` : ''}\n${confidenceLabel(conf)}\n\nVamos verificar o retorno.`,
+        chatMsg: `ROAS abaixo do padrão da conta\n\nAtual: ${m.avgRoas.toFixed(2)}x · Padrão: ${m.baselineRoas.toFixed(2)}x (${dropPct}% abaixo)\n${fmtReais(m.totalRevenue)} receita · ${fmtReais(m.totalSpend)} investidos${lostRev > 0 ? `\n~${fmtReais(lostRev)} receita perdida` : ''}\n${confidenceLabel(conf)}\n\nVamos verificar o retorno.`,
         priority: Math.round(70 * conf * goalBoost('roas')),
       });
     }

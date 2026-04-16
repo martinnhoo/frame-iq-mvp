@@ -900,7 +900,7 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
         }).catch(() => {});
       }
       onSave();
-    } catch { toast.error("Error saving"); }
+    } catch { toast.error("Erro ao salvar"); }
     finally { setSaving(false); }
   };
 

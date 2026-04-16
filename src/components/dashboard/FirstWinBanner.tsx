@@ -87,7 +87,7 @@ export default function FirstWinBanner({ userName, hasAdAccount }: FirstWinBanne
       color: C.amber,
       title: t.action1_title,
       sub: t.action1_sub,
-      onClick: () => { dismiss(); navigate("/dashboard/analysis"); },
+      onClick: () => { dismiss(); navigate("/dashboard/analyses"); },
     },
     ...(!hasAdAccount ? [{
       icon: Plug,

@@ -827,23 +827,23 @@ export default function AccountDiagnostic() {
         {/* ── Fatigued (collapsible) ───────────────────────────────── */}
         {data.ads_fatigued.length > 0 && (
           <div style={{ marginBottom: 14 }}>
-            <button onClick={() => {}} style={{
+            <div style={{
               display: "flex", alignItems: "center", gap: 6, width: "100%",
-              padding: "12px 14px", borderRadius: 10, ...card(1), cursor: "default",
+              padding: "12px 14px", borderRadius: 10, ...card(1),
               fontFamily: T.font, ...fadeUp(450),
             }}>
               <Flame size={14} color={T.amber} />
               <span style={{ fontSize: 13, fontWeight: 700, color: T.textPrimary, flex: 1, textAlign: "left" }}>Em fadiga criativa</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: T.amber, fontFamily: T.mono, fontVariantNumeric: "tabular-nums", padding: "1px 6px", borderRadius: 4, background: `${T.amber}0c` }}>{data.ads_fatigued.length}</span>
               <Tip text="Frequência acima de 3.5x. Troque o criativo pra recuperar performance." />
-            </button>
+            </div>
           </div>
         )}
 
         {/* ── Quick metrics strip ──────────────────────────────────── */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, marginBottom: 14, ...fadeUp(500) }}>
           {[
-            { label: "Spend", value: `R$${data.metrics.total_spend.toFixed(0)}`, color: T.textPrimary },
+            { label: "Investido", value: `R$${data.metrics.total_spend.toFixed(0)}`, color: T.textPrimary },
             { label: "CTR", value: `${(data.metrics.avg_ctr * 100).toFixed(2)}%`, color: data.benchmarks.ctr?.verdict === "above" ? T.green : T.red },
             { label: "CPC", value: `R$${data.metrics.avg_cpc.toFixed(2)}`, color: data.benchmarks.cpc?.verdict === "above" ? T.green : T.red },
             { label: "Conv.", value: String(data.metrics.total_conversions), color: hasConversions ? T.green : T.textMuted },
