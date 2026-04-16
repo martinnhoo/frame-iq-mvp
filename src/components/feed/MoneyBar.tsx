@@ -86,7 +86,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
                   {formatMoney(leaking)}
                 </span>
                 <span style={{
-                  fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.45)',
+                  fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.65)',
                   fontFamily: F, letterSpacing: '-0.02em',
                 }}>
                   /dia
@@ -132,12 +132,12 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
           <div style={{ display: 'flex', gap: 6 }}>
             <div style={{
               flex: 1, background: '#0C1017',
-              border: '1px solid rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.09)',
               borderRadius: 4, padding: '12px 14px',
               transition: 'border-color 0.15s',
             }}>
               <div style={{
-                fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.40)',
+                fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.60)',
                 textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
               }}>
                 Recuperável
@@ -151,12 +151,12 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             </div>
             <div style={{
               flex: 1, background: '#0C1017',
-              border: '1px solid rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.09)',
               borderRadius: 4, padding: '12px 14px',
               transition: 'border-color 0.15s',
             }}>
               <div style={{
-                fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.40)',
+                fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.60)',
                 textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
               }}>
                 Economizado
@@ -184,7 +184,7 @@ export const MoneyBar: React.FC<MoneyBarProps> = ({ leaking, capturable, totalSa
             <span style={{ fontSize: 13, fontWeight: 600, color: '#F0F6FC' }}>
               Sem perdas detectadas
             </span>
-            <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.40)' }}>
+            <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.60)' }}>
               Foco: crescimento
             </span>
           </div>

@@ -116,7 +116,7 @@ const VisibleWin: React.FC<{
         </div>
       )}
 
-      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontFamily: F, overflowWrap: 'break-word' }}>
+      <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.60)', fontFamily: F, overflowWrap: 'break-word' }}>
         → baseado nos seus dados reais de performance · {actioned.length} {actioned.length === 1 ? 'otimização aplicada' : 'otimizações aplicadas'}
       </div>
     </div>
@@ -153,7 +153,7 @@ const SystemStatus: React.FC<{
           <div style={{ fontSize: 11.5, fontWeight: 600, color: '#F0F6FC', fontFamily: F }}>
             Sistema ativo
           </div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)', fontFamily: F, marginTop: 1, overflowWrap: 'break-word' }}>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.60)', fontFamily: F, marginTop: 1, overflowWrap: 'break-word' }}>
             {patternsCount > 0 && `${patternsCount} padrões validados`}
             {patternsCount > 0 && actioned.length > 0 && ' · '}
             {actioned.length > 0 && `${actioned.length} ${actioned.length === 1 ? 'otimização aplicada' : 'otimizações aplicadas'}`}
@@ -165,7 +165,7 @@ const SystemStatus: React.FC<{
           <div style={{ fontSize: 13, fontWeight: 700, color: '#38BDF8', fontFamily: F }}>
             +R${monthlyEstimate.toLocaleString('pt-BR')}
           </div>
-          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.40)', fontFamily: F }}>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.60)', fontFamily: F }}>
             impacto projetado/mês
           </div>
         </div>
@@ -538,7 +538,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
               background: '#0C1017', border: '1px solid rgba(42,171,238,0.10)',
               borderRadius: 4, padding: '12px 14px',
             }}>
-              <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.60)', lineHeight: 1.6 }}>
                 Você será notificado quando: perdas forem detectadas, oportunidades surgirem, ações forem necessárias.
               </div>
             </div>
@@ -550,7 +550,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
               background: '#0C1017', border: '1px solid rgba(42,171,238,0.12)',
               borderRadius: 4, padding: '14px 16px',
             }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, marginBottom: 10 }}>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', lineHeight: 1.4, marginBottom: 10 }}>
                 Abra o bot no Telegram e toque em <strong style={{ color: '#F0F6FC' }}>Iniciar</strong> para conectar.
               </div>
               <div style={{ height: 2, borderRadius: 1, background: 'rgba(42,171,238,0.10)', overflow: 'hidden' }}>
@@ -564,7 +564,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
                     padding: '5px 10px', fontSize: 11, fontWeight: 600,
                     cursor: 'pointer', fontFamily: F,
                   }}>Reabrir bot</button>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>Link expira em 10 min</span>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>Link expira em 10 min</span>
               </div>
               <style>{`@keyframes tg-progress{from{transform:translateX(-40%)}to{transform:translateX(80%)}}`}</style>
             </div>
@@ -578,7 +578,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
               display: 'flex', alignItems: 'center', gap: 14,
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', lineHeight: 1.4 }}>
                   Receba kills e alertas urgentes em tempo real. Pause anúncios direto pelo bot.
                 </div>
               </div>
@@ -635,7 +635,7 @@ const StateNoAds: React.FC = () => {
         }}>
           Você ainda pode usar o AdBrief para começar com vantagem
         </h2>
-        <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', margin: '0 0 20px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.72)', margin: '0 0 20px', lineHeight: 1.6 }}>
           Comece criando os melhores anúncios antes de investir
         </p>
 
@@ -666,9 +666,9 @@ const StateNoAds: React.FC = () => {
               <span style={{ fontSize: 16, flexShrink: 0 }}>{item.icon}</span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#F0F6FC', marginBottom: 1 }}>{item.label}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{item.desc}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)' }}>{item.desc}</div>
               </div>
-              <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.28)', fontSize: 14 }}>→</span>
+              <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.48)', fontSize: 14 }}>→</span>
             </div>
           ))}
         </div>
@@ -677,7 +677,7 @@ const StateNoAds: React.FC = () => {
       </div>
 
       <p style={{
-        textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.35)',
+        textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.72)',
         margin: '14px 0 0', lineHeight: 1.5,
       }}>
         Quando suas campanhas estiverem ativas, as decisões aparecerão aqui automaticamente.
@@ -702,13 +702,13 @@ interface AdSummary {
 function getAdStatusDisplay(ad: AdSummary): { label: string; color: string; dotColor: string } {
   const s = (ad.effective_status || ad.status || '').toUpperCase();
   if (s === 'PAUSED' || s === 'CAMPAIGN_PAUSED' || s === 'ADSET_PAUSED')
-    return { label: 'Pausado', color: 'rgba(255,255,255,0.40)', dotColor: 'rgba(255,255,255,0.25)' };
+    return { label: 'Pausado', color: 'rgba(255,255,255,0.60)', dotColor: 'rgba(255,255,255,0.45)' };
   if (s === 'DISAPPROVED' || s === 'WITH_ISSUES')
     return { label: 'Problema', color: '#FBBF24', dotColor: 'rgba(251,191,36,0.50)' };
   if (['LEARNING', 'IN_PROCESS', 'PENDING_REVIEW'].includes(s))
     return { label: 'Aprendizado', color: '#F59E0B', dotColor: 'rgba(245,158,11,0.40)' };
   if (s === 'ARCHIVED' || s === 'DELETED')
-    return { label: 'Arquivado', color: 'rgba(255,255,255,0.30)', dotColor: 'rgba(255,255,255,0.18)' };
+    return { label: 'Arquivado', color: 'rgba(255,255,255,0.68)', dotColor: 'rgba(255,255,255,0.18)' };
   // ACTIVE or unknown → healthy (green)
   return { label: 'Saudável', color: '#4ADE80', dotColor: 'rgba(74,222,128,0.50)' };
 }
@@ -783,11 +783,11 @@ const AdList: React.FC<{
           Anúncios
         </span>
         {!open ? (
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>
             {summaryText}
           </span>
         ) : (
-          <span style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>
+          <span style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.72)' }}>
             {totalAds}
           </span>
         )}
@@ -807,7 +807,7 @@ const AdList: React.FC<{
               }}>
                 <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
                 <span style={{
-                  fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500,
+                  fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: 500,
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0,
                 }}>
                   {ad.name}
@@ -914,7 +914,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
         {/* Breadcrumb */}
         {breadcrumb && (
           <div style={{
-            fontSize: 10.5, color: 'rgba(255,255,255,0.45)', fontWeight: 500,
+            fontSize: 10.5, color: 'rgba(255,255,255,0.65)', fontWeight: 500,
             marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             maxWidth: '100%',
           }}>
@@ -928,7 +928,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
         }}>
           {headline}
         </h3>
-        <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', margin: '0 0 14px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.72)', margin: '0 0 14px', lineHeight: 1.6 }}>
           {detail}
         </p>
 
@@ -954,7 +954,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
               </span>
             )}
             <span style={{
-              fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
+              fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.72)',
               background: 'rgba(230,237,243,0.03)', border: '1px solid rgba(230,237,243,0.06)',
               padding: '3px 8px', borderRadius: 3,
             }}>
@@ -969,7 +969,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
           marginBottom: 14,
         }}>
           <div style={{
-            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.50)',
+            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.68)',
             textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 8,
           }}>
             Recomendação baseada nos dados dos últimos {periodLabel}
@@ -996,7 +996,7 @@ const StateSingleAd: React.FC<{ ad: AdSummary; metrics: AdMetricsSummary | null;
           boxShadow: '0 0 4px rgba(14,165,233,0.4)',
           animation: 'st2-pulse 2s ease-in-out infinite',
         }} />
-        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>
           Monitorando em tempo real — análise atualiza automaticamente
         </span>
       </div>
@@ -1042,7 +1042,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
           Alguns sinais iniciais foram detectados
         </h3>
         <p style={{
-          fontSize: 12.5, color: 'rgba(255,255,255,0.55)', margin: '0 0 14px', lineHeight: 1.6,
+          fontSize: 12.5, color: 'rgba(255,255,255,0.72)', margin: '0 0 14px', lineHeight: 1.6,
         }}>
           {totalAds} {totalAds === 1 ? 'anúncio analisado' : 'anúncios analisados'} nos últimos {periodLabel} — volume ainda insuficiente para decisões críticas
         </p>
@@ -1067,7 +1067,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
           marginBottom: 14,
         }}>
           <div style={{
-            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.50)',
+            fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.68)',
             textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 8,
           }}>
             Recomendação leve
@@ -1091,7 +1091,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
           boxShadow: '0 0 4px rgba(14,165,233,0.4)',
           animation: 'st3-pulse 2s ease-in-out infinite',
         }} />
-        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontWeight: 500 }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.60)', fontWeight: 500 }}>
           Análise em andamento — mais dados melhoram as decisões
         </span>
       </div>
@@ -1112,7 +1112,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
 
       {/* ── BLOCO 1: STATUS ── */}
       <div style={{
-        background: '#0C1017', border: '1px solid rgba(255,255,255,0.06)',
+        background: '#0C1017', border: '1px solid rgba(255,255,255,0.09)',
         borderRadius: 6, padding: 'clamp(12px, 3vw, 18px)',
         transition: 'border-color 0.15s',
       }}>
@@ -1131,7 +1131,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
             }} />
             Conta saudável
           </span>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)' }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.60)' }}>
             {periodLabel}
           </span>
         </div>
@@ -1140,7 +1140,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         <div style={{ fontSize: 15, fontWeight: 700, color: '#F0F6FC', letterSpacing: '-0.01em', marginBottom: 5 }}>
           Sem ações críticas — operação estável
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', marginBottom: 16 }}>
           Sistema focado em otimização
         </div>
 
@@ -1167,7 +1167,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
         <div style={{ fontSize: 14, fontWeight: 700, color: '#F0F6FC', marginBottom: 6, lineHeight: 1.4 }}>
           Novos criativos podem melhorar seu CTR em até <span style={{ color: '#38BDF8' }}>+18%</span>
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, marginBottom: 14 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, marginBottom: 14 }}>
           Contas com performance semelhante à sua ganham mais diversificando hooks e formatos
         </div>
         <button onClick={() => navigate('/dashboard/criar')} style={{
@@ -1192,7 +1192,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
           boxShadow: '0 0 6px rgba(74,222,128,0.35)',
           animation: 'pulse 2.5s ease-in-out infinite',
         }} />
-        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)' }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.60)' }}>
           Monitoramento ativo · novas decisões podem surgir a qualquer momento
         </span>
       </div>
@@ -1233,7 +1233,7 @@ const PerformanceSummary: React.FC<{
 
       {/* ── BLOCO 1: STATUS + METRICS ── */}
       <div style={{
-        background: '#0C1017', border: '1px solid rgba(255,255,255,0.06)',
+        background: '#0C1017', border: '1px solid rgba(255,255,255,0.09)',
         borderRadius: 6, padding: 'clamp(12px, 3vw, 18px)',
       }}>
         {/* Confidence — top */}
@@ -1252,7 +1252,7 @@ const PerformanceSummary: React.FC<{
             }} />
             {confLevel === 'alta' ? 'Conta saudável' : `Confiança: ${confLevel}`}
           </span>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)' }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.60)' }}>
             {periodLabel}
           </span>
         </div>
@@ -1261,7 +1261,7 @@ const PerformanceSummary: React.FC<{
         <div style={{ fontSize: 15, fontWeight: 700, color: '#F0F6FC', letterSpacing: '-0.01em', marginBottom: 5 }}>
           Sem ações críticas — operação estável
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: hasMetrics ? 14 : 16 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', marginBottom: hasMetrics ? 14 : 16 }}>
           Sistema focado em otimização
         </div>
 
@@ -1278,7 +1278,7 @@ const PerformanceSummary: React.FC<{
                 padding: '10px 8px', textAlign: 'center',
                 border: '1px solid rgba(255,255,255,0.05)',
               }}>
-                <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.45)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+                <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.65)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
                   {m.label}
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: m.color, letterSpacing: '-0.03em' }}>
@@ -1314,7 +1314,7 @@ const PerformanceSummary: React.FC<{
             ? <>CTR de <span style={{ color: '#4ADE80' }}>{ctrPct}%</span> com espaço para escalar — variações podem ampliar esse resultado</>
             : <>Novos criativos podem melhorar seu CTR em até <span style={{ color: '#38BDF8' }}>+18%</span></>}
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55, marginBottom: 14 }}>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, marginBottom: 14 }}>
           Contas com performance semelhante à sua ganham mais diversificando hooks e formatos
         </div>
         <button onClick={() => navigate('/dashboard/criar')} style={{
@@ -1339,7 +1339,7 @@ const PerformanceSummary: React.FC<{
           boxShadow: '0 0 6px rgba(74,222,128,0.35)',
           animation: 'pulse 2.5s ease-in-out infinite',
         }} />
-        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)' }}>
+        <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.60)' }}>
           Monitoramento ativo · novas decisões podem surgir a qualquer momento
         </span>
       </div>
@@ -1378,7 +1378,7 @@ const SectionHeader: React.FC<{
       {label}
     </span>
     <span style={{
-      fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.30)',
+      fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.68)',
       fontFamily: F,
     }}>
       {count}
@@ -1653,7 +1653,7 @@ const AdToggleModal: React.FC<{
                 {isPause ? 'Pausar anúncio?' : 'Ativar anúncio?'}
               </div>
               <div style={{
-                fontSize: 12, color: 'rgba(255,255,255,0.40)', marginTop: 2,
+                fontSize: 12, color: 'rgba(255,255,255,0.60)', marginTop: 2,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {request.ad.name}
@@ -1735,12 +1735,12 @@ const AdToggleModal: React.FC<{
               style={{
                 flex: 1, padding: '12px 16px', borderRadius: 8,
                 background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-                color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600,
+                color: 'rgba(255,255,255,0.72)', fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', fontFamily: F,
                 transition: 'all 0.15s',
               }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.72)'; }}
             >
               Cancelar
             </button>
@@ -1776,7 +1776,7 @@ const AdToggleModal: React.FC<{
 
 // ── Performance Pulse — KPI bar with trend arrows ──
 const TrendArrow: React.FC<{ current: number; previous: number; invert?: boolean }> = ({ current, previous, invert }) => {
-  if (!previous || previous === 0) return <Minus size={10} style={{ color: 'rgba(255,255,255,0.25)' }} />;
+  if (!previous || previous === 0) return <Minus size={10} style={{ color: 'rgba(255,255,255,0.65)' }} />;
   const pct = ((current - previous) / previous) * 100;
   const up = pct > 2;
   const down = pct < -2;
@@ -1785,7 +1785,7 @@ const TrendArrow: React.FC<{ current: number; previous: number; invert?: boolean
   const bad = invert ? up : down;
   if (up) return <TrendingUp size={10} style={{ color: good ? '#4ADE80' : '#EF4444' }} />;
   if (down) return <TrendingDown size={10} style={{ color: bad ? '#EF4444' : '#4ADE80' }} />;
-  return <Minus size={10} style={{ color: 'rgba(255,255,255,0.25)' }} />;
+  return <Minus size={10} style={{ color: 'rgba(255,255,255,0.65)' }} />;
 };
 
 const PerformancePulse: React.FC<{
@@ -1841,10 +1841,10 @@ const PerformancePulse: React.FC<{
       }}>
         {kpis.map(k => (
           <div key={k.label} style={{
-            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)',
             borderRadius: 6, padding: '10px 10px 8px', textAlign: 'center',
           }}>
-            <div style={{ fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+            <div style={{ fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.72)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
               {k.label}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1863,7 +1863,7 @@ const PerformancePulse: React.FC<{
           borderRadius: 5,
         }}>
           <span style={{ fontSize: 10, color: '#4ADE80', fontWeight: 700 }}>↓</span>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>
             Decisões do AdBrief economizaram{' '}
             <span style={{ color: '#4ADE80', fontWeight: 700 }}>
               R${savings >= 1000 ? (savings / 1000).toFixed(1) + 'k' : savings.toFixed(0)}
@@ -2328,7 +2328,7 @@ const FeedPage: React.FC = () => {
   // ── Loading skeleton with shimmer ──
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#06080C', padding: '24px 20px' }}>
+      <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: '24px 20px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
             <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: 6, animation: 'feed-shimmer 1.5s ease-in-out infinite' }} />
@@ -2361,7 +2361,7 @@ const FeedPage: React.FC = () => {
   // ── No Meta connection — special entry screen ──
   if (!metaConnected) {
     return (
-      <div style={{ minHeight: '100vh', background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
+      <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', overflow: 'hidden' }}>
           <div style={{ marginBottom: 18 }}>
             <h1 style={{ fontSize: 14, fontWeight: 800, color: '#F0F6FC', fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>DECISÕES</h1>
@@ -2375,7 +2375,7 @@ const FeedPage: React.FC = () => {
   // Syncing is now an inline banner — no full-page overlay
 
   return (
-    <div style={{ minHeight: '100vh', background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
+    <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', overflow: 'hidden' }}>
         {/* Header — wraps on mobile */}
         <div style={{ marginBottom: 16 }}>
@@ -2386,7 +2386,7 @@ const FeedPage: React.FC = () => {
               </h1>
               {isDemo && (
                 <span style={{
-                  fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.55)',
+                  fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.72)',
                   background: 'rgba(230,237,243,0.04)', border: '1px solid rgba(230,237,243,0.06)',
                   padding: '2px 6px', borderRadius: 3, letterSpacing: '0.08em',
                 }}>DEMO</span>
@@ -2397,13 +2397,13 @@ const FeedPage: React.FC = () => {
                 <PeriodSelector value={period} onChange={setPeriod} />
               )}
               {pendingDecisions.length > 0 && (
-                <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.40)', fontFamily: F }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.60)', fontFamily: F }}>
                   {pendingDecisions.length} {pendingDecisions.length === 1 ? 'item' : 'itens'}
                 </span>
               )}
               {metaConnected && !syncing && (
                 <button onClick={handleSync} style={{
-                  background: 'rgba(230,237,243,0.04)', color: 'rgba(255,255,255,0.55)',
+                  background: 'rgba(230,237,243,0.04)', color: 'rgba(255,255,255,0.72)',
                   border: '1px solid rgba(230,237,243,0.06)', borderRadius: 4,
                   padding: '4px 10px', fontSize: 11, fontWeight: 600,
                   cursor: 'pointer', fontFamily: F, display: 'flex', alignItems: 'center', gap: 4,
@@ -2426,7 +2426,7 @@ const FeedPage: React.FC = () => {
             borderRadius: 3, padding: '10px 14px', marginBottom: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 16px',
           }}>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', fontFamily: F, lineHeight: 1.5, minWidth: 0 }}>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', fontFamily: F, lineHeight: 1.5, minWidth: 0 }}>
               Dados simulados. Sincronize sua conta Meta para análise real.
             </span>
             <button onClick={handleSync} style={{
@@ -2530,7 +2530,7 @@ const FeedPage: React.FC = () => {
                   boxShadow: '0 0 4px rgba(14,165,233,0.4)',
                   animation: 'pulse 2s ease-in-out infinite',
                 }} />
-                <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.40)', fontFamily: F, fontWeight: 500 }}>
+                <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.60)', fontFamily: F, fontWeight: 500 }}>
                   Monitorando performance em tempo real — última análise há {lastAnalysisMin} min
                 </span>
               </div>

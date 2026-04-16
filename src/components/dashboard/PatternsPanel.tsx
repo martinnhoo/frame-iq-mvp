@@ -484,7 +484,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
           </span>
           {worthShowing.length > 0 && (
             <span style={{
-              fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.40)",
+              fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.60)",
               fontFamily: F,
             }}>
               {worthShowing.length} {worthShowing.length === 1 ? "padrão" : "padrões"}
@@ -549,7 +549,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
               }}>
                 {alignment.score}%
               </span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", fontFamily: F }}>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.60)", fontFamily: F }}>
                 alinhamento · {alignment.label}
               </span>
             </div>
@@ -759,7 +759,7 @@ function PatternRow({
                 </span>
                 {hero.context && (
                   <span style={{
-                    fontSize: 10.5, color: "rgba(255,255,255,0.45)",
+                    fontSize: 10.5, color: "rgba(255,255,255,0.65)",
                     fontFamily: F, fontWeight: 400,
                   }}>
                     · {hero.context}
@@ -789,7 +789,7 @@ function PatternRow({
 
             <span style={{ fontSize: 7, color: "rgba(255,255,255,0.10)" }}>·</span>
 
-            <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", fontFamily: F, fontWeight: 500, fontVariant: "tabular-nums" }}>
+            <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.65)", fontFamily: F, fontWeight: 500, fontVariant: "tabular-nums" }}>
               {pluralAds(p.sample_size)}
             </span>
 
@@ -882,7 +882,7 @@ function PatternRow({
           {hasTopAds && (
             <div>
               <div style={{
-                fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.45)",
+                fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.65)",
                 letterSpacing: "0.08em", marginBottom: 6,
               }}>
                 MELHORES ANÚNCIOS

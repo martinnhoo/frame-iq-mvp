@@ -476,7 +476,7 @@ export default function DashboardLayout() {
         /* Base: sem overflow horizontal */
         .dashboard-root, .dashboard-root * { box-sizing: border-box; }
         .dashboard-root { overflow-x: hidden !important; }
-        .dashboard-main { overflow-x: hidden !important; min-height: 0; }
+        .dashboard-main { overflow-x: hidden !important; overflow-y: visible !important; min-height: 0; }
         .dashboard-main > * { max-width: 100vw !important; overflow-x: hidden !important; }
 
         /* Topbar: compacto e limpo */
@@ -619,8 +619,8 @@ export default function DashboardLayout() {
         }
       }
       
-      /* Dropdowns e calendários: sempre visíveis, nunca cortados pelo overflow */
-      .dashboard-main { overflow-x: hidden !important; overflow-y: auto !important; }
+      /* Dropdowns e calendários: overflow-x hidden, scroll handled by .dashboard-content-area only */
+      .dashboard-main { overflow-x: hidden !important; overflow-y: visible !important; }
       /* Elementos absolutos dentro do dashboard não devem ser cortados */
       .lp [style*="position: absolute"],
       .lp [style*="position:absolute"],
@@ -682,7 +682,7 @@ export default function DashboardLayout() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0 dashboard-content-area" style={{ overflowX: "hidden", overflowY: "auto", maxWidth: "100%", minHeight: 0, width: "100%" }}>
+      <div className="flex-1 flex flex-col min-w-0 dashboard-content-area" style={{ overflowX: "hidden", overflowY: "auto", maxWidth: "100%", minHeight: 0, width: "100%", WebkitOverflowScrolling: "touch", overscrollBehaviorY: "contain" }}>
 
         {/* ══════════════════════════════════════════════════════════════════
             TOPBAR v3 — Completely rewritten from scratch
@@ -704,11 +704,11 @@ export default function DashboardLayout() {
             style={{
               width: 34, height: 34, minWidth: 34, display: "flex", alignItems: "center",
               justifyContent: "center", borderRadius: 8, background: "transparent",
-              border: "none", cursor: "pointer", color: "rgba(255,255,255,0.45)",
+              border: "none", cursor: "pointer", color: "rgba(255,255,255,0.65)",
               flexShrink: 0, transition: "color 0.15s",
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.85)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; }}>
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}>
             <Menu size={17} />
           </button>
 
@@ -861,7 +861,7 @@ export default function DashboardLayout() {
                 <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 17, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
                   AdBrief Alerts
                 </p>
-                <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "2px 0 0", fontWeight: 500 }}>
+                <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.60)", margin: "2px 0 0", fontWeight: 500 }}>
                   @AdBriefAlertsBot
                 </p>
               </div>
@@ -880,12 +880,12 @@ export default function DashboardLayout() {
                 style={{
                   width: 32, height: 32, borderRadius: 10, background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
-                  color: "rgba(255,255,255,0.4)", fontSize: 16, lineHeight: 1,
+                  color: "rgba(255,255,255,0.60)", fontSize: 16, lineHeight: 1,
                   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                   transition: "all 0.15s",
                 }}
                 onMouseEnter={e => { const t = e.currentTarget; t.style.background = "rgba(255,255,255,0.08)"; t.style.color = "rgba(255,255,255,0.7)"; }}
-                onMouseLeave={e => { const t = e.currentTarget; t.style.background = "rgba(255,255,255,0.04)"; t.style.color = "rgba(255,255,255,0.4)"; }}>
+                onMouseLeave={e => { const t = e.currentTarget; t.style.background = "rgba(255,255,255,0.04)"; t.style.color = "rgba(255,255,255,0.60)"; }}>
                 ×
               </button>
             </div>
@@ -981,7 +981,7 @@ export default function DashboardLayout() {
                     </span>
                   </a>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, padding: "0 2px" }}>
-                    <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.25)", margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                    <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.48)", margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(251,191,36,0.5)", display: "inline-block" }} />
                       {language === "pt" ? "Expira em 10 minutos" : language === "es" ? "Expira en 10 minutos" : "Expires in 10 minutes"}
                     </p>
@@ -1040,7 +1040,7 @@ export default function DashboardLayout() {
                           <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 13, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
                             {item.title}
                           </p>
-                          <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>
+                          <p style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.60)", margin: "2px 0 0" }}>
                             {item.desc}
                           </p>
                         </div>
