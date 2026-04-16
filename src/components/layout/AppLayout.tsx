@@ -79,13 +79,22 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-const NAV_ITEMS = [
-  { url: '/dashboard/feed',        label: 'Feed',        icon: Activity,    badge: 'IA' },
-  { url: '/dashboard/history',     label: 'Histórico',   icon: Clock },
-  { url: '/dashboard/criar',      label: 'Criar',       icon: Sparkles },
-  { url: '/dashboard/accounts',   label: 'Contas',      icon: Link2 },
-  { url: '/dashboard/settings',   label: 'Config',      icon: Settings },
-];
+function getNavItems(lang: string) {
+  const l: Record<string, Record<string, string>> = {
+    history:  { pt: 'Histórico', es: 'Historial', fr: 'Historique', de: 'Verlauf', zh: '历史记录', ar: 'السجل', en: 'History' },
+    create:   { pt: 'Criar', es: 'Crear', fr: 'Créer', de: 'Erstellen', zh: '创建', ar: 'إنشاء', en: 'Create' },
+    accounts: { pt: 'Contas', es: 'Cuentas', fr: 'Comptes', de: 'Konten', zh: '账户', ar: 'الحسابات', en: 'Accounts' },
+    settings: { pt: 'Configurações', es: 'Configuración', fr: 'Paramètres', de: 'Einstellungen', zh: '设置', ar: 'الإعدادات', en: 'Settings' },
+  };
+  const t = (key: string) => l[key]?.[lang] || l[key]?.en || key;
+  return [
+    { url: '/dashboard/feed',      label: 'Feed',        icon: Activity,    badge: 'IA' },
+    { url: '/dashboard/history',   label: t('history'),   icon: Clock },
+    { url: '/dashboard/criar',     label: t('create'),    icon: Sparkles },
+    { url: '/dashboard/accounts',  label: t('accounts'),  icon: Link2 },
+    { url: '/dashboard/settings',  label: t('settings'),  icon: Settings },
+  ];
+}
 
 export function AppLayout() {
   const navigate = useNavigate();
@@ -477,7 +486,7 @@ export function AppLayout() {
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 8 }}>
         <SectionHeader label="Copilot" />
         <nav>
-          {NAV_ITEMS.map(item => (
+          {getNavItems(language).map(item => (
             <NavItem
               key={item.url}
               url={item.url}
