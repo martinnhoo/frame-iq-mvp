@@ -796,7 +796,7 @@ const AdList: React.FC<{
           {sorted.map((ad, i) => {
             const st = getAdStatusDisplay(ad);
             const isPaused = st.label === 'Pausado';
-            const isActive = st.label === 'Saudável';
+            const isActive = st.label === 'Saudável' || st.label === 'Aprendizado';
             const canToggle = onRequestToggle && ad.meta_ad_id && (isPaused || isActive);
             const isToggling = togglingAd === ad.meta_ad_id;
             return (
