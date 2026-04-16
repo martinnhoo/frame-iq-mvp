@@ -454,9 +454,9 @@ Deno.serve(async (req) => {
 
       const PLAN_NAMES: Record<string, string> = { free: "Free", maker: "Maker", pro: "Pro", studio: "Studio" };
       const NEXT_PLAN: Record<string, { name: string; credits: number; price: string } | null> = {
-        free: { name: "Maker", credits: 1000, price: "R$47/mês" },
-        maker: { name: "Pro", credits: 2500, price: "R$97/mês" },
-        pro: { name: "Studio", credits: 9000, price: "R$197/mês" },
+        free: { name: "Maker", credits: 1000, price: "$19/mo" },
+        maker: { name: "Pro", credits: 2500, price: "$49/mo" },
+        pro: { name: "Studio", credits: 9000, price: "$149/mo" },
         studio: null,
       };
 
@@ -470,9 +470,9 @@ Deno.serve(async (req) => {
           type: "credits_exhausted_free",
           plan: "free",
           plans: [
-            { name: "Maker", price: "R$47/mês", credits: "1.000 créditos", highlight: "1 conta de anúncios" },
-            { name: "Pro", price: "R$97/mês", credits: "2.500 créditos", highlight: "3 contas de anúncios", recommended: true },
-            { name: "Studio", price: "R$197/mês", credits: "9.000 créditos", highlight: "Contas ilimitadas" },
+            { name: "Maker", price: "$19/mo", credits: "1,000 credits", highlight: "1 ad account" },
+            { name: "Pro", price: "$49/mo", credits: "2,500 credits", highlight: "3 ad accounts", recommended: true },
+            { name: "Studio", price: "$149/mo", credits: "9,000 credits", highlight: "Unlimited accounts" },
           ],
         });
       } else if (planKey === "studio") {

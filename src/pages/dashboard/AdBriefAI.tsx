@@ -1362,7 +1362,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
     return(
       <div style={{margin:"4px 0 12px"}}>
         <div style={{fontSize:13,color:"rgba(255,255,255,0.50)",fontFamily:F,marginBottom:12,lineHeight:1.5}}>
-          Seus créditos gratuitos acabaram. Escolha um plano para continuar:
+          {lang==="pt"?"Seus créditos gratuitos acabaram. Escolha um plano para continuar:":lang==="es"?"Tus créditos gratuitos se agotaron. Elige un plan para continuar:":"Your free credits have run out. Choose a plan to continue:"}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {plans.map((p:any,i:number)=>(
@@ -1376,7 +1376,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <span style={{fontSize:14,fontWeight:700,color:p.recommended?"#0ea5e9":"#F0F6FC",fontFamily:F}}>{p.name}</span>
-                  {p.recommended&&<span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>RECOMENDADO</span>}
+                  {p.recommended&&<span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>{lang==="pt"?"RECOMENDADO":lang==="es"?"RECOMENDADO":"RECOMMENDED"}</span>}
                 </div>
                 <span style={{fontSize:13,fontWeight:700,color:"#F0F6FC",fontFamily:F}}>{p.price}</span>
               </div>
@@ -1401,7 +1401,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
     return(
       <div style={{margin:"4px 0 12px"}}>
         <div style={{fontSize:13,color:"rgba(255,255,255,0.50)",fontFamily:F,marginBottom:12,lineHeight:1.5}}>
-          Você usou todos os {totalCredits.toLocaleString("pt-BR")} créditos do plano {planName} este mês.
+          {lang==="pt"?`Você usou todos os ${totalCredits.toLocaleString("pt-BR")} créditos do plano ${planName} este mês.`:lang==="es"?`Has usado todos los ${totalCredits.toLocaleString("es")} créditos del plan ${planName} este mes.`:`You've used all ${totalCredits.toLocaleString("en-US")} credits on the ${planName} plan this month.`}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {/* Buy credits */}
@@ -1414,8 +1414,8 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
             onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)"}}
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)"}}>
               <div>
-                <div style={{fontSize:13.5,fontWeight:700,color:"#F0F6FC",fontFamily:F,marginBottom:3}}>Comprar créditos extras</div>
-                <div style={{fontSize:11,color:"rgba(255,255,255,0.40)",fontFamily:F}}>Receba mais créditos sem mudar de plano</div>
+                <div style={{fontSize:13.5,fontWeight:700,color:"#F0F6FC",fontFamily:F,marginBottom:3}}>{lang==="pt"?"Comprar créditos extras":lang==="es"?"Comprar créditos extras":"Buy extra credits"}</div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.40)",fontFamily:F}}>{lang==="pt"?"Receba mais créditos sem mudar de plano":lang==="es"?"Obtén más créditos sin cambiar de plan":"Get more credits without changing plans"}</div>
               </div>
               <span style={{fontSize:16,color:"rgba(255,255,255,0.30)"}}>→</span>
             </div>
@@ -1431,11 +1431,11 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.08)"}}>
               <div>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
-                  <span style={{fontSize:13.5,fontWeight:700,color:"#0ea5e9",fontFamily:F}}>Subir para {nextPlan.name}</span>
-                  <span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>+{((nextPlan.credits/totalCredits-1)*100).toFixed(0)}% créditos</span>
+                  <span style={{fontSize:13.5,fontWeight:700,color:"#0ea5e9",fontFamily:F}}>{lang==="pt"?`Subir para ${nextPlan.name}`:lang==="es"?`Subir a ${nextPlan.name}`:`Upgrade to ${nextPlan.name}`}</span>
+                  <span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>+{((nextPlan.credits/totalCredits-1)*100).toFixed(0)}% {lang==="en"?"credits":"créditos"}</span>
                 </div>
                 <div style={{fontSize:11,color:"rgba(255,255,255,0.45)",fontFamily:F}}>
-                  {nextPlan.credits.toLocaleString("pt-BR")} créditos · {nextPlan.price}
+                  {nextPlan.credits.toLocaleString(lang==="pt"?"pt-BR":lang==="es"?"es":"en-US")} {lang==="en"?"credits":"créditos"} · {nextPlan.price}
                 </div>
               </div>
               <span style={{fontSize:16,color:"rgba(14,165,233,0.50)"}}>→</span>
