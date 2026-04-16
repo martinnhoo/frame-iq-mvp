@@ -1485,10 +1485,12 @@ interface ToggleRequest {
 const AdToggleModal: React.FC<{
   request: ToggleRequest;
   accountId: string | null;
+  userId?: string;
+  personaId?: string;
   onConfirm: () => void;
   onCancel: () => void;
   loading: boolean;
-}> = ({ request, accountId, onConfirm, onCancel, loading }) => {
+}> = ({ request, accountId, userId, personaId, onConfirm, onCancel, loading }) => {
   const [aiOpinion, setAiOpinion] = useState<string | null>(null);
   const [loadingAi, setLoadingAi] = useState(true);
   const isPause = request.action === 'pause';
@@ -1518,34 +1520,64 @@ const AdToggleModal: React.FC<{
         const ctr = totalImps > 0 ? (totalClicks / totalImps * 100) : 0;
         const cpa = totalConv > 0 ? totalSpend / totalConv : 0;
         const days = m.length;
+        const adSetName = request.ad.ad_set?.name || '';
+        const campName = request.ad.ad_set?.campaign?.name || '';
 
-        // Get AI opinion via adbrief-ai-chat
-        const { data: aiData } = await supabase.functions.invoke('adbrief-ai-chat', {
+        const prompt = `Analise rapidamente se devo ${isPause ? 'pausar' : 'ativar'} o anúncio "${request.ad.name}"` +
+          (campName ? ` (campanha: ${campName}` + (adSetName ? `, conjunto: ${adSetName})` : ')') : '') + '. ' +
+          (days > 0
+            ? `Dados dos últimos ${days} dias: Spend R$${totalSpend.toFixed(2)}, ${totalConv} conversões, CTR ${ctr.toFixed(2)}%, CPA R$${(cpa/100).toFixed(2)}, ${totalImps} impressões, ${totalClicks} cliques. `
+            : 'Sem dados de performance disponíveis para este anúncio. ') +
+          `Status atual: ${request.ad.effective_status || request.ad.status || 'desconhecido'}. ` +
+          `Responda APENAS com 2-3 frases curtas e diretas. Sem formatação, sem bullet points. Recomende se deve ou não ${isPause ? 'pausar' : 'ativar'} e por quê.`;
+
+        // Call adbrief-ai-chat — returns { blocks: [...] }
+        const { data: aiData, error: aiErr } = await supabase.functions.invoke('adbrief-ai-chat', {
           body: {
-            message: `Analise rapidamente se devo ${isPause ? 'pausar' : 'ativar'} o anúncio "${request.ad.name}". ` +
-              `Dados dos últimos ${days} dias: Spend R$${totalSpend.toFixed(2)}, ` +
-              `${totalConv} conversões, CTR ${ctr.toFixed(2)}%, CPA R$${cpa.toFixed(2)}, ` +
-              `${totalImps} impressões, ${totalClicks} cliques. ` +
-              `Status atual: ${request.ad.effective_status || request.ad.status || 'desconhecido'}. ` +
-              `Responda em 2-3 frases curtas com sua recomendação. Seja direto e prático.`,
-            context: 'feed_toggle',
-            max_tokens: 200,
+            message: prompt,
+            user_id: userId,
+            persona_id: personaId,
           },
         });
 
         if (cancelled) return;
-        const opinion = aiData?.reply || aiData?.message || aiData?.response;
-        setAiOpinion(opinion || `${isPause ? 'Pausar' : 'Ativar'} este anúncio pode impactar sua performance. Spend acumulado: R$${totalSpend.toFixed(0)}, ${totalConv} conversões em ${days} dias.`);
+
+        // Extract text from blocks array
+        let opinion = '';
+        if (aiData?.blocks && Array.isArray(aiData.blocks)) {
+          opinion = aiData.blocks
+            .map((b: any) => b.content || b.text || '')
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+        }
+
+        if (opinion) {
+          setAiOpinion(opinion);
+        } else if (days > 0) {
+          // Fallback with actual data
+          const verdict = isPause
+            ? (totalConv > 0 ? `Este anúncio gerou ${totalConv} conversões com R$${totalSpend.toFixed(0)} de spend. Considere se o CPA de R$${(cpa/100).toFixed(2)} está dentro do aceitável antes de pausar.`
+              : totalSpend > 0 ? `R$${totalSpend.toFixed(0)} investidos sem conversões em ${days} dias. Pausar pode ser uma boa decisão para realocar o budget.`
+              : 'Sem investimento recente. Pausar não terá impacto no orçamento atual.')
+            : (totalConv > 0 ? `Histórico positivo: ${totalConv} conversões com CTR de ${ctr.toFixed(2)}%. Reativar pode trazer resultados.`
+              : 'Sem conversões no histórico recente. Considere otimizar o criativo antes de ativar.');
+          setAiOpinion(verdict);
+        } else {
+          setAiOpinion(isPause
+            ? 'Sem dados de performance para este anúncio. Ao pausar, ele para de gastar imediatamente.'
+            : 'Sem dados de performance para este anúncio. Ao ativar, ele volta a competir nos leilões do Meta.');
+        }
       } catch {
         if (!cancelled) setAiOpinion(isPause
-          ? 'Não foi possível consultar a IA. Ao pausar, o anúncio para de gastar imediatamente.'
-          : 'Não foi possível consultar a IA. Ao ativar, o anúncio volta a competir nos leilões.');
+          ? 'Ao pausar, o anúncio para de gastar imediatamente. Você pode reativá-lo a qualquer momento.'
+          : 'Ao ativar, o anúncio volta a competir nos leilões. O aprendizado pode levar algumas horas.');
       } finally {
         if (!cancelled) setLoadingAi(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [request.ad.meta_ad_id, request.action]);
+  }, [request.ad.meta_ad_id, request.action, userId, personaId]);
 
   return (
     <div
@@ -1660,16 +1692,18 @@ const TrendArrow: React.FC<{ current: number; previous: number; invert?: boolean
 
 const PerformancePulse: React.FC<{
   data: {
-    spend7d: number; ctr7d: number; conversions7d: number; activeAds: number;
+    spend7d: number; ctr7d: number; activeAds: number; totalAds?: number;
     spendPrev: number; ctrPrev: number;
   };
   savings: number;
 }> = ({ data, savings }) => {
+  const ctrDisplay = data.ctr7d < 1 ? data.ctr7d * 100 : data.ctr7d;
+  const pausedAds = (data.totalAds || 0) - data.activeAds;
   const kpis = [
     { label: 'Spend 7d', value: `R$${data.spend7d >= 1000 ? (data.spend7d / 1000).toFixed(1) + 'k' : data.spend7d.toFixed(0)}`, trend: <TrendArrow current={data.spend7d} previous={data.spendPrev} invert /> },
-    { label: 'CTR', value: `${(data.ctr7d < 1 ? data.ctr7d * 100 : data.ctr7d).toFixed(2)}%`, trend: <TrendArrow current={data.ctr7d} previous={data.ctrPrev} /> },
-    { label: 'Conversões', value: data.conversions7d > 0 ? data.conversions7d.toLocaleString('pt-BR') : '—', trend: null },
+    { label: 'CTR', value: data.spend7d > 0 ? `${ctrDisplay.toFixed(2)}%` : '—', trend: data.spend7d > 0 ? <TrendArrow current={data.ctr7d} previous={data.ctrPrev} /> : null },
     { label: 'Ativos', value: String(data.activeAds), trend: null },
+    { label: 'Pausados', value: String(pausedAds > 0 ? pausedAds : 0), trend: null },
   ];
 
   return (
@@ -1907,7 +1941,7 @@ const FeedPage: React.FC = () => {
 
   // ── Performance Pulse: daily_snapshots + savings ──
   const [pulseData, setPulseData] = useState<{
-    spend7d: number; ctr7d: number; conversions7d: number; activeAds: number;
+    spend7d: number; ctr7d: number; activeAds: number;
     spendYesterday: number; ctrYesterday: number;
     spendPrev: number; ctrPrev: number;
   } | null>(null);
@@ -1955,7 +1989,7 @@ const FeedPage: React.FC = () => {
           const ctrPrev = (prevSnaps || []).reduce((s: number, r: any) => s + normCtr(r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendP;
 
           setPulseData({
-            spend7d, ctr7d, conversions7d: 0, activeAds,
+            spend7d, ctr7d, activeAds,
             spendYesterday: (snaps as any[])[0]?.yesterday_spend || 0,
             ctrYesterday: (snaps as any[])[0]?.yesterday_ctr || 0,
             spendPrev, ctrPrev,
@@ -1967,26 +2001,6 @@ const FeedPage: React.FC = () => {
     })();
     return () => { cancelled = true; };
   }, [userId, personaId]);
-
-  // Fetch conversions from ad_metrics (daily_snapshots doesn't have them)
-  const [pulseConversions, setPulseConversions] = useState<number>(0);
-  useEffect(() => {
-    if (!accountId) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const sevenAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-        const { data } = await (supabase
-          .from('ad_metrics' as any)
-          .select('conversions')
-          .eq('account_id', accountId)
-          .gte('date', sevenAgo) as any);
-        if (cancelled) return;
-        setPulseConversions((data || []).reduce((s: number, r: any) => s + (r.conversions || 0), 0));
-      } catch {}
-    })();
-    return () => { cancelled = true; };
-  }, [accountId]);
 
   // Fetch savings from action_log
   useEffect(() => {
@@ -2272,7 +2286,14 @@ const FeedPage: React.FC = () => {
 
         {/* Performance Pulse — KPI bar */}
         {metaConnected && !isDemo && pulseData && (
-          <PerformancePulse data={{ ...pulseData, conversions7d: pulseConversions }} savings={savingsTotal} />
+          <PerformancePulse data={{
+            ...pulseData,
+            activeAds: userAds.filter(a => {
+              const s = (a.effective_status || a.status || '').toUpperCase();
+              return s === 'ACTIVE' || s === '';
+            }).length,
+            totalAds: totalAdCount,
+          }} savings={savingsTotal} />
         )}
 
         {/* STATE 5 — Full data: money tracker + summary + cards */}
@@ -2381,6 +2402,8 @@ const FeedPage: React.FC = () => {
         <AdToggleModal
           request={toggleRequest}
           accountId={accountId}
+          userId={userId}
+          personaId={personaId}
           onConfirm={handleConfirmToggle}
           onCancel={() => setToggleRequest(null)}
           loading={!!togglingAd}
