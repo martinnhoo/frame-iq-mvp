@@ -1167,7 +1167,7 @@ Esta conta ainda não tem padrões validados com dados suficientes.
                 .slice(0, 15)
                 .map(
                   (c: any) =>
-                    `  ${c.name}: ${c.effective_status || c.status} | budget=${c.daily_budget ? `$${(parseInt(c.daily_budget) / 100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget) / 100).toFixed(0)} total` : "no budget"} | ${c.objective}`,
+                    `  [${c.id}] ${c.name}: ${c.effective_status || c.status} | budget=${c.daily_budget ? `$${(parseInt(c.daily_budget) / 100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget) / 100).toFixed(0)} total` : "no budget"} | ${c.objective}`,
                 )
                 .join("\n");
               liveMetaData += `CAMPAIGNS (${campsRaw.data.length}):\n${lines}\n`;
@@ -1183,7 +1183,7 @@ Esta conta ainda não tem padrões validados com dados suficientes.
                   const budget = s.daily_budget
                     ? `$${(parseInt(s.daily_budget) / 100).toFixed(0)}/day`
                     : "—";
-                  return `  ${(s.name || "?").slice(0, 40)}: ${s.effective_status || s.status} | ${budget} | ${s.optimization_goal || ""}`;
+                  return `  [${s.id}] ${(s.name || "?").slice(0, 40)}: ${s.effective_status || s.status} | ${budget} | ${s.optimization_goal || ""}`;
                 })
                 .join("\n");
               liveMetaData += `ADSETS (${adsetsRaw.data.length}):\n${adsetLines}\n`;
@@ -1212,7 +1212,7 @@ Esta conta ainda não tem padrões validados com dados suficientes.
                     ? ` hook=${((parseInt(hookRate) / Math.max(parseInt(ad.impressions || 1), 1)) * 100).toFixed(1)}%`
                     : "";
                   const conv = leads ? ` leads=${leads}` : purchases !== "0" ? ` purch=${purchases}` : "";
-                  return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend || 0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm || 0).toFixed(1)} freq=${ad.frequency || "?"}${hr}${conv}`;
+                  return `  [${ad.ad_id}] ${ad.ad_name}: spend=$${parseFloat(ad.spend || 0).toFixed(0)} ctr=${ad.ctr}% cpm=$${parseFloat(ad.cpm || 0).toFixed(1)} freq=${ad.frequency || "?"}${hr}${conv}`;
                 })
                 .join("\n");
               liveMetaData += `ADS (${adsRaw.data.length} found, top by spend):\n${adLines}\n`;
@@ -1227,7 +1227,7 @@ Esta conta ainda não tem padrões validados com dados suficientes.
                 .map((ad: any) => {
                   const purchases = ad.actions?.find((a: any) => a.action_type === "purchase")?.value || "0";
                   const conv = purchases !== "0" ? ` purch=${purchases}` : "";
-                  return `  ${ad.ad_name}: spend=$${parseFloat(ad.spend || 0).toFixed(0)} ctr=${ad.ctr}% impr=${parseInt(ad.impressions || 0).toLocaleString()}${conv} | ${ad.campaign_name}`;
+                  return `  [${ad.ad_id}] ${ad.ad_name}: spend=$${parseFloat(ad.spend || 0).toFixed(0)} ctr=${ad.ctr}% impr=${parseInt(ad.impressions || 0).toLocaleString()}${conv} | ${ad.campaign_name}`;
                 })
                 .join("\n");
               liveMetaData += `\nALL-TIME TOP ADS (últimos 3 anos):\n${lifetimeLines}\n`;
@@ -1902,7 +1902,8 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 \`{ "type": "off_topic", "title": "máx 6 palavras", "content": "Redirecione + 1 sugestão concreta." }\`
 \`{ "type": "dashboard", "title": "...", "content": "...", "metrics": [{ "label": "...", "value": "...", "delta": "...", "trend": "up|down|flat" }], "chart": { "type": "bar", "labels": [...], "values": [...], "colors": [...] } }\`
 \`{ "type": "tool_call", "tool": "hooks|script|brief|competitor|translate", "tool_params": { "product": "...", "niche": "...", "market": "...", "platform": "...", "tone": "...", "angle": "...", "count": 5, "context": "..." } }\`
-\`{ "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "...", "target_type": "campaign|adset|ad", "target_name": "...", "value": "..." } }\`
+\`{ "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "OBRIGATÓRIO — use o ID entre [colchetes] dos dados acima, ex: 123456789", "target_type": "campaign|adset|ad", "target_name": "nome do item", "value": "..." } }\`
+REGRA CRÍTICA para meta_action: target_id DEVE ser o ID numérico real do Meta (entre [colchetes] nos dados da conta). NUNCA use "undefined" ou omita. Se não encontrar o ID, pergunte ao usuário ou use list_campaigns primeiro.
 \`{ "type": "navigate", "route": "/dashboard/...", "cta": "..." }\`
 \`{ "type": "limit_warning", "title": "", "content": "...", "is_limit_warning": true, "will_hit_limit": true|false }\`
 

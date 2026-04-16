@@ -138,6 +138,12 @@ Deno.serve(async (req) => {
       return r.json();
     };
 
+    // ── Validate target_id for write actions ────────────────────────────
+    const WRITE_ACTIONS = ["pause", "enable", "update_budget", "publish", "duplicate"];
+    if (WRITE_ACTIONS.includes(action) && (!target_id || target_id === "undefined" || target_id === "null")) {
+      return errResp(`target_id obrigatório para ação "${action}". Peça ao usuário identificar o item ou use list_campaigns primeiro.`);
+    }
+
     // ── Write actions (pause, enable, budget, publish, duplicate) ────────
 
     if (action === "pause" || action === "enable") {
