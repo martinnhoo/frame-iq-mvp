@@ -8,9 +8,71 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { TrendingUp, TrendingDown, Sparkles, RefreshCw, Loader2, ArrowLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 const M = "'DM Mono', monospace";
+
+// ── i18n ────────────────────────────────────────────────────────────────────
+const TX = {
+  pt: {
+    title: "Padrões Criativos",
+    subtitle: (name: string) => `${name} — padrões detectados a partir dos dados reais de performance`,
+    detecting: "Detectando...",
+    redetect: "Re-detectar",
+    baselineCtr: "CTR padrão",
+    baselineRoas: "ROAS padrão",
+    baselineCpc: "CPC padrão",
+    adsAnalyzed: "Anúncios analisados",
+    noPatterns: "Nenhum padrão detectado ainda",
+    noPatternsDesc: "Padrões aparecem automaticamente conforme seus anúncios acumulam dados de performance. Conecte sua conta Meta e sincronize o diário de anúncios para começar.",
+    winningPatterns: "Padrões vencedores",
+    otherPatterns: "Outros padrões",
+    winner: "VENCEDOR",
+    ads: "anúncios",
+    conf: "conf",
+    generateVariation: "Gerar variação baseada neste padrão",
+    currency: "R$",
+  },
+  es: {
+    title: "Patrones Creativos",
+    subtitle: (name: string) => `${name} — patrones detectados a partir de datos reales de rendimiento`,
+    detecting: "Detectando...",
+    redetect: "Re-detectar",
+    baselineCtr: "CTR base",
+    baselineRoas: "ROAS base",
+    baselineCpc: "CPC base",
+    adsAnalyzed: "Anuncios analizados",
+    noPatterns: "Ningún patrón detectado aún",
+    noPatternsDesc: "Los patrones aparecen automáticamente a medida que tus anuncios acumulan datos de rendimiento. Conecta tu cuenta de Meta y sincroniza el diario de anuncios para empezar.",
+    winningPatterns: "Patrones ganadores",
+    otherPatterns: "Otros patrones",
+    winner: "GANADOR",
+    ads: "anuncios",
+    conf: "conf",
+    generateVariation: "Generar variación basada en este patrón",
+    currency: "$",
+  },
+  en: {
+    title: "Creative Patterns",
+    subtitle: (name: string) => `${name} — patterns detected from real ad performance data`,
+    detecting: "Detecting...",
+    redetect: "Re-detect",
+    baselineCtr: "Baseline CTR",
+    baselineRoas: "Baseline ROAS",
+    baselineCpc: "Baseline CPC",
+    adsAnalyzed: "Ads analyzed",
+    noPatterns: "No patterns detected yet",
+    noPatternsDesc: "Patterns appear automatically as your ads accumulate performance data. Connect your Meta account and sync your ad diary to get started.",
+    winningPatterns: "Winning patterns",
+    otherPatterns: "Other patterns",
+    winner: "WINNER",
+    ads: "ads",
+    conf: "conf",
+    generateVariation: "Generate variation based on this pattern",
+    currency: "$",
+  },
+} as const;
 
 interface DetectedPattern {
   id?: string;
@@ -29,6 +91,8 @@ interface DetectedPattern {
 const PatternsPage: React.FC = () => {
   const ctx = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const t = TX[language as keyof typeof TX] || TX.pt;
   const userId = ctx.user?.id;
   const personaId = ctx.selectedPersona?.id;
   const personaName = ctx.selectedPersona?.name || "Account";
@@ -74,8 +138,8 @@ const PatternsPage: React.FC = () => {
   // Auto-detect if empty
   useEffect(() => {
     if (!loading && patterns.length === 0 && userId && personaId && !detecting) {
-      const t = setTimeout(runDetection, 600);
-      return () => clearTimeout(t);
+      const timer = setTimeout(runDetection, 600);
+      return () => clearTimeout(timer);
     }
   }, [loading, patterns.length, userId, personaId, detecting]);
 
@@ -94,13 +158,13 @@ const PatternsPage: React.FC = () => {
             fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.90)",
             margin: 0, letterSpacing: "-0.02em",
           }}>
-            Creative Patterns
+            {t.title}
           </h1>
           <p style={{
             fontSize: 13, color: "rgba(255,255,255,0.40)", margin: "4px 0 0",
             fontFamily: F,
           }}>
-            {personaName} — patterns detected from real ad performance data
+            {t.subtitle(personaName)}
           </p>
         </div>
         <button
@@ -118,7 +182,7 @@ const PatternsPage: React.FC = () => {
             : <RefreshCw size={14} color="#9f7aea" />
           }
           <span style={{ fontSize: 13, fontWeight: 600, color: "#9f7aea", fontFamily: F }}>
-            {detecting ? "Detecting..." : "Re-detect"}
+            {detecting ? t.detecting : t.redetect}
           </span>
         </button>
       </div>
@@ -130,10 +194,10 @@ const PatternsPage: React.FC = () => {
           background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
           borderRadius: 10,
         }}>
-          <Stat label="Baseline CTR" value={`${(baseline.ctr * 100).toFixed(2)}%`} />
-          {baseline.roas > 0 && <Stat label="Baseline ROAS" value={`${baseline.roas.toFixed(1)}x`} />}
-          {baseline.cpc > 0 && <Stat label="Baseline CPC" value={`$${baseline.cpc.toFixed(2)}`} />}
-          <Stat label="Ads analyzed" value={String(baseline.ads_count)} />
+          <Stat label={t.baselineCtr} value={`${(baseline.ctr * 100).toFixed(2)}%`} />
+          {baseline.roas > 0 && <Stat label={t.baselineRoas} value={`${baseline.roas.toFixed(1)}x`} />}
+          {baseline.cpc > 0 && <Stat label={t.baselineCpc} value={`${t.currency}${baseline.cpc.toFixed(2)}`} />}
+          <Stat label={t.adsAnalyzed} value={String(baseline.ads_count)} />
         </div>
       )}
 
@@ -160,11 +224,10 @@ const PatternsPage: React.FC = () => {
         }}>
           <TrendingUp size={32} color="rgba(255,255,255,0.15)" style={{ marginBottom: 12 }} />
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.50)", margin: "0 0 6px", fontWeight: 600 }}>
-            No patterns detected yet
+            {t.noPatterns}
           </p>
           <p style={{ fontSize: 13, color: "rgba(255,255,255,0.30)", margin: 0, maxWidth: 360, marginInline: "auto" }}>
-            Patterns appear automatically as your ads accumulate performance data.
-            Connect your Meta account and sync your ad diary to get started.
+            {t.noPatternsDesc}
           </p>
         </div>
       )}
@@ -177,11 +240,11 @@ const PatternsPage: React.FC = () => {
             letterSpacing: "0.06em", textTransform: "uppercase",
             margin: "0 0 10px", fontFamily: F,
           }}>
-            Winning patterns
+            {t.winningPatterns}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {winners.map((p, i) => (
-              <FullPatternCard key={p.pattern_key || i} pattern={p} navigate={navigate} />
+              <FullPatternCard key={p.pattern_key || i} pattern={p} navigate={navigate} t={t} />
             ))}
           </div>
         </div>
@@ -195,11 +258,11 @@ const PatternsPage: React.FC = () => {
             letterSpacing: "0.06em", textTransform: "uppercase",
             margin: "0 0 10px", fontFamily: F,
           }}>
-            Other patterns
+            {t.otherPatterns}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {others.map((p, i) => (
-              <FullPatternCard key={p.pattern_key || i} pattern={p} navigate={navigate} />
+              <FullPatternCard key={p.pattern_key || i} pattern={p} navigate={navigate} t={t} />
             ))}
           </div>
         </div>
@@ -240,7 +303,9 @@ function parseAiInsight(insightText: string | null): { title: string | null; exp
   return { title: null, explanation: insightText.length > 200 ? insightText.slice(0, 197) + "..." : insightText };
 }
 
-function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; navigate: any }) {
+type Translations = typeof TX.pt;
+
+function FullPatternCard({ pattern: p, navigate, t }: { pattern: DetectedPattern; navigate: any; t: Translations }) {
   const [hov, setHov] = useState(false);
 
   // Parse AI insight for title + explanation
@@ -276,7 +341,7 @@ function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; n
               background: "rgba(159,122,234,0.12)", padding: "2px 6px",
               borderRadius: 4, letterSpacing: "0.04em", fontFamily: F, flexShrink: 0,
             }}>
-              WINNER
+              {t.winner}
             </span>
           )}
           <span style={{
@@ -287,7 +352,7 @@ function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; n
           </span>
         </div>
         <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.25)", fontFamily: M, flexShrink: 0, marginLeft: 8 }}>
-          {p.sample_size} ads · {(p.confidence * 100).toFixed(0)}% conf
+          {p.sample_size} {t.ads} · {(p.confidence * 100).toFixed(0)}% {t.conf}
         </span>
       </div>
 
@@ -315,7 +380,7 @@ function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; n
         )}
         {p.avg_cpc != null && p.avg_cpc > 0 && (
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.40)", fontFamily: M, fontVariant: "tabular-nums" }}>
-            CPC ${p.avg_cpc.toFixed(2)}
+            CPC {t.currency}{p.avg_cpc.toFixed(2)}
           </span>
         )}
       </div>
@@ -346,7 +411,7 @@ function FullPatternCard({ pattern: p, navigate }: { pattern: DetectedPattern; n
         >
           <Sparkles size={12} color="#9f7aea" />
           <span style={{ fontSize: 12, fontWeight: 600, color: "#9f7aea", fontFamily: F }}>
-            Gerar variação baseada neste padrão
+            {t.generateVariation}
           </span>
           <ChevronRight size={12} color="#9f7aea" style={{ marginLeft: "auto" }} />
         </button>

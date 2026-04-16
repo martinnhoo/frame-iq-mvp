@@ -1228,27 +1228,42 @@ const AdList: React.FC<{
   );
 };
 
+/**
+ * AdMetricsSummary — single source of truth for FeedPage metric intelligence.
+ *
+ * DATA CONTRACT:
+ * - Source: `ad_metrics` table (via Supabase) — synced by `sync-meta-data`
+ * - Units: integers matching DB storage (centavos for money, basis points for rates)
+ * - Formatters: use `fmtReais(centavos)` for money, `fmtPct(basisPoints)` for rates
+ *
+ * CROSS-COMPONENT NOTE:
+ * - PerformanceDashboard uses `live-metrics` API → reais (float), CTR decimal (0.015)
+ * - AdDiary uses `ad_diary` table → reais (float), CTR decimal
+ * - FeedPage uses `ad_metrics` table → centavos (int), CTR basis points (int)
+ * - These are intentionally different data sources. Do NOT pass values between them
+ *   without unit conversion.
+ */
 interface AdMetricsSummary {
-  totalSpend: number;        // centavos
-  totalConversions: number;
-  totalRevenue: number;      // centavos
-  totalClicks: number;
-  totalImpressions: number;
-  avgCtr: number;
-  avgCpa: number;            // centavos
-  avgRoas: number;           // ratio (e.g. 3.0)
-  avgCpc: number;            // centavos
-  daysOfData: number;
+  totalSpend: number;        // centavos (int) — use fmtReais() to display
+  totalConversions: number;  // count (int)
+  totalRevenue: number;      // centavos (int) — use fmtReais() to display
+  totalClicks: number;       // count (int)
+  totalImpressions: number;  // count (int)
+  avgCtr: number;            // basis points (int, 93 = 0.93%) — use fmtPct() to display
+  avgCpa: number;            // centavos (int) — use fmtReais() to display
+  avgRoas: number;           // ratio (float, 3.0 = 3x) — display directly with .toFixed()
+  avgCpc: number;            // centavos (int) — use fmtReais() to display
+  daysOfData: number;        // count of unique dates with data
   // Baselines — drift-protected: max(recent, anchor * 0.8)
   // "recent" = robust median of selected period. "anchor" = robust median of 30d.
-  baselineCtr: number | null;   // drift-protected CTR baseline (basis points)
-  baselineCpa: number | null;   // drift-protected CPA baseline (centavos)
-  baselineRoas: number | null;  // drift-protected ROAS baseline (ratio)
+  baselineCtr: number | null;   // basis points (int) — drift-protected
+  baselineCpa: number | null;   // centavos (int) — drift-protected
+  baselineRoas: number | null;  // ratio (float, 3.0 = 3x) — drift-protected, converted from DB basis points
   // Volatility — coefficient of variation (stddev/mean), 0-1+
   volatilityCtr: number;
   volatilityCpa: number;
   // Data freshness: fraction of data from last 24h (0-1). High = recent/incomplete data.
-  freshnessFactor: number;
+  freshnessFactor: number;       // float 0-1
   // Whether 30d anchor data was available (for trust messaging)
   hasAnchorBaseline: boolean;
 }
@@ -2817,7 +2832,8 @@ const FeedPage: React.FC = () => {
 
         const dailyCtrVals = significantRows.filter((r: any) => r.ctr != null && r.ctr > 0).map((r: any) => Number(r.ctr));
         const dailyCpaVals = significantRows.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
-        const roasVals = significantRows.filter((r: any) => r.roas != null && r.roas > 0).map((r: any) => Number(r.roas));
+        // ROAS in DB is basis points (30000 = 3.0x) — convert to ratio for consistency with avgRoas
+        const roasVals = significantRows.filter((r: any) => r.roas != null && r.roas > 0).map((r: any) => Number(r.roas) / 10000);
 
         // Recent baselines (selected period)
         const recentCtr = robustMedian(dailyCtrVals);
@@ -2837,7 +2853,8 @@ const FeedPage: React.FC = () => {
           const anchorSig = anchorData.filter((r: any) => (r.spend || 0) >= anchorMinSpend);
           const aCtr = anchorSig.filter((r: any) => r.ctr != null && r.ctr > 0).map((r: any) => Number(r.ctr));
           const aCpa = anchorSig.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
-          const aRoas = anchorSig.filter((r: any) => r.roas != null && r.roas > 0).map((r: any) => Number(r.roas));
+          // ROAS in DB is basis points — convert to ratio
+          const aRoas = anchorSig.filter((r: any) => r.roas != null && r.roas > 0).map((r: any) => Number(r.roas) / 10000);
           anchorCtr = robustMedian(aCtr);
           anchorCpa = robustMedian(aCpa);
           anchorRoas = robustMedian(aRoas);

@@ -1,3 +1,12 @@
+/**
+ * PerformanceDashboard — real-time ad metrics via live-metrics API.
+ *
+ * DATA CONTRACT:
+ * - Source: `live-metrics` edge function → Meta Ads API (real-time)
+ * - Units: REAIS (float) for money, DECIMAL (float, 0.015 = 1.5%) for CTR, RATIO (float) for ROAS
+ * - This is DIFFERENT from FeedPage which uses `ad_metrics` table (centavos, basis points)
+ * - Do NOT pass values between PerformanceDashboard and FeedPage without unit conversion
+ */
 import { storage } from "@/lib/storage";
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -39,7 +48,7 @@ interface MetricDef {
 }
 
 const METRICS: MetricDef[] = [
-  { key:"spend",       label:"Ad Spend",    labelPt:"Gasto",        labelEs:"Gasto",        icon:DollarSign,  format:(v,lang)=>{ const s=lang==="pt"?"R$":"$"; if(v>=1e6)return s+(v/1e6).toFixed(1)+"M"; if(v>=1000)return s+(v/1000).toFixed(1)+"k"; return s+v.toFixed(0); },    higherIsBetter:false, platforms:["both"]   },
+  { key:"spend",       label:"Ad Spend",    labelPt:"Investido",    labelEs:"Invertido",    icon:DollarSign,  format:(v,lang)=>{ const s=lang==="pt"?"R$":"$"; if(v>=1e6)return s+(v/1e6).toFixed(1)+"M"; if(v>=1000)return s+(v/1000).toFixed(1)+"k"; return s+v.toFixed(0); },    higherIsBetter:false, platforms:["both"]   },
   { key:"ctr",         label:"CTR",         labelPt:"CTR",          labelEs:"CTR",          icon:MousePointer,format:(v)=>`${(v*100).toFixed(2)}%`,                                higherIsBetter:true,  platforms:["both"]   },
   { key:"clicks",      label:"Clicks",      labelPt:"Cliques",      labelEs:"Clics",        icon:Target,      format:(v)=>v>=1000?(v/1000).toFixed(1)+"k":String(Math.round(v)), higherIsBetter:true,  platforms:["both"]   },
   { key:"impressions", label:"Impressions", labelPt:"Impressões",   labelEs:"Impresiones",  icon:Eye,         format:(v)=>{ if(v>=1e6)return (v/1e6).toFixed(1)+"M"; if(v>=1000)return (v/1000).toFixed(0)+"k"; return String(Math.round(v)); }, higherIsBetter:true,  platforms:["both"]   },
