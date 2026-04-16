@@ -3294,12 +3294,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
         const id=Date.now();
         return[...prev,{role:"assistant" as const,id,ts:id,blocks:[dashBlock]}];
       });
-    } else if(data?.success && block.meta_action){
-      // Show success confirmation
-      const id=Date.now();
-      const label = data.message || (block.meta_action === "pause" ? (lang==="pt"?"Pausado com sucesso":"Paused successfully") : block.meta_action === "enable" ? (lang==="pt"?"Ativado com sucesso":"Activated successfully") : (lang==="pt"?"Ação executada":"Action executed"));
-      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"action",title:lang==="pt"?"Pronto":"Done",content:label}]}]);
     }
+    // Success UI is handled by ConfirmActionBlock — no separate message needed
   };
 
   const handleNavigate=(route:string,params?:Record<string,string>)=>{
