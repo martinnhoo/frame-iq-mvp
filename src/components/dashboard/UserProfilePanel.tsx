@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { queryClient } from "@/App";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 import {
@@ -518,7 +519,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                 {saving ? (language === "pt" ? "Salvando..." : "Saving...") : saved ? (language === "pt" ? "Salvo!" : "Saved!") : (language === "pt" ? "Salvar alterações" : language === "es" ? "Guardar cambios" : "Save changes")}
               </button>
-              <button onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}
+              <button onClick={async () => { queryClient.clear(); await supabase.auth.signOut(); window.location.href = "/"; }}
                 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 20px", borderRadius: 10, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.20)", cursor: "pointer", fontFamily: M, fontSize: 13, fontWeight: 600, color: "#f87171" }}>
                 <LogOut className="h-4 w-4" />{language === "pt" ? "Sair da conta" : language === "es" ? "Cerrar sesión" : "Sign out"}
               </button>

@@ -6,6 +6,7 @@ import { Logo } from '@/components/Logo';
 import { CreditBar } from '@/components/dashboard/CreditBar';
 import { ReferralPopup } from '@/components/dashboard/ReferralPopup';
 import { supabase } from '@/integrations/supabase/client';
+import { queryClient } from '@/App';
 import { storage } from '@/lib/storage';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useActiveAccount } from '@/hooks/useActiveAccount';
@@ -200,14 +201,25 @@ export function AppLayout() {
 
       fetchUsage(session.user.id);
 
-      // Load saved personas
-      const { data: personas } = await (supabase as any)
+      // Load saved personas — select only columns that exist in the table
+      const { data: rawPersonas } = await (supabase as any)
         .from('personas')
-        .select('id, name, logo_url, website, description, preferred_market, industry')
+        .select('id, name, result, brand_kit, created_at')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
 
-      if (mounted && personas?.length) {
+      // Flatten result jsonb into top-level fields for compatibility
+      const personas = (rawPersonas || []).map((p: any) => ({
+        id: p.id,
+        name: p.name || p.result?.name || 'Conta',
+        logo_url: p.brand_kit?.logo_data_url || null,
+        website: p.result?.website || null,
+        description: p.result?.biz_description || null,
+        preferred_market: p.result?.preferred_market || null,
+        industry: p.result?.industry || p.result?.niche || null,
+      }));
+
+      if (mounted && personas.length) {
         setSavedPersonas(personas);
         const stored = selectedPersona;
         if (!stored || !personas.find((p: any) => p.id === stored.id)) {
@@ -230,6 +242,7 @@ export function AppLayout() {
   };
 
   const handleLogout = async () => {
+    queryClient.clear();
     await supabase.auth.signOut();
     navigate('/login');
   };

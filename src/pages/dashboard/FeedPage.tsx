@@ -3033,7 +3033,7 @@ const FeedPage: React.FC = () => {
           .from('action_log' as any)
           .select('estimated_daily_impact')
           .eq('user_id', userId)
-          .gte('created_at', monthStart)
+          .gte('executed_at', monthStart)
           .like('action_type', 'pause%') as any);
         if (cancelled) return;
         const total = (data || []).reduce((s: number, r: any) => s + (r.estimated_daily_impact || 0), 0);

@@ -107,7 +107,7 @@ const PageLoader = () => (
   </div>
 );
 
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient();
 
 const App = () => (
   <HelmetProvider>

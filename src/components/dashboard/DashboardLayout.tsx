@@ -9,6 +9,7 @@ import { SectionBoundary } from "@/components/SectionBoundary";
 import { DashboardSidebar } from "./DashboardSidebar";
 // ReferralPopup now lives inside DashboardSidebar footer
 import { supabase } from "@/integrations/supabase/client";
+import { queryClient } from "@/App";
 import { Menu, Users, ChevronDown, Sparkles, PartyPopper } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
@@ -394,7 +395,7 @@ export default function DashboardLayout() {
     init().catch((e) => { console.error("[AdBrief] init failed:", e); setLoading(false); }).finally(() => clearTimeout(timeout));
     // Handle auth state changes — keep session alive, redirect only on explicit sign-out
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") { navigate("/login"); return; }
+      if (event === "SIGNED_OUT") { queryClient.clear(); navigate("/login"); return; }
       // On token refresh, update user object silently
       if (event === "TOKEN_REFRESHED" && session?.user) {
         setUser(session.user);
