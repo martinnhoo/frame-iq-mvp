@@ -76,7 +76,7 @@ export function UsageBar({ userId, plan }: Props) {
   // Colors
   const pctColor = isEmpty ? "#ef4444" : isCritical ? "#ef4444" : isLow ? "#eab308" : "rgba(255,255,255,0.55)";
   const barFill = isEmpty ? "#ef4444" : isCritical ? "#ef4444" : isLow ? "#eab308" : "#0ea5e9";
-  const labelColor = isEmpty ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.4)";
+  const labelColor = isEmpty ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.55)";
 
   if (loading && !usage) {
     return (

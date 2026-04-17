@@ -75,10 +75,10 @@ export function ReferralPopup({ userId }: Props) {
           transition: "background 0.15s",
         }}
       >
-        <Gift size={14} strokeWidth={1.6} color="rgba(255,255,255,0.35)" />
+        <Gift size={14} strokeWidth={1.6} color="rgba(255,255,255,0.45)" />
         <span style={{
           flex: 1, fontSize: 12.5, fontWeight: 500,
-          color: "rgba(255,255,255,0.50)", textAlign: "left",
+          color: "rgba(255,255,255,0.60)", textAlign: "left",
           fontFamily: F,
         }}>
           {pt ? "Indique amigos" : es ? "Invitar amigos" : "Refer friends"}

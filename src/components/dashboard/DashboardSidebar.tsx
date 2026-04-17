@@ -71,24 +71,24 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
         display: "flex", alignItems: "center", gap: 10,
         padding: "7px 12px", margin: "1px 0", borderRadius: 7,
         marginLeft: 8, marginRight: 8,
-        color: isActive ? "#fff" : hov ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.50)",
+        color: isActive ? "#fff" : hov ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.65)",
         background: isActive
           ? "rgba(255,255,255,0.10)"
           : hov ? "rgba(255,255,255,0.04)" : "transparent",
         border: "none",
-        fontSize: 13.5, fontWeight: isActive ? 600 : 400,
+        fontSize: 13.5, fontWeight: isActive ? 600 : 450,
         textDecoration: "none", transition: "all 0.15s",
         fontFamily: F, letterSpacing: "-0.01em",
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <Icon size={16} strokeWidth={1.5} style={{
-        color: isActive ? "#0da2e7" : "rgba(255,255,255,0.30)",
+        color: isActive ? "#0da2e7" : "rgba(255,255,255,0.45)",
         flexShrink: 0, transition: "color 0.15s",
       }} />
       <span style={{ flex: 1 }}>{label}</span>
       {badge && (
         <span style={{
-          fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.40)",
+          fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.50)",
           letterSpacing: "0.04em", fontFamily: F,
         }}>{badge}</span>
       )}
@@ -108,16 +108,16 @@ function NavTool({ url, label, icon: Icon, isActive, onClose }: {
         display: "flex", alignItems: "center", gap: 10,
         padding: "7px 12px", marginLeft: 8, marginRight: 8,
         borderRadius: 7, border: "none",
-        color: isActive ? "rgba(255,255,255,0.95)" : hov ? "rgba(255,255,255,0.60)" : "rgba(255,255,255,0.40)",
+        color: isActive ? "rgba(255,255,255,0.95)" : hov ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.55)",
         background: isActive ? "rgba(255,255,255,0.08)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
-        fontSize: 13, fontWeight: isActive ? 600 : 400,
+        fontSize: 13, fontWeight: isActive ? 600 : 450,
         textDecoration: "none", transition: "all 0.12s",
         fontFamily: F,
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <Icon size={15} strokeWidth={1.5} style={{
         flexShrink: 0, transition: "color 0.12s",
-        color: isActive ? "#0da2e7" : "rgba(255,255,255,0.22)",
+        color: isActive ? "#0da2e7" : "rgba(255,255,255,0.38)",
       }} />
       <span>{label}</span>
     </NavLink>
@@ -132,7 +132,7 @@ function SectionHeader({ label }: { label: string }) {
       display: "flex", alignItems: "center", gap: 0,
     }}>
       <p style={{
-        fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.35)",
+        fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.45)",
         letterSpacing: "0.08em", textTransform: "uppercase", margin: 0,
         fontFamily: F,
       }}>
@@ -465,10 +465,10 @@ export function DashboardSidebar({
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.55)", fontFamily: F }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,255,255,0.65)", fontFamily: F }}>
                 {pt ? "Fazer upgrade" : es ? "Mejorar plan" : "Upgrade"}
               </span>
-              <ArrowUpRight size={12} color="rgba(255,255,255,0.35)" style={{ marginLeft: "auto" }} />
+              <ArrowUpRight size={12} color="rgba(255,255,255,0.45)" style={{ marginLeft: "auto" }} />
             </button>
           )}
 
