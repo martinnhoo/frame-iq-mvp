@@ -134,13 +134,9 @@ export function UsageBar({ userId, plan }: Props) {
     window.dispatchEvent(new CustomEvent("adbrief:open-upgrade"));
   };
 
-  if (loading && !usage) {
-    return (
-      <div style={{ padding: "8px 14px", margin: "0 6px" }}>
-        <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.04)" }} />
-      </div>
-    );
-  }
+  // No separate loading indicator — the main AppLayout spinner covers initial load.
+  // CreditBar renders silently once data arrives to avoid a second loading flash.
+  if (loading && !usage) return null;
 
   return (
     <>
