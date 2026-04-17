@@ -1,7 +1,7 @@
 // Pricing.tsx — Detailed pricing page · Clarity removes hesitation
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Loader2, ChevronDown, Shield, Zap, BarChart3, TrendingUp, Clock } from "lucide-react";
+import { ArrowRight, Check, Loader2, ChevronDown, Shield, Zap, BarChart3, TrendingUp, Clock, Sparkles } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
