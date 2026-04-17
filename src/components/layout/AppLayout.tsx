@@ -13,9 +13,9 @@ import { useActiveAccount } from '@/hooks/useActiveAccount';
 import type { DashboardContext, Profile, Usage, UsageDetails, ActivePersona } from '@/components/dashboard/DashboardLayout';
 import type { User } from '@supabase/supabase-js';
 import {
-  Activity,
+  Radar,
   Clock,
-  Sparkles,
+  Wand2,
   Settings,
   LogOut,
   Link2,
@@ -89,10 +89,10 @@ function getNavItems(lang: string) {
   };
   const t = (key: string) => l[key]?.[lang] || l[key]?.en || key;
   return [
-    { url: '/dashboard/feed',      label: 'Feed',        icon: Activity,    badge: 'IA' },
+    { url: '/dashboard/feed',      label: 'Feed',        icon: Radar,       badge: 'IA' },
     { url: '/dashboard/history',   label: t('history'),   icon: Clock },
-    { url: '/dashboard/criar',     label: t('create'),    icon: Sparkles },
-    { url: '/dashboard/accounts',  label: t('accounts'),  icon: Link2 },
+    { url: '/dashboard/criar',     label: t('create'),    icon: Wand2 },
+    { url: '/dashboard/accounts',  label: t('accounts'),  icon: Building2 },
     { url: '/dashboard/settings',  label: t('settings'),  icon: Settings },
   ];
 }
