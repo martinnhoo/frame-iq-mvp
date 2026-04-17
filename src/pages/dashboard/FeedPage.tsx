@@ -2828,7 +2828,7 @@ const PerformancePulse: React.FC<{
 // FEED PAGE — Main component
 // ================================================================
 const FeedPage: React.FC = () => {
-  const ctx = useOutletContext<DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean; setContentReady?: (v: boolean) => void }>();
+  const ctx = useOutletContext<DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean }>();
   const navigate = useNavigate();
 
   const { activeAccount, metaConnected, accountResolving } = ctx;
@@ -2885,7 +2885,6 @@ const FeedPage: React.FC = () => {
 
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
-  const [metricsReady, setMetricsReady] = useState(false);
   const [metricsRefreshKey, setMetricsRefreshKey] = useState(0);
   const refreshMetrics = useCallback(() => setMetricsRefreshKey(k => k + 1), []);
 
@@ -3163,7 +3162,6 @@ const FeedPage: React.FC = () => {
 
   const fetchLiveMetrics = useCallback(async (silent = false) => {
     if (!userId || !personaId || !accountId) { if (!silent) setAdMetrics(null); return; }
-    if (!silent) setMetricsReady(false);
     try {
       const periodKey = period === '30d' ? '30d' : period === '14d' ? '14d' : '7d';
       const { data, error } = await supabase.functions.invoke('live-metrics', {
@@ -3211,7 +3209,6 @@ const FeedPage: React.FC = () => {
         freshnessFactor: 1, // live data is always fresh
         hasAnchorBaseline: false,
       });
-      setMetricsReady(true);
     } catch {
       // Fallback: read from ad_metrics DB table (stale but better than nothing)
       try {
@@ -3252,7 +3249,6 @@ const FeedPage: React.FC = () => {
           hasAnchorBaseline: false,
         });
       } catch { setAdMetrics(null); }
-      setMetricsReady(true);
     }
   }, [userId, personaId, accountId, period, periodDays]);
 
@@ -3276,7 +3272,7 @@ const FeedPage: React.FC = () => {
   // Only show skeleton on the very first load — not after sync finishes (prevents flash)
   const hasSyncedRef = useRef(false);
   if (syncing) hasSyncedRef.current = true;
-  const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading || !metricsReady) : false);
+  const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
   const isLoading = isFirstLoad && !hasSyncedRef.current;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
@@ -3626,14 +3622,55 @@ const FeedPage: React.FC = () => {
 
   const feedState = resolveFeedState();
 
-  // ── Signal to AppLayout overlay that page content is ready ──
-  useEffect(() => {
-    if (!isLoading) ctx.setContentReady?.(true);
-  }, [isLoading]);
-
-  // ── Loading: blank background — overlay covers everything until data arrives ──
+  // ── Loading skeleton with shimmer ──
   if (isLoading) {
-    return <div style={{ flex: 1, minHeight: 0, background: '#06080C' }} />;
+    return (
+      <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          {/* Header skeleton */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.06)', borderRadius: 3, animation: 'feed-shimmer 1.5s ease-in-out infinite' }} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ width: 60, height: 24, background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} />
+              <div style={{ width: 80, height: 24, background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} />
+            </div>
+          </div>
+          {/* KPI skeleton — 4 cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 14 }}>
+            {[1,2,3,4].map(i => (
+              <div key={i} style={{
+                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+                borderRadius: 8, padding: '14px 12px 12px',
+                animation: 'feed-shimmer 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.1}s`,
+              }}>
+                <div style={{ width: 45, height: 7, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginBottom: 10 }} />
+                <div style={{ width: '65%', height: 18, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 6 }} />
+                <div style={{ width: '45%', height: 7, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+              </div>
+            ))}
+          </div>
+          {/* Content cards skeleton */}
+          {[1,2].map(i => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+              borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)', marginBottom: 10,
+              animation: 'feed-shimmer 1.5s ease-in-out infinite',
+              animationDelay: `${i * 0.15}s`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                <div style={{ width: 80, height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }} />
+              </div>
+              <div style={{ width: '75%', height: 16, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 8 }} />
+              <div style={{ width: '55%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2, marginBottom: 5 }} />
+              <div style={{ width: '40%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+            </div>
+          ))}
+        </div>
+        <style>{`@keyframes feed-shimmer{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
+      </div>
+    );
   }
 
   // ── No Meta connection — special entry screen ──
@@ -3653,8 +3690,7 @@ const FeedPage: React.FC = () => {
   // Syncing is now an inline banner — no full-page overlay
 
   return (
-    <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px', animation: 'feedFadeIn 0.4s ease-out both' }}>
-      <style>{`@keyframes feedFadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
+    <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         {/* Header — wraps on mobile */}
         <div style={{ marginBottom: 16 }}>
@@ -4168,9 +4204,23 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'no-critical' ? (
           <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
         ) : feedState === 'loading' ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
-            <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.06)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[1,2].map(i => (
+              <div key={i} style={{
+                background: T.bg1, border: `1px solid ${T.border0}`,
+                borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
+                animation: 'feed-shimmer 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.15}s`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                  <div style={{ width: 80, height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }} />
+                </div>
+                <div style={{ width: '80%', height: 16, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 8 }} />
+                <div style={{ width: '60%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2, marginBottom: 5 }} />
+                <div style={{ width: '45%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+              </div>
+            ))}
           </div>
         ) : null}
 

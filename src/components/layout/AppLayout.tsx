@@ -139,15 +139,6 @@ export function AppLayout() {
     setAccountsOpen(false);
   }, [location.pathname]);
 
-  // ── Page-ready gate: overlay stays until child page signals content is loaded ──
-  const [contentReady, setContentReady] = useState(false);
-  useEffect(() => {
-    setContentReady(false);
-    // Auto-ready fallback for simple pages that don't call setContentReady
-    const timer = setTimeout(() => setContentReady(true), 200);
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
-
   // ── Auth + profile state ──
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -295,8 +286,15 @@ export function AppLayout() {
     };
   }, []);
 
-  // ── Overlay flag: covers everything until auth + account + page content are ready ──
-  const showOverlay = loading || accountResolving || !contentReady;
+  // Loading state
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#06080C' }}>
+        <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   // ── Sidebar content ──
   const sidebarContent = (
@@ -654,24 +652,13 @@ export function AppLayout() {
             activeAccount,
             metaConnected,
             accountResolving,
-            setContentReady,
-          } satisfies DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean; setContentReady: (v: boolean) => void }} />
+          } satisfies DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean }} />
         ) : (
-          <div style={{ flex: 1, background: '#06080C' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300 }}>
+            <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
+          </div>
         )}
       </main>
-
-      {/* ── Full-screen overlay: single loading spinner until everything is ready ── */}
-      {showOverlay && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: '#06080C',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2.5px solid rgba(255,255,255,0.06)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      )}
 
       {/* ── Upgrade Wall ── */}
       {upgradeOpen && (
