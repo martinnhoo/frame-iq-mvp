@@ -13,9 +13,9 @@ import { useActiveAccount } from '@/hooks/useActiveAccount';
 import type { DashboardContext, Profile, Usage, UsageDetails, ActivePersona } from '@/components/dashboard/DashboardLayout';
 import type { User } from '@supabase/supabase-js';
 import {
-  Radar,
+  Zap,
   Clock,
-  Wand2,
+  PenLine,
   Settings,
   LogOut,
   Link2,
@@ -24,6 +24,7 @@ import {
   Building2,
   ChevronDown,
   Plus,
+  Users,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -89,10 +90,10 @@ function getNavItems(lang: string) {
   };
   const t = (key: string) => l[key]?.[lang] || l[key]?.en || key;
   return [
-    { url: '/dashboard/feed',      label: 'Feed',        icon: Radar,       badge: 'IA' },
+    { url: '/dashboard/feed',      label: 'Feed',        icon: Zap,         badge: 'IA' },
     { url: '/dashboard/history',   label: t('history'),   icon: Clock },
-    { url: '/dashboard/criar',     label: t('create'),    icon: Wand2 },
-    { url: '/dashboard/accounts',  label: t('accounts'),  icon: Building2 },
+    { url: '/dashboard/criar',     label: t('create'),    icon: PenLine },
+    { url: '/dashboard/accounts',  label: t('accounts'),  icon: Users },
     { url: '/dashboard/settings',  label: t('settings'),  icon: Settings },
   ];
 }

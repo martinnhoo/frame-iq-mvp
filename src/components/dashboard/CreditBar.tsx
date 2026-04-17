@@ -43,39 +43,36 @@ export function UsageBar({ userId, plan }: Props) {
     return (
       <div style={{
         padding: "10px 14px 8px", margin: "0 6px",
-        display: "flex", alignItems: "center", gap: 10,
+        display: "flex", alignItems: "center", gap: 9,
       }}>
-        {/* Diamond icon */}
-        <div style={{
-          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-          background: "linear-gradient(135deg, rgba(167,139,250,0.15), rgba(99,102,241,0.10))",
-          border: "1px solid rgba(167,139,250,0.20)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 0 12px rgba(167,139,250,0.10)",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0Z" />
-          </svg>
-        </div>
+        {/* Minimal infinity/loop mark — conceptual "unlimited" */}
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+          <path
+            d="M18.178 8c.61 0 1.185.237 1.617.669a2.289 2.289 0 0 1 0 3.232l-.014.014a2.293 2.293 0 0 1-3.232 0L12 7.366l-4.55 4.55a2.293 2.293 0 0 1-3.232 0l-.014-.015a2.289 2.289 0 0 1 0-3.232A2.279 2.279 0 0 1 5.822 8c.61 0 1.185.237 1.617.669L12 13.228l4.56-4.56A2.279 2.279 0 0 1 18.179 8Z"
+            fill="url(#studioGrad)" fillOpacity="0.9"
+          />
+          <defs>
+            <linearGradient id="studioGrad" x1="3" y1="8" x2="21" y2="15">
+              <stop stopColor="#a78bfa" />
+              <stop offset="1" stopColor="#818cf8" />
+            </linearGradient>
+          </defs>
+        </svg>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{
             margin: 0, fontSize: 11.5, fontWeight: 600,
             color: "rgba(167,139,250,0.85)",
-            letterSpacing: "0.03em",
+            letterSpacing: "-0.01em",
           }}>
             Studio
           </p>
           <p style={{
-            margin: "1px 0 0", fontSize: 10, fontWeight: 500,
-            color: "rgba(255,255,255,0.35)",
+            margin: "1px 0 0", fontSize: 10, fontWeight: 400,
+            color: "rgba(255,255,255,0.30)",
           }}>
-            {pt ? "Uso ilimitado" : es ? "Uso ilimitado" : "Unlimited usage"}
+            {pt ? "Sem limites" : es ? "Sin límites" : "No limits"}
           </p>
         </div>
-        {/* Sparkle accent */}
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(167,139,250,0.4)" stroke="none">
-          <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
-        </svg>
       </div>
     );
   }
