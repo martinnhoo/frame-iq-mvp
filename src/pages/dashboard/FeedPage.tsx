@@ -3315,8 +3315,18 @@ const FeedPage: React.FC = () => {
     hasSyncedAccountRef.current = accountId ?? null;
   }
   if (syncing) hasSyncedRef.current = true;
+
+  // Hard cap: never let the skeleton render more than 6 s on first mount,
+  // no matter which sub-fetch hangs (decisions, tracker, live-metrics).
+  const [skeletonExpired, setSkeletonExpired] = useState(false);
+  useEffect(() => {
+    setSkeletonExpired(false);
+    const t = setTimeout(() => setSkeletonExpired(true), 6000);
+    return () => clearTimeout(t);
+  }, [accountId]);
+
   const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading || !metricsReady) : false);
-  const isLoading = isFirstLoad && !hasSyncedRef.current;
+  const isLoading = isFirstLoad && !hasSyncedRef.current && !skeletonExpired;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
   const handleSync = useCallback(async () => {
