@@ -517,7 +517,12 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
       borderBottom: scrolled ? `1px solid ${BORDER}` : "1px solid transparent",
       transition: `all 0.4s ${EASE}`,
     }}>
-      {!scrolled && <TrustBar t={t} />}
+      <div style={{
+        maxHeight: scrolled ? 0 : 32, opacity: scrolled ? 0 : 1,
+        overflow: "hidden", transition: `max-height 0.35s ${EASE}, opacity 0.25s ${EASE}`,
+      }}>
+        <TrustBar t={t} />
+      </div>
       <div style={{
         maxWidth: 1120, margin: "0 auto", display: "flex", alignItems: "center",
         height: 56, padding: "0 clamp(16px,4vw,32px)",

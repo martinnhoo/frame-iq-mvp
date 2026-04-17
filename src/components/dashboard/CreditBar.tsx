@@ -37,6 +37,49 @@ export function UsageBar({ userId, plan }: Props) {
   const pt = language === "pt";
   const es = language === "es";
 
+  // Studio plan — show premium badge instead of usage bar
+  const isStudio = plan === "studio" || plan === "scale";
+  if (isStudio) {
+    return (
+      <div style={{
+        padding: "10px 14px 8px", margin: "0 6px",
+        display: "flex", alignItems: "center", gap: 10,
+      }}>
+        {/* Diamond icon */}
+        <div style={{
+          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+          background: "linear-gradient(135deg, rgba(167,139,250,0.15), rgba(99,102,241,0.10))",
+          border: "1px solid rgba(167,139,250,0.20)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 0 12px rgba(167,139,250,0.10)",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0Z" />
+          </svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{
+            margin: 0, fontSize: 11.5, fontWeight: 600,
+            color: "rgba(167,139,250,0.85)",
+            letterSpacing: "0.03em",
+          }}>
+            Studio
+          </p>
+          <p style={{
+            margin: "1px 0 0", fontSize: 10, fontWeight: 500,
+            color: "rgba(255,255,255,0.35)",
+          }}>
+            {pt ? "Uso ilimitado" : es ? "Uso ilimitado" : "Unlimited usage"}
+          </p>
+        </div>
+        {/* Sparkle accent */}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(167,139,250,0.4)" stroke="none">
+          <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
+        </svg>
+      </div>
+    );
+  }
+
   const fetchUsage = useCallback(async () => {
     if (!userId) return;
     try {
