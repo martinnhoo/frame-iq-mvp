@@ -266,21 +266,39 @@ export type Database = {
           account_id: string
           action_type: string
           actual_impact_48h: number | null
+          confidence: number | null
+          created_at: string | null
           decision_id: string | null
+          decision_tag: string | null
           error_message: string | null
           estimated_daily_impact: number | null
+          executed: boolean | null
           executed_at: string | null
+          execution_result: Json | null
+          explanation: Json | null
+          financial_verdict: string | null
           id: string
+          is_shadow: boolean | null
           meta_api_response: Json | null
           new_state: Json
+          new_value: Json | null
+          persona_id: string | null
           previous_state: Json
+          previous_value: Json | null
           result: string | null
+          risk_level: string | null
+          rollback_action_id: string | null
           rollback_available: boolean | null
           rollback_expires_at: string | null
+          rollback_reason: string | null
+          rolled_back: boolean | null
           rolled_back_at: string | null
+          source: string | null
+          target_id: string | null
           target_meta_id: string
           target_name: string | null
           target_type: string
+          triggered_by: string | null
           user_id: string
           validated_at: string | null
         }
@@ -288,21 +306,39 @@ export type Database = {
           account_id: string
           action_type: string
           actual_impact_48h?: number | null
+          confidence?: number | null
+          created_at?: string | null
           decision_id?: string | null
+          decision_tag?: string | null
           error_message?: string | null
           estimated_daily_impact?: number | null
+          executed?: boolean | null
           executed_at?: string | null
+          execution_result?: Json | null
+          explanation?: Json | null
+          financial_verdict?: string | null
           id?: string
+          is_shadow?: boolean | null
           meta_api_response?: Json | null
           new_state?: Json
+          new_value?: Json | null
+          persona_id?: string | null
           previous_state?: Json
+          previous_value?: Json | null
           result?: string | null
+          risk_level?: string | null
+          rollback_action_id?: string | null
           rollback_available?: boolean | null
           rollback_expires_at?: string | null
+          rollback_reason?: string | null
+          rolled_back?: boolean | null
           rolled_back_at?: string | null
+          source?: string | null
+          target_id?: string | null
           target_meta_id: string
           target_name?: string | null
           target_type: string
+          triggered_by?: string | null
           user_id: string
           validated_at?: string | null
         }
@@ -310,21 +346,39 @@ export type Database = {
           account_id?: string
           action_type?: string
           actual_impact_48h?: number | null
+          confidence?: number | null
+          created_at?: string | null
           decision_id?: string | null
+          decision_tag?: string | null
           error_message?: string | null
           estimated_daily_impact?: number | null
+          executed?: boolean | null
           executed_at?: string | null
+          execution_result?: Json | null
+          explanation?: Json | null
+          financial_verdict?: string | null
           id?: string
+          is_shadow?: boolean | null
           meta_api_response?: Json | null
           new_state?: Json
+          new_value?: Json | null
+          persona_id?: string | null
           previous_state?: Json
+          previous_value?: Json | null
           result?: string | null
+          risk_level?: string | null
+          rollback_action_id?: string | null
           rollback_available?: boolean | null
           rollback_expires_at?: string | null
+          rollback_reason?: string | null
+          rolled_back?: boolean | null
           rolled_back_at?: string | null
+          source?: string | null
+          target_id?: string | null
           target_meta_id?: string
           target_name?: string | null
           target_type?: string
+          triggered_by?: string | null
           user_id?: string
           validated_at?: string | null
         }
@@ -347,20 +401,32 @@ export type Database = {
       }
       ad_accounts: {
         Row: {
+          ab_test_group: string | null
           access_token_encrypted: string | null
+          auto_rollback_enabled: boolean | null
+          break_even_roas: number | null
           created_at: string | null
           currency: string | null
+          decision_engine_version: string | null
           goal_configured_at: string | null
           goal_conversion_event: string | null
           goal_objective: string | null
           goal_primary_metric: string | null
           goal_target_value: number | null
+          gradual_scaling_enabled: boolean | null
           id: string
           last_deep_sync_at: string | null
           last_fast_sync_at: string | null
           last_full_sync_at: string | null
+          ltv_estimate: number | null
+          max_actions_per_day: number | null
+          max_budget_increase_pct: number | null
           meta_account_id: string
+          monthly_budget_target: number | null
           name: string
+          profit_margin_pct: number | null
+          rollback_roas_drop_pct: number | null
+          rollback_window_hours: number | null
           status: string | null
           timezone: string | null
           token_expires_at: string | null
@@ -370,20 +436,32 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ab_test_group?: string | null
           access_token_encrypted?: string | null
+          auto_rollback_enabled?: boolean | null
+          break_even_roas?: number | null
           created_at?: string | null
           currency?: string | null
+          decision_engine_version?: string | null
           goal_configured_at?: string | null
           goal_conversion_event?: string | null
           goal_objective?: string | null
           goal_primary_metric?: string | null
           goal_target_value?: number | null
+          gradual_scaling_enabled?: boolean | null
           id?: string
           last_deep_sync_at?: string | null
           last_fast_sync_at?: string | null
           last_full_sync_at?: string | null
+          ltv_estimate?: number | null
+          max_actions_per_day?: number | null
+          max_budget_increase_pct?: number | null
           meta_account_id: string
+          monthly_budget_target?: number | null
           name: string
+          profit_margin_pct?: number | null
+          rollback_roas_drop_pct?: number | null
+          rollback_window_hours?: number | null
           status?: string | null
           timezone?: string | null
           token_expires_at?: string | null
@@ -393,20 +471,32 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ab_test_group?: string | null
           access_token_encrypted?: string | null
+          auto_rollback_enabled?: boolean | null
+          break_even_roas?: number | null
           created_at?: string | null
           currency?: string | null
+          decision_engine_version?: string | null
           goal_configured_at?: string | null
           goal_conversion_event?: string | null
           goal_objective?: string | null
           goal_primary_metric?: string | null
           goal_target_value?: number | null
+          gradual_scaling_enabled?: boolean | null
           id?: string
           last_deep_sync_at?: string | null
           last_fast_sync_at?: string | null
           last_full_sync_at?: string | null
+          ltv_estimate?: number | null
+          max_actions_per_day?: number | null
+          max_budget_increase_pct?: number | null
           meta_account_id?: string
+          monthly_budget_target?: number | null
           name?: string
+          profit_margin_pct?: number | null
+          rollback_roas_drop_pct?: number | null
+          rollback_window_hours?: number | null
           status?: string | null
           timezone?: string | null
           token_expires_at?: string | null
@@ -1941,6 +2031,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "notifications_action_log_id_fkey"
+            columns: ["action_log_id"]
+            isOneToOne: false
+            referencedRelation: "pending_rollback_checks"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "notifications_decision_id_fkey"
             columns: ["decision_id"]
             isOneToOne: false
@@ -2924,6 +3021,30 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pending_rollback_checks: {
+        Row: {
+          account_id: string | null
+          action_type: string | null
+          executed_at: string | null
+          id: string | null
+          new_value: Json | null
+          previous_value: Json | null
+          rollback_roas_drop_pct: number | null
+          rollback_window_hours: number | null
+          target_id: string | null
+          target_type: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_log_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "ad_accounts"
             referencedColumns: ["id"]
           },
         ]
