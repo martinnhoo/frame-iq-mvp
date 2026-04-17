@@ -1,9 +1,13 @@
-// check-critical-alerts v2 — CERTEIRO, não banal
+// check-critical-alerts v3 — CERTEIRO + Decision Pipeline
 // Roda a cada 6h. Máximo 1 email/dia por usuário.
 // Dedup por ad_id + tipo + semana — nunca repete o mesmo alerta.
 // Cruza com learned_patterns — alerta quando repete padrão de fracasso conhecido.
+// v2_shadow/v2_active: enriches alerts through financial + safety + confidence pipeline
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { runShadowPipeline, getEngineVersion, loadAccountConfig, type AlertInput } from "../_shared/decision-pipeline/shadow-mode.ts";
+import { enrichDecision, toActionLogEntry } from "../_shared/decision-pipeline/decision-output.ts";
+import type { RawDecision, EnrichedDecision } from "../_shared/decision-pipeline/types.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -305,6 +309,71 @@ Deno.serve(async (req) => {
 
         if (!alerts.length) continue;
 
+        // ─── DECISION PIPELINE INTEGRATION ──────────────────────────────
+        // Run alerts through financial + safety + confidence pipeline
+        // v1: no change. v2_shadow: logs in parallel. v2_active: filters alerts.
+        let engineVersion: 'v1' | 'v2_shadow' | 'v2_active' = 'v1';
+        let pipelineDecisions: EnrichedDecision[] | null = null;
+        try {
+          engineVersion = await getEngineVersion(account.id, sb);
+          if (engineVersion !== 'v1') {
+            // Enrich alerts with ad metric data for pipeline processing
+            const enrichedAlerts: AlertInput[] = alerts.map(a => {
+              const adData = curr.find((ad: any) => (ad.ad_name || "").slice(0, 55) === a.ad);
+              return {
+                ...a,
+                ad_id: adData?.ad_id,
+                spend: adData ? parseN(adData.spend) : undefined,
+                roas: adData ? getRoas(adData) ?? undefined : undefined,
+                ctr: adData ? parseN(adData.ctr) : undefined,
+                frequency: adData ? parseN(adData.frequency) : undefined,
+                conversions: adData ? getConv(adData) : undefined,
+                current_daily_budget: undefined, // Not available from insights API
+                period_days: 1, // 24h data
+              };
+            });
+
+            pipelineDecisions = await runShadowPipeline(
+              enrichedAlerts, account.id, conn.user_id, sb,
+              'check-critical-alerts', { personaId: conn.persona_id },
+            );
+
+            // v2_active: filter out alerts the pipeline rejects
+            if (engineVersion === 'v2_active' && pipelineDecisions) {
+              const approvedTargets = new Set(
+                pipelineDecisions
+                  .filter(d => d.approved)
+                  .map(d => d.raw.target_name)
+              );
+              // Keep alerts whose ad was approved OR that have no pipeline decision (review type)
+              const beforeCount = alerts.length;
+              const filteredAlerts = alerts.filter(a =>
+                approvedTargets.has(a.ad) ||
+                !pipelineDecisions!.some(d => d.raw.target_name === a.ad)
+              );
+              // Enrich alert details with financial context
+              for (const alert of filteredAlerts) {
+                const decision = pipelineDecisions.find(d => d.raw.target_name === alert.ad);
+                if (decision && decision.approved) {
+                  const impact = decision.expected_daily_impact;
+                  const conf = Math.round(decision.confidence * 100);
+                  if (impact > 0) {
+                    alert.detail += ` [Pipeline: ${conf}% confiança, impacto ~R$${impact.toFixed(0)}/dia]`;
+                  }
+                }
+              }
+              // Replace alerts array (reassign elements)
+              alerts.length = 0;
+              filteredAlerts.forEach(a => alerts.push(a));
+              if (!alerts.length) continue; // All alerts filtered out by pipeline
+            }
+          }
+        } catch (e) {
+          console.error("Decision pipeline error (non-blocking):", String(e));
+          // Pipeline errors are non-blocking — alerts continue as v1
+        }
+        // ─── END PIPELINE INTEGRATION ───────────────────────────────────
+
         // Sort: 🔴 first, then 🟡. Cap at 3 total — qualidade > quantidade
         const sorted = alerts
           .sort((a, b) => (a.urgency === "🔴" ? -1 : 1) - (b.urgency === "🔴" ? -1 : 1))
@@ -447,7 +516,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, checked: conns.length, alerts_fired: alertsFired }), {
+    return new Response(JSON.stringify({ ok: true, checked: conns.length, alerts_fired: alertsFired, pipeline: "v2_integrated" }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
 
@@ -457,4 +526,4 @@ Deno.serve(async (req) => {
     });
   }
 });
-// redeploy 202603270400
+// redeploy 202604170800 — v3 with decision pipeline integration
