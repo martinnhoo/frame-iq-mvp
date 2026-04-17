@@ -3283,7 +3283,7 @@ const FeedPage: React.FC = () => {
     // Wait for ALL data sources to be ready before showing the page
     if (decisionsLoading || trackerLoading) return true;
     if (metaConnected && !adsLoaded) return true;
-    if (metaConnected && !pulseData) return true;
+    if (metaConnected && !pulseDataReady) return true;
     return false;
   })();
 
@@ -3368,6 +3368,7 @@ const FeedPage: React.FC = () => {
     spendYesterday: number; ctrYesterday: number;
     spendPrev: number; ctrPrev: number;
   } | null>(null);
+  const [pulseDataReady, setPulseDataReady] = useState(false);
   const [savingsTotal, setSavingsTotal] = useState<number>(0);
 
   useEffect(() => {
@@ -3420,7 +3421,8 @@ const FeedPage: React.FC = () => {
         } else {
           setPulseData(null);
         }
-      } catch { if (!cancelled) setPulseData(null); }
+        if (!cancelled) setPulseDataReady(true);
+      } catch { if (!cancelled) { setPulseData(null); setPulseDataReady(true); } }
     })();
     return () => { cancelled = true; };
   }, [userId, personaId, metricsRefreshKey]);
