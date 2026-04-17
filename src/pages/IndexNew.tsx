@@ -475,7 +475,7 @@ function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => voi
 function TrustBar({ t }: { t: Record<string, string> }) {
   return (
     <div style={{
-      background: "rgba(255,255,255,0.025)", borderBottom: `1px solid ${BORDER}`,
+      background: "rgba(255,255,255,0.04)", borderBottom: `1px solid ${BORDER}`,
       padding: "7px clamp(16px,4vw,32px)",
     }}>
       <div className="trust-inner" style={{
@@ -483,15 +483,15 @@ function TrustBar({ t }: { t: Record<string, string> }) {
         justifyContent: "center", gap: "clamp(12px, 3vw, 24px)", flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, opacity: 0.7, fontWeight: 500 }}>{t.trust_powered}</span>
-          <OpenAILogo size={14} opacity={0.65} />
-          <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.35 }}>·</span>
-          <ClaudeLogo size={14} opacity={0.65} />
+          <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, opacity: 0.85, fontWeight: 500 }}>{t.trust_powered}</span>
+          <OpenAILogo size={14} opacity={0.85} />
+          <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.5 }}>·</span>
+          <ClaudeLogo size={14} opacity={0.85} />
         </div>
-        <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.25 }}>|</span>
+        <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.4 }}>|</span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <MetaLogo size={15} opacity={0.7} />
-          <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, opacity: 0.7, fontWeight: 500 }}>{t.trust_meta}</span>
+          <MetaLogo size={15} opacity={0.9} />
+          <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, opacity: 0.85, fontWeight: 500 }}>{t.trust_meta}</span>
         </div>
       </div>
     </div>
