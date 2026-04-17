@@ -186,7 +186,7 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
 
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"meta_action"|"text"|"trend_chart"|"limit_warning"|"creative_check";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"meta_action"|"text"|"trend_chart"|"limit_warning"|"creative_check"|"credits_exhausted_free"|"credits_exhausted_paid";
   remaining?: number;
   original_message?: string;
   title: string; content?: string; items?: string[];
