@@ -3189,6 +3189,10 @@ const FeedPage: React.FC = () => {
       if (!silent) { setAdMetrics(null); setMetricsReady(true); }
       return;
     }
+    // Safety net: never let the skeleton hang more than 8s, regardless of
+    // edge-function latency or silent failures. This guarantees the UI
+    // transitions out of "loading" even if live-metrics never responds.
+    const safetyTimer = setTimeout(() => setMetricsReady(true), 8000);
     // Real fetch starting — gate stays closed until this completes
     if (!silent) setMetricsReady(false);
     try {
@@ -3280,6 +3284,8 @@ const FeedPage: React.FC = () => {
         });
       } catch { setAdMetrics(null); }
       setMetricsReady(true); // ✓ Path B: fallback success OR fallback error
+    } finally {
+      clearTimeout(safetyTimer);
     }
   }, [userId, personaId, accountId, period, periodDays]);
 
