@@ -3153,36 +3153,70 @@ const FeedPage: React.FC = () => {
 
   useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
 
-  // Metrics fetch — re-runs when period or accountId changes
-  // Fetches both selected period + 30d anchor for drift-protected baselines
-  useEffect(() => {
-    if (!accountId) { setAdMetrics(null); return; }
-    let cancelled = false;
-    (async () => {
+  // ── Unified metrics fetch — live-metrics API (same source as Live Panel) ──
+  // Ensures Feed KPIs always match the chat's Live Panel.
+  // Falls back to ad_metrics DB table if live-metrics fails.
+  // Auto-refreshes every 60s so data stays current.
+  const liveMetricsInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchLiveMetrics = useCallback(async (silent = false) => {
+    if (!userId || !personaId || !accountId) { if (!silent) setAdMetrics(null); return; }
+    try {
+      const periodKey = period === '30d' ? '30d' : period === '14d' ? '14d' : '7d';
+      const { data, error } = await supabase.functions.invoke('live-metrics', {
+        body: { user_id: userId, persona_id: personaId, period: periodKey },
+      });
+      if (error || !data?.ok) throw new Error(error?.message || 'live-metrics failed');
+
+      // Use combined (multi-platform) or meta-specific data
+      const m = data.combined || data.meta;
+      if (!m || m.error) throw new Error('No platform data');
+
+      // Convert live-metrics format (reais/decimal) → AdMetricsSummary (centavos/basis-points)
+      const totalSpend = Math.round((m.spend || 0) * 100);           // reais → centavos
+      const totalClicks = Math.round(m.clicks || 0);
+      const totalImpressions = Math.round(m.impressions || 0);
+      const totalConversions = Math.round(m.conversions || 0);
+      const totalRevenue = Math.round((m.conv_value || 0) * 100);    // reais → centavos
+      const avgCtr = Math.round((m.ctr || 0) * 10000);               // decimal (0.042) → basis points (420)
+      const avgCpa = totalConversions > 0 ? Math.round(totalSpend / totalConversions) : 0;
+      const avgRoas = m.roas || (totalSpend > 0 && totalRevenue > 0 ? totalRevenue / totalSpend : 0);
+      const avgCpc = totalClicks > 0 ? Math.round(totalSpend / totalClicks) : 0;
+
+      // Daily breakdown for baselines
+      const daily = (m.daily || []) as { date: string; spend: number; ctr: number }[];
+      const dailyCtrBp = daily.filter(d => d.ctr > 0).map(d => Math.round(d.ctr * 10000));
+      const dailyCpaBp = daily.filter(d => d.spend > 0).map(() => avgCpa); // approx — no per-day conversions
+      const daysOfData = daily.length || 1;
+
+      setAdMetrics({
+        totalSpend,
+        totalConversions,
+        totalRevenue,
+        totalClicks,
+        totalImpressions,
+        avgCtr,
+        avgCpa,
+        avgRoas,
+        avgCpc,
+        daysOfData,
+        baselineCtr: robustMedian(dailyCtrBp),
+        baselineCpa: avgCpa > 0 ? avgCpa : null,
+        baselineRoas: avgRoas > 0 ? avgRoas : null,
+        volatilityCtr: coefficientOfVariation(dailyCtrBp),
+        volatilityCpa: coefficientOfVariation(dailyCpaBp),
+        freshnessFactor: 1, // live data is always fresh
+        hasAnchorBaseline: false,
+      });
+    } catch {
+      // Fallback: read from ad_metrics DB table (stale but better than nothing)
       try {
         const since = new Date(Date.now() - periodDays * 86400000).toISOString().slice(0, 10);
-        const anchorSince = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-
-        // Fetch both: selected period + 30d anchor (single round-trip if period <= 30d)
-        const needsAnchor = periodDays < 30;
-        const fetchPeriod = supabase
+        const { data: mData } = await (supabase
           .from('ad_metrics' as any)
           .select('spend, conversions, revenue, clicks, impressions, ctr, cpa, cpc, roas, date')
           .eq('account_id', accountId)
-          .gte('date', since) as any;
-        const fetchAnchor = needsAnchor ? (supabase
-          .from('ad_metrics' as any)
-          .select('spend, ctr, cpa, roas, date')
-          .eq('account_id', accountId)
-          .gte('date', anchorSince) as any) : null;
-
-        const [{ data: mData }, anchorResult] = await Promise.all([
-          fetchPeriod,
-          fetchAnchor ? fetchAnchor : Promise.resolve({ data: null }),
-        ]);
-
-        if (cancelled) return;
+          .gte('date', since) as any);
         if (!mData || mData.length === 0) { setAdMetrics(null); return; }
 
         const totalSpend = mData.reduce((s: number, r: any) => s + (r.spend || 0), 0);
@@ -3193,60 +3227,6 @@ const FeedPage: React.FC = () => {
         const ctrVals = mData.filter((r: any) => r.ctr != null).map((r: any) => Number(r.ctr));
         const cpaVals = mData.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
         const uniqueDates = new Set(mData.map((r: any) => r.date));
-
-        // ── Robust baselines: filter low-spend days, remove P5/P95 outliers ──
-        const avgDailySpend = totalSpend / Math.max(uniqueDates.size, 1);
-        const minDaySpend = avgDailySpend * 0.1;
-        const significantRows = mData.filter((r: any) => (r.spend || 0) >= minDaySpend);
-
-        const dailyCtrVals = significantRows.filter((r: any) => r.ctr != null && r.ctr > 0).map((r: any) => Number(r.ctr));
-        const dailyCpaVals = significantRows.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
-        // ROAS in DB is basis points (30000 = 3.0x) — convert to ratio for consistency with avgRoas
-        const roasVals = significantRows.filter((r: any) => r.roas != null && r.roas > 0).map((r: any) => Number(r.roas) / 10000);
-
-        // Recent baselines (selected period)
-        const recentCtr = robustMedian(dailyCtrVals);
-        const recentCpa = robustMedian(dailyCpaVals);
-        const recentRoas = robustMedian(roasVals);
-
-        // ── 30d anchor baselines (drift protection) ──
-        let anchorCtr: number | null = null;
-        let anchorCpa: number | null = null;
-        let anchorRoas: number | null = null;
-        let hasAnchor = false;
-
-        const anchorData = needsAnchor ? anchorResult?.data : mData;
-        if (anchorData && anchorData.length > 0) {
-          const anchorAvgSpend = anchorData.reduce((s: number, r: any) => s + (r.spend || 0), 0) / anchorData.length;
-          const anchorMinSpend = anchorAvgSpend * 0.1;
-          const anchorSig = anchorData.filter((r: any) => (r.spend || 0) >= anchorMinSpend);
-          const aCtr = anchorSig.filter((r: any) => r.ctr != null && r.ctr > 0).map((r: any) => Number(r.ctr));
-          const aCpa = anchorSig.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
-          // ROAS in DB is basis points — convert to ratio
-          const aRoas = anchorSig.filter((r: any) => r.roas != null && r.roas > 0).map((r: any) => Number(r.roas) / 10000);
-          anchorCtr = robustMedian(aCtr);
-          anchorCpa = robustMedian(aCpa);
-          anchorRoas = robustMedian(aRoas);
-          hasAnchor = anchorCtr !== null || anchorCpa !== null;
-        }
-
-        // Drift-protected baseline = max(recent, anchor * 0.8)
-        // For CTR (higher=better): use max to prevent "normalizing decline"
-        // For CPA (lower=better): use min to prevent "normalizing increase"
-        // For ROAS (higher=better): use max
-        const driftCtr = (recentCtr !== null && anchorCtr !== null)
-          ? Math.max(recentCtr, anchorCtr * 0.8)
-          : recentCtr;
-        const driftCpa = (recentCpa !== null && anchorCpa !== null)
-          ? Math.min(recentCpa, anchorCpa * 1.2) // CPA: min because lower CPA = better
-          : recentCpa;
-        const driftRoas = (recentRoas !== null && anchorRoas !== null)
-          ? Math.max(recentRoas, anchorRoas * 0.8)
-          : recentRoas;
-
-        // ── Data freshness: what fraction of rows are from last 24h ──
-        const recentRows = mData.filter((r: any) => r.date >= yesterday).length;
-        const freshnessFactor = mData.length > 0 ? recentRows / mData.length : 0;
 
         setAdMetrics({
           totalSpend,
@@ -3259,20 +3239,24 @@ const FeedPage: React.FC = () => {
           avgRoas: totalSpend > 0 && totalRevenue > 0 ? totalRevenue / totalSpend : 0,
           avgCpc: totalClicks > 0 ? totalSpend / totalClicks : 0,
           daysOfData: uniqueDates.size,
-          baselineCtr: driftCtr,
-          baselineCpa: driftCpa,
-          baselineRoas: driftRoas,
-          volatilityCtr: coefficientOfVariation(dailyCtrVals),
-          volatilityCpa: coefficientOfVariation(dailyCpaVals),
-          freshnessFactor,
-          hasAnchorBaseline: hasAnchor,
+          baselineCtr: null,
+          baselineCpa: null,
+          baselineRoas: null,
+          volatilityCtr: 0,
+          volatilityCpa: 0,
+          freshnessFactor: 0,
+          hasAnchorBaseline: false,
         });
-      } catch {
-        // noop
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [accountId, periodDays, metricsRefreshKey]);
+      } catch { setAdMetrics(null); }
+    }
+  }, [userId, personaId, accountId, period, periodDays]);
+
+  // Initial fetch + auto-refresh every 60s
+  useEffect(() => {
+    fetchLiveMetrics();
+    liveMetricsInterval.current = setInterval(() => fetchLiveMetrics(true), 60_000);
+    return () => { if (liveMetricsInterval.current) clearInterval(liveMetricsInterval.current); };
+  }, [fetchLiveMetrics, metricsRefreshKey]);
 
   const hasRealData = realDecisions.length > 0;
   const demoDismissed = isDemoDismissedToday();
@@ -3333,16 +3317,15 @@ const FeedPage: React.FC = () => {
         setSyncError('Falha na análise. Tente novamente.');
       }
 
-      // Refetch ALL data sources (decisions, ads, metrics, campaigns)
-      refreshMetrics();
-      await Promise.all([refetchDecisions(), fetchAds(), fetchCampaigns()]);
+      // Refetch ALL data sources (decisions, ads, live metrics, campaigns)
+      await Promise.all([refetchDecisions(), fetchAds(), fetchCampaigns(), fetchLiveMetrics()]);
     } catch (err) {
       console.error('Sync error:', err);
       setSyncError('Falha na conexão. Tente novamente.');
     } finally {
       setSyncing(false);
     }
-  }, [accountId, syncing, refetchDecisions, fetchAds, fetchCampaigns, refreshMetrics]);
+  }, [accountId, syncing, refetchDecisions, fetchAds, fetchCampaigns, fetchLiveMetrics]);
 
   // ── Auto-sync: trigger first sync when account connected but no ads imported yet ──
   // Uses localStorage to ensure it only fires once per account (even across remounts)
