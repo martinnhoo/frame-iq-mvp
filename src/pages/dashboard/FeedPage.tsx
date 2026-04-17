@@ -1066,12 +1066,10 @@ const StateNoConnection: React.FC = () => {
             color: '#fff', border: 'none',
             cursor: 'pointer', transition: 'all 0.2s ease',
             boxShadow: '0 2px 16px rgba(0,130,251,0.3), 0 0 0 1px rgba(0,130,251,0.1)',
-            display: 'inline-flex', alignItems: 'center', gap: 8,
           }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 28px rgba(0,130,251,0.45), 0 0 0 1px rgba(0,130,251,0.2)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 16px rgba(0,130,251,0.3), 0 0 0 1px rgba(0,130,251,0.1)'; }}
         >
-          <MetaLogo size={16} />
           Conectar conta
         </button>
 
