@@ -475,23 +475,23 @@ function LangSwitcher({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => voi
 function TrustBar({ t }: { t: Record<string, string> }) {
   return (
     <div style={{
-      background: "rgba(255,255,255,0.015)", borderBottom: `1px solid ${BORDER}`,
-      padding: "6px clamp(16px,4vw,32px)",
+      background: "rgba(255,255,255,0.025)", borderBottom: `1px solid ${BORDER}`,
+      padding: "7px clamp(16px,4vw,32px)",
     }}>
       <div className="trust-inner" style={{
         maxWidth: 1120, margin: "0 auto", display: "flex", alignItems: "center",
         justifyContent: "center", gap: "clamp(12px, 3vw, 24px)", flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.5, fontWeight: 400 }}>{t.trust_powered}</span>
-          <OpenAILogo size={13} opacity={0.45} />
-          <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.25 }}>·</span>
-          <ClaudeLogo size={13} opacity={0.45} />
+          <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, opacity: 0.7, fontWeight: 500 }}>{t.trust_powered}</span>
+          <OpenAILogo size={14} opacity={0.65} />
+          <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.35 }}>·</span>
+          <ClaudeLogo size={14} opacity={0.65} />
         </div>
-        <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.15 }}>|</span>
+        <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.25 }}>|</span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <MetaLogo size={14} opacity={0.5} />
-          <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.5, fontWeight: 400 }}>{t.trust_meta}</span>
+          <MetaLogo size={15} opacity={0.7} />
+          <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, opacity: 0.7, fontWeight: 500 }}>{t.trust_meta}</span>
         </div>
       </div>
     </div>
@@ -518,8 +518,11 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
       transition: `all 0.4s ${EASE}`,
     }}>
       <div style={{
-        maxHeight: scrolled ? 0 : 32, opacity: scrolled ? 0 : 1,
-        overflow: "hidden", transition: `max-height 0.35s ${EASE}, opacity 0.25s ${EASE}`,
+        maxHeight: scrolled ? 0 : 40, opacity: scrolled ? 0 : 1,
+        overflow: "hidden",
+        transition: scrolled
+          ? `max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out`
+          : `max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-in 0.1s`,
       }}>
         <TrustBar t={t} />
       </div>
