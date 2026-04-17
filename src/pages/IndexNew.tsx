@@ -2,7 +2,7 @@
 // Complete from-scratch rebuild with depth system, real SVG logos, visual flow
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
-import { Globe, ChevronDown, ArrowRight, CheckCircle2, Pause, TrendingUp } from "lucide-react";
+import { Globe, ChevronDown, ArrowRight, CheckCircle2, Pause, TrendingUp, ChevronRight, Zap, Brain } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import CookieConsent from "@/components/CookieConsent";
@@ -97,24 +97,32 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta: "Começar grátis",
     hero_cta_sub: "Sem cartão · Sem configuração · 15 melhorias grátis",
     hero_login: "Já tem conta? Entrar",
-    // mockup
-    mock_decisions: "DECISÕES ATIVAS",
-    mock_7d: "Últimos 7 dias",
+    // mockup — realistic scaling campaign
+    mock_decisions: "DECISÕES",
+    mock_7d: "7 dias",
     mock_invested: "INVESTIDO",
     mock_cpa: "CPA",
     mock_ctr: "CTR",
     mock_roas: "ROAS",
-    mock_kill: "Pausar — CTR 62% abaixo da média",
-    mock_kill_d: "Creative_042 · R$180/dia sem retorno",
-    mock_scale: "Escalar — ROAS 4.8x estável há 5 dias",
-    mock_scale_d: "Creative_019 · margem para +R$1.080/dia",
+    mock_campaign: "Escala Lookalike — Top Criativos",
+    mock_campaign_status: "Ativa",
+    mock_ads_count: "4 anúncios",
+    mock_ad1: "UGC_Depoimento_v3",
+    mock_ad1_status: "Ativo",
+    mock_ad1_metrics: "CTR 3.8% · CPA R$22 · ROAS 4.2x",
+    mock_scale: "Escalar — ROAS 4.2x com CPA estável há 7 dias",
+    mock_scale_d: "Frequência 1.4 e CPM caindo. Janela de escala aberta — aumentar 20% do budget mantém eficiência.",
+    mock_scale_cta: "+20% budget",
+    mock_intel_title: "INTELIGÊNCIA",
+    mock_intel1: "UGC com prova social converte 2.3x mais que produto isolado",
+    mock_intel1_conf: "Confiança alta · 12 criativos analisados",
+    mock_intel2: "Hook nos primeiros 2s retém 68% mais audiência neste nicho",
+    mock_intel2_conf: "Confiança média · 8 vídeos",
     mock_opp: "PRÓXIMA OPORTUNIDADE",
-    mock_opp_t: "Próximo ganho: variação de criativo",
-    mock_apply: "Aplicar melhoria",
-    mock_applied: "Melhoria aplicada",
-    mock_estimated: "+18% CTR estimado",
-    mock_pause: "Pausar anúncio",
-    mock_scale_cta: "Aumentar budget",
+    mock_opp_t: "Criar variação UGC do criativo top",
+    mock_apply: "Gerar com IA",
+    mock_applied: "Gerado",
+    mock_estimated: "+26% ROAS estimado",
     // concept
     concept_title: "Não é um dashboard.\nÉ um sistema de decisão.",
     concept_s1: "Análise contínua",
@@ -194,23 +202,31 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta: "Start free",
     hero_cta_sub: "No card · No setup · 15 free improvements",
     hero_login: "Already have an account? Log in",
-    mock_decisions: "ACTIVE DECISIONS",
-    mock_7d: "Last 7 days",
+    mock_decisions: "DECISIONS",
+    mock_7d: "7 days",
     mock_invested: "INVESTED",
     mock_cpa: "CPA",
     mock_ctr: "CTR",
     mock_roas: "ROAS",
-    mock_kill: "Pause — CTR 62% below average",
-    mock_kill_d: "Creative_042 · $52/day with no return",
-    mock_scale: "Scale — ROAS 4.8x stable for 5 days",
-    mock_scale_d: "Creative_019 · room for +$300/day",
+    mock_campaign: "Scale Lookalike — Top Creatives",
+    mock_campaign_status: "Active",
+    mock_ads_count: "4 ads",
+    mock_ad1: "UGC_Testimonial_v3",
+    mock_ad1_status: "Active",
+    mock_ad1_metrics: "CTR 3.8% · CPA $6.20 · ROAS 4.2x",
+    mock_scale: "Scale — ROAS 4.2x with stable CPA for 7 days",
+    mock_scale_d: "Frequency 1.4 and CPM declining. Scale window open — 20% budget increase maintains efficiency.",
+    mock_scale_cta: "+20% budget",
+    mock_intel_title: "INTELLIGENCE",
+    mock_intel1: "UGC with social proof converts 2.3x more than product-only",
+    mock_intel1_conf: "High confidence · 12 creatives analyzed",
+    mock_intel2: "Hook in first 2s retains 68% more audience in this niche",
+    mock_intel2_conf: "Medium confidence · 8 videos",
     mock_opp: "NEXT OPPORTUNITY",
-    mock_opp_t: "Next gain: creative variation",
-    mock_apply: "Apply improvement",
-    mock_applied: "Improvement applied",
-    mock_estimated: "+18% estimated CTR",
-    mock_pause: "Pause ad",
-    mock_scale_cta: "Increase budget",
+    mock_opp_t: "Create UGC variation of top creative",
+    mock_apply: "Generate with AI",
+    mock_applied: "Generated",
+    mock_estimated: "+26% estimated ROAS",
     concept_title: "Not a dashboard.\nA decision system.",
     concept_s1: "Continuous analysis",
     concept_s1d: "Monitors your campaigns 24/7 and identifies opportunities you'd miss.",
@@ -283,23 +299,31 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta: "Empezar gratis",
     hero_cta_sub: "Sin tarjeta · Sin configuración · 15 mejoras gratis",
     hero_login: "¿Ya tienes cuenta? Entrar",
-    mock_decisions: "DECISIONES ACTIVAS",
-    mock_7d: "Últimos 7 días",
+    mock_decisions: "DECISIONES",
+    mock_7d: "7 días",
     mock_invested: "INVERTIDO",
     mock_cpa: "CPA",
     mock_ctr: "CTR",
     mock_roas: "ROAS",
-    mock_kill: "Pausar — CTR 62% bajo el promedio",
-    mock_kill_d: "Creative_042 · $52/día sin retorno",
-    mock_scale: "Escalar — ROAS 4.8x estable hace 5 días",
-    mock_scale_d: "Creative_019 · margen para +$300/día",
+    mock_campaign: "Escala Lookalike — Top Creativos",
+    mock_campaign_status: "Activa",
+    mock_ads_count: "4 anuncios",
+    mock_ad1: "UGC_Testimonio_v3",
+    mock_ad1_status: "Activo",
+    mock_ad1_metrics: "CTR 3.8% · CPA $6.20 · ROAS 4.2x",
+    mock_scale: "Escalar — ROAS 4.2x con CPA estable hace 7 días",
+    mock_scale_d: "Frecuencia 1.4 y CPM bajando. Ventana de escala abierta — subir 20% del budget mantiene eficiencia.",
+    mock_scale_cta: "+20% budget",
+    mock_intel_title: "INTELIGENCIA",
+    mock_intel1: "UGC con prueba social convierte 2.3x más que producto solo",
+    mock_intel1_conf: "Confianza alta · 12 creativos analizados",
+    mock_intel2: "Hook en primeros 2s retiene 68% más audiencia en este nicho",
+    mock_intel2_conf: "Confianza media · 8 videos",
     mock_opp: "PRÓXIMA OPORTUNIDAD",
-    mock_opp_t: "Próxima ganancia: variación de creativo",
-    mock_apply: "Aplicar mejora",
-    mock_applied: "Mejora aplicada",
-    mock_estimated: "+18% CTR estimado",
-    mock_pause: "Pausar anuncio",
-    mock_scale_cta: "Aumentar presupuesto",
+    mock_opp_t: "Crear variación UGC del creativo top",
+    mock_apply: "Generar con IA",
+    mock_applied: "Generado",
+    mock_estimated: "+26% ROAS estimado",
     concept_title: "No es un dashboard.\nEs un sistema de decisión.",
     concept_s1: "Análisis continuo",
     concept_s1d: "Monitorea tus campañas 24/7 e identifica oportunidades que perderías.",
@@ -512,16 +536,17 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
 // ── Live Product (hero visual — auto-demo) ──────────────────────────────────
 function LiveProduct({ t }: { t: Record<string, string> }) {
   const [applied, setApplied] = useState(false);
-  const [roas, setRoas] = useState("3.2x");
+  const [roas, setRoas] = useState("4.2x");
+  const [expanded, setExpanded] = useState(true);
 
   useEffect(() => {
     const doApply = () => {
       setApplied(true);
-      setRoas("3.6x");
-      setTimeout(() => { setApplied(false); setRoas("3.2x"); }, 2500);
+      setRoas("4.8x");
+      setTimeout(() => { setApplied(false); setRoas("4.2x"); }, 2500);
     };
-    const first = setTimeout(doApply, 1200);
-    const interval = setInterval(doApply, 6000);
+    const first = setTimeout(doApply, 1800);
+    const interval = setInterval(doApply, 7000);
     return () => { clearTimeout(first); clearInterval(interval); };
   }, []);
 
@@ -552,15 +577,15 @@ function LiveProduct({ t }: { t: Record<string, string> }) {
         }}>{t.mock_7d}</span>
       </div>
 
-      {/* Metrics */}
+      {/* Metrics — green-dominant */}
       <div style={{
         display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr",
         borderBottom: `1px solid ${BORDER}`, padding: "14px 16px",
       }}>
         {[
-          { label: t.mock_invested, value: "R$12.430", color: TEXT },
-          { label: t.mock_cpa, value: "R$28,50", color: TEXT },
-          { label: t.mock_ctr, value: "2.1%", color: TEXT },
+          { label: t.mock_invested, value: "R$8.740", color: TEXT },
+          { label: t.mock_cpa, value: "R$22", color: GREEN },
+          { label: t.mock_ctr, value: "3.8%", color: GREEN },
           { label: t.mock_roas, value: roas, color: GREEN },
         ].map((m, i) => (
           <div key={i} style={{ textAlign: "center" }}>
@@ -577,41 +602,60 @@ function LiveProduct({ t }: { t: Record<string, string> }) {
         ))}
       </div>
 
-      {/* Decision cards */}
+      {/* Campaign card — expandable */}
       <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
         <div style={{
-          background: "rgba(239,68,68,0.03)", border: "1px solid rgba(239,68,68,0.08)",
-          borderRadius: 9, padding: "10px 14px",
+          background: "rgba(34,197,94,0.03)", border: "1px solid rgba(34,197,94,0.08)",
+          borderRadius: 9, overflow: "hidden",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
-            <div style={{ width: 5, height: 5, borderRadius: "50%", background: RED, boxShadow: "0 0 8px rgba(239,68,68,0.4)" }} />
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: TEXT, flex: 1 }}>{t.mock_kill}</span>
+          {/* Campaign header — clickable */}
+          <div
+            onClick={() => setExpanded(!expanded)}
+            style={{ padding: "10px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}
+          >
+            <ChevronRight size={12} style={{
+              color: TEXT3, transition: `transform 0.3s ${EASE}`,
+              transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+            }} />
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: "0 0 8px rgba(34,197,94,0.4)" }} />
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: TEXT, flex: 1 }}>{t.mock_campaign}</span>
+            <span style={{ fontSize: 9, color: TEXT3, fontWeight: 600 }}>{t.mock_ads_count}</span>
           </div>
-          <p style={{ fontSize: 10, color: TEXT3, margin: "0 0 7px", paddingLeft: 12, opacity: 0.8 }}>{t.mock_kill_d}</p>
-          <div style={{ paddingLeft: 12 }}>
-            <span style={{
-              fontSize: 10, fontWeight: 700, color: RED, padding: "3px 10px",
-              borderRadius: 5, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.12)",
-              display: "inline-flex", alignItems: "center", gap: 4,
+
+          {/* Expanded: ad row inside */}
+          <div style={{
+            maxHeight: expanded ? 60 : 0, overflow: "hidden",
+            transition: `max-height 0.4s ${EASE}`,
+          }}>
+            <div style={{
+              padding: "6px 14px 10px 38px",
+              borderTop: `1px solid rgba(255,255,255,0.04)`,
             }}>
-              <Pause size={9} /> {t.mock_pause}
-            </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                <div style={{ width: 4, height: 4, borderRadius: "50%", background: GREEN, opacity: 0.7 }} />
+                <span style={{ fontSize: 10.5, fontWeight: 600, color: TEXT2 }}>{t.mock_ad1}</span>
+                <span style={{ fontSize: 8.5, color: GREEN, fontWeight: 700, marginLeft: "auto" }}>{t.mock_ad1_status}</span>
+              </div>
+              <div style={{ fontSize: 9, color: TEXT3, paddingLeft: 10, opacity: 0.8 }}>{t.mock_ad1_metrics}</div>
+            </div>
           </div>
         </div>
 
+        {/* Scale decision — the big card */}
         <div style={{
-          background: "rgba(34,197,94,0.03)", border: "1px solid rgba(34,197,94,0.08)",
+          background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.10)",
           borderRadius: 9, padding: "10px 14px",
+          boxShadow: "0 0 20px rgba(34,197,94,0.05)",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
-            <div style={{ width: 5, height: 5, borderRadius: "50%", background: GREEN, boxShadow: "0 0 8px rgba(34,197,94,0.4)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
+            <TrendingUp size={12} style={{ color: GREEN }} />
             <span style={{ fontSize: 11.5, fontWeight: 700, color: TEXT, flex: 1 }}>{t.mock_scale}</span>
           </div>
-          <p style={{ fontSize: 10, color: TEXT3, margin: "0 0 7px", paddingLeft: 12, opacity: 0.8 }}>{t.mock_scale_d}</p>
-          <div style={{ paddingLeft: 12 }}>
+          <p style={{ fontSize: 10, color: TEXT2, margin: "0 0 8px", paddingLeft: 19, lineHeight: 1.5 }}>{t.mock_scale_d}</p>
+          <div style={{ paddingLeft: 19 }}>
             <span style={{
               fontSize: 10, fontWeight: 700, color: GREEN, padding: "3px 10px",
-              borderRadius: 5, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)",
+              borderRadius: 5, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)",
               display: "inline-flex", alignItems: "center", gap: 4,
             }}>
               <TrendingUp size={9} /> {t.mock_scale_cta}
@@ -620,32 +664,63 @@ function LiveProduct({ t }: { t: Record<string, string> }) {
         </div>
       </div>
 
+      {/* Intelligence section */}
+      <div style={{
+        margin: "2px 14px 6px", padding: "10px 14px", borderRadius: 9,
+        background: "rgba(255,255,255,0.015)", border: `1px solid ${BORDER}`,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Brain size={11} style={{ color: INDIGO, opacity: 0.7 }} />
+          <span style={{ fontSize: 8.5, fontWeight: 800, color: INDIGO, letterSpacing: "0.1em", opacity: 0.6 }}>
+            {t.mock_intel_title}
+          </span>
+        </div>
+
+        {/* Pattern 1 */}
+        <div style={{ marginBottom: 8 }}>
+          <p style={{ fontSize: 10, color: TEXT2, margin: 0, lineHeight: 1.45, fontWeight: 500 }}>{t.mock_intel1}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
+            <div style={{ width: 4, height: 4, borderRadius: "50%", background: GREEN }} />
+            <span style={{ fontSize: 8.5, color: GREEN, fontWeight: 600, opacity: 0.8 }}>{t.mock_intel1_conf}</span>
+          </div>
+        </div>
+
+        {/* Pattern 2 */}
+        <div>
+          <p style={{ fontSize: 10, color: TEXT2, margin: 0, lineHeight: 1.45, fontWeight: 500 }}>{t.mock_intel2}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
+            <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#eab308" }} />
+            <span style={{ fontSize: 8.5, color: "#eab308", fontWeight: 600, opacity: 0.8 }}>{t.mock_intel2_conf}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Opportunity — focal point */}
       <div style={{
         margin: "2px 14px 14px", padding: "14px 16px", borderRadius: 10,
-        borderLeft: `2px solid ${applied ? GREEN : ACCENT}`,
-        background: applied ? "rgba(34,197,94,0.04)" : "rgba(14,165,233,0.04)",
-        boxShadow: applied ? "0 0 30px rgba(34,197,94,0.08)" : "0 0 24px rgba(14,165,233,0.04)",
+        borderLeft: `3px solid ${applied ? GREEN : GREEN}`,
+        background: applied ? "rgba(34,197,94,0.06)" : "rgba(34,197,94,0.03)",
+        boxShadow: applied ? "0 0 30px rgba(34,197,94,0.10)" : "0 0 16px rgba(34,197,94,0.04)",
         transition: `all 0.5s ${EASE}`,
       }}>
-        <div style={{ fontSize: 8, fontWeight: 800, color: applied ? GREEN : ACCENT, letterSpacing: "0.12em", marginBottom: 6, opacity: 0.6, transition: `color 0.4s ${EASE}` }}>
+        <div style={{ fontSize: 8, fontWeight: 800, color: GREEN, letterSpacing: "0.12em", marginBottom: 6, opacity: 0.5 }}>
           {t.mock_opp}
         </div>
         <p style={{ fontSize: 12, fontWeight: 600, color: TEXT, margin: "0 0 10px" }}>
-          {t.mock_opp_t} · <span style={{ color: applied ? GREEN : ACCENT, fontWeight: 700, transition: `color 0.4s ${EASE}` }}>{t.mock_estimated}</span>
+          {t.mock_opp_t} · <span style={{ color: GREEN, fontWeight: 700 }}>{t.mock_estimated}</span>
         </p>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{
             fontSize: 11, fontWeight: 700, color: "#fff",
             padding: "7px 16px", borderRadius: 7,
-            background: applied ? GREEN : ACCENT, cursor: "default",
+            background: GREEN, cursor: "default",
             display: "inline-flex", alignItems: "center", gap: 5,
-            boxShadow: applied ? "0 2px 12px rgba(34,197,94,0.3)" : "0 2px 10px rgba(14,165,233,0.2)",
+            boxShadow: applied ? "0 2px 16px rgba(34,197,94,0.35)" : "0 2px 10px rgba(34,197,94,0.2)",
             transition: `all 0.4s ${EASE}`,
-            transform: applied ? "scale(1.02)" : "scale(1)",
+            transform: applied ? "scale(1.03)" : "scale(1)",
           }}>
-            {applied ? <><CheckCircle2 size={12} strokeWidth={2.2} /> {t.mock_applied}</> : t.mock_apply}
+            {applied ? <><CheckCircle2 size={12} strokeWidth={2.2} /> {t.mock_applied}</> : <><Zap size={11} /> {t.mock_apply}</>}
           </span>
         </div>
       </div>
