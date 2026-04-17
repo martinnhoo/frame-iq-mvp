@@ -154,6 +154,33 @@ export interface Decision {
   acted_at: string | null;
   dismissed_at: string | null;
   created_at: string;
+
+  // ── Pipeline v2 fields ──
+  // Financial verdict from the pipeline
+  pipeline_approved?: boolean;
+  financial_verdict?: 'profitable' | 'break_even' | 'losing' | 'unknown';
+  break_even_roas?: number | null;
+  margin_of_safety?: number | null;    // % above/below break-even
+  // Risk & confidence (pipeline-computed)
+  risk_level?: 'safe' | 'moderate' | 'high';
+  data_confidence?: number;            // 0.0 to 1.0 (pipeline-computed)
+  confidence_gate?: string;            // do_not_act | caution_only | moderate | high
+  // Safety layer
+  safety_status?: 'approved' | 'queued' | 'rejected' | 'needs_gradual';
+  cooldown_active?: boolean;
+  gradual_step?: number | null;
+  rollback_plan?: string | null;
+  // Explanation chain (transparent reasoning)
+  explanation_chain?: {
+    data_point: string;
+    threshold: string;
+    financial_check: string;
+    safety_check: string;
+    verdict: string;
+  } | null;
+  // Pipeline mode indicator
+  pipeline_mode?: 'v1' | 'v2_shadow' | 'v2_active';
+
   // Joined data (from queries)
   ad?: Ad & {
     ad_set?: AdSet & { campaign?: Campaign };

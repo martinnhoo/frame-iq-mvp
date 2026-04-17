@@ -16,6 +16,17 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  enrichDecision,
+  getEngineVersion,
+  loadAccountConfig,
+} from "../_shared/decision-pipeline/mod.ts";
+import type {
+  RawDecision,
+  EnrichedDecision,
+  FinancialConfig,
+  SafetyConfig,
+} from "../_shared/decision-pipeline/types.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -1586,32 +1597,176 @@ async function fetchAccountBaseline(accountId: string): Promise<AccountBaseline 
 // PERSISTENCE
 // ================================================================
 
-async function persistDecisions(accountId: string, items: FeedItem[]): Promise<void> {
+// ================================================================
+// PIPELINE v2 — FINANCIAL FILTER + SAFETY LAYER + DATA CONFIDENCE
+// Enriches each FeedItem with pipeline-computed fields before persist.
+// Non-blocking: if pipeline fails, items persist without enrichment.
+// ================================================================
+
+interface PipelineEnrichment {
+  pipeline_approved: boolean;
+  financial_verdict: string;
+  break_even_roas: number | null;
+  margin_of_safety: number | null;
+  risk_level: string;
+  data_confidence: number;
+  confidence_gate: string;
+  safety_status: string;
+  cooldown_active: boolean;
+  gradual_step: number | null;
+  rollback_plan: string | null;
+  explanation_chain: {
+    data_point: string;
+    threshold: string;
+    financial_check: string;
+    safety_check: string;
+    verdict: string;
+  };
+  pipeline_mode: string;
+}
+
+function feedItemToRawDecision(item: FeedItem): RawDecision {
+  const ms = item.metrics_snapshot as any || {};
+  const actionType =
+    item.type === 'kill' ? 'pause' as const :
+    item.type === 'scale' ? 'scale_budget' as const :
+    item.type === 'fix' ? 'review' as const :
+    'review' as const;
+
+  return {
+    action_type: actionType,
+    target_id: item.ad_id || 'account',
+    target_type: 'ad',
+    target_name: ms.ad_name || item.headline?.slice(0, 60) || '',
+    detection_reason: item.cluster_key || 'UNKNOWN',
+    urgency: item.confidence === 'high' ? 'high' : item.confidence === 'medium' ? 'medium' : 'low',
+    kpi_data: {
+      metric: item.type === 'kill' ? (ms.ctr < (ms.baseline_ctr || 0.01) ? 'ctr' : ms.cpa_cents > 0 ? 'cpa' : 'roas') :
+              item.type === 'scale' ? 'roas' : 'ctr',
+      current_value: item.type === 'kill' ? (ms.ctr || ms.cpa_cents || 0) :
+                     item.type === 'scale' ? (ms.roas || 0) : (ms.ctr || 0),
+      previous_value: undefined,
+      threshold: item.type === 'kill' ? (ms.baseline_ctr || 0.01) :
+                 item.type === 'scale' ? (ms.baseline_roas || 1.0) : (ms.baseline_ctr || 0.01),
+      period_days: ms.days_active || 7,
+    },
+    spend: (ms.spend_cents || 0) / 100,
+    conversions: ms.conversions || 0,
+    roas: ms.roas || 0,
+    ctr: ms.ctr || 0,
+    frequency: ms.frequency || 0,
+    current_daily_budget: ms.spend_cents ? Math.round(ms.spend_cents / Math.max(ms.days_active || 7, 1)) / 100 : 0,
+  };
+}
+
+function getConfidenceGate(score: number): string {
+  if (score < 0.30) return 'do_not_act';
+  if (score < 0.50) return 'caution_only';
+  if (score < 0.70) return 'moderate';
+  if (score >= 0.85) return 'high';
+  return 'moderate';
+}
+
+async function enrichWithPipeline(
+  items: FeedItem[],
+  accountId: string,
+): Promise<Map<string, PipelineEnrichment>> {
+  const enrichments = new Map<string, PipelineEnrichment>();
+
+  try {
+    const engineVersion = await getEngineVersion(accountId, supabase);
+    if (engineVersion === 'v1') return enrichments;
+
+    const config = await loadAccountConfig(accountId, supabase);
+    const financialConfig: FinancialConfig = config.financial;
+    const safetyConfig: SafetyConfig = config.safety;
+
+    // Only enrich actionable items (kill, fix, scale)
+    const actionableItems = items.filter(i => ['kill', 'fix', 'scale'].includes(i.type));
+
+    const results = await Promise.allSettled(
+      actionableItems.map(async (item) => {
+        const raw = feedItemToRawDecision(item);
+        const enriched = await enrichDecision(raw, financialConfig, safetyConfig, accountId, supabase, {
+          patternConfidence: item.pattern_ref?.is_winner ? 0.8 : 0.3,
+        });
+        return { itemKey: `${item.ad_id || 'null'}_${item.type}_${item.cluster_key}`, enriched, mode: engineVersion };
+      })
+    );
+
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        const { itemKey, enriched, mode } = result.value;
+        enrichments.set(itemKey, {
+          pipeline_approved: enriched.approved,
+          financial_verdict: enriched.financial.verdict,
+          break_even_roas: enriched.financial.break_even_roas,
+          margin_of_safety: enriched.financial.margin_of_safety,
+          risk_level: enriched.risk_level,
+          data_confidence: enriched.confidence,
+          confidence_gate: getConfidenceGate(enriched.confidence),
+          safety_status: enriched.safety.status,
+          cooldown_active: enriched.safety.status === 'queued',
+          gradual_step: enriched.safety.gradual_step,
+          rollback_plan: enriched.safety.rollback_plan,
+          explanation_chain: enriched.explanation,
+          pipeline_mode: mode,
+        });
+      }
+    }
+  } catch (e) {
+    console.error("[run-decision-engine] Pipeline enrichment error (non-blocking):", String(e));
+  }
+
+  return enrichments;
+}
+
+async function persistDecisions(accountId: string, items: FeedItem[], pipelineEnrichments?: Map<string, PipelineEnrichment>): Promise<void> {
   if (items.length === 0) return;
 
   // Map feed items to decisions table format
-  const rows = items.map((item, idx) => ({
-    id: uuid(),
-    ad_id: item.ad_id,
-    account_id: accountId,
-    type: item.type,
-    score: item.score,
-    priority_rank: idx + 1,
-    headline: item.headline,
-    reason: item.reason,
-    impact_type: item.impact_type,
-    impact_daily: item.impact_daily_cents,
-    impact_7d: item.impact_7d_cents,
-    impact_confidence: item.confidence,
-    impact_basis: item.impact_basis,
-    metrics_snapshot: item.metrics_snapshot,
-    metrics: item.metrics || [],
-    actions: item.actions,
-    action_recommendation: item.action_recommendation,
-    group_note: item.group_note,
-    status: "pending",
-    created_at: new Date().toISOString(),
-  }));
+  const rows = items.map((item, idx) => {
+    const enrichKey = `${item.ad_id || 'null'}_${item.type}_${item.cluster_key}`;
+    const pe = pipelineEnrichments?.get(enrichKey);
+    return {
+      id: uuid(),
+      ad_id: item.ad_id,
+      account_id: accountId,
+      type: item.type,
+      score: item.score,
+      priority_rank: idx + 1,
+      headline: item.headline,
+      reason: item.reason,
+      impact_type: item.impact_type,
+      impact_daily: item.impact_daily_cents,
+      impact_7d: item.impact_7d_cents,
+      impact_confidence: item.confidence,
+      impact_basis: item.impact_basis,
+      metrics_snapshot: item.metrics_snapshot,
+      metrics: item.metrics || [],
+      actions: item.actions,
+      action_recommendation: item.action_recommendation,
+      group_note: item.group_note,
+      status: "pending",
+      created_at: new Date().toISOString(),
+      // Pipeline v2 fields
+      ...(pe ? {
+        pipeline_approved: pe.pipeline_approved,
+        financial_verdict: pe.financial_verdict,
+        break_even_roas: pe.break_even_roas,
+        margin_of_safety: pe.margin_of_safety,
+        risk_level: pe.risk_level,
+        data_confidence: pe.data_confidence,
+        confidence_gate: pe.confidence_gate,
+        safety_status: pe.safety_status,
+        cooldown_active: pe.cooldown_active,
+        gradual_step: pe.gradual_step,
+        rollback_plan: pe.rollback_plan,
+        explanation_chain: pe.explanation_chain,
+        pipeline_mode: pe.pipeline_mode,
+      } : {}),
+    };
+  });
 
   // Clear old pending decisions for this account
   await supabase
@@ -1837,9 +1992,12 @@ serve(async (req: Request) => {
       }
     }
 
-    // 6. Persist
+    // 5e. Pipeline v2 enrichment — financial filter + safety layer + data confidence
+    const pipelineEnrichments = await enrichWithPipeline(allItems, account_id);
+
+    // 6. Persist (with pipeline enrichments)
     await Promise.all([
-      persistDecisions(account_id, allItems),
+      persistDecisions(account_id, allItems, pipelineEnrichments),
       updateMoneyTracker(account_id, allItems),
       persistPatterns(account_id, allItems),
     ]);
@@ -1891,6 +2049,8 @@ serve(async (req: Request) => {
       JSON.stringify({
         ok: true,
         mode: "live",
+        pipeline_active: pipelineEnrichments.size > 0,
+        pipeline_enriched_count: pipelineEnrichments.size,
         total: allItems.length,
         kill_count: allItems.filter(d => d.type === "kill").length,
         fix_count: allItems.filter(d => d.type === "fix").length,

@@ -185,6 +185,21 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
   const actionRec = decision.action_recommendation;
   const groupNote = decision.group_note;
 
+  // ── Pipeline v2 data ──
+  const hasPipeline = !!(decision as any).pipeline_mode && (decision as any).pipeline_mode !== 'v1';
+  const pipelineConfidence = (decision as any).data_confidence as number | undefined;
+  const riskLevel = (decision as any).risk_level as string | undefined;
+  const financialVerdict = (decision as any).financial_verdict as string | undefined;
+  const safetyStatus = (decision as any).safety_status as string | undefined;
+  const explanationChain = (decision as any).explanation_chain as {
+    data_point: string; threshold: string;
+    financial_check: string; safety_check: string; verdict: string;
+  } | null | undefined;
+  const pipelineApproved = (decision as any).pipeline_approved as boolean | undefined;
+  const confidenceGate = (decision as any).confidence_gate as string | undefined;
+  const breakEvenRoas = (decision as any).break_even_roas as number | undefined;
+  const marginOfSafety = (decision as any).margin_of_safety as number | undefined;
+
   const recItems: string[] = [];
   if (actionRec) {
     const colonIdx = actionRec.indexOf(':');
@@ -201,7 +216,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
   // Determine if there's enough "deep" content worth expanding
   const hasDeepContent = reasonLines.length > 1 || recItems.length > 0 ||
     (decision as any).pattern_ref || (decision as any).prediction ||
-    (decision.metrics && decision.metrics.length > 0);
+    (decision.metrics && decision.metrics.length > 0) ||
+    (hasPipeline && explanationChain);
 
   return (
     <>
@@ -259,16 +275,42 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
           }}>
-            <div style={{
-              fontSize: 10, color: L3,
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}>
+            {/* Pipeline confidence % — more precise than legacy dot */}
+            {hasPipeline && pipelineConfidence != null ? (
+              <div style={{
+                fontSize: 10, color: L3,
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}>
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: pipelineConfidence >= 0.70 ? '#38BDF8' : pipelineConfidence >= 0.50 ? '#FBBF24' : pipelineConfidence >= 0.30 ? '#F97316' : '#94A3B8',
+                  boxShadow: pipelineConfidence >= 0.70 ? '0 0 4px rgba(56,189,248,0.40)' : 'none',
+                }} />
+                <span style={{ fontWeight: 600 }}>{Math.round(pipelineConfidence * 100)}%</span>
+              </div>
+            ) : (
+              <div style={{
+                fontSize: 10, color: L3,
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}>
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: confidence === 'high' ? '#38BDF8' : confidence === 'medium' ? '#FBBF24' : '#94A3B8',
+                }} />
+                {basisText.toLowerCase()}
+              </div>
+            )}
+            {/* Risk badge — only for pipeline v2 */}
+            {hasPipeline && riskLevel && (
               <span style={{
-                width: 5, height: 5, borderRadius: '50%',
-                background: confidence === 'high' ? '#38BDF8' : confidence === 'medium' ? '#FBBF24' : '#94A3B8',
-              }} />
-              {basisText.toLowerCase()}
-            </div>
+                fontSize: 8.5, fontWeight: 700, letterSpacing: '0.06em',
+                padding: '1px 5px', borderRadius: 2,
+                background: riskLevel === 'safe' ? 'rgba(74,222,128,0.12)' : riskLevel === 'moderate' ? 'rgba(251,191,36,0.12)' : 'rgba(248,113,113,0.12)',
+                color: riskLevel === 'safe' ? '#4ADE80' : riskLevel === 'moderate' ? '#FBBF24' : '#F87171',
+              }}>
+                {riskLevel === 'safe' ? 'SEGURO' : riskLevel === 'moderate' ? 'MODERADO' : 'ALTO RISCO'}
+              </span>
+            )}
             {hasDeepContent && (
               <span style={{
                 fontSize: 14, color: L3, lineHeight: 1,
@@ -324,6 +366,41 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         }}>
           {decision.headline}
         </div>
+
+        {/* Financial verdict bar — pipeline v2 */}
+        {hasPipeline && financialVerdict && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6,
+            padding: '5px 8px', borderRadius: 4,
+            background: financialVerdict === 'losing' ? 'rgba(248,113,113,0.06)' :
+                        financialVerdict === 'profitable' ? 'rgba(74,222,128,0.06)' :
+                        'rgba(255,255,255,0.03)',
+          }}>
+            <span style={{
+              fontSize: 9, fontWeight: 800, letterSpacing: '0.08em',
+              color: financialVerdict === 'losing' ? '#F87171' :
+                     financialVerdict === 'profitable' ? '#4ADE80' :
+                     financialVerdict === 'break_even' ? '#FBBF24' : L3,
+            }}>
+              {financialVerdict === 'losing' ? 'PERDENDO DINHEIRO' :
+               financialVerdict === 'profitable' ? 'LUCRATIVO' :
+               financialVerdict === 'break_even' ? 'NO BREAK-EVEN' : 'SEM DADOS'}
+            </span>
+            {breakEvenRoas != null && (
+              <span style={{ fontSize: 10, color: L3, fontWeight: 500 }}>
+                BE ROAS: {breakEvenRoas.toFixed(1)}x
+              </span>
+            )}
+            {marginOfSafety != null && Math.abs(marginOfSafety) > 0 && (
+              <span style={{
+                fontSize: 10, fontWeight: 600,
+                color: marginOfSafety > 0 ? '#4ADE80' : '#F87171',
+              }}>
+                {marginOfSafety > 0 ? '+' : ''}{Math.round(marginOfSafety)}% margem
+              </span>
+            )}
+          </div>
+        )}
 
         {groupNote && (
           <div style={{ fontSize: 11, color: L3, marginBottom: 5 }}>
@@ -435,6 +512,60 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                   ))}
                 </div>
               )
+            )}
+
+            {/* PIPELINE EXPLANATION CHAIN — transparent reasoning */}
+            {hasPipeline && explanationChain && (
+              <div style={{
+                marginBottom: 10, paddingTop: 8,
+                borderTop: '1px solid rgba(255,255,255,0.06)',
+              }}>
+                <div style={{
+                  fontSize: 9, fontWeight: 800, color: L3,
+                  letterSpacing: '0.10em', marginBottom: 6,
+                }}>
+                  CADEIA DE DECISÃO
+                </div>
+                {[
+                  { label: 'DADO', value: explanationChain.data_point, color: L2 },
+                  { label: 'REGRA', value: explanationChain.threshold, color: L3 },
+                  { label: 'FINANCEIRO', value: explanationChain.financial_check, color: financialVerdict === 'losing' ? '#F87171' : financialVerdict === 'profitable' ? '#4ADE80' : L3 },
+                  { label: 'SEGURANÇA', value: explanationChain.safety_check, color: safetyStatus === 'approved' ? '#4ADE80' : safetyStatus === 'rejected' ? '#F87171' : L3 },
+                  { label: 'VEREDICTO', value: explanationChain.verdict, color: pipelineApproved ? '#38BDF8' : '#F87171' },
+                ].map((step, i) => (
+                  <div key={i} style={{
+                    display: 'flex', gap: 8, marginBottom: 4,
+                    alignItems: 'flex-start',
+                  }}>
+                    <span style={{
+                      fontSize: 8, fontWeight: 700, letterSpacing: '0.06em',
+                      color: L3, minWidth: 62, paddingTop: 2, flexShrink: 0,
+                    }}>
+                      {step.label}
+                    </span>
+                    <span style={{
+                      fontSize: 11, color: step.color, lineHeight: 1.45,
+                      wordBreak: 'break-word',
+                    }}>
+                      {step.value}
+                    </span>
+                  </div>
+                ))}
+
+                {/* Safety details if relevant */}
+                {safetyStatus && safetyStatus !== 'approved' && (
+                  <div style={{
+                    marginTop: 4, padding: '4px 8px', borderRadius: 3,
+                    background: safetyStatus === 'rejected' ? 'rgba(248,113,113,0.06)' : 'rgba(251,191,36,0.06)',
+                    fontSize: 10, color: safetyStatus === 'rejected' ? '#F87171' : '#FBBF24',
+                    fontWeight: 600,
+                  }}>
+                    {safetyStatus === 'rejected' ? 'Bloqueado pela camada de segurança' :
+                     safetyStatus === 'queued' ? 'Na fila — aguardando condições seguras' :
+                     safetyStatus === 'needs_gradual' ? 'Escala gradual recomendada' : safetyStatus}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* METRICS */}
