@@ -3135,7 +3135,7 @@ const FeedPage: React.FC = () => {
     fetchAds(userAds.length, true);
   }, [fetchAds, userAds.length]);
 
-  useEffect(() => { fetchAds(); }, [fetchAds]);
+  // Individual fetchAds effect removed — coordinated in batch below
 
   // ── Campaigns fetch ──
   const fetchCampaigns = useCallback(async () => {
@@ -3152,7 +3152,7 @@ const FeedPage: React.FC = () => {
     }
   }, [accountId]);
 
-  useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
+  // Individual fetchCampaigns effect removed — coordinated in batch below
 
   // ── Unified metrics fetch — live-metrics API (same source as Live Panel) ──
   // Ensures Feed KPIs always match the chat's Live Panel.
@@ -3252,12 +3252,14 @@ const FeedPage: React.FC = () => {
     }
   }, [userId, personaId, accountId, period, periodDays]);
 
-  // Initial fetch + auto-refresh every 60s
+  // ── Coordinated initial fetch: all data arrives together ──
+  // Uses Promise.all so ads, campaigns, and metrics resolve at the same time,
+  // preventing progressive/phased rendering where elements pop in one by one.
   useEffect(() => {
-    fetchLiveMetrics();
+    Promise.all([fetchAds(), fetchCampaigns(), fetchLiveMetrics()]);
     liveMetricsInterval.current = setInterval(() => fetchLiveMetrics(true), 60_000);
     return () => { if (liveMetricsInterval.current) clearInterval(liveMetricsInterval.current); };
-  }, [fetchLiveMetrics, metricsRefreshKey]);
+  }, [fetchAds, fetchCampaigns, fetchLiveMetrics, metricsRefreshKey]);
 
   const hasRealData = realDecisions.length > 0;
   const demoDismissed = isDemoDismissedToday();
