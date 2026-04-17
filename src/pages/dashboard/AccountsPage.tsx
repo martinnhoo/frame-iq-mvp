@@ -548,6 +548,158 @@ const GOAL_OBJECTIVES = [
 ];
 
 // ── Goal section (per account) ──────────────────────────────────────────────
+// ── Profit margin — inline editable with break-even ROAS preview ────────────
+function MarginSection({ userId, personaId }: { userId: string; personaId: string }) {
+  const [margin, setMargin] = useState<number | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editVal, setEditVal] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [v2Id, setV2Id] = useState<string | null>(null);
+
+  const DEFAULT_MARGIN = 30;
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: connRes } = await supabase.functions.invoke("meta-oauth", {
+          body: { action: "get_connections", user_id: userId }
+        });
+        const conns = (connRes?.connections || []) as any[];
+        const meta = conns.find((c: any) => c.platform === "meta" && c.persona_id === personaId && c.status === "active");
+        if (!meta) { setLoading(false); return; }
+        const ads = (meta.ad_accounts || []) as any[];
+        const selId = localStorage.getItem(`meta_sel_${personaId}`) || meta.selected_account_id || ads[0]?.id;
+        if (!selId) { setLoading(false); return; }
+        const { data: row } = await (supabase.from('ad_accounts' as any)
+          .select('id, profit_margin_pct')
+          .eq('user_id', userId).eq('meta_account_id', selId).maybeSingle() as any);
+        if (row?.id) { setV2Id(row.id); setMargin(row.profit_margin_pct); }
+      } catch {}
+      setLoading(false);
+    })();
+  }, [userId, personaId]);
+
+  const save = async () => {
+    if (!v2Id) return;
+    const val = parseFloat(editVal);
+    if (isNaN(val) || val < 1 || val > 99) { toast.error("Margem deve ser entre 1% e 99%"); return; }
+    setSaving(true);
+    try {
+      await (supabase.from('ad_accounts' as any).update({ profit_margin_pct: val }).eq('id', v2Id) as any);
+      setMargin(val);
+      setEditing(false);
+      toast.success('Margem atualizada');
+    } catch { toast.error('Erro ao salvar'); }
+    finally { setSaving(false); }
+  };
+
+  if (loading) return <div style={{ height: 38, borderRadius: 8, background: "rgba(255,255,255,0.03)", animation: "pulse 1.5s ease-in-out infinite" }} />;
+  if (!v2Id) return null;
+
+  const displayMargin = margin ?? DEFAULT_MARGIN;
+  const breakEven = displayMargin > 0 ? (1 / (displayMargin / 100)).toFixed(2) : '—';
+  const isDefault = margin === null;
+
+  if (editing) {
+    return (
+      <div>
+        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
+          textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
+          display: "flex", alignItems: "center", gap: 6 }}>
+          💰 Margem de Lucro
+        </p>
+        <div style={{
+          background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.18)",
+          borderRadius: 12, padding: "14px 16px",
+        }}>
+          <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.50)", margin: "0 0 10px", lineHeight: 1.5 }}>
+            Qual a margem de lucro do seu produto? (sem contar ads)
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <input type="number" min="1" max="99" step="1"
+              placeholder={`${DEFAULT_MARGIN}`}
+              value={editVal} onChange={e => setEditVal(e.target.value)}
+              autoFocus
+              style={{
+                width: 80, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 8, padding: "9px 12px", color: "#F0F6FC", fontSize: 15, fontWeight: 700,
+                fontFamily: F, outline: "none", fontVariant: "tabular-nums", textAlign: "center",
+              }}
+              onFocus={e => e.currentTarget.style.borderColor = "rgba(52,211,153,0.40)"}
+              onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"}
+              onKeyDown={e => e.key === 'Enter' && save()}
+            />
+            <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.40)" }}>%</span>
+            {editVal && !isNaN(parseFloat(editVal)) && parseFloat(editVal) > 0 && (
+              <span style={{ fontFamily: F, fontSize: 12, color: "rgba(52,211,153,0.65)", marginLeft: 4 }}>
+                → Break-even ROAS: {(1 / (parseFloat(editVal) / 100)).toFixed(2)}x
+              </span>
+            )}
+          </div>
+          <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.25)", margin: "0 0 12px", lineHeight: 1.5 }}>
+            Ex: margem 40% = break-even ROAS 2.50x (precisa R$2.50 de retorno por R$1 gasto em ads)
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={save} disabled={saving || !editVal}
+              style={{
+                flex: 1, padding: "9px 14px", borderRadius: 8,
+                background: editVal ? "linear-gradient(135deg, #34d399 0%, #10b981 100%)" : "rgba(255,255,255,0.06)",
+                border: "none", color: editVal ? "#fff" : "rgba(255,255,255,0.25)",
+                fontFamily: F, fontSize: 12, fontWeight: 700, cursor: editVal ? "pointer" : "not-allowed",
+                boxShadow: editVal ? "0 3px 10px rgba(52,211,153,0.25)" : "none",
+              }}>
+              {saving ? 'Salvando...' : 'Salvar'}
+            </button>
+            <button onClick={() => setEditing(false)}
+              style={{
+                padding: "9px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)",
+                fontFamily: F, fontSize: 12, fontWeight: 500, cursor: "pointer",
+              }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
+        textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
+        display: "flex", alignItems: "center", gap: 6 }}>
+        💰 Margem de Lucro
+      </p>
+      <div
+        role="button" tabIndex={0}
+        onClick={() => { setEditVal(displayMargin.toString()); setEditing(true); }}
+        onKeyDown={e => e.key === 'Enter' && (setEditVal(displayMargin.toString()), setEditing(true))}
+        style={{
+          display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+          background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.12)",
+          borderRadius: 10, justifyContent: "space-between", cursor: "pointer",
+          transition: "all 0.15s",
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(52,211,153,0.30)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(52,211,153,0.12)"; }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div>
+            <div style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "#F0F6FC" }}>
+              {displayMargin}%{isDefault ? <span style={{ fontSize: 11, color: "rgba(255,255,255,0.30)", fontWeight: 400 }}> (padrão)</span> : ''}
+            </div>
+            <div style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 2 }}>
+              Break-even ROAS: {breakEven}x · Clique para alterar
+            </div>
+          </div>
+        </div>
+        <Pencil size={12} color="rgba(255,255,255,0.30)" />
+      </div>
+    </div>
+  );
+}
+
 function GoalSection({ userId, personaId }: { userId: string; personaId: string }) {
   const navigate = useNavigate();
   const [goalData, setGoalData] = useState<any>(null);
@@ -1344,6 +1496,9 @@ export default function AccountsPage() {
 
                     {/* Performance goal */}
                     <GoalSection userId={user.id} personaId={acc.id} />
+
+                    {/* Profit margin — controls break-even ROAS for decision pipeline */}
+                    <MarginSection userId={user.id} personaId={acc.id} />
                   </div>
                 </div>
               )}
