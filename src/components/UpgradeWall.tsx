@@ -15,7 +15,7 @@ const PRICE_IDS: Record<string, string> = {
 
 interface UpgradeWallProps {
   onClose?: () => void;
-  trigger?: "chat" | "tool" | "account";
+  trigger?: "chat" | "tool" | "account" | "sidebar";
   inline?: boolean;
 }
 
@@ -36,6 +36,11 @@ const HEADLINE: Record<string, Record<string, string>> = {
     es: "3 días gratis.\nSin cobro ahora.",
     en: "3 days free.\nNo charge now.",
   },
+  sidebar: {
+    pt: "Desbloqueie o potencial\ncompleto da IA.",
+    es: "Desbloquea todo el\npotencial de la IA.",
+    en: "Unlock the full\npower of AI.",
+  },
 };
 
 const SUBLINE: Record<string, Record<string, string>> = {
@@ -53,6 +58,11 @@ const SUBLINE: Record<string, Record<string, string>> = {
     pt: "Conecte sua conta e desbloqueie a IA com seus dados reais.",
     es: "Conecta tu cuenta y desbloquea la IA con tus datos reales.",
     en: "Connect your account and unlock AI with your real data.",
+  },
+  sidebar: {
+    pt: "Mais análises, mais contas, mais inteligência. Escolha o plano ideal e comece agora com 3 dias grátis.",
+    es: "Más análisis, más cuentas, más inteligencia. Elige el plan ideal y empieza ahora con 3 días gratis.",
+    en: "More analyses, more accounts, more intelligence. Pick the right plan and start now with 3 days free.",
   },
 };
 

@@ -5,6 +5,7 @@ import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
 import { CreditBar } from '@/components/dashboard/CreditBar';
 import { ReferralPopup } from '@/components/dashboard/ReferralPopup';
+import UpgradeWall from '@/components/UpgradeWall';
 import { supabase } from '@/integrations/supabase/client';
 import { queryClient } from '@/App';
 import { storage } from '@/lib/storage';
@@ -271,6 +272,19 @@ export function AppLayout() {
   };
 
   const plan = (profile as any)?.plan || 'free';
+
+  // ── Upgrade wall state ──
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  useEffect(() => {
+    const handler = () => setUpgradeOpen(true);
+    window.addEventListener("adbrief:open-upgrade", handler);
+    // also listen to legacy capacity modal event
+    window.addEventListener("adbrief:open-capacity-modal", handler);
+    return () => {
+      window.removeEventListener("adbrief:open-upgrade", handler);
+      window.removeEventListener("adbrief:open-capacity-modal", handler);
+    };
+  }, []);
 
   // Loading state
   if (loading) {
@@ -645,6 +659,14 @@ export function AppLayout() {
           </div>
         )}
       </main>
+
+      {/* ── Upgrade Wall ── */}
+      {upgradeOpen && (
+        <UpgradeWall
+          onClose={() => setUpgradeOpen(false)}
+          trigger="sidebar"
+        />
+      )}
     </div>
   );
 }
