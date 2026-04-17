@@ -303,7 +303,7 @@ function parseAiInsight(insightText: string | null): { title: string | null; exp
   return { title: null, explanation: insightText.length > 200 ? insightText.slice(0, 197) + "..." : insightText };
 }
 
-type Translations = typeof TX.pt;
+type Translations = (typeof TX)[keyof typeof TX];
 
 function FullPatternCard({ pattern: p, navigate, t }: { pattern: DetectedPattern; navigate: any; t: Translations }) {
   const [hov, setHov] = useState(false);
