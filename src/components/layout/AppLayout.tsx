@@ -291,8 +291,8 @@ export function AppLayout() {
   if (loading || accountResolving) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#06080C' }}>
-        <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2.5px solid rgba(255,255,255,0.06)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes layoutFadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
       </div>
     );
   }
@@ -579,7 +579,8 @@ export function AppLayout() {
   );
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#060709' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#060709', animation: 'layoutFadeIn 0.35s ease-out both' }}>
+      <style>{`@keyframes layoutFadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
       {/* ── Mobile top bar ── */}
       {isMobile && (
         <div style={{
