@@ -2885,6 +2885,7 @@ const FeedPage: React.FC = () => {
 
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
+  const [metricsReady, setMetricsReady] = useState(false);
   const [metricsRefreshKey, setMetricsRefreshKey] = useState(0);
   const refreshMetrics = useCallback(() => setMetricsRefreshKey(k => k + 1), []);
 
@@ -3161,7 +3162,7 @@ const FeedPage: React.FC = () => {
   const liveMetricsInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchLiveMetrics = useCallback(async (silent = false) => {
-    if (!userId || !personaId || !accountId) { if (!silent) setAdMetrics(null); return; }
+    if (!userId || !personaId || !accountId) { if (!silent) { setAdMetrics(null); setMetricsReady(true); } return; }
     try {
       const periodKey = period === '30d' ? '30d' : period === '14d' ? '14d' : '7d';
       const { data, error } = await supabase.functions.invoke('live-metrics', {
@@ -3209,6 +3210,7 @@ const FeedPage: React.FC = () => {
         freshnessFactor: 1, // live data is always fresh
         hasAnchorBaseline: false,
       });
+      setMetricsReady(true);
     } catch {
       // Fallback: read from ad_metrics DB table (stale but better than nothing)
       try {
@@ -3249,6 +3251,7 @@ const FeedPage: React.FC = () => {
           hasAnchorBaseline: false,
         });
       } catch { setAdMetrics(null); }
+      setMetricsReady(true);
     }
   }, [userId, personaId, accountId, period, periodDays]);
 
@@ -3272,7 +3275,7 @@ const FeedPage: React.FC = () => {
   // Only show skeleton on the very first load — not after sync finishes (prevents flash)
   const hasSyncedRef = useRef(false);
   if (syncing) hasSyncedRef.current = true;
-  const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
+  const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading || !metricsReady) : false);
   const isLoading = isFirstLoad && !hasSyncedRef.current;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
