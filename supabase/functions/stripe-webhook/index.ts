@@ -1,5 +1,6 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getEffectivePlan } from "../_shared/credits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -100,12 +101,18 @@ Deno.serve(async (req) => {
             .limit(1);
 
           if (profiles && profiles.length > 0) {
-            // Get subscription to determine plan
+            const { data: profileRow } = await supabase
+              .from("profiles")
+              .select("id, email")
+              .eq("id", profiles[0].id)
+              .maybeSingle();
+
             const subscriptionId = session.subscription as string;
             if (subscriptionId) {
               const sub = await stripe.subscriptions.retrieve(subscriptionId);
               const productId = sub.items.data[0]?.price?.product as string;
-              const plan = PRODUCT_TO_PLAN[productId] || "free";
+              const dbPlan = PRODUCT_TO_PLAN[productId] || "free";
+              const plan = getEffectivePlan(dbPlan, profileRow?.email);
 
               await supabase.from("profiles").update({
                 plan,
@@ -131,19 +138,20 @@ Deno.serve(async (req) => {
 
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id")
+          .select("id, email")
           .eq("stripe_customer_id", customerId)
           .limit(1);
 
         if (profiles && profiles.length > 0) {
+          const nextPlan = getEffectivePlan(isActive ? plan : "free", profiles[0].email);
           await supabase.from("profiles").update({
-            plan: isActive ? plan : "free",
-            subscription_status: sub.status,           // trialing | active | canceled | past_due | unpaid
-            trial_end: isTrialing ? trialEnd : null,   // null when not trialing
-            current_period_end: periodEnd,             // when the paid period ends
+            plan: nextPlan,
+            subscription_status: nextPlan === "studio" && !isActive ? "active" : sub.status,
+            trial_end: isTrialing ? trialEnd : null,
+            current_period_end: nextPlan === "studio" && !isActive ? "2099-12-31T23:59:59Z" : periodEnd,
             stripe_subscription_id: sub.id,
           } as any).eq("id", profiles[0].id);
-          logStep("Subscription updated", { userId: profiles[0].id, plan: isActive ? plan : "free", status: sub.status, isTrialing });
+          logStep("Subscription updated", { userId: profiles[0].id, plan: nextPlan, status: sub.status, isTrialing });
         }
         break;
       }
@@ -154,18 +162,19 @@ Deno.serve(async (req) => {
 
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id")
+          .select("id, email")
           .eq("stripe_customer_id", customerId)
           .limit(1);
 
         if (profiles && profiles.length > 0) {
+          const nextPlan = getEffectivePlan("free", profiles[0].email);
           await supabase.from("profiles").update({
-            plan: "free",
-            subscription_status: "canceled",
+            plan: nextPlan,
+            subscription_status: nextPlan === "studio" ? "active" : "canceled",
             trial_end: null,
-            current_period_end: null,
+            current_period_end: nextPlan === "studio" ? "2099-12-31T23:59:59Z" : null,
           } as any).eq("id", profiles[0].id);
-          logStep("Subscription deleted, downgraded to free", { userId: profiles[0].id });
+          logStep("Subscription deleted", { userId: profiles[0].id, plan: nextPlan });
         }
         break;
       }
@@ -184,13 +193,14 @@ Deno.serve(async (req) => {
 
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id")
+            .select("id, email")
             .eq("stripe_customer_id", customerId)
             .limit(1);
 
           if (profiles && profiles.length > 0) {
-            await supabase.from("profiles").update({ plan }).eq("id", profiles[0].id);
-            logStep("Plan confirmed after invoice.paid", { userId: profiles[0].id, plan });
+            const nextPlan = getEffectivePlan(plan, profiles[0].email);
+            await supabase.from("profiles").update({ plan: nextPlan }).eq("id", profiles[0].id);
+            logStep("Plan confirmed after invoice.paid", { userId: profiles[0].id, plan: nextPlan });
           }
         }
         break;

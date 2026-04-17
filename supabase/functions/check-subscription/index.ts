@@ -1,6 +1,6 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { ADMIN_EMAILS } from "../_shared/credits.ts";
+import { ADMIN_EMAILS, getEffectivePlan } from "../_shared/credits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,10 +8,9 @@ const corsHeaders = {
 };
 
 const logStep = (step: string, details?: unknown) => {
-  console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
+  console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
-// Map Stripe product IDs to plan names
 const PRODUCT_TO_PLAN: Record<string, string> = {
   "prod_U88ul5IK0HHW19": "maker",
   "prod_U88v5WVcy2NZV7": "pro",
@@ -39,22 +38,37 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
     if (userError) throw new Error(`Auth error: ${userError.message}`);
+
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
     logStep("User authenticated", { userId: user.id, email: user.email });
+
+    const forcePermanentStudio = async () => {
+      await supabase.from("profiles").update({
+        plan: "studio",
+        subscription_status: "active",
+        trial_end: null,
+        current_period_end: "2099-12-31T23:59:59Z",
+      } as any).eq("id", user.id);
+
+      logStep("Permanent Studio account — forcing studio plan", { email: user.email });
+
+      return new Response(JSON.stringify({
+        subscribed: false,
+        plan: "studio",
+        admin: ADMIN_EMAILS.includes(user.email || ""),
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    };
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found");
-      // Admin emails get studio plan — always
-      if (ADMIN_EMAILS.includes(user.email!)) {
-        await supabase.from("profiles").update({ plan: "studio" }).eq("id", user.id);
-        logStep("Admin email — forcing studio plan", { email: user.email });
-        return new Response(JSON.stringify({ subscribed: false, plan: "studio", admin: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (getEffectivePlan("free", user.email) === "studio") {
+        return await forcePermanentStudio();
       }
       await supabase.from("profiles").update({ plan: "free" }).eq("id", user.id);
       return new Response(JSON.stringify({ subscribed: false, plan: "free" }), {
@@ -71,7 +85,6 @@ Deno.serve(async (req) => {
       limit: 1,
     });
 
-    // Also check trialing
     let sub = subscriptions.data[0];
     if (!sub) {
       const trialing = await stripe.subscriptions.list({
@@ -84,13 +97,8 @@ Deno.serve(async (req) => {
 
     if (!sub) {
       logStep("No active/trialing subscription");
-      // Admin emails get studio plan — always
-      if (ADMIN_EMAILS.includes(user.email!)) {
-        await supabase.from("profiles").update({ plan: "studio" }).eq("id", user.id);
-        logStep("Admin email — forcing studio plan", { email: user.email });
-        return new Response(JSON.stringify({ subscribed: false, plan: "studio", admin: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (getEffectivePlan("free", user.email) === "studio") {
+        return await forcePermanentStudio();
       }
       await supabase.from("profiles").update({ plan: "free" }).eq("id", user.id);
       return new Response(JSON.stringify({ subscribed: false, plan: "free" }), {
@@ -99,13 +107,13 @@ Deno.serve(async (req) => {
     }
 
     const productId = sub.items.data[0].price.product as string;
-    const plan = PRODUCT_TO_PLAN[productId] || "studio";
+    const dbPlan = PRODUCT_TO_PLAN[productId] || "studio";
+    const plan = getEffectivePlan(dbPlan, user.email);
     const subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
     const isTrial = sub.status === "trialing";
 
     logStep("Active subscription found", { plan, productId, isTrial, end: subscriptionEnd });
 
-    // Sync plan to profiles table
     await supabase.from("profiles").update({
       plan,
       stripe_customer_id: customerId,

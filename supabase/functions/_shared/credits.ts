@@ -144,7 +144,21 @@ export const ADMIN_EMAILS: string[] = [
   "denis@adbrief.pro",
 ];
 
-/** Get effective plan (normalizes aliases, no special overrides) */
-export function getEffectivePlan(dbPlan: string | null | undefined, _email?: string | null): string {
+/** Accounts with permanent Studio access regardless of billing state */
+export const PERMANENT_STUDIO_EMAILS: string[] = [
+  "martinhovff@gmail.com",
+  "denis.magalhaes10@gmail.com",
+  "denis@adbrief.pro",
+  "isadoradblima@gmail.com",
+  "victoriafnogueira@hotmail.com",
+  "isis.pinheiro11@yahoo.com.br",
+];
+
+/** Get effective plan, including permanent Studio overrides */
+export function getEffectivePlan(dbPlan: string | null | undefined, email?: string | null): string {
+  const normalizedEmail = email?.trim().toLowerCase();
+  if (normalizedEmail && PERMANENT_STUDIO_EMAILS.includes(normalizedEmail)) {
+    return "studio";
+  }
   return normalizePlan(dbPlan);
 }
