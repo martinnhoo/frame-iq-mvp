@@ -161,9 +161,9 @@ const T: Record<Lang, Record<string, string>> = {
     pricing_sub: "Every plan includes a 3-day free trial. Card required. No charge until day 4.",
     pricing_cta: "Start 3-day trial", pricing_note: "3 days free · No charge until day 4",
     plan_badge_pro: "Most popular",
-    plan_maker_f0: "50 AI messages / day", plan_maker_f1: "1 ad account", plan_maker_f2: "Basic tools", plan_maker_f3: "1 workspace",
-    plan_pro_f0: "200 AI messages / day", plan_pro_f1: "3 ad accounts", plan_pro_f2: "All tools unlocked", plan_pro_f3: "Unlimited brands", plan_pro_f4: "Multi-market",
-    plan_studio_f0: "Unlimited credits", plan_studio_f1: "Unlimited ad accounts", plan_studio_f2: "Unlimited improvements", plan_studio_f3: "All tools unlocked", plan_studio_f4: "Dedicated onboarding",
+    plan_maker_f0: "1 ad account", plan_maker_f1: "~33 improvements/mo", plan_maker_f2: "All AI tools", plan_maker_f3: "30 credits per improvement",
+    plan_pro_f0: "3 ad accounts", plan_pro_f1: "~166 improvements/mo", plan_pro_f2: "All AI tools", plan_pro_f3: "50% off per action", plan_pro_f4: "Multi-market",
+    plan_studio_f0: "Unlimited accounts", plan_studio_f1: "Unlimited improvements", plan_studio_f2: "Unlimited credits", plan_studio_f3: "All tools unlocked", plan_studio_f4: "Dedicated onboarding",
     faq_label: "FAQ", faq_h2: "Common questions",
     faq_q0: "How does the 3-day free trial work?", faq_a0: "When you sign up, you get full access for 3 days at no charge. If you cancel within that period, you won't be billed.",
     faq_q1: "Why do I need a card to start?", faq_a1: "Requiring a card filters for serious users and lets us give you genuine full access. We don't charge anything for 72 hours (3 days).",
@@ -240,8 +240,8 @@ const T: Record<Lang, Record<string, string>> = {
     pricing_sub: "Acesso completo por 3 dias. Cartão necessário — mas nenhuma cobrança até o 4º dia.",
     pricing_cta: "Começar teste grátis", pricing_note: "3 dias grátis · Sem cobrança até o 4º dia",
     plan_badge_pro: "Mais popular",
-    plan_maker_f0: "50 mensagens / dia", plan_maker_f1: "1 conta de anúncios", plan_maker_f2: "Ferramentas básicas", plan_maker_f3: "1 workspace",
-    plan_pro_f0: "200 mensagens / dia", plan_pro_f1: "3 contas conectadas", plan_pro_f2: "Todas as ferramentas", plan_pro_f3: "Marcas ilimitadas", plan_pro_f4: "Multi-mercado",
+    plan_maker_f0: "1 conta de anúncios", plan_maker_f1: "~33 melhorias/mês", plan_maker_f2: "Todas as ferramentas IA", plan_maker_f3: "30 créditos por melhoria",
+    plan_pro_f0: "3 contas de anúncios", plan_pro_f1: "~166 melhorias/mês", plan_pro_f2: "Todas as ferramentas IA", plan_pro_f3: "50% off por ação", plan_pro_f4: "Multi-mercado",
     plan_studio_f0: "Créditos ilimitados", plan_studio_f1: "Contas ilimitadas", plan_studio_f2: "Melhorias ilimitadas", plan_studio_f3: "Todas as ferramentas", plan_studio_f4: "Onboarding dedicado",
     faq_label: "FAQ", faq_h2: "Perguntas frequentes",
     faq_q0: "Como funciona o teste grátis de 3 dias?", faq_a0: "Ao se cadastrar, você tem acesso completo por 3 dias sem cobrança. Cancele dentro desse período e não será cobrado.",
@@ -319,8 +319,8 @@ const T: Record<Lang, Record<string, string>> = {
     pricing_sub: "Todos incluyen 3 días gratis. Sin cargo hasta el día 4.",
     pricing_cta: "Empezar prueba gratis", pricing_note: "3 días gratis · Sin cargo hasta el día 4",
     plan_badge_pro: "Más popular",
-    plan_maker_f0: "50 mensajes / día", plan_maker_f1: "1 cuenta de anuncios", plan_maker_f2: "Herramientas básicas", plan_maker_f3: "1 workspace",
-    plan_pro_f0: "200 mensajes / día", plan_pro_f1: "3 cuentas conectadas", plan_pro_f2: "Todas las herramientas", plan_pro_f3: "Marcas ilimitadas", plan_pro_f4: "Multi-mercado",
+    plan_maker_f0: "1 cuenta de anuncios", plan_maker_f1: "~33 mejoras/mes", plan_maker_f2: "Todas las herramientas IA", plan_maker_f3: "30 créditos por mejora",
+    plan_pro_f0: "3 cuentas de anuncios", plan_pro_f1: "~166 mejoras/mes", plan_pro_f2: "Todas las herramientas IA", plan_pro_f3: "50% off por acción", plan_pro_f4: "Multi-mercado",
     plan_studio_f0: "Créditos ilimitados", plan_studio_f1: "Cuentas ilimitadas", plan_studio_f2: "Mejoras ilimitadas", plan_studio_f3: "Todas las herramientas", plan_studio_f4: "Onboarding dedicado",
     faq_label: "PREGUNTAS FRECUENTES", faq_h2: "Preguntas comunes",
     faq_q0: "¿Cómo funciona la prueba gratis?", faq_a0: "Al registrarte, tienes acceso completo por 3 días sin cargo. Cancela y no se te cobra.",
@@ -2179,16 +2179,8 @@ function HeroLeft({ lang, onCTA, ctaLoading }: { lang: Lang; onCTA: () => void; 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' as const, justifyContent: 'center', minWidth: 0, width: '100%', position: 'relative' as const }}>
-      {/* Eyebrow */}
-      <div className="badge-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 28, width: 'fit-content', padding: '6px 14px', borderRadius: 20, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', backdropFilter: 'blur(8px)' }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }} />
-        <span style={{ fontFamily: F, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#38bdf8' }}>
-          {lang === 'pt' ? 'IA conectada na sua conta' : lang === 'es' ? 'IA conectada en tu cuenta' : 'AI connected to your account'}
-        </span>
-      </div>
-
       {/* Headline — massive, bold, with glow */}
-      <h1 style={{
+      <h1 className="hero-h1" style={{
         fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.02,
         margin: '0 0 20px', color: '#fff',
         fontSize: 'clamp(44px, 5.5vw, 76px)',
@@ -3183,32 +3175,42 @@ function TelegramSection({ t, lang }: { t: Record<string, string>; lang: Lang })
 function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, string>; lang: Lang }) {
   const navigate = useNavigate();
   const [annual, setAnnual] = useState(false);
-  const plans = [
+
+  const makerPro = [
     {
       name: "Maker", price: annual ? "$15" : "$19", desc: annual ? "/mo billed annually" : "/mo",
       features: [t.plan_maker_f0, t.plan_maker_f1, t.plan_maker_f2, t.plan_maker_f3],
       highlight: false, badge: null,
+      accent: "#3b82f6",
       action: () => navigate(`/signup?plan=maker${annual ? "&billing=annual" : ""}`),
     },
     {
       name: "Pro", price: annual ? "$39" : "$49", desc: annual ? "/mo billed annually" : "/mo",
       features: [t.plan_pro_f0, t.plan_pro_f1, t.plan_pro_f2, t.plan_pro_f3, t.plan_pro_f4],
       highlight: true, badge: t.plan_badge_pro,
+      accent: "#6366f1",
       action: () => navigate(`/signup?plan=pro${annual ? "&billing=annual" : ""}`),
-    },
-    {
-      name: "Studio", price: annual ? "$239" : "$299", desc: annual ? "/mo billed annually" : "/mo",
-      features: [t.plan_studio_f0, t.plan_studio_f1, t.plan_studio_f2, t.plan_studio_f3, t.plan_studio_f4,
-        lang === "pt" ? "Suporte prioritário via WhatsApp" : lang === "es" ? "Soporte prioritario por WhatsApp" : "Priority WhatsApp support"
-      ],
-      highlight: false, badge: null,
-      action: () => navigate(`/signup?plan=studio${annual ? "&billing=annual" : ""}`),
     },
   ];
 
+  const studioFeatures = [t.plan_studio_f0, t.plan_studio_f1, t.plan_studio_f2, t.plan_studio_f3, t.plan_studio_f4,
+    lang === "pt" ? "Suporte prioritário" : lang === "es" ? "Soporte prioritario" : "Priority support"
+  ];
+
+  const studioAction = () => navigate(`/signup?plan=studio${annual ? "&billing=annual" : ""}`);
+  const studioBadge = lang === "pt" ? "Para Agências" : lang === "es" ? "Para Agencias" : "For Agencies";
+
+  // Melhorias explainer
+  const melhorias_title = lang === "pt" ? "O que são melhorias?" : lang === "es" ? "¿Qué son las mejoras?" : "What are improvements?";
+  const melhorias_desc = lang === "pt"
+    ? "Melhorias são ações reais na sua conta de anúncios — pausar, escalar, ativar, ajustar orçamento. Cada plano tem um custo diferente por ação."
+    : lang === "es"
+    ? "Mejoras son acciones reales en tu cuenta de anuncios — pausar, escalar, activar, ajustar presupuesto. Cada plan tiene un costo diferente por acción."
+    : "Improvements are real actions on your ad account — pause, scale, activate, adjust budget. Each plan has a different cost per action.";
+
   return (
     <Section id="pricing" bg="accent">
-      {/* Glow no topo do pricing — overlay interno */}
+      {/* Glow */}
       <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "100%", height: 280, background: "radial-gradient(ellipse 60% 100% at 50% 0%, rgba(99,102,241,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
       <div style={{ maxWidth: 960, margin: "0 auto", position: "relative" }}>
         <div className="scroll-reveal" style={{ textAlign: "center", marginBottom: 48 }}>
@@ -3230,8 +3232,10 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
             <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 6, background: annual ? "rgba(52,211,153,0.15)" : "rgba(52,211,153,0.06)", color: annual ? "#34d399" : "rgba(52,211,153,0.5)", border: "1px solid rgba(52,211,153,0.2)", transition: "all 0.2s" }}>{lang === "pt" ? "Economize 20%" : lang === "es" ? "Ahorra 20%" : "Save 20%"}</span>
           </div>
         </div>
-        <div className="pricing-grid scroll-reveal scroll-reveal-delay-1" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-          {plans.map((plan, i) => (
+
+        {/* ── Maker + Pro — 2 col grid ── */}
+        <div className="pricing-grid scroll-reveal scroll-reveal-delay-1" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14, maxWidth: 680, margin: "0 auto" }}>
+          {makerPro.map((plan, i) => (
             <div key={i} className={`premium-card ${plan.highlight ? 'pricing-highlight' : ''}`} style={{
               padding: "28px 24px", borderRadius: 18,
               background: plan.highlight
@@ -3243,7 +3247,6 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
                 ? "1px solid rgba(99,102,241,0.30)"
                 : "1px solid rgba(99,102,241,0.08)",
               display: "flex", flexDirection: "column", gap: 20, position: "relative",
-              transform: plan.highlight ? "scale(1.03)" : "scale(1)",
               zIndex: plan.highlight ? 2 : 1,
               boxShadow: plan.highlight ? "0 0 40px rgba(99,102,241,0.12), 0 24px 48px rgba(0,0,0,0.3)" : "none",
               overflow: "visible",
@@ -3274,20 +3277,82 @@ function Pricing({ onCTA, t, lang }: { onCTA: () => void; t: Record<string, stri
               </div>
               <button onClick={plan.action} style={{
                 fontFamily: F, width: "100%", padding: "13px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                background: plan.highlight
-                  ? "#6366f1"
-                  : "rgba(255,255,255,0.06)",
+                background: plan.highlight ? "#6366f1" : "rgba(255,255,255,0.06)",
                 color: plan.highlight ? "#fff" : "rgba(255,255,255,0.5)",
                 border: plan.highlight ? "none" : "1px solid rgba(255,255,255,0.08)",
                 cursor: "pointer", transition: "all 0.15s",
                 boxShadow: plan.highlight ? "0 0 20px rgba(99,102,241,0.25)" : "none",
               }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; if(el.style.background.includes('gradient')){el.style.transform='translateY(-1px)';el.style.boxShadow='0 0 32px rgba(99,102,241,0.4)';}else{el.style.opacity='0.8';} }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform='translateY(0)'; el.style.opacity='1'; el.style.boxShadow=el.style.background.includes('gradient')?'0 0 20px rgba(99,102,241,0.25)':'none'; }}
+                onMouseEnter={e => { const el = e.currentTarget; if(plan.highlight){el.style.transform='translateY(-1px)';el.style.boxShadow='0 0 32px rgba(99,102,241,0.4)';}else{el.style.opacity='0.8';} }}
+                onMouseLeave={e => { const el = e.currentTarget; el.style.transform='translateY(0)'; el.style.opacity='1'; el.style.boxShadow=plan.highlight?'0 0 20px rgba(99,102,241,0.25)':'none'; }}
               >{t.pricing_cta}</button>
               <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center" as const }}>{t.pricing_note}</p>
             </div>
           ))}
+        </div>
+
+        {/* ── Studio — premium full-width card ── */}
+        <div className="scroll-reveal scroll-reveal-delay-2" style={{ marginTop: 20, position: "relative" }}>
+          <div style={{
+            position: "relative", overflow: "hidden", borderRadius: 22, padding: "36px 40px",
+            background: "linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(236,72,153,0.08) 50%, rgba(99,102,241,0.06) 100%)",
+            border: "1px solid rgba(168,85,247,0.25)",
+            boxShadow: "0 0 60px rgba(168,85,247,0.08), 0 24px 48px rgba(0,0,0,0.3)",
+          }}>
+            {/* Decorative orbs */}
+            <div style={{ position: "absolute", top: -60, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(168,85,247,0.08)", filter: "blur(60px)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -40, left: -30, width: 160, height: 160, borderRadius: "50%", background: "rgba(236,72,153,0.06)", filter: "blur(50px)", pointerEvents: "none" }} />
+
+            {/* Badge */}
+            <div style={{ position: "absolute", top: -12, left: 36, background: "linear-gradient(135deg, #a855f7, #ec4899)", borderRadius: 6, padding: "4px 14px", boxShadow: "0 0 16px rgba(168,85,247,0.4)" }}>
+              <span style={{ fontFamily: F, fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#fff", fontWeight: 800 }}>{studioBadge}</span>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "center", position: "relative", zIndex: 1 }} className="studio-inner-grid">
+              {/* Left: name, price, CTA */}
+              <div>
+                <p style={{ fontFamily: F, fontSize: 14, color: "rgba(168,85,247,0.8)", marginBottom: 8, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Studio</p>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+                  <span style={{
+                    fontFamily: F, fontSize: 52, fontWeight: 900, letterSpacing: "-0.04em",
+                    background: "linear-gradient(135deg, #a855f7, #ec4899)",
+                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                  }}>{annual ? "$239" : "$299"}</span>
+                  <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{annual ? "/mo billed annually" : "/mo"}</span>
+                </div>
+                <p style={{ fontFamily: F, fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 24, lineHeight: 1.5 }}>
+                  {lang === "pt" ? "Tudo ilimitado. Para agências e operações com múltiplas contas." : lang === "es" ? "Todo ilimitado. Para agencias y operaciones con múltiples cuentas." : "Everything unlimited. For agencies and multi-account operations."}
+                </p>
+                <button onClick={studioAction} style={{
+                  fontFamily: F, padding: "14px 32px", borderRadius: 12, fontSize: 14, fontWeight: 700,
+                  background: "linear-gradient(135deg, #a855f7, #ec4899)",
+                  color: "#fff", border: "none", cursor: "pointer", transition: "all 0.15s",
+                  boxShadow: "0 0 24px rgba(168,85,247,0.3)",
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow='0 0 40px rgba(168,85,247,0.5)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 0 24px rgba(168,85,247,0.3)'; }}
+                >{t.pricing_cta}</button>
+              </div>
+              {/* Right: features */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {studioFeatures.map(f => (
+                  <div key={f} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+                      <circle cx="7" cy="7" r="6.5" stroke="rgba(168,85,247,0.3)"/>
+                      <path d="M4.5 7l1.8 1.8L9.5 5" stroke="#a855f7" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.4 }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Melhorias explainer ── */}
+        <div className="scroll-reveal scroll-reveal-delay-2" style={{ marginTop: 32, padding: "20px 28px", borderRadius: 14, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <p style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>{melhorias_title}</p>
+          <p style={{ fontFamily: F, fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: 0 }}>{melhorias_desc}</p>
         </div>
       </div>
     </Section>
@@ -3687,8 +3752,11 @@ export default function IndexNew() {
 
           .mobile-demo-section{display:none}
 
+          @media(max-width:1024px){
+            .hero-grid{grid-template-columns:1fr 1fr!important;gap:clamp(24px,3vw,48px)!important}
+          }
           @media(max-width:860px){
-            .hero-grid{grid-template-columns:1fr!important;gap:0!important}
+            .hero-grid{grid-template-columns:1fr!important;gap:32px!important}
             .hero-demo-col{display:block!important;width:100%!important}
             .pain-grid>div:nth-child(2){display:none!important}
           }
@@ -3819,6 +3887,10 @@ export default function IndexNew() {
               grid-template-columns:1fr!important;
               gap:14px!important;
               max-width:100%!important;
+            }
+            .studio-inner-grid{
+              grid-template-columns:1fr!important;
+              gap:24px!important;
             }
 
             /* ── FAQ ── */
