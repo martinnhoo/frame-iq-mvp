@@ -2743,7 +2743,7 @@ const PerformancePulse: React.FC<{
               style={{
                 background: isHovered ? T.bg2 : T.bg1,
                 borderRadius: 10,
-                padding: k.primary ? '14px 12px 12px' : '12px 10px 10px',
+                padding: '14px 12px 12px',
                 textAlign: 'center',
                 border: `1px solid ${isHovered ? T.border2 : T.border1}`,
                 transition: 'all 0.2s ease',
@@ -2756,12 +2756,12 @@ const PerformancePulse: React.FC<{
             >
               {/* Label */}
               <div style={{
-                fontSize: k.primary ? 11 : 9,
+                fontSize: 10,
                 fontWeight: 700,
                 color: T.labelColor,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
-                marginBottom: k.primary ? 6 : 4,
+                marginBottom: 6,
               }}>
                 {k.label}
               </div>
@@ -2776,8 +2776,8 @@ const PerformancePulse: React.FC<{
                 </div>
               ) : (
                 <div style={{
-                  fontSize: k.primary ? 28 : 18,
-                  fontWeight: k.primary ? 700 : 800,
+                  fontSize: 22,
+                  fontWeight: 700,
                   color: T.text1,
                   fontVariantNumeric: 'tabular-nums',
                   letterSpacing: '-0.03em',
@@ -2885,6 +2885,8 @@ const FeedPage: React.FC = () => {
 
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
+  const [metricsRefreshKey, setMetricsRefreshKey] = useState(0);
+  const refreshMetrics = useCallback(() => setMetricsRefreshKey(k => k + 1), []);
 
   // ── Tracking status — persisted per account (GLOBAL, not per date range) ──
   const [trackingUserStatus, setTrackingUserStatus] = useState<TrackingStatus>(() =>
@@ -3270,7 +3272,7 @@ const FeedPage: React.FC = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [accountId, periodDays]);
+  }, [accountId, periodDays, metricsRefreshKey]);
 
   const hasRealData = realDecisions.length > 0;
   const demoDismissed = isDemoDismissedToday();
@@ -3331,15 +3333,16 @@ const FeedPage: React.FC = () => {
         setSyncError('Falha na análise. Tente novamente.');
       }
 
-      // Refetch decisions + ads (data changed after sync)
-      await Promise.all([refetchDecisions(), fetchAds()]);
+      // Refetch ALL data sources (decisions, ads, metrics, campaigns)
+      refreshMetrics();
+      await Promise.all([refetchDecisions(), fetchAds(), fetchCampaigns()]);
     } catch (err) {
       console.error('Sync error:', err);
       setSyncError('Falha na conexão. Tente novamente.');
     } finally {
       setSyncing(false);
     }
-  }, [accountId, syncing, refetchDecisions, fetchAds]);
+  }, [accountId, syncing, refetchDecisions, fetchAds, fetchCampaigns, refreshMetrics]);
 
   // ── Auto-sync: trigger first sync when account connected but no ads imported yet ──
   // Uses localStorage to ensure it only fires once per account (even across remounts)
@@ -3422,7 +3425,7 @@ const FeedPage: React.FC = () => {
       } catch { if (!cancelled) setPulseData(null); }
     })();
     return () => { cancelled = true; };
-  }, [userId, personaId]);
+  }, [userId, personaId, metricsRefreshKey]);
 
   // Fetch savings from action_log
   useEffect(() => {
@@ -3781,81 +3784,130 @@ const FeedPage: React.FC = () => {
           }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
         )}
 
-        {/* Tracking Health — fact-based decision card */}
+        {/* ── Tracking Health — full diagnostic card ── */}
         {metaConnected && !isDemo && trackingHealth && (
           <div className="feed-card-lift" style={{
             background: T.bg1,
             border: `1px solid ${T.border1}`,
-            borderRadius: 8, padding: 'clamp(12px, 2.5vw, 16px)', marginBottom: 12,
+            borderRadius: 10, padding: 'clamp(14px, 2.5vw, 18px)', marginBottom: 12,
             borderLeft: `3px solid ${T.yellow}`,
             animation: 'feed-fadeUp 0.3s ease',
           }}>
-            {/* Header — neutral label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
               <span style={{
-                width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+                width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
                 background: T.yellow,
-                boxShadow: `0 0 6px ${T.yellow}50`,
+                boxShadow: `0 0 8px ${T.yellow}50`,
               }} />
               <span style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
                 color: T.labelColor,
               }}>
-                {trackingHealth.status === 'no_conversions' ? 'Conversões' : 'Taxa de conversão'}
+                Saúde do rastreamento
               </span>
             </div>
 
-            {/* Fact — primary text, no assumptions */}
-            <p style={{ fontSize: 13, color: T.text1, fontWeight: 600, margin: '0 0 6px', lineHeight: 1.5 }}>
+            {/* Primary fact */}
+            <p style={{ fontSize: 14, color: T.text1, fontWeight: 700, margin: '0 0 4px', lineHeight: 1.4 }}>
               {trackingHealth.status === 'no_conversions'
-                ? 'Nenhuma conversão registrada'
-                : `${trackingHealth.conversions} conversões em ${trackingHealth.clicks} cliques (${trackingHealth.rate}%)`
+                ? 'Nenhuma conversão registrada neste período'
+                : `Apenas ${trackingHealth.conversions} conversões em ${trackingHealth.clicks} cliques (${trackingHealth.rate}%)`
+              }
+            </p>
+            <p style={{ fontSize: 12, color: T.text2, margin: '0 0 14px', lineHeight: 1.5 }}>
+              {trackingHealth.clicks} cliques · {fmtReais(trackingHealth.spend)} investidos · {adMetrics?.daysOfData || 0} dias de dados
+            </p>
+
+            {/* ── Diagnostic checklist — step by step ── */}
+            <div style={{
+              background: T.bg2, borderRadius: 8,
+              padding: '12px 14px', marginBottom: 14,
+            }}>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: T.labelColor, margin: '0 0 10px' }}>
+                Checklist de diagnóstico
+              </p>
+              {[
+                {
+                  label: 'Pixel Meta instalado no site',
+                  detail: 'Verificar se o pixel está presente em todas as páginas',
+                  status: trackingHealth.clicks > 0 ? 'ok' : 'warn',
+                },
+                {
+                  label: 'Eventos de conversão configurados',
+                  detail: trackingHealth.status === 'no_conversions'
+                    ? 'Nenhum evento Purchase/Lead registrado'
+                    : `${trackingHealth.conversions} eventos registrados`,
+                  status: trackingHealth.status === 'no_conversions' ? 'error' : 'warn',
+                },
+                {
+                  label: 'Conversions API (CAPI) ativa',
+                  detail: 'Server-side tracking para maior precisão',
+                  status: 'unknown' as const,
+                },
+                {
+                  label: 'Domínio verificado no Business Manager',
+                  detail: 'Necessário para eventos web (iOS 14+)',
+                  status: 'unknown' as const,
+                },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 8,
+                  padding: '6px 0',
+                  borderTop: i > 0 ? `1px solid ${T.border0}` : 'none',
+                }}>
+                  <span style={{
+                    width: 7, height: 7, borderRadius: '50%', flexShrink: 0, marginTop: 4,
+                    background: item.status === 'ok' ? T.green
+                      : item.status === 'error' ? T.red
+                      : item.status === 'warn' ? T.yellow
+                      : T.text3,
+                    boxShadow: item.status === 'error' ? `0 0 6px ${T.red}40` : 'none',
+                  }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 12, color: T.text1, fontWeight: 600, margin: 0, lineHeight: 1.4 }}>
+                      {item.label}
+                    </p>
+                    <p style={{ fontSize: 10.5, color: T.text3, margin: '1px 0 0', lineHeight: 1.4 }}>
+                      {item.detail}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Ambiguity note */}
+            <p style={{ fontSize: 11, color: T.text3, margin: '0 0 12px', lineHeight: 1.6, fontStyle: 'italic' }}>
+              {trackingHealth.status === 'no_conversions'
+                ? 'Não sabemos se realmente não houve vendas ou se o rastreamento falhou. Verifique os itens acima.'
+                : 'A taxa de conversão está muito abaixo do esperado. Pode indicar eventos não registrados.'
               }
             </p>
 
-            {/* Context — secondary data */}
-            <p style={{ fontSize: 11.5, color: T.text2, margin: '0 0 10px', lineHeight: 1.5 }}>
-              {trackingHealth.clicks} cliques · {fmtReais(trackingHealth.spend)} investidos
-            </p>
-
-            {/* Ambiguity — honest uncertainty */}
-            <div style={{
-              background: T.bg2, borderRadius: 6,
-              padding: '10px 12px', marginBottom: 12,
-            }}>
-              <p style={{ fontSize: 11, color: T.text3, margin: 0, lineHeight: 1.6 }}>
-                Não é possível determinar se:{' '}
-                {trackingHealth.status === 'no_conversions'
-                  ? 'não houve conversões ou se os eventos não foram registrados.'
-                  : 'a taxa é real ou se alguns eventos não foram registrados.'
-                }
-              </p>
-            </div>
-
-            {/* Two action buttons — user decides */}
+            {/* Action buttons */}
             <div style={{ display: 'flex', gap: 8 }}>
-              {/* Confirm: no conversions */}
               <button
                 onClick={confirmNoConversion}
                 style={{
                   flex: 1, background: T.bg2, color: T.text2,
                   border: `1px solid ${T.border1}`,
-                  borderRadius: 6, padding: '9px 10px', cursor: 'pointer',
-                  fontSize: 11.5, fontWeight: 600,
+                  borderRadius: 8, padding: '10px 10px', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600,
                   transition: 'all 0.18s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = T.bg1; e.currentTarget.style.borderColor = T.text3; }}
+                onMouseEnter={e => { e.currentTarget.style.background = T.bg3; e.currentTarget.style.borderColor = T.text3; }}
                 onMouseLeave={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border1; }}
               >
                 {trackingHealth.status === 'no_conversions' ? 'Não houve conversões' : 'Taxa está correta'}
               </button>
 
-              {/* Investigate: open chat */}
               <button
                 className="feed-cta"
                 onClick={() => {
                   startTrackingInvestigation();
-                  const msg = `Minha conta tem ${trackingHealth.clicks} cliques e ${trackingHealth.conversions} conversões com gasto de ${fmtReais(trackingHealth.spend)}. Analise o rastreamento e me diga se há problemas.`;
+                  const msg = trackingHealth.status === 'no_conversions'
+                    ? `Minha conta tem ${trackingHealth.clicks} cliques, ${fmtReais(trackingHealth.spend)} investidos e ZERO conversões registradas nos últimos ${adMetrics?.daysOfData || 7} dias. Preciso de ajuda para diagnosticar: 1) O pixel está instalado? 2) Os eventos estão configurados? 3) A CAPI está ativa? 4) O domínio está verificado? Me guie passo a passo.`
+                    : `Minha conta tem ${trackingHealth.clicks} cliques e apenas ${trackingHealth.conversions} conversões (${trackingHealth.rate}%) com ${fmtReais(trackingHealth.spend)} investidos. A taxa parece muito baixa. Ajude-me a verificar se o rastreamento está perdendo eventos.`;
                   navigate('/dashboard/ai', {
                     state: { prompt: msg },
                   });
@@ -3863,14 +3915,14 @@ const FeedPage: React.FC = () => {
                 style={{
                   flex: 1, background: T.blue, color: T.text1,
                   border: 'none',
-                  borderRadius: 6, padding: '9px 10px', cursor: 'pointer',
-                  fontSize: 11.5, fontWeight: 700,
+                  borderRadius: 8, padding: '10px 10px', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 700,
                   transition: 'all 0.18s',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.blueHover; e.currentTarget.style.boxShadow = `0 4px 14px ${T.blue}30`; }}
                 onMouseLeave={e => { e.currentTarget.style.background = T.blue; e.currentTarget.style.boxShadow = 'none'; }}
               >
-                Verificar rastreamento →
+                Diagnosticar com IA →
               </button>
             </div>
           </div>
