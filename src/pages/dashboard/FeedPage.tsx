@@ -975,7 +975,115 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
 };
 
 // ================================================================
-// STATE 1 — NO ADS (0 campanhas / 0 anúncios)
+// STATE 1A — NO META CONNECTION
+// Guide user to connect their Meta Ads account
+// ================================================================
+const StateNoConnection: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <div style={{ fontFamily: F }}>
+      {/* Main connect CTA */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(0,130,251,0.08) 0%, rgba(0,130,251,0.03) 100%)',
+        border: '1px solid rgba(0,130,251,0.18)',
+        borderRadius: 10, padding: 'clamp(24px, 4vw, 32px)',
+        textAlign: 'center',
+      }}>
+        {/* Meta icon */}
+        <div style={{
+          width: 48, height: 48, borderRadius: 12,
+          background: 'rgba(0,130,251,0.12)', border: '1px solid rgba(0,130,251,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 16px',
+        }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" fill="rgba(0,130,251,0.3)"/><path d="M15.5 8.5c-1.5 0-2.5 1.2-3.5 3-1-1.8-2-3-3.5-3C6.5 8.5 5 10 5 12.5S7 17 8.5 17c1.5 0 2.5-1.2 3.5-3 1 1.8 2 3 3.5 3s3.5-2 3.5-4.5S17 8.5 15.5 8.5z" fill="#0082FB"/></svg>
+        </div>
+
+        <h2 style={{
+          fontSize: 17, fontWeight: 700, color: T.text1, margin: '0 0 8px',
+          letterSpacing: '-0.02em',
+        }}>
+          Conecte seu Meta Ads
+        </h2>
+        <p style={{ fontSize: 13, color: T.text2, margin: '0 0 24px', lineHeight: 1.6, maxWidth: 380, marginLeft: 'auto', marginRight: 'auto' }}>
+          A IA precisa dos seus dados reais para analisar campanhas, sugerir melhorias e gerar insights. Leva 30 segundos.
+        </p>
+
+        <button
+          onClick={() => navigate('/dashboard/accounts')}
+          style={{
+            fontFamily: F, fontSize: 14, fontWeight: 700,
+            padding: '12px 28px', borderRadius: 10,
+            background: '#0082FB', color: '#fff', border: 'none',
+            cursor: 'pointer', transition: 'all 0.15s',
+            boxShadow: '0 0 20px rgba(0,130,251,0.25)',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 32px rgba(0,130,251,0.4)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0,130,251,0.25)'; }}
+        >
+          Conectar conta →
+        </button>
+
+        {/* Trust signals */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 16, flexWrap: 'wrap' }}>
+          {['OAuth seguro', 'Leitura apenas', '30 segundos'].map(t => (
+            <span key={t} style={{ fontSize: 10.5, color: T.text3, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ color: 'rgba(52,211,153,0.7)', fontSize: 11 }}>✓</span> {t}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* What happens after connecting */}
+      <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <p style={{ fontSize: 11, fontWeight: 600, color: T.text3, margin: '0 0 8px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+          Depois de conectar
+        </p>
+        {[
+          { label: 'Feed inteligente', desc: 'Decisões automáticas sobre o que pausar, escalar e otimizar' },
+          { label: 'IA com dados reais', desc: 'Respostas baseadas no seu CTR, ROAS e gasto real' },
+          { label: 'Alertas proativos', desc: 'Telegram notifica quando algo crítico acontece' },
+        ].map((item, i) => (
+          <div key={i} style={{
+            borderRadius: 6, padding: '10px 12px',
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: 7,
+              background: T.bg2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, color: T.text2, flexShrink: 0,
+            }}>{i + 1}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T.text1, marginBottom: 1 }}>{item.label}</div>
+              <div style={{ fontSize: 11, color: T.text3 }}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Secondary: use without connection */}
+      <div style={{
+        marginTop: 16, padding: '14px 16px', borderRadius: 8,
+        background: T.bg1, border: `1px solid ${T.border1}`,
+        display: 'flex', alignItems: 'center', gap: 12,
+        cursor: 'pointer', transition: 'background 0.15s',
+      }}
+        onClick={() => navigate('/dashboard/ai')}
+        onMouseEnter={e => { e.currentTarget.style.background = T.bg2; }}
+        onMouseLeave={e => { e.currentTarget.style.background = T.bg1; }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: T.text2 }}>Ainda não tem conta de anúncios?</div>
+          <div style={{ fontSize: 11, color: T.text3 }}>Use o chat para criar hooks, roteiros e briefs sem dados conectados</div>
+        </div>
+        <span style={{ color: T.text3, fontSize: 14, flexShrink: 0 }}>→</span>
+      </div>
+    </div>
+  );
+};
+
+// ================================================================
+// STATE 1B — META CONNECTED BUT NO ADS (0 campanhas / 0 anúncios)
 // Creative entry experience — never empty, always actionable
 // ================================================================
 const StateNoAds: React.FC = () => {
@@ -998,13 +1106,13 @@ const StateNoAds: React.FC = () => {
           fontSize: 16, fontWeight: 700, color: T.text1, margin: '0 0 6px',
           letterSpacing: '-0.02em',
         }}>
-          Comece com vantagem usando o AdBrief
+          Conta conectada — crie seu primeiro anúncio
         </h2>
         <p style={{ fontSize: 12.5, color: T.text2, margin: '0 0 20px', lineHeight: 1.6 }}>
-          Crie os melhores anúncios antes de investir
+          Sua conta Meta Ads está conectada. Use a IA para criar os melhores anúncios antes de investir.
         </p>
 
-        {/* Action items — no heavy borders */}
+        {/* Action items */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 20 }}>
           {[
             { label: 'Gerar ideias de criativos', desc: 'Baseado em padrões de alta performance' },
@@ -3228,9 +3336,9 @@ const FeedPage: React.FC = () => {
       <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>DECISÕES</h1>
+            <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>SEU FEED</h1>
           </div>
-          <StateNoAds />
+          <StateNoConnection />
         </div>
       </div>
     );
