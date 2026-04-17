@@ -2828,7 +2828,7 @@ const PerformancePulse: React.FC<{
 // FEED PAGE — Main component
 // ================================================================
 const FeedPage: React.FC = () => {
-  const ctx = useOutletContext<DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean }>();
+  const ctx = useOutletContext<DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean; setContentReady?: (v: boolean) => void }>();
   const navigate = useNavigate();
 
   const { activeAccount, metaConnected, accountResolving } = ctx;
@@ -3626,14 +3626,14 @@ const FeedPage: React.FC = () => {
 
   const feedState = resolveFeedState();
 
-  // ── Loading: show the same blue spinner as AppLayout for a seamless single loading experience ──
+  // ── Signal to AppLayout overlay that page content is ready ──
+  useEffect(() => {
+    if (!isLoading) ctx.setContentReady?.(true);
+  }, [isLoading]);
+
+  // ── Loading: blank background — overlay covers everything until data arrives ──
   if (isLoading) {
-    return (
-      <div style={{ flex: 1, minHeight: 0, background: '#06080C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2.5px solid rgba(255,255,255,0.06)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
+    return <div style={{ flex: 1, minHeight: 0, background: '#06080C' }} />;
   }
 
   // ── No Meta connection — special entry screen ──
