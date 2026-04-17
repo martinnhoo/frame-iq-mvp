@@ -1,8 +1,7 @@
 // AdBrief AI Chat v2
 // Removed: dead imports (Sparkles, Brain, Radio, Wifi etc), unused vars (PLATFORMS, BS, SUGGS, metaConn),
 //          duplicate LP_CSS injection, LP_CSS as separate string
-// Fixed: DashboardLimitPopup missing plan prop, LABEL.en.placeholder bug,
-//        single CSS block (no more split/duplicate style tags)
+// Fixed: single CSS block (no more split/duplicate style tags)
 import React, { useState, useEffect, useRef } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { storage } from "@/lib/storage";
@@ -13,7 +12,7 @@ import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
   Send, Loader2, RotateCcw,
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
-  Zap, Clapperboard, ScanEye, LayoutDashboard, X, Sparkles, Target,
+  Zap, Clapperboard, ScanEye, X, Sparkles, Target,
   TrendingUp, TrendingDown, BarChart2, BarChart3, Stethoscope,
 } from "lucide-react";
 // v20: removed unused — Sparkles, Brain, Upload, FileText, Activity, ExternalLink,
@@ -187,7 +186,7 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
 
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"dashboard"|"meta_action"|"dashboard_offer"|"text"|"trend_chart"|"limit_warning"|"creative_check";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"meta_action"|"text"|"trend_chart"|"limit_warning"|"creative_check";
   remaining?: number;
   original_message?: string;
   title: string; content?: string; items?: string[];
@@ -310,116 +309,6 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
   );
 }
 
-// ── Dashboard block ────────────────────────────────────────────────────────────
-function DashboardBlock({block}:{block:Block}) {
-  const cols = !block.metrics?.length ? 1 : block.metrics.length<=2 ? block.metrics.length : block.metrics.length<=4 ? 2 : 3;
-  return (
-    <div style={{borderRadius:16,border:"1px solid rgba(14,165,233,0.15)",background:"linear-gradient(135deg,rgba(14,165,233,0.04) 0%,rgba(6,182,212,0.02) 100%)",overflow:"hidden",marginBottom:10,boxShadow:"0 4px 24px rgba(0,0,0,0.25)"}}>
-      <div style={{padding:"12px 16px",borderBottom:"1px solid rgba(255,255,255,0.05)",display:"flex",alignItems:"center",gap:9}}>
-        <div style={{width:26,height:26,borderRadius:8,background:"#0369a1",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-          <BarChart2 size={12} color="#000"/>
-        </div>
-        <p style={{...j,fontSize:12,fontWeight:700,color:"#fff",flex:1,margin:0}}>{block.title}</p>
-        <span style={{...m,fontSize:12,color:"rgba(14,165,233,0.5)",letterSpacing:"0.12em"}}>LIVE DATA</span>
-      </div>
-      {block.metrics && block.metrics.length>0 && (
-        <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap:"1px",background:"rgba(255,255,255,0.03)"}}>
-          {block.metrics.map((metric,i)=>{
-            const isUp=metric.trend==="up",isDown=metric.trend==="down";
-            const mc=isDown?"#f87171":isUp?"#34d399":"#e2e8f0";
-            return(
-              <div key={i} style={{padding:"16px",background:"rgba(255,255,255,0.02)",position:"relative",overflow:"hidden"}}>
-                <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:`radial-gradient(circle,${mc}10,transparent 65%)`,pointerEvents:"none"}}/>
-                <p style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{metric.label}</p>
-                <p style={{...j,fontSize:28,fontWeight:900,color:mc,letterSpacing:"-0.04em",lineHeight:1,marginBottom:6}}>{metric.value}</p>
-                {metric.delta&&(
-                  <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 7px",borderRadius:5,background:isDown?"rgba(248,113,113,0.1)":isUp?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.05)",border:`1px solid ${isDown?"rgba(248,113,113,0.2)":isUp?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.10)"}`}}>
-                    {isDown?<TrendingDown size={9} color="#f87171"/>:isUp?<TrendingUp size={9} color="#34d399"/>:null}
-                    <span style={{...m,fontSize:12,fontWeight:600,color:isDown?"#f87171":isUp?"#34d399":"rgba(255,255,255,0.4)"}}>{metric.delta}</span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-      {block.chart&&block.chart.type==="bar"&&(
-        <div style={{padding:"16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
-          {block.chart.labels.map((label,i)=>{
-            const max=Math.max(...block.chart!.values);
-            const pct=max>0?(block.chart!.values[i]/max)*100:0;
-            const color=block.chart!.colors?.[i]||"#0ea5e9";
-            return(
-              <div key={i} style={{marginBottom:10}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.6)"}}>{label}</span>
-                  <span style={{...j,fontSize:12,fontWeight:700,color:"#fff"}}>{block.chart!.values[i]}</span>
-                </div>
-                <div style={{height:6,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden"}}>
-                  <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${color},${color}99)`,borderRadius:3}}/>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      {block.trend&&block.trend.dates.length>1&&(()=>{
-        const d=block.trend;
-        const n=d.dates.length;
-        const W=340,H=80,PAD=8;
-        // Sparkline path helper
-        const path=(vals:number[],color:string)=>{
-          const min=Math.min(...vals),max=Math.max(...vals);
-          const range=max-min||1;
-          const pts=vals.map((v,i)=>`${PAD+(i/(n-1))*(W-PAD*2)},${H-PAD-(v-min)/range*(H-PAD*2)}`);
-          return <polyline key={color} points={pts.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round"/>;
-        };
-        const lastCtr=d.ctr[n-1],firstCtr=d.ctr[0];
-        const lastRoas=d.roas[n-1],firstRoas=d.roas[0];
-        const ctrDelta=firstCtr>0?((lastCtr-firstCtr)/firstCtr*100):0;
-        const roasDelta=firstRoas>0?((lastRoas-firstRoas)/firstRoas*100):0;
-        const totalSpend=d.spend.reduce((a,b)=>a+b,0);
-        return(
-          <div style={{padding:"16px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
-            <div style={{display:"flex",gap:16,marginBottom:10}}>
-              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>CTR {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{(lastCtr*100).toFixed(2)}%</span><span style={{...m,fontSize:12,color:ctrDelta>=0?"#2ECECE":"#f87171",marginLeft:4}}>{ctrDelta>=0?"+":""}{ctrDelta.toFixed(1)}%</span></div>
-              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>ROAS {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>{lastRoas.toFixed(2)}x</span><span style={{...m,fontSize:12,color:roasDelta>=0?"#2ECECE":"#f87171",marginLeft:4}}>{roasDelta>=0?"+":""}{roasDelta.toFixed(1)}%</span></div>
-              <div><span style={{...m,fontSize:12,color:"rgba(255,255,255,0.3)",display:"block"}}>Spend {n}d</span><span style={{...j,fontSize:16,fontWeight:700,color:"#fff"}}>${totalSpend.toFixed(0)}</span></div>
-            </div>
-            <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{display:"block",maxWidth:W}}>
-              {d.ctr.some(v=>v>0)&&path(d.ctr,"#0ea5e9")}
-              {d.roas.some(v=>v>0)&&path(d.roas.map(v=>v/Math.max(...d.roas)),"#2ECECE")}
-            </svg>
-            <div style={{display:"flex",gap:12,marginTop:6}}>
-              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#0369a1",display:"inline-block",borderRadius:1}}/> CTR</span>
-              {d.roas.some(v=>v>0)&&<span style={{...m,fontSize:12,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}><span style={{width:10,height:2,background:"#2ECECE",display:"inline-block",borderRadius:1}}/> ROAS (norm.)</span>}
-              <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.25)",marginLeft:"auto"}}>{d.dates[0]} → {d.dates[n-1]}</span>
-            </div>
-          </div>
-        );
-      })()}
-      {block.table&&(
-        <div style={{overflowX:"auto",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
-          <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <thead><tr style={{background:"rgba(255,255,255,0.02)"}}>
-              {block.table.headers.map((h,i)=>(
-                <th key={i} style={{...m,fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.28)",textAlign:"left",padding:"8px 14px",letterSpacing:"0.1em",textTransform:"uppercase",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>{block.table.rows.map((row,ri)=>(
-              <tr key={ri} style={{borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
-                {row.map((cell,ci)=>(
-                  <td key={ci} style={{...m,fontSize:12,color:ci===0?"rgba(255,255,255,0.85)":"rgba(255,255,255,0.5)",padding:"10px 14px",fontWeight:ci===0?600:400}}>{cell}</td>
-                ))}
-              </tr>
-            ))}</tbody>
-          </table>
-        </div>
-      )}
-      {block.content&&<div style={{padding:"10px 16px"}}><p style={{...m,fontSize:12,color:"rgba(255,255,255,0.55)",lineHeight:1.65,margin:0}}>{block.content}</p></div>}
-    </div>
-  );
-}
 
 // ── Confirm action block ───────────────────────────────────────────────────────
 function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Block)=>Promise<void>;lang:string}) {
@@ -1405,86 +1294,6 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   );
 });
 
-// ── Dashboard Offer Block ─────────────────────────────────────────────────────
-function DashboardOfferBlock({ block, lang, onConfirm, onSilentConfirm }: { block: Block; lang: string; onConfirm: (msg: string) => void; onSilentConfirm?: (msg: string) => void }) {
-  const F = "'Plus Jakarta Sans', sans-serif";
-  const M = "'Plus Jakarta Sans', system-ui, sans-serif";
-  const [loading, setLoading] = useState(false);
-
-  const handleConfirm = () => {
-    setLoading(true);
-    const internalMsg = `[DASHBOARD_CONFIRMED] ${block.original_message || "gerar dashboard"}`;
-    if (onSilentConfirm) {
-      // Promise-based so we can reset loading on completion
-      Promise.resolve(onSilentConfirm(internalMsg))
-        .finally(() => setLoading(false));
-    } else {
-      onConfirm(internalMsg);
-      setLoading(false);
-    }
-  };
-
-  const labels: Record<string, Record<string, string>> = {
-    pt: { confirm: "Gerar dashboard", cancel: "Agora não", remaining: "restantes este mês" },
-    es: { confirm: "Generar dashboard", cancel: "Ahora no", remaining: "restantes este mes" },
-    en: { confirm: "Generate dashboard", cancel: "Not now", remaining: "remaining this month" },
-  };
-  const t = labels[lang] || labels.pt;
-
-  return (
-    <div style={{ borderRadius: 14, border: "1px solid rgba(14,165,233,0.25)", background: "rgba(14,165,233,0.05)", padding: "16px", marginBottom: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 16 }}></span>
-        <p style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "#eef0f6", margin: 0 }}>{block.title}</p>
-      </div>
-      <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.65)", lineHeight: 1.65, margin: "0 0 14px" }}>{block.content}</p>
-      {typeof block.remaining === "number" && block.remaining <= 3 && (
-        <p style={{ fontFamily: M, fontSize: 12, color: block.remaining === 0 ? "#f87171" : "#fbbf24", marginBottom: 12 }}>
-          {block.remaining === 0 ? " " : " "}{block.remaining} {t.remaining}
-        </p>
-      )}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={handleConfirm} disabled={loading}
-          style={{ flex: 1, padding: "9px 14px", borderRadius: 9, background: loading ? "rgba(14,165,233,0.15)" : "#0ea5e9", border: "none", cursor: loading ? "not-allowed" : "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: loading ? "#0ea5e9" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.15s" }}>
-          {loading ? <><Loader2 size={13} className="animate-spin"/> {lang === "pt" ? "Gerando..." : "Generating..."}</> : <><BarChart3 size={13}/> {t.confirm}</>}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── Dashboard Limit Popup ─────────────────────────────────────────────────────
-function DashboardLimitPopup({ lang, plan, onClose }: { lang: string; plan?: string; onClose: () => void }) {
-  const F = "'Plus Jakarta Sans', sans-serif";
-  const M = "'Plus Jakarta Sans', system-ui, sans-serif";
-  const navigate = useNavigate();
-
-  const msgs: Record<string, { title: string; sub: string; cta: string }> = {
-    pt: { title: "Dashboards do mês esgotados", sub: `Você atingiu o limite de dashboards do plano ${plan || "atual"}. Faça upgrade para continuar gerando dashboards com dados reais da sua conta.`, cta: "Ver planos" },
-    es: { title: "Dashboards del mes agotados", sub: `Alcanzaste el límite de dashboards del plan ${plan || "actual"}. Mejora tu plan para seguir generando dashboards.`, cta: "Ver planes" },
-    en: { title: "Monthly dashboards exhausted", sub: `You've reached the dashboard limit for the ${plan || "current"} plan. Upgrade to keep generating dashboards with real account data.`, cta: "View plans" },
-  };
-  const m = msgs[lang] || msgs.pt;
-
-  return (
-    <>
-      <div role="button" aria-label="Close" tabIndex={0} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 500 }} onClick={onClose} onKeyDown={e => e.key === "Escape" && onClose()} />
-      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", zIndex: 501, width: 360, background: "#131720", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 20, padding: "28px 24px", boxShadow: "0 24px 80px rgba(0,0,0,0.7)" }}>
-        <div style={{ fontSize: 36, marginBottom: 14, textAlign: "center" }}></div>
-        <p style={{ fontFamily: F, fontSize: 16, fontWeight: 800, color: "#eef0f6", textAlign: "center", margin: "0 0 10px" }}>{m.title}</p>
-        <p style={{ fontFamily: M, fontSize: 13, color: "rgba(238,240,246,0.55)", lineHeight: 1.65, textAlign: "center", margin: "0 0 22px" }}>{m.sub}</p>
-        <button onClick={() => { navigate("/dashboard/ai"); onClose(); setTimeout(() => navigate("/pricing"), 50); }}
-          style={{ width: "100%", padding: "12px", borderRadius: 12, background: "#0ea5e9", border: "none", cursor: "pointer", fontFamily: F, fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 10 }}>
-          {m.cta} →
-        </button>
-        <button onClick={onClose}
-          style={{ width: "100%", padding: "10px", borderRadius: 10, background: "transparent", border: "1px solid rgba(255,255,255,0.10)", cursor: "pointer", fontFamily: M, fontSize: 13, color: "rgba(238,240,246,0.40)" }}>
-          {lang === "pt" ? "Fechar" : lang === "es" ? "Cerrar" : "Close"}
-        </button>
-      </div>
-    </>
-  );
-}
 // ─── Live Panel v5 — build bump v2 ────────────────────────────────────────────────────────────
 // Design: editorial dark refinado — Inter, cards com proporção correta
 
@@ -2281,7 +2090,6 @@ export default function AdBriefAI() {
   const [activeTool,setActiveTool]=useState<string|null>(null);
   const [activeToolParams,setActiveToolParams]=useState<Record<string,string>>({});
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
-  const [showDashboardLimit,setShowDashboardLimit]=useState(false);
   // Credit balance from the new credit system
   const [creditBalance,setCreditBalance]=useState<{remaining:number,total:number}|null>(null);
   const [proactiveLoading,setProactiveLoading]=useState(false);
@@ -3390,13 +3198,13 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
 
     if(data?.campaigns){
       const rows=(data.campaigns as any[]).map((c:any)=>[c.name,c.effective_status||c.status,c.daily_budget?`$${(c.daily_budget/100).toFixed(0)}/dia`:"—",c.id]);
-      const dashBlock={type:"dashboard" as const,title:lang==="pt"?"Campanhas":"Campaigns",table:{headers:[lang==="pt"?"Nome":"Name","Status",lang==="pt"?"Orçamento":"Budget","ID"],rows}};
+      const campBlock={type:"insight" as const,title:lang==="pt"?"Campanhas":"Campaigns",table:{headers:[lang==="pt"?"Nome":"Name","Status",lang==="pt"?"Orçamento":"Budget","ID"],rows}};
       setMessages(prev=>{
         const idx=[...prev].reverse().findIndex((m:any)=>m.blocks?.some((b:any)=>b.meta_action==="list_campaigns"||b.meta_action==="get_campaigns"));
         const realIdx=idx>=0?prev.length-1-idx:-1;
-        if(realIdx>=0){return prev.map((m,i)=>i===realIdx?{...m,blocks:[dashBlock]}:m);}
+        if(realIdx>=0){return prev.map((m,i)=>i===realIdx?{...m,blocks:[campBlock]}:m);}
         const id=Date.now();
-        return[...prev,{role:"assistant" as const,id,ts:id,blocks:[dashBlock]}];
+        return[...prev,{role:"assistant" as const,id,ts:id,blocks:[campBlock]}];
       });
     }
     // Success UI is handled by ConfirmActionBlock — no separate message needed
@@ -3612,11 +3420,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       return;
     }
 
-        // If dashboard tool is active, prefix with dashboard intent
-    if(activeTool==="dashboard"&&!text){
-      const prefix=lang==="pt"?"[DASHBOARD] ":lang==="es"?"[DASHBOARD] ":"[DASHBOARD] ";
-      msg=prefix+msg;
-    }
     setInput("");
     if(textareaRef.current)textareaRef.current.style.height="auto";
     setActiveTool(null);
@@ -3631,8 +3434,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       const history = messages.slice(-12).map(m => {
         if (m.role === "user") return { role: "user" as const, content: m.userText || "" };
         const text = (m.blocks || []).map((b: any) => {
-          // Dashboard/table blocks: serialize rows so AI remembers campaign data
-          if (b.type === "dashboard" && b.table) {
+          // Table blocks: serialize rows so AI remembers campaign data
+          if (b.table) {
             const rows = (b.table.rows || []).slice(0, 5).map((r: any[]) =>
               (b.table.headers || []).map((h: string, i: number) => `${h}:${r[i]||"—"}`).join(" ")
             ).join(" | ");
@@ -3698,7 +3501,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           }
           setLoading(false);return;
         }
-        if(parsedErr?.error==="dashboard_limit"){setShowDashboardLimit(true);setLoading(false);return;}
         if(parsedErr?.error==="monthly_softcap"){
           const aid=Date.now()+1;
           const warningBlocks=parsedErr.blocks||[{type:"warning",title:lang==="pt"?"Limite mensal":lang==="es"?"Límite mensual":"Monthly limit",content:lang==="pt"?"Você está se aproximando do limite do plano. Considere fazer upgrade.":"You're approaching your plan limit. Consider upgrading."}];
@@ -3750,8 +3552,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         if(profile?.plan&&profile.plan!=="free"){window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));}else{setShowUpgradeWall(true);}
         setLoading(false);return;
       }
-      if(data?.error==="dashboard_limit"){setShowDashboardLimit(true);setLoading(false);return;}
-
       // Strip all markdown from text fields
       const stripMd=(s:string)=>String(s)
         .replace(/\*\*(.*?)\*\*/g,"$1").replace(/\*(.*?)\*/g,"$1")
@@ -3765,7 +3565,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         (blocks[0] as any)._ccData = ccData;
         (blocks[0] as any)._fileName = pendingImage.name;
       }
-      const isDashReq=msg.includes("[DASHBOARD]")||msg.toLowerCase().includes("dashboard");
       // Detect trend/evolution requests — auto-inject sparkline from snapshots
       const isTrendReq = /roas.*tempo|ctr.*tempo|evolu|tendên|trend|histórico.*performance|30.*dias|semanas?.*performance|performance.*semana|como.*está.*indo/i.test(msg);
       if (isTrendReq && user?.id) {
@@ -3823,7 +3622,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           "action": "",
           "warning": "Atenção",
           "navigate": "Ver mais",
-          "dashboard": "Dashboard",
           "pause": "Pausar campanha",
           "enable": "Ativar campanha",
           "update_budget": "Atualizar orçamento",
@@ -3893,15 +3691,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           content:b.content, // preserve markdown for renderMarkdown (**bold**, \n\n)
           items:b.items, // preserve markdown in hook items too
         };
-        // Upgrade insight→dashboard when requested and no dashboard block exists
-        if(isDashReq&&(c.type==="insight"||c.type==="action")&&!blocks.some(bb=>bb.type==="dashboard")){
-          const metrics=(c.items||[]).slice(0,6).map((it:string)=>{
-            const m=it.match(/^([^:]+):\s*(.+)$/);
-            if(m)return{label:m[1].trim().slice(0,30),value:m[2].trim().slice(0,20),delta:"",trend:"flat" as const};
-            return{label:it.slice(0,30),value:"—",delta:"",trend:"flat" as const};
-          });
-          if(metrics.length>0)return{...c,type:"dashboard" as const,metrics,items:undefined};
-        }
         // Intercept empty hooks block (AI returned {type:"hooks", items:[]}) — execute generate-hooks
         if(c.type==="hooks" && (!c.items || c.items.length === 0)){
           const countMatch=msg.match(/(\d+)\s+hooks?/i);
@@ -4017,7 +3806,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       if (user?.id && selectedPersona?.id && !pendingImage) {
         const lastUserMsg = msg || "";
         const isFactual = /(vendi|comprei|mudei|trabalho com|meu produto|minha conta|tenho|não tenho|agora|decidi|parei|comecei|meu preço|meu cliente|meu mercado|meu público|minha meta|meu objetivo|meu nicho)/i.test(lastUserMsg);
-        const isTool = /\[DASHBOARD\]|\[HOOKS\]|\[ROTEIRO\]|\[REPORT\]|\[CAMPAIGN_PLAN\]|\[ANALYZE_AD\]/i.test(lastUserMsg);
+        const isTool = /\[HOOKS\]|\[ROTEIRO\]|\[REPORT\]|\[CAMPAIGN_PLAN\]|\[ANALYZE_AD\]/i.test(lastUserMsg);
         if (isFactual && !isTool && lastUserMsg.length > 15) {
           extractAndSaveMemory(lastUserMsg, user.id, selectedPersona.id, lang);
         }
@@ -4032,43 +3821,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     }
   };
 
-  const handleDashboardSilentConfirm = async (msg: string) => {
-    if (!msg || loading || !contextReady) return;
-    setLoading(true);
-    try {
-      const { data } = await supabase.functions.invoke("adbrief-ai-chat", {
-        body: {
-          message: msg,
-          user_id: user.id,
-          persona_id: selectedPersona?.id || null,
-          user_language: lang,
-          history: [...messages].slice(-10).map(m => ({
-            role: m.role,
-            content: (m.blocks || []).map((b: any) => b.content || "").join(" ").slice(0, 300)
-          })).filter(m => m.content),
-        }
-      });
-      if (data?.blocks?.length) {
-        const aid = Date.now() + 1;
-        setMessages(prev => [...prev, { role: "assistant", blocks: data.blocks, ts: aid, id: aid }]);
-      }
-    } catch (e) {
-      console.error("dashboard silent error", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
     const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
   const hasData=connections.length>0;
 
-  const dashboardPlaceholder = lang==="pt"?"Diga qual dashboard quer — campanhas, criativos, ROAS...":lang==="es"?"Di qué dashboard quieres — campañas, creativos, ROAS...":"Say what dashboard you want — campaigns, creatives, ROAS...";
-
   const LABEL: Record<string,Record<string,string>>={
-    pt:{clear:"Limpar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pergunte sobre sua conta...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
-    es:{clear:"Limpiar",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Pregunta sobre tu cuenta...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
-    en:{clear:"Clear",placeholder:activeTool==="dashboard"?dashboardPlaceholder:"Ask anything...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
+    pt:{clear:"Limpar",placeholder:"Pergunte sobre sua conta...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
+    es:{clear:"Limpiar",placeholder:"Pregunta sobre tu cuenta...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
+    en:{clear:"Clear",placeholder:"Ask anything...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
   };
   const L=LABEL[lang]||LABEL.en;
 
@@ -4314,9 +4073,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     animation:isLatest?"cardIn 0.28s cubic-bezier(0.16,1,0.3,1)":"cardIn 0.22s ease-out",
                   }}>
                     {msg.blocks?.map((b,bi)=>
-                      b.type==="dashboard"?<DashboardBlock key={bi} block={b}/>:
                       b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
-                      b.type==="dashboard_offer"?<DashboardOfferBlock key={bi} block={b} lang={lang} onConfirm={(msg)=>send(msg)} onSilentConfirm={handleDashboardSilentConfirm}/>:
                       (b.type as string)==="limit_warning"?(
                         <div key={bi} style={{marginTop:8,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.05)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap" as const}}>
                           <p style={{...m,fontSize:13,color:"rgba(14,165,233,0.8)",lineHeight:1.5,margin:0,flex:1}}>{b.content}</p>
@@ -4405,7 +4162,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
         {/* Inline tool panel — only show when not loading */}
-        {activeTool&&activeTool!=="dashboard"&&!loading&&!messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
+        {activeTool&&!loading&&!messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
           <div style={{maxWidth:720,margin:"0 auto 8px",padding:"0 40px",boxSizing:"border-box" as const}}>
             <InlineToolPanel
               action={activeTool}
@@ -4786,7 +4543,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       `}</style>
 
       {showUpgradeWall&&<UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>}
-      {showDashboardLimit&&<DashboardLimitPopup lang={lang} plan={profile?.plan} onClose={()=>setShowDashboardLimit(false)}/>}
       <ReferralNudge messageCount={messages.filter(m=>m.role==="user").length}/>
     </div>
   );
