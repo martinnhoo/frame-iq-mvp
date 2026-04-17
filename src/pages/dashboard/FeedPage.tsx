@@ -2898,10 +2898,11 @@ const FeedPage: React.FC = () => {
     if (accountId) setTrackingUserStatus(getTrackingStatus(accountId));
   }, [accountId]);
 
-  // AUTO-RESET: when conversions appear, the "confirmed_no_conversion" is stale → reset
+  // AUTO-RESET: when conversions appear, any tracking diagnosis state is stale → reset
   useEffect(() => {
     if (!accountId || !adMetrics) return;
-    if (trackingUserStatus === 'confirmed_no_conversion' && adMetrics.totalConversions > 0) {
+    const terminalStates = ['confirmed_no_conversion', 'verified_ok', 'verified_issue', 'investigating'];
+    if (terminalStates.includes(trackingUserStatus) && adMetrics.totalConversions > 0) {
       setTrackingStatus(accountId, 'unknown');
       setTrackingUserStatus('unknown');
     }
@@ -3911,44 +3912,7 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Compact tracking status — shown after any tracking diagnosis path */}
-        {(trackingUserStatus === 'confirmed_no_conversion' || trackingUserStatus === 'verified_ok' || trackingUserStatus === 'verified_issue' || trackingUserStatus === 'investigating') && adMetrics && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: T.bg1, border: `1px solid ${T.border0}`,
-            borderRadius: 8, padding: '10px 14px', marginBottom: 10,
-            animation: 'feed-fadeUp 0.3s ease',
-          }}>
-            <span style={{
-              width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-              background: trackingUserStatus === 'verified_ok' ? T.green
-                : trackingUserStatus === 'verified_issue' ? T.red
-                : trackingUserStatus === 'investigating' ? T.blue
-                : T.yellow,
-              boxShadow: `0 0 6px ${
-                trackingUserStatus === 'verified_ok' ? T.green
-                : trackingUserStatus === 'verified_issue' ? T.red
-                : trackingUserStatus === 'investigating' ? T.blue
-                : T.yellow
-              }40`,
-            }} />
-            <span style={{ fontSize: 12, color: T.text2, fontWeight: 600, flex: 1 }}>
-              {trackingUserStatus === 'confirmed_no_conversion' && 'Sem conversões — confirmado'}
-              {trackingUserStatus === 'verified_ok' && 'Rastreamento verificado — OK'}
-              {trackingUserStatus === 'verified_issue' && 'Problema no rastreamento detectado'}
-              {trackingUserStatus === 'investigating' && 'Diagnóstico em andamento…'}
-            </span>
-            <button
-              onClick={resetTrackingStatus}
-              style={{
-                background: 'none', border: 'none', color: T.text3, cursor: 'pointer',
-                fontSize: 11, textDecoration: 'underline', padding: 0,
-              }}
-            >
-              Reverificar
-            </button>
-          </div>
-        )}
+        {/* Tracking status removed here — now rendered inline near campaigns */}
 
         {/* Beginner Mode — data still collecting, no alerts */}
         {metaConnected && !isDemo && beginnerMode && adMetrics && adMetrics.daysOfData > 0 && (
@@ -4199,6 +4163,39 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'no-critical' ? (
           <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
         ) : null}
+
+        {/* Discreet tracking status — tiny pill near campaigns */}
+        {(trackingUserStatus === 'confirmed_no_conversion' || trackingUserStatus === 'verified_ok' || trackingUserStatus === 'verified_issue' || trackingUserStatus === 'investigating') && adMetrics && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '5px 0', marginTop: -2,
+          }}>
+            <span style={{
+              width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+              background: trackingUserStatus === 'verified_ok' ? T.green
+                : trackingUserStatus === 'verified_issue' ? T.red
+                : trackingUserStatus === 'investigating' ? T.blue
+                : T.yellow,
+            }} />
+            <span style={{ fontSize: 10, color: T.text3, fontWeight: 500 }}>
+              {trackingUserStatus === 'confirmed_no_conversion' && 'Sem conversões — confirmado'}
+              {trackingUserStatus === 'verified_ok' && 'Rastreamento OK'}
+              {trackingUserStatus === 'verified_issue' && 'Problema no rastreamento'}
+              {trackingUserStatus === 'investigating' && 'Diagnóstico em andamento'}
+            </span>
+            <button
+              onClick={resetTrackingStatus}
+              style={{
+                background: 'none', border: 'none', color: T.text3, cursor: 'pointer',
+                fontSize: 9.5, opacity: 0.6, padding: 0, marginLeft: 2,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.textDecoration = 'underline'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.textDecoration = 'none'; }}
+            >
+              reverificar
+            </button>
+          </div>
+        )}
 
         {/* Intelligence — collapsible, always available */}
         {metaConnected && !isDemo && userId && personaId && (
