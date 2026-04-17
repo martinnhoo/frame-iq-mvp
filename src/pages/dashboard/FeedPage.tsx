@@ -3271,7 +3271,9 @@ const FeedPage: React.FC = () => {
   const hasSyncedRef = useRef(false);
   if (syncing) hasSyncedRef.current = true;
   const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
-  const isLoading = isFirstLoad && !hasSyncedRef.current;
+  // Also show skeleton if Meta is connected but metrics/ads haven't loaded yet (first visit)
+  const metricsStillLoading = metaConnected && accountId && !pulseData && !adsLoaded && !hasSyncedRef.current;
+  const isLoading = (isFirstLoad || metricsStillLoading) && !hasSyncedRef.current;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
   const handleSync = useCallback(async () => {
@@ -3623,28 +3625,46 @@ const FeedPage: React.FC = () => {
   // ── Loading skeleton with shimmer ──
   if (isLoading) {
     return (
-      <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: '24px 20px' }}>
+      <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
-          <div style={{ marginBottom: 18 }}>
-            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: 6, animation: 'feed-shimmer 1.5s ease-in-out infinite' }} />
-            <div style={{ width: 200, height: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 3, animation: 'feed-shimmer 1.5s ease-in-out infinite', animationDelay: '0.1s' }} />
+          {/* Header skeleton */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.06)', borderRadius: 3, animation: 'feed-shimmer 1.5s ease-in-out infinite' }} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ width: 60, height: 24, background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} />
+              <div style={{ width: 80, height: 24, background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} />
+            </div>
           </div>
-          {[1,2,3].map(i => (
+          {/* KPI skeleton — 4 cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 14 }}>
+            {[1,2,3,4].map(i => (
+              <div key={i} style={{
+                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+                borderRadius: 8, padding: '14px 12px 12px',
+                animation: 'feed-shimmer 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.1}s`,
+              }}>
+                <div style={{ width: 45, height: 7, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginBottom: 10 }} />
+                <div style={{ width: '65%', height: 18, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 6 }} />
+                <div style={{ width: '45%', height: 7, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+              </div>
+            ))}
+          </div>
+          {/* Content cards skeleton */}
+          {[1,2].map(i => (
             <div key={i} style={{
-              borderLeft: '2px solid rgba(255,255,255,0.04)',
-              padding: '14px 16px',
-              marginBottom: 0,
-              borderTop: i > 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+              borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)', marginBottom: 10,
               animation: 'feed-shimmer 1.5s ease-in-out infinite',
               animationDelay: `${i * 0.15}s`,
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <div style={{ width: 60, height: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }} />
-                <div style={{ width: 80, height: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                <div style={{ width: 80, height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }} />
               </div>
-              <div style={{ width: '70%', height: 22, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 8 }} />
-              <div style={{ width: '90%', height: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 2, marginBottom: 4 }} />
-              <div style={{ width: '60%', height: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+              <div style={{ width: '75%', height: 16, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 8 }} />
+              <div style={{ width: '55%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2, marginBottom: 5 }} />
+              <div style={{ width: '40%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
             </div>
           ))}
         </div>

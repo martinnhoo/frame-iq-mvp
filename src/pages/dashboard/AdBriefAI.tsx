@@ -3822,17 +3822,28 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   };
 
   // ── Auto-send prompt from navigation state (e.g. tracking diagnosis from Feed) ──
-  const injectedPromptRef = useRef(false);
+  const pendingNavPrompt = useRef<string | null>(
+    (location.state as any)?.prompt || null
+  );
+  const navPromptSent = useRef(false);
   useEffect(() => {
-    const navPrompt = (location.state as any)?.prompt;
-    if (!navPrompt || injectedPromptRef.current || loading) return;
-    if (!selectedPersona?.id) return;
-    injectedPromptRef.current = true;
+    // Also capture on location change (in case ref missed it)
+    if (!navPromptSent.current && (location.state as any)?.prompt) {
+      pendingNavPrompt.current = (location.state as any).prompt;
+    }
+  }, [location.state]);
+  useEffect(() => {
+    if (!pendingNavPrompt.current || navPromptSent.current) return;
+    // Wait for persona + context to be ready + not currently sending
+    if (!selectedPersona?.id || !contextReady || loading) return;
+    const prompt = pendingNavPrompt.current;
+    navPromptSent.current = true;
+    pendingNavPrompt.current = null;
     // Clear navigation state so refresh doesn't re-send
     navigate(location.pathname, { replace: true, state: {} });
-    // Small delay to let chat initialize
-    setTimeout(() => send(navPrompt), 400);
-  }, [location.state, selectedPersona?.id, loading]);
+    // Small delay for UI to settle
+    setTimeout(() => send(prompt), 300);
+  }, [selectedPersona?.id, contextReady, loading]);
 
     const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
   const hasData=connections.length>0;
