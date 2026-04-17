@@ -3821,6 +3821,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     }
   };
 
+  // ── Auto-send prompt from navigation state (e.g. tracking diagnosis from Feed) ──
+  const injectedPromptRef = useRef(false);
+  useEffect(() => {
+    const navPrompt = (location.state as any)?.prompt;
+    if (!navPrompt || injectedPromptRef.current || loading) return;
+    if (!selectedPersona?.id) return;
+    injectedPromptRef.current = true;
+    // Clear navigation state so refresh doesn't re-send
+    navigate(location.pathname, { replace: true, state: {} });
+    // Small delay to let chat initialize
+    setTimeout(() => send(navPrompt), 400);
+  }, [location.state, selectedPersona?.id, loading]);
+
     const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
   const hasData=connections.length>0;
 
