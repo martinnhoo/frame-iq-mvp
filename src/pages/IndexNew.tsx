@@ -140,9 +140,13 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_s5: "A performance melhora",
     // loop
     loop_title: "Cada melhoria gera a próxima.",
-    loop_s1: "Aplica",
-    loop_s2: "Sistema aprende",
+    loop_sub: "O sistema aprende com cada ação e fica mais preciso a cada ciclo.",
+    loop_s1: "Você aplica",
+    loop_s1d: "Aceita a decisão direto no feed. Um clique.",
+    loop_s2: "O sistema aprende",
+    loop_s2d: "Cada resultado vira padrão. A IA evolui com seus dados.",
     loop_s3: "Nova oportunidade",
+    loop_s3d: "Recomendações cada vez mais específicas pro seu negócio.",
     // pricing
     pricing_title: "Quanto você quer melhorar?",
     pricing_sub: "Você paga pelas melhorias aplicadas na sua campanha.",
@@ -241,9 +245,13 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_s4: "You apply",
     flow_s5: "Performance improves",
     loop_title: "Each improvement generates the next.",
-    loop_s1: "Apply",
+    loop_sub: "The system learns from every action and gets sharper each cycle.",
+    loop_s1: "You apply",
+    loop_s1d: "Accept the decision right in the feed. One click.",
     loop_s2: "System learns",
+    loop_s2d: "Every result becomes a pattern. The AI evolves with your data.",
     loop_s3: "New opportunity",
+    loop_s3d: "Recommendations increasingly specific to your business.",
     pricing_title: "How much do you want to improve?",
     pricing_sub: "You pay for improvements applied to your campaign.",
     pricing_free: "Free",
@@ -338,9 +346,13 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_s4: "Las aplicas",
     flow_s5: "La performance mejora",
     loop_title: "Cada mejora genera la siguiente.",
-    loop_s1: "Aplica",
-    loop_s2: "Sistema aprende",
+    loop_sub: "El sistema aprende de cada acción y se vuelve más preciso en cada ciclo.",
+    loop_s1: "Tú aplicas",
+    loop_s1d: "Acepta la decisión directo en el feed. Un clic.",
+    loop_s2: "El sistema aprende",
+    loop_s2d: "Cada resultado se vuelve patrón. La IA evoluciona con tus datos.",
     loop_s3: "Nueva oportunidad",
+    loop_s3d: "Recomendaciones cada vez más específicas para tu negocio.",
     pricing_title: "¿Cuánto quieres mejorar?",
     pricing_sub: "Pagas por las mejoras aplicadas en tu campaña.",
     pricing_free: "Free",
@@ -466,9 +478,9 @@ function TrustBar({ t }: { t: Record<string, string> }) {
       background: "rgba(255,255,255,0.015)", borderBottom: `1px solid ${BORDER}`,
       padding: "6px clamp(16px,4vw,32px)",
     }}>
-      <div style={{
+      <div className="trust-inner" style={{
         maxWidth: 1120, margin: "0 auto", display: "flex", alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent: "center", gap: "clamp(12px, 3vw, 24px)", flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.5, fontWeight: 400 }}>{t.trust_powered}</span>
@@ -476,8 +488,9 @@ function TrustBar({ t }: { t: Record<string, string> }) {
           <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.25 }}>·</span>
           <ClaudeLogo size={13} opacity={0.45} />
         </div>
+        <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.15 }}>|</span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <MetaLogo size={13} opacity={0.45} />
+          <MetaLogo size={14} opacity={0.5} />
           <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.5, fontWeight: 400 }}>{t.trust_meta}</span>
         </div>
       </div>
@@ -985,11 +998,14 @@ function FlowSection({ t }: { t: Record<string, string> }) {
 // ── Section 4 — Loop (horizontal + animated) ───────────────────────────────
 function LoopSection({ t }: { t: Record<string, string> }) {
   const [active, setActive] = useState(0);
-  const steps = [t.loop_s1, t.loop_s2, t.loop_s3];
-  const colors = [GREEN, INDIGO, ACCENT];
+  const steps = [
+    { label: t.loop_s1, icon: <Zap size={18} />, color: GREEN, desc: t.loop_s1d || "" },
+    { label: t.loop_s2, icon: <Brain size={18} />, color: INDIGO, desc: t.loop_s2d || "" },
+    { label: t.loop_s3, icon: <TrendingUp size={18} />, color: ACCENT, desc: t.loop_s3d || "" },
+  ];
 
   useEffect(() => {
-    const interval = setInterval(() => setActive(a => (a + 1) % 3), 2000);
+    const interval = setInterval(() => setActive(a => (a + 1) % 3), 2200);
     return () => clearInterval(interval);
   }, []);
 
@@ -998,49 +1014,114 @@ function LoopSection({ t }: { t: Record<string, string> }) {
       background: BG2, padding: "clamp(72px,9vw,100px) clamp(20px,4vw,40px)",
       borderTop: `1px solid ${BORDER}`,
     }}>
-      <div style={{ maxWidth: 700, margin: "0 auto" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
         <h2 style={{
           fontFamily: F, fontSize: "clamp(24px,2.8vw,34px)", fontWeight: 800,
-          letterSpacing: "-0.04em", color: TEXT, margin: "0 0 48px",
+          letterSpacing: "-0.04em", color: TEXT, margin: "0 0 16px", textAlign: "center",
         }}>
           {t.loop_title}
         </h2>
-
-        <div className="loop-flow" style={{
-          display: "flex", alignItems: "center", gap: 0, position: "relative",
+        <p style={{
+          fontFamily: F, fontSize: "clamp(13px,1.1vw,15px)", color: TEXT3,
+          margin: "0 0 48px", textAlign: "center", maxWidth: 480, marginLeft: "auto", marginRight: "auto",
+          lineHeight: 1.6,
         }}>
-          {steps.map((step, i) => (
-            <React.Fragment key={i}>
-              <div style={{
-                padding: "12px 24px", borderRadius: 10,
-                background: active === i ? `${colors[i]}10` : `${colors[i]}04`,
-                border: `1px solid ${active === i ? `${colors[i]}30` : `${colors[i]}12`}`,
-                boxShadow: active === i ? `0 0 24px ${colors[i]}12` : "none",
+          {t.loop_sub || ""}
+        </p>
+
+        {/* Cards grid */}
+        <div className="loop-flow" style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+          gap: "clamp(10px, 2vw, 16px)", position: "relative",
+        }}>
+          {steps.map((step, i) => {
+            const isActive = active === i;
+            return (
+              <div key={i} style={{
+                padding: "clamp(20px,2.5vw,28px) clamp(16px,2vw,22px)",
+                borderRadius: 14,
+                background: isActive ? `${step.color}08` : "rgba(255,255,255,0.015)",
+                border: `1px solid ${isActive ? `${step.color}25` : BORDER}`,
+                boxShadow: isActive ? `0 0 32px ${step.color}10, 0 8px 24px rgba(0,0,0,0.2)` : "0 2px 8px rgba(0,0,0,0.1)",
                 transition: `all 0.5s ${EASE}`,
-                transform: active === i ? "scale(1.04)" : "scale(1)",
+                transform: isActive ? "translateY(-4px)" : "translateY(0)",
+                textAlign: "center", position: "relative", overflow: "hidden",
               }}>
-                <span style={{
-                  fontFamily: F, fontSize: 13, fontWeight: 700,
-                  color: active === i ? colors[i] : TEXT3,
-                  whiteSpace: "nowrap",
-                  transition: `color 0.4s ${EASE}`,
+                {/* Step number */}
+                <div style={{
+                  fontSize: 10, fontWeight: 800, color: isActive ? step.color : TEXT3,
+                  letterSpacing: "0.1em", marginBottom: 12, opacity: isActive ? 0.6 : 0.3,
+                  transition: `all 0.4s ${EASE}`,
                 }}>
-                  {step}
-                </span>
-              </div>
-              {i < 2 && (
-                <ArrowRight size={14} style={{
-                  color: "rgba(255,255,255,0.10)", margin: "0 12px", flexShrink: 0,
-                  transition: `color 0.3s ${EASE}`,
+                  0{i + 1}
+                </div>
+
+                {/* Icon */}
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10, margin: "0 auto 14px",
+                  background: isActive ? `${step.color}12` : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${isActive ? `${step.color}20` : "rgba(255,255,255,0.04)"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: isActive ? step.color : TEXT3,
+                  transition: `all 0.4s ${EASE}`,
+                  boxShadow: isActive ? `0 0 16px ${step.color}15` : "none",
+                }}>
+                  {step.icon}
+                </div>
+
+                {/* Label */}
+                <div style={{
+                  fontFamily: F, fontSize: "clamp(13px,1.1vw,15px)", fontWeight: 700,
+                  color: isActive ? TEXT : TEXT2,
+                  marginBottom: 8, transition: `color 0.4s ${EASE}`,
+                }}>
+                  {step.label}
+                </div>
+
+                {/* Description */}
+                {step.desc && (
+                  <div style={{
+                    fontFamily: F, fontSize: 11, color: TEXT3,
+                    lineHeight: 1.55, opacity: isActive ? 0.8 : 0.5,
+                    transition: `opacity 0.4s ${EASE}`,
+                  }}>
+                    {step.desc}
+                  </div>
+                )}
+
+                {/* Active indicator dot */}
+                <div style={{
+                  width: 4, height: 4, borderRadius: "50%",
+                  background: step.color, margin: "14px auto 0",
+                  opacity: isActive ? 1 : 0.15,
+                  boxShadow: isActive ? `0 0 8px ${step.color}` : "none",
+                  transition: `all 0.4s ${EASE}`,
                 }} />
-              )}
-            </React.Fragment>
-          ))}
-          {/* Loop-back line */}
-          <div style={{
-            position: "absolute", bottom: -16, left: "15%", right: "15%", height: 1,
-            background: `linear-gradient(to right, ${ACCENT}15, rgba(255,255,255,0.02), ${ACCENT}15)`,
-          }} />
+              </div>
+            );
+          })}
+
+          {/* Connecting arrows between cards — desktop only */}
+          <div className="loop-arrows" style={{
+            position: "absolute", top: "50%", left: 0, right: 0,
+            display: "flex", justifyContent: "center", gap: "30%",
+            pointerEvents: "none", transform: "translateY(-50%)",
+          }}>
+            <ArrowRight size={14} style={{ color: "rgba(255,255,255,0.08)" }} />
+            <ArrowRight size={14} style={{ color: "rgba(255,255,255,0.08)" }} />
+          </div>
+        </div>
+
+        {/* Loop-back indicator */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "center",
+          gap: 8, marginTop: 28, opacity: 0.25,
+        }}>
+          <div style={{ width: 40, height: 1, background: `linear-gradient(to right, transparent, ${ACCENT})` }} />
+          <ArrowRight size={11} style={{ color: ACCENT, transform: "rotate(180deg)" }} />
+          <span style={{ fontFamily: F, fontSize: 9, color: ACCENT, fontWeight: 600, letterSpacing: "0.1em" }}>LOOP</span>
+          <ArrowRight size={11} style={{ color: ACCENT }} />
+          <div style={{ width: 40, height: 1, background: `linear-gradient(to left, transparent, ${ACCENT})` }} />
         </div>
       </div>
     </section>
@@ -1417,6 +1498,7 @@ export default function IndexNew() {
         /* ── Mobile ≤768px ────────────────────────────────────── */
         @media (max-width: 768px) {
           .nav-signup-btn { display: none !important; }
+          .trust-inner { gap: 8px !important; }
           .hero-grid {
             grid-template-columns: 1fr !important;
             text-align: center;
@@ -1445,11 +1527,10 @@ export default function IndexNew() {
           }
           .pricing-card { transform: none !important; }
           .loop-flow {
-            flex-direction: column !important;
-            gap: 8px !important;
-            align-items: center !important;
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
           }
-          .loop-flow > svg { transform: rotate(90deg); }
+          .loop-arrows { display: none !important; }
           .footer-inner {
             grid-template-columns: 1fr 1fr !important;
             gap: 28px !important;
@@ -1478,7 +1559,7 @@ export default function IndexNew() {
             gap: 14px !important;
           }
           .footer-inner { grid-template-columns: 1fr 1fr 1fr 1fr !important; }
-          .loop-flow span { white-space: normal !important; }
+          .loop-arrows { display: none !important; }
         }
 
         /* ── iPad Pro gap ──────────────────────────────────────── */
