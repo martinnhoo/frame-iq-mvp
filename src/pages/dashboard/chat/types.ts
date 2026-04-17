@@ -4,7 +4,8 @@ export type BlockType =
   | "insight" | "action" | "warning" | "hooks" | "navigate"
   | "tool_call" | "dashboard" | "meta_action" | "off_topic"
   | "dashboard_offer" | "limit_warning" | "text" | "trend_chart"
-  | "proactive";
+  | "proactive" | "pattern"
+  | "credits_exhausted_free" | "credits_exhausted_paid";
 
 export interface MetricItem {
   label: string;
