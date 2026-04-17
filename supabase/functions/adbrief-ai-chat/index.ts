@@ -712,13 +712,21 @@ Deno.serve(async (req) => {
       persona_id
         ? supabase.from("personas").select("result").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
-      // 7. Learned patterns (limit 20 — trimmed further in context building)
-      (supabase as any)
-        .from("learned_patterns")
-        .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, persona_id")
-        .eq("user_id", user_id)
-        .order("confidence", { ascending: false })
-        .limit(20),
+      // 7. Learned patterns — STRICT persona scope (limit 20)
+      persona_id
+        ? (supabase as any)
+            .from("learned_patterns")
+            .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, persona_id")
+            .eq("user_id", user_id)
+            .eq("persona_id", persona_id)
+            .order("confidence", { ascending: false })
+            .limit(20)
+        : (supabase as any)
+            .from("learned_patterns")
+            .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, persona_id")
+            .eq("user_id", user_id)
+            .order("confidence", { ascending: false })
+            .limit(20),
       // 7b. Global benchmarks — limit 8 for context size
       (supabase as any)
         .from("learned_patterns")
@@ -799,18 +807,20 @@ Deno.serve(async (req) => {
               },
         ),
       // 12. Chat memory (limit 15 for context size)
+      // STRICT persona isolation — never leak data between accounts/personas
       persona_id
         ? (supabase as any)
             .from("chat_memory")
             .select("memory_text, memory_type, importance")
             .eq("user_id", user_id)
-            .or(`persona_id.eq.${persona_id},persona_id.is.null`)
+            .eq("persona_id", persona_id)
             .order("importance", { ascending: false })
             .limit(15)
         : (supabase as any)
             .from("chat_memory")
             .select("memory_text, memory_type, importance")
             .eq("user_id", user_id)
+            .is("persona_id", null)
             .order("importance", { ascending: false })
             .limit(15),
       // 13. Few-shot examples
@@ -856,9 +866,9 @@ Deno.serve(async (req) => {
     const connections = (platformConns || []) as any[];
     const imports = (adsImports || []) as any[];
 
-    // chat_memory: DB query already handles scoping via OR clause
-    // persona_id present → returns persona-specific + global (null) memories
-    // no persona_id → returns all user memories (global fallback)
+    // chat_memory: strictly scoped per persona — no cross-account leaks
+    // persona_id present → returns ONLY that persona's memories
+    // no persona_id → returns ONLY global (null) memories
     const persistentMemories = (chatMemories || []) as any[];
 
     // few-shot examples: liked responses used as style/format guide
