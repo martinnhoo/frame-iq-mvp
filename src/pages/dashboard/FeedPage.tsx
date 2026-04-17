@@ -1231,6 +1231,15 @@ interface AdSummary {
   ad_set?: { name: string; campaign?: { name: string } };
 }
 
+interface CampaignSummary {
+  id: string;
+  name: string;
+  meta_campaign_id: string;
+  status?: string | null;
+  objective?: string | null;
+  daily_budget?: number | null;
+}
+
 /** Resolve display label + color for an ad's status */
 function getAdStatusDisplay(ad: AdSummary): { label: string; color: string; dotColor: string } {
   const s = (ad.effective_status || ad.status || '').toUpperCase();
@@ -1261,10 +1270,195 @@ function sortAdsByStatus(ads: AdSummary[]): AdSummary[] {
   return [...ads].sort((a, b) => getAdSortOrder(a) - getAdSortOrder(b));
 }
 
-/** Collapsible ad list — shows 5 by default, expand/collapse when >5 */
-const AD_LIST_PREVIEW = 3; // show 3 ads collapsed, rest hidden
+/** Resolve display label + color for a campaign's status */
+function getCampaignStatusDisplay(c: CampaignSummary): { label: string; color: string; dotColor: string } {
+  const s = (c.status || '').toUpperCase();
+  if (s === 'PAUSED') return { label: 'Pausado', color: 'rgba(255,255,255,0.60)', dotColor: 'rgba(255,255,255,0.45)' };
+  if (s === 'ARCHIVED' || s === 'DELETED') return { label: 'Arquivado', color: 'rgba(255,255,255,0.40)', dotColor: 'rgba(255,255,255,0.18)' };
+  return { label: 'Ativo', color: '#4ADE80', dotColor: 'rgba(74,222,128,0.50)' };
+}
 
-const AdList: React.FC<{
+/** Group ads by campaign name */
+function groupAdsByCampaign(ads: AdSummary[]): Map<string, AdSummary[]> {
+  const map = new Map<string, AdSummary[]>();
+  ads.forEach(ad => {
+    const campName = ad.ad_set?.campaign?.name || 'Sem campanha';
+    if (!map.has(campName)) map.set(campName, []);
+    map.get(campName)!.push(ad);
+  });
+  return map;
+}
+
+/** Collapsible ad list — shows 3 ads collapsed, rest hidden */
+const AD_LIST_PREVIEW = 3;
+
+/** Single ad row with toggle button */
+const AdRow: React.FC<{
+  ad: AdSummary;
+  togglingAd?: string | null;
+  toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
+  onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
+}> = ({ ad, togglingAd, toggleSuccess, onRequestToggle }) => {
+  const st = getAdStatusDisplay(ad);
+  const isPaused = st.label === 'Pausado';
+  const isActive = st.label === 'Saudável' || st.label === 'Aprendizado';
+  const canToggle = onRequestToggle && ad.meta_ad_id && (isPaused || isActive);
+  const isToggling = togglingAd === ad.meta_ad_id;
+  const justSucceeded = toggleSuccess?.id === ad.meta_ad_id;
+
+  return (
+    <div className="feed-micro-btn" style={{
+      display: 'flex', alignItems: 'center', gap: 6, padding: '5px 2px 5px 12px', minWidth: 0,
+    }}>
+      <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
+      <span style={{
+        fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: 500,
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0,
+      }}>
+        {ad.name}
+      </span>
+      <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+        {st.label}
+      </span>
+      {canToggle && (
+        justSucceeded ? (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            padding: '3px 8px', borderRadius: 3,
+            background: 'rgba(74,222,128,0.08)', color: T.green,
+            fontSize: 10, fontWeight: 600, fontFamily: F, flexShrink: 0,
+            animation: 'feed-success 0.3s ease forwards',
+          }}>
+            ✓ {toggleSuccess.action === 'pause' ? 'Pausado' : 'Ativado'}
+          </span>
+        ) : (
+          <button
+            onClick={(e) => { e.stopPropagation(); onRequestToggle!(ad, isPaused ? 'activate' : 'pause'); }}
+            disabled={isToggling}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '3px 8px', borderRadius: 3, border: 'none',
+              background: isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)',
+              color: isPaused ? '#4ADE80' : 'rgba(255,255,255,0.40)',
+              fontSize: 10, fontWeight: 600, fontFamily: F,
+              cursor: isToggling ? 'default' : 'pointer',
+              opacity: isToggling ? 0.4 : 1, transition: 'all 0.15s', flexShrink: 0,
+            }}
+            onMouseEnter={e => { if (!isToggling) { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.08)'; } }}
+            onMouseLeave={e => { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)'; }}
+          >
+            {isToggling ? (
+              <span style={{ width: 9, height: 9, border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'inline-block', animation: 'feed-shimmer 0.8s linear infinite' }} />
+            ) : isPaused ? <Play size={9} /> : <Pause size={9} />}
+            {isToggling ? '...' : isPaused ? 'Ativar' : 'Pausar'}
+          </button>
+        )
+      )}
+    </div>
+  );
+};
+
+/** Campaign row — expandable, shows ads inside */
+const CampaignRow: React.FC<{
+  campaign: CampaignSummary;
+  ads: AdSummary[];
+  togglingAd?: string | null;
+  toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
+  onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
+  togglingCampaign?: string | null;
+  campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
+  onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void;
+}> = ({ campaign, ads, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
+  const [open, setOpen] = useState(false);
+  const sorted = sortAdsByStatus(ads);
+  const st = getCampaignStatusDisplay(campaign);
+  const isPaused = st.label === 'Pausado';
+  const isActive = st.label === 'Ativo';
+  const canToggle = onRequestCampaignToggle && campaign.meta_campaign_id && (isPaused || isActive);
+  const isToggling = togglingCampaign === campaign.meta_campaign_id;
+  const justSucceeded = campaignToggleSuccess?.id === campaign.meta_campaign_id;
+
+  return (
+    <div>
+      {/* Campaign header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 2px' }}>
+        <div
+          onClick={() => setOpen(prev => !prev)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0,
+            cursor: 'pointer', userSelect: 'none',
+          }}
+        >
+          <span style={{
+            fontSize: 14, lineHeight: 1,
+            color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
+            transition: 'transform 0.2s ease, color 0.15s',
+            transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+          }}>›</span>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
+          <span style={{
+            fontSize: 11.5, fontWeight: 600, color: T.text1,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0,
+          }}>
+            {campaign.name}
+          </span>
+          <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {st.label}
+          </span>
+          <span style={{ fontSize: 9.5, color: T.text3, whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {ads.length} {ads.length === 1 ? 'anúncio' : 'anúncios'}
+          </span>
+        </div>
+        {canToggle && (
+          justSucceeded ? (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '3px 8px', borderRadius: 3,
+              background: 'rgba(74,222,128,0.08)', color: T.green,
+              fontSize: 10, fontWeight: 600, fontFamily: F, flexShrink: 0,
+              animation: 'feed-success 0.3s ease forwards',
+            }}>
+              ✓ {campaignToggleSuccess.action === 'pause' ? 'Pausado' : 'Ativado'}
+            </span>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); onRequestCampaignToggle!(campaign, isPaused ? 'activate' : 'pause'); }}
+              disabled={isToggling}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '3px 8px', borderRadius: 3, border: 'none',
+                background: isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)',
+                color: isPaused ? '#4ADE80' : 'rgba(255,255,255,0.40)',
+                fontSize: 10, fontWeight: 600, fontFamily: F,
+                cursor: isToggling ? 'default' : 'pointer',
+                opacity: isToggling ? 0.4 : 1, transition: 'all 0.15s', flexShrink: 0,
+              }}
+              onMouseEnter={e => { if (!isToggling) { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.08)'; } }}
+              onMouseLeave={e => { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)'; }}
+            >
+              {isToggling ? (
+                <span style={{ width: 9, height: 9, border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'inline-block', animation: 'feed-shimmer 0.8s linear infinite' }} />
+              ) : isPaused ? <Play size={9} /> : <Pause size={9} />}
+              {isToggling ? '...' : isPaused ? 'Ativar' : 'Pausar'}
+            </button>
+          )
+        )}
+      </div>
+      {/* Ads inside campaign */}
+      <FeedExpandable open={open}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, paddingLeft: 6 }}>
+          {sorted.map((ad, i) => (
+            <AdRow key={ad.meta_ad_id || i} ad={ad} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
+          ))}
+        </div>
+      </FeedExpandable>
+    </div>
+  );
+};
+
+/** CampaignList — shows campaigns, each expandable to reveal their ads */
+const CampaignList: React.FC<{
+  campaigns: CampaignSummary[];
   ads: AdSummary[];
   totalAds: number;
   onLoadMore?: () => void;
@@ -1273,33 +1467,28 @@ const AdList: React.FC<{
   togglingAd?: string | null;
   toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
   onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
-}> = ({ ads, totalAds, onLoadMore, loadingMore, onToggleAd, togglingAd, toggleSuccess, onRequestToggle }) => {
+  togglingCampaign?: string | null;
+  campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
+  onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void;
+}> = ({ campaigns, ads, totalAds, onLoadMore, loadingMore, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
   const [open, setOpen] = useState(false);
-  const sorted = sortAdsByStatus(ads);
+  const adsByCampaign = groupAdsByCampaign(ads);
 
-  // Group by status for summary
-  const statusCounts: Record<string, number> = {};
-  sorted.forEach(ad => {
-    const st = getAdStatusDisplay(ad);
-    statusCounts[st.label] = (statusCounts[st.label] || 0) + 1;
+  // Sort campaigns: ACTIVE first, then PAUSED
+  const sortedCampaigns = [...campaigns].sort((a, b) => {
+    const aP = (a.status || '').toUpperCase() === 'PAUSED' ? 1 : 0;
+    const bP = (b.status || '').toUpperCase() === 'PAUSED' ? 1 : 0;
+    return aP - bP;
   });
-  const pluralize = (lbl: string, n: number) => {
-    if (n <= 1) return lbl.toLowerCase();
-    // Portuguese plurals: pausado→pausados, saudável→saudáveis, etc.
-    const l = lbl.toLowerCase();
-    if (l.endsWith('vel')) return l.slice(0, -3) + 'veis';
-    if (l.endsWith('do') || l.endsWith('da') || l.endsWith('vo') || l.endsWith('va')) return l + 's';
-    if (l.endsWith('a') || l.endsWith('o') || l.endsWith('e')) return l + 's';
-    return l + 's';
-  };
-  const summaryParts = Object.entries(statusCounts).map(([label, count]) => `${count} ${pluralize(label, count)}`);
-  const summaryText = summaryParts.join(', ') || `${totalAds} anúncios`;
+
+  const activeCamps = campaigns.filter(c => (c.status || '').toUpperCase() !== 'PAUSED' && (c.status || '').toUpperCase() !== 'ARCHIVED').length;
+  const pausedCamps = campaigns.length - activeCamps;
 
   const hasMore = totalAds > ads.length;
 
   return (
     <div style={{ fontFamily: F }}>
-      {/* Collapsible header — status summary always visible */}
+      {/* Collapsible header */}
       <div
         onClick={() => setOpen(prev => !prev)}
         style={{
@@ -1314,84 +1503,32 @@ const AdList: React.FC<{
           transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
         }}>›</span>
         <span style={{ fontSize: 11.5, fontWeight: 700, color: T.text1 }}>
-          Anúncios
+          Campanhas
         </span>
-        {!open ? (
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>
-            {summaryText}
-          </span>
-        ) : (
-          <span style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.72)' }}>
-            {totalAds}
-          </span>
-        )}
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>
+          {open ? campaigns.length : `${activeCamps} ativa${activeCamps !== 1 ? 's' : ''}${pausedCamps > 0 ? `, ${pausedCamps} pausada${pausedCamps !== 1 ? 's' : ''}` : ''}`}
+        </span>
       </div>
 
       <FeedExpandable open={open}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 2 }}>
-          {sorted.map((ad, i) => {
-            const st = getAdStatusDisplay(ad);
-            const isPaused = st.label === 'Pausado';
-            const isActive = st.label === 'Saudável' || st.label === 'Aprendizado';
-            const canToggle = onRequestToggle && ad.meta_ad_id && (isPaused || isActive);
-            const isToggling = togglingAd === ad.meta_ad_id;
-            const justSucceeded = toggleSuccess?.id === ad.meta_ad_id;
+          {sortedCampaigns.map(campaign => {
+            const campAds = adsByCampaign.get(campaign.name) || [];
             return (
-              <div key={ad.meta_ad_id || i} className="feed-micro-btn" style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '6px 2px', minWidth: 0,
-              }}>
-                <span style={{ width: 3, height: 3, borderRadius: '50%', background: st.dotColor, flexShrink: 0 }} />
-                <span style={{
-                  fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: 500,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0,
-                }}>
-                  {ad.name}
-                </span>
-                <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  {st.label}
-                </span>
-                {canToggle && (
-                  justSucceeded ? (
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                      padding: '3px 8px', borderRadius: 3,
-                      background: 'rgba(74,222,128,0.08)',
-                      color: T.green,
-                      fontSize: 10, fontWeight: 600, fontFamily: F,
-                      flexShrink: 0,
-                      animation: 'feed-success 0.3s ease forwards',
-                    }}>
-                      ✓ {toggleSuccess.action === 'pause' ? 'Pausado' : 'Ativado'}
-                    </span>
-                  ) : (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onRequestToggle!(ad, isPaused ? 'activate' : 'pause'); }}
-                    disabled={isToggling}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                      padding: '3px 8px', borderRadius: 3, border: 'none',
-                      background: isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)',
-                      color: isPaused ? '#4ADE80' : 'rgba(255,255,255,0.40)',
-                      fontSize: 10, fontWeight: 600, fontFamily: F,
-                      cursor: isToggling ? 'default' : 'pointer',
-                      opacity: isToggling ? 0.4 : 1,
-                      transition: 'all 0.15s',
-                      flexShrink: 0,
-                    }}
-                    onMouseEnter={e => { if (!isToggling) { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.08)'; } }}
-                    onMouseLeave={e => { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)'; }}
-                  >
-                    {isToggling ? (
-                      <span style={{ width: 9, height: 9, border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'inline-block', animation: 'feed-shimmer 0.8s linear infinite' }} />
-                    ) : isPaused ? <Play size={9} /> : <Pause size={9} />}
-                    {isToggling ? '...' : isPaused ? 'Ativar' : 'Pausar'}
-                  </button>
-                  )
-                )}
-              </div>
+              <CampaignRow
+                key={campaign.id}
+                campaign={campaign}
+                ads={campAds}
+                togglingAd={togglingAd}
+                toggleSuccess={toggleSuccess}
+                onRequestToggle={onRequestToggle}
+                togglingCampaign={togglingCampaign}
+                campaignToggleSuccess={campaignToggleSuccess}
+                onRequestCampaignToggle={onRequestCampaignToggle}
+              />
             );
           })}
-          {/* Load more from DB */}
+          {/* Load more ads */}
           {hasMore && (
             <button
               onClick={(e) => { e.stopPropagation(); onLoadMore?.(); }}
@@ -1408,6 +1545,56 @@ const AdList: React.FC<{
               {loadingMore
                 ? 'Carregando...'
                 : `+ Carregar mais ${Math.min(40, totalAds - ads.length)} anúncios`}
+            </button>
+          )}
+        </div>
+      </FeedExpandable>
+    </div>
+  );
+};
+
+/** Legacy AdList — kept for backward compat in single-ad states */
+const AdList: React.FC<{
+  ads: AdSummary[];
+  totalAds: number;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+  onToggleAd?: (adId: string, action: 'pause' | 'activate') => void;
+  togglingAd?: string | null;
+  toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
+  onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
+}> = ({ ads, totalAds, onLoadMore, loadingMore, togglingAd, toggleSuccess, onRequestToggle }) => {
+  const [open, setOpen] = useState(false);
+  const sorted = sortAdsByStatus(ads);
+  const hasMore = totalAds > ads.length;
+
+  return (
+    <div style={{ fontFamily: F }}>
+      <div onClick={() => setOpen(prev => !prev)} style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '6px 2px', cursor: 'pointer', userSelect: 'none',
+      }}>
+        <span style={{
+          fontSize: 14, lineHeight: 1,
+          color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
+          transition: 'transform 0.2s ease, color 0.15s',
+          transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+        }}>›</span>
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: T.text1 }}>Anúncios</span>
+        <span style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.72)' }}>{totalAds}</span>
+      </div>
+      <FeedExpandable open={open}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 2 }}>
+          {sorted.map((ad, i) => (
+            <AdRow key={ad.meta_ad_id || i} ad={ad} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
+          ))}
+          {hasMore && (
+            <button onClick={(e) => { e.stopPropagation(); onLoadMore?.(); }} disabled={loadingMore} style={{
+              background: 'none', border: 'none', padding: '6px 2px',
+              fontSize: 10.5, color: 'rgba(14,165,233,0.55)', fontWeight: 600,
+              cursor: loadingMore ? 'default' : 'pointer', fontFamily: F, textAlign: 'left',
+            }}>
+              {loadingMore ? 'Carregando...' : `+ Carregar mais ${Math.min(40, totalAds - ads.length)} anúncios`}
             </button>
           )}
         </div>
@@ -1696,19 +1883,23 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void }> = ({ totalAds, ads, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, toggleSuccess, onRequestToggle }) => {
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns: CampaignSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void; togglingCampaign?: string | null; campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void }> = ({ totalAds, ads, campaigns, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
   const navigate = useNavigate();
   const [oppHov, setOppHov] = useState(false);
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 8 }}>
 
-      {/* ── BLOCO 1: ADS — status handled by unified SystemStatus ── */}
-      {ads.length > 0 && (
+      {/* ── BLOCO 1: CAMPAIGNS → ADS ── */}
+      {(campaigns.length > 0 || ads.length > 0) && (
         <div style={{
           background: T.bg1, border: `1px solid ${T.border1}`,
           borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
         }}>
-          <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
+          {campaigns.length > 0 ? (
+            <CampaignList campaigns={campaigns} ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={onRequestCampaignToggle} />
+          ) : (
+            <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
+          )}
         </div>
       )}
 
@@ -1758,6 +1949,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; periodLabe
 // ================================================================
 const PerformanceSummary: React.FC<{
   ads: AdSummary[];
+  campaigns: CampaignSummary[];
   totalAds: number;
   metrics: AdMetricsSummary | null;
   periodLabel: string;
@@ -1769,7 +1961,10 @@ const PerformanceSummary: React.FC<{
   toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
   onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
   trackingIssue?: boolean;
-}> = ({ ads, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, toggleSuccess, onRequestToggle, trackingIssue }) => {
+  togglingCampaign?: string | null;
+  campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
+  onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void;
+}> = ({ ads, campaigns, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, toggleSuccess, onRequestToggle, trackingIssue, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
   const navigate = useNavigate();
   const hasMetrics = metrics && metrics.daysOfData > 0;
 
@@ -1820,8 +2015,25 @@ const PerformanceSummary: React.FC<{
           </div>
         )}
 
-        {/* Ad list */}
-        {ads.length > 0 && <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />}
+        {/* Campaign → Ads hierarchy */}
+        {campaigns.length > 0 ? (
+          <CampaignList
+            campaigns={campaigns}
+            ads={ads}
+            totalAds={totalAds}
+            onLoadMore={onLoadMoreAds}
+            loadingMore={loadingMoreAds}
+            onToggleAd={onToggleAd}
+            togglingAd={togglingAd}
+            toggleSuccess={toggleSuccess}
+            onRequestToggle={onRequestToggle}
+            togglingCampaign={togglingCampaign}
+            campaignToggleSuccess={campaignToggleSuccess}
+            onRequestCampaignToggle={onRequestCampaignToggle}
+          />
+        ) : ads.length > 0 ? (
+          <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
+        ) : null}
       </div>
 
       {/* ── BLOCO 2: OPORTUNIDADE ── */}
@@ -2485,7 +2697,7 @@ const PerformancePulse: React.FC<{
     }
   }
 
-  // Slot 4: AD STATUS — always
+  // Slot 4: CAMPAIGN/AD STATUS — always
   kpis.push({
     label: 'Anúncios',
     value: `${data.activeAds}`,
@@ -2667,6 +2879,9 @@ const FeedPage: React.FC = () => {
   const [userAds, setUserAds] = useState<AdSummary[]>([]);
   const [totalAdCount, setTotalAdCount] = useState<number>(0);
   const [adsLoaded, setAdsLoaded] = useState(false);
+
+  // ── Fetch user's campaigns ──
+  const [userCampaigns, setUserCampaigns] = useState<CampaignSummary[]>([]);
 
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
@@ -2918,6 +3133,23 @@ const FeedPage: React.FC = () => {
   }, [fetchAds, userAds.length]);
 
   useEffect(() => { fetchAds(); }, [fetchAds]);
+
+  // ── Campaigns fetch ──
+  const fetchCampaigns = useCallback(async () => {
+    if (!accountId) { setUserCampaigns([]); return; }
+    try {
+      const { data } = await (supabase
+        .from('campaigns' as any)
+        .select('id, name, meta_campaign_id, status, objective, daily_budget')
+        .eq('account_id', accountId)
+        .order('name') as any);
+      setUserCampaigns((data || []) as CampaignSummary[]);
+    } catch {
+      // noop
+    }
+  }, [accountId]);
+
+  useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
 
   // Metrics fetch — re-runs when period or accountId changes
   // Fetches both selected period + 30d anchor for drift-protected baselines
@@ -3272,6 +3504,48 @@ const FeedPage: React.FC = () => {
       setToggleRequest(null);
     }
   }, [toggleRequest, togglingAd, userId, personaId, fetchAds]);
+
+  // ── Campaign toggle (pause/activate) ──
+  const [togglingCampaign, setTogglingCampaign] = useState<string | null>(null);
+  const [campaignToggleSuccess, setCampaignToggleSuccess] = useState<{ id: string; action: 'pause' | 'activate' } | null>(null);
+
+  const handleRequestCampaignToggle = useCallback((campaign: CampaignSummary, action: 'pause' | 'activate') => {
+    // Direct toggle — no confirmation modal for campaigns (same UX pattern)
+    if (togglingCampaign) return;
+    setTogglingCampaign(campaign.meta_campaign_id);
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const res = await fetch(`${supabaseUrl}/functions/v1/meta-actions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || supabaseKey}`,
+            'apikey': supabaseKey,
+          },
+          body: JSON.stringify({
+            action: action === 'pause' ? 'pause' : 'enable',
+            user_id: userId,
+            persona_id: personaId,
+            target_id: campaign.meta_campaign_id,
+            target_type: 'campaign',
+          }),
+        });
+        if (res.ok) {
+          setCampaignToggleSuccess({ id: campaign.meta_campaign_id, action });
+          setTimeout(() => setCampaignToggleSuccess(null), 2400);
+          fetchCampaigns();
+          fetchAds(); // Refresh ads too since campaign status affects them
+        }
+      } catch (e) {
+        console.error('Toggle campaign error:', e);
+      } finally {
+        setTogglingCampaign(null);
+      }
+    })();
+  }, [togglingCampaign, userId, personaId, fetchCampaigns, fetchAds]);
 
   // Meta Ads Manager URL for the connected account
   const metaAccountId = activeAccount?.metaAccountId || '';
@@ -3815,6 +4089,10 @@ const FeedPage: React.FC = () => {
                 onLoadMoreAds={loadMoreAds}
                 loadingMoreAds={adsLoadingMore}
                 trackingIssue={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'}
+                campaigns={userCampaigns}
+                togglingCampaign={togglingCampaign}
+                campaignToggleSuccess={campaignToggleSuccess}
+                onRequestCampaignToggle={handleRequestCampaignToggle}
               />
             )}
 
@@ -3847,7 +4125,7 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'few-data' ? (
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
-          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} />
+          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
         ) : null}
 
         {/* Intelligence — collapsible, always available */}
