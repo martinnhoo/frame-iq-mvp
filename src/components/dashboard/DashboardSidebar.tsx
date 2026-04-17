@@ -44,19 +44,20 @@ const PLANS: Record<string, { label: string; color: string }> = {
 const F = "'Plus Jakarta Sans', sans-serif";
 const A = "#0da2e7";
 
-const SB_AVATAR_PALETTE = [
-  { bg:"rgba(13,162,231,0.12)",  border:"rgba(13,162,231,0.22)",  text:"#5cc8f0"  },
-  { bg:"rgba(167,139,250,0.12)", border:"rgba(167,139,250,0.22)", text:"#c4b5fd"  },
-  { bg:"rgba(16,185,129,0.10)",  border:"rgba(16,185,129,0.20)",  text:"#6ee7b7"  },
-  { bg:"rgba(251,146,60,0.10)",  border:"rgba(251,146,60,0.20)",  text:"#fcd34d"  },
-  { bg:"rgba(248,113,113,0.10)", border:"rgba(248,113,113,0.20)", text:"#fca5a5"  },
-  { bg:"rgba(6,182,212,0.10)",   border:"rgba(6,182,212,0.20)",   text:"#67e8f9"  },
-  { bg:"rgba(244,114,182,0.10)", border:"rgba(244,114,182,0.20)", text:"#f9a8d4"  },
+// Gradient palette for persona avatars — subtle, dark-first linear gradients
+const AVATAR_GRADIENTS = [
+  "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
+  "linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)",
+  "linear-gradient(135deg, #191924 0%, #2d1b4e 100%)",
+  "linear-gradient(135deg, #1a1a2e 0%, #1b3a4b 100%)",
+  "linear-gradient(135deg, #1c1c1c 0%, #2c1810 100%)",
+  "linear-gradient(135deg, #141e20 0%, #0d2818 100%)",
+  "linear-gradient(135deg, #1a1520 0%, #2a1a3a 100%)",
 ];
-function sbAvatarColor(name: string) {
+function avatarGradient(name: string) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
-  return SB_AVATAR_PALETTE[Math.abs(h) % SB_AVATAR_PALETTE.length];
+  return AVATAR_GRADIENTS[Math.abs(h) % AVATAR_GRADIENTS.length];
 }
 
 // ── Nav item (primary links) — always show icon, like Linear ─────────────────
@@ -296,14 +297,16 @@ export function DashboardSidebar({
             {/* Avatar */}
             <div style={{
               width: 30, height: 30, borderRadius: 8, flexShrink: 0, overflow: "hidden",
-              background: selectedPersona ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.10)",
+              background: selectedPersona
+                ? (selectedPersona.logo_url ? "rgba(255,255,255,0.08)" : avatarGradient(selectedPersona.name || "?"))
+                : "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               {selectedPersona?.logo_url
                 ? <img src={selectedPersona.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : selectedPersona
-                  ? <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.7)", fontFamily: F }}>
+                  ? <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.75)", fontFamily: F }}>
                         {(selectedPersona.name || "?").charAt(0).toUpperCase()}
                       </span>
                   : <Building2 size={13} color="rgba(255,255,255,0.25)" />
@@ -372,16 +375,16 @@ export function DashboardSidebar({
                     onMouseLeave={e => { if (!isSel) (e.currentTarget as HTMLElement).style.background = isSel ? "rgba(255,255,255,0.04)" : "transparent"; }}>
                     <div style={{
                       width: 20, height: 20, borderRadius: 5, flexShrink: 0, overflow: "hidden",
-                      background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
+                      background: p.logo_url ? "rgba(255,255,255,0.06)" : avatarGradient(p.name || "?"),
+                      border: "1px solid rgba(255,255,255,0.06)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       {p.logo_url
                         ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        : (() => { const av = sbAvatarColor(p.name || "?"); return (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: av.text }}>
-                              {(p.name || "?").charAt(0).toUpperCase()}
-                            </span>
-                          ); })()}
+                        : <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>
+                            {(p.name || "?").charAt(0).toUpperCase()}
+                          </span>
+                      }
                     </div>
                     <span style={{
                       flex: 1, fontSize: 12.5, fontWeight: isSel ? 500 : 400,
@@ -491,7 +494,7 @@ export function DashboardSidebar({
               <AvatarImage src={profile?.avatar_url || undefined} />
               <AvatarFallback style={{
                 fontSize: 11, fontWeight: 700, borderRadius: 7,
-                background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)",
+                background: avatarGradient(displayName), color: "rgba(255,255,255,0.5)",
                 border: "none",
               }}>{initials}</AvatarFallback>
             </Avatar>

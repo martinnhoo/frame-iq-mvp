@@ -30,6 +30,22 @@ import {
 const F = "'Plus Jakarta Sans', sans-serif";
 const MOBILE_BP = 768;
 
+// Gradient palette for persona avatars — subtle, dark-first linear gradients
+const AVATAR_GRADIENTS = [
+  "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
+  "linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)",
+  "linear-gradient(135deg, #191924 0%, #2d1b4e 100%)",
+  "linear-gradient(135deg, #1a1a2e 0%, #1b3a4b 100%)",
+  "linear-gradient(135deg, #1c1c1c 0%, #2c1810 100%)",
+  "linear-gradient(135deg, #141e20 0%, #0d2818 100%)",
+  "linear-gradient(135deg, #1a1520 0%, #2a1a3a 100%)",
+];
+function avatarGradient(name: string) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
+  return AVATAR_GRADIENTS[Math.abs(h) % AVATAR_GRADIENTS.length];
+}
+
 // ── Nav item ─────────────────────────────────────────────────────────────────
 function NavItem({ url, label, icon: Icon, isActive, badge, onClick }: {
   url: string; label: string; icon: React.ElementType;
@@ -303,14 +319,16 @@ export function AppLayout() {
           {/* Avatar */}
           <div style={{
             width: 30, height: 30, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
-            background: selectedPersona ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.10)',
+            background: selectedPersona
+              ? (selectedPersona.logo_url ? 'rgba(255,255,255,0.08)' : avatarGradient(selectedPersona.name || '?'))
+              : 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             {selectedPersona?.logo_url
               ? <img src={selectedPersona.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : selectedPersona
-                ? <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>
+                ? <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
                     {(selectedPersona.name || '?').charAt(0).toUpperCase()}
                   </span>
                 : <Building2 size={13} color="rgba(255,255,255,0.25)" />
@@ -384,13 +402,13 @@ export function AppLayout() {
                     >
                       <div style={{
                         width: 20, height: 20, borderRadius: 5, flexShrink: 0, overflow: 'hidden',
-                        background: 'rgba(255,255,255,0.06)',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        background: p.logo_url ? 'rgba(255,255,255,0.06)' : avatarGradient(p.name || '?'),
+                        border: '1px solid rgba(255,255,255,0.06)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         {p.logo_url
                           ? <img src={p.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>
+                          : <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
                               {(p.name || '?').charAt(0).toUpperCase()}
                             </span>
                         }
