@@ -1134,28 +1134,28 @@ function PricingSection({ t }: { t: Record<string, string> }) {
 
   const plans = [
     {
-      name: t.pricing_free, desc: t.pricing_free_d, price: "$0",
+      name: t.pricing_free, desc: t.pricing_free_d, price: "$0", mo: false,
       f1: t.pricing_free_f1, f2: t.pricing_free_f2,
       cta: t.pricing_free_cta, action: () => navigate("/signup"),
-      highlight: false, badge: null, scale: 0.92,
+      tier: "free" as const,
     },
     {
-      name: t.pricing_maker, desc: t.pricing_maker_d, price: "$19",
+      name: t.pricing_maker, desc: t.pricing_maker_d, price: "$19", mo: true,
       f1: t.pricing_maker_f1, f2: t.pricing_maker_f2,
       cta: t.pricing_maker_cta, action: () => navigate("/signup?plan=maker"),
-      highlight: false, badge: null, scale: 0.96,
+      tier: "maker" as const,
     },
     {
-      name: t.pricing_pro, desc: t.pricing_pro_d, price: "$49",
+      name: t.pricing_pro, desc: t.pricing_pro_d, price: "$49", mo: true,
       f1: t.pricing_pro_f1, f2: t.pricing_pro_f2,
       cta: t.pricing_pro_cta, action: () => navigate("/signup?plan=pro"),
-      highlight: true, badge: t.pricing_pro_badge, scale: 1,
+      tier: "pro" as const,
     },
     {
-      name: t.pricing_studio, desc: t.pricing_studio_d, price: "$299",
+      name: t.pricing_studio, desc: t.pricing_studio_d, price: "$299", mo: true,
       f1: t.pricing_studio_f1, f2: t.pricing_studio_f2,
       cta: t.pricing_studio_cta, action: () => navigate("/signup?plan=studio"),
-      highlight: false, badge: null, scale: 0.96,
+      tier: "studio" as const,
     },
   ];
 
@@ -1164,83 +1164,98 @@ function PricingSection({ t }: { t: Record<string, string> }) {
       background: BG, padding: "clamp(72px,9vw,100px) clamp(20px,4vw,40px)",
       borderTop: `1px solid ${BORDER}`,
     }}>
-      <div style={{ maxWidth: 960, margin: "0 auto" }}>
-        <h2 style={{
-          fontFamily: F, fontSize: "clamp(24px,2.8vw,34px)", fontWeight: 800,
-          letterSpacing: "-0.04em", color: TEXT, margin: "0 0 8px",
-        }}>
-          {t.pricing_title}
-        </h2>
-        <p style={{
-          fontFamily: F, fontSize: 14, color: TEXT3, margin: "0 0 48px",
-        }}>
-          {t.pricing_sub}
-        </p>
+      <div style={{ maxWidth: 980, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <h2 style={{
+            fontFamily: F, fontSize: "clamp(24px,2.8vw,34px)", fontWeight: 800,
+            letterSpacing: "-0.04em", color: TEXT, margin: "0 0 10px",
+          }}>
+            {t.pricing_title}
+          </h2>
+          <p style={{
+            fontFamily: F, fontSize: 14, color: TEXT3, margin: 0,
+          }}>
+            {t.pricing_sub}
+          </p>
+        </div>
 
         <div className="pricing-grid" style={{
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, alignItems: "end",
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "clamp(10px, 1.5vw, 16px)", alignItems: "stretch",
         }}>
-          {plans.map((plan, i) => {
-            const isPro = plan.highlight;
-            const isStudio = i === 3;
+          {plans.map((plan) => {
+            const isPro = plan.tier === "pro";
             return (
-              <div key={i} className="pricing-card" style={{
-                background: isPro ? "rgba(99,102,241,0.04)" : isStudio ? "rgba(14,165,233,0.02)" : SURFACE,
-                border: `1px solid ${isPro ? "rgba(99,102,241,0.20)" : isStudio ? "rgba(14,165,233,0.10)" : BORDER}`,
+              <div key={plan.tier} className="pricing-card" style={{
+                background: isPro ? "rgba(99,102,241,0.05)" : SURFACE,
+                border: isPro
+                  ? "1.5px solid rgba(99,102,241,0.30)"
+                  : `1px solid ${BORDER}`,
                 borderRadius: 14,
-                padding: isPro ? "32px 22px" : "24px 18px",
+                padding: "clamp(20px, 2.5vw, 28px) clamp(16px, 2vw, 22px)",
+                display: "flex", flexDirection: "column",
                 position: "relative",
                 transition: `all 0.3s ${EASE}`,
+                boxShadow: isPro ? "0 0 40px rgba(99,102,241,0.08), 0 8px 32px rgba(0,0,0,0.2)" : "none",
               }}>
-                {plan.badge && (
+                {/* Badge — Pro only */}
+                {isPro && t.pricing_pro_badge && (
                   <span style={{
-                    fontFamily: F, fontSize: 9.5, fontWeight: 800, letterSpacing: "0.05em",
-                    color: INDIGO, marginBottom: 12, display: "inline-block",
-                    background: "rgba(99,102,241,0.08)", padding: "3px 9px", borderRadius: 5,
-                    border: "1px solid rgba(99,102,241,0.15)",
+                    fontFamily: F, fontSize: 9, fontWeight: 800, letterSpacing: "0.06em",
+                    color: INDIGO, marginBottom: 14, display: "inline-block",
+                    background: "rgba(99,102,241,0.10)", padding: "4px 10px", borderRadius: 5,
+                    border: "1px solid rgba(99,102,241,0.18)", alignSelf: "flex-start",
                   }}>
-                    {plan.badge}
+                    {t.pricing_pro_badge}
                   </span>
                 )}
 
+                {/* Name */}
                 <h3 style={{
-                  fontFamily: F, fontSize: isPro ? 18 : 15, fontWeight: 700,
-                  color: isPro ? TEXT : "rgba(255,255,255,0.8)", margin: "0 0 3px", letterSpacing: "-0.02em",
+                  fontFamily: F, fontSize: 16, fontWeight: 700,
+                  color: isPro ? TEXT : "rgba(255,255,255,0.85)",
+                  margin: "0 0 3px", letterSpacing: "-0.02em",
                 }}>
                   {plan.name}
                 </h3>
+
+                {/* Description */}
                 <p style={{
-                  fontFamily: F, fontSize: 11.5, color: TEXT3, margin: "0 0 18px", fontWeight: 400,
+                  fontFamily: F, fontSize: 11.5, color: TEXT3, margin: "0 0 20px",
+                  fontWeight: 400, lineHeight: 1.4,
                 }}>
                   {plan.desc}
                 </p>
 
-                <div style={{ marginBottom: 18 }}>
+                {/* Price */}
+                <div style={{ marginBottom: 20 }}>
                   <span style={{
-                    fontFamily: F, fontSize: isPro ? 40 : 28, fontWeight: 900,
-                    color: isPro ? TEXT : "rgba(255,255,255,0.85)", letterSpacing: "-0.04em",
+                    fontFamily: F, fontSize: 32, fontWeight: 900,
+                    color: isPro ? TEXT : "rgba(255,255,255,0.88)", letterSpacing: "-0.04em",
                   }}>
                     {plan.price}
                   </span>
-                  {plan.price !== "$0" && (
+                  {plan.mo && (
                     <span style={{ fontFamily: F, fontSize: 12, color: TEXT3, marginLeft: 2 }}>{t.pricing_mo}</span>
                   )}
                 </div>
 
-                <div style={{ marginBottom: 18 }}>
-                  <p style={{ fontFamily: F, fontSize: 12, color: TEXT2, margin: "0 0 4px", fontWeight: 500 }}>{plan.f1}</p>
+                {/* Features */}
+                <div style={{ marginBottom: 24, flex: 1 }}>
+                  <p style={{ fontFamily: F, fontSize: 12.5, color: TEXT2, margin: "0 0 4px", fontWeight: 500 }}>{plan.f1}</p>
                   <p style={{ fontFamily: F, fontSize: 11.5, color: TEXT3, margin: 0, fontWeight: 400 }}>{plan.f2}</p>
                 </div>
 
+                {/* CTA */}
                 <button onClick={plan.action} className="pricing-cta-btn" style={{
-                  width: "100%", fontFamily: F, fontSize: 12.5,
-                  fontWeight: isPro ? 700 : 600,
-                  padding: isPro ? "12px 0" : "9px 0", borderRadius: 8,
-                  background: isPro ? INDIGO : isStudio ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.04)",
+                  width: "100%", fontFamily: F, fontSize: 13,
+                  fontWeight: 700, padding: "11px 0", borderRadius: 8,
+                  background: isPro ? INDIGO : "rgba(255,255,255,0.04)",
                   color: isPro ? "#fff" : TEXT2,
-                  border: isPro ? "none" : `1px solid ${isStudio ? "rgba(255,255,255,0.08)" : BORDER}`,
+                  border: isPro ? "none" : `1px solid rgba(255,255,255,0.08)`,
                   cursor: "pointer", transition: `all 0.2s ${EASE}`,
-                  boxShadow: isPro ? "0 2px 12px rgba(99,102,241,0.2)" : "none",
+                  boxShadow: isPro ? "0 2px 16px rgba(99,102,241,0.25)" : "none",
+                  marginTop: "auto",
                 }}>
                   {plan.cta}
                 </button>
@@ -1521,9 +1536,8 @@ export default function IndexNew() {
           .concept-grid h2 { text-align: center; }
           .flow-steps { padding-left: 0 !important; }
           .pricing-grid {
-            grid-template-columns: 1fr !important;
-            max-width: 340px;
-            margin: 0 auto;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
           }
           .pricing-card { transform: none !important; }
           .loop-flow {
@@ -1542,7 +1556,7 @@ export default function IndexNew() {
         @media (max-width: 375px) {
           .hero-grid h1 { font-size: 26px !important; line-height: 1.12 !important; }
           .hero-grid p { font-size: 13px !important; }
-          .pricing-grid { max-width: 100% !important; }
+          .pricing-grid { grid-template-columns: 1fr !important; max-width: 340px !important; margin: 0 auto !important; }
           .footer-inner { grid-template-columns: 1fr !important; }
         }
 
