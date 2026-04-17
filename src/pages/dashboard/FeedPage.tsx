@@ -3372,7 +3372,7 @@ const FeedPage: React.FC = () => {
   const [savingsTotal, setSavingsTotal] = useState<number>(0);
 
   useEffect(() => {
-    if (!userId || !personaId) { setPulseData(null); return; }
+    if (!userId || !personaId) { setPulseData(null); setPulseDataReady(true); return; }
     let cancelled = false;
     (async () => {
       try {
