@@ -3284,6 +3284,8 @@ const FeedPage: React.FC = () => {
         });
       } catch { setAdMetrics(null); }
       setMetricsReady(true); // ✓ Path B: fallback success OR fallback error
+    } finally {
+      clearTimeout(safetyTimer);
     }
   }, [userId, personaId, accountId, period, periodDays]);
 
