@@ -3162,7 +3162,8 @@ const FeedPage: React.FC = () => {
   const liveMetricsInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchLiveMetrics = useCallback(async (silent = false) => {
-    if (!userId || !personaId || !accountId) { if (!silent) { setAdMetrics(null); setMetricsReady(true); } return; }
+    if (!userId || !personaId || !accountId) { if (!silent) setAdMetrics(null); return; }
+    if (!silent) setMetricsReady(false);
     try {
       const periodKey = period === '30d' ? '30d' : period === '14d' ? '14d' : '7d';
       const { data, error } = await supabase.functions.invoke('live-metrics', {
