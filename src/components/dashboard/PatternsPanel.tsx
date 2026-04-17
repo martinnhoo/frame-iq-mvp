@@ -308,7 +308,7 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
   const [detecting, setDetecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [alignment, setAlignment] = useState<{ score: number; label: string } | null>(null);
-  const [sectionOpen, setSectionOpen] = useState(true);
+  const [sectionOpen, setSectionOpen] = useState(false);
   const triedDetect = useRef(false);
   const navigate = useNavigate();
 

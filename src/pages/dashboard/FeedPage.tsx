@@ -3911,7 +3911,33 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Tracking status absorbed into SystemStatus — no separate indicator */}
+        {/* Compact tracking status — shown after user confirms no conversions */}
+        {trackingUserStatus === 'confirmed_no_conversion' && adMetrics && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: T.bg1, border: `1px solid ${T.border0}`,
+            borderRadius: 8, padding: '10px 14px', marginBottom: 10,
+            animation: 'feed-fadeUp 0.3s ease',
+          }}>
+            <span style={{
+              width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+              background: T.yellow,
+              boxShadow: `0 0 6px ${T.yellow}40`,
+            }} />
+            <span style={{ fontSize: 12, color: T.text2, fontWeight: 600, flex: 1 }}>
+              Sem conversões — confirmado pelo usuário
+            </span>
+            <button
+              onClick={resetTrackingStatus}
+              style={{
+                background: 'none', border: 'none', color: T.text3, cursor: 'pointer',
+                fontSize: 11, textDecoration: 'underline', padding: 0,
+              }}
+            >
+              Reverificar
+            </button>
+          </div>
+        )}
 
         {/* Beginner Mode — data still collecting, no alerts */}
         {metaConnected && !isDemo && beginnerMode && adMetrics && adMetrics.daysOfData > 0 && (
