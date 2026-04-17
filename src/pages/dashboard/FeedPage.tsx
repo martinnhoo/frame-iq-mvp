@@ -3183,9 +3183,12 @@ const FeedPage: React.FC = () => {
   const liveMetricsInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchLiveMetrics = useCallback(async (silent = false) => {
-    // Early return: no account yet. Don't touch metricsReady — the isFirstLoad
-    // gate uses accountResolving for this case, not metricsReady.
-    if (!userId || !personaId || !accountId) { if (!silent) setAdMetrics(null); return; }
+    // Early return: missing context. Set metricsReady so the skeleton doesn't
+    // hang forever — this lets the empty/no-data UI render instead.
+    if (!userId || !personaId || !accountId) {
+      if (!silent) { setAdMetrics(null); setMetricsReady(true); }
+      return;
+    }
     // Real fetch starting — gate stays closed until this completes
     if (!silent) setMetricsReady(false);
     try {
