@@ -81,11 +81,20 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
     return () => window.removeEventListener("keydown", fn);
   }, [zoomed]);
 
-  // Prevent scroll when lightbox open
+  // Prevent scroll when lightbox open — always clean up on unmount
   useEffect(() => {
-    document.body.style.overflow = zoomed ? "hidden" : "";
+    if (zoomed) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
     return () => { document.body.style.overflow = ""; };
   }, [zoomed]);
+
+  // Safety: ensure body overflow is restored if component unmounts while zoomed
+  useEffect(() => {
+    return () => { document.body.style.overflow = ""; };
+  }, []);
 
   return (
     <>

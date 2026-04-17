@@ -2315,7 +2315,7 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
 
 
   return (
-    <section className="hero-main-section" style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', padding: 'clamp(20px,3vw,40px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflow: 'hidden', overflowX: 'hidden', background: '#070d1a' }}>
+    <section className="hero-main-section" style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', padding: 'clamp(20px,3vw,40px) clamp(20px,5vw,80px) clamp(40px,4vw,60px)', position: 'relative', overflowX: 'clip', background: '#070d1a' }}>
 
       {/* Soft ambient gradient */}
       <div style={{
@@ -2328,14 +2328,14 @@ function ImmersiveHero({ onCTA, t, lang, ctaLoading }: { onCTA: () => void; t: R
       <div className="hero-glow-orb" style={{ right: '8%', top: '55%', width: 380, height: 380, background: 'rgba(99,102,241,0.05)', animationDelay: '3s' }} />
 
       {/* Grid */}
-      <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1, overflow: 'hidden' }} className="hero-grid">
+      <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 'clamp(40px,5vw,80px)', alignItems: 'center', position: 'relative', zIndex: 1 }} className="hero-grid">
 
         {/* ── LEFT ── */}
         <HeroLeft lang={lang} onCTA={onCTA} ctaLoading={ctaLoading} />
 
         {/* ── RIGHT — demo ── */}
         {/* ── RIGHT — Demo redesign ── */}
-        <div className="hero-demo-col" style={{ position: 'relative', width: '100%', minWidth: 0, overflow: 'hidden' }}>
+        <div className="hero-demo-col" style={{ position: 'relative', width: '100%', minWidth: 0, overflowX: 'clip' }}>
           <DemoTabs onCTA={onCTA} />
         </div>
 
@@ -3771,11 +3771,11 @@ export default function IndexNew() {
 
             /* ── HERO — tela cheia, conteúdo empilhado ── */
             .hero-main-section{
-              min-height:100vh!important;
-              min-height:100dvh!important;
+              min-height:auto!important;
               padding:56px 20px 32px!important;
-              align-items:center!important;
-              overflow:hidden!important;
+              align-items:flex-start!important;
+              overflow-x:clip!important;
+              overflow-y:visible!important;
             }
             .hero-grid{
               grid-template-columns:1fr!important;
@@ -3809,12 +3809,13 @@ export default function IndexNew() {
               justify-content:center!important;
               font-size:15px!important;
             }
-            /* DemoTabs: full width, no overflow */
+            /* DemoTabs: full width, clip horizontal only */
             .hero-demo-col{
               padding:0!important;
               width:100%!important;
               min-width:0!important;
-              overflow:hidden!important;
+              overflow-x:clip!important;
+              overflow-y:visible!important;
               max-width:100vw!important;
             }
             .hero-demo-col > *{
@@ -3922,7 +3923,7 @@ export default function IndexNew() {
           /* ── 480px — smaller screens ── */
           @media(max-width:480px){
             h1,.hero-h1{font-size:clamp(34px,9vw,44px)!important}
-            .hero-main-section{min-height:100vh!important;min-height:100dvh!important;padding:48px 16px 28px!important}
+            .hero-main-section{min-height:auto!important;padding:48px 16px 28px!important}
             section{padding-left:16px!important;padding-right:16px!important;padding-top:48px!important;padding-bottom:48px!important}
             .spstrip-grid{grid-template-columns:1fr!important}
             .spstrip-grid>div{
