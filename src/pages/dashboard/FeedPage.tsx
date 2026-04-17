@@ -3604,12 +3604,12 @@ const FeedPage: React.FC = () => {
    *  STATE 2 → single ad
    *  STATE 1 → zero ads
    */
-  type FeedState = 'demo' | 'full' | 'no-critical' | 'few-data' | 'single-ad' | 'no-ads';
+  type FeedState = 'demo' | 'full' | 'no-critical' | 'few-data' | 'single-ad' | 'no-ads' | 'loading';
 
   function resolveFeedState(): FeedState {
     if (isDemo) return 'demo';
     if (pendingDecisions.length > 0) return 'full'; // STATE 5
-    if (!adsLoaded) return 'no-ads'; // isLoading gate handles this case now
+    if (!adsLoaded) return 'loading'; // show skeleton while ads load
     if (totalAdCount === 0) return 'no-ads';         // STATE 1
     if (totalAdCount === 1) return 'single-ad';      // STATE 2
     // Multiple ads but no decisions — fixed thresholds (period only affects metrics display)
@@ -3773,6 +3773,27 @@ const FeedPage: React.FC = () => {
 
         {/* Inline sync progress banner */}
         {syncing && <SyncBanner />}
+
+        {/* Performance Pulse — KPI shimmer skeleton while loading */}
+        {metaConnected && !isDemo && !pulseData && (
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
+            marginBottom: 12,
+          }}>
+            {[1,2,3,4].map(i => (
+              <div key={i} style={{
+                background: T.bg1, border: `1px solid ${T.border0}`,
+                borderRadius: 8, padding: '14px 12px 12px',
+                animation: 'feed-shimmer 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.1}s`,
+              }}>
+                <div style={{ width: 50, height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginBottom: 10 }} />
+                <div style={{ width: '70%', height: 20, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 6 }} />
+                <div style={{ width: '50%', height: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Performance Pulse — KPI bar */}
         {metaConnected && !isDemo && pulseData && (
@@ -4180,6 +4201,25 @@ const FeedPage: React.FC = () => {
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
           <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
+        ) : feedState === 'loading' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[1,2].map(i => (
+              <div key={i} style={{
+                background: T.bg1, border: `1px solid ${T.border0}`,
+                borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
+                animation: 'feed-shimmer 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.15}s`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                  <div style={{ width: 80, height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }} />
+                </div>
+                <div style={{ width: '80%', height: 16, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 8 }} />
+                <div style={{ width: '60%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2, marginBottom: 5 }} />
+                <div style={{ width: '45%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
+              </div>
+            ))}
+          </div>
         ) : null}
 
         {/* Discreet tracking status — tiny pill near campaigns */}
