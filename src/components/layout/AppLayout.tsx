@@ -289,48 +289,9 @@ export function AppLayout() {
   // Loading state
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#06080C', display: 'flex' }}>
-        {/* Sidebar placeholder */}
-        <div style={{ width: 220, flexShrink: 0, background: '#0a0e17', borderRight: '1px solid rgba(255,255,255,0.06)' }} />
-        {/* Content skeleton — matches Feed layout */}
-        <div style={{ flex: 1, padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
-          <div style={{ maxWidth: 760, margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ width: 100, height: 16, background: 'rgba(255,255,255,0.06)', borderRadius: 3, animation: 'app-shimmer 1.5s ease-in-out infinite' }} />
-              <div style={{ display: 'flex', gap: 6 }}>
-                <div style={{ width: 60, height: 24, background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} />
-                <div style={{ width: 80, height: 24, background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} />
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 14 }}>
-              {[1,2,3,4].map(i => (
-                <div key={i} style={{
-                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
-                  borderRadius: 8, padding: '14px 12px 12px',
-                  animation: 'app-shimmer 1.5s ease-in-out infinite',
-                  animationDelay: `${i * 0.1}s`,
-                }}>
-                  <div style={{ width: 45, height: 7, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginBottom: 10 }} />
-                  <div style={{ width: '65%', height: 18, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 6 }} />
-                  <div style={{ width: '45%', height: 7, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
-                </div>
-              ))}
-            </div>
-            {[1,2].map(i => (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
-                borderRadius: 8, padding: '16px', marginBottom: 10,
-                animation: 'app-shimmer 1.5s ease-in-out infinite',
-                animationDelay: `${i * 0.15}s`,
-              }}>
-                <div style={{ width: '75%', height: 16, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 8 }} />
-                <div style={{ width: '55%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2, marginBottom: 5 }} />
-                <div style={{ width: '40%', height: 11, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
-              </div>
-            ))}
-          </div>
-        </div>
-        <style>{`@keyframes app-shimmer{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#06080C' }}>
+        <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }

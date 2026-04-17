@@ -3267,25 +3267,11 @@ const FeedPage: React.FC = () => {
 
   const decisions = isDemo ? buildDemoDecisions() : realDecisions;
   const tracker = isDemo ? buildDemoMoneyTracker() : realTracker;
-  // ── Loading gate: show skeleton until ALL data sources are ready ──
-  // Everything renders as a single block — no partial/phased rendering
+  // Only show skeleton on the very first load — not after sync finishes (prevents flash)
   const hasSyncedRef = useRef(false);
   if (syncing) hasSyncedRef.current = true;
-  const isLoading = (() => {
-    // Never show skeleton after user has synced (prevents flash on re-sync)
-    if (hasSyncedRef.current) return false;
-    // Demo mode doesn't need real data
-    if (isDemo) return false;
-    // Account still resolving
-    if (accountResolving) return true;
-    // No account yet (pre-connection)
-    if (!accountId) return false;
-    // Wait for ALL data sources to be ready before showing the page
-    if (decisionsLoading || trackerLoading) return true;
-    if (metaConnected && !adsLoaded) return true;
-    if (metaConnected && !pulseDataReady) return true;
-    return false;
-  })();
+  const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
+  const isLoading = isFirstLoad && !hasSyncedRef.current;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
   const handleSync = useCallback(async () => {
@@ -3368,11 +3354,10 @@ const FeedPage: React.FC = () => {
     spendYesterday: number; ctrYesterday: number;
     spendPrev: number; ctrPrev: number;
   } | null>(null);
-  const [pulseDataReady, setPulseDataReady] = useState(false);
   const [savingsTotal, setSavingsTotal] = useState<number>(0);
 
   useEffect(() => {
-    if (!userId || !personaId) { setPulseData(null); setPulseDataReady(true); return; }
+    if (!userId || !personaId) { setPulseData(null); return; }
     let cancelled = false;
     (async () => {
       try {
@@ -3421,8 +3406,7 @@ const FeedPage: React.FC = () => {
         } else {
           setPulseData(null);
         }
-        if (!cancelled) setPulseDataReady(true);
-      } catch { if (!cancelled) { setPulseData(null); setPulseDataReady(true); } }
+      } catch { if (!cancelled) setPulseData(null); }
     })();
     return () => { cancelled = true; };
   }, [userId, personaId, metricsRefreshKey]);
@@ -3704,7 +3688,7 @@ const FeedPage: React.FC = () => {
   // Syncing is now an inline banner — no full-page overlay
 
   return (
-    <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px', animation: 'feed-fadeIn 0.3s ease' }}>
+    <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         {/* Header — wraps on mobile */}
         <div style={{ marginBottom: 16 }}>
