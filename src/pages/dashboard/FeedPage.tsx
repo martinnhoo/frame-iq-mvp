@@ -3316,17 +3316,21 @@ const FeedPage: React.FC = () => {
   }
   if (syncing) hasSyncedRef.current = true;
 
-  // Hard cap: never let the skeleton render more than 6 s on first mount,
-  // no matter which sub-fetch hangs (decisions, tracker, live-metrics).
+  // Skeleton policy:
+  // - Show skeleton ONLY while the active account is being resolved (accountResolving).
+  // - Once we know the account, render the real UI immediately. Sub-fetches
+  //   (decisions, tracker, live-metrics) have their own empty/loading states
+  //   so they CAN'T block the whole page if any of them hangs (RLS, network,
+  //   edge-function cold-start, etc.).
+  // - Hard cap of 4s as an absolute safety net for accountResolving itself.
   const [skeletonExpired, setSkeletonExpired] = useState(false);
   useEffect(() => {
     setSkeletonExpired(false);
-    const t = setTimeout(() => setSkeletonExpired(true), 6000);
+    const t = setTimeout(() => setSkeletonExpired(true), 4000);
     return () => clearTimeout(t);
-  }, [accountId]);
+  }, []);
 
-  const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading || !metricsReady) : false);
-  const isLoading = isFirstLoad && !hasSyncedRef.current && !skeletonExpired;
+  const isLoading = accountResolving && !hasSyncedRef.current && !skeletonExpired;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
   const handleSync = useCallback(async () => {
