@@ -358,7 +358,7 @@ export function AppLayout() {
             }}>
               {selectedPersona?.name || 'Selecionar conta'}
             </p>
-            {selectedPersona && (
+            {selectedPersona && !accountResolving && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
                 <span style={{
                   width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
@@ -370,11 +370,7 @@ export function AppLayout() {
                   color: metaConnected ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.25)',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
-                  {accountResolving
-                    ? 'Conectando...'
-                    : metaConnected
-                      ? `Meta Ads conectado`
-                      : 'Não conectado'}
+                  {metaConnected ? 'Meta Ads conectado' : 'Não conectado'}
                 </span>
               </div>
             )}

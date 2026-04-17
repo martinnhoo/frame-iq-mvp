@@ -2885,6 +2885,7 @@ const FeedPage: React.FC = () => {
 
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
+  const [metricsReady, setMetricsReady] = useState(false); // true once fetchLiveMetrics completes (success OR fail)
   const [metricsRefreshKey, setMetricsRefreshKey] = useState(0);
   const refreshMetrics = useCallback(() => setMetricsRefreshKey(k => k + 1), []);
 
@@ -3161,7 +3162,11 @@ const FeedPage: React.FC = () => {
   const liveMetricsInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchLiveMetrics = useCallback(async (silent = false) => {
+    // Early return: no account yet. Don't touch metricsReady — the isFirstLoad
+    // gate uses accountResolving for this case, not metricsReady.
     if (!userId || !personaId || !accountId) { if (!silent) setAdMetrics(null); return; }
+    // Real fetch starting — gate stays closed until this completes
+    if (!silent) setMetricsReady(false);
     try {
       const periodKey = period === '30d' ? '30d' : period === '14d' ? '14d' : '7d';
       const { data, error } = await supabase.functions.invoke('live-metrics', {
@@ -3209,6 +3214,7 @@ const FeedPage: React.FC = () => {
         freshnessFactor: 1, // live data is always fresh
         hasAnchorBaseline: false,
       });
+      setMetricsReady(true); // ✓ Path A: live-metrics API success
     } catch {
       // Fallback: read from ad_metrics DB table (stale but better than nothing)
       try {
@@ -3249,6 +3255,7 @@ const FeedPage: React.FC = () => {
           hasAnchorBaseline: false,
         });
       } catch { setAdMetrics(null); }
+      setMetricsReady(true); // ✓ Path B: fallback success OR fallback error
     }
   }, [userId, personaId, accountId, period, periodDays]);
 
@@ -3272,7 +3279,7 @@ const FeedPage: React.FC = () => {
   // Only show skeleton on the very first load — not after sync finishes (prevents flash)
   const hasSyncedRef = useRef(false);
   if (syncing) hasSyncedRef.current = true;
-  const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading) : false);
+  const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading || !metricsReady) : false);
   const isLoading = isFirstLoad && !hasSyncedRef.current;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
