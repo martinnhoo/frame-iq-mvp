@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { MoneyTracker } from '../types/v2-database';
 
+const MONEY_TRACKER_POLL_MS = 30000;
+
 interface UseMoneyTrackerReturn {
   tracker: MoneyTracker | null;
   isLoading: boolean;
@@ -27,7 +29,6 @@ export function useMoneyTracker(accountId: string | null): UseMoneyTrackerReturn
         .single() as any);
 
       if (error && error.code !== 'PGRST116') {
-        // PGRST116 = no rows returned
         throw error;
       }
 
@@ -40,41 +41,21 @@ export function useMoneyTracker(accountId: string | null): UseMoneyTrackerReturn
     }
   }, [accountId]);
 
-  // Initial fetch
   useEffect(() => {
     fetchTracker();
   }, [fetchTracker]);
 
-  // Subscribe to Realtime updates
   useEffect(() => {
     if (!accountId) return;
 
-    const channel = supabase
-      .channel(`money_tracker:${accountId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'money_tracker',
-          filter: `account_id=eq.${accountId}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'UPDATE') {
-            setTracker(payload.new as MoneyTracker);
-          } else if (payload.eventType === 'INSERT') {
-            setTracker(payload.new as MoneyTracker);
-          } else if (payload.eventType === 'DELETE') {
-            setTracker(null);
-          }
-        }
-      )
-      .subscribe();
+    const intervalId = window.setInterval(() => {
+      fetchTracker();
+    }, MONEY_TRACKER_POLL_MS);
 
     return () => {
-      supabase.removeChannel(channel);
+      window.clearInterval(intervalId);
     };
-  }, [accountId]);
+  }, [accountId, fetchTracker]);
 
   return {
     tracker,
