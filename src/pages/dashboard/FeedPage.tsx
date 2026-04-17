@@ -3410,6 +3410,18 @@ const FeedPage: React.FC = () => {
     spendPrev: number; ctrPrev: number;
   } | null>(null);
   const [savingsTotal, setSavingsTotal] = useState<number>(0);
+  const performancePulseData = useMemo(() => ({
+    spend7d: pulseData?.spend7d ?? 0,
+    ctr7d: pulseData?.ctr7d ?? 0,
+    activeAds: userAds.filter(a => {
+      const s = (a.effective_status || a.status || '').toUpperCase();
+      return s === 'ACTIVE' || s === '';
+    }).length,
+    spendYesterday: pulseData?.spendYesterday ?? 0,
+    ctrYesterday: pulseData?.ctrYesterday ?? 0,
+    spendPrev: pulseData?.spendPrev ?? 0,
+    ctrPrev: pulseData?.ctrPrev ?? 0,
+  }), [pulseData, userAds]);
 
   useEffect(() => {
     if (!userId || !personaId || !accountId) { setPulseData(null); return; }
@@ -3831,35 +3843,10 @@ const FeedPage: React.FC = () => {
         {/* Inline sync progress banner */}
         {syncing && <SyncBanner />}
 
-        {/* Performance Pulse — KPI shimmer skeleton while loading */}
-        {metaConnected && !isDemo && !pulseData && (
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
-            marginBottom: 12,
-          }}>
-            {[1,2,3,4].map(i => (
-              <div key={i} style={{
-                background: T.bg1, border: `1px solid ${T.border0}`,
-                borderRadius: 8, padding: '14px 12px 12px',
-                animation: 'feed-shimmer 1.5s ease-in-out infinite',
-                animationDelay: `${i * 0.1}s`,
-              }}>
-                <div style={{ width: 50, height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginBottom: 10 }} />
-                <div style={{ width: '70%', height: 20, background: 'rgba(255,255,255,0.05)', borderRadius: 3, marginBottom: 6 }} />
-                <div style={{ width: '50%', height: 8, background: 'rgba(255,255,255,0.03)', borderRadius: 2 }} />
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Performance Pulse — KPI bar */}
-        {metaConnected && !isDemo && pulseData && (
+        {metaConnected && !isDemo && (
           <PerformancePulse data={{
-            ...pulseData,
-            activeAds: userAds.filter(a => {
-              const s = (a.effective_status || a.status || '').toUpperCase();
-              return s === 'ACTIVE' || s === '';
-            }).length,
+            ...performancePulseData,
             totalAds: totalAdCount,
           }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
         )}
