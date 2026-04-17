@@ -286,8 +286,9 @@ export function AppLayout() {
     };
   }, []);
 
-  // Loading state
-  if (loading) {
+  // Loading state — wait for auth + profile AND account resolution before
+  // rendering the layout, so sidebar never flashes "Conectando..." then updates.
+  if (loading || accountResolving) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#06080C' }}>
         <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
