@@ -3911,8 +3911,8 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Compact tracking status — shown after user confirms no conversions */}
-        {trackingUserStatus === 'confirmed_no_conversion' && adMetrics && (
+        {/* Compact tracking status — shown after any tracking diagnosis path */}
+        {(trackingUserStatus === 'confirmed_no_conversion' || trackingUserStatus === 'verified_ok' || trackingUserStatus === 'verified_issue' || trackingUserStatus === 'investigating') && adMetrics && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
             background: T.bg1, border: `1px solid ${T.border0}`,
@@ -3921,11 +3921,22 @@ const FeedPage: React.FC = () => {
           }}>
             <span style={{
               width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-              background: T.yellow,
-              boxShadow: `0 0 6px ${T.yellow}40`,
+              background: trackingUserStatus === 'verified_ok' ? T.green
+                : trackingUserStatus === 'verified_issue' ? T.red
+                : trackingUserStatus === 'investigating' ? T.blue
+                : T.yellow,
+              boxShadow: `0 0 6px ${
+                trackingUserStatus === 'verified_ok' ? T.green
+                : trackingUserStatus === 'verified_issue' ? T.red
+                : trackingUserStatus === 'investigating' ? T.blue
+                : T.yellow
+              }40`,
             }} />
             <span style={{ fontSize: 12, color: T.text2, fontWeight: 600, flex: 1 }}>
-              Sem conversões — confirmado pelo usuário
+              {trackingUserStatus === 'confirmed_no_conversion' && 'Sem conversões — confirmado'}
+              {trackingUserStatus === 'verified_ok' && 'Rastreamento verificado — OK'}
+              {trackingUserStatus === 'verified_issue' && 'Problema no rastreamento detectado'}
+              {trackingUserStatus === 'investigating' && 'Diagnóstico em andamento…'}
             </span>
             <button
               onClick={resetTrackingStatus}
