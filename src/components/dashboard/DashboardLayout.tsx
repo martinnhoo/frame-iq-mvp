@@ -615,7 +615,7 @@ export default function DashboardLayout() {
       }
       
       /* Dropdowns e calendários: overflow-x hidden, scroll handled by .dashboard-content-area only */
-      .dashboard-main { overflow-x: hidden !important; overflow-y: visible !important; }
+      .dashboard-main { overflow-x: hidden !important; }
       /* Elementos absolutos dentro do dashboard não devem ser cortados */
       .lp [style*="position: absolute"],
       .lp [style*="position:absolute"],

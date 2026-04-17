@@ -714,11 +714,19 @@ input, textarea, select {
   }
 
   /* Dashboard main content fills full width (sidebar is off-screen) */
-  /* Scroll is handled by .dashboard-content-area parent — no double overflow */
+  /* Scroll is handled by .dashboard-content-area parent — keep content flowing */
   .dashboard-main {
     overflow: visible !important;
     width: 100% !important;
     min-width: 0 !important;
+    min-height: 0 !important;
+  }
+
+  /* Scroll container must keep overflow-y: auto on mobile */
+  .dashboard-content-area {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   /* Touch targets — Apple HIG minimum 44×44px (exclude feed micro-buttons) */

@@ -3226,7 +3226,7 @@ const FeedPage: React.FC = () => {
   if (!metaConnected) {
     return (
       <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
-        <div style={{ maxWidth: 760, margin: '0 auto', overflow: 'hidden' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
             <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>DECISÕES</h1>
           </div>
@@ -3240,7 +3240,7 @@ const FeedPage: React.FC = () => {
 
   return (
     <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', overflow: 'hidden' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
         {/* Header — wraps on mobile */}
         <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 8px' }}>
