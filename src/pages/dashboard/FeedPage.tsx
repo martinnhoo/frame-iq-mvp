@@ -2854,6 +2854,10 @@ const FeedPage: React.FC = () => {
   const [goalData, setGoalData] = useState<{ objective: string; metric: string; target: number | null } | null>(null);
   useEffect(() => {
     if (!accountId) { setGoalConfigured(null); setGoalData(null); return; }
+    // Reset immediately on account switch to prevent stale state from previous account
+    setGoalConfigured(null);
+    setGoalData(null);
+    let cancelled = false;
     (async () => {
       try {
         const { data } = await (supabase
@@ -2861,6 +2865,7 @@ const FeedPage: React.FC = () => {
           .select('goal_objective, goal_primary_metric, goal_target_value')
           .eq('id', accountId)
           .maybeSingle() as any);
+        if (cancelled) return;
         setGoalConfigured(!!data?.goal_objective);
         if (data?.goal_objective) {
           setGoalData({
@@ -2871,8 +2876,9 @@ const FeedPage: React.FC = () => {
         } else {
           setGoalData(null);
         }
-      } catch { setGoalConfigured(null); setGoalData(null); }
+      } catch { if (!cancelled) { setGoalConfigured(null); setGoalData(null); } }
     })();
+    return () => { cancelled = true; };
   }, [accountId]);
 
   // ── Fetch user's actual ads ──
@@ -2882,6 +2888,21 @@ const FeedPage: React.FC = () => {
 
   // ── Fetch user's campaigns ──
   const [userCampaigns, setUserCampaigns] = useState<CampaignSummary[]>([]);
+
+  // ── Reset data states on account switch to prevent stale data leaks ──
+  const prevAccountRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevAccountRef.current && prevAccountRef.current !== accountId) {
+      // Account actually changed — reset fetch-related state
+      setUserAds([]);
+      setTotalAdCount(0);
+      setAdsLoaded(false);
+      setUserCampaigns([]);
+      setAdMetrics(null);
+      setMetricsReady(false);
+    }
+    prevAccountRef.current = accountId ?? null;
+  }, [accountId]);
 
   // ── Fetch aggregate metrics for state detection (respects period) ──
   const [adMetrics, setAdMetrics] = useState<AdMetricsSummary | null>(null);
@@ -3224,7 +3245,7 @@ const FeedPage: React.FC = () => {
           .select('spend, conversions, revenue, clicks, impressions, ctr, cpa, cpc, roas, date')
           .eq('account_id', accountId)
           .gte('date', since) as any);
-        if (!mData || mData.length === 0) { setAdMetrics(null); return; }
+        if (!mData || mData.length === 0) { setAdMetrics(null); setMetricsReady(true); return; }
 
         const totalSpend = mData.reduce((s: number, r: any) => s + (r.spend || 0), 0);
         const totalConversions = mData.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
@@ -3278,6 +3299,12 @@ const FeedPage: React.FC = () => {
   const tracker = isDemo ? buildDemoMoneyTracker() : realTracker;
   // Only show skeleton on the very first load — not after sync finishes (prevents flash)
   const hasSyncedRef = useRef(false);
+  const hasSyncedAccountRef = useRef<string | null>(null);
+  // Reset hasSyncedRef when account changes so new account gets proper skeleton
+  if (accountId !== hasSyncedAccountRef.current) {
+    hasSyncedRef.current = false;
+    hasSyncedAccountRef.current = accountId ?? null;
+  }
   if (syncing) hasSyncedRef.current = true;
   const isFirstLoad = accountResolving || (accountId ? (decisionsLoading || trackerLoading || !metricsReady) : false);
   const isLoading = isFirstLoad && !hasSyncedRef.current;
@@ -3342,18 +3369,18 @@ const FeedPage: React.FC = () => {
   const handleSyncRef = useRef(handleSync);
   handleSyncRef.current = handleSync;
 
-  const autoSyncFired = useRef(false);
+  const autoSyncFiredForAccount = useRef<string | null>(null);
   useEffect(() => {
     if (!accountId || !metaConnected || !adsLoaded || totalAdCount > 0 || syncing || isDemo) return;
-    if (autoSyncFired.current) return;
+    if (autoSyncFiredForAccount.current === accountId) return;
 
     // Check localStorage — only skip if sync previously SUCCEEDED for this account
     const key = `adbrief_autosync_ok_${accountId}`;
     if (localStorage.getItem(key)) return;
 
-    autoSyncFired.current = true;
+    autoSyncFiredForAccount.current = accountId;
     const t = setTimeout(() => handleSyncRef.current(), 600);
-    return () => { clearTimeout(t); autoSyncFired.current = false; };
+    return () => { clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId, metaConnected, adsLoaded, totalAdCount]);
 
@@ -3366,7 +3393,7 @@ const FeedPage: React.FC = () => {
   const [savingsTotal, setSavingsTotal] = useState<number>(0);
 
   useEffect(() => {
-    if (!userId || !personaId) { setPulseData(null); return; }
+    if (!userId || !personaId || !accountId) { setPulseData(null); return; }
     let cancelled = false;
     (async () => {
       try {
@@ -3374,12 +3401,13 @@ const FeedPage: React.FC = () => {
         const sevenAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
         const fourteenAgo = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
 
-        // Last 7 days snapshots
+        // Last 7 days snapshots — filter by account_id to prevent cross-account data
         const { data: snaps } = await (supabase
           .from('daily_snapshots' as any)
           .select('date, total_spend, avg_ctr, active_ads, yesterday_spend, yesterday_ctr')
           .eq('user_id', userId)
           .eq('persona_id', personaId)
+          .eq('account_id', accountId)
           .gte('date', sevenAgo)
           .order('date', { ascending: false }) as any);
 
@@ -3389,6 +3417,7 @@ const FeedPage: React.FC = () => {
           .select('date, total_spend, avg_ctr')
           .eq('user_id', userId)
           .eq('persona_id', personaId)
+          .eq('account_id', accountId)
           .gte('date', fourteenAgo)
           .lt('date', sevenAgo)
           .order('date', { ascending: false }) as any);
@@ -3418,7 +3447,7 @@ const FeedPage: React.FC = () => {
       } catch { if (!cancelled) setPulseData(null); }
     })();
     return () => { cancelled = true; };
-  }, [userId, personaId, metricsRefreshKey]);
+  }, [userId, personaId, accountId, metricsRefreshKey]);
 
   // Fetch savings from action_log
   useEffect(() => {
@@ -3595,7 +3624,7 @@ const FeedPage: React.FC = () => {
   };
 
   // ── State detection ──
-  const pendingDecisions = (isDemo ? decisions : decisions).filter(d => {
+  const pendingDecisions = decisions.filter(d => {
     if (d.status !== 'pending') return false;
     // Remove onboarding/placeholder insights when account already has real ads
     if (totalAdCount > 0 && d.type === 'insight' && !d.ad_id && d.impact_daily === 0) return false;
