@@ -34,7 +34,6 @@ const Careers      = lazy(() => import("./pages/Careers"));
 const Pricing      = lazy(() => import("./pages/Pricing"));
 const Demo         = lazy(() => import("./pages/Demo"));
 const DemoShare    = lazy(() => import("./pages/DemoShare"));
-const Diagnostico  = lazy(() => import("./pages/Diagnostico"));
 const Gestao       = lazy(() => import("./pages/Gestao"));
 const Criativo     = lazy(() => import("./pages/Criativo"));
 
@@ -52,7 +51,6 @@ const BoardDetail      = lazy(() => import("./pages/dashboard/BoardDetail"));
 const TranslatePage    = lazy(() => import("./pages/dashboard/TranslatePage"));
 const SettingsPage     = lazy(() => import("./pages/dashboard/SettingsPage"));
 const TemplatesPage    = lazy(() => import("./pages/dashboard/TemplatesPage"));
-const PreflightCheck   = lazy(() => import("./pages/dashboard/PreflightCheck"));
 const PersonaPage      = lazy(() => import("./pages/dashboard/PersonaPage"));
 const AccountsPage     = lazy(() => import("./pages/dashboard/AccountsPage"));
 const AdScorePage      = lazy(() => import("./pages/dashboard/AdScorePage"));
@@ -62,7 +60,6 @@ const BriefGenerator   = lazy(() => import("./pages/dashboard/BriefGenerator"));
 const CreativeLoopPage = lazy(() => import("./pages/dashboard/CreativeLoopPage"));
 const PerformanceDashboard = lazy(() => import("./pages/dashboard/PerformanceDashboard"));
 const OAuthCallback    = lazy(() => import("./pages/dashboard/OAuthCallback"));
-const AccountDiagnostic = lazy(() => import("./pages/dashboard/AccountDiagnostic"));
 const LoopImportPage   = lazy(() => import("./pages/dashboard/LoopImportPage"));
 const LoopSettingsPage = lazy(() => import("./pages/dashboard/LoopSettingsPage"));
 const LoopGuidePage    = lazy(() => import("./pages/dashboard/LoopGuidePage"));
@@ -132,7 +129,6 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/demo" element={<Demo />} />
               <Route path="/s/:shareId" element={<DemoShare />} />
-              <Route path="/diagnostico" element={<Diagnostico />} />
               <Route path="/gestao" element={<Gestao />} />
               <Route path="/criativo" element={<Criativo />} />
               <Route path="/terms" element={<Terms />} />
@@ -170,7 +166,6 @@ const App = () => (
                 <Route path="translate" element={<ToolGate><TranslatePage /></ToolGate>} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="templates" element={<ToolGate><TemplatesPage /></ToolGate>} />
-                <Route path="preflight" element={<ToolGate><PreflightCheck /></ToolGate>} />
                 <Route path="persona" element={<PersonaPage />} />
                 <Route path="accounts" element={<AccountsPage />} />
                 <Route path="ad-score" element={<AdScorePage />} />
@@ -180,7 +175,6 @@ const App = () => (
                 <Route path="brief" element={<ToolGate><BriefGenerator /></ToolGate>} />
                 <Route path="loop" element={<CreativeLoopPage />} />
                 <Route path="performance" element={<PerformanceDashboard />} />
-                <Route path="diagnostic" element={<AccountDiagnostic />} />
                 <Route path="loop/connect/:platform/callback" element={<OAuthCallback />} />
                 <Route path="loop/import" element={<LoopImportPage />} />
                 <Route path="loop/settings" element={<LoopSettingsPage />} />

@@ -21,7 +21,6 @@ const GOALS = [
   { id: "analyze",   emoji: "", label: "Score my hook",            desc: "Get a 0–10 hook score + actionable fixes in 30 seconds",  route: "/dashboard/analyses/new", color: "#0ea5e9" },
   { id: "script",    emoji: "", label: "Write a video script",      desc: "Full ad script with VO, visuals & on-screen text",        route: "/dashboard/script",       color: "#60a5fa" },
   { id: "brief",     emoji: "", label: "Create a campaign brief",   desc: "Strategy doc ready for your team or editor",              route: "/dashboard/brief",        color: "#06b6d4" },
-  { id: "preflight", emoji: "", label: "Pre-flight check",          desc: "Catch mistakes before you spend a single dollar",         route: "/dashboard/preflight",    color: "#fbbf24" },
   { id: "hooks",     emoji: "", label: "Generate hook variations",  desc: "10+ hooks for the same concept, ranked by strength",      route: "/dashboard/hooks",        color: "#fb923c" },
   { id: "persona",   emoji: "", label: "Build audience persona",    desc: "Deep profile of who you're targeting — AI-generated",     route: "/dashboard/persona",      color: "#c084fc" },
 ];

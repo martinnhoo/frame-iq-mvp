@@ -2875,12 +2875,7 @@ const FeedPage: React.FC = () => {
     const stateCtx = buildAiStateContext();
     navigate('/dashboard/ai', {
       state: {
-        type: 'diagnostic_start',
-        payload: {
-          message: alert.chatMsg + stateCtx,
-          mode: 'metric_diagnostic',
-          alertId: alert.id,
-        },
+        prompt: alert.chatMsg + stateCtx,
       },
     });
   }, [accountId, period, navigate, buildAiStateContext]);
@@ -3586,20 +3581,9 @@ const FeedPage: React.FC = () => {
                 className="feed-cta"
                 onClick={() => {
                   startTrackingInvestigation();
-                  // Structured payload for the guided diagnostic flow
+                  const msg = `Minha conta tem ${trackingHealth.clicks} cliques e ${trackingHealth.conversions} conversões com gasto de ${fmtReais(trackingHealth.spend)}. Analise o rastreamento e me diga se há problemas.`;
                   navigate('/dashboard/ai', {
-                    state: {
-                      type: 'diagnostic_start',
-                      payload: {
-                        mode: 'tracking_diagnostic',
-                        accountId,
-                        clicks: trackingHealth.clicks,
-                        spend: trackingHealth.spend, // centavos
-                        spendFormatted: fmtReais(trackingHealth.spend),
-                        conversions: trackingHealth.conversions,
-                        trackingStatus: trackingUserStatus,
-                      },
-                    },
+                    state: { prompt: msg },
                   });
                 }}
                 style={{

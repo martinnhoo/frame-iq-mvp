@@ -9,7 +9,6 @@ export const CREDIT_COSTS: Record<string, number> = {
   analysis:    5,
   hooks:       2,
   brief:       2,
-  preflight:   2,
   board:       2,
   script:      2,
   translation: 1,

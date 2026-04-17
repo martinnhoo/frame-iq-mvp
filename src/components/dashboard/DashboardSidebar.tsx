@@ -1,5 +1,5 @@
 // DashboardSidebar v12 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
-import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, FileText, ScanLine, Brain, ScanEye, Languages, Activity, Clock, X, TrendingUp } from "lucide-react";
+import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, FileText, Brain, ScanEye, Languages, Activity, Clock, X, TrendingUp } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -235,7 +235,6 @@ export function DashboardSidebar({
   const CRIAR = [
     { url: "/dashboard/hooks",     label: pt ? "Gerar Hooks" : "Generate Hooks", icon: Sparkles },
     { url: "/dashboard/brief",     label: pt ? "Criar Brief" : "Create Brief",   icon: FileText },
-    { url: "/dashboard/preflight", label: pt ? "Revisar Criativo" : "Review Creative", icon: ScanLine },
   ];
 
   const ANALISE = [

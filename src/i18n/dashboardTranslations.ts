@@ -11,7 +11,6 @@ export type DashT = {
   nav_hooks: string;
   nav_templates: string;
   nav_translate: string;
-  nav_preflight: string;
   nav_intelligence: string;
   nav_persona: string;
   nav_accounts: string;
@@ -28,7 +27,6 @@ export type DashT = {
   ov_analyses: string;
   ov_boards: string;
   ov_avg_hook: string;
-  ov_preflights: string;
   ov_recent: string;
   ov_no_activity: string;
   ov_quick_actions: string;
@@ -58,7 +56,6 @@ export type DashT = {
   ov_translate_desc: string;
   ov_templates: string;
   ov_templates_desc: string;
-  ov_preflight_desc: string;
   ov_persona_desc: string;
   ov_intel_signals: string;
   ov_no_signals_desc: string;
@@ -407,7 +404,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   en: {
     nav_overview: "Overview", nav_analyses: "Analyses", nav_boards: "Boards",
     nav_hooks: "Hook Generator", nav_templates: "Templates", nav_translate: "Translate",
-    nav_preflight: "Creative Check", nav_intelligence: "Intelligence", nav_persona: "Accounts", nav_accounts: "Accounts",
+    nav_intelligence: "Intelligence", nav_persona: "Accounts", nav_accounts: "Accounts",
     nav_workspace: "Workspace", nav_tools: "Tools", nav_upgrade: "Upgrade plan",
     nav_upgrade_desc: "Unlock more analyses & boards",
     nav_competitor: "Competitors", nav_script: "Script", nav_brief: "Brief",
@@ -424,7 +421,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     loop_copy: "Copy", loop_copied: "Copied!", loop_like: "Helpful", loop_dislike: "Not helpful", loop_regenerate: "Regenerate", loop_more_ideas: "More ideas",
     ov_welcome: "Welcome back", ov_good_morning: "Good morning", ov_good_afternoon: "Good afternoon",
     ov_good_evening: "Good evening", ov_analyses: "Analyses", ov_boards: "Boards",
-    ov_avg_hook: "Avg hook score", ov_preflights: "Pre-flights", ov_recent: "Recent activity",
+    ov_avg_hook: "Avg hook score", ov_recent: "Recent activity",
     ov_no_activity: "No activity yet", ov_quick_actions: "Quick actions", ov_new_analysis: "New analysis",
     ov_new_board: "New board", ov_run_hooks: "Run hooks", ov_intel_feed: "Intelligence feed",
     ov_view_all: "View all", ov_no_signals: "No signals yet", ov_no_persona: "No persona active",
@@ -542,7 +539,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_board: "Board", ov_board_desc: "Production brief",
     ov_hooks: "Hooks", ov_hooks_desc: "10 angles in 30s",
     ov_translate_desc: "Any market", ov_templates: "Templates", ov_templates_desc: "183 formats",
-    ov_preflight_desc: "Before going live", ov_persona_desc: "Define audience",
+    ov_persona_desc: "Define audience",
     ov_intel_signals: "AI-powered creative signals", ov_no_signals_desc: "Analyze a few videos to unlock AI-powered creative insights",
     ov_start_analyzing: "Start analyzing", ov_recent_work: "Recent work", ov_latest_activity: "Latest activity",
     ov_no_work: "No work yet", ov_get_started: "Get started", ov_performance: "Performance",
@@ -573,7 +570,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   pt: {
     nav_overview: "Visão Geral", nav_analyses: "Análises", nav_boards: "Boards",
     nav_hooks: "Gerador de Hooks", nav_templates: "Templates", nav_translate: "Traduzir",
-    nav_preflight: "Check Criativo", nav_intelligence: "Inteligência", nav_persona: "Contas", nav_accounts: "Contas",
+    nav_intelligence: "Inteligência", nav_persona: "Contas", nav_accounts: "Contas",
     nav_workspace: "Área de Trabalho", nav_tools: "Ferramentas", nav_upgrade: "Fazer upgrade",
     nav_upgrade_desc: "Desbloqueie mais análises e boards",
     nav_competitor: "Concorrentes", nav_script: "Roteiro", nav_brief: "Brief",
@@ -590,7 +587,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     loop_copy: "Copiar", loop_copied: "Copiado!", loop_like: "Útil", loop_dislike: "Não útil", loop_regenerate: "Refazer", loop_more_ideas: "Mais ideias",
     ov_welcome: "Bem-vindo de volta", ov_good_morning: "Bom dia", ov_good_afternoon: "Boa tarde",
     ov_good_evening: "Boa noite", ov_analyses: "Análises", ov_boards: "Boards",
-    ov_avg_hook: "Score médio de hook", ov_preflights: "Pré-voos", ov_recent: "Atividade recente",
+    ov_avg_hook: "Score médio de hook", ov_recent: "Atividade recente",
     ov_no_activity: "Nenhuma atividade ainda", ov_quick_actions: "Ações rápidas",
     ov_new_analysis: "Nova análise", ov_new_board: "Novo board", ov_run_hooks: "Gerar hooks",
     ov_intel_feed: "Feed de inteligência", ov_view_all: "Ver tudo",
@@ -708,7 +705,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_board: "Board", ov_board_desc: "Brief de produção",
     ov_hooks: "Hooks", ov_hooks_desc: "10 ângulos em 30s",
     ov_translate_desc: "Qualquer mercado", ov_templates: "Templates", ov_templates_desc: "183 formatos",
-    ov_preflight_desc: "Antes de publicar", ov_persona_desc: "Defina audiência",
+    ov_persona_desc: "Defina audiência",
     ov_intel_signals: "Sinais criativos com IA", ov_no_signals_desc: "Analise alguns vídeos para liberar insights criativos com IA",
     ov_start_analyzing: "Começar a analisar", ov_recent_work: "Trabalho recente", ov_latest_activity: "Atividade recente",
     ov_no_work: "Nenhum trabalho ainda", ov_get_started: "Começar", ov_performance: "Performance",
@@ -743,7 +740,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   es: {
     nav_overview: "Resumen", nav_analyses: "Análisis", nav_boards: "Boards",
     nav_hooks: "Generador de Hooks", nav_templates: "Plantillas", nav_translate: "Traducir",
-    nav_preflight: "Precheck", nav_intelligence: "Inteligencia", nav_persona: "Persona", nav_accounts: "Accounts",
+    nav_intelligence: "Inteligencia", nav_persona: "Persona", nav_accounts: "Accounts",
     nav_workspace: "Área de Trabajo", nav_tools: "Herramientas", nav_upgrade: "Mejorar plan",
      nav_upgrade_desc: "Desbloquea más análisis y boards",
      nav_competitor: "Competidores", nav_script: "Guion", nav_brief: "Brief",
@@ -760,7 +757,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
      loop_copy: "Copiar", loop_copied: "¡Copiado!", loop_like: "Útil", loop_dislike: "No útil", loop_regenerate: "Regenerar", loop_more_ideas: "Más ideas",
     ov_welcome: "Bienvenido de nuevo", ov_good_morning: "Buenos días", ov_good_afternoon: "Buenas tardes",
     ov_good_evening: "Buenas noches", ov_analyses: "Análisis", ov_boards: "Boards",
-    ov_avg_hook: "Score promedio de hook", ov_preflights: "Prechecks", ov_recent: "Actividad reciente",
+    ov_avg_hook: "Score promedio de hook", ov_recent: "Actividad reciente",
     ov_no_activity: "Sin actividad aún", ov_quick_actions: "Acciones rápidas",
     ov_new_analysis: "Nuevo análisis", ov_new_board: "Nuevo board", ov_run_hooks: "Generar hooks",
     ov_intel_feed: "Feed de inteligencia", ov_view_all: "Ver todo",
@@ -878,7 +875,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_board: "Board", ov_board_desc: "Brief de producción",
     ov_hooks: "Hooks", ov_hooks_desc: "10 ángulos en 30s",
     ov_translate_desc: "Cualquier mercado", ov_templates: "Plantillas", ov_templates_desc: "183 formatos",
-    ov_preflight_desc: "Antes de publicar", ov_persona_desc: "Define audiencia",
+    ov_persona_desc: "Define audiencia",
     ov_intel_signals: "Señales creativas con IA", ov_no_signals_desc: "Analiza algunos videos para desbloquear insights creativos",
     ov_start_analyzing: "Empezar a analizar", ov_recent_work: "Trabajo reciente", ov_latest_activity: "Actividad reciente",
     ov_no_work: "Sin trabajos aún", ov_get_started: "Empezar", ov_performance: "Rendimiento",
@@ -913,7 +910,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   zh: {
     nav_overview: "概览", nav_analyses: "分析", nav_boards: "制作板",
     nav_hooks: "钩子生成器", nav_templates: "模板", nav_translate: "翻译",
-    nav_preflight: "预检", nav_intelligence: "智能分析", nav_persona: "用户画像", nav_accounts: "账户",
+    nav_intelligence: "智能分析", nav_persona: "用户画像", nav_accounts: "账户",
     nav_workspace: "工作区", nav_tools: "工具", nav_upgrade: "升级方案",
      nav_upgrade_desc: "解锁更多分析和制作板",
      nav_competitor: "竞争对手", nav_script: "脚本", nav_brief: "简报",
@@ -930,7 +927,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
      loop_copy: "复制", loop_copied: "已复制！", loop_like: "有帮助", loop_dislike: "没帮助", loop_regenerate: "重新生成", loop_more_ideas: "更多想法",
     ov_welcome: "欢迎回来", ov_good_morning: "早上好", ov_good_afternoon: "下午好",
     ov_good_evening: "晚上好", ov_analyses: "分析次数", ov_boards: "制作板",
-    ov_avg_hook: "平均钩子评分", ov_preflights: "预检次数", ov_recent: "近期活动",
+    ov_avg_hook: "平均钩子评分", ov_recent: "近期活动",
     ov_no_activity: "暂无活动", ov_quick_actions: "快速操作",
     ov_new_analysis: "新建分析", ov_new_board: "新建制作板", ov_run_hooks: "生成钩子",
     ov_intel_feed: "智能动态", ov_view_all: "查看全部",
@@ -1047,7 +1044,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_board: "制作板", ov_board_desc: "制作简报",
     ov_hooks: "钩子", ov_hooks_desc: "30秒10个角度",
     ov_translate_desc: "任何市场", ov_templates: "模板", ov_templates_desc: "183种格式",
-    ov_preflight_desc: "发布前检查", ov_persona_desc: "定义受众",
+    ov_persona_desc: "定义受众",
     ov_intel_signals: "AI创意信号", ov_no_signals_desc: "分析几个视频以解锁AI创意洞察",
     ov_start_analyzing: "开始分析", ov_recent_work: "近期工作", ov_latest_activity: "最新活动",
     ov_no_work: "暂无工作", ov_get_started: "开始", ov_performance: "表现",
@@ -1078,7 +1075,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   fr: {
     nav_overview: "Tableau de bord", nav_analyses: "Analyses", nav_boards: "Boards",
     nav_hooks: "Générateur de hooks", nav_templates: "Modèles", nav_translate: "Traduire",
-    nav_preflight: "Pré-vol", nav_intelligence: "Intelligence", nav_persona: "Persona", nav_accounts: "Comptes",
+    nav_intelligence: "Intelligence", nav_persona: "Persona", nav_accounts: "Comptes",
     nav_workspace: "Espace de travail", nav_tools: "Outils", nav_upgrade: "Mettre à niveau",
      nav_upgrade_desc: "Débloquez plus d'analyses et de boards",
      nav_competitor: "Concurrent", nav_script: "Script", nav_brief: "Brief",
@@ -1095,7 +1092,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
      loop_copy: "Copier", loop_copied: "Copié !", loop_like: "Utile", loop_dislike: "Pas utile", loop_regenerate: "Régénérer", loop_more_ideas: "Plus d'idées",
     ov_welcome: "Bon retour", ov_good_morning: "Bonjour", ov_good_afternoon: "Bon après-midi",
     ov_good_evening: "Bonsoir", ov_analyses: "Analyses", ov_boards: "Boards",
-    ov_avg_hook: "Score moyen du hook", ov_preflights: "Pré-vols", ov_recent: "Activité récente",
+    ov_avg_hook: "Score moyen du hook", ov_recent: "Activité récente",
     ov_no_activity: "Aucune activité", ov_quick_actions: "Actions rapides",
     ov_new_analysis: "Nouvelle analyse", ov_new_board: "Nouveau board", ov_run_hooks: "Générer des hooks",
     ov_intel_feed: "Fil d'intelligence", ov_view_all: "Voir tout",
@@ -1211,7 +1208,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_board: "Board", ov_board_desc: "Brief de production",
     ov_hooks: "Hooks", ov_hooks_desc: "10 angles en 30s",
     ov_translate_desc: "N'importe quel marché", ov_templates: "Modèles", ov_templates_desc: "183 formats",
-    ov_preflight_desc: "Avant publication", ov_persona_desc: "Définir l'audience",
+    ov_persona_desc: "Définir l'audience",
     ov_intel_signals: "Signaux créatifs IA", ov_no_signals_desc: "Analysez quelques vidéos pour débloquer des insights créatifs",
     ov_start_analyzing: "Commencer l'analyse", ov_recent_work: "Travail récent", ov_latest_activity: "Dernière activité",
     ov_no_work: "Aucun travail", ov_get_started: "Commencer", ov_performance: "Performance",
@@ -1242,7 +1239,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   de: {
     nav_overview: "Übersicht", nav_analyses: "Analysen", nav_boards: "Boards",
     nav_hooks: "Hook-Generator", nav_templates: "Vorlagen", nav_translate: "Übersetzen",
-    nav_preflight: "Vorflug-Check", nav_intelligence: "Intelligenz", nav_persona: "Persona", nav_accounts: "Konten",
+    nav_intelligence: "Intelligenz", nav_persona: "Persona", nav_accounts: "Konten",
     nav_workspace: "Arbeitsbereich", nav_tools: "Tools", nav_upgrade: "Plan upgraden",
      nav_upgrade_desc: "Mehr Analysen und Boards freischalten",
      nav_competitor: "Wettbewerber", nav_script: "Skript", nav_brief: "Brief",
@@ -1259,7 +1256,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
      loop_copy: "Kopieren", loop_copied: "Kopiert!", loop_like: "Hilfreich", loop_dislike: "Nicht hilfreich", loop_regenerate: "Neu generieren", loop_more_ideas: "Mehr Ideen",
     ov_welcome: "Willkommen zurück", ov_good_morning: "Guten Morgen", ov_good_afternoon: "Guten Tag",
     ov_good_evening: "Guten Abend", ov_analyses: "Analysen", ov_boards: "Boards",
-    ov_avg_hook: "Ø Hook-Score", ov_preflights: "Vorflug-Checks", ov_recent: "Letzte Aktivität",
+    ov_avg_hook: "Ø Hook-Score", ov_recent: "Letzte Aktivität",
     ov_no_activity: "Noch keine Aktivität", ov_quick_actions: "Schnellaktionen",
     ov_new_analysis: "Neue Analyse", ov_new_board: "Neues Board", ov_run_hooks: "Hooks generieren",
     ov_intel_feed: "Intelligence-Feed", ov_view_all: "Alle anzeigen",
@@ -1374,7 +1371,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_board: "Board", ov_board_desc: "Produktions-Brief",
     ov_hooks: "Hooks", ov_hooks_desc: "10 Winkel in 30s",
     ov_translate_desc: "Jeder Markt", ov_templates: "Vorlagen", ov_templates_desc: "183 Formate",
-    ov_preflight_desc: "Vor der Veröffentlichung", ov_persona_desc: "Zielgruppe definieren",
+    ov_persona_desc: "Zielgruppe definieren",
     ov_intel_signals: "KI-gestützte kreative Signale", ov_no_signals_desc: "Analysieren Sie Videos für KI-Kreativ-Insights",
     ov_start_analyzing: "Analyse starten", ov_recent_work: "Letzte Arbeiten", ov_latest_activity: "Neueste Aktivität",
     ov_no_work: "Noch keine Arbeiten", ov_get_started: "Starten", ov_performance: "Leistung",
@@ -1409,7 +1406,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
   ar: {
     nav_overview: "نظرة عامة", nav_analyses: "التحليلات", nav_boards: "اللوحات",
     nav_hooks: "مولّد الخطافات", nav_templates: "القوالب", nav_translate: "ترجمة",
-    nav_preflight: "الفحص المسبق", nav_intelligence: "الذكاء الإبداعي", nav_persona: "الشخصية", nav_accounts: "الحسابات",
+    nav_intelligence: "الذكاء الإبداعي", nav_persona: "الشخصية", nav_accounts: "الحسابات",
     nav_workspace: "مساحة العمل", nav_tools: "الأدوات", nav_upgrade: "ترقية الخطة",
      nav_upgrade_desc: "احصل على المزيد من التحليلات واللوحات",
      nav_competitor: "المنافس", nav_script: "النص", nav_brief: "الموجز",
@@ -1426,7 +1423,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
      loop_copy: "نسخ", loop_copied: "تم النسخ!", loop_like: "مفيد", loop_dislike: "غير مفيد", loop_regenerate: "إعادة التوليد", loop_more_ideas: "أفكار أخرى",
     ov_welcome: "مرحباً بعودتك", ov_good_morning: "صباح الخير", ov_good_afternoon: "مساء الخير",
     ov_good_evening: "مساء النور", ov_analyses: "التحليلات", ov_boards: "اللوحات",
-    ov_avg_hook: "متوسط نقاط الخطاف", ov_preflights: "الفحوصات المسبقة", ov_recent: "النشاط الأخير",
+    ov_avg_hook: "متوسط نقاط الخطاف", ov_recent: "النشاط الأخير",
     ov_no_activity: "لا نشاط بعد", ov_quick_actions: "إجراءات سريعة",
     ov_new_analysis: "تحليل جديد", ov_new_board: "لوحة جديدة", ov_run_hooks: "توليد خطافات",
     ov_intel_feed: "تغذية الذكاء", ov_view_all: "عرض الكل",
@@ -1541,7 +1538,7 @@ export const dashTranslations: Record<DashLang, DashT> = {
     ov_board: "لوحة", ov_board_desc: "ملخص إنتاج",
     ov_hooks: "خطافات", ov_hooks_desc: "10 زوايا في 30 ثانية",
     ov_translate_desc: "أي سوق", ov_templates: "القوالب", ov_templates_desc: "183 تنسيقاً",
-    ov_preflight_desc: "قبل النشر", ov_persona_desc: "حدد الجمهور",
+    ov_persona_desc: "حدد الجمهور",
     ov_intel_signals: "إشارات إبداعية بالذكاء الاصطناعي", ov_no_signals_desc: "حلل بعض الفيديوهات لفتح رؤى إبداعية",
     ov_start_analyzing: "ابدأ التحليل", ov_recent_work: "العمل الأخير", ov_latest_activity: "أحدث نشاط",
     ov_no_work: "لا عمل بعد", ov_get_started: "ابدأ", ov_performance: "الأداء",

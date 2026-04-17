@@ -99,7 +99,7 @@ export default function OAuthCallback() {
             : `${pl.name} connected.`);
           // Meta → go to diagnostic; others → accounts page
           const dest = platform === "meta"
-            ? "/dashboard/diagnostic"
+            ? "/dashboard/feed"
             : `/dashboard/accounts?connected=${platform || ""}`;
           setTimeout(() => navigate(dest), 2000);
           return;
@@ -112,7 +112,7 @@ export default function OAuthCallback() {
           setMessage(`${pl.name} connected with ${accs[0].name || accs[0].id}.`);
           // Meta → go to diagnostic for instant wow
           const dest = platform === "meta"
-            ? "/dashboard/diagnostic"
+            ? "/dashboard/feed"
             : `/dashboard/accounts?connected=${platform || ""}`;
           setTimeout(() => navigate(dest), 2000);
           return;
@@ -163,7 +163,7 @@ export default function OAuthCallback() {
       const acc = accounts.find(a => a.id === accountId);
       setMessage(`${pl.name} connected with "${acc?.name || accountId}".`);
       const dest = platform === "meta"
-        ? "/dashboard/diagnostic"
+        ? "/dashboard/feed"
         : "/dashboard/accounts";
       setTimeout(() => navigate(dest), 2000);
     } catch (e: any) {

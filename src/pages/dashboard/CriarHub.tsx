@@ -8,7 +8,6 @@ import {
   Target,
   Clapperboard,
   Languages,
-  Stethoscope,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -72,14 +71,6 @@ const TOOLS: ToolCard[] = [
     icon: Languages,
     color: '#ec4899',
     route: '/dashboard/translate',
-  },
-  {
-    id: 'diagnostic',
-    label: 'Diagnóstico',
-    desc: 'Auditoria completa da conta de anúncios',
-    icon: Stethoscope,
-    color: '#f97316',
-    route: '/dashboard/diagnostic',
   },
   {
     id: 'ai-chat',
