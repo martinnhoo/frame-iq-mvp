@@ -4028,25 +4028,30 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       if(selectedAccId2) invokeBody.account_id = selectedAccId2;
       const{data,error}=await supabase.functions.invoke("adbrief-ai-chat",{body:invokeBody});
 
-      // Handle rate limit errors (429) — supabase returns them as errors with context
+      // Handle non-2xx errors — supabase returns them as errors with context
       if(error) {
-        // Try multiple ways to parse the 429 body from Supabase edge function errors
+        // Try multiple strategies to parse the error body from Supabase edge function errors
         let parsedErr: any = null;
         try {
           const ctx = (error as any).context;
           if (ctx instanceof Response) {
             const txt = await ctx.clone().text();
-            parsedErr = JSON.parse(txt);
+            try { parsedErr = JSON.parse(txt); } catch { parsedErr = { raw: txt }; }
           } else if (typeof ctx === "string") {
-            parsedErr = JSON.parse(ctx);
+            try { parsedErr = JSON.parse(ctx); } catch { parsedErr = { raw: ctx }; }
           } else if (ctx && typeof ctx === "object") {
-            // ctx might already be parsed
             parsedErr = ctx;
           }
-        } catch {
-          // Last resort: try parsing the error message itself
+        } catch {}
+        // Fallback: try parsing the error message itself
+        if (!parsedErr) {
           try { parsedErr = JSON.parse(error?.message || "{}"); } catch {}
         }
+        // Fallback: try data field (some supabase versions return it here)
+        if (!parsedErr && data) {
+          parsedErr = data;
+        }
+
         if(parsedErr?.error==="daily_limit"){
           if(profile?.plan&&profile.plan!=="free"){window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));}else{setShowUpgradeWall(true);}
           setLoading(false);return;
@@ -4056,6 +4061,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           if(parsedErr?.blocks){
             const aid=Date.now()+1;
             setMessages(prev=>[...prev,{role:"assistant",blocks:parsedErr.blocks,ts:aid,id:aid}]);
+          } else {
+            // Fallback: show upgrade wall if blocks parsing failed
+            setShowUpgradeWall(true);
           }
           setLoading(false);return;
         }
@@ -4074,7 +4082,28 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           setLoading(false);
           return;
         }
-        throw new Error(error?.message||"No response");
+        // Final fallback: if we couldn't parse and it's a non-2xx, show a friendly credits/limit message
+        // instead of the raw "Edge Function returned a non-2xx status code"
+        const errMsg = error?.message || "";
+        if (errMsg.includes("non-2xx") || errMsg.includes("FunctionsHttpError")) {
+          // Likely a credit or auth issue — show upgrade wall for free, capacity modal for paid
+          if (!profile?.plan || profile.plan === "free") {
+            setShowUpgradeWall(true);
+          } else {
+            const aid = Date.now() + 1;
+            setMessages(prev => [...prev, { role: "assistant", blocks: [{
+              type: "warning",
+              title: lang === "pt" ? "Limite atingido" : lang === "es" ? "Límite alcanzado" : "Limit reached",
+              content: lang === "pt"
+                ? "Seus créditos acabaram este mês. Faça upgrade para continuar usando o AdBrief."
+                : lang === "es"
+                ? "Tus créditos se agotaron este mes. Haz upgrade para seguir usando AdBrief."
+                : "Your credits ran out this month. Upgrade to keep using AdBrief.",
+            }], ts: aid, id: aid }]);
+          }
+          setLoading(false); return;
+        }
+        throw new Error(errMsg || "No response");
       }
 
       if(!data?.blocks)throw new Error("No response");

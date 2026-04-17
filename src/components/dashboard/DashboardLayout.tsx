@@ -114,16 +114,8 @@ export default function DashboardLayout() {
   const [telegramConn, setTelegramConn] = useState<any>(null);
   const [telegramPairingLink, setTelegramPairingLink] = useState<string|null>(null);
   const [telegramLinkLoading, setTelegramLinkLoading] = useState(false);
-  const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
-    try {
-      const s = storage.get("frameiq_active_persona");
-      if (!s) return null;
-      const parsed = JSON.parse(s);
-      // Validate essential fields exist
-      if (!parsed || !parsed.id || !parsed.name) return null;
-      return parsed;
-    } catch { return null; }
-  });
+  // Start with null — persona is loaded AFTER auth to prevent cross-account leak
+  const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(null);
   const [personaPickerOpen, setPersonaPickerOpen] = useState(false);
   const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
   const [vikaPopup, setVikaPopup] = useState(false);
@@ -133,10 +125,11 @@ export default function DashboardLayout() {
   const location = useLocation();
   // checkout success detection uses window.location directly (inside init callback)
 
-  const setSelectedPersona = (p: ActivePersona | null) => {
+  const setSelectedPersona = (p: ActivePersona | null, uid?: string) => {
     setSelectedPersonaState(p);
     try {
-      if (p) storage.setJSON("frameiq_active_persona", p);
+      if (p && uid) storage.setJSON("frameiq_active_persona", { ...p, _uid: uid });
+      else if (p) storage.setJSON("frameiq_active_persona", p);
       else storage.remove("frameiq_active_persona");
     } catch {
       // localStorage unavailable (private browsing, storage full, etc.)
@@ -258,25 +251,26 @@ export default function DashboardLayout() {
             })) as ActivePersona[])
         : [];
       setSavedPersonas(loadedPersonas);
-      // Auto-select persona: if none selected but personas exist, pick the first one
-      setSelectedPersonaState(prev => {
-        if (!prev && loadedPersonas.length > 0) {
-          const first = loadedPersonas[0];
-          try { storage.setJSON("frameiq_active_persona", first); } catch {}
-          return first;
-        }
-        if (!prev) return null;
-        if (!loadedPersonas.some(p => p.id === prev.id)) {
-          // Cached persona was deleted — fallback to first available or null
-          if (loadedPersonas.length > 0) {
-            try { storage.setJSON("frameiq_active_persona", loadedPersonas[0]); } catch {}
-            return loadedPersonas[0];
+      // Restore persona from localStorage only if it belongs to THIS user
+      const currentUid = session.user.id;
+      let restored: ActivePersona | null = null;
+      try {
+        const s = storage.get("frameiq_active_persona");
+        if (s) {
+          const parsed = JSON.parse(s);
+          if (parsed?._uid === currentUid && parsed?.id && loadedPersonas.some(p => p.id === parsed.id)) {
+            restored = parsed;
           }
-          try { storage.remove("frameiq_active_persona"); } catch (e) { console.error("[AdBrief]", e); }
-          return null;
         }
-        return prev;
-      });
+      } catch {}
+      if (restored) {
+        setSelectedPersonaState(restored);
+      } else if (loadedPersonas.length > 0) {
+        setSelectedPersona(loadedPersonas[0], currentUid);
+      } else {
+        try { storage.remove("frameiq_active_persona"); } catch {}
+        setSelectedPersonaState(null);
+      }
       // Welcome popups for special accounts
       const WELCOME_POPUPS: Record<string, { key: string; title: string; body: string }> = {
         "victoriafnogueira@hotmail.com": {

@@ -128,20 +128,14 @@ export function AppLayout() {
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiProfile, setAiProfile] = useState<any>(null);
-  const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(() => {
-    try {
-      const s = storage.get('frameiq_active_persona');
-      if (!s) return null;
-      const parsed = JSON.parse(s);
-      if (!parsed?.id || !parsed?.name) return null;
-      return parsed;
-    } catch { return null; }
-  });
+  // Start with null — persona is loaded AFTER auth to prevent cross-account leak
+  const [selectedPersona, setSelectedPersonaState] = useState<ActivePersona | null>(null);
 
-  const setSelectedPersona = (p: ActivePersona | null) => {
+  const setSelectedPersona = (p: ActivePersona | null, uid?: string) => {
     setSelectedPersonaState(p);
     try {
-      if (p) storage.setJSON('frameiq_active_persona', p);
+      if (p && uid) storage.setJSON('frameiq_active_persona', { ...p, _uid: uid });
+      else if (p) storage.setJSON('frameiq_active_persona', p);
       else storage.remove('frameiq_active_persona');
     } catch {}
   };
@@ -221,9 +215,21 @@ export function AppLayout() {
 
       if (mounted && personas.length) {
         setSavedPersonas(personas);
-        const stored = selectedPersona;
-        if (!stored || !personas.find((p: any) => p.id === stored.id)) {
-          setSelectedPersona(personas[0]);
+        // Restore from localStorage only if it belongs to THIS user
+        let restored: ActivePersona | null = null;
+        try {
+          const s = storage.get('frameiq_active_persona');
+          if (s) {
+            const parsed = JSON.parse(s);
+            if (parsed?._uid === session.user.id && parsed?.id && personas.find((p: any) => p.id === parsed.id)) {
+              restored = parsed;
+            }
+          }
+        } catch {}
+        if (restored) {
+          setSelectedPersonaState(restored);
+        } else {
+          setSelectedPersona(personas[0], session.user.id);
         }
       }
 
