@@ -60,7 +60,7 @@ serve(async (req) => {
 
         if (acc?.id) {
           const token = metaConn.access_token;
-          const fields = "spend,impressions,clicks,ctr,cpc,cpm,reach,actions,action_values,website_purchase_roas,date_start";
+          const fields = "spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,action_values,website_purchase_roas,date_start";
 
           // Load user's goal conversion event (if configured)
           let goalEvent: string | null = null;
@@ -106,9 +106,14 @@ serve(async (req) => {
           const metaClicks = parseN(c.clicks);
           const prevClicks = parseN(p.clicks);
           const metaImpr  = parseN(c.impressions);
+          const metaReach  = parseN(c.reach);
+          const metaFreq   = parseN(c.frequency);
+          const metaCpm    = metaImpr > 0 ? (metaSpend / metaImpr) * 1000 : 0;
+          const metaCpc    = metaClicks > 0 ? metaSpend / metaClicks : 0;
           const metaConv  = getConversions(c);
           const metaConvVal = getConvValue(c);
           const metaRoas  = metaSpend > 0 && metaConvVal > 0 ? metaConvVal / metaSpend : null;
+          const metaCpa   = metaConv > 0 ? metaSpend / metaConv : null;
 
           // Top ads — separate request
           const adsFields = "ad_id,ad_name,adset_name,campaign_name,spend,ctr,cpc,impressions,actions,action_values,website_purchase_roas";
@@ -175,10 +180,14 @@ serve(async (req) => {
             clicks: metaClicks,
             prev_clicks: prevClicks,
             impressions: metaImpr,
+            reach: metaReach,
+            frequency: metaFreq,
+            cpm: metaCpm,
+            cpc: metaCpc,
             conversions: metaConv,
             conv_value: metaConvVal,
             roas: metaRoas,
-            cpa: metaConv > 0 ? metaSpend / metaConv : null,
+            cpa: metaCpa,
             delta_spend: deltaRatio(metaSpend, prevSpend),
             delta_ctr: deltaRatio(metaCtr, prevCtr),
             delta_clicks: deltaRatio(metaClicks, prevClicks),

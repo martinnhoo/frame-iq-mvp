@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
   }
 
   const schedules = [
+    { name: 'adbrief-sync-ad-diary',      cron: '0 9 * * *',    fn: 'sync-ad-diary',           body: '{}' },  // sync all accounts daily at 9h UTC
     { name: 'adbrief-daily-intelligence',  cron: '0 11 * * *',   fn: 'daily-intelligence',      body: '{}' },
     { name: 'adbrief-market-intelligence', cron: '30 11 * * *',  fn: 'market-intelligence',     body: '{}' },
     { name: 'adbrief-creative-director',   cron: '0 11 * * 1',   fn: 'creative-director',       body: '{}' },

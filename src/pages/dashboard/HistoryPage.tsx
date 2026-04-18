@@ -316,6 +316,19 @@ const HistoryPage: React.FC = () => {
                     {/* Description */}
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
                       {getActionLabel(entry.action_type)}
+                      {/* Show specific budget values when available */}
+                      {(entry.action_type === 'increase_budget' || entry.action_type === 'decrease_budget') &&
+                        (entry as any).new_state?.budget_change ? (() => {
+                          const bc = (entry as any).new_state.budget_change;
+                          const fromVal = (bc.from / 100).toFixed(2).replace('.', ',');
+                          const toVal = (bc.to / 100).toFixed(2).replace('.', ',');
+                          return ` · R$ ${fromVal} → R$ ${toVal} (${bc.change_pct > 0 ? '+' : ''}${bc.change_pct}%)`;
+                        })() : (entry.action_type === 'increase_budget' || entry.action_type === 'decrease_budget') &&
+                          (entry as any).previous_state?.daily_budget && (entry as any).new_state?.daily_budget ? (() => {
+                            const fromVal = (Number((entry as any).previous_state.daily_budget) / 100).toFixed(2).replace('.', ',');
+                            const toVal = (Number((entry as any).new_state.daily_budget) / 100).toFixed(2).replace('.', ',');
+                            return ` · R$ ${fromVal} → R$ ${toVal}`;
+                          })() : null}
                       {entry.target_type && ` · ${getTargetLabel(entry.target_type)}`}
                       {' · '}{formatDate(entry.executed_at)}
                     </p>

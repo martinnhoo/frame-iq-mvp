@@ -1,6 +1,9 @@
 // sync-ad-diary — pulls all ads from Meta + Google and upserts into ad_diary
+// Supports two modes:
+// 1. User mode: { user_id, persona_id } — syncs a single user (requires auth)
+// 2. Cron mode: {} — iterates ALL active connections and syncs all users
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -34,15 +37,57 @@ Deno.serve(async (req) => {
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const sbAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const { user_id, persona_id } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { user_id, persona_id } = body;
 
+    // ── Cron mode: iterate all active connections ──
+    if (!user_id) {
+      if (!isCronAuthorized(req)) return unauthorizedResponse(cors);
+
+      const { data: allConns } = await sb.from("platform_connections" as any)
+        .select("user_id, persona_id, platform, access_token, refresh_token, expires_at, ad_accounts, selected_account_id")
+        .eq("status", "active");
+
+      if (!allConns?.length) return ok({ ok: true, synced: 0, mode: "cron", reason: "no_active_connections" });
+
+      // Group by user_id+persona_id to avoid duplicate syncs
+      const seen = new Set<string>();
+      const targets: { user_id: string; persona_id: string | null }[] = [];
+      for (const c of allConns) {
+        const key = `${c.user_id}:${c.persona_id}`;
+        if (!seen.has(key)) { seen.add(key); targets.push({ user_id: c.user_id, persona_id: c.persona_id }); }
+      }
+
+      let totalSynced = 0;
+      const errors: string[] = [];
+      for (const t of targets) {
+        try {
+          const res = await syncUser(sb, t.user_id, t.persona_id);
+          totalSynced += res.synced;
+        } catch (e) {
+          errors.push(`${t.user_id}: ${String(e)}`);
+        }
+      }
+
+      return ok({ ok: true, synced: totalSynced, mode: "cron", users: targets.length, errors: errors.length ? errors : undefined });
+    }
+
+    // ── User mode: single user auth ──
     if (!await isUserAuthorized(req, sbAuth, user_id)) return unauthorizedResponse(cors);
 
+    const result = await syncUser(sb, user_id, persona_id);
+    return ok({ ok: true, ...result, v: 6 });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
+  }
+});
+
+async function syncUser(sb: any, user_id: string, persona_id: string | null): Promise<{ synced: number }> {
     const { data: conns } = await sb.from("platform_connections" as any)
       .select("platform, access_token, refresh_token, expires_at, ad_accounts, selected_account_id")
       .eq("user_id", user_id).eq("persona_id", persona_id).eq("status", "active");
 
-    if (!conns?.length) return ok({ synced: 0 });
+    if (!conns?.length) return { synced: 0 };
 
     const since = new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0];
     const today = new Date().toISOString().split("T")[0];
@@ -201,10 +246,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return ok({ ok: true, synced: totalSynced, v: 5 });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
-  }
-});
+    return { synced: totalSynced };
+}
 
-// force-redeploy 2026-04-03T20:00:00Z
+// force-redeploy 2026-04-18T00:00:00Z — added cron mode

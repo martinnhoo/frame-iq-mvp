@@ -143,11 +143,14 @@ async function executeAction(
 ): Promise<Record<string, unknown>> {
   const {
     decision_id,
-    action_type,
+    action_type: originalActionType,
     target_type,
     target_meta_id,
     params = {},
   } = req;
+
+  // action_type may be corrected later (e.g., budget direction fix)
+  let action_type = originalActionType;
 
   const userId = (user as { id: string }).id;
 
@@ -275,16 +278,42 @@ async function executeAction(
         );
       }
 
-      const defaultMultiplier = action_type === "increase_budget" ? 1.5 : 0.7;
-      const multiplier = (params.multiplier as number) || defaultMultiplier;
-      const newBudget = Math.max(100, Math.round(currentBudget * multiplier)); // min 100 cents ($1)
+      // Support explicit new_budget from params (user-specified value)
+      let newBudget: number;
+      if (params.new_budget && Number(params.new_budget) > 0) {
+        newBudget = Math.max(100, Math.round(Number(params.new_budget)));
+      } else {
+        const defaultMultiplier = action_type === "increase_budget" ? 1.5 : 0.7;
+        const multiplier = (params.multiplier as number) || defaultMultiplier;
+        newBudget = Math.max(100, Math.round(currentBudget * multiplier)); // min 100 cents ($1)
+      }
+
+      // ── Correct action_type based on ACTUAL direction ──
+      action_type = newBudget > currentBudget ? "increase_budget" : "decrease_budget";
 
       metaApiResult = await callMetaApi(target_meta_id, metaAccessToken, {
         daily_budget: newBudget,
       });
 
       if (metaApiResult.success) {
-        newState = { ...previousState, daily_budget: newBudget };
+        newState = {
+          ...previousState,
+          daily_budget: newBudget,
+          // Store specific change details for accurate history
+          budget_change: {
+            from: currentBudget,
+            to: newBudget,
+            direction: correctedActionType === "increase_budget" ? "increase" : "decrease",
+            change_pct: Math.round(((newBudget - currentBudget) / currentBudget) * 100),
+          },
+        };
+
+        // ── Fix action_log to reflect actual direction + specific values ──
+        await supabase.from("action_log").update({
+          action_type,
+        }).eq("id", logId);
+
+        console.log(`[execute-action] Budget ${action_type}: ${currentBudget} → ${newBudget} (${Math.round(((newBudget - currentBudget) / currentBudget) * 100)}%)`);
       }
       break;
     }
@@ -384,8 +413,9 @@ async function executeAction(
   }
 
   // Update money_tracker — atomic increment with 1 retry
+  // Use the actual action that happened (budget may have been corrected from increase→decrease)
   if (estimated_daily_impact) {
-    const isRevenueCaptureAction = ["increase_budget"].includes(action_type);
+    const isRevenueCaptureAction = ["increase_budget", "reactivate_ad", "reactivate_adset", "reactivate_campaign"].includes(action_type);
     const field = isRevenueCaptureAction ? "total_revenue_captured" : "total_saved";
     const rpcParams = { p_account_id: adAccountId, p_field: field, p_amount: estimated_daily_impact };
 
