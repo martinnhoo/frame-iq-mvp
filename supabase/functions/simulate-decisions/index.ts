@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     // ── 1. Load account financial config ──
     const { data: account } = await sb
       .from("ad_accounts")
-      .select("id, profit_margin_pct, break_even_roas, ltv_estimate, monthly_budget_target, currency, max_budget_increase_pct, max_actions_per_day, auto_rollback_enabled, rollback_roas_drop_pct, rollback_window_hours, gradual_scaling_enabled")
+      .select("id, user_id, profit_margin_pct, break_even_roas, ltv_estimate, monthly_budget_target, currency, max_budget_increase_pct, max_actions_per_day, auto_rollback_enabled, rollback_roas_drop_pct, rollback_window_hours, gradual_scaling_enabled")
       .eq("id", account_id)
       .single();
 
