@@ -1636,9 +1636,16 @@ export type Database = {
           action_recommendation: string | null
           actions: Json | null
           ad_id: string | null
+          break_even_roas: number | null
+          confidence_gate: string | null
+          cooldown_active: boolean | null
           created_at: string | null
+          data_confidence: number | null
           dismissed_at: string | null
           expires_at: string | null
+          explanation_chain: Json | null
+          financial_verdict: string | null
+          gradual_step: number | null
           group_note: string | null
           headline: string
           id: string
@@ -1647,10 +1654,16 @@ export type Database = {
           impact_confidence: string | null
           impact_daily: number | null
           impact_type: string | null
+          margin_of_safety: number | null
           metrics: Json | null
           metrics_snapshot: Json | null
+          pipeline_approved: boolean | null
+          pipeline_mode: string | null
           priority_rank: number | null
           reason: string
+          risk_level: string | null
+          rollback_plan: string | null
+          safety_status: string | null
           score: number
           status: string | null
           type: string
@@ -1662,9 +1675,16 @@ export type Database = {
           action_recommendation?: string | null
           actions?: Json | null
           ad_id?: string | null
+          break_even_roas?: number | null
+          confidence_gate?: string | null
+          cooldown_active?: boolean | null
           created_at?: string | null
+          data_confidence?: number | null
           dismissed_at?: string | null
           expires_at?: string | null
+          explanation_chain?: Json | null
+          financial_verdict?: string | null
+          gradual_step?: number | null
           group_note?: string | null
           headline: string
           id?: string
@@ -1673,10 +1693,16 @@ export type Database = {
           impact_confidence?: string | null
           impact_daily?: number | null
           impact_type?: string | null
+          margin_of_safety?: number | null
           metrics?: Json | null
           metrics_snapshot?: Json | null
+          pipeline_approved?: boolean | null
+          pipeline_mode?: string | null
           priority_rank?: number | null
           reason: string
+          risk_level?: string | null
+          rollback_plan?: string | null
+          safety_status?: string | null
           score: number
           status?: string | null
           type: string
@@ -1688,9 +1714,16 @@ export type Database = {
           action_recommendation?: string | null
           actions?: Json | null
           ad_id?: string | null
+          break_even_roas?: number | null
+          confidence_gate?: string | null
+          cooldown_active?: boolean | null
           created_at?: string | null
+          data_confidence?: number | null
           dismissed_at?: string | null
           expires_at?: string | null
+          explanation_chain?: Json | null
+          financial_verdict?: string | null
+          gradual_step?: number | null
           group_note?: string | null
           headline?: string
           id?: string
@@ -1699,10 +1732,16 @@ export type Database = {
           impact_confidence?: string | null
           impact_daily?: number | null
           impact_type?: string | null
+          margin_of_safety?: number | null
           metrics?: Json | null
           metrics_snapshot?: Json | null
+          pipeline_approved?: boolean | null
+          pipeline_mode?: string | null
           priority_rank?: number | null
           reason?: string
+          risk_level?: string | null
+          rollback_plan?: string | null
+          safety_status?: string | null
           score?: number
           status?: string | null
           type?: string
