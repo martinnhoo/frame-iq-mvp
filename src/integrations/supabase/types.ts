@@ -3139,6 +3139,11 @@ export type Database = {
         Args: { fn_name: string; payload?: string }
         Returns: undefined
       }
+      adbrief_schedule_edge: {
+        Args: { p_body?: string; p_cron: string; p_fn: string; p_name: string }
+        Returns: undefined
+      }
+      adbrief_setup_cron: { Args: never; Returns: Json }
       add_bonus_credits: {
         Args: {
           p_credits: number
