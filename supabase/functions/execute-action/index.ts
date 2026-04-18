@@ -303,7 +303,7 @@ async function executeAction(
           budget_change: {
             from: currentBudget,
             to: newBudget,
-            direction: correctedActionType === "increase_budget" ? "increase" : "decrease",
+            direction: action_type === "increase_budget" ? "increase" : "decrease",
             change_pct: Math.round(((newBudget - currentBudget) / currentBudget) * 100),
           },
         };

@@ -115,10 +115,10 @@ async function syncUser(sb: any, user_id: string, persona_id: string | null): Pr
         const adsRes = await fetch(
           `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${insFields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=200&access_token=${token}`
         );
-        if (!adsRes.ok) { return ok({ ok: false, synced: 0, error: `Meta HTTP ${adsRes.status}` }); }
+        if (!adsRes.ok) { console.error(`[sync-ad-diary] Meta HTTP ${adsRes.status} for ${user_id}`); continue; }
         const adsData = await adsRes.json();
-        if (adsData.error) { return ok({ ok: false, synced: 0, error: `Meta API: ${adsData.error.message} (${adsData.error.code})` }); }
-        if (!adsData.data?.length) { return ok({ ok: false, synced: 0, error: `Meta: 0 ads retornados`, account: acc.id, since, today }); }
+        if (adsData.error) { console.error(`[sync-ad-diary] Meta API error for ${user_id}: ${adsData.error.message} (${adsData.error.code})`); continue; }
+        if (!adsData.data?.length) { console.log(`[sync-ad-diary] 0 ads for ${user_id} acc ${acc.id}`); continue; }
         const ads = (adsData.data || []).map((ins: any) => ({
           id: ins.ad_id, name: ins.ad_name,
           campaign: { name: ins.campaign_name },
