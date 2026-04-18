@@ -1775,9 +1775,22 @@ async function persistDecisions(accountId: string, items: FeedItem[], pipelineEn
     .eq("account_id", accountId)
     .eq("status", "pending");
 
-  // Insert new decisions
+  // Insert new decisions — with pipeline fallback
   const { error } = await supabase.from("decisions").insert(rows);
-  if (error) console.error("Failed to persist decisions:", error);
+  if (error) {
+    // If insert failed (possibly because pipeline columns don't exist yet),
+    // retry WITHOUT pipeline fields to guarantee decisions are always saved
+    console.warn("Decisions insert failed, retrying without pipeline fields:", error.message);
+    const safeRows = rows.map(r => {
+      const { pipeline_approved, financial_verdict, break_even_roas, margin_of_safety,
+              risk_level, data_confidence, confidence_gate, safety_status,
+              cooldown_active, gradual_step, rollback_plan, explanation_chain,
+              pipeline_mode, ...safe } = r;
+      return safe;
+    });
+    const { error: retryError } = await supabase.from("decisions").insert(safeRows);
+    if (retryError) console.error("Failed to persist decisions (retry):", retryError);
+  }
 }
 
 async function updateMoneyTracker(accountId: string, items: FeedItem[]): Promise<void> {
