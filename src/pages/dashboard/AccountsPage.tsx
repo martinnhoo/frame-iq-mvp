@@ -547,15 +547,26 @@ const GOAL_OBJECTIVES = [
   },
 ];
 
-// ── Goal section (per account) ──────────────────────────────────────────────
-// ── Profit margin — inline editable with break-even ROAS preview ────────────
+// ── Business profile — smart margin calculator ──────────────────────────────
+// Three modes based on business type:
+// 1. "Produto físico" → asks price + cost → auto-calculates margin
+// 2. "Serviço / Digital" → asks margin directly (typically high)
+// 3. "Não sei" → uses conservative default (30%) with explanation
+type BusinessMode = 'product' | 'service' | 'unknown' | null;
+
 function MarginSection({ userId, personaId }: { userId: string; personaId: string }) {
   const [margin, setMargin] = useState<number | null>(null);
   const [editing, setEditing] = useState(false);
-  const [editVal, setEditVal] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [v2Id, setV2Id] = useState<string | null>(null);
+  const [goalObj, setGoalObj] = useState<string | null>(null);
+
+  // Edit state
+  const [mode, setMode] = useState<BusinessMode>(null);
+  const [price, setPrice] = useState('');
+  const [cost, setCost] = useState('');
+  const [directMargin, setDirectMargin] = useState('');
 
   const DEFAULT_MARGIN = 30;
 
@@ -572,23 +583,44 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
         const selId = localStorage.getItem(`meta_sel_${personaId}`) || meta.selected_account_id || ads[0]?.id;
         if (!selId) { setLoading(false); return; }
         const { data: row } = await (supabase.from('ad_accounts' as any)
-          .select('id, profit_margin_pct')
+          .select('id, profit_margin_pct, goal_objective')
           .eq('user_id', userId).eq('meta_account_id', selId).maybeSingle() as any);
-        if (row?.id) { setV2Id(row.id); setMargin(row.profit_margin_pct); }
+        if (row?.id) {
+          setV2Id(row.id);
+          setMargin(row.profit_margin_pct);
+          setGoalObj(row.goal_objective);
+        }
       } catch {}
       setLoading(false);
     })();
   }, [userId, personaId]);
 
+  const calculatedMargin = (() => {
+    if (mode === 'product') {
+      const p = parseFloat(price), c = parseFloat(cost);
+      if (p > 0 && c >= 0 && c < p) return Math.round(((p - c) / p) * 100);
+      return null;
+    }
+    if (mode === 'service') {
+      const v = parseFloat(directMargin);
+      if (v >= 1 && v <= 99) return Math.round(v);
+      return null;
+    }
+    if (mode === 'unknown') return DEFAULT_MARGIN;
+    return null;
+  })();
+
+  const breakEvenPreview = calculatedMargin && calculatedMargin > 0
+    ? (1 / (calculatedMargin / 100)).toFixed(2) : null;
+
   const save = async () => {
-    if (!v2Id) return;
-    const val = parseFloat(editVal);
-    if (isNaN(val) || val < 1 || val > 99) { toast.error("Margem deve ser entre 1% e 99%"); return; }
+    if (!v2Id || !calculatedMargin) return;
     setSaving(true);
     try {
-      await (supabase.from('ad_accounts' as any).update({ profit_margin_pct: val }).eq('id', v2Id) as any);
-      setMargin(val);
+      await (supabase.from('ad_accounts' as any).update({ profit_margin_pct: calculatedMargin }).eq('id', v2Id) as any);
+      setMargin(calculatedMargin);
       setEditing(false);
+      setMode(null);
       toast.success('Margem atualizada');
     } catch { toast.error('Erro ao salvar'); }
     finally { setSaving(false); }
@@ -601,97 +633,259 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
   const breakEven = displayMargin > 0 ? (1 / (displayMargin / 100)).toFixed(2) : '—';
   const isDefault = margin === null;
 
+  // ── Smart context from goal ──
+  const goalHint = goalObj === 'sales'
+    ? 'Necessário para calcular se seus anúncios estão gerando lucro real.'
+    : goalObj === 'leads'
+    ? 'Ajuda a calcular o custo máximo por lead que ainda gera lucro.'
+    : 'Usado para calcular o retorno mínimo dos seus anúncios.';
+
+  // ── EDIT MODE ──
   if (editing) {
     return (
       <div>
         <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
           textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
           display: "flex", alignItems: "center", gap: 6 }}>
-          💰 Margem de Lucro
+          <Target size={12} color="rgba(255,255,255,0.35)" />
+          Margem de Lucro
         </p>
         <div style={{
-          background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.18)",
-          borderRadius: 12, padding: "14px 16px",
+          background: "rgba(52,211,153,0.03)", border: "1px solid rgba(52,211,153,0.15)",
+          borderRadius: 12, padding: "16px 16px 18px", overflow: "hidden",
         }}>
-          <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.50)", margin: "0 0 10px", lineHeight: 1.5 }}>
-            Qual a margem de lucro do seu produto? (sem contar ads)
+          {/* Explanation */}
+          <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.55)", margin: "0 0 14px", lineHeight: 1.5 }}>
+            {goalHint}
           </p>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <input type="number" min="1" max="99" step="1"
-              placeholder={`${DEFAULT_MARGIN}`}
-              value={editVal} onChange={e => setEditVal(e.target.value)}
-              autoFocus
-              style={{
-                width: 80, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 8, padding: "9px 12px", color: "#F0F6FC", fontSize: 15, fontWeight: 700,
-                fontFamily: F, outline: "none", fontVariant: "tabular-nums", textAlign: "center",
-              }}
-              onFocus={e => e.currentTarget.style.borderColor = "rgba(52,211,153,0.40)"}
-              onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"}
-              onKeyDown={e => e.key === 'Enter' && save()}
-            />
-            <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.40)" }}>%</span>
-            {editVal && !isNaN(parseFloat(editVal)) && parseFloat(editVal) > 0 && (
-              <span style={{ fontFamily: F, fontSize: 12, color: "rgba(52,211,153,0.65)", marginLeft: 4 }}>
-                → Break-even ROAS: {(1 / (parseFloat(editVal) / 100)).toFixed(2)}x
-              </span>
-            )}
-          </div>
-          <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.25)", margin: "0 0 12px", lineHeight: 1.5 }}>
-            Ex: margem 40% = break-even ROAS 2.50x (precisa R$2.50 de retorno por R$1 gasto em ads)
+
+          {/* Business type selector */}
+          <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.40)", margin: "0 0 8px", letterSpacing: "0.04em" }}>
+            Tipo de negócio
           </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={save} disabled={saving || !editVal}
-              style={{
-                flex: 1, padding: "9px 14px", borderRadius: 8,
-                background: editVal ? "linear-gradient(135deg, #34d399 0%, #10b981 100%)" : "rgba(255,255,255,0.06)",
-                border: "none", color: editVal ? "#fff" : "rgba(255,255,255,0.25)",
-                fontFamily: F, fontSize: 12, fontWeight: 700, cursor: editVal ? "pointer" : "not-allowed",
-                boxShadow: editVal ? "0 3px 10px rgba(52,211,153,0.25)" : "none",
-              }}>
-              {saving ? 'Salvando...' : 'Salvar'}
-            </button>
-            <button onClick={() => setEditing(false)}
-              style={{
-                padding: "9px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)",
-                fontFamily: F, fontSize: 12, fontWeight: 500, cursor: "pointer",
-              }}>
-              Cancelar
-            </button>
+          <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+            {([
+              { key: 'product' as const, label: 'Produto físico', sub: 'E-commerce, loja', icon: '📦' },
+              { key: 'service' as const, label: 'Serviço / Digital', sub: 'Info, SaaS, consultoria', icon: '💻' },
+              { key: 'unknown' as const, label: 'Não sei minha margem', sub: 'Usar padrão 30%', icon: '🤔' },
+            ]).map(opt => {
+              const sel = mode === opt.key;
+              return (
+                <button key={opt.key} onClick={() => { setMode(opt.key); setPrice(''); setCost(''); setDirectMargin(''); }}
+                  style={{
+                    flex: "1 1 140px", display: "flex", flexDirection: "column", alignItems: "flex-start",
+                    gap: 3, padding: "10px 12px", borderRadius: 8,
+                    background: sel ? "rgba(52,211,153,0.08)" : "rgba(255,255,255,0.03)",
+                    border: sel ? "1px solid rgba(52,211,153,0.30)" : "1px solid rgba(255,255,255,0.07)",
+                    color: sel ? "#34d399" : "rgba(255,255,255,0.55)",
+                    fontFamily: F, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                    transition: "all 0.15s", textAlign: "left",
+                  }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 14 }}>{opt.icon}</span>
+                    {opt.label}
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 400, color: sel ? "rgba(52,211,153,0.55)" : "rgba(255,255,255,0.25)" }}>
+                    {opt.sub}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+
+          {/* Mode-specific inputs */}
+          {mode === 'product' && (
+            <div style={{ animation: "fadeIn 0.2s ease" }}>
+              <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.40)", margin: "0 0 8px" }}>
+                Preço médio de venda e custo do produto
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.30)", display: "block", marginBottom: 4 }}>Preço de venda</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.30)" }}>R$</span>
+                    <input type="number" min="0" step="0.01" placeholder="150"
+                      value={price} onChange={e => setPrice(e.target.value)} autoFocus
+                      style={{
+                        width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)",
+                        borderRadius: 6, padding: "8px 10px", color: "#F0F6FC", fontSize: 14, fontWeight: 700,
+                        fontFamily: F, outline: "none", fontVariant: "tabular-nums",
+                      }}
+                      onFocus={e => e.currentTarget.style.borderColor = "rgba(52,211,153,0.35)"}
+                      onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"}
+                    />
+                  </div>
+                </div>
+                <span style={{ fontFamily: F, fontSize: 16, color: "rgba(255,255,255,0.15)", marginTop: 18 }}>—</span>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.30)", display: "block", marginBottom: 4 }}>Custo (produto + frete)</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.30)" }}>R$</span>
+                    <input type="number" min="0" step="0.01" placeholder="60"
+                      value={cost} onChange={e => setCost(e.target.value)}
+                      style={{
+                        width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)",
+                        borderRadius: 6, padding: "8px 10px", color: "#F0F6FC", fontSize: 14, fontWeight: 700,
+                        fontFamily: F, outline: "none", fontVariant: "tabular-nums",
+                      }}
+                      onFocus={e => e.currentTarget.style.borderColor = "rgba(52,211,153,0.35)"}
+                      onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mode === 'service' && (
+            <div style={{ animation: "fadeIn 0.2s ease" }}>
+              <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.40)", margin: "0 0 8px" }}>
+                Margem de lucro (% que sobra de cada venda, sem ads)
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <input type="number" min="1" max="99" step="1" placeholder="70"
+                  value={directMargin} onChange={e => setDirectMargin(e.target.value)} autoFocus
+                  style={{
+                    width: 80, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)",
+                    borderRadius: 6, padding: "8px 10px", color: "#F0F6FC", fontSize: 14, fontWeight: 700,
+                    fontFamily: F, outline: "none", fontVariant: "tabular-nums", textAlign: "center",
+                  }}
+                  onFocus={e => e.currentTarget.style.borderColor = "rgba(52,211,153,0.35)"}
+                  onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"}
+                  onKeyDown={e => e.key === 'Enter' && save()}
+                />
+                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.30)" }}>%</span>
+              </div>
+              <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.22)", margin: 0, lineHeight: 1.5 }}>
+                Infoprodutos: geralmente 80-95% · SaaS: 70-90% · Consultoria: 50-80%
+              </p>
+            </div>
+          )}
+
+          {mode === 'unknown' && (
+            <div style={{
+              padding: "10px 12px", borderRadius: 8,
+              background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.10)",
+              marginBottom: 8, animation: "fadeIn 0.2s ease",
+            }}>
+              <p style={{ fontFamily: F, fontSize: 12, color: "rgba(251,191,36,0.70)", margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
+                Usaremos 30% como padrão (conservador). Isso significa que o sistema vai exigir ROAS 3.33x como mínimo para considerar um anúncio lucrativo. Você pode ajustar depois a qualquer momento.
+              </p>
+            </div>
+          )}
+
+          {/* Live preview */}
+          {calculatedMargin && calculatedMargin > 0 && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
+              borderRadius: 8, background: "rgba(52,211,153,0.06)",
+              border: "1px solid rgba(52,211,153,0.12)", marginTop: 12, marginBottom: 12,
+              animation: "fadeIn 0.15s ease",
+            }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                  <span style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#34d399", letterSpacing: "-0.02em" }}>
+                    {calculatedMargin}%
+                  </span>
+                  <span style={{ fontFamily: F, fontSize: 11, color: "rgba(52,211,153,0.55)", fontWeight: 500 }}>margem</span>
+                </div>
+                <div style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 2 }}>
+                  Break-even ROAS: <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.60)" }}>{breakEvenPreview}x</span>
+                  <span style={{ color: "rgba(255,255,255,0.22)" }}> — mínimo para não perder dinheiro</span>
+                </div>
+              </div>
+              {mode === 'product' && price && cost && (
+                <div style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "right", lineHeight: 1.5 }}>
+                  R${price} - R${cost} = R${(parseFloat(price) - parseFloat(cost)).toFixed(2)} lucro
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Action buttons */}
+          {mode && (
+            <div style={{ display: "flex", gap: 8, marginTop: mode === 'unknown' ? 12 : 0 }}>
+              <button onClick={save} disabled={saving || !calculatedMargin}
+                style={{
+                  flex: 1, padding: "10px 14px", borderRadius: 8,
+                  background: calculatedMargin ? "linear-gradient(135deg, #34d399 0%, #10b981 100%)" : "rgba(255,255,255,0.06)",
+                  border: "none", color: calculatedMargin ? "#fff" : "rgba(255,255,255,0.25)",
+                  fontFamily: F, fontSize: 12, fontWeight: 700,
+                  cursor: calculatedMargin ? "pointer" : "not-allowed",
+                  boxShadow: calculatedMargin ? "0 3px 10px rgba(52,211,153,0.25)" : "none",
+                  transition: "all 0.15s",
+                }}>
+                {saving ? 'Salvando...' : 'Confirmar margem'}
+              </button>
+              <button onClick={() => { setEditing(false); setMode(null); }}
+                style={{
+                  padding: "10px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)",
+                  fontFamily: F, fontSize: 12, fontWeight: 500, cursor: "pointer",
+                }}>
+                Cancelar
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
+  // ── DISPLAY MODE ──
   return (
     <div>
       <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
         textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
         display: "flex", alignItems: "center", gap: 6 }}>
-        💰 Margem de Lucro
+        <Target size={12} color="rgba(255,255,255,0.35)" />
+        Margem de Lucro
       </p>
       <div
         role="button" tabIndex={0}
-        onClick={() => { setEditVal(displayMargin.toString()); setEditing(true); }}
-        onKeyDown={e => e.key === 'Enter' && (setEditVal(displayMargin.toString()), setEditing(true))}
+        onClick={() => { setEditing(true); if (margin) setMode(null); }}
+        onKeyDown={e => { if (e.key === 'Enter') { setEditing(true); if (margin) setMode(null); } }}
         style={{
           display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-          background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.12)",
+          background: isDefault ? "rgba(251,191,36,0.04)" : "rgba(52,211,153,0.04)",
+          border: isDefault ? "1px solid rgba(251,191,36,0.12)" : "1px solid rgba(52,211,153,0.12)",
           borderRadius: 10, justifyContent: "space-between", cursor: "pointer",
           transition: "all 0.15s",
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(52,211,153,0.30)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(52,211,153,0.12)"; }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div>
-            <div style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "#F0F6FC" }}>
-              {displayMargin}%{isDefault ? <span style={{ fontSize: 11, color: "rgba(255,255,255,0.30)", fontWeight: 400 }}> (padrão)</span> : ''}
-            </div>
-            <div style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 2 }}>
-              Break-even ROAS: {breakEven}x · Clique para alterar
-            </div>
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.borderColor = isDefault ? "rgba(251,191,36,0.25)" : "rgba(52,211,153,0.30)";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.borderColor = isDefault ? "rgba(251,191,36,0.12)" : "rgba(52,211,153,0.12)";
+        }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#F0F6FC" }}>
+              {displayMargin}%
+            </span>
+            {isDefault && (
+              <span style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: "0.06em",
+                padding: "2px 6px", borderRadius: 3,
+                background: "rgba(251,191,36,0.10)", color: "#FBBF24",
+              }}>
+                PADRÃO
+              </span>
+            )}
+            {!isDefault && (
+              <span style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: "0.06em",
+                padding: "2px 6px", borderRadius: 3,
+                background: "rgba(52,211,153,0.10)", color: "#34d399",
+              }}>
+                CONFIGURADO
+              </span>
+            )}
+          </div>
+          <div style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 3, lineHeight: 1.4 }}>
+            Break-even ROAS: {breakEven}x
+            {isDefault && <span style={{ color: "rgba(251,191,36,0.50)" }}> · Configure para decisões financeiras precisas</span>}
+            {!isDefault && <span> · Clique para alterar</span>}
           </div>
         </div>
         <Pencil size={12} color="rgba(255,255,255,0.30)" />
