@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Undo2, Check, X, RotateCcw, Loader2, CircleSlash, CirclePlay, ArrowUpRight, ArrowDownRight, CopyPlus, Sparkles, Calendar, Filter, ChevronDown, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { DESIGN_TOKENS as DT } from '@/hooks/useDesignTokens';
+import { storage } from '@/lib/storage';
 
 // ── Design tokens — matching AccountsPage ────────────────────────────────────
 const F = DT.font;
@@ -124,24 +125,33 @@ function matchesDateFilter(dateStr: string, preset: DatePreset): boolean {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 const HistoryPage: React.FC = () => {
-  const ctx = useOutletContext<DashboardContext & { activeAccount: any; metaConnected: boolean }>();
-  const { activeAccount } = ctx;
-  const accountId = activeAccount?.id ?? null;
+  const ctx = useOutletContext<DashboardContext>();
+  const { selectedPersona } = ctx;
 
   const [history, setHistory] = useState<ActionLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [undoingId, setUndoingId] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<DatePreset>('all');
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
+  // Force re-read of localStorage when Meta account changes
+  const [accTick, setAccTick] = useState(0);
+  const liveAccountId = React.useMemo(() => {
+    // accTick dependency forces re-read
+    void accTick;
+    return selectedPersona?.id
+      ? (storage.get(`meta_sel_${selectedPersona.id}`, "") || null)
+      : null;
+  }, [selectedPersona?.id, accTick]);
 
   const loadHistory = useCallback(async () => {
-    if (!accountId) { setHistory([]); setLoading(false); return; }
+    const aid = liveAccountId;
+    if (!aid) { setHistory([]); setLoading(false); return; }
     try {
       setLoading(true);
       const { data, error } = await (supabase
         .from('action_log' as any)
         .select('*')
-        .eq('account_id', accountId)
+        .eq('account_id', aid)
         .order('executed_at', { ascending: false })
         .limit(100) as any);
       if (error) throw error;
@@ -151,15 +161,15 @@ const HistoryPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [accountId]);
+  }, [liveAccountId]);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
 
   useEffect(() => {
-    const handler = () => { loadHistory(); };
+    const handler = () => { setAccTick(t => t + 1); };
     window.addEventListener('meta-account-changed', handler);
     return () => window.removeEventListener('meta-account-changed', handler);
-  }, [loadHistory]);
+  }, []);
 
   // ── Filtered list ──
   const filtered = useMemo(() =>
