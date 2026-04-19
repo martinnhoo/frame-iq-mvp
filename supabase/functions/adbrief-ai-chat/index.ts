@@ -1140,7 +1140,7 @@ Esta conta ainda não tem padrões validados com dados suficientes.
     // ── 4b. Fetch live Meta Ads data (with historical date detection) ──────────
     // Detect if user is asking about a specific historical period
     const historicalMatch = message.match(
-      /(?:em|in|de|desde|from|between|entre|no mês de|no dia|week of|semana de)?\s*(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)\s*(?:de\s*)?(?:20\d{2})?|(?:\d{1,2})[\/\-](?:\d{1,2})(?:[\/\-](?:20)?\d{2,4})?|(?:last|últim[ao]s?|past)\s+(?:\d+)\s+(?:days?|dias?|weeks?|semanas?|months?|meses?)/i,
+      /(?:em|in|de|desde|from|between|entre|no mês de|no dia|week of|semana de)?\s*(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|january|february|march|april|may|june|july|august|september|october|november|december)\s*(?:de\s*)?(?:20\d{2})?|(?:\d{1,2})[\/\-](?:\d{1,2})(?:[\/\-](?:20)?\d{2,4})?|(?:last|[uú]ltim[ao]s?|past|nos\s+[uú]ltim[ao]s?)\s+(?:\d+)\s+(?:days?|dias?|weeks?|semanas?|months?|meses?)|(?:esta|essa|this)\s+(?:semana|week)|(?:semana|week)\s+(?:passada|last)|(?:ontem|yesterday|hoje|today|this week|esta semana)/i,
     );
     let historicalSince: string | null = null;
     let historicalUntil: string | null = null;
@@ -1186,7 +1186,7 @@ Esta conta ainda não tem padrões validados com dados suficientes.
           historicalSince = new Date(year, month, 1).toISOString().split("T")[0];
           historicalUntil = new Date(year, month + 1, 0).toISOString().split("T")[0];
         }
-        // "last N days/weeks/months"
+        // "last N days/weeks/months" or "últimos N dias"
         const relMatch = matched.match(/(\d+)\s*(day|dia|week|semana|month|mes)/);
         if (relMatch) {
           const n = parseInt(relMatch[1]);
@@ -1200,14 +1200,28 @@ Esta conta ainda não tem padrões validados com dados suficientes.
           historicalSince = new Date(Date.now() - ms).toISOString().split("T")[0];
           historicalUntil = new Date().toISOString().split("T")[0];
         }
-        // Only use historical if it's actually outside our default 30-day window
-        if (historicalSince) {
-          const daysDiff = (Date.now() - new Date(historicalSince).getTime()) / 86400000;
-          if (daysDiff <= 32) {
-            historicalSince = null;
-            historicalUntil = null;
-          } // within default window
+        // "esta semana" / "this week" — last 7 days
+        if (!historicalSince && /(?:esta|essa|this)\s*(?:semana|week)/i.test(matched)) {
+          historicalSince = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+          historicalUntil = new Date().toISOString().split("T")[0];
         }
+        // "semana passada" / "last week" — 14 to 7 days ago
+        if (!historicalSince && /(?:semana|week)\s*(?:passada|last)/i.test(matched)) {
+          historicalSince = new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
+          historicalUntil = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+        }
+        // "hoje" / "today" — today only
+        if (!historicalSince && /(?:hoje|today)/i.test(matched)) {
+          historicalSince = new Date().toISOString().split("T")[0];
+          historicalUntil = new Date().toISOString().split("T")[0];
+        }
+        // "ontem" / "yesterday" — yesterday only
+        if (!historicalSince && /(?:ontem|yesterday)/i.test(matched)) {
+          historicalSince = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+          historicalUntil = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+        }
+        // Always respect the user's requested period — even short ones like "7 days"
+        // Previously we discarded <=32 days but that caused wrong data when user asks about 7 days
       } catch (_) {
         historicalSince = null;
         historicalUntil = null;
@@ -1241,7 +1255,8 @@ Esta conta ainda não tem padrões validados com dados suficientes.
           const activeAcc = (selId && accs.find((a: any) => a.id === selId)) || accs[0];
 
           if (activeAcc?.id) {
-            const since = historicalSince || new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString().split("T")[0];
+            // Default: 30 days (aligned with Live Panel's default). historicalSince overrides.
+            const since = historicalSince || new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().split("T")[0];
             const until = historicalUntil || new Date().toISOString().split("T")[0];
             // Lifetime since (for all-time top performers)
             const lifetimeSince = new Date(Date.now() - 3 * 365 * 24 * 3600 * 1000).toISOString().split("T")[0];
@@ -1267,25 +1282,29 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               timeSeriesRaw = cached.timeSeriesRaw;
               placementRaw = cached.placementRaw;
             } else {
-              // Comprehensive Meta Ads data fetch: 90 days + lifetime top performers
+              // Comprehensive Meta Ads data fetch: period-aware + lifetime top performers
               const fields =
                 "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency";
+              // Time series granularity: daily for <=31 days, monthly for longer
+              const periodDays = Math.round((new Date(until).getTime() - new Date(since).getTime()) / 86400000) + 1;
+              const timeIncrement = periodDays <= 31 ? "1" : "monthly";
+              const timeSeriesLimit = periodDays <= 31 ? periodDays : 6;
               const [r1, r2, r3, r4, r5, r6] = await Promise.allSettled([
-                // 90-day ad insights — limit 25 (was 100)
+                // Ad insights for period — limit 25
                 fetch(
                   `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=25&access_token=${token}`,
                 ),
-                // Campaigns — limit 30 (was 100)
+                // Campaigns — limit 30
                 fetch(
                   `https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=30&access_token=${token}`,
                 ),
-                // Adsets — limit 20, trimmed fields (was 100 with targeting)
+                // Adsets — limit 20, trimmed fields
                 fetch(
                   `https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,optimization_goal&limit=20&access_token=${token}`,
                 ),
-                // Monthly time series
+                // Time series — daily or monthly depending on period
                 fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${until}"}&time_increment=monthly&limit=6&access_token=${token}`,
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${until}"}&time_increment=${timeIncrement}&limit=${timeSeriesLimit}&access_token=${token}`,
                 ),
                 // Placement breakdown — limit 10 (was 20)
                 fetch(
@@ -1974,6 +1993,7 @@ REGRAS QUE NUNCA QUEBRAM
 ZERO ALUCINAÇÃO DE MÉTRICAS
 Nunca escreva CTR, ROAS, CPM, CPC, conversões ou qualquer número que não esteja explicitamente nos dados do contexto.
 Dado real do contexto > qualquer generalização.
+PERÍODO DOS DADOS: Os dados no contexto são do período indicado em "LIVE META ADS (since X to Y)". Se o padrão é 30 dias e o usuário perguntar sobre 7 dias, os dados serão re-buscados para 7 dias — cite APENAS os números que estão no contexto para o período correto. NUNCA divida ou extrapole dados de um período para estimar outro.
 
 DISTINÇÃO CRÍTICA — CAMPANHAS vs ANÚNCIOS:
 - "active_ads" = anúncios que tiveram impressões no período. Se active_ads = 0, NÃO há anúncios rodando.
