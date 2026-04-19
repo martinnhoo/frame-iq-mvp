@@ -575,7 +575,7 @@ export function AppLayout() {
             <Menu size={20} color="rgba(255,255,255,0.60)" />
           </button>
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <Logo size="md" />
+            <LogoMark size={26} />
           </div>
           <div style={{ width: 36 }} />
         </div>
