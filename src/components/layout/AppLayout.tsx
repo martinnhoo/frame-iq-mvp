@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { Logo } from '@/components/Logo';
+import { LogoMark } from '@/components/Logo';
 import { CreditBar } from '@/components/dashboard/CreditBar';
 import { ReferralPopup } from '@/components/dashboard/ReferralPopup';
 import UpgradeWall from '@/components/UpgradeWall';
@@ -317,15 +317,16 @@ export function AppLayout() {
   // ── Sidebar content ──
   const sidebarContent = (
     <>
-      {/* Logo row */}
+      {/* Logo mark */}
       <div style={{
-        height: 52, padding: '0 16px',
+        height: 48, padding: '0 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexShrink: 0,
       }}>
         <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
-          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-          <Logo size="md" />
+          title="adbrief"
+          style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <LogoMark size={26} />
         </button>
         {isMobile && (
           <button onClick={() => setMobileOpen(false)}
@@ -348,27 +349,38 @@ export function AppLayout() {
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
-          {/* Avatar */}
-          <div style={{
-            width: 30, height: 30, borderRadius: 8, flexShrink: 0, overflow: 'hidden',
-            background: selectedPersona
-              ? (selectedPersona.logo_url ? 'rgba(255,255,255,0.08)' : avatarGradient(selectedPersona.name || '?'))
-              : 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {selectedPersona?.logo_url
-              ? <img src={selectedPersona.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : selectedPersona
-                ? <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
-                    {(selectedPersona.name || '?').charAt(0).toUpperCase()}
-                  </span>
-                : <Building2 size={13} color="rgba(255,255,255,0.25)" />
-            }
+          {/* Avatar with connection dot */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 8, overflow: 'hidden',
+              background: selectedPersona
+                ? (selectedPersona.logo_url ? 'rgba(255,255,255,0.08)' : avatarGradient(selectedPersona.name || '?'))
+                : 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {selectedPersona?.logo_url
+                ? <img src={selectedPersona.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : selectedPersona
+                  ? <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
+                      {(selectedPersona.name || '?').charAt(0).toUpperCase()}
+                    </span>
+                  : <Building2 size={13} color="rgba(255,255,255,0.25)" />
+              }
+            </div>
+            {selectedPersona && !accountResolving && (
+              <span style={{
+                position: 'absolute', bottom: -1, right: -1,
+                width: 8, height: 8, borderRadius: '50%',
+                background: metaConnected ? '#22c55e' : 'rgba(255,255,255,0.20)',
+                border: '2px solid #0a0c10',
+                boxShadow: metaConnected ? '0 0 4px rgba(34,197,94,0.5)' : 'none',
+              }} />
+            )}
           </div>
 
-          {/* Name + connection status */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Name + plan badge */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 7 }}>
             <p style={{
               margin: 0, fontSize: 13, fontWeight: 600,
               color: selectedPersona ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.30)',
@@ -376,21 +388,14 @@ export function AppLayout() {
             }}>
               {selectedPersona?.name || 'Selecionar conta'}
             </p>
-            {selectedPersona && !accountResolving && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                <span style={{
-                  width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                  background: metaConnected ? '#22A3A3' : 'rgba(255,255,255,0.15)',
-                  boxShadow: metaConnected ? '0 0 4px rgba(16,185,129,0.6)' : 'none',
-                }} />
-                <span style={{
-                  fontSize: 10.5,
-                  color: metaConnected ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.25)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {metaConnected ? 'Meta Ads conectado' : 'Não conectado'}
-                </span>
-              </div>
+            {usageDetails?.plan && usageDetails.plan !== 'free' && (
+              <span style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+                color: '#38bdf8', background: 'rgba(56,189,248,0.10)',
+                padding: '1.5px 5px', borderRadius: 4, flexShrink: 0, lineHeight: '14px',
+              }}>
+                {usageDetails.plan === 'studio' ? 'Studio' : usageDetails.plan === 'starter' ? 'Pro' : usageDetails.plan === 'creator' ? 'Maker' : usageDetails.plan}
+              </span>
             )}
           </div>
 
