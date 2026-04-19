@@ -2836,6 +2836,134 @@ const PerformancePulse: React.FC<{
 };
 
 // ================================================================
+// ACCOUNT HEALTH BANNER — Always visible intelligence status
+// Shows alerts when they exist, healthy status when none
+// ================================================================
+const AccountHealthBanner: React.FC<{
+  alerts: AccountAlert[];
+  onDismiss: (id: string) => void;
+  onAction: (alert: AccountAlert) => void;
+  lastAnalysisMin: number;
+  patternsCount: number;
+}> = ({ alerts, onDismiss, onAction, lastAnalysisMin, patternsCount }) => {
+  // If there ARE alerts → show PriorityStack
+  if (alerts.length > 0) {
+    return <PriorityStack alerts={alerts} onDismiss={onDismiss} onAction={onAction} />;
+  }
+
+  // No alerts → show healthy monitoring card
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {/* Section label */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
+      }}>
+        <span style={{
+          width: 7, height: 7, borderRadius: '50%',
+          background: T.green,
+          boxShadow: '0 0 8px rgba(74,222,128,0.4)',
+          animation: 'alertPulse 3s ease-in-out infinite',
+        }} />
+        <span style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+          color: T.green, fontFamily: F,
+        }}>
+          MONITORAMENTO ATIVO
+        </span>
+        <div style={{ flex: 1, height: 1, background: 'rgba(74,222,128,0.12)' }} />
+      </div>
+
+      {/* Healthy status card */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(74,222,128,0.06) 0%, rgba(13,17,23,0.95) 100%)',
+        border: '1px solid rgba(74,222,128,0.12)',
+        borderRadius: 8,
+        padding: '14px 16px',
+        position: 'relative' as const,
+        overflow: 'hidden' as const,
+      }}>
+        {/* Subtle left accent */}
+        <div style={{
+          position: 'absolute' as const, left: 0, top: 0, bottom: 0, width: 3,
+          background: 'linear-gradient(180deg, rgba(74,222,128,0.6) 0%, rgba(74,222,128,0.1) 100%)',
+          borderRadius: '3px 0 0 3px',
+        }} />
+
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingLeft: 6 }}>
+          {/* Shield icon */}
+          <div style={{
+            width: 36, height: 36, borderRadius: 8,
+            background: 'rgba(74,222,128,0.08)',
+            border: '1px solid rgba(74,222,128,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 18, flexShrink: 0,
+          }}>
+            🛡️
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 13, fontWeight: 700, color: T.text1, fontFamily: F,
+              marginBottom: 4, lineHeight: 1.3,
+            }}>
+              Conta saudável — nenhum alerta detectado
+            </div>
+            <div style={{
+              fontSize: 11, color: T.text3, fontFamily: F, lineHeight: 1.5,
+            }}>
+              A IA está monitorando sua conta 24/7. Alertas aparecem aqui automaticamente quando algo precisa de atenção.
+            </div>
+
+            {/* Stats row */}
+            <div style={{
+              display: 'flex', gap: 16, marginTop: 10,
+              flexWrap: 'wrap' as const,
+            }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}>
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: T.green,
+                  boxShadow: '0 0 4px rgba(74,222,128,0.3)',
+                }} />
+                <span style={{ fontSize: 10, color: T.text3, fontFamily: F }}>
+                  Última análise: <span style={{ color: T.text2, fontWeight: 600 }}>{lastAnalysisMin}min</span>
+                </span>
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}>
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: T.purple,
+                  boxShadow: '0 0 4px rgba(167,139,250,0.3)',
+                }} />
+                <span style={{ fontSize: 10, color: T.text3, fontFamily: F }}>
+                  Padrões aprendidos: <span style={{ color: T.text2, fontWeight: 600 }}>{patternsCount}</span>
+                </span>
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}>
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: T.blue,
+                  boxShadow: '0 0 4px rgba(14,165,233,0.3)',
+                }} />
+                <span style={{ fontSize: 10, color: T.text3, fontFamily: F }}>
+                  8 tipos de alerta ativos
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ================================================================
 // PRIORITY STACK — Aggressive alert cards (Sprint 1)
 // Rule: each card = ACTION + LOSS/GAIN + URGENCY
 // ================================================================
@@ -4053,13 +4181,13 @@ const FeedPage: React.FC = () => {
           <div style={{ marginBottom: 18 }}>
             <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>SEU FEED</h1>
           </div>
-          {visibleAlerts.length > 0 && (
-            <PriorityStack
-              alerts={visibleAlerts}
-              onDismiss={handleAlertDismiss}
-              onAction={handleAlertAction}
-            />
-          )}
+          <AccountHealthBanner
+            alerts={visibleAlerts}
+            onDismiss={handleAlertDismiss}
+            onAction={handleAlertAction}
+            lastAnalysisMin={lastAnalysisMin}
+            patternsCount={patternsCount}
+          />
           <StateNoConnection />
         </div>
       </div>
@@ -4155,12 +4283,14 @@ const FeedPage: React.FC = () => {
         {/* Inline sync progress banner */}
         {syncing && <SyncBanner />}
 
-        {/* ── PRIORITY STACK — urgent alerts above everything (shows regardless of Meta connection) ── */}
-        {!isDemo && visibleAlerts.length > 0 && (
-          <PriorityStack
+        {/* ── ACCOUNT HEALTH — always visible: alerts OR healthy status ── */}
+        {!isDemo && (
+          <AccountHealthBanner
             alerts={visibleAlerts}
             onDismiss={handleAlertDismiss}
             onAction={handleAlertAction}
+            lastAnalysisMin={lastAnalysisMin}
+            patternsCount={patternsCount}
           />
         )}
 
