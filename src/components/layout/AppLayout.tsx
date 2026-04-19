@@ -460,51 +460,7 @@ export function AppLayout() {
               </>
             )}
 
-            {/* Meta ad accounts switcher — always show when connected */}
-            {activeAccount && activeAccount.allAccounts.length > 0 && (
-              <>
-                <div style={{ padding: '8px 14px 3px', fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: F }}>
-                  Contas de anúncio
-                </div>
-                {activeAccount.allAccounts.map(adAcc => {
-                  const isActive = adAcc.id === activeAccount.metaAccountId;
-                  return (
-                    <button key={adAcc.id}
-                      onClick={async () => {
-                        if (!isActive && switchAccount) {
-                          await switchAccount(adAcc.id);
-                        }
-                        setAccountsOpen(false);
-                        setMobileOpen(false);
-                      }}
-                      style={{
-                        width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '5px 14px', background: isActive ? 'rgba(14,165,233,0.08)' : 'transparent',
-                        border: 'none', cursor: 'pointer', fontFamily: F,
-                        transition: 'background 0.1s', textAlign: 'left',
-                      }}
-                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
-                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
-                      <span style={{
-                        width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-                        background: isActive ? '#0ea5e9' : 'rgba(255,255,255,0.12)',
-                      }} />
-                      <span style={{
-                        flex: 1, fontSize: 11.5, fontWeight: isActive ? 600 : 400,
-                        color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {adAcc.name || adAcc.id}
-                      </span>
-                      {isActive && (
-                        <span style={{ fontSize: 8, fontWeight: 600, color: '#0ea5e9', letterSpacing: '0.04em' }}>●</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </>
-            )}
+            {/* Ad account switching removed from sidebar — use Accounts page instead */}
 
             {/* Not connected — nudge */}
             {!metaConnected && selectedPersona && (
