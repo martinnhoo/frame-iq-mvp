@@ -133,6 +133,7 @@ export function AppLayout() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
+  const [accountAlerts, setAccountAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiProfile, setAiProfile] = useState<any>(null);
   // Start with null — persona is loaded AFTER auth to prevent cross-account leak
@@ -201,6 +202,17 @@ export function AppLayout() {
       }
 
       fetchUsage(session.user.id);
+
+      (supabase as any)
+        .from('account_alerts')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .is('dismissed_at', null)
+        .order('created_at', { ascending: false })
+        .limit(10)
+        .then(({ data, error }: any) => {
+          if (mounted && !error) setAccountAlerts(data || []);
+        });
 
       // Load saved personas
       const { data: rawPersonas } = await (supabase as any)
@@ -638,6 +650,7 @@ export function AppLayout() {
             setSelectedPersona,
             aiProfile,
             lang: language,
+            accountAlerts,
             // v2: active account resolution
             activeAccount,
             metaConnected,
