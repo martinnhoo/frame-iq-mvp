@@ -32,31 +32,52 @@ const T = {
   PATTERN_CONF:     0.55,  // confiança mínima no padrão para usar no alerta
 };
 
-// ── Telegram message builder ─────────────────────────────────────────────────
+// ── Telegram message builder — aggressive, loss-framed ──────────────────────
 function buildTelegramMessage(alerts: any[], userName: string): string {
-  const greeting = userName ? `Oi ${userName.split(" ")[0]}` : "AdBrief Alerts";
+  const name = userName ? userName.split(" ")[0] : "";
+  const highCount = alerts.filter(a => a.urgency === "high").length;
+
+  // Aggressive header
+  const header = highCount > 0
+    ? `🚨 <b>${name ? name + ", " : ""}${highCount} problema${highCount > 1 ? "s" : ""} queimando dinheiro agora</b>`
+    : `⚠️ <b>${name ? name + ", " : ""}${alerts.length} ponto${alerts.length > 1 ? "s" : ""} de atenção</b>`;
+
+  // Each alert: verb + ad + loss detail
+  const alertVerbs: Record<string, string> = {
+    FADIGA_CRITICA: "🔥 PAUSE",
+    ROAS_CRITICO: "💸 CORTE",
+    ROAS_COLAPSOU: "📉 AÇÃO IMEDIATA",
+    CTR_COLAPSOU: "🧊 TROQUE CRIATIVO",
+    RETENCAO_VIDEO_BAIXA: "⏭️ REFAÇA HOOK",
+    SPEND_SEM_RETORNO: "🕳️ PARE SANGRAMENTO",
+  };
+
   const lines = alerts.slice(0, 3).map(a => {
-    const icon = a.urgency === "high" ? "🔴" : "🟡";
-    const ad = a.ad_name ? ` — <i>${a.ad_name}</i>` : "";
-    return `${icon} ${a.detail}${ad}`;
+    const verb = alertVerbs[a.type] || (a.urgency === "high" ? "🔴 URGENTE" : "🟡 ATENÇÃO");
+    const ad = a.ad ? `<b>${a.ad}</b>` : "";
+    return `${verb}${ad ? ` — ${ad}` : ""}\n${a.detail}`;
   });
-  const hasHighUrgency = alerts.some(a => a.urgency === "high");
-  const pitch = hasHighUrgency
-    ? `\n\n💡 <b>Abra o AdBrief agora</b> para ver o diagnóstico completo e agir diretamente da plataforma.`
-    : `\n\n💡 Entre no AdBrief para ver a análise completa e a ação recomendada.`;
-  return `⚠️ <b>${greeting}, você tem ${alerts.length} alerta${alerts.length > 1 ? "s" : ""} na sua conta</b>\n\n${lines.join("\n\n")}${pitch}\n\n/alertas para ver todos | /status para resumo`;
+
+  const cta = highCount > 0
+    ? `\n\n👉 <b>Abra agora e resolva em 30 segundos:</b>\nhttps://adbrief.pro/dashboard/feed`
+    : `\n\n👉 <b>Ver análise completa:</b>\nhttps://adbrief.pro/dashboard/feed`;
+
+  return `${header}\n\n${lines.join("\n\n")}${cta}`;
 }
 
 function buildTelegramButtons(alerts: any[]): object | undefined {
-  // If there's a pauseable ad, offer quick action button
   const pauseable = alerts.find(a => a.ad_name && a.urgency === "high");
-  if (!pauseable) return undefined;
-  return {
-    inline_keyboard: [[
-      { text: `⏸ Pausar ${pauseable.ad_name?.slice(0, 20)}`, callback_data: `pause_confirm:${pauseable.ad_name}:${encodeURIComponent(pauseable.ad_name || "")}` },
-      { text: "✓ Ver alertas", callback_data: "dismiss_alert:all" },
-    ]],
-  };
+  const buttons: any[][] = [];
+  if (pauseable) {
+    buttons.push([
+      { text: `⏸ Pausar "${pauseable.ad_name?.slice(0, 18)}"`, callback_data: `pause_confirm:${pauseable.ad_name}:${encodeURIComponent(pauseable.ad_name || "")}` },
+    ]);
+  }
+  buttons.push([
+    { text: "📊 Abrir Feed", url: "https://adbrief.pro/dashboard/feed" },
+    { text: "💬 Falar com IA", url: "https://adbrief.pro/dashboard/ai" },
+  ]);
+  return { inline_keyboard: buttons };
 }
 
 Deno.serve(async (req) => {
@@ -391,7 +412,7 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 model: "claude-haiku-4-5-20251001",
                 max_tokens: 120,
-                system: "Você é o AdBrief AI. Escreva UMA frase de 20-30 palavras em PT-BR resumindo a situação da conta com base nos alertas. Seja específico, direto, sem floreios. Foque no impacto financeiro.",
+                system: "Você é o AdBrief AI. Escreva UMA frase de 20-30 palavras em PT-BR. Foque no IMPACTO FINANCEIRO e URGÊNCIA. Use framing de perda (quanto dinheiro está sendo jogado fora). Sem floreios, sem 'considere'. Seja direto como um media buyer sênior avisando um cliente.",
                 messages: [{ role: "user", content: JSON.stringify(sorted.map(a => ({ tipo: a.type, anuncio: a.ad, detalhe: a.detail }))) }],
               }),
             });
@@ -403,46 +424,60 @@ Deno.serve(async (req) => {
         // Build email
         const F = "'Inter', Arial, sans-serif";
         const subject = urgent > 0
-          ? `⚠️ ${urgent} alerta${urgent > 1 ? "s" : ""} crítico${urgent > 1 ? "s" : ""} detectado${urgent > 1 ? "s" : ""} — AdBrief`
-          : `💡 Oportunidade identificada na sua conta — AdBrief`;
+          ? `🚨 ${urgent} problema${urgent > 1 ? "s" : ""} queimando dinheiro na sua conta — AdBrief`
+          : `💡 Oportunidade detectada na sua conta — AdBrief`;
 
-        const emailAlertRows = sorted.map(a => `
+        // Alert verb mapping for email — aggressive loss-framed
+        const emailVerbs: Record<string, string> = {
+          FADIGA_CRITICA: "🔥 Pause agora",
+          ROAS_CRITICO: "💸 Corte já",
+          ROAS_COLAPSOU: "📉 Ação imediata",
+          CTR_COLAPSOU: "🧊 Troque o criativo",
+          RETENCAO_VIDEO_BAIXA: "⏭️ Refaça o hook",
+          SPEND_SEM_RETORNO: "🕳️ Pare o sangramento",
+        };
+
+        const emailAlertRows = sorted.map(a => {
+          const isHigh = a.urgency === "🔴";
+          const verb = emailVerbs[a.type] || (isHigh ? "🚨 Ação urgente" : "⚠️ Atenção");
+          return `
           <tr>
-            <td style="padding:14px 20px;border-bottom:1px solid #13132a;">
+            <td style="padding:16px 20px;border-bottom:1px solid #13132a;border-left:3px solid ${isHigh ? "#f87171" : "#fbbf24"};">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="padding:0 0 4px;">
-                    <span style="font-size:10px;font-weight:700;color:${a.urgency === "🔴" ? "#f87171" : "#fbbf24"};font-family:${F};text-transform:uppercase;letter-spacing:0.1em;">${a.urgency} ${a.type.replace(/_/g, " ")}</span>
+                    <span style="font-size:9px;font-weight:800;color:${isHigh ? "#f87171" : "#fbbf24"};font-family:${F};text-transform:uppercase;letter-spacing:0.1em;">${a.type.replace(/_/g, " ")}</span>
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:0 0 3px;">
-                    <span style="font-size:14px;font-weight:700;color:#eef0f6;font-family:${F};">${a.ad}</span>
-                    ${a.campaign ? `<span style="font-size:11px;color:rgba(238,240,246,0.4);font-family:${F};"> · ${a.campaign}</span>` : ""}
+                  <td style="padding:0 0 4px;">
+                    <span style="font-size:16px;font-weight:800;color:#eef0f6;font-family:${F};letter-spacing:-0.02em;">${verb}${a.ad ? ` '${a.ad}'` : ""}</span>
                   </td>
                 </tr>
                 <tr>
-                  <td>
-                    <span style="font-size:12px;color:rgba(238,240,246,0.65);font-family:${F};line-height:1.5;">${a.detail}</span>
+                  <td style="padding:0 0 6px;">
+                    <span style="font-size:13px;color:${isHigh ? "rgba(248,113,113,0.85)" : "rgba(238,240,246,0.65)"};font-family:${F};line-height:1.5;font-weight:${isHigh ? "500" : "400"};">${a.detail}</span>
                   </td>
                 </tr>
+                ${a.campaign ? `<tr><td><span style="font-size:10px;color:rgba(238,240,246,0.3);font-family:${F};">Campanha: ${a.campaign}</span></td></tr>` : ""}
               </table>
             </td>
-          </tr>`).join("");
+          </tr>`;
+        }).join("");
 
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
 <body style="margin:0;padding:0;background:#07080f;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#07080f;">
   <tr><td align="center" style="padding:28px 12px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:540px;background:#0d0d1a;border-radius:16px;overflow:hidden;border:1px solid #1a1a2e;">
-      
+
       <!-- Header -->
-      <tr><td style="padding:22px 20px 16px;background:linear-gradient(160deg,#0d0d1a 60%,#12122a);">
-        <p style="margin:0 0 2px;font-size:10px;font-weight:800;color:#0ea5e9;font-family:${F};text-transform:uppercase;letter-spacing:0.14em;">AdBrief AI · ${account.name || account.id}</p>
-        <p style="margin:0;font-size:20px;font-weight:900;color:#eef0f6;font-family:${F};letter-spacing:-0.03em;">
-          ${urgent > 0 ? `${urgent} alerta${urgent > 1 ? "s" : ""} crítico${urgent > 1 ? "s" : ""} na conta` : "Oportunidade identificada"}
+      <tr><td style="padding:24px 20px 18px;background:linear-gradient(160deg,#0d0d1a 60%,#12122a);">
+        <p style="margin:0 0 4px;font-size:9px;font-weight:800;color:#0ea5e9;font-family:${F};text-transform:uppercase;letter-spacing:0.14em;">AdBrief AI · ${account.name || account.id}</p>
+        <p style="margin:0;font-size:22px;font-weight:900;color:#eef0f6;font-family:${F};letter-spacing:-0.03em;">
+          ${urgent > 0 ? `${urgent} problema${urgent > 1 ? "s" : ""} queimando dinheiro` : "Oportunidade detectada"}
         </p>
-        ${summaryInsight ? `<p style="margin:8px 0 0;font-size:12px;color:rgba(238,240,246,0.5);font-family:${F};line-height:1.5;">${summaryInsight}</p>` : ""}
+        ${summaryInsight ? `<p style="margin:10px 0 0;font-size:13px;color:rgba(238,240,246,0.6);font-family:${F};line-height:1.5;">${summaryInsight}</p>` : ""}
       </td></tr>
 
       <!-- Alerts -->
@@ -451,11 +486,18 @@ Deno.serve(async (req) => {
       </td></tr>
 
       <!-- CTA -->
-      <tr><td style="padding:18px 20px 22px;">
-        <a href="https://adbrief.pro/dashboard/ai" style="display:block;text-align:center;padding:12px 20px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#000;font-family:${F};font-size:13px;font-weight:800;text-decoration:none;border-radius:10px;letter-spacing:-0.01em;">
-          Abrir AdBrief e agir →
+      <tr><td style="padding:20px 20px 14px;">
+        <a href="https://adbrief.pro/dashboard/feed" style="display:block;text-align:center;padding:14px 20px;background:#f87171;color:#fff;font-family:${F};font-size:14px;font-weight:800;text-decoration:none;border-radius:10px;letter-spacing:-0.01em;">
+          ${urgent > 0 ? "Resolver agora →" : "Ver análise completa →"}
         </a>
-        <p style="margin:10px 0 0;text-align:center;font-size:10px;color:rgba(238,240,246,0.2);font-family:${F};">
+      </td></tr>
+      <tr><td style="padding:0 20px 8px;">
+        <a href="https://adbrief.pro/dashboard/ai" style="display:block;text-align:center;padding:10px 20px;background:transparent;color:#0ea5e9;font-family:${F};font-size:12px;font-weight:700;text-decoration:none;border-radius:8px;border:1px solid rgba(14,165,233,0.25);">
+          💬 Falar com a IA sobre isso
+        </a>
+      </td></tr>
+      <tr><td style="padding:4px 20px 18px;">
+        <p style="margin:0;text-align:center;font-size:10px;color:rgba(238,240,246,0.18);font-family:${F};">
           Detectado automaticamente · dados Meta Ads em tempo real · máx. 1 alerta/dia
         </p>
       </td></tr>
@@ -502,10 +544,19 @@ Deno.serve(async (req) => {
           detail: a.detail,
           kpi_label: null as string | null,
           kpi_value: null as string | null,
-          action_suggestion: a.urgency === "🔴"
-            ? "Abrir AdBrief e agir agora"
-            : "Verificar oportunidade",
+          action_suggestion: (() => {
+            const verbs: Record<string, string> = {
+              FADIGA_CRITICA: "Pausar anúncio agora",
+              ROAS_CRITICO: "Cortar gasto agora",
+              ROAS_COLAPSOU: "Agir imediatamente",
+              CTR_COLAPSOU: "Trocar criativo agora",
+              RETENCAO_VIDEO_BAIXA: "Refazer hook do vídeo",
+              SPEND_SEM_RETORNO: "Parar sangramento",
+            };
+            return verbs[a.type] || (a.urgency === "🔴" ? "Resolver agora" : "Verificar oportunidade");
+          })(),
           emailed_at: emailRes.ok ? new Date().toISOString() : null,
+          notified_at: new Date().toISOString(),
         }));
         if (dbAlertRows.length > 0) {
           try { await sb.from("account_alerts" as any).insert(dbAlertRows as any); } catch { /* silent */ }
