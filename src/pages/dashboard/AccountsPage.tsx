@@ -72,86 +72,86 @@ const GLOW_GREEN = '0 0 20px rgba(34,197,94,0.15)';
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const T = {
   pt: {
-    title:"Contas", sub:"Gerencie suas contas de anúncios e contexto de IA.",
-    new:"Nova conta", no_accounts:"Nenhuma conta ainda",
-    no_accounts_sub:"Crie sua primeira conta para conectar anúncios e usar a IA.",
-    create_first:"Criar primeira conta",
-    active_in_chat:"Ativa no chat", use_in_chat:"Usar no chat",
-    delete_confirm:"Excluir esta conta? Essa ação não pode ser desfeita.",
-    deleted:"Conta excluída", saving:"Salvando…", save:"Salvar",
-    cancel:"Cancelar", create:"Criar conta", edit:"Editar conta",
-    name_label:"Nome da conta", name_ph:"Ambulatório M., Nike BR, Eluck MX…",
-    website_label:"Website", website_ph:"seusite.com.br",
-    desc_label:"Contexto para a IA", optional:"opcional",
-    desc_ph:"O que esta conta vende? Quem é o público? Qualquer detalhe que a IA deve saber ao responder…",
-    desc_hint:"A IA lê isso como contexto em todas as respostas para esta conta.",
+    title:"Seus negócios", sub:"A IA aprende com cada detalhe que você ensina aqui.",
+    new:"Novo negócio", no_accounts:"A IA ainda não conhece seu negócio",
+    no_accounts_sub:"Ensine à IA o que você vende, quem é seu público e quanto custa — ela precisa disso para tomar decisões inteligentes.",
+    create_first:"Ensinar meu negócio à IA",
+    active_in_chat:"IA ativa", use_in_chat:"Ativar IA",
+    delete_confirm:"Remover este negócio? A IA perderá todo o contexto aprendido.",
+    deleted:"Negócio removido", saving:"Salvando…", save:"Salvar",
+    cancel:"Cancelar", create:"Salvar negócio", edit:"Editar",
+    name_label:"Qual é o negócio?", name_ph:"Ambulatório M., Nike BR, Eluck MX…",
+    website_label:"Site", website_ph:"seusite.com.br",
+    desc_label:"O que a IA precisa saber", optional:"opcional, mas recomendado",
+    desc_ph:"O que você vende? Quem compra? Ticket médio? Diferenciais? Quanto mais a IA souber, melhores as decisões…",
+    desc_hint:"A IA usa isso como base de conhecimento em todas as análises e recomendações.",
     logo_label:"Logo", logo_hint:"PNG, JPG ou SVG · Máx 2MB", remove_logo:"Remover logo",
-    platforms:"Conexões de anúncios",
-    connect:"Conectar", disconnect:"Desconectar", connecting:"Conectando…",
-    soon:"Em breve", connected:"Conectado", not_connected:"Não conectado",
-    active_label:"ATIVO", select_account:"Conta de anúncios ativa",
+    platforms:"Fonte de dados",
+    connect:"Conectar dados", disconnect:"Desconectar", connecting:"Conectando…",
+    soon:"Em breve", connected:"Dados conectados", not_connected:"Sem dados — a IA não consegue analisar",
+    active_label:"ATIVO", select_account:"Conta que a IA analisa",
     cid_label:"Customer ID", cid_ph:"Ex: 512-522-3131",
     verify:"Verificar", verifying:"Verificando…",
     invalid_id:"ID inválido — deve ter 10 dígitos",
-    unnamed:"Conta sem nome", details:"Detalhes",
-    no_context:"Sem contexto de IA — a IA usará somente os dados da conta",
-    add_context:"Adicionar contexto para a IA",
+    unnamed:"Negócio sem nome", details:"Detalhes",
+    no_context:"A IA não conhece este negócio — ensine para decisões melhores",
+    add_context:"Ensinar contexto à IA",
     cid_hint:"Encontre em Google Ads → Admin → ID da conta",
     manage:"Gerenciar",
   },
   es: {
-    title:"Cuentas", sub:"Administra tus cuentas de anuncios y contexto de IA.",
-    new:"Nueva cuenta", no_accounts:"Sin cuentas aún",
-    no_accounts_sub:"Crea tu primera cuenta para conectar anuncios y usar la IA.",
-    create_first:"Crear primera cuenta",
-    active_in_chat:"Activa en chat", use_in_chat:"Usar en chat",
-    delete_confirm:"¿Eliminar esta cuenta? Esta acción no se puede deshacer.",
-    deleted:"Cuenta eliminada", saving:"Guardando…", save:"Guardar",
-    cancel:"Cancelar", create:"Crear cuenta", edit:"Editar cuenta",
-    name_label:"Nombre", name_ph:"Clínica Premium, Nike MX…",
+    title:"Tus negocios", sub:"La IA aprende con cada detalle que le enseñas aquí.",
+    new:"Nuevo negocio", no_accounts:"La IA aún no conoce tu negocio",
+    no_accounts_sub:"Enséñale a la IA qué vendes, quién es tu público y cuánto cuesta — lo necesita para tomar decisiones inteligentes.",
+    create_first:"Enseñar mi negocio a la IA",
+    active_in_chat:"IA activa", use_in_chat:"Activar IA",
+    delete_confirm:"¿Eliminar este negocio? La IA perderá todo el contexto aprendido.",
+    deleted:"Negocio eliminado", saving:"Guardando…", save:"Guardar",
+    cancel:"Cancelar", create:"Guardar negocio", edit:"Editar",
+    name_label:"¿Cuál es el negocio?", name_ph:"Clínica Premium, Nike MX…",
     website_label:"Sitio web", website_ph:"tusitio.com",
-    desc_label:"Contexto para la IA", optional:"opcional",
-    desc_ph:"¿Qué vende? ¿Quién es el público? Cualquier detalle que la IA debe saber…",
-    desc_hint:"La IA usa esto como contexto en cada respuesta.",
+    desc_label:"Lo que la IA necesita saber", optional:"opcional, pero recomendado",
+    desc_ph:"¿Qué vendes? ¿Quién compra? ¿Ticket promedio? Cuanto más sepa la IA, mejores las decisiones…",
+    desc_hint:"La IA usa esto como base de conocimiento en cada análisis y recomendación.",
     logo_label:"Logo", logo_hint:"PNG, JPG o SVG · Máx 2MB", remove_logo:"Quitar logo",
-    platforms:"Conexiones de anuncios",
-    connect:"Conectar", disconnect:"Desconectar", connecting:"Conectando…",
-    soon:"Próximamente", connected:"Conectado", not_connected:"Sin conectar",
-    active_label:"ACTIVO", select_account:"Cuenta de anuncios activa",
+    platforms:"Fuente de datos",
+    connect:"Conectar datos", disconnect:"Desconectar", connecting:"Conectando…",
+    soon:"Próximamente", connected:"Datos conectados", not_connected:"Sin datos — la IA no puede analizar",
+    active_label:"ACTIVO", select_account:"Cuenta que la IA analiza",
     cid_label:"Customer ID", cid_ph:"Ej: 512-522-3131",
     verify:"Verificar", verifying:"Verificando…",
     invalid_id:"ID inválido — debe tener 10 dígitos",
-    unnamed:"Cuenta sin nombre", details:"Detalles",
-    no_context:"Sin contexto de IA",
-    add_context:"Agregar contexto para la IA",
+    unnamed:"Negocio sin nombre", details:"Detalles",
+    no_context:"La IA no conoce este negocio — enséñale para mejores decisiones",
+    add_context:"Enseñar contexto a la IA",
     cid_hint:"En Google Ads → Admin → ID de cuenta",
     manage:"Administrar",
   },
   en: {
-    title:"Accounts", sub:"Manage your ad accounts and AI context.",
-    new:"New account", no_accounts:"No accounts yet",
-    no_accounts_sub:"Create your first account to connect ads and use the AI.",
-    create_first:"Create first account",
-    active_in_chat:"Active in chat", use_in_chat:"Use in chat",
-    delete_confirm:"Delete this account? This cannot be undone.",
-    deleted:"Account deleted", saving:"Saving…", save:"Save",
-    cancel:"Cancel", create:"Create account", edit:"Edit account",
-    name_label:"Account name", name_ph:"FitCore US, Nike BR, Eluck MX…",
+    title:"Your businesses", sub:"The AI learns from every detail you teach it here.",
+    new:"New business", no_accounts:"The AI doesn't know your business yet",
+    no_accounts_sub:"Teach the AI what you sell, who your audience is, and your margins — it needs this to make smart decisions with your money.",
+    create_first:"Teach my business to the AI",
+    active_in_chat:"AI active", use_in_chat:"Activate AI",
+    delete_confirm:"Remove this business? The AI will lose all learned context.",
+    deleted:"Business removed", saving:"Saving…", save:"Save",
+    cancel:"Cancel", create:"Save business", edit:"Edit",
+    name_label:"What's the business?", name_ph:"FitCore US, Nike BR, Eluck MX…",
     website_label:"Website", website_ph:"yoursite.com",
-    desc_label:"AI context", optional:"optional",
-    desc_ph:"What does this account sell? Who's the audience? Any detail the AI should know…",
-    desc_hint:"The AI reads this as context for every response on this account.",
+    desc_label:"What the AI needs to know", optional:"optional, but recommended",
+    desc_ph:"What do you sell? Who buys it? Average ticket? The more the AI knows, the better its decisions…",
+    desc_hint:"The AI uses this as its knowledge base for every analysis and recommendation.",
     logo_label:"Logo", logo_hint:"PNG, JPG or SVG · Max 2MB", remove_logo:"Remove logo",
-    platforms:"Ad connections",
-    connect:"Connect", disconnect:"Disconnect", connecting:"Connecting…",
-    soon:"Coming soon", connected:"Connected", not_connected:"Not connected",
-    active_label:"ACTIVE", select_account:"Active ad account",
+    platforms:"Data source",
+    connect:"Connect data", disconnect:"Disconnect", connecting:"Connecting…",
+    soon:"Coming soon", connected:"Data connected", not_connected:"No data — AI can't analyze",
+    active_label:"ACTIVE", select_account:"Account the AI analyzes",
     cid_label:"Customer ID", cid_ph:"e.g. 512-522-3131",
     verify:"Verify", verifying:"Verifying…",
     invalid_id:"Invalid ID — must be 10 digits",
-    unnamed:"Unnamed account", details:"Details",
-    no_context:"No AI context — AI will use only account data",
-    add_context:"Add AI context",
+    unnamed:"Unnamed business", details:"Details",
+    no_context:"AI doesn't know this business — teach it for better decisions",
+    add_context:"Teach context to the AI",
     cid_hint:"Find in Google Ads → Admin → Account ID",
     manage:"Manage",
   },
@@ -496,7 +496,7 @@ function PlatformRow({ p, userId, accountId, t }: {
           <p style={{ fontFamily:F, fontSize:12, color:T3, margin:0,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
             {loadError
-              ? "Erro ao carregar conexão"
+              ? "Erro ao verificar dados"
               : isConnected
               ? (selAcc ? `${selAcc.name || selAcc.id}${ads.length>1?` · ${ads.length} contas`:""}` : t.connected)
               : t.not_connected}
@@ -733,8 +733,8 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
     ? (1 / (calculatedMargin / 100)).toFixed(2) : null;
 
   const save = async () => {
-    if (!calculatedMargin) { toast.error('Preencha os dados para calcular a margem'); return; }
-    if (!v2Id) { toast.error('Conta de anúncios não encontrada. Conecte o Meta Ads primeiro.'); return; }
+    if (!calculatedMargin) { toast.error('Preencha os dados para a IA calcular sua margem'); return; }
+    if (!v2Id) { toast.error('Conecte o Meta Ads primeiro — a IA precisa dos dados.'); return; }
     setSaving(true);
     try {
       const { error: updateErr } = await (supabase.from('ad_accounts' as any).update({ profit_margin_pct: calculatedMargin }).eq('id', v2Id) as any);
@@ -742,7 +742,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
       setMargin(calculatedMargin);
       setEditing(false);
       setMode(null);
-      toast.success('Margem atualizada');
+      toast.success('Margem salva — a IA já está usando');
     } catch (e: any) {
       console.error('[MarginSection] save error:', e);
       toast.error('Erro ao salvar: ' + (e?.message || 'tente novamente'));
@@ -759,10 +759,10 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
 
   // ── Smart context from goal ──
   const goalHint = goalObj === 'sales'
-    ? 'Necessário para calcular se seus anúncios estão gerando lucro real.'
+    ? 'A IA precisa saber sua margem para calcular se cada anúncio está gerando lucro ou prejuízo.'
     : goalObj === 'leads'
-    ? 'Ajuda a calcular o custo máximo por lead que ainda gera lucro.'
-    : 'Usado para calcular o retorno mínimo dos seus anúncios.';
+    ? 'A IA usa sua margem para definir o custo máximo por lead que ainda gera lucro.'
+    : 'Sem essa informação, a IA não consegue distinguir anúncios lucrativos de prejuízos.';
 
   // ── EDIT MODE ──
   if (editing) {
@@ -772,7 +772,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
           textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
           display: "flex", alignItems: "center", gap: 6 }}>
           <Target size={12} color={TL} />
-          Margem de Lucro
+          Quanto você lucra por venda?
         </p>
         <div style={{
           background: "rgba(52,211,153,0.03)", border: "1px solid rgba(52,211,153,0.15)",
@@ -791,7 +791,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
             {([
               { key: 'product' as const, label: 'Produto físico', sub: 'E-commerce, loja', icon: '📦' },
               { key: 'service' as const, label: 'Serviço / Digital', sub: 'Info, SaaS, consultoria', icon: '💻' },
-              { key: 'unknown' as const, label: 'Não sei minha margem', sub: 'Usar padrão 30%', icon: '🤔' },
+              { key: 'unknown' as const, label: 'Ainda não sei', sub: 'A IA usa 30% (conservador)', icon: '🤔' },
             ]).map(opt => {
               const sel = mode === opt.key;
               return (
@@ -821,7 +821,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
           {mode === 'product' && (
             <div style={{ animation: "fadeIn 0.2s ease" }}>
               <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL, margin: "0 0 8px" }}>
-                Preço médio de venda e custo do produto
+                Quanto entra e quanto sai por venda?
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <div style={{ flex: 1 }}>
@@ -864,7 +864,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
           {mode === 'service' && (
             <div style={{ animation: "fadeIn 0.2s ease" }}>
               <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL, margin: "0 0 8px" }}>
-                Margem de lucro (% que sobra de cada venda, sem ads)
+                Quanto % sobra de cada venda, antes de pagar ads?
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <input type="number" min="1" max="99" step="1" placeholder="70"
@@ -881,7 +881,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
                 <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: T3 }}>%</span>
               </div>
               <p style={{ fontFamily: F, fontSize: 10, color: T3, margin: 0, lineHeight: 1.5 }}>
-                Infoprodutos: geralmente 80-95% · SaaS: 70-90% · Consultoria: 50-80%
+                Referência: Infoprodutos 80-95% · SaaS 70-90% · Consultoria 50-80%
               </p>
             </div>
           )}
@@ -893,7 +893,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
               marginBottom: 8, animation: "fadeIn 0.2s ease",
             }}>
               <p style={{ fontFamily: F, fontSize: 12, color: "rgba(251,191,36,0.70)", margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
-                Usaremos 30% como padrão (conservador). Isso significa que o sistema vai exigir ROAS 3.33x como mínimo para considerar um anúncio lucrativo. Você pode ajustar depois a qualquer momento.
+                A IA vai usar 30% como margem padrão — ou seja, vai exigir ROAS 3.33x mínimo para considerar um anúncio lucrativo. Quando souber sua margem real, volte aqui e ajuste.
               </p>
             </div>
           )}
@@ -911,11 +911,11 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
                   <span style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#34d399", letterSpacing: "-0.02em" }}>
                     {calculatedMargin}%
                   </span>
-                  <span style={{ fontFamily: F, fontSize: 11, color: "rgba(52,211,153,0.55)", fontWeight: 500 }}>margem</span>
+                  <span style={{ fontFamily: F, fontSize: 11, color: "rgba(52,211,153,0.55)", fontWeight: 500 }}>de lucro</span>
                 </div>
                 <div style={{ fontFamily: F, fontSize: 11, color: TL, marginTop: 2 }}>
-                  Break-even ROAS: <span style={{ fontWeight: 700, color: T2 }}>{breakEvenPreview}x</span>
-                  <span style={{ color: T3 }}> — mínimo para não perder dinheiro</span>
+                  A IA vai exigir no mínimo <span style={{ fontWeight: 700, color: T2 }}>{breakEvenPreview}x</span>
+                  <span style={{ color: T3 }}> de ROAS para considerar lucrativo</span>
                 </div>
               </div>
               {mode === 'product' && price && cost && (
@@ -939,7 +939,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
                   boxShadow: calculatedMargin ? "0 3px 10px rgba(52,211,153,0.25)" : "none",
                   transition: "all 0.15s",
                 }}>
-                {saving ? 'Salvando...' : 'Confirmar margem'}
+                {saving ? 'Salvando...' : 'Ensinar margem à IA'}
               </button>
               <button onClick={() => { setEditing(false); setMode(null); }}
                 style={{
@@ -1012,11 +1012,11 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
       {/* Break-even */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontFamily: F, fontSize: 12, color: T2 }}>
-          Break-even ROAS: <strong style={{ color: T1, fontWeight: 700 }}>{breakEven}x</strong>
+          A IA exige mínimo <strong style={{ color: T1, fontWeight: 700 }}>{breakEven}x</strong> de ROAS
         </span>
         {isDefault && (
           <span style={{ fontFamily: F, fontSize: 10, color: AMBER, fontWeight: 500 }}>
-            Configure para decisões precisas
+            Ensine sua margem real →
           </span>
         )}
       </div>
@@ -1080,11 +1080,11 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
 
   const handleSave = async () => {
     if (!editObj || !editEvent) {
-      toast.error('Selecione o objetivo e evento de conversão');
+      toast.error('Diga à IA o que otimizar e qual evento conta como sucesso');
       return;
     }
     if (!v2AccountId) {
-      toast.error('Conta de anúncios não encontrada. Conecte o Meta Ads primeiro.');
+      toast.error('Conecte o Meta Ads primeiro — a IA precisa dos dados.');
       return;
     }
     setSaving(true);
@@ -1108,7 +1108,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
 
       if (updateErr) throw updateErr;
 
-      toast.success('Objetivo atualizado');
+      toast.success('A IA agora sabe o que otimizar');
       setEditing(false);
       loadGoal();
     } catch (e: any) {
@@ -1134,7 +1134,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
       <div>
         <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL,
           textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px" }}>
-          Objetivo de Performance
+          O que a IA deve otimizar?
         </p>
         <div style={{
           background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.15)",
@@ -1142,7 +1142,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
         }}>
           {/* Step 1: Objective */}
           <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: T2, margin: "0 0 8px" }}>
-            Objetivo
+            Qual é o resultado que importa?
           </p>
           <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
             {GOAL_OBJECTIVES.map(o => {
@@ -1166,7 +1166,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
           {selObj && (
             <>
               <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: T2, margin: "0 0 8px" }}>
-                Evento de conversão
+                O que conta como sucesso?
               </p>
               <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
                 {selObj.events.map(ev => {
@@ -1191,7 +1191,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
                 Meta de {selObj.metricLabel} <span style={{ fontWeight: 400, color: T3 }}>(opcional)</span>
               </p>
               <p style={{ fontFamily: F, fontSize: 11, color: T3, margin: "0 0 8px" }}>
-                Deixe vazio se não souber — a IA analisa sem meta fixa.
+                Se não souber, deixe vazio — a IA analisa sem meta fixa.
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: TL }}>{selObj.unit}</span>
@@ -1219,7 +1219,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
             }}>
               <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>⚡</span>
               <div style={{ fontSize: 11, color: T3, lineHeight: 1.55 }}>
-                Precisa do <strong style={{ color: T2 }}>Pixel do Meta</strong> no site.
+                A IA precisa do <strong style={{ color: T2 }}>Pixel do Meta</strong> instalado no site para rastrear esse evento.
                 {" "}
                 <button
                   onClick={() => navigate("/dashboard/ai?prompt=" + encodeURIComponent("Preciso instalar o Pixel do Meta no meu site para rastrear conversões. Me ajude passo a passo."))}
@@ -1230,7 +1230,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
                     textUnderlineOffset: "2px",
                   }}
                 >
-                  A IA te ajuda →
+                  Peça ajuda à IA →
                 </button>
               </div>
             </div>
@@ -1266,7 +1266,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
       <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL,
         textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
         display: "flex", alignItems: "center", gap: 6 }}>
-        <Target size={11} /> Objetivo de Performance
+        <Target size={11} /> O que a IA otimiza
       </p>
 
       {goalData && obj ? (
@@ -1296,7 +1296,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#242A34"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = BG3; }}>
-            <Settings2 size={11} /> Alterar
+            <Settings2 size={11} /> Mudar
           </button>
         </div>
       ) : (
@@ -1309,7 +1309,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = BG3; }}>
           <Target size={13} color={BLUE} />
           <span style={{ fontFamily: F, fontSize: 12, color: BLUE }}>
-            Configurar objetivo de performance
+            Ensinar à IA o que otimizar
           </span>
         </button>
       )}
@@ -1558,7 +1558,7 @@ export default function AccountsPage() {
   const activate = (acc: any) => {
     setSelectedPersona({ ...acc } as any);
     window.dispatchEvent(new CustomEvent('persona-updated'));
-    toast.success(acc.name + " ativada no chat");
+    toast.success("IA ativada para " + acc.name);
   };
 
   const del = async (id: string, name: string) => {
@@ -1582,8 +1582,8 @@ export default function AccountsPage() {
   if (!user) return (
     <div style={{ maxWidth:740, margin:"0 auto", padding:"clamp(16px,4vw,40px)", fontFamily:F }}>
       <div style={{ borderRadius:14, padding:"18px 20px", background:"rgba(239,68,68,0.06)", border:`1px solid rgba(239,68,68,0.15)`, backdropFilter:GLASS }}>
-        <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#FCA5A5" }}>Não foi possível abrir Accounts</p>
-        <p style={{ margin:"6px 0 0", fontSize:13, color:T2 }}>Sua sessão não está disponível no momento.</p>
+        <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#FCA5A5" }}>Sessão não encontrada</p>
+        <p style={{ margin:"6px 0 0", fontSize:13, color:T2 }}>Recarregue a página para reconectar.</p>
       </div>
     </div>
   );
@@ -1640,7 +1640,7 @@ export default function AccountsPage() {
       {loadError && !creating && (
         <div style={{ marginBottom:16, borderRadius:14, padding:"16px 20px", background:"rgba(239,68,68,0.06)", border:`1px solid rgba(239,68,68,0.12)`, backdropFilter:GLASS, display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, flexWrap:"wrap" }}>
           <div>
-            <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#FCA5A5" }}>Erro ao carregar Accounts</p>
+            <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#FCA5A5" }}>Não foi possível carregar seus negócios</p>
             <p style={{ margin:"4px 0 0", fontSize:13, color:T3 }}>{loadError}</p>
           </div>
           <button className="acc-btn" onClick={() => load()}
@@ -1775,12 +1775,12 @@ export default function AccountsPage() {
                           </button>
                         </div>
 
-                        {/* ── Margem de Lucro ── */}
+                        {/* ── Margem ── */}
                         <div>
                           <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:T3,
                             textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 8px",
                             display:"flex", alignItems:"center", gap:6 }}>
-                            <Target size={11} /> Margem de Lucro
+                            <Target size={11} /> Lucro por venda
                           </p>
                           <MarginSection userId={user.id} personaId={acc.id} />
                         </div>
