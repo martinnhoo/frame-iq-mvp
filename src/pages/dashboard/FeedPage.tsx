@@ -1924,7 +1924,7 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns:
         <div style={{ fontSize: 12, color: T.text2, lineHeight: 1.55, marginBottom: 14 }}>
           Contas com performance semelhante escalam diversificando hooks e formatos
         </div>
-        <button onClick={() => navigate('/dashboard/criar')} className="feed-cta" style={{
+        <button onClick={() => navigate('/dashboard/ai')} className="feed-cta" style={{
           background: T.blue, color: T.text1,
           border: 'none', borderRadius: 6,
           padding: '9px 20px', fontSize: 12.5, fontWeight: 700,
@@ -2059,7 +2059,7 @@ const PerformanceSummary: React.FC<{
         <div style={{ fontSize: 12, color: T.text2, lineHeight: 1.55, marginBottom: 14 }}>
           Contas com performance semelhante escalam diversificando hooks e formatos
         </div>
-        <button onClick={() => navigate('/dashboard/criar')} className="feed-cta" style={{
+        <button onClick={() => navigate('/dashboard/ai')} className="feed-cta" style={{
           background: T.blue, color: T.text1,
           border: 'none', borderRadius: 6,
           padding: '9px 20px', fontSize: 12.5, fontWeight: 700,
@@ -2169,9 +2169,10 @@ const CollapsibleDecisions: React.FC<{
   const [criticalOpen, setCriticalOpen] = useState(true);
   const [recsOpen, setRecsOpen] = useState(true);
 
-  // Split into critical (kill/fix) and other (scale/pattern/insight)
-  const critical = decisions.filter(d => d.type === 'kill' || d.type === 'fix');
-  const other = decisions.filter(d => d.type !== 'kill' && d.type !== 'fix');
+  // Split into critical (kill/fix) and other (scale/pattern/insight), sorted by financial impact
+  const byImpact = (a: Decision, b: Decision) => Math.abs(b.impact_daily || 0) - Math.abs(a.impact_daily || 0);
+  const critical = decisions.filter(d => d.type === 'kill' || d.type === 'fix').sort(byImpact);
+  const other = decisions.filter(d => d.type !== 'kill' && d.type !== 'fix').sort(byImpact);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -4186,7 +4187,7 @@ const FeedPage: React.FC = () => {
                   totalSaved={(tracker as any).total_saved || 0}
                   urgentCount={urgentCount}
                   onStopLosses={hasKills && !isDemo ? handleStopLosses : undefined}
-                  onResolve={() => navigate('/dashboard/criar')}
+                  onResolve={() => navigate('/dashboard/ai')}
                 />
               </div>
             )}
