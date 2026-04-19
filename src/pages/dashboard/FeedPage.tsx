@@ -8,6 +8,7 @@ import { useDecisions } from '../../hooks/useDecisions';
 import { useMoneyTracker } from '../../hooks/useMoneyTracker';
 import { useActions } from '../../hooks/useActions';
 import { supabase } from '@/integrations/supabase/client';
+import { storage } from '@/lib/storage';
 import type { Decision, DecisionAction } from '../../types/v2-database';
 import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
 import { GoalSetup } from '../../components/feed/GoalSetup';
@@ -2838,13 +2839,29 @@ const PerformancePulse: React.FC<{
 // FEED PAGE — Main component
 // ================================================================
 const FeedPage: React.FC = () => {
-  const ctx = useOutletContext<DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean }>();
+  const ctx = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
 
-  const { activeAccount, metaConnected, accountResolving } = ctx;
-  const userId = (ctx as any).user?.id as string | undefined;
-  const personaId = (ctx as any).selectedPersona?.id as string | undefined;
-  const accountId = activeAccount?.id ?? null;
+  const userId = ctx.user?.id as string | undefined;
+  const personaId = ctx.selectedPersona?.id as string | undefined;
+
+  // ── Resolve active Meta account from localStorage (same pattern as HistoryPage) ──
+  const [accTick, setAccTick] = useState(0);
+  const accountId = useMemo(() => {
+    void accTick;
+    return ctx.selectedPersona?.id
+      ? (storage.get(`meta_sel_${ctx.selectedPersona.id}`, "") || null)
+      : null;
+  }, [ctx.selectedPersona?.id, accTick]);
+
+  useEffect(() => {
+    const handler = () => setAccTick(t => t + 1);
+    window.addEventListener("meta-account-changed", handler);
+    return () => window.removeEventListener("meta-account-changed", handler);
+  }, []);
+
+  const metaConnected = !!accountId;
+  const accountResolving = false; // resolved synchronously from localStorage
 
   const [period, setPeriod] = useState<PeriodKey>('7d');
   const periodDays = PERIODS.find(p => p.key === period)!.days;
@@ -3629,8 +3646,13 @@ const FeedPage: React.FC = () => {
     })();
   }, [togglingCampaign, userId, personaId, fetchCampaigns, fetchAds]);
 
-  // Meta Ads Manager URL for the connected account
-  const metaAccountId = activeAccount?.metaAccountId || '';
+  // Meta Ads Manager URL — fetch meta_account_id from ad_accounts table
+  const [metaAccountId, setMetaAccountId] = useState('');
+  useEffect(() => {
+    if (!accountId) { setMetaAccountId(''); return; }
+    supabase.from("ad_accounts").select("meta_account_id").eq("id", accountId).maybeSingle()
+      .then(({ data }) => { if (data?.meta_account_id) setMetaAccountId(data.meta_account_id); });
+  }, [accountId]);
   const adsManagerUrl = metaAccountId
     ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${metaAccountId.replace('act_', '')}`
     : 'https://adsmanager.facebook.com/';

@@ -168,19 +168,26 @@ export default function DashboardLayout() {
       setUser(session.user);
       identifyUser(session.user.id, { email: session.user.email });
 
-      // Fetch profile in parallel with usage — don't wait sequentially
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
-      // Load telegram connection status
-      (supabase as any).from("telegram_connections").select("chat_id,telegram_username,active")
-        .eq("user_id", session.user.id).eq("active", true).maybeSingle()
-        .then(({ data }: any) => { if (mounted) setTelegramConn(data || null); });
-      // Load ai_profile for tool pre-fill — select only base columns that always exist
-      // pain_point/avg_hook_score/creative_style may not exist yet if migration hasn't run
-      (supabase as any).from("user_ai_profile")
-        .select("industry, ai_summary, top_performing_models, best_platforms")
-        .eq("user_id", session.user.id).maybeSingle()
-        .then(({ data, error }: any) => { if (mounted && !error) setAiProfile(data || null); });
-      if (profileData && mounted) {
+      // ── Fetch ALL data in parallel before showing UI ──
+      const [profileResult, telegramResult, aiProfileResult, , personaResult] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
+        supabase.from("telegram_connections").select("chat_id,telegram_username,active")
+          .eq("user_id", session.user.id).eq("active", true).maybeSingle(),
+        supabase.from("user_ai_profile")
+          .select("industry, ai_summary, top_performing_models, best_platforms")
+          .eq("user_id", session.user.id).maybeSingle(),
+        fetchUsage(session.user.id),
+        supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }),
+      ]);
+
+      if (!mounted) return;
+
+      const profileData = profileResult.data;
+      // Set telegram & ai_profile state
+      setTelegramConn(telegramResult.data || null);
+      if (!aiProfileResult.error) setAiProfile(aiProfileResult.data || null);
+
+      if (profileData) {
         // Test account: reset onboarding every login — BUT skip if arriving from demo flow
         const TEST_EMAIL = "testadbrief@yopmail.com";
         const currentParams = new URLSearchParams(window.location.search);
@@ -218,27 +225,9 @@ export default function DashboardLayout() {
           return;
         }
       }
-      // ── Show dashboard immediately after profile loads — don't block on usage/personas ──
-      if (mounted) setLoading(false);
 
-      // Run usage + personas in parallel — non-blocking (dashboard already visible)
-      const [, personaData] = await Promise.all([
-        fetchUsage(session.user.id),
-        supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }).then(r => r.data),
-      ]);
-
-      // check-subscription fires after render — sync plan from Stripe
-      const subUserId = session.user.id;
-      Promise.race([
-        supabase.functions.invoke("check-subscription"),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
-      ]).then((res: any) => {
-        if (!mounted) return; // component unmounted
-        const subData = res?.data;
-        if (subData?.plan && profileData && subData.plan !== profileData.plan) {
-          setProfile(prev => prev ? { ...prev, plan: subData.plan } : prev);
-        }
-      }).catch(() => {}); // silent — never blocks UI
+      // ── Process personas before showing UI ──
+      const personaData = personaResult.data;
       const loadedPersonas = personaData
         ? (personaData
             .filter((d: Record<string, unknown>) => d.name)
@@ -271,6 +260,21 @@ export default function DashboardLayout() {
         try { storage.remove("frameiq_active_persona"); } catch {}
         setSelectedPersonaState(null);
       }
+
+      // ── Everything loaded — show dashboard ──
+      if (mounted) setLoading(false);
+
+      // check-subscription fires after render — sync plan from Stripe (non-blocking)
+      Promise.race([
+        supabase.functions.invoke("check-subscription"),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
+      ]).then((res: any) => {
+        if (!mounted) return;
+        const subData = res?.data;
+        if (subData?.plan && profileData && subData.plan !== profileData.plan) {
+          setProfile(prev => prev ? { ...prev, plan: subData.plan } : prev);
+        }
+      }).catch(() => {}); // silent — never blocks UI
       // Welcome popups for special accounts
       const WELCOME_POPUPS: Record<string, { key: string; title: string; body: string }> = {
         "victoriafnogueira@hotmail.com": {
@@ -384,8 +388,8 @@ export default function DashboardLayout() {
         window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
       }
     };
-    // Safety timeout — if init takes >6s on mobile, force show dashboard
-    const timeout = setTimeout(() => { setLoading(false); }, 6000);
+    // Safety timeout — if init takes >8s, force show dashboard
+    const timeout = setTimeout(() => { setLoading(false); }, 8000);
     init().catch((e) => { console.error("[AdBrief] init failed:", e); setLoading(false); }).finally(() => clearTimeout(timeout));
     // Handle auth state changes — keep session alive, redirect only on explicit sign-out
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
