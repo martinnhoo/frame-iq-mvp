@@ -186,14 +186,14 @@ const SettingsPage = () => {
               <p className="font-medium text-foreground capitalize">{profile?.plan}</p>
               <p className="text-sm text-muted-foreground">
                 {profile?.plan === "free"
-                  ? "5 mensagens/dia · Todas as ferramentas com limites · Faça upgrade para uso ilimitado."
+                  ? "15 créditos/mês · Todas as ferramentas com limites · Faça upgrade para mais créditos."
                   : profile?.plan === "maker"
-                  ? "50 mensagens IA/dia · 1 conta de anúncios · Todas as ferramentas."
+                  ? "1.000 créditos/mês · 1 conta de anúncios · Todas as ferramentas."
                   : profile?.plan === "pro"
-                  ? "200 mensagens IA/dia · 3 contas de anúncios · Todas as ferramentas."
+                  ? "2.500 créditos/mês · 3 contas de anúncios · Todas as ferramentas."
                   : profile?.plan === "studio"
-                  ? "Mensagens ilimitadas · Contas ilimitadas · Tudo liberado · Suporte prioritário."
-                  : "Mensagens ilimitadas · Contas ilimitadas · Tudo liberado."}
+                  ? "Créditos ilimitados · Contas ilimitadas · Tudo liberado · Suporte prioritário."
+                  : "Créditos ilimitados · Contas ilimitadas · Tudo liberado."}
               </p>
             </div>
             <Badge variant="outline" className="capitalize border-border text-muted-foreground">
