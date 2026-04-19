@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { Undo2, Check, X, RotateCcw, Loader2, Pause, Play, TrendingUp, TrendingDown, Copy, Zap, Calendar, Filter, ChevronDown } from 'lucide-react';
+import { Undo2, Check, X, RotateCcw, Loader2, CircleSlash, CirclePlay, ArrowUpRight, ArrowDownRight, CopyPlus, Sparkles, Calendar, Filter, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { DESIGN_TOKENS as DT } from '@/hooks/useDesignTokens';
 
@@ -12,7 +12,7 @@ const EASE = 'cubic-bezier(0.4,0,0.2,1)';
 
 const BLUE   = '#2563EB';
 const CYAN   = '#06B6D4';
-const GREEN  = '#22C55E';
+const GREEN  = '#10B981';
 const AMBER  = '#F59E0B';
 const RED    = '#EF4444';
 
@@ -83,14 +83,14 @@ const ACTION_FILTERS: { key: ActionFilter; label: string; color: string }[] = [
 
 // ── Action icon ───────────────────────────────────────────────────────────────
 function ActionIcon({ type }: { type: string }) {
-  const size = 15;
-  const common = { strokeWidth: 2 };
-  if (type.includes('pause')) return <Pause size={size} {...common} />;
-  if (type.includes('reactivate')) return <Play size={size} {...common} />;
-  if (type.includes('increase')) return <TrendingUp size={size} {...common} />;
-  if (type.includes('decrease')) return <TrendingDown size={size} {...common} />;
-  if (type.includes('duplicate')) return <Copy size={size} {...common} />;
-  return <Zap size={size} {...common} />;
+  const size = 16;
+  const common = { strokeWidth: 2.2 };
+  if (type.includes('pause')) return <CircleSlash size={size} {...common} />;
+  if (type.includes('reactivate')) return <CirclePlay size={size} {...common} />;
+  if (type.includes('increase')) return <ArrowUpRight size={size} {...common} />;
+  if (type.includes('decrease')) return <ArrowDownRight size={size} {...common} />;
+  if (type.includes('duplicate')) return <CopyPlus size={size} {...common} />;
+  return <Sparkles size={size} {...common} />;
 }
 
 function getActionColor(type: string): string {
@@ -319,8 +319,8 @@ const HistoryPage: React.FC = () => {
               backdropFilter: GLASS,
             }}>
               <p style={{
-                fontSize: 10, fontWeight: 600, color: TL,
-                textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px',
+                fontSize: 11, fontWeight: 600, color: T2,
+                textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px',
               }}>
                 {stat.label}
               </p>
@@ -444,9 +444,9 @@ const HistoryPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 {/* Action icon */}
                 <div style={{
-                  width: 34, height: 34, borderRadius: 9,
-                  background: `${actionColor}10`,
-                  border: `1px solid ${actionColor}20`,
+                  width: 36, height: 36, borderRadius: 10,
+                  background: `${actionColor}14`,
+                  border: `1px solid ${actionColor}28`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: actionColor, flexShrink: 0, marginTop: 1,
                 }}>
