@@ -1641,290 +1641,372 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   };
 
   // ══════════════════════════════════════════════════════════════════════════
-  // COLLAPSED TOOLBAR v3 — Completely rewritten from scratch
-  // Designed as a real toolbar: generous spacing, clear hierarchy, click to expand
+  // LIVE PANEL v5 — Premium glassmorphism metrics dashboard
   // ══════════════════════════════════════════════════════════════════════════
   {
     const cur = data?.currency_symbol || "R$";
     const metrics = data && !data.error && !busy ? [
-      k.spend       && { lbl: lang==="pt"?"Gasto":lang==="es"?"Gasto":"Spend", val: `${cur}${parseFloat(k.spend||0).toLocaleString(undefined,{maximumFractionDigits:0})}`, warn: false, tr: sTr },
-      k.ctr         && { lbl: "CTR", val: `${parseFloat(k.ctr||0).toFixed(2)}%`, warn: parseFloat(k.ctr) < 0.5, tr: cTr },
-      k.cpm && parseFloat(k.cpm) > 0 && { lbl: "CPM", val: `${cur}${parseFloat(k.cpm||0).toFixed(1)}`, warn: false, tr: "flat" as const },
-      k.cpc && parseFloat(k.cpc) > 0 && { lbl: "CPC", val: `${cur}${parseFloat(k.cpc).toFixed(2)}`, warn: false, tr: "flat" as const },
-      k.frequency && parseFloat(k.frequency) > 0 && { lbl: "Freq", val: `${parseFloat(k.frequency).toFixed(1)}x`, warn: parseFloat(k.frequency) > 3.5, tr: "flat" as const },
-      k.conversions && k.conversions !== "0" && { lbl: "Conv", val: k.conversions, warn: false, tr: "flat" as const },
-      k.roas && parseFloat(k.roas) > 0 && { lbl: "ROAS", val: `${parseFloat(k.roas).toFixed(2)}x`, warn: parseFloat(k.roas) < 1, tr: "flat" as const },
+      k.spend       && { lbl: lang==="pt"?"Gasto":lang==="es"?"Gasto":"Spend", val: `${cur}${parseFloat(k.spend||0).toLocaleString(undefined,{maximumFractionDigits:0})}`, warn: false, tr: sTr, color: "#F1F5F9", icon: "spend" },
+      k.ctr         && { lbl: "CTR", val: `${parseFloat(k.ctr||0).toFixed(2)}%`, warn: parseFloat(k.ctr) < 0.5, tr: cTr, color: parseFloat(k.ctr) > 1.5 ? "#10B981" : parseFloat(k.ctr) < 0.5 ? "#EF4444" : "#F1F5F9", icon: "ctr" },
+      k.cpm && parseFloat(k.cpm) > 0 && { lbl: "CPM", val: `${cur}${parseFloat(k.cpm||0).toFixed(1)}`, warn: false, tr: "flat" as const, color: "#F1F5F9", icon: "cpm" },
+      k.cpc && parseFloat(k.cpc) > 0 && { lbl: "CPC", val: `${cur}${parseFloat(k.cpc).toFixed(2)}`, warn: false, tr: "flat" as const, color: "#F1F5F9", icon: "cpc" },
+      k.frequency && parseFloat(k.frequency) > 0 && { lbl: "Freq", val: `${parseFloat(k.frequency).toFixed(1)}x`, warn: parseFloat(k.frequency) > 3.5, tr: "flat" as const, color: parseFloat(k.frequency) > 3.5 ? "#EF4444" : "#F1F5F9", icon: "freq" },
+      k.conversions && k.conversions !== "0" && { lbl: "Conv", val: k.conversions, warn: false, tr: "flat" as const, color: "#10B981", icon: "conv" },
+      k.roas && parseFloat(k.roas) > 0 && { lbl: "ROAS", val: `${parseFloat(k.roas).toFixed(2)}x`, warn: parseFloat(k.roas) < 1, tr: "flat" as const, color: parseFloat(k.roas) >= 2 ? "#10B981" : parseFloat(k.roas) < 1 ? "#EF4444" : "#F1F5F9", icon: "roas" },
     ].filter(Boolean) : [];
     const isLive = !busy && !fail;
 
     return (
       <div className="lp lp-bar" style={{
-        ...I, display: "flex", alignItems: "center", height: 48,
-        padding: "0 20px", userSelect: "none" as const,
-        background: "rgba(8,10,14,0.65)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        gap: 0,
+        ...I, display: "flex", flexDirection: "column" as const,
+        padding: "0", userSelect: "none" as const,
+        background: "rgba(6,10,20,0.92)",
+        backdropFilter: "blur(20px) saturate(180%)",
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+        borderBottom: "1px solid rgba(148,163,184,0.06)",
         position: "relative" as const, zIndex: 10,
       }}>
-
-        {/* ── Live status chip ── */}
+        {/* ── Top accent gradient line ── */}
         <div style={{
-          display: "flex", alignItems: "center", gap: 7,
-          padding: "4px 12px 4px 10px", borderRadius: 999,
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          flexShrink: 0, marginRight: 14,
+          height: 1, width: "100%",
+          background: isLive
+            ? "linear-gradient(90deg, transparent 0%, rgba(37,99,235,0.4) 20%, rgba(16,185,129,0.4) 50%, rgba(37,99,235,0.4) 80%, transparent 100%)"
+            : "linear-gradient(90deg, transparent 0%, rgba(148,163,184,0.08) 50%, transparent 100%)",
+          flexShrink: 0,
+        }}/>
+
+        {/* ── Main content row ── */}
+        <div style={{
+          display: "flex", alignItems: "center", height: 56,
+          padding: "0 20px", gap: 0,
         }}>
-          {/* Meta mini logo */}
-          <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
-            <path d="M6.897 4h-.024l-.031 2.615h.022c1.715 0 3.046 1.357 5.94 6.246l.175.297.012.02 1.62-2.438-.012-.019a48.763 48.763 0 00-1.098-1.716 28.01 28.01 0 00-1.175-1.629C10.413 4.932 8.812 4 6.896 4z" fill="url(#meta-g0)"/>
-            <path d="M6.873 4C4.95 4.01 3.247 5.258 2.02 7.17a4.352 4.352 0 00-.01.017l2.254 1.231.011-.017c.718-1.083 1.61-1.774 2.568-1.785h.021L6.896 4h-.023z" fill="url(#meta-g1)"/>
-            <path d="M2.019 7.17l-.011.017C1.2 8.447.598 9.995.274 11.664l-.005.022 2.534.6.004-.022c.27-1.467.786-2.828 1.456-3.845l.011-.017L2.02 7.17z" fill="url(#meta-g2)"/>
-            <path d="M2.807 12.264l-2.533-.6-.005.022c-.177.918-.267 1.851-.269 2.786v.023l2.598.233v-.023a12.591 12.591 0 01.21-2.44z" fill="url(#meta-g3)"/>
-            <path d="M2.677 15.537a5.462 5.462 0 01-.079-.813v-.022L0 14.468v.024a8.89 8.89 0 00.146 1.652l2.535-.585a4.106 4.106 0 01-.004-.022z" fill="url(#meta-g4)"/>
-            <path d="M3.27 16.89c-.284-.31-.484-.756-.589-1.328l-.004-.021-2.535.585.004.021c.192 1.01.568 1.85 1.106 2.487l.014.017 2.018-1.745a2.106 2.106 0 01-.015-.016z" fill="url(#meta-g5)"/>
-            <path d="M10.78 9.654c-1.528 2.35-2.454 3.825-2.454 3.825-2.035 3.2-2.739 3.917-3.871 3.917a1.545 1.545 0 01-1.186-.508l-2.017 1.744.014.017C2.01 19.518 3.058 20 4.356 20c1.963 0 3.374-.928 5.884-5.33l1.766-3.13a41.283 41.283 0 00-1.227-1.886z" fill="#0082FB"/>
-            <path d="M13.502 5.946l-.016.016c-.4.43-.786.908-1.16 1.416.378.483.768 1.024 1.175 1.63.48-.743.928-1.345 1.367-1.807l.016-.016-1.382-1.24z" fill="url(#meta-g6)"/>
-            <path d="M20.918 5.713C19.853 4.633 18.583 4 17.225 4c-1.432 0-2.637.787-3.723 1.944l-.016.016 1.382 1.24.016-.017c.715-.747 1.408-1.12 2.176-1.12.826 0 1.6.39 2.27 1.075l.015.016 1.589-1.425-.016-.016z" fill="#0082FB"/>
-            <path d="M23.998 14.125c-.06-3.467-1.27-6.566-3.064-8.396l-.016-.016-1.588 1.424.015.016c1.35 1.392 2.277 3.98 2.361 6.971v.023h2.292v-.022z" fill="url(#meta-g7)"/>
-            <path d="M23.998 14.15v-.023h-2.292v.022c.004.14.006.282.006.424 0 .815-.121 1.474-.368 1.95l-.011.022 1.708 1.782.013-.02c.62-.96.946-2.293.946-3.91 0-.083 0-.165-.002-.247z" fill="url(#meta-g8)"/>
-            <path d="M21.344 16.52l-.011.02c-.214.402-.519.67-.917.787l.778 2.462a3.493 3.493 0 00.438-.182 3.558 3.558 0 001.366-1.218l.044-.065.012-.02-1.71-1.784z" fill="url(#meta-g9)"/>
-            <path d="M19.92 17.393c-.262 0-.492-.039-.718-.14l-.798 2.522c.449.153.927.222 1.46.222.492 0 .943-.073 1.352-.215l-.78-2.462c-.167.05-.341.075-.517.073z" fill="url(#meta-g10)"/>
-            <path d="M18.323 16.534l-.014-.017-1.836 1.914.016.017c.637.682 1.246 1.105 1.937 1.337l.797-2.52c-.291-.125-.573-.353-.9-.731z" fill="url(#meta-g11)"/>
-            <path d="M18.309 16.515c-.55-.642-1.232-1.712-2.303-3.44l-1.396-2.336-.011-.02-1.62 2.438.012.02.989 1.668c.959 1.61 1.74 2.774 2.493 3.585l.016.016 1.834-1.914a2.353 2.353 0 01-.014-.017z" fill="url(#meta-g12)"/>
-            <defs>
-              <linearGradient id="meta-g0" x1="75.897%" x2="26.312%" y1="89.199%" y2="12.194%"><stop offset=".06%" stopColor="#0867DF"/><stop offset="45.39%" stopColor="#0668E1"/><stop offset="85.91%" stopColor="#0064E0"/></linearGradient>
-              <linearGradient id="meta-g1" x1="21.67%" x2="97.068%" y1="75.874%" y2="23.985%"><stop offset="13.23%" stopColor="#0064DF"/><stop offset="99.88%" stopColor="#0064E0"/></linearGradient>
-              <linearGradient id="meta-g2" x1="38.263%" x2="60.895%" y1="89.127%" y2="16.131%"><stop offset="1.47%" stopColor="#0072EC"/><stop offset="68.81%" stopColor="#0064DF"/></linearGradient>
-              <linearGradient id="meta-g3" x1="47.032%" x2="52.15%" y1="90.19%" y2="15.745%"><stop offset="7.31%" stopColor="#007CF6"/><stop offset="99.43%" stopColor="#0072EC"/></linearGradient>
-              <linearGradient id="meta-g4" x1="52.155%" x2="47.591%" y1="58.301%" y2="37.004%"><stop offset="7.31%" stopColor="#007FF9"/><stop offset="100%" stopColor="#007CF6"/></linearGradient>
-              <linearGradient id="meta-g5" x1="37.689%" x2="61.961%" y1="12.502%" y2="63.624%"><stop offset="7.31%" stopColor="#007FF9"/><stop offset="100%" stopColor="#0082FB"/></linearGradient>
-              <linearGradient id="meta-g6" x1="34.808%" x2="62.313%" y1="68.859%" y2="23.174%"><stop offset="27.99%" stopColor="#007FF8"/><stop offset="91.41%" stopColor="#0082FB"/></linearGradient>
-              <linearGradient id="meta-g7" x1="43.762%" x2="57.602%" y1="6.235%" y2="98.514%"><stop offset="0%" stopColor="#0082FB"/><stop offset="99.95%" stopColor="#0081FA"/></linearGradient>
-              <linearGradient id="meta-g8" x1="60.055%" x2="39.88%" y1="4.661%" y2="69.077%"><stop offset="6.19%" stopColor="#0081FA"/><stop offset="100%" stopColor="#0080F9"/></linearGradient>
-              <linearGradient id="meta-g9" x1="30.282%" x2="61.081%" y1="59.32%" y2="33.244%"><stop offset="0%" stopColor="#027AF3"/><stop offset="100%" stopColor="#0080F9"/></linearGradient>
-              <linearGradient id="meta-g10" x1="20.433%" x2="82.112%" y1="50.001%" y2="50.001%"><stop offset="0%" stopColor="#0377EF"/><stop offset="99.94%" stopColor="#0279F1"/></linearGradient>
-              <linearGradient id="meta-g11" x1="40.303%" x2="72.394%" y1="35.298%" y2="57.811%"><stop offset=".19%" stopColor="#0471E9"/><stop offset="100%" stopColor="#0377EF"/></linearGradient>
-              <linearGradient id="meta-g12" x1="32.254%" x2="68.003%" y1="19.719%" y2="84.908%"><stop offset="27.65%" stopColor="#0867DF"/><stop offset="100%" stopColor="#0471E9"/></linearGradient>
-            </defs>
-          </svg>
 
-          {/* Live dot + label */}
-          <span style={{
-            width: 6, height: 6, borderRadius: "50%",
-            background: busy ? "rgba(255,255,255,0.2)" : fail ? "#f87171" : "#22A3A3",
-            boxShadow: isLive ? "0 0 8px rgba(34,197,94,0.4)" : "none",
-            animation: isLive ? "pulse 2s ease-in-out infinite" : "none",
-            flexShrink: 0,
-          }}/>
-          <span style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
-            textTransform: "uppercase" as const,
-            color: busy ? "rgba(255,255,255,0.3)" : fail ? "#f87171" : "rgba(255,255,255,0.50)",
-            fontFamily: F,
+          {/* ── Left: Live status badge ── */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10,
+            flexShrink: 0, marginRight: 16,
           }}>
-            {busy ? "..." : fail ? "ERR" : "LIVE"}
-          </span>
-        </div>
-
-        {/* ── Separator ── */}
-        <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.06)", flexShrink: 0 }}/>
-
-        {/* ── Metric chips ── */}
-        {metrics.length > 0 && (
-          <div className="lp-metrics-scroll" style={{
-            display: "flex", alignItems: "center", flex: 1, overflow: "hidden",
-            marginLeft: 12, gap: 6,
-          }}>
-            {(metrics as any[]).map((item: any) => (
-              <div key={item.lbl} style={{
-                display: "flex", alignItems: "center", gap: 5,
-                flexShrink: 0, padding: "4px 10px", borderRadius: 999,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                transition: "all 0.15s",
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
-              >
-                <span style={{
-                  fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.40)",
-                  fontFamily: F,
-                  letterSpacing: "0.04em", textTransform: "uppercase" as const,
-                  lineHeight: 1,
-                }}>
-                  {item.lbl}
-                </span>
-                <span style={{
-                  fontSize: 12, fontWeight: 800,
-                  color: item.warn ? "#f87171" : "#fff",
-                  fontFamily: F,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1,
-                }}>
-                  {item.val}
-                </span>
-                {item.tr !== "flat" && (
-                  <span style={{
-                    fontSize: 8, fontWeight: 700, lineHeight: 1,
-                    color: item.tr === "up" ? "#34d399" : "#f87171",
-                  }}>
-                    {item.tr === "up" ? "▲" : "▼"}
-                  </span>
-                )}
+            {/* Live indicator orb */}
+            <div style={{
+              position: "relative" as const, width: 32, height: 32,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              {/* Outer glow ring */}
+              <div style={{
+                position: "absolute" as const, inset: 0, borderRadius: "50%",
+                border: `1.5px solid ${isLive ? "rgba(16,185,129,0.25)" : busy ? "rgba(148,163,184,0.12)" : "rgba(239,68,68,0.25)"}`,
+                animation: isLive ? "lpRingPulse 3s ease-in-out infinite" : "none",
+              }}/>
+              {/* Inner orb with Meta logo */}
+              <div style={{
+                width: 22, height: 22, borderRadius: "50%",
+                background: isLive ? "rgba(16,185,129,0.08)" : busy ? "rgba(148,163,184,0.06)" : "rgba(239,68,68,0.08)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: isLive ? "0 0 12px rgba(16,185,129,0.15)" : "none",
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, opacity: 0.9 }}>
+                  <path d="M6.897 4h-.024l-.031 2.615h.022c1.715 0 3.046 1.357 5.94 6.246l.175.297.012.02 1.62-2.438-.012-.019a48.763 48.763 0 00-1.098-1.716 28.01 28.01 0 00-1.175-1.629C10.413 4.932 8.812 4 6.896 4z" fill="url(#meta-g0)"/>
+                  <path d="M6.873 4C4.95 4.01 3.247 5.258 2.02 7.17a4.352 4.352 0 00-.01.017l2.254 1.231.011-.017c.718-1.083 1.61-1.774 2.568-1.785h.021L6.896 4h-.023z" fill="url(#meta-g1)"/>
+                  <path d="M2.019 7.17l-.011.017C1.2 8.447.598 9.995.274 11.664l-.005.022 2.534.6.004-.022c.27-1.467.786-2.828 1.456-3.845l.011-.017L2.02 7.17z" fill="url(#meta-g2)"/>
+                  <path d="M2.807 12.264l-2.533-.6-.005.022c-.177.918-.267 1.851-.269 2.786v.023l2.598.233v-.023a12.591 12.591 0 01.21-2.44z" fill="url(#meta-g3)"/>
+                  <path d="M2.677 15.537a5.462 5.462 0 01-.079-.813v-.022L0 14.468v.024a8.89 8.89 0 00.146 1.652l2.535-.585a4.106 4.106 0 01-.004-.022z" fill="url(#meta-g4)"/>
+                  <path d="M3.27 16.89c-.284-.31-.484-.756-.589-1.328l-.004-.021-2.535.585.004.021c.192 1.01.568 1.85 1.106 2.487l.014.017 2.018-1.745a2.106 2.106 0 01-.015-.016z" fill="url(#meta-g5)"/>
+                  <path d="M10.78 9.654c-1.528 2.35-2.454 3.825-2.454 3.825-2.035 3.2-2.739 3.917-3.871 3.917a1.545 1.545 0 01-1.186-.508l-2.017 1.744.014.017C2.01 19.518 3.058 20 4.356 20c1.963 0 3.374-.928 5.884-5.33l1.766-3.13a41.283 41.283 0 00-1.227-1.886z" fill="#0082FB"/>
+                  <path d="M13.502 5.946l-.016.016c-.4.43-.786.908-1.16 1.416.378.483.768 1.024 1.175 1.63.48-.743.928-1.345 1.367-1.807l.016-.016-1.382-1.24z" fill="url(#meta-g6)"/>
+                  <path d="M20.918 5.713C19.853 4.633 18.583 4 17.225 4c-1.432 0-2.637.787-3.723 1.944l-.016.016 1.382 1.24.016-.017c.715-.747 1.408-1.12 2.176-1.12.826 0 1.6.39 2.27 1.075l.015.016 1.589-1.425-.016-.016z" fill="#0082FB"/>
+                  <path d="M23.998 14.125c-.06-3.467-1.27-6.566-3.064-8.396l-.016-.016-1.588 1.424.015.016c1.35 1.392 2.277 3.98 2.361 6.971v.023h2.292v-.022z" fill="url(#meta-g7)"/>
+                  <path d="M23.998 14.15v-.023h-2.292v.022c.004.14.006.282.006.424 0 .815-.121 1.474-.368 1.95l-.011.022 1.708 1.782.013-.02c.62-.96.946-2.293.946-3.91 0-.083 0-.165-.002-.247z" fill="url(#meta-g8)"/>
+                  <path d="M21.344 16.52l-.011.02c-.214.402-.519.67-.917.787l.778 2.462a3.493 3.493 0 00.438-.182 3.558 3.558 0 001.366-1.218l.044-.065.012-.02-1.71-1.784z" fill="url(#meta-g9)"/>
+                  <path d="M19.92 17.393c-.262 0-.492-.039-.718-.14l-.798 2.522c.449.153.927.222 1.46.222.492 0 .943-.073 1.352-.215l-.78-2.462c-.167.05-.341.075-.517.073z" fill="url(#meta-g10)"/>
+                  <path d="M18.323 16.534l-.014-.017-1.836 1.914.016.017c.637.682 1.246 1.105 1.937 1.337l.797-2.52c-.291-.125-.573-.353-.9-.731z" fill="url(#meta-g11)"/>
+                  <path d="M18.309 16.515c-.55-.642-1.232-1.712-2.303-3.44l-1.396-2.336-.011-.02-1.62 2.438.012.02.989 1.668c.959 1.61 1.74 2.774 2.493 3.585l.016.016 1.834-1.914a2.353 2.353 0 01-.014-.017z" fill="url(#meta-g12)"/>
+                  <defs>
+                    <linearGradient id="meta-g0" x1="75.897%" x2="26.312%" y1="89.199%" y2="12.194%"><stop offset=".06%" stopColor="#0867DF"/><stop offset="45.39%" stopColor="#0668E1"/><stop offset="85.91%" stopColor="#0064E0"/></linearGradient>
+                    <linearGradient id="meta-g1" x1="21.67%" x2="97.068%" y1="75.874%" y2="23.985%"><stop offset="13.23%" stopColor="#0064DF"/><stop offset="99.88%" stopColor="#0064E0"/></linearGradient>
+                    <linearGradient id="meta-g2" x1="38.263%" x2="60.895%" y1="89.127%" y2="16.131%"><stop offset="1.47%" stopColor="#0072EC"/><stop offset="68.81%" stopColor="#0064DF"/></linearGradient>
+                    <linearGradient id="meta-g3" x1="47.032%" x2="52.15%" y1="90.19%" y2="15.745%"><stop offset="7.31%" stopColor="#007CF6"/><stop offset="99.43%" stopColor="#0072EC"/></linearGradient>
+                    <linearGradient id="meta-g4" x1="52.155%" x2="47.591%" y1="58.301%" y2="37.004%"><stop offset="7.31%" stopColor="#007FF9"/><stop offset="100%" stopColor="#007CF6"/></linearGradient>
+                    <linearGradient id="meta-g5" x1="37.689%" x2="61.961%" y1="12.502%" y2="63.624%"><stop offset="7.31%" stopColor="#007FF9"/><stop offset="100%" stopColor="#0082FB"/></linearGradient>
+                    <linearGradient id="meta-g6" x1="34.808%" x2="62.313%" y1="68.859%" y2="23.174%"><stop offset="27.99%" stopColor="#007FF8"/><stop offset="91.41%" stopColor="#0082FB"/></linearGradient>
+                    <linearGradient id="meta-g7" x1="43.762%" x2="57.602%" y1="6.235%" y2="98.514%"><stop offset="0%" stopColor="#0082FB"/><stop offset="99.95%" stopColor="#0081FA"/></linearGradient>
+                    <linearGradient id="meta-g8" x1="60.055%" x2="39.88%" y1="4.661%" y2="69.077%"><stop offset="6.19%" stopColor="#0081FA"/><stop offset="100%" stopColor="#0080F9"/></linearGradient>
+                    <linearGradient id="meta-g9" x1="30.282%" x2="61.081%" y1="59.32%" y2="33.244%"><stop offset="0%" stopColor="#027AF3"/><stop offset="100%" stopColor="#0080F9"/></linearGradient>
+                    <linearGradient id="meta-g10" x1="20.433%" x2="82.112%" y1="50.001%" y2="50.001%"><stop offset="0%" stopColor="#0377EF"/><stop offset="99.94%" stopColor="#0279F1"/></linearGradient>
+                    <linearGradient id="meta-g11" x1="40.303%" x2="72.394%" y1="35.298%" y2="57.811%"><stop offset=".19%" stopColor="#0471E9"/><stop offset="100%" stopColor="#0377EF"/></linearGradient>
+                    <linearGradient id="meta-g12" x1="32.254%" x2="68.003%" y1="19.719%" y2="84.908%"><stop offset="27.65%" stopColor="#0867DF"/><stop offset="100%" stopColor="#0471E9"/></linearGradient>
+                  </defs>
+                </svg>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
 
-        {/* ── Loading skeleton shimmer ── */}
-        {busy && metrics.length === 0 && (
-          <>
-            <style>{`@keyframes skPulse{0%,100%{opacity:0.3}50%{opacity:0.7}}`}</style>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, marginLeft: 12 }}>
-              {[0,1,2].map(i => (
-                <div key={i} style={{
-                  width: 56 + i * 8, height: 22, borderRadius: 999,
-                  background: "rgba(255,255,255,0.06)",
-                  animation: `skPulse 1.4s ease-in-out ${i * 0.15}s infinite`,
-                }}/>
+            {/* Status text */}
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 1 }}>
+              <span style={{
+                fontSize: 9, fontWeight: 800, letterSpacing: "0.12em",
+                textTransform: "uppercase" as const, lineHeight: 1,
+                color: busy ? "#94A3B8" : fail ? "#EF4444" : "#10B981",
+                fontFamily: F,
+              }}>
+                {busy ? (lang==="pt"?"Atualizando":"Updating") : fail ? "Error" : "LIVE"}
+              </span>
+              {accName && !busy && !fail && (
+                <span style={{
+                  fontSize: 10, fontWeight: 500, color: "#475569",
+                  fontFamily: F, lineHeight: 1, maxWidth: 100,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const,
+                }}>
+                  {accName}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* ── Separator ── */}
+          <div style={{ width: 1, height: 28, background: "rgba(148,163,184,0.08)", flexShrink: 0 }}/>
+
+          {/* ── Metric cards ── */}
+          {metrics.length > 0 && (
+            <div className="lp-metrics-scroll" style={{
+              display: "flex", alignItems: "center", flex: 1, overflow: "hidden",
+              marginLeft: 14, gap: 3,
+            }}>
+              {(metrics as any[]).map((item: any) => (
+                <div key={item.lbl} style={{
+                  display: "flex", flexDirection: "column" as const,
+                  flexShrink: 0, padding: "6px 14px", borderRadius: 10,
+                  background: "rgba(148,163,184,0.03)",
+                  border: "1px solid rgba(148,163,184,0.06)",
+                  transition: "all 0.2s ease",
+                  cursor: "default",
+                  position: "relative" as const,
+                  minWidth: 58,
+                }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "rgba(148,163,184,0.07)";
+                    e.currentTarget.style.borderColor = "rgba(148,163,184,0.14)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "rgba(148,163,184,0.03)";
+                    e.currentTarget.style.borderColor = "rgba(148,163,184,0.06)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  {/* Label row */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+                    <span style={{
+                      fontSize: 8.5, fontWeight: 600, color: "#64748B",
+                      fontFamily: F,
+                      letterSpacing: "0.06em", textTransform: "uppercase" as const,
+                      lineHeight: 1,
+                    }}>
+                      {item.lbl}
+                    </span>
+                    {item.tr !== "flat" && (
+                      <span style={{
+                        fontSize: 7, fontWeight: 700, lineHeight: 1,
+                        color: item.tr === "up" ? "#10B981" : "#EF4444",
+                        display: "flex", alignItems: "center",
+                      }}>
+                        {item.tr === "up" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                  {/* Value */}
+                  <span style={{
+                    fontSize: 14, fontWeight: 800,
+                    color: item.color || "#F1F5F9",
+                    fontFamily: F,
+                    letterSpacing: "-0.03em",
+                    lineHeight: 1,
+                  }}>
+                    {item.val}
+                  </span>
+                </div>
               ))}
             </div>
-          </>
-        )}
+          )}
 
-        {/* ── Error ── */}
-        {fail && !busy && (
-          <span style={{
-            fontSize: 11, fontWeight: 500, color: "rgba(248,113,133,0.45)", flex: 1, marginLeft: 12,
-            fontFamily: F,
-          }}>
-            {lang==="pt" ? "Falha ao carregar dados" : lang==="es" ? "Error al cargar datos" : "Failed to load data"}
-          </span>
-        )}
-
-        {/* ── Right side: date presets + calendar ── */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 12, position: "relative" as const }}>
-          {PRESETS_AI.map(p => (
-            <button key={p.label} onClick={() => {
-              setActivePreset(p.label);
-              setDateRange({ from: addDaysAI(today, -(p.days - 1)), to: today });
-            }}
-              style={{
-                padding: "4px 10px", borderRadius: 999, border: "none",
-                background: activePreset === p.label ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)",
-                color: activePreset === p.label ? "#0ea5e9" : "rgba(255,255,255,0.40)",
-                fontSize: 10, fontWeight: 700, fontFamily: F,
-                letterSpacing: "0.02em", cursor: "pointer",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}}
-              onMouseLeave={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.40)"; }}}
-            >
-              {p.label}
-            </button>
-          ))}
-
-          {/* Calendar icon for custom date */}
-          <button onClick={() => setShowCal(!showCal)}
-            style={{
-              width: 28, height: 28, borderRadius: 999, border: "none",
-              background: showCal ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.04)",
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={e => { if (!showCal) e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
-            onMouseLeave={e => { if (!showCal) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
-            title={lang === "pt" ? "Escolher datas" : "Pick dates"}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={showCal ? "#0ea5e9" : "rgba(255,255,255,0.40)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-          </button>
-
-          {/* Calendar dropdown */}
-          {showCal && (
-            <div ref={calRef} style={{
-              position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 100,
-              background: "rgba(15,17,22,0.98)", border: "1px solid rgba(255,255,255,0.10)",
-              borderRadius: 14, padding: 16, minWidth: 260,
-              boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
-              backdropFilter: "blur(16px)",
-            }}>
-              {/* Month nav */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() - 1, 1))}
-                  style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: 16, padding: "2px 6px" }}>
-                  ‹
-                </button>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: F }}>
-                  {calView.toLocaleDateString(lang === "pt" ? "pt-BR" : "en-US", { month: "long", year: "numeric" })}
-                </span>
-                <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() + 1, 1))}
-                  style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: 16, padding: "2px 6px" }}>
-                  ›
-                </button>
-              </div>
-              {/* Day headers */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
-                {(lang === "pt" ? ["D","S","T","Q","Q","S","S"] : ["S","M","T","W","T","F","S"]).map((d, i) => (
-                  <div key={i} style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.25)", textAlign: "center", padding: 4, fontFamily: F }}>{d}</div>
+          {/* ── Loading skeleton shimmer ── */}
+          {busy && metrics.length === 0 && (
+            <>
+              <style>{`@keyframes lpSkPulse{0%,100%{opacity:0.15}50%{opacity:0.4}}`}</style>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, marginLeft: 14 }}>
+                {[0,1,2,3].map(i => (
+                  <div key={i} style={{
+                    width: 64 + i * 6, height: 38, borderRadius: 10,
+                    background: "rgba(148,163,184,0.06)",
+                    border: "1px solid rgba(148,163,184,0.04)",
+                    animation: `lpSkPulse 1.6s ease-in-out ${i * 0.12}s infinite`,
+                  }}/>
                 ))}
               </div>
-              {/* Calendar days */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
-                {(() => {
-                  const first = new Date(calView.getFullYear(), calView.getMonth(), 1);
-                  const last = new Date(calView.getFullYear(), calView.getMonth() + 1, 0);
-                  const cells: React.ReactNode[] = [];
-                  for (let i = 0; i < first.getDay(); i++) cells.push(<div key={`e${i}`} />);
-                  for (let d = 1; d <= last.getDate(); d++) {
-                    const dt = new Date(calView.getFullYear(), calView.getMonth(), d);
-                    const isFrom = calDraft.from && dt.toDateString() === calDraft.from.toDateString();
-                    const isTo = calDraft.to && dt.toDateString() === calDraft.to.toDateString();
-                    const inRange = calDraft.from && calDraft.to && dt >= calDraft.from && dt <= calDraft.to;
-                    const isFuture = dt > today;
-                    cells.push(
-                      <button key={d} disabled={isFuture} onClick={() => {
-                        if (calSel === "from") {
-                          setCalDraft({ from: dt, to: null });
-                          setCalSel("to");
-                        } else {
-                          const from = calDraft.from!;
-                          const finalFrom = dt < from ? dt : from;
-                          const finalTo = dt < from ? from : dt;
-                          setCalDraft({ from: finalFrom, to: finalTo });
-                          setActivePreset("");
-                          setDateRange({ from: finalFrom, to: finalTo });
-                          setShowCal(false);
-                          setCalSel("from");
-                        }
-                      }}
-                        style={{
-                          width: "100%", aspectRatio: "1", border: "none", borderRadius: 8,
-                          background: isFrom || isTo ? "rgba(14,165,233,0.3)" : inRange ? "rgba(14,165,233,0.08)" : "transparent",
-                          color: isFuture ? "rgba(255,255,255,0.12)" : isFrom || isTo ? "#0ea5e9" : "#fff",
-                          fontSize: 11, fontWeight: isFrom || isTo ? 700 : 500, fontFamily: F,
-                          cursor: isFuture ? "default" : "pointer",
-                          transition: "all 0.1s",
-                        }}
-                      >
-                        {d}
-                      </button>
-                    );
-                  }
-                  return cells;
-                })()}
-              </div>
-              {/* Current range label */}
-              <div style={{ marginTop: 10, fontSize: 10, color: "rgba(255,255,255,0.35)", textAlign: "center", fontFamily: F }}>
-                {fmtLabelAI(dateRange.from)} — {fmtLabelAI(dateRange.to)}
-              </div>
+            </>
+          )}
+
+          {/* ── Error ── */}
+          {fail && !busy && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, flex: 1, marginLeft: 14,
+              padding: "6px 14px", borderRadius: 10,
+              background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.12)",
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: "#EF4444", fontFamily: F, opacity: 0.8 }}>
+                {lang==="pt" ? "Falha ao carregar dados" : lang==="es" ? "Error al cargar datos" : "Failed to load data"}
+              </span>
+              <button onClick={load} style={{
+                fontSize: 10, fontWeight: 700, color: "#2563EB", background: "none",
+                border: "none", cursor: "pointer", fontFamily: F, padding: "2px 6px",
+              }}>
+                {lang==="pt" ? "Tentar" : "Retry"}
+              </button>
             </div>
           )}
+
+          {/* ── Right side: segmented date control + calendar ── */}
+          <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0, marginLeft: 14, position: "relative" as const }}>
+            {/* Segmented control background */}
+            <div style={{
+              display: "flex", alignItems: "center",
+              padding: 2, borderRadius: 10,
+              background: "rgba(148,163,184,0.04)",
+              border: "1px solid rgba(148,163,184,0.06)",
+              gap: 1,
+            }}>
+              {PRESETS_AI.map(p => (
+                <button key={p.label} onClick={() => {
+                  setActivePreset(p.label);
+                  setDateRange({ from: addDaysAI(today, -(p.days - 1)), to: today });
+                }}
+                  style={{
+                    padding: "5px 12px", borderRadius: 8, border: "none",
+                    background: activePreset === p.label
+                      ? "rgba(37,99,235,0.14)"
+                      : "transparent",
+                    color: activePreset === p.label ? "#2563EB" : "#64748B",
+                    fontSize: 10, fontWeight: 700, fontFamily: F,
+                    letterSpacing: "0.02em", cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "rgba(148,163,184,0.06)"; e.currentTarget.style.color = "#94A3B8"; }}}
+                  onMouseLeave={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#64748B"; }}}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Calendar icon for custom date */}
+            <button onClick={() => setShowCal(!showCal)}
+              style={{
+                width: 32, height: 32, borderRadius: 10, border: "none",
+                background: showCal ? "rgba(37,99,235,0.14)" : "rgba(148,163,184,0.04)",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.2s ease", marginLeft: 2,
+              }}
+              onMouseEnter={e => { if (!showCal) e.currentTarget.style.background = "rgba(148,163,184,0.08)"; }}
+              onMouseLeave={e => { if (!showCal) e.currentTarget.style.background = showCal ? "rgba(37,99,235,0.14)" : "rgba(148,163,184,0.04)"; }}
+              title={lang === "pt" ? "Escolher datas" : "Pick dates"}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={showCal ? "#2563EB" : "#64748B"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </button>
+
+            {/* Calendar dropdown */}
+            {showCal && (
+              <div ref={calRef} style={{
+                position: "absolute", top: "calc(100% + 10px)", right: 0, zIndex: 100,
+                background: "rgba(10,15,28,0.96)",
+                border: "1px solid rgba(148,163,184,0.10)",
+                borderRadius: 16, padding: 18, minWidth: 270,
+                boxShadow: "0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(148,163,184,0.04)",
+                backdropFilter: "blur(20px) saturate(180%)",
+              }}>
+                {/* Month nav */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() - 1, 1))}
+                    style={{ background: "rgba(148,163,184,0.06)", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 14, padding: "4px 8px", borderRadius: 6, lineHeight: 1 }}>
+                    ‹
+                  </button>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#F1F5F9", fontFamily: F }}>
+                    {calView.toLocaleDateString(lang === "pt" ? "pt-BR" : "en-US", { month: "long", year: "numeric" })}
+                  </span>
+                  <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() + 1, 1))}
+                    style={{ background: "rgba(148,163,184,0.06)", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 14, padding: "4px 8px", borderRadius: 6, lineHeight: 1 }}>
+                    ›
+                  </button>
+                </div>
+                {/* Day headers */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 6 }}>
+                  {(lang === "pt" ? ["D","S","T","Q","Q","S","S"] : ["S","M","T","W","T","F","S"]).map((d, i) => (
+                    <div key={i} style={{ fontSize: 9, fontWeight: 700, color: "#475569", textAlign: "center", padding: 4, fontFamily: F, letterSpacing: "0.04em" }}>{d}</div>
+                  ))}
+                </div>
+                {/* Calendar days */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
+                  {(() => {
+                    const first = new Date(calView.getFullYear(), calView.getMonth(), 1);
+                    const last = new Date(calView.getFullYear(), calView.getMonth() + 1, 0);
+                    const cells: React.ReactNode[] = [];
+                    for (let i = 0; i < first.getDay(); i++) cells.push(<div key={`e${i}`} />);
+                    for (let d = 1; d <= last.getDate(); d++) {
+                      const dt = new Date(calView.getFullYear(), calView.getMonth(), d);
+                      const isFrom = calDraft.from && dt.toDateString() === calDraft.from.toDateString();
+                      const isTo = calDraft.to && dt.toDateString() === calDraft.to.toDateString();
+                      const inRange = calDraft.from && calDraft.to && dt >= calDraft.from && dt <= calDraft.to;
+                      const isFuture = dt > today;
+                      cells.push(
+                        <button key={d} disabled={isFuture} onClick={() => {
+                          if (calSel === "from") {
+                            setCalDraft({ from: dt, to: null });
+                            setCalSel("to");
+                          } else {
+                            const from = calDraft.from!;
+                            const finalFrom = dt < from ? dt : from;
+                            const finalTo = dt < from ? from : dt;
+                            setCalDraft({ from: finalFrom, to: finalTo });
+                            setActivePreset("");
+                            setDateRange({ from: finalFrom, to: finalTo });
+                            setShowCal(false);
+                            setCalSel("from");
+                          }
+                        }}
+                          style={{
+                            width: "100%", aspectRatio: "1", border: "none", borderRadius: 8,
+                            background: isFrom || isTo ? "rgba(37,99,235,0.25)" : inRange ? "rgba(37,99,235,0.08)" : "transparent",
+                            color: isFuture ? "rgba(148,163,184,0.15)" : isFrom || isTo ? "#2563EB" : "#F1F5F9",
+                            fontSize: 11, fontWeight: isFrom || isTo ? 700 : 500, fontFamily: F,
+                            cursor: isFuture ? "default" : "pointer",
+                            transition: "all 0.1s",
+                          }}
+                        >
+                          {d}
+                        </button>
+                      );
+                    }
+                    return cells;
+                  })()}
+                </div>
+                {/* Current range label */}
+                <div style={{
+                  marginTop: 12, fontSize: 10, color: "#64748B", textAlign: "center", fontFamily: F,
+                  padding: "6px 0", borderTop: "1px solid rgba(148,163,184,0.06)",
+                }}>
+                  {fmtLabelAI(dateRange.from)} — {fmtLabelAI(dateRange.to)}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* ── Keyframes ── */}
+        <style>{`
+          @keyframes lpRingPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.06); }
+          }
+        `}</style>
       </div>
     );
   }
