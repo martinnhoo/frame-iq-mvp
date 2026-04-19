@@ -1,5 +1,5 @@
 // DashboardSidebar v13 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
-import { MessageSquare, Building2, ChevronDown, Plus, ArrowUpRight, LayoutDashboard, Clock, X } from "lucide-react";
+import { MessageSquare, Building2, ChevronDown, Plus, ArrowUpRight, Layers, Clock, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -194,7 +194,7 @@ export function DashboardSidebar({
   // ── Navigation structure — simplified: result-focused, no fluff ──
   // All creative/analysis tools now live inside the AI Chat as invokable skills.
   const NAV_ITEMS = [
-    { url: "/dashboard/feed",     label: "Feed",                                      icon: LayoutDashboard },
+    { url: "/dashboard/feed",     label: "Feed",                                      icon: Layers },
     { url: "/dashboard/ai",      label: pt ? "Media Buyer IA" : "AI Media Buyer",    icon: MessageSquare },
     { url: "/dashboard/history",  label: pt ? "Histórico" : es ? "Historial" : "History", icon: Clock },
     { url: "/dashboard/accounts", label: pt ? "Contas" : es ? "Cuentas" : "Accounts", icon: Building2 },
