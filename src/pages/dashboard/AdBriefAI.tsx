@@ -2142,6 +2142,21 @@ export default function AdBriefAI() {
   const textareaRef=useRef<HTMLTextAreaElement>(null);
   const prevPersonaId=useRef<string|null>(null);
 
+  // ── Scroll to bottom on mount / when messages first load ──
+  const initialScrollDone=useRef(false);
+  useEffect(()=>{
+    if(messages.length>0 && !initialScrollDone.current){
+      initialScrollDone.current=true;
+      // Use setTimeout to ensure DOM is rendered
+      setTimeout(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}),50);
+    }
+  },[messages.length]);
+
+  // Reset scroll flag when persona changes
+  useEffect(()=>{
+    initialScrollDone.current=false;
+  },[selectedPersona?.id]);
+
   // ── Load credit balance on mount ──
   useEffect(()=>{
     if(!user?.id) return;
@@ -4588,9 +4603,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           .suggestions-bar{overflow-x:auto!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
           .suggestions-bar::-webkit-scrollbar{display:none}
           /* LivePanel collapsed bar: metrics scroll horizontal */
-          .lp-bar{padding:0 12px!important;height:40px!important;gap:0!important}
-          .lp-metrics-scroll{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;gap:14px!important;margin-left:12px!important;scrollbar-width:none;mask-image:linear-gradient(to right,#000 85%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 85%,transparent 100%)}
+          .lp-bar{padding:0 10px!important;height:52px!important;gap:0!important}
+          .lp-metrics-scroll{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;gap:10px!important;margin-left:8px!important;scrollbar-width:none;mask-image:linear-gradient(to right,#000 85%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 85%,transparent 100%)}
           .lp-metrics-scroll::-webkit-scrollbar{display:none}
+          /* LivePanel bar metric cards: compact on mobile */
+          .lp-metrics-scroll > div{padding:4px 10px!important;min-width:50px!important;border-radius:8px!important}
+          .lp-metrics-scroll > div span:first-child span{font-size:7.5px!important}
+          .lp-metrics-scroll > div > span:last-child{font-size:12px!important}
           /* LivePanel full-width on mobile */
           .lp{width:100%!important;max-width:100vw!important}
           /* LivePanel EXPANDED: limit height on mobile so chat remains usable */

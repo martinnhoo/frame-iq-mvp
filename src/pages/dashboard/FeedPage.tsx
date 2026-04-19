@@ -3028,12 +3028,45 @@ const FeedPage: React.FC = () => {
 
   // ── Resolve active Meta account: localStorage stores meta ID (act_...), resolve to Supabase UUID ──
   const [accTick, setAccTick] = useState(0);
-  const metaSelId = useMemo(() => {
-    void accTick;
+  const [metaSelId, setMetaSelId] = useState<string | null>(() => {
     return ctx.selectedPersona?.id
       ? (storage.get(`meta_sel_${ctx.selectedPersona.id}`, "") || null)
       : null;
+  });
+
+  // Re-read localStorage on tick or persona change
+  useEffect(() => {
+    const val = ctx.selectedPersona?.id
+      ? (storage.get(`meta_sel_${ctx.selectedPersona.id}`, "") || null)
+      : null;
+    setMetaSelId(val);
   }, [ctx.selectedPersona?.id, accTick]);
+
+  // ── Fallback: if localStorage is empty (e.g. mobile), auto-detect from DB ──
+  useEffect(() => {
+    if (metaSelId || !ctx.selectedPersona?.id || !ctx.user?.id) return;
+    // Check if user has an active Meta connection in DB
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("meta-oauth", {
+          body: { action: "get_connections", user_id: ctx.user.id }
+        });
+        const all = (data?.connections || []) as any[];
+        const scoped = all.filter((c: any) => c.persona_id === ctx.selectedPersona!.id && c.platform === "meta" && c.status === "active");
+        if (scoped.length > 0) {
+          const metaConn = scoped[0];
+          const accounts = (metaConn.ad_accounts || []) as any[];
+          const selId = metaConn.selected_account_id;
+          const acc = (selId && accounts.find((a: any) => a.id === selId)) || accounts[0];
+          if (acc?.id) {
+            // Save to localStorage so subsequent loads are instant
+            storage.set(`meta_sel_${ctx.selectedPersona!.id}`, acc.id);
+            setMetaSelId(acc.id);
+          }
+        }
+      } catch {}
+    })();
+  }, [metaSelId, ctx.selectedPersona?.id, ctx.user?.id]);
 
   const [accountId, setAccountId] = useState<string | null>(null);
   const [accountResolving, setAccountResolving] = useState(false);
