@@ -1,4 +1,4 @@
-// DashboardSidebar v12 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
+// DashboardSidebar v13 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
 import { MessageSquare, Building2, ChevronDown, Plus, ArrowUpRight, Activity, Clock, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
@@ -194,7 +194,7 @@ export function DashboardSidebar({
         @keyframes sb-in { from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)} }
       `}</style>
 
-      <aside style={{
+      <aside data-sidebar-build="v13-4-items" style={{
         width: 216, height: "100%",
         background: "#060709",
         borderRight: "1px solid rgba(255,255,255,0.06)",
