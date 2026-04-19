@@ -14,10 +14,9 @@ import { useActiveAccount } from '@/hooks/useActiveAccount';
 import type { DashboardContext, Profile, Usage, UsageDetails, ActivePersona } from '@/components/dashboard/DashboardLayout';
 import type { User } from '@supabase/supabase-js';
 import {
-  Zap,
+  Activity,
+  MessageSquare,
   Clock,
-  PenLine,
-  Settings,
   LogOut,
   Link2,
   Menu,
@@ -25,7 +24,6 @@ import {
   Building2,
   ChevronDown,
   Plus,
-  Users,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -48,9 +46,9 @@ function avatarGradient(name: string) {
 }
 
 // ── Nav item ─────────────────────────────────────────────────────────────────
-function NavItem({ url, label, icon: Icon, isActive, badge, onClick }: {
+function NavItem({ url, label, icon: Icon, onClick, isActive }: {
   url: string; label: string; icon: React.ElementType;
-  isActive: boolean; badge?: string; onClick?: () => void;
+  onClick?: () => void; isActive: boolean;
 }) {
   const [hov, setHov] = useState(false);
   return (
@@ -74,44 +72,22 @@ function NavItem({ url, label, icon: Icon, isActive, badge, onClick }: {
         flexShrink: 0, transition: 'color 0.15s',
       }} />
       <span style={{ flex: 1 }}>{label}</span>
-      {badge && (
-        <span style={{
-          fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.50)',
-          letterSpacing: '0.04em', fontFamily: F,
-        }}>{badge}</span>
-      )}
     </NavLink>
-  );
-}
-
-function SectionHeader({ label }: { label: string }) {
-  return (
-    <div style={{ padding: '16px 20px 6px', display: 'flex', alignItems: 'center' }}>
-      <p style={{
-        fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)',
-        letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0,
-        fontFamily: F,
-      }}>
-        {label}
-      </p>
-    </div>
   );
 }
 
 function getNavItems(lang: string) {
   const l: Record<string, Record<string, string>> = {
-    history:  { pt: 'Histórico', es: 'Historial', fr: 'Historique', de: 'Verlauf', zh: '历史记录', ar: 'السجل', en: 'History' },
-    create:   { pt: 'Criar', es: 'Crear', fr: 'Créer', de: 'Erstellen', zh: '创建', ar: 'إنشاء', en: 'Create' },
+    ai: { pt: 'Media Buyer IA', es: 'Media Buyer IA', fr: 'AI Media Buyer', de: 'AI Media Buyer', zh: 'AI Media Buyer', ar: 'AI Media Buyer', en: 'AI Media Buyer' },
+    history: { pt: 'Histórico', es: 'Historial', fr: 'Historique', de: 'Verlauf', zh: '历史记录', ar: 'السجل', en: 'History' },
     accounts: { pt: 'Contas', es: 'Cuentas', fr: 'Comptes', de: 'Konten', zh: '账户', ar: 'الحسابات', en: 'Accounts' },
-    settings: { pt: 'Configurações', es: 'Configuración', fr: 'Paramètres', de: 'Einstellungen', zh: '设置', ar: 'الإعدادات', en: 'Settings' },
   };
   const t = (key: string) => l[key]?.[lang] || l[key]?.en || key;
   return [
-    { url: '/dashboard/feed',      label: 'Feed',        icon: Zap,         badge: 'IA' },
-    { url: '/dashboard/history',   label: t('history'),   icon: Clock },
-    { url: '/dashboard/criar',     label: t('create'),    icon: PenLine },
-    { url: '/dashboard/accounts',  label: t('accounts'),  icon: Users },
-    { url: '/dashboard/settings',  label: t('settings'),  icon: Settings },
+    { url: '/dashboard/feed', label: 'Feed', icon: Activity },
+    { url: '/dashboard/ai', label: t('ai'), icon: MessageSquare },
+    { url: '/dashboard/history', label: t('history'), icon: Clock },
+    { url: '/dashboard/accounts', label: t('accounts'), icon: Building2 },
   ];
 }
 
