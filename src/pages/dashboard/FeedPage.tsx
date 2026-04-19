@@ -4012,7 +4012,7 @@ const FeedPage: React.FC = () => {
     );
   }
 
-  // ── No Meta connection — special entry screen ──
+  // ── No Meta connection — special entry screen (but still show alerts if any) ──
   if (!metaConnected) {
     return (
       <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
@@ -4020,6 +4020,13 @@ const FeedPage: React.FC = () => {
           <div style={{ marginBottom: 18 }}>
             <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>SEU FEED</h1>
           </div>
+          {visibleAlerts.length > 0 && (
+            <PriorityStack
+              alerts={visibleAlerts}
+              onDismiss={handleAlertDismiss}
+              onAction={handleAlertAction}
+            />
+          )}
           <StateNoConnection />
         </div>
       </div>
@@ -4115,8 +4122,8 @@ const FeedPage: React.FC = () => {
         {/* Inline sync progress banner */}
         {syncing && <SyncBanner />}
 
-        {/* ── PRIORITY STACK — urgent alerts above everything ── */}
-        {metaConnected && !isDemo && (
+        {/* ── PRIORITY STACK — urgent alerts above everything (shows regardless of Meta connection) ── */}
+        {!isDemo && visibleAlerts.length > 0 && (
           <PriorityStack
             alerts={visibleAlerts}
             onDismiss={handleAlertDismiss}

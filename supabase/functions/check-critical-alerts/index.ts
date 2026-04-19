@@ -556,7 +556,6 @@ Deno.serve(async (req) => {
             return verbs[a.type] || (a.urgency === "🔴" ? "Resolver agora" : "Verificar oportunidade");
           })(),
           emailed_at: emailRes.ok ? new Date().toISOString() : null,
-          notified_at: new Date().toISOString(),
         }));
         if (dbAlertRows.length > 0) {
           try { await sb.from("account_alerts" as any).insert(dbAlertRows as any); } catch { /* silent */ }

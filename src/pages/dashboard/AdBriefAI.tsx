@@ -2907,13 +2907,14 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   useEffect(() => {
     if (!user?.id || (ctxAlerts?.length ?? 0) > 0) return;
     const loadAlerts = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("account_alerts" as any)
         .select("*")
         .eq("user_id", user.id)
         .is("dismissed_at", null)
         .order("created_at", { ascending: false })
         .limit(5);
+      if (error) console.error("[AdBrief] Chat alert fetch failed:", error);
       if (data?.length) setAccountAlerts(data);
     };
     loadAlerts();

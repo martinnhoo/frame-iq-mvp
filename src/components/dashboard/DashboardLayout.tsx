@@ -207,7 +207,8 @@ export default function DashboardLayout() {
       setTelegramConn(telegramResult.data || null);
       if (!aiProfileResult.error) setAiProfile(aiProfileResult.data || null);
       if (usageResult.data) setUsage({ analyses_count: usageResult.data.analyses_count, boards_count: usageResult.data.boards_count });
-      if (alertsResult.data?.length) setAccountAlerts(alertsResult.data as AccountAlert[]);
+      if (alertsResult.error) console.error("[AdBrief] Alert fetch failed:", alertsResult.error);
+      setAccountAlerts((alertsResult.data || []) as AccountAlert[]);
 
       if (profileData) {
         // Test account: reset onboarding every login — BUT skip if arriving from demo flow
@@ -705,7 +706,7 @@ export default function DashboardLayout() {
           savedPersonas={savedPersonas}
           selectedPersona={selectedPersona}
           onSelectPersona={(p) => setSelectedPersona(p as ActivePersona)}
-          alertCount={accountAlerts.filter(a => a.urgency === "high").length}
+          alertCount={accountAlerts.length}
         />
       </div>
 
