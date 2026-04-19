@@ -404,8 +404,8 @@ export function AppLayout() {
             borderTop: '1px solid rgba(255,255,255,0.05)',
             paddingTop: 2, paddingBottom: 2,
           }}>
-            {/* Persona switcher (if multiple) */}
-            {savedPersonas.length > 1 && (
+            {/* Persona switcher — always show */}
+            {savedPersonas.length > 0 && (
               <>
                 <div style={{ padding: '6px 14px 3px', fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: F }}>
                   Marcas
@@ -415,7 +415,10 @@ export function AppLayout() {
                   return (
                     <button key={p.id}
                       onClick={() => {
-                        setSelectedPersona(p);
+                        if (!isActive) {
+                          setSelectedPersona(p);
+                          window.dispatchEvent(new CustomEvent('persona-updated'));
+                        }
                         setAccountsOpen(false);
                         setMobileOpen(false);
                       }}
@@ -457,8 +460,8 @@ export function AppLayout() {
               </>
             )}
 
-            {/* Meta ad accounts switcher (if multiple) */}
-            {activeAccount && activeAccount.allAccounts.length > 1 && (
+            {/* Meta ad accounts switcher — always show when connected */}
+            {activeAccount && activeAccount.allAccounts.length > 0 && (
               <>
                 <div style={{ padding: '8px 14px 3px', fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: F }}>
                   Contas de anúncio
@@ -494,6 +497,9 @@ export function AppLayout() {
                       }}>
                         {adAcc.name || adAcc.id}
                       </span>
+                      {isActive && (
+                        <span style={{ fontSize: 8, fontWeight: 600, color: '#0ea5e9', letterSpacing: '0.04em' }}>●</span>
+                      )}
                     </button>
                   );
                 })}
