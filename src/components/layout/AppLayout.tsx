@@ -516,7 +516,6 @@ export function AppLayout() {
               label={item.label}
               icon={item.icon}
               isActive={isAt(item.url)}
-              badge={item.badge}
               onClick={() => setMobileOpen(false)}
             />
           ))}
