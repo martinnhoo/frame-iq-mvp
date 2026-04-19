@@ -56,25 +56,27 @@ function NavItem({ url, label, icon: Icon, onClick, isActive }: {
     <NavLink to={url} onClick={onClick}
       style={{
         display: 'flex', alignItems: 'center', gap: 10, position: 'relative',
-        padding: '9px 12px 9px 14px', margin: '1px 8px', borderRadius: 9,
+        padding: '9px 12px 9px 16px', margin: '1px 8px', borderRadius: 9,
         color: isActive ? '#F1F5F9' : hov ? '#CBD5E1' : '#94A3B8',
         background: isActive
-          ? 'linear-gradient(135deg, rgba(37,99,235,0.12), rgba(6,182,212,0.06))'
+          ? 'linear-gradient(135deg, rgba(37,99,235,0.14), rgba(6,182,212,0.07))'
           : hov ? 'rgba(148,163,184,0.06)' : 'transparent',
         border: 'none',
         fontSize: 13.5, fontWeight: isActive ? 600 : 450,
         textDecoration: 'none', transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
         fontFamily: F, letterSpacing: '-0.01em',
-        boxShadow: isActive ? '0 0 16px rgba(37,99,235,0.08)' : 'none',
+        boxShadow: isActive
+          ? 'inset 4px 0 12px rgba(37,99,235,0.18), 0 0 20px rgba(37,99,235,0.10)'
+          : 'none',
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       {/* Active indicator bar */}
       {isActive && (
         <div style={{
           position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-          width: 3, height: 18, borderRadius: 2,
-          background: 'linear-gradient(180deg, #2563EB, #06B6D4)',
-          boxShadow: '0 0 8px rgba(37,99,235,0.40)',
+          width: 3, height: 22, borderRadius: 2,
+          background: 'linear-gradient(180deg, #3B82F6, #06B6D4)',
+          boxShadow: '0 0 12px rgba(59,130,246,0.50), 0 0 4px rgba(59,130,246,0.30)',
         }}/>
       )}
       <Icon size={16} strokeWidth={isActive ? 2 : 1.5} style={{
