@@ -12,10 +12,10 @@ import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
   Send, Loader2, RotateCcw,
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
-  Zap, Clapperboard, ScanEye, X, Sparkles, Target,
+  Zap, Clapperboard, ScanEye, X, Sparkles, Target, FileText,
   TrendingUp, TrendingDown, BarChart2, BarChart3, Stethoscope,
 } from "lucide-react";
-// v20: removed unused — Sparkles, Brain, Upload, FileText, Activity, ExternalLink,
+// v20: removed unused — Brain, Upload, Activity, ExternalLink,
 //      DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
 import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
@@ -173,14 +173,23 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
   en: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
     { icon: Clapperboard,   label: "Script",           action: "script",       color: "#34d399" },
+    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b" },
+    { icon: ScanEye,        label: "Competitor",       action: "competitor",   color: "#a78bfa" },
+    { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc" },
   ],
   pt: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
     { icon: Clapperboard,   label: "Roteiro",          action: "script",       color: "#34d399" },
+    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b" },
+    { icon: ScanEye,        label: "Concorrente",      action: "competitor",   color: "#a78bfa" },
+    { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc" },
   ],
   es: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
     { icon: Clapperboard,   label: "Guión",            action: "script",       color: "#34d399" },
+    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b" },
+    { icon: ScanEye,        label: "Competidor",       action: "competitor",   color: "#a78bfa" },
+    { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc" },
   ],
 };
 
@@ -241,6 +250,20 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
       cta: { en: "Analyze →", pt: "Analisar →", es: "Analizar →" },
       buildMsg: (v: string) => `Analyze this competitor: "${v}". Give: 1) Hook type & formula, 2) Emotional trigger, 3) Creative model, 4) What makes it work, 5) How to beat it.`,
     },
+    brief: {
+      icon: "", color: "#f59e0b",
+      title: { en: "Creative Brief", pt: "Brief Criativo", es: "Brief Creativo" },
+      placeholder: { en: "Describe the campaign: product, objective, audience, format…", pt: "Descreva a campanha: produto, objetivo, público, formato…", es: "Describe la campaña: producto, objetivo, audiencia, formato…" },
+      cta: { en: "Generate brief →", pt: "Gerar brief →", es: "Generar brief →" },
+      buildMsg: (v: string, p: string, t: string) => `[BRIEF] Create a complete creative brief for a ${t} ad campaign. Product: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Platform: ${accountCtx?.platform||p}. Context: "${v}". Include: objective, target audience, key message, creative direction, format specs, references.`,
+    },
+    persona: {
+      icon: "", color: "#c084fc",
+      title: { en: "Build Persona", pt: "Criar Persona", es: "Crear Persona" },
+      placeholder: { en: "Describe your product or audience segment…", pt: "Descreva o produto ou segmento de audiência…", es: "Describe el producto o segmento de audiencia…" },
+      cta: { en: "Generate persona →", pt: "Gerar persona →", es: "Generar persona →" },
+      buildMsg: (v: string) => `[PERSONA] Build a detailed buyer persona for: "${v}". Product: ${accountCtx?.product||accountCtx?.niche||""}. Market: ${accountCtx?.market||lang.toUpperCase()}. Include: demographics, psychographics, pain points, desires, objections, media habits, purchase triggers, day-in-the-life, and ideal ad angle for this persona.`,
+    },
   };
   const cfg = config[action];
   if (!cfg) return null;
@@ -270,7 +293,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
         </button>
       </div>
       <div style={{padding:"12px 16px 14px",display:"flex",flexDirection:"column",gap:10}}>
-        {action!=="competitor"&&(
+        {!["competitor","persona"].includes(action)&&(
           <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
             <div style={{display:"flex",gap:4}}>
               {["meta","tiktok"].map(p=>(
