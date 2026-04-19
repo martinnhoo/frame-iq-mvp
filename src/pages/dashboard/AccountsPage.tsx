@@ -8,51 +8,66 @@ import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
 
-// ── Design tokens — matched to FeedPage layered dark aesthetic ────────────────
+// ── Design tokens — "Alive Interface" premium system ─────────────────────────
 const F = DT.font;
-const BLUE = '#0ea5e9';
-const CYAN = '#06b6d4';
+const EASE = 'cubic-bezier(0.4,0,0.2,1)';
 
-// Layered surfaces (same as Feed)
-const BG0 = '#080B11';
-const BG1 = '#0D1117';
-const BG2 = '#161B22';
-const BG3 = '#1C2128';
+// Primary palette
+const BLUE   = '#2563EB';
+const CYAN   = '#06B6D4';
+const GREEN  = '#22C55E';
+const AMBER  = '#F59E0B';
+const RED    = '#EF4444';
 
-// Borders
-const B0 = 'rgba(240,246,252,0.04)';
-const B1 = 'rgba(240,246,252,0.07)';
-const B2 = 'rgba(240,246,252,0.12)';
+// Deep layered surfaces (blue-black, not pure black)
+const BG0 = '#060A14';
+const BG1 = '#0A0F1C';
+const BG2 = '#0F172A';
+const BG3 = '#1E293B';
 
-// Text hierarchy
-const T1 = '#F0F6FC';
-const T2 = 'rgba(240,246,252,0.72)';
-const T3 = 'rgba(240,246,252,0.48)';
-const TL = 'rgba(240,246,252,0.40)'; // label
+// Borders — subtle glass edges
+const B0 = 'rgba(148,163,184,0.04)';
+const B1 = 'rgba(148,163,184,0.08)';
+const B2 = 'rgba(148,163,184,0.14)';
 
-// Card
-const CARD  = BG1;
-const SHD   = `0 0 0 1px ${B1}, 0 4px 12px rgba(0,0,0,0.3)`;
-const IBG   = BG2;
+// Text hierarchy — strong contrast
+const T1 = '#F1F5F9';     // primary — bright
+const T2 = '#94A3B8';     // secondary — slate
+const T3 = '#64748B';     // tertiary — muted
+const TL = '#475569';     // label — subtle
+
+// Card — glassmorphism
+const CARD  = 'rgba(15,23,42,0.80)';
+const SHD   = `0 0 0 1px ${B1}, 0 8px 32px rgba(0,0,0,0.40)`;
+const GLASS = 'blur(16px) saturate(180%)';
+const IBG   = 'rgba(15,23,42,0.60)';
 const IBD   = `1px solid ${B2}`;
 
-// Button presets
+// Button presets — alive
 const BTN_PRIMARY = {
   background: `linear-gradient(135deg, ${BLUE}, ${CYAN})`,
   border: 'none', color: '#fff', cursor: 'pointer',
   fontFamily: F, fontWeight: 700 as const,
-  boxShadow: '0 4px 16px rgba(14,165,233,0.30)',
+  boxShadow: '0 4px 20px rgba(37,99,235,0.35), 0 0 0 1px rgba(37,99,235,0.20)',
+  transition: `all 0.2s ${EASE}`,
 };
 const BTN_SECONDARY = {
-  background: BG3, border: 'none',
+  background: 'rgba(30,41,59,0.80)', border: `1px solid ${B2}`,
   color: T2, cursor: 'pointer',
   fontFamily: F, fontWeight: 600 as const,
+  backdropFilter: 'blur(8px)',
+  transition: `all 0.2s ${EASE}`,
 };
 const BTN_DANGER = {
-  background: 'rgba(239,68,68,0.15)', border: 'none',
-  color: '#F87171', cursor: 'pointer',
+  background: 'rgba(239,68,68,0.12)', border: `1px solid rgba(239,68,68,0.20)`,
+  color: '#FCA5A5', cursor: 'pointer',
   fontFamily: F, fontWeight: 600 as const,
+  transition: `all 0.2s ${EASE}`,
 };
+
+// Glow presets
+const GLOW_BLUE = '0 0 20px rgba(37,99,235,0.15)';
+const GLOW_GREEN = '0 0 20px rgba(34,197,94,0.15)';
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const T = {
@@ -188,20 +203,20 @@ function AccountAvatar({ name, logoUrl, size = 44, radius = 12 }: { name: string
 }
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const focusOn  = (e: React.FocusEvent<HTMLInputElement|HTMLTextAreaElement>) => {
-  e.currentTarget.style.borderColor = "rgba(14,165,233,0.40)";
-  e.currentTarget.style.background  = BG3;
-  e.currentTarget.style.boxShadow   = "0 0 0 2px rgba(14,165,233,0.12)";
+  e.currentTarget.style.borderColor = "rgba(37,99,235,0.50)";
+  e.currentTarget.style.background  = "rgba(15,23,42,0.90)";
+  e.currentTarget.style.boxShadow   = "0 0 0 3px rgba(37,99,235,0.12), 0 0 16px rgba(37,99,235,0.08)";
 };
 const focusOff = (e: React.FocusEvent<HTMLInputElement|HTMLTextAreaElement>) => {
   e.currentTarget.style.borderColor = B2;
-  e.currentTarget.style.background  = BG2;
+  e.currentTarget.style.background  = IBG;
   e.currentTarget.style.boxShadow   = "none";
 };
 const iStyle: React.CSSProperties = {
   width:"100%", fontFamily:F, fontSize:14, color:T1,
-  background:BG2, border:`1px solid ${B2}`, borderRadius:12,
+  background:IBG, border:`1px solid ${B2}`, borderRadius:10,
   padding:"11px 14px", outline:"none", boxSizing:"border-box",
-  transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)",
+  transition:`all 0.2s ${EASE}`,
 };
 
 const withTimeout = async <T,>(promise: PromiseLike<T>, ms = 10000): Promise<T> => {
@@ -429,7 +444,7 @@ function PlatformRow({ p, userId, accountId, t }: {
   const selAcc = ads.find(a => a.id === selId) || ads[0];
 
   if (loading) return (
-    <div style={{ height:60, borderRadius:12, background:B0, animation:"pulse 1.5s ease-in-out infinite" }} />
+    <div style={{ height:64, borderRadius:14, background:"rgba(15,23,42,0.40)", animation:"pulse 1.5s ease-in-out infinite" }} />
   );
 
   const isConnected = !!conn;
@@ -438,18 +453,29 @@ function PlatformRow({ p, userId, accountId, t }: {
   return (
     <div style={{
       borderRadius:14,
-      background: isConnected ? `linear-gradient(160deg,${pc}10 0%,${BG2} 100%)` : B0,
-      border: `1px solid ${isConnected ? pc+"30" : B1}`,
-      boxShadow: isConnected ? `0 0 0 1px ${pc}10 inset` : "none",
-      overflow:"hidden", transition:"all 0.2s",
+      background: isConnected ? `linear-gradient(160deg, ${pc}08 0%, rgba(15,23,42,0.50) 100%)` : "rgba(15,23,42,0.30)",
+      border: `1px solid ${isConnected ? pc+"25" : B1}`,
+      boxShadow: isConnected ? `0 0 20px ${pc}08` : "none",
+      overflow:"hidden", transition:`all 0.25s ${EASE}`,
+      backdropFilter: "blur(8px)",
     }}>
       {/* Header */}
-      <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 16px" }}>
-        <div style={{ width:38, height:38, borderRadius:10, flexShrink:0,
-          background: isConnected ? `${pc}18` : B0,
-          border: `1px solid ${isConnected ? pc+"28" : B1}`,
+      <div style={{ display:"flex", alignItems:"center", gap:12, padding:"16px 18px" }}>
+        <div style={{ width:40, height:40, borderRadius:11, flexShrink:0, position:"relative",
+          background: isConnected ? `${pc}15` : "rgba(148,163,184,0.06)",
+          border: `1px solid ${isConnected ? pc+"22" : B1}`,
           display:"flex", alignItems:"center", justifyContent:"center" }}>
           <PlatformIcon id={p.id}/>
+          {/* Live status dot */}
+          {isConnected && !p.soon && (
+            <div style={{
+              position:"absolute", bottom:-2, right:-2,
+              width:10, height:10, borderRadius:"50%",
+              background:pc, border:"2px solid #0A0F1C",
+              animation:"statusPulse 2s ease-in-out infinite",
+              boxShadow:`0 0 6px ${pc}60`,
+            }}/>
+          )}
         </div>
 
         <div style={{ flex:1, minWidth:0 }}>
@@ -457,14 +483,14 @@ function PlatformRow({ p, userId, accountId, t }: {
             <span style={{ fontFamily:F, fontSize:14, fontWeight:600,
               color: isConnected ? T1 : T3 }}>{p.label}</span>
             {p.soon && (
-              <span style={{ fontFamily:F, fontSize:11, fontWeight:600, color:T3,
-                background:B0, border:`1px solid ${B1}`,
-                borderRadius:5, padding:"1px 7px", letterSpacing:"0.06em" }}>{t.soon}</span>
+              <span style={{ fontFamily:F, fontSize:10, fontWeight:600, color:T3,
+                background:"rgba(148,163,184,0.06)", border:`1px solid ${B1}`,
+                borderRadius:5, padding:"2px 8px", letterSpacing:"0.06em" }}>{t.soon}</span>
             )}
             {isConnected && !p.soon && (
               <span style={{ fontFamily:F, fontSize:10, fontWeight:700, color:pc,
-                background:`${pc}15`, border:`1px solid ${pc}28`, borderRadius:99,
-                padding:"2px 8px", letterSpacing:"0.06em" }}>● {t.active_label}</span>
+                background:`${pc}12`, borderRadius:5,
+                padding:"3px 8px", letterSpacing:"0.06em" }}>{t.active_label}</span>
             )}
           </div>
           <p style={{ fontFamily:F, fontSize:12, color:T3, margin:0,
@@ -480,26 +506,28 @@ function PlatformRow({ p, userId, accountId, t }: {
         {/* Right actions */}
         {p.soon ? null : isConnected ? (
           <div style={{ display:"flex", gap:6 }}>
-            <button onClick={() => setExpanded(e => !e)}
-              style={{ ...BTN_SECONDARY, display:"flex", alignItems:"center", gap:5, padding:"6px 11px", borderRadius:9,
-                fontSize:12, transition:"all 0.15s" }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="#242A34"}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=BG3}}>
-              <ChevronDown size={12} style={{ transform: expanded?"rotate(180deg)":"none", transition:"transform 0.2s" }}/>
+            <button className="acc-btn" onClick={() => setExpanded(e => !e)}
+              style={{ ...BTN_SECONDARY, display:"flex", alignItems:"center", gap:5, padding:"7px 12px", borderRadius:8,
+                fontSize:12 }}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(30,41,59,1)";(e.currentTarget as HTMLElement).style.borderColor="rgba(148,163,184,0.20)"}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(30,41,59,0.80)";(e.currentTarget as HTMLElement).style.borderColor=B2}}>
+              <ChevronDown size={12} style={{ transform: expanded?"rotate(180deg)":"none", transition:`transform 0.25s ${EASE}` }}/>
               {t.manage}
             </button>
-            <button onClick={disconnect} disabled={disconnecting}
-              style={{ ...BTN_DANGER, padding:"6px 9px", borderRadius:9,
-                display:"flex", alignItems:"center", transition:"all 0.15s" }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.25)"}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.15)"}}>
+            <button className="acc-btn" onClick={disconnect} disabled={disconnecting}
+              style={{ ...BTN_DANGER, padding:"7px 9px", borderRadius:8,
+                display:"flex", alignItems:"center" }}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.20)";(e.currentTarget as HTMLElement).style.borderColor="rgba(239,68,68,0.30)"}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.12)";(e.currentTarget as HTMLElement).style.borderColor="rgba(239,68,68,0.20)"}}>
               {disconnecting ? <Loader2 size={12} className="animate-spin"/> : <X size={12}/>}
             </button>
           </div>
         ) : (
-          <button onClick={connect} disabled={connecting}
-            style={{ ...BTN_PRIMARY, display:"flex", alignItems:"center", gap:6, padding:"8px 16px", borderRadius:10,
-              fontSize:13, opacity:connecting?0.7:1, transition:"all 0.15s" }}>
+          <button className="acc-btn" onClick={connect} disabled={connecting}
+            style={{ ...BTN_PRIMARY, display:"flex", alignItems:"center", gap:6, padding:"9px 18px", borderRadius:10,
+              fontSize:13, opacity:connecting?0.7:1 }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.boxShadow="0 6px 28px rgba(37,99,235,0.45)"}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.boxShadow=BTN_PRIMARY.boxShadow}}>
             {connecting ? <Loader2 size={13} className="animate-spin"/> : <Link2 size={13}/>}
             {connecting ? t.connecting : t.connect}
           </button>
@@ -926,13 +954,17 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
     );
   }
 
-  // ── DISPLAY MODE ──
+  // ── DISPLAY MODE — Live KPI ──
+  // Dynamic color based on margin health
+  const marginColor = displayMargin >= 50 ? GREEN : displayMargin >= 25 ? AMBER : RED;
+  const marginPct = Math.min(displayMargin, 100);
+
   return (
     <div>
-      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL,
+      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: T3,
         textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
         display: "flex", alignItems: "center", gap: 6 }}>
-        <Target size={12} color={TL} />
+        <Target size={12} />
         Margem de Lucro
       </p>
       <div
@@ -940,49 +972,73 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
         onClick={() => { setEditing(true); if (margin) setMode(null); }}
         onKeyDown={e => { if (e.key === 'Enter') { setEditing(true); if (margin) setMode(null); } }}
         style={{
-          display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-          background: isDefault ? "rgba(251,191,36,0.04)" : "rgba(52,211,153,0.04)",
-          border: isDefault ? "1px solid rgba(251,191,36,0.12)" : "1px solid rgba(52,211,153,0.12)",
-          borderRadius: 10, justifyContent: "space-between", cursor: "pointer",
-          transition: "all 0.15s",
+          padding: "16px 18px",
+          background: "rgba(15,23,42,0.50)",
+          border: `1px solid ${B2}`,
+          borderRadius: 14, cursor: "pointer",
+          transition: `all 0.2s ${EASE}`,
+          backdropFilter: "blur(8px)",
         }}
         onMouseEnter={e => {
-          (e.currentTarget as HTMLElement).style.borderColor = isDefault ? "rgba(251,191,36,0.25)" : "rgba(52,211,153,0.30)";
+          (e.currentTarget as HTMLElement).style.borderColor = `${marginColor}40`;
+          (e.currentTarget as HTMLElement).style.boxShadow = `0 0 16px ${marginColor}15`;
         }}
         onMouseLeave={e => {
-          (e.currentTarget as HTMLElement).style.borderColor = isDefault ? "rgba(251,191,36,0.12)" : "rgba(52,211,153,0.12)";
+          (e.currentTarget as HTMLElement).style.borderColor = B2;
+          (e.currentTarget as HTMLElement).style.boxShadow = "none";
         }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#F0F6FC" }}>
+        {/* Top row: value + badge + edit */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontFamily: F, fontSize: 28, fontWeight: 800, color: marginColor,
+              letterSpacing: "-0.03em", lineHeight: 1 }}>
               {displayMargin}%
             </span>
-            {isDefault && (
+            {isDefault ? (
               <span style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: "0.06em",
-                padding: "2px 6px", borderRadius: 3,
-                background: "rgba(251,191,36,0.10)", color: "#FBBF24",
+                fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+                padding: "3px 8px", borderRadius: 5,
+                background: `${AMBER}18`, color: AMBER,
               }}>
                 PADRÃO
               </span>
-            )}
-            {!isDefault && (
+            ) : (
               <span style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: "0.06em",
-                padding: "2px 6px", borderRadius: 3,
-                background: "rgba(52,211,153,0.10)", color: "#34d399",
+                fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+                padding: "3px 8px", borderRadius: 5,
+                background: `${GREEN}18`, color: GREEN,
               }}>
                 CONFIGURADO
               </span>
             )}
           </div>
-          <div style={{ fontFamily: F, fontSize: 11, color: TL, marginTop: 3, lineHeight: 1.4 }}>
-            Break-even ROAS: {breakEven}x
-            {isDefault && <span style={{ color: "rgba(251,191,36,0.50)" }}> · Configure para decisões financeiras precisas</span>}
-            {!isDefault && <span> · Clique para alterar</span>}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, color: T3, fontSize: 12, fontFamily: F, fontWeight: 500 }}>
+            Ajustar <Pencil size={11} />
           </div>
         </div>
-        <Pencil size={12} color={T3} />
+
+        {/* Progress bar */}
+        <div style={{ height: 6, borderRadius: 3, background: "rgba(148,163,184,0.08)", overflow: "hidden", marginBottom: 10 }}>
+          <div style={{
+            height: "100%", borderRadius: 3,
+            width: `${marginPct}%`,
+            background: `linear-gradient(90deg, ${marginColor}, ${marginColor}CC)`,
+            boxShadow: `0 0 8px ${marginColor}40`,
+            transition: `width 0.5s ${EASE}`,
+          }}/>
+        </div>
+
+        {/* Break-even info */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontFamily: F, fontSize: 12, color: T2 }}>
+            Break-even ROAS: <strong style={{ color: T1, fontWeight: 700 }}>{breakEven}x</strong>
+          </span>
+          {isDefault && (
+            <span style={{ fontFamily: F, fontSize: 11, color: AMBER, fontWeight: 500 }}>
+              Configure para decisões precisas
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1539,48 +1595,57 @@ export default function AccountsPage() {
 
   if (loading) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:300 }}>
-      <Loader2 size={20} color={T3} className="animate-spin"/>
+      <Loader2 size={22} color={BLUE} className="animate-spin" style={{ filter:`drop-shadow(0 0 8px ${BLUE})` }}/>
     </div>
   );
 
   if (!user) return (
-    <div style={{ maxWidth:720, margin:"0 auto", padding:"clamp(16px,4vw,36px)", fontFamily:F }}>
-      <div style={{ borderRadius:16, padding:"16px 18px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.18)" }}>
-        <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#fca5a5" }}>Não foi possível abrir Accounts</p>
-        <p style={{ margin:"4px 0 0", fontSize:13, color:T2 }}>Sua sessão não está disponível no momento.</p>
+    <div style={{ maxWidth:740, margin:"0 auto", padding:"clamp(16px,4vw,40px)", fontFamily:F }}>
+      <div style={{ borderRadius:14, padding:"18px 20px", background:"rgba(239,68,68,0.06)", border:`1px solid rgba(239,68,68,0.15)`, backdropFilter:GLASS }}>
+        <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#FCA5A5" }}>Não foi possível abrir Accounts</p>
+        <p style={{ margin:"6px 0 0", fontSize:13, color:T2 }}>Sua sessão não está disponível no momento.</p>
       </div>
     </div>
   );
 
   return (
-    <div style={{ maxWidth:720, margin:"0 auto", padding:"clamp(16px,4vw,36px)", fontFamily:F }}>
+    <div style={{ maxWidth:740, margin:"0 auto", padding:"clamp(16px,4vw,40px)", fontFamily:F }}>
       <style>{`
-        @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
-        @keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.7}}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes glowPulse{0%,100%{box-shadow:0 0 12px rgba(37,99,235,0.15)}50%{box-shadow:0 0 24px rgba(37,99,235,0.30)}}
+        @keyframes statusPulse{0%,100%{opacity:1}50%{opacity:.5}}
+        .acc-card{transition:all 0.25s ${EASE}}
+        .acc-card:hover{transform:translateY(-1px)}
+        .acc-btn{transition:all 0.15s ${EASE}}
+        .acc-btn:hover{transform:translateY(-1px)}
+        .acc-btn:active{transform:scale(0.97)}
       `}</style>
 
       {/* ── Header ── */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28, gap:12, flexWrap:"wrap" }}>
+      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:32, gap:16, flexWrap:"wrap" }}>
         <div>
-          <h1 style={{ margin:0, fontSize:22, fontWeight:800, color:T1, letterSpacing:"-0.03em" }}>{t.title}</h1>
-          <p style={{ margin:"4px 0 0", fontSize:13, color:T3 }}>{t.sub}</p>
+          <h1 style={{ margin:0, fontSize:26, fontWeight:800, color:T1, letterSpacing:"-0.04em", lineHeight:1.2 }}>{t.title}</h1>
+          <p style={{ margin:"6px 0 0", fontSize:14, color:T3, lineHeight:1.5 }}>{t.sub}</p>
         </div>
         {!creating && (
-          <button onClick={() => { setCreating(true); setEditingId(null); setOpenId(null); }}
-            style={{ ...BTN_PRIMARY, display:"flex", alignItems:"center", gap:7, padding:"10px 20px",
-              borderRadius:12, fontSize:13, whiteSpace:"nowrap" }}>
-            <Plus size={14}/>{t.new}
+          <button className="acc-btn" onClick={() => { setCreating(true); setEditingId(null); setOpenId(null); }}
+            style={{ ...BTN_PRIMARY, display:"flex", alignItems:"center", gap:8, padding:"11px 22px",
+              borderRadius:10, fontSize:13, whiteSpace:"nowrap" }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.boxShadow="0 6px 28px rgba(37,99,235,0.45), 0 0 0 1px rgba(37,99,235,0.30)"}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.boxShadow=BTN_PRIMARY.boxShadow}}>
+            <Plus size={15} strokeWidth={2.5}/>{t.new}
           </button>
         )}
       </div>
 
       {/* ── Create new form ── */}
       {creating && (
-        <div style={{ borderRadius:16, background:BG1, border:`1px solid ${B2}`,
-          boxShadow:SHD, padding:"clamp(20px,4vw,28px)", marginBottom:12, animation:"fadeUp 0.25s ease" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22 }}>
-            <h2 style={{ margin:0, fontSize:17, fontWeight:700, color:T1, letterSpacing:"-0.02em" }}>{t.new}</h2>
+        <div style={{ borderRadius:16, background:CARD, border:`1px solid ${B2}`,
+          boxShadow:SHD, backdropFilter:GLASS, padding:"clamp(22px,4vw,30px)", marginBottom:16, animation:"fadeUp 0.3s ease" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
+            <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:T1, letterSpacing:"-0.02em" }}>{t.new}</h2>
             <button onClick={() => setCreating(false)}
               style={{ ...BTN_SECONDARY, borderRadius:8, padding:"5px 7px", display:"flex" }}>
               <X size={14}/>
@@ -1593,13 +1658,13 @@ export default function AccountsPage() {
       )}
 
       {loadError && !creating && (
-        <div style={{ marginBottom:12, borderRadius:14, padding:"14px 18px", background:"rgba(239,68,68,0.08)", border:`1px solid rgba(239,68,68,0.15)`, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
+        <div style={{ marginBottom:16, borderRadius:14, padding:"16px 20px", background:"rgba(239,68,68,0.06)", border:`1px solid rgba(239,68,68,0.12)`, backdropFilter:GLASS, display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, flexWrap:"wrap" }}>
           <div>
-            <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#F87171" }}>Erro ao carregar Accounts</p>
+            <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#FCA5A5" }}>Erro ao carregar Accounts</p>
             <p style={{ margin:"4px 0 0", fontSize:13, color:T3 }}>{loadError}</p>
           </div>
-          <button onClick={() => load()}
-            style={{ ...BTN_SECONDARY, padding:"8px 16px", borderRadius:10, fontSize:13 }}>
+          <button className="acc-btn" onClick={() => load()}
+            style={{ ...BTN_SECONDARY, padding:"9px 18px", borderRadius:10, fontSize:13 }}>
             Tentar novamente
           </button>
         </div>
@@ -1607,25 +1672,30 @@ export default function AccountsPage() {
 
       {/* ── Empty state ── */}
       {accounts.length === 0 && !creating && !loadError && (
-        <div style={{ textAlign:"center", padding:"64px 24px", borderRadius:20,
+        <div style={{ textAlign:"center", padding:"72px 32px", borderRadius:20,
           background:CARD, border:`1px solid ${B1}`,
-          boxShadow:SHD, backdropFilter:"blur(16px)", animation:"fadeUp 0.3s ease" }}>
-          <div style={{ width:56, height:56, borderRadius:16, background:"rgba(14,165,233,0.10)",
-            border:"none", display:"flex", alignItems:"center",
-            justifyContent:"center", margin:"0 auto 20px" }}>
-            <Building2 size={24} color={BLUE}/>
+          boxShadow:`${SHD}, ${GLOW_BLUE}`, backdropFilter:GLASS, animation:"fadeUp 0.4s ease" }}>
+          <div style={{ width:64, height:64, borderRadius:18,
+            background:`linear-gradient(135deg, rgba(37,99,235,0.15), rgba(6,182,212,0.10))`,
+            display:"flex", alignItems:"center",
+            justifyContent:"center", margin:"0 auto 24px",
+            boxShadow:`0 0 24px rgba(37,99,235,0.12)`,
+          }}>
+            <Building2 size={28} color={BLUE}/>
           </div>
-          <h3 style={{ margin:"0 0 8px", fontSize:18, fontWeight:700, color:T1, letterSpacing:"-0.02em" }}>{t.no_accounts}</h3>
-          <p style={{ margin:"0 0 24px", fontSize:14, color:T3, lineHeight:1.6 }}>{t.no_accounts_sub}</p>
-          <button onClick={() => setCreating(true)}
-            style={{ ...BTN_PRIMARY, padding:"10px 26px", borderRadius:12, fontSize:14 }}>
+          <h3 style={{ margin:"0 0 10px", fontSize:20, fontWeight:700, color:T1, letterSpacing:"-0.02em" }}>{t.no_accounts}</h3>
+          <p style={{ margin:"0 0 28px", fontSize:14, color:T2, lineHeight:1.7, maxWidth:380, marginLeft:"auto", marginRight:"auto" }}>{t.no_accounts_sub}</p>
+          <button className="acc-btn" onClick={() => setCreating(true)}
+            style={{ ...BTN_PRIMARY, padding:"12px 30px", borderRadius:10, fontSize:14 }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.boxShadow="0 6px 28px rgba(37,99,235,0.45)"}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.boxShadow=BTN_PRIMARY.boxShadow}}>
             {t.create_first}
           </button>
         </div>
       )}
 
       {/* ── Account cards (accordion) ── */}
-      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
         {accounts.map(acc => {
           const isOpen    = openId === acc.id;
           const isActive  = selectedPersona?.id === acc.id;
@@ -1633,35 +1703,36 @@ export default function AccountsPage() {
           const isDel     = deleting === acc.id;
 
           return (
-            <div key={acc.id} style={{
-              borderRadius:14,
-              background: isOpen ? BG1 : BG0,
-              border: `1px solid ${isOpen ? (isActive ? "rgba(14,165,233,0.25)" : B2) : B1}`,
-              boxShadow: isOpen ? SHD : "none",
+            <div key={acc.id} className="acc-card" style={{
+              borderRadius:16,
+              background: isOpen ? CARD : 'rgba(10,15,28,0.60)',
+              border: `1px solid ${isOpen ? (isActive ? "rgba(37,99,235,0.30)" : B2) : B1}`,
+              boxShadow: isOpen ? (isActive ? `${SHD}, ${GLOW_BLUE}` : SHD) : "none",
+              backdropFilter: isOpen ? GLASS : "none",
               overflow:"hidden",
-              transition:"all 0.25s cubic-bezier(0.4,0,0.2,1)",
+              transition:`all 0.25s ${EASE}`,
             }}>
 
               {/* ── Card header — always visible, clickable ── */}
               <button onClick={() => { setOpenId(isOpen ? null : acc.id); setEditingId(null); }}
-                style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"16px 18px",
-                  background:"none", border:"none", cursor:"pointer", textAlign:"left" }}>
+                style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"18px 20px",
+                  background:"none", border:"none", cursor:"pointer", textAlign:"left", transition:`all 0.2s ${EASE}` }}>
                 {/* Avatar */}
-                <AccountAvatar name={acc.name||"?"} logoUrl={acc.logo_url} size={44} radius={12}/>
+                <AccountAvatar name={acc.name||"?"} logoUrl={acc.logo_url} size={46} radius={13}/>
 
                 {/* Name + meta */}
                 <div style={{ flex:1, minWidth:0, textAlign:"left" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:2 }}>
-                    <span style={{ fontFamily:F, fontSize:15, fontWeight:600,
+                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
+                    <span style={{ fontFamily:F, fontSize:16, fontWeight:700,
                       color: isOpen ? T1 : T2,
                       overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-                      transition:"color 0.2s" }}>
+                      transition:`color 0.2s ${EASE}`, letterSpacing:"-0.01em" }}>
                       {acc.name || t.unnamed}
                     </span>
                     {isActive && (
-                      <span style={{ fontFamily:F, fontSize:10, fontWeight:700, color:BLUE,
-                        background:"rgba(14,165,233,0.10)", borderRadius:6, padding:"2px 8px",
-                        letterSpacing:"0.04em", flexShrink:0, lineHeight:"16px" }}>
+                      <span style={{ fontFamily:F, fontSize:10, fontWeight:700, color:"#60A5FA",
+                        background:"rgba(37,99,235,0.15)", borderRadius:6, padding:"3px 8px",
+                        letterSpacing:"0.04em", flexShrink:0, lineHeight:"14px" }}>
                         {t.active_in_chat}
                       </span>
                     )}
@@ -1674,19 +1745,19 @@ export default function AccountsPage() {
 
                 {/* Chevron */}
                 <ChevronDown size={16} color={T3}
-                  style={{ flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.25s" }}/>
+                  style={{ flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:`transform 0.3s ${EASE}` }}/>
               </button>
 
               {/* ── Expanded content ── */}
               {isOpen && (
-                <div style={{ animation:"slideDown 0.2s ease" }}>
-                  <div style={{ height:"1px", background:B1, margin:"0 18px" }}/>
+                <div style={{ animation:"slideDown 0.25s ease" }}>
+                  <div style={{ height:"1px", background:`linear-gradient(90deg, transparent, ${B2}, transparent)`, margin:"0 20px" }}/>
 
                   {isEditing ? (
                     /* Edit form */
-                    <div style={{ padding:"20px 18px 22px" }}>
-                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
-                        <h3 style={{ margin:0, fontSize:15, fontWeight:700, color:T1 }}>{t.edit}</h3>
+                    <div style={{ padding:"22px 20px 24px" }}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22 }}>
+                        <h3 style={{ margin:0, fontSize:16, fontWeight:700, color:T1 }}>{t.edit}</h3>
                         <button onClick={() => setEditingId(null)}
                           style={{ ...BTN_SECONDARY, borderRadius:7, padding:"4px 6px", display:"flex" }}>
                           <X size={13}/>
@@ -1698,30 +1769,32 @@ export default function AccountsPage() {
                     </div>
                   ) : (
                     /* Detail view */
-                    <div style={{ padding:"20px 18px 22px", display:"flex", flexDirection:"column", gap:18 }}>
+                    <div style={{ padding:"22px 20px 24px", display:"flex", flexDirection:"column", gap:20 }}>
 
                       {/* Action bar */}
                       <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                         {!isActive && (
-                          <button onClick={() => activate(acc)}
+                          <button className="acc-btn" onClick={() => activate(acc)}
                             style={{ ...BTN_PRIMARY, display:"flex", alignItems:"center", gap:6,
-                              padding:"9px 18px", borderRadius:10, fontSize:13 }}>
+                              padding:"10px 20px", borderRadius:10, fontSize:13 }}
+                            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.boxShadow="0 6px 28px rgba(37,99,235,0.45)"}}
+                            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.boxShadow=BTN_PRIMARY.boxShadow}}>
                             <CheckCircle2 size={13}/>{t.use_in_chat}
                           </button>
                         )}
-                        <button onClick={() => setEditingId(acc.id)}
+                        <button className="acc-btn" onClick={() => setEditingId(acc.id)}
                           style={{ ...BTN_SECONDARY, display:"flex", alignItems:"center", gap:6,
-                            padding:"9px 16px", borderRadius:10, fontSize:13 }}
-                          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="#242A34"}}
-                          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=BG3}}>
+                            padding:"10px 18px", borderRadius:10, fontSize:13 }}
+                          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(30,41,59,1)";(e.currentTarget as HTMLElement).style.borderColor="rgba(148,163,184,0.20)"}}
+                          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(30,41,59,0.80)";(e.currentTarget as HTMLElement).style.borderColor=B2}}>
                           <Pencil size={12}/>{t.edit}
                         </button>
                         <div style={{ flex:1 }}/>
-                        <button onClick={() => del(acc.id, acc.name)} disabled={isDel}
+                        <button className="acc-btn" onClick={() => del(acc.id, acc.name)} disabled={isDel}
                           style={{ ...BTN_DANGER, display:"flex", alignItems:"center", gap:5,
-                            padding:"9px 14px", borderRadius:10, fontSize:13 }}
-                          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.25)"}}
-                          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.15)"}}>
+                            padding:"10px 14px", borderRadius:10, fontSize:13 }}
+                          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.20)";(e.currentTarget as HTMLElement).style.borderColor="rgba(239,68,68,0.30)"}}
+                          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.12)";(e.currentTarget as HTMLElement).style.borderColor="rgba(239,68,68,0.20)"}}>
                           {isDel ? <Loader2 size={13} className="animate-spin"/> : <Trash2 size={13}/>}
                         </button>
                       </div>
@@ -1729,18 +1802,18 @@ export default function AccountsPage() {
                       {/* AI context */}
                       {acc.description ? (
                         <div>
-                          <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:TL,
+                          <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:T3,
                             textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 8px" }}>{t.desc_label}</p>
                           <p style={{ fontFamily:F, fontSize:13, color:T2, lineHeight:1.7,
-                            margin:0, padding:"12px 14px", background:BG2,
-                            border:`1px solid ${B1}`, borderRadius:10 }}>
+                            margin:0, padding:"14px 16px", background:"rgba(15,23,42,0.50)",
+                            border:`1px solid ${B1}`, borderRadius:12, backdropFilter:"blur(8px)" }}>
                             {acc.description}
                           </p>
                         </div>
                       ) : (
-                        <button onClick={() => setEditingId(acc.id)}
+                        <button className="acc-btn" onClick={() => setEditingId(acc.id)}
                           style={{ ...BTN_SECONDARY, display:"flex", alignItems:"center", gap:8,
-                            padding:"11px 14px", borderRadius:10, width:"100%", textAlign:"left", fontSize:12 }}>
+                            padding:"12px 16px", borderRadius:10, width:"100%", textAlign:"left", fontSize:12 }}>
                           <AlertCircle size={13} color={T3}/>
                           <span>{t.add_context}</span>
                         </button>
@@ -1749,12 +1822,14 @@ export default function AccountsPage() {
                       {/* Website */}
                       {acc.website && (
                         <div>
-                          <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:TL,
+                          <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:T3,
                             textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 6px" }}>{t.website_label}</p>
                           <a href={acc.website.startsWith("http") ? acc.website : `https://${acc.website}`}
                             target="_blank" rel="noreferrer"
-                            style={{ fontFamily:F, fontSize:13, color:BLUE, textDecoration:"none",
-                              display:"inline-flex", alignItems:"center", gap:5 }}>
+                            style={{ fontFamily:F, fontSize:13, color:"#60A5FA", textDecoration:"none",
+                              display:"inline-flex", alignItems:"center", gap:6, transition:`color 0.2s ${EASE}` }}
+                            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="#93C5FD"}}
+                            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="#60A5FA"}}>
                             <Globe size={12}/>{acc.website}
                           </a>
                         </div>
@@ -1763,9 +1838,9 @@ export default function AccountsPage() {
                   )}
 
                   {/* Platform connections + Goal — always visible when expanded */}
-                  <div style={{ padding:"0 18px 22px", display:"flex", flexDirection:"column", gap:20 }}>
+                  <div style={{ padding:"0 20px 24px", display:"flex", flexDirection:"column", gap:22 }}>
                     <div>
-                      <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:TL,
+                      <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:T3,
                         textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 10px" }}>{t.platforms}</p>
                       <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                         {PLATFORMS.map(p => (
@@ -1778,7 +1853,7 @@ export default function AccountsPage() {
                     {/* Performance goal */}
                     <GoalSection userId={user.id} personaId={acc.id} />
 
-                    {/* Profit margin — controls break-even ROAS for decision pipeline */}
+                    {/* Profit margin — live KPI */}
                     <MarginSection userId={user.id} personaId={acc.id} />
                   </div>
                 </div>
@@ -1790,18 +1865,20 @@ export default function AccountsPage() {
 
       {/* ── Add another account (bottom) ── */}
       {accounts.length > 0 && !creating && (
-        <button onClick={() => { setCreating(true); setOpenId(null); }}
-          style={{ ...BTN_SECONDARY, marginTop:12, display:"flex", alignItems:"center", gap:7, padding:"11px 18px",
-            borderRadius:12, width:"100%", justifyContent:"center", fontSize:13, transition:"all 0.15s" }}
+        <button className="acc-btn" onClick={() => { setCreating(true); setOpenId(null); }}
+          style={{ ...BTN_SECONDARY, marginTop:16, display:"flex", alignItems:"center", gap:8, padding:"12px 20px",
+            borderRadius:12, width:"100%", justifyContent:"center", fontSize:13 }}
           onMouseEnter={e=>{
-            (e.currentTarget as HTMLElement).style.background="#242A34";
-            (e.currentTarget as HTMLElement).style.color=BLUE;
+            (e.currentTarget as HTMLElement).style.background="rgba(30,41,59,1)";
+            (e.currentTarget as HTMLElement).style.borderColor="rgba(37,99,235,0.30)";
+            (e.currentTarget as HTMLElement).style.color="#60A5FA";
           }}
           onMouseLeave={e=>{
-            (e.currentTarget as HTMLElement).style.background=BG3;
+            (e.currentTarget as HTMLElement).style.background="rgba(30,41,59,0.80)";
+            (e.currentTarget as HTMLElement).style.borderColor=B2;
             (e.currentTarget as HTMLElement).style.color=T2;
           }}>
-          <Plus size={14}/>{t.new}
+          <Plus size={15}/>{t.new}
         </button>
       )}
     </div>

@@ -46,7 +46,7 @@ function avatarGradient(name: string) {
   return AVATAR_GRADIENTS[Math.abs(h) % AVATAR_GRADIENTS.length];
 }
 
-// ── Nav item ─────────────────────────────────────────────────────────────────
+// ── Nav item — alive, with indicator bar + glow ─────────────────────────────
 function NavItem({ url, label, icon: Icon, onClick, isActive }: {
   url: string; label: string; icon: React.ElementType;
   onClick?: () => void; isActive: boolean;
@@ -55,22 +55,32 @@ function NavItem({ url, label, icon: Icon, onClick, isActive }: {
   return (
     <NavLink to={url} onClick={onClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '7px 12px', margin: '1px 0', borderRadius: 7,
-        marginLeft: 8, marginRight: 8,
-        color: isActive ? '#fff' : hov ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.65)',
+        display: 'flex', alignItems: 'center', gap: 10, position: 'relative',
+        padding: '9px 12px 9px 14px', margin: '1px 8px', borderRadius: 9,
+        color: isActive ? '#F1F5F9' : hov ? '#CBD5E1' : '#94A3B8',
         background: isActive
-          ? 'rgba(255,255,255,0.10)'
-          : hov ? 'rgba(255,255,255,0.04)' : 'transparent',
+          ? 'linear-gradient(135deg, rgba(37,99,235,0.12), rgba(6,182,212,0.06))'
+          : hov ? 'rgba(148,163,184,0.06)' : 'transparent',
         border: 'none',
         fontSize: 13.5, fontWeight: isActive ? 600 : 450,
-        textDecoration: 'none', transition: 'all 0.15s',
+        textDecoration: 'none', transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
         fontFamily: F, letterSpacing: '-0.01em',
+        boxShadow: isActive ? '0 0 16px rgba(37,99,235,0.08)' : 'none',
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      <Icon size={16} strokeWidth={1.5} style={{
-        color: isActive ? '#0da2e7' : 'rgba(255,255,255,0.45)',
-        flexShrink: 0, transition: 'color 0.15s',
+      {/* Active indicator bar */}
+      {isActive && (
+        <div style={{
+          position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+          width: 3, height: 18, borderRadius: 2,
+          background: 'linear-gradient(180deg, #2563EB, #06B6D4)',
+          boxShadow: '0 0 8px rgba(37,99,235,0.40)',
+        }}/>
+      )}
+      <Icon size={16} strokeWidth={isActive ? 2 : 1.5} style={{
+        color: isActive ? '#60A5FA' : hov ? '#94A3B8' : '#64748B',
+        flexShrink: 0, transition: 'all 0.2s',
+        filter: isActive ? 'drop-shadow(0 0 4px rgba(96,165,250,0.30))' : 'none',
       }} />
       <span style={{ flex: 1 }}>{label}</span>
     </NavLink>
@@ -308,7 +318,7 @@ export function AppLayout() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#06080C' }}>
-        <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(148,163,184,0.10)', borderTopColor: '#2563EB', animation: 'spin 0.8s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -331,7 +341,7 @@ export function AppLayout() {
         {isMobile && (
           <button onClick={() => setMobileOpen(false)}
             style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer' }}>
-            <X size={20} color="rgba(255,255,255,0.50)" />
+            <X size={20} color="#94A3B8" />
           </button>
         )}
       </div>
@@ -346,35 +356,35 @@ export function AppLayout() {
             cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s',
             fontFamily: F,
           }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.04)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
           {/* Avatar with connection dot */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <div style={{
-              width: 30, height: 30, borderRadius: 8, overflow: 'hidden',
+              width: 32, height: 32, borderRadius: 9, overflow: 'hidden',
               background: selectedPersona
-                ? (selectedPersona.logo_url ? 'rgba(255,255,255,0.08)' : avatarGradient(selectedPersona.name || '?'))
-                : 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.08)',
+                ? (selectedPersona.logo_url ? 'rgba(148,163,184,0.08)' : avatarGradient(selectedPersona.name || '?'))
+                : 'rgba(148,163,184,0.06)',
+              border: '1px solid rgba(148,163,184,0.10)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {selectedPersona?.logo_url
                 ? <img src={selectedPersona.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : selectedPersona
-                  ? <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>
+                  ? <span style={{ fontSize: 13, fontWeight: 700, color: '#CBD5E1' }}>
                       {(selectedPersona.name || '?').charAt(0).toUpperCase()}
                     </span>
-                  : <Building2 size={13} color="rgba(255,255,255,0.25)" />
+                  : <Building2 size={13} color="#475569" />
               }
             </div>
             {selectedPersona && !accountResolving && (
               <span style={{
                 position: 'absolute', bottom: -1, right: -1,
-                width: 8, height: 8, borderRadius: '50%',
-                background: metaConnected ? '#22c55e' : 'rgba(255,255,255,0.20)',
-                border: '2px solid #0a0c10',
-                boxShadow: metaConnected ? '0 0 4px rgba(34,197,94,0.5)' : 'none',
+                width: 9, height: 9, borderRadius: '50%',
+                background: metaConnected ? '#22C55E' : '#475569',
+                border: '2px solid #060A14',
+                boxShadow: metaConnected ? '0 0 6px rgba(34,197,94,0.50)' : 'none',
               }} />
             )}
           </div>
@@ -383,7 +393,7 @@ export function AppLayout() {
           <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
             <p style={{
               margin: 0, fontSize: 13, fontWeight: 600,
-              color: selectedPersona ? '#F0F6FC' : 'rgba(255,255,255,0.30)',
+              color: selectedPersona ? '#F1F5F9' : '#475569',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               flex: 1, minWidth: 0,
             }}>
@@ -396,20 +406,20 @@ export function AppLayout() {
             )}
           </div>
 
-          <ChevronDown size={12} color="rgba(255,255,255,0.20)"
-            style={{ flexShrink: 0, transform: accountsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s' }} />
+          <ChevronDown size={12} color="#475569"
+            style={{ flexShrink: 0, transform: accountsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s cubic-bezier(0.4,0,0.2,1)' }} />
         </button>
 
         {/* Dropdown: personas + Meta ad accounts */}
         {accountsOpen && (
           <div style={{
-            borderTop: '1px solid rgba(255,255,255,0.05)',
+            borderTop: '1px solid rgba(148,163,184,0.06)',
             paddingTop: 2, paddingBottom: 2,
           }}>
             {/* Persona switcher — always show */}
             {savedPersonas.length > 0 && (
               <>
-                <div style={{ padding: '6px 14px 3px', fontSize: 9.5, fontWeight: 600, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: F }}>
+                <div style={{ padding: '6px 14px 3px', fontSize: 9.5, fontWeight: 600, color: '#475569', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: F }}>
                   Marcas
                 </div>
                 {savedPersonas.map(p => {
@@ -426,35 +436,36 @@ export function AppLayout() {
                       }}
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '5px 14px', background: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
+                        padding: '6px 14px', background: isActive ? 'rgba(37,99,235,0.08)' : 'transparent',
                         border: 'none', cursor: 'pointer', fontFamily: F,
-                        transition: 'background 0.1s', textAlign: 'left',
+                        transition: 'all 0.15s cubic-bezier(0.4,0,0.2,1)', textAlign: 'left',
+                        borderRadius: 6, margin: '0 4px',
                       }}
-                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.06)'; }}
                       onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                     >
                       <div style={{
-                        width: 20, height: 20, borderRadius: 5, flexShrink: 0, overflow: 'hidden',
-                        background: p.logo_url ? 'rgba(255,255,255,0.06)' : avatarGradient(p.name || '?'),
-                        border: '1px solid rgba(255,255,255,0.06)',
+                        width: 22, height: 22, borderRadius: 6, flexShrink: 0, overflow: 'hidden',
+                        background: p.logo_url ? 'rgba(148,163,184,0.08)' : avatarGradient(p.name || '?'),
+                        border: '1px solid rgba(148,163,184,0.08)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         {p.logo_url
                           ? <img src={p.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
+                          : <span style={{ fontSize: 9, fontWeight: 700, color: '#94A3B8' }}>
                               {(p.name || '?').charAt(0).toUpperCase()}
                             </span>
                         }
                       </div>
                       <span style={{
                         flex: 1, fontSize: 12, fontWeight: isActive ? 600 : 400,
-                        color: isActive ? '#fff' : 'rgba(255,255,255,0.50)',
+                        color: isActive ? '#F1F5F9' : '#94A3B8',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
                         {p.name}
                       </span>
                       {isActive && (
-                        <span style={{ fontSize: 8, fontWeight: 700, color: '#22A3A3', letterSpacing: '0.06em' }}>ATIVO</span>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: '#60A5FA', letterSpacing: '0.06em' }}>ATIVO</span>
                       )}
                     </button>
                   );
@@ -492,24 +503,24 @@ export function AppLayout() {
                 padding: '6px 14px', background: 'transparent', border: 'none',
                 cursor: 'pointer', fontFamily: F, transition: 'background 0.1s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.04)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >
               <div style={{
                 width: 20, height: 20, borderRadius: 5,
-                background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)',
+                background: 'rgba(148,163,184,0.06)', border: '1px dashed rgba(148,163,184,0.14)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Plus size={9} color="rgba(255,255,255,0.30)" />
+                <Plus size={9} color="#475569" />
               </div>
-              <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.30)' }}>
+              <span style={{ fontSize: 11.5, color: '#475569' }}>
                 Gerenciar contas
               </span>
             </button>
           </div>
         )}
 
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.04)', margin: '4px 0 0' }} />
+        <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '4px 0 0' }} />
       </div>
 
       {/* Nav */}
@@ -530,7 +541,7 @@ export function AppLayout() {
 
       {/* Footer — CreditBar + Referral + Logout */}
       <div style={{ flexShrink: 0 }}>
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.04)', margin: '0 0 4px' }} />
+        <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '0 0 4px' }} />
         <CreditBar userId={user?.id} plan={plan} />
         <ReferralPopup userId={user?.id} />
         <button
@@ -542,10 +553,10 @@ export function AppLayout() {
             width: '100%', transition: 'background 0.12s',
             fontFamily: F,
           }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.04)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-          <LogOut size={14} strokeWidth={1.5} color="rgba(255,255,255,0.30)" />
-          <span style={{ fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.40)' }}>
+          <LogOut size={14} strokeWidth={1.5} color="#475569" />
+          <span style={{ fontSize: 13, fontWeight: 400, color: '#64748B' }}>
             Sair
           </span>
         </button>
@@ -554,13 +565,13 @@ export function AppLayout() {
   );
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#060709' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#060A14' }}>
       {/* ── Mobile top bar ── */}
       {isMobile && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-          height: 52, background: '#060709',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          height: 52, background: '#060A14',
+          borderBottom: '1px solid rgba(148,163,184,0.06)',
           display: 'flex', alignItems: 'center', padding: '0 12px',
           fontFamily: F,
         }}>
@@ -569,7 +580,7 @@ export function AppLayout() {
               background: 'none', border: 'none', padding: 8, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-            <Menu size={20} color="rgba(255,255,255,0.60)" />
+            <Menu size={20} color="#94A3B8" />
           </button>
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'baseline' }}>
             <Logo size="lg" />
@@ -592,17 +603,17 @@ export function AppLayout() {
 
       {/* ── Sidebar ── */}
       <aside style={{
-        width: 216,
+        width: 220,
         height: '100%',
-        background: '#060709',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
+        background: '#060A14',
+        borderRight: '1px solid rgba(148,163,184,0.06)',
         display: 'flex', flexDirection: 'column', flexShrink: 0,
         fontFamily: F, overflow: 'hidden',
         ...(isMobile ? {
           position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 99,
           transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
-          boxShadow: mobileOpen ? '8px 0 32px rgba(0,0,0,0.5)' : 'none',
+          boxShadow: mobileOpen ? '12px 0 40px rgba(0,0,0,0.6)' : 'none',
         } : {}),
       }}>
         {sidebarContent}
@@ -610,7 +621,7 @@ export function AppLayout() {
 
       {/* Main content */}
       <main style={{
-        flex: 1, overflow: 'auto', background: '#060709',
+        flex: 1, overflow: 'auto', background: '#060A14',
         ...(isMobile ? { paddingTop: 52 } : {}),
       }}>
         {profile ? (
@@ -633,7 +644,7 @@ export function AppLayout() {
           </ErrorBoundary>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300 }}>
-            <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(148,163,184,0.10)', borderTopColor: '#2563EB', animation: 'spin 0.8s linear infinite' }} />
           </div>
         )}
       </main>
