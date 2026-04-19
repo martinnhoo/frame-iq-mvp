@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { LogoMark, MetaLogo } from '@/components/Logo';
+import { Logo, MetaLogo } from '@/components/Logo';
 import { CreditBar } from '@/components/dashboard/CreditBar';
 import { ReferralPopup } from '@/components/dashboard/ReferralPopup';
 import UpgradeWall from '@/components/UpgradeWall';
@@ -317,7 +317,7 @@ export function AppLayout() {
   // ── Sidebar content ──
   const sidebarContent = (
     <>
-      {/* Logo mark */}
+      {/* Logo text */}
       <div style={{
         height: 48, padding: '0 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -326,7 +326,7 @@ export function AppLayout() {
         <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
           title="adbrief"
           style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-          <LogoMark size={26} />
+          <Logo size="md" />
         </button>
         {isMobile && (
           <button onClick={() => setMobileOpen(false)}
@@ -572,7 +572,7 @@ export function AppLayout() {
             <Menu size={20} color="rgba(255,255,255,0.60)" />
           </button>
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <LogoMark size={26} />
+            <Logo size="md" />
           </div>
           <div style={{ width: 36 }} />
         </div>
