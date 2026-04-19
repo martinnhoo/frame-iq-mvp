@@ -18,23 +18,16 @@ export const Logo = ({ size = "md", className = "" }: LogoProps) => {
 export const LogoLight = Logo;
 
 /**
- * LogoMark — real AdBrief favicon logo as inline SVG.
- * "a" in white, "b" with blue→cyan gradient, dark rounded bg.
+ * LogoMark — uses the real favicon image so it always matches 1:1.
  */
 export const LogoMark = ({ size = 28 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="ab-brand" x1="50" y1="20" x2="110" y2="100" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#38bdf8" />
-        <stop offset="1" stopColor="#06b6d4" />
-      </linearGradient>
-    </defs>
-    <rect width="120" height="120" rx="26" fill="#0D1117" />
-    {/* "a" — white */}
-    <text x="22" y="88" style={{ fontSize: 78, fontWeight: 800, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", fill: "#FFFFFF" }}>a</text>
-    {/* "b" — blue→cyan gradient */}
-    <text x="62" y="88" style={{ fontSize: 78, fontWeight: 800, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", fill: "url(#ab-brand)" }}>b</text>
-  </svg>
+  <img
+    src="/favicon-192.png"
+    alt="adbrief"
+    width={size}
+    height={size}
+    style={{ borderRadius: size * 0.22, display: "block", objectFit: "cover" }}
+  />
 );
 
 /**
