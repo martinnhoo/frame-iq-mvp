@@ -1730,7 +1730,7 @@ export default function AccountsPage() {
 
                   <div style={{ padding:"20px 20px 24px" }}>
                     {isEditing ? (
-                      /* ── Edit form ── */}
+                      /* ── Edit form ── */
                       <div>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
                           <h3 style={{ margin:0, fontSize:16, fontWeight:700, color:T1 }}>{t.edit}</h3>

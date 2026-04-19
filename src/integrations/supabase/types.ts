@@ -1836,6 +1836,45 @@ export type Database = {
         }
         Relationships: []
       }
+      error_logs: {
+        Row: {
+          component: string | null
+          created_at: string
+          error_type: string
+          id: string
+          message: string | null
+          metadata: Json | null
+          stack: string | null
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          component?: string | null
+          created_at?: string
+          error_type?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          stack?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          component?: string | null
+          created_at?: string
+          error_type?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          stack?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       free_usage: {
         Row: {
           chat_count: number
@@ -3157,6 +3196,7 @@ export type Database = {
         Args: { p_plan?: string; p_user_id: string }
         Returns: Json
       }
+      cleanup_old_error_logs: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       deduct_credits: {
         Args: {
