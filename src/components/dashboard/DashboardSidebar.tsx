@@ -222,33 +222,21 @@ export function DashboardSidebar({
     return () => window.removeEventListener('meta-account-changed', handler);
   }, [user?.id, selectedPersona?.id]);
 
-  const perfActive = isAt("/dashboard/performance") || isAt("/dashboard/diary");
+  // perfActive removed — Performance page accessible via Feed/Chat but not in sidebar
 
-  // ── Navigation structure (matching screenshot layout) ──
-  const PRINCIPAL = [
-    { url: "/dashboard/feed",         label: "Copilot",     icon: Activity, badge: "NEW" },
-    { url: "/dashboard/history",      label: pt ? "Histórico" : "History", icon: Clock },
-    { url: "/dashboard/ai",          label: "Chat",        icon: MessageSquare, badge: "AI" },
-    { url: "/dashboard/performance",  label: "Performance", icon: BarChart2, forceActive: perfActive },
-    { url: "/dashboard/ad-score",      label: "Ad Score", icon: LayoutGrid },
+  // ── Navigation structure — simplified: result-focused, no fluff ──
+  // All creative/analysis tools now live inside the AI Chat as invokable skills.
+  const NAV_ITEMS = [
+    { url: "/dashboard/feed",     label: "Feed",                                      icon: Activity },
+    { url: "/dashboard/ai",      label: pt ? "Media Buyer IA" : "AI Media Buyer",    icon: MessageSquare },
+    { url: "/dashboard/history",  label: pt ? "Histórico" : es ? "Historial" : "History", icon: Clock },
+    { url: "/dashboard/accounts", label: pt ? "Contas" : es ? "Cuentas" : "Accounts", icon: Building2 },
   ];
 
-  const CRIAR = [
-    { url: "/dashboard/hooks",     label: pt ? "Gerar Hooks" : "Generate Hooks", icon: Sparkles },
-    { url: "/dashboard/brief",     label: pt ? "Criar Brief" : "Create Brief",   icon: FileText },
-  ];
-
-  const ANALISE = [
-    { url: "/dashboard/intelligence", label: "Insights",                                     icon: Brain },
-    { url: "/dashboard/patterns",     label: pt ? "Padrões" : es ? "Patrones" : "Patterns",  icon: TrendingUp },
-    { url: "/dashboard/competitor",   label: pt ? "Concorrentes" : es ? "Competidores" : "Competitors", icon: ScanEye },
-  ];
-
-  const WORKSPACE = [
-    { url: "/dashboard/boards",    label: "Boards",                                          icon: LayoutGrid },
-    { url: "/dashboard/templates", label: "Templates",                                       icon: FileText },
-    { url: "/dashboard/translate", label: pt ? "Traduzir" : es ? "Traducir" : "Translate",  icon: Languages },
-  ];
+  // Keep references for backwards compatibility (routes still work, just not in sidebar)
+  const CRIAR: any[] = [];
+  const ANALISE: any[] = [];
+  const WORKSPACE: any[] = [];
 
   return (
     <>
@@ -412,43 +400,13 @@ export function DashboardSidebar({
           )}
         </div>
 
-        {/* Scrollable nav area */}
-        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", paddingBottom: 8 }}>
-
-          {/* ── PRINCIPAL ── */}
-          <SectionHeader label="Principal" />
+        {/* Scrollable nav area — clean, focused */}
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", paddingBottom: 8, paddingTop: 4 }}>
           <nav>
-            {PRINCIPAL.map(item => (
+            {NAV_ITEMS.map(item => (
               <NavItem key={item.url} url={item.url} label={item.label} icon={item.icon}
-                isActive={(item as any).forceActive ?? isAt(item.url)}
-                onClose={onClose} badge={(item as any).badge} />
-            ))}
-          </nav>
-
-          {/* ── CRIAR ── */}
-          <SectionHeader label={pt ? "Criar" : es ? "Crear" : "Create"} />
-          <nav>
-            {CRIAR.map(item => (
-              <NavTool key={item.url} url={item.url} label={item.label} icon={item.icon}
-                isActive={isAt(item.url)} onClose={onClose} />
-            ))}
-          </nav>
-
-          {/* ── ANÁLISE ── */}
-          <SectionHeader label={pt ? "Análise" : es ? "Análisis" : "Analysis"} />
-          <nav>
-            {ANALISE.map(item => (
-              <NavTool key={item.url} url={item.url} label={item.label} icon={item.icon}
-                isActive={isAt(item.url)} onClose={onClose} />
-            ))}
-          </nav>
-
-          {/* ── WORKSPACE ── */}
-          <SectionHeader label="Workspace" />
-          <nav>
-            {WORKSPACE.map(item => (
-              <NavTool key={item.url} url={item.url} label={item.label} icon={item.icon}
-                isActive={isAt(item.url)} onClose={onClose} />
+                isActive={isAt(item.url)}
+                onClose={onClose} />
             ))}
           </nav>
         </div>
