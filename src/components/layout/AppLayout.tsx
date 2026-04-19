@@ -317,16 +317,16 @@ export function AppLayout() {
   // ── Sidebar content ──
   const sidebarContent = (
     <>
-      {/* Logo text */}
+      {/* Logo text — same as landing page header */}
       <div style={{
-        height: 48, padding: '0 14px',
+        height: 56, padding: '0 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexShrink: 0,
       }}>
         <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
           title="adbrief"
-          style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-          <Logo size="md" />
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'baseline' }}>
+          <Logo size="lg" />
         </button>
         {isMobile && (
           <button onClick={() => setMobileOpen(false)}
@@ -571,8 +571,8 @@ export function AppLayout() {
             }}>
             <Menu size={20} color="rgba(255,255,255,0.60)" />
           </button>
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <Logo size="md" />
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'baseline' }}>
+            <Logo size="lg" />
           </div>
           <div style={{ width: 36 }} />
         </div>
