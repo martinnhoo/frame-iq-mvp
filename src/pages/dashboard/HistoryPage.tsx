@@ -76,6 +76,13 @@ const HistoryPage: React.FC = () => {
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
 
+  // Force refresh on account switch from sidebar
+  useEffect(() => {
+    const handler = () => { loadHistory(); };
+    window.addEventListener('meta-account-changed', handler);
+    return () => window.removeEventListener('meta-account-changed', handler);
+  }, [loadHistory]);
+
   const handleUndo = async (entry: ActionLogEntry) => {
     setUndoingId(entry.id);
     try {

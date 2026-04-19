@@ -2920,6 +2920,18 @@ const FeedPage: React.FC = () => {
   const [metricsRefreshKey, setMetricsRefreshKey] = useState(0);
   const refreshMetrics = useCallback(() => setMetricsRefreshKey(k => k + 1), []);
 
+  // ── Force refresh on account switch from sidebar ──
+  useEffect(() => {
+    const handler = () => {
+      refetchDecisions();
+      refreshMetrics();
+      setAdsLoaded(false);
+      setUserCampaigns([]);
+    };
+    window.addEventListener('meta-account-changed', handler);
+    return () => window.removeEventListener('meta-account-changed', handler);
+  }, [refetchDecisions, refreshMetrics]);
+
   // ── Tracking status — persisted per account (GLOBAL, not per date range) ──
   const [trackingUserStatus, setTrackingUserStatus] = useState<TrackingStatus>(() =>
     accountId ? getTrackingStatus(accountId) : 'unknown'
