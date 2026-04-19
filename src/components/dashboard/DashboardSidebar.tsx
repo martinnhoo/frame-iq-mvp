@@ -1,5 +1,5 @@
 // DashboardSidebar v12 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
-import { MessageSquare, BarChart2, LayoutGrid, Building2, ChevronDown, Plus, Zap, ArrowUpRight, Sparkles, FileText, Brain, ScanEye, Languages, Activity, Clock, X, TrendingUp } from "lucide-react";
+import { MessageSquare, Building2, ChevronDown, Plus, ArrowUpRight, Activity, Clock, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -97,51 +97,6 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
   );
 }
 
-// ── Nav tool (secondary links) — always show icon ───────────────────────────
-function NavTool({ url, label, icon: Icon, isActive, onClose }: {
-  url: string; label: string; icon: React.ElementType;
-  isActive: boolean; onClose: () => void;
-}) {
-  const [hov, setHov] = useState(false);
-  return (
-    <NavLink to={url} onClick={onClose}
-      style={{
-        display: "flex", alignItems: "center", gap: 10,
-        padding: "7px 12px", marginLeft: 8, marginRight: 8,
-        borderRadius: 7, border: "none",
-        color: isActive ? "rgba(255,255,255,0.95)" : hov ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.55)",
-        background: isActive ? "rgba(255,255,255,0.08)" : hov ? "rgba(255,255,255,0.03)" : "transparent",
-        fontSize: 13, fontWeight: isActive ? 600 : 450,
-        textDecoration: "none", transition: "all 0.12s",
-        fontFamily: F,
-      }}
-      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      <Icon size={15} strokeWidth={1.5} style={{
-        flexShrink: 0, transition: "color 0.12s",
-        color: isActive ? "#0da2e7" : "rgba(255,255,255,0.38)",
-      }} />
-      <span>{label}</span>
-    </NavLink>
-  );
-}
-
-// ── Section header ───────────────────────────────────────────────────────────
-function SectionHeader({ label }: { label: string }) {
-  return (
-    <div style={{
-      padding: "16px 20px 6px",
-      display: "flex", alignItems: "center", gap: 0,
-    }}>
-      <p style={{
-        fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.45)",
-        letterSpacing: "0.08em", textTransform: "uppercase", margin: 0,
-        fontFamily: F,
-      }}>
-        {label}
-      </p>
-    </div>
-  );
-}
 
 export function DashboardSidebar({
   user, profile, open, onClose, onOpenProfile,
@@ -232,11 +187,6 @@ export function DashboardSidebar({
     { url: "/dashboard/history",  label: pt ? "Histórico" : es ? "Historial" : "History", icon: Clock },
     { url: "/dashboard/accounts", label: pt ? "Contas" : es ? "Cuentas" : "Accounts", icon: Building2 },
   ];
-
-  // Keep references for backwards compatibility (routes still work, just not in sidebar)
-  const CRIAR: any[] = [];
-  const ANALISE: any[] = [];
-  const WORKSPACE: any[] = [];
 
   return (
     <>
