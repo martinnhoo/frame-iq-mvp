@@ -2252,7 +2252,7 @@ const AdToggleModal: React.FC<{
     setAiOpinion(null);
     (async () => {
       try {
-        // Fetch ad metrics for AI context
+        // Fetch ad metrics for instant local recommendation
         const { data: metrics } = await (supabase
           .from('ad_metrics' as any)
           .select('spend, conversions, ctr, cpa, impressions, clicks, date')
@@ -2262,7 +2262,7 @@ const AdToggleModal: React.FC<{
 
         if (cancelled) return;
 
-        // Build context for AI
+        // Build context from local data
         const m = metrics || [];
         const totalSpend = m.reduce((s: number, r: any) => s + (r.spend || 0), 0);
         const totalConv = m.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
@@ -2280,64 +2280,80 @@ const AdToggleModal: React.FC<{
         const firstDate = m.length > 0 ? m[m.length - 1]?.date : null;
         const daysSinceStart = firstDate ? Math.ceil((Date.now() - new Date(firstDate).getTime()) / 86400000) : 0;
 
+        // ── INSTANT recommendation from local data (shows immediately) ──
+        let instantRec = '';
+        if (days > 0) {
+          if (isPause) {
+            if (daysRunning < 3 && totalSpend > 0) {
+              instantRec = `Atenção: este anúncio só tem ${daysRunning} dia${daysRunning > 1 ? 's' : ''} de dados. O Meta ainda está na fase de aprendizado — pausar agora pode prejudicar a otimização.`;
+            } else if (totalConv > 0) {
+              const spendR = (totalSpend / 100).toFixed(2);
+              const cpaR = (cpa / 100).toFixed(2);
+              instantRec = `Este anúncio gerou ${totalConv} conversão${totalConv > 1 ? 'ões' : ''} com CPA de R$${cpaR} (spend R$${spendR} em ${daysRunning} dias). Verifique se o CPA está acima do aceitável antes de pausar.`;
+            } else if (totalSpend > 0) {
+              const spendR = (totalSpend / 100).toFixed(2);
+              instantRec = `R$${spendR} investidos sem conversões em ${daysRunning} dias. Pausar pode ser uma boa decisão para realocar budget.`;
+            } else {
+              instantRec = 'Sem investimento recente. Pausar não terá impacto no orçamento atual.';
+            }
+          } else {
+            if (totalConv > 0) {
+              instantRec = `Histórico positivo: ${totalConv} conversão${totalConv > 1 ? 'ões' : ''} com CTR de ${ctr.toFixed(2)}%. Reativar pode trazer resultados.`;
+            } else if (totalSpend > 0) {
+              instantRec = `Sem conversões no histórico (${daysRunning} dias, R$${(totalSpend / 100).toFixed(2)} gastos). Considere otimizar o criativo antes de ativar.`;
+            } else {
+              instantRec = 'Sem dados de performance anteriores. Ao ativar, o Meta precisa de 3-4 dias para otimizar.';
+            }
+          }
+        } else {
+          instantRec = isPause
+            ? 'Sem dados de performance para este anúncio. Ao pausar, ele para de gastar imediatamente.'
+            : 'Sem dados de performance para este anúncio. Ao ativar, ele volta a competir nos leilões do Meta.';
+        }
+
+        // Show instant recommendation immediately
+        if (!cancelled) {
+          setAiOpinion(instantRec);
+          setLoadingAi(false);
+        }
+
+        // ── ASYNC: call AI for deeper opinion (upgrades the instant rec) ──
         const prompt = `Analise rapidamente se devo ${isPause ? 'pausar' : 'ativar'} o anúncio "${request.ad.name}"` +
           (campName ? ` (campanha: ${campName}` + (adSetName ? `, conjunto: ${adSetName})` : ')') : '') + '. ' +
           (days > 0
-            ? `Dados disponíveis: ${daysRunning} dias com dados nos últimos ${daysSinceStart} dias. ` +
-              `Spend total R$${(totalSpend / 100).toFixed(2)}, ${totalConv} conversões, CTR ${ctr.toFixed(2)}%, CPA R$${(cpa/100).toFixed(2)}, ${totalImps} impressões, ${totalClicks} cliques. `
-            : 'Sem dados de performance disponíveis para este anúncio. ') +
-          `Status atual: ${request.ad.effective_status || request.ad.status || 'desconhecido'}. ` +
-          `IMPORTANTE: Leve em consideração quantos dias o anúncio rodou. Se rodou poucos dias (menos de 3-4), o Meta ainda está na fase de aprendizado e pausar/reativar prematuramente pode prejudicar a otimização do algoritmo. ` +
-          `Responda APENAS com 2-3 frases curtas e diretas em texto puro. NÃO use markdown, asteriscos, negrito ou formatação. Recomende se deve ou não ${isPause ? 'pausar' : 'ativar'} e por quê.`;
+            ? `Dados: ${daysRunning} dias com dados nos últimos ${daysSinceStart} dias. ` +
+              `Spend R$${(totalSpend / 100).toFixed(2)}, ${totalConv} conv, CTR ${ctr.toFixed(2)}%, CPA R$${(cpa/100).toFixed(2)}, ${totalImps} impr. `
+            : 'Sem dados de performance. ') +
+          `Status: ${request.ad.effective_status || request.ad.status || 'desconhecido'}. ` +
+          `Se rodou menos de 3-4 dias, o Meta está em fase de aprendizado. ` +
+          `Responda com 2-3 frases curtas em texto puro, sem markdown.`;
 
-        // Call adbrief-ai-chat — returns { blocks: [...] }
-        const { data: aiData, error: aiErr } = await supabase.functions.invoke('adbrief-ai-chat', {
-          body: {
-            message: prompt,
-            user_id: userId,
-            persona_id: personaId,
-          },
+        const { data: aiData } = await supabase.functions.invoke('adbrief-ai-chat', {
+          body: { message: prompt, user_id: userId, persona_id: personaId },
         });
 
         if (cancelled) return;
 
-        // Extract text from blocks array and strip markdown
         let opinion = '';
         if (aiData?.blocks && Array.isArray(aiData.blocks)) {
           opinion = aiData.blocks
             .map((b: any) => b.content || b.text || '')
             .filter(Boolean)
             .join(' ')
-            .replace(/\*\*/g, '')    // strip bold **
-            .replace(/\*/g, '')      // strip italic *
-            .replace(/__/g, '')      // strip __
-            .replace(/`/g, '')       // strip backticks
-            .replace(/#{1,3}\s/g, '') // strip headers
-            .trim();
+            .replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '')
+            .replace(/`/g, '').replace(/#{1,3}\s/g, '').trim();
         }
-
-        if (opinion) {
+        if (opinion && !cancelled) {
           setAiOpinion(opinion);
-        } else if (days > 0) {
-          // Fallback with actual data
-          const verdict = isPause
-            ? (totalConv > 0 ? `Este anúncio gerou ${totalConv} conversões com R$${(totalSpend / 100).toFixed(2)} de spend. Considere se o CPA de R$${(cpa/100).toFixed(2)} está dentro do aceitável antes de pausar.`
-              : totalSpend > 0 ? `R$${(totalSpend / 100).toFixed(2)} investidos sem conversões em ${days} dias. Pausar pode ser uma boa decisão para realocar o budget.`
-              : 'Sem investimento recente. Pausar não terá impacto no orçamento atual.')
-            : (totalConv > 0 ? `Histórico positivo: ${totalConv} conversões com CTR de ${ctr.toFixed(2)}%. Reativar pode trazer resultados.`
-              : 'Sem conversões no histórico recente. Considere otimizar o criativo antes de ativar.');
-          setAiOpinion(verdict);
-        } else {
-          setAiOpinion(isPause
-            ? 'Sem dados de performance para este anúncio. Ao pausar, ele para de gastar imediatamente.'
-            : 'Sem dados de performance para este anúncio. Ao ativar, ele volta a competir nos leilões do Meta.');
         }
       } catch {
-        if (!cancelled) setAiOpinion(isPause
-          ? 'Ao pausar, o anúncio para de gastar imediatamente. Você pode reativá-lo a qualquer momento.'
-          : 'Ao ativar, o anúncio volta a competir nos leilões. O aprendizado pode levar algumas horas.');
-      } finally {
-        if (!cancelled) setLoadingAi(false);
+        // If everything fails and we don't have a recommendation yet, show fallback
+        if (!cancelled && !aiOpinion) {
+          setAiOpinion(isPause
+            ? 'Ao pausar, o anúncio para de gastar imediatamente. Você pode reativá-lo a qualquer momento.'
+            : 'Ao ativar, o anúncio volta a competir nos leilões. O aprendizado pode levar algumas horas.');
+          setLoadingAi(false);
+        }
       }
     })();
     return () => { cancelled = true; };
@@ -2432,11 +2448,11 @@ const AdToggleModal: React.FC<{
               />
               <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(56,189,248,0.30)' }} />
               <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(56,189,248,0.60)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                {loadingAi ? 'Analisando performance...' : 'Opinião da IA'}
+                {loadingAi ? 'Analisando...' : aiOpinion ? 'Recomendação' : 'Opinião da IA'}
               </span>
             </div>
 
-            {loadingAi ? (
+            {loadingAi && !aiOpinion ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative' }}>
                 <div style={{
                   width: '95%', height: 11, borderRadius: 3,
@@ -2450,13 +2466,6 @@ const AdToggleModal: React.FC<{
                   backgroundSize: '200% 100%',
                   animation: 'modal-text-shimmer 1.8s ease-in-out infinite',
                   animationDelay: '0.15s',
-                }} />
-                <div style={{
-                  width: '60%', height: 11, borderRadius: 3,
-                  background: 'linear-gradient(90deg, rgba(56,189,248,0.08) 0%, rgba(56,189,248,0.03) 50%, rgba(56,189,248,0.08) 100%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'modal-text-shimmer 1.8s ease-in-out infinite',
-                  animationDelay: '0.3s',
                 }} />
               </div>
             ) : (
