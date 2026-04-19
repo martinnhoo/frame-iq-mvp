@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { Undo2, Check, X, RotateCcw, Loader2, CircleSlash, CirclePlay, ArrowUpRight, ArrowDownRight, CopyPlus, Sparkles, Calendar, Filter, ChevronDown } from 'lucide-react';
+import { Undo2, Check, X, RotateCcw, Loader2, CircleSlash, CirclePlay, ArrowUpRight, ArrowDownRight, CopyPlus, Sparkles, Calendar, Filter, ChevronDown, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { DESIGN_TOKENS as DT } from '@/hooks/useDesignTokens';
 
