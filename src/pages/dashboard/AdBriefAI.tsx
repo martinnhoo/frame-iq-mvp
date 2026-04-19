@@ -278,17 +278,17 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
   const submit = () => { if(val.trim()){onSend(cfg.buildMsg(val.trim(),platform,tone), val.trim());onClose();}};
 
   return (
-    <div style={{borderRadius:16,overflow:"hidden",border:`1px solid rgba(255,255,255,0.10)`,background:"linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)",boxShadow:`0 0 0 1px rgba(255,255,255,0.04) inset, 0 8px 32px rgba(0,0,0,0.35), 0 0 40px ${cfg.color}08`,backdropFilter:"blur(16px)",margin:"0 0 12px",animation:"toolSlideIn 0.22s ease"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px 10px",borderBottom:`1px solid rgba(255,255,255,0.08)`}}>
+    <div style={{borderRadius:16,overflow:"hidden",border:`1px solid rgba(148,163,184,0.10)`,background:"linear-gradient(160deg,rgba(15,23,42,0.90) 0%,rgba(15,23,42,0.70) 100%)",boxShadow:`0 0 0 1px rgba(148,163,184,0.04) inset, 0 8px 32px rgba(0,0,0,0.40), 0 0 40px ${cfg.color}08`,backdropFilter:"blur(16px) saturate(180%)",margin:"0 0 12px",animation:"toolSlideIn 0.22s ease"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px 10px",borderBottom:`1px solid rgba(148,163,184,0.08)`}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <div style={{width:24,height:24,borderRadius:7,background:`${cfg.color}20`,border:`1px solid ${cfg.color}35`,display:"flex",alignItems:"center",justifyContent:"center"}}>
             <span style={{fontSize:12}}>{cfg.icon}</span>
           </div>
-          <span style={{...j,fontSize:13,fontWeight:700,color:"#f0f2f8",letterSpacing:"-0.01em"}}>{cfg.title[l]}</span>
+          <span style={{...j,fontSize:13,fontWeight:700,color:"#F1F5F9",letterSpacing:"-0.01em"}}>{cfg.title[l]}</span>
         </div>
-        <button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.10)",borderRadius:7,color:"rgba(255,255,255,0.5)",cursor:"pointer",display:"flex",padding:"4px 6px",transition:"all 0.15s"}}
-          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.10)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.8)"}}
-          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.06)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.5)"}}>
+        <button onClick={onClose} style={{background:"rgba(30,41,59,0.60)",border:"1px solid rgba(148,163,184,0.10)",borderRadius:7,color:"#64748B",cursor:"pointer",display:"flex",padding:"4px 6px",transition:"all 0.15s"}}
+          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(30,41,59,0.80)";(e.currentTarget as HTMLElement).style.color="#94A3B8"}}
+          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(30,41,59,0.60)";(e.currentTarget as HTMLElement).style.color="#64748B"}}>
           <X size={13}/>
         </button>
       </div>
@@ -298,16 +298,16 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
             <div style={{display:"flex",gap:4}}>
               {["meta","tiktok"].map(p=>(
                 <button key={p} onClick={()=>setPlatform(p)}
-                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:platform===p?cfg.color:"rgba(255,255,255,0.05)",color:platform===p?"#000":"rgba(255,255,255,0.4)",transition:"all 0.1s"}}>
+                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:platform===p?cfg.color:"rgba(148,163,184,0.06)",color:platform===p?"#000":"#64748B",transition:"all 0.1s"}}>
                   {p.charAt(0).toUpperCase()+p.slice(1)}
                 </button>
               ))}
             </div>
-            <div style={{width:1,height:16,background:"rgba(255,255,255,0.08)"}}/>
+            <div style={{width:1,height:16,background:"rgba(148,163,184,0.08)"}}/>
             <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
               {tones.map(t=>(
                 <button key={t} onClick={()=>setTone(t)}
-                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:tone===t?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)",color:tone===t?"#fff":"rgba(255,255,255,0.3)",transition:"all 0.1s"}}>
+                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:tone===t?"rgba(148,163,184,0.12)":"rgba(148,163,184,0.04)",color:tone===t?"#F1F5F9":"#475569",transition:"all 0.1s"}}>
                   {toneLabels[t][l]}
                 </button>
               ))}
@@ -315,15 +315,15 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
           </div>
         )}
         <textarea value={val} onChange={e=>setVal(e.target.value)} placeholder={cfg.placeholder[l]} rows={3} autoFocus
-          style={{width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,padding:"10px 14px",color:"#f0f2f8",fontSize:13,lineHeight:1.65,resize:"none",outline:"none",...m,caretColor:cfg.color,boxSizing:"border-box",transition:"border-color 0.2s, background 0.2s, box-shadow 0.2s"}}
-          onFocus={e=>{e.currentTarget.style.borderColor=`${cfg.color}55`;e.currentTarget.style.background="rgba(255,255,255,0.08)";e.currentTarget.style.boxShadow=`0 0 0 1px ${cfg.color}20`;}}
-          onBlur={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.12)";e.currentTarget.style.background="rgba(255,255,255,0.06)";e.currentTarget.style.boxShadow="none";}}
+          style={{width:"100%",background:"rgba(148,163,184,0.06)",border:"1px solid rgba(148,163,184,0.12)",borderRadius:12,padding:"10px 14px",color:"#F1F5F9",fontSize:13,lineHeight:1.65,resize:"none",outline:"none",...m,caretColor:cfg.color,boxSizing:"border-box",transition:"border-color 0.2s, background 0.2s, box-shadow 0.2s"}}
+          onFocus={e=>{e.currentTarget.style.borderColor=`${cfg.color}55`;e.currentTarget.style.background="rgba(148,163,184,0.08)";e.currentTarget.style.boxShadow=`0 0 0 1px ${cfg.color}20`;}}
+          onBlur={e=>{e.currentTarget.style.borderColor="rgba(148,163,184,0.12)";e.currentTarget.style.background="rgba(148,163,184,0.06)";e.currentTarget.style.boxShadow="none";}}
           onKeyDown={e=>{if(e.key==="Enter"&&e.metaKey)submit();}}
         />
         <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8}}>
-          <span style={{...m,fontSize:12,color:"rgba(255,255,255,0.18)"}}>⌘↵</span>
+          <span style={{...m,fontSize:12,color:"#475569"}}>⌘↵</span>
           <button onClick={submit} disabled={!val.trim()}
-            style={{padding:"8px 20px",borderRadius:10,fontSize:13,fontWeight:700,background:val.trim()?"#0ea5e9":"rgba(255,255,255,0.06)",color:val.trim()?"#fff":"rgba(255,255,255,0.25)",border:"none",cursor:val.trim()?"pointer":"not-allowed",...j,transition:"all 0.15s",boxShadow:val.trim()?"0 4px 16px rgba(14,165,233,0.35)":"none"}}>
+            style={{padding:"8px 20px",borderRadius:10,fontSize:13,fontWeight:700,background:val.trim()?"#2563EB":"rgba(148,163,184,0.06)",color:val.trim()?"#fff":"#475569",border:"none",cursor:val.trim()?"pointer":"not-allowed",...j,transition:"all 0.15s",boxShadow:val.trim()?"0 4px 16px rgba(37,99,235,0.35)":"none"}}>
             {cfg.cta[l]}
           </button>
         </div>
@@ -631,19 +631,20 @@ function SkillSelector({
   return (
     <div style={{
       position: "absolute" as const, bottom: "calc(100% + 8px)", left: 0, right: 0,
-      background: "#0d1017", border: "1px solid rgba(255,255,255,0.1)",
+      background: "rgba(10,15,28,0.95)", border: "1px solid rgba(148,163,184,0.10)",
       borderRadius: 16, padding: "16px", zIndex: 200,
-      boxShadow: "0 -20px 60px rgba(0,0,0,0.6)",
+      boxShadow: "0 -20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(148,163,184,0.04) inset",
+      backdropFilter: "blur(16px) saturate(180%)",
       animation: "slideUp .22s cubic-bezier(.34,1.2,.64,1)",
       fontFamily: F,
     }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#f0f2f8", letterSpacing: "-0.01em" }}>{t("title")}</p>
-          <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{t("subtitle")}</p>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#F1F5F9", letterSpacing: "-0.01em" }}>{t("title")}</p>
+          <p style={{ margin: "2px 0 0", fontSize: 11, color: "#64748B" }}>{t("subtitle")}</p>
         </div>
-        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 4, display: "flex", alignItems: "center" }}>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#475569", padding: 4, display: "flex", alignItems: "center" }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -653,17 +654,17 @@ function SkillSelector({
         onClick={() => { onSelect(null); onClose(); }}
         style={{
           width: "100%", padding: "8px 12px", borderRadius: 10, marginBottom: 8,
-          background: !activeSkillId ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.02)",
-          border: `1px solid ${!activeSkillId ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.06)"}`,
+          background: !activeSkillId ? "rgba(148,163,184,0.08)" : "rgba(148,163,184,0.03)",
+          border: `1px solid ${!activeSkillId ? "rgba(148,163,184,0.18)" : "rgba(148,163,184,0.06)"}`,
           cursor: "pointer", textAlign: "left" as const, display: "flex", alignItems: "center", gap: 8,
           transition: "all .15s",
         }}
-        onMouseEnter={e => { if (activeSkillId) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-        onMouseLeave={e => { if (activeSkillId) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"; }}
+        onMouseEnter={e => { if (activeSkillId) (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.06)"; }}
+        onMouseLeave={e => { if (activeSkillId) (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.03)"; }}
       >
         <span style={{ fontSize: 16, width: 24, textAlign: "center" as const }}>—</span>
-        <span style={{ fontSize: 12.5, color: !activeSkillId ? "#f0f2f8" : "rgba(255,255,255,0.5)", fontWeight: !activeSkillId ? 600 : 400 }}>{t("none")}</span>
-        {!activeSkillId && <span style={{ marginLeft: "auto", fontSize: 10, color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.08)", padding: "2px 7px", borderRadius: 4 }}>{t("active")}</span>}
+        <span style={{ fontSize: 12.5, color: !activeSkillId ? "#F1F5F9" : "#64748B", fontWeight: !activeSkillId ? 600 : 400 }}>{t("none")}</span>
+        {!activeSkillId && <span style={{ marginLeft: "auto", fontSize: 10, color: "#94A3B8", background: "rgba(148,163,184,0.10)", padding: "2px 7px", borderRadius: 4 }}>{t("active")}</span>}
       </button>
 
       {/* Skills grid */}
@@ -676,21 +677,21 @@ function SkillSelector({
               onClick={() => { onSelect(isActive ? null : skill.id); onClose(); }}
               style={{
                 padding: "10px 12px", borderRadius: 11, cursor: "pointer",
-                background: isActive ? `${skill.color}15` : "rgba(255,255,255,0.02)",
-                border: `1px solid ${isActive ? skill.color + "45" : "rgba(255,255,255,0.07)"}`,
+                background: isActive ? `${skill.color}15` : "rgba(148,163,184,0.03)",
+                border: `1px solid ${isActive ? skill.color + "45" : "rgba(148,163,184,0.07)"}`,
                 textAlign: "left" as const, transition: "all .15s",
               }}
-              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-              onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"; }}
+              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.06)"; }}
+              onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.03)"; }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
                 <span style={{ fontSize: 16 }}>{skill.icon}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: isActive ? skill.color : "#f0f2f8" }}>{skill.name}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: isActive ? skill.color : "#F1F5F9" }}>{skill.name}</span>
                 {isActive && (
                   <span style={{ marginLeft: "auto", width: 8, height: 8, borderRadius: "50%", background: skill.color, flexShrink: 0 }} />
                 )}
               </div>
-              <p style={{ margin: 0, fontSize: 10.5, color: "rgba(255,255,255,0.35)", lineHeight: 1.45 }}>
+              <p style={{ margin: 0, fontSize: 10.5, color: "#64748B", lineHeight: 1.45 }}>
                 {skill.desc[lang as "pt"|"en"|"es"] || skill.desc.en}
               </p>
             </button>
@@ -1154,11 +1155,11 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
         width: "100%", maxWidth: 440,
         padding: "clamp(20px,3vw,28px) clamp(20px,3vw,32px) clamp(18px,3vw,24px)",
         borderRadius: 18,
-        background: "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        boxShadow: "0 16px 48px rgba(0,0,0,0.40), 0 0 0 1px rgba(255,255,255,0.03) inset",
+        background: "linear-gradient(180deg, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.65) 100%)",
+        border: "1px solid rgba(148,163,184,0.08)",
+        backdropFilter: "blur(16px) saturate(180%)",
+        WebkitBackdropFilter: "blur(16px) saturate(180%)",
+        boxShadow: "0 0 0 1px rgba(148,163,184,0.04) inset, 0 16px 48px rgba(0,0,0,0.40)",
         display: "flex", flexDirection: "column", alignItems: "center",
         animation: mounted ? "pb-cardIn 0.35s ease-out both" : "none",
         opacity: mounted ? 1 : 0,
@@ -1207,15 +1208,15 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
             style={{
               padding: "10px 24px",
               borderRadius: 10,
-              background: "linear-gradient(180deg, #12b0f8 0%, #0a8fd4 100%)",
-              border: "1px solid rgba(13,162,231,0.4)",
+              background: "linear-gradient(180deg, #3B82F6 0%, #2563EB 100%)",
+              border: "1px solid rgba(37,99,235,0.5)",
               cursor: "pointer",
               fontFamily: F,
               fontSize: 13.5,
               fontWeight: 700,
               color: "#fff",
               letterSpacing: "-0.01em",
-              boxShadow: "0 4px 24px rgba(13,162,231,0.35), 0 1px 0 rgba(255,255,255,0.10) inset",
+              boxShadow: "0 4px 24px rgba(37,99,235,0.35), 0 1px 0 rgba(255,255,255,0.10) inset",
               transition: "all 0.18s ease-out",
               transform: pressed ? "scale(0.98)" : "scale(1)",
               outline: "none",
@@ -1260,24 +1261,24 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
                 style={{
                   display: "flex", alignItems: "center", gap: 10,
                   width: "100%", padding: "10px 14px", borderRadius: 10,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "rgba(148,163,184,0.04)",
+                  border: "1px solid rgba(148,163,184,0.08)",
                   cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 500,
-                  color: "rgba(255,255,255,0.65)", textAlign: "left",
+                  color: "#94A3B8", textAlign: "left",
                   transition: "all 0.18s ease-out",
                   animation: expanded ? `pb-fadeUp 0.2s ease-out ${i * 0.04}s both` : "none",
                   outline: "none",
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.13)";
-                  e.currentTarget.style.color = "#fff";
+                  e.currentTarget.style.background = "rgba(148,163,184,0.08)";
+                  e.currentTarget.style.borderColor = "rgba(148,163,184,0.14)";
+                  e.currentTarget.style.color = "#F1F5F9";
                   e.currentTarget.style.transform = "translateY(-1px)";
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
-                  e.currentTarget.style.color = "rgba(255,255,255,0.65)";
+                  e.currentTarget.style.background = "rgba(148,163,184,0.04)";
+                  e.currentTarget.style.borderColor = "rgba(148,163,184,0.08)";
+                  e.currentTarget.style.color = "#94A3B8";
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
@@ -3902,34 +3903,35 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       {/* ── Creative Skills Panel — shown when chat is empty ── */}
       {messages.length===0&&contextReady&&hasData&&!proactiveLoading&&(
         <div style={{position:"relative",zIndex:2,flexShrink:0,maxWidth:720,margin:"0 auto",width:"100%",padding:"24px 16px 0"}}>
-          <div style={{marginBottom:8}}>
-            <h2 style={{...j,fontSize:18,fontWeight:700,color:"#fff",margin:"0 0 4px",letterSpacing:"-0.02em"}}>
-              {lang==="pt"?"Ferramentas de criação":lang==="es"?"Herramientas de creación":"Creative tools"}
+          <div style={{marginBottom:14}}>
+            <h2 style={{...j,fontSize:20,fontWeight:800,color:"#F1F5F9",margin:"0 0 4px",letterSpacing:"-0.03em"}}>
+              {lang==="pt"?"Seu arsenal criativo":lang==="es"?"Tu arsenal creativo":"Your creative arsenal"}
             </h2>
-            <p style={{...j,fontSize:12,color:"rgba(255,255,255,0.30)",margin:0}}>
-              {lang==="pt"?"Selecione uma skill para iniciar uma conversa especializada":lang==="es"?"Selecciona una skill para iniciar una conversación especializada":"Select a skill to start a specialized conversation"}
+            <p style={{...j,fontSize:13,color:"#64748B",margin:0,lineHeight:1.5}}>
+              {lang==="pt"?"Cada especialista analisa seus dados com um olhar diferente":lang==="es"?"Cada experto analiza tus datos con una mirada diferente":"Each expert analyzes your data with a different lens"}
             </p>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
             {SKILLS.map(skill=>(
               <button key={skill.id} onClick={()=>{
                 setActiveSkillId(skill.id);
                 send(lang==="pt"?`Olá! Me ajude como ${skill.name}.`:lang==="es"?`¡Hola! Ayúdame como ${skill.name}.`:`Hi! Help me as ${skill.name}.`);
               }}
                 style={{
-                  ...j,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",
-                  borderRadius:12,padding:"20px 16px",cursor:"pointer",textAlign:"left",
-                  transition:"all 0.15s",display:"flex",flexDirection:"column",gap:8,
+                  ...j,background:"rgba(15,23,42,0.80)",border:"1px solid rgba(148,163,184,0.08)",
+                  borderRadius:14,padding:"20px 16px",cursor:"pointer",textAlign:"left",
+                  transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)",display:"flex",flexDirection:"column",gap:10,
+                  backdropFilter:"blur(12px)",
                 }}
-                onMouseEnter={e=>{const t=e.currentTarget as HTMLElement;t.style.background="rgba(255,255,255,0.06)";t.style.borderColor="rgba(255,255,255,0.12)";}}
-                onMouseLeave={e=>{const t=e.currentTarget as HTMLElement;t.style.background="rgba(255,255,255,0.03)";t.style.borderColor="rgba(255,255,255,0.06)";}}
+                onMouseEnter={e=>{const t=e.currentTarget as HTMLElement;t.style.background="rgba(15,23,42,0.95)";t.style.borderColor="rgba(148,163,184,0.16)";t.style.transform="translateY(-2px)";}}
+                onMouseLeave={e=>{const t=e.currentTarget as HTMLElement;t.style.background="rgba(15,23,42,0.80)";t.style.borderColor="rgba(148,163,184,0.08)";t.style.transform="translateY(0)";}}
               >
-                <div style={{width:36,height:36,borderRadius:10,background:`${skill.color}15`,border:`1px solid ${skill.color}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>
+                <div style={{width:38,height:38,borderRadius:10,background:`${skill.color}14`,border:`1px solid ${skill.color}28`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>
                   {skill.icon}
                 </div>
                 <div>
-                  <div style={{fontSize:14,fontWeight:700,color:"#fff",marginBottom:2}}>{skill.name}</div>
-                  <div style={{fontSize:11.5,color:"rgba(255,255,255,0.35)",lineHeight:1.4}}>{skill.desc[lang]||skill.desc.en}</div>
+                  <div style={{fontSize:14,fontWeight:700,color:"#F1F5F9",marginBottom:3,letterSpacing:"-0.01em"}}>{skill.name}</div>
+                  <div style={{fontSize:11.5,color:"#64748B",lineHeight:1.5}}>{skill.desc[lang]||skill.desc.en}</div>
                 </div>
               </button>
             ))}
@@ -4012,19 +4014,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           <div style={{maxWidth:720,margin:"16px auto 0",padding:"0 16px"}}>
             {/* ── No account connected — force connect ── */}
             <div style={{textAlign:"center",padding:"48px 24px"}}>
-              <div style={{width:52,height:52,borderRadius:14,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.40)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8M8 14h5"/></svg>
+              <div style={{width:52,height:52,borderRadius:14,background:"linear-gradient(135deg, rgba(37,99,235,0.12), rgba(6,182,212,0.08))",border:"1px solid rgba(148,163,184,0.08)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8M8 14h5"/></svg>
               </div>
-              <h3 style={{...j,fontSize:24,fontWeight:800,color:"#f0f2f8",margin:"0 0 10px",letterSpacing:"-0.03em"}}>
-                {lang==="pt"?"Conecte sua conta":lang==="es"?"Conecta tu cuenta":"Connect your account"}
+              <h3 style={{...j,fontSize:24,fontWeight:800,color:"#F1F5F9",margin:"0 0 10px",letterSpacing:"-0.03em"}}>
+                {lang==="pt"?"Conecte seus dados":lang==="es"?"Conecta tus datos":"Connect your data"}
               </h3>
-              <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.38)",lineHeight:1.65,margin:"0 0 28px",maxWidth:360,marginLeft:"auto",marginRight:"auto"}}>
-                {lang==="pt"?"Com sua conta conectada, a IA vê CTR, spend, o que pausar e escalar.":lang==="es"?"Con tu cuenta, la IA ve CTR, spend, qué pausar y escalar.":"With your account, AI sees CTR, spend, what to pause and scale."}
+              <p style={{...m,fontSize:13,color:"#64748B",lineHeight:1.65,margin:"0 0 28px",maxWidth:360,marginLeft:"auto",marginRight:"auto"}}>
+                {lang==="pt"?"Com seus dados conectados, a IA vê CTR, spend, o que pausar e escalar em tempo real.":lang==="es"?"Con tus datos, la IA ve CTR, spend, qué pausar y escalar en tiempo real.":"With your data connected, AI sees CTR, spend, what to pause and scale in real time."}
               </p>
               {selectedPersona ? (
                 <div style={{display:"flex",flexDirection:"column",gap:10,alignItems:"center"}}>
                   <button onClick={()=>handleConnect("meta","meta-oauth")}
-                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"#1877F2",color:"#fff",border:"none",cursor:"pointer",fontSize:14,fontWeight:700,boxShadow:"0 0 20px rgba(24,119,242,0.25)",transition:"all 0.2s"}}
+                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"linear-gradient(180deg, #3B82F6, #2563EB)",color:"#fff",border:"none",cursor:"pointer",fontSize:14,fontWeight:700,boxShadow:"0 0 20px rgba(37,99,235,0.30)",transition:"all 0.2s"}}
                     onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(-1px)";}}
                     onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(0)";}}>
                     {PLATFORM_ICONS_INLINE.meta} {lang==="pt"?"Conectar Meta Ads":lang==="es"?"Conectar Meta Ads":"Connect Meta Ads"}
@@ -4062,8 +4064,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"min(72%,calc(100vw - 80px))"}}>
                   <div style={{
                     borderRadius:"18px 18px 4px 18px",
-                    background:"linear-gradient(135deg,#0ea5e9,#0891b2)",
-                    boxShadow:"0 2px 12px rgba(14,165,233,0.25)",
+                    background:"linear-gradient(135deg,#3B82F6,#2563EB)",
+                    boxShadow:"0 2px 12px rgba(37,99,235,0.30)",
                     overflow:"hidden",
                     animation:"bubbleIn 0.2s cubic-bezier(0.34,1.56,0.64,1)",
                   }}>
@@ -4106,10 +4108,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {/* Avatar + label — só mostra se há blocks reais */}
                 {!!(msg.blocks?.length) && !(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,animation:"fadeUp 0.15s ease-out"}}>
-                    <div style={{width:26,height:26,borderRadius:8,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.22)"}}>
+                    <div style={{width:26,height:26,borderRadius:8,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(37,99,235,0.12)",border:"1px solid rgba(37,99,235,0.22)"}}>
                       <ABAvatar size={26}/>
                     </div>
-                    <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:12,fontWeight:600,color:"rgba(14,165,233,0.7)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
+                    <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:12,fontWeight:600,color:"rgba(37,99,235,0.75)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
                   </div>
                 )}
                 {/* Blocks — card da IA */}
@@ -4189,26 +4191,21 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           );
         })}
 
-        <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 clamp(12px,4vw,40px)",boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat"/>}</div>
+        <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 clamp(12px,4vw,40px)",boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat" userMessage={messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||""} label={(() => {
+              const pendingFn = (messages.flatMap(m=>m.blocks||[]) as any[]).find(b=>b._pendingTool)?._pendingTool as string|undefined;
+              if(pendingFn==="generate-hooks")  return lang==="pt"?"Criando hooks de alta conversão...":lang==="es"?"Creando hooks de alta conversión...":"Crafting high-converting hooks...";
+              if(pendingFn==="generate-script") return lang==="pt"?"Estruturando roteiro...":lang==="es"?"Estructurando guión...":"Building your script...";
+              if(pendingFn==="generate-brief")  return lang==="pt"?"Montando brief criativo...":lang==="es"?"Montando brief creativo...":"Building creative brief...";
+              return undefined; // let ThinkingIndicator derive from userMessage
+            })()}/>}</div>
         {!loading&&messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
           <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 32px",boxSizing:"border-box"}}>
-          <ThinkingIndicator lang={lang} variant="chat" label={(() => {
+          <ThinkingIndicator lang={lang} variant="chat" userMessage={messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||""} label={(() => {
               const pendingFn = (messages.flatMap(m=>m.blocks||[]) as any[]).find(b=>b._pendingTool)?._pendingTool as string|undefined;
-              if(pendingFn==="generate-hooks")  return lang==="pt"?"Gerando hooks...":lang==="es"?"Generando hooks...":"Generating hooks...";
-              if(pendingFn==="generate-script") return lang==="pt"?"Escrevendo roteiro...":lang==="es"?"Escribiendo guión...":"Writing script...";
-              if(pendingFn==="generate-brief")  return lang==="pt"?"Criando brief...":lang==="es"?"Creando brief...":"Creating brief...";
-              // Usar a última mensagem do usuário para label contextual
-              const last = (messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||"").toLowerCase().trim();
-              const isGreeting = /^(oi|olá|ola|hey|hi|hello|e aí|e ai|bom dia|boa tarde|boa noite|tudo bem|td bem|salve)[\s!?.,]*$/.test(last);
-              if(isGreeting)                     return lang==="pt"?"Respondendo...":lang==="es"?"Respondiendo...":"Thinking...";
-              if(/hook|gancho|copy|abertura/.test(last))   return lang==="pt"?"Analisando hooks...":lang==="es"?"Analizando hooks...":"Analyzing hooks...";
-              if(/roteiro|script|vídeo|video|ugc/.test(last)) return lang==="pt"?"Estruturando roteiro...":lang==="es"?"Estructurando guión...":"Building script...";
-              if(/brief|editor|direção/.test(last))        return lang==="pt"?"Montando brief...":"Building brief...";
-              if(/pausa|pause|escal|budget/.test(last))    return lang==="pt"?"Verificando conta...":"Checking account...";
-              if(/roas|ctr|cpm|cpc|perform/.test(last))    return lang==="pt"?"Analisando performance...":"Analyzing performance...";
-              if(/concorr|competitor|rival/.test(last))    return lang==="pt"?"Analisando concorrente...":"Analyzing competitor...";
-              if(last.length < 20)                         return lang==="pt"?"Respondendo...":lang==="es"?"Respondiendo...":"Thinking...";
-              return lang==="pt"?"Pensando...":lang==="es"?"Pensando...":"Thinking...";
+              if(pendingFn==="generate-hooks")  return lang==="pt"?"Criando hooks de alta conversão...":lang==="es"?"Creando hooks de alta conversión...":"Crafting high-converting hooks...";
+              if(pendingFn==="generate-script") return lang==="pt"?"Estruturando roteiro...":lang==="es"?"Estructurando guión...":"Building your script...";
+              if(pendingFn==="generate-brief")  return lang==="pt"?"Montando brief criativo...":lang==="es"?"Montando brief creativo...":"Building creative brief...";
+              return undefined; // let ThinkingIndicator derive from userMessage
             })()}/>
           </div>
         )}
@@ -4239,10 +4236,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       <div style={{flexShrink:0,position:"relative" as const,zIndex:2,display:undefined}}>
 
         {/* Fade from chat → input */}
-        <div style={{height:40,background:"linear-gradient(to bottom,transparent,rgba(9,12,20,0.98))",pointerEvents:"none",marginBottom:-1}}/>
+        <div style={{height:40,background:"linear-gradient(to bottom,transparent,rgba(6,10,20,0.98))",pointerEvents:"none",marginBottom:-1}}/>
 
         {/* Main input surface */}
-        <div style={{background:"#0a0d16",padding:"8px 0 18px"}}>
+        <div style={{background:"#060A14",padding:"8px 0 18px"}}>
           <div style={{maxWidth:720,margin:"0 auto",padding:"0 24px",boxSizing:"border-box" as const}}>
 
             {/* Session goal — one line, persists 7 days */}
@@ -4323,9 +4320,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 style={{
                   display:"flex", alignItems:"center", gap:5,
                   padding:"5px 12px", borderRadius:99, flexShrink:0,
-                  background: activeSkill ? `${activeSkill.color}14` : "rgba(255,255,255,0.03)",
-                  border:`1px solid ${activeSkill ? activeSkill.color + "40" : "rgba(255,255,255,0.08)"}`,
-                  color: activeSkill ? activeSkill.color : "rgba(255,255,255,0.45)",
+                  background: activeSkill ? `${activeSkill.color}14` : "rgba(148,163,184,0.04)",
+                  border:`1px solid ${activeSkill ? activeSkill.color + "40" : "rgba(148,163,184,0.08)"}`,
+                  color: activeSkill ? activeSkill.color : "#64748B",
                   fontSize:12, fontWeight: activeSkill ? 600 : 500, cursor:"pointer",
                   fontFamily:"'Plus Jakarta Sans', sans-serif",
                   letterSpacing:"-0.01em",
@@ -4355,9 +4352,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     style={{
                       display:"flex",alignItems:"center",gap:5,
                       padding:"5px 12px",borderRadius:99,flexShrink:0,
-                      background: isOn ? `${tool.color}18` : "rgba(255,255,255,0.03)",
-                      border:`1px solid ${isOn ? tool.color+"40" : "rgba(255,255,255,0.08)"}`,
-                      color: isOn ? tool.color : "rgba(255,255,255,0.45)",
+                      background: isOn ? `${tool.color}18` : "rgba(148,163,184,0.04)",
+                      border:`1px solid ${isOn ? tool.color+"40" : "rgba(148,163,184,0.08)"}`,
+                      color: isOn ? tool.color : "#64748B",
                       fontSize:12,fontWeight:isOn?600:500,cursor:"pointer",
                       fontFamily:"'Plus Jakarta Sans', sans-serif",
                       letterSpacing:"-0.01em",
@@ -4374,9 +4371,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             {/* Input card — clean dark, como a demo */}
             <div className="input-box-wrap" style={{
               display:"flex",flexDirection:"column",gap:0,
-              background: chatDragOver ? "rgba(13,162,231,0.06)" : "rgba(255,255,255,0.05)",
-              backdropFilter:"blur(20px) saturate(180%)",
-              border: chatDragOver ? "1px solid rgba(13,162,231,0.4)" : "1px solid rgba(255,255,255,0.10)",
+              background: chatDragOver ? "rgba(37,99,235,0.06)" : "rgba(15,23,42,0.80)",
+              backdropFilter:"blur(16px) saturate(180%)",
+              border: chatDragOver ? "1px solid rgba(37,99,235,0.4)" : "1px solid rgba(148,163,184,0.10)",
               borderRadius:16,
               padding:"14px 14px 14px 20px",
               boxShadow:"0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)",

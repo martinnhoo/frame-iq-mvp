@@ -1,4 +1,4 @@
-// ── Design tokens ─────────────────────────────────────────────────────────────
+// ── Design tokens — aligned with AccountsPage/HistoryPage system ─────────────
 export const FONTS = {
   sans:  "'Plus Jakarta Sans', sans-serif",
   body:  "'Plus Jakarta Sans', system-ui, sans-serif",
@@ -6,18 +6,18 @@ export const FONTS = {
 } as const;
 
 export const COLORS = {
-  accent:   "#0ea5e9",
-  accentLo: "rgba(14,165,233,0.15)",
-  accentMd: "rgba(14,165,233,0.30)",
-  green:    "#34d399",
-  red:      "#f87171",
-  amber:    "#fbbf24",
-  bg:       "#070d1a",  // aligned with --bg-main
-  surface:  "rgba(255,255,255,0.035)",
-  border:   "rgba(255,255,255,0.07)",
-  text:     "rgba(235,240,248,0.90)",
-  textMid:  "rgba(255,255,255,0.45)",
-  textLow:  "rgba(255,255,255,0.22)",
+  accent:   "#2563EB",
+  accentLo: "rgba(37,99,235,0.14)",
+  accentMd: "rgba(37,99,235,0.28)",
+  green:    "#10B981",
+  red:      "#EF4444",
+  amber:    "#F59E0B",
+  bg:       "#060A14",  // BG0
+  surface:  "rgba(148,163,184,0.04)", // B0
+  border:   "rgba(148,163,184,0.08)", // B1
+  text:     "#F1F5F9",  // T1
+  textMid:  "#94A3B8",  // T2
+  textLow:  "#475569",  // TL
 } as const;
 
 // ── i18n strings ──────────────────────────────────────────────────────────────
