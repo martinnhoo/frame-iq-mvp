@@ -245,6 +245,7 @@ export default function DebugPage() {
     }
 
     // 5. Ad accounts (v2)
+    let v2AccountRows: any[] = [];
     try {
       const { data: adAccounts, error } = await (supabase as any)
         .from('ad_accounts')
@@ -252,6 +253,7 @@ export default function DebugPage() {
         .eq('user_id', user.id);
       if (error) throw error;
       const accounts = adAccounts || [];
+      v2AccountRows = accounts;
       results.push({
         label: 'Ad accounts (v2)',
         status: accounts.length > 0 ? 'ok' : 'warn',
@@ -270,41 +272,50 @@ export default function DebugPage() {
       results.push({ label: 'Ad accounts (v2)', status: 'error', detail: err.message });
     }
 
-    // 6. Last sync check (ad_metrics)
+    // 6. Last sync check (ad_metrics) — uses account_id, not user_id
+    const v2Ids = v2AccountRows.map((a: any) => a.id).filter(Boolean);
     try {
-      const { data: latestMetric } = await (supabase as any)
-        .from('ad_metrics')
-        .select('date, created_at')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (latestMetric) {
-        const daysSince = Math.floor((Date.now() - new Date(latestMetric.date).getTime()) / 86400000);
-        results.push({
-          label: 'Last ad_metrics sync',
-          status: daysSince <= 1 ? 'ok' : daysSince <= 3 ? 'warn' : 'error',
-          detail: `${latestMetric.date} (${daysSince}d ago)`,
-          ts: latestMetric.created_at ? new Date(latestMetric.created_at).toLocaleString() : undefined,
-        });
+      if (v2Ids.length > 0) {
+        const { data: latestMetric } = await (supabase as any)
+          .from('ad_metrics')
+          .select('date, synced_at')
+          .in('account_id', v2Ids)
+          .order('date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (latestMetric) {
+          const daysSince = Math.floor((Date.now() - new Date(latestMetric.date).getTime()) / 86400000);
+          results.push({
+            label: 'Last ad_metrics sync',
+            status: daysSince <= 1 ? 'ok' : daysSince <= 3 ? 'warn' : 'error',
+            detail: `${latestMetric.date} (${daysSince}d ago)`,
+            ts: latestMetric.synced_at ? new Date(latestMetric.synced_at).toLocaleString() : undefined,
+          });
+        } else {
+          results.push({ label: 'Last ad_metrics sync', status: 'warn', detail: 'No data yet' });
+        }
       } else {
-        results.push({ label: 'Last ad_metrics sync', status: 'warn', detail: 'No data yet' });
+        results.push({ label: 'Last ad_metrics sync', status: 'warn', detail: 'No v2 accounts' });
       }
     } catch (err: any) {
       results.push({ label: 'Last ad_metrics sync', status: 'error', detail: err.message });
     }
 
-    // 7. Decisions check
+    // 7. Decisions check — uses account_id, not user_id
     try {
-      const { count } = await (supabase as any)
-        .from('decisions')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-      results.push({
-        label: 'Decisions generated',
-        status: (count || 0) > 0 ? 'ok' : 'warn',
-        detail: `${count || 0} total`,
-      });
+      if (v2Ids.length > 0) {
+        const { count } = await (supabase as any)
+          .from('decisions')
+          .select('id', { count: 'exact', head: true })
+          .in('account_id', v2Ids);
+        results.push({
+          label: 'Decisions generated',
+          status: (count || 0) > 0 ? 'ok' : 'warn',
+          detail: `${count || 0} total`,
+        });
+      } else {
+        results.push({ label: 'Decisions generated', status: 'warn', detail: 'No v2 accounts' });
+      }
     } catch (err: any) {
       results.push({ label: 'Decisions', status: 'error', detail: err.message });
     }
