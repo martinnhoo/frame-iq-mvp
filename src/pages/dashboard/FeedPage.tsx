@@ -2837,7 +2837,8 @@ const PerformancePulse: React.FC<{
 
 // ================================================================
 // ACCOUNT HEALTH BANNER — Always visible intelligence status
-// Shows alerts when they exist, healthy status when none
+// Shows alerts when they exist, minimal healthy line when none
+// Follows same section-label pattern as "Saúde do rastreamento"
 // ================================================================
 const AccountHealthBanner: React.FC<{
   alerts: AccountAlert[];
@@ -2846,119 +2847,66 @@ const AccountHealthBanner: React.FC<{
   lastAnalysisMin: number;
   patternsCount: number;
 }> = ({ alerts, onDismiss, onAction, lastAnalysisMin, patternsCount }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   // If there ARE alerts → show PriorityStack
   if (alerts.length > 0) {
     return <PriorityStack alerts={alerts} onDismiss={onDismiss} onAction={onAction} />;
   }
 
-  // No alerts → show healthy monitoring card
+  // No alerts → minimal monitoring line (same visual weight as SystemStatus)
   return (
-    <div style={{ marginBottom: 16 }}>
-      {/* Section label */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
-      }}>
-        <span style={{
-          width: 7, height: 7, borderRadius: '50%',
-          background: T.green,
-          boxShadow: '0 0 8px rgba(74,222,128,0.4)',
-          animation: 'alertPulse 3s ease-in-out infinite',
-        }} />
-        <span style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-          color: T.green, fontFamily: F,
-        }}>
-          MONITORAMENTO ATIVO
-        </span>
-        <div style={{ flex: 1, height: 1, background: 'rgba(74,222,128,0.12)' }} />
-      </div>
-
-      {/* Healthy status card */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(74,222,128,0.06) 0%, rgba(13,17,23,0.95) 100%)',
-        border: '1px solid rgba(74,222,128,0.12)',
-        borderRadius: 8,
-        padding: '14px 16px',
-        position: 'relative' as const,
-        overflow: 'hidden' as const,
-      }}>
-        {/* Subtle left accent */}
-        <div style={{
-          position: 'absolute' as const, left: 0, top: 0, bottom: 0, width: 3,
-          background: 'linear-gradient(180deg, rgba(74,222,128,0.6) 0%, rgba(74,222,128,0.1) 100%)',
-          borderRadius: '3px 0 0 3px',
-        }} />
-
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingLeft: 6 }}>
-          {/* Shield icon */}
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 6,
+      padding: '4px 2px', marginBottom: 10,
+      position: 'relative' as const,
+    }}>
+      <span style={{
+        width: 5, height: 5, borderRadius: '50%',
+        background: T.green,
+        boxShadow: `0 0 4px ${T.green}40`,
+        flexShrink: 0,
+      }} />
+      <span style={{ fontSize: 10, fontWeight: 600, color: T.text3, fontFamily: F }}>
+        Monitoramento ativo — nenhum alerta
+      </span>
+      {/* ? icon with tooltip */}
+      <span
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        style={{
+          width: 14, height: 14, borderRadius: '50%',
+          border: `1px solid ${T.border2}`,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 9, fontWeight: 700, color: T.text3,
+          cursor: 'default', flexShrink: 0, position: 'relative' as const,
+          lineHeight: 1,
+        }}
+      >
+        ?
+        {showTooltip && (
           <div style={{
-            width: 36, height: 36, borderRadius: 8,
-            background: 'rgba(74,222,128,0.08)',
-            border: '1px solid rgba(74,222,128,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, flexShrink: 0,
+            position: 'absolute' as const, top: '100%', left: '50%',
+            transform: 'translateX(-50%)', marginTop: 6,
+            background: T.bg2, border: `1px solid ${T.border2}`,
+            borderRadius: 6, padding: '10px 12px',
+            width: 220, zIndex: 50,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
           }}>
-            🛡️
-          </div>
-
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: 13, fontWeight: 700, color: T.text1, fontFamily: F,
-              marginBottom: 4, lineHeight: 1.3,
-            }}>
-              Conta saudável — nenhum alerta detectado
-            </div>
-            <div style={{
-              fontSize: 11, color: T.text3, fontFamily: F, lineHeight: 1.5,
-            }}>
-              A IA está monitorando sua conta 24/7. Alertas aparecem aqui automaticamente quando algo precisa de atenção.
-            </div>
-
-            {/* Stats row */}
-            <div style={{
-              display: 'flex', gap: 16, marginTop: 10,
-              flexWrap: 'wrap' as const,
-            }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-              }}>
-                <span style={{
-                  width: 5, height: 5, borderRadius: '50%',
-                  background: T.green,
-                  boxShadow: '0 0 4px rgba(74,222,128,0.3)',
-                }} />
-                <span style={{ fontSize: 10, color: T.text3, fontFamily: F }}>
-                  Última análise: <span style={{ color: T.text2, fontWeight: 600 }}>{lastAnalysisMin}min</span>
-                </span>
+            <div style={{ fontSize: 10, color: T.text3, fontFamily: F, lineHeight: 1.6 }}>
+              <div style={{ marginBottom: 6 }}>
+                Última análise: <span style={{ color: T.text2, fontWeight: 600 }}>{lastAnalysisMin}min atrás</span>
               </div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-              }}>
-                <span style={{
-                  width: 5, height: 5, borderRadius: '50%',
-                  background: T.purple,
-                  boxShadow: '0 0 4px rgba(167,139,250,0.3)',
-                }} />
-                <span style={{ fontSize: 10, color: T.text3, fontFamily: F }}>
-                  Padrões aprendidos: <span style={{ color: T.text2, fontWeight: 600 }}>{patternsCount}</span>
-                </span>
+              <div style={{ marginBottom: 6 }}>
+                Padrões aprendidos: <span style={{ color: T.text2, fontWeight: 600 }}>{patternsCount}</span>
               </div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-              }}>
-                <span style={{
-                  width: 5, height: 5, borderRadius: '50%',
-                  background: T.blue,
-                  boxShadow: '0 0 4px rgba(14,165,233,0.3)',
-                }} />
-                <span style={{ fontSize: 10, color: T.text3, fontFamily: F }}>
-                  8 tipos de alerta ativos
-                </span>
+              <div>
+                Tipos de alerta monitorados: <span style={{ color: T.text2, fontWeight: 600 }}>8</span>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
+      </span>
     </div>
   );
 };
@@ -4283,7 +4231,15 @@ const FeedPage: React.FC = () => {
         {/* Inline sync progress banner */}
         {syncing && <SyncBanner />}
 
-        {/* ── ACCOUNT HEALTH — always visible: alerts OR healthy status ── */}
+        {/* Performance Pulse — KPI bar (always first when connected) */}
+        {metaConnected && !isDemo && (
+          <PerformancePulse data={{
+            ...performancePulseData,
+            totalAds: totalAdCount,
+          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
+        )}
+
+        {/* ── ACCOUNT HEALTH — alerts or monitoring status ── */}
         {!isDemo && (
           <AccountHealthBanner
             alerts={visibleAlerts}
@@ -4292,14 +4248,6 @@ const FeedPage: React.FC = () => {
             lastAnalysisMin={lastAnalysisMin}
             patternsCount={patternsCount}
           />
-        )}
-
-        {/* Performance Pulse — KPI bar */}
-        {metaConnected && !isDemo && (
-          <PerformancePulse data={{
-            ...performancePulseData,
-            totalAds: totalAdCount,
-          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
         )}
 
         {/* ── Tracking Health — full diagnostic card ── */}
