@@ -2845,14 +2845,32 @@ const FeedPage: React.FC = () => {
   const userId = ctx.user?.id as string | undefined;
   const personaId = ctx.selectedPersona?.id as string | undefined;
 
-  // ── Resolve active Meta account from localStorage (same pattern as HistoryPage) ──
+  // ── Resolve active Meta account: localStorage stores meta ID (act_...), resolve to Supabase UUID ──
   const [accTick, setAccTick] = useState(0);
-  const accountId = useMemo(() => {
+  const metaSelId = useMemo(() => {
     void accTick;
     return ctx.selectedPersona?.id
       ? (storage.get(`meta_sel_${ctx.selectedPersona.id}`, "") || null)
       : null;
   }, [ctx.selectedPersona?.id, accTick]);
+
+  const [accountId, setAccountId] = useState<string | null>(null);
+  const [accountResolving, setAccountResolving] = useState(false);
+
+  useEffect(() => {
+    if (!metaSelId) { setAccountId(null); return; }
+    // meta_sel_ might be a UUID (legacy) or a meta ID (act_...). Try both.
+    if (!metaSelId.startsWith('act_')) {
+      setAccountId(metaSelId); // already a UUID
+      return;
+    }
+    setAccountResolving(true);
+    supabase.from("ad_accounts").select("id").eq("meta_account_id", metaSelId).maybeSingle()
+      .then(({ data }) => {
+        setAccountId(data?.id ?? null);
+        setAccountResolving(false);
+      });
+  }, [metaSelId]);
 
   useEffect(() => {
     const handler = () => setAccTick(t => t + 1);
@@ -2860,8 +2878,7 @@ const FeedPage: React.FC = () => {
     return () => window.removeEventListener("meta-account-changed", handler);
   }, []);
 
-  const metaConnected = !!accountId;
-  const accountResolving = false; // resolved synchronously from localStorage
+  const metaConnected = !!metaSelId;
 
   const [period, setPeriod] = useState<PeriodKey>('7d');
   const periodDays = PERIODS.find(p => p.key === period)!.days;
@@ -3646,15 +3663,9 @@ const FeedPage: React.FC = () => {
     })();
   }, [togglingCampaign, userId, personaId, fetchCampaigns, fetchAds]);
 
-  // Meta Ads Manager URL — fetch meta_account_id from ad_accounts table
-  const [metaAccountId, setMetaAccountId] = useState('');
-  useEffect(() => {
-    if (!accountId) { setMetaAccountId(''); return; }
-    supabase.from("ad_accounts").select("meta_account_id").eq("id", accountId).maybeSingle()
-      .then(({ data }) => { if (data?.meta_account_id) setMetaAccountId(data.meta_account_id); });
-  }, [accountId]);
-  const adsManagerUrl = metaAccountId
-    ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${metaAccountId.replace('act_', '')}`
+  // Meta Ads Manager URL — use metaSelId directly (it's the act_... ID)
+  const adsManagerUrl = metaSelId
+    ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${metaSelId.replace('act_', '')}`
     : 'https://adsmanager.facebook.com/';
 
   const handleAction = async (decisionId: string, action: DecisionAction) => {

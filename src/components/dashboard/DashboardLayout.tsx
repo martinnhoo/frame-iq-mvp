@@ -169,23 +169,26 @@ export default function DashboardLayout() {
       identifyUser(session.user.id, { email: session.user.email });
 
       // ── Fetch ALL data in parallel before showing UI ──
-      const [profileResult, telegramResult, aiProfileResult, , personaResult] = await Promise.all([
+      // Note: only fast Supabase queries here. Edge function (check-usage) runs after UI shows.
+      const currentPeriod = new Date().toISOString().slice(0, 7);
+      const [profileResult, telegramResult, aiProfileResult, usageResult, personaResult] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
         supabase.from("telegram_connections").select("chat_id,telegram_username,active")
           .eq("user_id", session.user.id).eq("active", true).maybeSingle(),
         supabase.from("user_ai_profile")
           .select("industry, ai_summary, top_performing_models, best_platforms")
           .eq("user_id", session.user.id).maybeSingle(),
-        fetchUsage(session.user.id),
+        supabase.from("usage").select("*").eq("user_id", session.user.id).eq("period", currentPeriod).maybeSingle(),
         supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }),
       ]);
 
       if (!mounted) return;
 
       const profileData = profileResult.data;
-      // Set telegram & ai_profile state
+      // Set telegram, ai_profile & usage state from parallel queries
       setTelegramConn(telegramResult.data || null);
       if (!aiProfileResult.error) setAiProfile(aiProfileResult.data || null);
+      if (usageResult.data) setUsage({ analyses_count: usageResult.data.analyses_count, boards_count: usageResult.data.boards_count });
 
       if (profileData) {
         // Test account: reset onboarding every login — BUT skip if arriving from demo flow
@@ -263,6 +266,11 @@ export default function DashboardLayout() {
 
       // ── Everything loaded — show dashboard ──
       if (mounted) setLoading(false);
+
+      // Deferred: edge function for detailed usage (non-blocking, enriches usageDetails after render)
+      supabase.functions.invoke("check-usage", { body: { user_id: session.user.id } })
+        .then(({ data: d }) => { if (mounted && d) setUsageDetails(d); })
+        .catch(() => {});
 
       // check-subscription fires after render — sync plan from Stripe (non-blocking)
       Promise.race([
@@ -388,8 +396,8 @@ export default function DashboardLayout() {
         window.dispatchEvent(new CustomEvent("adbrief:credits-updated"));
       }
     };
-    // Safety timeout — if init takes >8s, force show dashboard
-    const timeout = setTimeout(() => { setLoading(false); }, 8000);
+    // Safety timeout — if init takes >6s, force show dashboard
+    const timeout = setTimeout(() => { setLoading(false); }, 6000);
     init().catch((e) => { console.error("[AdBrief] init failed:", e); setLoading(false); }).finally(() => clearTimeout(timeout));
     // Handle auth state changes — keep session alive, redirect only on explicit sign-out
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {

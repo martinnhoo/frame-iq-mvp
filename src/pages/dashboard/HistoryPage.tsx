@@ -135,13 +135,21 @@ const HistoryPage: React.FC = () => {
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
   // Force re-read of localStorage when Meta account changes
   const [accTick, setAccTick] = useState(0);
-  const liveAccountId = React.useMemo(() => {
-    // accTick dependency forces re-read
+  const metaSelId = React.useMemo(() => {
     void accTick;
     return selectedPersona?.id
       ? (storage.get(`meta_sel_${selectedPersona.id}`, "") || null)
       : null;
   }, [selectedPersona?.id, accTick]);
+
+  // Resolve meta ID (act_...) → Supabase UUID for DB queries
+  const [liveAccountId, setLiveAccountId] = useState<string | null>(null);
+  React.useEffect(() => {
+    if (!metaSelId) { setLiveAccountId(null); return; }
+    if (!metaSelId.startsWith('act_')) { setLiveAccountId(metaSelId); return; }
+    supabase.from("ad_accounts").select("id").eq("meta_account_id", metaSelId).maybeSingle()
+      .then(({ data }) => setLiveAccountId(data?.id ?? null));
+  }, [metaSelId]);
 
   const loadHistory = useCallback(async () => {
     const aid = liveAccountId;
