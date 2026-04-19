@@ -4259,7 +4259,7 @@ const FeedPage: React.FC = () => {
                 totalAds={totalAdCount}
                 metrics={adMetrics}
                 periodLabel={PERIODS.find(p => p.key === period)!.label}
-                metaAccountId={metaAccountId}
+                metaAccountId={metaSelId || undefined}
                 onToggleAd={handleConfirmToggle}
                 togglingAd={togglingAd}
                 toggleSuccess={toggleSuccess}
@@ -4303,7 +4303,7 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'few-data' ? (
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
-          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaAccountId} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
+          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaSelId || undefined} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
         ) : feedState === 'loading' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[1,2].map(i => (
