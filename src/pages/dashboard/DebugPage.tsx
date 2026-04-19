@@ -217,19 +217,24 @@ export default function DebugPage() {
       const connections = connData?.connections || [];
       const metaConn = connections.find((c: any) => c.platform === 'meta' && c.status === 'active');
       if (metaConn) {
-        const adCount = (metaConn.ad_accounts || []).length;
-        const selId = metaConn.selected_account_id || 'none';
+        const ads = metaConn.ad_accounts || [];
+        const adCount = ads.length;
+        // Effective selected: DB → localStorage → first account (same logic as useActiveAccount)
+        const dbSel = metaConn.selected_account_id;
+        const lsSel = metaConn.persona_id ? localStorage.getItem(`meta_sel_${metaConn.persona_id}`) : null;
+        const effectiveSel = dbSel || lsSel || ads[0]?.id || 'none';
+        const selSource = dbSel ? 'db' : lsSel ? 'localStorage' : ads[0]?.id ? 'fallback[0]' : 'none';
         setMetaInfo({
           status: 'active',
           adAccounts: adCount,
-          selectedId: selId,
+          selectedId: `${effectiveSel} (${selSource})`,
           tokenExpiry: metaConn.token_expires_at || 'unknown',
           personaId: metaConn.persona_id,
         });
         results.push({
           label: 'Meta Ads connection',
           status: 'ok',
-          detail: `${adCount} ad account(s), selected: ${selId.slice(0, 15)}`,
+          detail: `${adCount} ad account(s), selected: ${effectiveSel.slice(0, 15)}`,
         });
       } else {
         setMetaInfo({ status: 'disconnected' });
@@ -243,7 +248,7 @@ export default function DebugPage() {
     try {
       const { data: adAccounts, error } = await (supabase as any)
         .from('ad_accounts')
-        .select('id, meta_account_id, name, status, last_synced_at, total_ads_synced, total_spend_30d')
+        .select('id, meta_account_id, name, status, last_full_sync_at, last_fast_sync_at, total_ads_synced, total_spend_30d')
         .eq('user_id', user.id);
       if (error) throw error;
       const accounts = adAccounts || [];
@@ -255,7 +260,7 @@ export default function DebugPage() {
       if (accounts.length > 0) {
         const latest = accounts[0];
         setSyncInfo({
-          lastSync: latest.last_synced_at,
+          lastSync: latest.last_full_sync_at || latest.last_fast_sync_at,
           totalAds: latest.total_ads_synced,
           spend30d: latest.total_spend_30d,
           accountName: latest.name,
