@@ -4259,7 +4259,7 @@ const FeedPage: React.FC = () => {
                 totalAds={totalAdCount}
                 metrics={adMetrics}
                 periodLabel={PERIODS.find(p => p.key === period)!.label}
-                metaAccountId={metaAccountId}
+                metaAccountId={metaSelId || undefined}
                 onToggleAd={handleConfirmToggle}
                 togglingAd={togglingAd}
                 toggleSuccess={toggleSuccess}
