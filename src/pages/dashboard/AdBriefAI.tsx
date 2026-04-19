@@ -1094,225 +1094,156 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
 
 // ── Proactive Block — first message from the AI when chat opens ──────────────
 const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend, connections, personaName }: { block: Block; lang: string; onSend: (s: string) => void; connections?: string[]; personaName?: string }) {
-  const F = "'Plus Jakarta Sans', sans-serif";
-  const M = "'Plus Jakarta Sans', system-ui, sans-serif";
-  const [expanded, setExpanded] = useState(false);
-  const [pressed, setPressed] = useState(false);
+  const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
   const [mounted, setMounted] = useState(false);
-  const [hintHover, setHintHover] = useState(false);
-  const cardRef = React.useRef<HTMLDivElement>(null);
-
-  // Entrance animation — staggered fade-in on mount
   React.useEffect(() => { const t = setTimeout(() => setMounted(true), 40); return () => clearTimeout(t); }, []);
 
   const hasMeta = connections?.includes("meta");
-  const hasData = hasMeta;
+
+  // Parse briefing cards from block.content (structured by triggerProactiveGreeting)
+  const briefingCards: { tag: string; tagColor: string; headline: string; detail: string; action?: string; actionPrompt?: string }[] = [];
+  try {
+    const parsed = JSON.parse(block.content || "[]");
+    if (Array.isArray(parsed)) parsed.forEach((c: any) => briefingCards.push(c));
+  } catch {
+    // Legacy plain-text greeting — wrap it as a single insight card
+    if (block.content) {
+      briefingCards.push({
+        tag: lang === "pt" ? "BRIEFING" : "BRIEFING",
+        tagColor: "#0ea5e9",
+        headline: personaName ? `${personaName}` : (lang === "pt" ? "Sua conta" : "Your account"),
+        detail: block.content,
+      });
+    }
+  }
+
+  // Quick actions at bottom
   const quickActions: Record<string, string[]> = {
-    pt: hasData
-      ? ["O que pausar agora?", "Gerar hooks vencedores", "Escrever roteiro", "O que escalar?"]
-      : ["Gerar hooks para minha conta", "Escrever roteiro de anúncio", "Analisar concorrente", "Quais trends posso usar?"],
-    es: hasData
-      ? ["¿Qué pausar ahora?", "Generar hooks ganadores", "Escribir guión", "¿Qué escalar?"]
-      : ["Generar hooks para mi cuenta", "Escribir guión de anuncio", "Analizar competidor", "¿Qué trends usar?"],
-    en: hasData
-      ? ["What to pause now?", "Generate winning hooks", "Write a script", "What to scale?"]
-      : ["Generate hooks for my account", "Write an ad script", "Analyze a competitor", "Which trends can I use?"],
+    pt: hasMeta
+      ? ["O que pausar agora?", "Gerar hooks vencedores", "O que escalar?", "Escrever roteiro"]
+      : ["Gerar hooks para minha conta", "Escrever roteiro de anúncio", "Analisar concorrente"],
+    es: hasMeta
+      ? ["¿Qué pausar ahora?", "Generar hooks ganadores", "¿Qué escalar?", "Escribir guión"]
+      : ["Generar hooks para mi cuenta", "Escribir guión de anuncio", "Analizar competidor"],
+    en: hasMeta
+      ? ["What to pause now?", "Generate winning hooks", "What to scale?", "Write a script"]
+      : ["Generate hooks for my account", "Write an ad script", "Analyze a competitor"],
   };
   const actions = quickActions[lang] || quickActions.pt;
-  const primaryAction = actions[0];
-  const secondaryActions = actions.slice(1);
-
-  const subtitle = hasData
-    ? (lang === "pt" ? "Meta Ads conectado. Escolha uma ação." : lang === "es" ? "Meta Ads conectado. Elige una acción." : "Meta Ads connected. Choose an action.")
-    : (lang === "pt" ? "Escolha uma ação para começar." : lang === "es" ? "Elige una acción para empezar." : "Choose an action to start.");
-
-  const doExpand = () => {
-    setPressed(true);
-    setTimeout(() => { setPressed(false); setExpanded(true); }, 80);
-  };
-
-  const handlePrimaryClick = () => {
-    if (expanded) { onSend(primaryAction); return; }
-    doExpand();
-  };
 
   return (
     <div style={{
-      width: "100%", maxWidth: 600, margin: "auto",
-      padding: "clamp(16px,3vw,24px) clamp(16px,4vw,28px) 24px",
-      display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-      marginTop: "clamp(8px, 2vw, 16px)",
+      width: "100%", maxWidth: 620, margin: "auto",
+      padding: "clamp(12px,2vw,20px) clamp(12px,3vw,20px) 20px",
+      marginTop: "clamp(4px, 1.5vw, 12px)",
     }}>
       <style>{`
         @keyframes pb-fadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
         @keyframes pb-cardIn { from { opacity:0; transform:translateY(12px) scale(0.98) } to { opacity:1; transform:translateY(0) scale(1) } }
-        @keyframes pb-breathe { 0%,100% { box-shadow: 0 0 0 0 rgba(13,162,231,0) } 50% { box-shadow: 0 0 16px 2px rgba(13,162,231,0.12) } }
-        @keyframes pb-shimmer { 0% { background-position: -200% center } 100% { background-position: 200% center } }
+        @keyframes pb-breathe { 0%,100% { box-shadow: 0 0 0 0 rgba(13,162,231,0) } 50% { box-shadow: 0 0 12px 2px rgba(13,162,231,0.10) } }
       `}</style>
 
-      {/* ── Container card — depth + glass ── */}
-      <div ref={cardRef} style={{
-        width: "100%", maxWidth: 440,
-        padding: "clamp(20px,3vw,28px) clamp(20px,3vw,32px) clamp(18px,3vw,24px)",
-        borderRadius: 18,
-        background: "linear-gradient(180deg, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.65) 100%)",
-        border: "1px solid rgba(148,163,184,0.08)",
-        backdropFilter: "blur(16px) saturate(180%)",
-        WebkitBackdropFilter: "blur(16px) saturate(180%)",
-        boxShadow: "0 0 0 1px rgba(148,163,184,0.04) inset, 0 16px 48px rgba(0,0,0,0.40)",
-        display: "flex", flexDirection: "column", alignItems: "center",
-        animation: mounted ? "pb-cardIn 0.35s ease-out both" : "none",
-        opacity: mounted ? 1 : 0,
+      {/* ── Header: avatar + greeting ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10, marginBottom: 16,
+        animation: mounted ? "pb-fadeUp 0.3s ease-out 0.06s both" : "none", opacity: 0,
       }}>
-
-        {/* Logo avatar — stagger 1, breathing glow */}
-        <div style={{
-          marginBottom: 12,
-          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.08s both, pb-breathe 3.5s ease-in-out 1s infinite" : "none",
-          opacity: 0,
-          borderRadius: 10,
-        }}>
-          <ABAvatar size={28} />
+        <div style={{ animation: mounted ? "pb-breathe 3.5s ease-in-out 1s infinite" : "none", borderRadius: 8 }}>
+          <ABAvatar size={24} />
         </div>
+        <div>
+          <h1 style={{
+            fontFamily: F, fontSize: "clamp(18px,3.5vw,22px)", fontWeight: 800,
+            color: "#f0f2f8", letterSpacing: "-0.03em", lineHeight: 1.2, margin: 0,
+          }}>
+            {block.title}
+          </h1>
+        </div>
+      </div>
 
-        {/* Hero headline — stagger 2 */}
-        <h1 style={{
-          fontFamily: F, fontSize: "clamp(22px,4.5vw,28px)", fontWeight: 800,
-          color: "#f0f2f8", letterSpacing: "-0.03em", lineHeight: 1.15,
-          margin: "0 0 6px",
-          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.14s both" : "none",
+      {/* ── Briefing Cards — urgente/oportunidade/insight ── */}
+      {briefingCards.map((card, i) => (
+        <div key={i} style={{
+          background: "rgba(15,23,42,0.65)",
+          border: `1px solid ${card.tagColor === "#F87171" ? "rgba(248,113,113,0.20)" : card.tagColor === "#4ADE80" ? "rgba(74,222,128,0.15)" : "rgba(148,163,184,0.08)"}`,
+          borderLeft: `3px solid ${card.tagColor}`,
+          borderRadius: 12, padding: "clamp(12px,2vw,16px) clamp(14px,2.5vw,18px)",
+          marginBottom: 8,
+          animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + i * 0.06}s both` : "none",
           opacity: 0,
         }}>
-          {block.title}
-        </h1>
+          {/* Tag */}
+          <span style={{
+            fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const,
+            color: card.tagColor, fontFamily: F, marginBottom: 4, display: "block",
+          }}>
+            {card.tag}
+          </span>
+          {/* Headline */}
+          <p style={{
+            fontSize: 14, fontWeight: 700, color: "#F0F6FC", margin: "4px 0 3px",
+            lineHeight: 1.4, fontFamily: F,
+          }}>
+            {card.headline}
+          </p>
+          {/* Detail */}
+          <p style={{
+            fontSize: 12.5, color: "rgba(240,246,252,0.72)", margin: "0 0 8px",
+            lineHeight: 1.5, fontFamily: F,
+          }}>
+            {card.detail}
+          </p>
+          {/* Action button */}
+          {card.action && (
+            <button onClick={() => onSend(card.actionPrompt || card.action!)}
+              style={{
+                background: card.tagColor === "#F87171" ? "#F87171" : card.tagColor === "#4ADE80" ? "rgba(74,222,128,0.15)" : "rgba(14,165,233,0.12)",
+                color: card.tagColor === "#F87171" ? "#fff" : card.tagColor,
+                border: card.tagColor === "#F87171" ? "none" : `1px solid ${card.tagColor}30`,
+                borderRadius: 6, padding: "5px 12px", fontSize: 11, fontWeight: 700,
+                fontFamily: F, cursor: "pointer", transition: "all 0.15s",
+                boxShadow: card.tagColor === "#F87171" ? `0 2px 8px rgba(248,113,113,0.3)` : "none",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
+            >
+              {card.action}
+            </button>
+          )}
+        </div>
+      ))}
 
-        {/* Subtitle — stagger 3 */}
-        <p style={{
-          fontFamily: M, fontSize: 12.5, color: "rgba(192,198,207,0.80)", lineHeight: 1.45,
-          margin: "0 0 16px", maxWidth: 300,
-          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.20s both" : "none",
-          opacity: 0,
-        }}>
-          {subtitle}
-        </p>
-
-        {/* ── Primary CTA — stagger 5 ── */}
-        <div style={{
-          animation: mounted ? "pb-fadeUp 0.3s ease-out 0.26s both" : "none",
-          opacity: 0,
-        }}>
-          <button
-            onClick={handlePrimaryClick}
-            onMouseDown={() => setPressed(true)}
-            onMouseUp={() => !expanded && setPressed(false)}
+      {/* ── Quick Actions — horizontal pills ── */}
+      <div style={{
+        display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12,
+        animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + briefingCards.length * 0.06 + 0.06}s both` : "none",
+        opacity: 0,
+      }}>
+        {actions.map((label, i) => (
+          <button key={i} onClick={() => onSend(label)}
             style={{
-              padding: "10px 24px",
-              borderRadius: 10,
-              background: "linear-gradient(180deg, #3B82F6 0%, #2563EB 100%)",
-              border: "1px solid rgba(37,99,235,0.5)",
-              cursor: "pointer",
-              fontFamily: F,
-              fontSize: 13.5,
-              fontWeight: 700,
-              color: "#fff",
-              letterSpacing: "-0.01em",
-              boxShadow: "0 4px 24px rgba(37,99,235,0.35), 0 1px 0 rgba(255,255,255,0.10) inset",
-              transition: "all 0.18s ease-out",
-              transform: pressed ? "scale(0.98)" : "scale(1)",
-              outline: "none",
-              position: "relative" as const,
-              overflow: "hidden",
+              padding: "7px 14px", borderRadius: 8,
+              background: "rgba(148,163,184,0.05)",
+              border: "1px solid rgba(148,163,184,0.10)",
+              cursor: "pointer", fontFamily: F, fontSize: 12, fontWeight: 600,
+              color: "rgba(148,163,184,0.85)", transition: "all 0.15s", outline: "none",
             }}
             onMouseEnter={e => {
-              if (!pressed) {
-                e.currentTarget.style.transform = "scale(1.03)";
-                e.currentTarget.style.boxShadow = "0 6px 32px rgba(13,162,231,0.50), 0 1px 0 rgba(255,255,255,0.10) inset";
-              }
+              e.currentTarget.style.background = "rgba(148,163,184,0.10)";
+              e.currentTarget.style.borderColor = "rgba(148,163,184,0.18)";
+              e.currentTarget.style.color = "#F1F5F9";
+              e.currentTarget.style.transform = "translateY(-1px)";
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.boxShadow = "0 4px 24px rgba(13,162,231,0.35), 0 1px 0 rgba(255,255,255,0.10) inset";
+              e.currentTarget.style.background = "rgba(148,163,184,0.05)";
+              e.currentTarget.style.borderColor = "rgba(148,163,184,0.10)";
+              e.currentTarget.style.color = "rgba(148,163,184,0.85)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
-            {/* Shimmer sweep */}
-            <span style={{
-              position: "absolute", inset: 0,
-              background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%)",
-              backgroundSize: "200% 100%",
-              animation: "pb-shimmer 3s ease-in-out 1.5s infinite",
-              pointerEvents: "none",
-            }}/>
-            <span style={{ position: "relative" }}>{primaryAction}</span>
+            {label}
           </button>
-        </div>
-
-        {/* ── Expandable secondary actions ── */}
-        <div style={{
-          overflow: "hidden",
-          maxHeight: expanded ? 260 : 0,
-          opacity: expanded ? 1 : 0,
-          transition: "max-height 0.2s ease-out, opacity 0.18s ease-out",
-          width: "100%",
-          marginTop: expanded ? 14 : 0,
-        }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5, width: "100%" }}>
-            {secondaryActions.map((label, i) => (
-              <button key={i} onClick={() => onSend(label)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  width: "100%", padding: "10px 14px", borderRadius: 10,
-                  background: "rgba(148,163,184,0.04)",
-                  border: "1px solid rgba(148,163,184,0.08)",
-                  cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 500,
-                  color: "#94A3B8", textAlign: "left",
-                  transition: "all 0.18s ease-out",
-                  animation: expanded ? `pb-fadeUp 0.2s ease-out ${i * 0.04}s both` : "none",
-                  outline: "none",
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = "rgba(148,163,184,0.08)";
-                  e.currentTarget.style.borderColor = "rgba(148,163,184,0.14)";
-                  e.currentTarget.style.color = "#F1F5F9";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "rgba(148,163,184,0.04)";
-                  e.currentTarget.style.borderColor = "rgba(148,163,184,0.08)";
-                  e.currentTarget.style.color = "#94A3B8";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(13,162,231,0.5)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Expand hint — only when collapsed, stagger 6 ── */}
-        {!expanded && (
-          <button
-            onClick={doExpand}
-            onMouseEnter={() => setHintHover(true)}
-            onMouseLeave={() => setHintHover(false)}
-            style={{
-              marginTop: 8, background: "none", border: "none", cursor: "pointer",
-              fontFamily: M, fontSize: 11, color: hintHover ? "rgba(255,255,255,0.50)" : "rgba(255,255,255,0.22)",
-              transition: "color 0.18s ease-out", padding: "4px 8px",
-              display: "flex", alignItems: "center", gap: 4,
-              animation: mounted ? "pb-fadeUp 0.3s ease-out 0.34s both" : "none",
-              opacity: 0,
-            }}
-          >
-            {lang === "pt" ? "ver mais opções" : lang === "es" ? "ver más opciones" : "see more options"}
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-              style={{
-                transition: "transform 0.18s ease-out",
-                transform: hintHover ? "translateY(2px)" : "translateY(0)",
-              }}
-            ><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-        )}
+        ))}
       </div>
     </div>
   );
@@ -3014,225 +2945,204 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     const hasRealHistory = existing.some((m: any) => m.role === "user");
     if (hasRealHistory) return;
 
-    // Onboarding quiz removed — go straight to proactive greeting
     setProactiveLoading(true);
     try {
       const accountName = selectedPersona?.name || null;
       const hour = new Date().getHours();
       const period: "morning"|"afternoon"|"evening"|"night" = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "afternoon" : hour < 22 ? "evening" : "night";
 
-      const greetingPool: Record<string, Record<typeof period, string[]>> = {
-        pt: {
-          morning: [
-            accountName ? `Bom dia. ${accountName} está pronta.` : "Bom dia. Sua conta está pronta.",
-            accountName ? `Bom dia — ${accountName} já está no ar.` : "Bom dia — tudo pronto por aqui.",
-            "Bom dia. O que vamos otimizar?",
-            "Bom dia. Suas campanhas te esperam.",
-          ],
-          afternoon: [
-            accountName ? `Boa tarde. ${accountName} está pronta.` : "Boa tarde. Sua conta está pronta.",
-            accountName ? `Boa tarde — ${accountName} já está ativa.` : "Boa tarde — tudo pronto por aqui.",
-            "Boa tarde. O que vamos ajustar?",
-            "Boa tarde. Hora de escalar?",
-          ],
-          evening: [
-            accountName ? `Boa noite. ${accountName} está pronta.` : "Boa noite. Sua conta está pronta.",
-            accountName ? `Boa noite — ${accountName} no ar.` : "Boa noite — tudo pronto.",
-            "Boa noite. Ainda dá tempo de otimizar.",
-            "Boa noite. Vamos revisar o dia?",
-          ],
-          night: [
-            accountName ? `${accountName} está pronta.` : "Sua conta está pronta.",
-            "Trabalhando até tarde? Bora otimizar.",
-            "Ainda online? Vamos aproveitar.",
-            accountName ? `${accountName} no ar. Vamos lá.` : "Tudo pronto. Vamos lá.",
-          ],
-        },
-        es: {
-          morning: [
-            accountName ? `Buenos días. ${accountName} está lista.` : "Buenos días. Tu cuenta está lista.",
-            "Buenos días. ¿Qué optimizamos?",
-            accountName ? `Buenos días — ${accountName} ya está activa.` : "Buenos días — todo listo.",
-          ],
-          afternoon: [
-            accountName ? `Buenas tardes. ${accountName} está lista.` : "Buenas tardes. Tu cuenta está lista.",
-            "Buenas tardes. ¿Qué ajustamos?",
-            "Buenas tardes. ¿Hora de escalar?",
-          ],
-          evening: [
-            accountName ? `Buenas noches. ${accountName} está lista.` : "Buenas noches. Tu cuenta está lista.",
-            "Buenas noches. ¿Revisamos el día?",
-            "Buenas noches. Aún hay tiempo de optimizar.",
-          ],
-          night: [
-            accountName ? `${accountName} está lista.` : "Tu cuenta está lista.",
-            "¿Trabajando tarde? Vamos.",
-            accountName ? `${accountName} activa. Vamos.` : "Todo listo. Vamos.",
-          ],
-        },
-        en: {
-          morning: [
-            accountName ? `Good morning. ${accountName} is ready.` : "Good morning. Your account is ready.",
-            "Good morning. What are we optimizing?",
-            accountName ? `Good morning — ${accountName} is live.` : "Good morning — all set.",
-          ],
-          afternoon: [
-            accountName ? `Good afternoon. ${accountName} is ready.` : "Good afternoon. Your account is ready.",
-            "Good afternoon. Time to scale?",
-            "Good afternoon. What needs attention?",
-          ],
-          evening: [
-            accountName ? `Good evening. ${accountName} is ready.` : "Good evening. Your account is ready.",
-            "Good evening. Let's review the day.",
-            "Good evening. Still time to optimize.",
-          ],
-          night: [
-            accountName ? `${accountName} is ready.` : "Your account is ready.",
-            "Working late? Let's make it count.",
-            accountName ? `${accountName} is live. Let's go.` : "All set. Let's go.",
-          ],
-        },
+      // ── Concise greeting title ──
+      const greetingTitles: Record<string, Record<typeof period, string>> = {
+        pt: { morning: "Bom dia.", afternoon: "Boa tarde.", evening: "Boa noite.", night: "Boa noite." },
+        es: { morning: "Buenos días.", afternoon: "Buenas tardes.", evening: "Buenas noches.", night: "Buenas noches." },
+        en: { morning: "Good morning.", afternoon: "Good afternoon.", evening: "Good evening.", night: "Good evening." },
       };
-      const pool = (greetingPool[lang] || greetingPool.pt)[period];
-      const greetingTitle = pool[Math.floor(Math.random() * pool.length)];
+      const greetingTitle = (greetingTitles[lang] || greetingTitles.pt)[period];
 
-      // Build platform context string
-      const platforms: string[] = [];
-      if (hasMetaConn) platforms.push("Meta Ads");
-      // if (hasGoogleConn) platforms.push("Google Ads"); — disabled
-      const platformStr = platforms.join(" + ") || "";
+      // ── Build briefing cards: urgente → oportunidade → insight ──
+      type BriefingCard = { tag: string; tagColor: string; headline: string; detail: string; action?: string; actionPrompt?: string };
+      const cards: BriefingCard[] = [];
 
-      let proactiveMsg = "";
+      // Card source 1: Account alerts (from PriorityStack)
+      const activeAlerts = accountAlerts || [];
+      const highAlerts = activeAlerts.filter((a: any) => a.urgency === "high");
+      const medAlerts = activeAlerts.filter((a: any) => a.urgency === "medium");
+
+      if (highAlerts.length > 0) {
+        const a = highAlerts[0];
+        const alertVerbs: Record<string,string> = {FADIGA_CRITICA:"Pause agora",ROAS_CRITICO:"Corte já",ROAS_COLAPSOU:"Ação imediata",CTR_COLAPSOU:"Troque o criativo",RETENCAO_VIDEO_BAIXA:"Refaça o hook",SPEND_SEM_RETORNO:"Pare o sangramento"};
+        cards.push({
+          tag: lang === "pt" ? "URGENTE" : lang === "es" ? "URGENTE" : "URGENT",
+          tagColor: "#F87171",
+          headline: `${alertVerbs[a.type] || "Ação urgente"}${a.ad_name ? ` '${a.ad_name}'` : ""}`,
+          detail: a.detail,
+          action: a.action_suggestion || (lang === "pt" ? "Resolver agora" : "Fix now"),
+          actionPrompt: `Analise urgente: ${a.detail}`,
+        });
+        if (highAlerts.length > 1) {
+          cards.push({
+            tag: lang === "pt" ? "URGENTE" : "URGENT",
+            tagColor: "#F87171",
+            headline: lang === "pt" ? `+${highAlerts.length - 1} alerta${highAlerts.length > 2 ? "s" : ""} crítico${highAlerts.length > 2 ? "s" : ""}` : `+${highAlerts.length - 1} critical alert${highAlerts.length > 2 ? "s" : ""}`,
+            detail: highAlerts.slice(1).map((h: any) => h.ad_name ? `${h.ad_name}: ${h.detail.slice(0, 60)}` : h.detail.slice(0, 80)).join(" · "),
+            action: lang === "pt" ? "Ver todos" : "View all",
+            actionPrompt: lang === "pt" ? "Mostre todos os alertas urgentes" : "Show all urgent alerts",
+          });
+        }
+      }
+
+      // Card source 2: Snapshot data — opportunities & insights
+      const currSymbol = (hasGoogleConn && !hasMetaConn) ? "$" : "R$";
 
       if (snapshot && snapshot.total_spend > 0) {
-        // ── Conta com dados ativos ─────────────────────────────────────────────
         const topAds = (snapshot.top_ads || []) as any[];
         const toScale = topAds.filter((a: any) => a.isScalable).slice(0, 2);
         const toPause = topAds.filter((a: any) => a.needsPause).slice(0, 1);
         const fatigued = topAds.filter((a: any) => a.isFatigued).slice(0, 1);
-        // Predictive alerts — criativos saudáveis mas na trajetória de fadiga
-        const approachingFatigue = topAds.filter((a: any) => a.predictCritical && !a.isFatigued).slice(0, 2);
         const ctrDelta = snapshot.yesterday_ctr > 0 && snapshot.avg_ctr > 0
           ? ((snapshot.avg_ctr - snapshot.yesterday_ctr) / snapshot.yesterday_ctr * 100) : null;
 
-        const parts: string[] = [];
-        // Currency: Google-only = $, Meta (or both) = R$ for PT
-        const isGoogleOnly = hasGoogleConn && !hasMetaConn;
-        const isBoth = hasMetaConn && hasGoogleConn;
-        const currSymbol = isGoogleOnly ? "$" : "R$";
-        // Google spend from raw_period when both connected
-        const googleRaw = isBoth ? (snapshot.raw_period as any)?.google : null;
-        if (lang === "pt") {
-          if (isBoth && googleRaw && !googleRaw.skipped) {
-            parts.push(`Analisei ${accountName ? `a conta ${accountName}` : "sua conta"} — Meta: R$${snapshot.total_spend?.toFixed(0)} gastos, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}% | Google: $${parseFloat(googleRaw.spend||0).toFixed(0)}, CTR ${parseFloat(googleRaw.ctr||0).toFixed(2)}%.`);
-          } else {
-            parts.push(`Analisei ${accountName ? `a conta ${accountName}` : "sua conta"} — ${currSymbol}${snapshot.total_spend?.toFixed(0)} gastos esta semana, CTR médio ${(snapshot.avg_ctr * 100)?.toFixed(2)}%.`);
-          }
-          if (ctrDelta !== null) parts.push(`CTR ${ctrDelta > 0 ? "↑" : "↓"} ${Math.abs(ctrDelta).toFixed(1)}% vs semana anterior.`);
-          if (toScale.length) parts.push(`"${toScale[0].name?.slice(0, 40)}" está com CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — bom candidato para escalar.`);
-          if (toPause.length) parts.push(`"${toPause[0].name?.slice(0, 40)}"CTR ${(toPause[0].ctr*100)?.toFixed(2)}%, ${currSymbol}${toPause[0].spend?.toFixed(0)} gastos — considere pausar.`);
-          if (fatigued.length) parts.push(`"${fatigued[0].name?.slice(0, 40)}" freq. ${fatigued[0].frequency?.toFixed(1)}x — fadiga criativa, troque o criativo.`);
-          if (approachingFatigue.length) parts.push(` "${approachingFatigue[0].name?.slice(0, 35)}" — ${approachingFatigue[0].predictCritical}: prepare uma variação agora.`);
-          if (snapshot.ai_insight) parts.push(snapshot.ai_insight);
-          parts.push("O que quer fazer?");
-        } else if (lang === "es") {
-          if (isBoth && googleRaw && !googleRaw.skipped) {
-            parts.push(`Analicé ${accountName ? `la cuenta ${accountName}` : "tu cuenta"} — Meta: $${snapshot.total_spend?.toFixed(0)} gastados, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}% | Google: $${parseFloat(googleRaw.spend||0).toFixed(0)}, CTR ${parseFloat(googleRaw.ctr||0).toFixed(2)}%.`);
-          } else {
-            parts.push(`Analicé ${accountName ? `la cuenta ${accountName}` : "tu cuenta"} — $${snapshot.total_spend?.toFixed(0)} gastados esta semana, CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%.`);
-          }
-          if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}"CTR ${(toScale[0].ctr*100)?.toFixed(2)}% — buen candidato para escalar.`);
-          if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}"CTR ${(toPause[0].ctr*100)?.toFixed(2)}% — considera pausarlo.`);
-          parts.push("¿Qué quieres hacer?");
-        } else {
-          if (isBoth && googleRaw && !googleRaw.skipped) {
-            parts.push(`Checked ${accountName || "your account"} — Meta: R$${snapshot.total_spend?.toFixed(0)} spent, ${(snapshot.avg_ctr*100)?.toFixed(2)}% CTR | Google: $${parseFloat(googleRaw.spend||0).toFixed(0)}, ${parseFloat(googleRaw.ctr||0).toFixed(2)}% CTR.`);
-          } else {
-            parts.push(`Checked ${accountName ? `${accountName}` : "your account"} — $${snapshot.total_spend?.toFixed(0)} spent this week, ${(snapshot.avg_ctr*100)?.toFixed(2)}% avg CTR.`);
-          }
-          if (toScale.length) parts.push(`"${toScale[0].name?.slice(0,40)}" at ${(toScale[0].ctr*100)?.toFixed(2)}% CTR — good candidate to scale.`);
-          if (toPause.length) parts.push(`"${toPause[0].name?.slice(0,40)}" at ${(toPause[0].ctr*100)?.toFixed(2)}% CTR spending $${toPause[0].spend?.toFixed(0)} — consider pausing.`);
-          parts.push((lang as string) === "es" ? "¿Qué quieres hacer?" : "O que quer fazer?");
+        // Opportunity: scalable ad
+        if (toScale.length && cards.length < 4) {
+          const ad = toScale[0];
+          cards.push({
+            tag: lang === "pt" ? "OPORTUNIDADE" : lang === "es" ? "OPORTUNIDAD" : "OPPORTUNITY",
+            tagColor: "#4ADE80",
+            headline: lang === "pt"
+              ? `Escale '${ad.name?.slice(0, 35)}'`
+              : `Scale '${ad.name?.slice(0, 35)}'`,
+            detail: lang === "pt"
+              ? `CTR ${(ad.ctr*100)?.toFixed(2)}% — performance acima da média. Aumente o orçamento antes que sature.`
+              : `CTR ${(ad.ctr*100)?.toFixed(2)}% — above average performance. Increase budget before it saturates.`,
+            action: lang === "pt" ? "Como escalar?" : "How to scale?",
+            actionPrompt: lang === "pt" ? `Como escalar "${ad.name}" com CTR ${(ad.ctr*100)?.toFixed(2)}%?` : `How to scale "${ad.name}" with ${(ad.ctr*100)?.toFixed(2)}% CTR?`,
+          });
         }
-        proactiveMsg = parts.join(" ");
 
-      } else if (snapshot || platforms.length > 0) {
-        // ── Conectado mas sem dados ativos ─────────────────────────────────────
-        const histSpend = (snapshot?.total_spend || 0) > 0;
-        const hasWinners = (snapshot?.winners_count || 0) > 0;
-        const pausedCount = snapshot?.losers_count || 0;
-        if (lang === "pt") {
-          if (histSpend) {
-            proactiveMsg = `Nenhuma campanha ativa essa semana em ${accountName || "sua conta"}, mas tenho seu histórico: R$${snapshot.total_spend?.toFixed(0)} analisados${hasWinners ? `, ${snapshot.winners_count} criativos vencedores identificados` : ""}${pausedCount ? `, ${pausedCount} com baixa performance` : ""}. Quer subir algo novo ou revisamos o que funcionou?`;
-          } else if (platforms.length > 0) {
-            proactiveMsg = `${platformStr} conectado${platforms.length > 1 ? "s" : ""} para ${accountName || "essa conta"}. Sem dados de campanha ainda — quer gerar hooks, escrever um roteiro ou criar um brief?`;
-          } else {
-            proactiveMsg = `${accountName ? `${accountName} carregada.` : "Conta carregada."} Sem plataformas de anúncio conectadas ainda — vá em Contas para conectar Meta Ads.`;
-          }
-        } else if (lang === "es") {
-          if (histSpend) {
-            proactiveMsg = `Sin campañas activas esta semana en ${accountName || "tu cuenta"}, pero tengo tu historial: $${snapshot?.total_spend?.toFixed(0)} analizados${hasWinners ? `, ${snapshot.winners_count} creativos ganadores` : ""}. ¿Lanzamos algo nuevo o revisamos lo que funcionó?`;
-          } else if (platforms.length > 0) {
-            proactiveMsg = `${platformStr} conectado${platforms.length > 1 ? "s" : ""} en ${accountName || "esta cuenta"}. Sin datos de campaña aún — ¿genero hooks, escribo un guión o creo un brief?`;
-          } else {
-            proactiveMsg = `${accountName ? `${accountName} cargada.` : "Cuenta cargada."} Sin plataformas conectadas — ve a Cuentas para conectar Meta Ads o Google Ads.`;
-          }
-        } else {
-          if (histSpend) {
-            proactiveMsg = `No active campaigns this week for ${accountName || "this account"}, but I have your history: $${snapshot?.total_spend?.toFixed(0)} analyzed${hasWinners ? `, ${snapshot.winners_count} winning creatives on file` : ""}${pausedCount ? `, ${pausedCount} underperformers flagged` : ""}. Want to launch something new or review what worked?`;
-          } else if (platforms.length > 0) {
-            proactiveMsg = (lang as string) === "pt"
-              ? `${platformStr} conectado${platforms.length > 1 ? "s" : ""} para ${accountName || "essa conta"}. Sem dados de campanha ainda — quer gerar hooks, escrever um roteiro ou criar um brief?`
-              : (lang as string) === "es"
-              ? `${platformStr} conectado${platforms.length > 1 ? "s" : ""} para ${accountName || "esta cuenta"}. Sin datos de campaña aún — ¿genero hooks, escribo un guión o creo un brief?`
-              : `${platformStr} connected for ${accountName || "this account"}. No campaign data yet — want to generate hooks, write a script, or create a brief?`;
-          } else {
-            proactiveMsg = (lang as string) === "pt"
-              ? `${accountName ? `${accountName} carregada.` : "Conta carregada."} Sem plataformas de anúncio conectadas ainda — vá em Contas para conectar Meta Ads.`
-              : (lang as string) === "es"
-              ? `${accountName ? `${accountName} cargada.` : "Cuenta cargada."} Sin plataformas conectadas — ve a Cuentas para conectar Meta Ads o Google Ads.`
-              : `${accountName ? `${accountName} loaded.` : "Account loaded."} No ad platforms connected yet — go to Accounts to connect Meta Ads or Google Ads.`;
+        // Urgent: fatigued or needs pause (if no PriorityStack alerts already cover it)
+        if (cards.filter(c => c.tagColor === "#F87171").length === 0) {
+          if (fatigued.length) {
+            const ad = fatigued[0];
+            cards.push({
+              tag: lang === "pt" ? "URGENTE" : "URGENT",
+              tagColor: "#F87171",
+              headline: lang === "pt"
+                ? `Pause '${ad.name?.slice(0, 35)}' — fadiga criativa`
+                : `Pause '${ad.name?.slice(0, 35)}' — creative fatigue`,
+              detail: lang === "pt"
+                ? `Frequência ${ad.frequency?.toFixed(1)}x — audiência já viu demais. Cada impressão extra é dinheiro jogado fora.`
+                : `Frequency ${ad.frequency?.toFixed(1)}x — audience oversaturated. Every extra impression is wasted spend.`,
+              action: lang === "pt" ? "Pausar agora" : "Pause now",
+              actionPrompt: lang === "pt" ? `Pause "${ad.name}" com frequência ${ad.frequency?.toFixed(1)}x` : `Pause "${ad.name}" with frequency ${ad.frequency?.toFixed(1)}x`,
+            });
+          } else if (toPause.length) {
+            const ad = toPause[0];
+            cards.push({
+              tag: lang === "pt" ? "URGENTE" : "URGENT",
+              tagColor: "#F87171",
+              headline: lang === "pt"
+                ? `Corte '${ad.name?.slice(0, 35)}'`
+                : `Cut '${ad.name?.slice(0, 35)}'`,
+              detail: lang === "pt"
+                ? `CTR ${(ad.ctr*100)?.toFixed(2)}% com ${currSymbol}${ad.spend?.toFixed(0)} gastos — sem retorno suficiente.`
+                : `CTR ${(ad.ctr*100)?.toFixed(2)}% with ${currSymbol}${ad.spend?.toFixed(0)} spent — insufficient return.`,
+              action: lang === "pt" ? "Pausar" : "Pause",
+              actionPrompt: lang === "pt" ? `Analise "${ad.name}" CTR ${(ad.ctr*100)?.toFixed(2)}% e ${currSymbol}${ad.spend?.toFixed(0)} gastos` : `Analyze "${ad.name}" CTR ${(ad.ctr*100)?.toFixed(2)}% and ${currSymbol}${ad.spend?.toFixed(0)} spent`,
+            });
           }
         }
 
-      } else {
-        // ── Sem nada conectado — onboarding consultivo ────────────────────────
-        const aid = Date.now() + 1;
-        const niche = (selectedPersona?.result as any)?.niche || (selectedPersona?.result as any)?.industry || "";
-        const nicheHint = niche
-          ? (lang === "pt" ? ` Para contas de ${niche}, já sei o que tende a funcionar.`
-           : lang === "es" ? ` Para cuentas de ${niche}, ya sé qué suele funcionar.`
-           : ` For ${niche} accounts, I already know what tends to work.`)
-          : "";
+        // Insight: overview card (always last)
+        const overviewDetail = lang === "pt"
+          ? `${currSymbol}${snapshot.total_spend?.toFixed(0)} investidos · CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${snapshot.active_ads || topAds.length} anúncios ativos`
+          : `${currSymbol}${snapshot.total_spend?.toFixed(0)} spent · CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${snapshot.active_ads || topAds.length} active ads`;
+        cards.push({
+          tag: "BRIEFING",
+          tagColor: "#0ea5e9",
+          headline: accountName || (lang === "pt" ? "Resumo da semana" : "Weekly summary"),
+          detail: overviewDetail + (snapshot.ai_insight ? ` · ${snapshot.ai_insight.slice(0, 100)}` : ""),
+        });
 
-        const intro = lang === "pt"
-          ? `Posso te ajudar com hooks, roteiros, análise de concorrentes e estratégia criativa — mesmo sem dados conectados.${nicheHint} Para análises específicas da sua conta (CTR, ROAS, o que pausar), conecte o Meta Ads em Contas. Ou me diz o que você está trabalhando agora.`
-          : lang === "es"
-          ? `Puedo ayudarte con hooks, guiones, análisis de competidores y estrategia creativa — incluso sin datos conectados.${nicheHint} Para análisis específicos de tu cuenta (CTR, ROAS, qué pausar), conecta Meta Ads o Google Ads en Cuentas. O dime en qué estás trabajando ahora.`
-          : `I can help with hooks, scripts, competitor analysis and creative strategy — even without connected data.${nicheHint} For specific account analysis (CTR, ROAS, what to pause), connect Meta Ads or Google Ads in Accounts. Or just tell me what you're working on.`;
-
-        const cta = lang === "es" ? "Conectar cuenta →" : lang === "pt" ? "Conectar conta →" : "Connect account →";
-
-        const demoMsgs = demoMessagesRef.current || [];
-        demoMessagesRef.current = null;
-        setMessages([{
-          role: "assistant",
-          blocks: [
-            { type: "insight" as any, title: greetingTitle, content: intro },
-            { type: "navigate" as any, title: lang === "pt" ? "Conectar Meta Ads" : lang === "es" ? "Conectar Meta Ads o Google Ads" : "Connect Meta Ads", content: lang === "pt" ? "Leva 30 segundos — depois vejo tudo da sua conta em tempo real." : lang === "es" ? "Solo 30 segundos — luego veo todo en tiempo real." : "Takes 30 seconds — then I see everything in real time.", route: "/dashboard/accounts", cta },
-          ],
-          ts: aid, id: aid
-        }, ...demoMsgs]);
-        setProactiveLoading(false);
-        return;
+      } else if (medAlerts.length > 0 && cards.length < 3) {
+        // Medium alerts as insights if no snapshot data
+        cards.push({
+          tag: lang === "pt" ? "ATENÇÃO" : "ATTENTION",
+          tagColor: "#FBBF24",
+          headline: medAlerts[0].ad_name || (lang === "pt" ? "Ponto de atenção" : "Watch point"),
+          detail: medAlerts[0].detail,
+        });
       }
 
+      // Card source 3: Learned patterns (visible memory)
+      if (cards.length < 4) {
+        try {
+          const pid = selectedPersona?.id || null;
+          const { data: patterns } = await (pid
+            ? (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,confidence,is_winner,insight_text").eq("user_id", user.id).eq("persona_id", pid).eq("is_winner", true).order("confidence", { ascending: false }).limit(2)
+            : (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,confidence,is_winner,insight_text").eq("user_id", user.id).is("persona_id", null).eq("is_winner", true).order("confidence", { ascending: false }).limit(2)
+          );
+          if (patterns?.length) {
+            const p = patterns[0];
+            cards.push({
+              tag: lang === "pt" ? "PADRÃO APRENDIDO" : lang === "es" ? "PATRÓN APRENDIDO" : "LEARNED PATTERN",
+              tagColor: "#A78BFA",
+              headline: lang === "pt"
+                ? `Eu sei que "${p.pattern_key}" funciona`
+                : `I know "${p.pattern_key}" works`,
+              detail: p.insight_text || (lang === "pt"
+                ? `CTR médio ${(p.avg_ctr * 100)?.toFixed(2)}% · confiança ${(p.confidence * 100)?.toFixed(0)}% — baseado nos seus dados reais.`
+                : `Avg CTR ${(p.avg_ctr * 100)?.toFixed(2)}% · ${(p.confidence * 100)?.toFixed(0)}% confidence — based on your real data.`),
+            });
+          }
+        } catch {}
+      }
+
+      // ── Fallback: no cards at all → generic greeting ──
+      if (cards.length === 0) {
+        if (snapshot || hasMetaConn) {
+          cards.push({
+            tag: "BRIEFING",
+            tagColor: "#0ea5e9",
+            headline: accountName || (lang === "pt" ? "Conta pronta" : "Account ready"),
+            detail: lang === "pt"
+              ? `${hasMetaConn ? "Meta Ads conectado. " : ""}Sem atividade relevante detectada. Quer gerar hooks, escrever roteiro ou analisar concorrente?`
+              : `${hasMetaConn ? "Meta Ads connected. " : ""}No significant activity detected. Want to generate hooks, write a script, or analyze a competitor?`,
+          });
+        } else {
+          // No connection — onboarding flow
+          const aid = Date.now() + 1;
+          const niche = (selectedPersona?.result as any)?.niche || (selectedPersona?.result as any)?.industry || "";
+          const nicheHint = niche
+            ? (lang === "pt" ? ` Para contas de ${niche}, já sei o que tende a funcionar.` : ` For ${niche} accounts, I already know what tends to work.`)
+            : "";
+          const intro = lang === "pt"
+            ? `Posso te ajudar com hooks, roteiros, análise de concorrentes e estratégia criativa — mesmo sem dados conectados.${nicheHint} Para análises específicas da sua conta, conecte o Meta Ads em Contas.`
+            : lang === "es"
+            ? `Puedo ayudarte con hooks, guiones, análisis de competidores y estrategia creativa — incluso sin datos conectados.${nicheHint}`
+            : `I can help with hooks, scripts, competitor analysis and creative strategy — even without connected data.${nicheHint}`;
+          const cta = lang === "es" ? "Conectar cuenta →" : lang === "pt" ? "Conectar conta →" : "Connect account →";
+          const demoMsgs = demoMessagesRef.current || [];
+          demoMessagesRef.current = null;
+          setMessages([{
+            role: "assistant",
+            blocks: [
+              { type: "insight" as any, title: greetingTitle, content: intro },
+              { type: "navigate" as any, title: lang === "pt" ? "Conectar Meta Ads" : "Connect Meta Ads", content: lang === "pt" ? "Leva 30 segundos — depois vejo tudo da sua conta em tempo real." : "Takes 30 seconds — then I see everything in real time.", route: "/dashboard/accounts", cta },
+            ],
+            ts: aid, id: aid
+          }, ...demoMsgs]);
+          setProactiveLoading(false);
+          return;
+        }
+      }
+
+      // ── Emit structured greeting ──
       const aid = Date.now() + 1;
       const demoMsgs2 = demoMessagesRef.current || [];
       demoMessagesRef.current = null;
       setMessages([{
         role: "assistant",
-        blocks: [{ type: "proactive" as any, title: greetingTitle, content: proactiveMsg }],
+        blocks: [{ type: "proactive" as any, title: greetingTitle, content: JSON.stringify(cards) }],
         ts: aid, id: aid
       }, ...demoMsgs2]);
 
