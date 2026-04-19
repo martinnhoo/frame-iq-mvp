@@ -8,14 +8,51 @@ import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
 
-// ── Design tokens — from unified design system ─────────────────────────────────
+// ── Design tokens — matched to FeedPage layered dark aesthetic ────────────────
 const F = DT.font;
-const BLUE = DT.accent; // #0ea5e9
-const CYAN = "#06b6d4";
-const CARD  = `linear-gradient(160deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%)`;
-const SHD   = `0 0 0 1px ${DT.borderSubtle} inset, ${DT.shadowMd}`;
-const IBG   = `rgba(255,255,255,0.06)`;
-const IBD   = `1px solid ${DT.borderLight}`;
+const BLUE = '#0ea5e9';
+const CYAN = '#06b6d4';
+
+// Layered surfaces (same as Feed)
+const BG0 = '#080B11';
+const BG1 = '#0D1117';
+const BG2 = '#161B22';
+const BG3 = '#1C2128';
+
+// Borders
+const B0 = 'rgba(240,246,252,0.04)';
+const B1 = 'rgba(240,246,252,0.07)';
+const B2 = 'rgba(240,246,252,0.12)';
+
+// Text hierarchy
+const T1 = '#F0F6FC';
+const T2 = 'rgba(240,246,252,0.72)';
+const T3 = 'rgba(240,246,252,0.48)';
+const TL = 'rgba(240,246,252,0.40)'; // label
+
+// Card
+const CARD  = BG1;
+const SHD   = `0 0 0 1px ${B1}, 0 4px 12px rgba(0,0,0,0.3)`;
+const IBG   = BG2;
+const IBD   = `1px solid ${B2}`;
+
+// Button presets
+const BTN_PRIMARY = {
+  background: `linear-gradient(135deg, ${BLUE}, ${CYAN})`,
+  border: 'none', color: '#fff', cursor: 'pointer',
+  fontFamily: F, fontWeight: 700 as const,
+  boxShadow: '0 4px 16px rgba(14,165,233,0.30)',
+};
+const BTN_SECONDARY = {
+  background: BG3, border: 'none',
+  color: T2, cursor: 'pointer',
+  fontFamily: F, fontWeight: 600 as const,
+};
+const BTN_DANGER = {
+  background: 'rgba(239,68,68,0.15)', border: 'none',
+  color: '#F87171', cursor: 'pointer',
+  fontFamily: F, fontWeight: 600 as const,
+};
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const T = {
@@ -151,20 +188,20 @@ function AccountAvatar({ name, logoUrl, size = 44, radius = 12 }: { name: string
 }
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const focusOn  = (e: React.FocusEvent<HTMLInputElement|HTMLTextAreaElement>) => {
-  e.currentTarget.style.borderColor = "rgba(14,165,233,0.55)";
-  e.currentTarget.style.background  = "rgba(14,165,233,0.06)";
-  e.currentTarget.style.boxShadow   = "0 0 0 1px rgba(14,165,233,0.15)";
+  e.currentTarget.style.borderColor = "rgba(14,165,233,0.40)";
+  e.currentTarget.style.background  = BG3;
+  e.currentTarget.style.boxShadow   = "0 0 0 2px rgba(14,165,233,0.12)";
 };
 const focusOff = (e: React.FocusEvent<HTMLInputElement|HTMLTextAreaElement>) => {
-  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-  e.currentTarget.style.background  = IBG;
+  e.currentTarget.style.borderColor = B2;
+  e.currentTarget.style.background  = BG2;
   e.currentTarget.style.boxShadow   = "none";
 };
 const iStyle: React.CSSProperties = {
-  width:"100%", fontFamily:F, fontSize:14, color:"#f0f2f8",
-  background:IBG, border:IBD, borderRadius:12,
+  width:"100%", fontFamily:F, fontSize:14, color:T1,
+  background:BG2, border:`1px solid ${B2}`, borderRadius:12,
   padding:"11px 14px", outline:"none", boxSizing:"border-box",
-  transition:"border-color 0.2s, background 0.2s, box-shadow 0.2s",
+  transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)",
 };
 
 const withTimeout = async <T,>(promise: PromiseLike<T>, ms = 10000): Promise<T> => {
@@ -392,7 +429,7 @@ function PlatformRow({ p, userId, accountId, t }: {
   const selAcc = ads.find(a => a.id === selId) || ads[0];
 
   if (loading) return (
-    <div style={{ height:60, borderRadius:12, background:"rgba(255,255,255,0.04)", animation:"pulse 1.5s ease-in-out infinite" }} />
+    <div style={{ height:60, borderRadius:12, background:B0, animation:"pulse 1.5s ease-in-out infinite" }} />
   );
 
   const isConnected = !!conn;
@@ -401,16 +438,16 @@ function PlatformRow({ p, userId, accountId, t }: {
   return (
     <div style={{
       borderRadius:14,
-      background: isConnected ? `linear-gradient(160deg,${pc}10 0%,rgba(255,255,255,0.03) 100%)` : "rgba(255,255,255,0.04)",
-      border: `1px solid ${isConnected ? pc+"30" : "rgba(255,255,255,0.09)"}`,
+      background: isConnected ? `linear-gradient(160deg,${pc}10 0%,${BG2} 100%)` : B0,
+      border: `1px solid ${isConnected ? pc+"30" : B1}`,
       boxShadow: isConnected ? `0 0 0 1px ${pc}10 inset` : "none",
       overflow:"hidden", transition:"all 0.2s",
     }}>
       {/* Header */}
       <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 16px" }}>
         <div style={{ width:38, height:38, borderRadius:10, flexShrink:0,
-          background: isConnected ? `${pc}18` : "rgba(255,255,255,0.05)",
-          border: `1px solid ${isConnected ? pc+"28" : "rgba(255,255,255,0.09)"}`,
+          background: isConnected ? `${pc}18` : B0,
+          border: `1px solid ${isConnected ? pc+"28" : B1}`,
           display:"flex", alignItems:"center", justifyContent:"center" }}>
           <PlatformIcon id={p.id}/>
         </div>
@@ -418,10 +455,10 @@ function PlatformRow({ p, userId, accountId, t }: {
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:2 }}>
             <span style={{ fontFamily:F, fontSize:14, fontWeight:600,
-              color: isConnected ? "#f0f2f8" : "rgba(255,255,255,0.5)" }}>{p.label}</span>
+              color: isConnected ? T1 : T3 }}>{p.label}</span>
             {p.soon && (
-              <span style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.3)",
-                background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.09)",
+              <span style={{ fontFamily:F, fontSize:11, fontWeight:600, color:T3,
+                background:B0, border:`1px solid ${B1}`,
                 borderRadius:5, padding:"1px 7px", letterSpacing:"0.06em" }}>{t.soon}</span>
             )}
             {isConnected && !p.soon && (
@@ -430,7 +467,7 @@ function PlatformRow({ p, userId, accountId, t }: {
                 padding:"2px 8px", letterSpacing:"0.06em" }}>● {t.active_label}</span>
             )}
           </div>
-          <p style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.35)", margin:0,
+          <p style={{ fontFamily:F, fontSize:12, color:T3, margin:0,
             overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
             {loadError
               ? "Erro ao carregar conexão"
@@ -444,30 +481,25 @@ function PlatformRow({ p, userId, accountId, t }: {
         {p.soon ? null : isConnected ? (
           <div style={{ display:"flex", gap:6 }}>
             <button onClick={() => setExpanded(e => !e)}
-              style={{ display:"flex", alignItems:"center", gap:5, padding:"6px 11px", borderRadius:9,
-                background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.11)",
-                color:"rgba(255,255,255,0.6)", fontFamily:F, fontSize:12, fontWeight:500, cursor:"pointer",
-                transition:"all 0.15s" }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.10)"}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.06)"}}>
+              style={{ ...BTN_SECONDARY, display:"flex", alignItems:"center", gap:5, padding:"6px 11px", borderRadius:9,
+                fontSize:12, transition:"all 0.15s" }}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="#242A34"}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=BG3}}>
               <ChevronDown size={12} style={{ transform: expanded?"rotate(180deg)":"none", transition:"transform 0.2s" }}/>
               {t.manage}
             </button>
             <button onClick={disconnect} disabled={disconnecting}
-              style={{ padding:"6px 9px", borderRadius:9, background:"rgba(239,68,68,0.07)",
-                border:"1px solid rgba(239,68,68,0.18)", color:"#f87171", cursor:"pointer",
+              style={{ ...BTN_DANGER, padding:"6px 9px", borderRadius:9,
                 display:"flex", alignItems:"center", transition:"all 0.15s" }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.14)"}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.07)"}}>
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.25)"}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.15)"}}>
               {disconnecting ? <Loader2 size={12} className="animate-spin"/> : <X size={12}/>}
             </button>
           </div>
         ) : (
           <button onClick={connect} disabled={connecting}
-            style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", borderRadius:10,
-              background:`linear-gradient(135deg,${BLUE},${CYAN})`, border:"none", color:"#fff",
-              fontFamily:F, fontSize:13, fontWeight:700, cursor:"pointer",
-              boxShadow:"0 4px 16px rgba(14,165,233,0.35)", opacity:connecting?0.7:1, transition:"all 0.15s" }}>
+            style={{ ...BTN_PRIMARY, display:"flex", alignItems:"center", gap:6, padding:"8px 16px", borderRadius:10,
+              fontSize:13, opacity:connecting?0.7:1, transition:"all 0.15s" }}>
             {connecting ? <Loader2 size={13} className="animate-spin"/> : <Link2 size={13}/>}
             {connecting ? t.connecting : t.connect}
           </button>
@@ -480,7 +512,7 @@ function PlatformRow({ p, userId, accountId, t }: {
           {/* Ad accounts — select active account */}
           {ads.length > 0 && p.id === "meta" && (
             <div style={{ marginBottom: 12 }}>
-              <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
+              <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:TL,
                 textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 8px" }}>
                 {lang==="pt"?"Conta de anúncios ativa":lang==="es"?"Cuenta de anuncios activa":"Active ad account"}
               </p>
@@ -491,12 +523,12 @@ function PlatformRow({ p, userId, accountId, t }: {
                     <button key={acc.id} onClick={() => selectAcc(acc.id)}
                       style={{
                         display:"flex", alignItems:"center", gap:10, padding:"10px 12px",
-                        borderRadius:10, border: isActive ? `1px solid ${pc}40` : "1px solid rgba(255,255,255,0.08)",
-                        background: isActive ? `${pc}12` : "rgba(255,255,255,0.03)",
+                        borderRadius:10, border: isActive ? `1px solid ${pc}40` : `1px solid ${B1}`,
+                        background: isActive ? `${pc}12` : B0,
                         cursor:"pointer", textAlign:"left", transition:"all 0.15s", width:"100%",
                       }}>
                       <div style={{
-                        width:18, height:18, borderRadius:"50%", border: isActive ? `2px solid ${pc}` : "2px solid rgba(255,255,255,0.15)",
+                        width:18, height:18, borderRadius:"50%", border: isActive ? `2px solid ${pc}` : `2px solid ${B2}`,
                         display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0,
                         background: isActive ? pc : "transparent",
                       }}>
@@ -504,12 +536,12 @@ function PlatformRow({ p, userId, accountId, t }: {
                       </div>
                       <div style={{ flex:1, minWidth:0 }}>
                         <p style={{ fontFamily:F, fontSize:13, fontWeight: isActive ? 600 : 400,
-                          color: isActive ? "#f0f2f8" : "rgba(255,255,255,0.55)", margin:0,
+                          color: isActive ? T1 : T2, margin:0,
                           overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                           {acc.name || acc.id}
                         </p>
                         {acc.currency && (
-                          <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)", margin:"2px 0 0" }}>
+                          <p style={{ fontFamily:F, fontSize:11, color:T3, margin:"2px 0 0" }}>
                             ID: {acc.id}{acc.currency ? ` · ${acc.currency}` : ""}
                           </p>
                         )}
@@ -532,9 +564,9 @@ function PlatformRow({ p, userId, accountId, t }: {
           {p.id === "google" && (
             <div>
               <div style={{ marginBottom:8 }}>
-                <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
+                <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:TL,
                   textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 3px" }}>{t.cid_label}</p>
-                <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)", margin:0 }}>
+                <p style={{ fontFamily:F, fontSize:11, color:T3, margin:0 }}>
                   O Google não compartilha a conta automaticamente — é preciso informar o ID
                 </p>
               </div>
@@ -548,15 +580,16 @@ function PlatformRow({ p, userId, accountId, t }: {
                   onKeyDown={e=>{ if(e.key==="Enter") verifyGoogle(); }}
                 />
                 <button onClick={verifyGoogle} disabled={verifying || !custId.trim()}
-                  style={{ padding:"9px 16px", borderRadius:10, whiteSpace:"nowrap",
-                    background: custId.trim() ? `linear-gradient(135deg,${BLUE},${CYAN})` : "rgba(255,255,255,0.05)",
-                    border:"none", color: custId.trim() ? "#fff" : "rgba(255,255,255,0.25)",
-                    fontFamily:F, fontSize:13, fontWeight:700, cursor: custId.trim()?"pointer":"not-allowed",
-                    boxShadow: custId.trim()?"0 4px 12px rgba(14,165,233,0.3)":"none", transition:"all 0.15s" }}>
+                  style={{ ...BTN_PRIMARY, padding:"9px 16px", borderRadius:10, whiteSpace:"nowrap",
+                    background: custId.trim() ? BTN_PRIMARY.background : B0,
+                    color: custId.trim() ? "#fff" : T3,
+                    boxShadow: custId.trim() ? BTN_PRIMARY.boxShadow : "none",
+                    cursor: custId.trim()?"pointer":"not-allowed",
+                    fontSize:13, transition:"all 0.15s" }}>
                   {verifying ? <Loader2 size={13} className="animate-spin" style={{display:"block"}}/> : t.verify}
                 </button>
               </div>
-              <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.22)", margin:"6px 0 0", lineHeight:1.5 }}>
+              <p style={{ fontFamily:F, fontSize:11, color:T3, margin:"6px 0 0", lineHeight:1.5 }}>
                 {t.cid_hint}<br/>
                 <span style={{ color:"rgba(14,165,233,0.55)" }}>Formato: 123-456-7890 (10 dígitos)</span>
               </p>
@@ -707,10 +740,10 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
   if (editing) {
     return (
       <div>
-        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
+        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL,
           textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
           display: "flex", alignItems: "center", gap: 6 }}>
-          <Target size={12} color="rgba(255,255,255,0.35)" />
+          <Target size={12} color={TL} />
           Margem de Lucro
         </p>
         <div style={{
@@ -718,12 +751,12 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
           borderRadius: 12, padding: "16px 16px 18px", overflow: "hidden",
         }}>
           {/* Explanation */}
-          <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.55)", margin: "0 0 14px", lineHeight: 1.5 }}>
+          <p style={{ fontFamily: F, fontSize: 12, color: T2, margin: "0 0 14px", lineHeight: 1.5 }}>
             {goalHint}
           </p>
 
           {/* Business type selector */}
-          <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.40)", margin: "0 0 8px", letterSpacing: "0.04em" }}>
+          <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL, margin: "0 0 8px", letterSpacing: "0.04em" }}>
             Tipo de negócio
           </p>
           <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
@@ -738,9 +771,9 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
                   style={{
                     flex: "1 1 140px", display: "flex", flexDirection: "column", alignItems: "flex-start",
                     gap: 3, padding: "10px 12px", borderRadius: 8,
-                    background: sel ? "rgba(52,211,153,0.08)" : "rgba(255,255,255,0.03)",
-                    border: sel ? "1px solid rgba(52,211,153,0.30)" : "1px solid rgba(255,255,255,0.07)",
-                    color: sel ? "#34d399" : "rgba(255,255,255,0.55)",
+                    background: sel ? "rgba(52,211,153,0.08)" : BG3,
+                    border: "none",
+                    color: sel ? "#34d399" : T2,
                     fontFamily: F, fontSize: 12, fontWeight: 600, cursor: "pointer",
                     transition: "all 0.15s", textAlign: "left",
                   }}>
@@ -748,7 +781,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
                     <span style={{ fontSize: 14 }}>{opt.icon}</span>
                     {opt.label}
                   </span>
-                  <span style={{ fontSize: 10, fontWeight: 400, color: sel ? "rgba(52,211,153,0.55)" : "rgba(255,255,255,0.25)" }}>
+                  <span style={{ fontSize: 10, fontWeight: 400, color: sel ? "rgba(52,211,153,0.55)" : T3 }}>
                     {opt.sub}
                   </span>
                 </button>
@@ -759,40 +792,40 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
           {/* Mode-specific inputs */}
           {mode === 'product' && (
             <div style={{ animation: "fadeIn 0.2s ease" }}>
-              <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.40)", margin: "0 0 8px" }}>
+              <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL, margin: "0 0 8px" }}>
                 Preço médio de venda e custo do produto
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <div style={{ flex: 1 }}>
-                  <span style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.30)", display: "block", marginBottom: 4 }}>Preço de venda</span>
+                  <span style={{ fontFamily: F, fontSize: 10, color: T3, display: "block", marginBottom: 4 }}>Preço de venda</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.30)" }}>R$</span>
+                    <span style={{ fontFamily: F, fontSize: 12, color: T3 }}>R$</span>
                     <input type="number" min="0" step="0.01" placeholder="150"
                       value={price} onChange={e => setPrice(e.target.value)} autoFocus
                       style={{
-                        width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)",
-                        borderRadius: 6, padding: "8px 10px", color: "#F0F6FC", fontSize: 14, fontWeight: 700,
+                        width: "100%", background: IBG, border: IBD,
+                        borderRadius: 6, padding: "8px 10px", color: T1, fontSize: 14, fontWeight: 700,
                         fontFamily: F, outline: "none", fontVariant: "tabular-nums",
                       }}
-                      onFocus={e => e.currentTarget.style.borderColor = "rgba(52,211,153,0.35)"}
-                      onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"}
+                      onFocus={e => { e.currentTarget.style.borderColor = "rgba(52,211,153,0.35)"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(52,211,153,0.10)"; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = B2; e.currentTarget.style.boxShadow = "none"; }}
                     />
                   </div>
                 </div>
-                <span style={{ fontFamily: F, fontSize: 16, color: "rgba(255,255,255,0.15)", marginTop: 18 }}>—</span>
+                <span style={{ fontFamily: F, fontSize: 16, color: B2, marginTop: 18 }}>—</span>
                 <div style={{ flex: 1 }}>
-                  <span style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.30)", display: "block", marginBottom: 4 }}>Custo (produto + frete)</span>
+                  <span style={{ fontFamily: F, fontSize: 10, color: T3, display: "block", marginBottom: 4 }}>Custo (produto + frete)</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.30)" }}>R$</span>
+                    <span style={{ fontFamily: F, fontSize: 12, color: T3 }}>R$</span>
                     <input type="number" min="0" step="0.01" placeholder="60"
                       value={cost} onChange={e => setCost(e.target.value)}
                       style={{
-                        width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)",
-                        borderRadius: 6, padding: "8px 10px", color: "#F0F6FC", fontSize: 14, fontWeight: 700,
+                        width: "100%", background: IBG, border: IBD,
+                        borderRadius: 6, padding: "8px 10px", color: T1, fontSize: 14, fontWeight: 700,
                         fontFamily: F, outline: "none", fontVariant: "tabular-nums",
                       }}
-                      onFocus={e => e.currentTarget.style.borderColor = "rgba(52,211,153,0.35)"}
-                      onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"}
+                      onFocus={e => { e.currentTarget.style.borderColor = "rgba(52,211,153,0.35)"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(52,211,153,0.10)"; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = B2; e.currentTarget.style.boxShadow = "none"; }}
                     />
                   </div>
                 </div>
@@ -802,24 +835,24 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
 
           {mode === 'service' && (
             <div style={{ animation: "fadeIn 0.2s ease" }}>
-              <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.40)", margin: "0 0 8px" }}>
+              <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL, margin: "0 0 8px" }}>
                 Margem de lucro (% que sobra de cada venda, sem ads)
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <input type="number" min="1" max="99" step="1" placeholder="70"
                   value={directMargin} onChange={e => setDirectMargin(e.target.value)} autoFocus
                   style={{
-                    width: 80, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.10)",
-                    borderRadius: 6, padding: "8px 10px", color: "#F0F6FC", fontSize: 14, fontWeight: 700,
+                    width: 80, background: IBG, border: IBD,
+                    borderRadius: 6, padding: "8px 10px", color: T1, fontSize: 14, fontWeight: 700,
                     fontFamily: F, outline: "none", fontVariant: "tabular-nums", textAlign: "center",
                   }}
-                  onFocus={e => e.currentTarget.style.borderColor = "rgba(52,211,153,0.35)"}
-                  onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"}
+                  onFocus={e => { e.currentTarget.style.borderColor = "rgba(52,211,153,0.35)"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(52,211,153,0.10)"; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = B2; e.currentTarget.style.boxShadow = "none"; }}
                   onKeyDown={e => e.key === 'Enter' && save()}
                 />
-                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.30)" }}>%</span>
+                <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: T3 }}>%</span>
               </div>
-              <p style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.22)", margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontFamily: F, fontSize: 10, color: T3, margin: 0, lineHeight: 1.5 }}>
                 Infoprodutos: geralmente 80-95% · SaaS: 70-90% · Consultoria: 50-80%
               </p>
             </div>
@@ -828,7 +861,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
           {mode === 'unknown' && (
             <div style={{
               padding: "10px 12px", borderRadius: 8,
-              background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.10)",
+              background: "rgba(251,191,36,0.04)", border: "none",
               marginBottom: 8, animation: "fadeIn 0.2s ease",
             }}>
               <p style={{ fontFamily: F, fontSize: 12, color: "rgba(251,191,36,0.70)", margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
@@ -852,13 +885,13 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
                   </span>
                   <span style={{ fontFamily: F, fontSize: 11, color: "rgba(52,211,153,0.55)", fontWeight: 500 }}>margem</span>
                 </div>
-                <div style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 2 }}>
-                  Break-even ROAS: <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.60)" }}>{breakEvenPreview}x</span>
-                  <span style={{ color: "rgba(255,255,255,0.22)" }}> — mínimo para não perder dinheiro</span>
+                <div style={{ fontFamily: F, fontSize: 11, color: TL, marginTop: 2 }}>
+                  Break-even ROAS: <span style={{ fontWeight: 700, color: T2 }}>{breakEvenPreview}x</span>
+                  <span style={{ color: T3 }}> — mínimo para não perder dinheiro</span>
                 </div>
               </div>
               {mode === 'product' && price && cost && (
-                <div style={{ fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "right", lineHeight: 1.5 }}>
+                <div style={{ fontFamily: F, fontSize: 10, color: T3, textAlign: "right", lineHeight: 1.5 }}>
                   R${price} - R${cost} = R${(parseFloat(price) - parseFloat(cost)).toFixed(2)} lucro
                 </div>
               )}
@@ -871,8 +904,8 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
               <button onClick={save} disabled={saving || !calculatedMargin}
                 style={{
                   flex: 1, padding: "10px 14px", borderRadius: 8,
-                  background: calculatedMargin ? "linear-gradient(135deg, #34d399 0%, #10b981 100%)" : "rgba(255,255,255,0.06)",
-                  border: "none", color: calculatedMargin ? "#fff" : "rgba(255,255,255,0.25)",
+                  background: calculatedMargin ? "linear-gradient(135deg, #34d399 0%, #10b981 100%)" : B0,
+                  border: "none", color: calculatedMargin ? "#fff" : T3,
                   fontFamily: F, fontSize: 12, fontWeight: 700,
                   cursor: calculatedMargin ? "pointer" : "not-allowed",
                   boxShadow: calculatedMargin ? "0 3px 10px rgba(52,211,153,0.25)" : "none",
@@ -882,9 +915,7 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
               </button>
               <button onClick={() => { setEditing(false); setMode(null); }}
                 style={{
-                  padding: "10px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)",
-                  fontFamily: F, fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  ...BTN_SECONDARY, padding: "10px 16px", borderRadius: 8, fontSize: 12,
                 }}>
                 Cancelar
               </button>
@@ -898,10 +929,10 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
   // ── DISPLAY MODE ──
   return (
     <div>
-      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
+      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL,
         textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
         display: "flex", alignItems: "center", gap: 6 }}>
-        <Target size={12} color="rgba(255,255,255,0.35)" />
+        <Target size={12} color={TL} />
         Margem de Lucro
       </p>
       <div
@@ -945,13 +976,13 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
               </span>
             )}
           </div>
-          <div style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 3, lineHeight: 1.4 }}>
+          <div style={{ fontFamily: F, fontSize: 11, color: TL, marginTop: 3, lineHeight: 1.4 }}>
             Break-even ROAS: {breakEven}x
             {isDefault && <span style={{ color: "rgba(251,191,36,0.50)" }}> · Configure para decisões financeiras precisas</span>}
             {!isDefault && <span> · Clique para alterar</span>}
           </div>
         </div>
-        <Pencil size={12} color="rgba(255,255,255,0.30)" />
+        <Pencil size={12} color={T3} />
       </div>
     </div>
   );
@@ -1065,7 +1096,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
     const selObj = GOAL_OBJECTIVES.find(o => o.key === editObj);
     return (
       <div>
-        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
+        <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL,
           textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px" }}>
           Objetivo de Performance
         </p>
@@ -1074,64 +1105,70 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
           borderRadius: 12, padding: "16px 16px 18px",
         }}>
           {/* Step 1: Objective */}
-          <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", margin: "0 0 8px" }}>
+          <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: T2, margin: "0 0 8px" }}>
             Objetivo
           </p>
           <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-            {GOAL_OBJECTIVES.map(o => (
+            {GOAL_OBJECTIVES.map(o => {
+              const sel = editObj === o.key;
+              return (
               <button key={o.key} onClick={() => { setEditObj(o.key); setEditEvent(null); setEditTarget(''); }}
                 style={{
                   display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 8,
-                  background: editObj === o.key ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.04)",
-                  border: editObj === o.key ? "1px solid rgba(56,189,248,0.35)" : "1px solid rgba(255,255,255,0.08)",
-                  color: editObj === o.key ? "#38BDF8" : "rgba(255,255,255,0.55)",
+                  background: sel ? "rgba(56,189,248,0.12)" : BG3,
+                  border: "none",
+                  color: sel ? "#38BDF8" : T2,
                   fontFamily: F, fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
                 }}>
                 <span style={{ fontSize: 14 }}>{o.icon}</span>{o.label}
               </button>
-            ))}
+              );
+            })}
           </div>
 
           {/* Step 2: Conversion Event */}
           {selObj && (
             <>
-              <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", margin: "0 0 8px" }}>
+              <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: T2, margin: "0 0 8px" }}>
                 Evento de conversão
               </p>
               <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-                {selObj.events.map(ev => (
+                {selObj.events.map(ev => {
+                  const sel = editEvent === ev.value;
+                  return (
                   <button key={ev.value} onClick={() => setEditEvent(ev.value)}
                     style={{
                       padding: "7px 12px", borderRadius: 7,
-                      background: editEvent === ev.value ? "rgba(56,189,248,0.10)" : "rgba(255,255,255,0.03)",
-                      border: editEvent === ev.value ? "1px solid rgba(56,189,248,0.30)" : "1px solid rgba(255,255,255,0.08)",
-                      color: editEvent === ev.value ? "#38BDF8" : "rgba(255,255,255,0.50)",
+                      background: sel ? "rgba(56,189,248,0.10)" : BG3,
+                      border: "none",
+                      color: sel ? "#38BDF8" : T2,
                       fontFamily: F, fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
                     }}>
                     {ev.label}
                   </button>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Step 3: Target (optional) */}
-              <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", margin: "0 0 4px" }}>
-                Meta de {selObj.metricLabel} <span style={{ fontWeight: 400, color: "rgba(255,255,255,0.30)" }}>(opcional)</span>
+              <p style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: T2, margin: "0 0 4px" }}>
+                Meta de {selObj.metricLabel} <span style={{ fontWeight: 400, color: T3 }}>(opcional)</span>
               </p>
-              <p style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.30)", margin: "0 0 8px" }}>
+              <p style={{ fontFamily: F, fontSize: 11, color: T3, margin: "0 0 8px" }}>
                 Deixe vazio se não souber — a IA analisa sem meta fixa.
               </p>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.35)" }}>{selObj.unit}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: TL }}>{selObj.unit}</span>
                 <input type="number" step="0.01" min="0"
                   placeholder={selObj.metric === 'roas' ? 'Ex: 3.0' : 'Ex: 20.00'}
                   value={editTarget} onChange={e => setEditTarget(e.target.value)}
                   style={{
-                    flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: 8, padding: "9px 12px", color: "#F0F6FC", fontSize: 13, fontWeight: 600,
+                    flex: 1, background: IBG, border: IBD,
+                    borderRadius: 8, padding: "9px 12px", color: T1, fontSize: 13, fontWeight: 600,
                     fontFamily: F, outline: "none", fontVariant: "tabular-nums",
                   }}
-                  onFocus={e => e.currentTarget.style.borderColor = "rgba(56,189,248,0.40)"}
-                  onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"}
+                  onFocus={e => { e.currentTarget.style.borderColor = "rgba(56,189,248,0.40)"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(56,189,248,0.12)"; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = B2; e.currentTarget.style.boxShadow = "none"; }}
                 />
               </div>
             </>
@@ -1145,8 +1182,8 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
               background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.12)",
             }}>
               <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>⚡</span>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.55 }}>
-                Precisa do <strong style={{ color: "rgba(255,255,255,0.65)" }}>Pixel do Meta</strong> no site.
+              <div style={{ fontSize: 11, color: T3, lineHeight: 1.55 }}>
+                Precisa do <strong style={{ color: T2 }}>Pixel do Meta</strong> no site.
                 {" "}
                 <button
                   onClick={() => navigate("/dashboard/ai?prompt=" + encodeURIComponent("Preciso instalar o Pixel do Meta no meu site para rastrear conversões. Me ajude passo a passo."))}
@@ -1167,19 +1204,17 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={handleSave} disabled={saving || !editObj || !editEvent}
               style={{
-                flex: 1, padding: "9px 14px", borderRadius: 8,
-                background: (editObj && editEvent) ? "linear-gradient(135deg, #38BDF8 0%, #0EA5E9 100%)" : "rgba(255,255,255,0.06)",
-                border: "none", color: (editObj && editEvent) ? "#fff" : "rgba(255,255,255,0.25)",
-                fontFamily: F, fontSize: 12, fontWeight: 700, cursor: (editObj && editEvent) ? "pointer" : "not-allowed",
-                boxShadow: (editObj && editEvent) ? "0 3px 10px rgba(56,189,248,0.25)" : "none",
+                ...BTN_PRIMARY, flex: 1, padding: "9px 14px", borderRadius: 8,
+                background: (editObj && editEvent) ? BTN_PRIMARY.background : B0,
+                color: (editObj && editEvent) ? "#fff" : T3,
+                fontSize: 12, cursor: (editObj && editEvent) ? "pointer" : "not-allowed",
+                boxShadow: (editObj && editEvent) ? BTN_PRIMARY.boxShadow : "none",
               }}>
               {saving ? 'Salvando...' : 'Salvar'}
             </button>
             <button onClick={() => setEditing(false)}
               style={{
-                padding: "9px 16px", borderRadius: 8, background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)",
-                fontFamily: F, fontSize: 12, fontWeight: 500, cursor: "pointer",
+                ...BTN_SECONDARY, padding: "9px 16px", borderRadius: 8, fontSize: 12,
               }}>
               Cancelar
             </button>
@@ -1192,7 +1227,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
   // ── Display mode ──
   return (
     <div>
-      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)",
+      <p style={{ fontFamily: F, fontSize: 11, fontWeight: 600, color: TL,
         textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px",
         display: "flex", alignItems: "center", gap: 6 }}>
         <Target size={11} /> Objetivo de Performance
@@ -1207,10 +1242,10 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
           <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
             <span style={{ fontSize: 18, flexShrink: 0 }}>{obj.icon}</span>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: "#F0F6FC" }}>
+              <div style={{ fontFamily: F, fontSize: 13, fontWeight: 600, color: T1 }}>
                 {obj.label}
               </div>
-              <div style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 2,
+              <div style={{ fontFamily: F, fontSize: 11, color: TL, marginTop: 2,
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {eventLabel || goalData.goal_conversion_event}
                 {goalData.goal_target_value ? ` · Meta: ${obj.formatTarget(goalData.goal_target_value)}` : ''}
@@ -1220,27 +1255,24 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
           </div>
           <button onClick={() => setEditing(true)}
             style={{
-              display: "flex", alignItems: "center", gap: 5, padding: "6px 10px", borderRadius: 7,
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)",
-              color: "rgba(255,255,255,0.50)", fontFamily: F, fontSize: 11, fontWeight: 500,
-              cursor: "pointer", flexShrink: 0, transition: "all 0.15s",
+              ...BTN_SECONDARY, display: "flex", alignItems: "center", gap: 5, padding: "6px 10px", borderRadius: 7,
+              fontSize: 11, flexShrink: 0, transition: "all 0.15s",
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}>
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#242A34"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = BG3; }}>
             <Settings2 size={11} /> Alterar
           </button>
         </div>
       ) : (
         <button onClick={() => setEditing(true)}
           style={{
-            display: "flex", alignItems: "center", gap: 8, padding: "11px 14px", borderRadius: 10,
-            background: "rgba(56,189,248,0.03)", border: "1px dashed rgba(56,189,248,0.18)",
-            cursor: "pointer", width: "100%", textAlign: "left", transition: "all 0.15s",
+            ...BTN_SECONDARY, display: "flex", alignItems: "center", gap: 8, padding: "11px 14px", borderRadius: 10,
+            width: "100%", textAlign: "left", transition: "all 0.15s",
           }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(56,189,248,0.35)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(56,189,248,0.18)"; }}>
-          <Target size={13} color="rgba(56,189,248,0.40)" />
-          <span style={{ fontFamily: F, fontSize: 12, color: "rgba(56,189,248,0.55)" }}>
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#242A34"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = BG3; }}>
+          <Target size={13} color={BLUE} />
+          <span style={{ fontFamily: F, fontSize: 12, color: BLUE }}>
             Configurar objetivo de performance
           </span>
         </button>
@@ -1326,16 +1358,16 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
           onClick={() => fileRef.current?.click()}
           onKeyDown={e => e.key==="Enter" && fileRef.current?.click()}
           style={{ width:64, height:64, borderRadius:14, flexShrink:0, overflow:"hidden", cursor:"pointer",
-            background: logo ? "transparent" : "rgba(255,255,255,0.04)",
-            border: `2px dashed ${logo ? "transparent" : "rgba(255,255,255,0.15)"}`,
+            background: logo ? "transparent" : B0,
+            border: `2px solid ${logo ? "transparent" : B2}`,
             display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.15s" }}
           onMouseEnter={e=>{ if(!logo) (e.currentTarget as HTMLElement).style.borderColor="rgba(14,165,233,0.4)"; }}
-          onMouseLeave={e=>{ if(!logo) (e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.15)"; }}>
-          {uploading ? <Loader2 size={16} color="rgba(255,255,255,0.4)" className="animate-spin"/>
+          onMouseLeave={e=>{ if(!logo) (e.currentTarget as HTMLElement).style.borderColor=B2; }}>
+          {uploading ? <Loader2 size={16} color={T3} className="animate-spin"/>
             : logo ? <img src={logo} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
             : <div style={{ textAlign:"center" }}>
-                <Upload size={16} color="rgba(255,255,255,0.3)"/>
-                <p style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)", margin:"3px 0 0" }}>Logo</p>
+                <Upload size={16} color={T3}/>
+                <p style={{ fontFamily:F, fontSize:11, color:T3, margin:"3px 0 0" }}>Logo</p>
               </div>}
         </div>
         <input ref={fileRef} type="file" accept="image/*" style={{ display:"none" }}
@@ -1343,7 +1375,7 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
 
         {/* Name */}
         <div style={{ flex:1 }}>
-          <label style={{ fontFamily:F, fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.55)",
+          <label style={{ fontFamily:F, fontSize:12, fontWeight:600, color:T2,
             textTransform:"uppercase", letterSpacing:"0.06em", display:"block", marginBottom:7 }}>
             {t.name_label}
           </label>
@@ -1352,7 +1384,7 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
             onFocus={focusOn as any} onBlur={focusOff as any}/>
           {logo && (
             <button onClick={()=>setLogo("")}
-              style={{ marginTop:6, fontFamily:F, fontSize:11, color:"rgba(248,113,113,0.65)",
+              style={{ marginTop:6, fontFamily:F, fontSize:11, color:"#F87171",
                 background:"none", border:"none", cursor:"pointer", padding:0,
                 display:"flex", alignItems:"center", gap:3 }}>
               <X size={10}/>{t.remove_logo}
@@ -1364,12 +1396,12 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
       {/* Website — optional */}
       <div>
         <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:7 }}>
-          <label style={{ fontFamily:F, fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.55)",
+          <label style={{ fontFamily:F, fontSize:12, fontWeight:600, color:T2,
             textTransform:"uppercase", letterSpacing:"0.06em" }}>{t.website_label}</label>
-          <span style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)" }}>{t.optional}</span>
+          <span style={{ fontFamily:F, fontSize:11, color:T3 }}>{t.optional}</span>
         </div>
         <div style={{ position:"relative" }}>
-          <Globe size={13} color="rgba(255,255,255,0.3)"
+          <Globe size={13} color={T3}
             style={{ position:"absolute", left:13, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }}/>
           <input value={website} onChange={e=>setWebsite(e.target.value)}
             placeholder={t.website_ph}
@@ -1381,15 +1413,15 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
       {/* AI context — optional */}
       <div>
         <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:7 }}>
-          <label style={{ fontFamily:F, fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.55)",
+          <label style={{ fontFamily:F, fontSize:12, fontWeight:600, color:T2,
             textTransform:"uppercase", letterSpacing:"0.06em" }}>{t.desc_label}</label>
-          <span style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.25)" }}>{t.optional}</span>
+          <span style={{ fontFamily:F, fontSize:11, color:T3 }}>{t.optional}</span>
         </div>
         <textarea value={desc} onChange={e=>setDesc(e.target.value)}
           placeholder={t.desc_ph} rows={4}
           style={{ ...iStyle, resize:"none", lineHeight:1.65 }}
           onFocus={focusOn as any} onBlur={focusOff as any}/>
-        <p style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.25)", margin:"6px 0 0" }}>{t.desc_hint}</p>
+        <p style={{ fontFamily:F, fontSize:12, color:T3, margin:"6px 0 0" }}>{t.desc_hint}</p>
       </div>
 
       {/* Actions */}
@@ -1398,7 +1430,7 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
           style={{ flex:1, height:46, borderRadius:12, border:"none",
             cursor: name.trim() ? "pointer" : "not-allowed",
             background: name.trim() ? `linear-gradient(135deg,${BLUE},${CYAN})` : "rgba(255,255,255,0.06)",
-            color: name.trim() ? "#fff" : "rgba(255,255,255,0.25)",
+            color: name.trim() ? "#fff" : T3,
             fontFamily:F, fontSize:14, fontWeight:700,
             display:"flex", alignItems:"center", justifyContent:"center", gap:7,
             boxShadow: name.trim() ? "0 4px 20px rgba(14,165,233,0.35)" : "none",
@@ -1407,11 +1439,10 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
           {saving ? t.saving : (account?.id ? t.save : t.create)}
         </button>
         <button onClick={onCancel}
-          style={{ padding:"0 22px", height:46, borderRadius:12, background:"rgba(255,255,255,0.05)",
-            border:"1px solid rgba(255,255,255,0.10)", color:"rgba(255,255,255,0.55)",
-            fontFamily:F, fontSize:14, fontWeight:500, cursor:"pointer", transition:"all 0.15s" }}
-          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.09)"}}
-          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)"}}>
+          style={{ ...BTN_SECONDARY, padding:"0 22px", height:46, borderRadius:12,
+            fontSize:14, transition:"all 0.15s" }}
+          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="#242A34"}}
+          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=BG3}}>
           {t.cancel}
         </button>
       </div>
@@ -1508,7 +1539,7 @@ export default function AccountsPage() {
 
   if (loading) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:300 }}>
-      <Loader2 size={20} color="rgba(255,255,255,0.3)" className="animate-spin"/>
+      <Loader2 size={20} color={T3} className="animate-spin"/>
     </div>
   );
 
@@ -1516,7 +1547,7 @@ export default function AccountsPage() {
     <div style={{ maxWidth:720, margin:"0 auto", padding:"clamp(16px,4vw,36px)", fontFamily:F }}>
       <div style={{ borderRadius:16, padding:"16px 18px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.18)" }}>
         <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#fca5a5" }}>Não foi possível abrir Accounts</p>
-        <p style={{ margin:"4px 0 0", fontSize:13, color:"rgba(255,255,255,0.55)" }}>Sua sessão não está disponível no momento.</p>
+        <p style={{ margin:"4px 0 0", fontSize:13, color:T2 }}>Sua sessão não está disponível no momento.</p>
       </div>
     </div>
   );
@@ -1530,17 +1561,15 @@ export default function AccountsPage() {
       `}</style>
 
       {/* ── Header ── */}
-      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:32, gap:12, flexWrap:"wrap" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28, gap:12, flexWrap:"wrap" }}>
         <div>
-          <h1 style={{ margin:0, fontSize:"clamp(20px,3vw,26px)", fontWeight:800, color:"#f0f2f8", letterSpacing:"-0.03em" }}>{t.title}</h1>
-          <p style={{ margin:"5px 0 0", fontSize:13, color:"rgba(255,255,255,0.4)" }}>{t.sub}</p>
+          <h1 style={{ margin:0, fontSize:22, fontWeight:800, color:T1, letterSpacing:"-0.03em" }}>{t.title}</h1>
+          <p style={{ margin:"4px 0 0", fontSize:13, color:T3 }}>{t.sub}</p>
         </div>
         {!creating && (
           <button onClick={() => { setCreating(true); setEditingId(null); setOpenId(null); }}
-            style={{ display:"flex", alignItems:"center", gap:7, padding:"9px 18px", borderRadius:12,
-              background:`linear-gradient(135deg,${BLUE},${CYAN})`, border:"none", color:"#fff",
-              fontFamily:F, fontSize:13, fontWeight:700, cursor:"pointer",
-              boxShadow:"0 4px 20px rgba(14,165,233,0.35)", whiteSpace:"nowrap" }}>
+            style={{ ...BTN_PRIMARY, display:"flex", alignItems:"center", gap:7, padding:"10px 20px",
+              borderRadius:12, fontSize:13, whiteSpace:"nowrap" }}>
             <Plus size={14}/>{t.new}
           </button>
         )}
@@ -1548,14 +1577,12 @@ export default function AccountsPage() {
 
       {/* ── Create new form ── */}
       {creating && (
-        <div style={{ borderRadius:20, background:CARD, border:"1px solid rgba(14,165,233,0.28)",
-          boxShadow:`${SHD}, 0 0 60px rgba(14,165,233,0.06)`, backdropFilter:"blur(20px)",
-          padding:"clamp(20px,4vw,32px)", marginBottom:16, animation:"fadeUp 0.25s ease" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
-            <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:"#f0f2f8", letterSpacing:"-0.02em" }}>{t.new}</h2>
+        <div style={{ borderRadius:16, background:BG1, border:`1px solid ${B2}`,
+          boxShadow:SHD, padding:"clamp(20px,4vw,28px)", marginBottom:12, animation:"fadeUp 0.25s ease" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22 }}>
+            <h2 style={{ margin:0, fontSize:17, fontWeight:700, color:T1, letterSpacing:"-0.02em" }}>{t.new}</h2>
             <button onClick={() => setCreating(false)}
-              style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.10)",
-                borderRadius:8, padding:"5px 7px", cursor:"pointer", color:"rgba(255,255,255,0.5)", display:"flex" }}>
+              style={{ ...BTN_SECONDARY, borderRadius:8, padding:"5px 7px", display:"flex" }}>
               <X size={14}/>
             </button>
           </div>
@@ -1566,13 +1593,13 @@ export default function AccountsPage() {
       )}
 
       {loadError && !creating && (
-        <div style={{ marginBottom:16, borderRadius:16, padding:"16px 18px", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.18)", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
+        <div style={{ marginBottom:12, borderRadius:14, padding:"14px 18px", background:"rgba(239,68,68,0.08)", border:`1px solid rgba(239,68,68,0.15)`, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
           <div>
-            <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#fca5a5" }}>Erro ao carregar Accounts</p>
-            <p style={{ margin:"4px 0 0", fontSize:13, color:"rgba(255,255,255,0.55)" }}>{loadError}</p>
+            <p style={{ margin:0, fontSize:13, fontWeight:700, color:"#F87171" }}>Erro ao carregar Accounts</p>
+            <p style={{ margin:"4px 0 0", fontSize:13, color:T3 }}>{loadError}</p>
           </div>
           <button onClick={() => load()}
-            style={{ padding:"9px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.06)", color:"#fff", fontFamily:F, fontSize:13, fontWeight:600, cursor:"pointer" }}>
+            style={{ ...BTN_SECONDARY, padding:"8px 16px", borderRadius:10, fontSize:13 }}>
             Tentar novamente
           </button>
         </div>
@@ -1581,19 +1608,17 @@ export default function AccountsPage() {
       {/* ── Empty state ── */}
       {accounts.length === 0 && !creating && !loadError && (
         <div style={{ textAlign:"center", padding:"64px 24px", borderRadius:20,
-          background:CARD, border:"1px solid rgba(255,255,255,0.10)",
+          background:CARD, border:`1px solid ${B1}`,
           boxShadow:SHD, backdropFilter:"blur(16px)", animation:"fadeUp 0.3s ease" }}>
           <div style={{ width:56, height:56, borderRadius:16, background:"rgba(14,165,233,0.10)",
-            border:"1px solid rgba(14,165,233,0.20)", display:"flex", alignItems:"center",
+            border:"none", display:"flex", alignItems:"center",
             justifyContent:"center", margin:"0 auto 20px" }}>
             <Building2 size={24} color={BLUE}/>
           </div>
-          <h3 style={{ margin:"0 0 8px", fontSize:18, fontWeight:700, color:"#f0f2f8", letterSpacing:"-0.02em" }}>{t.no_accounts}</h3>
-          <p style={{ margin:"0 0 24px", fontSize:14, color:"rgba(255,255,255,0.4)", lineHeight:1.6 }}>{t.no_accounts_sub}</p>
+          <h3 style={{ margin:"0 0 8px", fontSize:18, fontWeight:700, color:T1, letterSpacing:"-0.02em" }}>{t.no_accounts}</h3>
+          <p style={{ margin:"0 0 24px", fontSize:14, color:T3, lineHeight:1.6 }}>{t.no_accounts_sub}</p>
           <button onClick={() => setCreating(true)}
-            style={{ padding:"10px 26px", borderRadius:12, background:`linear-gradient(135deg,${BLUE},${CYAN})`,
-              border:"none", color:"#fff", fontFamily:F, fontSize:14, fontWeight:700, cursor:"pointer",
-              boxShadow:"0 4px 20px rgba(14,165,233,0.35)" }}>
+            style={{ ...BTN_PRIMARY, padding:"10px 26px", borderRadius:12, fontSize:14 }}>
             {t.create_first}
           </button>
         </div>
@@ -1609,11 +1634,10 @@ export default function AccountsPage() {
 
           return (
             <div key={acc.id} style={{
-              borderRadius:18,
-              background: isOpen ? CARD : "rgba(255,255,255,0.04)",
-              border: `1px solid ${isOpen ? (isActive ? "rgba(14,165,233,0.30)" : "rgba(255,255,255,0.13)") : "rgba(255,255,255,0.08)"}`,
+              borderRadius:14,
+              background: isOpen ? BG1 : BG0,
+              border: `1px solid ${isOpen ? (isActive ? "rgba(14,165,233,0.25)" : B2) : B1}`,
               boxShadow: isOpen ? SHD : "none",
-              backdropFilter: isOpen ? "blur(16px)" : "none",
               overflow:"hidden",
               transition:"all 0.25s cubic-bezier(0.4,0,0.2,1)",
             }}>
@@ -1628,43 +1652,43 @@ export default function AccountsPage() {
                 {/* Name + meta */}
                 <div style={{ flex:1, minWidth:0, textAlign:"left" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:2 }}>
-                    <span style={{ fontFamily:F, fontSize:15, fontWeight:isOpen?700:500,
-                      color: isOpen ? "#f0f2f8" : "rgba(255,255,255,0.65)",
-                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                    <span style={{ fontFamily:F, fontSize:15, fontWeight:600,
+                      color: isOpen ? T1 : T2,
+                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                      transition:"color 0.2s" }}>
                       {acc.name || t.unnamed}
                     </span>
                     {isActive && (
                       <span style={{ fontFamily:F, fontSize:10, fontWeight:700, color:BLUE,
-                        background:"rgba(14,165,233,0.12)", border:"1px solid rgba(14,165,233,0.25)",
-                        borderRadius:99, padding:"2px 8px", letterSpacing:"0.05em", flexShrink:0 }}>
-                        ● {t.active_in_chat}
+                        background:"rgba(14,165,233,0.10)", borderRadius:6, padding:"2px 8px",
+                        letterSpacing:"0.04em", flexShrink:0, lineHeight:"16px" }}>
+                        {t.active_in_chat}
                       </span>
                     )}
                   </div>
-                  <p style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.3)", margin:0,
+                  <p style={{ fontFamily:F, fontSize:12, color:T3, margin:0,
                     overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                     {acc.website || (acc.description ? acc.description.slice(0,48)+"…" : t.no_context)}
                   </p>
                 </div>
 
                 {/* Chevron */}
-                <ChevronDown size={16} color="rgba(255,255,255,0.3)"
+                <ChevronDown size={16} color={T3}
                   style={{ flexShrink:0, transform:isOpen?"rotate(180deg)":"none", transition:"transform 0.25s" }}/>
               </button>
 
               {/* ── Expanded content ── */}
               {isOpen && (
                 <div style={{ animation:"slideDown 0.2s ease" }}>
-                  <div style={{ height:"1px", background:"rgba(255,255,255,0.07)", margin:"0 18px" }}/>
+                  <div style={{ height:"1px", background:B1, margin:"0 18px" }}/>
 
                   {isEditing ? (
                     /* Edit form */
                     <div style={{ padding:"20px 18px 22px" }}>
                       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
-                        <h3 style={{ margin:0, fontSize:15, fontWeight:700, color:"#f0f2f8" }}>{t.edit}</h3>
+                        <h3 style={{ margin:0, fontSize:15, fontWeight:700, color:T1 }}>{t.edit}</h3>
                         <button onClick={() => setEditingId(null)}
-                          style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.10)",
-                            borderRadius:7, padding:"4px 6px", cursor:"pointer", color:"rgba(255,255,255,0.5)", display:"flex" }}>
+                          style={{ ...BTN_SECONDARY, borderRadius:7, padding:"4px 6px", display:"flex" }}>
                           <X size={13}/>
                         </button>
                       </div>
@@ -1674,34 +1698,30 @@ export default function AccountsPage() {
                     </div>
                   ) : (
                     /* Detail view */
-                    <div style={{ padding:"20px 18px 22px", display:"flex", flexDirection:"column", gap:20 }}>
+                    <div style={{ padding:"20px 18px 22px", display:"flex", flexDirection:"column", gap:18 }}>
 
                       {/* Action bar */}
                       <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                         {!isActive && (
                           <button onClick={() => activate(acc)}
-                            style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", borderRadius:10,
-                              background:`linear-gradient(135deg,${BLUE},${CYAN})`, border:"none", color:"#fff",
-                              fontFamily:F, fontSize:13, fontWeight:700, cursor:"pointer",
-                              boxShadow:"0 4px 14px rgba(14,165,233,0.3)" }}>
+                            style={{ ...BTN_PRIMARY, display:"flex", alignItems:"center", gap:6,
+                              padding:"9px 18px", borderRadius:10, fontSize:13 }}>
                             <CheckCircle2 size={13}/>{t.use_in_chat}
                           </button>
                         )}
                         <button onClick={() => setEditingId(acc.id)}
-                          style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", borderRadius:10,
-                            background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.11)",
-                            color:"rgba(255,255,255,0.65)", fontFamily:F, fontSize:13, fontWeight:500, cursor:"pointer" }}
-                          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.10)"}}
-                          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.06)"}}>
+                          style={{ ...BTN_SECONDARY, display:"flex", alignItems:"center", gap:6,
+                            padding:"9px 16px", borderRadius:10, fontSize:13 }}
+                          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="#242A34"}}
+                          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=BG3}}>
                           <Pencil size={12}/>{t.edit}
                         </button>
                         <div style={{ flex:1 }}/>
                         <button onClick={() => del(acc.id, acc.name)} disabled={isDel}
-                          style={{ display:"flex", alignItems:"center", gap:5, padding:"8px 12px", borderRadius:10,
-                            background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.18)",
-                            color:"#f87171", cursor:"pointer", fontFamily:F, fontSize:13 }}
-                          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.14)"}}
-                          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.07)"}}>
+                          style={{ ...BTN_DANGER, display:"flex", alignItems:"center", gap:5,
+                            padding:"9px 14px", borderRadius:10, fontSize:13 }}
+                          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.25)"}}
+                          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(239,68,68,0.15)"}}>
                           {isDel ? <Loader2 size={13} className="animate-spin"/> : <Trash2 size={13}/>}
                         </button>
                       </div>
@@ -1709,32 +1729,31 @@ export default function AccountsPage() {
                       {/* AI context */}
                       {acc.description ? (
                         <div>
-                          <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
+                          <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:TL,
                             textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 8px" }}>{t.desc_label}</p>
-                          <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.55)", lineHeight:1.7,
-                            margin:0, padding:"12px 14px", background:"rgba(255,255,255,0.04)",
-                            border:"1px solid rgba(255,255,255,0.08)", borderRadius:10 }}>
+                          <p style={{ fontFamily:F, fontSize:13, color:T2, lineHeight:1.7,
+                            margin:0, padding:"12px 14px", background:BG2,
+                            border:`1px solid ${B1}`, borderRadius:10 }}>
                             {acc.description}
                           </p>
                         </div>
                       ) : (
                         <button onClick={() => setEditingId(acc.id)}
-                          style={{ display:"flex", alignItems:"center", gap:8, padding:"11px 14px", borderRadius:10,
-                            background:"rgba(255,255,255,0.03)", border:"1px dashed rgba(255,255,255,0.10)",
-                            cursor:"pointer", width:"100%", textAlign:"left" }}>
-                          <AlertCircle size={13} color="rgba(255,255,255,0.2)"/>
-                          <span style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.35)" }}>{t.add_context}</span>
+                          style={{ ...BTN_SECONDARY, display:"flex", alignItems:"center", gap:8,
+                            padding:"11px 14px", borderRadius:10, width:"100%", textAlign:"left", fontSize:12 }}>
+                          <AlertCircle size={13} color={T3}/>
+                          <span>{t.add_context}</span>
                         </button>
                       )}
 
                       {/* Website */}
                       {acc.website && (
                         <div>
-                          <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
+                          <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:TL,
                             textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 6px" }}>{t.website_label}</p>
                           <a href={acc.website.startsWith("http") ? acc.website : `https://${acc.website}`}
                             target="_blank" rel="noreferrer"
-                            style={{ fontFamily:F, fontSize:13, color:"rgba(14,165,233,0.75)", textDecoration:"none",
+                            style={{ fontFamily:F, fontSize:13, color:BLUE, textDecoration:"none",
                               display:"inline-flex", alignItems:"center", gap:5 }}>
                             <Globe size={12}/>{acc.website}
                           </a>
@@ -1746,7 +1765,7 @@ export default function AccountsPage() {
                   {/* Platform connections + Goal — always visible when expanded */}
                   <div style={{ padding:"0 18px 22px", display:"flex", flexDirection:"column", gap:20 }}>
                     <div>
-                      <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.35)",
+                      <p style={{ fontFamily:F, fontSize:11, fontWeight:600, color:TL,
                         textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 10px" }}>{t.platforms}</p>
                       <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                         {PLATFORMS.map(p => (
@@ -1772,17 +1791,15 @@ export default function AccountsPage() {
       {/* ── Add another account (bottom) ── */}
       {accounts.length > 0 && !creating && (
         <button onClick={() => { setCreating(true); setOpenId(null); }}
-          style={{ marginTop:12, display:"flex", alignItems:"center", gap:7, padding:"11px 18px",
-            borderRadius:12, background:"transparent", border:"1px dashed rgba(255,255,255,0.12)",
-            color:"rgba(255,255,255,0.35)", fontFamily:F, fontSize:13, fontWeight:500,
-            cursor:"pointer", width:"100%", justifyContent:"center", transition:"all 0.15s" }}
+          style={{ ...BTN_SECONDARY, marginTop:12, display:"flex", alignItems:"center", gap:7, padding:"11px 18px",
+            borderRadius:12, width:"100%", justifyContent:"center", fontSize:13, transition:"all 0.15s" }}
           onMouseEnter={e=>{
-            (e.currentTarget as HTMLElement).style.borderColor="rgba(14,165,233,0.35)";
+            (e.currentTarget as HTMLElement).style.background="#242A34";
             (e.currentTarget as HTMLElement).style.color=BLUE;
           }}
           onMouseLeave={e=>{
-            (e.currentTarget as HTMLElement).style.borderColor="rgba(255,255,255,0.12)";
-            (e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.35)";
+            (e.currentTarget as HTMLElement).style.background=BG3;
+            (e.currentTarget as HTMLElement).style.color=T2;
           }}>
           <Plus size={14}/>{t.new}
         </button>

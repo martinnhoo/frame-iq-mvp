@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { LogoMark } from '@/components/Logo';
+import { LogoMark, MetaLogo } from '@/components/Logo';
 import { CreditBar } from '@/components/dashboard/CreditBar';
 import { ReferralPopup } from '@/components/dashboard/ReferralPopup';
 import UpgradeWall from '@/components/UpgradeWall';
@@ -379,22 +379,19 @@ export function AppLayout() {
             )}
           </div>
 
-          {/* Name + plan badge */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 7 }}>
+          {/* Name + Meta connection badge */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
             <p style={{
               margin: 0, fontSize: 13, fontWeight: 600,
-              color: selectedPersona ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.30)',
+              color: selectedPersona ? '#F0F6FC' : 'rgba(255,255,255,0.30)',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              flex: 1, minWidth: 0,
             }}>
               {selectedPersona?.name || 'Selecionar conta'}
             </p>
-            {usageDetails?.plan && usageDetails.plan !== 'free' && (
-              <span style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-                color: '#38bdf8', background: 'rgba(56,189,248,0.10)',
-                padding: '1.5px 5px', borderRadius: 4, flexShrink: 0, lineHeight: '14px',
-              }}>
-                {usageDetails.plan === 'studio' ? 'Studio' : usageDetails.plan === 'starter' ? 'Pro' : usageDetails.plan === 'creator' ? 'Maker' : usageDetails.plan}
+            {metaConnected && !accountResolving && (
+              <span style={{ flexShrink: 0, opacity: 0.7, display: 'flex' }}>
+                <MetaLogo size={16} />
               </span>
             )}
           </div>
