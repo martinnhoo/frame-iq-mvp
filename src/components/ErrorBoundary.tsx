@@ -1,5 +1,6 @@
-import { Component, type ReactNode } from "react";
+import { Component, type ReactNode, type ErrorInfo } from "react";
 import { RefreshCw, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props { children: ReactNode; }
 interface State { error: Error | null; }
@@ -29,8 +30,20 @@ export class ErrorBoundary extends Component<Props, State> {
     return { error };
   }
 
-  componentDidCatch(error: Error) {
-    console.error("[AdBrief ErrorBoundary]", error);
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("[AdBrief ErrorBoundary]", error, errorInfo);
+    // Log to Supabase error_logs (fire-and-forget)
+    try {
+      (supabase.from("error_logs" as any) as any).insert({
+        error_type: "react_crash",
+        message: error.message?.slice(0, 500),
+        stack: error.stack?.slice(0, 2000),
+        component: errorInfo.componentStack?.slice(0, 1000),
+        url: window.location.pathname,
+        user_agent: navigator.userAgent.slice(0, 200),
+        metadata: { timestamp: new Date().toISOString() },
+      }).then(() => {}).catch(() => {});
+    } catch {}
   }
 
   render() {

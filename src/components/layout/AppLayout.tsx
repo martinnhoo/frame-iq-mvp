@@ -2,6 +2,7 @@
 // Account selector at top (always visible), mobile hamburger menu
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Logo } from '@/components/Logo';
 import { CreditBar } from '@/components/dashboard/CreditBar';
 import { ReferralPopup } from '@/components/dashboard/ReferralPopup';
@@ -649,6 +650,7 @@ export function AppLayout() {
         ...(isMobile ? { paddingTop: 52 } : {}),
       }}>
         {profile ? (
+          <ErrorBoundary>
           <Outlet context={{
             user,
             profile,
@@ -664,6 +666,7 @@ export function AppLayout() {
             metaConnected,
             accountResolving,
           } satisfies DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean }} />
+          </ErrorBoundary>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300 }}>
             <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', animation: 'spin 0.8s linear infinite' }} />

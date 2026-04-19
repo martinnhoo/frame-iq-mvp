@@ -65,6 +65,9 @@ const LoopSettingsPage = lazy(() => import("./pages/dashboard/LoopSettingsPage")
 const LoopGuidePage    = lazy(() => import("./pages/dashboard/LoopGuidePage"));
 const ReferralPage     = lazy(() => import("./pages/dashboard/ReferralPage"));
 
+// Internal diagnostics (owner only)
+const DebugPage        = lazy(() => import("./pages/dashboard/DebugPage"));
+
 // V2 Decision Engine pages
 const FeedPage         = lazy(() => import("./pages/dashboard/FeedPage"));
 const PatternsPage     = lazy(() => import("./pages/dashboard/PatternsPage"));
@@ -168,6 +171,7 @@ const App = () => (
                 <Route path="templates" element={<ToolGate><TemplatesPage /></ToolGate>} />
                 <Route path="persona" element={<PersonaPage />} />
                 <Route path="accounts" element={<AccountsPage />} />
+                <Route path="debug" element={<DebugPage />} />
                 <Route path="ad-score" element={<AdScorePage />} />
                 <Route path="hooks" element={<ToolGate><HookGenerator /></ToolGate>} />
                 <Route path="competitor" element={<ToolGate><CompetitorDecoder /></ToolGate>} />
