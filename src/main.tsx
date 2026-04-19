@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import "./lib/errorLogger";  // Global error + rejection logging (must be early)
 import App from "./App.tsx";
 import "./index.css";
 
