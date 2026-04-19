@@ -2068,7 +2068,7 @@ Return [] if no relevant facts found. Max 3 facts per call.`,
 
 export default function AdBriefAI() {
   usePageTitle("IA Chat");
-  const {user,profile,selectedPersona,setSelectedPersona}=useOutletContext<DashboardContext>();
+  const {user,profile,selectedPersona,setSelectedPersona,accountAlerts:ctxAlerts}=useOutletContext<DashboardContext>();
   const {language}=useLanguage();
   const lang=(["pt","es"].includes(language)?language:"en") as "pt"|"es"|"en";
   const navigate=useNavigate();
@@ -2134,7 +2134,7 @@ export default function AdBriefAI() {
     } catch {}
   }, []);
 
-  const [accountAlerts,setAccountAlerts]=useState<any[]>([]);
+  const [accountAlerts,setAccountAlerts]=useState<any[]>(ctxAlerts||[]);
   // Virtual scroll: render only last N messages for performance
   // User can load older messages with "Ver mais"
   const MSG_PAGE = 30;
@@ -2967,8 +2967,14 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   },[messages]);
 
   // ── Load persistent account alerts ────────────────────────────────────────
+  // Sync alerts from DashboardLayout context (already fetched at init)
   useEffect(() => {
-    if (!user?.id) return;
+    if (ctxAlerts?.length) setAccountAlerts(ctxAlerts);
+  }, [ctxAlerts]);
+
+  // Fallback: fetch alerts directly if context is empty
+  useEffect(() => {
+    if (!user?.id || (ctxAlerts?.length ?? 0) > 0) return;
     const loadAlerts = async () => {
       const { data } = await supabase
         .from("account_alerts" as any)
@@ -2980,7 +2986,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       if (data?.length) setAccountAlerts(data);
     };
     loadAlerts();
-  }, [user?.id]);
+  }, [user?.id, ctxAlerts]);
 
   // ── Dismiss an alert permanently ───────────────────────────────────────────
   const dismissAlert = async (alertId: string) => {
@@ -4024,61 +4030,89 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       {/* ── Messages ── */}
       <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8}}>
         
-        {/* ── Persistent Account Alerts — survive chat clear ── */}
+        {/* ── Urgent Alert Banner — aggressive PriorityStack style ── */}
         {accountAlerts.length > 0 && (
-          <div style={{maxWidth:720,margin:"0 auto 16px",padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
-            {accountAlerts.map((alert:any) => {
+          <div style={{maxWidth:720,margin:"0 auto 16px",padding:"0 16px"}}>
+            {/* Section header */}
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+              <span style={{width:7,height:7,borderRadius:"50%",background:"#F87171",boxShadow:"0 0 10px rgba(248,113,113,0.5)",animation:"chatAlertPulse 2s ease-in-out infinite"}} />
+              <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"#F87171",fontFamily:"'Inter','Plus Jakarta Sans',system-ui,sans-serif"}}>
+                {accountAlerts.filter((a:any)=>a.urgency==="high").length > 0
+                  ? `${accountAlerts.filter((a:any)=>a.urgency==="high").length} ALERTA${accountAlerts.filter((a:any)=>a.urgency==="high").length>1?"S":""} URGENTE${accountAlerts.filter((a:any)=>a.urgency==="high").length>1?"S":""}`
+                  : `${accountAlerts.length} ALERTA${accountAlerts.length>1?"S":""}`}
+              </span>
+              <div style={{flex:1,height:1,background:"rgba(248,113,113,0.15)"}} />
+            </div>
+            {/* Alert cards */}
+            {[...accountAlerts].sort((a:any,b:any) => {
+              if(a.urgency==="high"&&b.urgency!=="high") return -1;
+              if(a.urgency!=="high"&&b.urgency==="high") return 1;
+              return new Date(b.created_at).getTime()-new Date(a.created_at).getTime();
+            }).map((alert:any,i:number) => {
               const isHigh = alert.urgency === "high";
               const isDismissing = alertsDismissing.has(alert.id);
+              const alertIcons: Record<string,string> = {FADIGA_CRITICA:"🔥",ROAS_CRITICO:"💸",ROAS_COLAPSOU:"📉",CTR_COLAPSOU:"🧊",RETENCAO_VIDEO_BAIXA:"⏭️",SPEND_SEM_RETORNO:"🕳️"};
+              const alertVerbs: Record<string,string> = {FADIGA_CRITICA:"Pause agora",ROAS_CRITICO:"Corte já",ROAS_COLAPSOU:"Ação imediata",CTR_COLAPSOU:"Troque o criativo",RETENCAO_VIDEO_BAIXA:"Refaça o hook",SPEND_SEM_RETORNO:"Pare o sangramento"};
+              const icon = alertIcons[alert.type] || (isHigh ? "🚨" : "⚠️");
+              const verb = alertVerbs[alert.type] || (isHigh ? "Ação urgente" : "Atenção");
+              const color = isHigh ? "#F87171" : "#FBBF24";
+              const adLabel = alert.ad_name || alert.campaign_name || "";
+              const diff = Date.now()-new Date(alert.created_at).getTime();
+              const mins = Math.floor(diff/60000);
+              const ago = mins<1?"agora":mins<60?`${mins}min atrás`:mins<1440?`${Math.floor(mins/60)}h atrás`:`${Math.floor(mins/1440)}d atrás`;
               return (
                 <div key={alert.id} style={{
-                  padding:"12px 16px",borderRadius:12,
-                  background: isHigh ? "rgba(248,113,113,0.07)" : "rgba(251,191,36,0.07)",
-                  border: `1px solid ${isHigh ? "rgba(248,113,113,0.25)" : "rgba(251,191,36,0.25)"}`,
-                  display:"flex",alignItems:"flex-start",gap:10,
-                  opacity: isDismissing ? 0 : 1,
-                  transform: isDismissing ? "translateX(12px) scale(0.97)" : "translateX(0) scale(1)",
-                  transition: isDismissing ? "all 0.25s cubic-bezier(0.4,0,0.2,1)" : "opacity 0.15s",
-                  pointerEvents: isDismissing ? "none" as const : "auto" as const
+                  background: isHigh ? "linear-gradient(135deg,rgba(248,113,113,0.08) 0%,rgba(13,17,23,0.95) 100%)" : "rgba(13,17,23,0.7)",
+                  border:`1px solid ${isHigh ? "rgba(248,113,113,0.25)" : "rgba(251,191,36,0.2)"}`,
+                  borderLeft:`3px solid ${color}`,
+                  borderRadius:10,padding:"12px 16px",marginBottom:8,
+                  opacity:isDismissing?0:1,
+                  transform:isDismissing?"translateX(12px) scale(0.97)":"translateX(0) scale(1)",
+                  transition:isDismissing?"all 0.25s cubic-bezier(0.4,0,0.2,1)":"opacity 0.15s",
+                  pointerEvents:isDismissing?"none" as const:"auto" as const,
                 }}>
-                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{isHigh ? "" : ""}</span>
-                  <div style={{flex:1,minWidth:0}}>
-                    <p style={{margin:"0 0 2px",fontSize:12,fontWeight:700,color: isHigh ? "#f87171" : alert.type==="system" ? "rgba(14,165,233,0.8)" : "#fbbf24",textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:"'DM Mono',monospace"}}>
-                      {(() => {
-                        const t = alert.type;
-                        const labels: Record<string,Record<string,string>> = {
-                          critical:  { pt:"Alerta crítico",   es:"Alerta crítica",   en:"Critical alert"   },
-                          warning:   { pt:"Atenção",          es:"Atención",         en:"Warning"          },
-                          system:    { pt:"Sistema",          es:"Sistema",          en:"System"           },
-                          action:    { pt:"Ação registrada",  es:"Acción registrada",en:"Action logged"    },
-                          info:      { pt:"Info",             es:"Info",             en:"Info"             },
-                        };
-                        return labels[t]?.[lang] || labels[t]?.en || t?.replace(/_/g," ") || "Alert";
-                      })()}
-                    </p>
-                    {alert.ad_name && (
-                      <p style={{margin:"0 0 2px",fontSize:13,fontWeight:600,color:"#eef0f6",fontFamily:"'Plus Jakarta Sans', sans-serif"}}>
-                        {alert.ad_name}
-                        {alert.campaign_name && <span style={{fontWeight:400,color:"rgba(238,240,246,0.4)",fontSize:12}}> · {alert.campaign_name}</span>}
-                      </p>
-                    )}
-                    <p style={{margin:0,fontSize:12,color:"rgba(238,240,246,0.65)",lineHeight:1.5,fontFamily:"'Plus Jakarta Sans', sans-serif"}}>
-                      {alert.detail}
-                    </p>
-                    <p style={{margin:"4px 0 0",fontSize:12,color:"rgba(238,240,246,0.3)",fontFamily:"'DM Mono',monospace"}}>
-                      {new Date(alert.created_at).toLocaleString(lang==="pt"?"pt-BR":"en-US",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
-                    </p>
+                  {/* Top: type badge + time */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <span style={{fontSize:14}}>{icon}</span>
+                      <span style={{fontSize:9,fontWeight:800,letterSpacing:"0.1em",textTransform:"uppercase",color,fontFamily:"'Inter',sans-serif"}}>
+                        {alert.type?.replace(/_/g," ")||"ALERTA"}
+                      </span>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:10,color:"rgba(240,246,252,0.48)",fontFamily:"'Inter',sans-serif"}}>{ago}</span>
+                      <button onClick={()=>dismissAlert(alert.id)} disabled={isDismissing}
+                        style={{background:"none",border:"none",cursor:"pointer",color:"rgba(240,246,252,0.3)",fontSize:14,padding:"0 2px",lineHeight:1}}
+                        title="Dispensar">×</button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => dismissAlert(alert.id)}
-                    disabled={isDismissing}
-                    style={{flexShrink:0,background:"none",border:"none",cursor:"pointer",color:"rgba(238,240,246,0.25)",fontSize:16,padding:"2px 4px",lineHeight:1}}
-                    title={lang==="pt"?"Dispensar":"Dismiss"}>
-                    ×
-                  </button>
+                  {/* Headline — ACTION + LOSS */}
+                  <p style={{fontSize:14,fontWeight:700,color:"#F0F6FC",margin:"0 0 4px",lineHeight:1.45,fontFamily:"'Inter',sans-serif"}}>
+                    {verb}{adLabel ? ` '${adLabel}'` : ""}
+                  </p>
+                  {/* Detail — loss framing */}
+                  <p style={{fontSize:12.5,color:isHigh?"rgba(248,113,113,0.85)":"rgba(240,246,252,0.72)",margin:"0 0 8px",lineHeight:1.5,fontFamily:"'Inter',sans-serif",fontWeight:isHigh?500:400}}>
+                    {alert.detail}
+                  </p>
+                  {/* Action button for high urgency */}
+                  {isHigh && (
+                    <button onClick={()=>{
+                      setInput(alert.action_suggestion || `Analise urgente: ${alert.detail}`);
+                    }} style={{
+                      background:color,color:"#fff",border:"none",borderRadius:5,
+                      padding:"5px 12px",fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif",
+                      cursor:"pointer",boxShadow:`0 2px 8px ${color}40`,transition:"all 0.15s",
+                    }}
+                    onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.boxShadow=`0 4px 12px ${color}60`;}}
+                    onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow=`0 2px 8px ${color}40`;}}
+                    >
+                      {alert.action_suggestion || "Analisar agora"}
+                    </button>
+                  )}
                 </div>
               );
             })}
+            <style>{`@keyframes chatAlertPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.85;transform:scale(1.08)}}`}</style>
           </div>
         )}
 

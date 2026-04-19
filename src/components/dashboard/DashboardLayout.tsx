@@ -44,6 +44,19 @@ export interface ActivePersona {
   [key: string]: unknown;
 }
 
+export interface AccountAlert {
+  id: string;
+  type: string;
+  urgency: "high" | "medium";
+  ad_name?: string;
+  campaign_name?: string;
+  detail: string;
+  kpi_label?: string;
+  kpi_value?: string;
+  action_suggestion?: string;
+  created_at: string;
+}
+
 export interface DashboardContext {
   user: User;
   profile: Profile;
@@ -54,6 +67,7 @@ export interface DashboardContext {
   setSelectedPersona: (p: ActivePersona | null) => void;
   aiProfile: { industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null;
   lang: string;
+  accountAlerts: AccountAlert[];
 }
 
 export interface Profile {
@@ -111,6 +125,7 @@ export default function DashboardLayout() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [telegramModalOpen, setTelegramModalOpen] = useState(false);
   const [aiProfile, setAiProfile] = useState<{ industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null>(null);
+  const [accountAlerts, setAccountAlerts] = useState<AccountAlert[]>([]);
   const [telegramConn, setTelegramConn] = useState<any>(null);
   const [telegramPairingLink, setTelegramPairingLink] = useState<string|null>(null);
   const [telegramLinkLoading, setTelegramLinkLoading] = useState(false);
@@ -171,7 +186,7 @@ export default function DashboardLayout() {
       // ── Fetch ALL data in parallel before showing UI ──
       // Note: only fast Supabase queries here. Edge function (check-usage) runs after UI shows.
       const currentPeriod = new Date().toISOString().slice(0, 7);
-      const [profileResult, telegramResult, aiProfileResult, usageResult, personaResult] = await Promise.all([
+      const [profileResult, telegramResult, aiProfileResult, usageResult, personaResult, alertsResult] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
         supabase.from("telegram_connections").select("chat_id,telegram_username,active")
           .eq("user_id", session.user.id).eq("active", true).maybeSingle(),
@@ -180,6 +195,9 @@ export default function DashboardLayout() {
           .eq("user_id", session.user.id).maybeSingle(),
         supabase.from("usage").select("*").eq("user_id", session.user.id).eq("period", currentPeriod).maybeSingle(),
         supabase.from("personas").select("*").eq("user_id", session.user.id).order("created_at", { ascending: false }),
+        (supabase as any).from("account_alerts").select("id,type,urgency,ad_name,campaign_name,detail,kpi_label,kpi_value,action_suggestion,created_at")
+          .eq("user_id", session.user.id).is("dismissed_at", null)
+          .order("created_at", { ascending: false }).limit(10),
       ]);
 
       if (!mounted) return;
@@ -189,6 +207,7 @@ export default function DashboardLayout() {
       setTelegramConn(telegramResult.data || null);
       if (!aiProfileResult.error) setAiProfile(aiProfileResult.data || null);
       if (usageResult.data) setUsage({ analyses_count: usageResult.data.analyses_count, boards_count: usageResult.data.boards_count });
+      if (alertsResult.data?.length) setAccountAlerts(alertsResult.data as AccountAlert[]);
 
       if (profileData) {
         // Test account: reset onboarding every login — BUT skip if arriving from demo flow
@@ -686,6 +705,7 @@ export default function DashboardLayout() {
           savedPersonas={savedPersonas}
           selectedPersona={selectedPersona}
           onSelectPersona={(p) => setSelectedPersona(p as ActivePersona)}
+          alertCount={accountAlerts.filter(a => a.urgency === "high").length}
         />
       </div>
 
@@ -768,7 +788,7 @@ export default function DashboardLayout() {
             >
               <ErrorBoundary>
               {profile ? (
-                <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile, lang: language } satisfies DashboardContext} />
+                <Outlet context={{ user, profile, usage, usageDetails, refreshUsage: () => fetchUsage(user!.id), selectedPersona, setSelectedPersona, aiProfile, lang: language, accountAlerts } satisfies DashboardContext} />
               ) : (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", minHeight: 300 }}>
                   <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.1)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite" }} />

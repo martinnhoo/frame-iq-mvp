@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
+import type { DashboardContext, AccountAlert } from '@/components/dashboard/DashboardLayout';
 import { MoneyBar } from '../../components/feed/MoneyBar';
 import { SummaryBar } from '../../components/feed/SummaryBar';
 import { DecisionCard } from '../../components/feed/DecisionCard';
@@ -2836,6 +2836,187 @@ const PerformancePulse: React.FC<{
 };
 
 // ================================================================
+// PRIORITY STACK — Aggressive alert cards (Sprint 1)
+// Rule: each card = ACTION + LOSS/GAIN + URGENCY
+// ================================================================
+const ALERT_CONFIG: Record<string, { icon: string; verb: string; color: string }> = {
+  FADIGA_CRITICA:       { icon: '🔥', verb: 'Pause agora',        color: '#F87171' },
+  ROAS_CRITICO:         { icon: '💸', verb: 'Corte já',           color: '#F87171' },
+  ROAS_COLAPSOU:        { icon: '📉', verb: 'Ação imediata',      color: '#F87171' },
+  CTR_COLAPSOU:         { icon: '🧊', verb: 'Troque o criativo',  color: '#F87171' },
+  RETENCAO_VIDEO_BAIXA: { icon: '⏭️', verb: 'Refaça o hook',     color: '#F87171' },
+  SPEND_SEM_RETORNO:    { icon: '🕳️', verb: 'Pare o sangramento', color: '#F87171' },
+  // medium-level types (from pattern alerts)
+  DEFAULT_HIGH:         { icon: '🚨', verb: 'Ação urgente',       color: '#F87171' },
+  DEFAULT_MEDIUM:       { icon: '⚠️', verb: 'Atenção',            color: '#FBBF24' },
+};
+
+function getAlertConfig(alert: AccountAlert) {
+  const cfg = ALERT_CONFIG[alert.type];
+  if (cfg) return cfg;
+  return alert.urgency === 'high' ? ALERT_CONFIG.DEFAULT_HIGH : ALERT_CONFIG.DEFAULT_MEDIUM;
+}
+
+/** Format time ago in Portuguese */
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'agora';
+  if (min < 60) return `${min}min atrás`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h atrás`;
+  const d = Math.floor(h / 24);
+  return `${d}d atrás`;
+}
+
+const PriorityStack: React.FC<{
+  alerts: AccountAlert[];
+  onDismiss: (id: string) => void;
+  onAction: (alert: AccountAlert) => void;
+}> = ({ alerts, onDismiss, onAction }) => {
+  if (!alerts.length) return null;
+
+  const sorted = [...alerts].sort((a, b) => {
+    if (a.urgency === 'high' && b.urgency !== 'high') return -1;
+    if (a.urgency !== 'high' && b.urgency === 'high') return 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {/* Section label */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
+      }}>
+        <span style={{
+          width: 7, height: 7, borderRadius: '50%',
+          background: '#F87171',
+          boxShadow: '0 0 10px rgba(248,113,113,0.5)',
+          animation: 'alertPulse 2s ease-in-out infinite',
+        }} />
+        <span style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+          color: '#F87171', fontFamily: F,
+        }}>
+          {sorted.filter(a => a.urgency === 'high').length > 0
+            ? `${sorted.filter(a => a.urgency === 'high').length} ALERTA${sorted.filter(a => a.urgency === 'high').length > 1 ? 'S' : ''} URGENTE${sorted.filter(a => a.urgency === 'high').length > 1 ? 'S' : ''}`
+            : `${sorted.length} ALERTA${sorted.length > 1 ? 'S' : ''}`}
+        </span>
+        <div style={{ flex: 1, height: 1, background: 'rgba(248,113,113,0.15)' }} />
+      </div>
+
+      {/* Alert cards */}
+      {sorted.map((alert, i) => {
+        const cfg = getAlertConfig(alert);
+        const isHigh = alert.urgency === 'high';
+        const adLabel = alert.ad_name || alert.campaign_name || '';
+
+        return (
+          <div
+            key={alert.id}
+            style={{
+              background: isHigh
+                ? 'linear-gradient(135deg, rgba(248,113,113,0.08) 0%, rgba(13,17,23,0.95) 100%)'
+                : T.bg1,
+              border: `1px solid ${isHigh ? 'rgba(248,113,113,0.25)' : T.border1}`,
+              borderLeft: `3px solid ${cfg.color}`,
+              borderRadius: 10,
+              padding: 'clamp(12px, 2.5vw, 16px)',
+              marginBottom: 8,
+              animation: `feed-fadeUp 0.3s ease ${i * 0.05}s both`,
+              position: 'relative' as const,
+            }}
+          >
+            {/* Top row: type badge + time */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 14 }}>{cfg.icon}</span>
+                <span style={{
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                  color: cfg.color, fontFamily: F,
+                }}>
+                  {alert.type.replace(/_/g, ' ')}
+                </span>
+              </div>
+              <span style={{ fontSize: 10, color: T.text3, fontFamily: F }}>
+                {timeAgo(alert.created_at)}
+              </span>
+            </div>
+
+            {/* Headline — ACTION + LOSS framing */}
+            <p style={{
+              fontSize: 14, fontWeight: 700, color: T.text1, fontFamily: F,
+              margin: '0 0 4px', lineHeight: 1.45,
+            }}>
+              {cfg.verb}
+              {adLabel ? ` '${adLabel}'` : ''}
+            </p>
+
+            {/* Detail — the loss/gain copy */}
+            <p style={{
+              fontSize: 12.5, color: isHigh ? 'rgba(248,113,113,0.85)' : T.text2,
+              fontFamily: F, margin: '0 0 10px', lineHeight: 1.5, fontWeight: isHigh ? 500 : 400,
+            }}>
+              {alert.detail}
+            </p>
+
+            {/* KPI chip if available */}
+            {alert.kpi_label && alert.kpi_value && (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: T.bg2, borderRadius: 4, padding: '3px 8px', marginBottom: 10,
+              }}>
+                <span style={{ fontSize: 10, color: T.text3, fontFamily: F, fontWeight: 600 }}>
+                  {alert.kpi_label}:
+                </span>
+                <span style={{ fontSize: 11, color: cfg.color, fontFamily: F, fontWeight: 700 }}>
+                  {alert.kpi_value}
+                </span>
+              </div>
+            )}
+
+            {/* Action row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {isHigh && (
+                <button
+                  onClick={() => onAction(alert)}
+                  style={{
+                    background: cfg.color, color: '#fff', border: 'none', borderRadius: 5,
+                    padding: '6px 14px', fontSize: 11, fontWeight: 700, fontFamily: F,
+                    cursor: 'pointer', letterSpacing: '-0.01em',
+                    transition: 'all 0.15s',
+                    boxShadow: `0 2px 8px ${cfg.color}40`,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 4px 12px ${cfg.color}60`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 2px 8px ${cfg.color}40`; }}
+                >
+                  {alert.action_suggestion || cfg.verb}
+                </button>
+              )}
+              <button
+                onClick={() => onDismiss(alert.id)}
+                style={{
+                  background: 'transparent', color: T.text3, border: 'none',
+                  padding: '4px 8px', fontSize: 10, fontWeight: 600, fontFamily: F,
+                  cursor: 'pointer', letterSpacing: '0.02em',
+                  transition: 'color 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = T.text2; }}
+                onMouseLeave={e => { e.currentTarget.style.color = T.text3; }}
+              >
+                Dispensar
+              </button>
+            </div>
+          </div>
+        );
+      })}
+
+      <style>{`@keyframes alertPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.85;transform:scale(1.08)}}`}</style>
+    </div>
+  );
+};
+
+// ================================================================
 // FEED PAGE — Main component
 // ================================================================
 const FeedPage: React.FC = () => {
@@ -2892,6 +3073,38 @@ const FeedPage: React.FC = () => {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastAnalysisMin] = useState(() => Math.floor(Math.random() * 4) + 2);
   const [patternsCount, setPatternsCount] = useState(0);
+
+  // ── PriorityStack: local dismiss tracking ──
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const visibleAlerts = useMemo(
+    () => (ctx.accountAlerts || []).filter(a => !dismissedAlerts.has(a.id)),
+    [ctx.accountAlerts, dismissedAlerts],
+  );
+
+  const handleAlertDismiss = useCallback(async (alertId: string) => {
+    setDismissedAlerts(prev => new Set(prev).add(alertId));
+    // Persist dismiss to DB
+    try {
+      await (supabase as any).from('account_alerts')
+        .update({ dismissed_at: new Date().toISOString() })
+        .eq('id', alertId);
+    } catch {}
+  }, []);
+
+  const handleAlertAction = useCallback((alert: AccountAlert) => {
+    // Navigate to AI Chat with the alert context pre-loaded
+    navigate('/dashboard/ai', {
+      state: {
+        urgentAlert: {
+          type: alert.type,
+          ad_name: alert.ad_name,
+          campaign_name: alert.campaign_name,
+          detail: alert.detail,
+          action_suggestion: alert.action_suggestion,
+        },
+      },
+    });
+  }, [navigate]);
 
   // ── Account goal (Conversion Intelligence) ──
   const [goalConfigured, setGoalConfigured] = useState<boolean | null>(null); // null = loading
@@ -3901,6 +4114,15 @@ const FeedPage: React.FC = () => {
 
         {/* Inline sync progress banner */}
         {syncing && <SyncBanner />}
+
+        {/* ── PRIORITY STACK — urgent alerts above everything ── */}
+        {metaConnected && !isDemo && (
+          <PriorityStack
+            alerts={visibleAlerts}
+            onDismiss={handleAlertDismiss}
+            onAction={handleAlertAction}
+          />
+        )}
 
         {/* Performance Pulse — KPI bar */}
         {metaConnected && !isDemo && (

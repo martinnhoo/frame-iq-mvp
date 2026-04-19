@@ -28,6 +28,7 @@ interface SidebarProps {
   savedPersonas?: ActivePersona[];
   selectedPersona?: ActivePersona | null;
   onSelectPersona?: (p: ActivePersona) => void;
+  alertCount?: number;
 }
 
 // LIFETIME removed — all accounts use normal credit system
@@ -61,9 +62,9 @@ function avatarGradient(name: string) {
 }
 
 // ── Nav item (primary links) — always show icon, like Linear ─────────────────
-function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
+function NavItem({ url, label, icon: Icon, isActive, onClose, badge, alertCount }: {
   url: string; label: string; icon: React.ElementType;
-  isActive: boolean; onClose: () => void; badge?: string;
+  isActive: boolean; onClose: () => void; badge?: string; alertCount?: number;
 }) {
   const [hov, setHov] = useState(false);
   return (
@@ -93,6 +94,16 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
           letterSpacing: "0.04em", fontFamily: F,
         }}>{badge}</span>
       )}
+      {(alertCount ?? 0) > 0 && (
+        <span style={{
+          minWidth: 18, height: 18, borderRadius: 9, padding: "0 5px",
+          background: "#ef4444", color: "#fff",
+          fontSize: 10, fontWeight: 700, fontFamily: F,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          animation: "alertPulse 2s ease-in-out infinite",
+          boxShadow: "0 0 8px rgba(239,68,68,0.4)",
+        }}>{alertCount}</span>
+      )}
     </NavLink>
   );
 }
@@ -101,6 +112,7 @@ function NavItem({ url, label, icon: Icon, isActive, onClose, badge }: {
 export function DashboardSidebar({
   user, profile, open, onClose, onOpenProfile,
   savedPersonas = [], selectedPersona, onSelectPersona,
+  alertCount = 0,
 }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -192,6 +204,7 @@ export function DashboardSidebar({
     <>
       <style>{`
         @keyframes sb-in { from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)} }
+        @keyframes alertPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.85;transform:scale(1.08)} }
       `}</style>
 
       <aside data-sidebar-build="v13-4-items" style={{
@@ -356,7 +369,8 @@ export function DashboardSidebar({
             {NAV_ITEMS.map(item => (
               <NavItem key={item.url} url={item.url} label={item.label} icon={item.icon}
                 isActive={isAt(item.url)}
-                onClose={onClose} />
+                onClose={onClose}
+                alertCount={item.url === "/dashboard/feed" || item.url === "/dashboard/ai" ? alertCount : undefined} />
             ))}
           </nav>
         </div>
