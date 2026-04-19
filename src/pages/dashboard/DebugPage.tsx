@@ -254,10 +254,11 @@ export default function DebugPage() {
       if (error) throw error;
       const accounts = adAccounts || [];
       v2AccountRows = accounts;
+      const v2Detail = accounts.map((a: any) => `${a.name || '?'} (${a.meta_account_id})`).join(' · ');
       results.push({
         label: 'Ad accounts (v2)',
         status: accounts.length > 0 ? 'ok' : 'warn',
-        detail: `${accounts.length} account(s)`,
+        detail: accounts.length > 0 ? `${accounts.length}: ${v2Detail}` : '0 account(s)',
       });
       if (accounts.length > 0) {
         const latest = accounts[0];
