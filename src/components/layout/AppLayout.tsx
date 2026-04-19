@@ -189,10 +189,10 @@ export function AppLayout() {
 
       fetchUsage(session.user.id);
 
-      // Load saved personas — select only columns that exist in the table
+      // Load saved personas
       const { data: rawPersonas } = await (supabase as any)
         .from('personas')
-        .select('id, name, result, brand_kit, created_at')
+        .select('id, name, logo_url, result, brand_kit, description, website, created_at')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
 
@@ -200,9 +200,9 @@ export function AppLayout() {
       const personas = (rawPersonas || []).map((p: any) => ({
         id: p.id,
         name: p.name || p.result?.name || 'Conta',
-        logo_url: p.brand_kit?.logo_data_url || null,
-        website: p.result?.website || null,
-        description: p.result?.biz_description || null,
+        logo_url: p.logo_url || p.brand_kit?.logo_data_url || null,
+        website: p.website || p.result?.website || null,
+        description: p.description || p.result?.biz_description || null,
         preferred_market: p.result?.preferred_market || null,
         industry: p.result?.industry || p.result?.niche || null,
       }));
@@ -233,6 +233,47 @@ export function AppLayout() {
     init();
     return () => { mounted = false; };
   }, []);
+
+  // ── Reload personas when AccountsPage saves changes ──
+  const reloadPersonas = useCallback(async () => {
+    if (!user) return;
+    const { data: rawPersonas } = await (supabase as any)
+      .from('personas')
+      .select('id, name, logo_url, result, brand_kit, description, website, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    const personas = (rawPersonas || []).map((p: any) => ({
+      id: p.id,
+      name: p.name || p.result?.name || 'Conta',
+      logo_url: p.logo_url || p.brand_kit?.logo_data_url || null,
+      website: p.website || p.result?.website || null,
+      description: p.description || p.result?.biz_description || null,
+      preferred_market: p.result?.preferred_market || null,
+      industry: p.result?.industry || p.result?.niche || null,
+    }));
+
+    setSavedPersonas(personas);
+
+    // If the currently selected persona was updated, refresh its data too
+    if (selectedPersona) {
+      const updated = personas.find((p: any) => p.id === selectedPersona.id);
+      if (updated) {
+        setSelectedPersona(updated, user.id);
+      } else if (personas.length) {
+        // Selected persona was deleted — switch to first available
+        setSelectedPersona(personas[0], user.id);
+      } else {
+        setSelectedPersona(null);
+      }
+    }
+  }, [user, selectedPersona]);
+
+  useEffect(() => {
+    const handler = () => { reloadPersonas(); };
+    window.addEventListener('persona-updated', handler);
+    return () => window.removeEventListener('persona-updated', handler);
+  }, [reloadPersonas]);
 
   const isAt = (url: string) => {
     if (url === '/dashboard/feed') {

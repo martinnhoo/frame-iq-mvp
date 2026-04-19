@@ -1211,6 +1211,7 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
       // Auto-save logo_url immediately for existing accounts
       if (account?.id) {
         await supabase.from("personas").update({ logo_url: url }).eq("id", account.id);
+        window.dispatchEvent(new CustomEvent('persona-updated'));
         toast.success("Logo salvo");
       }
     } catch (e: any) {
@@ -1424,6 +1425,7 @@ export default function AccountsPage() {
 
   const activate = (acc: any) => {
     setSelectedPersona({ ...acc } as any);
+    window.dispatchEvent(new CustomEvent('persona-updated'));
     toast.success(acc.name + " ativada no chat");
   };
 
@@ -1436,6 +1438,7 @@ export default function AccountsPage() {
     if (openId === id) setOpenId(null);
     load();
     setDeleting(null);
+    window.dispatchEvent(new CustomEvent('persona-updated'));
   };
 
   if (loading) return (
@@ -1492,7 +1495,7 @@ export default function AccountsPage() {
             </button>
           </div>
           <AccountForm userId={user.id} t={t}
-            onSave={() => { load(); setCreating(false); }}
+            onSave={() => { load(); setCreating(false); window.dispatchEvent(new CustomEvent('persona-updated')); }}
             onCancel={() => setCreating(false)}/>
         </div>
       )}
@@ -1601,7 +1604,7 @@ export default function AccountsPage() {
                         </button>
                       </div>
                       <AccountForm account={acc} userId={user.id} t={t}
-                        onSave={() => { load(); setEditingId(null); }}
+                        onSave={() => { load(); setEditingId(null); window.dispatchEvent(new CustomEvent('persona-updated')); }}
                         onCancel={() => setEditingId(null)}/>
                     </div>
                   ) : (
