@@ -174,6 +174,68 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, ms = 10000): Promise<T> 
   ]);
 };
 
+/**
+ * Resolves Meta connection + ensures a v2 ad_accounts row exists for this persona.
+ * Shared by GoalSection and MarginSection so both can reliably save data.
+ * Returns { v2Id, metaAccountId } or null if no Meta connection.
+ */
+async function resolveV2Account(userId: string, personaId: string): Promise<{ v2Id: string; metaAccountId: string } | null> {
+  const { data: connRes } = await supabase.functions.invoke("meta-oauth", {
+    body: { action: "get_connections", user_id: userId }
+  });
+  const conns = (connRes?.connections || []) as any[];
+  const metaConn = conns.find((c: any) => c.platform === "meta" && c.persona_id === personaId && c.status === "active");
+  if (!metaConn) return null;
+
+  const ads = (metaConn.ad_accounts || []) as any[];
+  const selId = localStorage.getItem(`meta_sel_${personaId}`) || metaConn.selected_account_id || ads[0]?.id;
+  if (!selId) return null;
+
+  // Try to find existing v2 row
+  const { data: existing } = await (supabase
+    .from('ad_accounts' as any)
+    .select('id')
+    .eq('user_id', userId)
+    .eq('meta_account_id', selId)
+    .maybeSingle() as any);
+
+  if (existing?.id) return { v2Id: existing.id, metaAccountId: selId };
+
+  // Auto-create v2 row (same logic as useActiveAccount.ensureV2Account)
+  const selMeta = ads.find((a: any) => a.id === selId) || ads[0];
+  const { data: created, error: insertErr } = await (supabase
+    .from('ad_accounts' as any)
+    .insert({
+      user_id: userId,
+      meta_account_id: selId,
+      name: selMeta?.name || selId,
+      currency: selMeta?.currency || 'BRL',
+      timezone: 'America/Sao_Paulo',
+      status: 'active',
+      total_ads_synced: 0,
+      total_spend_30d: 0,
+    })
+    .select('id')
+    .single() as any);
+
+  if (insertErr) {
+    // Unique constraint race — row may exist now
+    if (insertErr.code === '23505') {
+      const { data: retry } = await (supabase
+        .from('ad_accounts' as any)
+        .select('id')
+        .eq('user_id', userId)
+        .eq('meta_account_id', selId)
+        .maybeSingle() as any);
+      if (retry?.id) return { v2Id: retry.id, metaAccountId: selId };
+    }
+    console.error('[resolveV2Account] insert error:', insertErr);
+    return null;
+  }
+
+  return created?.id ? { v2Id: created.id, metaAccountId: selId } : null;
+}
+
 function PlatformIcon({ id }: { id:string }) {
   if (id === "meta") return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -573,24 +635,20 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
   useEffect(() => {
     (async () => {
       try {
-        const { data: connRes } = await supabase.functions.invoke("meta-oauth", {
-          body: { action: "get_connections", user_id: userId }
-        });
-        const conns = (connRes?.connections || []) as any[];
-        const meta = conns.find((c: any) => c.platform === "meta" && c.persona_id === personaId && c.status === "active");
-        if (!meta) { setLoading(false); return; }
-        const ads = (meta.ad_accounts || []) as any[];
-        const selId = localStorage.getItem(`meta_sel_${personaId}`) || meta.selected_account_id || ads[0]?.id;
-        if (!selId) { setLoading(false); return; }
+        const resolved = await resolveV2Account(userId, personaId);
+        if (!resolved) { setLoading(false); return; }
+        setV2Id(resolved.v2Id);
+        // Now load the actual data
         const { data: row } = await (supabase.from('ad_accounts' as any)
           .select('id, profit_margin_pct, goal_objective')
-          .eq('user_id', userId).eq('meta_account_id', selId).maybeSingle() as any);
-        if (row?.id) {
-          setV2Id(row.id);
+          .eq('id', resolved.v2Id).maybeSingle() as any);
+        if (row) {
           setMargin(row.profit_margin_pct);
           setGoalObj(row.goal_objective);
         }
-      } catch {}
+      } catch (e) {
+        console.error('[MarginSection] load error:', e);
+      }
       setLoading(false);
     })();
   }, [userId, personaId]);
@@ -614,15 +672,20 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
     ? (1 / (calculatedMargin / 100)).toFixed(2) : null;
 
   const save = async () => {
-    if (!v2Id || !calculatedMargin) return;
+    if (!calculatedMargin) { toast.error('Preencha os dados para calcular a margem'); return; }
+    if (!v2Id) { toast.error('Conta de anúncios não encontrada. Conecte o Meta Ads primeiro.'); return; }
     setSaving(true);
     try {
-      await (supabase.from('ad_accounts' as any).update({ profit_margin_pct: calculatedMargin }).eq('id', v2Id) as any);
+      const { error: updateErr } = await (supabase.from('ad_accounts' as any).update({ profit_margin_pct: calculatedMargin }).eq('id', v2Id) as any);
+      if (updateErr) throw updateErr;
       setMargin(calculatedMargin);
       setEditing(false);
       setMode(null);
       toast.success('Margem atualizada');
-    } catch { toast.error('Erro ao salvar'); }
+    } catch (e: any) {
+      console.error('[MarginSection] save error:', e);
+      toast.error('Erro ao salvar: ' + (e?.message || 'tente novamente'));
+    }
     finally { setSaving(false); }
   };
 
@@ -911,28 +974,20 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
   const loadGoal = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Find Meta platform_connection for this persona
-      const { data: connRes } = await supabase.functions.invoke("meta-oauth", {
-        body: { action: "get_connections", user_id: userId }
-      });
-      const conns = (connRes?.connections || []) as any[];
-      const metaConn = conns.find((c: any) => c.platform === "meta" && c.persona_id === personaId && c.status === "active");
-      if (!metaConn) { setNoMetaConn(true); setLoading(false); return; }
+      // 1. Resolve Meta connection + ensure v2 row exists
+      const resolved = await resolveV2Account(userId, personaId);
+      if (!resolved) { setNoMetaConn(true); setLoading(false); return; }
 
-      const ads = (metaConn.ad_accounts || []) as any[];
-      const selId = localStorage.getItem(`meta_sel_${personaId}`) || metaConn.selected_account_id || ads[0]?.id;
-      if (!selId) { setNoMetaConn(true); setLoading(false); return; }
+      setV2AccountId(resolved.v2Id);
 
-      // 2. Find v2 ad_accounts row
+      // 2. Load goal data from v2 row
       const { data: accRow } = await (supabase
         .from('ad_accounts' as any)
         .select('id, goal_objective, goal_primary_metric, goal_conversion_event, goal_target_value, goal_configured_at')
-        .eq('user_id', userId)
-        .eq('meta_account_id', selId)
+        .eq('id', resolved.v2Id)
         .maybeSingle() as any);
 
-      if (accRow?.id) {
-        setV2AccountId(accRow.id);
+      if (accRow) {
         setGoalData(accRow.goal_objective ? accRow : null);
         // Pre-fill edit state
         if (accRow.goal_objective) {
@@ -957,7 +1012,14 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
   useEffect(() => { loadGoal(); }, [loadGoal]);
 
   const handleSave = async () => {
-    if (!v2AccountId || !editObj || !editEvent) return;
+    if (!editObj || !editEvent) {
+      toast.error('Selecione o objetivo e evento de conversão');
+      return;
+    }
+    if (!v2AccountId) {
+      toast.error('Conta de anúncios não encontrada. Conecte o Meta Ads primeiro.');
+      return;
+    }
     setSaving(true);
     const obj = GOAL_OBJECTIVES.find(o => o.key === editObj);
     if (!obj) { setSaving(false); return; }
@@ -969,7 +1031,7 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
     }
 
     try {
-      await (supabase.from('ad_accounts' as any).update({
+      const { error: updateErr } = await (supabase.from('ad_accounts' as any).update({
         goal_objective: editObj,
         goal_primary_metric: obj.metric,
         goal_conversion_event: editEvent,
@@ -977,11 +1039,14 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
         goal_configured_at: new Date().toISOString(),
       }).eq('id', v2AccountId) as any);
 
+      if (updateErr) throw updateErr;
+
       toast.success('Objetivo atualizado');
       setEditing(false);
       loadGoal();
     } catch (e: any) {
-      toast.error('Erro ao salvar: ' + (e?.message || ''));
+      console.error('[GoalSection] save error:', e);
+      toast.error('Erro ao salvar: ' + (e?.message || 'tente novamente'));
     } finally {
       setSaving(false);
     }
