@@ -504,95 +504,6 @@ Deno.serve(async (req) => {
       }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Only trigger dashboard offer for explicit data/analytics requests
-    // NOT for "resumo" or "como vai" — too broad, creates friction unnecessarily
-    const isDashboardRequest =
-      /\b(dashboard|painel|panel|relatório|relatorio|report|overview|visão geral|vision general|métricas|metricas|metrics|como está minha conta|how is my account)\b/i.test(
-        message,
-      ) && !message.includes("[DASHBOARD]"); // pill-triggered already handled
-
-    // Dashboard limits per plan (monthly)
-    const DASHBOARD_LIMITS: Record<string, number> = { free: 0, maker: 10, pro: 30, studio: -1 };
-    const dashLimit = DASHBOARD_LIMITS[planKey] ?? 0;
-
-    // If dashboard request — check limit and offer instead of auto-generating
-    if (isDashboardRequest && !message.includes("[DASHBOARD_CONFIRMED]")) {
-      const dashUsed = (profileRow as any)?.dashboard_count || 0;
-      const dashRemaining = dashLimit === -1 ? 999 : Math.max(0, dashLimit - dashUsed);
-
-      if (dashLimit === 0 || (dashLimit !== -1 && dashUsed >= dashLimit)) {
-        // No dashboards left — return upgrade wall
-        const uLang = uiLang || "pt";
-        const title =
-          uLang === "pt"
-            ? "Limite de dashboards atingido"
-            : uLang === "es"
-              ? "Límite de dashboards alcanzado"
-              : "Dashboard limit reached";
-        const content =
-          uLang === "pt"
-            ? `Seu plano ${planKey} inclui ${dashLimit === 0 ? "acesso a dashboards apenas no plano Maker ou superior" : dashLimit + " dashboards/mês"}. Você usou ${dashUsed}.`
-            : `Your ${planKey} plan includes ${dashLimit === 0 ? "dashboards on Maker plan or higher" : dashLimit + " dashboards/month"}. You've used ${dashUsed}.`;
-        return new Response(
-          JSON.stringify({
-            error: "dashboard_limit",
-            blocks: [{ type: "warning", title, content }],
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-
-      // Offer to generate dashboard — don't auto-generate
-      const uLang = uiLang || "pt";
-      const offerTitle =
-        uLang === "pt"
-          ? "Gerar dashboard de performance?"
-          : uLang === "es"
-            ? "¿Generar dashboard de rendimiento?"
-            : "Generate performance dashboard?";
-      // Detect which platform is connected for accurate offer text
-      const connectedPlatformNames: string[] = [];
-      const platformLabel =
-        connectedPlatformNames.length > 0
-          ? connectedPlatformNames.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1) + " Ads").join(" + ")
-          : uLang === "pt"
-            ? "sua conta de anúncios"
-            : uLang === "es"
-              ? "tu cuenta de anuncios"
-              : "your ad account";
-      const offerContent =
-        uLang === "pt"
-          ? `Posso gerar um dashboard com os dados reais de ${platformLabel} — spend, CTR, anúncios para escalar e pausar. Isso usa 1 dos seus ${dashRemaining} dashboard${dashRemaining !== 1 ? "s" : ""} restantes este mês.`
-          : uLang === "es"
-            ? `Puedo generar un dashboard con los datos reales de ${platformLabel} — spend, CTR, anuncios para escalar y pausar. Usa 1 de tus ${dashRemaining} dashboard${dashRemaining !== 1 ? "s" : ""} restantes este mes.`
-            : `I can generate a dashboard with your real ${platformLabel} data — spend, CTR, ads to scale and pause. This uses 1 of your ${dashRemaining} remaining dashboard${dashRemaining !== 1 ? "s" : ""} this month.`;
-
-      return new Response(
-        JSON.stringify({
-          blocks: [
-            {
-              type: "dashboard_offer",
-              title: offerTitle,
-              content: offerContent,
-              remaining: dashRemaining,
-              original_message: message,
-            },
-          ],
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // If confirmed dashboard — increment counter
-    if (message.includes("[DASHBOARD_CONFIRMED]")) {
-      const dashUsed = (profileRow as any)?.dashboard_count || 0;
-      if (dashLimit !== -1) {
-        await supabase
-          .from("profiles")
-          .update({ dashboard_count: dashUsed + 1 } as any)
-          .eq("id", user_id);
-      }
-    }
 
 
     // ── 2b. Detect "remember this" instructions — save before fetching context ──
@@ -2272,8 +2183,6 @@ NUNCA use tool_call para leitura (listar, mostrar dados) — os dados já estão
 
 tool_params: use dados da conta (produto, nicho, mercado, plataforma) quando disponíveis. Se não houver, use o que o usuário informou na mensagem. NUNCA recuse por falta de dados — ferramentas criativas sempre funcionam.
 
-DASHBOARD quando pedir performance: bloco "dashboard" com dados reais. Sem dados: "Conecte seu Meta Ads para ver o dashboard em tempo real."
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **DADOS DESTA CONTA**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -2327,9 +2236,6 @@ Intenção clara → use tool_call imediatamente. Não explique. Faça.
 
 REGRA ABSOLUTA: se o usuário pede roteiro, script, hooks ou brief → emita tool_call imediatamente com os dados disponíveis. NUNCA diga "preciso de mais informações" ou "me diga o produto" — infira e execute.
 
-**DASHBOARD** quando pedir resumo/performance:
-Bloco "dashboard" com dados REAIS do contexto. Se sem dados: *"Conecte seu Meta Ads para ver seu dashboard em tempo real."*
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **FORMATO DE RESPOSTA**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -2342,7 +2248,6 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 **Regra de ouro:** UM bloco por resposta, salvo quando há genuinamente duas coisas separadas. Nunca divida o que é um pensamento só.
 
 \`{ "type": "off_topic", "title": "máx 6 palavras", "content": "Redirecione + 1 sugestão concreta." }\`
-\`{ "type": "dashboard", "title": "...", "content": "...", "metrics": [{ "label": "...", "value": "...", "delta": "...", "trend": "up|down|flat" }], "chart": { "type": "bar", "labels": [...], "values": [...], "colors": [...] } }\`
 \`{ "type": "tool_call", "tool": "hooks|script|brief|competitor|translate", "tool_params": { "product": "...", "niche": "...", "market": "...", "platform": "...", "tone": "...", "angle": "...", "count": 5, "context": "..." } }\`
 \`{ "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "OBRIGATÓRIO — use o ID entre [colchetes] dos dados acima, ex: 123456789", "target_type": "campaign|adset|ad", "target_name": "nome do item", "value": "..." } }\`
 REGRA CRÍTICA para meta_action: target_id DEVE ser o ID numérico real do Meta (entre [colchetes] nos dados da conta). NUNCA use "undefined" ou omita. Se não encontrar o ID, pergunte ao usuário ou use list_campaigns primeiro.
@@ -2449,8 +2354,8 @@ PROIBIDO:
           if (msg.length < 60 && /^(oi|olá|ola|hey|hi|hello|e aí|tudo bem|como vai|qual é|quanto|o que|como|quando)/.test(msg)) return 800;
           // Tool requests need full output
           if (/hook|roteiro|script|brief|criativo|copy|ugc/.test(msg)) return 3000;
-          // Dashboard/analysis needs space
-          if (/dashboard|analisa|performance|relatório|resumo/.test(msg)) return 2000;
+          // Analysis/performance needs space
+          if (/analisa|performance|relatório|resumo/.test(msg)) return 2000;
           // Default: medium
           return 1500;
         })(),
@@ -2545,7 +2450,7 @@ PROIBIDO:
     (async () => {
       try {
         const assistantText = finalBlocks
-          .filter((b: any) => !["limit_warning","dashboard_offer","meta_action","navigate","dashboard","proactive"].includes(b.type))
+          .filter((b: any) => !["limit_warning","meta_action","navigate","proactive"].includes(b.type))
           .map((b: any) => {
             const parts = [];
             if (b.title) parts.push(b.title);
