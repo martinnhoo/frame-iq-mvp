@@ -15,8 +15,8 @@ import type { DashboardContext, Profile, Usage, UsageDetails, ActivePersona } fr
 import type { User } from '@supabase/supabase-js';
 import {
   Activity,
-  MessageSquare,
   Clock,
+  MessageSquare,
   LogOut,
   Link2,
   Menu,
@@ -78,16 +78,16 @@ function NavItem({ url, label, icon: Icon, onClick, isActive }: {
 
 function getNavItems(lang: string) {
   const l: Record<string, Record<string, string>> = {
-    ai: { pt: 'Media Buyer IA', es: 'Media Buyer IA', fr: 'AI Media Buyer', de: 'AI Media Buyer', zh: 'AI Media Buyer', ar: 'AI Media Buyer', en: 'AI Media Buyer' },
-    history: { pt: 'Histórico', es: 'Historial', fr: 'Historique', de: 'Verlauf', zh: '历史记录', ar: 'السجل', en: 'History' },
+    ai:       { pt: 'Media Buyer IA', es: 'Media Buyer IA', fr: 'Media Buyer IA', de: 'Media Buyer KI', zh: 'AI媒体买手', ar: 'مشتري وسائط IA', en: 'Media Buyer AI' },
+    history:  { pt: 'Histórico', es: 'Historial', fr: 'Historique', de: 'Verlauf', zh: '历史记录', ar: 'السجل', en: 'History' },
     accounts: { pt: 'Contas', es: 'Cuentas', fr: 'Comptes', de: 'Konten', zh: '账户', ar: 'الحسابات', en: 'Accounts' },
   };
   const t = (key: string) => l[key]?.[lang] || l[key]?.en || key;
   return [
-    { url: '/dashboard/feed', label: 'Feed', icon: Activity },
-    { url: '/dashboard/ai', label: t('ai'), icon: MessageSquare },
-    { url: '/dashboard/history', label: t('history'), icon: Clock },
-    { url: '/dashboard/accounts', label: t('accounts'), icon: Building2 },
+    { url: '/dashboard/feed',     label: 'Feed',         icon: Activity },
+    { url: '/dashboard/ai',       label: t('ai'),        icon: MessageSquare },
+    { url: '/dashboard/history',   label: t('history'),   icon: Clock },
+    { url: '/dashboard/accounts',  label: t('accounts'),  icon: Building2 },
   ];
 }
 
@@ -508,8 +508,7 @@ export function AppLayout() {
 
       {/* Nav */}
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 8 }}>
-        <SectionHeader label="Copilot" />
-        <nav>
+        <nav style={{ paddingTop: 8 }}>
           {getNavItems(language).map(item => (
             <NavItem
               key={item.url}
