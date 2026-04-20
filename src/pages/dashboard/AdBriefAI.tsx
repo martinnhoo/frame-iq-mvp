@@ -1922,7 +1922,7 @@ export default function AdBriefAI() {
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   // Credit balance from the new credit system
   const [creditBalance,setCreditBalance]=useState<{remaining:number,total:number}|null>(null);
-  const [proactiveLoading,setProactiveLoading]=useState(false);
+  const [proactiveLoading,setProactiveLoading]=useState(true); // start true to prevent "Conecte" flash
   const proactiveFired=useRef(false);
   const onboardingSessionDone=useRef(false);
   const [showOnboardingWelcome,setShowOnboardingWelcome]=useState(false);
@@ -2762,9 +2762,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     // Returning user with real conversation history — don't interrupt
     const existing = (() => { try { return storage.getJSON(SK, []); } catch { return []; } })();
     const hasRealHistory = existing.some((m: any) => m.role === "user");
-    if (hasRealHistory) return;
-
-    setProactiveLoading(true);
+    if (hasRealHistory) { setProactiveLoading(false); return; }
     try {
       const accountName = selectedPersona?.name || null;
       const hour = new Date().getHours();
@@ -3841,13 +3839,21 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
 
-        {/* ── Loading state — minimal, no skeleton flash ── */}
+        {/* ── Loading state — premium progress bar ── */}
         {messages.length===0&&(proactiveLoading||!contextReady)&&(
-          <div style={{maxWidth:680,margin:"0 auto",padding:"clamp(48px,10vw,80px) 24px 32px",display:"flex",flexDirection:"column",alignItems:"center",opacity:0.5}}>
-            <div style={{width:44,height:44,borderRadius:12,background:"rgba(255,255,255,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <div style={{width:20,height:20,borderRadius:"50%",border:"2px solid rgba(255,255,255,0.08)",borderTopColor:"rgba(13,162,231,0.5)",animation:"spin 0.8s linear infinite"}}/>
+          <div style={{maxWidth:680,margin:"0 auto",padding:"clamp(60px,12vw,100px) 24px 32px",display:"flex",flexDirection:"column",alignItems:"center",gap:16}}>
+            <div style={{width:36,height:36,borderRadius:10,background:"rgba(13,162,231,0.06)",border:"1px solid rgba(13,162,231,0.10)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0da2e7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.7}}>
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+              </svg>
             </div>
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            <p style={{fontSize:12,fontWeight:600,color:"rgba(255,255,255,0.30)",fontFamily:"'Plus Jakarta Sans',sans-serif",letterSpacing:"0.02em",margin:0}}>
+              {lang==="pt"?"Carregando seus dados...":lang==="es"?"Cargando tus datos...":"Loading your data..."}
+            </p>
+            <div style={{width:140,height:2,borderRadius:1,background:"rgba(255,255,255,0.04)",overflow:"hidden"}}>
+              <div style={{height:"100%",borderRadius:1,background:"linear-gradient(90deg, transparent, #0da2e7, transparent)",animation:"chatLoadBar 1.5s ease-in-out infinite"}}/>
+            </div>
+            <style>{`@keyframes chatLoadBar{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}`}</style>
           </div>
         )}
 
