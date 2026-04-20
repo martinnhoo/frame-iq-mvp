@@ -2,7 +2,7 @@
 // Complete from-scratch rebuild with depth system, real SVG logos, visual flow
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
-import { Globe, ChevronDown, ArrowRight, CheckCircle2, Pause, TrendingUp, ChevronRight, Zap, Brain } from "lucide-react";
+import { Globe, ChevronDown, ArrowRight, CheckCircle2, TrendingUp, Zap, Brain, X, Plus, Minus } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import CookieConsent from "@/components/CookieConsent";
@@ -90,13 +90,27 @@ const TX: Record<Lang, Record<string, string>> = {
     trust_powered: "Powered by",
     trust_meta: "Funciona com Meta Ads",
     // hero
-    hero_tag: "MOTOR DE DECISÃO PARA META ADS",
-    hero_title: "Sua campanha te diz\no que fazer agora.",
-    hero_sub: "AdBrief analisa suas campanhas em tempo real, encontra oportunidades e deixa você aplicar em um clique.",
-    hero_support: "Sem análise manual. Sem achismo.",
-    hero_cta: "Começar grátis",
-    hero_cta_sub: "Sem cartão · Sem configuração · 15 melhorias grátis",
+    hero_tag: "DECISÕES AUTOMÁTICAS PARA META ADS",
+    hero_title: "Seu CPA subiu 30%.\nVocê descobre em 2h — não em 5 dias.",
+    hero_sub: "AdBrief monitora sua conta Meta 24/7, detecta o problema antes de virar prejuízo e aplica a correção com um clique.",
+    hero_support: "Pausar, escalar, ajustar orçamento — sem abrir o Gerenciador de Anúncios.",
+    hero_cta: "Conectar minha conta Meta",
+    hero_cta_sub: "30 segundos · Sem cartão · 15 decisões grátis",
     hero_login: "Já tem conta? Entrar",
+    hero_screenshot_label: "O feed do AdBrief — decisões aplicadas hoje",
+    // social proof
+    social_title: "Para gestores que cuidam de contas reais",
+    social_sub: "Usado por agências e e-commerces que gastam de R$5k a R$500k/mês em Meta Ads.",
+    social_logo_placeholder: "logo cliente",
+    social_t1_quote: "Pausei 4 criativos com fadiga antes de torrar o orçamento do dia. Em 30 segundos.",
+    social_t1_name: "Em breve",
+    social_t1_role: "Gestor de tráfego · agência",
+    social_t2_quote: "É o que eu já fazia manual, só que 10x mais rápido e sem esquecer de nada.",
+    social_t2_name: "Em breve",
+    social_t2_role: "Head de mídia · e-commerce",
+    social_t3_quote: "Ganhei uma hora por dia. Não abro o Meta Business 15 vezes até o almoço.",
+    social_t3_name: "Em breve",
+    social_t3_role: "Fundador · agência",
     // concept
     concept_title: "Não é um dashboard.\nÉ um sistema de decisão.",
     concept_s1: "Análise contínua",
@@ -112,8 +126,23 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_s3: "Oportunidades aparecem",
     flow_s4: "Você aplica",
     flow_s5: "A performance melhora",
+    // compare
+    compare_title: "Ads Manager mostra o que aconteceu.\nAdBrief diz o que fazer.",
+    compare_sub: "A diferença entre olhar relatório e tomar decisão.",
+    compare_ads_title: "Meta Ads Manager",
+    compare_ads_1: "Mostra métricas passadas",
+    compare_ads_2: "Você interpreta sozinho",
+    compare_ads_3: "Você decide na base do achismo",
+    compare_ads_4: "Você executa manualmente",
+    compare_ads_5: "Nenhum aprendizado entre contas",
+    compare_adbrief_title: "AdBrief",
+    compare_adbrief_1: "Detecta o problema em 2h",
+    compare_adbrief_2: "Explica o que está acontecendo",
+    compare_adbrief_3: "Recomenda a ação específica",
+    compare_adbrief_4: "Aplica em 1 clique",
+    compare_adbrief_5: "Aprende com cada resultado",
     // loop
-    loop_title: "Cada melhoria gera a próxima.",
+    loop_title: "Cada decisão gera a próxima.",
     loop_sub: "O sistema aprende com cada ação e fica mais preciso a cada ciclo.",
     loop_s1: "Você aplica",
     loop_s1d: "Aceita a decisão direto no feed. Um clique.",
@@ -122,44 +151,63 @@ const TX: Record<Lang, Record<string, string>> = {
     loop_s3: "Nova oportunidade",
     loop_s3d: "Recomendações cada vez mais específicas pro seu negócio.",
     // pricing
-    pricing_title: "Quanto você quer melhorar?",
-    pricing_sub: "Você paga pelas melhorias aplicadas na sua campanha.",
+    pricing_title: "Preço claro, escala real.",
+    pricing_sub: "Comece grátis. Faça upgrade quando a conta crescer.",
     pricing_free: "Free",
-    pricing_free_d: "Para começar",
-    pricing_free_f1: "15 melhorias",
-    pricing_free_f2: "Acesso completo",
-    pricing_free_cta: "Criar conta",
+    pricing_free_d: "Pra testar antes de decidir",
+    pricing_free_f1: "1 conta Meta conectada",
+    pricing_free_f2: "15 decisões aplicadas",
+    pricing_free_f3: "Acesso completo por 14 dias",
+    pricing_free_cta: "Criar conta grátis",
     pricing_maker: "Maker",
-    pricing_maker_d: "Para rodar com consistência",
-    pricing_maker_f1: "1.000 melhorias",
-    pricing_maker_f2: "Uso contínuo",
+    pricing_maker_d: "Pra um gestor, uma conta",
+    pricing_maker_f1: "1 conta Meta",
+    pricing_maker_f2: "Decisões ilimitadas",
+    pricing_maker_f3: "Gasto até R$50k/mês",
     pricing_maker_cta: "Começar",
     pricing_pro: "Pro",
-    pricing_pro_badge: "Plano mais escolhido",
-    pricing_pro_d: "Escala com clareza",
-    pricing_pro_f1: "2.500 melhorias",
-    pricing_pro_f2: "Escala com clareza",
+    pricing_pro_badge: "Mais escolhido",
+    pricing_pro_d: "Pra agências com vários clientes",
+    pricing_pro_f1: "3 contas Meta",
+    pricing_pro_f2: "Decisões ilimitadas",
+    pricing_pro_f3: "Gasto até R$200k/mês",
     pricing_pro_cta: "Começar com Pro",
     pricing_studio: "Studio",
-    pricing_studio_d: "Sem limites",
-    pricing_studio_f1: "Melhorias ilimitadas",
-    pricing_studio_f2: "Para operações reais",
-    pricing_studio_cta: "Ir para Studio",
+    pricing_studio_d: "Operações grandes, sem teto",
+    pricing_studio_f1: "Contas ilimitadas",
+    pricing_studio_f2: "Decisões ilimitadas",
+    pricing_studio_f3: "Gasto ilimitado",
+    pricing_studio_cta: "Falar com vendas",
     pricing_details: "Ver todos os detalhes",
     pricing_mo: "/mês",
+    // faq
+    faq_title: "Perguntas que todo gestor faz antes",
+    faq_q1: "O AdBrief mexe na minha conta sozinho?",
+    faq_a1: "Não. Toda decisão precisa do seu clique. O AdBrief monitora, analisa e recomenda — você aceita ou ignora.",
+    faq_q2: "Preciso ser admin da conta de anúncios?",
+    faq_a2: "Precisa de permissão de anunciante ou superior. Funciona com BM compartilhada de cliente e com conta pessoal.",
+    faq_q3: "E se o AdBrief recomendar algo errado?",
+    faq_a3: "Toda decisão vem com a razão explícita (ex: \"CPA subiu 180% em 24h, 0 conversões\"). Você vê os números antes de aplicar. E pode reverter em 1 clique por até 30 minutos depois.",
+    faq_q4: "Funciona pra e-commerce? Agência? Infoproduto?",
+    faq_a4: "Sim pros três. O sistema aprende com a sua conta específica — o que funciona pro seu nicho, não genérico.",
+    faq_q5: "Quanto custa?",
+    faq_a5: "Free dá 15 decisões grátis (sem cartão). Maker $19/mês para 1 conta. Pro $49/mês para 3 contas. Studio $299/mês sem limite.",
+    faq_q6: "Posso cancelar?",
+    faq_a6: "Sim. Mensal, sem contrato, sem multa. Desconectar da Meta também é 1 clique.",
     // final
     final_title: "Você já viu como funciona.",
-    final_sub: "Aplique sua primeira melhoria agora.",
-    final_cta: "Começar grátis",
-    final_sub2: "Leva menos de 10 segundos",
+    final_sub: "Conecte sua conta em 30 segundos.",
+    final_cta: "Conectar Meta Ads",
+    final_sub2: "15 decisões grátis · sem cartão",
     final_login: "Já tem conta? Entrar",
     // sticky
-    sticky_cta: "Aplicar melhorias agora",
+    sticky_cta: "Conectar agora",
     // footer
     footer_tagline: "Sistema de decisão para Meta Ads",
     footer_product: "Produto",
     footer_how: "Como funciona",
     footer_pricing: "Preços",
+    footer_faq: "FAQ",
     footer_company: "Empresa",
     footer_about: "Sobre",
     footer_contact: "Contato",
@@ -173,13 +221,26 @@ const TX: Record<Lang, Record<string, string>> = {
     nav_signup: "Sign up",
     trust_powered: "Powered by",
     trust_meta: "Works with Meta Ads",
-    hero_tag: "DECISION ENGINE FOR META ADS",
-    hero_title: "Your campaign tells you\nwhat to do now.",
-    hero_sub: "AdBrief analyzes your campaigns in real time, finds opportunities, and lets you apply them in one click.",
-    hero_support: "No manual analysis. No guessing.",
-    hero_cta: "Start free",
-    hero_cta_sub: "No card · No setup · 15 free improvements",
+    hero_tag: "AUTOMATED DECISIONS FOR META ADS",
+    hero_title: "Your CPA jumps 30%.\nYou'll know in 2h — not 5 days.",
+    hero_sub: "AdBrief monitors your Meta account 24/7, catches the problem before it bleeds budget, and applies the fix in one click.",
+    hero_support: "Pause, scale, adjust budget — without opening Ads Manager.",
+    hero_cta: "Connect my Meta account",
+    hero_cta_sub: "30 seconds · No card · 15 free decisions",
     hero_login: "Already have an account? Log in",
+    hero_screenshot_label: "The AdBrief feed — decisions applied today",
+    social_title: "For media buyers running real accounts",
+    social_sub: "Used by agencies and e-commerce teams spending $1k to $100k/mo on Meta Ads.",
+    social_logo_placeholder: "client logo",
+    social_t1_quote: "Paused 4 fatiguing creatives before they burned the daily budget. In 30 seconds.",
+    social_t1_name: "Coming soon",
+    social_t1_role: "Media buyer · agency",
+    social_t2_quote: "It's what I was already doing manually — just 10x faster and without missing a thing.",
+    social_t2_name: "Coming soon",
+    social_t2_role: "Head of growth · e-commerce",
+    social_t3_quote: "Got an hour back every day. I don't open Business Manager 15 times before lunch anymore.",
+    social_t3_name: "Coming soon",
+    social_t3_role: "Founder · agency",
     concept_title: "Not a dashboard.\nA decision system.",
     concept_s1: "Continuous analysis",
     concept_s1d: "Monitors your campaigns 24/7 and identifies opportunities you'd miss.",
@@ -193,7 +254,21 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_s3: "Opportunities appear",
     flow_s4: "You apply",
     flow_s5: "Performance improves",
-    loop_title: "Each improvement generates the next.",
+    compare_title: "Ads Manager shows what happened.\nAdBrief tells you what to do.",
+    compare_sub: "The difference between reading a report and making a decision.",
+    compare_ads_title: "Meta Ads Manager",
+    compare_ads_1: "Shows past metrics",
+    compare_ads_2: "You interpret it yourself",
+    compare_ads_3: "You decide on gut feel",
+    compare_ads_4: "You execute manually",
+    compare_ads_5: "No learning across accounts",
+    compare_adbrief_title: "AdBrief",
+    compare_adbrief_1: "Catches the problem in 2h",
+    compare_adbrief_2: "Explains what's happening",
+    compare_adbrief_3: "Recommends the specific action",
+    compare_adbrief_4: "Applies it in 1 click",
+    compare_adbrief_5: "Learns from every result",
+    loop_title: "Each decision generates the next.",
     loop_sub: "The system learns from every action and gets sharper each cycle.",
     loop_s1: "You apply",
     loop_s1d: "Accept the decision right in the feed. One click.",
@@ -201,41 +276,59 @@ const TX: Record<Lang, Record<string, string>> = {
     loop_s2d: "Every result becomes a pattern. The AI evolves with your data.",
     loop_s3: "New opportunity",
     loop_s3d: "Recommendations increasingly specific to your business.",
-    pricing_title: "How much do you want to improve?",
-    pricing_sub: "You pay for improvements applied to your campaign.",
+    pricing_title: "Clear pricing. Real scale.",
+    pricing_sub: "Start free. Upgrade when your account grows.",
     pricing_free: "Free",
-    pricing_free_d: "To get started",
-    pricing_free_f1: "15 improvements",
-    pricing_free_f2: "Full access",
-    pricing_free_cta: "Create account",
+    pricing_free_d: "Try it before deciding",
+    pricing_free_f1: "1 Meta account",
+    pricing_free_f2: "15 applied decisions",
+    pricing_free_f3: "Full access for 14 days",
+    pricing_free_cta: "Create free account",
     pricing_maker: "Maker",
-    pricing_maker_d: "For running consistently",
-    pricing_maker_f1: "1,000 improvements",
-    pricing_maker_f2: "Continuous use",
+    pricing_maker_d: "One buyer, one account",
+    pricing_maker_f1: "1 Meta account",
+    pricing_maker_f2: "Unlimited decisions",
+    pricing_maker_f3: "Spend up to $10k/mo",
     pricing_maker_cta: "Get started",
     pricing_pro: "Pro",
-    pricing_pro_badge: "Most chosen plan",
-    pricing_pro_d: "Scale with clarity",
-    pricing_pro_f1: "2,500 improvements",
-    pricing_pro_f2: "Scale with clarity",
+    pricing_pro_badge: "Most picked",
+    pricing_pro_d: "For agencies with multiple clients",
+    pricing_pro_f1: "3 Meta accounts",
+    pricing_pro_f2: "Unlimited decisions",
+    pricing_pro_f3: "Spend up to $40k/mo",
     pricing_pro_cta: "Start with Pro",
     pricing_studio: "Studio",
-    pricing_studio_d: "No limits",
-    pricing_studio_f1: "Unlimited improvements",
-    pricing_studio_f2: "For real operations",
-    pricing_studio_cta: "Go Studio",
+    pricing_studio_d: "Large operations, no ceiling",
+    pricing_studio_f1: "Unlimited accounts",
+    pricing_studio_f2: "Unlimited decisions",
+    pricing_studio_f3: "Unlimited spend",
+    pricing_studio_cta: "Talk to sales",
     pricing_details: "See all details",
     pricing_mo: "/mo",
+    faq_title: "Questions every media buyer asks first",
+    faq_q1: "Will AdBrief touch my account on its own?",
+    faq_a1: "No. Every decision needs your click. AdBrief monitors, analyzes, and recommends — you accept or ignore.",
+    faq_q2: "Do I need to be admin on the ad account?",
+    faq_a2: "Advertiser permission or above works. It runs fine with shared client BMs and personal accounts.",
+    faq_q3: "What if AdBrief recommends the wrong thing?",
+    faq_a3: "Every decision comes with the raw reason (e.g. \"CPA up 180% in 24h, 0 conversions\"). You see the numbers before applying. You can reverse any decision in 1 click for up to 30 minutes after.",
+    faq_q4: "Does it work for e-commerce? Agency? Infoproduct?",
+    faq_a4: "Yes to all three. The system learns from your specific account — what works for your niche, not generic advice.",
+    faq_q5: "What does it cost?",
+    faq_a5: "Free gives 15 decisions (no card). Maker is $19/mo for 1 account. Pro is $49/mo for 3. Studio is $299/mo, no cap.",
+    faq_q6: "Can I cancel?",
+    faq_a6: "Yes. Monthly, no contract, no fee. Disconnecting from Meta is also one click.",
     final_title: "You've seen how it works.",
-    final_sub: "Apply your first improvement now.",
-    final_cta: "Start free",
-    final_sub2: "Takes less than 10 seconds",
+    final_sub: "Connect your account in 30 seconds.",
+    final_cta: "Connect Meta Ads",
+    final_sub2: "15 free decisions · no card",
     final_login: "Already have an account? Log in",
-    sticky_cta: "Apply improvements now",
+    sticky_cta: "Connect now",
     footer_tagline: "Decision system for Meta Ads",
     footer_product: "Product",
     footer_how: "How it works",
     footer_pricing: "Pricing",
+    footer_faq: "FAQ",
     footer_company: "Company",
     footer_about: "About",
     footer_contact: "Contact",
@@ -249,13 +342,26 @@ const TX: Record<Lang, Record<string, string>> = {
     nav_signup: "Crear cuenta",
     trust_powered: "Powered by",
     trust_meta: "Funciona con Meta Ads",
-    hero_tag: "MOTOR DE DECISIÓN PARA META ADS",
-    hero_title: "Tu campaña te dice\nqué hacer ahora.",
-    hero_sub: "AdBrief analiza tus campañas en tiempo real, encuentra oportunidades y te deja aplicarlas en un clic.",
-    hero_support: "Sin análisis manual. Sin suposiciones.",
-    hero_cta: "Empezar gratis",
-    hero_cta_sub: "Sin tarjeta · Sin configuración · 15 mejoras gratis",
+    hero_tag: "DECISIONES AUTOMÁTICAS PARA META ADS",
+    hero_title: "Tu CPA sube 30%.\nLo sabes en 2h — no en 5 días.",
+    hero_sub: "AdBrief monitorea tu cuenta Meta 24/7, detecta el problema antes de quemar presupuesto y aplica la corrección en un clic.",
+    hero_support: "Pausar, escalar, ajustar presupuesto — sin abrir el Administrador de Anuncios.",
+    hero_cta: "Conectar mi cuenta Meta",
+    hero_cta_sub: "30 segundos · Sin tarjeta · 15 decisiones gratis",
     hero_login: "¿Ya tienes cuenta? Entrar",
+    hero_screenshot_label: "El feed de AdBrief — decisiones aplicadas hoy",
+    social_title: "Para gestores que manejan cuentas reales",
+    social_sub: "Usado por agencias y e-commerces que gastan de $1k a $100k/mes en Meta Ads.",
+    social_logo_placeholder: "logo cliente",
+    social_t1_quote: "Pausé 4 creativos con fatiga antes de quemar el presupuesto del día. En 30 segundos.",
+    social_t1_name: "Próximamente",
+    social_t1_role: "Gestor de tráfico · agencia",
+    social_t2_quote: "Es lo que ya hacía manual, pero 10x más rápido y sin olvidarme de nada.",
+    social_t2_name: "Próximamente",
+    social_t2_role: "Head de medios · e-commerce",
+    social_t3_quote: "Recuperé una hora al día. No abro el Business Manager 15 veces antes del almuerzo.",
+    social_t3_name: "Próximamente",
+    social_t3_role: "Fundador · agencia",
     concept_title: "No es un dashboard.\nEs un sistema de decisión.",
     concept_s1: "Análisis continuo",
     concept_s1d: "Monitorea tus campañas 24/7 e identifica oportunidades que perderías.",
@@ -269,7 +375,21 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_s3: "Aparecen oportunidades",
     flow_s4: "Las aplicas",
     flow_s5: "La performance mejora",
-    loop_title: "Cada mejora genera la siguiente.",
+    compare_title: "Ads Manager muestra lo que pasó.\nAdBrief te dice qué hacer.",
+    compare_sub: "La diferencia entre leer un reporte y tomar una decisión.",
+    compare_ads_title: "Meta Ads Manager",
+    compare_ads_1: "Muestra métricas pasadas",
+    compare_ads_2: "Lo interpretas tú",
+    compare_ads_3: "Decides a ciegas",
+    compare_ads_4: "Ejecutas manualmente",
+    compare_ads_5: "No aprende entre cuentas",
+    compare_adbrief_title: "AdBrief",
+    compare_adbrief_1: "Detecta el problema en 2h",
+    compare_adbrief_2: "Explica qué está pasando",
+    compare_adbrief_3: "Recomienda la acción específica",
+    compare_adbrief_4: "Lo aplica en 1 clic",
+    compare_adbrief_5: "Aprende de cada resultado",
+    loop_title: "Cada decisión genera la siguiente.",
     loop_sub: "El sistema aprende de cada acción y se vuelve más preciso en cada ciclo.",
     loop_s1: "Tú aplicas",
     loop_s1d: "Acepta la decisión directo en el feed. Un clic.",
@@ -277,41 +397,59 @@ const TX: Record<Lang, Record<string, string>> = {
     loop_s2d: "Cada resultado se vuelve patrón. La IA evoluciona con tus datos.",
     loop_s3: "Nueva oportunidad",
     loop_s3d: "Recomendaciones cada vez más específicas para tu negocio.",
-    pricing_title: "¿Cuánto quieres mejorar?",
-    pricing_sub: "Pagas por las mejoras aplicadas en tu campaña.",
+    pricing_title: "Precio claro. Escala real.",
+    pricing_sub: "Empieza gratis. Sube de plan cuando tu cuenta crezca.",
     pricing_free: "Free",
-    pricing_free_d: "Para empezar",
-    pricing_free_f1: "15 mejoras",
-    pricing_free_f2: "Acceso completo",
-    pricing_free_cta: "Crear cuenta",
+    pricing_free_d: "Para probar antes de decidir",
+    pricing_free_f1: "1 cuenta Meta",
+    pricing_free_f2: "15 decisiones aplicadas",
+    pricing_free_f3: "Acceso completo por 14 días",
+    pricing_free_cta: "Crear cuenta gratis",
     pricing_maker: "Maker",
-    pricing_maker_d: "Para rodar con consistencia",
-    pricing_maker_f1: "1.000 mejoras",
-    pricing_maker_f2: "Uso continuo",
+    pricing_maker_d: "Un gestor, una cuenta",
+    pricing_maker_f1: "1 cuenta Meta",
+    pricing_maker_f2: "Decisiones ilimitadas",
+    pricing_maker_f3: "Gasto hasta $10k/mes",
     pricing_maker_cta: "Empezar",
     pricing_pro: "Pro",
-    pricing_pro_badge: "Plan más elegido",
-    pricing_pro_d: "Escala con claridad",
-    pricing_pro_f1: "2.500 mejoras",
-    pricing_pro_f2: "Escala con claridad",
+    pricing_pro_badge: "Más elegido",
+    pricing_pro_d: "Para agencias con varios clientes",
+    pricing_pro_f1: "3 cuentas Meta",
+    pricing_pro_f2: "Decisiones ilimitadas",
+    pricing_pro_f3: "Gasto hasta $40k/mes",
     pricing_pro_cta: "Empezar con Pro",
     pricing_studio: "Studio",
-    pricing_studio_d: "Sin límites",
-    pricing_studio_f1: "Mejoras ilimitadas",
-    pricing_studio_f2: "Para operaciones reales",
-    pricing_studio_cta: "Ir a Studio",
+    pricing_studio_d: "Operaciones grandes, sin techo",
+    pricing_studio_f1: "Cuentas ilimitadas",
+    pricing_studio_f2: "Decisiones ilimitadas",
+    pricing_studio_f3: "Gasto ilimitado",
+    pricing_studio_cta: "Hablar con ventas",
     pricing_details: "Ver todos los detalles",
     pricing_mo: "/mes",
+    faq_title: "Preguntas que todo gestor hace antes",
+    faq_q1: "¿AdBrief toca mi cuenta solo?",
+    faq_a1: "No. Toda decisión necesita tu clic. AdBrief monitorea, analiza y recomienda — tú aceptas o ignoras.",
+    faq_q2: "¿Tengo que ser admin de la cuenta?",
+    faq_a2: "Permiso de anunciante o superior basta. Funciona con BM compartidas de cliente y cuenta personal.",
+    faq_q3: "¿Y si recomienda algo mal?",
+    faq_a3: "Cada decisión viene con la razón explícita (ej: \"CPA subió 180% en 24h, 0 conversiones\"). Ves los números antes de aplicar. Y puedes revertir en 1 clic hasta 30 minutos después.",
+    faq_q4: "¿Funciona para e-commerce? ¿Agencia? ¿Infoproducto?",
+    faq_a4: "Sí a los tres. El sistema aprende de tu cuenta específica — lo que funciona para tu nicho, no genérico.",
+    faq_q5: "¿Cuánto cuesta?",
+    faq_a5: "Free da 15 decisiones gratis (sin tarjeta). Maker $19/mes para 1 cuenta. Pro $49/mes para 3. Studio $299/mes sin límite.",
+    faq_q6: "¿Puedo cancelar?",
+    faq_a6: "Sí. Mensual, sin contrato, sin multa. Desconectar de Meta también es 1 clic.",
     final_title: "Ya viste cómo funciona.",
-    final_sub: "Aplica tu primera mejora ahora.",
-    final_cta: "Empezar gratis",
-    final_sub2: "Toma menos de 10 segundos",
+    final_sub: "Conecta tu cuenta en 30 segundos.",
+    final_cta: "Conectar Meta Ads",
+    final_sub2: "15 decisiones gratis · sin tarjeta",
     final_login: "¿Ya tienes cuenta? Entrar",
-    sticky_cta: "Aplicar mejoras ahora",
+    sticky_cta: "Conectar ahora",
     footer_tagline: "Sistema de decisión para Meta Ads",
     footer_product: "Producto",
     footer_how: "Cómo funciona",
     footer_pricing: "Precios",
+    footer_faq: "FAQ",
     footer_company: "Empresa",
     footer_about: "Acerca de",
     footer_contact: "Contacto",
@@ -404,7 +542,7 @@ function TrustBar({ t }: { t: Record<string, string> }) {
     }}>
       <div className="trust-inner" style={{
         maxWidth: 1120, margin: "0 auto", display: "flex", alignItems: "center",
-        justifyContent: "center", gap: "clamp(12px, 3vw, 24px)", flexWrap: "wrap",
+        justifyContent: "space-between", gap: "clamp(12px, 3vw, 24px)", flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, opacity: 0.85, fontWeight: 500 }}>{t.trust_powered}</span>
@@ -412,7 +550,6 @@ function TrustBar({ t }: { t: Record<string, string> }) {
           <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.5 }}>·</span>
           <ClaudeLogo size={14} opacity={0.85} />
         </div>
-        <span style={{ fontFamily: F, fontSize: 10, color: TEXT3, opacity: 0.4 }}>|</span>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <MetaLogo size={15} opacity={0.9} />
           <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, opacity: 0.85, fontWeight: 500 }}>{t.trust_meta}</span>
@@ -478,270 +615,100 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
   );
 }
 
-// ── HeroDemo — Cinematic AI story loop ──────────────────────────────────────
-// Shows the AI analyzing → detecting → deciding → acting in real-time.
-// Single panel, no carousel. A story that loops every ~14s.
-function HeroDemo({ t }: { t: Record<string, string> }) {
-  const [phase, setPhase] = useState(0);
-  const [roas, setRoas] = useState("3.4x");
-  const [ctr, setCtr] = useState("2.1%");
-
-  // Phase timeline:
-  // 0 = scanning (1.5s)
-  // 1 = alert detected (2.5s)
-  // 2 = pause applied (2s)
-  // 3 = scale opportunity (2.5s)
-  // 4 = pattern insight (2.5s)
-  // 5 = results update (2s) → reset
-  useEffect(() => {
-    const DURATIONS = [1500, 2500, 2000, 2500, 2500, 2000];
-    let current = 0;
-    let timeout: ReturnType<typeof setTimeout>;
-    const tick = () => {
-      current = (current + 1) % 6;
-      setPhase(current);
-      if (current === 5) { setRoas("4.1x"); setCtr("3.2%"); }
-      if (current === 0) { setRoas("3.4x"); setCtr("2.1%"); }
-      timeout = setTimeout(tick, DURATIONS[current]);
-    };
-    timeout = setTimeout(tick, DURATIONS[0]);
-    return () => clearTimeout(timeout);
-  }, []);
-
-  const pt = (t.nav_login === "Entrar");
-  const es = (t.nav_login === "Iniciar sesión");
-
-  // i18n helpers
-  const tx = {
-    account: pt ? "Moda Express" : es ? "Moda Express" : "Moda Express",
-    scanning: pt ? "Analisando 14 anúncios..." : es ? "Analizando 14 anuncios..." : "Analyzing 14 ads...",
-    scanned: pt ? "Análise concluída" : es ? "Análisis completado" : "Analysis complete",
-    alertTag: pt ? "ALERTA" : es ? "ALERTA" : "ALERT",
-    alertTitle: pt ? "Fadiga criativa detectada" : es ? "Fatiga creativa detectada" : "Creative fatigue detected",
-    alertAd: "Carrossel_BF_v2",
-    alertDetail: pt ? "Frequência 4.8 · CTR caiu 62% em 3 dias" : es ? "Frecuencia 4.8 · CTR cayó 62% en 3 días" : "Frequency 4.8 · CTR dropped 62% in 3 days",
-    pauseReason: pt ? "CPA subiu 180% — sem conversões nas últimas 24h" : es ? "CPA subió 180% — sin conversiones en 24h" : "CPA up 180% — no conversions in 24h",
-    pauseCta: pt ? "Pausar agora" : es ? "Pausar ahora" : "Pause now",
-    paused: pt ? "Pausado ✓" : es ? "Pausado ✓" : "Paused ✓",
-    scaleTag: pt ? "ESCALAR" : es ? "ESCALAR" : "SCALE",
-    scaleTitle: pt ? "UGC_Depoimento_v3" : es ? "UGC_Testimonio_v3" : "UGC_Testimonial_v3",
-    scaleDetail: pt ? "ROAS 6.1x · CPA R$14 · melhor dos últimos 14 dias" : es ? "ROAS 6.1x · CPA $4.20 · mejor de los últimos 14 días" : "ROAS 6.1x · CPA $4.20 · best performer in 14 days",
-    scaleCta: "+30% budget",
-    patternTag: pt ? "PADRÃO APRENDIDO" : es ? "PATRÓN APRENDIDO" : "LEARNED PATTERN",
-    patternTitle: pt ? "Hooks com prova social convertem 2.4x mais neste nicho" : es ? "Hooks con prueba social convierten 2.4x más en este nicho" : "Social proof hooks convert 2.4x more in this niche",
-    patternConf: pt ? "94% confiança · 18 criativos" : es ? "94% confianza · 18 creativos" : "94% confidence · 18 creatives",
-    patternCta: pt ? "Gerar variação" : es ? "Generar variación" : "Generate variation",
-    resultBadge: pt ? "3 melhorias aplicadas" : es ? "3 mejoras aplicadas" : "3 improvements applied",
-  };
-
-  // Animation helpers
-  const fadeIn = (visible: boolean, delay = 0) => ({
-    opacity: visible ? 1 : 0,
-    transform: visible ? "translateY(0)" : "translateY(8px)",
-    transition: `all 0.4s ${EASE} ${delay}s`,
-  });
-
-  const slideIn = (visible: boolean, delay = 0) => ({
-    opacity: visible ? 1 : 0,
-    transform: visible ? "translateX(0)" : "translateX(-12px)",
-    transition: `all 0.45s ${EASE} ${delay}s`,
-    maxHeight: visible ? 120 : 0,
-    overflow: "hidden" as const,
-  });
-
+// ── HeroScreenshot — Clean slot for a real product screenshot ───────────────
+// Replace the <HeroSlotPlaceholder /> below with <img src="/hero-screenshot.png" />
+// once Martinho takes the screenshot. Keep aspect ratio 16:10 for best fit.
+function HeroScreenshot({ t }: { t: Record<string, string> }) {
   return (
     <div className="product-mockup" style={{
-      background: "#0a0e18", borderRadius: 14, border: `1px solid rgba(255,255,255,0.07)`,
-      overflow: "hidden", fontFamily: F, width: "100%", maxWidth: 500,
-      transform: "perspective(1400px) rotateY(-2deg) rotateX(0.5deg)",
-      transition: `all 0.6s ${EASE}`,
-      boxShadow: `0 0 0 1px rgba(255,255,255,0.03), 0 12px 40px rgba(0,0,0,0.45), 0 50px 120px rgba(0,0,0,0.6)`,
-      animation: "mockFloat 6s ease-in-out infinite",
+      width: "100%", maxWidth: 560, position: "relative",
     }}>
-      {/* ── Window chrome ─────────────────────────────────────────── */}
+      {/* The frame — sits flat (no 3D perspective, no float animation) */}
       <div style={{
-        display: "flex", alignItems: "center", padding: "9px 14px",
-        background: "rgba(255,255,255,0.02)", borderBottom: `1px solid rgba(255,255,255,0.05)`,
+        position: "relative",
+        width: "100%",
+        aspectRatio: "16 / 10",
+        borderRadius: 14,
+        overflow: "hidden",
+        background: "#0a0e18",
+        border: `1px solid rgba(255,255,255,0.08)`,
+        boxShadow: `
+          0 0 0 1px rgba(255,255,255,0.03),
+          0 20px 60px rgba(0,0,0,0.5),
+          0 60px 140px rgba(0,0,0,0.65)
+        `,
       }}>
-        <div style={{ display: "flex", gap: 5, marginRight: 12 }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#ff5f57" }} />
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#febc2e" }} />
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#28c840" }} />
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, flex: 1 }}>
-          <span style={{ fontSize: 10.5, fontWeight: 800, color: "rgba(255,255,255,0.7)", letterSpacing: "-0.02em" }}>ad</span>
-          <span style={{ fontSize: 10.5, fontWeight: 900, background: `linear-gradient(135deg, #38bdf8, #06b6d4)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>brief</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 9, fontWeight: 600, color: TEXT3 }}>{tx.account}</span>
-          <div style={{ width: 5, height: 5, borderRadius: "50%", background: GREEN, boxShadow: `0 0 6px ${GREEN}60` }} />
-        </div>
+        {/*
+          ┌──────────────────────────────────────────────────────────┐
+          │  REPLACE the <HeroSlotPlaceholder/> below with:          │
+          │                                                          │
+          │    <img                                                  │
+          │      src="/hero-screenshot.png"                          │
+          │      alt="AdBrief dashboard"                             │
+          │      style={{ width: "100%", height: "100%",             │
+          │               objectFit: "cover", display: "block" }}    │
+          │    />                                                    │
+          │                                                          │
+          │  Recommended size: 1600×1000 PNG (2x retina).            │
+          └──────────────────────────────────────────────────────────┘
+        */}
+        <HeroSlotPlaceholder label={t.hero_screenshot_label} />
       </div>
 
-      {/* ── Metrics bar ──────────────────────────────────────────── */}
-      <div style={{
-        display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr",
-        padding: "12px 14px", borderBottom: `1px solid rgba(255,255,255,0.05)`,
-        background: "rgba(255,255,255,0.01)",
+      {/* Subtle caption below the frame */}
+      <p style={{
+        fontFamily: F, fontSize: 11.5, color: "rgba(255,255,255,0.28)",
+        margin: "14px 0 0", textAlign: "center", fontWeight: 500, letterSpacing: "-0.01em",
       }}>
-        {[
-          { label: "SPEND", value: pt ? "R$12.480" : "$3,240", color: TEXT },
-          { label: "CTR", value: ctr, color: phase >= 5 ? GREEN : TEXT2, delta: phase >= 5 ? "↑52%" : null },
-          { label: "ROAS", value: roas, color: phase >= 5 ? GREEN : TEXT2, delta: phase >= 5 ? "↑21%" : null },
-          { label: "ADS", value: "14", color: TEXT2 },
-        ].map((m, i) => (
-          <div key={i} style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 7, fontWeight: 800, color: "rgba(255,255,255,0.18)", letterSpacing: "0.12em", marginBottom: 3 }}>{m.label}</div>
-            <div style={{
-              fontSize: 15, fontWeight: 800, color: m.color, letterSpacing: "-0.03em",
-              transition: `all 0.6s ${EASE}`,
-            }}>
-              {m.value}
-            </div>
-            {m.delta && <span style={{ fontSize: 7.5, fontWeight: 700, color: GREEN, transition: `all 0.3s ease` }}>{m.delta}</span>}
-          </div>
-        ))}
-      </div>
+        {t.hero_screenshot_label}
+      </p>
+    </div>
+  );
+}
 
-      {/* ── Scanning bar ─────────────────────────────────────────── */}
+function HeroSlotPlaceholder({ label }: { label: string }) {
+  return (
+    <div style={{
+      position: "absolute", inset: 0,
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      gap: 14, padding: 32,
+      background: `
+        radial-gradient(circle at 50% 40%, rgba(14,165,233,0.08) 0%, transparent 60%),
+        linear-gradient(180deg, rgba(99,102,241,0.03) 0%, transparent 100%)
+      `,
+    }}>
       <div style={{
-        padding: "8px 14px", display: "flex", alignItems: "center", gap: 8,
-        borderBottom: `1px solid rgba(255,255,255,0.04)`,
+        width: 56, height: 56, borderRadius: 14,
+        border: `1.5px dashed rgba(255,255,255,0.14)`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "rgba(255,255,255,0.015)",
       }}>
         <div style={{
-          width: 5, height: 5, borderRadius: "50%",
-          background: phase === 0 ? ACCENT : GREEN,
-          boxShadow: phase === 0 ? `0 0 8px ${ACCENT}60` : `0 0 6px ${GREEN}40`,
-          animation: phase === 0 ? "demoPulse 1s ease-in-out infinite" : "none",
-          transition: "all 0.3s ease",
+          width: 8, height: 8, borderRadius: "50%", background: ACCENT,
+          boxShadow: `0 0 18px ${ACCENT}, 0 0 6px ${ACCENT}`,
         }} />
-        <span style={{ fontSize: 9, fontWeight: 600, color: phase === 0 ? ACCENT : TEXT3, transition: "color 0.3s ease", flex: 1 }}>
-          {phase === 0 ? tx.scanning : tx.scanned}
-        </span>
-        {phase === 0 && (
-          <div style={{ width: 80, height: 2, borderRadius: 1, background: "rgba(255,255,255,0.04)", overflow: "hidden" }}>
-            <div style={{ height: "100%", borderRadius: 1, background: `linear-gradient(90deg, transparent, ${ACCENT}, transparent)`, animation: "demoScanBar 1.2s ease-in-out infinite" }} />
-          </div>
-        )}
       </div>
-
-      {/* ── Content area — events appear here ─────────────────── */}
-      <div style={{ padding: "8px 12px 12px", display: "flex", flexDirection: "column", gap: 6, minHeight: 260 }}>
-
-        {/* Event 1: ALERT — creative fatigue (phase >= 1) */}
-        <div style={slideIn(phase >= 1)}>
-          <div style={{
-            padding: "10px 12px", borderRadius: 9,
-            background: phase >= 2 ? "rgba(239,68,68,0.02)" : "rgba(239,68,68,0.05)",
-            border: `1px solid ${phase >= 2 ? "rgba(239,68,68,0.06)" : "rgba(239,68,68,0.15)"}`,
-            transition: `all 0.5s ${EASE}`,
-            opacity: phase >= 2 ? 0.5 : 1,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
-              <span style={{
-                fontSize: 7.5, fontWeight: 800, letterSpacing: "0.1em", color: RED,
-                padding: "2px 6px", background: "rgba(239,68,68,0.10)", borderRadius: 3,
-              }}>{tx.alertTag}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: TEXT, flex: 1 }}>{tx.alertTitle}</span>
-            </div>
-            <div style={{ paddingLeft: 0 }}>
-              <p style={{ fontSize: 10, fontWeight: 600, color: TEXT2, margin: "0 0 2px" }}>{tx.alertAd}</p>
-              <p style={{ fontSize: 9, color: TEXT3, margin: "0 0 6px", lineHeight: 1.4 }}>{tx.alertDetail}</p>
-              <p style={{ fontSize: 9, color: "rgba(239,68,68,0.7)", margin: "0 0 7px", fontWeight: 500 }}>{tx.pauseReason}</p>
-              <span style={{
-                fontSize: 9.5, fontWeight: 700,
-                padding: "4px 12px", borderRadius: 5,
-                color: phase >= 2 ? GREEN : "#fff",
-                background: phase >= 2 ? "rgba(34,197,94,0.08)" : RED,
-                border: `1px solid ${phase >= 2 ? "rgba(34,197,94,0.15)" : "transparent"}`,
-                display: "inline-flex", alignItems: "center", gap: 4,
-                transition: `all 0.4s ${EASE}`,
-                boxShadow: phase >= 2 ? "none" : "0 2px 10px rgba(239,68,68,0.25)",
-              }}>
-                {phase >= 2 ? <><CheckCircle2 size={10} strokeWidth={2.5} /> {tx.paused}</> : <><Pause size={9} /> {tx.pauseCta}</>}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Event 2: SCALE opportunity (phase >= 3) */}
-        <div style={slideIn(phase >= 3)}>
-          <div style={{
-            padding: "10px 12px", borderRadius: 9,
-            background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)",
-            boxShadow: "0 0 20px rgba(34,197,94,0.04)",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
-              <span style={{
-                fontSize: 7.5, fontWeight: 800, letterSpacing: "0.1em", color: GREEN,
-                padding: "2px 6px", background: "rgba(34,197,94,0.10)", borderRadius: 3,
-              }}>{tx.scaleTag}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: TEXT }}>{tx.scaleTitle}</span>
-            </div>
-            <p style={{ fontSize: 9, color: TEXT2, margin: "0 0 7px", lineHeight: 1.45 }}>{tx.scaleDetail}</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{
-                fontSize: 9.5, fontWeight: 700, color: "#fff",
-                padding: "4px 12px", borderRadius: 5, background: GREEN,
-                display: "inline-flex", alignItems: "center", gap: 4,
-                boxShadow: "0 2px 10px rgba(34,197,94,0.2)",
-              }}>
-                <TrendingUp size={9} /> {tx.scaleCta}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Event 3: PATTERN learned (phase >= 4) */}
-        <div style={slideIn(phase >= 4)}>
-          <div style={{
-            padding: "10px 12px", borderRadius: 9,
-            background: "rgba(99,102,241,0.04)", border: "1px solid rgba(99,102,241,0.12)",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
-              <span style={{
-                fontSize: 7.5, fontWeight: 800, letterSpacing: "0.1em", color: INDIGO,
-                padding: "2px 6px", background: "rgba(99,102,241,0.10)", borderRadius: 3,
-              }}>{tx.patternTag}</span>
-            </div>
-            <p style={{ fontSize: 9.5, color: TEXT2, margin: "0 0 3px", lineHeight: 1.45, fontWeight: 500 }}>{tx.patternTitle}</p>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
-              <span style={{ fontSize: 8, color: INDIGO, fontWeight: 600, opacity: 0.7 }}>{tx.patternConf}</span>
-              <span style={{
-                fontSize: 8.5, fontWeight: 700, color: INDIGO, padding: "3px 8px",
-                borderRadius: 4, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)",
-                display: "inline-flex", alignItems: "center", gap: 3, cursor: "default",
-              }}>
-                <Zap size={8} /> {tx.patternCta}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Event 4: Results badge (phase >= 5) */}
-        <div style={{
-          ...fadeIn(phase >= 5, 0.15),
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-          padding: "8px 12px", borderRadius: 8,
-          background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.10)",
-        }}>
-          <CheckCircle2 size={11} color={GREEN} strokeWidth={2.2} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: GREEN }}>{tx.resultBadge}</span>
-          <span style={{ fontSize: 9, color: TEXT3, marginLeft: 4 }}>ROAS 3.4x → 4.1x</span>
-        </div>
+      <div style={{
+        fontFamily: F, fontSize: 10, fontWeight: 800, letterSpacing: "0.18em",
+        color: "rgba(255,255,255,0.45)", textTransform: "uppercase",
+      }}>
+        SCREENSHOT
       </div>
-
-      {/* ── CSS ──────────────────────────────────────────────────── */}
-      <style>{`
-        @keyframes demoPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.3); }
-        }
-        @keyframes demoScanBar {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-      `}</style>
+      <div style={{
+        fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.32)",
+        maxWidth: 280, textAlign: "center", lineHeight: 1.55,
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+        fontSize: 10, color: "rgba(255,255,255,0.18)",
+        padding: "4px 10px", borderRadius: 5,
+        border: `1px solid rgba(255,255,255,0.06)`,
+        background: "rgba(0,0,0,0.2)",
+      }}>
+        /public/hero-screenshot.png
+      </div>
     </div>
   );
 }
@@ -853,7 +820,111 @@ function Hero({ t }: { t: Record<string, string> }) {
             background: "radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 60%)",
             pointerEvents: "none", filter: "blur(60px)",
           }} />
-          <HeroDemo t={t} />
+          <HeroScreenshot t={t} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Section 1.5 — Social Proof (testimonials + client logos) ───────────────
+function SocialProofSection({ t }: { t: Record<string, string> }) {
+  const { ref, visible } = useReveal(0.15);
+
+  const testimonials = [
+    { quote: t.social_t1_quote, name: t.social_t1_name, role: t.social_t1_role, color: ACCENT },
+    { quote: t.social_t2_quote, name: t.social_t2_name, role: t.social_t2_role, color: INDIGO },
+    { quote: t.social_t3_quote, name: t.social_t3_name, role: t.social_t3_role, color: GREEN },
+  ];
+
+  return (
+    <section style={{
+      background: BG2, padding: "clamp(64px,8vw,96px) clamp(20px,4vw,40px)",
+      borderTop: `1px solid ${BORDER}`,
+    }} ref={ref}>
+      <div style={{ maxWidth: 1040, margin: "0 auto" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 48, maxWidth: 640, marginLeft: "auto", marginRight: "auto" }}>
+          <h2 style={{
+            fontFamily: F, fontSize: "clamp(22px,2.4vw,28px)", fontWeight: 800,
+            letterSpacing: "-0.03em", color: TEXT, margin: "0 0 10px",
+          }}>
+            {t.social_title}
+          </h2>
+          <p style={{
+            fontFamily: F, fontSize: 13.5, color: TEXT3, margin: 0, lineHeight: 1.55,
+          }}>
+            {t.social_sub}
+          </p>
+        </div>
+
+        {/* Logo row — placeholders (replace with <img src="/logos/client-X.svg" /> later) */}
+        <div className="social-logos" style={{
+          display: "grid", gridTemplateColumns: "repeat(5, 1fr)",
+          gap: "clamp(12px, 2vw, 24px)", marginBottom: 56,
+          opacity: 0.55,
+        }}>
+          {[1,2,3,4,5].map(i => (
+            <div key={i} style={{
+              height: 38,
+              border: `1px dashed rgba(255,255,255,0.08)`,
+              borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.22)",
+              letterSpacing: "0.08em", fontWeight: 600, textTransform: "uppercase",
+            }}>
+              {t.social_logo_placeholder}
+            </div>
+          ))}
+        </div>
+
+        {/* Testimonials row */}
+        <div className="social-grid" style={{
+          display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "clamp(12px, 2vw, 20px)",
+        }}>
+          {testimonials.map((ti, i) => (
+            <div key={i} style={{
+              padding: "22px 22px 20px",
+              borderRadius: 12,
+              background: SURFACE,
+              border: `1px solid ${BORDER}`,
+              display: "flex", flexDirection: "column",
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0)" : "translateY(14px)",
+              transition: `all 0.5s ${EASE} ${i * 0.08}s`,
+            }}>
+              {/* Small accent mark */}
+              <div style={{
+                width: 22, height: 2, background: ti.color, borderRadius: 1,
+                marginBottom: 14, opacity: 0.7,
+              }} />
+
+              <p style={{
+                fontFamily: F, fontSize: 14, color: TEXT, lineHeight: 1.55,
+                margin: "0 0 18px", fontWeight: 500, letterSpacing: "-0.01em", flex: 1,
+              }}>
+                “{ti.quote}”
+              </p>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
+                {/* Avatar placeholder */}
+                <div style={{
+                  width: 32, height: 32, borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${ti.color}30, ${ti.color}10)`,
+                  border: `1px solid ${ti.color}25`,
+                  flexShrink: 0,
+                }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: TEXT2, letterSpacing: "-0.01em" }}>
+                    {ti.name}
+                  </div>
+                  <div style={{ fontFamily: F, fontSize: 10.5, color: TEXT3, marginTop: 1 }}>
+                    {ti.role}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -1000,6 +1071,120 @@ function FlowSection({ t }: { t: Record<string, string> }) {
   );
 }
 
+// ── Section 3.5 — Compare (AdBrief vs Ads Manager) ─────────────────────────
+function CompareSection({ t }: { t: Record<string, string> }) {
+  const { ref, visible } = useReveal(0.2);
+
+  const adsRows = [t.compare_ads_1, t.compare_ads_2, t.compare_ads_3, t.compare_ads_4, t.compare_ads_5];
+  const adbriefRows = [t.compare_adbrief_1, t.compare_adbrief_2, t.compare_adbrief_3, t.compare_adbrief_4, t.compare_adbrief_5];
+
+  return (
+    <section style={{
+      background: BG2, padding: "clamp(72px,9vw,100px) clamp(20px,4vw,40px)",
+      borderTop: `1px solid ${BORDER}`,
+    }} ref={ref}>
+      <div style={{ maxWidth: 880, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 44, maxWidth: 620, marginLeft: "auto", marginRight: "auto" }}>
+          <h2 style={{
+            fontFamily: F, fontSize: "clamp(24px,2.8vw,34px)", fontWeight: 800,
+            letterSpacing: "-0.04em", color: TEXT, margin: "0 0 12px", whiteSpace: "pre-line", lineHeight: 1.15,
+          }}>
+            {t.compare_title}
+          </h2>
+          <p style={{
+            fontFamily: F, fontSize: 13.5, color: TEXT3, margin: 0, lineHeight: 1.55,
+          }}>
+            {t.compare_sub}
+          </p>
+        </div>
+
+        <div className="compare-grid" style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(10px,1.5vw,14px)",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(12px)",
+          transition: `all 0.5s ${EASE}`,
+        }}>
+          {/* Ads Manager — muted column */}
+          <div style={{
+            padding: "26px 24px 24px",
+            borderRadius: 12,
+            background: "rgba(255,255,255,0.015)",
+            border: `1px solid ${BORDER}`,
+          }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, marginBottom: 20,
+              paddingBottom: 14, borderBottom: `1px solid ${BORDER}`,
+            }}>
+              <MetaLogo size={16} opacity={0.55} />
+              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: TEXT2, letterSpacing: "-0.01em" }}>
+                {t.compare_ads_title}
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {adsRows.map((row, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{
+                    width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
+                    background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    marginTop: 1,
+                  }}>
+                    <X size={9} color={RED} strokeWidth={2.5} />
+                  </span>
+                  <span style={{ fontFamily: F, fontSize: 13, color: TEXT3, lineHeight: 1.5 }}>
+                    {row}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* AdBrief — active column */}
+          <div style={{
+            padding: "26px 24px 24px",
+            borderRadius: 12,
+            background: `linear-gradient(180deg, rgba(14,165,233,0.04) 0%, rgba(99,102,241,0.02) 100%)`,
+            border: `1px solid rgba(14,165,233,0.18)`,
+            boxShadow: `0 0 32px rgba(14,165,233,0.06)`,
+          }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, marginBottom: 20,
+              paddingBottom: 14, borderBottom: `1px solid rgba(14,165,233,0.12)`,
+            }}>
+              <span style={{
+                width: 16, height: 16, borderRadius: 4,
+                background: `linear-gradient(135deg, ${ACCENT}, #06b6d4)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: F, fontSize: 10, fontWeight: 900, color: "#fff",
+              }}>a</span>
+              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>
+                {t.compare_adbrief_title}
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {adbriefRows.map((row, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{
+                    width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
+                    background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.22)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    marginTop: 1,
+                  }}>
+                    <CheckCircle2 size={10} color={GREEN} strokeWidth={2.5} />
+                  </span>
+                  <span style={{ fontFamily: F, fontSize: 13, color: TEXT, lineHeight: 1.5, fontWeight: 500 }}>
+                    {row}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Section 4 — Loop (horizontal + animated) ───────────────────────────────
 function LoopSection({ t }: { t: Record<string, string> }) {
   const [active, setActive] = useState(0);
@@ -1140,25 +1325,25 @@ function PricingSection({ t }: { t: Record<string, string> }) {
   const plans = [
     {
       name: t.pricing_free, desc: t.pricing_free_d, price: "$0", mo: false,
-      f1: t.pricing_free_f1, f2: t.pricing_free_f2,
+      f1: t.pricing_free_f1, f2: t.pricing_free_f2, f3: t.pricing_free_f3,
       cta: t.pricing_free_cta, action: () => navigate("/signup"),
       tier: "free" as const,
     },
     {
       name: t.pricing_maker, desc: t.pricing_maker_d, price: "$19", mo: true,
-      f1: t.pricing_maker_f1, f2: t.pricing_maker_f2,
+      f1: t.pricing_maker_f1, f2: t.pricing_maker_f2, f3: t.pricing_maker_f3,
       cta: t.pricing_maker_cta, action: () => navigate("/signup?plan=maker"),
       tier: "maker" as const,
     },
     {
       name: t.pricing_pro, desc: t.pricing_pro_d, price: "$49", mo: true,
-      f1: t.pricing_pro_f1, f2: t.pricing_pro_f2,
+      f1: t.pricing_pro_f1, f2: t.pricing_pro_f2, f3: t.pricing_pro_f3,
       cta: t.pricing_pro_cta, action: () => navigate("/signup?plan=pro"),
       tier: "pro" as const,
     },
     {
       name: t.pricing_studio, desc: t.pricing_studio_d, price: "$299", mo: true,
-      f1: t.pricing_studio_f1, f2: t.pricing_studio_f2,
+      f1: t.pricing_studio_f1, f2: t.pricing_studio_f2, f3: t.pricing_studio_f3,
       cta: t.pricing_studio_cta, action: () => navigate("/signup?plan=studio"),
       tier: "studio" as const,
     },
@@ -1246,9 +1431,13 @@ function PricingSection({ t }: { t: Record<string, string> }) {
                 </div>
 
                 {/* Features */}
-                <div style={{ marginBottom: 24, flex: 1 }}>
-                  <p style={{ fontFamily: F, fontSize: 12.5, color: TEXT2, margin: "0 0 4px", fontWeight: 500 }}>{plan.f1}</p>
-                  <p style={{ fontFamily: F, fontSize: 11.5, color: TEXT3, margin: 0, fontWeight: 400 }}>{plan.f2}</p>
+                <div style={{ marginBottom: 24, flex: 1, display: "flex", flexDirection: "column", gap: 9 }}>
+                  {[plan.f1, plan.f2, plan.f3].filter(Boolean).map((feat, fi) => (
+                    <div key={fi} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <CheckCircle2 size={13} color={isPro ? INDIGO : GREEN} strokeWidth={2.2} style={{ flexShrink: 0, marginTop: 1, opacity: 0.85 }} />
+                      <span style={{ fontFamily: F, fontSize: 12.5, color: TEXT2, lineHeight: 1.4, fontWeight: 500 }}>{feat}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* CTA */}
@@ -1277,6 +1466,91 @@ function PricingSection({ t }: { t: Record<string, string> }) {
           }}>
             {t.pricing_details} <ArrowRight size={13} />
           </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Section 5.5 — FAQ (6 objections) ───────────────────────────────────────
+function FAQSection({ t }: { t: Record<string, string> }) {
+  const qa = [
+    { q: t.faq_q1, a: t.faq_a1 },
+    { q: t.faq_q2, a: t.faq_a2 },
+    { q: t.faq_q3, a: t.faq_a3 },
+    { q: t.faq_q4, a: t.faq_a4 },
+    { q: t.faq_q5, a: t.faq_a5 },
+    { q: t.faq_q6, a: t.faq_a6 },
+  ];
+  const [open, setOpen] = useState<number | null>(0);
+
+  return (
+    <section id="faq" style={{
+      background: BG2, padding: "clamp(72px,9vw,100px) clamp(20px,4vw,40px)",
+      borderTop: `1px solid ${BORDER}`,
+    }}>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <h2 style={{
+          fontFamily: F, fontSize: "clamp(22px,2.6vw,30px)", fontWeight: 800,
+          letterSpacing: "-0.03em", color: TEXT, margin: "0 0 36px", textAlign: "center",
+        }}>
+          {t.faq_title}
+        </h2>
+
+        <div style={{
+          background: SURFACE, borderRadius: 12, border: `1px solid ${BORDER}`,
+          overflow: "hidden",
+        }}>
+          {qa.map((item, i) => {
+            const isOpen = open === i;
+            const isLast = i === qa.length - 1;
+            return (
+              <div key={i} style={{
+                borderBottom: isLast ? "none" : `1px solid ${BORDER}`,
+              }}>
+                <button
+                  onClick={() => setOpen(isOpen ? null : i)}
+                  style={{
+                    width: "100%", padding: "18px 20px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: "transparent", border: "none", cursor: "pointer",
+                    textAlign: "left", fontFamily: F,
+                    transition: `background 0.2s ${EASE}`,
+                  }}
+                  className="faq-row"
+                >
+                  <span style={{
+                    fontSize: 14, fontWeight: 600, color: isOpen ? TEXT : TEXT2,
+                    letterSpacing: "-0.01em", lineHeight: 1.4, paddingRight: 16,
+                  }}>
+                    {item.q}
+                  </span>
+                  <span style={{
+                    width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                    background: isOpen ? `${ACCENT}10` : "rgba(255,255,255,0.03)",
+                    border: `1px solid ${isOpen ? `${ACCENT}25` : BORDER}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: isOpen ? ACCENT : TEXT3,
+                    transition: `all 0.25s ${EASE}`,
+                  }}>
+                    {isOpen ? <Minus size={12} strokeWidth={2.2} /> : <Plus size={12} strokeWidth={2.2} />}
+                  </span>
+                </button>
+                <div style={{
+                  maxHeight: isOpen ? 260 : 0,
+                  overflow: "hidden",
+                  transition: `max-height 0.35s ${EASE}`,
+                }}>
+                  <p style={{
+                    fontFamily: F, fontSize: 13, color: TEXT3, lineHeight: 1.6,
+                    padding: "0 20px 20px", margin: 0,
+                  }}>
+                    {item.a}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1340,7 +1614,7 @@ function FinalCTA({ t }: { t: Record<string, string> }) {
 // ── Footer (proper, with columns) ──────────────────────────────────────────
 function Footer({ t }: { t: Record<string, string> }) {
   const cols = [
-    { title: t.footer_product, links: [{ label: t.footer_how, href: "/#flow" }, { label: t.footer_pricing, href: "/pricing" }] },
+    { title: t.footer_product, links: [{ label: t.footer_how, href: "/#flow" }, { label: t.footer_pricing, href: "/pricing" }, { label: t.footer_faq, href: "/#faq" }] },
     { title: t.footer_company, links: [{ label: t.footer_about, href: "/about" }, { label: t.footer_contact, href: "mailto:hello@adbrief.pro" }] },
     { title: t.footer_legal, links: [{ label: t.footer_terms, href: "/terms" }, { label: t.footer_privacy, href: "/privacy" }] },
   ];
@@ -1491,10 +1765,13 @@ export default function IndexNew() {
 
       <Nav t={t} lang={lang} setLang={setLang} />
       <Hero t={t} />
+      <SocialProofSection t={t} />
       <ConceptSection t={t} />
       <FlowSection t={t} />
+      <CompareSection t={t} />
       <LoopSection t={t} />
       <PricingSection t={t} />
+      <FAQSection t={t} />
       <FinalCTA t={t} />
       <Footer t={t} />
       <StickyBar t={t} />
@@ -1505,10 +1782,6 @@ export default function IndexNew() {
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes mockFloat {
-          0%, 100% { transform: perspective(1400px) rotateY(-2deg) rotateX(0.5deg) translateY(0); }
-          50% { transform: perspective(1400px) rotateY(-2deg) rotateX(0.5deg) translateY(-4px); }
         }
         .hero-tag-fade { animation: fadeUp 0.6s ${EASE} 0.05s both; }
         .hero-sub-fade { animation: fadeUp 0.6s ${EASE} 0.15s both; }
@@ -1527,12 +1800,10 @@ export default function IndexNew() {
           .hero-grid p { margin-left: auto; margin-right: auto; }
           .hero-mockup {
             justify-content: center !important;
-            margin-top: 20px;
+            margin-top: 24px;
           }
           .product-mockup {
             max-width: 100% !important;
-            transform: none !important;
-            animation: none !important;
           }
           .concept-grid {
             grid-template-columns: 1fr !important;
@@ -1540,6 +1811,20 @@ export default function IndexNew() {
           }
           .concept-grid h2 { text-align: center; }
           .flow-steps { padding-left: 0 !important; }
+          .social-logos {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 10px !important;
+          }
+          .social-logos > :nth-child(4),
+          .social-logos > :nth-child(5) { display: none !important; }
+          .social-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .compare-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
           .pricing-grid {
             grid-template-columns: 1fr 1fr !important;
             gap: 10px !important;
@@ -1573,6 +1858,7 @@ export default function IndexNew() {
           }
           .product-mockup { max-width: 100% !important; }
           .concept-grid { gap: 40px !important; }
+          .social-grid { gap: 14px !important; }
           .pricing-grid {
             grid-template-columns: 1fr 1fr !important;
             gap: 14px !important;
@@ -1595,15 +1881,13 @@ export default function IndexNew() {
           .hero-cta-btn:active {
             transform: scale(0.98) !important;
           }
-          .hero-grid:hover .product-mockup {
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 12px 40px rgba(0,0,0,0.4), 0 50px 120px rgba(0,0,0,0.6) !important;
-          }
           .pricing-cta-btn:hover { opacity: 0.85; transform: translateY(-0.5px); }
           .pricing-card:hover {
             border-color: rgba(255,255,255,0.12) !important;
             transform: translateY(-4px) !important;
             box-shadow: 0 12px 40px rgba(0,0,0,0.3) !important;
           }
+          .faq-row:hover { background: rgba(255,255,255,0.015) !important; }
           .nav-signup-btn:hover { background: rgba(255,255,255,0.9) !important; transform: translateY(-1px); }
           .nav-login-btn:hover { color: ${TEXT} !important; }
           .footer-link:hover { color: ${TEXT2} !important; }
