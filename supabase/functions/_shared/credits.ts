@@ -33,6 +33,7 @@ export const CREDIT_COSTS: Record<string, number> = {
   persona:     1,
   competitor:  2,
   video:       5,  // generate-video (visual + audio multimodal analysis)
+  creative_loop: 8, // close-creative-loop: brief + 3 copy variants + 3 image variants (heavy)
 };
 
 // ── Plan credit pools (monthly) ───────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { storage } from "@/lib/storage";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, LogOut, Shield, Brain, XCircle } from "lucide-react";
+import { Loader2, LogOut, Shield, Brain, XCircle, Gauge, Info, PauseCircle, PlayCircle } from "lucide-react";
 import { CancelModal } from "@/components/dashboard/CancelModal";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { trackEvent, resetUser } from "@/lib/posthog";
@@ -27,6 +27,110 @@ const SettingsPage = () => {
   const [aiTone, setAiTone] = useState<"direto" | "didático" | "técnico">(() => {
     return storage.get("adbrief_ai_tone", "direto") as any
   });
+
+  // ── Autopilot state ───────────────────────────────────────────────────────
+  const [apLoading, setApLoading] = useState(true);
+  const [apSaving, setApSaving] = useState(false);
+  const [apEnabled, setApEnabled] = useState(false);
+  const [apTermsAccepted, setApTermsAccepted] = useState(false);
+  const [apMinConfidence, setApMinConfidence] = useState(0.95);
+  const [apMinAmount, setApMinAmount] = useState(500);
+  const [apDailyCap, setApDailyCap] = useState(5);
+  const [apAllowedActions, setApAllowedActions] = useState<string[]>(["pause"]);
+  const [apNotifyTelegram, setApNotifyTelegram] = useState(true);
+  const [apNotifyEmail, setApNotifyEmail] = useState(true);
+  const [apPausedUntil, setApPausedUntil] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from("autopilot_settings")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (data) {
+          setApEnabled(!!data.enabled);
+          setApTermsAccepted(!!data.accepted_terms_at);
+          setApMinConfidence(Number(data.min_confidence) || 0.95);
+          setApMinAmount(Number(data.min_amount_at_risk_brl) || 500);
+          setApDailyCap(Number(data.daily_action_cap) || 5);
+          setApAllowedActions(Array.isArray(data.allowed_action_types) ? data.allowed_action_types : ["pause"]);
+          setApNotifyTelegram(data.notify_telegram !== false);
+          setApNotifyEmail(data.notify_email !== false);
+          setApPausedUntil(data.paused_until);
+        }
+      } catch (e) {
+        // first-run: settings row doesn't exist yet — defaults are fine
+      } finally {
+        setApLoading(false);
+      }
+    })();
+  }, [user.id]);
+
+  const saveAutopilot = async (override?: Partial<{
+    enabled: boolean;
+    accepted_terms: boolean;
+    paused_until: string | null;
+  }>) => {
+    setApSaving(true);
+    try {
+      const payload: any = {
+        user_id: user.id,
+        enabled: override?.enabled ?? apEnabled,
+        min_confidence: apMinConfidence,
+        min_amount_at_risk_brl: apMinAmount,
+        daily_action_cap: apDailyCap,
+        allowed_action_types: apAllowedActions,
+        notify_telegram: apNotifyTelegram,
+        notify_email: apNotifyEmail,
+      };
+      if (override?.accepted_terms !== undefined) {
+        payload.accepted_terms_at = override.accepted_terms ? new Date().toISOString() : null;
+      } else if (apTermsAccepted && !apEnabled) {
+        // preserve existing timestamp
+      }
+      if (override?.paused_until !== undefined) {
+        payload.paused_until = override.paused_until;
+      }
+      const { error } = await (supabase as any)
+        .from("autopilot_settings")
+        .upsert(payload, { onConflict: "user_id" });
+      if (error) throw error;
+      toast.success("Autopilot atualizado");
+    } catch (e: any) {
+      toast.error(e.message || "Falha ao salvar autopilot");
+    } finally {
+      setApSaving(false);
+    }
+  };
+
+  const toggleAutopilot = async (next: boolean) => {
+    if (next && !apTermsAccepted) {
+      toast.error("Aceite os termos primeiro (caixinha acima)");
+      return;
+    }
+    setApEnabled(next);
+    await saveAutopilot({ enabled: next });
+  };
+
+  const acceptTerms = async (next: boolean) => {
+    setApTermsAccepted(next);
+    await saveAutopilot({ accepted_terms: next });
+  };
+
+  const pauseFor24h = async () => {
+    const until = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+    setApPausedUntil(until);
+    await saveAutopilot({ paused_until: until });
+  };
+
+  const resumeNow = async () => {
+    setApPausedUntil(null);
+    await saveAutopilot({ paused_until: null });
+  };
+
+  const isPaused = apPausedUntil && new Date(apPausedUntil) > new Date();
 
   const lang = language as "pt" | "en" | "es";
   const T = {
@@ -277,6 +381,315 @@ const SettingsPage = () => {
               ))}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* ───────────────────────── Autopilot ───────────────────────── */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Gauge className="h-4 w-4" />
+            {lang === "pt" ? "Autopilot (piloto automático)" : lang === "es" ? "Autopilot" : "Autopilot"}
+          </CardTitle>
+          <CardDescription>
+            {lang === "pt"
+              ? "Permite que o AdBrief execute ações (pausar, escalar) sozinho — SOMENTE em decisões com confiança altíssima e acima do valor que você definir. Toda ação tem desfazer de 24h e é notificada imediatamente."
+              : "Allow AdBrief to execute actions (pause, scale) on its own — ONLY on very-high-confidence decisions above the threshold you set. Every action has 24h undo and instant notification."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {apLoading ? (
+            <div className="py-8 flex items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <>
+              {/* ── Terms acceptance (T&C-style) ── */}
+              <label
+                className="flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer"
+                style={{
+                  background: apTermsAccepted ? "rgba(167,139,250,0.06)" : "rgba(255,255,255,0.025)",
+                  borderColor: apTermsAccepted ? "rgba(167,139,250,0.25)" : "rgba(255,255,255,0.08)",
+                }}
+                title={lang === "pt"
+                  ? "Ao marcar esta caixa, você autoriza o AdBrief a executar ações (pausar anúncios, ajustar verba) automaticamente nas condições configuradas abaixo. Toda ação fica registrada em log permanente e pode ser desfeita em até 24h."
+                  : "By checking this box, you authorize AdBrief to execute actions (pause ads, adjust budget) automatically under the conditions configured below. Every action is permanently logged and can be undone within 24h."}
+              >
+                <input
+                  type="checkbox"
+                  checked={apTermsAccepted}
+                  onChange={(e) => acceptTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded accent-violet-500 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {lang === "pt"
+                      ? "Eu autorizo o AdBrief a agir em minha conta de anúncios"
+                      : "I authorize AdBrief to act on my ad account"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    {lang === "pt"
+                      ? "Autopilot só age em decisões com confiança ≥ configurada abaixo e valor em risco ≥ o limite que você definir. Toda ação é logada, notificada e pode ser desfeita em até 24h. Você pode desativar ou pausar a qualquer momento."
+                      : "Autopilot only acts on decisions with confidence ≥ your configured threshold and risk amount ≥ your configured limit. Every action is logged, notified, and can be undone within 24h. You can disable or pause at any time."}
+                  </p>
+                </div>
+              </label>
+
+              {/* ── Enable toggle ── */}
+              <div
+                className="flex items-center justify-between p-3 rounded-lg border"
+                style={{
+                  background: apEnabled ? "rgba(52,211,153,0.06)" : "rgba(255,255,255,0.025)",
+                  borderColor: apEnabled ? "rgba(52,211,153,0.25)" : "rgba(255,255,255,0.08)",
+                }}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">
+                    {lang === "pt" ? "Ativar autopilot" : "Enable autopilot"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {apEnabled
+                      ? (lang === "pt" ? "Ativo — agindo dentro dos limites abaixo" : "Active — operating within your limits below")
+                      : (lang === "pt" ? "Desativado — você aprova cada ação manualmente" : "Disabled — you approve every action manually")}
+                  </p>
+                </div>
+                <button
+                  onClick={() => toggleAutopilot(!apEnabled)}
+                  disabled={!apTermsAccepted || apSaving}
+                  role="switch"
+                  aria-checked={apEnabled}
+                  className="relative flex-shrink-0"
+                  style={{
+                    width: 46, height: 26, borderRadius: 999,
+                    background: apEnabled ? "#34d399" : "rgba(255,255,255,0.1)",
+                    transition: "background 0.15s",
+                    cursor: !apTermsAccepted || apSaving ? "not-allowed" : "pointer",
+                    opacity: !apTermsAccepted ? 0.4 : 1,
+                    border: "none",
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 3, left: apEnabled ? 23 : 3,
+                      width: 20, height: 20, borderRadius: "50%",
+                      background: "#fff",
+                      transition: "left 0.15s",
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* ── Paused notice ── */}
+              {isPaused && (
+                <div
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                  style={{ background: "rgba(251,191,36,0.06)", borderColor: "rgba(251,191,36,0.25)" }}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <PauseCircle className="h-4 w-4 text-yellow-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {lang === "pt" ? "Pausado até " : "Paused until "}
+                        {new Date(apPausedUntil!).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {lang === "pt" ? "Nenhuma ação automática será tomada até lá" : "No automatic actions will be taken until then"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" className="border-border" onClick={resumeNow}>
+                    <PlayCircle className="h-3.5 w-3.5 mr-1.5" />
+                    {lang === "pt" ? "Retomar" : "Resume"}
+                  </Button>
+                </div>
+              )}
+
+              {/* ── Limits ── */}
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm">
+                      {lang === "pt" ? "Confiança mínima" : "Minimum confidence"}
+                      <span
+                        title={lang === "pt"
+                          ? "Autopilot só age quando o engine de decisão atribui pelo menos essa confiança à recomendação. 95% = muito conservador, só casos quase certos."
+                          : "Autopilot only acts when the decision engine assigns at least this confidence to the recommendation. 95% = very conservative, near-certain cases only."}
+                        className="inline-flex ml-1.5 align-middle cursor-help"
+                      >
+                        <Info className="h-3 w-3 text-muted-foreground inline" />
+                      </span>
+                    </Label>
+                    <span className="text-sm font-semibold text-violet-400">{Math.round(apMinConfidence * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={80} max={99} step={1}
+                    value={Math.round(apMinConfidence * 100)}
+                    onChange={(e) => setApMinConfidence(Number(e.target.value) / 100)}
+                    onMouseUp={() => saveAutopilot()}
+                    onTouchEnd={() => saveAutopilot()}
+                    className="w-full accent-violet-500"
+                  />
+                  <div className="flex justify-between mt-1">
+                    <span className="text-xs text-muted-foreground">80%</span>
+                    <span className="text-xs text-muted-foreground">{lang === "pt" ? "conservador" : "conservative"}</span>
+                    <span className="text-xs text-muted-foreground">99%</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm">
+                      {lang === "pt" ? "Valor em risco mínimo" : "Minimum amount at risk"}
+                      <span
+                        title={lang === "pt"
+                          ? "Autopilot não age em decisões pequenas. Só age quando o valor em risco (grana sendo queimada no anúncio ruim, ou oportunidade perdida) é pelo menos esse valor."
+                          : "Autopilot won't act on small decisions. Only triggers when the amount at risk is at least this value."}
+                        className="inline-flex ml-1.5 align-middle cursor-help"
+                      >
+                        <Info className="h-3 w-3 text-muted-foreground inline" />
+                      </span>
+                    </Label>
+                    <span className="text-sm font-semibold text-violet-400">
+                      R$ {apMinAmount.toLocaleString("pt-BR")}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={100} max={5000} step={50}
+                    value={apMinAmount}
+                    onChange={(e) => setApMinAmount(Number(e.target.value))}
+                    onMouseUp={() => saveAutopilot()}
+                    onTouchEnd={() => saveAutopilot()}
+                    className="w-full accent-violet-500"
+                  />
+                  <div className="flex justify-between mt-1">
+                    <span className="text-xs text-muted-foreground">R$ 100</span>
+                    <span className="text-xs text-muted-foreground">R$ 5.000</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm">
+                      {lang === "pt" ? "Máximo de ações por dia" : "Max actions per day"}
+                      <span
+                        title={lang === "pt"
+                          ? "Rede de segurança: mesmo que muitas decisões qualifiquem, autopilot não executa mais que esse número por dia. Garante que nunca toma ação em massa sem você notar."
+                          : "Safety net: even if many decisions qualify, autopilot won't execute more than this per day. Ensures it never mass-acts without you noticing."}
+                        className="inline-flex ml-1.5 align-middle cursor-help"
+                      >
+                        <Info className="h-3 w-3 text-muted-foreground inline" />
+                      </span>
+                    </Label>
+                    <span className="text-sm font-semibold text-violet-400">{apDailyCap}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1} max={20} step={1}
+                    value={apDailyCap}
+                    onChange={(e) => setApDailyCap(Number(e.target.value))}
+                    onMouseUp={() => saveAutopilot()}
+                    onTouchEnd={() => saveAutopilot()}
+                    className="w-full accent-violet-500"
+                  />
+                </div>
+              </div>
+
+              {/* ── Allowed action types ── */}
+              <div>
+                <Label className="text-sm mb-2 block">
+                  {lang === "pt" ? "Ações permitidas" : "Allowed actions"}
+                </Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    ["pause",        lang === "pt" ? "Pausar anúncio ruim" : "Pause bad ads",           "Menos arriscado"],
+                    ["scale_budget", lang === "pt" ? "Aumentar verba em ganhador" : "Scale winning budget", "Moderado"],
+                    ["reject",       lang === "pt" ? "Rejeitar recomendação óbvia" : "Reject obvious recs", "Muito seguro"],
+                  ] as const).map(([val, label, risk]) => {
+                    const active = apAllowedActions.includes(val);
+                    return (
+                      <button
+                        key={val}
+                        onClick={() => {
+                          const next = active ? apAllowedActions.filter(a => a !== val) : [...apAllowedActions, val];
+                          setApAllowedActions(next);
+                          // Save immediately via setState + saveAutopilot in next tick
+                          setTimeout(() => saveAutopilot(), 0);
+                        }}
+                        className="text-left p-2.5 rounded-lg border transition-colors cursor-pointer"
+                        style={{
+                          background: active ? "rgba(167,139,250,0.08)" : "rgba(255,255,255,0.03)",
+                          borderColor: active ? "rgba(167,139,250,0.3)" : "rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <p className="text-xs font-semibold" style={{ color: active ? "#a78bfa" : "rgba(255,255,255,0.7)" }}>
+                          {label}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{risk}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ── Notifications ── */}
+              <div>
+                <Label className="text-sm mb-2 block">
+                  {lang === "pt" ? "Me avise quando o autopilot agir" : "Notify me when autopilot acts"}
+                </Label>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => { setApNotifyTelegram(!apNotifyTelegram); setTimeout(() => saveAutopilot(), 0); }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition-colors"
+                    style={{
+                      background: apNotifyTelegram ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)",
+                      borderColor: apNotifyTelegram ? "rgba(14,165,233,0.3)" : "rgba(255,255,255,0.08)",
+                      color: apNotifyTelegram ? "#0ea5e9" : "rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    <span className="text-base"></span> Telegram
+                  </button>
+                  <button
+                    onClick={() => { setApNotifyEmail(!apNotifyEmail); setTimeout(() => saveAutopilot(), 0); }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition-colors"
+                    style={{
+                      background: apNotifyEmail ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)",
+                      borderColor: apNotifyEmail ? "rgba(14,165,233,0.3)" : "rgba(255,255,255,0.08)",
+                      color: apNotifyEmail ? "#0ea5e9" : "rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    <span className="text-base"></span> Email
+                  </button>
+                </div>
+              </div>
+
+              {/* ── Action log link + pause ── */}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-border"
+                  onClick={() => navigate("/dashboard/autopilot-log")}
+                >
+                  {lang === "pt" ? "Ver log de ações" : "View action log"}
+                </Button>
+                {!isPaused && apEnabled && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-border"
+                    onClick={pauseFor24h}
+                  >
+                    <PauseCircle className="h-3.5 w-3.5 mr-1.5" />
+                    {lang === "pt" ? "Pausar por 24h" : "Pause for 24h"}
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

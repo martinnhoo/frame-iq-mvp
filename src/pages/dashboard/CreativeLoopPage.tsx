@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
+import CreativeLoopDraftModal, { type CreativeLoopDraftSource } from "@/components/dashboard/CreativeLoopDraftModal";
 
 const j = { fontFamily: T.font } as const;
 const m = { fontFamily: T.font } as const;
@@ -61,6 +62,19 @@ export default function CreativeLoopPage() {
   const [loading, setLoading] = useState(true);
   const [learning, setLearning] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
+  const [draftModalOpen, setDraftModalOpen] = useState(false);
+  const [draftSource, setDraftSource] = useState<CreativeLoopDraftSource | null>(null);
+
+  const openLoopDraft = (pattern: Pattern) => {
+    const vars = pattern.variables ? Object.entries(pattern.variables).filter(([, v]) => v && v !== "unknown").map(([k, v]) => `${k}=${v}`).join(" · ") : "";
+    setDraftSource({
+      type: "pattern",
+      id: pattern.id,
+      snapshot: pattern,
+      label: vars || pattern.pattern_key,
+    });
+    setDraftModalOpen(true);
+  };
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -286,11 +300,24 @@ export default function CreativeLoopPage() {
                     ))}
                   </div>
                   {p.insight_text && <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5, marginBottom: 5 }}>{p.insight_text}</p>}
-                  <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                     {p.avg_ctr && <span style={{ ...m, fontSize: 12, color: "#34d399" }}>CTR {(p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr*100).toFixed(2)}%</span>}
                     {p.avg_roas && <span style={{ ...m, fontSize: 12, color: "#fbbf24" }}>ROAS {p.avg_roas.toFixed(1)}x</span>}
                     <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{p.sample_size} amostras</span>
                     <span style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>{(p.confidence*100).toFixed(0)}% confiança</span>
+                    <button
+                      onClick={() => openLoopDraft(p)}
+                      title="Gerar 3 variações de criativo com base nesse padrão (8 créditos)"
+                      style={{
+                        marginLeft: "auto",
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        padding: "5px 10px", borderRadius: 8,
+                        background: "linear-gradient(135deg,#a78bfa,#7c3aed)",
+                        color: "#fff", fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer",
+                      }}
+                    >
+                      <Sparkles size={11} /> Gerar variação IA
+                    </button>
                   </div>
                 </div>
               </div>
@@ -339,7 +366,21 @@ export default function CreativeLoopPage() {
                       </div>
                     </td>
                     <td style={{ padding: "10px" }}>
-                      {p.is_winner && <span style={{ ...m, fontSize: 12, padding: "2px 7px", borderRadius: 999, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>WIN</span>}
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        {p.is_winner && <span style={{ ...m, fontSize: 12, padding: "2px 7px", borderRadius: 999, background: "rgba(52,211,153,0.1)", color: "#34d399", border: "1px solid rgba(52,211,153,0.2)" }}>WIN</span>}
+                        <button
+                          onClick={() => openLoopDraft(p)}
+                          title="Gerar variação de criativo (8 créditos)"
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "3px 8px", borderRadius: 6,
+                            background: "rgba(167,139,250,0.12)",
+                            color: "#a78bfa", fontSize: 11, fontWeight: 700, border: "1px solid rgba(167,139,250,0.25)", cursor: "pointer",
+                          }}
+                        >
+                          <Sparkles size={10} /> Gerar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -348,6 +389,18 @@ export default function CreativeLoopPage() {
           </div>
         </div>
       )}
+
+      {/* ── Creative Loop Draft Modal ── */}
+      <CreativeLoopDraftModal
+        open={draftModalOpen}
+        userId={user.id}
+        source={draftSource}
+        onClose={() => setDraftModalOpen(false)}
+        onApproved={() => {
+          toast.success("Draft aprovado — disponível em /dashboard/loop/drafts em breve");
+          loadData();
+        }}
+      />
     </div>
   );
 }
