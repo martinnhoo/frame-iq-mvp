@@ -3565,12 +3565,12 @@ const NoActiveAdsHero: React.FC<{
       headline={hasPaused ? 'Nada está rodando agora.' : 'Você não tem anúncio ativo.'}
       subtext={subtext}
       primaryCta={{
-        label: hasPaused ? 'Reativar no Meta Ads' : 'Criar campanha',
-        onClick: hasPaused ? onOpenAI : onCreateCampaign,
+        label: hasPaused ? 'Reativar no Meta Ads' : 'Falar com a IA',
+        onClick: hasPaused ? onOpenAI : onOpenAI,
       }}
       secondaryCta={{
-        label: hasPaused ? 'Criar nova campanha' : 'Conversar com a IA',
-        onClick: hasPaused ? onCreateCampaign : onOpenAI,
+        label: hasPaused ? 'Falar com a IA' : 'Criar campanha',
+        onClick: hasPaused ? onOpenAI : onCreateCampaign,
       }}
       meta={hasPaused ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} · ${pausedAds} anúncio${pausedAds === 1 ? '' : 's'}` : undefined}
     >
@@ -5319,7 +5319,7 @@ const FeedPage: React.FC = () => {
             variant="no-traffic"
             headline="Nenhum anúncio importado ainda."
             subtext="Conecte esta conta ao Meta Ads e eu trago tudo: campanhas, anúncios, métricas. Em segundos você vê seu primeiro diagnóstico."
-            primaryCta={{ label: 'Criar campanha', onClick: () => navigate('/dashboard/campaign-builder') }}
+            primaryCta={{ label: 'Falar com a IA', onClick: () => navigate('/dashboard/ai') }}
             secondaryCta={{ label: 'Sincronizar Meta', onClick: handleSync }}
           />
         ) : feedState === 'single-ad' ? (

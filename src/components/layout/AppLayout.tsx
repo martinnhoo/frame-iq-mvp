@@ -91,7 +91,7 @@ function NavItem({ url, label, icon: Icon, onClick, isActive }: {
 
 function getNavItems(lang: string) {
   const l: Record<string, Record<string, string>> = {
-    ai:       { pt: 'Media Buyer IA', es: 'Media Buyer IA', fr: 'Media Buyer IA', de: 'Media Buyer KI', zh: 'AI媒体买手', ar: 'مشتري وسائط IA', en: 'Media Buyer AI' },
+    ai:       { pt: 'Estrategista', es: 'Estratega', fr: 'Stratège', de: 'Stratege', zh: '策略师', ar: 'الاستراتيجي', en: 'Strategist' },
     history:  { pt: 'Histórico', es: 'Historial', fr: 'Historique', de: 'Verlauf', zh: '历史记录', ar: 'السجل', en: 'History' },
     accounts: { pt: 'Contas', es: 'Cuentas', fr: 'Comptes', de: 'Konten', zh: '账户', ar: 'الحسابات', en: 'Accounts' },
   };
