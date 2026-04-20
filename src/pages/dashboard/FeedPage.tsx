@@ -4341,16 +4341,26 @@ const FeedPage: React.FC = () => {
 
   // ── Pixel Health — deterministic check via edge function (cached 1h server-side).
   // Runs once per account change. Takes priority over the heuristic trackingHealth below.
+  // States:
+  //   pixelHealthLoading=true          → still fetching (show "Verificando…")
+  //   pixelHealthError=true + !loading → fetch failed (show "Indisponível · tentar")
+  //   pixelHealth=null + !loading      → not applicable (no account / demo)
+  //   pixelHealth={...}                → render real status
   const [pixelHealth, setPixelHealth] = useState<PixelHealthSummary | null>(null);
   const [pixelHealthLoading, setPixelHealthLoading] = useState(false);
+  const [pixelHealthError, setPixelHealthError] = useState(false);
+  const [pixelHealthRetryNonce, setPixelHealthRetryNonce] = useState(0);
 
   useEffect(() => {
     if (!accountId || !userId || isDemo) {
       setPixelHealth(null);
+      setPixelHealthError(false);
+      setPixelHealthLoading(false);
       return;
     }
     let cancelled = false;
     setPixelHealthLoading(true);
+    setPixelHealthError(false);
     (async () => {
       try {
         const { data, error } = await supabase.functions.invoke('pixel-health-check', {
@@ -4359,6 +4369,7 @@ const FeedPage: React.FC = () => {
         if (cancelled) return;
         if (error || !data || (data as any).error) {
           setPixelHealth(null);
+          setPixelHealthError(true);
         } else {
           const d = data as any;
           const primaryPixel = Array.isArray(d.pixels) ? d.pixels.find((p: any) => p.id === d.primary_pixel_id) : null;
@@ -4373,15 +4384,25 @@ const FeedPage: React.FC = () => {
             active_ads_checked: d.active_ads_checked ?? 0,
             checked_at: d.checked_at,
           });
+          setPixelHealthError(false);
         }
-      } catch {
-        if (!cancelled) setPixelHealth(null);
+      } catch (err) {
+        console.warn('[feed] pixel-health-check failed:', err);
+        if (!cancelled) {
+          setPixelHealth(null);
+          setPixelHealthError(true);
+        }
       } finally {
         if (!cancelled) setPixelHealthLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [accountId, userId, isDemo]);
+  }, [accountId, userId, isDemo, pixelHealthRetryNonce]);
+
+  // Trigger a fresh pixel-health-check fetch (used by the Pixel tile retry CTA).
+  const retryPixelHealth = useCallback(() => {
+    setPixelHealthRetryNonce((n) => n + 1);
+  }, []);
 
   // ── Tracking health — pixel-first, heuristic fallback.
   // Priority order:
@@ -5521,8 +5542,21 @@ const FeedPage: React.FC = () => {
           });
 
           // 2) Pixel — derived from trackingHealth + pixelHealth
-          if (!pixelHealth) {
+          if (pixelHealthLoading) {
             signals.push({ key: 'pixel', label: 'Pixel', status: 'unknown', detail: 'Verificando…' });
+          } else if (pixelHealthError) {
+            signals.push({
+              key: 'pixel', label: 'Pixel',
+              status: 'warn',
+              detail: 'Indisponível · tentar',
+              onClick: () => retryPixelHealth(),
+            });
+          } else if (!pixelHealth) {
+            signals.push({
+              key: 'pixel', label: 'Pixel',
+              status: 'unknown', detail: 'Sem dados',
+              onClick: () => retryPixelHealth(),
+            });
           } else if (pixelHealth.status === 'pixel_ok') {
             signals.push({
               key: 'pixel', label: 'Pixel',
@@ -5553,7 +5587,12 @@ const FeedPage: React.FC = () => {
               onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: `Tenho ${orphans} anúncios sem pixel amarrado. Quais são e como corrigir?` } }); },
             });
           } else {
-            signals.push({ key: 'pixel', label: 'Pixel', status: 'unknown', detail: 'Verificando…' });
+            // Unknown status value returned by the edge fn — treat as recoverable.
+            signals.push({
+              key: 'pixel', label: 'Pixel',
+              status: 'unknown', detail: 'Status desconhecido',
+              onClick: () => retryPixelHealth(),
+            });
           }
 
           // 3) Gasto & conversões (period window)
@@ -5564,6 +5603,7 @@ const FeedPage: React.FC = () => {
               key: 'spend', label: 'Gasto & conversões',
               status: noActiveTraffic ? 'warn' : 'unknown',
               detail: noActiveTraffic ? 'Nenhum ad rodando' : 'Sem dados',
+              onClick: () => navigate('/dashboard/feed/campanhas'),
             });
           } else if (convs > 0) {
             const cpa = spend / convs;
@@ -5571,6 +5611,7 @@ const FeedPage: React.FC = () => {
               key: 'spend', label: 'Gasto & conversões',
               status: 'ok',
               detail: `${fmtReais(spend)} · ${convs} conv · CPA ${fmtReais(cpa)}`,
+              onClick: () => navigate('/dashboard/feed/campanhas'),
             });
           } else {
             signals.push({
@@ -5591,18 +5632,14 @@ const FeedPage: React.FC = () => {
             onClick: () => navigate('/dashboard/feed/campanhas'),
           });
 
-          // 5) Aprendizado Meta — stub until we pull delivery_info per adset
-          signals.push({
-            key: 'learning', label: 'Aprendizado Meta',
-            status: 'unknown',
-            detail: 'Em breve',
-          });
+          // 5) Aprendizado Meta — hidden until delivery_info per adset is wired.
+          // Shipping "Em breve" makes the panel look unfinished; we'd rather show 5 tiles.
 
           // 6) IA aprendendo padrões
           signals.push({
             key: 'patterns', label: 'IA aprendendo',
             status: patternsCount > 0 ? 'ok' : 'unknown',
-            detail: patternsCount > 0 ? `${patternsCount} padrão${patternsCount === 1 ? '' : 'ões'}` : 'Coletando',
+            detail: patternsCount > 0 ? `${patternsCount} padr${patternsCount === 1 ? 'ão' : 'ões'}` : 'Coletando',
             onClick: () => navigate('/dashboard/intelligence'),
           });
 
