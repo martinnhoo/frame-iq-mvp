@@ -534,7 +534,7 @@ export default function PerformanceDashboard() {
         <div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12,marginBottom:20}}>
             {[...Array(6)].map((_,i)=>(
-              <div key={i} style={{height:130,background:`${A}04`,borderRadius:14,border:`1px solid ${A}08`,opacity:1-i*0.08,animation:"fadeIn 0.4s ease both",animationDelay:`${i*0.05}s`}}/>
+              <div key={i} style={{height:130,background:`${A}04`,borderRadius:14,border:`1px solid ${A}08`,opacity:1-i*0.08,animation:"fadeIn 0.25s ease both"}}/>
             ))}
           </div>
           <div style={{height:260,background:`${A}04`,borderRadius:14,border:`1px solid ${A}08`}}/>

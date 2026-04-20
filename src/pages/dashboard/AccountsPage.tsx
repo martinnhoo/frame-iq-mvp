@@ -1589,11 +1589,12 @@ export default function AccountsPage() {
   );
 
   return (
-    <div style={{ maxWidth:740, margin:"0 auto", padding:"clamp(16px,4vw,40px)", fontFamily:F }}>
+    <div style={{ maxWidth:740, margin:"0 auto", padding:"clamp(16px,4vw,40px)", fontFamily:F, animation:"pageReveal 0.3s ease both" }}>
       <style>{`
         @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.7}}
         @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pageReveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeUp{from{opacity:0}to{opacity:1}}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         @keyframes statusPulse{0%,100%{opacity:1}50%{opacity:.5}}
         .acc-card{transition:all 0.25s ${EASE}}
@@ -1623,7 +1624,7 @@ export default function AccountsPage() {
       {/* ── Create new form ── */}
       {creating && (
         <div style={{ borderRadius:16, background:CARD, border:`1px solid ${B2}`,
-          boxShadow:SHD, backdropFilter:GLASS, padding:"clamp(22px,4vw,30px)", marginBottom:16, animation:"fadeUp 0.3s ease" }}>
+          boxShadow:SHD, backdropFilter:GLASS, padding:"clamp(22px,4vw,30px)", marginBottom:16 }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
             <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:T1, letterSpacing:"-0.02em" }}>{t.new}</h2>
             <button onClick={() => setCreating(false)}
@@ -1654,7 +1655,7 @@ export default function AccountsPage() {
       {accounts.length === 0 && !creating && !loadError && (
         <div style={{ textAlign:"center", padding:"72px 32px", borderRadius:20,
           background:CARD, border:`1px solid ${B1}`,
-          boxShadow:`${SHD}, ${GLOW_BLUE}`, backdropFilter:GLASS, animation:"fadeUp 0.4s ease" }}>
+          boxShadow:`${SHD}, ${GLOW_BLUE}`, backdropFilter:GLASS }}>
           <div style={{ width:64, height:64, borderRadius:18,
             background:`linear-gradient(135deg, rgba(37,99,235,0.15), rgba(6,182,212,0.10))`,
             display:"flex", alignItems:"center",

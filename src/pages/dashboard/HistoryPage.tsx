@@ -409,7 +409,7 @@ const HistoryPage: React.FC = () => {
           textAlign: 'center', padding: '60px 32px', borderRadius: 16,
           background: CARD, border: `1px solid ${B1}`,
           boxShadow: SHD, backdropFilter: GLASS,
-          animation: 'fadeUp 0.3s ease',
+          animation: 'fadeUp 0.25s ease both',
         }}>
           <div style={{
             width: 52, height: 52, borderRadius: 14,

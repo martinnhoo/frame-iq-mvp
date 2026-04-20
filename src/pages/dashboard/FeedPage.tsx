@@ -2761,7 +2761,7 @@ const PerformancePulse: React.FC<{
                 transform: isHovered ? 'translateY(-1px)' : 'none',
                 boxShadow: isHovered ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
                 opacity: k.empty ? 0.55 : 1,
-                animation: `feed-fadeUp 0.35s ease ${idx * 0.08}s both`,
+                animation: 'feed-fadeUp 0.25s ease both',
                 cursor: 'default',
               }}
             >
@@ -2816,7 +2816,7 @@ const PerformancePulse: React.FC<{
           marginTop: 10, padding: '6px 10px',
           background: 'rgba(74,222,128,0.04)',
           borderRadius: 6,
-          animation: 'feed-fadeIn 0.4s ease 0.3s both',
+          animation: 'feed-fadeIn 0.25s ease both',
         }}>
           <span style={{
             width: 5, height: 5, borderRadius: '50%', background: T.green,
@@ -2999,7 +2999,7 @@ const PriorityStack: React.FC<{
               borderRadius: 10,
               padding: 'clamp(12px, 2.5vw, 16px)',
               marginBottom: 8,
-              animation: `feed-fadeUp 0.3s ease ${i * 0.05}s both`,
+              animation: 'feed-fadeUp 0.25s ease both',
               position: 'relative' as const,
             }}
           >

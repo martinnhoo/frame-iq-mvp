@@ -583,7 +583,7 @@ export default function AdScorePage() {
           {[...Array(6)].map((_, i) => (
             <div key={i} style={{
               height: 300, background: `${A}04`, borderRadius: 16, border: `1px solid ${A}08`,
-              opacity: 1 - i * 0.1, animation: "fadeUp 0.3s ease both", animationDelay: `${i * 0.05}s`,
+              opacity: 1 - i * 0.1, animation: "fadeUp 0.25s ease both",
             }} />
           ))}
         </div>
