@@ -110,10 +110,10 @@ export function ReferralPopup({ userId }: Props) {
             lineHeight: 1.45, fontFamily: F,
           }}>
             {pt
-              ? "Compartilhe seu link. Cada pessoa que criar uma conta, você ganha +10 análises grátis."
+              ? "Compartilhe seu link. Cada pessoa que criar uma conta, você ganha +10 melhorias grátis."
               : es
-                ? "Comparte tu enlace. Por cada registro, ganas +10 análisis gratis."
-                : "Share your link. For each signup, you earn +10 free analyses."}
+                ? "Comparte tu enlace. Por cada registro, ganas +10 mejoras gratis."
+                : "Share your link. For each signup, you earn +10 free upgrades."}
           </p>
 
           {/* Code + copy */}

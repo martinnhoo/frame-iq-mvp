@@ -2104,6 +2104,10 @@ export default function AdBriefAI() {
     // Wait a tick to let connections settle
     const timer = setTimeout(()=>{
       const pid = selectedPersona?.id || null;
+      const hasMetaConn = connections.includes("meta");
+      const hasGoogleConn = false /* google disabled */;
+      const hasAnyConn = hasMetaConn || hasGoogleConn;
+
       // Server-side filter by persona_id — prevents cross-account snapshot leakage
       const buildSnapQuery = () => {
         const q = (supabase as any).from("daily_snapshots")
@@ -2122,27 +2126,43 @@ export default function AdBriefAI() {
         if (Array.isArray(s.top_ads)) s.top_ads = s.top_ads.map((a: any) => ({ ...a, ctr: a.ctr > 1 ? a.ctr / 100 : a.ctr }));
         return s;
       };
-      buildSnapQuery().then((r:any)=>{
-          const snap = normSnap((r.data || [])[0] || null);
-          const hasMetaConn = connections.includes("meta");
-          const hasGoogleConn = false /* google disabled */;
-          const hasAnyConn = hasMetaConn || hasGoogleConn;
 
-          if(!snap && hasAnyConn){
-            // Both Meta and Google now supported by daily-intelligence
-            supabase.functions.invoke("daily-intelligence",{body:{user_id:user.id,persona_id:pid}})
-              .then(()=>{
-                buildSnapQuery().then((r2:any)=>{
-                    const snap2 = normSnap((r2.data || [])[0] || null);
-                    if(!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn);
-                  })
-                  .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
-              })
-              .catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn); });
-          } else {
-            if(!proactiveFired.current) triggerProactiveGreeting(snap, hasMetaConn, hasGoogleConn);
+      // Fetch live-metrics in parallel — same source as Feed KPIs / LivePanel
+      // This ensures BRIEFING card shows the SAME numbers users see elsewhere.
+      const fetchLive = async (): Promise<{ spend: number; ctr: number; clicks: number; impressions: number; active_ads: number } | null> => {
+        if (!hasMetaConn) return null;
+        try {
+          const { data, error } = await supabase.functions.invoke("live-metrics", {
+            body: { user_id: user.id, persona_id: pid, period: "7d" },
+          });
+          if (error || !data?.ok) return null;
+          const m = data.combined || data.meta;
+          if (!m || m.error) return null;
+          return { spend: m.spend || 0, ctr: m.ctr || 0, clicks: m.clicks || 0, impressions: m.impressions || 0, active_ads: m.active_ads || m.ads_count || 0 };
+        } catch { return null; }
+      };
+
+      // Run snapshot + live-metrics in parallel
+      Promise.all([
+        buildSnapQuery().then((r: any) => normSnap((r.data || [])[0] || null)).catch(() => null),
+        fetchLive(),
+      ]).then(async ([snap, live]) => {
+        if (!snap && hasAnyConn) {
+          // No snapshot yet — trigger daily-intelligence then retry snapshot
+          try {
+            await supabase.functions.invoke("daily-intelligence", { body: { user_id: user.id, persona_id: pid } });
+            const r2 = await buildSnapQuery();
+            const snap2 = normSnap(((r2 as any).data || [])[0] || null);
+            if (!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn, live);
+          } catch {
+            if (!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn, live);
           }
-        }).catch(()=>{ if(!proactiveFired.current) triggerProactiveGreeting(null, connections.includes("meta"), false /* google disabled */); });
+        } else {
+          if (!proactiveFired.current) triggerProactiveGreeting(snap, hasMetaConn, hasGoogleConn, live);
+        }
+      }).catch(() => {
+        if (!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn, null);
+      });
     }, 300); // 300ms — let connections settle
     return () => clearTimeout(timer);
   },[contextReady, connections.length, user?.id, greetingKey]);
@@ -2735,7 +2755,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   // ── Proactive greeting — fires when chat opens, always speaks first ──────────
   // Onboarding quiz removed — completeOnboarding no longer needed
 
-  const triggerProactiveGreeting = async (snapshot: any, hasMetaConn?: boolean, hasGoogleConn?: boolean) => {
+  const triggerProactiveGreeting = async (snapshot: any, hasMetaConn?: boolean, hasGoogleConn?: boolean, liveMetrics?: { spend: number; ctr: number; clicks: number; impressions: number; active_ads: number } | null) => {
     if (proactiveFired.current) return;
     proactiveFired.current = true;
 
@@ -2793,12 +2813,14 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       // Card source 2: Snapshot data — opportunities & insights
       const currSymbol = (hasGoogleConn && !hasMetaConn) ? "$" : "R$";
 
-      if (snapshot && snapshot.total_spend > 0) {
-        const topAds = (snapshot.top_ads || []) as any[];
+      // Show data cards if we have live-metrics OR snapshot with spend
+      const hasSpendData = (liveMetrics && liveMetrics.spend > 0) || (snapshot && snapshot.total_spend > 0);
+      if (hasSpendData) {
+        const topAds = (snapshot?.top_ads || []) as any[];
         const toScale = topAds.filter((a: any) => a.isScalable).slice(0, 2);
         const toPause = topAds.filter((a: any) => a.needsPause).slice(0, 1);
         const fatigued = topAds.filter((a: any) => a.isFatigued).slice(0, 1);
-        const ctrDelta = snapshot.yesterday_ctr > 0 && snapshot.avg_ctr > 0
+        const ctrDelta = snapshot?.yesterday_ctr > 0 && snapshot?.avg_ctr > 0
           ? ((snapshot.avg_ctr - snapshot.yesterday_ctr) / snapshot.yesterday_ctr * 100) : null;
 
         // Opportunity: scalable ad
@@ -2852,9 +2874,14 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
         }
 
         // Insight: overview card (always last)
+        // Prefer live-metrics (same source as Feed/LivePanel) over stale daily_snapshots
+        const briefSpend = liveMetrics?.spend ?? snapshot.total_spend ?? 0;
+        // live-metrics CTR is decimal (0.042), snapshot.avg_ctr is already normalized to decimal
+        const briefCtr = liveMetrics?.ctr ?? snapshot.avg_ctr ?? 0;
+        const briefAds = liveMetrics?.active_ads || snapshot.active_ads || topAds.length;
         const overviewDetail = lang === "pt"
-          ? `${currSymbol}${snapshot.total_spend?.toFixed(0)} investidos · CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${snapshot.active_ads || topAds.length} anúncios ativos`
-          : `${currSymbol}${snapshot.total_spend?.toFixed(0)} spent · CTR ${(snapshot.avg_ctr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${snapshot.active_ads || topAds.length} active ads`;
+          ? `${currSymbol}${briefSpend?.toFixed(0)} investidos · CTR ${(briefCtr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${briefAds} anúncios ativos`
+          : `${currSymbol}${briefSpend?.toFixed(0)} spent · CTR ${(briefCtr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${briefAds} active ads`;
         cards.push({
           tag: "BRIEFING",
           tagColor: "#0ea5e9",
@@ -2884,7 +2911,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             const p = patterns[0];
             // Humanize pattern_key: "perf_urgency_meta" → "Urgência em Meta"
             const PATTERN_LABELS: Record<string, { pt: string; en: string }> = {
-              perf_urgency_meta: { pt: "Urgência no copy", en: "Urgency in copy" },
+              perf_urgency_meta: { pt: "Urgência na copy", en: "Urgency in copy" },
               perf_social_proof: { pt: "Prova social", en: "Social proof" },
               perf_question_hook: { pt: "Hook com pergunta", en: "Question hook" },
               perf_face_presence: { pt: "Rosto no criativo", en: "Face in creative" },

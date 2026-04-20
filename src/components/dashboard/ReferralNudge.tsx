@@ -9,7 +9,7 @@ const STORAGE_KEY = "adbrief_referral_nudge_dismissed";
 
 const texts = {
   en: { msg: "Know someone who runs ads? Share AdBrief and both get +10 free analyses!", cta: "Share now" },
-  pt: { msg: "Conhece alguém que roda anúncios? Compartilhe o AdBrief e ambos ganham +10 análises!", cta: "Compartilhar" },
+  pt: { msg: "Conhece alguém que roda anúncios? Compartilhe o AdBrief e ambos ganham +10 melhorias!", cta: "Compartilhar" },
   es: { msg: "¿Conoces a alguien que hace anuncios? Comparte AdBrief y ambos obtienen +10 análisis!", cta: "Compartir" },
 };
 
