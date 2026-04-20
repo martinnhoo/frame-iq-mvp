@@ -4961,6 +4961,15 @@ const FeedPage: React.FC = () => {
     setPatternsCount(count);
   }, []);
 
+  // ── Action error surface (toast-like banner for failed toggles/actions) ──
+  const [actionError, setActionError] = useState<string | null>(null);
+  const actionErrorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showActionError = useCallback((msg: string) => {
+    setActionError(msg);
+    if (actionErrorTimer.current) clearTimeout(actionErrorTimer.current);
+    actionErrorTimer.current = setTimeout(() => setActionError(null), 6000);
+  }, []);
+
   // ── Ad toggle (pause/activate) from Feed ──
   const [togglingAd, setTogglingAd] = useState<string | null>(null);
   const [toggleSuccess, setToggleSuccess] = useState<{ id: string; action: 'pause' | 'activate' } | null>(null);
@@ -4995,18 +5004,34 @@ const FeedPage: React.FC = () => {
           source: 'feed_ad_toggle_modal',
         }),
       });
-      if (res.ok) {
+      const body = await res.json().catch(() => null);
+      if (res.ok && body?.success) {
+        // OPTIMISTIC: flip the ad's status locally so the row reflects the new
+        // state immediately. meta-actions doesn't write to Supabase `ads`
+        // table — only to Meta + action_log — so without this the next
+        // fetchAds() returns stale data and the UI looks unchanged.
+        const newStatus = action === 'pause' ? 'PAUSED' : 'ACTIVE';
+        setUserAds(prev => prev.map(a =>
+          a.meta_ad_id === ad.meta_ad_id
+            ? { ...a, status: newStatus, effective_status: newStatus }
+            : a
+        ));
         setToggleSuccess({ id: ad.meta_ad_id, action });
         setTimeout(() => setToggleSuccess(null), 2400);
+        // Background refetch — keeps us in sync once sync-meta-data catches up.
         fetchAds();
+      } else {
+        const msg = body?.error || `Falha ao ${action === 'pause' ? 'pausar' : 'ativar'} anúncio. Tente novamente.`;
+        showActionError(msg);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Toggle ad error:', e);
+      showActionError('Erro de conexão. Verifique sua internet e tente de novo.');
     } finally {
       setTogglingAd(null);
       setToggleRequest(null);
     }
-  }, [toggleRequest, togglingAd, userId, personaId, fetchAds]);
+  }, [toggleRequest, togglingAd, userId, personaId, fetchAds, showActionError]);
 
   // ── Campaign toggle (pause/activate) ──
   const [togglingCampaign, setTogglingCampaign] = useState<string | null>(null);
@@ -5045,20 +5070,55 @@ const FeedPage: React.FC = () => {
             source: 'feed_campaign_toggle_modal',
           }),
         });
-        if (res.ok) {
+        const body = await res.json().catch(() => null);
+        if (res.ok && body?.success) {
+          // OPTIMISTIC: flip the campaign + its child ads locally so the UI
+          // reflects the new state immediately. meta-actions only talks to
+          // Meta + action_log — the Supabase `campaigns` / `ads` tables stay
+          // stale until sync-meta-data runs, so without this the row keeps
+          // showing the old status ("nao fica como a acao que foi confirmada").
+          const newCampaignStatus = action === 'pause' ? 'PAUSED' : 'ACTIVE';
+          setUserCampaigns(prev => prev.map(c =>
+            c.meta_campaign_id === campaign.meta_campaign_id
+              ? { ...c, status: newCampaignStatus }
+              : c
+          ));
+          // If we paused the campaign, Meta cascades PAUSED to all its ads
+          // (effective_status becomes CAMPAIGN_PAUSED). Reflect that too so
+          // the nested AdRows flip their dot + status label on the spot.
+          if (action === 'pause') {
+            setUserAds(prev => prev.map(a =>
+              a.ad_set?.campaign?.name === campaign.name
+                ? { ...a, effective_status: 'CAMPAIGN_PAUSED' }
+                : a
+            ));
+          } else {
+            // On activate, parent unblocks — child ads go back to their own
+            // stored status. Trigger a background refetch to reconcile.
+            setUserAds(prev => prev.map(a =>
+              a.ad_set?.campaign?.name === campaign.name && a.effective_status === 'CAMPAIGN_PAUSED'
+                ? { ...a, effective_status: a.status || 'ACTIVE' }
+                : a
+            ));
+          }
           setCampaignToggleSuccess({ id: campaign.meta_campaign_id, action });
-          setTimeout(() => setCampaignToggleSuccess(null), 2400);
+          setTimeout(() => setCampaignToggleSuccess(null), 2800);
+          // Background refetch — keeps us in sync once sync-meta-data catches up.
           fetchCampaigns();
-          fetchAds(); // Refresh ads too since campaign status affects them
+          fetchAds();
+        } else {
+          const msg = body?.error || `Falha ao ${action === 'pause' ? 'pausar' : 'ativar'} campanha. Tente novamente.`;
+          showActionError(msg);
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error('Toggle campaign error:', e);
+        showActionError('Erro de conexão. Verifique sua internet e tente de novo.');
       } finally {
         setTogglingCampaign(null);
         setCampaignToggleRequest(null);
       }
     })();
-  }, [campaignToggleRequest, togglingCampaign, userId, personaId, fetchCampaigns, fetchAds]);
+  }, [campaignToggleRequest, togglingCampaign, userId, personaId, fetchCampaigns, fetchAds, showActionError]);
 
   // ── AI analysis handlers — navigate to /dashboard/ai with pre-loaded context ──
   const handleAnalyzeAiAd = useCallback((ad: AdSummary) => {
@@ -5267,6 +5327,41 @@ const FeedPage: React.FC = () => {
             onAlertAction={handleAlertAction}
             onInvestigateMetric={investigateMetricAlert}
           />
+        )}
+
+        {/* Action error banner — shown when pause/activate/etc fails.
+            Sticks for 6s (or until dismissed). Replaces the old behavior
+            where errors were silently swallowed and the user saw nothing. */}
+        {actionError && (
+          <div
+            role="alert"
+            style={{
+              background: 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.04) 100%)',
+              border: '1px solid rgba(239,68,68,0.30)',
+              borderLeft: '3px solid #EF4444',
+              borderRadius: 8, padding: '10px 14px', marginBottom: 12,
+              display: 'flex', alignItems: 'center', gap: 10,
+              animation: 'feed-fadeUp 0.2s ease',
+            }}
+          >
+            <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
+            <span style={{
+              flex: 1, fontSize: 12, color: '#FCA5A5', fontFamily: F,
+              lineHeight: 1.45, wordBreak: 'break-word',
+            }}>{actionError}</span>
+            <button
+              onClick={() => setActionError(null)}
+              aria-label="Fechar"
+              style={{
+                background: 'transparent', border: 'none',
+                color: 'rgba(252,165,165,0.60)', fontSize: 16,
+                cursor: 'pointer', padding: '2px 6px', lineHeight: 1,
+                fontFamily: F, flexShrink: 0,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#FCA5A5'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'rgba(252,165,165,0.60)'; }}
+            >×</button>
+          </div>
         )}
 
         {/* ═══════════════════════════════════════════════
