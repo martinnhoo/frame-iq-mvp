@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
       const copyEndpoint = `${target_id}/copies`;
       const d = await post(copyEndpoint, { deep_copy: true, status_option: "PAUSED" });
       if (d.error) return errResp(d.error.message);
-      const newId = d.copied_adset_id || d.copied_ad_id || d.id;
+      const newId = d.copied_campaign_id || d.copied_adset_id || d.copied_ad_id || d.id;
 
       logToActionHistory(supabase, user_id, action, target_id, target_type || "ad", targetName,
         {},
