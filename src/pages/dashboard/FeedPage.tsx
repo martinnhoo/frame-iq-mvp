@@ -4073,23 +4073,35 @@ const FeedPage: React.FC = () => {
       : null;
   });
 
+  // Tracks whether we've finished checking if the user has a Meta connection
+  // (localStorage + DB fallback). While false, the feed shows the skeleton
+  // instead of flashing StateNoConnection. Prevents the "3 screens before
+  // the real one" flicker reported by users.
+  const [connectionLookupDone, setConnectionLookupDone] = useState<boolean>(
+    () => !!(ctx.selectedPersona?.id && storage.get(`meta_sel_${ctx.selectedPersona.id}`, ""))
+  );
+
   // Re-read localStorage on tick or persona change
   useEffect(() => {
     const val = ctx.selectedPersona?.id
       ? (storage.get(`meta_sel_${ctx.selectedPersona.id}`, "") || null)
       : null;
     setMetaSelId(val);
+    // Re-evaluate the lookup flag: hit in localStorage = done; otherwise wait for DB fallback.
+    setConnectionLookupDone(!!val);
   }, [ctx.selectedPersona?.id, accTick]);
 
   // ── Fallback: if localStorage is empty (e.g. mobile), auto-detect from DB ──
   useEffect(() => {
     if (metaSelId || !ctx.selectedPersona?.id || !ctx.user?.id) return;
     // Check if user has an active Meta connection in DB
+    let cancelled = false;
     (async () => {
       try {
         const { data } = await supabase.functions.invoke("meta-oauth", {
           body: { action: "get_connections", user_id: ctx.user.id }
         });
+        if (cancelled) return;
         const all = (data?.connections || []) as any[];
         const scoped = all.filter((c: any) => c.persona_id === ctx.selectedPersona!.id && c.platform === "meta" && c.status === "active");
         if (scoped.length > 0) {
@@ -4104,7 +4116,10 @@ const FeedPage: React.FC = () => {
           }
         }
       } catch {}
+      // Lookup finished — we now know whether the user has a Meta connection or not.
+      if (!cancelled) setConnectionLookupDone(true);
     })();
+    return () => { cancelled = true; };
   }, [metaSelId, ctx.selectedPersona?.id, ctx.user?.id]);
 
   const [accountId, setAccountId] = useState<string | null>(null);
@@ -4736,21 +4751,27 @@ const FeedPage: React.FC = () => {
   }
   if (syncing) hasSyncedRef.current = true;
 
-  // Skeleton policy:
-  // - Show skeleton ONLY while the active account is being resolved (accountResolving).
-  // - Once we know the account, render the real UI immediately. Sub-fetches
-  //   (decisions, tracker, live-metrics) have their own empty/loading states
-  //   so they CAN'T block the whole page if any of them hangs (RLS, network,
-  //   edge-function cold-start, etc.).
-  // - Hard cap of 4s as an absolute safety net for accountResolving itself.
+  // Skeleton policy (unified — one skeleton, no flicker):
+  // - While the connection lookup is still in flight (localStorage + DB fallback),
+  //   stay on the skeleton so StateNoConnection doesn't flash before we know.
+  // - If connected, stay on the skeleton until the account UUID is resolved
+  //   AND the first ad page has loaded. This collapses three intermediate states
+  //   (StateNoConnection → account-resolving skeleton → empty feed with 'loading'
+  //   shimmer) into a single skeleton that hands off directly to the real UI.
+  // - After the first successful load for an account, never show the skeleton
+  //   again for that account (prevents flash on sync/refresh).
+  // - Hard cap of 6s as an absolute safety net in case any lookup hangs.
   const [skeletonExpired, setSkeletonExpired] = useState(false);
   useEffect(() => {
     setSkeletonExpired(false);
-    const t = setTimeout(() => setSkeletonExpired(true), 4000);
+    const t = setTimeout(() => setSkeletonExpired(true), 6000);
     return () => clearTimeout(t);
   }, []);
 
-  const isLoading = accountResolving && !hasSyncedRef.current && !skeletonExpired;
+  const isLoading = (
+    !connectionLookupDone
+    || (metaConnected && (accountResolving || !adsLoaded))
+  ) && !hasSyncedRef.current && !skeletonExpired;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
   const handleSync = useCallback(async () => {
