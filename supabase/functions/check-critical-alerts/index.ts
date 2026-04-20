@@ -1,13 +1,21 @@
-// check-critical-alerts v3 — CERTEIRO + Decision Pipeline
-// Roda a cada 6h. Máximo 1 email/dia por usuário.
-// Dedup por ad_id + tipo + semana — nunca repete o mesmo alerta.
-// Cruza com learned_patterns — alerta quando repete padrão de fracasso conhecido.
-// v2_shadow/v2_active: enriches alerts through financial + safety + confidence pipeline
+// check-critical-alerts v4 — Two-layer alert system
+//
+// LAYER 1 (this file, cheap path): polls Meta every 15–30 min, runs PURE
+// RULES (no LLM) via _shared/detect-alerts.ts. If zero alerts fire → return
+// immediately, zero LLM cost, zero email sent. This is the common case.
+//
+// LAYER 2 (triggered only when layer 1 fires): Claude Haiku composes ONE
+// sharp summary line. LLM cost only exists when something is actually wrong.
+//
+// Caps still apply: dedup per ad+type+week, max 1 email/day per user.
+// Decision pipeline (v2_shadow/v2_active) still enriches alerts with
+// financial + safety + confidence signals before sending.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 import { runShadowPipeline, getEngineVersion, loadAccountConfig, type AlertInput } from "../_shared/decision-pipeline/shadow-mode.ts";
 import { enrichDecision, toActionLogEntry } from "../_shared/decision-pipeline/decision-output.ts";
 import type { RawDecision, EnrichedDecision } from "../_shared/decision-pipeline/types.ts";
+import { detectAlerts, topAlerts, type DetectedAlert } from "../_shared/detect-alerts.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -136,20 +144,10 @@ Deno.serve(async (req) => {
         ]);
         const [d1, d0, dCamps] = await Promise.all([r1.json(), r2.json(), rCamps.json()]);
 
-        // Objective map
+        // Objective map (used by shared detector + pipeline enrichment)
         const objMap: Record<string, string> = {};
         ((dCamps?.data || []) as any[]).forEach((c: any) => { if (c.name) objMap[c.name] = c.objective || ''; });
 
-        // Get primary KPI per objective
-        const getPrimaryKpi = (obj: string) => {
-          const o = (obj || '').toUpperCase();
-          if (o.includes('PURCHASE') || o.includes('SALES'))   return 'roas';
-          if (o.includes('LEAD'))                               return 'cpl';
-          if (o.includes('APP'))                                return 'cpi';
-          if (o.includes('VIDEO'))                              return 'thruplay';
-          if (o.includes('REACH') || o.includes('BRAND'))      return 'cpm';
-          return 'ctr';
-        };
         if (d1.error) continue;
 
         const curr: any[] = d1.data || [];
@@ -173,11 +171,6 @@ Deno.serve(async (req) => {
           const spend = parseFloat(ad.spend || "0");
           return pv && spend > 0 ? parseFloat(pv.value || "0") / spend : null;
         };
-        const getThruPlayRate = (ad: any) => {
-          const plays = parseFloat(((ad.video_play_actions || [])[0])?.value || "0");
-          const thru  = parseFloat(((ad.video_thruplay_watched_actions || [])[0])?.value || "0");
-          return plays > 0 ? thru / plays : null;
-        };
 
         // Load learned patterns for this user — to detect repeated failure patterns
         const { data: patterns } = await sb.from("learned_patterns" as any)
@@ -187,148 +180,35 @@ Deno.serve(async (req) => {
           .order("confidence", { ascending: false })
           .limit(30);
 
-        const failurePatterns = ((patterns || []) as any[])
-          .filter((p: any) => !p.is_winner && p.sample_size >= 3);
-        const winnerPatterns  = ((patterns || []) as any[])
-          .filter((p: any) => p.is_winner && p.sample_size >= 3);
+        // ─── LAYER 1: pure rule-based detection (no LLM) ───────────────────
+        const detected: DetectedAlert[] = detectAlerts({
+          currentInsights: curr,
+          previousInsights: prev,
+          campaignObjectiveMap: objMap,
+          alreadyFiredFlags: flags,
+          weekKey,
+          learnedPatterns: (patterns || []) as any[],
+        });
 
-        // Detect alerts — only fires if not already alerted this week for same ad+type
+        // EARLY EXIT: nothing fired → zero LLM cost, zero email.
+        // This is the common case on any given 15-min tick for most users.
+        if (!detected.length) continue;
+
+        // Adapt to the legacy emoji-urgency shape used by downstream code
+        // (buildTelegramMessage, pipeline enrichment, email rendering).
         const alerts: Array<{
-          type: string; ad: string; campaign: string;
+          type: string; ad: string; ad_name?: string; campaign: string;
           detail: string; urgency: "🔴" | "🟡";
           dedup_key: string;
-        }> = [];
-
-        for (const ad of curr) {
-          const adId = ad.ad_id || ad.ad_name;
-          const ctr     = parseN(ad.ctr);
-          const spend   = parseN(ad.spend);
-          const freq    = parseN(ad.frequency);
-          const conv    = getConv(ad);
-          const roas    = getRoas(ad);
-          const thru    = getThruPlayRate(ad);
-          const prevAd  = prevMap[adId];
-          const prevCtr = prevAd ? parseN(prevAd.ctr) : null;
-          const prevRoas = prevAd ? getRoas(prevAd) : null;
-          const adName  = (ad.ad_name || "Sem nome").slice(0, 55);
-          const camp    = (ad.campaign_name || "").slice(0, 45);
-          const objective = objMap[ad.campaign_name] || "";
-          const primaryKpi = getPrimaryKpi(objective);
-
-          const push = (type: string, detail: string, urgency: "🔴" | "🟡") => {
-            const dedup = `${weekKey}_${adId}_${type.replace(/\s/g, "_")}`;
-            if (!flags[dedup]) alerts.push({ type, ad: adName, campaign: camp, detail, urgency, dedup_key: dedup });
-          };
-
-          // ─── CRITICAL SIGNALS — KPI-AWARE ──────────────────────────────────
-
-          // 🔴 Frequência crítica — universal, qualquer objetivo
-          if (freq >= T.FREQ_CRITICAL) {
-            push("FADIGA_CRITICA",
-              `Frequência ${freq.toFixed(1)}x — audiência esgotada. Pause hoje e troque o criativo.`,
-              "🔴");
-          }
-
-          // 🔴 ROAS colapsou — campanha de conversão
-          if (primaryKpi === 'roas' && roas !== null && roas < 0.8 && spend > 40) {
-            push("ROAS_CRITICO",
-              `ROAS ${roas.toFixed(2)}x — cada R$1 gasto retorna menos de R$0,80. ` +
-              `Campanha não está se pagando. Revise criativo e oferta.`,
-              "🔴");
-          }
-
-          // 🔴 ROAS caiu > 40% vs ontem
-          if (primaryKpi === 'roas' && roas !== null && prevRoas !== null && prevRoas > 1.0 && roas < prevRoas * 0.6) {
-            const drop = Math.round(((prevRoas - roas) / prevRoas) * 100);
-            push("ROAS_COLAPSOU",
-              `ROAS caiu ${drop}% em 72h: ${prevRoas.toFixed(2)}x → ${roas.toFixed(2)}x. ` +
-              `Criativo perdendo força ou audiência saturando.`,
-              "🔴");
-          }
-
-          // 🔴 CTR colapsou — campanha de tráfego/leads
-          if ((primaryKpi === 'ctr' || primaryKpi === 'cpl') &&
-              prevCtr !== null && prevCtr >= T.CTR_DROP_MIN && ctr < prevCtr * ((100 - T.CTR_DROP_PCT) / 100)) {
-            const drop = Math.round(((prevCtr - ctr) / prevCtr) * 100);
-            push("CTR_COLAPSOU",
-              `CTR caiu ${drop}% em 72h: ${(prevCtr*100).toFixed(2)}% → ${(ctr*100).toFixed(2)}%. ` +
-              `Cheque frequência e copy.`,
-              "🔴");
-          }
-
-          // 🔴 ThruPlay rate baixo — campanha de vídeo
-          if (primaryKpi === 'thruplay' && thru !== null && thru < 0.10 && spend > 20) {
-            push("RETENCAO_VIDEO_BAIXA",
-              `Só ${(thru*100).toFixed(1)}% assistiram o vídeo até o fim. ` +
-              `Hook ou ritmo do vídeo fraco. Teste versão mais curta ou novo hook.`,
-              "🔴");
-          }
-
-          // 🔴 Spend alto sem nenhuma conversão — campanhas com objetivo de conversão
-          if (['roas','cpl','cpi'].includes(primaryKpi) && spend >= T.SPEND_NO_CONV && conv === 0) {
-            push("SPEND_SEM_RETORNO",
-              `R$${spend.toFixed(0)} gastos hoje sem uma única conversão. ` +
-              `Pause e revise oferta, criativo ou público.`,
-              "🔴");
-          }
-
-          // ─── PATTERN-BASED ALERTS (o diferencial) ──────────────────────────
-
-          // Detecta se este ad está repetindo padrão de fracasso que a IA já viu
-          if (failurePatterns.length > 0 && spend > 15) {
-            // Match: frequência similar ao que levou ao fracasso antes
-            for (const pattern of failurePatterns.slice(0, 5)) {
-              const vars = (pattern.variables as any) || {};
-              const histFreqs = (vars.history || []).map((h: any) => h.frequency || 0).filter((f: number) => f > 0);
-              if (histFreqs.length < 2) continue;
-              const patternAvgFreq = histFreqs.reduce((s: number, f: number) => s + f, 0) / histFreqs.length;
-
-              // If current ad is approaching the frequency level where this pattern failed before
-              if (freq > patternAvgFreq * 0.8 && freq >= 2.5 && pattern.confidence > 0.6) {
-                const dedup = `${weekKey}_${adId}_PATTERN_FREQ`;
-                if (!flags[dedup]) {
-                  alerts.push({
-                    type: "PADRÃO DE RISCO",
-                    ad: adName, campaign: camp,
-                    detail: `Frequência ${freq.toFixed(1)}x está se aproximando do nível onde criativos similares falharam na sua conta (média ${patternAvgFreq.toFixed(1)}x). ` +
-                            `Histórico mostra que vale criar variação agora antes do CTR cair.`,
-                    urgency: "🟡",
-                    dedup_key: dedup,
-                  });
-                }
-                break; // one pattern alert per ad
-              }
-            }
-          }
-
-          // ─── OPPORTUNITY SIGNAL ────────────────────────────────────────────
-
-          // 🟡 KPI bom com budget baixo — oportunidade de escala (KPI-aware)
-          const isScaleOpp = (() => {
-            if (spend < T.SCALE_SPEND_MIN || spend > T.SCALE_SPEND_MAX) return false;
-            if (primaryKpi === 'roas')    return roas !== null && roas >= 2.0;
-            if (primaryKpi === 'cpl')     return conv > 0 && (spend/conv) < 30;
-            if (primaryKpi === 'thruplay') return thru !== null && thru >= 0.20;
-            return ctr >= T.SCALE_CTR; // default: traffic
-          })();
-          if (isScaleOpp) {
-            const kpiStr = primaryKpi === 'roas' ? `ROAS ${roas?.toFixed(2)}x`
-              : primaryKpi === 'cpl' ? `CPL R$${(spend/conv).toFixed(0)}`
-              : primaryKpi === 'thruplay' ? `ThruPlay ${((thru||0)*100).toFixed(1)}%`
-              : `CTR ${(ctr*100).toFixed(2)}%`;
-            const confirmedByPattern = winnerPatterns.some((p: any) => {
-              const vars = (p.variables as any) || {};
-              return vars.adset && ad.adset_name && vars.adset.toLowerCase().includes(ad.adset_name.slice(0, 10).toLowerCase());
-            });
-            push("OPORTUNIDADE_ESCALA",
-              `${kpiStr} com apenas R$${spend.toFixed(0)} de budget hoje. ` +
-              (confirmedByPattern ? `Padrão similar já performou bem na sua conta. ` : ``) +
-              `Aumente o budget em 20-30% e monitore.`,
-              "🟡");
-          }
-        }
-
-        if (!alerts.length) continue;
+        }> = detected.map(d => ({
+          type: d.type,
+          ad: d.ad,
+          ad_name: d.ad,
+          campaign: d.campaign,
+          detail: d.detail,
+          urgency: d.urgency === "high" ? "🔴" : "🟡",
+          dedup_key: d.dedup_key,
+        }));
 
         // ─── DECISION PIPELINE INTEGRATION ──────────────────────────────
         // Run alerts through financial + safety + confidence pipeline
@@ -402,9 +282,13 @@ Deno.serve(async (req) => {
 
         const urgent = sorted.filter(a => a.urgency === "🔴").length;
 
-        // Use Haiku to write a single sharp insight tying the alerts together
+        // LAYER 2: Use Haiku to compose a single sharp insight tying the alerts
+        // together. Gate tightly — LLM only fires if:
+        //   - 2+ alerts survived
+        //   - AND at least one is urgent (🔴)
+        // Low-severity or single-alert runs skip the LLM entirely (~$0 cost).
         let summaryInsight = "";
-        if (ANTHROPIC_KEY && sorted.length > 1) {
+        if (ANTHROPIC_KEY && sorted.length > 1 && urgent > 0) {
           try {
             const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",

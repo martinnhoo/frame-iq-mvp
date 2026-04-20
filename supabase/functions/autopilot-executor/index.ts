@@ -30,6 +30,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { checkAutopilotGuards, type GuardTarget } from "../_shared/autopilot-guards.ts";
 
 // deno-lint-ignore no-explicit-any
 type SupabaseClient = any;
@@ -306,6 +307,67 @@ async function executeOne(
   const amountAtRiskBrl = impactCents / 100;
   const confidence = Math.min(1, Math.max(0, Number(decision.score) / 100));
 
+  // ── HARD SAFETY FLOOR ──────────────────────────────────────────────────────
+  // Runs beneath user settings — even if user says "be aggressive", these 5
+  // guards STILL gate the action. See _shared/autopilot-guards.ts.
+  const guardTarget: GuardTarget = {
+    kind: targetKind,
+    meta_id: targetMetaId,
+    db_ad_id: decision.ad_id ?? null,
+    account_id: decision.account_id,
+    user_id: userId,
+  };
+  const guard = await checkAutopilotGuards({
+    sb,
+    decision: {
+      id: decision.id,
+      ad_id: decision.ad_id,
+      account_id: decision.account_id,
+      impact_type: decision.impact_type,
+      meta_api_action: picked.meta_api_action,
+    },
+    target: guardTarget,
+    metaToken: token,
+  });
+
+  if (!guard.pass) {
+    // Record the skip in autopilot_action_log so the audit log explains
+    // exactly why autopilot held off. No Meta call, no decision status change.
+    try {
+      await sb.from("autopilot_action_log").insert({
+        user_id: userId,
+        decision_id: decision.id,
+        action_type: picked.meta_api_action,
+        target_kind: targetKind,
+        target_id: targetMetaId,
+        target_name: targetName || decision.headline,
+        reason: `[guard:${guard.failed}] ${guard.detail || ""} — decision: ${decision.reason || decision.headline}`,
+        confidence,
+        amount_at_risk_brl: amountAtRiskBrl,
+        payload: {
+          guard_failed: guard.failed,
+          guard_detail: guard.detail,
+          effective_status: guard.effective_status,
+          days_active: guard.days_active,
+          impressions: guard.impressions,
+          spend_cents: guard.spend_cents,
+          current_roas: guard.current_roas,
+          decision_actions: decision.actions,
+        },
+        status: "skipped",
+      });
+    } catch {
+      // non-fatal — the skip decision itself is what matters
+    }
+    return {
+      user_id: userId,
+      decision_id: decision.id,
+      action_type: picked.meta_api_action,
+      status: "skipped",
+      reason: `guard:${guard.failed}:${guard.detail || ""}`,
+    };
+  }
+
   // ── LOG-FIRST: create row BEFORE Meta call so we never lose audit trail ────
   const expiresUndo = new Date(Date.now() + (settings.undo_window_hours || UNDO_WINDOW_HOURS) * 3600_000).toISOString();
   const { data: logRow, error: logErr } = await sb
@@ -320,7 +382,18 @@ async function executeOne(
       reason: decision.reason || decision.headline,
       confidence,
       amount_at_risk_brl: amountAtRiskBrl,
-      payload: { request: payload, decision_actions: decision.actions, previous_state: previousState },
+      payload: {
+        request: payload,
+        decision_actions: decision.actions,
+        previous_state: previousState,
+        guards_passed: {
+          effective_status: guard.effective_status,
+          days_active: guard.days_active,
+          impressions: guard.impressions,
+          spend_cents: guard.spend_cents,
+          current_roas: guard.current_roas,
+        },
+      },
       status: "pending",
       expires_undo_at: expiresUndo,
     })
