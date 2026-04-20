@@ -1884,210 +1884,26 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns: CampaignSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void; togglingCampaign?: string | null; campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void }> = ({ totalAds, ads, campaigns, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
-  const navigate = useNavigate();
-  const [oppHov, setOppHov] = useState(false);
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns: CampaignSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void; togglingCampaign?: string | null; campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void }> = ({ totalAds, ads, campaigns, onLoadMoreAds, loadingMoreAds, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
+  // Only renders the actual campaign/ad list. No hero filler — that's the
+  // parent's job (hero is chosen contextually by the main render).
+  if (campaigns.length === 0 && ads.length === 0) return null;
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 8 }}>
-
-      {/* ── BLOCO 1: CAMPAIGNS → ADS ── */}
-      {(campaigns.length > 0 || ads.length > 0) && (
-        <div style={{
-          background: T.bg1, border: `1px solid ${T.border1}`,
-          borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
-        }}>
-          {campaigns.length > 0 ? (
-            <CampaignList campaigns={campaigns} ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={onRequestCampaignToggle} />
-          ) : (
-            <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
-          )}
-        </div>
-      )}
-
-      {/* ── BLOCO 2: OPORTUNIDADE — left border accent, neutral surface ── */}
-      <div
-        className="feed-card-lift"
-        onMouseEnter={() => setOppHov(true)}
-        onMouseLeave={() => setOppHov(false)}
-        style={{
-          background: oppHov ? T.bg2 : T.bg1,
-          border: `1px solid ${T.border1}`,
-          borderLeft: `3px solid ${T.blue}`,
-          borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
-        }}
-      >
-        <div style={{ fontSize: 9, fontWeight: 700, color: T.labelColor, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-          PRÓXIMA OPORTUNIDADE
-        </div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: T.text1, marginBottom: 6, lineHeight: 1.4 }}>
-          Seu próximo ganho vem de novos criativos · <span style={{ color: T.blue }}>+18% CTR potencial</span>
-        </div>
-        <div style={{ fontSize: 12, color: T.text2, lineHeight: 1.55, marginBottom: 14 }}>
-          Contas com performance semelhante escalam diversificando hooks e formatos
-        </div>
-        <button onClick={() => navigate('/dashboard/ai')} className="feed-cta" style={{
-          background: T.blue, color: T.text1,
-          border: 'none', borderRadius: 6,
-          padding: '9px 20px', fontSize: 12.5, fontWeight: 700,
-          fontFamily: F, cursor: 'pointer',
-          transition: 'all 0.18s',
-          boxShadow: oppHov ? `0 4px 14px ${T.blue}30` : 'none',
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.blueHover; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.blue; }}>
-          Gerar variação com IA
-        </button>
-      </div>
-
-      {/* Footer absorbed into unified SystemStatus */}
-    </div>
-  );
-};
-
-// ================================================================
-// PERFORMANCE SUMMARY — compressed, each block unique function
-// 1. Status + metrics  2. Opportunity (the one strong insight)  3. Next action
-// ================================================================
-const PerformanceSummary: React.FC<{
-  ads: AdSummary[];
-  campaigns: CampaignSummary[];
-  totalAds: number;
-  metrics: AdMetricsSummary | null;
-  periodLabel: string;
-  metaAccountId?: string;
-  onLoadMoreAds?: () => void;
-  loadingMoreAds?: boolean;
-  onToggleAd?: (adId: string, action: 'pause' | 'activate') => void;
-  togglingAd?: string | null;
-  toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
-  onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
-  trackingIssue?: boolean;
-  togglingCampaign?: string | null;
-  campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
-  onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void;
-}> = ({ ads, campaigns, totalAds, metrics, periodLabel, metaAccountId, onLoadMoreAds, loadingMoreAds, onToggleAd, togglingAd, toggleSuccess, onRequestToggle, trackingIssue, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
-  const navigate = useNavigate();
-  const hasMetrics = metrics && metrics.daysOfData > 0;
-
-  // Use unified formatters (same source as KPI bar)
-  const ctrPct = hasMetrics ? fmtPct(metrics.avgCtr) : null;
-  const spendReais = hasMetrics ? fmtReais(metrics.totalSpend) : null;
-  const cpaReais = hasMetrics && metrics.avgCpa > 0 ? fmtReais(metrics.avgCpa) : null;
-  const ctrGood = hasMetrics && (metrics.avgCtr / 100) >= 1;
-  // confLevel/confColor removed — status handled by unified SystemStatus
-
-  const [oppHov, setOppHov] = useState(false);
-
-  return (
-    <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 6 }}>
-
-      {/* ── BLOCO 1: METRICS — status handled by unified SystemStatus ── */}
       <div style={{
         background: T.bg1, border: `1px solid ${T.border1}`,
         borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
       }}>
-        {/* Metrics — clean grid, no heavy borders */}
-        {hasMetrics && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
-            {[
-              { label: 'Investido', value: spendReais || '—', color: T.text1 },
-              { label: 'CTR', value: ctrPct || '—', color: ctrGood ? T.green : T.yellow },
-              { label: 'CPA', value: cpaReais || '—', color: T.text1 },
-            ].map((m, i) => (
-              <div key={i} style={{
-                background: T.bg2, borderRadius: 6,
-                padding: '10px 8px', textAlign: 'center',
-              }}>
-                <div style={{ fontSize: 9, color: T.labelColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
-                  {m.label}
-                </div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: m.color, letterSpacing: '-0.03em' }}>
-                  {m.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Tracking caveat */}
-        {trackingIssue && hasMetrics && (
-          <div style={{ fontSize: 10.5, color: T.text3, fontStyle: 'italic', marginBottom: 10, paddingLeft: 2 }}>
-            Insights baseados em dados limitados de conversão
-          </div>
-        )}
-
-        {/* Campaign → Ads hierarchy */}
         {campaigns.length > 0 ? (
-          <CampaignList
-            campaigns={campaigns}
-            ads={ads}
-            totalAds={totalAds}
-            onLoadMore={onLoadMoreAds}
-            loadingMore={loadingMoreAds}
-            onToggleAd={onToggleAd}
-            togglingAd={togglingAd}
-            toggleSuccess={toggleSuccess}
-            onRequestToggle={onRequestToggle}
-            togglingCampaign={togglingCampaign}
-            campaignToggleSuccess={campaignToggleSuccess}
-            onRequestCampaignToggle={onRequestCampaignToggle}
-          />
-        ) : ads.length > 0 ? (
-          <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} onToggleAd={onToggleAd} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
-        ) : null}
-      </div>
-
-      {/* ── BLOCO 2: OPORTUNIDADE ── */}
-      <div
-        className="feed-card-lift"
-        onMouseEnter={() => setOppHov(true)}
-        onMouseLeave={() => setOppHov(false)}
-        style={{
-          background: oppHov ? T.bg2 : T.bg1,
-          border: `1px solid ${T.border1}`,
-          borderLeft: `3px solid ${T.blue}`,
-          borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
-        }}
-      >
-        <div style={{ fontSize: 9, fontWeight: 700, color: T.labelColor, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-          PRÓXIMA OPORTUNIDADE
-        </div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: T.text1, marginBottom: 6, lineHeight: 1.4 }}>
-          {ctrGood
-            ? <>CTR de <span style={{ color: T.green }}>{ctrPct}</span> — espaço para escalar com novos criativos</>
-            : <>Seu próximo ganho vem de novos criativos · <span style={{ color: T.blue }}>+18% CTR potencial</span></>}
-        </div>
-        <div style={{ fontSize: 12, color: T.text2, lineHeight: 1.55, marginBottom: 14 }}>
-          Contas com performance semelhante escalam diversificando hooks e formatos
-        </div>
-        <button onClick={() => navigate('/dashboard/ai')} className="feed-cta" style={{
-          background: T.blue, color: T.text1,
-          border: 'none', borderRadius: 6,
-          padding: '9px 20px', fontSize: 12.5, fontWeight: 700,
-          fontFamily: F, cursor: 'pointer',
-          transition: 'all 0.18s',
-          boxShadow: oppHov ? `0 4px 14px ${T.blue}30` : 'none',
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.blueHover; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.blue; }}>
-          Gerar variação com IA
-        </button>
-      </div>
-
-      {/* ── BLOCO 3: SISTEMA ATIVO ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 2px', animation: 'feed-fadeIn 0.4s ease' }}>
-        <span style={{
-          width: 4, height: 4, borderRadius: '50%', background: T.green,
-          boxShadow: `0 0 5px ${T.green}40`,
-          animation: 'pulse 2.5s ease-in-out infinite',
-        }} />
-        <span style={{ fontSize: 10, color: T.text3 }}>
-          Monitoramento ativo · sistema operando
-        </span>
+          <CampaignList campaigns={campaigns} ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={onRequestCampaignToggle} />
+        ) : (
+          <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
+        )}
       </div>
     </div>
   );
 };
+
 
 // ================================================================
 // COLLAPSIBLE DECISIONS — shows first 5, expand to see all
@@ -2809,8 +2625,9 @@ const PerformancePulse: React.FC<{
         })}
       </div>
 
-      {/* Savings line */}
-      {savings > 0 && (
+      {/* Savings line — hidden below R$50 because "R$2,50 economizados"
+          as a hero footer is worse than saying nothing. */}
+      {savings >= 5000 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
           marginTop: 10, padding: '6px 10px',
@@ -3487,60 +3304,82 @@ const IntelligencePanel: React.FC<{
 };
 
 // ================================================================
-// SILENT CONFIDENCE — When the brain is genuinely quiet
-// Only rendered when NO tracking issue, NO alerts, NO metric alerts.
-// Honest state: system is watching, nothing requires action.
+// QUIET PILL — one-line monitoring status
+// Replaces the big "Conta estável" card. Only shows when there's
+// genuinely nothing else on the page to say.
 // ================================================================
-const SilentConfidence: React.FC<{
-  lastAnalysisMin: number;
-  patternsCount: number;
-  actionsLast24h: number;
-  daysOfData?: number;
-}> = ({ lastAnalysisMin, patternsCount, actionsLast24h, daysOfData }) => (
+const QuietPill: React.FC<{ lastAnalysisMin: number }> = ({ lastAnalysisMin }) => (
   <div style={{
-    background: T.bg1, border: `1px solid ${T.border1}`,
-    borderRadius: 10, padding: 'clamp(14px, 2.5vw, 18px)', marginBottom: 14,
-    borderLeft: `3px solid ${T.green}`,
-    animation: 'feed-fadeUp 0.3s ease',
+    display: 'flex', alignItems: 'center', gap: 8,
+    padding: '8px 12px', marginBottom: 14,
+    background: T.bg1, border: `1px solid ${T.border0}`,
+    borderRadius: 6,
+    animation: 'feed-fadeIn 0.3s ease',
   }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-      <span style={{
-        width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-        background: T.green, boxShadow: `0 0 8px ${T.green}50`,
-      }} />
-      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
-        Cérebro ativo · monitoramento contínuo
-      </span>
-    </div>
-    <p style={{ fontSize: 14, color: T.text1, fontWeight: 700, margin: '0 0 6px', lineHeight: 1.4, fontFamily: F }}>
-      Conta estável. Nada exige sua ação agora.
-    </p>
-    <p style={{ fontSize: 12, color: T.text2, margin: '0 0 12px', lineHeight: 1.55, fontFamily: F }}>
-      {lastAnalysisMin < 60
-        ? `Última análise há ${lastAnalysisMin} min`
-        : `Última análise há ${Math.round(lastAnalysisMin / 60)}h`}
-      {daysOfData ? ` · ${daysOfData} dias de histórico lidos` : ''}
-      {' · próxima varredura em até 20 min'}
-    </p>
-    <div style={{
-      display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8,
-      padding: '10px 12px', background: T.bg2, borderRadius: 8,
-    }}>
-      <div>
-        <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor, margin: 0 }}>Padrões aprendidos</p>
-        <p style={{ fontSize: 15, fontWeight: 700, color: T.text1, margin: '3px 0 0', fontFamily: F, lineHeight: 1 }}>{patternsCount}</p>
-      </div>
-      <div>
-        <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor, margin: 0 }}>Ações 24h</p>
-        <p style={{ fontSize: 15, fontWeight: 700, color: T.text1, margin: '3px 0 0', fontFamily: F, lineHeight: 1 }}>{actionsLast24h}</p>
-      </div>
-      <div>
-        <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor, margin: 0 }}>Frequência</p>
-        <p style={{ fontSize: 15, fontWeight: 700, color: T.text1, margin: '3px 0 0', fontFamily: F, lineHeight: 1 }}>20 min</p>
-      </div>
-    </div>
+    <span style={{
+      width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+      background: T.green, boxShadow: `0 0 5px ${T.green}50`,
+    }} />
+    <span style={{ fontSize: 11, color: T.text3, fontFamily: F }}>
+      Monitorando a cada 20 min · última análise há {lastAnalysisMin < 60 ? `${lastAnalysisMin}min` : `${Math.round(lastAnalysisMin / 60)}h`}
+    </span>
   </div>
 );
+
+// ================================================================
+// NO ACTIVE ADS HERO — one clean card when all ads are paused
+// This is the ONLY thing the feed should say in this state.
+// Everything else (metrics, panels, grids) is noise here.
+// ================================================================
+const NoActiveAdsHero: React.FC<{
+  pausedCampaigns: number;
+  pausedAds: number;
+  onOpenAI: () => void;
+}> = ({ pausedCampaigns, pausedAds, onOpenAI }) => {
+  const navigate = useNavigate();
+  return (
+    <div className="feed-card-lift" style={{
+      background: T.bg1, border: `1px solid ${T.border1}`,
+      borderRadius: 10, padding: 'clamp(18px, 3vw, 22px)', marginBottom: 14,
+      borderLeft: `3px solid ${T.blue}`,
+      animation: 'feed-fadeUp 0.3s ease',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+        <span style={{
+          width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+          background: T.blue, boxShadow: `0 0 8px ${T.blue}50`,
+        }} />
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
+          Nada rodando agora
+        </span>
+      </div>
+      <p style={{ fontSize: 16, color: T.text1, fontWeight: 700, margin: '0 0 6px', lineHeight: 1.35, fontFamily: F }}>
+        Você não tem anúncio ativo.
+      </p>
+      <p style={{ fontSize: 13, color: T.text2, margin: '0 0 16px', lineHeight: 1.55, fontFamily: F }}>
+        {pausedCampaigns > 0 || pausedAds > 0
+          ? `${pausedCampaigns > 0 ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} pausada${pausedCampaigns === 1 ? '' : 's'}` : `${pausedAds} anúncio${pausedAds === 1 ? '' : 's'} pausado${pausedAds === 1 ? '' : 's'}`}. Reative uma ou crie uma nova — assim que houver tráfego, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.`
+          : 'Conecte ou crie uma campanha. Assim que houver tráfego, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.'}
+      </p>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button className="feed-cta" onClick={() => navigate('/dashboard/campaign-builder')} style={{
+          background: T.blue, color: '#fff', border: 'none', borderRadius: 6,
+          padding: '10px 18px', fontSize: 12.5, fontWeight: 700, fontFamily: F,
+          cursor: 'pointer', transition: 'all 0.18s',
+        }}>
+          Criar campanha
+        </button>
+        <button onClick={onOpenAI} style={{
+          background: T.bg2, color: T.text2, border: `1px solid ${T.border1}`,
+          borderRadius: 6, padding: '10px 18px', fontSize: 12.5, fontWeight: 600,
+          fontFamily: F, cursor: 'pointer', transition: 'all 0.18s',
+        }}>
+          Conversar com a IA
+        </button>
+      </div>
+    </div>
+  );
+};
 
 // ================================================================
 // BRAIN OVERWATCH — "Enquanto você dormia" narrative
@@ -3562,10 +3401,7 @@ type BrainAction = {
 
 const BrainOverwatch: React.FC<{
   userId: string;
-  patternsLearnedRecently: number;
-  alertsDetectedRecently: number;
-  savingsTotal: number;
-}> = ({ userId, patternsLearnedRecently, alertsDetectedRecently, savingsTotal }) => {
+}> = ({ userId }) => {
   const navigate = useNavigate();
   const [actions, setActions] = useState<BrainAction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -3579,6 +3415,7 @@ const BrainOverwatch: React.FC<{
           .from('autopilot_action_log')
           .select('id, action_type, target_kind, target_name, reason, confidence, amount_at_risk_brl, status, executed_at')
           .eq('user_id', userId)
+          .eq('status', 'executed')
           .gte('executed_at', since)
           .order('executed_at', { ascending: false })
           .limit(6);
@@ -3589,15 +3426,14 @@ const BrainOverwatch: React.FC<{
     return () => { cancelled = true; };
   }, [userId]);
 
-  // Count only executed (skipped don't count as "actions taken")
-  const executed = actions.filter(a => a.status === 'executed');
+  // Hard gate: only renders when the brain ACTUALLY acted in the last 24h.
+  // No filler "analisou N padrões" narratives — that's theater, not value.
+  if (loading || actions.length === 0) return null;
+
+  const executed = actions;
   const pauses = executed.filter(a => a.action_type.startsWith('pause')).length;
   const scales = executed.filter(a => a.action_type.includes('budget')).length;
   const totalSaved = executed.reduce((sum, a) => sum + (Number(a.amount_at_risk_brl) || 0), 0);
-
-  // Only render if there's a story — autopilot acted OR alerts fired OR patterns learned
-  const hasStory = executed.length > 0 || alertsDetectedRecently > 0 || patternsLearnedRecently > 0;
-  if (loading || !hasStory) return null;
 
   const timeAgo = (iso: string): string => {
     const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -3639,40 +3475,31 @@ const BrainOverwatch: React.FC<{
             background: T.purple, boxShadow: `0 0 8px ${T.purple}50`,
           }} />
           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
-            Enquanto você estava fora · últimas 24h
+            Últimas 24h · o que o cérebro fez
           </span>
         </div>
-        {executed.length > 0 && (
-          <button onClick={() => navigate('/dashboard/autopilot-log')} style={{
-            background: 'transparent', color: T.purple, border: 'none', cursor: 'pointer',
-            fontSize: 10.5, fontWeight: 700, padding: 0, fontFamily: F,
-          }}>
-            Ver tudo →
-          </button>
-        )}
+        <button onClick={() => navigate('/dashboard/autopilot-log')} style={{
+          background: 'transparent', color: T.purple, border: 'none', cursor: 'pointer',
+          fontSize: 10.5, fontWeight: 700, padding: 0, fontFamily: F,
+        }}>
+          Ver tudo →
+        </button>
       </div>
 
-      {/* Headline narrative */}
       <p style={{ fontSize: 14, color: T.text1, fontWeight: 700, margin: '0 0 4px', lineHeight: 1.4, fontFamily: F }}>
-        {executed.length > 0
-          ? `O cérebro agiu ${executed.length}x automaticamente${totalSaved > 0 ? ` · protegeu ${fmtReais(totalSaved)}` : ''}`
-          : alertsDetectedRecently > 0
-            ? `${alertsDetectedRecently} alerta${alertsDetectedRecently === 1 ? '' : 's'} detectado${alertsDetectedRecently === 1 ? '' : 's'} · nenhum exigiu ação automática`
-            : `Analisou ${patternsLearnedRecently} padrão${patternsLearnedRecently === 1 ? '' : 'es'} novos`}
+        Agi {executed.length}x automaticamente{totalSaved > 0 ? ` · protegi ${fmtReais(totalSaved)}` : ''}
       </p>
-      <p style={{ fontSize: 12, color: T.text2, margin: '0 0 14px', lineHeight: 1.5, fontFamily: F }}>
-        {executed.length > 0 && pauses > 0 && `${pauses} pausa${pauses === 1 ? '' : 's'} preventiva${pauses === 1 ? '' : 's'}`}
-        {executed.length > 0 && pauses > 0 && scales > 0 && ' · '}
-        {executed.length > 0 && scales > 0 && `${scales} ajuste${scales === 1 ? '' : 's'} de budget`}
-        {executed.length > 0 && patternsLearnedRecently > 0 && ` · ${patternsLearnedRecently} padrão${patternsLearnedRecently === 1 ? '' : 'es'} aprendido${patternsLearnedRecently === 1 ? '' : 's'}`}
-        {executed.length === 0 && savingsTotal > 0 && `Economia acumulada: ${fmtReais(savingsTotal)}`}
-        {executed.length === 0 && savingsTotal === 0 && 'Nenhuma intervenção foi necessária — conta se manteve dentro dos guardrails.'}
-      </p>
+      {(pauses > 0 || scales > 0) && (
+        <p style={{ fontSize: 12, color: T.text2, margin: '0 0 14px', lineHeight: 1.5, fontFamily: F }}>
+          {[
+            pauses > 0 ? `${pauses} pausa${pauses === 1 ? '' : 's'}` : null,
+            scales > 0 ? `${scales} ajuste${scales === 1 ? '' : 's'} de budget` : null,
+          ].filter(Boolean).join(' · ')}
+        </p>
+      )}
 
-      {/* Action timeline (max 3 most recent executed) */}
-      {executed.length > 0 && (
-        <div style={{ background: T.bg2, borderRadius: 8, padding: '10px 12px' }}>
-          {executed.slice(0, 3).map((a, i) => (
+      <div style={{ background: T.bg2, borderRadius: 8, padding: '10px 12px' }}>
+        {executed.slice(0, 3).map((a, i) => (
             <div key={a.id} style={{
               display: 'flex', alignItems: 'flex-start', gap: 10,
               padding: '8px 0',
@@ -3695,7 +3522,6 @@ const BrainOverwatch: React.FC<{
             </div>
           ))}
         </div>
-      )}
     </div>
   );
 };
@@ -4678,6 +4504,18 @@ const FeedPage: React.FC = () => {
 
   const feedState = resolveFeedState();
 
+  // ── Active-vs-paused detection — a "no-critical" state can still
+  // mean "zero ads actively running". Treat that as its own story
+  // because the brain has nothing to monitor.
+  const activeAdsCount = userAds.filter(ad => {
+    const s = (ad.effective_status || ad.status || '').toUpperCase();
+    return s === 'ACTIVE' || s === 'IN_PROCESS' || s === 'LEARNING' || s === 'LEARNING_LIMITED';
+  }).length;
+  const activeCampaignsCount = userCampaigns.filter(c => (c.status || '').toUpperCase() === 'ACTIVE').length;
+  const pausedCampaignsCount = userCampaigns.filter(c => (c.status || '').toUpperCase() !== 'ACTIVE').length;
+  const pausedAdsCount = userAds.length - activeAdsCount;
+  const noActiveTraffic = activeAdsCount === 0 && activeCampaignsCount === 0;
+
   // ── Loading skeleton with shimmer ──
   if (isLoading) {
     return (
@@ -4867,12 +4705,7 @@ const FeedPage: React.FC = () => {
             Renders only when there's a real story.
             ═══════════════════════════════════════════════ */}
         {metaConnected && !isDemo && userId && (
-          <BrainOverwatch
-            userId={userId}
-            patternsLearnedRecently={patternsCount}
-            alertsDetectedRecently={visibleAlerts.length + metricAlerts.length + (trackingHealth ? 1 : 0)}
-            savingsTotal={savingsTotal}
-          />
+          <BrainOverwatch userId={userId} />
         )}
 
         {/* ═══════════════════════════════════════════════
@@ -5100,45 +4933,44 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'no-critical' ? (
           <>
             {/* ═══════════════════════════════════════════════
-                CALM STATE — Silent Confidence
-                Only show when truly quiet: no tracking issue,
-                no visible alerts, no metric alerts.
-                Otherwise those higher layers already speak.
+                CALM STATE — contextual, not filler
+                Split into two honest sub-states:
+                  • No active ads at all → NoActiveAdsHero (single card, clear CTA)
+                  • Active ads + no decisions → tiny QuietPill + campaign list
+                No "+18% CTR potencial" placeholder. No filler grids.
                 ═══════════════════════════════════════════════ */}
-            {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && (
-              <SilentConfidence
-                lastAnalysisMin={lastAnalysisMin}
-                patternsCount={patternsCount}
-                actionsLast24h={0}
-                daysOfData={adMetrics?.daysOfData}
+            {noActiveTraffic ? (
+              <NoActiveAdsHero
+                pausedCampaigns={pausedCampaignsCount}
+                pausedAds={pausedAdsCount}
+                onOpenAI={() => navigate('/dashboard/ai')}
               />
+            ) : (
+              <>
+                {/* Only the pill when truly quiet everywhere else */}
+                {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && (
+                  <QuietPill lastAnalysisMin={lastAnalysisMin} />
+                )}
+
+                {/* Real opportunity from DB — never generic placeholder */}
+                {pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (
+                  <>
+                    <div style={{
+                      fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+                      textTransform: 'uppercase' as const, color: T.labelColor,
+                      marginTop: 2, marginBottom: 10,
+                      display: 'flex', alignItems: 'center', gap: 6,
+                    }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.green, boxShadow: `0 0 6px ${T.green}50` }} />
+                      <span>Próximo ganho</span>
+                    </div>
+                    <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="opportunities" />
+                  </>
+                )}
+
+                <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaSelId || undefined} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
+              </>
             )}
-
-            {/* ═══════════════════════════════════════════════
-                REAL NEXT OPPORTUNITY — from decisions hook
-                Shows only if there's an actual scale/pattern/insight
-                decision in the DB. Never generic "+X% CTR" copy.
-                ═══════════════════════════════════════════════ */}
-            {(() => {
-              const realOpp = pendingDecisions.find(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight');
-              if (!realOpp) return null;
-              return (
-                <>
-                  <div style={{
-                    fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-                    textTransform: 'uppercase' as const, color: T.labelColor,
-                    marginTop: 2, marginBottom: 10,
-                    display: 'flex', alignItems: 'center', gap: 6,
-                  }}>
-                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.green, boxShadow: `0 0 6px ${T.green}50` }} />
-                    <span>Próximo ganho</span>
-                  </div>
-                  <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="opportunities" />
-                </>
-              );
-            })()}
-
-            <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaSelId || undefined} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
           </>
         ) : feedState === 'loading' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -5164,8 +4996,12 @@ const FeedPage: React.FC = () => {
         {/* ═══════════════════════════════════════════════
             LAYER 6 — PERFORMANCE SNAPSHOT (secondary)
             KPIs moved BELOW decisions — data supports, not leads.
+            Suppressed when there's no active traffic: showing metrics
+            from paused/historical ads alongside a "create campaign" CTA
+            is noise. Users with R$2,50 economizados and 0 ads don't
+            need a hero strip of dead numbers.
             ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && metricsReady && adMetrics && (
+        {metaConnected && !isDemo && metricsReady && adMetrics && !noActiveTraffic && (
           <div style={{ marginTop: 4 }}>
             <PerformancePulse data={{
               ...performancePulseData,
@@ -5177,8 +5013,10 @@ const FeedPage: React.FC = () => {
         {/* ═══════════════════════════════════════════════
             LAYER 7 — SYSTEM STATUS (contexto, não hero)
             Confiança IA, última análise, padrões — rodapé discreto.
+            Also suppressed when no active traffic (BrainOverwatch
+            above or NoActiveAdsHero already own the narrative).
             ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && metricsReady && (
+        {metaConnected && !isDemo && metricsReady && !noActiveTraffic && (
           <div style={{ marginTop: 10 }}>
             <IntelligencePanel
               decisions={decisions}
