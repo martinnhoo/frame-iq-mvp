@@ -60,114 +60,7 @@ const PLATFORM_ICONS_INLINE: Record<string,React.ReactNode> = {
   meta: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.897 4h-.024l-.031 2.615h.022c1.715 0 3.046 1.357 5.94 6.246l.175.297.012.02 1.62-2.438-.012-.019a48.763 48.763 0 00-1.098-1.716 28.01 28.01 0 00-1.175-1.629C10.413 4.932 8.812 4 6.896 4z" fill="url(#lobe-icons-meta-fill-0)"></path><path d="M6.873 4C4.95 4.01 3.247 5.258 2.02 7.17a4.352 4.352 0 00-.01.017l2.254 1.231.011-.017c.718-1.083 1.61-1.774 2.568-1.785h.021L6.896 4h-.023z" fill="url(#lobe-icons-meta-fill-1)"></path><path d="M2.019 7.17l-.011.017C1.2 8.447.598 9.995.274 11.664l-.005.022 2.534.6.004-.022c.27-1.467.786-2.828 1.456-3.845l.011-.017L2.02 7.17z" fill="url(#lobe-icons-meta-fill-2)"></path><path d="M2.807 12.264l-2.533-.6-.005.022c-.177.918-.267 1.851-.269 2.786v.023l2.598.233v-.023a12.591 12.591 0 01.21-2.44z" fill="url(#lobe-icons-meta-fill-3)"></path><path d="M2.677 15.537a5.462 5.462 0 01-.079-.813v-.022L0 14.468v.024a8.89 8.89 0 00.146 1.652l2.535-.585a4.106 4.106 0 01-.004-.022z" fill="url(#lobe-icons-meta-fill-4)"></path><path d="M3.27 16.89c-.284-.31-.484-.756-.589-1.328l-.004-.021-2.535.585.004.021c.192 1.01.568 1.85 1.106 2.487l.014.017 2.018-1.745a2.106 2.106 0 01-.015-.016z" fill="url(#lobe-icons-meta-fill-5)"></path><path d="M10.78 9.654c-1.528 2.35-2.454 3.825-2.454 3.825-2.035 3.2-2.739 3.917-3.871 3.917a1.545 1.545 0 01-1.186-.508l-2.017 1.744.014.017C2.01 19.518 3.058 20 4.356 20c1.963 0 3.374-.928 5.884-5.33l1.766-3.13a41.283 41.283 0 00-1.227-1.886z" fill="#0082FB"></path><path d="M13.502 5.946l-.016.016c-.4.43-.786.908-1.16 1.416.378.483.768 1.024 1.175 1.63.48-.743.928-1.345 1.367-1.807l.016-.016-1.382-1.24z" fill="url(#lobe-icons-meta-fill-6)"></path><path d="M20.918 5.713C19.853 4.633 18.583 4 17.225 4c-1.432 0-2.637.787-3.723 1.944l-.016.016 1.382 1.24.016-.017c.715-.747 1.408-1.12 2.176-1.12.826 0 1.6.39 2.27 1.075l.015.016 1.589-1.425-.016-.016z" fill="#0082FB"></path><path d="M23.998 14.125c-.06-3.467-1.27-6.566-3.064-8.396l-.016-.016-1.588 1.424.015.016c1.35 1.392 2.277 3.98 2.361 6.971v.023h2.292v-.022z" fill="url(#lobe-icons-meta-fill-7)"></path><path d="M23.998 14.15v-.023h-2.292v.022c.004.14.006.282.006.424 0 .815-.121 1.474-.368 1.95l-.011.022 1.708 1.782.013-.02c.62-.96.946-2.293.946-3.91 0-.083 0-.165-.002-.247z" fill="url(#lobe-icons-meta-fill-8)"></path><path d="M21.344 16.52l-.011.02c-.214.402-.519.67-.917.787l.778 2.462a3.493 3.493 0 00.438-.182 3.558 3.558 0 001.366-1.218l.044-.065.012-.02-1.71-1.784z" fill="url(#lobe-icons-meta-fill-9)"></path><path d="M19.92 17.393c-.262 0-.492-.039-.718-.14l-.798 2.522c.449.153.927.222 1.46.222.492 0 .943-.073 1.352-.215l-.78-2.462c-.167.05-.341.075-.517.073z" fill="url(#lobe-icons-meta-fill-10)"></path><path d="M18.323 16.534l-.014-.017-1.836 1.914.016.017c.637.682 1.246 1.105 1.937 1.337l.797-2.52c-.291-.125-.573-.353-.9-.731z" fill="url(#lobe-icons-meta-fill-11)"></path><path d="M18.309 16.515c-.55-.642-1.232-1.712-2.303-3.44l-1.396-2.336-.011-.02-1.62 2.438.012.02.989 1.668c.959 1.61 1.74 2.774 2.493 3.585l.016.016 1.834-1.914a2.353 2.353 0 01-.014-.017z" fill="url(#lobe-icons-meta-fill-12)"></path><defs><linearGradient id="lobe-icons-meta-fill-0" x1="75.897%" x2="26.312%" y1="89.199%" y2="12.194%"><stop offset=".06%" stopColor="#0867DF"></stop><stop offset="45.39%" stopColor="#0668E1"></stop><stop offset="85.91%" stopColor="#0064E0"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-1" x1="21.67%" x2="97.068%" y1="75.874%" y2="23.985%"><stop offset="13.23%" stopColor="#0064DF"></stop><stop offset="99.88%" stopColor="#0064E0"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-2" x1="38.263%" x2="60.895%" y1="89.127%" y2="16.131%"><stop offset="1.47%" stopColor="#0072EC"></stop><stop offset="68.81%" stopColor="#0064DF"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-3" x1="47.032%" x2="52.15%" y1="90.19%" y2="15.745%"><stop offset="7.31%" stopColor="#007CF6"></stop><stop offset="99.43%" stopColor="#0072EC"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-4" x1="52.155%" x2="47.591%" y1="58.301%" y2="37.004%"><stop offset="7.31%" stopColor="#007FF9"></stop><stop offset="100%" stopColor="#007CF6"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-5" x1="37.689%" x2="61.961%" y1="12.502%" y2="63.624%"><stop offset="7.31%" stopColor="#007FF9"></stop><stop offset="100%" stopColor="#0082FB"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-6" x1="34.808%" x2="62.313%" y1="68.859%" y2="23.174%"><stop offset="27.99%" stopColor="#007FF8"></stop><stop offset="91.41%" stopColor="#0082FB"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-7" x1="43.762%" x2="57.602%" y1="6.235%" y2="98.514%"><stop offset="0%" stopColor="#0082FB"></stop><stop offset="99.95%" stopColor="#0081FA"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-8" x1="60.055%" x2="39.88%" y1="4.661%" y2="69.077%"><stop offset="6.19%" stopColor="#0081FA"></stop><stop offset="100%" stopColor="#0080F9"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-9" x1="30.282%" x2="61.081%" y1="59.32%" y2="33.244%"><stop offset="0%" stopColor="#027AF3"></stop><stop offset="100%" stopColor="#0080F9"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-10" x1="20.433%" x2="82.112%" y1="50.001%" y2="50.001%"><stop offset="0%" stopColor="#0377EF"></stop><stop offset="99.94%" stopColor="#0279F1"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-11" x1="40.303%" x2="72.394%" y1="35.298%" y2="57.811%"><stop offset=".19%" stopColor="#0471E9"></stop><stop offset="100%" stopColor="#0377EF"></stop></linearGradient><linearGradient id="lobe-icons-meta-fill-12" x1="32.254%" x2="68.003%" y1="19.719%" y2="84.908%"><stop offset="27.65%" stopColor="#0867DF"></stop><stop offset="100%" stopColor="#0471E9"></stop></linearGradient></defs></svg>,
 };
 // ─────────────────────────────────────────────────────────────────────────────
-// SKILLS — specialized expert modes that change how the AI analyzes data
-// ─────────────────────────────────────────────────────────────────────────────
-interface Skill {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  desc: { pt: string; en: string; es: string };
-  prompt: string;
-}
-
-const SKILLS: Skill[] = [
-  {
-    id: "media_buyer",
-    name: "Media Buyer",
-    icon: "",
-    color: T.accent, // #0ea5e9 — unified design system
-    desc: {
-      pt: "Lances, orçamento, frequência e estrutura de campanha",
-      en: "Bids, budget, frequency and campaign structure",
-      es: "Pujas, presupuesto, frecuencia y estructura de campaña",
-    },
-    prompt: `=== SKILL ATIVA: MEDIA BUYER ===
-Você está no modo Media Buyer especialista. Ao analisar dados:
-- Priorize: frequência/fadiga de audiência, CPM, saturação, estratégia de lance
-- Enquadre cada recomendação em eficiência de orçamento e qualidade de impressão
-- Sinalize quando frequência > 2.0 (fadiga) ou CPM sobe >20% semana-a-semana
-- Estrutura: diagnóstico → causa → ação com números específicos
-- Nunca sugira "testar mais criativos" sem especificar: formato, ângulo, budget, prazo
-- Com winner claro: ampliar orçamento primeiro, tudo mais depois`,
-  },
-  {
-    id: "creative_director",
-    name: "Creative Director",
-    icon: "",
-    color: "#38bdf8", // Sky blue for creative/visual thinking
-    desc: {
-      pt: "Hooks, storytelling, scroll-stop e direção criativa",
-      en: "Hooks, storytelling, scroll-stop and creative direction",
-      es: "Hooks, storytelling, scroll-stop y dirección creativa",
-    },
-    prompt: `=== SKILL ATIVA: CREATIVE DIRECTOR ===
-Você está no modo Creative Director. Ao analisar dados:
-- Priorize: performance do hook (0-3s), diferenciação criativa, ressonância emocional
-- Identifique padrões em criativos que vencem vs perdem: ângulo, formato, psicologia, face/faceless
-- Enquadre em estratégia criativa, não só métricas
-- Considere: psicologia do scroll, estética nativa da plataforma, thumb-stop
-- Estrutura: observação → hipótese criativa → brief para próximo criativo
-- CTR cai? Primeiro hipótese: hook. Segundo: ângulo. Terceiro: audiência`,
-  },
-  {
-    id: "copywriter",
-    name: "Copywriter DR",
-    icon: "",
-    color: T.green, // #22A3A3 — unified design system
-    desc: {
-      pt: "Copy de alta conversão, PAS/AIDA, scripts e CTAs irresistíveis",
-      en: "High-conversion copy, PAS/AIDA, scripts and CTAs",
-      es: "Copy de alta conversión, PAS/AIDA, scripts y CTAs",
-    },
-    prompt: `=== SKILL ATIVA: COPYWRITER DIRECT RESPONSE ===
-Você está no modo Copywriter de Resposta Direta. Ao escrever ou analisar:
-- Aplique: PAS (Problema-Agitação-Solução), AIDA, BAB, 4U, Hook-Story-Oferta
-- Todo headline: específico + urgente + único + útil (mínimo 3 dos 4)
-- CTAs: micro-compromisso, não só cliques
-- Copy vaga ou genérica → sinalizar imediatamente com alternativas específicas
-- Estrutura: hook (0-3s) → corpo (3-15s) → CTA (específico, urgente, com benefício)
-- Números concretos, nomes específicos, prazos reais — nunca abstrato`,
-  },
-  {
-    id: "analyst",
-    name: "Analista",
-    icon: "",
-    color: "#f59e0b",
-    desc: {
-      pt: "Padrões estatísticos, correlações, testes A/B e tendências",
-      en: "Statistical patterns, correlations, A/B tests and trends",
-      es: "Patrones estadísticos, correlaciones, tests A/B y tendencias",
-    },
-    prompt: `=== SKILL ATIVA: ANALISTA DE PERFORMANCE ===
-Você está no modo Analista de Performance. Ao analisar dados:
-- Padrões estatísticos, não métricas superficiais de ponto único
-- Sempre cheque variáveis de confusão (sazonalidade, frequência, idade do criativo)
-- Priorize: direção da tendência sobre valores pontuais
-- Sinalize quando amostras são pequenas demais para concluir
-- Estrutura: padrão → nível de confiança → hipótese → teste para confirmar
-- Nunca confunda correlação com causalidade — sempre apresente alternativas causais`,
-  },
-  {
-    id: "growth",
-    name: "Growth",
-    icon: "",
-    color: "#ef4444",
-    desc: {
-      pt: "Ampliar winners, lookalikes, escala rápida e velocidade de execução",
-      en: "Amplify winners, lookalikes, fast scaling and execution speed",
-      es: "Ampliar winners, lookalikes, escala rápida y velocidad",
-    },
-    prompt: `=== SKILL ATIVA: GROWTH HACKER ===
-Você está no modo Growth Hacker. Ao analisar dados:
-- O que já funciona e como ampliar 10x — essa é sempre a pergunta central
-- Procure: expansão de lookalike, realocação de budget para winners, velocidade
-- NUNCA corrija underperformers quando há winners para escalar
-- Cada recomendação: velocidade de execução + upside assimétrico
-- Estrutura: winner identificado → alavanca de escala → ação → resultado esperado
-- Regra: 80% do orçamento nos top 20% dos criativos`,
-  },
-];
+// SKILLS system removed — AI always operates in full expert mode
 
 const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string}>> = {
   en: [
@@ -608,99 +501,7 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SKILL SELECTOR — floating panel triggered from chat toolbar
-// ─────────────────────────────────────────────────────────────────────────────
-
-function SkillSelector({
-  activeSkillId, onSelect, lang, onClose,
-}: {
-  activeSkillId: string | null;
-  onSelect: (id: string | null) => void;
-  lang: string;
-  onClose: () => void;
-}) {
-  const F = "Inter,-apple-system,sans-serif";
-  const labels = {
-    title:    { pt: "Modo de especialista", en: "Expert mode", es: "Modo experto" },
-    subtitle: { pt: "A IA responde com foco no especialista selecionado", en: "AI responds with the selected expert's focus", es: "La IA responde con el enfoque del experto seleccionado" },
-    none:     { pt: "Nenhum (modo padrão)", en: "None (default mode)", es: "Ninguno (modo predeterminado)" },
-    active:   { pt: "ativo", en: "active", es: "activo" },
-  };
-  const t = (k: keyof typeof labels) => labels[k][lang as "pt"|"en"|"es"] || labels[k].en;
-
-  return (
-    <div style={{
-      position: "absolute" as const, bottom: "calc(100% + 8px)", left: 0, right: 0,
-      background: "rgba(10,15,28,0.95)", border: "1px solid rgba(148,163,184,0.10)",
-      borderRadius: 16, padding: "16px", zIndex: 200,
-      boxShadow: "0 -20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(148,163,184,0.04) inset",
-      backdropFilter: "blur(16px) saturate(180%)",
-      animation: "slideUp .22s cubic-bezier(.34,1.2,.64,1)",
-      fontFamily: F,
-    }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <div>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#F1F5F9", letterSpacing: "-0.01em" }}>{t("title")}</p>
-          <p style={{ margin: "2px 0 0", fontSize: 11, color: "#64748B" }}>{t("subtitle")}</p>
-        </div>
-        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#475569", padding: 4, display: "flex", alignItems: "center" }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-
-      {/* None option */}
-      <button
-        onClick={() => { onSelect(null); onClose(); }}
-        style={{
-          width: "100%", padding: "8px 12px", borderRadius: 10, marginBottom: 8,
-          background: !activeSkillId ? "rgba(148,163,184,0.08)" : "rgba(148,163,184,0.03)",
-          border: `1px solid ${!activeSkillId ? "rgba(148,163,184,0.18)" : "rgba(148,163,184,0.06)"}`,
-          cursor: "pointer", textAlign: "left" as const, display: "flex", alignItems: "center", gap: 8,
-          transition: "all .15s",
-        }}
-        onMouseEnter={e => { if (activeSkillId) (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.06)"; }}
-        onMouseLeave={e => { if (activeSkillId) (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.03)"; }}
-      >
-        <span style={{ fontSize: 16, width: 24, textAlign: "center" as const }}>—</span>
-        <span style={{ fontSize: 12.5, color: !activeSkillId ? "#F1F5F9" : "#64748B", fontWeight: !activeSkillId ? 600 : 400 }}>{t("none")}</span>
-        {!activeSkillId && <span style={{ marginLeft: "auto", fontSize: 10, color: "#94A3B8", background: "rgba(148,163,184,0.10)", padding: "2px 7px", borderRadius: 4 }}>{t("active")}</span>}
-      </button>
-
-      {/* Skills grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
-        {SKILLS.map(skill => {
-          const isActive = activeSkillId === skill.id;
-          return (
-            <button
-              key={skill.id}
-              onClick={() => { onSelect(isActive ? null : skill.id); onClose(); }}
-              style={{
-                padding: "10px 12px", borderRadius: 11, cursor: "pointer",
-                background: isActive ? `${skill.color}15` : "rgba(148,163,184,0.03)",
-                border: `1px solid ${isActive ? skill.color + "45" : "rgba(148,163,184,0.07)"}`,
-                textAlign: "left" as const, transition: "all .15s",
-              }}
-              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.06)"; }}
-              onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.03)"; }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
-                <span style={{ fontSize: 16 }}>{skill.icon}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: isActive ? skill.color : "#F1F5F9" }}>{skill.name}</span>
-                {isActive && (
-                  <span style={{ marginLeft: "auto", width: 8, height: 8, borderRadius: "50%", background: skill.color, flexShrink: 0 }} />
-                )}
-              </div>
-              <p style={{ margin: 0, fontSize: 10.5, color: "#64748B", lineHeight: 1.45 }}>
-                {skill.desc[lang as "pt"|"en"|"es"] || skill.desc.en}
-              </p>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+// SkillSelector removed
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CREATIVE CHECK CARD — inline in chat
@@ -2094,18 +1895,6 @@ export default function AdBriefAI() {
 
   // Session goal — persists 7 days, resets automatically
   const GOAL_KEY = `adbrief_goal_${selectedPersona?.id || "default"}`;
-  // Active skill — persisted per persona in localStorage
-  const [activeSkillId, setActiveSkillId] = useState<string|null>(() => {
-    if (!selectedPersona?.id) return null;
-    try {
-      return storage.get(`adbrief_skill_${selectedPersona?.id}`, "") || null;
-    } catch {
-      return null;
-    }
-  });
-  const activeSkill = SKILLS.find(s => s.id === activeSkillId) || null;
-  const [showSkills, setShowSkills] = useState(false);
-
   const [sessionGoal, setSessionGoal] = useState<string>(() => {
     try {
       const saved = storage.getJSON(GOAL_KEY, null);
@@ -2230,11 +2019,6 @@ export default function AdBriefAI() {
       if (streamTimerRef.current) { clearTimeout(streamTimerRef.current); streamTimerRef.current = null; }
       setLoading(false); // cancel any pending send spinner
       setProactiveLoading(false); // cancel any pending proactive greeting
-      // Load skill for the newly selected persona only
-      const savedSkill = newId
-        ? storage.get(`adbrief_skill_${newId}`, "") || null
-        : null;
-      setActiveSkillId(savedSkill);
       setContextReady(false);
       setConnections([]);
       if (newId) setGreetingKey(k => k + 1);
@@ -2682,7 +2466,6 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
 
 
       setContext([
-        ...(activeSkill ? [activeSkill.prompt, ``] : []),
         `=== ACTIVE ACCOUNT ===`,
         accountInfo,
         connStatus,
@@ -2723,7 +2506,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[user?.id, selectedPersona?.id, sessionGoal, activeSkillId, accountAlerts.length, connections.join(",")]);
+  },[user?.id, selectedPersona?.id, sessionGoal, accountAlerts.length, connections.join(",")]);
 
   useEffect(()=>{
     try{
@@ -3099,15 +2882,41 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
           );
           if (patterns?.length) {
             const p = patterns[0];
+            // Humanize pattern_key: "perf_urgency_meta" → "Urgência em Meta"
+            const PATTERN_LABELS: Record<string, { pt: string; en: string }> = {
+              perf_urgency_meta: { pt: "Urgência no copy", en: "Urgency in copy" },
+              perf_social_proof: { pt: "Prova social", en: "Social proof" },
+              perf_question_hook: { pt: "Hook com pergunta", en: "Question hook" },
+              perf_face_presence: { pt: "Rosto no criativo", en: "Face in creative" },
+              perf_video_format: { pt: "Formato vídeo", en: "Video format" },
+              perf_carousel: { pt: "Formato carrossel", en: "Carousel format" },
+              perf_testimonial: { pt: "Depoimento", en: "Testimonial" },
+              perf_before_after: { pt: "Antes e depois", en: "Before & after" },
+              perf_discount_offer: { pt: "Oferta com desconto", en: "Discount offer" },
+              perf_scarcity: { pt: "Escassez", en: "Scarcity" },
+            };
+            const keyClean = p.pattern_key?.replace(/^perf_/, "") || "";
+            const humanLabel = PATTERN_LABELS[p.pattern_key]
+              ? PATTERN_LABELS[p.pattern_key][lang === "pt" ? "pt" : "en"]
+              : keyClean.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+            // Format CTR — handle both decimal (0.079) and percentage (7.9) formats
+            const ctrVal = p.avg_ctr != null
+              ? (p.avg_ctr < 1 ? (p.avg_ctr * 100).toFixed(2) : Number(p.avg_ctr).toFixed(2))
+              : null;
+            const confVal = p.confidence != null
+              ? (p.confidence <= 1 ? (p.confidence * 100).toFixed(0) : Number(p.confidence).toFixed(0))
+              : null;
             cards.push({
               tag: lang === "pt" ? "PADRÃO APRENDIDO" : lang === "es" ? "PATRÓN APRENDIDO" : "LEARNED PATTERN",
               tagColor: "#A78BFA",
               headline: lang === "pt"
-                ? `Eu sei que "${p.pattern_key}" funciona`
-                : `I know "${p.pattern_key}" works`,
-              detail: p.insight_text || (lang === "pt"
-                ? `CTR médio ${(p.avg_ctr * 100)?.toFixed(2)}% · confiança ${(p.confidence * 100)?.toFixed(0)}% — baseado nos seus dados reais.`
-                : `Avg CTR ${(p.avg_ctr * 100)?.toFixed(2)}% · ${(p.confidence * 100)?.toFixed(0)}% confidence — based on your real data.`),
+                ? `"${humanLabel}" tem boa performance`
+                : `"${humanLabel}" performs well`,
+              detail: p.insight_text && !p.insight_text.includes("pattern_key") && !p.insight_text.match(/ROAS\s+null/i) && !p.insight_text.match(/CTR\s+\d+\.\d{4,}/)
+                ? p.insight_text
+                : (lang === "pt"
+                  ? `${ctrVal ? `CTR ${ctrVal}%` : ""}${ctrVal && confVal ? " · " : ""}${confVal ? `confiança ${confVal}%` : ""} — baseado nos seus dados reais.`
+                  : `${ctrVal ? `CTR ${ctrVal}%` : ""}${ctrVal && confVal ? " · " : ""}${confVal ? `${confVal}% confidence` : ""} — based on your real data.`),
             });
           }
         } catch {}
@@ -3914,44 +3723,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <LivePanel user={user} selectedPersona={selectedPersona} connections={connections} lang={lang} onSend={send} />
       )}
 
-      {/* ── Creative Skills Panel — shown when chat is empty ── */}
-      {messages.length===0&&contextReady&&hasData&&!proactiveLoading&&(
-        <div style={{position:"relative",zIndex:2,flexShrink:0,maxWidth:720,margin:"0 auto",width:"100%",padding:"24px 16px 0"}}>
-          <div style={{marginBottom:14}}>
-            <h2 style={{...j,fontSize:20,fontWeight:800,color:"#F1F5F9",margin:"0 0 4px",letterSpacing:"-0.03em"}}>
-              {lang==="pt"?"Seu arsenal criativo":lang==="es"?"Tu arsenal creativo":"Your creative arsenal"}
-            </h2>
-            <p style={{...j,fontSize:13,color:"#64748B",margin:0,lineHeight:1.5}}>
-              {lang==="pt"?"Cada especialista analisa seus dados com um olhar diferente":lang==="es"?"Cada experto analiza tus datos con una mirada diferente":"Each expert analyzes your data with a different lens"}
-            </p>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
-            {SKILLS.map(skill=>(
-              <button key={skill.id} onClick={()=>{
-                setActiveSkillId(skill.id);
-                send(lang==="pt"?`Olá! Me ajude como ${skill.name}.`:lang==="es"?`¡Hola! Ayúdame como ${skill.name}.`:`Hi! Help me as ${skill.name}.`);
-              }}
-                style={{
-                  ...j,background:"rgba(15,23,42,0.80)",border:"1px solid rgba(148,163,184,0.08)",
-                  borderRadius:14,padding:"20px 16px",cursor:"pointer",textAlign:"left",
-                  transition:"all 0.2s cubic-bezier(0.4,0,0.2,1)",display:"flex",flexDirection:"column",gap:10,
-                  backdropFilter:"blur(12px)",
-                }}
-                onMouseEnter={e=>{const t=e.currentTarget as HTMLElement;t.style.background="rgba(15,23,42,0.95)";t.style.borderColor="rgba(148,163,184,0.16)";t.style.transform="translateY(-2px)";}}
-                onMouseLeave={e=>{const t=e.currentTarget as HTMLElement;t.style.background="rgba(15,23,42,0.80)";t.style.borderColor="rgba(148,163,184,0.08)";t.style.transform="translateY(0)";}}
-              >
-                <div style={{width:38,height:38,borderRadius:10,background:`${skill.color}14`,border:`1px solid ${skill.color}28`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>
-                  {skill.icon}
-                </div>
-                <div>
-                  <div style={{fontSize:14,fontWeight:700,color:"#F1F5F9",marginBottom:3,letterSpacing:"-0.01em"}}>{skill.name}</div>
-                  <div style={{fontSize:11.5,color:"#64748B",lineHeight:1.5}}>{skill.desc[lang]||skill.desc.en}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Skills panel removed */}
 
       {/* ── Messages ── */}
       <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8}}>
@@ -4314,71 +4086,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </button>
             )}
 
-            {/* Active skill badge in header */}
-            {activeSkill && (
-              <button
-                onClick={() => setShowSkills(true)}
-                style={{
-                  display:"flex", alignItems:"center", gap:5,
-                  padding:"3px 10px 3px 7px", borderRadius:99, cursor:"pointer",
-                  background:`${activeSkill.color}15`,
-                  border:`1px solid ${activeSkill.color}35`,
-                  color:activeSkill.color,
-                  fontSize:11, fontWeight:600,
-                  fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",
-                  transition:"all .15s",
-                  marginBottom:6,
-                }}
-              >
-                <span>{activeSkill.icon}</span>
-                <span>{activeSkill.name}</span>
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{marginLeft:2,opacity:.6}}><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-            )}
-
-            {/* Skill selector panel */}
-            {showSkills && (
-              <div style={{ position: "relative" as const }}>
-                <SkillSelector
-                  activeSkillId={activeSkillId}
-                  lang={lang}
-                  onClose={() => setShowSkills(false)}
-                  onSelect={(id) => {
-                    setActiveSkillId(id);
-                    if (selectedPersona?.id) {
-                      if (id) storage.set(`adbrief_skill_${selectedPersona.id}`, id);
-                      else storage.remove(`adbrief_skill_${selectedPersona.id}`);
-                    }
-                  }}
-                />
-              </div>
-            )}
-
             {/* Tool pills — compact row */}
             <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",marginBottom:10,alignItems:"center"} as any}>
-              {/* Skill pill */}
-              <button
-                onClick={() => setShowSkills(s => !s)}
-                style={{
-                  display:"flex", alignItems:"center", gap:5,
-                  padding:"5px 12px", borderRadius:99, flexShrink:0,
-                  background: activeSkill ? `${activeSkill.color}14` : "rgba(148,163,184,0.04)",
-                  border:`1px solid ${activeSkill ? activeSkill.color + "40" : "rgba(148,163,184,0.08)"}`,
-                  color: activeSkill ? activeSkill.color : "#64748B",
-                  fontSize:12, fontWeight: activeSkill ? 600 : 500, cursor:"pointer",
-                  fontFamily:"'Plus Jakarta Sans', sans-serif",
-                  letterSpacing:"-0.01em",
-                  transition:"all 0.15s",
-                }}
-              >
-                {activeSkill ? (
-                  <><span>{activeSkill.icon}</span><span>{activeSkill.name}</span></>
-                ) : (
-                  <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span>Skill</span></>
-                )}
-              </button>
-              {/* Separator dot */}
-              <span style={{width:3,height:3,borderRadius:"50%",background:"rgba(255,255,255,0.12)",flexShrink:0}}/>
               {TOOLS.map(tool=>{
                 const isOn = activeTool===tool.action;
                 return (
