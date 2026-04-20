@@ -242,7 +242,7 @@ export default function OAuthCallback() {
 
             <button
               onClick={() => navigate("/dashboard/accounts")}
-              style={{ marginTop: 8, padding: "10px", borderRadius: 9, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)", fontSize: 12, cursor: "pointer", fontFamily: F, width: "100%" }}
+              style={{ marginTop: 8, padding: "10px", borderRadius: 9, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.55)", fontSize: 12, cursor: "pointer", fontFamily: F, width: "100%", transition: "all 0.15s" }}
             >
               Skip for now
             </button>

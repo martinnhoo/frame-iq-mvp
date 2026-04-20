@@ -179,9 +179,9 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
           </div>
           <span style={{...j,fontSize:13,fontWeight:700,color:"#F1F5F9",letterSpacing:"-0.01em"}}>{cfg.title[l]}</span>
         </div>
-        <button onClick={onClose} style={{background:"rgba(30,41,59,0.60)",border:"1px solid rgba(148,163,184,0.10)",borderRadius:7,color:"#64748B",cursor:"pointer",display:"flex",padding:"4px 6px",transition:"all 0.15s"}}
-          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(30,41,59,0.80)";(e.currentTarget as HTMLElement).style.color="#94A3B8"}}
-          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(30,41,59,0.60)";(e.currentTarget as HTMLElement).style.color="#64748B"}}>
+        <button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:7,color:"rgba(255,255,255,0.45)",cursor:"pointer",display:"flex",padding:"4px 6px",transition:"all 0.15s"}}
+          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.10)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.70)"}}
+          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.06)";(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)"}}>
           <X size={13}/>
         </button>
       </div>
@@ -191,7 +191,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
             <div style={{display:"flex",gap:4}}>
               {["meta","tiktok"].map(p=>(
                 <button key={p} onClick={()=>setPlatform(p)}
-                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:platform===p?cfg.color:"rgba(148,163,184,0.06)",color:platform===p?"#000":"#64748B",transition:"all 0.1s"}}>
+                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:platform===p?cfg.color:"rgba(255,255,255,0.06)",color:platform===p?"#000":"rgba(255,255,255,0.55)",transition:"all 0.1s"}}>
                   {p.charAt(0).toUpperCase()+p.slice(1)}
                 </button>
               ))}
@@ -200,7 +200,7 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
             <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
               {tones.map(t=>(
                 <button key={t} onClick={()=>setTone(t)}
-                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:tone===t?"rgba(148,163,184,0.12)":"rgba(148,163,184,0.04)",color:tone===t?"#F1F5F9":"#475569",transition:"all 0.1s"}}>
+                  style={{padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:600,border:"none",cursor:"pointer",...j,background:tone===t?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.04)",color:tone===t?"#F1F5F9":"rgba(255,255,255,0.50)",transition:"all 0.1s"}}>
                   {toneLabels[t][l]}
                 </button>
               ))}
@@ -1615,13 +1615,13 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                     background: activePreset === p.label
                       ? "rgba(37,99,235,0.14)"
                       : "transparent",
-                    color: activePreset === p.label ? "#2563EB" : "#64748B",
+                    color: activePreset === p.label ? "#2563EB" : "rgba(255,255,255,0.45)",
                     fontSize: 10, fontWeight: 700, fontFamily: F,
                     letterSpacing: "0.02em", cursor: "pointer",
                     transition: "all 0.2s ease",
                   }}
-                  onMouseEnter={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "rgba(148,163,184,0.06)"; e.currentTarget.style.color = "#94A3B8"; }}}
-                  onMouseLeave={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#64748B"; }}}
+                  onMouseEnter={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}}
+                  onMouseLeave={e => { if (activePreset !== p.label) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}}
                 >
                   {p.label}
                 </button>
@@ -1632,15 +1632,15 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             <button onClick={() => setShowCal(!showCal)}
               style={{
                 width: 32, height: 32, borderRadius: 10, border: "none",
-                background: showCal ? "rgba(37,99,235,0.14)" : "rgba(148,163,184,0.04)",
+                background: showCal ? "rgba(37,99,235,0.14)" : "rgba(255,255,255,0.04)",
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
                 transition: "all 0.2s ease", marginLeft: 2,
               }}
-              onMouseEnter={e => { if (!showCal) e.currentTarget.style.background = "rgba(148,163,184,0.08)"; }}
-              onMouseLeave={e => { if (!showCal) e.currentTarget.style.background = showCal ? "rgba(37,99,235,0.14)" : "rgba(148,163,184,0.04)"; }}
+              onMouseEnter={e => { if (!showCal) e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+              onMouseLeave={e => { if (!showCal) e.currentTarget.style.background = showCal ? "rgba(37,99,235,0.14)" : "rgba(255,255,255,0.04)"; }}
               title={lang === "pt" ? "Escolher datas" : "Pick dates"}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={showCal ? "#2563EB" : "#64748B"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={showCal ? "#2563EB" : "rgba(255,255,255,0.45)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
             </button>
@@ -1658,14 +1658,14 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                 {/* Month nav */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                   <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() - 1, 1))}
-                    style={{ background: "rgba(148,163,184,0.06)", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 14, padding: "4px 8px", borderRadius: 6, lineHeight: 1 }}>
+                    style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.55)", cursor: "pointer", fontSize: 14, padding: "4px 8px", borderRadius: 6, lineHeight: 1, transition: "all 0.15s" }}>
                     ‹
                   </button>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "#F1F5F9", fontFamily: F }}>
                     {calView.toLocaleDateString(lang === "pt" ? "pt-BR" : "en-US", { month: "long", year: "numeric" })}
                   </span>
                   <button onClick={() => setCalView(new Date(calView.getFullYear(), calView.getMonth() + 1, 1))}
-                    style={{ background: "rgba(148,163,184,0.06)", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 14, padding: "4px 8px", borderRadius: 6, lineHeight: 1 }}>
+                    style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.55)", cursor: "pointer", fontSize: 14, padding: "4px 8px", borderRadius: 6, lineHeight: 1, transition: "all 0.15s" }}>
                     ›
                   </button>
                 </div>

@@ -522,7 +522,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
                   className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
                   style={tone === t.id
                     ? { background: "rgba(14,165,233,0.15)", borderColor: "rgba(14,165,233,0.5)", color: "#0ea5e9" }
-                    : { background: "transparent", borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.35)" }}>
+                    : { background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.55)" }}>
                   {t.label}
                 </button>
               ))}

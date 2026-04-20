@@ -592,7 +592,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
             const color = tab.key !== "all" ? V_STYLE[tab.key].bar : undefined;
             return (
               <button key={tab.key} onClick={() => setFilter(tab.key)}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, border: "1px solid", whiteSpace: "nowrap", cursor: "pointer", fontFamily: F, fontSize: 12, fontWeight: isActive ? 600 : 400, transition: "all 0.12s", background: isActive ? "rgba(255,255,255,0.06)" : "transparent", borderColor: isActive ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)", color: isActive ? "#f0f2f8" : "rgba(255,255,255,0.35)" }}>
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 11px", borderRadius: 7, border: "1px solid", whiteSpace: "nowrap", cursor: "pointer", fontFamily: F, fontSize: 12, fontWeight: isActive ? 600 : 400, transition: "all 0.12s", background: isActive ? "rgba(255,255,255,0.06)" : "transparent", borderColor: isActive ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)", color: isActive ? "#f0f2f8" : "rgba(255,255,255,0.50)" }}>
                 {color && <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0 }} />}
                 {tab.label}
                 <span style={{ fontSize: 10, fontFamily: M, color: isActive ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.18)" }}>{tab.count}</span>
