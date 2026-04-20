@@ -6,17 +6,20 @@
  *    { state: { fromFeed: true } })`. Deep-links or direct URL entry redirect
  *    back to the Feed.
  *
- * Phase A: read-only tree, load data, expand/collapse, status badges.
- * Phase B (this file): pause/activate on all 3 levels + REAL AI inline comment
- *   (backed by 30d/7d Meta insights via the ai-campaign-comment edge fn).
- * Phase C: inline budget edit + duplicate.
+ * Features:
+ *  - Tree view: campaign → adset → ad (lazy load per level).
+ *  - Pause/activate on all 3 levels.
+ *  - Inline daily_budget edit on campaigns + adsets.
+ *  - Duplicate on all 3 levels (copy is always paused).
+ *  - After every action, the Estrategista (Haiku) drops a real analysis
+ *    comment based on 30d + 7d Meta insights for that specific object.
  */
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   ChevronRight, ChevronDown, ArrowLeft, Layers, Target, Sparkles,
-  Pause, Play, Loader2,
+  Pause, Play, Loader2, Copy, Check, X, Pencil,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -146,6 +149,167 @@ function ActionButton({
       }
       {isPause ? 'Pausar' : 'Ativar'}
     </button>
+  );
+}
+
+// ── Small component: duplicate button ─────────────────────────────────────
+function DuplicateButton({
+  onClick,
+  inflight,
+  size = 'md',
+}: {
+  onClick: (e: React.MouseEvent) => void;
+  inflight: boolean;
+  size?: 'md' | 'sm';
+}) {
+  const iconSize = size === 'sm' ? 10 : 12;
+  const paddingV = size === 'sm' ? 3 : 4;
+  const paddingH = size === 'sm' ? 7 : 9;
+  const fontSize = size === 'sm' ? 9.5 : 10.5;
+  return (
+    <button
+      onClick={onClick}
+      disabled={inflight}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        background: 'rgba(14,165,233,0.06)', color: T.blue,
+        border: `1px solid rgba(14,165,233,0.22)`,
+        borderRadius: 5,
+        padding: `${paddingV}px ${paddingH}px`,
+        fontSize, fontWeight: 600, fontFamily: F,
+        cursor: inflight ? 'default' : 'pointer',
+        opacity: inflight ? 0.6 : 1,
+        whiteSpace: 'nowrap',
+        transition: 'background 0.12s',
+      }}
+      onMouseEnter={(e) => {
+        if (inflight) return;
+        e.currentTarget.style.background = 'rgba(14,165,233,0.14)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'rgba(14,165,233,0.06)';
+      }}
+      title="Duplicar (pausado)"
+    >
+      {inflight ? <Loader2 size={iconSize} className="spin" /> : <Copy size={iconSize} />}
+      Duplicar
+    </button>
+  );
+}
+
+// ── Small component: inline editable budget ───────────────────────────────
+function BudgetInlineEdit({
+  cents,
+  onSave,
+  saving,
+  size = 'md',
+}: {
+  cents: number | null | undefined;
+  onSave: (newCents: number) => void;
+  saving: boolean;
+  size?: 'md' | 'sm';
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const fontSize = size === 'sm' ? 10 : 10;
+
+  useEffect(() => {
+    if (editing) {
+      // Preload current budget in reais
+      const reais = cents ? (cents / 100) : 0;
+      setValue(reais ? reais.toFixed(2).replace('.', ',') : '');
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [editing, cents]);
+
+  const commit = () => {
+    const raw = value.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '');
+    const reais = parseFloat(raw);
+    if (isNaN(reais) || reais <= 0) {
+      setEditing(false);
+      return;
+    }
+    const newCents = Math.round(reais * 100);
+    if (newCents === (cents || 0)) {
+      setEditing(false);
+      return;
+    }
+    onSave(newCents);
+    setEditing(false);
+  };
+
+  if (!editing) {
+    const display = cents
+      ? `R$ ${(cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/dia`
+      : '—';
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!cents) return; // can't edit if no daily_budget (CBO)
+          setEditing(true);
+        }}
+        disabled={saving || !cents}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          background: 'transparent', border: 'none',
+          fontSize, color: T.text3, fontWeight: 600,
+          letterSpacing: '0.04em', fontFamily: F,
+          cursor: cents ? 'pointer' : 'default', padding: '2px 4px',
+          borderRadius: 4,
+          transition: 'background 0.1s, color 0.1s',
+        }}
+        onMouseEnter={(e) => {
+          if (!cents) return;
+          e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+          e.currentTarget.style.color = T.text2;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.color = T.text3;
+        }}
+        title={cents ? 'Clique para editar orçamento diário' : 'Orçamento gerenciado pela campanha (CBO)'}
+      >
+        {saving ? <Loader2 size={10} className="spin" /> : cents ? <Pencil size={9} style={{ opacity: 0.6 }} /> : null}
+        {display}
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={(e) => e.stopPropagation()}>
+      <span style={{ fontSize: 10, color: T.text3 }}>R$</span>
+      <input
+        ref={inputRef}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+        onBlur={commit}
+        style={{
+          width: 70, fontSize: 11, fontFamily: F,
+          background: T.bg2, border: `1px solid ${T.border2}`, color: T.text1,
+          borderRadius: 4, padding: '3px 6px', outline: 'none',
+        }}
+        inputMode="decimal"
+      />
+      <span style={{ fontSize: 9.5, color: T.text3 }}>/dia</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); commit(); }}
+        style={{ background: 'rgba(74,222,128,0.12)', border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 4, padding: 3, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+      >
+        <Check size={10} style={{ color: T.green }} />
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); setEditing(false); }}
+        style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border1}`, borderRadius: 4, padding: 3, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+      >
+        <X size={10} style={{ color: T.text3 }} />
+      </button>
+    </div>
   );
 }
 
@@ -425,6 +589,137 @@ export default function CampaignsManager() {
     }
   }, [userId, personaId]);
 
+  // ── Update daily budget (campaign or adset) ─────────────────────────────
+  const updateBudget = useCallback(async (
+    targetId: string,
+    targetType: 'campaign' | 'adset',
+    oldCents: number | null | undefined,
+    newCents: number,
+    targetName: string,
+  ) => {
+    if (!userId) return;
+    setFeedback(prev => ({ ...prev, [targetId]: { inflight: true, timestamp: Date.now() } }));
+
+    try {
+      const newReais = newCents / 100;
+      const { data: actionData, error: actionErr } = await supabase.functions.invoke('meta-actions', {
+        body: {
+          user_id: userId,
+          persona_id: personaId,
+          action: 'update_budget',
+          target_id: targetId,
+          target_type: targetType,
+          target_name: targetName,
+          value: newReais,
+          budget_type: 'daily',
+        },
+      });
+      if (actionErr || !actionData || (actionData as any).error) {
+        const msg = (actionData as any)?.error || actionErr?.message || 'Falha na ação.';
+        setFeedback(prev => ({ ...prev, [targetId]: { error: msg, timestamp: Date.now() } }));
+        return;
+      }
+
+      // Update local state optimistically
+      if (targetType === 'campaign') {
+        setCampaigns(prev => prev.map(c => c.id === targetId ? { ...c, daily_budget: newCents } : c));
+      } else {
+        setAdsetsByCampaign(prev => {
+          const out: Record<string, AdSet[]> = {};
+          for (const [cid, list] of Object.entries(prev)) {
+            out[cid] = list.map(a => a.id === targetId ? { ...a, daily_budget: newCents } : a);
+          }
+          return out;
+        });
+      }
+
+      // AI comment
+      setFeedback(prev => ({ ...prev, [targetId]: { analyzing: true, timestamp: Date.now() } }));
+      const oldReais = oldCents ? oldCents / 100 : 0;
+      const { data: aiData, error: aiErr } = await supabase.functions.invoke('ai-campaign-comment', {
+        body: {
+          user_id: userId,
+          persona_id: personaId,
+          target_id: targetId,
+          target_type: targetType,
+          action: 'update_budget',
+          context: { old_budget: oldReais, new_budget: newReais },
+        },
+      });
+
+      if (aiErr || !aiData || (aiData as any).error) {
+        setFeedback(prev => ({
+          ...prev,
+          [targetId]: {
+            comment: `Orçamento ajustado para R$${newReais.toFixed(2)}/dia. Análise da IA indisponível.`,
+            timestamp: Date.now(),
+          },
+        }));
+        return;
+      }
+      setFeedback(prev => ({ ...prev, [targetId]: { comment: (aiData as any).comment, timestamp: Date.now() } }));
+    } catch (e: any) {
+      setFeedback(prev => ({ ...prev, [targetId]: { error: e?.message || 'Erro inesperado', timestamp: Date.now() } }));
+    }
+  }, [userId, personaId]);
+
+  // ── Duplicate (campaign/adset/ad) ───────────────────────────────────────
+  const duplicate = useCallback(async (
+    targetId: string,
+    targetType: TargetType,
+    targetName: string,
+  ) => {
+    if (!userId) return;
+    setFeedback(prev => ({ ...prev, [targetId]: { inflight: true, timestamp: Date.now() } }));
+
+    try {
+      const { data: actionData, error: actionErr } = await supabase.functions.invoke('meta-actions', {
+        body: {
+          user_id: userId,
+          persona_id: personaId,
+          action: 'duplicate',
+          target_id: targetId,
+          target_type: targetType,
+          target_name: targetName,
+        },
+      });
+      if (actionErr || !actionData || (actionData as any).error) {
+        const msg = (actionData as any)?.error || actionErr?.message || 'Falha na ação.';
+        setFeedback(prev => ({ ...prev, [targetId]: { error: msg, timestamp: Date.now() } }));
+        return;
+      }
+      const newId = (actionData as any).new_id;
+
+      setFeedback(prev => ({ ...prev, [targetId]: { analyzing: true, timestamp: Date.now() } }));
+
+      const { data: aiData, error: aiErr } = await supabase.functions.invoke('ai-campaign-comment', {
+        body: {
+          user_id: userId,
+          persona_id: personaId,
+          target_id: targetId,
+          target_type: targetType,
+          action: 'duplicate',
+          context: { new_id: newId },
+        },
+      });
+
+      if (aiErr || !aiData || (aiData as any).error) {
+        const label = targetType === 'campaign' ? 'Campanha' : targetType === 'adset' ? 'Conjunto' : 'Anúncio';
+        setFeedback(prev => ({
+          ...prev,
+          [targetId]: {
+            comment: `${label} duplicado${targetType === 'campaign' ? 'a' : ''} (pausado${targetType === 'campaign' ? 'a' : ''}). Análise da IA indisponível.`,
+            timestamp: Date.now(),
+          },
+        }));
+        return;
+      }
+      setFeedback(prev => ({ ...prev, [targetId]: { comment: (aiData as any).comment, timestamp: Date.now() } }));
+    } catch (e: any) {
+      setFeedback(prev => ({ ...prev, [targetId]: { error: e?.message || 'Erro inesperado', timestamp: Date.now() } }));
+    }
+  }, [userId, personaId]);
+
   const sortedCampaigns = useMemo(() => {
     return [...campaigns].sort((a, b) => {
       const sa = (a.effective_status || a.status || '').toUpperCase();
@@ -500,12 +795,12 @@ export default function CampaignsManager() {
           return (
             <div key={c.id} style={{ background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 10, marginBottom: 8, overflow: 'hidden' }}>
               {/* Campaign row */}
-              <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 12px 14px 16px', minWidth: 0 }}>
                 <button
                   onClick={() => toggleCampaign(c.id)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, flex: 1,
-                    background: 'transparent', border: 'none', padding: '14px 10px 14px 16px',
+                    background: 'transparent', border: 'none', padding: 0,
                     cursor: 'pointer', textAlign: 'left', color: T.text1, fontFamily: F, minWidth: 0,
                   }}
                 >
@@ -514,20 +809,29 @@ export default function CampaignsManager() {
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {c.name}
                   </span>
-                  <span style={{ fontSize: 10, color: T.text3, fontWeight: 600, letterSpacing: '0.04em' }}>
-                    {fmtBudget(c.daily_budget)}
-                  </span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: sc.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    {sc.label}
-                  </span>
                 </button>
-                <div style={{ padding: '0 12px 0 0', flexShrink: 0 }}>
+                <BudgetInlineEdit
+                  cents={c.daily_budget}
+                  saving={cInflight}
+                  onSave={(newCents) => updateBudget(c.id, 'campaign', c.daily_budget, newCents, c.name)}
+                />
+                <span style={{ fontSize: 10, fontWeight: 700, color: sc.color, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
+                  {sc.label}
+                </span>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <ActionButton
                     kind={cPaused ? 'activate' : 'pause'}
                     inflight={cInflight}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleStatus(c.id, 'campaign', c.effective_status || c.status, c.name);
+                    }}
+                  />
+                  <DuplicateButton
+                    inflight={cInflight}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      duplicate(c.id, 'campaign', c.name);
                     }}
                   />
                 </div>
@@ -559,12 +863,12 @@ export default function CampaignsManager() {
 
                     return (
                       <div key={ads.id}>
-                        <div style={{ display: 'flex', alignItems: 'center', borderTop: `1px solid ${T.border0}` }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 12px 11px 36px', borderTop: `1px solid ${T.border0}`, minWidth: 0 }}>
                           <button
                             onClick={() => toggleAdset(ads.id, c.id)}
                             style={{
                               display: 'flex', alignItems: 'center', gap: 10, flex: 1,
-                              background: 'transparent', border: 'none', padding: '11px 10px 11px 36px',
+                              background: 'transparent', border: 'none', padding: 0,
                               cursor: 'pointer', textAlign: 'left', color: T.text1, fontFamily: F, minWidth: 0,
                             }}
                           >
@@ -573,14 +877,17 @@ export default function CampaignsManager() {
                             <span style={{ flex: 1, fontSize: 12, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {ads.name}
                             </span>
-                            <span style={{ fontSize: 10, color: T.text3 }}>
-                              {fmtBudget(ads.daily_budget)}
-                            </span>
-                            <span style={{ fontSize: 9.5, fontWeight: 700, color: sa.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                              {sa.label}
-                            </span>
                           </button>
-                          <div style={{ padding: '0 12px 0 0', flexShrink: 0 }}>
+                          <BudgetInlineEdit
+                            cents={ads.daily_budget}
+                            saving={aInflight}
+                            onSave={(newCents) => updateBudget(ads.id, 'adset', ads.daily_budget, newCents, ads.name)}
+                            size="sm"
+                          />
+                          <span style={{ fontSize: 9.5, fontWeight: 700, color: sa.color, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
+                            {sa.label}
+                          </span>
+                          <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
                             <ActionButton
                               kind={aPaused ? 'activate' : 'pause'}
                               inflight={aInflight}
@@ -588,6 +895,14 @@ export default function CampaignsManager() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleStatus(ads.id, 'adset', ads.effective_status || ads.status, ads.name);
+                              }}
+                            />
+                            <DuplicateButton
+                              inflight={aInflight}
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                duplicate(ads.id, 'adset', ads.name);
                               }}
                             />
                           </div>
@@ -627,15 +942,25 @@ export default function CampaignsManager() {
                                     <span style={{ fontSize: 9, fontWeight: 700, color: sAd.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                                       {sAd.label}
                                     </span>
-                                    <ActionButton
-                                      kind={adPaused ? 'activate' : 'pause'}
-                                      inflight={adInflight}
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleStatus(ad.id, 'ad', ad.effective_status || ad.status, ad.name);
-                                      }}
-                                    />
+                                    <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                                      <ActionButton
+                                        kind={adPaused ? 'activate' : 'pause'}
+                                        inflight={adInflight}
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleStatus(ad.id, 'ad', ad.effective_status || ad.status, ad.name);
+                                        }}
+                                      />
+                                      <DuplicateButton
+                                        inflight={adInflight}
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          duplicate(ad.id, 'ad', ad.name);
+                                        }}
+                                      />
+                                    </div>
                                   </div>
                                   <InlineComment feedback={adFeedback} indent={80} />
                                 </div>
@@ -654,7 +979,7 @@ export default function CampaignsManager() {
 
         {!loading && !error && campaigns.length > 0 && (
           <p style={{ fontSize: 10.5, color: T.text3, textAlign: 'center', margin: '20px 0 0', fontStyle: 'italic' }}>
-            Fase B — pausar/ativar + análise da IA ativos. Ajuste de orçamento e duplicação chegam na Fase C.
+            Pausar, ativar, ajustar orçamento ou duplicar — cada ação é analisada pelo Estrategista com dados reais de 30 dias.
           </p>
         )}
       </div>
