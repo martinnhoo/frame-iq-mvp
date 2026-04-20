@@ -3487,32 +3487,218 @@ const IntelligencePanel: React.FC<{
 };
 
 // ================================================================
-// STABLE STATUS LINE — When nothing is critical
+// SILENT CONFIDENCE — When the brain is genuinely quiet
+// Only rendered when NO tracking issue, NO alerts, NO metric alerts.
+// Honest state: system is watching, nothing requires action.
 // ================================================================
-const StableStatus: React.FC<{ savingsTotal: number }> = ({ savingsTotal }) => (
+const SilentConfidence: React.FC<{
+  lastAnalysisMin: number;
+  patternsCount: number;
+  actionsLast24h: number;
+  daysOfData?: number;
+}> = ({ lastAnalysisMin, patternsCount, actionsLast24h, daysOfData }) => (
   <div style={{
-    display: 'flex', alignItems: 'center', gap: 8,
-    padding: '12px 16px', marginBottom: 14,
-    background: `rgba(74,222,128,0.04)`,
-    borderRadius: 8,
-    border: `1px solid rgba(74,222,128,0.10)`,
-    animation: 'feed-fadeUp 0.25s ease both',
+    background: T.bg1, border: `1px solid ${T.border1}`,
+    borderRadius: 10, padding: 'clamp(14px, 2.5vw, 18px)', marginBottom: 14,
+    borderLeft: `3px solid ${T.green}`,
+    animation: 'feed-fadeUp 0.3s ease',
   }}>
-    <span style={{
-      width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-      background: T.green,
-      boxShadow: `0 0 8px ${T.green}40`,
-    }} />
-    <span style={{ fontSize: 12.5, fontWeight: 600, color: T.text2, fontFamily: F }}>
-      Nada crítico agora. Sua conta está estável.
-    </span>
-    {savingsTotal > 0 && (
-      <span style={{ fontSize: 11, color: T.green, fontWeight: 600, fontFamily: F, marginLeft: 'auto' }}>
-        {fmtReais(savingsTotal)} economizados
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+      <span style={{
+        width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+        background: T.green, boxShadow: `0 0 8px ${T.green}50`,
+      }} />
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
+        Cérebro ativo · monitoramento contínuo
       </span>
-    )}
+    </div>
+    <p style={{ fontSize: 14, color: T.text1, fontWeight: 700, margin: '0 0 6px', lineHeight: 1.4, fontFamily: F }}>
+      Conta estável. Nada exige sua ação agora.
+    </p>
+    <p style={{ fontSize: 12, color: T.text2, margin: '0 0 12px', lineHeight: 1.55, fontFamily: F }}>
+      {lastAnalysisMin < 60
+        ? `Última análise há ${lastAnalysisMin} min`
+        : `Última análise há ${Math.round(lastAnalysisMin / 60)}h`}
+      {daysOfData ? ` · ${daysOfData} dias de histórico lidos` : ''}
+      {' · próxima varredura em até 20 min'}
+    </p>
+    <div style={{
+      display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8,
+      padding: '10px 12px', background: T.bg2, borderRadius: 8,
+    }}>
+      <div>
+        <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor, margin: 0 }}>Padrões aprendidos</p>
+        <p style={{ fontSize: 15, fontWeight: 700, color: T.text1, margin: '3px 0 0', fontFamily: F, lineHeight: 1 }}>{patternsCount}</p>
+      </div>
+      <div>
+        <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor, margin: 0 }}>Ações 24h</p>
+        <p style={{ fontSize: 15, fontWeight: 700, color: T.text1, margin: '3px 0 0', fontFamily: F, lineHeight: 1 }}>{actionsLast24h}</p>
+      </div>
+      <div>
+        <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor, margin: 0 }}>Frequência</p>
+        <p style={{ fontSize: 15, fontWeight: 700, color: T.text1, margin: '3px 0 0', fontFamily: F, lineHeight: 1 }}>20 min</p>
+      </div>
+    </div>
   </div>
 );
+
+// ================================================================
+// BRAIN OVERWATCH — "Enquanto você dormia" narrative
+// Reads autopilot_action_log (last 24h) + summarizes what the
+// brain actually did. Only renders when there IS a story to tell.
+// Tied to real data — never generic copy.
+// ================================================================
+type BrainAction = {
+  id: string;
+  action_type: string;
+  target_kind: string;
+  target_name: string | null;
+  reason: string;
+  confidence: number;
+  amount_at_risk_brl: number | null;
+  status: string;
+  executed_at: string;
+};
+
+const BrainOverwatch: React.FC<{
+  userId: string;
+  patternsLearnedRecently: number;
+  alertsDetectedRecently: number;
+  savingsTotal: number;
+}> = ({ userId, patternsLearnedRecently, alertsDetectedRecently, savingsTotal }) => {
+  const navigate = useNavigate();
+  const [actions, setActions] = useState<BrainAction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data } = await supabase
+          .from('autopilot_action_log')
+          .select('id, action_type, target_kind, target_name, reason, confidence, amount_at_risk_brl, status, executed_at')
+          .eq('user_id', userId)
+          .gte('executed_at', since)
+          .order('executed_at', { ascending: false })
+          .limit(6);
+        if (!cancelled) setActions((data || []) as BrainAction[]);
+      } catch {}
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // Count only executed (skipped don't count as "actions taken")
+  const executed = actions.filter(a => a.status === 'executed');
+  const pauses = executed.filter(a => a.action_type.startsWith('pause')).length;
+  const scales = executed.filter(a => a.action_type.includes('budget')).length;
+  const totalSaved = executed.reduce((sum, a) => sum + (Number(a.amount_at_risk_brl) || 0), 0);
+
+  // Only render if there's a story — autopilot acted OR alerts fired OR patterns learned
+  const hasStory = executed.length > 0 || alertsDetectedRecently > 0 || patternsLearnedRecently > 0;
+  if (loading || !hasStory) return null;
+
+  const timeAgo = (iso: string): string => {
+    const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (mins < 1) return 'agora';
+    if (mins < 60) return `${mins}min`;
+    const h = Math.floor(mins / 60);
+    if (h < 24) return `${h}h`;
+    return `${Math.floor(h / 24)}d`;
+  };
+
+  const actionIcon = (type: string): string => {
+    if (type.startsWith('pause')) return '⏸';
+    if (type.includes('increase')) return '↑';
+    if (type.includes('decrease')) return '↓';
+    return '●';
+  };
+
+  const actionLabel = (type: string): string => {
+    if (type === 'pause_ad') return 'Pausou anúncio';
+    if (type === 'pause_adset') return 'Pausou conjunto';
+    if (type === 'pause_campaign') return 'Pausou campanha';
+    if (type === 'increase_budget') return 'Aumentou budget';
+    if (type === 'decrease_budget') return 'Reduziu budget';
+    return type;
+  };
+
+  return (
+    <div className="feed-card-lift" style={{
+      background: T.bg1,
+      border: `1px solid ${T.border1}`,
+      borderRadius: 10, padding: 'clamp(14px, 2.5vw, 18px)', marginBottom: 14,
+      borderLeft: `3px solid ${T.purple}`,
+      animation: 'feed-fadeUp 0.3s ease',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+            background: T.purple, boxShadow: `0 0 8px ${T.purple}50`,
+          }} />
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
+            Enquanto você estava fora · últimas 24h
+          </span>
+        </div>
+        {executed.length > 0 && (
+          <button onClick={() => navigate('/dashboard/autopilot-log')} style={{
+            background: 'transparent', color: T.purple, border: 'none', cursor: 'pointer',
+            fontSize: 10.5, fontWeight: 700, padding: 0, fontFamily: F,
+          }}>
+            Ver tudo →
+          </button>
+        )}
+      </div>
+
+      {/* Headline narrative */}
+      <p style={{ fontSize: 14, color: T.text1, fontWeight: 700, margin: '0 0 4px', lineHeight: 1.4, fontFamily: F }}>
+        {executed.length > 0
+          ? `O cérebro agiu ${executed.length}x automaticamente${totalSaved > 0 ? ` · protegeu ${fmtReais(totalSaved)}` : ''}`
+          : alertsDetectedRecently > 0
+            ? `${alertsDetectedRecently} alerta${alertsDetectedRecently === 1 ? '' : 's'} detectado${alertsDetectedRecently === 1 ? '' : 's'} · nenhum exigiu ação automática`
+            : `Analisou ${patternsLearnedRecently} padrão${patternsLearnedRecently === 1 ? '' : 'es'} novos`}
+      </p>
+      <p style={{ fontSize: 12, color: T.text2, margin: '0 0 14px', lineHeight: 1.5, fontFamily: F }}>
+        {executed.length > 0 && pauses > 0 && `${pauses} pausa${pauses === 1 ? '' : 's'} preventiva${pauses === 1 ? '' : 's'}`}
+        {executed.length > 0 && pauses > 0 && scales > 0 && ' · '}
+        {executed.length > 0 && scales > 0 && `${scales} ajuste${scales === 1 ? '' : 's'} de budget`}
+        {executed.length > 0 && patternsLearnedRecently > 0 && ` · ${patternsLearnedRecently} padrão${patternsLearnedRecently === 1 ? '' : 'es'} aprendido${patternsLearnedRecently === 1 ? '' : 's'}`}
+        {executed.length === 0 && savingsTotal > 0 && `Economia acumulada: ${fmtReais(savingsTotal)}`}
+        {executed.length === 0 && savingsTotal === 0 && 'Nenhuma intervenção foi necessária — conta se manteve dentro dos guardrails.'}
+      </p>
+
+      {/* Action timeline (max 3 most recent executed) */}
+      {executed.length > 0 && (
+        <div style={{ background: T.bg2, borderRadius: 8, padding: '10px 12px' }}>
+          {executed.slice(0, 3).map((a, i) => (
+            <div key={a.id} style={{
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+              padding: '8px 0',
+              borderTop: i > 0 ? `1px solid ${T.border0}` : 'none',
+            }}>
+              <span style={{
+                fontSize: 13, color: T.purple, fontWeight: 700,
+                flexShrink: 0, width: 14, textAlign: 'center',
+              }}>{actionIcon(a.action_type)}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: T.text1, margin: 0, lineHeight: 1.4, fontFamily: F }}>
+                  {actionLabel(a.action_type)}
+                  {a.target_name && <span style={{ color: T.text3, fontWeight: 500 }}> · {a.target_name.length > 40 ? a.target_name.slice(0, 40) + '…' : a.target_name}</span>}
+                </p>
+                <p style={{ fontSize: 10.5, color: T.text3, margin: '2px 0 0', lineHeight: 1.4, fontFamily: F }}>
+                  {timeAgo(a.executed_at)} atrás · confiança {Math.round(Number(a.confidence) * 100)}%
+                  {a.amount_at_risk_brl && Number(a.amount_at_risk_brl) > 0 ? ` · protegeu ${fmtReais(Number(a.amount_at_risk_brl))}` : ''}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ================================================================
 // FEED PAGE — Main component
@@ -4675,6 +4861,21 @@ const FeedPage: React.FC = () => {
         {syncing && <SyncBanner />}
 
         {/* ═══════════════════════════════════════════════
+            LAYER 2 — BRAIN OVERWATCH
+            "Enquanto você dormia" — narrates what the brain
+            actually did in last 24h. Pulled from autopilot_action_log.
+            Renders only when there's a real story.
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && !isDemo && userId && (
+          <BrainOverwatch
+            userId={userId}
+            patternsLearnedRecently={patternsCount}
+            alertsDetectedRecently={visibleAlerts.length + metricAlerts.length + (trackingHealth ? 1 : 0)}
+            savingsTotal={savingsTotal}
+          />
+        )}
+
+        {/* ═══════════════════════════════════════════════
             LAYER 3 — ACCOUNT HEALTH ALERTS (if any)
             Only visible when there are actual alerts.
             ═══════════════════════════════════════════════ */}
@@ -4898,38 +5099,44 @@ const FeedPage: React.FC = () => {
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
           <>
-            {/* Stable status — replaces old "Monitoramento ativo — nenhum alerta" */}
-            <StableStatus savingsTotal={savingsTotal} />
+            {/* ═══════════════════════════════════════════════
+                CALM STATE — Silent Confidence
+                Only show when truly quiet: no tracking issue,
+                no visible alerts, no metric alerts.
+                Otherwise those higher layers already speak.
+                ═══════════════════════════════════════════════ */}
+            {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && (
+              <SilentConfidence
+                lastAnalysisMin={lastAnalysisMin}
+                patternsCount={patternsCount}
+                actionsLast24h={0}
+                daysOfData={adMetrics?.daysOfData}
+              />
+            )}
 
-            {/* Next opportunity card */}
-            <div className="feed-card-lift" style={{
-              background: T.bg1, border: `1px solid ${T.border1}`,
-              borderRadius: 10, padding: 'clamp(14px, 2.5vw, 18px)', marginBottom: 14,
-              borderLeft: `3px solid ${T.green}`,
-              animation: 'feed-fadeUp 0.25s ease both',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.green }}>
-                  PRÓXIMA OPORTUNIDADE
-                </span>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: T.text1, margin: '0 0 4px', lineHeight: 1.4, fontFamily: F }}>
-                Seu próximo ganho vem de novos criativos · <span style={{ color: T.green }}>+18% CTR potencial</span>
-              </p>
-              <p style={{ fontSize: 12, color: T.text2, margin: '0 0 14px', lineHeight: 1.5 }}>
-                Contas com performance semelhante escalam diversificando hooks e formatos
-              </p>
-              <button className="feed-cta" onClick={() => navigate('/dashboard/hooks')} style={{
-                background: T.green, color: '#000', border: 'none', borderRadius: 8,
-                padding: '10px 20px', fontSize: 12.5, fontWeight: 700, fontFamily: F,
-                cursor: 'pointer', transition: 'all 0.18s',
-                boxShadow: `0 2px 10px ${T.green}30`,
-              }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 4px 18px ${T.green}50`; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = `0 2px 10px ${T.green}30`; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                Gerar variação com IA
-              </button>
-            </div>
+            {/* ═══════════════════════════════════════════════
+                REAL NEXT OPPORTUNITY — from decisions hook
+                Shows only if there's an actual scale/pattern/insight
+                decision in the DB. Never generic "+X% CTR" copy.
+                ═══════════════════════════════════════════════ */}
+            {(() => {
+              const realOpp = pendingDecisions.find(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight');
+              if (!realOpp) return null;
+              return (
+                <>
+                  <div style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+                    textTransform: 'uppercase' as const, color: T.labelColor,
+                    marginTop: 2, marginBottom: 10,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.green, boxShadow: `0 0 6px ${T.green}50` }} />
+                    <span>Próximo ganho</span>
+                  </div>
+                  <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="opportunities" />
+                </>
+              );
+            })()}
 
             <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaSelId || undefined} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
           </>
