@@ -6,15 +6,18 @@
  *    { state: { fromFeed: true } })`. Deep-links or direct URL entry redirect
  *    back to the Feed.
  *
- * Phase A (this file): read-only tree, load data, expand/collapse, status badges,
- *   row selection. No mutations yet.
- * Phase B: pause/activate + AI inline comment after each action.
+ * Phase A: read-only tree, load data, expand/collapse, status badges.
+ * Phase B (this file): pause/activate on all 3 levels + REAL AI inline comment
+ *   (backed by 30d/7d Meta insights via the ai-campaign-comment edge fn).
  * Phase C: inline budget edit + duplicate.
  */
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronRight, ChevronDown, ArrowLeft, Layers, Target, Sparkles } from 'lucide-react';
+import {
+  ChevronRight, ChevronDown, ArrowLeft, Layers, Target, Sparkles,
+  Pause, Play, Loader2,
+} from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 interface Campaign {
@@ -44,6 +47,18 @@ interface Ad {
   effective_status?: string;
 }
 
+type TargetType = 'campaign' | 'adset' | 'ad';
+type ActionKind = 'pause' | 'activate';
+
+interface ActionFeedback {
+  // Keyed by target_id
+  inflight?: boolean;        // action being executed
+  analyzing?: boolean;       // AI analysis being generated
+  comment?: string;          // AI comment (final)
+  error?: string;            // error message
+  timestamp?: number;        // for staleness
+}
+
 // ── Design tokens (match FeedPage) ────────────────────────────────────────
 const T = {
   bg0: '#06080C', bg1: 'rgba(255,255,255,0.02)', bg2: 'rgba(255,255,255,0.04)', bg3: 'rgba(255,255,255,0.06)',
@@ -67,10 +82,120 @@ function statusColor(s: string | undefined): { color: string; dot: string; label
   return { color: T.text2, dot: 'rgba(255,255,255,0.30)', label: u || '—' };
 }
 
+function isPausedStatus(s: string | undefined): boolean {
+  const u = (s || '').toUpperCase();
+  return u === 'PAUSED' || u === 'CAMPAIGN_PAUSED' || u === 'ADSET_PAUSED';
+}
+
 function fmtBudget(cents: number | null | undefined): string {
   if (!cents) return '—';
   const reais = cents / 100;
   return `R$ ${reais.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/dia`;
+}
+
+// ── Small component: the pause/activate button shown on each row ──────────
+function ActionButton({
+  kind,
+  onClick,
+  inflight,
+  size = 'md',
+}: {
+  kind: ActionKind;
+  onClick: (e: React.MouseEvent) => void;
+  inflight: boolean;
+  size?: 'md' | 'sm';
+}) {
+  const isPause = kind === 'pause';
+  const iconSize = size === 'sm' ? 10 : 12;
+  const paddingV = size === 'sm' ? 3 : 4;
+  const paddingH = size === 'sm' ? 7 : 9;
+  const fontSize = size === 'sm' ? 9.5 : 10.5;
+  const color = isPause ? T.text2 : T.green;
+  const bg = isPause ? 'rgba(255,255,255,0.04)' : 'rgba(74,222,128,0.08)';
+  const border = isPause ? 'rgba(255,255,255,0.10)' : 'rgba(74,222,128,0.22)';
+  return (
+    <button
+      onClick={onClick}
+      disabled={inflight}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        background: bg, color,
+        border: `1px solid ${border}`,
+        borderRadius: 5,
+        padding: `${paddingV}px ${paddingH}px`,
+        fontSize, fontWeight: 600, fontFamily: F,
+        cursor: inflight ? 'default' : 'pointer',
+        opacity: inflight ? 0.6 : 1,
+        whiteSpace: 'nowrap',
+        transition: 'background 0.12s, color 0.12s, border-color 0.12s',
+      }}
+      onMouseEnter={(e) => {
+        if (inflight) return;
+        e.currentTarget.style.background = isPause ? 'rgba(255,255,255,0.08)' : 'rgba(74,222,128,0.14)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = bg;
+      }}
+      title={isPause ? 'Pausar' : 'Ativar'}
+    >
+      {inflight
+        ? <Loader2 size={iconSize} className="spin" />
+        : isPause
+          ? <Pause size={iconSize} />
+          : <Play size={iconSize} />
+      }
+      {isPause ? 'Pausar' : 'Ativar'}
+    </button>
+  );
+}
+
+// ── Small component: the inline AI comment box ────────────────────────────
+function InlineComment({ feedback, indent }: { feedback: ActionFeedback | undefined; indent: number }) {
+  if (!feedback) return null;
+  if (feedback.analyzing) {
+    return (
+      <div style={{
+        padding: `8px 16px 10px ${indent}px`,
+        fontSize: 11, color: T.text3,
+        display: 'flex', alignItems: 'center', gap: 6,
+        background: 'rgba(167,139,250,0.04)', borderTop: `1px solid ${T.border0}`,
+      }}>
+        <Loader2 size={11} className="spin" style={{ color: T.purple }} />
+        Estrategista analisando 30 dias de performance…
+      </div>
+    );
+  }
+  if (feedback.error) {
+    return (
+      <div style={{
+        padding: `8px 16px 10px ${indent}px`,
+        fontSize: 11, color: T.red,
+        background: 'rgba(248,113,113,0.04)',
+        borderTop: `1px solid ${T.border0}`,
+      }}>
+        Ação falhou: {feedback.error}
+      </div>
+    );
+  }
+  if (feedback.comment) {
+    return (
+      <div style={{
+        padding: `10px 16px 12px ${indent}px`,
+        fontSize: 11.5, lineHeight: 1.5, color: T.text2,
+        background: 'rgba(167,139,250,0.05)',
+        borderTop: `1px solid ${T.border0}`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <Sparkles size={11} style={{ color: T.purple }} />
+          <span style={{ fontSize: 10, fontWeight: 700, color: T.purple, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Estrategista
+          </span>
+        </div>
+        <div>{feedback.comment}</div>
+      </div>
+    );
+  }
+  return null;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -81,7 +206,6 @@ export default function CampaignsManager() {
   const location = useLocation();
 
   // ── Access guard ────────────────────────────────────────────────────────
-  // Must come from the Feed (state.fromFeed === true). Otherwise redirect.
   useEffect(() => {
     const state = location.state as { fromFeed?: boolean } | null;
     if (!state?.fromFeed) {
@@ -91,6 +215,7 @@ export default function CampaignsManager() {
 
   // ── Session state ───────────────────────────────────────────────────────
   const [userId, setUserId] = useState<string | null>(null);
+  const [personaId, setPersonaId] = useState<string | null>(null);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,33 +227,36 @@ export default function CampaignsManager() {
     })();
   }, []);
 
-  // Get selected account from platform_connections
+  // Get selected account + persona from platform_connections
   useEffect(() => {
     if (!userId) return;
     (async () => {
       const { data } = await (supabase as any)
         .from('platform_connections')
-        .select('selected_account_id, ad_accounts')
+        .select('selected_account_id, ad_accounts, persona_id')
         .eq('user_id', userId)
         .eq('platform', 'meta')
         .eq('status', 'active')
         .maybeSingle();
       const sel = data?.selected_account_id || (Array.isArray(data?.ad_accounts) ? data.ad_accounts[0]?.account_id : null);
       if (sel) setAccountId(sel);
+      if (data?.persona_id) setPersonaId(data.persona_id);
     })();
   }, [userId]);
 
-  // ── Data: campaigns, adsets (lazy per campaign), ads (lazy per adset) ───
+  // ── Data ────────────────────────────────────────────────────────────────
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [adsetsByCampaign, setAdsetsByCampaign] = useState<Record<string, AdSet[]>>({});
   const [adsByAdset, setAdsByAdset] = useState<Record<string, Ad[]>>({});
   const [loadingAdsets, setLoadingAdsets] = useState<Record<string, boolean>>({});
   const [loadingAds, setLoadingAds] = useState<Record<string, boolean>>({});
-
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(new Set());
   const [expandedAdsets, setExpandedAdsets] = useState<Set<string>>(new Set());
 
-  // ── Load campaigns via meta-actions list_campaigns ──────────────────────
+  // Per-target action feedback (keyed by target_id)
+  const [feedback, setFeedback] = useState<Record<string, ActionFeedback>>({});
+
+  // ── Load campaigns ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!userId || !accountId) return;
     let cancelled = false;
@@ -137,7 +265,7 @@ export default function CampaignsManager() {
     (async () => {
       try {
         const { data, error: fnErr } = await supabase.functions.invoke('meta-actions', {
-          body: { user_id: userId, account_id: accountId, action: 'list_campaigns' },
+          body: { user_id: userId, persona_id: personaId, account_id: accountId, action: 'list_campaigns' },
         });
         if (cancelled) return;
         if (fnErr || !data || (data as any).error) {
@@ -153,21 +281,20 @@ export default function CampaignsManager() {
       }
     })();
     return () => { cancelled = true; };
-  }, [userId, accountId]);
+  }, [userId, personaId, accountId]);
 
-  // ── Toggle campaign expand → lazy-load its adsets ───────────────────────
+  // ── Toggle campaign expand ──────────────────────────────────────────────
   const toggleCampaign = useCallback(async (campaignId: string) => {
     setExpandedCampaigns(prev => {
       const next = new Set(prev);
       if (next.has(campaignId)) next.delete(campaignId); else next.add(campaignId);
       return next;
     });
-    // Load adsets only if not cached
     if (!adsetsByCampaign[campaignId] && userId) {
       setLoadingAdsets(prev => ({ ...prev, [campaignId]: true }));
       try {
         const { data } = await supabase.functions.invoke('meta-actions', {
-          body: { user_id: userId, account_id: accountId, action: 'list_adsets', target_id: campaignId },
+          body: { user_id: userId, persona_id: personaId, account_id: accountId, action: 'list_adsets', target_id: campaignId },
         });
         const list: AdSet[] = (((data as any)?.adsets) || []).map((a: any) => ({
           ...a, campaign_id: campaignId,
@@ -179,9 +306,9 @@ export default function CampaignsManager() {
         setLoadingAdsets(prev => ({ ...prev, [campaignId]: false }));
       }
     }
-  }, [adsetsByCampaign, userId, accountId]);
+  }, [adsetsByCampaign, userId, personaId, accountId]);
 
-  // ── Toggle adset expand → lazy-load its ads ─────────────────────────────
+  // ── Toggle adset expand ─────────────────────────────────────────────────
   const toggleAdset = useCallback(async (adsetId: string, campaignId: string) => {
     setExpandedAdsets(prev => {
       const next = new Set(prev);
@@ -191,11 +318,8 @@ export default function CampaignsManager() {
     if (!adsByAdset[adsetId] && userId) {
       setLoadingAds(prev => ({ ...prev, [adsetId]: true }));
       try {
-        // list_ads is not in meta-actions yet — fall back to direct Meta API via an
-        // edge function extension or, for Phase A, reuse list_adsets endpoint style.
-        // For now we call a new action 'list_ads'; meta-actions needs to support it.
         const { data } = await supabase.functions.invoke('meta-actions', {
-          body: { user_id: userId, account_id: accountId, action: 'list_ads', target_id: adsetId },
+          body: { user_id: userId, persona_id: personaId, account_id: accountId, action: 'list_ads', target_id: adsetId },
         });
         const list: Ad[] = (((data as any)?.ads) || []).map((a: any) => ({
           ...a, adset_id: adsetId, campaign_id: campaignId,
@@ -207,10 +331,101 @@ export default function CampaignsManager() {
         setLoadingAds(prev => ({ ...prev, [adsetId]: false }));
       }
     }
-  }, [adsByAdset, userId, accountId]);
+  }, [adsByAdset, userId, personaId, accountId]);
+
+  // ── Toggle status (pause/activate) — the core Phase B flow ──────────────
+  // 1. Call meta-actions to flip status on Meta API
+  // 2. Update local state optimistically
+  // 3. Call ai-campaign-comment for REAL analysis
+  // 4. Show inline AI comment under the row
+  const toggleStatus = useCallback(async (
+    targetId: string,
+    targetType: TargetType,
+    currentStatus: string,
+    targetName: string,
+  ) => {
+    if (!userId) return;
+    const isPaused = isPausedStatus(currentStatus);
+    const kind: ActionKind = isPaused ? 'activate' : 'pause';
+    const metaAction = isPaused ? 'enable' : 'pause';
+
+    // Mark inflight
+    setFeedback(prev => ({ ...prev, [targetId]: { inflight: true, timestamp: Date.now() } }));
+
+    try {
+      // ── 1. Execute action ────────────────────────────────────────────
+      const { data: actionData, error: actionErr } = await supabase.functions.invoke('meta-actions', {
+        body: {
+          user_id: userId,
+          persona_id: personaId,
+          action: metaAction,
+          target_id: targetId,
+          target_type: targetType,
+          target_name: targetName,
+        },
+      });
+      if (actionErr || !actionData || (actionData as any).error) {
+        const msg = (actionData as any)?.error || actionErr?.message || 'Falha na ação.';
+        setFeedback(prev => ({ ...prev, [targetId]: { error: msg, timestamp: Date.now() } }));
+        return;
+      }
+
+      // ── 2. Update local state optimistically ──────────────────────────
+      const newStatus = isPaused ? 'ACTIVE' : 'PAUSED';
+      if (targetType === 'campaign') {
+        setCampaigns(prev => prev.map(c => c.id === targetId ? { ...c, status: newStatus, effective_status: newStatus } : c));
+      } else if (targetType === 'adset') {
+        setAdsetsByCampaign(prev => {
+          const out: Record<string, AdSet[]> = {};
+          for (const [cid, list] of Object.entries(prev)) {
+            out[cid] = list.map(a => a.id === targetId ? { ...a, status: newStatus, effective_status: newStatus } : a);
+          }
+          return out;
+        });
+      } else {
+        setAdsByAdset(prev => {
+          const out: Record<string, Ad[]> = {};
+          for (const [aid, list] of Object.entries(prev)) {
+            out[aid] = list.map(ad => ad.id === targetId ? { ...ad, status: newStatus, effective_status: newStatus } : ad);
+          }
+          return out;
+        });
+      }
+
+      // ── 3. Get AI comment (REAL analysis on 30d data) ────────────────
+      setFeedback(prev => ({ ...prev, [targetId]: { analyzing: true, timestamp: Date.now() } }));
+
+      const { data: aiData, error: aiErr } = await supabase.functions.invoke('ai-campaign-comment', {
+        body: {
+          user_id: userId,
+          persona_id: personaId,
+          target_id: targetId,
+          target_type: targetType,
+          action: kind === 'pause' ? 'pause' : 'activate',
+        },
+      });
+
+      if (aiErr || !aiData || (aiData as any).error) {
+        // Action succeeded but analysis failed — show a minimal confirmation
+        const label = targetType === 'campaign' ? 'Campanha' : targetType === 'adset' ? 'Conjunto' : 'Anúncio';
+        setFeedback(prev => ({
+          ...prev,
+          [targetId]: {
+            comment: `${label} ${kind === 'pause' ? 'pausada' : 'ativada'}. Análise da IA indisponível no momento.`,
+            timestamp: Date.now(),
+          },
+        }));
+        return;
+      }
+
+      const comment = (aiData as any).comment || 'Ação executada.';
+      setFeedback(prev => ({ ...prev, [targetId]: { comment, timestamp: Date.now() } }));
+    } catch (e: any) {
+      setFeedback(prev => ({ ...prev, [targetId]: { error: e?.message || 'Erro inesperado', timestamp: Date.now() } }));
+    }
+  }, [userId, personaId]);
 
   const sortedCampaigns = useMemo(() => {
-    // Active first, paused next, archived last
     return [...campaigns].sort((a, b) => {
       const sa = (a.effective_status || a.status || '').toUpperCase();
       const sb = (b.effective_status || b.status || '').toUpperCase();
@@ -224,6 +439,9 @@ export default function CampaignsManager() {
   // ══════════════════════════════════════════════════════════════════════
   return (
     <div style={{ flex: 1, minHeight: 0, background: T.bg0, padding: '24px 16px', fontFamily: F, color: T.text1, overflow: 'auto' }}>
+      {/* Local CSS for spin animation (Loader2 icon) */}
+      <style>{`.spin { animation: mgr-spin 0.9s linear infinite; } @keyframes mgr-spin { to { transform: rotate(360deg); } }`}</style>
+
       <div style={{ maxWidth: 920, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -247,17 +465,15 @@ export default function CampaignsManager() {
         </div>
 
         <p style={{ fontSize: 12, color: T.text3, margin: '0 0 18px' }}>
-          Todas as campanhas, conjuntos e anúncios desta conta. Clique para expandir, ajustar ou analisar.
+          Pause, ative ou ajuste qualquer campanha, conjunto ou anúncio. A cada ação, o Estrategista analisa os últimos 30 dias e explica o impacto.
         </p>
 
-        {/* Loading */}
         {loading && (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: T.text3, fontSize: 13 }}>
             Carregando campanhas…
           </div>
         )}
 
-        {/* Error */}
         {error && !loading && (
           <div style={{ background: T.bg1, border: `1px solid ${T.border1}`, borderLeft: `3px solid ${T.red}`, borderRadius: 8, padding: 16, marginBottom: 16 }}>
             <p style={{ fontSize: 13, fontWeight: 700, margin: '0 0 4px', color: T.text1 }}>Não consegui carregar as campanhas.</p>
@@ -265,7 +481,6 @@ export default function CampaignsManager() {
           </div>
         )}
 
-        {/* Empty */}
         {!loading && !error && campaigns.length === 0 && (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: T.text3, fontSize: 13 }}>
             Nenhuma campanha encontrada nesta conta.
@@ -278,30 +493,47 @@ export default function CampaignsManager() {
           const isOpen = expandedCampaigns.has(c.id);
           const adsets = adsetsByCampaign[c.id] || [];
           const loadingThisAdsets = loadingAdsets[c.id];
+          const cFeedback = feedback[c.id];
+          const cInflight = !!cFeedback?.inflight;
+          const cPaused = isPausedStatus(c.effective_status || c.status);
 
           return (
             <div key={c.id} style={{ background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 10, marginBottom: 8, overflow: 'hidden' }}>
               {/* Campaign row */}
-              <button
-                onClick={() => toggleCampaign(c.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-                  background: 'transparent', border: 'none', padding: '14px 16px',
-                  cursor: 'pointer', textAlign: 'left', color: T.text1, fontFamily: F,
-                }}
-              >
-                {isOpen ? <ChevronDown size={14} style={{ color: T.text3, flexShrink: 0 }} /> : <ChevronRight size={14} style={{ color: T.text3, flexShrink: 0 }} />}
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot, flexShrink: 0 }} />
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {c.name}
-                </span>
-                <span style={{ fontSize: 10, color: T.text3, fontWeight: 600, letterSpacing: '0.04em' }}>
-                  {fmtBudget(c.daily_budget)}
-                </span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: sc.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  {sc.label}
-                </span>
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <button
+                  onClick={() => toggleCampaign(c.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, flex: 1,
+                    background: 'transparent', border: 'none', padding: '14px 10px 14px 16px',
+                    cursor: 'pointer', textAlign: 'left', color: T.text1, fontFamily: F, minWidth: 0,
+                  }}
+                >
+                  {isOpen ? <ChevronDown size={14} style={{ color: T.text3, flexShrink: 0 }} /> : <ChevronRight size={14} style={{ color: T.text3, flexShrink: 0 }} />}
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot, flexShrink: 0 }} />
+                  <span style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {c.name}
+                  </span>
+                  <span style={{ fontSize: 10, color: T.text3, fontWeight: 600, letterSpacing: '0.04em' }}>
+                    {fmtBudget(c.daily_budget)}
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: sc.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    {sc.label}
+                  </span>
+                </button>
+                <div style={{ padding: '0 12px 0 0', flexShrink: 0 }}>
+                  <ActionButton
+                    kind={cPaused ? 'activate' : 'pause'}
+                    inflight={cInflight}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStatus(c.id, 'campaign', c.effective_status || c.status, c.name);
+                    }}
+                  />
+                </div>
+              </div>
+
+              <InlineComment feedback={cFeedback} indent={40} />
 
               {/* Adsets */}
               {isOpen && (
@@ -321,30 +553,47 @@ export default function CampaignsManager() {
                     const isAdsetOpen = expandedAdsets.has(ads.id);
                     const ads_ = adsByAdset[ads.id] || [];
                     const loadingThisAds = loadingAds[ads.id];
+                    const aFeedback = feedback[ads.id];
+                    const aInflight = !!aFeedback?.inflight;
+                    const aPaused = isPausedStatus(ads.effective_status || ads.status);
 
                     return (
                       <div key={ads.id}>
-                        <button
-                          onClick={() => toggleAdset(ads.id, c.id)}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-                            background: 'transparent', border: 'none', padding: '11px 16px 11px 36px',
-                            cursor: 'pointer', textAlign: 'left', color: T.text1, fontFamily: F,
-                            borderTop: `1px solid ${T.border0}`,
-                          }}
-                        >
-                          {isAdsetOpen ? <ChevronDown size={12} style={{ color: T.text3, flexShrink: 0 }} /> : <ChevronRight size={12} style={{ color: T.text3, flexShrink: 0 }} />}
-                          <Target size={11} style={{ color: T.text3, flexShrink: 0 }} />
-                          <span style={{ flex: 1, fontSize: 12, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {ads.name}
-                          </span>
-                          <span style={{ fontSize: 10, color: T.text3 }}>
-                            {fmtBudget(ads.daily_budget)}
-                          </span>
-                          <span style={{ fontSize: 9.5, fontWeight: 700, color: sa.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                            {sa.label}
-                          </span>
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', borderTop: `1px solid ${T.border0}` }}>
+                          <button
+                            onClick={() => toggleAdset(ads.id, c.id)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 10, flex: 1,
+                              background: 'transparent', border: 'none', padding: '11px 10px 11px 36px',
+                              cursor: 'pointer', textAlign: 'left', color: T.text1, fontFamily: F, minWidth: 0,
+                            }}
+                          >
+                            {isAdsetOpen ? <ChevronDown size={12} style={{ color: T.text3, flexShrink: 0 }} /> : <ChevronRight size={12} style={{ color: T.text3, flexShrink: 0 }} />}
+                            <Target size={11} style={{ color: T.text3, flexShrink: 0 }} />
+                            <span style={{ flex: 1, fontSize: 12, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {ads.name}
+                            </span>
+                            <span style={{ fontSize: 10, color: T.text3 }}>
+                              {fmtBudget(ads.daily_budget)}
+                            </span>
+                            <span style={{ fontSize: 9.5, fontWeight: 700, color: sa.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                              {sa.label}
+                            </span>
+                          </button>
+                          <div style={{ padding: '0 12px 0 0', flexShrink: 0 }}>
+                            <ActionButton
+                              kind={aPaused ? 'activate' : 'pause'}
+                              inflight={aInflight}
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleStatus(ads.id, 'adset', ads.effective_status || ads.status, ads.name);
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <InlineComment feedback={aFeedback} indent={60} />
 
                         {/* Ads inside this adset */}
                         {isAdsetOpen && (
@@ -361,18 +610,34 @@ export default function CampaignsManager() {
                             )}
                             {ads_.map((ad) => {
                               const sAd = statusColor(ad.effective_status || ad.status);
+                              const adFeedback = feedback[ad.id];
+                              const adInflight = !!adFeedback?.inflight;
+                              const adPaused = isPausedStatus(ad.effective_status || ad.status);
                               return (
-                                <div key={ad.id} style={{
-                                  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px 9px 60px',
-                                  borderTop: `1px solid ${T.border0}`,
-                                }}>
-                                  <Sparkles size={10} style={{ color: T.purple, flexShrink: 0 }} />
-                                  <span style={{ flex: 1, fontSize: 11.5, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                    {ad.name}
-                                  </span>
-                                  <span style={{ fontSize: 9, fontWeight: 700, color: sAd.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                                    {sAd.label}
-                                  </span>
+                                <div key={ad.id}>
+                                  <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 10,
+                                    padding: '9px 12px 9px 60px',
+                                    borderTop: `1px solid ${T.border0}`,
+                                  }}>
+                                    <Sparkles size={10} style={{ color: T.purple, flexShrink: 0 }} />
+                                    <span style={{ flex: 1, fontSize: 11.5, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {ad.name}
+                                    </span>
+                                    <span style={{ fontSize: 9, fontWeight: 700, color: sAd.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                      {sAd.label}
+                                    </span>
+                                    <ActionButton
+                                      kind={adPaused ? 'activate' : 'pause'}
+                                      inflight={adInflight}
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleStatus(ad.id, 'ad', ad.effective_status || ad.status, ad.name);
+                                      }}
+                                    />
+                                  </div>
+                                  <InlineComment feedback={adFeedback} indent={80} />
                                 </div>
                               );
                             })}
@@ -387,10 +652,9 @@ export default function CampaignsManager() {
           );
         })}
 
-        {/* Phase A footer: hint that actions are coming */}
         {!loading && !error && campaigns.length > 0 && (
           <p style={{ fontSize: 10.5, color: T.text3, textAlign: 'center', margin: '20px 0 0', fontStyle: 'italic' }}>
-            Fase A — apenas visualização. Ações (pausar, editar, duplicar) + análise da IA chegam na Fase B.
+            Fase B — pausar/ativar + análise da IA ativos. Ajuste de orçamento e duplicação chegam na Fase C.
           </p>
         )}
       </div>
