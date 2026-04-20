@@ -594,7 +594,7 @@ export default function PerformanceDashboard() {
                     onDrop={()=>handleDrop(i)}
                     onDragEnd={()=>{setDragging(null);setDragOver(null);}}
                     className={`perf-card${dragOver===i&&dragging!==i?" drag-over":""}`}
-                    style={{animationDelay:`${i*0.04}s`}}>
+                    style={{}}>
                     <SparklineCard
                       label={def.labelPt}
                       currentValue={value}

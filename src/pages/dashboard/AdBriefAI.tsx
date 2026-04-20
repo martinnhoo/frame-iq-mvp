@@ -821,7 +821,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
         const copied = copiedIdx===i;
         return(
           <div key={i}
-            style={{display:"flex",alignItems:"flex-start",gap:0,borderBottom:"1px solid rgba(255,255,255,0.06)",transition:"background 0.12s",animation:"fadeUp 0.18s ease-out both",animationDelay:`${i*0.06}s`}}
+            style={{display:"flex",alignItems:"flex-start",gap:0,borderBottom:"1px solid rgba(255,255,255,0.06)",transition:"background 0.12s",animation:"fadeUp 0.18s ease-out both"}}
             className="hook-item"
             onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)"}}
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="transparent"}}>

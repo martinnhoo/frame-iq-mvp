@@ -529,18 +529,8 @@ code, pre,
 }
 
 .dashboard-main .space-y-6 > * {
-  animation: staggerFadeUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: staggerFadeUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
-.dashboard-main .space-y-6 > *:nth-child(1) { animation-delay: 0.02s; }
-.dashboard-main .space-y-6 > *:nth-child(2) { animation-delay: 0.06s; }
-.dashboard-main .space-y-6 > *:nth-child(3) { animation-delay: 0.10s; }
-.dashboard-main .space-y-6 > *:nth-child(4) { animation-delay: 0.14s; }
-.dashboard-main .space-y-6 > *:nth-child(5) { animation-delay: 0.18s; }
-.dashboard-main .space-y-6 > *:nth-child(6) { animation-delay: 0.22s; }
-.dashboard-main .space-y-6 > *:nth-child(7) { animation-delay: 0.26s; }
-.dashboard-main .space-y-6 > *:nth-child(8) { animation-delay: 0.30s; }
-.dashboard-main .space-y-6 > *:nth-child(9) { animation-delay: 0.34s; }
-.dashboard-main .space-y-6 > *:nth-child(10) { animation-delay: 0.38s; }
 
 /* ── Dashboard cards: Global hover glow ─────────────────────────────────────── */
 
@@ -579,12 +569,6 @@ code, pre,
 .perf-page .grid > * {
   animation: staggerFadeUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
-.perf-page .grid > *:nth-child(1) { animation-delay: 0.03s; }
-.perf-page .grid > *:nth-child(2) { animation-delay: 0.06s; }
-.perf-page .grid > *:nth-child(3) { animation-delay: 0.09s; }
-.perf-page .grid > *:nth-child(4) { animation-delay: 0.12s; }
-.perf-page .grid > *:nth-child(5) { animation-delay: 0.15s; }
-.perf-page .grid > *:nth-child(6) { animation-delay: 0.18s; }
 
 /* ── Sidebar: Premium glass effect ───────────────────────────────────────────── */
 
@@ -1041,13 +1025,8 @@ input, textarea, select {
 
 /* ── KPI card entrance stagger ───────────────────────────────────────────── */
 .kpi-card {
-  animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.kpi-card:nth-child(1) { animation-delay: 0s; }
-.kpi-card:nth-child(2) { animation-delay: 0.05s; }
-.kpi-card:nth-child(3) { animation-delay: 0.10s; }
-.kpi-card:nth-child(4) { animation-delay: 0.15s; }
-.kpi-card:nth-child(5) { animation-delay: 0.20s; }
 
 /* ── Input focus glow ─────────────────────────────────────────────────────── */
 .input-glow {

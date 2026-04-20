@@ -649,7 +649,7 @@ export default function AdScorePage() {
           gap: 14,
         }}>
           {filtered.map((ad, i) => (
-            <div key={ad.id || ad.ad_id || i} style={{ animationDelay: `${i * 0.04}s` }}>
+            <div key={ad.id || ad.ad_id || i}>
               <AdCard ad={ad} allScores={allScores} pt={pt} onSelect={() => setSelectedAd(ad)} />
             </div>
           ))}

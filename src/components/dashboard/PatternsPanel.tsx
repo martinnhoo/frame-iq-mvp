@@ -529,7 +529,6 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
               {displayPatterns.map((p, idx) => (
                 <div key={p.pattern_key || idx} style={{
                   animation: 'pp-fadeUp 0.3s ease both',
-                  animationDelay: `${idx * 0.05}s`,
                 }}>
                   <PatternRow pattern={p} onGenerateVariation={onGenerateVariation} isFirst={idx === 0} />
                 </div>
