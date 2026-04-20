@@ -1299,7 +1299,8 @@ const AdRow: React.FC<{
   togglingAd?: string | null;
   toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
   onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
-}> = ({ ad, togglingAd, toggleSuccess, onRequestToggle }) => {
+  onAnalyzeAi?: (ad: AdSummary) => void;
+}> = ({ ad, togglingAd, toggleSuccess, onRequestToggle, onAnalyzeAi }) => {
   const st = getAdStatusDisplay(ad);
   const isPaused = st.label === 'Pausado';
   const isActive = st.label === 'Saudável' || st.label === 'Aprendizado';
@@ -1321,6 +1322,23 @@ const AdRow: React.FC<{
       <span style={{ fontSize: 10, color: st.color, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
         {st.label}
       </span>
+      {onAnalyzeAi && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onAnalyzeAi(ad); }}
+          title="Analisar este anúncio com a IA"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 3,
+            padding: '3px 7px', borderRadius: 3, border: 'none',
+            background: 'rgba(167,139,250,0.08)', color: T.purple,
+            fontSize: 10, fontWeight: 700, fontFamily: F,
+            cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.18)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.08)'; }}
+        >
+          IA
+        </button>
+      )}
       {canToggle && (
         justSucceeded ? (
           <span style={{
@@ -1369,7 +1387,9 @@ const CampaignRow: React.FC<{
   togglingCampaign?: string | null;
   campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
   onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void;
-}> = ({ campaign, ads, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
+  onAnalyzeAiCampaign?: (campaign: CampaignSummary) => void;
+  onAnalyzeAiAd?: (ad: AdSummary) => void;
+}> = ({ campaign, ads, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle, onAnalyzeAiCampaign, onAnalyzeAiAd }) => {
   const [open, setOpen] = useState(false);
   const sorted = sortAdsByStatus(ads);
   const st = getCampaignStatusDisplay(campaign);
@@ -1410,6 +1430,23 @@ const CampaignRow: React.FC<{
             {ads.length} {ads.length === 1 ? 'anúncio' : 'anúncios'}
           </span>
         </div>
+        {onAnalyzeAiCampaign && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onAnalyzeAiCampaign(campaign); }}
+            title="Analisar esta campanha com a IA"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 3,
+              padding: '3px 8px', borderRadius: 3, border: 'none',
+              background: 'rgba(167,139,250,0.08)', color: T.purple,
+              fontSize: 10, fontWeight: 700, fontFamily: F,
+              cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.18)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.08)'; }}
+          >
+            Analisar IA
+          </button>
+        )}
         {canToggle && (
           justSucceeded ? (
             <span style={{
@@ -1449,7 +1486,7 @@ const CampaignRow: React.FC<{
       <FeedExpandable open={open}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1, paddingLeft: 6 }}>
           {sorted.map((ad, i) => (
-            <AdRow key={ad.meta_ad_id || i} ad={ad} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
+            <AdRow key={ad.meta_ad_id || i} ad={ad} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} onAnalyzeAi={onAnalyzeAiAd} />
           ))}
         </div>
       </FeedExpandable>
@@ -1471,8 +1508,11 @@ const CampaignList: React.FC<{
   togglingCampaign?: string | null;
   campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
   onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void;
-}> = ({ campaigns, ads, totalAds, onLoadMore, loadingMore, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
-  const [open, setOpen] = useState(false);
+  onAnalyzeAiCampaign?: (campaign: CampaignSummary) => void;
+  onAnalyzeAiAd?: (ad: AdSummary) => void;
+  defaultOpen?: boolean;
+}> = ({ campaigns, ads, totalAds, onLoadMore, loadingMore, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle, onAnalyzeAiCampaign, onAnalyzeAiAd, defaultOpen }) => {
+  const [open, setOpen] = useState(!!defaultOpen);
   const adsByCampaign = groupAdsByCampaign(ads);
 
   // Sort campaigns: ACTIVE first, then PAUSED
@@ -1526,6 +1566,8 @@ const CampaignList: React.FC<{
                 togglingCampaign={togglingCampaign}
                 campaignToggleSuccess={campaignToggleSuccess}
                 onRequestCampaignToggle={onRequestCampaignToggle}
+                onAnalyzeAiCampaign={onAnalyzeAiCampaign}
+                onAnalyzeAiAd={onAnalyzeAiAd}
               />
             );
           })}
@@ -1564,7 +1606,8 @@ const AdList: React.FC<{
   togglingAd?: string | null;
   toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
   onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
-}> = ({ ads, totalAds, onLoadMore, loadingMore, togglingAd, toggleSuccess, onRequestToggle }) => {
+  onAnalyzeAiAd?: (ad: AdSummary) => void;
+}> = ({ ads, totalAds, onLoadMore, loadingMore, togglingAd, toggleSuccess, onRequestToggle, onAnalyzeAiAd }) => {
   const [open, setOpen] = useState(false);
   const sorted = sortAdsByStatus(ads);
   const hasMore = totalAds > ads.length;
@@ -1587,7 +1630,7 @@ const AdList: React.FC<{
       <FeedExpandable open={open}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 2 }}>
           {sorted.map((ad, i) => (
-            <AdRow key={ad.meta_ad_id || i} ad={ad} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
+            <AdRow key={ad.meta_ad_id || i} ad={ad} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} onAnalyzeAi={onAnalyzeAiAd} />
           ))}
           {hasMore && (
             <button onClick={(e) => { e.stopPropagation(); onLoadMore?.(); }} disabled={loadingMore} style={{
@@ -1884,7 +1927,7 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns: CampaignSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void; togglingCampaign?: string | null; campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void }> = ({ totalAds, ads, campaigns, onLoadMoreAds, loadingMoreAds, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle }) => {
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns: CampaignSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void; togglingCampaign?: string | null; campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void; onAnalyzeAiCampaign?: (campaign: CampaignSummary) => void; onAnalyzeAiAd?: (ad: AdSummary) => void }> = ({ totalAds, ads, campaigns, onLoadMoreAds, loadingMoreAds, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle, onAnalyzeAiCampaign, onAnalyzeAiAd }) => {
   // Only renders the actual campaign/ad list. No hero filler — that's the
   // parent's job (hero is chosen contextually by the main render).
   if (campaigns.length === 0 && ads.length === 0) return null;
@@ -1895,9 +1938,9 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns:
         borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
       }}>
         {campaigns.length > 0 ? (
-          <CampaignList campaigns={campaigns} ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={onRequestCampaignToggle} />
+          <CampaignList campaigns={campaigns} ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={onRequestCampaignToggle} onAnalyzeAiCampaign={onAnalyzeAiCampaign} onAnalyzeAiAd={onAnalyzeAiAd} defaultOpen />
         ) : (
-          <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} />
+          <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} onAnalyzeAiAd={onAnalyzeAiAd} />
         )}
       </div>
     </div>
@@ -2537,15 +2580,15 @@ const PerformancePulse: React.FC<{
   if (!kpis.some(k => k.primary) && kpis.length > 0) kpis[0].primary = true;
 
   return (
-    <div className="feed-kpi-bar" style={{ marginBottom: 14, fontFamily: F }}>
+    <div className="feed-kpi-strip" style={{ marginBottom: 14, fontFamily: F }}>
       {/* Context line */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: 8, padding: '0 2px',
+        marginBottom: 6, padding: '0 2px',
         animation: 'feed-fadeIn 0.3s ease',
       }}>
-        <span style={{ fontSize: 10, fontWeight: 600, color: T.text3 }}>
-          {periodLabel ? `Últimos ${periodLabel}` : 'Últimos 7 dias'}
+        <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
+          {periodLabel ? `Resumo · ${periodLabel}` : 'Resumo · 7 dias'}
         </span>
         {data.spendPrev > 0 && (
           <span style={{ fontSize: 9.5, color: T.text3 }}>
@@ -2554,11 +2597,13 @@ const PerformancePulse: React.FC<{
         )}
       </div>
 
-      {/* 2×2 KPI Grid — always symmetrical */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: 6,
+      {/* Horizontal KPI strip — compact, single row */}
+      <div className="feed-kpi-row" style={{
+        display: 'flex',
+        background: T.bg1,
+        border: `1px solid ${T.border1}`,
+        borderRadius: 10,
+        overflow: 'hidden',
       }}>
         {kpis.slice(0, 4).map((k, idx) => {
           const isHovered = hovIdx === idx;
@@ -2568,56 +2613,50 @@ const PerformancePulse: React.FC<{
               onMouseEnter={() => setHovIdx(idx)}
               onMouseLeave={() => setHovIdx(null)}
               style={{
-                background: isHovered ? T.bg2 : T.bg1,
-                borderRadius: 10,
-                padding: '14px 12px 12px',
-                textAlign: 'center',
-                border: `1px solid ${isHovered ? T.border2 : T.border1}`,
-                transition: 'all 0.2s ease',
-                transform: isHovered ? 'translateY(-1px)' : 'none',
-                boxShadow: isHovered ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
+                flex: 1, minWidth: 0,
+                background: isHovered ? T.bg2 : 'transparent',
+                padding: '10px 12px',
+                borderLeft: idx > 0 ? `1px solid ${T.border0}` : 'none',
+                transition: 'background 0.15s ease',
                 opacity: k.empty ? 0.55 : 1,
-                animation: 'feed-fadeUp 0.25s ease both',
                 cursor: 'default',
+                display: 'flex', flexDirection: 'column',
+                gap: 2,
               }}
             >
-              {/* Label */}
               <div style={{
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: 700,
                 color: T.labelColor,
                 textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                marginBottom: 6,
+                letterSpacing: '0.1em',
+                whiteSpace: 'nowrap',
               }}>
                 {k.label}
               </div>
-
-              {/* Value */}
               {k.empty ? (
                 <div style={{
-                  fontSize: 11, fontWeight: 600, color: T.text3,
-                  lineHeight: 1.4, marginTop: 2,
+                  fontSize: 10.5, fontWeight: 500, color: T.text3,
+                  lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 }}>
-                  {k.emptyMsg || 'Dados insuficientes'}
+                  {k.emptyMsg || '—'}
                 </div>
               ) : (
-                <div style={{
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: T.text1,
-                  fontVariantNumeric: 'tabular-nums',
-                  letterSpacing: '-0.03em',
-                  lineHeight: 1.1,
-                }}>
-                  {k.value}
-                </div>
-              )}
-
-              {/* Trend */}
-              {k.trend && !k.empty && (
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
-                  {k.trend}
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+                  <span style={{
+                    fontSize: 16,
+                    fontWeight: 800,
+                    color: T.text1,
+                    fontVariantNumeric: 'tabular-nums',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.1,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {k.value}
+                  </span>
+                  {k.trend && (
+                    <span style={{ flexShrink: 0 }}>{k.trend}</span>
+                  )}
                 </div>
               )}
             </div>
@@ -2630,7 +2669,7 @@ const PerformancePulse: React.FC<{
       {savings >= 5000 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          marginTop: 10, padding: '6px 10px',
+          marginTop: 8, padding: '6px 10px',
           background: 'rgba(74,222,128,0.04)',
           borderRadius: 6,
           animation: 'feed-fadeIn 0.25s ease both',
@@ -3327,57 +3366,231 @@ const QuietPill: React.FC<{ lastAnalysisMin: number }> = ({ lastAnalysisMin }) =
 );
 
 // ================================================================
-// NO ACTIVE ADS HERO — one clean card when all ads are paused
-// This is the ONLY thing the feed should say in this state.
-// Everything else (metrics, panels, grids) is noise here.
+// COMMAND HERO — the one dominant card at the top of the feed.
+// 240-320px tall, gradient bg, 28px headline, ONE primary CTA.
+// Variant drives the accent color + label + copy frame, everything
+// else stays consistent so the page has hierarchy.
+// ================================================================
+type HeroVariant = 'critical' | 'tracking' | 'no-traffic' | 'brain-acted' | 'scale-opp' | 'calm';
+
+const HERO_ACCENT: Record<HeroVariant, { color: string; label: string; dot: string }> = {
+  'critical':   { color: '#F87171', label: 'AÇÃO URGENTE',        dot: '#F87171' },
+  'tracking':   { color: '#FBBF24', label: 'RASTREAMENTO',         dot: '#FBBF24' },
+  'no-traffic': { color: '#0ea5e9', label: 'NADA RODANDO AGORA',   dot: '#0ea5e9' },
+  'brain-acted':{ color: '#A78BFA', label: 'ÚLTIMAS 24H',          dot: '#A78BFA' },
+  'scale-opp':  { color: '#4ADE80', label: 'PRÓXIMO GANHO',         dot: '#4ADE80' },
+  'calm':       { color: '#4ADE80', label: 'OPERAÇÃO ESTÁVEL',     dot: '#4ADE80' },
+};
+
+const CommandHero: React.FC<{
+  variant: HeroVariant;
+  headline: string;
+  subtext?: string;
+  primaryCta: { label: string; onClick: () => void };
+  secondaryCta?: { label: string; onClick: () => void };
+  meta?: string; // optional right-aligned meta text in header
+  children?: React.ReactNode; // optional inline content below CTAs (campaign list, metrics, etc)
+}> = ({ variant, headline, subtext, primaryCta, secondaryCta, meta, children }) => {
+  const accent = HERO_ACCENT[variant];
+  return (
+    <div className="feed-command-hero" style={{
+      position: 'relative',
+      background: `linear-gradient(135deg, ${T.bg1} 0%, ${T.bg2} 100%)`,
+      border: `1px solid ${T.border1}`,
+      borderLeft: `3px solid ${accent.color}`,
+      borderRadius: 12,
+      padding: 'clamp(20px, 3.5vw, 28px)',
+      marginBottom: 16,
+      overflow: 'hidden',
+      animation: 'feed-fadeUp 0.3s ease',
+    }}>
+      {/* Glow accent on top-right */}
+      <div aria-hidden style={{
+        position: 'absolute', top: -60, right: -60, width: 180, height: 180,
+        borderRadius: '50%',
+        background: `radial-gradient(circle, ${accent.color}14 0%, transparent 70%)`,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Header label row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{
+            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+            background: accent.dot, boxShadow: `0 0 10px ${accent.dot}70`,
+            animation: variant === 'critical' ? 'pulse 1.8s ease-in-out infinite' : undefined,
+          }} />
+          <span style={{
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.12em',
+            textTransform: 'uppercase' as const, color: accent.color,
+            fontFamily: F,
+          }}>
+            {accent.label}
+          </span>
+        </div>
+        {meta && (
+          <span style={{ fontSize: 10.5, color: T.text3, fontWeight: 500, fontFamily: F }}>
+            {meta}
+          </span>
+        )}
+      </div>
+
+      {/* Headline — dominant */}
+      <h2 style={{
+        fontSize: 'clamp(22px, 3.2vw, 28px)',
+        lineHeight: 1.2,
+        color: T.text1,
+        fontWeight: 800,
+        margin: '0 0 10px',
+        fontFamily: F,
+        letterSpacing: '-0.02em',
+      }}>
+        {headline}
+      </h2>
+
+      {/* Subtext */}
+      {subtext && (
+        <p style={{
+          fontSize: 13.5, color: T.text2, fontWeight: 500,
+          margin: '0 0 20px', lineHeight: 1.55, fontFamily: F,
+          maxWidth: 560,
+        }}>
+          {subtext}
+        </p>
+      )}
+
+      {/* CTAs */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button
+          className="feed-cta"
+          onClick={primaryCta.onClick}
+          style={{
+            background: accent.color,
+            color: variant === 'scale-opp' || variant === 'calm' ? '#0B1117' : '#fff',
+            border: 'none', borderRadius: 8,
+            padding: '13px 26px', fontSize: 13.5, fontWeight: 800,
+            fontFamily: F, cursor: 'pointer',
+            letterSpacing: '-0.005em',
+            boxShadow: `0 6px 22px ${accent.color}40, 0 2px 6px ${accent.color}30`,
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 8px 26px ${accent.color}55, 0 3px 8px ${accent.color}40`; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 6px 22px ${accent.color}40, 0 2px 6px ${accent.color}30`; }}
+        >
+          {primaryCta.label}
+        </button>
+        {secondaryCta && (
+          <button
+            onClick={secondaryCta.onClick}
+            style={{
+              background: 'transparent',
+              color: T.text2,
+              border: `1px solid ${T.border1}`,
+              borderRadius: 8, padding: '12px 20px',
+              fontSize: 12.5, fontWeight: 600, fontFamily: F,
+              cursor: 'pointer', transition: 'all 0.18s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border2; e.currentTarget.style.color = T.text1; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = T.border1; e.currentTarget.style.color = T.text2; }}
+          >
+            {secondaryCta.label}
+          </button>
+        )}
+      </div>
+
+      {/* Inline content slot */}
+      {children && (
+        <div style={{ marginTop: 22, paddingTop: 18, borderTop: `1px solid ${T.border0}` }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ================================================================
+// NO ACTIVE ADS HERO — CommandHero variant="no-traffic" + inline
+// paused campaign list, so users can manually reactivate + analyze
+// each campaign/ad with the IA right from this state.
 // ================================================================
 const NoActiveAdsHero: React.FC<{
   pausedCampaigns: number;
   pausedAds: number;
+  campaigns: CampaignSummary[];
+  ads: AdSummary[];
+  totalAds: number;
   onOpenAI: () => void;
-}> = ({ pausedCampaigns, pausedAds, onOpenAI }) => {
-  const navigate = useNavigate();
+  onCreateCampaign: () => void;
+  onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
+  togglingAd?: string | null;
+  toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
+  onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void;
+  togglingCampaign?: string | null;
+  campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null;
+  onAnalyzeAiCampaign?: (campaign: CampaignSummary) => void;
+  onAnalyzeAiAd?: (ad: AdSummary) => void;
+  onLoadMoreAds?: () => void;
+  loadingMoreAds?: boolean;
+}> = ({
+  pausedCampaigns, pausedAds, campaigns, ads, totalAds,
+  onOpenAI, onCreateCampaign,
+  onRequestToggle, togglingAd, toggleSuccess,
+  onRequestCampaignToggle, togglingCampaign, campaignToggleSuccess,
+  onAnalyzeAiCampaign, onAnalyzeAiAd,
+  onLoadMoreAds, loadingMoreAds,
+}) => {
+  const hasPaused = pausedCampaigns > 0 || pausedAds > 0;
+  const subtext = hasPaused
+    ? `${pausedCampaigns > 0 ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} pausada${pausedCampaigns === 1 ? '' : 's'}` : `${pausedAds} anúncio${pausedAds === 1 ? '' : 's'} pausado${pausedAds === 1 ? '' : 's'}`} abaixo. Reative com um clique ou peça à IA para analisar antes. Assim que voltar a rodar, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.`
+    : 'Conecte ou crie uma campanha. Assim que houver tráfego, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.';
+
   return (
-    <div className="feed-card-lift" style={{
-      background: T.bg1, border: `1px solid ${T.border1}`,
-      borderRadius: 10, padding: 'clamp(18px, 3vw, 22px)', marginBottom: 14,
-      borderLeft: `3px solid ${T.blue}`,
-      animation: 'feed-fadeUp 0.3s ease',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-        <span style={{
-          width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-          background: T.blue, boxShadow: `0 0 8px ${T.blue}50`,
-        }} />
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
-          Nada rodando agora
-        </span>
-      </div>
-      <p style={{ fontSize: 16, color: T.text1, fontWeight: 700, margin: '0 0 6px', lineHeight: 1.35, fontFamily: F }}>
-        Você não tem anúncio ativo.
-      </p>
-      <p style={{ fontSize: 13, color: T.text2, margin: '0 0 16px', lineHeight: 1.55, fontFamily: F }}>
-        {pausedCampaigns > 0 || pausedAds > 0
-          ? `${pausedCampaigns > 0 ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} pausada${pausedCampaigns === 1 ? '' : 's'}` : `${pausedAds} anúncio${pausedAds === 1 ? '' : 's'} pausado${pausedAds === 1 ? '' : 's'}`}. Reative uma ou crie uma nova — assim que houver tráfego, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.`
-          : 'Conecte ou crie uma campanha. Assim que houver tráfego, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.'}
-      </p>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button className="feed-cta" onClick={() => navigate('/dashboard/campaign-builder')} style={{
-          background: T.blue, color: '#fff', border: 'none', borderRadius: 6,
-          padding: '10px 18px', fontSize: 12.5, fontWeight: 700, fontFamily: F,
-          cursor: 'pointer', transition: 'all 0.18s',
-        }}>
-          Criar campanha
-        </button>
-        <button onClick={onOpenAI} style={{
-          background: T.bg2, color: T.text2, border: `1px solid ${T.border1}`,
-          borderRadius: 6, padding: '10px 18px', fontSize: 12.5, fontWeight: 600,
-          fontFamily: F, cursor: 'pointer', transition: 'all 0.18s',
-        }}>
-          Conversar com a IA
-        </button>
-      </div>
-    </div>
+    <CommandHero
+      variant="no-traffic"
+      headline={hasPaused ? 'Nada está rodando agora.' : 'Você não tem anúncio ativo.'}
+      subtext={subtext}
+      primaryCta={{
+        label: hasPaused ? 'Reativar no Meta Ads' : 'Criar campanha',
+        onClick: hasPaused ? onOpenAI : onCreateCampaign,
+      }}
+      secondaryCta={{
+        label: hasPaused ? 'Criar nova campanha' : 'Conversar com a IA',
+        onClick: hasPaused ? onCreateCampaign : onOpenAI,
+      }}
+      meta={hasPaused ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} · ${pausedAds} anúncio${pausedAds === 1 ? '' : 's'}` : undefined}
+    >
+      {/* Inline paused campaign list so manual controls + AI analysis are right here */}
+      {hasPaused && campaigns.length > 0 && (
+        <CampaignList
+          campaigns={campaigns}
+          ads={ads}
+          totalAds={totalAds}
+          onLoadMore={onLoadMoreAds}
+          loadingMore={loadingMoreAds}
+          togglingAd={togglingAd}
+          toggleSuccess={toggleSuccess}
+          onRequestToggle={onRequestToggle}
+          togglingCampaign={togglingCampaign}
+          campaignToggleSuccess={campaignToggleSuccess}
+          onRequestCampaignToggle={onRequestCampaignToggle}
+          onAnalyzeAiCampaign={onAnalyzeAiCampaign}
+          onAnalyzeAiAd={onAnalyzeAiAd}
+          defaultOpen
+        />
+      )}
+      {hasPaused && campaigns.length === 0 && ads.length > 0 && (
+        <AdList
+          ads={ads}
+          totalAds={totalAds}
+          onLoadMore={onLoadMoreAds}
+          loadingMore={loadingMoreAds}
+          togglingAd={togglingAd}
+          toggleSuccess={toggleSuccess}
+          onRequestToggle={onRequestToggle}
+          onAnalyzeAiAd={onAnalyzeAiAd}
+        />
+      )}
+    </CommandHero>
   );
 };
 
@@ -4419,6 +4632,23 @@ const FeedPage: React.FC = () => {
     })();
   }, [togglingCampaign, userId, personaId, fetchCampaigns, fetchAds]);
 
+  // ── AI analysis handlers — navigate to /dashboard/ai with pre-loaded context ──
+  const handleAnalyzeAiAd = useCallback((ad: AdSummary) => {
+    const campaignName = ad.ad_set?.campaign?.name || 'sem campanha';
+    const adsetName = ad.ad_set?.name || 'sem conjunto';
+    const statusLabel = (ad.effective_status || ad.status || 'desconhecido').toUpperCase();
+    const prompt = `Analisa o anúncio "${ad.name}" (campanha: ${campaignName}, conjunto: ${adsetName}, status: ${statusLabel}).\n\nQuero saber: está performando bem? Devo pausar, manter ou escalar? Quais os principais problemas e oportunidades que você vê nos dados dos últimos ${periodDays} dias?`;
+    navigate('/dashboard/ai', { state: { prompt, focusAd: { meta_ad_id: ad.meta_ad_id, name: ad.name } } });
+  }, [navigate, periodDays]);
+
+  const handleAnalyzeAiCampaign = useCallback((campaign: CampaignSummary) => {
+    const objective = campaign.objective || 'sem objetivo definido';
+    const statusLabel = (campaign.status || 'desconhecido').toUpperCase();
+    const budget = campaign.daily_budget ? `R$ ${(campaign.daily_budget / 100).toFixed(2)}/dia` : 'sem budget definido';
+    const prompt = `Analisa a campanha "${campaign.name}" (objetivo: ${objective}, status: ${statusLabel}, budget: ${budget}).\n\nQuero saber: como ela está performando nos últimos ${periodDays} dias? Qual anúncio está puxando e qual está drenando? Devo reativar, escalar, pausar ou otimizar? Me dá um diagnóstico completo com ações concretas.`;
+    navigate('/dashboard/ai', { state: { prompt, focusCampaign: { meta_campaign_id: campaign.meta_campaign_id, name: campaign.name } } });
+  }, [navigate, periodDays]);
+
   // Meta Ads Manager URL — use metaSelId directly (it's the act_... ID)
   const adsManagerUrl = metaSelId
     ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${metaSelId.replace('act_', '')}`
@@ -4925,7 +5155,13 @@ const FeedPage: React.FC = () => {
             <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="opportunities" />
           </>
         ) : feedState === 'no-ads' ? (
-          <StateNoAds />
+          <CommandHero
+            variant="no-traffic"
+            headline="Nenhum anúncio importado ainda."
+            subtext="Conecte esta conta ao Meta Ads e eu trago tudo: campanhas, anúncios, métricas. Em segundos você vê seu primeiro diagnóstico."
+            primaryCta={{ label: 'Criar campanha', onClick: () => navigate('/dashboard/campaign-builder') }}
+            secondaryCta={{ label: 'Sincronizar Meta', onClick: handleSync }}
+          />
         ) : feedState === 'single-ad' ? (
           <StateSingleAd ad={userAds[0]!} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'few-data' ? (
@@ -4943,32 +5179,68 @@ const FeedPage: React.FC = () => {
               <NoActiveAdsHero
                 pausedCampaigns={pausedCampaignsCount}
                 pausedAds={pausedAdsCount}
+                campaigns={userCampaigns}
+                ads={userAds}
+                totalAds={totalAdCount}
                 onOpenAI={() => navigate('/dashboard/ai')}
+                onCreateCampaign={() => navigate('/dashboard/campaign-builder')}
+                onRequestToggle={handleRequestToggle}
+                togglingAd={togglingAd}
+                toggleSuccess={toggleSuccess}
+                onRequestCampaignToggle={handleRequestCampaignToggle}
+                togglingCampaign={togglingCampaign}
+                campaignToggleSuccess={campaignToggleSuccess}
+                onAnalyzeAiCampaign={handleAnalyzeAiCampaign}
+                onAnalyzeAiAd={handleAnalyzeAiAd}
+                onLoadMoreAds={loadMoreAds}
+                loadingMoreAds={adsLoadingMore}
               />
             ) : (
               <>
-                {/* Only the pill when truly quiet everywhere else */}
-                {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && (
-                  <QuietPill lastAnalysisMin={lastAnalysisMin} />
+                {/* Calm hero when the account is running and nothing urgent is pending */}
+                {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && !pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (
+                  <CommandHero
+                    variant="calm"
+                    headline="Operação estável. Estou monitorando tudo."
+                    subtext={`${activeAdsCount} anúncio${activeAdsCount === 1 ? '' : 's'} rodando${activeCampaignsCount > 0 ? ` em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}` : ''}. Análise a cada 20 minutos — se algo fugir do padrão, eu ajo automaticamente ou te aviso.`}
+                    primaryCta={{ label: 'Abrir chat com a IA', onClick: () => navigate('/dashboard/ai') }}
+                    secondaryCta={{ label: 'Gerar novo criativo', onClick: () => navigate('/dashboard/hooks') }}
+                    meta={`Última análise há ${lastAnalysisMin < 60 ? `${lastAnalysisMin}min` : `${Math.round(lastAnalysisMin / 60)}h`}`}
+                  />
                 )}
 
-                {/* Real opportunity from DB — never generic placeholder */}
+                {/* Scale-opportunity hero when there IS a real opportunity */}
                 {pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (
                   <>
-                    <div style={{
-                      fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-                      textTransform: 'uppercase' as const, color: T.labelColor,
-                      marginTop: 2, marginBottom: 10,
-                      display: 'flex', alignItems: 'center', gap: 6,
-                    }}>
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.green, boxShadow: `0 0 6px ${T.green}50` }} />
-                      <span>Próximo ganho</span>
-                    </div>
+                    <CommandHero
+                      variant="scale-opp"
+                      headline="Onde está seu próximo ganho."
+                      subtext={`Detectei ${pendingDecisions.filter(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight').length} oportunidade${pendingDecisions.filter(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight').length === 1 ? '' : 's'} no que você tem rodando. Ver os detalhes e ação concreta abaixo.`}
+                      primaryCta={{ label: 'Conversar com a IA', onClick: () => navigate('/dashboard/ai') }}
+                      secondaryCta={{ label: 'Gerar variações', onClick: () => navigate('/dashboard/hooks') }}
+                    />
                     <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="opportunities" />
                   </>
                 )}
 
-                <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaSelId || undefined} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
+                <StateNoCritical
+                  totalAds={totalAdCount}
+                  ads={userAds}
+                  periodLabel={PERIODS.find(p => p.key === period)!.label}
+                  metaAccountId={metaSelId || undefined}
+                  onLoadMoreAds={loadMoreAds}
+                  loadingMoreAds={adsLoadingMore}
+                  onToggleAd={handleConfirmToggle}
+                  togglingAd={togglingAd}
+                  toggleSuccess={toggleSuccess}
+                  onRequestToggle={handleRequestToggle}
+                  campaigns={userCampaigns}
+                  togglingCampaign={togglingCampaign}
+                  campaignToggleSuccess={campaignToggleSuccess}
+                  onRequestCampaignToggle={handleRequestCampaignToggle}
+                  onAnalyzeAiCampaign={handleAnalyzeAiCampaign}
+                  onAnalyzeAiAd={handleAnalyzeAiAd}
+                />
               </>
             )}
           </>
@@ -5007,28 +5279,6 @@ const FeedPage: React.FC = () => {
               ...performancePulseData,
               totalAds: totalAdCount,
             }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════
-            LAYER 7 — SYSTEM STATUS (contexto, não hero)
-            Confiança IA, última análise, padrões — rodapé discreto.
-            Also suppressed when no active traffic (BrainOverwatch
-            above or NoActiveAdsHero already own the narrative).
-            ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && metricsReady && !noActiveTraffic && (
-          <div style={{ marginTop: 10 }}>
-            <IntelligencePanel
-              decisions={decisions}
-              tracker={tracker}
-              patternsCount={patternsCount}
-              trackingStatus={trackingUserStatus}
-              hasMetricAlerts={metricAlerts.length > 0}
-              trackingHasIssue={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'}
-              lastAnalysisMin={lastAnalysisMin}
-              adMetrics={adMetrics}
-              beginnerMode={beginnerMode}
-            />
           </div>
         )}
 
