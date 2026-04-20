@@ -4734,6 +4734,15 @@ const FeedPage: React.FC = () => {
         .feed-cta{transition:all 0.18s ease}
         .feed-cta:hover{box-shadow:0 4px 14px rgba(14,165,233,0.25) !important}
         .feed-cta:active{transform:scale(0.97);transition:transform 0.08s ease}
+        @media(max-width:768px){
+          .feed-kpis-grid{grid-template-columns:repeat(2,1fr)!important;gap:6px!important}
+          .feed-decisions-list{gap:6px!important}
+          .feed-section-title{font-size:11px!important}
+          .feed-card-lift{padding:12px 14px!important}
+        }
+        @media(max-width:480px){
+          .feed-kpis-grid{grid-template-columns:1fr 1fr!important}
+        }
       `}</style>
 
       {/* Ad toggle confirmation modal */}
