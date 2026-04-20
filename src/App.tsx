@@ -64,6 +64,7 @@ const LoopImportPage   = lazy(() => import("./pages/dashboard/LoopImportPage"));
 const LoopSettingsPage = lazy(() => import("./pages/dashboard/LoopSettingsPage"));
 const LoopGuidePage    = lazy(() => import("./pages/dashboard/LoopGuidePage"));
 const ReferralPage     = lazy(() => import("./pages/dashboard/ReferralPage"));
+const AutopilotLogPage = lazy(() => import("./pages/dashboard/AutopilotLogPage"));
 
 // Internal diagnostics (owner only)
 const DebugPage        = lazy(() => import("./pages/dashboard/DebugPage"));
@@ -185,6 +186,7 @@ const App = () => (
                 <Route path="loop/ai" element={<Navigate to="/dashboard/feed" replace />} />
                 <Route path="loop/guide" element={<LoopGuidePage />} />
                 <Route path="referral" element={<ReferralPage />} />
+                <Route path="autopilot-log" element={<AutopilotLogPage />} />
                 <Route path="*" element={<Navigate to="/dashboard/feed" replace />} />
               </Route>
 
