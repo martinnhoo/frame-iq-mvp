@@ -4086,82 +4086,89 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div style={{height:40,background:"linear-gradient(to bottom,transparent,rgba(6,10,20,0.98))",pointerEvents:"none",marginBottom:-1}}/>
 
         {/* Main input surface */}
-        <div style={{background:"#060A14",padding:"8px 0 18px"}}>
-          <div style={{maxWidth:720,margin:"0 auto",padding:"0 24px",boxSizing:"border-box" as const}}>
+        <div style={{background:"#060A14",padding:"0 0 max(env(safe-area-inset-bottom, 0px), 14px)"}}>
+          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const}}>
 
-            {/* Session goal — one line, persists 7 days */}
-            {showGoalInput ? (
-              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
-                <input
-                  autoFocus
-                  placeholder={lang==="pt"?"Objetivo desta semana (ex: escalar winners, cortar CPA)…":lang==="es"?"Objetivo esta semana (ej: escalar ganadores, cortar CPA)…":"Goal this week (e.g. scale winners, cut CPA)…"}
-                  defaultValue={sessionGoal}
-                  onKeyDown={e=>{
-                    if(e.key==="Enter") saveGoal((e.target as HTMLInputElement).value.trim());
-                    if(e.key==="Escape"){setShowGoalInput(false);}
-                  }}
-                  onBlur={e=>saveGoal(e.target.value.trim())}
-                  style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(14,165,233,0.35)",borderRadius:8,padding:"5px 12px",color:"#f0f2f8",fontSize:12,outline:"none",fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",caretColor:"#0ea5e9"}}
-                />
-                <button onClick={()=>setShowGoalInput(false)} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.3)",fontSize:16,lineHeight:1,padding:"0 4px"}}>×</button>
-              </div>
-            ) : (
+            {/* Tool actions — clean horizontal chips */}
+            <div className="tool-pills-row" style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",marginBottom:8,alignItems:"center",paddingBottom:2} as any}>
+              {/* Goal chip — inline with tools */}
               <button
-                onClick={()=>setShowGoalInput(true)}
-                style={{display:"flex",alignItems:"center",gap:5,marginBottom:8,background:"none",border:"none",cursor:"pointer",padding:0,maxWidth:"100%"}}
+                onClick={()=>setShowGoalInput(s=>!s)}
+                style={{
+                  display:"flex",alignItems:"center",gap:4,
+                  padding:"5px 10px",borderRadius:99,flexShrink:0,
+                  background: sessionGoal ? "rgba(14,165,233,0.06)" : "transparent",
+                  border: `1px solid ${sessionGoal ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.06)"}`,
+                  color: sessionGoal ? "rgba(14,165,233,0.65)" : "rgba(255,255,255,0.20)",
+                  fontSize:11,fontWeight:500,cursor:"pointer",
+                  fontFamily:"'Plus Jakarta Sans', sans-serif",
+                  transition:"all 0.15s",
+                  maxWidth:160,overflow:"hidden",
+                }}
               >
-                <span style={{fontSize:11,color:"rgba(255,255,255,0.18)",fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",letterSpacing:"0.04em",textTransform:"uppercase" as const}}>
-                  {lang==="pt"?"objetivo":lang==="es"?"objetivo":"goal"}
-                </span>
-                <span style={{fontSize:12,color:sessionGoal?"rgba(14,165,233,0.7)":"rgba(255,255,255,0.22)",fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" as const,maxWidth:400}}>
-                  {sessionGoal || (lang==="pt"?"definir foco desta semana →":lang==="es"?"definir foco esta semana →":"set this week's focus →")}
+                <Target size={10} strokeWidth={2}/>
+                <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" as const}}>
+                  {sessionGoal || (lang==="pt"?"Objetivo":lang==="es"?"Objetivo":"Goal")}
                 </span>
               </button>
-            )}
-
-            {/* Tool pills — compact row */}
-            <div className="tool-pills-row" style={{display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",marginBottom:10,alignItems:"center"} as any}>
+              <div style={{width:1,height:14,background:"rgba(255,255,255,0.06)",flexShrink:0}}/>
               {TOOLS.map(tool=>{
                 const isOn = activeTool===tool.action;
                 return (
                   <button key={tool.action}
+                    className={`tool-pill${isOn?" tool-pill-on":""}`}
                     onClick={()=>{
                       if(tool.action === "analyze_ad"){
-                        // Open file picker instead of sending a text message
                         imageInputRef.current?.click();
                         return;
                       }
                       setActiveTool(isOn?null:tool.action);
                     }}
                     style={{
-                      display:"flex",alignItems:"center",gap:5,
-                      padding:"5px 12px",borderRadius:99,flexShrink:0,
-                      background: isOn ? `${tool.color}18` : "rgba(148,163,184,0.04)",
-                      border:`1px solid ${isOn ? tool.color+"40" : "rgba(148,163,184,0.08)"}`,
-                      color: isOn ? tool.color : "#64748B",
-                      fontSize:12,fontWeight:isOn?600:500,cursor:"pointer",
+                      display:"flex",alignItems:"center",gap:4,
+                      padding:"5px 11px",borderRadius:99,flexShrink:0,
+                      background: isOn ? `${tool.color}14` : "transparent",
+                      border:`1px solid ${isOn ? tool.color+"35" : "rgba(255,255,255,0.06)"}`,
+                      color: isOn ? tool.color : "rgba(255,255,255,0.35)",
+                      fontSize:11.5,fontWeight:isOn?600:500,cursor:"pointer",
                       fontFamily:"'Plus Jakarta Sans', sans-serif",
                       letterSpacing:"-0.01em",
                       transition:"all 0.15s",
                     }}
                   >
-                    <tool.icon size={12} strokeWidth={isOn?2.5:2}/>
+                    <tool.icon size={11} strokeWidth={isOn?2.5:1.8}/>
                     {tool.label}
                   </button>
                 );
               })}
             </div>
 
-            {/* Input card — clean dark, como a demo */}
+            {/* Goal input — expandable */}
+            {showGoalInput && (
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8,animation:"fadeUp 0.15s ease"}}>
+                <input
+                  autoFocus
+                  placeholder={lang==="pt"?"Foco desta semana (ex: escalar winners, cortar CPA)…":lang==="es"?"Foco esta semana (ej: escalar ganadores, cortar CPA)…":"This week's focus (e.g. scale winners, cut CPA)…"}
+                  defaultValue={sessionGoal}
+                  onKeyDown={e=>{
+                    if(e.key==="Enter") saveGoal((e.target as HTMLInputElement).value.trim());
+                    if(e.key==="Escape"){setShowGoalInput(false);}
+                  }}
+                  onBlur={e=>saveGoal(e.target.value.trim())}
+                  style={{flex:1,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(14,165,233,0.20)",borderRadius:10,padding:"7px 12px",color:"#f0f2f8",fontSize:12,outline:"none",fontFamily:"'Plus Jakarta Sans', system-ui, sans-serif",caretColor:"#0ea5e9",transition:"border-color 0.15s"}}
+                />
+                <button onClick={()=>setShowGoalInput(false)} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.25)",fontSize:14,lineHeight:1,padding:"0 4px"}}>×</button>
+              </div>
+            )}
+
+            {/* Input card — premium glass */}
             <div className="input-box-wrap" style={{
               display:"flex",flexDirection:"column",gap:0,
-              background: chatDragOver ? "rgba(37,99,235,0.06)" : "rgba(15,23,42,0.80)",
-              backdropFilter:"blur(16px) saturate(180%)",
-              border: chatDragOver ? "1px solid rgba(37,99,235,0.4)" : "1px solid rgba(148,163,184,0.10)",
-              borderRadius:16,
-              padding:"14px 14px 14px 20px",
-              boxShadow:"0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)",
-              transition:"border-color 0.2s, box-shadow 0.2s",
+              background: chatDragOver ? "rgba(37,99,235,0.05)" : "rgba(255,255,255,0.025)",
+              border: chatDragOver ? "1px solid rgba(37,99,235,0.35)" : "1px solid rgba(255,255,255,0.07)",
+              borderRadius:14,
+              padding:"12px 12px 12px 18px",
+              transition:"border-color 0.2s, box-shadow 0.2s, background 0.2s",
             }}
             onDragOver={e => { e.preventDefault(); setChatDragOver(true); }}
             onDragLeave={() => setChatDragOver(false)}
@@ -4182,29 +4189,29 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             >
               {/* Image preview strip */}
               {chatImage && (
-                <div style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 0 8px", borderBottom:"1px solid rgba(255,255,255,0.06)", marginBottom:8 }}>
-                  <img src={chatImage.preview} alt="criativo" style={{ width:44, height:44, borderRadius:8, objectFit:"cover", border:"1px solid rgba(255,255,255,0.1)" }} />
+                <div style={{ display:"flex", alignItems:"center", gap:10, padding:"4px 0 10px", borderBottom:"1px solid rgba(255,255,255,0.05)", marginBottom:8 }}>
+                  <img src={chatImage.preview} alt="criativo" style={{ width:40, height:40, borderRadius:8, objectFit:"cover", border:"1px solid rgba(255,255,255,0.08)" }} />
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ ...m, fontSize:11, color:"rgba(255,255,255,0.6)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{chatImage.name}</p>
-                    <p style={{ ...m, fontSize:10, color:"rgba(13,162,231,0.7)" }}>{lang==="pt"?"Criativo anexado — descreva o que quer analisar":lang==="es"?"Creativo adjunto — describe qué quieres analizar":"Creative attached — describe what to analyze"}</p>
+                    <p style={{ ...m, fontSize:11, color:"rgba(255,255,255,0.55)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", margin:0 }}>{chatImage.name}</p>
+                    <p style={{ ...m, fontSize:10, color:"rgba(13,162,231,0.6)", margin:"2px 0 0" }}>{lang==="pt"?"Descreva o que quer analisar":lang==="es"?"Describe qué quieres analizar":"Describe what to analyze"}</p>
                   </div>
-                  <button onClick={() => setChatImage(null)} style={{ background:"none", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.3)", padding:4, lineHeight:1 }}></button>
+                  <button onClick={() => setChatImage(null)} style={{ background:"rgba(255,255,255,0.04)", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.25)", padding:"4px 6px", lineHeight:1, borderRadius:6, fontSize:12 }}>×</button>
                 </div>
               )}
-              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ display:"flex", alignItems:"flex-end", gap:8 }}>
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
-                style={{flex:1,background:"transparent",border:"none",padding:"2px 0",color:"#f0f2f8",fontSize:15.5,resize:"none",outline:"none",...m,lineHeight:1.6,minHeight:32,maxHeight:140,caretColor:"#0ea5e9"}}
+                style={{flex:1,background:"transparent",border:"none",padding:"4px 0",color:"#f0f2f8",fontSize:15,resize:"none",outline:"none",...m,lineHeight:1.55,minHeight:28,maxHeight:140,caretColor:"#0ea5e9"}}
                 className="chat-textarea"
                 onInput={e=>{const t=e.target as HTMLTextAreaElement;requestAnimationFrame(()=>{t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";});}}
               />
-              <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,paddingBottom:1}}>
-                {/* Image attach button */}
-                <label title={lang==="pt"?"Anexar imagem de criativo":lang==="es"?"Adjuntar imagen":"Attach creative image"}
-                  style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.22)"}}
-                  onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(13,162,231,0.3)";el.style.color="rgba(13,162,231,0.7)";}}
-                  onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.08)";el.style.color="rgba(255,255,255,0.22)";}}>
+              <div style={{display:"flex",gap:4,alignItems:"center",flexShrink:0,paddingBottom:2}}>
+                {/* Image attach */}
+                <label title={lang==="pt"?"Anexar criativo":lang==="es"?"Adjuntar imagen":"Attach image"}
+                  style={{width:32,height:32,borderRadius:8,background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.18)"}}
+                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(13,162,231,0.65)";(e.currentTarget as HTMLElement).style.background="rgba(13,162,231,0.06)";}}
+                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.18)";(e.currentTarget as HTMLElement).style.background="transparent";}}>
                   <input ref={imageInputRef} type="file" accept="image/*" className="hidden" style={{display:"none"}}
                     onChange={e=>{
                       const file=e.target.files?.[0];
@@ -4220,7 +4227,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       }
                     }}
                   />
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                 </label>
                 {messages.length>0&&(
                   <button onClick={()=>{
@@ -4237,16 +4244,15 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     setShowOnboardingWelcome(false);
                     setOnboardingStep(-1);
                     setVisibleCount(MSG_PAGE);
-                    // Re-trigger proactive greeting on clear
                     proactiveFired.current = false;
                     setProactiveLoading(true);
                     setGreetingKey(k => k + 1);
                   }}
                     title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
-                    style={{width:34,height:34,borderRadius:10,background:"transparent",border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.22)"}}
-                    onMouseEnter={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.18)";el.style.color="rgba(255,255,255,0.55)";}}
-                    onMouseLeave={e=>{const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.08)";el.style.color="rgba(255,255,255,0.22)";}}>
-                    <RotateCcw size={13}/>
+                    style={{width:32,height:32,borderRadius:8,background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.18)"}}
+                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)";(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.18)";(e.currentTarget as HTMLElement).style.background="transparent";}}>
+                    <RotateCcw size={12}/>
                   </button>
                 )}
                 <button onClick={()=>{
@@ -4257,20 +4263,25 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   send();
                 }} disabled={!input.trim()||loading||!contextReady}
                   style={{
-                    width:34,height:34,borderRadius:10,border:"none",
-                    background:input.trim()&&!loading&&contextReady?"#0ea5e9":"rgba(255,255,255,0.06)",
+                    width:32,height:32,borderRadius:8,border:"none",
+                    background:input.trim()&&!loading&&contextReady?"#0ea5e9":"rgba(255,255,255,0.04)",
                     cursor:input.trim()&&contextReady?"pointer":"not-allowed",
                     display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
-                    transition:"background 0.15s",
+                    transition:"all 0.2s",
                   }}>
                   {loading
-                    ?<Loader2 size={15} color="rgba(255,255,255,0.7)" className="animate-spin"/>
-                    :<Send size={15} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.22)"}/>
+                    ?<Loader2 size={14} color="rgba(255,255,255,0.8)" className="animate-spin"/>
+                    :<Send size={14} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.15)"}/>
                   }
                 </button>
               </div>
               </div>{/* close inner flex row */}
             </div>{/* close input-box-wrap */}
+
+            {/* Footer hint */}
+            <p className="chat-footer-hint" style={{margin:"6px 0 0",fontSize:10,color:"rgba(255,255,255,0.12)",textAlign:"center",fontFamily:"'Plus Jakarta Sans', sans-serif",letterSpacing:"0.02em"}}>
+              {L.footer}
+            </p>
 
           </div>
         </div>
