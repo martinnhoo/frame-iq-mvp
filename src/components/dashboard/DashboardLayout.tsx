@@ -10,7 +10,7 @@ import { DashboardSidebar } from "./DashboardSidebar";
 // ReferralPopup now lives inside DashboardSidebar footer
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/App";
-import { Menu, Users, ChevronDown, Sparkles, PartyPopper } from "lucide-react";
+import { Menu, Users, ChevronDown, Sparkles, PartyPopper, Zap } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -749,6 +749,72 @@ export default function DashboardLayout() {
 
           {/* ── Spacer ── */}
           <div style={{ flex: 1 }} />
+
+          {/* ── Credit Meter — always visible spend control ── */}
+          {usageDetails && (() => {
+            const c = usageDetails.credits;
+            const pct = c.pool > 0 ? Math.min(100, Math.round((c.used / c.pool) * 100)) : 0;
+            const remaining = c.remaining ?? Math.max(0, (c.pool || 0) - (c.used || 0));
+            const color = pct >= 90 ? "#F87171" : pct >= 70 ? "#FBBF24" : "#34D399";
+            const bg = pct >= 90 ? "rgba(248,113,113,0.08)" : pct >= 70 ? "rgba(251,191,36,0.08)" : "rgba(52,211,153,0.08)";
+            const border = pct >= 90 ? "rgba(248,113,113,0.22)" : pct >= 70 ? "rgba(251,191,36,0.22)" : "rgba(52,211,153,0.18)";
+            const isUnlimited = c.pool >= 99999;
+            return (
+              <button
+                onClick={() => navigate("/dashboard/settings?tab=billing")}
+                title={isUnlimited ? "Créditos ilimitados" : `${remaining} de ${c.pool} créditos restantes (${pct}% usado)`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "5px 10px",
+                  height: 30,
+                  borderRadius: 8,
+                  background: isUnlimited ? "rgba(167,139,250,0.08)" : bg,
+                  border: `1px solid ${isUnlimited ? "rgba(167,139,250,0.22)" : border}`,
+                  color: isUnlimited ? "#C4B5FD" : color,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                  letterSpacing: 0.2,
+                  transition: "transform 0.12s",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}
+              >
+                <Zap size={12} strokeWidth={2.2} />
+                {isUnlimited ? "∞" : remaining.toLocaleString()}
+                {!isUnlimited && (
+                  <span
+                    style={{
+                      width: 42,
+                      height: 4,
+                      borderRadius: 2,
+                      background: "rgba(255,255,255,0.08)",
+                      overflow: "hidden",
+                      position: "relative",
+                      display: "inline-block",
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        height: "100%",
+                        width: `${Math.max(2, 100 - pct)}%`,
+                        background: color,
+                        borderRadius: 2,
+                        transition: "width 0.3s",
+                      }}
+                    />
+                  </span>
+                )}
+              </button>
+            );
+          })()}
 
           {/* ── Telegram (desktop) ── */}
           <button
