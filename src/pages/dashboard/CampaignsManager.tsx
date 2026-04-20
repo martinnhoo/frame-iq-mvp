@@ -15,8 +15,9 @@
  *    comment based on 30d + 7d Meta insights for that specific object.
  */
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
 import {
   ChevronRight, ChevronDown, ArrowLeft, Layers, Target, Sparkles,
   Pause, Play, Loader2, Copy, Check, X, Pencil,
@@ -377,36 +378,18 @@ export default function CampaignsManager() {
     }
   }, [location.state, navigate]);
 
-  // ── Session state ───────────────────────────────────────────────────────
-  const [userId, setUserId] = useState<string | null>(null);
-  const [personaId, setPersonaId] = useState<string | null>(null);
-  const [accountId, setAccountId] = useState<string | null>(null);
+  // ── Session state — sourced from the Dashboard outlet context ──────────
+  // Using useOutletContext guarantees we share the same user/persona/account
+  // resolution as the rest of the dashboard (FeedPage, PerformancePanel, etc.)
+  // and prevents multi-persona maybeSingle() crashes.
+  const ctx = useOutletContext<DashboardContext & { activeAccount?: { metaAccountId?: string } | null; metaConnected?: boolean }>();
+  const userId = ctx?.user?.id as string | undefined;
+  const personaId = ctx?.selectedPersona?.id as string | undefined;
+  const accountId = ctx?.activeAccount?.metaAccountId || null;
+  const metaConnected = !!ctx?.metaConnected;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data.user?.id) setUserId(data.user.id);
-    })();
-  }, []);
-
-  // Get selected account + persona from platform_connections
-  useEffect(() => {
-    if (!userId) return;
-    (async () => {
-      const { data } = await (supabase as any)
-        .from('platform_connections')
-        .select('selected_account_id, ad_accounts, persona_id')
-        .eq('user_id', userId)
-        .eq('platform', 'meta')
-        .eq('status', 'active')
-        .maybeSingle();
-      const sel = data?.selected_account_id || (Array.isArray(data?.ad_accounts) ? data.ad_accounts[0]?.account_id : null);
-      if (sel) setAccountId(sel);
-      if (data?.persona_id) setPersonaId(data.persona_id);
-    })();
-  }, [userId]);
 
   // ── Data ────────────────────────────────────────────────────────────────
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -422,7 +405,12 @@ export default function CampaignsManager() {
 
   // ── Load campaigns ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (!userId || !accountId) return;
+    if (!userId) return;
+    if (!metaConnected) {
+      setLoading(false);
+      return;
+    }
+    if (!accountId) return; // still resolving — keep the spinner
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -445,7 +433,7 @@ export default function CampaignsManager() {
       }
     })();
     return () => { cancelled = true; };
-  }, [userId, personaId, accountId]);
+  }, [userId, personaId, accountId, metaConnected]);
 
   // ── Toggle campaign expand ──────────────────────────────────────────────
   const toggleCampaign = useCallback(async (campaignId: string) => {
@@ -776,7 +764,31 @@ export default function CampaignsManager() {
           </div>
         )}
 
-        {!loading && !error && campaigns.length === 0 && (
+        {!loading && !error && !metaConnected && (
+          <div style={{
+            background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 10,
+            padding: '32px 24px', textAlign: 'center',
+          }}>
+            <p style={{ fontSize: 13.5, fontWeight: 700, margin: '0 0 6px', color: T.text1 }}>
+              Conecte sua conta do Meta Ads
+            </p>
+            <p style={{ fontSize: 12, margin: '0 0 14px', color: T.text3, lineHeight: 1.5 }}>
+              Para ver, pausar ou ajustar campanhas aqui, conecte uma conta de anúncios em Contas.
+            </p>
+            <button
+              onClick={() => navigate('/dashboard/accounts')}
+              style={{
+                background: T.bg3, color: T.text1, border: `1px solid ${T.border2}`,
+                borderRadius: 8, padding: '8px 14px', cursor: 'pointer',
+                fontSize: 12, fontWeight: 600, fontFamily: F,
+              }}
+            >
+              Ir para Contas
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && metaConnected && campaigns.length === 0 && (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: T.text3, fontSize: 13 }}>
             Nenhuma campanha encontrada nesta conta.
           </div>
