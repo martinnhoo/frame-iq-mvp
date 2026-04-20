@@ -31,7 +31,7 @@ interface Props {
   plan?: string;
 }
 
-const F = "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif";
+const F = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 /** @deprecated Use UsageBar instead */
 export const CreditBar = UsageBar;
