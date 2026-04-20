@@ -3678,7 +3678,9 @@ const BrainOverwatch: React.FC<{
     (async () => {
       try {
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { data } = await supabase
+        // autopilot_action_log isn't in the generated Supabase types yet —
+        // cast to any so the typecheck stays clean until types are regenerated.
+        const { data } = await (supabase as any)
           .from('autopilot_action_log')
           .select('id, action_type, target_kind, target_name, reason, confidence, amount_at_risk_brl, status, executed_at')
           .eq('user_id', userId)
@@ -3686,7 +3688,7 @@ const BrainOverwatch: React.FC<{
           .gte('executed_at', since)
           .order('executed_at', { ascending: false })
           .limit(6);
-        if (!cancelled) setActions((data || []) as BrainAction[]);
+        if (!cancelled) setActions(((data || []) as unknown) as BrainAction[]);
       } catch {}
       if (!cancelled) setLoading(false);
     })();

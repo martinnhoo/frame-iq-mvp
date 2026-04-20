@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { action, user_id, persona_id, target_id, target_type, value } = body;
+    const { action, user_id, persona_id, account_id, target_id, target_type, value } = body;
 
     if (!user_id || !action) return errResp("missing user_id or action");
 
@@ -249,7 +249,11 @@ Deno.serve(async (req) => {
       const copyEndpoint = `${target_id}/copies`;
       const d = await post(copyEndpoint, { deep_copy: true, status_option: "PAUSED" });
       if (d.error) return errResp(d.error.message);
-      const newId = d.copied_adset_id || d.copied_ad_id || d.id;
+      // Meta returns different id field per level:
+      //   campaign → copied_campaign_id
+      //   adset    → copied_adset_id
+      //   ad       → copied_ad_id
+      const newId = d.copied_campaign_id || d.copied_adset_id || d.copied_ad_id || d.id;
 
       logToActionHistory(supabase, user_id, action, target_id, target_type || "ad", targetName,
         {},
@@ -263,9 +267,31 @@ Deno.serve(async (req) => {
 
     if (action === "list_campaigns") {
       const accs = (conn.ad_accounts as any[]) || [];
-      const acc = accs.find((a: any) => a.account_status === 1) || accs[0];
-      if (!acc) return errResp("No active ad account");
-      const accId = acc.id.startsWith("act_") ? acc.id : `act_${acc.id}`;
+
+      // Prefer the account_id passed in the body (respects the user's selected
+      // account in the dashboard). Fall back to first-active for legacy callers.
+      let acc: any = null;
+      if (account_id) {
+        const wantedRaw = String(account_id);
+        const wanted = wantedRaw.startsWith("act_") ? wantedRaw.slice(4) : wantedRaw;
+        acc = accs.find((a: any) => {
+          const aid = String(a?.id ?? a?.account_id ?? "");
+          const bare = aid.startsWith("act_") ? aid.slice(4) : aid;
+          return bare === wanted;
+        });
+        // Soft-fail: if the caller requested an account that isn't in this
+        // connection's list, don't silently return a different account's
+        // campaigns — tell them.
+        if (!acc) {
+          return errResp(`account_id ${account_id} não está vinculado a esta conexão Meta.`);
+        }
+      } else {
+        acc = accs.find((a: any) => a.account_status === 1) || accs[0];
+        if (!acc) return errResp("No active ad account");
+      }
+
+      const rawId = String(acc.id ?? acc.account_id ?? "");
+      const accId = rawId.startsWith("act_") ? rawId : `act_${rawId}`;
       const d = await get(`${accId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,effective_status&limit=30`);
       if (d.error) return errResp(d.error.message);
       return ok({ success: true, campaigns: d.data || [] });
