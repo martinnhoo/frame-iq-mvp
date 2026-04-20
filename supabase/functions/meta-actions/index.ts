@@ -269,7 +269,8 @@ Deno.serve(async (req) => {
       const accs = (conn.ad_accounts as any[]) || [];
 
       // Prefer the account_id passed in the body (respects the user's selected
-      // account in the dashboard). Fall back to first-active for legacy callers.
+      // account in the dashboard). Fall back to first-active for legacy callers
+      // (AI chat tool-calls don't pass account_id).
       let acc: any = null;
       if (account_id) {
         const wantedRaw = String(account_id);

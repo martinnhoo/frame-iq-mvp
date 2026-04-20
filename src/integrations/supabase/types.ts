@@ -2196,6 +2196,60 @@ export type Database = {
         }
         Relationships: []
       }
+      pixel_health_cache: {
+        Row: {
+          active_ads_checked: number | null
+          ad_account_id: string
+          checked_at: string | null
+          created_at: string | null
+          error: string | null
+          id: string
+          last_fired_at: string | null
+          message: string | null
+          orphan_ads_count: number | null
+          persona_id: string | null
+          pixels: Json | null
+          primary_pixel_id: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active_ads_checked?: number | null
+          ad_account_id: string
+          checked_at?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          last_fired_at?: string | null
+          message?: string | null
+          orphan_ads_count?: number | null
+          persona_id?: string | null
+          pixels?: Json | null
+          primary_pixel_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active_ads_checked?: number | null
+          ad_account_id?: string
+          checked_at?: string | null
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          last_fired_at?: string | null
+          message?: string | null
+          orphan_ads_count?: number | null
+          persona_id?: string | null
+          pixels?: Json | null
+          primary_pixel_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_connections: {
         Row: {
           access_token: string
@@ -3174,6 +3228,7 @@ export type Database = {
       }
     }
     Functions: {
+      adbrief_cron_headers: { Args: never; Returns: Json }
       adbrief_invoke_function: {
         Args: { fn_name: string; payload?: string }
         Returns: undefined
