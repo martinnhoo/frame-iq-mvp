@@ -15,7 +15,7 @@ import { useActiveAccount } from '@/hooks/useActiveAccount';
 import type { DashboardContext, Profile, Usage, UsageDetails, ActivePersona } from '@/components/dashboard/DashboardLayout';
 import type { User } from '@supabase/supabase-js';
 import {
-  Activity,
+  Command,
   Clock,
   MessageSquare,
   LogOut,
@@ -97,7 +97,7 @@ function getNavItems(lang: string) {
   };
   const t = (key: string) => l[key]?.[lang] || l[key]?.en || key;
   return [
-    { url: '/dashboard/feed',     label: 'Feed',         icon: Activity },
+    { url: '/dashboard/feed',     label: 'Comando',      icon: Command },
     { url: '/dashboard/ai',       label: t('ai'),        icon: MessageSquare },
     { url: '/dashboard/history',   label: t('history'),   icon: Clock },
     { url: '/dashboard/accounts',  label: t('accounts'),  icon: Building2 },

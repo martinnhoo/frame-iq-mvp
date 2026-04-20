@@ -3247,7 +3247,9 @@ const FlowSection: React.FC<{
   decisions: Decision[];
   onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
   isDemo: boolean;
-}> = ({ decisions, onAction, isDemo }) => {
+  // 'decisions' = kills+fixes only; 'opportunities' = scales+patterns only; default 'all'
+  mode?: 'all' | 'decisions' | 'opportunities';
+}> = ({ decisions, onAction, isDemo, mode = 'all' }) => {
   const navigate = useNavigate();
 
   const kills = decisions.filter(d => d.type === 'kill' && d.status === 'pending');
@@ -3257,7 +3259,10 @@ const FlowSection: React.FC<{
 
   const steps: { label: string; sublabel: string; color: string; icon: string; items: Decision[] }[] = [];
 
-  if (kills.length + fixes.length > 0) {
+  const showDecisions = mode === 'all' || mode === 'decisions';
+  const showOpportunities = mode === 'all' || mode === 'opportunities';
+
+  if (showDecisions && kills.length + fixes.length > 0) {
     steps.push({
       label: 'Cortar perdas',
       sublabel: `${kills.length + fixes.length} ${kills.length + fixes.length === 1 ? 'ação' : 'ações'}`,
@@ -3266,7 +3271,7 @@ const FlowSection: React.FC<{
       items: [...kills, ...fixes],
     });
   }
-  if (scales.length > 0) {
+  if (showOpportunities && scales.length > 0) {
     steps.push({
       label: 'Escalar vencedores',
       sublabel: `${scales.length} oportunidade${scales.length > 1 ? 's' : ''}`,
@@ -3275,7 +3280,7 @@ const FlowSection: React.FC<{
       items: scales,
     });
   }
-  if (patterns.length > 0) {
+  if (showOpportunities && patterns.length > 0) {
     steps.push({
       label: 'Explorar padrões',
       sublabel: `${patterns.length} insight${patterns.length > 1 ? 's' : ''}`,
@@ -4544,7 +4549,7 @@ const FeedPage: React.FC = () => {
       <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>COMMAND CENTER</h1>
+            <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>CENTRAL DE COMANDO</h1>
           </div>
           <AccountHealthBanner
             alerts={visibleAlerts}
@@ -4589,7 +4594,7 @@ const FeedPage: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>
-                COMMAND CENTER
+                CENTRAL DE COMANDO
               </h1>
               {isDemo && (
                 <span style={{
@@ -4668,24 +4673,6 @@ const FeedPage: React.FC = () => {
 
         {/* Inline sync progress */}
         {syncing && <SyncBanner />}
-
-        {/* ═══════════════════════════════════════════════
-            LAYER 2 — INTELLIGENCE PANEL (AI status)
-            Shows: confidence, learning status, system health.
-            ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && metricsReady && (
-          <IntelligencePanel
-            decisions={decisions}
-            tracker={tracker}
-            patternsCount={patternsCount}
-            trackingStatus={trackingUserStatus}
-            hasMetricAlerts={metricAlerts.length > 0}
-            trackingHasIssue={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'}
-            lastAnalysisMin={lastAnalysisMin}
-            adMetrics={adMetrics}
-            beginnerMode={beginnerMode}
-          />
-        )}
 
         {/* ═══════════════════════════════════════════════
             LAYER 3 — ACCOUNT HEALTH ALERTS (if any)
@@ -4841,37 +4828,67 @@ const FeedPage: React.FC = () => {
             ═══════════════════════════════════════════════ */}
         {feedState === 'full' || feedState === 'demo' ? (
           <>
-            {/* Money tracker — shows waste + opportunity */}
+            {/* ═══════════════════════════════════════════════
+                ZONE 1 — DINHEIRO EM RISCO (hero)
+                Primeiro impacto: quanto está sangrando agora.
+                ═══════════════════════════════════════════════ */}
             {tracker && (
-              <div style={{ marginBottom: 16 }}>
-                <MoneyBar
-                  leaking={(tracker as any).leaking_now || tracker.leaking_now}
-                  capturable={(tracker as any).capturable_now || tracker.capturable_now}
-                  totalSaved={(tracker as any).total_saved || 0}
-                  urgentCount={urgentCount}
-                  onStopLosses={hasKills && !isDemo ? handleStopLosses : undefined}
-                  onResolve={() => navigate('/dashboard/ai')}
-                />
-              </div>
-            )}
-
-            {/* Visible Win — celebrate when actions taken */}
-            {!isDemo && <VisibleWin decisions={decisions} tracker={tracker} />}
-
-            {/* Flow-based decision groups: Fix → Scale → Explore */}
-            <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} />
-
-            {/* Fallback: full decision list if FlowSection has no grouped items */}
-            {pendingDecisions.length > 0 && (
               <>
-                {hasCritical && (
-                  <div style={{ marginBottom: 12 }}>
-                    <SummaryBar decisions={pendingDecisions} />
-                  </div>
-                )}
-                <CollapsibleDecisions decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} />
+                <div style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+                  textTransform: 'uppercase' as const, color: T.labelColor,
+                  marginTop: 2, marginBottom: 10,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.red, boxShadow: `0 0 6px ${T.red}50` }} />
+                  <span>Dinheiro em risco</span>
+                </div>
+                <div style={{ marginBottom: 24 }}>
+                  <MoneyBar
+                    leaking={(tracker as any).leaking_now || tracker.leaking_now}
+                    capturable={(tracker as any).capturable_now || tracker.capturable_now}
+                    totalSaved={(tracker as any).total_saved || 0}
+                    urgentCount={urgentCount}
+                    onStopLosses={hasKills && !isDemo ? handleStopLosses : undefined}
+                    onResolve={() => navigate('/dashboard/ai')}
+                  />
+                </div>
               </>
             )}
+
+            {/* ═══════════════════════════════════════════════
+                ZONE 2 — DECISÕES PENDENTES (ação guiada)
+                kills + fixes: o que precisa parar ou ser corrigido.
+                ═══════════════════════════════════════════════ */}
+            {pendingDecisions.some(d => d.type === 'kill' || d.type === 'fix') && (
+              <div style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+                textTransform: 'uppercase' as const, color: T.labelColor,
+                marginTop: 2, marginBottom: 10,
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.yellow, boxShadow: `0 0 6px ${T.yellow}50` }} />
+                <span>Decisões pendentes</span>
+              </div>
+            )}
+            <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="decisions" />
+
+            {/* ═══════════════════════════════════════════════
+                ZONE 3 — OPORTUNIDADES (escala + padrões)
+                scales + patterns: onde seu próximo ganho está.
+                ═══════════════════════════════════════════════ */}
+            {pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (
+              <div style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+                textTransform: 'uppercase' as const, color: T.labelColor,
+                marginTop: 18, marginBottom: 10,
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.green, boxShadow: `0 0 6px ${T.green}50` }} />
+                <span>Oportunidades</span>
+              </div>
+            )}
+            <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="opportunities" />
           </>
         ) : feedState === 'no-ads' ? (
           <StateNoAds />
@@ -4947,6 +4964,26 @@ const FeedPage: React.FC = () => {
               ...performancePulseData,
               totalAds: totalAdCount,
             }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════
+            LAYER 7 — SYSTEM STATUS (contexto, não hero)
+            Confiança IA, última análise, padrões — rodapé discreto.
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && !isDemo && metricsReady && (
+          <div style={{ marginTop: 10 }}>
+            <IntelligencePanel
+              decisions={decisions}
+              tracker={tracker}
+              patternsCount={patternsCount}
+              trackingStatus={trackingUserStatus}
+              hasMetricAlerts={metricAlerts.length > 0}
+              trackingHasIssue={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'}
+              lastAnalysisMin={lastAnalysisMin}
+              adMetrics={adMetrics}
+              beginnerMode={beginnerMode}
+            />
           </div>
         )}
 
