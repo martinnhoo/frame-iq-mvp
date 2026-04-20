@@ -2,7 +2,7 @@
 // Complete from-scratch rebuild with depth system, real SVG logos, visual flow
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
-import { Globe, ChevronDown, ArrowRight, CheckCircle2, Pause, TrendingUp, ChevronRight, Zap, Brain } from "lucide-react";
+import { Globe, ChevronDown, ArrowRight, ArrowUpRight, CheckCircle2, Pause, TrendingUp, ChevronRight, Zap, Brain } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import CookieConsent from "@/components/CookieConsent";
