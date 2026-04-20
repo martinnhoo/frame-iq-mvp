@@ -749,6 +749,157 @@ function LiveProduct({ t }: { t: Record<string, string> }) {
   );
 }
 
+// ── Product Carousel (wraps LiveProduct + 2 more screens) ────────────────────
+function ProductCarousel({ t }: { t: Record<string, string> }) {
+  const [active, setActive] = useState(0);
+  const SCREENS = 3;
+  const labels = [t.mock_decisions || "Decisões", "AI Chat", "Feed"];
+
+  useEffect(() => {
+    const timer = setInterval(() => setActive(a => (a + 1) % SCREENS), 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div style={{ width: "100%", maxWidth: 520, position: "relative" }}>
+      {/* Screens */}
+      <div style={{ overflow: "hidden", borderRadius: 16 }}>
+        <div style={{
+          display: "flex", width: `${SCREENS * 100}%`,
+          transform: `translateX(-${active * (100 / SCREENS)}%)`,
+          transition: `transform 0.5s ${EASE}`,
+        }}>
+          {/* Screen 1: LiveProduct (decisions) */}
+          <div style={{ width: `${100 / SCREENS}%`, flexShrink: 0 }}>
+            <LiveProduct t={t} />
+          </div>
+
+          {/* Screen 2: AI Chat mock */}
+          <div style={{ width: `${100 / SCREENS}%`, flexShrink: 0 }}>
+            <div style={{
+              background: SURFACE, borderRadius: 16, border: `1px solid ${BORDER}`,
+              overflow: "hidden", fontFamily: F, width: "100%",
+              transform: "perspective(1400px) rotateY(-2deg) rotateX(0.5deg)",
+              boxShadow: `0 0 0 1px rgba(255,255,255,0.03), 0 8px 32px rgba(0,0,0,0.35), 0 40px 100px rgba(0,0,0,0.55)`,
+            }}>
+              {/* Chat header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 16px", borderBottom: `1px solid ${BORDER}` }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: `0 0 6px ${GREEN}40` }} />
+                <span style={{ fontSize: 9.5, fontWeight: 800, color: TEXT3, letterSpacing: "0.12em" }}>MEDIA BUYER IA</span>
+                <span style={{ fontSize: 9, color: ACCENT, fontWeight: 600, marginLeft: "auto" }}>Online</span>
+              </div>
+              {/* Messages */}
+              <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 10, minHeight: 280 }}>
+                {/* User message */}
+                <div style={{ alignSelf: "flex-end", maxWidth: "75%", padding: "8px 12px", borderRadius: "12px 12px 4px 12px", background: `${ACCENT}15`, border: `1px solid ${ACCENT}25` }}>
+                  <p style={{ fontSize: 10.5, color: TEXT, margin: 0, lineHeight: 1.5 }}>Como estão meus anúncios essa semana?</p>
+                </div>
+                {/* AI response */}
+                <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "4px 12px 12px 12px", background: "rgba(255,255,255,0.02)", border: `1px solid ${BORDER}` }}>
+                  <p style={{ fontSize: 10.5, color: TEXT2, margin: 0, lineHeight: 1.6 }}>
+                    Seus anúncios tiveram <span style={{ color: GREEN, fontWeight: 700 }}>CTR 3.8%</span> nos últimos 7 dias. O anúncio "Black Friday" está escalável — recomendo aumentar orçamento em 30%.
+                  </p>
+                </div>
+                {/* Briefing card */}
+                <div style={{ padding: "10px 12px", borderRadius: 10, background: `${ACCENT}06`, border: `1px solid ${ACCENT}15` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
+                    <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, letterSpacing: "0.1em", padding: "2px 6px", background: `${ACCENT}10`, borderRadius: 4 }}>BRIEFING</span>
+                  </div>
+                  <p style={{ fontSize: 10, color: TEXT3, margin: 0, lineHeight: 1.5 }}>R$8.740 investidos · CTR 3.8% (↑12%) · 14 anúncios ativos</p>
+                </div>
+                {/* Pattern */}
+                <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.10)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ fontSize: 8, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.1em", padding: "2px 6px", background: "rgba(167,139,250,0.08)", borderRadius: 4 }}>PADRÃO</span>
+                    <span style={{ fontSize: 9.5, color: TEXT2, fontWeight: 500 }}>"Urgência na copy" performa melhor</span>
+                  </div>
+                </div>
+              </div>
+              {/* Input bar */}
+              <div style={{ padding: "8px 14px 12px", borderTop: `1px solid ${BORDER}` }}>
+                <div style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.025)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 10, color: TEXT3, flex: 1, opacity: 0.5 }}>Pergunte sobre sua conta...</span>
+                  <div style={{ width: 22, height: 22, borderRadius: 6, background: `${ACCENT}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <ArrowUpRight size={10} color={ACCENT} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Screen 3: Feed/Dashboard mock */}
+          <div style={{ width: `${100 / SCREENS}%`, flexShrink: 0 }}>
+            <div style={{
+              background: SURFACE, borderRadius: 16, border: `1px solid ${BORDER}`,
+              overflow: "hidden", fontFamily: F, width: "100%",
+              transform: "perspective(1400px) rotateY(-2deg) rotateX(0.5deg)",
+              boxShadow: `0 0 0 1px rgba(255,255,255,0.03), 0 8px 32px rgba(0,0,0,0.35), 0 40px 100px rgba(0,0,0,0.55)`,
+            }}>
+              {/* Feed header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 16px", borderBottom: `1px solid ${BORDER}` }}>
+                <span style={{ fontSize: 9.5, fontWeight: 800, color: TEXT3, letterSpacing: "0.12em" }}>FEED</span>
+                <span style={{ fontSize: 9, color: TEXT3, marginLeft: "auto" }}>Hoje · 14:32</span>
+              </div>
+              {/* KPI row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, borderBottom: `1px solid ${BORDER}` }}>
+                {[
+                  { label: "SPEND", value: "R$8.740", color: TEXT },
+                  { label: "CTR", value: "3.8%", delta: "+12%", color: GREEN },
+                  { label: "ROAS", value: "4.2x", color: GREEN },
+                ].map((m, i) => (
+                  <div key={i} style={{ padding: "12px 14px", textAlign: "center", borderRight: i < 2 ? `1px solid ${BORDER}` : "none" }}>
+                    <div style={{ fontSize: 7.5, fontWeight: 800, color: TEXT3, letterSpacing: "0.1em", marginBottom: 4 }}>{m.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: m.color, letterSpacing: "-0.03em" }}>{m.value}</div>
+                    {m.delta && <span style={{ fontSize: 8, fontWeight: 700, color: GREEN }}>{m.delta}</span>}
+                  </div>
+                ))}
+              </div>
+              {/* Decision cards */}
+              <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6, minHeight: 200 }}>
+                <div style={{ padding: "10px 12px", borderRadius: 8, borderLeft: `3px solid ${GREEN}`, background: "rgba(34,197,94,0.03)" }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: TEXT, margin: "0 0 2px" }}>Escale "BF - Video Hook A"</p>
+                  <p style={{ fontSize: 9, color: TEXT3, margin: 0 }}>CTR 5.2% · ROAS 6.1x · melhor da semana</p>
+                </div>
+                <div style={{ padding: "10px 12px", borderRadius: 8, borderLeft: "3px solid #ef4444", background: "rgba(239,68,68,0.03)" }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: TEXT, margin: "0 0 2px" }}>Pause "Carrossel Genérico"</p>
+                  <p style={{ fontSize: 9, color: TEXT3, margin: 0 }}>CTR 0.8% · R$420 gastos · sem conversões</p>
+                </div>
+                <div style={{ padding: "10px 12px", borderRadius: 8, borderLeft: `3px solid ${ACCENT}`, background: `${ACCENT}04` }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: TEXT, margin: "0 0 2px" }}>Teste novo hook com prova social</p>
+                  <p style={{ fontSize: 9, color: TEXT3, margin: 0 }}>Padrão detectado: depoimentos convertem +40%</p>
+                </div>
+              </div>
+              {/* Health */}
+              <div style={{ padding: "6px 14px 12px", borderTop: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: GREEN, boxShadow: `0 0 4px ${GREEN}40` }} />
+                <span style={{ fontSize: 9, fontWeight: 600, color: TEXT3 }}>Monitoramento ativo — nenhum alerta</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Carousel dots + labels */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 16 }}>
+        {labels.map((label, i) => (
+          <button key={i} onClick={() => setActive(i)} style={{
+            display: "flex", alignItems: "center", gap: 5,
+            padding: "4px 10px", borderRadius: 99,
+            background: i === active ? `${ACCENT}12` : "transparent",
+            border: `1px solid ${i === active ? `${ACCENT}30` : "rgba(255,255,255,0.06)"}`,
+            color: i === active ? ACCENT : TEXT3,
+            fontSize: 10, fontWeight: 600, cursor: "pointer",
+            fontFamily: F, transition: "all 0.2s ease",
+          }}>
+            <div style={{ width: 4, height: 4, borderRadius: "50%", background: i === active ? ACCENT : "rgba(255,255,255,0.15)" }} />
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Hero ─────────────────────────────────────────────────────────────────────
 function Hero({ t }: { t: Record<string, string> }) {
   const navigate = useNavigate();
@@ -845,7 +996,7 @@ function Hero({ t }: { t: Record<string, string> }) {
           </div>
         </div>
 
-        {/* Right — live product */}
+        {/* Right — product carousel */}
         <div className="hero-mockup" style={{
           display: "flex", justifyContent: "flex-end", position: "relative",
         }}>
@@ -856,7 +1007,7 @@ function Hero({ t }: { t: Record<string, string> }) {
             background: "radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 60%)",
             pointerEvents: "none", filter: "blur(60px)",
           }} />
-          <LiveProduct t={t} />
+          <ProductCarousel t={t} />
         </div>
       </div>
     </section>
