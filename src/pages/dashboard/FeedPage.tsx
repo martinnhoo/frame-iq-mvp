@@ -12,6 +12,7 @@ import { storage } from '@/lib/storage';
 import type { Decision, DecisionAction } from '../../types/v2-database';
 import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
 import { GoalSetup } from '../../components/feed/GoalSetup';
+import { HealthPanel, type HealthSignal } from '../../components/feed/HealthPanel';
 import { Pause, Play } from 'lucide-react';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
@@ -1339,47 +1340,44 @@ const AdRow: React.FC<{
       </span>
       {onAnalyzeAi && (
         <button
+          className="feed-linear-btn"
           onClick={(e) => { e.stopPropagation(); onAnalyzeAi(ad); }}
           title="Analisar este anúncio com a IA"
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: 3,
-            padding: '3px 7px', borderRadius: 3, border: 'none',
-            background: 'rgba(167,139,250,0.08)', color: T.purple,
-            fontSize: 10, fontWeight: 700, fontFamily: F,
-            cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0,
+            background: 'transparent', border: 'none', padding: '3px 2px',
+            color: T.purple, fontSize: 10.5, fontWeight: 600, fontFamily: F,
+            cursor: 'pointer', flexShrink: 0, letterSpacing: '0.01em',
+            opacity: 0.82,
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.18)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.08)'; }}
         >
-          IA
+          IA →
         </button>
+      )}
+      {onAnalyzeAi && canToggle && (
+        <span aria-hidden style={{ fontSize: 9, color: 'rgba(255,255,255,0.18)', flexShrink: 0, userSelect: 'none' }}>·</span>
       )}
       {canToggle && (
         justSucceeded ? (
           <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            padding: '3px 8px', borderRadius: 3,
-            background: 'rgba(74,222,128,0.08)', color: T.green,
-            fontSize: 10, fontWeight: 600, fontFamily: F, flexShrink: 0,
+            display: 'inline-flex', alignItems: 'center', gap: 3,
+            color: T.green, fontSize: 10.5, fontWeight: 600, fontFamily: F, flexShrink: 0,
             animation: 'feed-success 0.3s ease forwards',
           }}>
             ✓ {toggleSuccess.action === 'pause' ? 'Pausado' : 'Ativado'}
           </span>
         ) : (
           <button
+            className="feed-linear-btn"
             onClick={(e) => { e.stopPropagation(); onRequestToggle!(ad, isPaused ? 'activate' : 'pause'); }}
             disabled={isToggling}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '3px 8px', borderRadius: 3, border: 'none',
-              background: isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)',
-              color: isPaused ? '#4ADE80' : 'rgba(255,255,255,0.40)',
-              fontSize: 10, fontWeight: 600, fontFamily: F,
+              background: 'transparent', border: 'none', padding: '3px 2px',
+              color: isPaused ? T.green : 'rgba(255,255,255,0.58)',
+              fontSize: 10.5, fontWeight: 600, fontFamily: F,
               cursor: isToggling ? 'default' : 'pointer',
-              opacity: isToggling ? 0.4 : 1, transition: 'all 0.15s', flexShrink: 0,
+              opacity: isToggling ? 0.4 : 0.85, flexShrink: 0, letterSpacing: '0.01em',
             }}
-            onMouseEnter={e => { if (!isToggling) { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.08)'; } }}
-            onMouseLeave={e => { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)'; }}
           >
             {isToggling ? (
               <span style={{ width: 9, height: 9, border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'inline-block', animation: 'feed-shimmer 0.8s linear infinite' }} />
@@ -1447,47 +1445,43 @@ const CampaignRow: React.FC<{
         </div>
         {onAnalyzeAiCampaign && (
           <button
+            className="feed-linear-btn"
             onClick={(e) => { e.stopPropagation(); onAnalyzeAiCampaign(campaign); }}
             title="Analisar esta campanha com a IA"
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 3,
-              padding: '3px 8px', borderRadius: 3, border: 'none',
-              background: 'rgba(167,139,250,0.08)', color: T.purple,
-              fontSize: 10, fontWeight: 700, fontFamily: F,
-              cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0,
+              background: 'transparent', border: 'none', padding: '3px 2px',
+              color: T.purple, fontSize: 10.5, fontWeight: 600, fontFamily: F,
+              cursor: 'pointer', flexShrink: 0, letterSpacing: '0.01em', opacity: 0.82,
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.18)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(167,139,250,0.08)'; }}
           >
-            Analisar IA
+            Analisar IA →
           </button>
+        )}
+        {onAnalyzeAiCampaign && canToggle && (
+          <span aria-hidden style={{ fontSize: 9, color: 'rgba(255,255,255,0.18)', flexShrink: 0, userSelect: 'none' }}>·</span>
         )}
         {canToggle && (
           justSucceeded ? (
             <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '3px 8px', borderRadius: 3,
-              background: 'rgba(74,222,128,0.08)', color: T.green,
-              fontSize: 10, fontWeight: 600, fontFamily: F, flexShrink: 0,
+              display: 'inline-flex', alignItems: 'center', gap: 3,
+              color: T.green, fontSize: 10.5, fontWeight: 600, fontFamily: F, flexShrink: 0,
               animation: 'feed-success 0.3s ease forwards',
             }}>
               ✓ {campaignToggleSuccess.action === 'pause' ? 'Pausado' : 'Ativado'}
             </span>
           ) : (
             <button
+              className="feed-linear-btn"
               onClick={(e) => { e.stopPropagation(); onRequestCampaignToggle!(campaign, isPaused ? 'activate' : 'pause'); }}
               disabled={isToggling}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 4,
-                padding: '3px 8px', borderRadius: 3, border: 'none',
-                background: isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)',
-                color: isPaused ? '#4ADE80' : 'rgba(255,255,255,0.40)',
-                fontSize: 10, fontWeight: 600, fontFamily: F,
+                background: 'transparent', border: 'none', padding: '3px 2px',
+                color: isPaused ? T.green : 'rgba(255,255,255,0.58)',
+                fontSize: 10.5, fontWeight: 600, fontFamily: F,
                 cursor: isToggling ? 'default' : 'pointer',
-                opacity: isToggling ? 0.4 : 1, transition: 'all 0.15s', flexShrink: 0,
+                opacity: isToggling ? 0.4 : 0.85, flexShrink: 0, letterSpacing: '0.01em',
               }}
-              onMouseEnter={e => { if (!isToggling) { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.08)'; } }}
-              onMouseLeave={e => { e.currentTarget.style.background = isPaused ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.04)'; }}
             >
               {isToggling ? (
                 <span style={{ width: 9, height: 9, border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: 'rgba(255,255,255,0.7)', borderRadius: '50%', display: 'inline-block', animation: 'feed-shimmer 0.8s linear infinite' }} />
@@ -1573,31 +1567,17 @@ const CampaignList: React.FC<{
           </span>
         </div>
         <button
+          className="feed-linear-btn"
           onClick={(e) => {
             e.stopPropagation();
             navigate('/dashboard/feed/campanhas', { state: { fromFeed: true } });
           }}
           style={{
-            background: 'rgba(14,165,233,0.08)',
-            border: '1px solid rgba(14,165,233,0.22)',
-            borderRadius: 6,
-            padding: '3px 8px',
-            fontSize: 10, fontWeight: 600,
+            background: 'transparent', border: 'none', padding: '3px 2px',
+            fontSize: 10.5, fontWeight: 600,
             color: 'rgba(14,165,233,0.85)',
-            cursor: 'pointer',
-            fontFamily: F,
-            transition: 'background 0.12s, border-color 0.12s, color 0.12s',
-            whiteSpace: 'nowrap',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(14,165,233,0.14)';
-            e.currentTarget.style.borderColor = 'rgba(14,165,233,0.35)';
-            e.currentTarget.style.color = 'rgba(14,165,233,1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(14,165,233,0.08)';
-            e.currentTarget.style.borderColor = 'rgba(14,165,233,0.22)';
-            e.currentTarget.style.color = 'rgba(14,165,233,0.85)';
+            cursor: 'pointer', fontFamily: F,
+            whiteSpace: 'nowrap', flexShrink: 0, letterSpacing: '0.01em',
           }}
           title="Abrir gerenciador de campanhas"
         >
@@ -2152,7 +2132,7 @@ const AdToggleModal: React.FC<{
   accountId: string | null;
   userId?: string;
   personaId?: string;
-  onConfirm: () => void;
+  onConfirm: (aiReasoning?: string) => void;
   onCancel: () => void;
   loading: boolean;
 }> = ({ request, accountId, userId, personaId, onConfirm, onCancel, loading }) => {
@@ -2410,7 +2390,7 @@ const AdToggleModal: React.FC<{
               Cancelar
             </button>
             <button
-              onClick={onConfirm}
+              onClick={() => onConfirm(aiOpinion || undefined)}
               disabled={loading}
               style={{
                 flex: 1, padding: '12px 16px', borderRadius: 8,
@@ -2431,6 +2411,286 @@ const AdToggleModal: React.FC<{
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isPause ? '0 4px 12px rgba(245,158,11,0.30), inset 0 1px 0 rgba(255,255,255,0.15)' : '0 4px 12px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.15)'; }}
             >
               {loading ? 'Executando...' : isPause ? 'Pausar' : 'Ativar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Campaign Toggle Confirmation Modal with AI opinion ──
+// Mirrors AdToggleModal but scoped to a whole campaign. AI gets aggregate
+// performance across all ads in the campaign, and the action fires via
+// meta-actions with target_type='campaign'. User sees the AI's take
+// BEFORE confirming — never after.
+interface CampaignToggleRequest {
+  campaign: CampaignSummary;
+  action: 'pause' | 'activate';
+}
+
+const CampaignToggleModal: React.FC<{
+  request: CampaignToggleRequest;
+  userId?: string;
+  personaId?: string;
+  onConfirm: (aiReasoning?: string) => void;
+  onCancel: () => void;
+  loading: boolean;
+}> = ({ request, userId, personaId, onConfirm, onCancel, loading }) => {
+  const [aiOpinion, setAiOpinion] = useState<string | null>(null);
+  const [loadingAi, setLoadingAi] = useState(true);
+  const isPause = request.action === 'pause';
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingAi(true);
+    setAiOpinion(null);
+    (async () => {
+      try {
+        // Aggregate last 14 days of ad_metrics for this campaign
+        const { data: metrics } = await (supabase
+          .from('ad_metrics' as any)
+          .select('spend, conversions, ctr, cpa, impressions, clicks, date, campaign_name')
+          .eq('campaign_name', request.campaign.name)
+          .order('date', { ascending: false })
+          .limit(200) as any);
+
+        if (cancelled) return;
+
+        const m = metrics || [];
+        const totalSpend = m.reduce((s: number, r: any) => s + (r.spend || 0), 0);
+        const totalConv = m.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
+        const totalImps = m.reduce((s: number, r: any) => s + (r.impressions || 0), 0);
+        const totalClicks = m.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
+        const ctr = totalImps > 0 ? (totalClicks / totalImps * 100) : 0;
+        const cpa = totalConv > 0 ? totalSpend / totalConv : 0;
+        const uniqueDates = new Set(m.map((r: any) => r.date).filter(Boolean));
+        const daysRunning = uniqueDates.size;
+
+        // ── Instant recommendation from local data ──
+        let instantRec = '';
+        if (daysRunning > 0) {
+          if (isPause) {
+            if (daysRunning < 3 && totalSpend > 0) {
+              instantRec = `Esta campanha tem só ${daysRunning} dia${daysRunning > 1 ? 's' : ''} de dados. O Meta ainda está em fase de aprendizado — pausar agora pode prejudicar a otimização dos conjuntos.`;
+            } else if (totalConv > 0) {
+              instantRec = `Campanha gerou ${totalConv} conversão${totalConv > 1 ? 'ões' : ''} com CPA de R$${(cpa / 100).toFixed(2)} (gasto total R$${(totalSpend / 100).toFixed(2)} em ${daysRunning} dias). Confirme se o CPA está acima do aceitável antes de pausar toda a campanha.`;
+            } else if (totalSpend > 0) {
+              instantRec = `R$${(totalSpend / 100).toFixed(2)} gastos em ${daysRunning} dias sem conversões. Pausar a campanha pode liberar orçamento para realocar em criativos com melhor sinal.`;
+            } else {
+              instantRec = 'Sem investimento recente. Pausar não terá impacto no orçamento atual.';
+            }
+          } else {
+            if (totalConv > 0) {
+              instantRec = `Histórico positivo: ${totalConv} conversão${totalConv > 1 ? 'ões' : ''} com CTR de ${ctr.toFixed(2)}%. Reativar pode trazer resultados.`;
+            } else if (totalSpend > 0) {
+              instantRec = `Sem conversões nos últimos ${daysRunning} dias (R$${(totalSpend / 100).toFixed(2)} gastos). Considere revisar criativo ou público antes de reativar.`;
+            } else {
+              instantRec = 'Sem histórico recente. Ao reativar, o Meta precisará de 3-4 dias para recalibrar.';
+            }
+          }
+        } else {
+          instantRec = isPause
+            ? 'Sem dados de performance para esta campanha. Ao pausar, todos os conjuntos param de gastar imediatamente.'
+            : 'Sem dados anteriores para esta campanha. Ao ativar, ela volta a competir nos leilões do Meta.';
+        }
+
+        if (!cancelled) {
+          setAiOpinion(instantRec);
+          setLoadingAi(false);
+        }
+
+        // ── Async: upgrade with AI opinion ──
+        const prompt = `Analise rapidamente se devo ${isPause ? 'pausar' : 'ativar'} a campanha "${request.campaign.name}". ` +
+          (daysRunning > 0
+            ? `Dados agregados (${daysRunning} dias): spend R$${(totalSpend / 100).toFixed(2)}, ${totalConv} conv, CTR ${ctr.toFixed(2)}%, CPA R$${(cpa / 100).toFixed(2)}, ${totalImps} impr. `
+            : 'Sem dados de performance. ') +
+          `Objetivo: ${request.campaign.objective || 'n/d'}. Status: ${request.campaign.status || 'n/d'}. ` +
+          `Lembre: pausar uma campanha pausa TODOS os conjuntos e anúncios dentro. ` +
+          `Se rodou menos de 3-4 dias, o Meta está em aprendizado. ` +
+          `Responda em 2-3 frases curtas em texto puro, sem markdown.`;
+
+        const { data: aiData } = await supabase.functions.invoke('adbrief-ai-chat', {
+          body: { message: prompt, user_id: userId, persona_id: personaId },
+        });
+
+        if (cancelled) return;
+
+        let opinion = '';
+        if (aiData?.blocks && Array.isArray(aiData.blocks)) {
+          opinion = aiData.blocks
+            .map((b: any) => b.content || b.text || '')
+            .filter(Boolean)
+            .join(' ')
+            .replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '')
+            .replace(/`/g, '').replace(/#{1,3}\s/g, '').trim();
+        }
+        if (opinion && !cancelled) setAiOpinion(opinion);
+      } catch {
+        if (!cancelled && !aiOpinion) {
+          setAiOpinion(isPause
+            ? 'Ao pausar, a campanha e todos os conjuntos/anúncios dentro dela param de gastar imediatamente.'
+            : 'Ao ativar, a campanha volta a competir nos leilões. O aprendizado pode levar algumas horas.');
+          setLoadingAi(false);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [request.campaign.meta_campaign_id, request.action, userId, personaId]);
+
+  const accentColor = isPause ? '#F59E0B' : '#22C55E';
+  const accentGlow = isPause ? 'rgba(245,158,11,0.20)' : 'rgba(34,197,94,0.20)';
+
+  return (
+    <div
+      onClick={onCancel}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20, fontFamily: F,
+        animation: 'modal-overlay-in 0.2s ease-out',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'linear-gradient(180deg, #111827 0%, #0C1017 100%)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 14, padding: 0, maxWidth: 440, width: '100%',
+          animation: 'modal-card-in 0.3s cubic-bezier(0.16,1,0.3,1)',
+          overflow: 'hidden',
+          boxShadow: `0 24px 48px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,255,255,0.05), 0 0 80px ${accentGlow}`,
+        }}
+      >
+        <div style={{
+          height: 3,
+          background: `linear-gradient(90deg, ${accentColor} 0%, transparent 100%)`,
+          opacity: 0.6,
+        }} />
+
+        <div style={{ padding: 'clamp(14px, 4vw, 22px) clamp(16px, 4vw, 24px) clamp(16px, 4vw, 24px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 10,
+              background: `linear-gradient(135deg, ${accentColor}18 0%, ${accentColor}08 100%)`,
+              border: `1px solid ${accentColor}25`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              {isPause
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="6,3 20,12 6,21" /></svg>
+              }
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#F0F6FC', letterSpacing: '-0.02em' }}>
+                {isPause ? 'Pausar campanha?' : 'Ativar campanha?'}
+              </div>
+              <div style={{
+                fontSize: 12, color: 'rgba(255,255,255,0.60)', marginTop: 2,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {request.campaign.name}
+              </div>
+            </div>
+          </div>
+
+          {/* Scope notice — pausing a campaign pauses everything inside */}
+          {isPause && (
+            <div style={{
+              background: 'rgba(245,158,11,0.06)',
+              border: '1px solid rgba(245,158,11,0.18)',
+              borderRadius: 6, padding: '8px 12px', marginBottom: 12,
+              fontSize: 11, color: 'rgba(251,191,36,0.85)', lineHeight: 1.5,
+            }}>
+              Esta ação pausa <strong>todos</strong> os conjuntos e anúncios dentro desta campanha.
+            </div>
+          )}
+
+          {/* AI Opinion */}
+          <div style={{
+            background: 'rgba(56,189,248,0.04)',
+            border: '1px solid rgba(56,189,248,0.12)',
+            borderLeft: '3px solid #38BDF8',
+            borderRadius: 8, padding: '14px 16px', marginBottom: 22,
+            minHeight: 60, position: 'relative', overflow: 'hidden',
+          }}>
+            {loadingAi && (
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(90deg, transparent 0%, rgba(56,189,248,0.06) 50%, transparent 100%)',
+                animation: 'modal-shimmer 2s ease-in-out infinite',
+              }} />
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, position: 'relative' }}>
+              <img src="/ab-avatar.png" alt="AdBrief" width={18} height={18} style={{ width: 18, height: 18, borderRadius: 4, objectFit: 'cover', display: 'block' }} />
+              <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(56,189,248,0.30)' }} />
+              <span style={{ fontSize: 9, fontWeight: 600, color: 'rgba(56,189,248,0.60)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {loadingAi ? 'Analisando campanha...' : 'Recomendação'}
+              </span>
+            </div>
+
+            {loadingAi && !aiOpinion ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative' }}>
+                <div style={{
+                  width: '95%', height: 11, borderRadius: 3,
+                  background: 'linear-gradient(90deg, rgba(56,189,248,0.08) 0%, rgba(56,189,248,0.03) 50%, rgba(56,189,248,0.08) 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'modal-text-shimmer 1.8s ease-in-out infinite',
+                }} />
+                <div style={{
+                  width: '80%', height: 11, borderRadius: 3,
+                  background: 'linear-gradient(90deg, rgba(56,189,248,0.08) 0%, rgba(56,189,248,0.03) 50%, rgba(56,189,248,0.08) 100%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'modal-text-shimmer 1.8s ease-in-out infinite',
+                  animationDelay: '0.15s',
+                }} />
+              </div>
+            ) : (
+              <div style={{
+                fontSize: 12.5, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6,
+                animation: 'modal-text-in 0.4s ease-out', position: 'relative',
+              }}>
+                {aiOpinion}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={onCancel}
+              style={{
+                flex: 1, padding: '12px 16px', borderRadius: 8,
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                color: 'rgba(255,255,255,0.72)', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: F, transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => onConfirm(aiOpinion || undefined)}
+              disabled={loading}
+              style={{
+                flex: 1, padding: '12px 16px', borderRadius: 8,
+                background: isPause
+                  ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                  : 'linear-gradient(135deg, #34D399 0%, #10B981 50%, #059669 100%)',
+                border: 'none', color: '#fff',
+                fontSize: 13, fontWeight: 700, letterSpacing: '-0.01em',
+                cursor: loading ? 'default' : 'pointer', fontFamily: F,
+                opacity: loading ? 0.6 : 1,
+                transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+                boxShadow: isPause
+                  ? '0 4px 12px rgba(245,158,11,0.30), inset 0 1px 0 rgba(255,255,255,0.15)'
+                  : '0 4px 12px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.15)',
+              }}
+            >
+              {loading ? 'Executando...' : isPause ? 'Confirmar pausa' : 'Confirmar ativação'}
             </button>
           </div>
         </div>
@@ -4689,7 +4949,7 @@ const FeedPage: React.FC = () => {
     setToggleRequest({ ad, action });
   }, []);
 
-  const handleConfirmToggle = useCallback(async () => {
+  const handleConfirmToggle = useCallback(async (aiReasoning?: string) => {
     if (!toggleRequest || togglingAd) return;
     const { ad, action } = toggleRequest;
     setTogglingAd(ad.meta_ad_id);
@@ -4710,6 +4970,8 @@ const FeedPage: React.FC = () => {
           persona_id: personaId,
           target_id: ad.meta_ad_id,
           target_type: 'ad',
+          ai_reasoning: aiReasoning || null,
+          source: 'feed_ad_toggle_modal',
         }),
       });
       if (res.ok) {
@@ -4728,10 +4990,17 @@ const FeedPage: React.FC = () => {
   // ── Campaign toggle (pause/activate) ──
   const [togglingCampaign, setTogglingCampaign] = useState<string | null>(null);
   const [campaignToggleSuccess, setCampaignToggleSuccess] = useState<{ id: string; action: 'pause' | 'activate' } | null>(null);
+  const [campaignToggleRequest, setCampaignToggleRequest] = useState<{ campaign: CampaignSummary; action: 'pause' | 'activate' } | null>(null);
 
   const handleRequestCampaignToggle = useCallback((campaign: CampaignSummary, action: 'pause' | 'activate') => {
-    // Direct toggle — no confirmation modal for campaigns (same UX pattern)
+    // Now opens a confirmation modal with AI opinion FIRST — does NOT fire yet.
     if (togglingCampaign) return;
+    setCampaignToggleRequest({ campaign, action });
+  }, [togglingCampaign]);
+
+  const handleConfirmCampaignToggle = useCallback((aiReasoning?: string) => {
+    if (!campaignToggleRequest || togglingCampaign) return;
+    const { campaign, action } = campaignToggleRequest;
     setTogglingCampaign(campaign.meta_campaign_id);
     (async () => {
       try {
@@ -4751,6 +5020,8 @@ const FeedPage: React.FC = () => {
             persona_id: personaId,
             target_id: campaign.meta_campaign_id,
             target_type: 'campaign',
+            ai_reasoning: aiReasoning || null,
+            source: 'feed_campaign_toggle_modal',
           }),
         });
         if (res.ok) {
@@ -4763,9 +5034,10 @@ const FeedPage: React.FC = () => {
         console.error('Toggle campaign error:', e);
       } finally {
         setTogglingCampaign(null);
+        setCampaignToggleRequest(null);
       }
     })();
-  }, [togglingCampaign, userId, personaId, fetchCampaigns, fetchAds]);
+  }, [campaignToggleRequest, togglingCampaign, userId, personaId, fetchCampaigns, fetchAds]);
 
   // ── AI analysis handlers — navigate to /dashboard/ai with pre-loaded context ──
   const handleAnalyzeAiAd = useCallback((ad: AdSummary) => {
@@ -5072,6 +5344,112 @@ const FeedPage: React.FC = () => {
         {metaConnected && !isDemo && userId && (
           <BrainOverwatch userId={userId} />
         )}
+
+        {/* ═══════════════════════════════════════════════
+            LAYER 2.5 — HEALTH PANEL (always visible when connected)
+            Semáforo: pixel, gasto, anúncios, padrões da IA.
+            Verde = tudo certo. Amarelo = atenção. Vermelho = ação.
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && !isDemo && (() => {
+          const signals: HealthSignal[] = [];
+
+          // 1) Meta connection
+          signals.push({
+            key: 'meta',
+            label: 'Conta Meta',
+            status: 'ok',
+            detail: metaSelId ? `act_${metaSelId.replace('act_', '').slice(0, 10)}…` : 'Conectado',
+            onClick: () => navigate('/dashboard/contas'),
+          });
+
+          // 2) Pixel — derived from trackingHealth + pixelHealth
+          if (!pixelHealth) {
+            signals.push({ key: 'pixel', label: 'Pixel', status: 'unknown', detail: 'Verificando…' });
+          } else if (pixelHealth.status === 'pixel_ok') {
+            signals.push({
+              key: 'pixel', label: 'Pixel',
+              status: 'ok',
+              detail: pixelHealth.pixels?.[0]?.name ? `${pixelHealth.pixels[0].name} · OK` : 'Disparando',
+              onClick: () => navigate('/dashboard/ai', { state: { prompt: 'Me mostra o diagnóstico completo do meu pixel e eventos de conversão.' } }),
+            });
+          } else if (pixelHealth.status === 'no_pixel') {
+            signals.push({
+              key: 'pixel', label: 'Pixel',
+              status: 'error', detail: 'Não instalado',
+              onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: 'Minha conta não tem pixel. Como instalar passo a passo?' } }); },
+            });
+          } else if (pixelHealth.status === 'pixel_stale') {
+            const days = (pixelHealth as any).daysSinceFire || 0;
+            signals.push({
+              key: 'pixel', label: 'Pixel',
+              status: 'error',
+              detail: days > 0 ? `Parou há ${days}d` : 'Parou de disparar',
+              onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: 'Meu pixel parou de disparar. Por quê e como resolver?' } }); },
+            });
+          } else if (pixelHealth.status === 'pixel_orphan') {
+            const orphans = pixelHealth.orphan_ads_count || 0;
+            signals.push({
+              key: 'pixel', label: 'Pixel',
+              status: 'warn',
+              detail: `${orphans} ads órfãos`,
+              onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: `Tenho ${orphans} anúncios sem pixel amarrado. Quais são e como corrigir?` } }); },
+            });
+          } else {
+            signals.push({ key: 'pixel', label: 'Pixel', status: 'unknown', detail: 'Verificando…' });
+          }
+
+          // 3) Gasto & conversões (period window)
+          const spend = adMetrics?.spend || 0;
+          const convs = adMetrics?.conversions || 0;
+          if (spend === 0) {
+            signals.push({
+              key: 'spend', label: 'Gasto & conversões',
+              status: noActiveTraffic ? 'warn' : 'unknown',
+              detail: noActiveTraffic ? 'Nenhum ad rodando' : 'Sem dados',
+            });
+          } else if (convs > 0) {
+            const cpa = spend / convs;
+            signals.push({
+              key: 'spend', label: 'Gasto & conversões',
+              status: 'ok',
+              detail: `${fmtReais(spend)} · ${convs} conv · CPA ${fmtReais(cpa)}`,
+            });
+          } else {
+            signals.push({
+              key: 'spend', label: 'Gasto & conversões',
+              status: 'warn',
+              detail: `${fmtReais(spend)} · 0 conversões`,
+              onClick: () => startTrackingInvestigation(),
+            });
+          }
+
+          // 4) Anúncios ativos
+          signals.push({
+            key: 'ads', label: 'Anúncios ativos',
+            status: activeAdsCount > 0 ? 'ok' : 'warn',
+            detail: activeAdsCount > 0
+              ? `${activeAdsCount} em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}`
+              : 'Nenhum rodando',
+            onClick: () => navigate('/dashboard/feed/campanhas'),
+          });
+
+          // 5) Aprendizado Meta — stub until we pull delivery_info per adset
+          signals.push({
+            key: 'learning', label: 'Aprendizado Meta',
+            status: 'unknown',
+            detail: 'Em breve',
+          });
+
+          // 6) IA aprendendo padrões
+          signals.push({
+            key: 'patterns', label: 'IA aprendendo',
+            status: patternsCount > 0 ? 'ok' : 'unknown',
+            detail: patternsCount > 0 ? `${patternsCount} padrão${patternsCount === 1 ? '' : 'ões'}` : 'Coletando',
+            onClick: () => navigate('/dashboard/intelligence'),
+          });
+
+          return <HealthPanel signals={signals} lastCheckedMin={lastAnalysisMin} />;
+        })()}
 
         {/* ═══════════════════════════════════════════════
             LAYER 3 — ACCOUNT HEALTH ALERTS (if any)
@@ -5543,6 +5921,10 @@ const FeedPage: React.FC = () => {
         .feed-cta{transition:all 0.18s ease}
         .feed-cta:hover{box-shadow:0 4px 14px rgba(14,165,233,0.25) !important}
         .feed-cta:active{transform:scale(0.97);transition:transform 0.08s ease}
+        .feed-linear-btn{transition:opacity 0.15s ease,color 0.15s ease}
+        .feed-linear-btn:hover:not(:disabled){opacity:1!important;text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
+        .feed-linear-btn:active:not(:disabled){transform:translateY(0.5px)}
+        .feed-linear-btn:disabled{cursor:default}
         @media(max-width:768px){
           .feed-kpis-grid{grid-template-columns:repeat(2,1fr)!important;gap:6px!important}
           .feed-decisions-list{gap:6px!important}
@@ -5564,6 +5946,18 @@ const FeedPage: React.FC = () => {
           onConfirm={handleConfirmToggle}
           onCancel={() => setToggleRequest(null)}
           loading={!!togglingAd}
+        />
+      )}
+
+      {/* Campaign toggle confirmation modal — AI explains before you fire */}
+      {campaignToggleRequest && (
+        <CampaignToggleModal
+          request={campaignToggleRequest}
+          userId={userId}
+          personaId={personaId}
+          onConfirm={handleConfirmCampaignToggle}
+          onCancel={() => setCampaignToggleRequest(null)}
+          loading={!!togglingCampaign}
         />
       )}
     </div>

@@ -79,6 +79,8 @@ async function logToActionHistory(
   previousState: object | null,
   newState: object | null,
   estimatedDailyImpact: number | null = null,
+  aiReasoning: string | null = null,
+  source: string | null = null,
 ) {
   try {
     // Get user's ad_account id (our internal UUID)
@@ -96,6 +98,14 @@ async function logToActionHistory(
 
     const actionType = mapActionType(action, targetType);
 
+    // Enriched new_state includes the AI reasoning shown to the user before
+    // they confirmed + where they clicked from. Stored inline (JSONB) so no
+    // schema migration required. HistoryPage can read it back for audit.
+    const enrichedNewState: Record<string, any> = { ...(newState || {}) };
+    if (aiReasoning) enrichedNewState._ai_reasoning = aiReasoning;
+    if (source) enrichedNewState._source = source;
+    enrichedNewState._confirmed_at = new Date().toISOString();
+
     const row: Record<string, any> = {
       account_id: adAccount.id,
       user_id: userId,
@@ -104,7 +114,7 @@ async function logToActionHistory(
       target_meta_id: targetId,
       target_name: targetName,
       previous_state: previousState || {},
-      new_state: newState || {},
+      new_state: enrichedNewState,
       result: "success",
       executed_at: new Date().toISOString(),
       rollback_expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
@@ -126,7 +136,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { action, user_id, persona_id, account_id, target_id, target_type, value } = body;
+    const { action, user_id, persona_id, account_id, target_id, target_type, value, ai_reasoning, source } = body;
 
     if (!user_id || !action) return errResp("missing user_id or action");
 
@@ -200,11 +210,13 @@ Deno.serve(async (req) => {
       const d = await post(target_id, { status });
       if (d.error) return errResp(d.error.message);
 
-      // Log to action_log (non-blocking)
+      // Log to action_log (non-blocking) — includes AI reasoning shown before confirm
       logToActionHistory(supabase, user_id, action, target_id, tType, targetName,
         { status: action === "pause" ? "ACTIVE" : "PAUSED" },
         { status },
         dailyImpact,
+        ai_reasoning || null,
+        source || null,
       );
 
       const label = target_type === "campaign" ? "Campanha" : target_type === "adset" ? "Conjunto" : "Anúncio";
@@ -222,7 +234,10 @@ Deno.serve(async (req) => {
 
       logToActionHistory(supabase, user_id, action, target_id, target_type || "campaign", targetName,
         {},
-        { [budgetField]: cents }
+        { [budgetField]: cents },
+        null,
+        ai_reasoning || null,
+        source || null,
       );
 
       const label = budgetField === "lifetime_budget" ? "vitalício" : "/dia";
@@ -237,7 +252,10 @@ Deno.serve(async (req) => {
 
       logToActionHistory(supabase, user_id, action, target_id, target_type || "ad", targetName,
         { status: "PAUSED" },
-        { status: "ACTIVE" }
+        { status: "ACTIVE" },
+        null,
+        ai_reasoning || null,
+        source || null,
       );
 
       return ok({ success: true, target_id, message: `Publicado e definido como ATIVO.` });
@@ -257,7 +275,10 @@ Deno.serve(async (req) => {
 
       logToActionHistory(supabase, user_id, action, target_id, target_type || "ad", targetName,
         {},
-        { new_id: newId, status: "PAUSED" }
+        { new_id: newId, status: "PAUSED" },
+        null,
+        ai_reasoning || null,
+        source || null,
       );
 
       return ok({ success: true, new_id: newId, message: `Duplicado e pausado. Novo ID: ${newId}` });
