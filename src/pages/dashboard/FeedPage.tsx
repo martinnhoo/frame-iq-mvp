@@ -3093,6 +3093,423 @@ const PriorityStack: React.FC<{
 };
 
 // ================================================================
+// TOP PRIORITY BAR — Sticky, high-contrast, ONE action
+// The most critical thing to do RIGHT NOW
+// ================================================================
+const TopPriorityBar: React.FC<{
+  decisions: Decision[];
+  alerts: AccountAlert[];
+  trackingHealth: any;
+  metricAlerts: MetricAlert[];
+  isDemo: boolean;
+  onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
+  onAlertAction: (alert: AccountAlert) => void;
+  onInvestigateMetric: (alert: MetricAlert) => void;
+}> = ({ decisions, alerts, trackingHealth, metricAlerts, isDemo, onAction, onAlertAction, onInvestigateMetric }) => {
+  const navigate = useNavigate();
+  const [hov, setHov] = useState(false);
+
+  // Priority resolution: kills > high alerts > metric alerts > fix > tracking > scale
+  const topKill = decisions.find(d => d.type === 'kill' && d.status === 'pending');
+  const topHighAlert = alerts.find(a => a.urgency === 'high');
+  const topMetricAlert = metricAlerts[0];
+  const topFix = decisions.find(d => d.type === 'fix' && d.status === 'pending');
+  const topScale = decisions.find(d => d.type === 'scale' && d.status === 'pending');
+
+  let bar: { color: string; icon: string; text: string; subtext: string; action: () => void; actionLabel: string } | null = null;
+
+  if (topKill) {
+    const impact = topKill.impact_daily ? `−R$${Math.round(topKill.impact_daily / 100).toLocaleString('pt-BR')}/dia` : '';
+    bar = {
+      color: T.red,
+      icon: '🔴',
+      text: topKill.headline || 'Anúncio precisa ser pausado agora',
+      subtext: impact ? `Perdendo ${impact}` : 'Performance crítica detectada',
+      action: () => {
+        const a = topKill.actions?.[0];
+        if (a && !isDemo) onAction(topKill.id, a);
+      },
+      actionLabel: 'Pausar agora',
+    };
+  } else if (topHighAlert) {
+    bar = {
+      color: T.red,
+      icon: '🚨',
+      text: topHighAlert.detail || 'Ação imediata necessária',
+      subtext: topHighAlert.ad_name || topHighAlert.campaign_name || '',
+      action: () => onAlertAction(topHighAlert),
+      actionLabel: topHighAlert.action_suggestion || 'Resolver',
+    };
+  } else if (topMetricAlert) {
+    bar = {
+      color: T.yellow,
+      icon: '⚠️',
+      text: topMetricAlert.fact,
+      subtext: topMetricAlert.context,
+      action: () => onInvestigateMetric(topMetricAlert),
+      actionLabel: topMetricAlert.investigateLabel || 'Investigar',
+    };
+  } else if (topFix) {
+    const impact = topFix.impact_daily ? `R$${Math.round(topFix.impact_daily / 100).toLocaleString('pt-BR')}/dia` : '';
+    bar = {
+      color: T.yellow,
+      icon: '🔧',
+      text: topFix.headline || 'Anúncio precisa de otimização',
+      subtext: impact ? `Potencial: ${impact}` : 'Performance deteriorando',
+      action: () => navigate('/dashboard/ai', { state: { fromDecision: topFix } }),
+      actionLabel: 'Otimizar',
+    };
+  } else if (trackingHealth) {
+    bar = {
+      color: T.yellow,
+      icon: '📡',
+      text: trackingHealth.status === 'no_conversions' ? 'Nenhuma conversão registrada' : 'Taxa de conversão muito baixa',
+      subtext: `${trackingHealth.clicks} cliques · ${fmtReais(trackingHealth.spend)} investidos`,
+      action: () => navigate('/dashboard/ai', { state: { prompt: trackingHealth.chatMsg } }),
+      actionLabel: 'Diagnosticar',
+    };
+  } else if (topScale) {
+    const impact = topScale.impact_daily ? `+R$${Math.round(topScale.impact_daily / 100).toLocaleString('pt-BR')}/dia` : '';
+    bar = {
+      color: T.green,
+      icon: '🚀',
+      text: topScale.headline || 'Oportunidade de escala confirmada',
+      subtext: impact ? `Potencial: ${impact}` : 'Performance estável para escalar',
+      action: () => {
+        const a = topScale.actions?.[0];
+        if (a && !isDemo) onAction(topScale.id, a);
+      },
+      actionLabel: 'Escalar',
+    };
+  }
+
+  if (!bar) return null;
+
+  return (
+    <div style={{
+      position: 'sticky', top: 0, zIndex: 40,
+      background: `linear-gradient(135deg, ${bar.color}12 0%, ${T.bg0}F8 100%)`,
+      borderBottom: `1px solid ${bar.color}30`,
+      padding: '10px 16px',
+      marginBottom: 16,
+      marginLeft: -16, marginRight: -16, marginTop: -24,
+      paddingTop: 'max(10px, env(safe-area-inset-top, 10px))',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+    }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 16, flexShrink: 0 }}>{bar.icon}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{
+            fontSize: 13, fontWeight: 700, color: T.text1, margin: 0,
+            lineHeight: 1.3, fontFamily: F,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>
+            {bar.text}
+          </p>
+          {bar.subtext && (
+            <p style={{
+              fontSize: 11, fontWeight: 500, color: bar.color, margin: '2px 0 0',
+              fontFamily: F, opacity: 0.85,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
+              {bar.subtext}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={bar.action}
+          onMouseEnter={() => setHov(true)}
+          onMouseLeave={() => setHov(false)}
+          style={{
+            background: hov ? bar.color : `${bar.color}E0`,
+            color: '#fff', border: 'none',
+            borderRadius: 6, padding: '7px 16px',
+            fontSize: 12, fontWeight: 700, fontFamily: F,
+            cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+            transition: 'all 0.15s',
+            boxShadow: hov ? `0 4px 14px ${bar.color}40` : `0 2px 8px ${bar.color}25`,
+            animation: bar.color === T.red ? 'priorityPulse 2s ease-in-out infinite' : 'none',
+          }}
+        >
+          {bar.actionLabel}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ================================================================
+// FLOW SECTION — Step-based grouping (Fix → Scale → Create)
+// Groups decisions into actionable steps
+// ================================================================
+const FlowSection: React.FC<{
+  decisions: Decision[];
+  onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
+  isDemo: boolean;
+}> = ({ decisions, onAction, isDemo }) => {
+  const navigate = useNavigate();
+
+  const kills = decisions.filter(d => d.type === 'kill' && d.status === 'pending');
+  const fixes = decisions.filter(d => d.type === 'fix' && d.status === 'pending');
+  const scales = decisions.filter(d => d.type === 'scale' && d.status === 'pending');
+  const patterns = decisions.filter(d => (d.type === 'pattern' || d.type === 'insight') && d.status === 'pending');
+
+  const steps: { label: string; sublabel: string; color: string; icon: string; items: Decision[] }[] = [];
+
+  if (kills.length + fixes.length > 0) {
+    steps.push({
+      label: 'Cortar perdas',
+      sublabel: `${kills.length + fixes.length} ${kills.length + fixes.length === 1 ? 'ação' : 'ações'}`,
+      color: T.red,
+      icon: '🛑',
+      items: [...kills, ...fixes],
+    });
+  }
+  if (scales.length > 0) {
+    steps.push({
+      label: 'Escalar vencedores',
+      sublabel: `${scales.length} oportunidade${scales.length > 1 ? 's' : ''}`,
+      color: T.green,
+      icon: '📈',
+      items: scales,
+    });
+  }
+  if (patterns.length > 0) {
+    steps.push({
+      label: 'Explorar padrões',
+      sublabel: `${patterns.length} insight${patterns.length > 1 ? 's' : ''}`,
+      color: T.blue,
+      icon: '💡',
+      items: patterns,
+    });
+  }
+
+  if (steps.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      {/* Step flow indicator */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 0, marginBottom: 14,
+        padding: '0 2px',
+      }}>
+        {steps.map((step, i) => (
+          <React.Fragment key={step.label}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <span style={{
+                width: 22, height: 22, borderRadius: '50%',
+                background: `${step.color}18`,
+                border: `1.5px solid ${step.color}40`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, fontWeight: 800, color: step.color,
+                fontFamily: F,
+              }}>
+                {i + 1}
+              </span>
+              <div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: step.color, fontFamily: F }}>
+                  {step.label}
+                </span>
+                <span style={{ fontSize: 10, color: T.text3, marginLeft: 4, fontFamily: F }}>
+                  {step.sublabel}
+                </span>
+              </div>
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{
+                flex: 1, height: 1, minWidth: 12,
+                background: `linear-gradient(90deg, ${steps[i].color}30, ${steps[i + 1].color}30)`,
+                margin: '0 8px',
+              }} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Grouped cards */}
+      {steps.map((step) => (
+        <div key={step.label} style={{ marginBottom: 16 }}>
+          {step.items.map((d) => {
+            const typeColor = d.type === 'kill' || d.type === 'fix' ? T.red
+              : d.type === 'scale' ? T.green : T.blue;
+            const typeLabel = d.type === 'kill' ? 'PARAR' : d.type === 'fix' ? 'CORRIGIR'
+              : d.type === 'scale' ? 'ESCALAR' : 'PADRÃO';
+
+            return (
+              <DecisionCard
+                key={d.id}
+                decision={d}
+                onAction={onAction}
+                isDemo={isDemo}
+              />
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ================================================================
+// INTELLIGENCE PANEL — AI confidence, learning, system status
+// ================================================================
+const IntelligencePanel: React.FC<{
+  decisions: Decision[];
+  tracker: any;
+  patternsCount: number;
+  trackingStatus: TrackingStatus;
+  hasMetricAlerts: boolean;
+  trackingHasIssue: boolean;
+  lastAnalysisMin: number;
+  adMetrics: AdMetricsSummary | null;
+  beginnerMode: boolean;
+}> = ({ decisions, tracker, patternsCount, trackingStatus, hasMetricAlerts, trackingHasIssue, lastAnalysisMin, adMetrics, beginnerMode }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const hasIssue = trackingStatus === 'verified_issue' || trackingHasIssue;
+  const needsAttention = hasMetricAlerts || trackingStatus === 'investigating';
+  const isHealthy = !hasIssue && !needsAttention;
+
+  const dotColor = hasIssue ? T.red : needsAttention ? T.yellow : T.green;
+  const statusText = hasIssue ? 'Problema detectado — ação necessária'
+    : needsAttention ? 'Atenção necessária — investigando'
+    : beginnerMode ? 'Coletando dados — aprendendo com sua conta'
+    : 'Tudo sob controle. Operação estável.';
+
+  const actioned = decisions.filter((d: any) => d.status === 'actioned' || d.status === 'resolved');
+  const totalSaved = (tracker?.total_saved || 0);
+
+  // Confidence level
+  const confidence = !adMetrics ? 'baixa'
+    : adMetrics.daysOfData < 3 || adMetrics.totalClicks < 30 ? 'baixa'
+    : adMetrics.daysOfData < 7 || adMetrics.totalClicks < 100 ? 'média'
+    : 'alta';
+
+  const confidenceColor = confidence === 'alta' ? T.green : confidence === 'média' ? T.blue : T.yellow;
+
+  return (
+    <div style={{
+      background: T.bg1, border: `1px solid ${T.border1}`,
+      borderRadius: 10, padding: 'clamp(12px, 2.5vw, 16px)',
+      marginBottom: 14,
+      animation: 'feed-fadeUp 0.25s ease both',
+    }}>
+      {/* Main status line */}
+      <div
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          cursor: 'pointer', gap: 8,
+        }}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+            background: dotColor,
+            boxShadow: `0 0 8px ${dotColor}50`,
+          }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: T.text2, fontFamily: F }}>
+            {statusText}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          {/* Confidence badge */}
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: 10, fontWeight: 600, color: confidenceColor,
+            fontFamily: F,
+          }}>
+            <span style={{
+              width: 4, height: 4, borderRadius: '50%', background: confidenceColor,
+            }} />
+            Confiança: {confidence}
+          </span>
+          <span style={{
+            fontSize: 11, color: T.text3, transform: expanded ? 'rotate(180deg)' : 'rotate(0)',
+            transition: 'transform 0.2s', display: 'inline-block',
+          }}>▾</span>
+        </div>
+      </div>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div style={{
+          marginTop: 12, paddingTop: 10,
+          borderTop: `1px solid ${T.border0}`,
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10,
+        }}>
+          <div>
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: T.labelColor, textTransform: 'uppercase' as const }}>
+              ÚLTIMA ANÁLISE
+            </span>
+            <p style={{ fontSize: 13, fontWeight: 600, color: T.text1, margin: '4px 0 0', fontFamily: F }}>
+              {lastAnalysisMin}min atrás
+            </p>
+          </div>
+          <div>
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: T.labelColor, textTransform: 'uppercase' as const }}>
+              PADRÕES APRENDIDOS
+            </span>
+            <p style={{ fontSize: 13, fontWeight: 600, color: T.text1, margin: '4px 0 0', fontFamily: F }}>
+              {patternsCount}
+            </p>
+          </div>
+          <div>
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: T.labelColor, textTransform: 'uppercase' as const }}>
+              OTIMIZAÇÕES
+            </span>
+            <p style={{ fontSize: 13, fontWeight: 600, color: T.text1, margin: '4px 0 0', fontFamily: F }}>
+              {actioned.length}
+            </p>
+          </div>
+          {adMetrics && (
+            <div>
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: T.labelColor, textTransform: 'uppercase' as const }}>
+                DADOS ANALISADOS
+              </span>
+              <p style={{ fontSize: 13, fontWeight: 600, color: T.text1, margin: '4px 0 0', fontFamily: F }}>
+                {adMetrics.daysOfData} dias · {adMetrics.totalClicks.toLocaleString('pt-BR')} cliques
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ================================================================
+// STABLE STATUS LINE — When nothing is critical
+// ================================================================
+const StableStatus: React.FC<{ savingsTotal: number }> = ({ savingsTotal }) => (
+  <div style={{
+    display: 'flex', alignItems: 'center', gap: 8,
+    padding: '12px 16px', marginBottom: 14,
+    background: `rgba(74,222,128,0.04)`,
+    borderRadius: 8,
+    border: `1px solid rgba(74,222,128,0.10)`,
+    animation: 'feed-fadeUp 0.25s ease both',
+  }}>
+    <span style={{
+      width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+      background: T.green,
+      boxShadow: `0 0 8px ${T.green}40`,
+    }} />
+    <span style={{ fontSize: 12.5, fontWeight: 600, color: T.text2, fontFamily: F }}>
+      Nada crítico agora. Sua conta está estável.
+    </span>
+    {savingsTotal > 0 && (
+      <span style={{ fontSize: 11, color: T.green, fontWeight: 600, fontFamily: F, marginLeft: 'auto' }}>
+        {fmtReais(savingsTotal)} economizados
+      </span>
+    )}
+  </div>
+);
+
+// ================================================================
 // FEED PAGE — Main component
 // ================================================================
 const FeedPage: React.FC = () => {
@@ -4127,7 +4544,7 @@ const FeedPage: React.FC = () => {
       <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto' }}>
           <div style={{ marginBottom: 18 }}>
-            <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>SEU FEED</h1>
+            <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>COMMAND CENTER</h1>
           </div>
           <AccountHealthBanner
             alerts={visibleAlerts}
@@ -4147,12 +4564,32 @@ const FeedPage: React.FC = () => {
   return (
     <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
-        {/* Header — wraps on mobile */}
-        <div style={{ marginBottom: 16 }}>
+
+        {/* ═══════════════════════════════════════════════
+            LAYER 0 — TOP PRIORITY BAR (sticky, high-contrast)
+            The ONE thing to do right now.
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && (feedState === 'full' || feedState === 'demo' || (feedState === 'no-critical' && (visibleAlerts.length > 0 || metricAlerts.length > 0 || trackingHealth))) && (
+          <TopPriorityBar
+            decisions={pendingDecisions}
+            alerts={visibleAlerts}
+            trackingHealth={trackingHealth}
+            metricAlerts={metricAlerts}
+            isDemo={isDemo}
+            onAction={handleAction}
+            onAlertAction={handleAlertAction}
+            onInvestigateMetric={investigateMetricAlert}
+          />
+        )}
+
+        {/* ═══════════════════════════════════════════════
+            LAYER 1 — HEADER (compact, utilitarian)
+            ═══════════════════════════════════════════════ */}
+        <div style={{ marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>
-                DECISÕES
+                COMMAND CENTER
               </h1>
               {isDemo && (
                 <span style={{
@@ -4165,11 +4602,6 @@ const FeedPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               {!isDemo && metaConnected && (
                 <PeriodSelector value={period} onChange={setPeriod} />
-              )}
-              {pendingDecisions.length > 0 && (
-                <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.60)', fontFamily: F }}>
-                  {pendingDecisions.length} {pendingDecisions.length === 1 ? 'item' : 'itens'}
-                </span>
               )}
               {metaConnected && !syncing && (
                 <button onClick={handleSync} style={{
@@ -4195,52 +4627,71 @@ const FeedPage: React.FC = () => {
         {/* Demo banner */}
         {isDemo && (
           <div style={{
-            background: T.bg1, border: `1px solid ${T.border0}`,
-            borderRadius: 6, padding: '10px 14px', marginBottom: 12,
+            background: `linear-gradient(135deg, ${T.bg1} 0%, rgba(14,165,233,0.04) 100%)`,
+            border: `1px solid ${T.border1}`,
+            borderRadius: 8, padding: '12px 16px', marginBottom: 14,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 16px',
           }}>
-            <span style={{ fontSize: 12, color: T.text2, fontFamily: F, lineHeight: 1.5, minWidth: 0 }}>
-              Dados simulados. Sincronize sua conta Meta para análise real.
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+              <span style={{ fontSize: 14 }}>🧪</span>
+              <span style={{ fontSize: 12.5, color: T.text2, fontFamily: F, lineHeight: 1.5 }}>
+                Simulação ativa. Conecte sua conta para decisões reais.
+              </span>
+            </div>
             <button onClick={handleSync} style={{
-              background: '#1F3A5F', color: '#fff', border: 'none', borderRadius: 3,
-              padding: '7px 14px', fontSize: 12, fontWeight: 700, fontFamily: F,
-              cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 0.1s', letterSpacing: '-0.01em',
+              background: T.blue, color: '#fff', border: 'none', borderRadius: 6,
+              padding: '8px 16px', fontSize: 12, fontWeight: 700, fontFamily: F,
+              cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s',
+              boxShadow: `0 2px 8px ${T.blue}30`,
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#162C48'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#1F3A5F'; }}
-            >Sincronizar conta</button>
+              onMouseEnter={e => { e.currentTarget.style.background = T.blueHover; e.currentTarget.style.boxShadow = `0 4px 14px ${T.blue}40`; }}
+              onMouseLeave={e => { e.currentTarget.style.background = T.blue; e.currentTarget.style.boxShadow = `0 2px 8px ${T.blue}30`; }}
+            >Conectar Meta Ads</button>
           </div>
         )}
 
         {/* Sync error */}
         {syncError && (
           <div style={{
-            background: 'rgba(180,35,42,0.08)', border: '1px solid rgba(180,35,42,0.20)',
-            borderRadius: 3, padding: '8px 14px', marginBottom: 12,
+            background: 'rgba(248,113,113,0.06)', border: `1px solid rgba(248,113,113,0.20)`,
+            borderRadius: 8, padding: '10px 14px', marginBottom: 12,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px 12px',
           }}>
-            <span style={{ fontSize: 12, color: '#D63B3B', fontFamily: F, minWidth: 0, wordBreak: 'break-word' }}>{syncError}</span>
+            <span style={{ fontSize: 12, color: T.red, fontFamily: F, minWidth: 0, wordBreak: 'break-word' }}>{syncError}</span>
             <button onClick={handleSync} style={{
-              background: '#B4232A', color: '#fff', border: 'none', borderRadius: 3,
-              padding: '5px 12px', fontSize: 11, fontWeight: 700, fontFamily: F, cursor: 'pointer',
+              background: T.red, color: '#fff', border: 'none', borderRadius: 6,
+              padding: '6px 14px', fontSize: 11, fontWeight: 700, fontFamily: F, cursor: 'pointer',
+              transition: 'all 0.15s',
             }}>Tentar novamente</button>
           </div>
         )}
 
-        {/* Inline sync progress banner */}
+        {/* Inline sync progress */}
         {syncing && <SyncBanner />}
 
-        {/* Performance Pulse — KPI bar (always first when connected) */}
-        {metaConnected && !isDemo && (
-          <PerformancePulse data={{
-            ...performancePulseData,
-            totalAds: totalAdCount,
-          }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
+        {/* ═══════════════════════════════════════════════
+            LAYER 2 — INTELLIGENCE PANEL (AI status)
+            Shows: confidence, learning status, system health.
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && !isDemo && metricsReady && (
+          <IntelligencePanel
+            decisions={decisions}
+            tracker={tracker}
+            patternsCount={patternsCount}
+            trackingStatus={trackingUserStatus}
+            hasMetricAlerts={metricAlerts.length > 0}
+            trackingHasIssue={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'}
+            lastAnalysisMin={lastAnalysisMin}
+            adMetrics={adMetrics}
+            beginnerMode={beginnerMode}
+          />
         )}
 
-        {/* ── ACCOUNT HEALTH — alerts or monitoring status ── */}
-        {!isDemo && (
+        {/* ═══════════════════════════════════════════════
+            LAYER 3 — ACCOUNT HEALTH ALERTS (if any)
+            Only visible when there are actual alerts.
+            ═══════════════════════════════════════════════ */}
+        {!isDemo && visibleAlerts.length > 0 && (
           <AccountHealthBanner
             alerts={visibleAlerts}
             onDismiss={handleAlertDismiss}
@@ -4250,274 +4701,111 @@ const FeedPage: React.FC = () => {
           />
         )}
 
-        {/* ── Tracking Health — full diagnostic card ── */}
+        {/* ═══════════════════════════════════════════════
+            LAYER 4 — TRACKING HEALTH (diagnostic card)
+            Only shows when tracking has issues.
+            ═══════════════════════════════════════════════ */}
         {metaConnected && !isDemo && trackingHealth && (
           <div className="feed-card-lift" style={{
             background: T.bg1,
             border: `1px solid ${T.border1}`,
-            borderRadius: 10, padding: 'clamp(14px, 2.5vw, 18px)', marginBottom: 12,
+            borderRadius: 10, padding: 'clamp(14px, 2.5vw, 18px)', marginBottom: 14,
             borderLeft: `3px solid ${T.yellow}`,
             animation: 'feed-fadeUp 0.3s ease',
           }}>
-            {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
               <span style={{
                 width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                background: T.yellow,
-                boxShadow: `0 0 8px ${T.yellow}50`,
+                background: T.yellow, boxShadow: `0 0 8px ${T.yellow}50`,
               }} />
-              <span style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-                color: T.labelColor,
-              }}>
-                Saúde do rastreamento
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
+                Rastreamento requer atenção
               </span>
             </div>
 
-            {/* Primary fact */}
             <p style={{ fontSize: 14, color: T.text1, fontWeight: 700, margin: '0 0 4px', lineHeight: 1.4 }}>
               {trackingHealth.status === 'no_conversions'
-                ? 'Nenhuma conversão registrada neste período'
-                : `Apenas ${trackingHealth.conversions} conversões em ${trackingHealth.clicks} cliques (${trackingHealth.rate}%)`
-              }
+                ? 'Zero conversões detectadas. Ação necessária.'
+                : `Apenas ${trackingHealth.conversions} conversões em ${trackingHealth.clicks} cliques — taxa anormalmente baixa`}
             </p>
             <p style={{ fontSize: 12, color: T.text2, margin: '0 0 14px', lineHeight: 1.5 }}>
               {trackingHealth.clicks} cliques · {fmtReais(trackingHealth.spend)} investidos · {adMetrics?.daysOfData || 0} dias de dados
             </p>
 
-            {/* ── Diagnostic checklist — step by step ── */}
-            <div style={{
-              background: T.bg2, borderRadius: 8,
-              padding: '12px 14px', marginBottom: 14,
-            }}>
+            {/* Diagnostic checklist */}
+            <div style={{ background: T.bg2, borderRadius: 8, padding: '12px 14px', marginBottom: 14 }}>
               <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: T.labelColor, margin: '0 0 10px' }}>
-                Checklist de diagnóstico
+                Diagnóstico rápido
               </p>
               {[
-                {
-                  label: 'Pixel Meta instalado no site',
-                  detail: 'Verificar se o pixel está presente em todas as páginas',
-                  status: trackingHealth.clicks > 0 ? 'ok' : 'warn',
-                },
-                {
-                  label: 'Eventos de conversão configurados',
-                  detail: trackingHealth.status === 'no_conversions'
-                    ? 'Nenhum evento Purchase/Lead registrado'
-                    : `${trackingHealth.conversions} eventos registrados`,
-                  status: trackingHealth.status === 'no_conversions' ? 'error' : 'warn',
-                },
-                {
-                  label: 'Conversions API (CAPI) ativa',
-                  detail: 'Server-side tracking para maior precisão',
-                  status: 'unknown' as const,
-                },
-                {
-                  label: 'Domínio verificado no Business Manager',
-                  detail: 'Necessário para eventos web (iOS 14+)',
-                  status: 'unknown' as const,
-                },
+                { label: 'Pixel Meta instalado', detail: 'Presente em todas as páginas do site', status: trackingHealth.clicks > 0 ? 'ok' : 'warn' },
+                { label: 'Eventos de conversão', detail: trackingHealth.status === 'no_conversions' ? 'Nenhum evento Purchase/Lead registrado' : `${trackingHealth.conversions} eventos registrados`, status: trackingHealth.status === 'no_conversions' ? 'error' : 'warn' },
+                { label: 'Conversions API (CAPI)', detail: 'Server-side tracking', status: 'unknown' as const },
+                { label: 'Domínio verificado', detail: 'Necessário para iOS 14+', status: 'unknown' as const },
               ].map((item, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 8,
-                  padding: '6px 0',
-                  borderTop: i > 0 ? `1px solid ${T.border0}` : 'none',
-                }}>
-                  <span style={{
-                    width: 7, height: 7, borderRadius: '50%', flexShrink: 0, marginTop: 4,
-                    background: item.status === 'ok' ? T.green
-                      : item.status === 'error' ? T.red
-                      : item.status === 'warn' ? T.yellow
-                      : T.text3,
-                    boxShadow: item.status === 'error' ? `0 0 6px ${T.red}40` : 'none',
-                  }} />
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 0', borderTop: i > 0 ? `1px solid ${T.border0}` : 'none' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, marginTop: 4, background: item.status === 'ok' ? T.green : item.status === 'error' ? T.red : item.status === 'warn' ? T.yellow : T.text3, boxShadow: item.status === 'error' ? `0 0 6px ${T.red}40` : 'none' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 12, color: T.text1, fontWeight: 600, margin: 0, lineHeight: 1.4 }}>
-                      {item.label}
-                    </p>
-                    <p style={{ fontSize: 10.5, color: T.text3, margin: '1px 0 0', lineHeight: 1.4 }}>
-                      {item.detail}
-                    </p>
+                    <p style={{ fontSize: 12, color: T.text1, fontWeight: 600, margin: 0, lineHeight: 1.4 }}>{item.label}</p>
+                    <p style={{ fontSize: 10.5, color: T.text3, margin: '1px 0 0', lineHeight: 1.4 }}>{item.detail}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Ambiguity note */}
-            <p style={{ fontSize: 11, color: T.text3, margin: '0 0 12px', lineHeight: 1.6, fontStyle: 'italic' }}>
-              {trackingHealth.status === 'no_conversions'
-                ? 'Não sabemos se realmente não houve vendas ou se o rastreamento falhou. Verifique os itens acima.'
-                : 'A taxa de conversão está muito abaixo do esperado. Pode indicar eventos não registrados.'
-              }
-            </p>
-
-            {/* Action buttons */}
             <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={confirmNoConversion}
-                style={{
-                  flex: 1, background: T.bg2, color: T.text2,
-                  border: `1px solid ${T.border1}`,
-                  borderRadius: 8, padding: '10px 10px', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 600,
-                  transition: 'all 0.18s',
-                }}
+              <button onClick={confirmNoConversion} style={{ flex: 1, background: T.bg2, color: T.text2, border: `1px solid ${T.border1}`, borderRadius: 8, padding: '10px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.18s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.bg3; e.currentTarget.style.borderColor = T.text3; }}
-                onMouseLeave={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border1; }}
-              >
+                onMouseLeave={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border1; }}>
                 {trackingHealth.status === 'no_conversions' ? 'Não houve conversões' : 'Taxa está correta'}
               </button>
-
-              <button
-                className="feed-cta"
-                onClick={() => {
-                  startTrackingInvestigation();
-                  const msg = trackingHealth.status === 'no_conversions'
-                    ? `Minha conta tem ${trackingHealth.clicks} cliques, ${fmtReais(trackingHealth.spend)} investidos e ZERO conversões registradas nos últimos ${adMetrics?.daysOfData || 7} dias. Preciso de ajuda para diagnosticar: 1) O pixel está instalado? 2) Os eventos estão configurados? 3) A CAPI está ativa? 4) O domínio está verificado? Me guie passo a passo.`
-                    : `Minha conta tem ${trackingHealth.clicks} cliques e apenas ${trackingHealth.conversions} conversões (${trackingHealth.rate}%) com ${fmtReais(trackingHealth.spend)} investidos. A taxa parece muito baixa. Ajude-me a verificar se o rastreamento está perdendo eventos.`;
-                  navigate('/dashboard/ai', {
-                    state: { prompt: msg },
-                  });
-                }}
-                style={{
-                  flex: 1, background: T.blue, color: T.text1,
-                  border: 'none',
-                  borderRadius: 8, padding: '10px 10px', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 700,
-                  transition: 'all 0.18s',
-                }}
+              <button className="feed-cta" onClick={() => {
+                startTrackingInvestigation();
+                const msg = trackingHealth.status === 'no_conversions'
+                  ? `Minha conta tem ${trackingHealth.clicks} cliques, ${fmtReais(trackingHealth.spend)} investidos e ZERO conversões nos últimos ${adMetrics?.daysOfData || 7} dias. Diagnóstico completo: pixel, eventos, CAPI, domínio.`
+                  : `${trackingHealth.clicks} cliques, ${trackingHealth.conversions} conversões (${trackingHealth.rate}%), ${fmtReais(trackingHealth.spend)} investidos. Taxa muito baixa — verificar rastreamento.`;
+                navigate('/dashboard/ai', { state: { prompt: msg } });
+              }} style={{ flex: 1, background: T.blue, color: T.text1, border: 'none', borderRadius: 8, padding: '10px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.18s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.blueHover; e.currentTarget.style.boxShadow = `0 4px 14px ${T.blue}30`; }}
-                onMouseLeave={e => { e.currentTarget.style.background = T.blue; e.currentTarget.style.boxShadow = 'none'; }}
-              >
+                onMouseLeave={e => { e.currentTarget.style.background = T.blue; e.currentTarget.style.boxShadow = 'none'; }}>
                 Diagnosticar com IA →
               </button>
             </div>
           </div>
         )}
 
-        {/* Tracking status removed here — now rendered inline near campaigns */}
-
-        {/* Beginner Mode — data still collecting, no alerts */}
-        {metaConnected && !isDemo && beginnerMode && adMetrics && adMetrics.daysOfData > 0 && (
-          <div style={{
-            background: T.bg1, border: `1px solid ${T.border1}`,
-            borderRadius: 8, padding: 'clamp(12px, 2.5vw, 16px)', marginBottom: 10,
-            animation: 'feed-fadeUp 0.3s ease',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, background: T.blue, opacity: 0.6 }} />
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
-                Coletando dados
-              </span>
-            </div>
-            <p style={{ fontSize: 13, color: T.text1, fontWeight: 600, margin: '0 0 4px', lineHeight: 1.5 }}>
-              Dados ainda insuficientes para análise
-            </p>
-            <p style={{ fontSize: 11.5, color: T.text3, margin: 0, lineHeight: 1.5 }}>
-              {adMetrics.daysOfData} dia{adMetrics.daysOfData !== 1 ? 's' : ''} de dados · {adMetrics.totalClicks} cliques · O sistema precisa de mais dados para gerar insights confiáveis.
-            </p>
-          </div>
-        )}
-
-        {/* Silent Mode absorbed into SystemStatus — no separate card */}
-
-        {/* Metric Alerts — adaptive, priority-scored, max 2 */}
+        {/* Metric Alerts — kept but improved microcopy */}
         {metaConnected && !isDemo && metricAlerts.length > 0 && metricAlerts.map(alert => (
           <div key={alert.id} className="feed-card-lift" style={{
-            background: T.bg1,
-            border: `1px solid ${T.border1}`,
-            borderRadius: 8, padding: 'clamp(12px, 2.5vw, 16px)', marginBottom: 10,
+            background: T.bg1, border: `1px solid ${T.border1}`,
+            borderRadius: 10, padding: 'clamp(12px, 2.5vw, 16px)', marginBottom: 10,
             borderLeft: `3px solid ${T.blue}`,
             animation: 'feed-fadeUp 0.3s ease',
           }}>
-            {/* Header + confidence label */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, background: T.blue, boxShadow: `0 0 6px ${T.blue}50` }} />
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>
-                  {alert.label}
-                </span>
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>{alert.label}</span>
               </div>
-              <span style={{
-                fontSize: 9, fontWeight: 600, letterSpacing: '0.04em',
-                color: alert.confidenceLabel === 'Alta confiança' ? 'rgba(74,222,128,0.60)'
-                  : alert.confidenceLabel === 'Confiança moderada' ? 'rgba(14,165,233,0.50)'
-                  : 'rgba(251,191,36,0.50)',
-              }}>
-                {alert.confidenceLabel}
-              </span>
+              <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.04em', color: alert.confidenceLabel === 'Alta confiança' ? 'rgba(74,222,128,0.60)' : alert.confidenceLabel === 'Confiança moderada' ? 'rgba(14,165,233,0.50)' : 'rgba(251,191,36,0.50)' }}>{alert.confidenceLabel}</span>
             </div>
-
-            {/* Fact + context */}
-            <p style={{ fontSize: 13, color: T.text1, fontWeight: 600, margin: '0 0 4px', lineHeight: 1.5 }}>
-              {alert.fact}
-            </p>
-            <p style={{ fontSize: 11.5, color: T.text2, margin: '0 0 8px', lineHeight: 1.5 }}>
-              {alert.context}
-            </p>
-
-            {/* Impact estimation */}
-            <div style={{
-              background: 'rgba(14,165,233,0.06)', borderRadius: 6,
-              padding: '8px 12px', marginBottom: 8,
-              borderLeft: `2px solid ${T.blue}30`,
-            }}>
-              <p style={{ fontSize: 11, color: T.text2, margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
-                {alert.impact}
-              </p>
+            <p style={{ fontSize: 13, color: T.text1, fontWeight: 600, margin: '0 0 4px', lineHeight: 1.5 }}>{alert.fact}</p>
+            <p style={{ fontSize: 11.5, color: T.text2, margin: '0 0 8px', lineHeight: 1.5 }}>{alert.context}</p>
+            <div style={{ background: 'rgba(14,165,233,0.06)', borderRadius: 6, padding: '8px 12px', marginBottom: 8, borderLeft: `2px solid ${T.blue}30` }}>
+              <p style={{ fontSize: 11, color: T.text2, margin: 0, lineHeight: 1.6, fontWeight: 500 }}>{alert.impact}</p>
             </div>
-
-            {/* Ambiguity */}
-            <div style={{ background: T.bg2, borderRadius: 6, padding: '8px 12px', marginBottom: 8 }}>
-              <p style={{ fontSize: 10.5, color: T.text3, margin: 0, lineHeight: 1.6 }}>
-                {alert.ambiguity}
-              </p>
-            </div>
-
-            {/* Trust line + history note */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 4 }}>
-              <span style={{ fontSize: 9.5, color: T.text3, fontWeight: 500 }}>
-                {alert.trustLine}
-              </span>
-              {alert.historyNote && (
-                <span style={{ fontSize: 9.5, color: T.text3, fontStyle: 'italic' }}>
-                  {alert.historyNote}
-                </span>
-              )}
-            </div>
-
-            {/* Actions */}
             <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={() => acknowledgeMetricAlert(alert.id)}
-                style={{
-                  flex: 1, background: T.bg2, color: T.text2,
-                  border: `1px solid ${T.border1}`,
-                  borderRadius: 6, padding: '9px 10px', cursor: 'pointer',
-                  fontSize: 11.5, fontWeight: 600, transition: 'all 0.18s',
-                }}
+              <button onClick={() => acknowledgeMetricAlert(alert.id)} style={{ flex: 1, background: T.bg2, color: T.text2, border: `1px solid ${T.border1}`, borderRadius: 6, padding: '9px 10px', cursor: 'pointer', fontSize: 11.5, fontWeight: 600, transition: 'all 0.18s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.bg1; e.currentTarget.style.borderColor = T.text3; }}
-                onMouseLeave={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border1; }}
-              >
-                {alert.dismissLabel}
-              </button>
-              <button
-                className="feed-cta"
-                onClick={() => investigateMetricAlert(alert)}
-                style={{
-                  flex: 1, background: T.blue, color: T.text1,
-                  border: 'none', borderRadius: 6, padding: '9px 10px', cursor: 'pointer',
-                  fontSize: 11.5, fontWeight: 700, transition: 'all 0.18s',
-                }}
+                onMouseLeave={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border1; }}>{alert.dismissLabel}</button>
+              <button className="feed-cta" onClick={() => investigateMetricAlert(alert)} style={{ flex: 1, background: T.blue, color: T.text1, border: 'none', borderRadius: 6, padding: '9px 10px', cursor: 'pointer', fontSize: 11.5, fontWeight: 700, transition: 'all 0.18s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.blueHover; e.currentTarget.style.boxShadow = `0 4px 14px ${T.blue}30`; }}
-                onMouseLeave={e => { e.currentTarget.style.background = T.blue; e.currentTarget.style.boxShadow = 'none'; }}
-              >
-                {alert.investigateLabel}
-              </button>
+                onMouseLeave={e => { e.currentTarget.style.background = T.blue; e.currentTarget.style.boxShadow = 'none'; }}>{alert.investigateLabel}</button>
             </div>
           </div>
         ))}
 
-        {/* Metric investigating states — minimal reminders */}
+        {/* Metric investigating reminders */}
         {metaConnected && !isDemo && (['cpa_no_data', 'cpa_deviation', 'ctr_deviation', 'roas_deviation'] as MetricAlertId[])
           .filter(id => metricEntries[id]?.action === 'investigating')
           .map(id => {
@@ -4528,51 +4816,32 @@ const FeedPage: React.FC = () => {
               roas_deviation: 'ROAS — investigando retorno',
             };
             return (
-              <div key={`inv-${id}`} style={{
-                background: T.bg1, border: `1px solid ${T.border1}`,
-                borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 10,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                gap: 10, flexWrap: 'wrap',
-                animation: 'feed-fadeUp 0.3s ease',
-              }}>
+              <div key={`inv-${id}`} style={{ background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', animation: 'feed-fadeUp 0.3s ease' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
                   <span style={{ fontSize: 12, color: T.blue }}>◉</span>
                   <span style={{ fontSize: 11.5, color: T.text2, fontWeight: 500 }}>{labels[id]}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button
-                    onClick={() => navigate('/dashboard/ai')}
-                    style={{ background: 'transparent', color: T.blue, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, padding: '4px 0', transition: 'opacity 0.15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-                  >
-                    Continuar no chat
-                  </button>
-                  <button
-                    onClick={() => resetMetricAlert(id)}
-                    style={{ background: 'transparent', color: T.text3, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 500, padding: '4px 0', transition: 'opacity 0.15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-                    onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-                  >
-                    Resetar
-                  </button>
+                  <button onClick={() => navigate('/dashboard/ai')} style={{ background: 'transparent', color: T.blue, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, padding: '4px 0' }}>Continuar no chat</button>
+                  <button onClick={() => resetMetricAlert(id)} style={{ background: 'transparent', color: T.text3, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 500, padding: '4px 0' }}>Resetar</button>
                 </div>
               </div>
             );
           })
         }
 
-        {/* Goal Setup — show when Meta is connected but no goal configured */}
+        {/* Goal Setup */}
         {metaConnected && !isDemo && goalConfigured === false && accountId && (
-          <GoalSetup
-            accountId={accountId}
-            onComplete={() => setGoalConfigured(true)}
-          />
+          <GoalSetup accountId={accountId} onComplete={() => setGoalConfigured(true)} />
         )}
 
-        {/* STATE 5 — Full data: money tracker + summary + cards */}
+        {/* ═══════════════════════════════════════════════
+            LAYER 5 — DECISION STACK + FLOW SECTIONS
+            The heart of the Command Center.
+            ═══════════════════════════════════════════════ */}
         {feedState === 'full' || feedState === 'demo' ? (
           <>
+            {/* Money tracker — shows waste + opportunity */}
             {tracker && (
               <div style={{ marginBottom: 16 }}>
                 <MoneyBar
@@ -4586,55 +4855,23 @@ const FeedPage: React.FC = () => {
               </div>
             )}
 
-            {/* Visible Win — celebrate results when actions have been taken */}
+            {/* Visible Win — celebrate when actions taken */}
             {!isDemo && <VisibleWin decisions={decisions} tracker={tracker} />}
 
-            {/* System Status — "Sistema ativo" confidence block */}
-            {!isDemo && <SystemStatus decisions={decisions} tracker={tracker} patternsCount={patternsCount} trackingStatus={trackingUserStatus} hasMetricAlerts={metricAlerts.length > 0} trackingHasIssue={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} />}
+            {/* Flow-based decision groups: Fix → Scale → Explore */}
+            <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} />
 
-            {/* Performance summary when no critical issues — shows ad health + metrics */}
-            {!isDemo && !hasCritical && totalAdCount > 0 && (
-              <PerformanceSummary
-                ads={userAds}
-                totalAds={totalAdCount}
-                metrics={adMetrics}
-                periodLabel={PERIODS.find(p => p.key === period)!.label}
-                metaAccountId={metaSelId || undefined}
-                onToggleAd={handleConfirmToggle}
-                togglingAd={togglingAd}
-                toggleSuccess={toggleSuccess}
-                onRequestToggle={handleRequestToggle}
-                onLoadMoreAds={loadMoreAds}
-                loadingMoreAds={adsLoadingMore}
-                trackingIssue={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'}
-                campaigns={userCampaigns}
-                togglingCampaign={togglingCampaign}
-                campaignToggleSuccess={campaignToggleSuccess}
-                onRequestCampaignToggle={handleRequestCampaignToggle}
-              />
+            {/* Fallback: full decision list if FlowSection has no grouped items */}
+            {pendingDecisions.length > 0 && (
+              <>
+                {hasCritical && (
+                  <div style={{ marginBottom: 12 }}>
+                    <SummaryBar decisions={pendingDecisions} />
+                  </div>
+                )}
+                <CollapsibleDecisions decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} />
+              </>
             )}
-
-
-            {pendingDecisions.length > 0 && hasCritical && (
-              <div style={{ marginBottom: 12 }}>
-                <SummaryBar decisions={pendingDecisions} />
-              </div>
-            )}
-
-            {pendingDecisions.length > 0 && hasCritical && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, padding: '0 2px' }}>
-                <span style={{
-                  width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9',
-                  boxShadow: '0 0 4px rgba(14,165,233,0.4)',
-                  animation: 'pulse 2s ease-in-out infinite',
-                }} />
-                <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.60)', fontFamily: F, fontWeight: 500 }}>
-                  Monitorando performance em tempo real — última análise há {lastAnalysisMin} min
-                </span>
-              </div>
-            )}
-
-            <CollapsibleDecisions decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} />
           </>
         ) : feedState === 'no-ads' ? (
           <StateNoAds />
@@ -4643,7 +4880,42 @@ const FeedPage: React.FC = () => {
         ) : feedState === 'few-data' ? (
           <StateFewData totalAds={totalAdCount} metrics={adMetrics} periodLabel={PERIODS.find(p => p.key === period)!.label} />
         ) : feedState === 'no-critical' ? (
-          <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaSelId || undefined} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
+          <>
+            {/* Stable status — replaces old "Monitoramento ativo — nenhum alerta" */}
+            <StableStatus savingsTotal={savingsTotal} />
+
+            {/* Next opportunity card */}
+            <div className="feed-card-lift" style={{
+              background: T.bg1, border: `1px solid ${T.border1}`,
+              borderRadius: 10, padding: 'clamp(14px, 2.5vw, 18px)', marginBottom: 14,
+              borderLeft: `3px solid ${T.green}`,
+              animation: 'feed-fadeUp 0.25s ease both',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.green }}>
+                  PRÓXIMA OPORTUNIDADE
+                </span>
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: T.text1, margin: '0 0 4px', lineHeight: 1.4, fontFamily: F }}>
+                Seu próximo ganho vem de novos criativos · <span style={{ color: T.green }}>+18% CTR potencial</span>
+              </p>
+              <p style={{ fontSize: 12, color: T.text2, margin: '0 0 14px', lineHeight: 1.5 }}>
+                Contas com performance semelhante escalam diversificando hooks e formatos
+              </p>
+              <button className="feed-cta" onClick={() => navigate('/dashboard/hooks')} style={{
+                background: T.green, color: '#000', border: 'none', borderRadius: 8,
+                padding: '10px 20px', fontSize: 12.5, fontWeight: 700, fontFamily: F,
+                cursor: 'pointer', transition: 'all 0.18s',
+                boxShadow: `0 2px 10px ${T.green}30`,
+              }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 4px 18px ${T.green}50`; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = `0 2px 10px ${T.green}30`; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                Gerar variação com IA
+              </button>
+            </div>
+
+            <StateNoCritical totalAds={totalAdCount} ads={userAds} periodLabel={PERIODS.find(p => p.key === period)!.label} metaAccountId={metaSelId || undefined} onLoadMoreAds={loadMoreAds} loadingMoreAds={adsLoadingMore} onToggleAd={handleConfirmToggle} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={handleRequestToggle} campaigns={userCampaigns} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={handleRequestCampaignToggle} />
+          </>
         ) : feedState === 'loading' ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[1,2].map(i => (
@@ -4665,42 +4937,45 @@ const FeedPage: React.FC = () => {
           </div>
         ) : null}
 
-        {/* Discreet tracking status — tiny pill near campaigns */}
+        {/* ═══════════════════════════════════════════════
+            LAYER 6 — PERFORMANCE SNAPSHOT (secondary)
+            KPIs moved BELOW decisions — data supports, not leads.
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && !isDemo && metricsReady && adMetrics && (
+          <div style={{ marginTop: 4 }}>
+            <PerformancePulse data={{
+              ...performancePulseData,
+              totalAds: totalAdCount,
+            }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
+          </div>
+        )}
+
+        {/* Discreet tracking status pill */}
         {(trackingUserStatus === 'confirmed_no_conversion' || trackingUserStatus === 'verified_ok' || trackingUserStatus === 'verified_issue' || trackingUserStatus === 'investigating') && adMetrics && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '5px 0', marginTop: -2,
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', marginTop: -2 }}>
             <span style={{
               width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-              background: trackingUserStatus === 'verified_ok' ? T.green
-                : trackingUserStatus === 'verified_issue' ? T.red
-                : trackingUserStatus === 'investigating' ? T.blue
-                : T.yellow,
+              background: trackingUserStatus === 'verified_ok' ? T.green : trackingUserStatus === 'verified_issue' ? T.red : trackingUserStatus === 'investigating' ? T.blue : T.yellow,
             }} />
             <span style={{ fontSize: 10, color: T.text3, fontWeight: 500 }}>
               {trackingUserStatus === 'confirmed_no_conversion' && 'Sem conversões — confirmado'}
-              {trackingUserStatus === 'verified_ok' && 'Rastreamento OK'}
-              {trackingUserStatus === 'verified_issue' && 'Problema no rastreamento'}
+              {trackingUserStatus === 'verified_ok' && 'Rastreamento verificado'}
+              {trackingUserStatus === 'verified_issue' && 'Problema no rastreamento detectado'}
               {trackingUserStatus === 'investigating' && 'Diagnóstico em andamento'}
             </span>
-            <button
-              onClick={resetTrackingStatus}
-              style={{
-                background: 'none', border: 'none', color: T.text3, cursor: 'pointer',
-                fontSize: 9.5, opacity: 0.6, padding: 0, marginLeft: 2,
-              }}
+            <button onClick={resetTrackingStatus} style={{ background: 'none', border: 'none', color: T.text3, cursor: 'pointer', fontSize: 9.5, opacity: 0.6, padding: 0, marginLeft: 2 }}
               onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.textDecoration = 'underline'; }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.textDecoration = 'none'; }}
-            >
+              onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.textDecoration = 'none'; }}>
               reverificar
             </button>
           </div>
         )}
 
-        {/* Intelligence — collapsible, always available */}
+        {/* ═══════════════════════════════════════════════
+            LAYER 7 — PATTERNS & LEARNING (collapsible)
+            ═══════════════════════════════════════════════ */}
         {metaConnected && !isDemo && userId && personaId && (
-          <div style={{ marginTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+          <div style={{ marginTop: 20, borderTop: `1px solid ${T.border0}`, paddingTop: 8 }}>
             <PatternsPanel
               userId={userId}
               personaId={personaId}
@@ -4710,7 +4985,7 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Telegram connection card — shown when Meta is connected */}
+        {/* Telegram */}
         {metaConnected && !isDemo && userId && <TelegramCard userId={userId} />}
       </div>
 
@@ -4722,6 +4997,7 @@ const FeedPage: React.FC = () => {
         @keyframes feed-shimmer{0%,100%{opacity:1}50%{opacity:0.5}}
         @keyframes feed-success{0%{opacity:0;transform:scale(0.9)}40%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
         @keyframes feed-btn-press{0%{transform:scale(1)}50%{transform:scale(0.96)}100%{transform:scale(1)}}
+        @keyframes priorityPulse{0%,100%{box-shadow:0 2px 8px rgba(248,113,113,0.25)}50%{box-shadow:0 2px 16px rgba(248,113,113,0.5)}}
         @keyframes modal-overlay-in{from{opacity:0}to{opacity:1}}
         @keyframes modal-card-in{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
         @keyframes modal-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
