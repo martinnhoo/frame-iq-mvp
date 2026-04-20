@@ -2,7 +2,7 @@
 // Complete from-scratch rebuild with depth system, real SVG logos, visual flow
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
-import { Globe, ChevronDown, ArrowRight, ArrowUpRight, CheckCircle2, Pause, TrendingUp, ChevronRight, Zap, Brain } from "lucide-react";
+import { Globe, ChevronDown, ArrowRight, CheckCircle2, Pause, TrendingUp, ChevronRight, Zap, Brain } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import CookieConsent from "@/components/CookieConsent";
@@ -97,32 +97,6 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta: "Começar grátis",
     hero_cta_sub: "Sem cartão · Sem configuração · 15 melhorias grátis",
     hero_login: "Já tem conta? Entrar",
-    // mockup — realistic scaling campaign
-    mock_decisions: "DECISÕES",
-    mock_7d: "7 dias",
-    mock_invested: "INVESTIDO",
-    mock_cpa: "CPA",
-    mock_ctr: "CTR",
-    mock_roas: "ROAS",
-    mock_campaign: "Escala Lookalike — Top Criativos",
-    mock_campaign_status: "Ativa",
-    mock_ads_count: "4 anúncios",
-    mock_ad1: "UGC_Depoimento_v3",
-    mock_ad1_status: "Ativo",
-    mock_ad1_metrics: "CTR 3.8% · CPA R$22 · ROAS 4.2x",
-    mock_scale: "Escalar — ROAS 4.2x com CPA estável há 7 dias",
-    mock_scale_d: "Frequência 1.4 e CPM caindo. Janela de escala aberta — aumentar 20% do budget mantém eficiência.",
-    mock_scale_cta: "+20% budget",
-    mock_intel_title: "INTELIGÊNCIA",
-    mock_intel1: "UGC com prova social converte 2.3x mais que produto isolado",
-    mock_intel1_conf: "Confiança alta · 12 criativos analisados",
-    mock_intel2: "Hook nos primeiros 2s retém 68% mais audiência neste nicho",
-    mock_intel2_conf: "Confiança média · 8 vídeos",
-    mock_opp: "PRÓXIMA OPORTUNIDADE",
-    mock_opp_t: "Criar variação UGC do criativo top",
-    mock_apply: "Gerar com IA",
-    mock_applied: "Gerado",
-    mock_estimated: "+26% ROAS estimado",
     // concept
     concept_title: "Não é um dashboard.\nÉ um sistema de decisão.",
     concept_s1: "Análise contínua",
@@ -206,31 +180,6 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta: "Start free",
     hero_cta_sub: "No card · No setup · 15 free improvements",
     hero_login: "Already have an account? Log in",
-    mock_decisions: "DECISIONS",
-    mock_7d: "7 days",
-    mock_invested: "INVESTED",
-    mock_cpa: "CPA",
-    mock_ctr: "CTR",
-    mock_roas: "ROAS",
-    mock_campaign: "Scale Lookalike — Top Creatives",
-    mock_campaign_status: "Active",
-    mock_ads_count: "4 ads",
-    mock_ad1: "UGC_Testimonial_v3",
-    mock_ad1_status: "Active",
-    mock_ad1_metrics: "CTR 3.8% · CPA $6.20 · ROAS 4.2x",
-    mock_scale: "Scale — ROAS 4.2x with stable CPA for 7 days",
-    mock_scale_d: "Frequency 1.4 and CPM declining. Scale window open — 20% budget increase maintains efficiency.",
-    mock_scale_cta: "+20% budget",
-    mock_intel_title: "INTELLIGENCE",
-    mock_intel1: "UGC with social proof converts 2.3x more than product-only",
-    mock_intel1_conf: "High confidence · 12 creatives analyzed",
-    mock_intel2: "Hook in first 2s retains 68% more audience in this niche",
-    mock_intel2_conf: "Medium confidence · 8 videos",
-    mock_opp: "NEXT OPPORTUNITY",
-    mock_opp_t: "Create UGC variation of top creative",
-    mock_apply: "Generate with AI",
-    mock_applied: "Generated",
-    mock_estimated: "+26% estimated ROAS",
     concept_title: "Not a dashboard.\nA decision system.",
     concept_s1: "Continuous analysis",
     concept_s1d: "Monitors your campaigns 24/7 and identifies opportunities you'd miss.",
@@ -307,31 +256,6 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta: "Empezar gratis",
     hero_cta_sub: "Sin tarjeta · Sin configuración · 15 mejoras gratis",
     hero_login: "¿Ya tienes cuenta? Entrar",
-    mock_decisions: "DECISIONES",
-    mock_7d: "7 días",
-    mock_invested: "INVERTIDO",
-    mock_cpa: "CPA",
-    mock_ctr: "CTR",
-    mock_roas: "ROAS",
-    mock_campaign: "Escala Lookalike — Top Creativos",
-    mock_campaign_status: "Activa",
-    mock_ads_count: "4 anuncios",
-    mock_ad1: "UGC_Testimonio_v3",
-    mock_ad1_status: "Activo",
-    mock_ad1_metrics: "CTR 3.8% · CPA $6.20 · ROAS 4.2x",
-    mock_scale: "Escalar — ROAS 4.2x con CPA estable hace 7 días",
-    mock_scale_d: "Frecuencia 1.4 y CPM bajando. Ventana de escala abierta — subir 20% del budget mantiene eficiencia.",
-    mock_scale_cta: "+20% budget",
-    mock_intel_title: "INTELIGENCIA",
-    mock_intel1: "UGC con prueba social convierte 2.3x más que producto solo",
-    mock_intel1_conf: "Confianza alta · 12 creativos analizados",
-    mock_intel2: "Hook en primeros 2s retiene 68% más audiencia en este nicho",
-    mock_intel2_conf: "Confianza media · 8 videos",
-    mock_opp: "PRÓXIMA OPORTUNIDAD",
-    mock_opp_t: "Crear variación UGC del creativo top",
-    mock_apply: "Generar con IA",
-    mock_applied: "Generado",
-    mock_estimated: "+26% ROAS estimado",
     concept_title: "No es un dashboard.\nEs un sistema de decisión.",
     concept_s1: "Análisis continuo",
     concept_s1d: "Monitorea tus campañas 24/7 e identifica oportunidades que perderías.",
@@ -554,348 +478,270 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
   );
 }
 
-// ── Live Product (hero visual — auto-demo) ──────────────────────────────────
-function LiveProduct({ t }: { t: Record<string, string> }) {
-  const [applied, setApplied] = useState(false);
-  const [roas, setRoas] = useState("4.2x");
-  const [expanded, setExpanded] = useState(true);
+// ── HeroDemo — Cinematic AI story loop ──────────────────────────────────────
+// Shows the AI analyzing → detecting → deciding → acting in real-time.
+// Single panel, no carousel. A story that loops every ~14s.
+function HeroDemo({ t }: { t: Record<string, string> }) {
+  const [phase, setPhase] = useState(0);
+  const [roas, setRoas] = useState("3.4x");
+  const [ctr, setCtr] = useState("2.1%");
 
+  // Phase timeline:
+  // 0 = scanning (1.5s)
+  // 1 = alert detected (2.5s)
+  // 2 = pause applied (2s)
+  // 3 = scale opportunity (2.5s)
+  // 4 = pattern insight (2.5s)
+  // 5 = results update (2s) → reset
   useEffect(() => {
-    const doApply = () => {
-      setApplied(true);
-      setRoas("4.8x");
-      setTimeout(() => { setApplied(false); setRoas("4.2x"); }, 2500);
+    const DURATIONS = [1500, 2500, 2000, 2500, 2500, 2000];
+    let current = 0;
+    let timeout: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      current = (current + 1) % 6;
+      setPhase(current);
+      if (current === 5) { setRoas("4.1x"); setCtr("3.2%"); }
+      if (current === 0) { setRoas("3.4x"); setCtr("2.1%"); }
+      timeout = setTimeout(tick, DURATIONS[current]);
     };
-    const first = setTimeout(doApply, 1800);
-    const interval = setInterval(doApply, 7000);
-    return () => { clearTimeout(first); clearInterval(interval); };
+    timeout = setTimeout(tick, DURATIONS[0]);
+    return () => clearTimeout(timeout);
   }, []);
+
+  const pt = (t.nav_login === "Entrar");
+  const es = (t.nav_login === "Iniciar sesión");
+
+  // i18n helpers
+  const tx = {
+    account: pt ? "Moda Express" : es ? "Moda Express" : "Moda Express",
+    scanning: pt ? "Analisando 14 anúncios..." : es ? "Analizando 14 anuncios..." : "Analyzing 14 ads...",
+    scanned: pt ? "Análise concluída" : es ? "Análisis completado" : "Analysis complete",
+    alertTag: pt ? "ALERTA" : es ? "ALERTA" : "ALERT",
+    alertTitle: pt ? "Fadiga criativa detectada" : es ? "Fatiga creativa detectada" : "Creative fatigue detected",
+    alertAd: "Carrossel_BF_v2",
+    alertDetail: pt ? "Frequência 4.8 · CTR caiu 62% em 3 dias" : es ? "Frecuencia 4.8 · CTR cayó 62% en 3 días" : "Frequency 4.8 · CTR dropped 62% in 3 days",
+    pauseReason: pt ? "CPA subiu 180% — sem conversões nas últimas 24h" : es ? "CPA subió 180% — sin conversiones en 24h" : "CPA up 180% — no conversions in 24h",
+    pauseCta: pt ? "Pausar agora" : es ? "Pausar ahora" : "Pause now",
+    paused: pt ? "Pausado ✓" : es ? "Pausado ✓" : "Paused ✓",
+    scaleTag: pt ? "ESCALAR" : es ? "ESCALAR" : "SCALE",
+    scaleTitle: pt ? "UGC_Depoimento_v3" : es ? "UGC_Testimonio_v3" : "UGC_Testimonial_v3",
+    scaleDetail: pt ? "ROAS 6.1x · CPA R$14 · melhor dos últimos 14 dias" : es ? "ROAS 6.1x · CPA $4.20 · mejor de los últimos 14 días" : "ROAS 6.1x · CPA $4.20 · best performer in 14 days",
+    scaleCta: "+30% budget",
+    patternTag: pt ? "PADRÃO APRENDIDO" : es ? "PATRÓN APRENDIDO" : "LEARNED PATTERN",
+    patternTitle: pt ? "Hooks com prova social convertem 2.4x mais neste nicho" : es ? "Hooks con prueba social convierten 2.4x más en este nicho" : "Social proof hooks convert 2.4x more in this niche",
+    patternConf: pt ? "94% confiança · 18 criativos" : es ? "94% confianza · 18 creativos" : "94% confidence · 18 creatives",
+    patternCta: pt ? "Gerar variação" : es ? "Generar variación" : "Generate variation",
+    resultBadge: pt ? "3 melhorias aplicadas" : es ? "3 mejoras aplicadas" : "3 improvements applied",
+  };
+
+  // Animation helpers
+  const fadeIn = (visible: boolean, delay = 0) => ({
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateY(0)" : "translateY(8px)",
+    transition: `all 0.4s ${EASE} ${delay}s`,
+  });
+
+  const slideIn = (visible: boolean, delay = 0) => ({
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateX(0)" : "translateX(-12px)",
+    transition: `all 0.45s ${EASE} ${delay}s`,
+    maxHeight: visible ? 120 : 0,
+    overflow: "hidden" as const,
+  });
 
   return (
     <div className="product-mockup" style={{
-      background: SURFACE, borderRadius: 16, border: `1px solid ${BORDER}`,
-      overflow: "hidden", fontFamily: F, width: "100%", maxWidth: 520,
+      background: "#0a0e18", borderRadius: 14, border: `1px solid rgba(255,255,255,0.07)`,
+      overflow: "hidden", fontFamily: F, width: "100%", maxWidth: 500,
       transform: "perspective(1400px) rotateY(-2deg) rotateX(0.5deg)",
       transition: `all 0.6s ${EASE}`,
-      boxShadow: `
-        0 0 0 1px rgba(255,255,255,0.03),
-        0 8px 32px rgba(0,0,0,0.35),
-        0 40px 100px rgba(0,0,0,0.55)
-      `,
+      boxShadow: `0 0 0 1px rgba(255,255,255,0.03), 0 12px 40px rgba(0,0,0,0.45), 0 50px 120px rgba(0,0,0,0.6)`,
       animation: "mockFloat 6s ease-in-out infinite",
     }}>
-      {/* Header */}
+      {/* ── Window chrome ─────────────────────────────────────────── */}
       <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "11px 16px", borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", padding: "9px 14px",
+        background: "rgba(255,255,255,0.02)", borderBottom: `1px solid rgba(255,255,255,0.05)`,
       }}>
-        <span style={{ fontSize: 9.5, fontWeight: 800, color: TEXT3, letterSpacing: "0.12em" }}>
-          {t.mock_decisions}
-        </span>
-        <span style={{
-          fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.35)", padding: "2px 8px",
-          background: "rgba(255,255,255,0.03)", borderRadius: 4,
-        }}>{t.mock_7d}</span>
+        <div style={{ display: "flex", gap: 5, marginRight: 12 }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#ff5f57" }} />
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#febc2e" }} />
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#28c840" }} />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, flex: 1 }}>
+          <span style={{ fontSize: 10.5, fontWeight: 800, color: "rgba(255,255,255,0.7)", letterSpacing: "-0.02em" }}>ad</span>
+          <span style={{ fontSize: 10.5, fontWeight: 900, background: `linear-gradient(135deg, #38bdf8, #06b6d4)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>brief</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 9, fontWeight: 600, color: TEXT3 }}>{tx.account}</span>
+          <div style={{ width: 5, height: 5, borderRadius: "50%", background: GREEN, boxShadow: `0 0 6px ${GREEN}60` }} />
+        </div>
       </div>
 
-      {/* Metrics — green-dominant */}
+      {/* ── Metrics bar ──────────────────────────────────────────── */}
       <div style={{
         display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr",
-        borderBottom: `1px solid ${BORDER}`, padding: "14px 16px",
+        padding: "12px 14px", borderBottom: `1px solid rgba(255,255,255,0.05)`,
+        background: "rgba(255,255,255,0.01)",
       }}>
         {[
-          { label: t.mock_invested, value: "R$8.740", color: TEXT },
-          { label: t.mock_cpa, value: "R$22", color: GREEN },
-          { label: t.mock_ctr, value: "3.8%", color: GREEN },
-          { label: t.mock_roas, value: roas, color: GREEN },
+          { label: "SPEND", value: pt ? "R$12.480" : "$3,240", color: TEXT },
+          { label: "CTR", value: ctr, color: phase >= 5 ? GREEN : TEXT2, delta: phase >= 5 ? "↑52%" : null },
+          { label: "ROAS", value: roas, color: phase >= 5 ? GREEN : TEXT2, delta: phase >= 5 ? "↑21%" : null },
+          { label: "ADS", value: "14", color: TEXT2 },
         ].map((m, i) => (
           <div key={i} style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.22)", letterSpacing: "0.1em", marginBottom: 4 }}>
-              {m.label}
-            </div>
+            <div style={{ fontSize: 7, fontWeight: 800, color: "rgba(255,255,255,0.18)", letterSpacing: "0.12em", marginBottom: 3 }}>{m.label}</div>
             <div style={{
-              fontSize: 16, fontWeight: 800, color: m.color, letterSpacing: "-0.02em",
-              transition: `all 0.5s ${EASE}`,
+              fontSize: 15, fontWeight: 800, color: m.color, letterSpacing: "-0.03em",
+              transition: `all 0.6s ${EASE}`,
             }}>
               {m.value}
             </div>
+            {m.delta && <span style={{ fontSize: 7.5, fontWeight: 700, color: GREEN, transition: `all 0.3s ease` }}>{m.delta}</span>}
           </div>
         ))}
       </div>
 
-      {/* Campaign card — expandable */}
-      <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
+      {/* ── Scanning bar ─────────────────────────────────────────── */}
+      <div style={{
+        padding: "8px 14px", display: "flex", alignItems: "center", gap: 8,
+        borderBottom: `1px solid rgba(255,255,255,0.04)`,
+      }}>
         <div style={{
-          background: "rgba(34,197,94,0.03)", border: "1px solid rgba(34,197,94,0.08)",
-          borderRadius: 9, overflow: "hidden",
-        }}>
-          {/* Campaign header — clickable */}
-          <div
-            onClick={() => setExpanded(!expanded)}
-            style={{ padding: "10px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}
-          >
-            <ChevronRight size={12} style={{
-              color: TEXT3, transition: `transform 0.3s ${EASE}`,
-              transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
-            }} />
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: "0 0 8px rgba(34,197,94,0.4)" }} />
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: TEXT, flex: 1 }}>{t.mock_campaign}</span>
-            <span style={{ fontSize: 9, color: TEXT3, fontWeight: 600 }}>{t.mock_ads_count}</span>
+          width: 5, height: 5, borderRadius: "50%",
+          background: phase === 0 ? ACCENT : GREEN,
+          boxShadow: phase === 0 ? `0 0 8px ${ACCENT}60` : `0 0 6px ${GREEN}40`,
+          animation: phase === 0 ? "demoPulse 1s ease-in-out infinite" : "none",
+          transition: "all 0.3s ease",
+        }} />
+        <span style={{ fontSize: 9, fontWeight: 600, color: phase === 0 ? ACCENT : TEXT3, transition: "color 0.3s ease", flex: 1 }}>
+          {phase === 0 ? tx.scanning : tx.scanned}
+        </span>
+        {phase === 0 && (
+          <div style={{ width: 80, height: 2, borderRadius: 1, background: "rgba(255,255,255,0.04)", overflow: "hidden" }}>
+            <div style={{ height: "100%", borderRadius: 1, background: `linear-gradient(90deg, transparent, ${ACCENT}, transparent)`, animation: "demoScanBar 1.2s ease-in-out infinite" }} />
           </div>
+        )}
+      </div>
 
-          {/* Expanded: ad row inside */}
+      {/* ── Content area — events appear here ─────────────────── */}
+      <div style={{ padding: "8px 12px 12px", display: "flex", flexDirection: "column", gap: 6, minHeight: 260 }}>
+
+        {/* Event 1: ALERT — creative fatigue (phase >= 1) */}
+        <div style={slideIn(phase >= 1)}>
           <div style={{
-            maxHeight: expanded ? 60 : 0, overflow: "hidden",
-            transition: `max-height 0.4s ${EASE}`,
+            padding: "10px 12px", borderRadius: 9,
+            background: phase >= 2 ? "rgba(239,68,68,0.02)" : "rgba(239,68,68,0.05)",
+            border: `1px solid ${phase >= 2 ? "rgba(239,68,68,0.06)" : "rgba(239,68,68,0.15)"}`,
+            transition: `all 0.5s ${EASE}`,
+            opacity: phase >= 2 ? 0.5 : 1,
           }}>
-            <div style={{
-              padding: "6px 14px 10px 38px",
-              borderTop: `1px solid rgba(255,255,255,0.04)`,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                <div style={{ width: 4, height: 4, borderRadius: "50%", background: GREEN, opacity: 0.7 }} />
-                <span style={{ fontSize: 10.5, fontWeight: 600, color: TEXT2 }}>{t.mock_ad1}</span>
-                <span style={{ fontSize: 8.5, color: GREEN, fontWeight: 700, marginLeft: "auto" }}>{t.mock_ad1_status}</span>
-              </div>
-              <div style={{ fontSize: 9, color: TEXT3, paddingLeft: 10, opacity: 0.8 }}>{t.mock_ad1_metrics}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+              <span style={{
+                fontSize: 7.5, fontWeight: 800, letterSpacing: "0.1em", color: RED,
+                padding: "2px 6px", background: "rgba(239,68,68,0.10)", borderRadius: 3,
+              }}>{tx.alertTag}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: TEXT, flex: 1 }}>{tx.alertTitle}</span>
+            </div>
+            <div style={{ paddingLeft: 0 }}>
+              <p style={{ fontSize: 10, fontWeight: 600, color: TEXT2, margin: "0 0 2px" }}>{tx.alertAd}</p>
+              <p style={{ fontSize: 9, color: TEXT3, margin: "0 0 6px", lineHeight: 1.4 }}>{tx.alertDetail}</p>
+              <p style={{ fontSize: 9, color: "rgba(239,68,68,0.7)", margin: "0 0 7px", fontWeight: 500 }}>{tx.pauseReason}</p>
+              <span style={{
+                fontSize: 9.5, fontWeight: 700,
+                padding: "4px 12px", borderRadius: 5,
+                color: phase >= 2 ? GREEN : "#fff",
+                background: phase >= 2 ? "rgba(34,197,94,0.08)" : RED,
+                border: `1px solid ${phase >= 2 ? "rgba(34,197,94,0.15)" : "transparent"}`,
+                display: "inline-flex", alignItems: "center", gap: 4,
+                transition: `all 0.4s ${EASE}`,
+                boxShadow: phase >= 2 ? "none" : "0 2px 10px rgba(239,68,68,0.25)",
+              }}>
+                {phase >= 2 ? <><CheckCircle2 size={10} strokeWidth={2.5} /> {tx.paused}</> : <><Pause size={9} /> {tx.pauseCta}</>}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Scale decision — the big card */}
+        {/* Event 2: SCALE opportunity (phase >= 3) */}
+        <div style={slideIn(phase >= 3)}>
+          <div style={{
+            padding: "10px 12px", borderRadius: 9,
+            background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)",
+            boxShadow: "0 0 20px rgba(34,197,94,0.04)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+              <span style={{
+                fontSize: 7.5, fontWeight: 800, letterSpacing: "0.1em", color: GREEN,
+                padding: "2px 6px", background: "rgba(34,197,94,0.10)", borderRadius: 3,
+              }}>{tx.scaleTag}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: TEXT }}>{tx.scaleTitle}</span>
+            </div>
+            <p style={{ fontSize: 9, color: TEXT2, margin: "0 0 7px", lineHeight: 1.45 }}>{tx.scaleDetail}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{
+                fontSize: 9.5, fontWeight: 700, color: "#fff",
+                padding: "4px 12px", borderRadius: 5, background: GREEN,
+                display: "inline-flex", alignItems: "center", gap: 4,
+                boxShadow: "0 2px 10px rgba(34,197,94,0.2)",
+              }}>
+                <TrendingUp size={9} /> {tx.scaleCta}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Event 3: PATTERN learned (phase >= 4) */}
+        <div style={slideIn(phase >= 4)}>
+          <div style={{
+            padding: "10px 12px", borderRadius: 9,
+            background: "rgba(99,102,241,0.04)", border: "1px solid rgba(99,102,241,0.12)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+              <span style={{
+                fontSize: 7.5, fontWeight: 800, letterSpacing: "0.1em", color: INDIGO,
+                padding: "2px 6px", background: "rgba(99,102,241,0.10)", borderRadius: 3,
+              }}>{tx.patternTag}</span>
+            </div>
+            <p style={{ fontSize: 9.5, color: TEXT2, margin: "0 0 3px", lineHeight: 1.45, fontWeight: 500 }}>{tx.patternTitle}</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+              <span style={{ fontSize: 8, color: INDIGO, fontWeight: 600, opacity: 0.7 }}>{tx.patternConf}</span>
+              <span style={{
+                fontSize: 8.5, fontWeight: 700, color: INDIGO, padding: "3px 8px",
+                borderRadius: 4, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)",
+                display: "inline-flex", alignItems: "center", gap: 3, cursor: "default",
+              }}>
+                <Zap size={8} /> {tx.patternCta}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Event 4: Results badge (phase >= 5) */}
         <div style={{
+          ...fadeIn(phase >= 5, 0.15),
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+          padding: "8px 12px", borderRadius: 8,
           background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.10)",
-          borderRadius: 9, padding: "10px 14px",
-          boxShadow: "0 0 20px rgba(34,197,94,0.05)",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
-            <TrendingUp size={12} style={{ color: GREEN }} />
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: TEXT, flex: 1 }}>{t.mock_scale}</span>
-          </div>
-          <p style={{ fontSize: 10, color: TEXT2, margin: "0 0 8px", paddingLeft: 19, lineHeight: 1.5 }}>{t.mock_scale_d}</p>
-          <div style={{ paddingLeft: 19 }}>
-            <span style={{
-              fontSize: 10, fontWeight: 700, color: GREEN, padding: "3px 10px",
-              borderRadius: 5, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)",
-              display: "inline-flex", alignItems: "center", gap: 4,
-            }}>
-              <TrendingUp size={9} /> {t.mock_scale_cta}
-            </span>
-          </div>
+          <CheckCircle2 size={11} color={GREEN} strokeWidth={2.2} />
+          <span style={{ fontSize: 10, fontWeight: 700, color: GREEN }}>{tx.resultBadge}</span>
+          <span style={{ fontSize: 9, color: TEXT3, marginLeft: 4 }}>ROAS 3.4x → 4.1x</span>
         </div>
       </div>
 
-      {/* Intelligence section */}
-      <div style={{
-        margin: "2px 14px 6px", padding: "10px 14px", borderRadius: 9,
-        background: "rgba(255,255,255,0.015)", border: `1px solid ${BORDER}`,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-          <Brain size={11} style={{ color: INDIGO, opacity: 0.7 }} />
-          <span style={{ fontSize: 8.5, fontWeight: 800, color: INDIGO, letterSpacing: "0.1em", opacity: 0.6 }}>
-            {t.mock_intel_title}
-          </span>
-        </div>
-
-        {/* Pattern 1 */}
-        <div style={{ marginBottom: 8 }}>
-          <p style={{ fontSize: 10, color: TEXT2, margin: 0, lineHeight: 1.45, fontWeight: 500 }}>{t.mock_intel1}</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
-            <div style={{ width: 4, height: 4, borderRadius: "50%", background: GREEN }} />
-            <span style={{ fontSize: 8.5, color: GREEN, fontWeight: 600, opacity: 0.8 }}>{t.mock_intel1_conf}</span>
-          </div>
-        </div>
-
-        {/* Pattern 2 */}
-        <div>
-          <p style={{ fontSize: 10, color: TEXT2, margin: 0, lineHeight: 1.45, fontWeight: 500 }}>{t.mock_intel2}</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
-            <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#eab308" }} />
-            <span style={{ fontSize: 8.5, color: "#eab308", fontWeight: 600, opacity: 0.8 }}>{t.mock_intel2_conf}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Opportunity — focal point */}
-      <div style={{
-        margin: "2px 14px 14px", padding: "14px 16px", borderRadius: 10,
-        borderLeft: `3px solid ${applied ? GREEN : GREEN}`,
-        background: applied ? "rgba(34,197,94,0.06)" : "rgba(34,197,94,0.03)",
-        boxShadow: applied ? "0 0 30px rgba(34,197,94,0.10)" : "0 0 16px rgba(34,197,94,0.04)",
-        transition: `all 0.5s ${EASE}`,
-      }}>
-        <div style={{ fontSize: 8, fontWeight: 800, color: GREEN, letterSpacing: "0.12em", marginBottom: 6, opacity: 0.5 }}>
-          {t.mock_opp}
-        </div>
-        <p style={{ fontSize: 12, fontWeight: 600, color: TEXT, margin: "0 0 10px" }}>
-          {t.mock_opp_t} · <span style={{ color: GREEN, fontWeight: 700 }}>{t.mock_estimated}</span>
-        </p>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{
-            fontSize: 11, fontWeight: 700, color: "#fff",
-            padding: "7px 16px", borderRadius: 7,
-            background: GREEN, cursor: "default",
-            display: "inline-flex", alignItems: "center", gap: 5,
-            boxShadow: applied ? "0 2px 16px rgba(34,197,94,0.35)" : "0 2px 10px rgba(34,197,94,0.2)",
-            transition: `all 0.4s ${EASE}`,
-            transform: applied ? "scale(1.03)" : "scale(1)",
-          }}>
-            {applied ? <><CheckCircle2 size={12} strokeWidth={2.2} /> {t.mock_applied}</> : <><Zap size={11} /> {t.mock_apply}</>}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Product Carousel (wraps LiveProduct + 2 more screens) ────────────────────
-function ProductCarousel({ t }: { t: Record<string, string> }) {
-  const [active, setActive] = useState(0);
-  const SCREENS = 3;
-  const labels = [t.mock_decisions || "Decisões", "AI Chat", "Feed"];
-
-  useEffect(() => {
-    const timer = setInterval(() => setActive(a => (a + 1) % SCREENS), 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <div style={{ width: "100%", maxWidth: 520, position: "relative" }}>
-      {/* Screens */}
-      <div style={{ overflow: "hidden", borderRadius: 16 }}>
-        <div style={{
-          display: "flex", width: `${SCREENS * 100}%`,
-          transform: `translateX(-${active * (100 / SCREENS)}%)`,
-          transition: `transform 0.5s ${EASE}`,
-        }}>
-          {/* Screen 1: LiveProduct (decisions) */}
-          <div style={{ width: `${100 / SCREENS}%`, flexShrink: 0 }}>
-            <LiveProduct t={t} />
-          </div>
-
-          {/* Screen 2: AI Chat mock */}
-          <div style={{ width: `${100 / SCREENS}%`, flexShrink: 0 }}>
-            <div style={{
-              background: SURFACE, borderRadius: 16, border: `1px solid ${BORDER}`,
-              overflow: "hidden", fontFamily: F, width: "100%",
-              transform: "perspective(1400px) rotateY(-2deg) rotateX(0.5deg)",
-              boxShadow: `0 0 0 1px rgba(255,255,255,0.03), 0 8px 32px rgba(0,0,0,0.35), 0 40px 100px rgba(0,0,0,0.55)`,
-            }}>
-              {/* Chat header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 16px", borderBottom: `1px solid ${BORDER}` }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: `0 0 6px ${GREEN}40` }} />
-                <span style={{ fontSize: 9.5, fontWeight: 800, color: TEXT3, letterSpacing: "0.12em" }}>MEDIA BUYER IA</span>
-                <span style={{ fontSize: 9, color: ACCENT, fontWeight: 600, marginLeft: "auto" }}>Online</span>
-              </div>
-              {/* Messages */}
-              <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: 10, minHeight: 280 }}>
-                {/* User message */}
-                <div style={{ alignSelf: "flex-end", maxWidth: "75%", padding: "8px 12px", borderRadius: "12px 12px 4px 12px", background: `${ACCENT}15`, border: `1px solid ${ACCENT}25` }}>
-                  <p style={{ fontSize: 10.5, color: TEXT, margin: 0, lineHeight: 1.5 }}>Como estão meus anúncios essa semana?</p>
-                </div>
-                {/* AI response */}
-                <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "4px 12px 12px 12px", background: "rgba(255,255,255,0.02)", border: `1px solid ${BORDER}` }}>
-                  <p style={{ fontSize: 10.5, color: TEXT2, margin: 0, lineHeight: 1.6 }}>
-                    Seus anúncios tiveram <span style={{ color: GREEN, fontWeight: 700 }}>CTR 3.8%</span> nos últimos 7 dias. O anúncio "Black Friday" está escalável — recomendo aumentar orçamento em 30%.
-                  </p>
-                </div>
-                {/* Briefing card */}
-                <div style={{ padding: "10px 12px", borderRadius: 10, background: `${ACCENT}06`, border: `1px solid ${ACCENT}15` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
-                    <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, letterSpacing: "0.1em", padding: "2px 6px", background: `${ACCENT}10`, borderRadius: 4 }}>BRIEFING</span>
-                  </div>
-                  <p style={{ fontSize: 10, color: TEXT3, margin: 0, lineHeight: 1.5 }}>R$8.740 investidos · CTR 3.8% (↑12%) · 14 anúncios ativos</p>
-                </div>
-                {/* Pattern */}
-                <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(167,139,250,0.04)", border: "1px solid rgba(167,139,250,0.10)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ fontSize: 8, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.1em", padding: "2px 6px", background: "rgba(167,139,250,0.08)", borderRadius: 4 }}>PADRÃO</span>
-                    <span style={{ fontSize: 9.5, color: TEXT2, fontWeight: 500 }}>"Urgência na copy" performa melhor</span>
-                  </div>
-                </div>
-              </div>
-              {/* Input bar */}
-              <div style={{ padding: "8px 14px 12px", borderTop: `1px solid ${BORDER}` }}>
-                <div style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.025)", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 10, color: TEXT3, flex: 1, opacity: 0.5 }}>Pergunte sobre sua conta...</span>
-                  <div style={{ width: 22, height: 22, borderRadius: 6, background: `${ACCENT}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <ArrowUpRight size={10} color={ACCENT} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Screen 3: Feed/Dashboard mock */}
-          <div style={{ width: `${100 / SCREENS}%`, flexShrink: 0 }}>
-            <div style={{
-              background: SURFACE, borderRadius: 16, border: `1px solid ${BORDER}`,
-              overflow: "hidden", fontFamily: F, width: "100%",
-              transform: "perspective(1400px) rotateY(-2deg) rotateX(0.5deg)",
-              boxShadow: `0 0 0 1px rgba(255,255,255,0.03), 0 8px 32px rgba(0,0,0,0.35), 0 40px 100px rgba(0,0,0,0.55)`,
-            }}>
-              {/* Feed header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 16px", borderBottom: `1px solid ${BORDER}` }}>
-                <span style={{ fontSize: 9.5, fontWeight: 800, color: TEXT3, letterSpacing: "0.12em" }}>FEED</span>
-                <span style={{ fontSize: 9, color: TEXT3, marginLeft: "auto" }}>Hoje · 14:32</span>
-              </div>
-              {/* KPI row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, borderBottom: `1px solid ${BORDER}` }}>
-                {[
-                  { label: "SPEND", value: "R$8.740", color: TEXT },
-                  { label: "CTR", value: "3.8%", delta: "+12%", color: GREEN },
-                  { label: "ROAS", value: "4.2x", color: GREEN },
-                ].map((m, i) => (
-                  <div key={i} style={{ padding: "12px 14px", textAlign: "center", borderRight: i < 2 ? `1px solid ${BORDER}` : "none" }}>
-                    <div style={{ fontSize: 7.5, fontWeight: 800, color: TEXT3, letterSpacing: "0.1em", marginBottom: 4 }}>{m.label}</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: m.color, letterSpacing: "-0.03em" }}>{m.value}</div>
-                    {m.delta && <span style={{ fontSize: 8, fontWeight: 700, color: GREEN }}>{m.delta}</span>}
-                  </div>
-                ))}
-              </div>
-              {/* Decision cards */}
-              <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6, minHeight: 200 }}>
-                <div style={{ padding: "10px 12px", borderRadius: 8, borderLeft: `3px solid ${GREEN}`, background: "rgba(34,197,94,0.03)" }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: TEXT, margin: "0 0 2px" }}>Escale "BF - Video Hook A"</p>
-                  <p style={{ fontSize: 9, color: TEXT3, margin: 0 }}>CTR 5.2% · ROAS 6.1x · melhor da semana</p>
-                </div>
-                <div style={{ padding: "10px 12px", borderRadius: 8, borderLeft: "3px solid #ef4444", background: "rgba(239,68,68,0.03)" }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: TEXT, margin: "0 0 2px" }}>Pause "Carrossel Genérico"</p>
-                  <p style={{ fontSize: 9, color: TEXT3, margin: 0 }}>CTR 0.8% · R$420 gastos · sem conversões</p>
-                </div>
-                <div style={{ padding: "10px 12px", borderRadius: 8, borderLeft: `3px solid ${ACCENT}`, background: `${ACCENT}04` }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: TEXT, margin: "0 0 2px" }}>Teste novo hook com prova social</p>
-                  <p style={{ fontSize: 9, color: TEXT3, margin: 0 }}>Padrão detectado: depoimentos convertem +40%</p>
-                </div>
-              </div>
-              {/* Health */}
-              <div style={{ padding: "6px 14px 12px", borderTop: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 5, height: 5, borderRadius: "50%", background: GREEN, boxShadow: `0 0 4px ${GREEN}40` }} />
-                <span style={{ fontSize: 9, fontWeight: 600, color: TEXT3 }}>Monitoramento ativo — nenhum alerta</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Carousel dots + labels */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 16 }}>
-        {labels.map((label, i) => (
-          <button key={i} onClick={() => setActive(i)} style={{
-            display: "flex", alignItems: "center", gap: 5,
-            padding: "4px 10px", borderRadius: 99,
-            background: i === active ? `${ACCENT}12` : "transparent",
-            border: `1px solid ${i === active ? `${ACCENT}30` : "rgba(255,255,255,0.06)"}`,
-            color: i === active ? ACCENT : TEXT3,
-            fontSize: 10, fontWeight: 600, cursor: "pointer",
-            fontFamily: F, transition: "all 0.2s ease",
-          }}>
-            <div style={{ width: 4, height: 4, borderRadius: "50%", background: i === active ? ACCENT : "rgba(255,255,255,0.15)" }} />
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* ── CSS ──────────────────────────────────────────────────── */}
+      <style>{`
+        @keyframes demoPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.3); }
+        }
+        @keyframes demoScanBar {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -1007,7 +853,7 @@ function Hero({ t }: { t: Record<string, string> }) {
             background: "radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 60%)",
             pointerEvents: "none", filter: "blur(60px)",
           }} />
-          <ProductCarousel t={t} />
+          <HeroDemo t={t} />
         </div>
       </div>
     </section>
