@@ -1528,6 +1528,7 @@ const CampaignList: React.FC<{
   defaultOpen?: boolean;
 }> = ({ campaigns, ads, totalAds, onLoadMore, loadingMore, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle, onAnalyzeAiCampaign, onAnalyzeAiAd, defaultOpen }) => {
   const [open, setOpen] = useState(!!defaultOpen);
+  const navigate = useNavigate();
   const adsByCampaign = groupAdsByCampaign(ads);
 
   // Sort campaigns: ACTIVE first, then PAUSED
@@ -1546,24 +1547,62 @@ const CampaignList: React.FC<{
     <div style={{ fontFamily: F }}>
       {/* Collapsible header */}
       <div
-        onClick={() => setOpen(prev => !prev)}
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          padding: '6px 2px', cursor: 'pointer', userSelect: 'none',
+          padding: '6px 2px', userSelect: 'none',
         }}
       >
-        <span style={{
-          fontSize: 14, lineHeight: 1,
-          color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
-          transition: 'transform 0.2s ease, color 0.15s',
-          transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-        }}>›</span>
-        <span style={{ fontSize: 11.5, fontWeight: 700, color: T.text1 }}>
-          Campanhas
-        </span>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>
-          {open ? campaigns.length : `${activeCamps} ativa${activeCamps !== 1 ? 's' : ''}${pausedCamps > 0 ? `, ${pausedCamps} pausada${pausedCamps !== 1 ? 's' : ''}` : ''}`}
-        </span>
+        <div
+          onClick={() => setOpen(prev => !prev)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, flex: 1,
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{
+            fontSize: 14, lineHeight: 1,
+            color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
+            transition: 'transform 0.2s ease, color 0.15s',
+            transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+          }}>›</span>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: T.text1 }}>
+            Campanhas
+          </span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>
+            {open ? campaigns.length : `${activeCamps} ativa${activeCamps !== 1 ? 's' : ''}${pausedCamps > 0 ? `, ${pausedCamps} pausada${pausedCamps !== 1 ? 's' : ''}` : ''}`}
+          </span>
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/dashboard/feed/campanhas', { state: { fromFeed: true } });
+          }}
+          style={{
+            background: 'rgba(14,165,233,0.08)',
+            border: '1px solid rgba(14,165,233,0.22)',
+            borderRadius: 6,
+            padding: '3px 8px',
+            fontSize: 10, fontWeight: 600,
+            color: 'rgba(14,165,233,0.85)',
+            cursor: 'pointer',
+            fontFamily: F,
+            transition: 'background 0.12s, border-color 0.12s, color 0.12s',
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(14,165,233,0.14)';
+            e.currentTarget.style.borderColor = 'rgba(14,165,233,0.35)';
+            e.currentTarget.style.color = 'rgba(14,165,233,1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(14,165,233,0.08)';
+            e.currentTarget.style.borderColor = 'rgba(14,165,233,0.22)';
+            e.currentTarget.style.color = 'rgba(14,165,233,0.85)';
+          }}
+          title="Abrir gerenciador de campanhas"
+        >
+          Gerenciar →
+        </button>
       </div>
 
       <FeedExpandable open={open}>

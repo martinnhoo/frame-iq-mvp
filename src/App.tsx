@@ -75,6 +75,7 @@ const PatternsPage     = lazy(() => import("./pages/dashboard/PatternsPage"));
 const HistoryPage      = lazy(() => import("./pages/dashboard/HistoryPage"));
 const OnboardingPage   = lazy(() => import("./pages/dashboard/OnboardingPage"));
 const CriarHub         = lazy(() => import("./pages/dashboard/CriarHub"));
+const CampaignsManager = lazy(() => import("./pages/dashboard/CampaignsManager"));
 
 // SEO pages — lazily loaded, rarely visited from landing
 const ToolsIndex    = lazy(() => import("@/pages/seo/ToolsIndex"));
@@ -152,6 +153,7 @@ const App = () => (
                 {/* V2: Copilot Feed is the new default */}
                 <Route index element={<Navigate to="/dashboard/feed" replace />} />
                 <Route path="feed" element={<FeedPage />} />
+                <Route path="feed/campanhas" element={<CampaignsManager />} />
                 <Route path="history" element={<HistoryPage />} />
                 <Route path="welcome" element={<OnboardingPage />} />
 
