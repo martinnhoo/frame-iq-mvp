@@ -263,7 +263,12 @@ Deno.serve(async (req) => {
 
     if (action === "list_campaigns") {
       const accs = (conn.ad_accounts as any[]) || [];
-      const acc = accs.find((a: any) => a.account_status === 1) || accs[0];
+      // Respect account_id from body when provided; fallback to first active
+      let acc: any = null;
+      if (body.account_id) {
+        acc = accs.find((a: any) => a.id === body.account_id || a.id === `act_${body.account_id}` || `act_${a.id}` === body.account_id);
+      }
+      if (!acc) acc = accs.find((a: any) => a.account_status === 1) || accs[0];
       if (!acc) return errResp("No active ad account");
       const accId = acc.id.startsWith("act_") ? acc.id : `act_${acc.id}`;
       const d = await get(`${accId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,effective_status&limit=30`);
