@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     const results: Array<{ lang: string; translated_text: string; cultural_adaptation: string }> = [];
 
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    const LOVABLE_API_URL = "https://api.anthropic.com/v1/messages";
+    const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 
     for (const target of targets) {
       const systemPrompt = `You are an expert advertising translator and cultural strategist specializing in performance marketing ads. Your job is to translate ad scripts, captions, hooks, and VO copy so they feel native — not translated.
@@ -81,16 +81,21 @@ ${context ? `Context: ${context}` : ''}
 
 Return ONLY valid JSON.`;
 
-      const res = await fetch(LOVABLE_API_URL, {
+      // Use Claude Haiku 4.5 via Anthropic's native Messages API — matches the
+      // rest of the codebase (was previously pointed at Anthropic URL but with
+      // OpenAI-style headers and a Gemini model ID, which always 401'd).
+      const res = await fetch(ANTHROPIC_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${ANTHROPIC_API_KEY}`,
+          'x-api-key': ANTHROPIC_API_KEY || '',
+          'anthropic-version': '2023-06-01',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1200,
+          system: systemPrompt,
           messages: [
-            { role: 'system', content: systemPrompt },
             { role: 'user', content: userMsg },
           ],
           temperature: 0.3,
@@ -99,12 +104,12 @@ Return ONLY valid JSON.`;
 
       if (!res.ok) {
         const errText = await res.text();
-        console.error('Lovable AI error:', res.status, errText);
-        throw new Error(`AI API ${res.status}: ${errText}`);
+        console.error('Anthropic API error:', res.status, errText.slice(0, 400));
+        throw new Error(`AI API ${res.status}`);
       }
 
       const apiData = await res.json();
-      const rawContent = apiData.choices?.[0]?.message?.content || '';
+      const rawContent = apiData.content?.[0]?.text || '';
       const raw = rawContent.replace(/```json|```/g, '').trim();
 
       let parsed: { translated: string; cultural_notes: string };

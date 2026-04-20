@@ -79,24 +79,41 @@ const AnalysisDetail = () => {
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollAttemptsRef = useRef(0);
+  // Cap the poll at 100 attempts (~5 minutes). Prevents an infinite loop if
+  // Supabase is unreachable or a consistent error keeps the record stuck.
+  const MAX_POLL_ATTEMPTS = 100;
 
   const fetchAnalysis = async () => {
-    const { data, error } = await supabase
-      .from("analyses").select("*")
-      .eq("id", id!).eq("user_id", user.id).single();
-    if (data) {
-      setAnalysis(data as AnalysisData);
-      if (data.status === "completed" || data.status === "failed") {
+    pollAttemptsRef.current += 1;
+    if (pollAttemptsRef.current > MAX_POLL_ATTEMPTS) {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      setLoading(false);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from("analyses").select("*")
+        .eq("id", id!).eq("user_id", user.id).single();
+      if (data) {
+        setAnalysis(data as AnalysisData);
+        if (data.status === "completed" || data.status === "failed") {
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+        }
+      } else if (error) {
+        // ID not found or unauthorized — stop polling and show not found
         if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       }
-    } else if (error) {
-      // ID not found or unauthorized — stop polling and show not found
-      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    } catch (e: any) {
+      // Network / RLS error — keep polling but count the attempt (bounded above).
+      console.warn("[AnalysisDetail] fetch failed", e?.message || e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
+    pollAttemptsRef.current = 0;
     fetchAnalysis();
     // Poll every 3s if analysis is pending/processing
     pollRef.current = setInterval(fetchAnalysis, 3000);

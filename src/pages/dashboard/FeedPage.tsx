@@ -845,10 +845,24 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
 
   useEffect(() => {
     if (!userId) return;
-    (supabase as any).from('telegram_connections')
-      .select('chat_id, telegram_username, connected_at')
-      .eq('user_id', userId).eq('active', true).maybeSingle()
-      .then(({ data }: any) => { setConn(data || null); setLoading(false); });
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await (supabase as any).from('telegram_connections')
+          .select('chat_id, telegram_username, connected_at')
+          .eq('user_id', userId).eq('active', true).maybeSingle();
+        if (cancelled) return;
+        setConn(data || null);
+      } catch (e: any) {
+        // Query failed (RLS, network, cold start) — don't leave the skeleton hanging.
+        if (cancelled) return;
+        console.warn('[TelegramCard] query failed', e?.message || e);
+        setConn(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [userId]);
 
   const handleConnect = async () => {
@@ -4132,12 +4146,33 @@ const FeedPage: React.FC = () => {
       setAccountId(metaSelId); // already a UUID
       return;
     }
+    let cancelled = false;
     setAccountResolving(true);
-    supabase.from("ad_accounts").select("id").eq("meta_account_id", metaSelId).maybeSingle()
-      .then(({ data }) => {
-        setAccountId(data?.id ?? null);
-        setAccountResolving(false);
-      });
+    // Always clear the resolving flag in `finally`, including errors — otherwise
+    // an RLS failure or network blip leaves the skeleton stuck forever.
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("ad_accounts")
+          .select("id")
+          .eq("meta_account_id", metaSelId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error) {
+          console.warn("[FeedPage] account resolve error", error.message);
+          setAccountId(null);
+        } else {
+          setAccountId(data?.id ?? null);
+        }
+      } catch (e: any) {
+        if (cancelled) return;
+        console.warn("[FeedPage] account resolve threw", e?.message || e);
+        setAccountId(null);
+      } finally {
+        if (!cancelled) setAccountResolving(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [metaSelId]);
 
   useEffect(() => {
@@ -4728,8 +4763,15 @@ const FeedPage: React.FC = () => {
   // Uses Promise.all so ads, campaigns, and metrics resolve at the same time,
   // preventing progressive/phased rendering where elements pop in one by one.
   useEffect(() => {
-    Promise.all([fetchAds(), fetchCampaigns(), fetchLiveMetrics()]);
-    liveMetricsInterval.current = setInterval(() => fetchLiveMetrics(true), 60_000);
+    // Each fetcher owns its own error state; catch here is a safety net to
+    // keep the interval alive if any of them throws unexpectedly.
+    Promise.all([fetchAds(), fetchCampaigns(), fetchLiveMetrics()])
+      .catch((err) => console.warn("[FeedPage] initial fetch batch failed:", err?.message || err));
+    liveMetricsInterval.current = setInterval(() => {
+      fetchLiveMetrics(true).catch((err) =>
+        console.warn("[FeedPage] interval fetchLiveMetrics failed:", err?.message || err)
+      );
+    }, 60_000);
     return () => { if (liveMetricsInterval.current) clearInterval(liveMetricsInterval.current); };
   }, [fetchAds, fetchCampaigns, fetchLiveMetrics, metricsRefreshKey]);
 

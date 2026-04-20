@@ -11,6 +11,36 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[CREATE-CHECKOUT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
+// ── Module-scope cache for Stripe customer lookups ────────────────────────────
+// Survives warm invocations of the edge function. TTL 5min — enough to absorb
+// retries, double-clicks, and rapid reloads without hammering Stripe. Not a
+// true distributed cache; a bad actor can still force fresh lookups by
+// cycling emails, but that burns their own rate limit first.
+const customerCache = new Map<string, { ts: number; customers: any[] }>();
+const CUSTOMER_CACHE_TTL_MS = 5 * 60 * 1000;
+
+async function getStripeCustomersCached(
+  stripe: Stripe,
+  email: string,
+  limit = 10,
+): Promise<any[]> {
+  const key = `${email.toLowerCase()}::${limit}`;
+  const hit = customerCache.get(key);
+  const now = Date.now();
+  if (hit && now - hit.ts < CUSTOMER_CACHE_TTL_MS) {
+    return hit.customers;
+  }
+  const res = await stripe.customers.list({ email, limit });
+  customerCache.set(key, { ts: now, customers: res.data });
+  // Keep the cache bounded — drop oldest if we grow past 500 entries.
+  if (customerCache.size > 500) {
+    const oldest = Array.from(customerCache.entries())
+      .sort((a, b) => a[1].ts - b[1].ts)[0]?.[0];
+    if (oldest) customerCache.delete(oldest);
+  }
+  return res.data;
+}
+
 // ── Proteção 1: Domínios de email descartável ─────────────────────────────────
 // Lista curada dos domínios mais usados para bypass de trial
 const DISPOSABLE_DOMAINS = new Set([
@@ -94,10 +124,10 @@ function isDisposableEmail(email: string): boolean {
 // ── Proteção 2: Verificar histórico de trial no Stripe ───────────────────────
 async function hasUsedTrialBefore(stripe: Stripe, email: string): Promise<{ used: boolean; reason: string }> {
   try {
-    // Search ALL customers with this email (includes deleted)
-    const customers = await stripe.customers.list({ email, limit: 10 });
+    // Search ALL customers with this email (includes deleted) — cached 5min
+    const customersData = await getStripeCustomersCached(stripe, email, 10);
 
-    for (const customer of customers.data) {
+    for (const customer of customersData) {
       // Check subscriptions (including canceled, trialing, past_due)
       const subs = await stripe.subscriptions.list({
         customer: customer.id,
@@ -218,8 +248,8 @@ Deno.serve(async (req) => {
       || "unknown";
 
     // Only check IP for new customers (existing customers managing subscriptions are fine)
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    const isNewCustomer = customers.data.length === 0;
+    const customersList = await getStripeCustomersCached(stripe, user.email, 1);
+    const isNewCustomer = customersList.length === 0;
 
     if (isNewCustomer) {
       const { allowed } = await checkIpRateLimit(supabase, ip);

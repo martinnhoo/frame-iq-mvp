@@ -68,9 +68,49 @@ Deno.serve(async (req) => {
 
         // ── Capacity pack (one-time payment) ─────────────────────────────────
         if (session.metadata?.type === "capacity_pack") {
-          const userId = session.metadata.user_id;
           const credits = parseInt(session.metadata.credits || "0", 10);
           const pack = session.metadata.pack || "unknown";
+          const metadataUserId = session.metadata.user_id;
+
+          // SECURITY: never trust session.metadata.user_id blindly — a malicious
+          // session creator could set someone else's user_id and credit their
+          // account. Resolve user via the Stripe customer email (Stripe-authenticated)
+          // and only accept the metadata user_id when it matches that resolved id.
+          let resolvedUserId: string | null = null;
+          if (customerEmail) {
+            const { data: profilesByEmail } = await supabase
+              .from("profiles")
+              .select("id, email")
+              .eq("email", customerEmail)
+              .limit(1);
+            if (profilesByEmail && profilesByEmail.length > 0) {
+              resolvedUserId = profilesByEmail[0].id;
+            }
+          }
+
+          // Fallback: resolve via stripe_customer_id stored on profile
+          if (!resolvedUserId && customerId) {
+            const { data: profilesByCustomer } = await supabase
+              .from("profiles")
+              .select("id, email")
+              .eq("stripe_customer_id", customerId)
+              .limit(1);
+            if (profilesByCustomer && profilesByCustomer.length > 0) {
+              resolvedUserId = profilesByCustomer[0].id;
+            }
+          }
+
+          // Guard: if metadata.user_id was supplied but does NOT match the
+          // authenticated customer, refuse the credit (do not escalate to
+          // metadataUserId; that is the whole attack vector).
+          if (metadataUserId && resolvedUserId && metadataUserId !== resolvedUserId) {
+            logStep("SECURITY: metadata.user_id mismatch — refusing capacity pack", {
+              metadataUserId, resolvedUserId, customerEmail,
+            });
+            break;
+          }
+
+          const userId = resolvedUserId || null;
 
           if (userId && credits > 0) {
             // Call add_bonus_credits RPC to add capacity
@@ -87,7 +127,7 @@ Deno.serve(async (req) => {
               logStep("Capacity pack applied", { userId, pack, credits });
             }
           } else {
-            logStep("Capacity pack missing data", { userId, credits, pack });
+            logStep("Capacity pack missing data", { userId, credits, pack, customerEmail });
           }
           break;
         }

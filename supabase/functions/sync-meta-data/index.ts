@@ -79,6 +79,14 @@ interface PaginatedResponse {
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
 // Retry with exponential backoff for rate limits
+// Helper: fetch Meta Graph with token in Authorization header (never in URL).
+// Accepts either a URL with no token, or an existing URL+header combo.
+function metaFetch(url: string, token: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers || {});
+  headers.set("Authorization", `Bearer ${token}`);
+  return fetchWithRetry(url, { ...options, headers });
+}
+
 async function fetchWithRetry(
   url: string,
   options: RequestInit = {},
@@ -223,7 +231,6 @@ async function fetchCampaigns(
   while (true) {
     const params = new URLSearchParams({
       fields: "id,name,objective,status,daily_budget,lifetime_budget",
-      access_token: token,
       limit: limit.toString(),
     });
 
@@ -232,7 +239,7 @@ async function fetchCampaigns(
     }
 
     const url = `${META_API_BASE}/${accountId}/campaigns?${params}`;
-    const response = await fetchWithRetry(url);
+    const response = await metaFetch(url, token);
 
     if (!response.ok) {
       const error = await response.json();
@@ -261,7 +268,6 @@ async function fetchAdSets(
   while (true) {
     const params = new URLSearchParams({
       fields: "id,name,campaign_id,status,daily_budget,targeting,optimization_goal",
-      access_token: token,
       limit: limit.toString(),
     });
 
@@ -270,7 +276,7 @@ async function fetchAdSets(
     }
 
     const url = `${META_API_BASE}/${accountId}/adsets?${params}`;
-    const response = await fetchWithRetry(url);
+    const response = await metaFetch(url, token);
 
     if (!response.ok) {
       const error = await response.json();
@@ -305,7 +311,6 @@ async function fetchAds(
   while (true) {
     const params = new URLSearchParams({
       fields,
-      access_token: token,
       limit: limit.toString(),
     });
 
@@ -314,7 +319,7 @@ async function fetchAds(
     }
 
     const url = `${META_API_BASE}/${accountId}/ads?${params}`;
-    const response = await fetchWithRetry(url);
+    const response = await metaFetch(url, token);
 
     if (!response.ok) {
       const error = await response.json();
@@ -344,7 +349,6 @@ async function fetchInsights(
   while (true) {
     const params = new URLSearchParams({
       fields: "spend,impressions,clicks,actions,action_values,ctr,cpc,cpm,frequency,reach,date_start",
-      access_token: token,
       time_increment: "1",
       since: dateRange.since,
       until: dateRange.until,
@@ -356,7 +360,7 @@ async function fetchInsights(
     }
 
     const url = `${META_API_BASE}/${objectId}/insights?${params}`;
-    const response = await fetchWithRetry(url);
+    const response = await metaFetch(url, token);
 
     if (!response.ok) {
       const error = await response.json();

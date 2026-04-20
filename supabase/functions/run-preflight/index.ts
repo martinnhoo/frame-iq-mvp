@@ -356,23 +356,25 @@ Return ONLY valid JSON (no markdown, no backticks):
     const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${ANTHROPIC_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY || "",
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
+        max_tokens: 4096,
         messages: [{ role: "user", content: prompt }],
       }),
     });
 
     if (!aiRes.ok) {
       const errText = await aiRes.text();
-      console.error("AI error:", aiRes.status, errText);
+      console.error("AI error:", aiRes.status, errText.slice(0, 400));
       throw new Error(`AI analysis error: ${aiRes.status}`);
     }
 
     const aiData = await aiRes.json();
-    const rawText = aiData.choices?.[0]?.message?.content || "{}";
+    const rawText = aiData.content?.[0]?.text || "{}";
     const clean = rawText.replace(/```json|```/g, "").trim();
     console.log("AI response length:", clean.length);
     const result = JSON.parse(clean);
@@ -381,9 +383,14 @@ Return ONLY valid JSON (no markdown, no backticks):
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-  } catch (err) {
-    console.error("run-preflight error:", err);
-    return new Response(JSON.stringify({ error: String(err) }), {
+  } catch (err: any) {
+    // Do NOT leak raw error/stack to the client — that can surface Meta API
+    // error payloads, internal paths, or secrets from error.cause chains.
+    console.error("run-preflight error:", err?.message || err);
+    const msg = typeof err?.message === "string" ? err.message : "internal error";
+    // Strip anything token-ish before returning
+    const safe = msg.replace(/access_token=[^&\s]+/gi, "access_token=***");
+    return new Response(JSON.stringify({ error: safe }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

@@ -294,7 +294,23 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id);
 
     if (error) throw error;
-    return new Response(JSON.stringify({ connections: data || [] }), {
+
+    // Trim ad_accounts to essential fields only — avoids shipping 10MB+ payloads
+    // for agencies with thousands of accounts. Payload goes from O(all_fields*N)
+    // to O(4 fields * N).
+    const trimmed = (data || []).map((conn: any) => ({
+      ...conn,
+      ad_accounts: Array.isArray(conn.ad_accounts)
+        ? conn.ad_accounts.map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            account_status: a.account_status,
+            currency: a.currency,
+          }))
+        : [],
+    }));
+
+    return new Response(JSON.stringify({ connections: trimmed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

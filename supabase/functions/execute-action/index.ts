@@ -79,9 +79,13 @@ async function snapshotAdState(
   const fields = targetType === "ad"
     ? "status,name"
     : "status,daily_budget,name";
-  const url = `https://graph.facebook.com/${metaGraphApiVersion}/${adId}?fields=${fields}&access_token=${metaAccessToken}`;
+  // Pass the token via Authorization header so it never lands in URLs (which
+  // get captured by access logs, traces, CDN edges, etc).
+  const url = `https://graph.facebook.com/${metaGraphApiVersion}/${adId}?fields=${fields}`;
 
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${metaAccessToken}` },
+  });
   const data = await response.json();
 
   if (!response.ok) {

@@ -60,6 +60,27 @@ Deno.serve(async (req) => {
 
     // ── Update selected account — service_role bypasses trigger/RLS ──────────
     if (body.update_selected_account && user_id && persona_id && body.account_id) {
+      // Validate the account actually belongs to this user's persona connection
+      // before writing. Defense-in-depth on top of the JWT ownership check
+      // above — prevents a client from saving an account_id that isn't theirs.
+      const { data: connRow } = await sbAuth
+        .from("platform_connections" as any)
+        .select("ad_accounts")
+        .eq("user_id", user_id)
+        .eq("persona_id", persona_id)
+        .eq("platform", "meta")
+        .maybeSingle();
+
+      const owned = Array.isArray((connRow as any)?.ad_accounts)
+        && (connRow as any).ad_accounts.some((a: any) => a?.id === body.account_id);
+
+      if (!owned) {
+        return new Response(JSON.stringify({ error: "account_not_owned" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       await sbAuth.from("platform_connections" as any)
         .update({ selected_account_id: body.account_id })
         .eq("user_id", user_id)

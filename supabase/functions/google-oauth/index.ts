@@ -179,7 +179,10 @@ Deno.serve(async (req) => {
       }).eq("user_id", user_id).eq("platform", "google").eq("persona_id", persona_id);
 
       return new Response(
-        JSON.stringify({ success: true, access_token: data.access_token }),
+        JSON.stringify({
+          success: true,
+          expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
+        }),
         { headers: { ...cors, "Content-Type": "application/json" } }
       );
     }

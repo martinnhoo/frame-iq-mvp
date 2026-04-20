@@ -1957,7 +1957,11 @@ export default function AdBriefAI() {
         if(data?.credits){
           setCreditBalance({ remaining: data.credits.remaining, total: data.credits.total + (data.credits.bonus||0) });
         }
-      } catch(_){}
+      } catch(e: any){
+        // Non-fatal — credits panel will fall back to its default. Log so we
+        // can see real outages instead of silent failures.
+        console.warn('[AdBriefAI] check-usage failed', e?.message || e);
+      }
     };
     load();
   },[user?.id]);
