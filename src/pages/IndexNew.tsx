@@ -1492,12 +1492,19 @@ function CompareSection({ t }: { t: Record<string, string> }) {
               display: "flex", alignItems: "center", gap: 8, marginBottom: 20,
               paddingBottom: 14, borderBottom: `1px solid rgba(14,165,233,0.12)`,
             }}>
-              <span style={{
-                width: 16, height: 16, borderRadius: 4,
-                background: `linear-gradient(135deg, ${ACCENT}, #06b6d4)`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: F, fontSize: 10, fontWeight: 900, color: "#fff",
-              }}>a</span>
+              <img
+                src="/ab-avatar.png"
+                alt="AdBrief"
+                width={18}
+                height={18}
+                loading="lazy"
+                decoding="async"
+                style={{
+                  width: 18, height: 18, borderRadius: 4,
+                  objectFit: "cover", display: "block",
+                  boxShadow: "0 0 0 1px rgba(255,255,255,0.04)",
+                }}
+              />
               <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>
                 {t.compare_adbrief_title}
               </span>
