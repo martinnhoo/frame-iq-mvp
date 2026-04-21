@@ -424,6 +424,39 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
     orderedCounter = 0;
   };
 
+  // Semantic label detection — maps label keywords → accent color, optional bg tint
+  // Used to render `**Label:** value` lines as mini info-blocks with consistent UX language.
+  type LabelKind = "critical" | "action" | "status" | "cause" | "neutral";
+  const classifyLabel = (label: string): LabelKind => {
+    const l = label.toLowerCase();
+    if (/problema|crítico|critico|erro\b|falha|urgente|broken|critical|risco/.test(l)) return "critical";
+    if (/ação|acao|action|próximo passo|recomenda|o que fazer|next step|passo\s*\d|imediat/.test(l)) return "action";
+    if (/status|pixel|último|ultimo|diagn[oó]stico|funcionando|disparando|healthy/.test(l)) return "status";
+    if (/causa|poss[ií]vel|poss[ií]veis|por que|possible|cause/.test(l)) return "cause";
+    return "neutral";
+  };
+  const labelColor: Record<LabelKind, string> = {
+    critical: "#F87171",
+    action:   "#0EA5E9",
+    status:   "#4ADE80",
+    cause:    "#FBBF24",
+    neutral:  "rgba(255,255,255,0.50)",
+  };
+  const labelBgTint: Record<LabelKind, string> = {
+    critical: "rgba(248,113,113,0.06)",
+    action:   "rgba(14,165,233,0.05)",
+    status:   "transparent",
+    cause:    "transparent",
+    neutral:  "transparent",
+  };
+  const labelBorder: Record<LabelKind, string> = {
+    critical: "rgba(248,113,113,0.22)",
+    action:   "rgba(14,165,233,0.22)",
+    status:   "transparent",
+    cause:    "transparent",
+    neutral:  "transparent",
+  };
+
   lines.forEach((line, i) => {
     const trimmed = line.trim();
 
@@ -438,13 +471,19 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       return;
     }
 
-    // H2
+    // H2 — section title with subtle tag pill
     if (/^##\s/.test(trimmed)) {
       flushList(`fl-${i}`);
+      const title = trimmed.replace(/^##\s/, "");
+      const kind = classifyLabel(title);
+      const color = labelColor[kind];
       nodes.push(
-        <p key={i} style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,0.95)", letterSpacing: "-0.025em", margin: "16px 0 5px", lineHeight: 1.3, ...blockAnim(nodes.length) }}>
-          {inlineFormat(trimmed.replace(/^##\s/, ""))}
-        </p>
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 0 6px", ...blockAnim(nodes.length) }}>
+          <span style={{ width: 3, height: 14, borderRadius: 2, background: color, flexShrink: 0, opacity: 0.85 }} />
+          <p style={{ fontFamily: F, fontSize: 15.5, fontWeight: 700, color: "rgba(255,255,255,0.96)", letterSpacing: "-0.02em", margin: 0, lineHeight: 1.3 }}>
+            {inlineFormat(title)}
+          </p>
+        </div>
       );
       return;
     }
@@ -485,6 +524,61 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
     if (!trimmed) {
       flushList(`fl-${i}`);
       return;
+    }
+
+    // Label:value line — pattern "**Label:** value..." (or "**Label**: value")
+    // Renders as a small-caps uppercase label above the value, with semantic coloring
+    // for critical / action / status / cause. This is what lifts responses like the
+    // pixel diagnostic from "wall of bold text" to a structured info card.
+    const labelValueMatch = trimmed.match(/^\*\*([^*]+?)\*\*\s*:?\s*(.+)$/);
+    if (labelValueMatch) {
+      flushList(`fl-${i}`);
+      const label = labelValueMatch[1].replace(/:\s*$/, "").trim();
+      const value = labelValueMatch[2].trim();
+      // Only treat as label-value if label is short enough to actually be a label
+      if (label.length > 0 && label.length <= 40 && value.length > 0) {
+        const kind = classifyLabel(label);
+        const color = labelColor[kind];
+        const bg = labelBgTint[kind];
+        const br = labelBorder[kind];
+        const tinted = bg !== "transparent";
+
+        nodes.push(
+          <div key={i} style={{
+            display: "flex", flexDirection: "column", gap: 3,
+            padding: tinted ? "9px 12px 10px" : "2px 0",
+            margin: tinted ? "6px 0" : "3px 0",
+            borderRadius: tinted ? 8 : 0,
+            background: bg,
+            border: tinted ? `1px solid ${br}` : "none",
+            borderLeft: tinted ? `3px solid ${color}` : "none",
+            ...blockAnim(nodes.length),
+          }}>
+            <span style={{
+              fontFamily: F,
+              fontSize: 9.5,
+              fontWeight: 800,
+              letterSpacing: "0.11em",
+              textTransform: "uppercase" as const,
+              color,
+              lineHeight: 1,
+            }}>
+              {label}
+            </span>
+            <span style={{
+              fontFamily: F,
+              fontSize: 14,
+              fontWeight: 500,
+              color: "rgba(240,245,255,0.92)",
+              lineHeight: 1.55,
+              letterSpacing: "-0.01em",
+            }}>
+              {inlineFormat(value)}
+            </span>
+          </div>
+        );
+        return;
+      }
     }
 
     // Paragraph
