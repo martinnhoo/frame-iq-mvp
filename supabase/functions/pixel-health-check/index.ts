@@ -153,8 +153,45 @@ Deno.serve(async (req) => {
     const conn = connections[0];
     const token = conn.access_token;
     const adAccounts = conn.ad_accounts || [];
-    const selectedAccountId =
-      requestedAccountId || conn.selected_account_id || adAccounts[0]?.account_id;
+
+    // Resolve the Meta ad account ID. The frontend may pass either:
+    //   • the Meta account ID (e.g. "act_152022538205761"), OR
+    //   • the internal Supabase UUID of the ad_accounts row (e.g. "a68d2420-...").
+    // The latter happens because FeedPage resolves act_… → UUID before calling us.
+    // If we see a UUID, look up the Meta ID from ad_accounts (and verify ownership).
+    const looksLikeMetaId = (v: string) =>
+      typeof v === "string" && (v.startsWith("act_") || /^\d+$/.test(v));
+    const looksLikeUuid = (v: string) =>
+      typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+
+    let selectedAccountId: string | null = null;
+
+    if (requestedAccountId && looksLikeMetaId(requestedAccountId)) {
+      selectedAccountId = requestedAccountId;
+    } else if (requestedAccountId && looksLikeUuid(requestedAccountId)) {
+      const { data: row, error: rowErr } = await sb
+        .from("ad_accounts")
+        .select("meta_account_id, user_id")
+        .eq("id", requestedAccountId)
+        .maybeSingle();
+      if (rowErr || !row) {
+        return new Response(JSON.stringify({ error: "ad_account_not_found" }), {
+          status: 404,
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+      // Defence-in-depth: refuse if the row doesn't belong to the caller.
+      if (row.user_id !== user_id) {
+        return new Response(JSON.stringify({ error: "ad_account_not_owned" }), {
+          status: 403,
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+      selectedAccountId = row.meta_account_id;
+    } else {
+      // Fallbacks: connection's saved selection, then first ad account on record.
+      selectedAccountId = conn.selected_account_id || adAccounts[0]?.account_id || null;
+    }
 
     if (!selectedAccountId) {
       return new Response(JSON.stringify({ error: "no_account_selected" }), {
@@ -172,7 +209,9 @@ Deno.serve(async (req) => {
         .eq("ad_account_id", selectedAccountId)
         .maybeSingle();
 
-      if (cached && cached.checked_at) {
+      // Skip cached entries that were themselves errors — otherwise a single
+      // transient Meta outage poisons the result for the whole TTL window.
+      if (cached && cached.checked_at && !cached.error && cached.status !== "unknown") {
         const age = Date.now() - new Date(cached.checked_at).getTime();
         if (age < CACHE_TTL_MS) {
           const cachedResult: PixelHealthResult = {
@@ -199,16 +238,22 @@ Deno.serve(async (req) => {
       : `act_${selectedAccountId}`;
 
     // ── Fetch pixels + active ads in parallel ───────────────────────────
+    // Token via Authorization header (never in URL params — leaks to logs).
+    const metaHeaders = { Authorization: `Bearer ${token}` };
+
     const pixelsUrl =
       `https://graph.facebook.com/v21.0/${actId}/adspixels?` +
-      `fields=id,name,last_fired_time,is_created_by_business&limit=25&access_token=${token}`;
+      `fields=id,name,last_fired_time,is_created_by_business&limit=25`;
 
     const adsUrl =
       `https://graph.facebook.com/v21.0/${actId}/ads?` +
       `fields=id,name,effective_status,tracking_specs,conversion_specs` +
-      `&effective_status=%5B%22ACTIVE%22%5D&limit=100&access_token=${token}`;
+      `&effective_status=%5B%22ACTIVE%22%5D&limit=100`;
 
-    const [pixelsRes, adsRes] = await Promise.all([fetch(pixelsUrl), fetch(adsUrl)]);
+    const [pixelsRes, adsRes] = await Promise.all([
+      fetch(pixelsUrl, { headers: metaHeaders }),
+      fetch(adsUrl, { headers: metaHeaders }),
+    ]);
 
     // ── Hard failure: pixels endpoint errored ───────────────────────────
     if (!pixelsRes.ok) {
@@ -223,7 +268,7 @@ Deno.serve(async (req) => {
         active_ads_checked: 0,
         checked_at: new Date().toISOString(),
         cached: false,
-        error: `adspixels_api_error: ${errText.slice(0, 200)}`,
+        error: `adspixels_api_error: ${errText.replace(/access_token=[^&"\s]+/gi, "access_token=***").slice(0, 200)}`,
       };
       await upsertCache(sb, user_id, persona_id, selectedAccountId, errResult);
       return new Response(JSON.stringify(errResult), {
