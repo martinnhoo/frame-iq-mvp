@@ -5570,7 +5570,7 @@ const FeedPage: React.FC = () => {
             signals.push({
               key: 'pixel', label: 'Pixel',
               status: 'ok',
-              detail: pixelHealth.pixels?.[0]?.name ? `${pixelHealth.pixels[0].name} · OK` : 'Disparando',
+              detail: pixelHealth.primary_pixel_name ? `${pixelHealth.primary_pixel_name} · OK` : 'Disparando',
               onClick: () => navigate('/dashboard/ai', { state: { prompt: 'Me mostra o diagnóstico completo do meu pixel e eventos de conversão.' } }),
             });
           } else if (pixelHealth.status === 'no_pixel') {
@@ -5605,8 +5605,9 @@ const FeedPage: React.FC = () => {
           }
 
           // 3) Gasto & conversões (period window)
-          const spend = adMetrics?.spend || 0;
-          const convs = adMetrics?.conversions || 0;
+          // NOTE: AdMetricsSummary stores spend in centavos (int) — fmtReais() handles display.
+          const spend = adMetrics?.totalSpend || 0;
+          const convs = adMetrics?.totalConversions || 0;
           if (spend === 0) {
             signals.push({
               key: 'spend', label: 'Gasto & conversões',
