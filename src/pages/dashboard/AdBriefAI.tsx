@@ -2251,16 +2251,21 @@ export default function AdBriefAI() {
 
       // Fetch live-metrics in parallel — same source as Feed KPIs / LivePanel
       // This ensures BRIEFING card shows the SAME numbers users see elsewhere.
+      // CRITICAL: pass the same account_id LivePanel uses, otherwise the edge fn
+      // falls back to a different account and the briefing ends up showing the
+      // wrong totals (e.g. top chips R$112 vs briefing R$51).
       const fetchLive = async (): Promise<{ spend: number; ctr: number; clicks: number; impressions: number; active_ads: number } | null> => {
         if (!hasMetaConn) return null;
         try {
+          const selectedAccId = pid ? (storage.get(`meta_sel_${pid}`, "") || undefined) : undefined;
           const { data, error } = await supabase.functions.invoke("live-metrics", {
-            body: { user_id: user.id, persona_id: pid, period: "7d" },
+            body: { user_id: user.id, persona_id: pid, period: "7d", account_id: selectedAccId },
           });
           if (error || !data?.ok) return null;
-          const m = data.combined || data.meta;
+          // Prefer Meta (same as LivePanel) over combined — LivePanel shows meta KPIs.
+          const m = data.meta && !data.meta.error ? data.meta : (data.combined || null);
           if (!m || m.error) return null;
-          return { spend: m.spend || 0, ctr: m.ctr || 0, clicks: m.clicks || 0, impressions: m.impressions || 0, active_ads: m.active_ads || m.ads_count || 0 };
+          return { spend: m.spend || 0, ctr: m.ctr || 0, clicks: m.clicks || 0, impressions: m.impressions || 0, active_ads: m.active_ads || m.ads_count || (Array.isArray(m.top_ads) ? m.top_ads.length : 0) };
         } catch { return null; }
       };
 
@@ -3029,6 +3034,13 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
           );
           if (patterns?.length) {
             const p = patterns[0];
+            // Normalize confidence to 0–100 regardless of storage format
+            const confRaw = p.confidence != null
+              ? (p.confidence <= 1 ? p.confidence * 100 : Number(p.confidence))
+              : null;
+            // Don't surface weak patterns with "tem boa performance" copy —
+            // below 40% confidence it's an emerging signal, not a learned winner.
+            const isStrong = confRaw != null && confRaw >= 40;
             // Humanize pattern_key: "perf_urgency_meta" → "Urgência em Meta"
             const PATTERN_LABELS: Record<string, { pt: string; en: string }> = {
               perf_urgency_meta: { pt: "Urgência na copy", en: "Urgency in copy" },
@@ -3050,20 +3062,33 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             const ctrVal = p.avg_ctr != null
               ? (p.avg_ctr < 1 ? (p.avg_ctr * 100).toFixed(2) : Number(p.avg_ctr).toFixed(2))
               : null;
-            const confVal = p.confidence != null
-              ? (p.confidence <= 1 ? (p.confidence * 100).toFixed(0) : Number(p.confidence).toFixed(0))
-              : null;
+            const confVal = confRaw != null ? confRaw.toFixed(0) : null;
+            // Tag + headline adapt to confidence — weak patterns show as "emerging" not "proven".
+            const patternTag = isStrong
+              ? (lang === "pt" ? "PADRÃO APRENDIDO" : lang === "es" ? "PATRÓN APRENDIDO" : "LEARNED PATTERN")
+              : (lang === "pt" ? "PADRÃO EMERGENTE" : lang === "es" ? "PATRÓN EMERGENTE" : "EMERGING PATTERN");
+            const patternHeadline = isStrong
+              ? (lang === "pt" ? `"${humanLabel}" tem boa performance` : `"${humanLabel}" performs well`)
+              : (lang === "pt" ? `"${humanLabel}" — sinal inicial` : lang === "es" ? `"${humanLabel}" — señal inicial` : `"${humanLabel}" — early signal`);
+            // Detail copy matches confidence level — don't claim certainty we don't have.
+            const weakSuffix = lang === "pt"
+              ? " — amostra ainda pequena, vou validar com mais dados."
+              : lang === "es"
+              ? " — muestra aún pequeña, validaré con más datos."
+              : " — small sample, I'll validate with more data.";
+            const strongSuffix = lang === "pt"
+              ? " — baseado nos seus dados reais."
+              : " — based on your real data.";
+            const metrics = lang === "pt"
+              ? `${ctrVal ? `CTR ${ctrVal}%` : ""}${ctrVal && confVal ? " · " : ""}${confVal ? `confiança ${confVal}%` : ""}`
+              : `${ctrVal ? `CTR ${ctrVal}%` : ""}${ctrVal && confVal ? " · " : ""}${confVal ? `${confVal}% confidence` : ""}`;
             cards.push({
-              tag: lang === "pt" ? "PADRÃO APRENDIDO" : lang === "es" ? "PATRÓN APRENDIDO" : "LEARNED PATTERN",
-              tagColor: "#A78BFA",
-              headline: lang === "pt"
-                ? `"${humanLabel}" tem boa performance`
-                : `"${humanLabel}" performs well`,
+              tag: patternTag,
+              tagColor: isStrong ? "#A78BFA" : "#64748B",
+              headline: patternHeadline,
               detail: p.insight_text && !p.insight_text.includes("pattern_key") && !p.insight_text.match(/ROAS\s+null/i) && !p.insight_text.match(/CTR\s+\d+\.\d{4,}/)
                 ? p.insight_text
-                : (lang === "pt"
-                  ? `${ctrVal ? `CTR ${ctrVal}%` : ""}${ctrVal && confVal ? " · " : ""}${confVal ? `confiança ${confVal}%` : ""} — baseado nos seus dados reais.`
-                  : `${ctrVal ? `CTR ${ctrVal}%` : ""}${ctrVal && confVal ? " · " : ""}${confVal ? `${confVal}% confidence` : ""} — based on your real data.`),
+                : `${metrics}${isStrong ? strongSuffix : weakSuffix}`,
             });
           }
         } catch {}
