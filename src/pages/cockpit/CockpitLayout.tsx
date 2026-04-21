@@ -25,8 +25,10 @@ import {
   ArrowLeft,
   Menu,
   X,
+  Command,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { CommandPalette, MONO, useHotkey } from './_shared';
 
 const F = "'Plus Jakarta Sans', sans-serif";
 const MOBILE_BP = 768;
@@ -113,6 +115,8 @@ export default function CockpitLayout() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [now, setNow] = useState<Date>(() => new Date());
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < MOBILE_BP);
@@ -122,6 +126,24 @@ export default function CockpitLayout() {
   }, []);
 
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
+  // Live clock in the sidebar footer. Updates every 30s — enough for a
+  // "what time is it for the system" signal without burning renders.
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // ⌘K / Ctrl-K opens the palette. Only wire when the gate is 'ok' so the
+  // listener never fires on the 404/loading screens.
+  useHotkey(
+    (e) => gate.status === 'ok' && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k',
+    (e) => {
+      e.preventDefault();
+      setPaletteOpen((v) => !v);
+    },
+    [gate.status],
+  );
 
   const headMeta = useMemo(() => (
     <Helmet>
@@ -181,6 +203,10 @@ export default function CockpitLayout() {
   }
 
   // ── OK ──────────────────────────────────────────────────────────────────
+  const isMac = typeof navigator !== 'undefined'
+    ? /Mac|iPhone|iPad|iPod/.test(navigator.platform)
+    : true;
+
   const sidebar = (
     <>
       <div style={{
@@ -211,9 +237,51 @@ export default function CockpitLayout() {
         )}
       </div>
 
-      <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '2px 0 6px' }} />
+      <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '2px 0 10px' }} />
 
-      <nav style={{ flex: 1, paddingTop: 4 }}>
+      {/* Jump-to / command palette trigger */}
+      <div style={{ padding: '0 8px 8px' }}>
+        <button
+          onClick={() => setPaletteOpen(true)}
+          style={{
+            width: '100%',
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '8px 10px 8px 12px', borderRadius: 8,
+            background: 'rgba(15,23,42,0.55)',
+            border: '1px solid rgba(148,163,184,0.10)',
+            color: '#64748B', cursor: 'pointer',
+            fontFamily: F, fontSize: 12,
+            transition: 'border-color 0.15s, color 0.15s',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(37,99,235,0.40)';
+            (e.currentTarget as HTMLElement).style.color = '#CBD5E1';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(148,163,184,0.10)';
+            (e.currentTarget as HTMLElement).style.color = '#64748B';
+          }}
+        >
+          <Command size={12} strokeWidth={1.75} />
+          <span style={{ flex: 1, textAlign: 'left' }}>Jump to…</span>
+          <kbd style={{
+            padding: '1px 5px', borderRadius: 4,
+            background: 'rgba(148,163,184,0.08)',
+            border: '1px solid rgba(148,163,184,0.14)',
+            fontFamily: MONO, fontSize: 10,
+          }}>
+            {isMac ? '⌘K' : 'Ctrl K'}
+          </kbd>
+        </button>
+      </div>
+
+      <div style={{
+        padding: '0 16px 4px', fontSize: 10,
+        color: '#334155', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase',
+      }}>
+        Sections
+      </div>
+      <nav style={{ flex: 1, paddingTop: 2 }}>
         <NavItem url="/cockpit" label="Overview" icon={LayoutDashboard} end />
         <NavItem url="/cockpit/users" label="Users" icon={Users} />
         <NavItem url="/cockpit/audit" label="Audit log" icon={ScrollText} />
@@ -230,6 +298,13 @@ export default function CockpitLayout() {
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {gate.email}
+          </div>
+          <div style={{
+            fontSize: 10.5, color: '#475569', marginTop: 4,
+            fontFamily: MONO,
+          }}>
+            {now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}{' '}
+            · {now.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
           </div>
         </div>
         <button
@@ -298,9 +373,13 @@ export default function CockpitLayout() {
           flex: 1, overflow: 'auto', background: '#060A14',
           ...(isMobile ? { paddingTop: 52 } : {}),
         }}>
-          <Outlet context={{ adminEmail: gate.email }} />
+          <Outlet context={{
+            adminEmail: gate.email,
+            openPalette: () => setPaletteOpen(true),
+          }} />
         </main>
       </div>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </>
   );
 }

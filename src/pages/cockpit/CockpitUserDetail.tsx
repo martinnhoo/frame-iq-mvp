@@ -2,25 +2,29 @@
  * CockpitUserDetail — exhaustive per-user view.
  *
  * Hydrated from the admin-user-summary edge function. Layout sections:
- *   1. Identity header (name, email, plan pill, flags)
+ *   1. Identity header + actions toolbar (copy, open Stripe/Meta)
  *   2. Anomalies banner
  *   3. Usage KPI tiles (chats, actions, decisions, upgrade gates)
  *   4. Meta ad accounts list
  *   5. AI intelligence (profile + top patterns)
  *   6. Billing panel (stripe ids, trial, period end)
- *   7. Timeline (last 50 merged events)
+ *   7. Timeline (last 50 merged events) — filterable
  *   8. Errors list
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, MessageSquare, Zap, TrendingUp, AlertTriangle,
   ExternalLink, Clock, Building2, Sparkles, CreditCard,
+  User as UserIcon, Copy as CopyIcon, LinkIcon,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
-const F = "'Plus Jakarta Sans', sans-serif";
+import {
+  Avatar, Card, COLORS, CopyButton, F, GhostButton, MONO, MicroPill, PlanPill,
+  SectionHead, SubPill, StatusPill,
+  fmtMoney, longDateTime, relativeTime, shortDate,
+} from './_shared';
 
 interface Summary {
   identity: {
@@ -73,17 +77,7 @@ interface Summary {
   anomalies: Array<{ code: string; severity: 'info' | 'warn' | 'critical'; note: string }>;
 }
 
-function Card({ children, padding = 18 }: { children: React.ReactNode; padding?: number }) {
-  return (
-    <div style={{
-      background: 'rgba(15,23,42,0.40)',
-      border: '1px solid rgba(148,163,184,0.08)',
-      borderRadius: 12, padding, fontFamily: F,
-    }}>
-      {children}
-    </div>
-  );
-}
+type TimelineFilter = 'all' | 'chat' | 'action' | 'decision' | 'upgrade_event' | 'error';
 
 export default function CockpitUserDetail() {
   const { id } = useParams<{ id: string }>();
@@ -92,6 +86,7 @@ export default function CockpitUserDetail() {
   const [data, setData] = useState<Summary | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tlFilter, setTlFilter] = useState<TimelineFilter>('all');
 
   useEffect(() => {
     if (!id) return;
@@ -116,52 +111,108 @@ export default function CockpitUserDetail() {
     return () => { mounted = false; };
   }, [id]);
 
+  // Count per-kind for filter chips.
+  const tlCounts = useMemo(() => {
+    if (!data) return { all: 0, chat: 0, action: 0, decision: 0, upgrade_event: 0, error: 0 };
+    const out = { all: 0, chat: 0, action: 0, decision: 0, upgrade_event: 0, error: 0 };
+    for (const ev of data.timeline) {
+      out.all += 1;
+      if (ev.kind in out) (out as any)[ev.kind] += 1;
+    }
+    return out;
+  }, [data]);
+
+  const tlFiltered = useMemo(() => {
+    if (!data) return [];
+    if (tlFilter === 'all') return data.timeline;
+    return data.timeline.filter(ev => ev.kind === tlFilter);
+  }, [data, tlFilter]);
+
   if (loading) {
-    return <div style={{ padding: 40, fontFamily: F, color: '#94A3B8' }}>Loading…</div>;
+    return <div style={{ padding: 40, fontFamily: F, color: COLORS.textMuted }}>Loading…</div>;
   }
   if (err || !data) {
     return (
       <div style={{ padding: 40, fontFamily: F }}>
-        <button onClick={() => navigate('/cockpit/users')} style={backBtn}>
-          <ChevronLeft size={14} /> Back
-        </button>
-        <div style={{ color: '#EF4444', marginTop: 16 }}>Failed to load user: {err ?? 'unknown'}</div>
+        <GhostButton icon={ChevronLeft} onClick={() => navigate('/cockpit/users')}>
+          Back
+        </GhostButton>
+        <div style={{ color: COLORS.critical, marginTop: 16 }}>Failed to load user: {err ?? 'unknown'}</div>
       </div>
     );
   }
 
-  const { identity, billing, ad_accounts, usage, credits, free_usage, ai_intelligence, timeline, errors, anomalies } = data;
+  const { identity, billing, ad_accounts, usage, credits, free_usage, ai_intelligence, errors, anomalies } = data;
+
+  const stripeUrl = billing.stripe_customer_id
+    ? `https://dashboard.stripe.com/customers/${billing.stripe_customer_id}`
+    : null;
+
+  // Sort ad accounts: connected + synced first, then by spend desc.
+  const sortedAdAccounts = [...ad_accounts].sort((a, b) => {
+    const aScore = (a.status === 'connected' ? 2 : 0) + (a.last_fast_sync_at ? 1 : 0);
+    const bScore = (b.status === 'connected' ? 2 : 0) + (b.last_fast_sync_at ? 1 : 0);
+    if (aScore !== bScore) return bScore - aScore;
+    return (b.total_spend_30d ?? 0) - (a.total_spend_30d ?? 0);
+  });
 
   return (
     <div style={{
       maxWidth: 1280, margin: '0 auto',
-      padding: '28px 28px 60px', fontFamily: F, color: '#E2E8F0',
+      padding: '28px 28px 60px', fontFamily: F, color: COLORS.text,
     }}>
-      <button onClick={() => navigate('/cockpit/users')} style={backBtn}>
-        <ChevronLeft size={14} /> Back to users
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <GhostButton icon={ChevronLeft} onClick={() => navigate('/cockpit/users')} size="sm">
+          Back to users
+        </GhostButton>
+        <div style={{ flex: 1 }} />
+        {identity.email && (
+          <CopyButton text={identity.email} label="Copy email" />
+        )}
+        <CopyButton text={identity.user_id} label="Copy ID" />
+        {stripeUrl && (
+          <GhostButton
+            icon={ExternalLink}
+            onClick={() => window.open(stripeUrl, '_blank', 'noopener,noreferrer')}
+            tone="accent" size="sm"
+            title="Open in Stripe dashboard"
+          >
+            Open in Stripe
+          </GhostButton>
+        )}
+      </div>
 
       {/* Identity header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 16, marginBottom: 20 }}>
-        <div style={{
-          width: 52, height: 52, borderRadius: 12,
-          background: 'rgba(148,163,184,0.08)', overflow: 'hidden',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#94A3B8', fontSize: 20, fontWeight: 600,
-          border: '1px solid rgba(148,163,184,0.10)',
-        }}>
-          {identity.avatar_url
-            ? <img src={identity.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : (identity.name ?? identity.email ?? '?').charAt(0).toUpperCase()}
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+        <Avatar
+          src={identity.avatar_url}
+          name={identity.name}
+          email={identity.email}
+          size={52}
+          radius={12}
+        />
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: '#F1F5F9' }}>
+          <div style={{
+            fontSize: 20, fontWeight: 700,
+            letterSpacing: '-0.02em', color: COLORS.text,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
             {identity.name || identity.email || '—'}
           </div>
-          <div style={{ fontSize: 13, color: '#64748B', marginTop: 2, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <span>{identity.email ?? '—'}</span>
-            <span style={{ color: '#334155' }}>·</span>
-            <span>ID {identity.user_id}</span>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            fontSize: 13, color: COLORS.textDim, marginTop: 3, flexWrap: 'wrap',
+          }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {identity.email ?? '—'}
+            </span>
+            <span style={{ color: COLORS.textFaint }}>·</span>
+            <span style={{
+              fontFamily: MONO, fontSize: 11.5, color: COLORS.textFaint,
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              {identity.user_id.slice(0, 8)}…
+            </span>
           </div>
           <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
             <PlanPill plan={billing.plan} />
@@ -198,9 +249,9 @@ export default function CockpitUserDetail() {
               display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
             }}>
               <AlertTriangle size={14}
-                color={a.severity === 'critical' ? '#FCA5A5' : a.severity === 'warn' ? '#FCD34D' : '#93C5FD'} />
-              <span style={{ color: '#F1F5F9', fontWeight: 600 }}>{a.code}</span>
-              <span style={{ color: '#94A3B8' }}>— {a.note}</span>
+                color={a.severity === 'critical' ? COLORS.criticalSoft : a.severity === 'warn' ? COLORS.warnSoft : '#93C5FD'} />
+              <span style={{ color: COLORS.text, fontWeight: 600, fontFamily: MONO, fontSize: 12 }}>{a.code}</span>
+              <span style={{ color: COLORS.textMuted }}>— {a.note}</span>
             </div>
           ))}
         </div>
@@ -231,29 +282,60 @@ export default function CockpitUserDetail() {
           <Card>
             <SectionHead icon={Building2} title={`Meta accounts (${ad_accounts.length})`} />
             {ad_accounts.length === 0 ? (
-              <div style={{ color: '#64748B', fontSize: 13, padding: '12px 0' }}>No ad accounts connected.</div>
+              <div style={{ color: COLORS.textDim, fontSize: 13, padding: '12px 0' }}>
+                No ad accounts connected.
+              </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {ad_accounts.map(a => (
-                  <div key={a.id} style={{
-                    padding: '10px 12px', borderRadius: 8,
-                    background: 'rgba(15,23,42,0.5)',
-                    border: '1px solid rgba(148,163,184,0.06)',
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
-                      <div style={{ color: '#F1F5F9', fontSize: 13, fontWeight: 600 }}>
-                        {a.name || a.meta_account_id}
+                {sortedAdAccounts.map(a => {
+                  const metaUrl = `https://business.facebook.com/adsmanager/manage/campaigns?act=${a.meta_account_id}`;
+                  return (
+                    <div key={a.id} style={{
+                      padding: '10px 12px', borderRadius: 8,
+                      background: COLORS.surfaceStrong,
+                      border: `1px solid ${COLORS.border}`,
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3, gap: 8 }}>
+                        <div style={{
+                          color: COLORS.text, fontSize: 13, fontWeight: 600,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          minWidth: 0, flex: 1,
+                        }}>
+                          {a.name || a.meta_account_id}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                          <StatusPill status={a.status ?? '—'} />
+                          <a
+                            href={metaUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            title="Open in Meta Ads Manager"
+                            style={{
+                              display: 'inline-flex', alignItems: 'center',
+                              padding: 4, borderRadius: 5,
+                              color: COLORS.textDim, textDecoration: 'none',
+                            }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = COLORS.accent; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = COLORS.textDim; }}
+                          >
+                            <ExternalLink size={11} />
+                          </a>
+                        </div>
                       </div>
-                      <StatusPill status={a.status ?? '—'} />
+                      <div style={{ color: COLORS.textDim, fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: MONO }}>{a.meta_account_id}</span>
+                        <CopyButton text={a.meta_account_id} size={10} />
+                        <span>· {a.currency ?? '—'}</span>
+                        <span>· spend 30d: {fmtMoney(a.total_spend_30d, a.currency)}</span>
+                        <span>· {a.total_ads_synced ?? 0} ads synced</span>
+                      </div>
+                      <div style={{ color: COLORS.textFaint, fontSize: 11, marginTop: 4 }}>
+                        last sync {a.last_fast_sync_at ? relativeTime(a.last_fast_sync_at) : 'never'}
+                      </div>
                     </div>
-                    <div style={{ color: '#64748B', fontSize: 11.5 }}>
-                      Meta ID {a.meta_account_id} · {a.currency ?? '—'} · spend 30d: {fmtMoney(a.total_spend_30d, a.currency)} · {a.total_ads_synced ?? 0} ads synced
-                    </div>
-                    <div style={{ color: '#475569', fontSize: 11, marginTop: 4 }}>
-                      last sync {a.last_fast_sync_at ? relativeTime(a.last_fast_sync_at) : 'never'}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </Card>
@@ -273,19 +355,19 @@ export default function CockpitUserDetail() {
               <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {ai_intelligence.top_patterns.map((p, i) => (
                   <div key={i} style={{
-                    padding: '8px 10px', background: 'rgba(15,23,42,0.5)',
-                    border: '1px solid rgba(148,163,184,0.06)', borderRadius: 8,
+                    padding: '8px 10px', background: COLORS.surfaceStrong,
+                    border: `1px solid ${COLORS.border}`, borderRadius: 8,
                     fontSize: 12.5,
                   }}>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-                      {p.is_winner && <span style={{ fontSize: 10.5, color: '#86EFAC', fontWeight: 700 }}>★</span>}
-                      <span style={{ color: '#CBD5E1', fontWeight: 600 }}>{p.pattern_key}</span>
-                      <span style={{ color: '#64748B' }}>· conf {Number(p.confidence).toFixed(2)}</span>
-                      {p.avg_ctr != null && <span style={{ color: '#64748B' }}>· CTR {(p.avg_ctr * 100).toFixed(2)}%</span>}
-                      {p.avg_roas != null && <span style={{ color: '#64748B' }}>· ROAS {Number(p.avg_roas).toFixed(2)}</span>}
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
+                      {p.is_winner && <span style={{ fontSize: 10.5, color: COLORS.successSoft, fontWeight: 700 }}>★</span>}
+                      <span style={{ color: COLORS.textMid, fontWeight: 600 }}>{p.pattern_key}</span>
+                      <span style={{ color: COLORS.textDim }}>· conf {Number(p.confidence).toFixed(2)}</span>
+                      {p.avg_ctr != null && <span style={{ color: COLORS.textDim }}>· CTR {(p.avg_ctr * 100).toFixed(2)}%</span>}
+                      {p.avg_roas != null && <span style={{ color: COLORS.textDim }}>· ROAS {Number(p.avg_roas).toFixed(2)}</span>}
                     </div>
                     {p.insight_text && (
-                      <div style={{ color: '#94A3B8', marginTop: 4 }}>{p.insight_text}</div>
+                      <div style={{ color: COLORS.textMuted, marginTop: 4 }}>{p.insight_text}</div>
                     )}
                   </div>
                 ))}
@@ -295,22 +377,42 @@ export default function CockpitUserDetail() {
 
           {/* Timeline */}
           <Card>
-            <SectionHead icon={Clock} title={`Recent activity (${timeline.length})`} />
-            {timeline.length === 0 ? (
-              <div style={{ color: '#64748B', fontSize: 13, padding: '12px 0' }}>No activity recorded.</div>
+            <SectionHead
+              icon={Clock}
+              title={`Recent activity (${tlFiltered.length}${tlFilter !== 'all' ? ` of ${tlCounts.all}` : ''})`}
+            />
+            {/* Filter chips */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+              <TlChip label={`All · ${tlCounts.all}`} active={tlFilter === 'all'} onClick={() => setTlFilter('all')} color={COLORS.textMuted} />
+              <TlChip label={`Chats · ${tlCounts.chat}`} active={tlFilter === 'chat'} onClick={() => setTlFilter('chat')} color={COLORS.accent} />
+              <TlChip label={`Actions · ${tlCounts.action}`} active={tlFilter === 'action'} onClick={() => setTlFilter('action')} color={COLORS.success} />
+              <TlChip label={`Decisions · ${tlCounts.decision}`} active={tlFilter === 'decision'} onClick={() => setTlFilter('decision')} color={COLORS.purple} />
+              <TlChip label={`Upgrades · ${tlCounts.upgrade_event}`} active={tlFilter === 'upgrade_event'} onClick={() => setTlFilter('upgrade_event')} color={COLORS.warn} />
+            </div>
+            {tlFiltered.length === 0 ? (
+              <div style={{ color: COLORS.textDim, fontSize: 13, padding: '12px 0' }}>
+                {tlFilter === 'all' ? 'No activity recorded.' : `No ${tlFilter} events.`}
+              </div>
             ) : (
               <div style={{ maxHeight: 480, overflowY: 'auto' }}>
-                {timeline.map((ev, i) => (
+                {tlFiltered.map((ev, i) => (
                   <div key={i} style={{
                     display: 'flex', gap: 10, padding: '8px 0',
-                    borderBottom: i === timeline.length - 1 ? 'none' : '1px solid rgba(148,163,184,0.04)',
+                    borderBottom: i === tlFiltered.length - 1 ? 'none' : `1px solid ${COLORS.divider}`,
                   }}>
                     <TimelineDot kind={ev.kind} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: '#CBD5E1', fontSize: 12.5, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{
+                        color: COLORS.textMid, fontSize: 12.5,
+                        overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
                         {ev.summary}
                       </div>
-                      <div style={{ color: '#475569', fontSize: 10.5, marginTop: 2 }}>
+                      <div style={{
+                        color: COLORS.textFaint, fontSize: 10.5, marginTop: 2,
+                      }}
+                        title={longDateTime(ev.ts)}
+                      >
                         {ev.kind} · {relativeTime(ev.ts)}
                       </div>
                     </div>
@@ -330,11 +432,13 @@ export default function CockpitUserDetail() {
                     padding: '8px 10px', background: 'rgba(239,68,68,0.06)',
                     border: '1px solid rgba(239,68,68,0.18)', borderRadius: 8, fontSize: 12,
                   }}>
-                    <div style={{ color: '#FCA5A5', fontWeight: 600 }}>
+                    <div style={{ color: COLORS.criticalSoft, fontWeight: 600 }}>
                       {e.error_type} {e.component ? <span style={{ opacity: 0.65, fontWeight: 400 }}>@ {e.component}</span> : null}
                     </div>
-                    <div style={{ color: '#CBD5E1', marginTop: 2 }}>{e.message}</div>
-                    <div style={{ color: '#475569', fontSize: 11, marginTop: 2 }}>
+                    <div style={{ color: COLORS.textMid, marginTop: 2 }}>{e.message}</div>
+                    <div style={{ color: COLORS.textFaint, fontSize: 11, marginTop: 2 }}
+                      title={longDateTime(e.created_at)}
+                    >
                       {e.url && (
                         <span style={{ marginRight: 8 }}>
                           <ExternalLink size={10} style={{ display: 'inline', marginRight: 3 }} />
@@ -357,10 +461,27 @@ export default function CockpitUserDetail() {
             <SectionHead icon={CreditCard} title="Billing" />
             <Row label="Plan" value={billing.plan} />
             <Row label="Status" value={billing.subscription_status ?? '—'} />
-            <Row label="Stripe customer" value={billing.stripe_customer_id ?? '—'} mono />
+            <RowWithCopy
+              label="Stripe customer"
+              value={billing.stripe_customer_id ?? '—'}
+              copyable={!!billing.stripe_customer_id}
+              mono
+            />
             <Row label="Plan started" value={billing.plan_started_at ? shortDate(billing.plan_started_at) : '—'} />
             <Row label="Period end" value={billing.current_period_end ? shortDate(billing.current_period_end) : '—'} />
             <Row label="Trial end" value={billing.trial_end ? shortDate(billing.trial_end) : '—'} />
+            {stripeUrl && (
+              <div style={{ marginTop: 10 }}>
+                <GhostButton
+                  icon={LinkIcon}
+                  onClick={() => window.open(stripeUrl, '_blank', 'noopener,noreferrer')}
+                  size="sm"
+                  tone="accent"
+                >
+                  View in Stripe
+                </GhostButton>
+              </div>
+            )}
           </Card>
 
           {/* Credits */}
@@ -368,16 +489,22 @@ export default function CockpitUserDetail() {
             <SectionHead icon={Sparkles} title="Credits" />
             {credits.current ? (
               <>
-                <Row label="Period" value={credits.current.period} />
-                <Row label="Used / Total" value={`${credits.current.used_credits} / ${credits.current.total_credits}`} />
-                <Row label="Bonus" value={String(credits.current.bonus_credits ?? 0)} />
+                <Row label="Period" value={credits.current.period} mono />
+                <CreditsBar
+                  used={credits.current.used_credits}
+                  total={credits.current.total_credits + credits.current.bonus_credits}
+                />
+                <Row label="Used / Total" value={`${credits.current.used_credits.toLocaleString()} / ${(credits.current.total_credits + credits.current.bonus_credits).toLocaleString()}`} />
+                {credits.current.bonus_credits > 0 && (
+                  <Row label="Bonus" value={String(credits.current.bonus_credits)} />
+                )}
                 <Row label="Updated" value={relativeTime(credits.current.updated_at)} />
               </>
             ) : (
-              <div style={{ color: '#64748B', fontSize: 12, padding: '6px 0' }}>No credit record.</div>
+              <div style={{ color: COLORS.textDim, fontSize: 12, padding: '6px 0' }}>No credit record.</div>
             )}
             {free_usage && (
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(148,163,184,0.06)' }}>
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${COLORS.border}` }}>
                 <Row label="Free-tier chats" value={String(free_usage.chat_count)} />
                 <Row label="Last reset" value={shortDate(free_usage.last_reset)} />
               </div>
@@ -394,24 +521,40 @@ export default function CockpitUserDetail() {
                   .map(([type, n]) => (
                     <div key={type} style={{
                       display: 'flex', justifyContent: 'space-between', padding: '5px 0',
-                      borderBottom: '1px solid rgba(148,163,184,0.04)', fontSize: 12.5,
+                      borderBottom: `1px solid ${COLORS.divider}`, fontSize: 12.5,
                     }}>
-                      <span style={{ color: '#CBD5E1' }}>{type}</span>
-                      <span style={{ color: '#64748B', fontWeight: 600 }}>{n}</span>
+                      <span style={{ color: COLORS.textMid, fontFamily: MONO, fontSize: 11.5 }}>{type}</span>
+                      <span style={{ color: COLORS.textDim, fontWeight: 600 }}>{n}</span>
                     </div>
                   ))}
               </div>
             </Card>
           )}
 
+          {/* User identity — copyable */}
+          <Card padding={14}>
+            <SectionHead icon={UserIcon} title="Identity" />
+            <RowWithCopy label="User ID" value={identity.user_id} copyable mono />
+            {identity.email && <RowWithCopy label="Email" value={identity.email} copyable />}
+          </Card>
+
           {/* Onboarding snapshot */}
           {identity.onboarding_data && (
             <Card>
-              <SectionHead icon={Building2} title="Onboarding data" />
+              <SectionHead
+                icon={Building2}
+                title="Onboarding data"
+                right={
+                  <CopyButton
+                    text={JSON.stringify(identity.onboarding_data, null, 2)}
+                    label="JSON"
+                  />
+                }
+              />
               <pre style={{
-                margin: 0, fontSize: 11, color: '#94A3B8',
+                margin: 0, fontSize: 11, color: COLORS.textMuted,
                 whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                maxHeight: 220, overflow: 'auto', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                maxHeight: 220, overflow: 'auto', fontFamily: MONO,
               }}>
                 {JSON.stringify(identity.onboarding_data, null, 2)}
               </pre>
@@ -424,40 +567,21 @@ export default function CockpitUserDetail() {
 }
 
 // ── Presentational helpers ───────────────────────────────────────────────────
-const backBtn: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: 4,
-  padding: '6px 10px', borderRadius: 8,
-  background: 'rgba(15,23,42,0.70)',
-  border: '1px solid rgba(148,163,184,0.10)',
-  color: '#94A3B8', fontSize: 12,
-  cursor: 'pointer', fontFamily: F,
-};
-
-function SectionHead({ icon: Icon, title, tone = 'default' }: {
-  icon: React.ElementType; title: string; tone?: 'default' | 'critical';
-}) {
-  const color = tone === 'critical' ? '#FCA5A5' : '#60A5FA';
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-      <Icon size={14} color={color} />
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#F1F5F9' }}>{title}</div>
-    </div>
-  );
-}
-
 function UsageKpi({ label, value, breakdown, icon: Icon }: {
   label: string; value: number | string; breakdown?: string; icon: React.ElementType;
 }) {
   return (
     <Card padding={14}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-        <Icon size={12} color="#60A5FA" />
-        <div style={{ fontSize: 11, color: '#64748B', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+        <Icon size={12} color={COLORS.accent} />
+        <div style={{ fontSize: 11, color: COLORS.textDim, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
           {label}
         </div>
       </div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: '#F1F5F9' }}>{value}</div>
-      {breakdown && <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{breakdown}</div>}
+      <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, fontVariantNumeric: 'tabular-nums' }}>
+        {typeof value === 'number' ? value.toLocaleString() : value}
+      </div>
+      {breakdown && <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>{breakdown}</div>}
     </Card>
   );
 }
@@ -465,10 +589,12 @@ function UsageKpi({ label, value, breakdown, icon: Icon }: {
 function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
     <div>
-      <div style={{ fontSize: 10, color: '#64748B', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+      <div style={{ fontSize: 10, color: COLORS.textDim, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
         {label}
       </div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: '#F1F5F9', marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text, marginTop: 2 }}>
+        {typeof value === 'number' ? value.toLocaleString() : value}
+      </div>
     </div>
   );
 }
@@ -477,13 +603,13 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between',
-      padding: '5px 0', borderBottom: '1px solid rgba(148,163,184,0.04)', fontSize: 12.5,
+      padding: '5px 0', borderBottom: `1px solid ${COLORS.divider}`, fontSize: 12.5,
       gap: 10,
     }}>
-      <span style={{ color: '#64748B', flexShrink: 0 }}>{label}</span>
+      <span style={{ color: COLORS.textDim, flexShrink: 0 }}>{label}</span>
       <span style={{
-        color: '#CBD5E1', fontWeight: 500,
-        fontFamily: mono ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : F,
+        color: COLORS.textMid, fontWeight: 500,
+        fontFamily: mono ? MONO : F,
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
         {value}
@@ -492,102 +618,96 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
   );
 }
 
-function PlanPill({ plan }: { plan: string }) {
-  const colors: Record<string, { bg: string; fg: string }> = {
-    free:   { bg: 'rgba(148,163,184,0.08)', fg: '#94A3B8' },
-    maker:  { bg: 'rgba(6,182,212,0.10)',   fg: '#67E8F9' },
-    creator:{ bg: 'rgba(6,182,212,0.10)',   fg: '#67E8F9' },
-    pro:    { bg: 'rgba(37,99,235,0.14)',   fg: '#93C5FD' },
-    starter:{ bg: 'rgba(37,99,235,0.14)',   fg: '#93C5FD' },
-    studio: { bg: 'rgba(168,85,247,0.14)',  fg: '#D8B4FE' },
-    scale:  { bg: 'rgba(168,85,247,0.14)',  fg: '#D8B4FE' },
-  };
-  const c = colors[plan] ?? colors.free;
-  return (
-    <span style={{
-      padding: '2px 8px', borderRadius: 999,
-      background: c.bg, color: c.fg,
-      fontSize: 10.5, fontWeight: 600,
-      textTransform: 'uppercase', letterSpacing: '0.04em',
-    }}>
-      {plan}
-    </span>
-  );
-}
-function SubPill({ status }: { status: string }) {
-  const color = status === 'past_due' ? '#FCA5A5'
-              : status === 'active' ? '#86EFAC'
-              : status === 'trialing' ? '#FCD34D'
-              : '#94A3B8';
-  return <MicroPill tone="raw" color={color}>{status}</MicroPill>;
-}
-function StatusPill({ status }: { status: string }) {
-  const color = status === 'connected' ? '#86EFAC'
-              : status === 'disconnected' ? '#FCA5A5'
-              : '#94A3B8';
-  return (
-    <span style={{
-      padding: '1px 7px', borderRadius: 999,
-      background: `${color}15`, color,
-      fontSize: 10.5, fontWeight: 600,
-      textTransform: 'uppercase', letterSpacing: '0.04em',
-    }}>
-      {status}
-    </span>
-  );
-}
-function MicroPill({ children, tone, color }: {
-  children: React.ReactNode;
-  tone: 'success' | 'warn' | 'muted' | 'raw';
-  color?: string;
+function RowWithCopy({
+  label, value, copyable, mono,
+}: {
+  label: string; value: string; copyable?: boolean; mono?: boolean;
 }) {
-  const map = {
-    success: { bg: 'rgba(34,197,94,0.10)', fg: '#86EFAC' },
-    warn:    { bg: 'rgba(245,158,11,0.10)', fg: '#FCD34D' },
-    muted:   { bg: 'rgba(148,163,184,0.08)', fg: '#94A3B8' },
-    raw:     { bg: `${color ?? '#94A3B8'}15`, fg: color ?? '#94A3B8' },
-  }[tone];
   return (
-    <span style={{
-      padding: '2px 8px', borderRadius: 999,
-      background: map.bg, color: map.fg,
-      fontSize: 10.5, fontWeight: 500,
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '5px 0', borderBottom: `1px solid ${COLORS.divider}`, fontSize: 12.5,
+      gap: 10,
     }}>
-      {children}
-    </span>
+      <span style={{ color: COLORS.textDim, flexShrink: 0 }}>{label}</span>
+      <span style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        minWidth: 0, flex: 1, justifyContent: 'flex-end',
+      }}>
+        <span style={{
+          color: COLORS.textMid, fontWeight: 500,
+          fontFamily: mono ? MONO : F,
+          fontSize: mono ? 11.5 : 12.5,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {value}
+        </span>
+        {copyable && value && value !== '—' && <CopyButton text={value} />}
+      </span>
+    </div>
   );
 }
+
+function CreditsBar({ used, total }: { used: number; total: number }) {
+  const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+  const color =
+    pct >= 100 ? COLORS.critical :
+    pct >= 80 ? COLORS.warn :
+    COLORS.accent;
+  return (
+    <div style={{ margin: '6px 0 10px' }}>
+      <div style={{
+        height: 4, borderRadius: 2,
+        background: 'rgba(148,163,184,0.08)', overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${pct}%`, height: '100%',
+          background: color,
+          transition: 'width 0.4s ease-out',
+        }} />
+      </div>
+      <div style={{
+        fontSize: 10.5, color: COLORS.textDim, marginTop: 3,
+        display: 'flex', justifyContent: 'space-between',
+      }}>
+        <span>{pct}% used</span>
+        {pct >= 80 && <span style={{ color }}>{pct >= 100 ? 'exhausted' : 'near limit'}</span>}
+      </div>
+    </div>
+  );
+}
+
+function TlChip({ label, active, onClick, color }: {
+  label: string; active: boolean; onClick: () => void; color: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '4px 10px', borderRadius: 999,
+        background: active ? `${color}20` : 'transparent',
+        border: `1px solid ${active ? color + '60' : COLORS.borderStrong}`,
+        color: active ? color : COLORS.textMuted,
+        fontSize: 11.5, fontFamily: F, fontWeight: 500,
+        cursor: 'pointer',
+        transition: 'all 0.15s',
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 function TimelineDot({ kind }: { kind: string }) {
-  const color = kind === 'chat' ? '#60A5FA'
-              : kind === 'action' ? '#22C55E'
-              : kind === 'decision' ? '#A78BFA'
-              : kind === 'upgrade_event' ? '#FCD34D'
-              : '#94A3B8';
+  const color = kind === 'chat' ? COLORS.accent
+              : kind === 'action' ? COLORS.success
+              : kind === 'decision' ? COLORS.purple
+              : kind === 'upgrade_event' ? COLORS.warnSoft
+              : COLORS.textMuted;
   return (
     <div style={{
       width: 6, height: 6, borderRadius: '50%', background: color,
       marginTop: 7, flexShrink: 0, boxShadow: `0 0 8px ${color}70`,
     }} />
   );
-}
-
-function shortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-function relativeTime(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(ms / 60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 30) return `${d}d ago`;
-  return shortDate(iso);
-}
-function fmtMoney(v: number | null, currency: string | null): string {
-  if (v == null) return '—';
-  const cur = (currency ?? 'BRL').toUpperCase();
-  if (cur === 'BRL') return `R$ ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  return `${cur} ${Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

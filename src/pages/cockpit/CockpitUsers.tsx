@@ -3,14 +3,24 @@
  *
  * Data comes from the admin-users-list edge function. Each row links to
  * /cockpit/users/:id which loads CockpitUserDetail (admin-user-summary).
+ *
+ * Filter state is mirrored into the URL query string so palette deep-links
+ * (e.g. /cockpit/users?status=past_due) land in the correct filter and the
+ * back button restores the previous view.
  */
 
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, Filter, ChevronLeft, ChevronRight, Circle } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  Search, ChevronLeft, ChevronRight, Circle, RotateCcw,
+  ArrowUp, ArrowDown, X,
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
-const F = "'Plus Jakarta Sans', sans-serif";
+import {
+  Avatar, COLORS, CopyButton, F, Flag, GhostButton, MicroPill, PlanPill,
+  SectionTitle, SelectFilter, ToggleChip, PagerBtn,
+  relativeTime, shortDateCompact, useHotkey,
+} from './_shared';
 
 interface Row {
   user_id: string;
@@ -41,19 +51,44 @@ interface ListResponse {
 
 const PLAN_FILTERS = ['any', 'free', 'maker', 'pro', 'studio', 'creator', 'starter', 'scale'];
 const STATUS_FILTERS = ['any', 'active', 'trialing', 'past_due', 'canceled', 'none'];
+type SortKey = 'signup_desc' | 'signup_asc' | 'last_action_desc' | 'plan_asc';
+const SORT_KEYS: SortKey[] = ['signup_desc', 'signup_asc', 'last_action_desc', 'plan_asc'];
+
+const SORT_LABELS: Record<SortKey, string> = {
+  signup_desc: 'Newest signup',
+  signup_asc: 'Oldest signup',
+  last_action_desc: 'Most recently active',
+  plan_asc: 'Plan (asc)',
+};
 
 export default function CockpitUsers() {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
 
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [plan, setPlan] = useState<string>('any');
-  const [status, setStatus] = useState<string>('any');
-  const [hasMeta, setHasMeta] = useState(false);
-  const [inactive7d, setInactive7d] = useState(false);
-  const [sort, setSort] = useState<'signup_desc' | 'signup_asc' | 'last_action_desc' | 'plan_asc'>('signup_desc');
-  const [page, setPage] = useState(1);
+  // Derive initial state from URL.
+  const initial = useMemo(() => ({
+    search: params.get('q') ?? '',
+    plan: params.get('plan') ?? 'any',
+    status: params.get('status') ?? 'any',
+    hasMeta: params.get('has_meta') === '1',
+    inactive7d: params.get('inactive_7d') === '1',
+    sort: (params.get('sort') ?? 'signup_desc') as SortKey,
+    page: Math.max(1, Number(params.get('page') ?? '1')),
+  }), []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [search, setSearch] = useState(initial.search);
+  const [debouncedSearch, setDebouncedSearch] = useState(initial.search);
+  const [plan, setPlan] = useState<string>(initial.plan);
+  const [status, setStatus] = useState<string>(initial.status);
+  const [hasMeta, setHasMeta] = useState(initial.hasMeta);
+  const [inactive7d, setInactive7d] = useState(initial.inactive7d);
+  const [sort, setSort] = useState<SortKey>(
+    SORT_KEYS.includes(initial.sort) ? initial.sort : 'signup_desc',
+  );
+  const [page, setPage] = useState(initial.page);
   const pageSize = 50;
+
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const [data, setData] = useState<ListResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,6 +102,20 @@ export default function CockpitUsers() {
     }, 250);
     return () => clearTimeout(t);
   }, [search]);
+
+  // Sync URL from state (so palette deep-links and back button work).
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (debouncedSearch) next.set('q', debouncedSearch);
+    if (plan !== 'any') next.set('plan', plan);
+    if (status !== 'any') next.set('status', status);
+    if (hasMeta) next.set('has_meta', '1');
+    if (inactive7d) next.set('inactive_7d', '1');
+    if (sort !== 'signup_desc') next.set('sort', sort);
+    if (page > 1) next.set('page', String(page));
+    setParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, plan, status, hasMeta, inactive7d, sort, page]);
 
   useEffect(() => {
     let mounted = true;
@@ -100,67 +149,116 @@ export default function CockpitUsers() {
 
   const totalPages = data?.total_pages ?? 1;
 
-  const planPill = useMemo(() => (p: string) => {
-    const colors: Record<string, { bg: string; fg: string }> = {
-      free:   { bg: 'rgba(148,163,184,0.08)', fg: '#94A3B8' },
-      maker:  { bg: 'rgba(6,182,212,0.10)',   fg: '#67E8F9' },
-      creator:{ bg: 'rgba(6,182,212,0.10)',   fg: '#67E8F9' },
-      pro:    { bg: 'rgba(37,99,235,0.14)',   fg: '#93C5FD' },
-      starter:{ bg: 'rgba(37,99,235,0.14)',   fg: '#93C5FD' },
-      studio: { bg: 'rgba(168,85,247,0.14)',  fg: '#D8B4FE' },
-      scale:  { bg: 'rgba(168,85,247,0.14)',  fg: '#D8B4FE' },
-    };
-    const c = colors[p] ?? colors.free;
-    return (
-      <span style={{
-        padding: '2px 8px', borderRadius: 999,
-        background: c.bg, color: c.fg,
-        fontSize: 10.5, fontWeight: 600,
-        textTransform: 'uppercase', letterSpacing: '0.04em',
-      }}>
-        {p}
-      </span>
-    );
-  }, []);
+  // Keyboard shortcut: / focuses search; Esc clears if search is focused.
+  useHotkey(
+    (e) => {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      const editing = tag === 'input' || tag === 'textarea' || tag === 'select';
+      return e.key === '/' && !editing && !e.metaKey && !e.ctrlKey;
+    },
+    (e) => {
+      e.preventDefault();
+      searchRef.current?.focus();
+      searchRef.current?.select();
+    },
+    [],
+  );
+
+  const hasActiveFilters =
+    !!debouncedSearch || plan !== 'any' || status !== 'any' || hasMeta || inactive7d || sort !== 'signup_desc';
+
+  const resetFilters = () => {
+    setSearch('');
+    setPlan('any');
+    setStatus('any');
+    setHasMeta(false);
+    setInactive7d(false);
+    setSort('signup_desc');
+    setPage(1);
+  };
+
+  // Flag counts across current page, for a "caution" pill in the header.
+  const flagCount = useMemo(() => {
+    if (!data) return 0;
+    let n = 0;
+    for (const r of data.rows) {
+      if (r.flags.past_due || r.flags.trial_ending_soon) n++;
+    }
+    return n;
+  }, [data]);
 
   return (
     <div style={{
       maxWidth: 1400, margin: '0 auto',
-      padding: '32px 28px 60px', fontFamily: F, color: '#E2E8F0',
+      padding: '32px 28px 60px', fontFamily: F, color: COLORS.text,
     }}>
-      {/* Header */}
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>Users</div>
-        <div style={{ fontSize: 13, color: '#64748B', marginTop: 3 }}>
-          {data ? `${data.total_count.toLocaleString()} total — showing ${data.rows.length}` : 'Loading…'}
-        </div>
-      </div>
+      <SectionTitle
+        title="Users"
+        subtitle={
+          data
+            ? <>
+                <span>{data.total_count.toLocaleString()} total</span>
+                <span style={{ color: COLORS.textFaint, margin: '0 6px' }}>·</span>
+                <span>showing {data.rows.length}</span>
+                {flagCount > 0 && (
+                  <>
+                    <span style={{ color: COLORS.textFaint, margin: '0 6px' }}>·</span>
+                    <span style={{ color: COLORS.warnSoft, fontWeight: 600 }}>
+                      {flagCount} need attention
+                    </span>
+                  </>
+                )}
+              </>
+            : 'Loading…'
+        }
+        right={
+          hasActiveFilters && (
+            <GhostButton icon={RotateCcw} onClick={resetFilters} size="sm">
+              Reset filters
+            </GhostButton>
+          )
+        }
+      />
 
       {/* Filter bar */}
       <div style={{
         display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
         marginBottom: 14, padding: 14,
-        background: 'rgba(15,23,42,0.40)',
-        border: '1px solid rgba(148,163,184,0.08)',
+        background: COLORS.surface,
+        border: `1px solid ${COLORS.border}`,
         borderRadius: 10,
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '7px 10px', borderRadius: 8,
-          background: 'rgba(15,23,42,0.70)',
-          border: '1px solid rgba(148,163,184,0.10)',
+          background: COLORS.surfaceStrong,
+          border: `1px solid ${COLORS.borderStrong}`,
           flex: '1 1 260px', minWidth: 220,
         }}>
-          <Search size={14} color="#64748B" />
+          <Search size={14} color={COLORS.textDim} />
           <input
+            ref={searchRef}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search by email or name…"
+            onKeyDown={e => { if (e.key === 'Escape' && search) { e.preventDefault(); setSearch(''); } }}
+            placeholder="Search by email or name…  press /  to focus"
             style={{
               flex: 1, background: 'none', border: 'none', outline: 'none',
-              color: '#E2E8F0', fontSize: 13, fontFamily: F,
+              color: COLORS.text, fontSize: 13, fontFamily: F,
             }}
           />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              style={{
+                background: 'none', border: 'none', padding: 2, cursor: 'pointer',
+                color: COLORS.textDim, display: 'flex', alignItems: 'center',
+              }}
+              title="Clear search"
+            >
+              <X size={12} />
+            </button>
+          )}
         </div>
 
         <SelectFilter label="Plan" value={plan} options={PLAN_FILTERS}
@@ -169,39 +267,75 @@ export default function CockpitUsers() {
           onChange={v => { setStatus(v); setPage(1); }} />
 
         <ToggleChip label="Has Meta" active={hasMeta} onClick={() => { setHasMeta(v => !v); setPage(1); }} />
-        <ToggleChip label="Inactive 7d" active={inactive7d} onClick={() => { setInactive7d(v => !v); setPage(1); }} />
+        <ToggleChip label="Inactive 7d" active={inactive7d} onClick={() => { setInactive7d(v => !v); setPage(1); }} tone="warn" />
 
-        <SelectFilter label="Sort" value={sort} options={['signup_desc', 'signup_asc', 'last_action_desc', 'plan_asc']}
-          onChange={v => setSort(v as any)} />
+        <SelectFilter
+          label="Sort"
+          value={sort}
+          options={SORT_KEYS}
+          onChange={v => setSort(v as SortKey)}
+          renderOption={(o) => SORT_LABELS[o as SortKey] ?? o}
+        />
       </div>
 
       {/* Table */}
       <div style={{
-        background: 'rgba(15,23,42,0.40)',
-        border: '1px solid rgba(148,163,184,0.08)',
+        background: COLORS.surface,
+        border: `1px solid ${COLORS.border}`,
         borderRadius: 10, overflow: 'hidden',
       }}>
         {loading && !data ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>Loading…</div>
+          <div style={{ padding: 40, textAlign: 'center', color: COLORS.textMuted, fontSize: 13 }}>Loading…</div>
         ) : err ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#EF4444', fontSize: 13 }}>Error: {err}</div>
+          <div style={{ padding: 40, textAlign: 'center', color: COLORS.critical, fontSize: 13 }}>Error: {err}</div>
         ) : !data || data.rows.length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#64748B', fontSize: 13 }}>
+          <div style={{ padding: 40, textAlign: 'center', color: COLORS.textDim, fontSize: 13 }}>
             No users match the current filters.
+            {hasActiveFilters && (
+              <div style={{ marginTop: 12 }}>
+                <GhostButton icon={RotateCcw} onClick={resetFilters} size="sm">
+                  Reset filters
+                </GhostButton>
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.08)' }}>
-                  <Th>User</Th>
+                <tr style={{
+                  borderBottom: `1px solid ${COLORS.border}`,
+                  background: 'rgba(15,23,42,0.55)',
+                  position: 'sticky', top: 0, zIndex: 2,
+                }}>
+                  <SortableTh
+                    label="User"
+                    ascKey="signup_asc"
+                    descKey="signup_desc"
+                    currentSort={sort}
+                    onChange={(k) => { setSort(k); setPage(1); }}
+                  />
                   <Th>Plan</Th>
                   <Th>Status</Th>
+                  <SortableTh
+                    label="Plan tier"
+                    ascKey="plan_asc"
+                    descKey="plan_asc"
+                    currentSort={sort}
+                    onChange={(k) => { setSort(k); setPage(1); }}
+                    hideUnlessCurrent
+                  />
                   <Th>Meta</Th>
                   <Th align="right">Chats 7d</Th>
                   <Th align="right">Actions 7d</Th>
                   <Th>Signup</Th>
-                  <Th>Last action</Th>
+                  <SortableTh
+                    label="Last action"
+                    ascKey="last_action_desc"
+                    descKey="last_action_desc"
+                    currentSort={sort}
+                    onChange={(k) => { setSort(k); setPage(1); }}
+                  />
                   <Th>Flags</Th>
                 </tr>
               </thead>
@@ -211,7 +345,7 @@ export default function CockpitUsers() {
                     key={r.user_id}
                     onClick={() => navigate(`/cockpit/users/${r.user_id}`)}
                     style={{
-                      borderBottom: '1px solid rgba(148,163,184,0.04)',
+                      borderBottom: `1px solid ${COLORS.divider}`,
                       cursor: 'pointer',
                       transition: 'background 0.12s',
                     }}
@@ -220,54 +354,52 @@ export default function CockpitUsers() {
                   >
                     <Td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: 7,
-                          background: 'rgba(148,163,184,0.08)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: '#94A3B8', fontSize: 11, fontWeight: 600,
-                          overflow: 'hidden',
-                        }}>
-                          {r.avatar_url
-                            ? <img src={r.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            : (r.name ?? r.email ?? '?').charAt(0).toUpperCase()}
-                        </div>
+                        <Avatar src={r.avatar_url} name={r.name} email={r.email} size={28} />
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ color: '#F1F5F9', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{
+                            color: COLORS.text, fontWeight: 500,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
                             {r.name || '—'}
                           </div>
-                          <div style={{ color: '#64748B', fontSize: 11.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {r.email ?? '—'}
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            color: COLORS.textDim, fontSize: 11.5,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {r.email ?? '—'}
+                            </span>
+                            {r.email && <CopyButton text={r.email} />}
                           </div>
                         </div>
                       </div>
                     </Td>
-                    <Td>{planPill(r.plan)}</Td>
+                    <Td><PlanPill plan={r.plan} /></Td>
                     <Td>
-                      <span style={{
-                        color: r.subscription_status === 'past_due' ? '#EF4444'
-                             : r.subscription_status === 'active' ? '#86EFAC'
-                             : r.subscription_status === 'trialing' ? '#FCD34D'
-                             : '#64748B',
-                        fontSize: 12, fontWeight: 500,
-                        textTransform: 'capitalize',
-                      }}>
-                        {r.subscription_status ?? '—'}
-                      </span>
+                      <SubscriptionStatus status={r.subscription_status} />
                     </Td>
+                    <Td>{/* no-op cell for invisible plan-asc sort column */}</Td>
                     <Td>
                       {r.meta_connected ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: r.meta_has_synced ? '#86EFAC' : '#FCD34D' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: r.meta_has_synced ? COLORS.successSoft : COLORS.warnSoft }}>
                           <Circle size={8} fill="currentColor" color="currentColor" />
                           <span style={{ fontSize: 12 }}>{r.meta_accounts_count} {r.meta_has_synced ? '' : '(unsynced)'}</span>
                         </div>
                       ) : (
-                        <span style={{ color: '#475569', fontSize: 12 }}>—</span>
+                        <span style={{ color: COLORS.textFaint, fontSize: 12 }}>—</span>
                       )}
                     </Td>
-                    <Td align="right">{r.chats_7d}</Td>
-                    <Td align="right">{r.actions_7d}</Td>
-                    <Td>{shortDate(r.signup_at)}</Td>
-                    <Td>{r.last_ai_action_at ? relativeTime(r.last_ai_action_at) : <span style={{ color: '#475569' }}>never</span>}</Td>
+                    <Td align="right">
+                      <MetricCell value={r.chats_7d} />
+                    </Td>
+                    <Td align="right">
+                      <MetricCell value={r.actions_7d} />
+                    </Td>
+                    <Td>{shortDateCompact(r.signup_at)}</Td>
+                    <Td>{r.last_ai_action_at
+                      ? relativeTime(r.last_ai_action_at)
+                      : <span style={{ color: COLORS.textFaint }}>never</span>}</Td>
                     <Td>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                         {r.flags.past_due && <Flag text="past_due" tone="critical" />}
@@ -288,10 +420,13 @@ export default function CockpitUsers() {
       {data && data.total_pages > 1 && (
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          marginTop: 14, fontSize: 12, color: '#94A3B8',
+          marginTop: 14, fontSize: 12, color: COLORS.textMuted,
         }}>
           <div>
-            Page {page} of {totalPages}
+            Page <span style={{ color: COLORS.text, fontWeight: 600 }}>{page}</span> of {totalPages}
+            <span style={{ color: COLORS.textFaint, marginLeft: 10 }}>
+              {data.total_count.toLocaleString()} users total
+            </span>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <PagerBtn disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>
@@ -312,110 +447,84 @@ function Th({ children, align = 'left' }: { children: React.ReactNode; align?: '
   return (
     <th style={{
       padding: '10px 14px', textAlign: align,
-      color: '#64748B', fontSize: 11, fontWeight: 600,
+      color: COLORS.textDim, fontSize: 11, fontWeight: 600,
       letterSpacing: '0.04em', textTransform: 'uppercase',
     }}>
       {children}
     </th>
   );
 }
+
+function SortableTh({
+  label, ascKey, descKey, currentSort, onChange, hideUnlessCurrent,
+}: {
+  label: string;
+  ascKey: SortKey;
+  descKey: SortKey;
+  currentSort: SortKey;
+  onChange: (k: SortKey) => void;
+  hideUnlessCurrent?: boolean;
+}) {
+  const isAsc = currentSort === ascKey;
+  const isDesc = currentSort === descKey;
+  const active = isAsc || isDesc;
+  if (hideUnlessCurrent && !active) {
+    return <th style={{ padding: 0, width: 0 }} />;
+  }
+  // One click = toggle asc/desc; if equal, force desc first.
+  const next: SortKey = isDesc ? ascKey : descKey;
+  return (
+    <th style={{
+      padding: '10px 14px', textAlign: 'left',
+      color: active ? COLORS.textMid : COLORS.textDim,
+      fontSize: 11, fontWeight: 600,
+      letterSpacing: '0.04em', textTransform: 'uppercase',
+      cursor: 'pointer', userSelect: 'none',
+    }}
+    onClick={() => onChange(next)}
+    >
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        {label}
+        {isAsc && <ArrowUp size={11} color={COLORS.accent} />}
+        {isDesc && <ArrowDown size={11} color={COLORS.accent} />}
+        {!active && <ArrowDown size={10} color={COLORS.textFaint} style={{ opacity: 0.5 }} />}
+      </span>
+    </th>
+  );
+}
+
 function Td({ children, align = 'left' }: { children: React.ReactNode; align?: 'left' | 'right' }) {
   return (
-    <td style={{ padding: '10px 14px', textAlign: align, color: '#CBD5E1', fontSize: 13 }}>
+    <td style={{ padding: '10px 14px', textAlign: align, color: COLORS.textMid, fontSize: 13 }}>
       {children}
     </td>
   );
 }
-function Flag({ text, tone }: { text: string; tone: 'critical' | 'warn' | 'muted' }) {
-  const map = {
-    critical: { bg: 'rgba(239,68,68,0.12)', fg: '#FCA5A5' },
-    warn:     { bg: 'rgba(245,158,11,0.12)', fg: '#FCD34D' },
-    muted:    { bg: 'rgba(148,163,184,0.10)', fg: '#94A3B8' },
-  }[tone];
+
+function SubscriptionStatus({ status }: { status: string | null }) {
+  if (!status) {
+    return <span style={{ color: COLORS.textFaint, fontSize: 12 }}>—</span>;
+  }
+  const color =
+    status === 'past_due' ? COLORS.critical :
+    status === 'active' ? COLORS.successSoft :
+    status === 'trialing' ? COLORS.warnSoft :
+    status === 'canceled' ? COLORS.textMuted :
+    COLORS.textMuted;
   return (
-    <span style={{
-      padding: '1px 7px', borderRadius: 999,
-      background: map.bg, color: map.fg,
-      fontSize: 10.5, fontWeight: 500,
-    }}>
-      {text}
-    </span>
-  );
-}
-function SelectFilter({ label, value, options, onChange }: {
-  label: string; value: string; options: string[]; onChange: (v: string) => void;
-}) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <Filter size={12} color="#64748B" />
-      <span style={{ fontSize: 11, color: '#64748B', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{label}</span>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        style={{
-          background: 'rgba(15,23,42,0.70)',
-          border: '1px solid rgba(148,163,184,0.10)',
-          borderRadius: 8, padding: '6px 10px',
-          color: '#E2E8F0', fontSize: 12, fontFamily: F,
-          outline: 'none', cursor: 'pointer',
-        }}
-      >
-        {options.map(o => (
-          <option key={o} value={o}>{o}</option>
-        ))}
-      </select>
-    </div>
-  );
-}
-function ToggleChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: '6px 12px', borderRadius: 999,
-        background: active ? 'rgba(37,99,235,0.14)' : 'rgba(15,23,42,0.70)',
-        border: `1px solid ${active ? 'rgba(37,99,235,0.40)' : 'rgba(148,163,184,0.10)'}`,
-        color: active ? '#93C5FD' : '#94A3B8',
-        fontSize: 12, fontWeight: 500, cursor: 'pointer',
-        fontFamily: F,
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-function PagerBtn({ children, disabled, onClick }: { children: React.ReactNode; disabled?: boolean; onClick: () => void }) {
-  return (
-    <button
-      disabled={disabled}
-      onClick={onClick}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 4,
-        padding: '6px 12px', borderRadius: 8,
-        background: 'rgba(15,23,42,0.70)',
-        border: '1px solid rgba(148,163,184,0.10)',
-        color: disabled ? '#475569' : '#CBD5E1',
-        fontSize: 12, fontFamily: F,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      {children}
-    </button>
+    <MicroPill tone="raw" color={color}>{status}</MicroPill>
   );
 }
 
-function shortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', { year: '2-digit', month: 'short', day: 'numeric' });
-}
-function relativeTime(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(ms / 60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 30) return `${d}d ago`;
-  return shortDate(iso);
+function MetricCell({ value }: { value: number }) {
+  // Fade zeros to visually quiet them so non-zero rows pop.
+  const dim = value === 0;
+  return (
+    <span style={{
+      color: dim ? COLORS.textFaint : COLORS.textMid,
+      fontVariantNumeric: 'tabular-nums',
+    }}>
+      {value.toLocaleString()}
+    </span>
+  );
 }
