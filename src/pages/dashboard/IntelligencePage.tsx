@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain, TrendingUp, MessageSquare, Zap, Star, Trash2, RefreshCw, ChevronRight, ChevronDown } from "lucide-react";
+import { Brain, TrendingUp, Star, Trash2, RefreshCw, ChevronRight, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
@@ -13,7 +13,48 @@ const M = T.mono; // 'Space Grotesk', 'DM Mono', monospace
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Memory  { id:string; memory_text:string; memory_type:string; importance:number; created_at:string; }
 interface Example { id:string; user_message:string; quality_score:number; created_at:string; }
-interface Pattern { id:string; pattern_key:string; insight_text:string; avg_ctr:number; confidence:number; is_winner:boolean; }
+interface Pattern {
+  id:string;
+  pattern_key:string;
+  insight_text:string;
+  avg_ctr:number|null;
+  avg_roas:number|null;
+  sample_size:number|null;
+  confidence:number;
+  is_winner:boolean;
+}
+
+// ── Pattern-key parser: turns "perf_urgency_meta" → { label:"Urgency", platform:"meta" }
+const PLATFORMS = new Set(["meta","facebook","instagram","google","tiktok","youtube","linkedin"]);
+const PLATFORM_COLOR: Record<string,string> = {
+  meta: "#0866ff",
+  facebook: "#0866ff",
+  instagram: "#e1306c",
+  google: "#fbbc05",
+  tiktok: "#25f4ee",
+  youtube: "#ff0000",
+  linkedin: "#0a66c2",
+};
+function parsePatternKey(key: string): { label: string; platform: string } {
+  if (!key) return { label: "—", platform: "" };
+  // Strip known prefixes so we surface the meaningful slug
+  const stripped = key
+    .replace(/^perf_/i, "")
+    .replace(/^market_/i, "")
+    .replace(/^competitor_/i, "")
+    .replace(/^trend_hook_/i, "");
+  const parts = stripped.split("_").filter(Boolean);
+  let platform = "";
+  let labelParts = parts;
+  if (parts.length > 1 && PLATFORMS.has(parts[parts.length - 1].toLowerCase())) {
+    platform = parts[parts.length - 1].toLowerCase();
+    labelParts = parts.slice(0, -1);
+  }
+  const label = labelParts
+    .join(" ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+  return { label: label || key, platform };
+}
 
 // ── Compact memory row ────────────────────────────────────────────────────────
 const TYPE_COLOR: Record<string,string> = {
@@ -77,34 +118,86 @@ function MemoryRow({ m, lang, deleting, onDelete }: {
   );
 }
 
-// ── Pattern row ──────────────────────────────────────────────────────────────
-function PatternRow({ p, showLess, showMore }: { p: Pattern; showLess:string; showMore:string }) {
-  const [exp, setExp] = useState(false);
-  const isLong = p.insight_text.length > 100;
+// ── Pattern row — structured, not raw text ───────────────────────────────────
+function PatternRow({ p, lang }: { p: Pattern; lang:string }) {
+  const { label, platform } = parsePatternKey(p.pattern_key);
+  const ctrPct = p.avg_ctr && p.avg_ctr > 0
+    ? (p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr * 100)
+    : null;
+  const roasX = p.avg_roas && p.avg_roas > 0 ? p.avg_roas : null;
+  const confPct = Math.round((p.confidence || 0) * 100);
+  const platColor = platform ? (PLATFORM_COLOR[platform] || "#94a3b8") : "";
+  const samplesLabel = lang === "pt" ? "amostras" : lang === "es" ? "muestras" : "samples";
+  const confLabel    = lang === "pt" ? "confiança" : lang === "es" ? "confianza" : "confidence";
+  const winnerLabel  = lang === "pt" ? "VENCEDOR" : lang === "es" ? "GANADOR" : "WINNER";
+
   return (
-    <div style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 12px", borderRadius:10,
+    <div style={{
+      display:"flex", alignItems:"center", gap:12,
+      padding:"11px 14px", borderRadius:10,
       background: p.is_winner ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
-      border:`1px solid ${p.is_winner ? "rgba(52,211,153,0.14)" : "rgba(255,255,255,0.07)"}` }}>
-      <span style={{ fontSize:13, flexShrink:0, marginTop:1 }}>{p.is_winner ? "" : ""}</span>
+      border: `1px solid ${p.is_winner ? "rgba(52,211,153,0.16)" : "rgba(255,255,255,0.06)"}`,
+    }}>
+      {/* Left cluster — label + meta badges */}
       <div style={{ flex:1, minWidth:0 }}>
-        <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.8)", lineHeight:1.5, margin:0,
-          ...(isLong && !exp ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" as const } : {}) }}>
-          {p.insight_text}
-        </p>
-        {isLong && (
-          <button onClick={() => setExp(e => !e)}
-            style={{ background:"none", border:"none", cursor:"pointer", padding:0, marginTop:3,
-              fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.3)", display:"flex", alignItems:"center", gap:2 }}>
-            {exp ? <><ChevronDown size={10}/>{showLess}</> : <><ChevronRight size={10}/>{showMore}</>}
-          </button>
+        <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:4, flexWrap:"wrap" as const }}>
+          <span style={{
+            fontFamily:F, fontSize:13.5, fontWeight:700, color:"#f5f7fb",
+            letterSpacing:"-0.01em",
+            overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" as const,
+            maxWidth:"100%",
+          }}>{label}</span>
+          {platform && (
+            <span style={{
+              fontFamily:F, fontSize:10, fontWeight:700,
+              color: platColor,
+              background: `${platColor}18`,
+              border:`1px solid ${platColor}35`,
+              padding:"1px 7px", borderRadius:99,
+              textTransform:"capitalize" as const,
+              letterSpacing:"0.04em",
+              lineHeight:1.5,
+            }}>{platform}</span>
+          )}
+          {p.is_winner && (
+            <span style={{
+              fontFamily:F, fontSize:9.5, fontWeight:700, color:"#34d399",
+              background:"rgba(52,211,153,0.1)", border:"1px solid rgba(52,211,153,0.3)",
+              padding:"1px 7px", borderRadius:99,
+              letterSpacing:"0.08em",
+              lineHeight:1.5,
+            }}>{winnerLabel}</span>
+          )}
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:10, fontSize:11, color:"rgba(255,255,255,0.35)", fontFamily:F }}>
+          {p.sample_size ? <span>{p.sample_size} {samplesLabel}</span> : null}
+          {confPct > 0 && (
+            <>
+              {p.sample_size ? <span style={{opacity:0.4}}>·</span> : null}
+              <span>{confLabel} {confPct}%</span>
+            </>
+          )}
+        </div>
+      </div>
+      {/* Right cluster — metrics */}
+      <div style={{ display:"flex", gap:14, flexShrink:0, alignItems:"center" }}>
+        {ctrPct !== null && (
+          <div style={{ textAlign:"right" as const }}>
+            <div style={{ fontFamily:M, fontSize:13, fontWeight:700, color:"#34d399", lineHeight:1 }}>
+              {ctrPct.toFixed(2)}<span style={{fontSize:10,opacity:0.7,marginLeft:1}}>%</span>
+            </div>
+            <div style={{ fontFamily:F, fontSize:9.5, color:"rgba(255,255,255,0.3)", marginTop:3, letterSpacing:"0.06em", textTransform:"uppercase" as const }}>CTR</div>
+          </div>
+        )}
+        {roasX !== null && (
+          <div style={{ textAlign:"right" as const }}>
+            <div style={{ fontFamily:M, fontSize:13, fontWeight:700, color:"#60a5fa", lineHeight:1 }}>
+              {roasX.toFixed(2)}<span style={{fontSize:10,opacity:0.7,marginLeft:1}}>x</span>
+            </div>
+            <div style={{ fontFamily:F, fontSize:9.5, color:"rgba(255,255,255,0.3)", marginTop:3, letterSpacing:"0.06em", textTransform:"uppercase" as const }}>ROAS</div>
+          </div>
         )}
       </div>
-      {p.avg_ctr > 0 && (
-        <div style={{ flexShrink:0, textAlign:"right" as const }}>
-          <div style={{ fontFamily:M, fontSize:12, color:"#34d399" }}>{(p.avg_ctr > 1 ? p.avg_ctr : p.avg_ctr*100).toFixed(2)}%</div>
-          <div style={{ fontFamily:F, fontSize:10, color:"rgba(255,255,255,0.25)" }}>CTR</div>
-        </div>
-      )}
     </div>
   );
 }
@@ -197,7 +290,6 @@ export default function IntelligencePage() {
   const [memories, setMemories]     = useState<Memory[]>([]);
   const [examples, setExamples]     = useState<Example[]>([]);
   const [patterns, setPatterns]     = useState<Pattern[]>([]);
-  const [actionCount, setActionCount] = useState(0);
   const [loading, setLoading]       = useState(true);
   const [deleting, setDeleting]     = useState<string | null>(null);
 
@@ -222,10 +314,6 @@ export default function IntelligencePage() {
     ex_sub:      isPT ? "Quando você curte  uma resposta, salvo o estilo"
                      : isES ? "Cuando das  a una respuesta, guardo el estilo"
                      : "When you  a response, I save the style",
-    actions:     isPT ? "Ações executadas" : isES ? "Acciones ejecutadas" : "Actions executed",
-    act_sub:     isPT ? "Pausas e escaladas feitas via IA com sua confirmação"
-                     : isES ? "Pausas y escalados hechos via IA con tu confirmación"
-                     : "Pauses and scale-ups done via AI with your confirmation",
     empty:       isPT ? "Ainda sem inteligência acumulada"
                      : isES ? "Aún sin inteligencia acumulada"
                      : "No intelligence accumulated yet",
@@ -239,12 +327,6 @@ export default function IntelligencePage() {
     no_examples: isPT ? "Nenhum exemplo — curta  respostas no chat"
                      : isES ? "Sin ejemplos — da  a respuestas en el chat"
                      : "No examples —  responses in chat",
-    no_actions:  isPT ? "Nenhuma ação ainda"
-                     : isES ? "Sin acciones aún"
-                     : "No actions yet",
-    actions_desc:isPT ? "No chat, peça para a IA pausar ou escalar um criativo"
-                     : isES ? "En el chat, pide a la IA pausar o escalar un creativo"
-                     : "In chat, ask the AI to pause or scale a creative",
     show_less:   isPT ? "Ver menos" : isES ? "Ver menos" : "Show less",
     show_more:   isPT ? "Ver tudo" : isES ? "Ver todo" : "Show all",
     scope_account: isPT ? "desta conta" : isES ? "de esta cuenta" : "for this account",
@@ -263,11 +345,14 @@ export default function IntelligencePage() {
       if (selectedPersona?.id) memQ.eq("persona_id", selectedPersona.id);
       else memQ.is("persona_id", null);
 
-      // Patterns: scoped by persona
+      // Patterns: scoped by persona — only the performance-grounded ones,
+      // filter out the noisy meta/system keys (business_profile, chat_hooks, etc.)
       const patQ = (supabase as any).from("learned_patterns")
-        .select("id,pattern_key,insight_text,avg_ctr,confidence,is_winner")
+        .select("id,pattern_key,insight_text,avg_ctr,avg_roas,sample_size,confidence,is_winner")
         .eq("user_id", user.id)
-        .order("confidence", { ascending:false }).limit(15);
+        .order("is_winner", { ascending:false })
+        .order("confidence", { ascending:false })
+        .limit(20);
       if (selectedPersona?.id) patQ.eq("persona_id", selectedPersona.id);
 
       // Examples: global per user (style preference, not account-specific)
@@ -276,15 +361,21 @@ export default function IntelligencePage() {
         .eq("user_id", user.id)
         .order("created_at", { ascending:false }).limit(10);
 
-      // Actions: global
-      const actQ = (supabase as any).from("ai_action_log")
-        .select("id", { count:"exact", head:true }).eq("user_id", user.id);
-
-      const [mR, pR, eR, aR] = await Promise.all([memQ, patQ, exQ, actQ]);
+      const [mR, pR, eR] = await Promise.all([memQ, patQ, exQ]);
+      // Filter patterns: keep perf_*, market_*, trend_*; drop internal keys
+      const rawPatterns: Pattern[] = pR.data || [];
+      const cleanPatterns = rawPatterns.filter((p: Pattern) => {
+        const k = (p.pattern_key || "").toLowerCase();
+        if (!k) return false;
+        if (k.startsWith("business_profile")) return false;
+        if (k.startsWith("chat_hooks_")) return false;
+        if (k.startsWith("action_")) return false;
+        if (k.startsWith("preflight_")) return false;
+        return true;
+      });
       setMemories(mR.data || []);
-      setPatterns(pR.data || []);
+      setPatterns(cleanPatterns);
       setExamples(eR.data || []);
-      setActionCount(aR.count || 0);
     } finally { setLoading(false); }
   }, [user?.id, selectedPersona?.id]);
 
@@ -354,12 +445,11 @@ export default function IntelligencePage() {
       </div>
 
       {/* Stats row */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:8, marginBottom:28 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:8, marginBottom:28 }}>
         {[
           { n:memories.length,  label:t.memories, color:"#0ea5e9" },
           { n:patterns.length,  label:t.patterns, color:"#34d399" },
           { n:examples.length,  label:t.examples, color:"#a78bfa" },
-          { n:actionCount,      label:t.actions,  color:"#fb923c" },
         ].map(s => (
           <div key={s.label} style={{ padding:"12px 14px", borderRadius:12,
             background:"linear-gradient(160deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.02) 100%)",
@@ -428,7 +518,7 @@ export default function IntelligencePage() {
             ) : (
               <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                 {patterns.map(p => (
-                  <PatternRow key={p.id} p={p} showLess={t.show_less} showMore={t.show_more}/>
+                  <PatternRow key={p.id} p={p} lang={lang}/>
                 ))}
               </div>
             )}
@@ -450,20 +540,6 @@ export default function IntelligencePage() {
                 ))}
               </div>
             )}
-          </Section>
-
-          {/* Actions */}
-          <Section icon={<Zap size={14}/>} color="#fb923c"
-            title={t.actions} subtitle={t.act_sub} count={actionCount}>
-            <div style={{ padding:"14px 16px", borderRadius:10,
-              background:"rgba(251,146,60,0.04)", border:"1px solid rgba(251,146,60,0.12)",
-              display:"flex", alignItems:"center", gap:14 }}>
-              <div style={{ fontFamily:M, fontSize:28, fontWeight:700, color:"#fb923c", lineHeight:1 }}>{actionCount}</div>
-              <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.5)", margin:0, lineHeight:1.5 }}>
-                {actionCount === 0 ? t.no_actions : `${actionCount} ${t.actions.toLowerCase()}`}<br/>
-                <span style={{ fontSize:12, color:"rgba(255,255,255,0.3)" }}>{t.actions_desc}</span>
-              </p>
-            </div>
           </Section>
 
         </div>
