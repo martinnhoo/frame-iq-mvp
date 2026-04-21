@@ -1907,6 +1907,54 @@ export type Database = {
           },
         ]
       }
+      landing_page_snapshots: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          error: string | null
+          fetched_at: string | null
+          has_conversion_event: boolean | null
+          has_fb_pixel: boolean | null
+          id: string
+          primary_cta: string | null
+          source: string
+          title: string | null
+          url: string
+          url_hash: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          error?: string | null
+          fetched_at?: string | null
+          has_conversion_event?: boolean | null
+          has_fb_pixel?: boolean | null
+          id?: string
+          primary_cta?: string | null
+          source?: string
+          title?: string | null
+          url: string
+          url_hash: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          error?: string | null
+          fetched_at?: string | null
+          has_conversion_event?: boolean | null
+          has_fb_pixel?: boolean | null
+          id?: string
+          primary_cta?: string | null
+          source?: string
+          title?: string | null
+          url?: string
+          url_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       learned_patterns: {
         Row: {
           avg_cpc: number | null
