@@ -4363,8 +4363,17 @@ const FeedPage: React.FC = () => {
     setPixelHealthError(false);
     (async () => {
       try {
+        // Pass the Meta ad account ID (act_…) when we have it, falling back to
+        // the internal UUID. The edge fn used to assume Meta-format here and
+        // would prefix `act_` blindly, producing 'act_<uuid>' for users whose
+        // FeedPage already resolved their selection to a UUID. The deployed
+        // edge fn now resolves either, but until that ships, send the Meta ID
+        // we already have so the function works regardless of edge-fn version.
+        const accountIdForPixel = metaSelId && metaSelId.startsWith('act_')
+          ? metaSelId
+          : accountId;
         const { data, error } = await supabase.functions.invoke('pixel-health-check', {
-          body: { user_id: userId, account_id: accountId },
+          body: { user_id: userId, account_id: accountIdForPixel },
         });
         if (cancelled) return;
         if (error || !data || (data as any).error) {
@@ -4397,7 +4406,7 @@ const FeedPage: React.FC = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [accountId, userId, isDemo, pixelHealthRetryNonce]);
+  }, [accountId, metaSelId, userId, isDemo, pixelHealthRetryNonce]);
 
   // Trigger a fresh pixel-health-check fetch (used by the Pixel tile retry CTA).
   const retryPixelHealth = useCallback(() => {
