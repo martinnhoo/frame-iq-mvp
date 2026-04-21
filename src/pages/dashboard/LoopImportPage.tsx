@@ -273,7 +273,7 @@ export default function LoopImportPage() {
             })()}
 
             <Button onClick={processImport} disabled={loading} className="w-full gap-2"
-              style={{ background: "linear-gradient(135deg, #60a5fa, #0ea5e9)", color: "#000" }}>
+              style={{ background: "#0ea5e9", color: "#000" }}>
               {loading ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
               {loading ? "Processando..." : "Importar e analisar criativos"}
             </Button>
@@ -293,7 +293,7 @@ export default function LoopImportPage() {
             {results.skipped > 0 && <span style={{ ...m, fontSize: 12, color: "#fbbf24" }}> {results.skipped} skipped</span>}
           </div>
           <Button onClick={() => navigate("/dashboard/ai")} className="gap-2"
-            style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
+            style={{ background: "#0ea5e9", color: "#000" }}>
             Go to Loop → Run Learning
           </Button>
         </div>

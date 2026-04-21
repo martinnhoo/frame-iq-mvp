@@ -1055,7 +1055,7 @@ export default function DashboardLayout() {
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                       width: "100%", padding: "14px 0", borderRadius: 14,
-                      background: "linear-gradient(135deg, #27AEE1, #1a8fc2)",
+                      background: "#1a8fc2",
                       color: "#fff", fontSize: 15, fontWeight: 700,
                       fontFamily: "'Plus Jakarta Sans', sans-serif", textDecoration: "none",
                       boxSizing: "border-box" as const, position: "relative" as const, overflow: "hidden",

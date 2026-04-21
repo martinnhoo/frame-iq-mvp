@@ -528,7 +528,7 @@ export default function CreativeLoopDraftModal({ open, userId, source, onClose, 
                     borderRadius: 10,
                     background: approving
                       ? "rgba(167,139,250,0.3)"
-                      : "linear-gradient(135deg,#a78bfa,#7c3aed)",
+                      : "#7c3aed",
                     color: "#fff",
                     fontSize: 12,
                     fontWeight: 700,

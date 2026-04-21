@@ -197,7 +197,7 @@ export default function BriefGenerator() {
           <Textarea placeholder="Diretrizes de marca, compliance, aprendizados de campanhas anteriores..." value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
-        <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #22A3A3, #1B8A8A)" }}>
+        <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "#1B8A8A" }}>
           <Sparkles className="h-4 w-4" />
           {loading ? "Gerando prompts detalhados..." : "Gerar Brief AI"}
         </Button>

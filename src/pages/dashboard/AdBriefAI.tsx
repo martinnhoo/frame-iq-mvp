@@ -3995,7 +3995,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               {selectedPersona ? (
                 <div style={{display:"flex",flexDirection:"column",gap:10,alignItems:"center"}}>
                   <button onClick={()=>handleConnect("meta","meta-oauth")}
-                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"linear-gradient(180deg, #3B82F6, #2563EB)",color:"#fff",border:"none",cursor:"pointer",fontSize:14,fontWeight:700,boxShadow:"0 0 20px rgba(37,99,235,0.30)",transition:"all 0.2s"}}
+                    style={{...j,display:"inline-flex",alignItems:"center",gap:8,padding:"12px 28px",borderRadius:12,background:"#2563EB",color:"#fff",border:"none",cursor:"pointer",fontSize:14,fontWeight:700,boxShadow:"0 0 20px rgba(37,99,235,0.30)",transition:"all 0.2s"}}
                     onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(-1px)";}}
                     onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(0)";}}>
                     {PLATFORM_ICONS_INLINE.meta} {lang==="pt"?"Conectar Meta Ads":lang==="es"?"Conectar Meta Ads":"Connect Meta Ads"}
@@ -4033,7 +4033,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"min(72%,calc(100vw - 80px))"}}>
                   <div style={{
                     borderRadius:"18px 18px 4px 18px",
-                    background:"linear-gradient(135deg,#3B82F6,#2563EB)",
+                    background:"#2563EB",
                     boxShadow:"0 2px 12px rgba(37,99,235,0.30)",
                     overflow:"hidden",
                     animation:"bubbleIn 0.2s cubic-bezier(0.34,1.56,0.64,1)",

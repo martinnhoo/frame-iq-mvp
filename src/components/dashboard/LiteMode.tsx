@@ -100,7 +100,7 @@ export default function LiteMode({ profile, onSwitchToPro }: LiteModeProps) {
         {/* Binance-style segmented toggle — LITE active */}
         <div style={{ display: "flex", borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", padding: 2, gap: 0 }}>
           <button
-            style={{ ...j, fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "default", background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", letterSpacing: "0.04em", boxShadow: "0 2px 8px rgba(14,165,233,0.3)" }}
+            style={{ ...j, fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 999, cursor: "default", background: "#0ea5e9", color: "#000", border: "none", letterSpacing: "0.04em", boxShadow: "0 2px 8px rgba(14,165,233,0.3)" }}
           >LITE</button>
           <button
             onClick={onSwitchToPro}

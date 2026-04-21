@@ -364,7 +364,7 @@ export const GoalSetup: React.FC<GoalSetupProps> = ({ accountId, onComplete }) =
             disabled={saving}
             style={{
               flex: 2, padding: '10px 14px', borderRadius: 6,
-              background: 'linear-gradient(135deg, #38BDF8 0%, #0EA5E9 100%)',
+              background: '#0EA5E9',
               border: 'none',
               color: '#fff', fontSize: 12, fontWeight: 700,
               cursor: saving ? 'default' : 'pointer', fontFamily: F,

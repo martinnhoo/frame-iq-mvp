@@ -480,7 +480,7 @@ const AutopilotLogPage: React.FC = () => {
               marginTop: 18,
               padding: "8px 16px",
               borderRadius: 10,
-              background: "linear-gradient(180deg, rgba(167,139,250,0.18), rgba(139,92,246,0.08))",
+              background: "rgba(139,92,246,0.16)",
               border: "1px solid rgba(167,139,250,0.3)",
               color: "#C4B5FD",
               fontSize: 13,

@@ -376,7 +376,7 @@ const TranscribeMode = ({ userId }: { userId: string }) => {
         </div>
         <button onClick={handleRun} disabled={!file || isProcessing}
           className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-7 py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
+          style={{ ...syne, background: "#0ea5e9", color: "#000" }}>
           {isProcessing ? <><Loader2 className="h-4 w-4 animate-spin" /> {STEP_LABELS[step]}</>
            : <><Wand2 className="h-4 w-4" /> Transcribe &amp; Translate</>}
         </button>
@@ -556,7 +556,7 @@ const AdaptMode = ({ userId }: { userId: string }) => {
           </div>
           <button onClick={handleAdapt} disabled={loading || !input.trim() || !targetLangs.length}
             className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            style={{ ...syne, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
+            style={{ ...syne, background: "#0ea5e9", color: "#000" }}>
             {loading
               ? <><Loader2 className="h-4 w-4 animate-spin" /> Adapting {targetLangs.length} markets...</>
               : <><Sparkles className="h-4 w-4" /> Adapt for {targetLangs.length} market{targetLangs.length !== 1 ? "s" : ""}</>}

@@ -207,7 +207,7 @@ export default function LoopSettingsPage() {
       </div>
 
       <Button onClick={save} disabled={saving} className="w-full gap-2"
-        style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
+        style={{ background: "#0ea5e9", color: "#000" }}>
         {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
         {saving ? "Salvando..." : "Salvar configuração"}
       </Button>

@@ -141,7 +141,7 @@ export default function SupportChat() {
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }} />
               <button onClick={handleSendMessage} disabled={isLoading}
                 className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", border: "none", cursor: "pointer" }}>
+                style={{ background: "#0ea5e9", border: "none", cursor: "pointer" }}>
                 <Send className="h-3.5 w-3.5 text-black" />
               </button>
             </div>

@@ -34,7 +34,7 @@ export function SeoCTA({ headline, sub, primaryLabel, primaryHref = "/signup", s
       <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)", maxWidth: 480, margin: "0 auto 28px", lineHeight: 1.6, position: "relative" }}>{s}</p>
       <div style={{ display: "flex", gap: 12, justifyContent: "center", position: "relative" }}>
         <button onClick={() => navigate(primaryHref)}
-          style={{ ...j, padding: "12px 28px", borderRadius: 999, fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+          style={{ ...j, padding: "12px 28px", borderRadius: 999, fontSize: 14, fontWeight: 700, background: "#0ea5e9", color: "#000", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
           {pl}
         </button>
         {secondaryLabel && (

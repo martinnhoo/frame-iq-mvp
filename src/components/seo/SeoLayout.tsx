@@ -116,7 +116,7 @@ export function SeoLayout({ title, description, canonical, ogImage, children, no
                 Sign in
               </button>
               <button onClick={() => navigate("/signup")}
-                style={{ padding: "7px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", border: "none", cursor: "pointer" }}>
+                style={{ padding: "7px 18px", borderRadius: 20, fontSize: 13, fontWeight: 700, background: "#0ea5e9", color: "#000", border: "none", cursor: "pointer" }}>
                 Try free
               </button>
             </div>

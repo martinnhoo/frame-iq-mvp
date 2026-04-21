@@ -102,7 +102,7 @@ export default function AnalysesList() {
           <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{analyses.length} total</p>
         </div>
         <button onClick={() => navigate("/dashboard/analyses/new")}
-          style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", borderRadius: 10, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000", fontFamily: F, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer" }}>
+          style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", borderRadius: 10, background: "#0ea5e9", color: "#000", fontFamily: F, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer" }}>
           <Plus size={14} /> {t.new_btn}
         </button>
       </div>

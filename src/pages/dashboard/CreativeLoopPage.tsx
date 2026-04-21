@@ -268,7 +268,7 @@ export default function CreativeLoopPage() {
           </p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={() => navigate("/dashboard/loop/import")}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "linear-gradient(135deg,#60a5fa,#0ea5e9)", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 12, background: "#0ea5e9", color: "#000", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none" }}>
               <Upload size={14} /> Importar Dados
             </button>
             <button onClick={() => navigate("/dashboard/loop/settings")}
@@ -312,7 +312,7 @@ export default function CreativeLoopPage() {
                         marginLeft: "auto",
                         display: "inline-flex", alignItems: "center", gap: 5,
                         padding: "5px 10px", borderRadius: 8,
-                        background: "linear-gradient(135deg,#a78bfa,#7c3aed)",
+                        background: "#7c3aed",
                         color: "#fff", fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer",
                       }}
                     >

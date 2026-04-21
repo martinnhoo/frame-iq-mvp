@@ -1093,7 +1093,7 @@ const StateNoConnection: React.FC = () => {
           style={{
             fontFamily: F, fontSize: 14, fontWeight: 700,
             padding: '13px 32px', borderRadius: 10,
-            background: 'linear-gradient(135deg, #0082FB 0%, #0064E0 100%)',
+            background: '#0064E0',
             color: '#fff', border: 'none',
             cursor: 'pointer', transition: 'all 0.2s ease',
             boxShadow: '0 2px 16px rgba(0,130,251,0.3), 0 0 0 1px rgba(0,130,251,0.1)',
@@ -3848,6 +3848,7 @@ const NoActiveAdsHero: React.FC<{
   ads: AdSummary[];
   totalAds: number;
   onOpenAI: () => void;
+  onOpenAIWithPrompt?: (prompt: string) => void;
   onCreateCampaign: () => void;
   onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void;
   togglingAd?: string | null;
@@ -3861,7 +3862,7 @@ const NoActiveAdsHero: React.FC<{
   loadingMoreAds?: boolean;
 }> = ({
   pausedCampaigns, pausedAds, campaigns, ads, totalAds,
-  onOpenAI, onCreateCampaign,
+  onOpenAI, onOpenAIWithPrompt, onCreateCampaign,
   onRequestToggle, togglingAd, toggleSuccess,
   onRequestCampaignToggle, togglingCampaign, campaignToggleSuccess,
   onAnalyzeAiCampaign, onAnalyzeAiAd,
@@ -3869,8 +3870,17 @@ const NoActiveAdsHero: React.FC<{
 }) => {
   const hasPaused = pausedCampaigns > 0 || pausedAds > 0;
   const subtext = hasPaused
-    ? `${pausedCampaigns > 0 ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} pausada${pausedCampaigns === 1 ? '' : 's'}` : `${pausedAds} anúncio${pausedAds === 1 ? '' : 's'} pausado${pausedAds === 1 ? '' : 's'}`} abaixo. Reative com um clique ou peça à IA para analisar antes. Assim que voltar a rodar, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.`
+    ? `${pausedCampaigns > 0 ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} pausada${pausedCampaigns === 1 ? '' : 's'}` : `${pausedAds} anúncio${pausedAds === 1 ? '' : 's'} pausado${pausedAds === 1 ? '' : 's'}`} abaixo. Peça à IA para analisar o histórico e te dizer o que vale reativar primeiro. Assim que voltar a rodar, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.`
     : 'Conecte ou crie uma campanha. Assim que houver tráfego, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.';
+
+  const pausedPrompt = hasPaused
+    ? `Tenho ${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} e ${pausedAds} anúncio${pausedAds === 1 ? '' : 's'} pausado${pausedAds === 1 ? '' : 's'}. Analisa o histórico de cada um — CTR, ROAS, CPA, conversões — e me diz quais devo reativar primeiro, em ordem de prioridade. Se algum não vale reativar, me avisa também e sugere o que testar no lugar.`
+    : '';
+
+  const triggerPausedPrompt = () => {
+    if (onOpenAIWithPrompt) onOpenAIWithPrompt(pausedPrompt);
+    else onOpenAI();
+  };
 
   return (
     <CommandHero
@@ -3878,11 +3888,11 @@ const NoActiveAdsHero: React.FC<{
       headline={hasPaused ? 'Nada está rodando agora.' : 'Você não tem anúncio ativo.'}
       subtext={subtext}
       primaryCta={{
-        label: hasPaused ? 'Reativar no Meta Ads' : 'Falar com a IA',
-        onClick: hasPaused ? onOpenAI : onOpenAI,
+        label: hasPaused ? 'Pedir plano de reativação à IA' : 'Falar com a IA',
+        onClick: hasPaused ? triggerPausedPrompt : onOpenAI,
       }}
       secondaryCta={{
-        label: hasPaused ? 'Falar com a IA' : 'Criar campanha',
+        label: hasPaused ? 'Abrir chat livre' : 'Criar campanha',
         onClick: hasPaused ? onOpenAI : onCreateCampaign,
       }}
       meta={hasPaused ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} · ${pausedAds} anúncio${pausedAds === 1 ? '' : 's'}` : undefined}
@@ -5967,6 +5977,7 @@ const FeedPage: React.FC = () => {
                 ads={userAds}
                 totalAds={totalAdCount}
                 onOpenAI={() => navigate('/dashboard/ai')}
+                onOpenAIWithPrompt={(prompt: string) => navigate('/dashboard/ai', { state: { prompt } })}
                 onCreateCampaign={() => navigate('/dashboard/campaign-builder')}
                 onRequestToggle={handleRequestToggle}
                 togglingAd={togglingAd}

@@ -251,7 +251,7 @@ export default function ScriptGenerator() {
           <Textarea placeholder={language === "pt" ? "Regras de compliance, diretrizes da marca, mensagens específicas..." : language === "es" ? "Reglas de cumplimiento, directrices de marca..." : "Compliance rules, brand guidelines, specific messaging..."} value={extraContext} onChange={e => setExtraContext(e.target.value)} className="min-h-[60px]" />
         </div>
 
-        <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "linear-gradient(135deg, #0ea5e9, #06b6d4)" }}>
+        <Button onClick={generate} disabled={loading || !product.trim()} className="w-full gap-2" style={{ background: "#0ea5e9" }}>
           <Sparkles className="h-4 w-4" />
           {loading ? dt("sg_generating") : dt("sg_generate")}
         </Button>

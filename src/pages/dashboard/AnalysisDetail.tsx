@@ -482,7 +482,7 @@ const AnalysisDetail = () => {
             </div>
             <button onClick={() => navigate("/pricing")}
               className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold transition-all hover:opacity-90"
-              style={{ ...jakarta, background: "linear-gradient(135deg, #0ea5e9, #06b6d4)", color: "#000" }}>
+              style={{ ...jakarta, background: "#0ea5e9", color: "#000" }}>
               Upgrade <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
