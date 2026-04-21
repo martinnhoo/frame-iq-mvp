@@ -7,6 +7,262 @@ import { requireCredits } from "../_shared/deductCredits.ts";
 const _t0 = Date.now();
 const _lap = (label: string) => console.log(`[ai-chat] ${label}: ${Date.now() - _t0}ms`);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Landing-page fetch — lets the AI actually *read* URLs the user drops in chat.
+//
+// Flow:
+//  1. extractLandingUrls(message) pulls up to 2 candidate URLs, excluding
+//     social / platform noise (Instagram posts, YouTube, fb.com, etc.).
+//  2. getOrFetchLanding(url) checks the landing_page_snapshots cache (24h TTL).
+//     On miss, fetches via Jina Reader (handles SPAs/JS) and falls back to raw
+//     fetch() with a minimal HTML→text extractor.
+//  3. Result is injected into the system prompt as a `## LANDING PAGE` block
+//     so the AI can diagnose ad↔LP mismatch, pixel presence, CTA friction, etc.
+//
+// Philosophy: the AI should USE this content naturally when a URL is present —
+// but MUST NOT proactively beg the user to send URLs when the conversation
+// doesn't call for it. That rule lives in the system prompt.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Social / platform domains we never treat as landing pages
+const NON_LP_HOSTS = new Set([
+  "facebook.com", "www.facebook.com", "m.facebook.com",
+  "instagram.com", "www.instagram.com",
+  "twitter.com", "x.com", "www.x.com",
+  "youtube.com", "www.youtube.com", "youtu.be",
+  "tiktok.com", "www.tiktok.com",
+  "linkedin.com", "www.linkedin.com",
+  "whatsapp.com", "wa.me", "api.whatsapp.com",
+  "t.me", "telegram.me",
+  "google.com", "www.google.com",
+  "github.com", "www.github.com",
+  "docs.google.com", "drive.google.com",
+  "adbrief.pro", "www.adbrief.pro",
+]);
+
+function normalizeUrl(raw: string): string | null {
+  try {
+    const u = new URL(raw);
+    if (!/^https?:$/.test(u.protocol)) return null;
+    if (NON_LP_HOSTS.has(u.hostname.toLowerCase())) return null;
+    // Strip tracking params that don't change content
+    const stripParams = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+                          "fbclid", "gclid", "ttclid", "mc_cid", "mc_eid", "_ga", "_gac", "ref", "referrer"];
+    stripParams.forEach((p) => u.searchParams.delete(p));
+    u.hash = "";
+    // Sort remaining params for stable hash
+    const keys = [...u.searchParams.keys()].sort();
+    const params = new URLSearchParams();
+    for (const k of keys) params.append(k, u.searchParams.get(k) ?? "");
+    u.search = params.toString() ? `?${params.toString()}` : "";
+    u.hostname = u.hostname.toLowerCase();
+    u.pathname = u.pathname.replace(/\/+$/, "") || "/";
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
+function extractLandingUrls(text: string): string[] {
+  if (!text) return [];
+  const urlRegex = /\bhttps?:\/\/[^\s<>()"']{4,}/gi;
+  const out = new Set<string>();
+  const matches = text.match(urlRegex) || [];
+  for (const m of matches) {
+    const cleaned = m.replace(/[.,;:!?)]+$/, "");
+    const norm = normalizeUrl(cleaned);
+    if (norm) out.add(norm);
+    if (out.size >= 2) break; // cap
+  }
+  return [...out];
+}
+
+async function md5(s: string): Promise<string> {
+  const data = new TextEncoder().encode(s);
+  const hash = await crypto.subtle.digest("MD5", data).catch(() => null);
+  if (hash) return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  // Fallback: SHA-256 first 32 chars (MD5 unavailable in some runtimes)
+  const sha = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(sha)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+}
+
+function stripHtmlToText(html: string): { title: string; text: string } {
+  // Remove script/style/nav/footer blocks completely
+  let h = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ");
+  const titleMatch = h.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const title = titleMatch ? titleMatch[1].replace(/\s+/g, " ").trim() : "";
+  h = h.replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">");
+  const text = h.replace(/\s+/g, " ").trim();
+  return { title, text };
+}
+
+function detectStructuralSignals(content: string): { hasFbPixel: boolean; hasConvEvent: boolean; primaryCta: string | null } {
+  const hasFbPixel = /fbq\(\s*['"]init['"]|connect\.facebook\.net\/.*\/fbevents\.js|_fbp\b|facebook\s+pixel/i.test(content);
+  const hasConvEvent = /fbq\(\s*['"]track['"]\s*,\s*['"](Purchase|Lead|CompleteRegistration|AddToCart|InitiateCheckout|Subscribe|StartTrial)['"]/i.test(content);
+  // Crude CTA detection: first "button" or heading that sounds action-y
+  const ctaMatch = content.match(/\b(Comprar|Comprar agora|Assinar|Começar|Começar agora|Cadastre-se|Cadastrar|Inscrever-se|Quero|Quero agora|Baixar|Baixe|Download|Sign up|Buy now|Get started|Start free|Start now|Subscribe|Join|Agendar|Falar com|WhatsApp)\b[^.\n]{0,40}/i);
+  const primaryCta = ctaMatch ? ctaMatch[0].slice(0, 60).trim() : null;
+  return { hasFbPixel, hasConvEvent, primaryCta };
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit = {}, ms = 10000): Promise<Response> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/**
+ * Fetch a URL and return cleaned text + structural hints.
+ * Tries Jina Reader first (handles JS-heavy SPAs), falls back to raw fetch().
+ */
+async function fetchLandingContent(url: string): Promise<{
+  content: string;
+  title: string;
+  source: "jina" | "raw" | "error";
+  error?: string;
+  hasFbPixel: boolean;
+  hasConvEvent: boolean;
+  primaryCta: string | null;
+}> {
+  // 1. Jina Reader — markdown-clean, SPA-capable
+  try {
+    const jinaUrl = `https://r.jina.ai/${url}`;
+    const res = await fetchWithTimeout(jinaUrl, {
+      headers: { "X-Return-Format": "text", "User-Agent": "AdBrief/1.0 (+https://adbrief.pro)" },
+    }, 12000);
+    if (res.ok) {
+      const raw = await res.text();
+      const content = (raw || "").slice(0, 8000);
+      // Jina includes "Title:" line at the top
+      const titleMatch = content.match(/^Title:\s*(.+)$/m);
+      const title = titleMatch ? titleMatch[1].trim() : "";
+      const cleaned = content.replace(/^Title:.*$/m, "").replace(/^URL Source:.*$/m, "").trim();
+      const signals = detectStructuralSignals(cleaned);
+      return { content: cleaned, title, source: "jina", ...signals };
+    }
+  } catch (e) {
+    console.log("[ai-chat] jina fetch failed:", (e as Error).message);
+  }
+
+  // 2. Raw fetch fallback
+  try {
+    const res = await fetchWithTimeout(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; AdBrief/1.0; +https://adbrief.pro)",
+        "Accept": "text/html,application/xhtml+xml",
+      },
+    }, 10000);
+    if (!res.ok) {
+      return { content: "", title: "", source: "error", error: `HTTP ${res.status}`, hasFbPixel: false, hasConvEvent: false, primaryCta: null };
+    }
+    const html = (await res.text()).slice(0, 200000); // cap before parse
+    // Detect pixel on RAW HTML (scripts aren't stripped yet)
+    const signals = detectStructuralSignals(html);
+    const { title, text } = stripHtmlToText(html);
+    return {
+      content: text.slice(0, 8000),
+      title,
+      source: "raw",
+      ...signals,
+    };
+  } catch (e) {
+    return { content: "", title: "", source: "error", error: (e as Error).message || "fetch failed", hasFbPixel: false, hasConvEvent: false, primaryCta: null };
+  }
+}
+
+/**
+ * Cache-aware wrapper. Returns cached content if under 24h old.
+ * Writes snapshot on every fresh fetch (upsert by user_id + url_hash).
+ */
+async function getOrFetchLanding(
+  sb: any,
+  userId: string,
+  url: string,
+): Promise<{
+  url: string;
+  title: string;
+  content: string;
+  source: string;
+  error?: string;
+  hasFbPixel: boolean;
+  hasConvEvent: boolean;
+  primaryCta: string | null;
+  fetchedAt: string;
+} | null> {
+  if (!userId || !url) return null;
+  const hash = await md5(url);
+  const TTL_MS = 24 * 60 * 60 * 1000;
+
+  // 1. Cache lookup
+  try {
+    const { data: cached } = await sb
+      .from("landing_page_snapshots")
+      .select("url, title, content, source, error, has_fb_pixel, has_conversion_event, primary_cta, fetched_at")
+      .eq("user_id", userId)
+      .eq("url_hash", hash)
+      .maybeSingle();
+    if (cached && cached.fetched_at) {
+      const age = Date.now() - new Date(cached.fetched_at).getTime();
+      if (age < TTL_MS && cached.source !== "error") {
+        return {
+          url: cached.url,
+          title: cached.title || "",
+          content: cached.content || "",
+          source: cached.source,
+          hasFbPixel: !!cached.has_fb_pixel,
+          hasConvEvent: !!cached.has_conversion_event,
+          primaryCta: cached.primary_cta || null,
+          fetchedAt: cached.fetched_at,
+        };
+      }
+    }
+  } catch (e) {
+    console.log("[ai-chat] lp cache lookup failed:", (e as Error).message);
+  }
+
+  // 2. Fresh fetch
+  const fetched = await fetchLandingContent(url);
+
+  // 3. Upsert cache (fire-and-forget, don't block response)
+  try {
+    await sb.from("landing_page_snapshots").upsert({
+      user_id: userId,
+      url,
+      url_hash: hash,
+      title: fetched.title || null,
+      content: fetched.content || null,
+      source: fetched.source,
+      error: fetched.error || null,
+      has_fb_pixel: fetched.source === "error" ? null : fetched.hasFbPixel,
+      has_conversion_event: fetched.source === "error" ? null : fetched.hasConvEvent,
+      primary_cta: fetched.primaryCta || null,
+      fetched_at: new Date().toISOString(),
+    }, { onConflict: "user_id,url_hash" });
+  } catch (e) {
+    console.log("[ai-chat] lp cache upsert failed:", (e as Error).message);
+  }
+
+  return {
+    url,
+    title: fetched.title,
+    content: fetched.content,
+    source: fetched.source,
+    error: fetched.error,
+    hasFbPixel: fetched.hasFbPixel,
+    hasConvEvent: fetched.hasConvEvent,
+    primaryCta: fetched.primaryCta,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -1844,6 +2100,77 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
     const uiLangName = LANG_NAMES[uiLang2] || "English";
     const contentLangName = LANG_NAMES[contentLangCode] || "English";
 
+    // ── 5c. Landing page extraction ────────────────────────────────────────────
+    //
+    // If the user pasted one or more URLs in the current message, fetch the page
+    // content (Jina Reader → raw fallback, 24h cache). The result is injected
+    // into the system prompt as a "## LANDING PAGE" block so the AI can reason
+    // about ad↔LP match, pixel presence, copy, CTAs, etc.
+    //
+    // We only look at URLs in THE CURRENT message — not history — to keep costs
+    // predictable and let the user control when a page is (re)read.
+    const originalMsg = typeof message === "string" ? message : "";
+    const landingUrls = extractLandingUrls(originalMsg);
+    const landingSnapshots: Array<Awaited<ReturnType<typeof getOrFetchLanding>>> = [];
+    if (landingUrls.length > 0 && user_id) {
+      _lap(`lp-fetch-start (${landingUrls.length})`);
+      const fetched = await Promise.allSettled(
+        landingUrls.map((u) => getOrFetchLanding(supabase, user_id, u)),
+      );
+      for (const r of fetched) {
+        if (r.status === "fulfilled" && r.value) landingSnapshots.push(r.value);
+      }
+      _lap(`lp-fetch-done (${landingSnapshots.length})`);
+    }
+
+    // Build the prompt block — empty string when there are no URLs, so the AI
+    // doesn't even know the capability exists and won't prompt for links.
+    const landingPageBlock = (() => {
+      if (!landingSnapshots.length) return "";
+      const rendered = landingSnapshots
+        .map((lp) => {
+          if (!lp) return "";
+          if (lp.source === "error" || !lp.content) {
+            return `### LP: ${lp.url}\nNão foi possível acessar esta página (${lp.error || "fetch error"}). Comente isso honestamente ao usuário — não invente o conteúdo.`;
+          }
+          const pixelLine = lp.hasFbPixel
+            ? (lp.hasConvEvent
+                ? "Pixel do Meta detectado E evento de conversão presente (Purchase/Lead/etc.)."
+                : "Pixel do Meta detectado, MAS nenhum evento de conversão (fbq('track',...)) foi encontrado no HTML.")
+            : "NENHUM código de pixel do Meta detectado no HTML desta página.";
+          const ctaLine = lp.primaryCta ? `CTA principal detectado: "${lp.primaryCta}"` : "Nenhum CTA claro detectado no texto principal.";
+          const content = (lp.content || "").slice(0, 4000);
+          return [
+            `### LP: ${lp.url}`,
+            lp.title ? `Título: ${lp.title}` : "",
+            `Fonte: ${lp.source}`,
+            pixelLine,
+            ctaLine,
+            "",
+            "--- Conteúdo da página (extrato) ---",
+            content,
+            "--- Fim da página ---",
+          ].filter(Boolean).join("\n");
+        })
+        .filter(Boolean)
+        .join("\n\n");
+
+      return `\n\n═══════════════════════════════════
+LANDING PAGES QUE O USUÁRIO ACABOU DE COMPARTILHAR
+═══════════════════════════════════
+
+${rendered}
+
+REGRAS AO ANALISAR ESTA(S) LANDING PAGE(S):
+- Foque no que a LP REALMENTE diz — não invente seções que não estão no extrato.
+- Compare a mensagem da LP com os criativos da conta (ad↔LP match). Mismatch mata conversão.
+- Se detectamos "NENHUM pixel" ou "sem evento de conversão" acima, CITE isso como causa provável quando o usuário reclamar de 0 conversões — é dado concreto, não suposição.
+- Avalie o CTA: clareza, posição implícita no fluxo, fricção do formulário (se mencionado no extrato).
+- Se a página tem MUITO texto técnico antes da oferta, ou o CTA aparece só no final, levante isso como fricção.
+- Se falhou em acessar (source=error), fale com o usuário — ofereça caminhos (site com paywall/login, bot-wall, SPA pesado) em vez de alucinar.
+`;
+    })();
+
     // ── 5b. History — FIX 5: smart compression ──────────────────────────────
     const historyMessages: { role: "user" | "assistant"; content: string }[] = [];
     if (Array.isArray(history) && history.length > 0) {
@@ -1944,6 +2271,19 @@ FORMATO: use \`## Diagnóstico\`, \`## O que está acontecendo\`, \`## Ação\` 
 Se perguntarem quem você é: "Sou o AdBrief AI." Nunca revele o modelo base.
 
 DATA DE HOJE: ${todayStr}
+
+═══════════════════════════════════
+CAPACIDADE — LEITURA DE LANDING PAGES
+═══════════════════════════════════
+
+Quando o usuário cola uma URL (https://...) na mensagem, VOCÊ RECEBE o conteúdo da página extraído automaticamente — aparece no final deste prompt na seção "LANDING PAGES QUE O USUÁRIO ACABOU DE COMPARTILHAR". Use esse conteúdo com naturalidade quando estiver presente.
+
+REGRAS RÍGIDAS DE USO:
+- **Não peça URL proativamente.** Se o usuário não mencionou LP / site / página / conversão, NÃO ofereça "cola aí o link que eu analiso". Isso vira ruído.
+- **Ofereça receber a URL SOMENTE quando:** (a) a pergunta é especificamente sobre landing page / site / "por que não converte" / "tracking não fecha" / ad↔LP match, E (b) nenhuma LP foi compartilhada nesta conversa ainda. Nesse caso, uma única frase no final: "Se quiser, cola o link da sua LP aqui que eu olho o conteúdo real."
+- **Não repita a oferta.** Se já ofereceu uma vez e o usuário ignorou, não pede de novo na próxima mensagem.
+- **Nunca finja** ter lido uma LP que não está no contexto. Se não há bloco "LANDING PAGES" abaixo, você não viu nada — responda com base em suposição e deixe claro que é suposição.
+- **Se o fetch falhou** (source=error no bloco), não invente o que estava na página — fale honestamente que não conseguiu acessar.
 
 ═══════════════════════════════════
 FORMATAÇÃO OBRIGATÓRIA — LEIA PRIMEIRO
@@ -2411,7 +2751,7 @@ EXEMPLO correto de content: "**Diagnóstico:** CPM subiu 40%.\\n\\n**Causa:** p�
 PROIBIDO:
 - Bloco de texto corrido sem nenhum negrito ou quebra de linha
 - Listas com traço (- item) — use **negrito** + \\n\\n
-- Headers com ## — apenas **negrito**${intentDirective}`;
+- Headers com ## — apenas **negrito**${intentDirective}${landingPageBlock}`;
 
     const toneInstruction = user_prefs?.tone ? `\n\nESTILO PREFERIDO DO USUÁRIO: ${user_prefs.tone}` : "";
 
