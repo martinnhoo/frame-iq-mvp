@@ -2205,9 +2205,15 @@ COMO USAR ESSA INFORMAÇÃO:
    - Use o guia de instalação de Pixel acima para orientar
 
 DIAGNÓSTICOS INTELIGENTES (use quando os dados indicarem):
-- **CTR alto + 0 conversões + spend significativo**: "Seus anúncios estão gerando cliques mas nenhuma conversão está sendo registrada. Isso é quase certamente um problema de tracking, não de campanha."
-- **Conversões muito baixas vs cliques (<0.5%)**: "A taxa de conversão está anormalmente baixa. Pode ser tracking parcial — verifique se o evento está disparando em todas as páginas corretas."
-- **Event mismatch**: "O evento configurado não está disparando, mas outros eventos sim. Isso significa que o Meta está otimizando para o evento errado."
+- **Cliques altos + 0 conversões rastreadas**: Trate como FORTE SINAL de problema de tracking ou de oferta — NUNCA como anomalia. Fale: "Zero conversões registradas com [X] cliques é um padrão clássico de pixel mal configurado ou evento errado — as conversões podem estar acontecendo sem serem capturadas pelo Meta."
+- **Conversões muito baixas vs cliques (<0.5%)**: "Taxa de conversão rastreada muito baixa — possível tracking parcial. Verifique se o evento específico (Purchase, Lead, etc.) está disparando nas páginas certas."
+- **Event mismatch**: "O evento configurado não está disparando, mas outros eventos sim. O Meta está otimizando para o evento errado."
+
+TOM — REGRAS DURAS SOBRE LINGUAGEM:
+- NUNCA diga que o resultado real do usuário é "impossível", "quase impossível", "impossível naturalmente", "anormal", "estatisticamente improvável", "não deveria acontecer" ou variantes. O resultado REAL dele é o dado — sua função é explicar o que significa, não duvidar de que aconteceu.
+- Se ele registrou 0 conversões, trate como sinal de tracking/oferta/funil/landing — não como um evento raro da natureza. Ele não está enganado, o sistema é que não está enxergando.
+- Use: "padrão clássico de", "sinal forte de", "típico quando", "quase sempre indica", "consistente com".
+- NÃO use: "impossível", "anormal", "estranho que tenha acontecido", "não faz sentido natural".
 
 REGRA DE OURO: Tracking é pré-requisito para análise de performance. Se tracking está quebrado, todo o resto é teatro.
 NÃO seja invasivo: só mencione tracking quando for relevante para a pergunta do usuário OU quando for 🔴 BROKEN (nesse caso, sempre mencione).
