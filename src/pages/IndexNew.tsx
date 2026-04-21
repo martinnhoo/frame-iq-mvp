@@ -728,7 +728,7 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         </svg>
       </div>
 
-      {/* The product window — live-built in JSX so text stays sharp at any size */}
+      {/* The product window — rebuilt as a Decision Card: the atomic moment of the product */}
       <div style={{
         position: "relative",
         width: "100%",
@@ -743,7 +743,7 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         `,
         fontFamily: F,
       }}>
-        {/* Traffic-light window chrome */}
+        {/* Window chrome */}
         <div style={{
           display: "flex", alignItems: "center", gap: 7,
           padding: "10px 14px",
@@ -754,159 +754,183 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
           <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e", opacity: 0.8 }} />
           <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840", opacity: 0.8 }} />
           <div style={{ flex: 1, textAlign: "center", fontSize: 10.5, color: "rgba(255,255,255,0.35)", fontWeight: 500, letterSpacing: "0.02em" }}>
-            adbrief.pro · Central de Comando
+            adbrief.pro · Decisão sugerida
           </div>
         </div>
 
         {/* Content */}
-        <div style={{ padding: "16px 18px 20px" }}>
-          {/* Top alert — Sangria ativa */}
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            gap: 10,
-            background: "linear-gradient(90deg, rgba(239,68,68,0.14) 0%, rgba(239,68,68,0.06) 100%)",
-            border: "1px solid rgba(239,68,68,0.28)",
-            borderRadius: 10,
-            padding: "11px 13px",
-            marginBottom: 16,
-          }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, minWidth: 0 }}>
-              <span style={{
-                width: 7, height: 7, borderRadius: "50%", background: RED,
-                boxShadow: `0 0 10px ${RED}`, flexShrink: 0, marginTop: 5,
-              }} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em", lineHeight: 1.3 }}>
-                  Sangria ativa — UGC 03 perdeu R$2.150 em 48h
-                </div>
-                <div style={{ fontSize: 10.5, color: "rgba(239,68,68,0.85)", marginTop: 2, fontWeight: 500 }}>
-                  Perdendo -R$2.150/dia
-                </div>
-              </div>
-            </div>
-            <button style={{
-              fontFamily: F, fontSize: 11.5, fontWeight: 600,
-              padding: "6px 12px", borderRadius: 7,
-              background: RED, color: "#fff", border: "none",
-              whiteSpace: "nowrap", cursor: "pointer", letterSpacing: "-0.01em",
-              boxShadow: "0 2px 8px rgba(239,68,68,0.3)",
-            }}>
-              Pausar agora
-            </button>
-          </div>
-
-          {/* Header row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,0.55)", letterSpacing: "0.12em" }}>
-              CENTRAL DE COMANDO
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              {["7d", "14d", "30d"].map((tf, i) => (
-                <span key={tf} style={{
-                  fontSize: 10.5, fontWeight: 600,
-                  padding: "4px 9px", borderRadius: 6,
-                  background: i === 0 ? "rgba(255,255,255,0.07)" : "transparent",
-                  color: i === 0 ? TEXT : "rgba(255,255,255,0.4)",
-                  letterSpacing: "-0.01em",
+        <div style={{ padding: "18px 18px 16px" }}>
+          {/* AI header — the agent speaking */}
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
+            <img
+              src="/ab-avatar.png"
+              alt="AdBrief"
+              width={26}
+              height={26}
+              style={{
+                width: 26, height: 26, borderRadius: 7, objectFit: "cover",
+                boxShadow: "0 0 0 1px rgba(255,255,255,0.06)", flexShrink: 0,
+              }}
+            />
+            <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0, flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>AdBrief</span>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  fontSize: 9.5, fontWeight: 700, color: ACCENT,
+                  padding: "2px 7px", borderRadius: 5,
+                  background: "rgba(14,165,233,0.10)",
+                  border: "1px solid rgba(14,165,233,0.22)",
+                  letterSpacing: "0.06em", textTransform: "uppercase",
                 }}>
-                  {tf}
+                  Decisão sugerida
                 </span>
-              ))}
-              <span style={{
-                marginLeft: 4, fontSize: 10.5, padding: "4px 9px", borderRadius: 6,
-                background: "rgba(14,165,233,0.10)", color: ACCENT, fontWeight: 600,
-                letterSpacing: "-0.01em",
-              }}>
-                ↻ Sync
+              </div>
+              <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                analisou sua conta há 3 min · baseado nos últimos 7 dias
               </span>
             </div>
           </div>
 
-          {/* Saúde — compact green row */}
+          {/* Headline — the proposition */}
           <div style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "9px 12px",
-            background: "rgba(34,197,94,0.05)",
-            border: "1px solid rgba(34,197,94,0.16)",
-            borderLeft: `2px solid ${GREEN}`,
-            borderRadius: 8,
-            marginBottom: 12,
+            fontSize: 15.5, fontWeight: 700, color: TEXT,
+            letterSpacing: "-0.02em", lineHeight: 1.35,
+            marginBottom: 14,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: `0 0 8px ${GREEN}` }} />
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,0.55)", letterSpacing: "0.1em" }}>
-              SAÚDE DA CONTA
-            </span>
-            <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>Tudo certo</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>· 5 OK</span>
-            <span style={{ marginLeft: "auto", fontSize: 10, color: "rgba(255,255,255,0.32)" }}>atualizado há 5min</span>
+            Pausar <span style={{
+              padding: "1px 6px", borderRadius: 4,
+              background: "rgba(255,255,255,0.06)",
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+              fontSize: 13, fontWeight: 600,
+            }}>UGC 03</span> — economia estimada{" "}
+            <span style={{ color: GREEN, fontVariantNumeric: "tabular-nums" }}>R$2.150/dia</span>
           </div>
 
-          {/* PERDA ATIVA — the centerpiece */}
+          {/* Evidence — why the AI decided */}
           <div style={{
-            padding: "14px 16px 16px",
-            background: "linear-gradient(180deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.02) 100%)",
-            border: "1px solid rgba(239,68,68,0.20)",
-            borderRadius: 12,
+            padding: "12px 13px",
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            borderRadius: 9,
             marginBottom: 12,
+            display: "flex", flexDirection: "column", gap: 8,
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: RED, boxShadow: `0 0 8px ${RED}` }} />
-              <span style={{ fontSize: 10, fontWeight: 700, color: RED, letterSpacing: "0.14em" }}>PERDA ATIVA</span>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.42)", letterSpacing: "0.12em", marginBottom: 2 }}>
+              POR QUÊ
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
-              <span style={{
-                fontSize: 34, fontWeight: 800, color: TEXT,
-                letterSpacing: "-0.035em", lineHeight: 1,
-                fontVariantNumeric: "tabular-nums",
-              }}>
-                R$21.500
+            {[
+              { label: "CTR", value: "0.80%", baseline: "base 2.14%", delta: "−62%", tone: "bad" as const },
+              { label: "Hook rate", value: "14%", baseline: "base 28%", delta: "−50%", tone: "bad" as const },
+              { label: "CPA", value: "R$87", baseline: "meta R$35", delta: "+149%", tone: "bad" as const },
+            ].map((m) => (
+              <div key={m.label} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11.5 }}>
+                <span style={{ width: 74, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
+                  {m.label}
+                </span>
+                <span style={{ color: TEXT, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+                  {m.value}
+                </span>
+                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 10.5 }}>
+                  {m.baseline}
+                </span>
+                <span style={{
+                  marginLeft: "auto",
+                  fontSize: 10.5, fontWeight: 700, padding: "2px 6px",
+                  borderRadius: 4,
+                  background: m.tone === "bad" ? "rgba(239,68,68,0.10)" : "rgba(34,197,94,0.10)",
+                  color: m.tone === "bad" ? RED : GREEN,
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  {m.delta}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Confidence + actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, flex: 1 }}>
+              <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.42)", fontWeight: 500 }}>
+                Confiança
               </span>
-              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>/dia</span>
+              <div style={{
+                position: "relative", flex: 1, height: 4, borderRadius: 2,
+                background: "rgba(255,255,255,0.06)", overflow: "hidden", maxWidth: 110,
+              }}>
+                <div style={{
+                  position: "absolute", inset: 0, width: "94%",
+                  background: `linear-gradient(90deg, ${ACCENT}, ${GREEN})`,
+                  borderRadius: 2,
+                }} />
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}>
+                94%
+              </span>
             </div>
-            <div style={{ fontSize: 11, color: "rgba(239,68,68,0.85)", fontWeight: 500, marginBottom: 12 }}>
-              2 decisões podem reduzir perdas agora
-            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 8 }}>
             <button style={{
-              width: "100%", fontFamily: F, fontSize: 13, fontWeight: 700,
-              padding: "11px 16px", borderRadius: 9,
-              background: RED, color: "#fff", border: "none",
+              flex: 1, fontFamily: F, fontSize: 13, fontWeight: 700,
+              padding: "10px 14px", borderRadius: 8,
+              background: "#fff", color: "#000", border: "none",
               cursor: "pointer", letterSpacing: "-0.01em",
-              boxShadow: "0 4px 14px rgba(239,68,68,0.35), inset 0 1px 0 rgba(255,255,255,0.12)",
+              boxShadow: "0 2px 10px rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.1)",
             }}>
-              Resolver agora
+              Aprovar e pausar
+            </button>
+            <button style={{
+              fontFamily: F, fontSize: 13, fontWeight: 600,
+              padding: "10px 14px", borderRadius: 8,
+              background: "transparent", color: TEXT, border: `1px solid rgba(255,255,255,0.12)`,
+              cursor: "pointer", letterSpacing: "-0.01em",
+              whiteSpace: "nowrap",
+            }}>
+              Ver detalhes
             </button>
           </div>
 
-          {/* Two small cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div style={{
-              padding: "11px 13px",
-              background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: 10,
-            }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.12em", marginBottom: 4 }}>
-                RECUPERÁVEL
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: ACCENT, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-                +R$32.000
-              </div>
-            </div>
-            <div style={{
-              padding: "11px 13px",
-              background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: 10,
-            }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.12em", marginBottom: 4 }}>
-                ECONOMIZADO
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: GREEN, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-                R$47.320
-              </div>
-            </div>
+          {/* Footer meta */}
+          <div style={{
+            marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)",
+            display: "flex", alignItems: "center", gap: 14,
+            fontSize: 10, color: "rgba(255,255,255,0.35)", fontWeight: 500,
+          }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <span style={{ width: 4, height: 4, borderRadius: "50%", background: GREEN, boxShadow: `0 0 6px ${GREEN}` }} />
+              Reversível a qualquer momento
+            </span>
+            <span>·</span>
+            <span>Log auditável</span>
           </div>
         </div>
+      </div>
+
+      {/* "Next in queue" card — shows the system is alive, processing */}
+      <div style={{
+        marginTop: 12,
+        padding: "11px 14px",
+        display: "flex", alignItems: "center", gap: 10,
+        background: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.05)",
+        borderRadius: 10,
+        fontFamily: F,
+      }}>
+        <span style={{
+          width: 5, height: 5, borderRadius: "50%",
+          background: "rgba(245,158,11,0.8)",
+          flexShrink: 0,
+          animation: "heroQueuePulse 2.2s ease-in-out infinite",
+        }} />
+        <span style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", fontWeight: 500, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ color: TEXT, fontWeight: 600 }}>Próxima na fila</span>
+          <span style={{ color: "rgba(255,255,255,0.32)" }}> · Escalar UGC 07 (+32% CTR vs baseline)</span>
+        </span>
+        <span style={{ marginLeft: "auto", fontSize: 10, color: "rgba(255,255,255,0.28)", fontWeight: 500, flexShrink: 0 }}>
+          em 2 min
+        </span>
       </div>
 
       {/* Subtle caption below the frame */}
@@ -2147,6 +2171,12 @@ export default function IndexNew() {
         }
         .hero-bg-spotlight { animation: heroSpotlightPulse 9s ${EASE} infinite; }
         .hero-bg-ambient   { animation: heroAmbientDrift 14s ${EASE} infinite; }
+
+        /* ── Decision card "next in queue" dot ──────────────────── */
+        @keyframes heroQueuePulse {
+          0%, 100% { opacity: 0.5; transform: scale(1); box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+          50%      { opacity: 1;   transform: scale(1.15); box-shadow: 0 0 10px 2px rgba(245,158,11,0.35); }
+        }
 
         @media (prefers-reduced-motion: reduce) {
           .hero-bg-spotlight, .hero-bg-ambient { animation: none !important; }
