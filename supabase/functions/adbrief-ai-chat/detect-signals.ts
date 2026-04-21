@@ -79,7 +79,9 @@ export interface StructuralSignals {
 export function detectStructuralSignals(content: string): StructuralSignals {
   const hasFbPixel = /fbq\(\s*['"]init['"]|connect\.facebook\.net\/.*\/fbevents\.js|_fbp\b|facebook\s+pixel/i.test(content);
   const hasConvEvent = /fbq\(\s*['"]track['"]\s*,\s*['"](Purchase|Lead|CompleteRegistration|AddToCart|InitiateCheckout|Subscribe|StartTrial)['"]/i.test(content);
-  const ctaMatch = content.match(/\b(Comprar|Comprar agora|Assinar|Começar|Começar agora|Cadastre-se|Cadastrar|Inscrever-se|Quero|Quero agora|Baixar|Baixe|Download|Sign up|Buy now|Get started|Start free|Start now|Subscribe|Join|Agendar|Falar com|WhatsApp)\b[^.\n]{0,40}/i);
+  // Exclude `<` `>` so we don't capture trailing markup like `</button>` when
+  // running CTA detection on raw HTML.
+  const ctaMatch = content.match(/\b(Comprar|Comprar agora|Assinar|Começar|Começar agora|Cadastre-se|Cadastrar|Inscrever-se|Quero|Quero agora|Baixar|Baixe|Download|Sign up|Buy now|Get started|Start free|Start now|Subscribe|Join|Agendar|Falar com|WhatsApp)\b[^.\n<>]{0,40}/i);
   const primaryCta = ctaMatch ? ctaMatch[0].slice(0, 60).trim() : null;
   return { hasFbPixel, hasConvEvent, primaryCta };
 }
