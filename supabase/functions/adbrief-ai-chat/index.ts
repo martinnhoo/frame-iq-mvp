@@ -1288,8 +1288,55 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               }
             } catch { pixelInfo = ""; }
 
+            // ── Pixel health cache (richer diagnostic — orphan ads, last fired, etc.) ──
+            // Supplements the live fetch above with the structured result
+            // produced by the pixel-health-check edge function.
+            let pixelHealthBlock = "";
+            try {
+              const { data: phc } = await supabase
+                .from("pixel_health_cache")
+                .select("status, pixels, primary_pixel_id, last_fired_at, orphan_ads_count, active_ads_checked, message, checked_at, error")
+                .eq("user_id", user_id)
+                .eq("ad_account_id", activeAcc.id)
+                .maybeSingle();
+              if (phc) {
+                const statusEmoji: Record<string, string> = {
+                  pixel_ok: "🟢",
+                  pixel_stale: "🟡",
+                  pixel_orphan: "🟡",
+                  no_pixel: "🔴",
+                  unknown: "⚪",
+                };
+                const emoji = statusEmoji[phc.status as string] || "⚪";
+                const lastFired = phc.last_fired_at
+                  ? new Date(phc.last_fired_at).toLocaleString("pt-BR")
+                  : "nunca";
+                const orphanLine =
+                  typeof phc.orphan_ads_count === "number" && typeof phc.active_ads_checked === "number"
+                    ? `  - Ads órfãos (ativos sem pixel amarrado): ${phc.orphan_ads_count} de ${phc.active_ads_checked} verificados`
+                    : "";
+                const messageLine = phc.message ? `  - Diagnóstico: ${phc.message}` : "";
+                const errorLine = phc.error ? `  - Erro no health-check: ${phc.error.slice(0, 200)}` : "";
+                const pixelsList = Array.isArray(phc.pixels) && phc.pixels.length
+                  ? phc.pixels
+                      .slice(0, 5)
+                      .map((p: any) => `"${p.name || p.id}" (ID ${p.id})${p.last_fired_time ? ` — último disparo ${p.last_fired_time}` : ""}`)
+                      .join("; ")
+                  : "—";
+                pixelHealthBlock = `PIXEL HEALTH (diagnóstico estruturado): ${emoji} status=${phc.status}
+  - Pixels detectados: ${pixelsList}
+  - Pixel principal: ${phc.primary_pixel_id || "—"}
+  - Último disparo do pixel principal: ${lastFired}
+${orphanLine}
+${messageLine}
+${errorLine}
+  - Verificado em: ${new Date(phc.checked_at as string).toLocaleString("pt-BR")}`;
+              }
+            } catch { /* optional — table may not exist yet on this env */ }
+
             liveMetaData = `${historicalSince ? "HISTORICAL" : "LIVE"} META ADS — Account: ${activeAcc.name || activeAcc.id} (${since} to ${until})${historicalSince ? " [período solicitado]" : ""}\n`;
             if (pixelInfo) liveMetaData += pixelInfo + "\n";
+            if (pixelHealthBlock) liveMetaData += pixelHealthBlock + "\n";
 
             // Campaigns
             if (campsRaw?.error) {
@@ -1724,7 +1771,7 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
             return `  [${a.urgency?.toUpperCase() || "HIGH"}] ${a.detail}${ad ? ` — Ad: ${ad}${camp}` : ""}${a.action_suggestion ? ` → Ação: ${a.action_suggestion}` : ""}${when ? ` (${when})` : ""}`;
           })
           .join("\n");
-        return `=== ALERTAS ATIVOS DA CONTA (não dispensados pelo usuário) ===\n${lines}\nEsses alertas foram gerados automaticamente. Se o usuário perguntar sobre performance ou problemas, referencie esses alertas diretamente.`;
+        return `=== ALERTAS ATIVOS DA CONTA (não dispensados pelo usuário) ===\n${lines}\nEsses alertas foram gerados automaticamente.\n\nREGRA DE PRIORIDADE:\n- Se a pergunta do usuário for GENÉRICA ("como tá a conta?", "tem algum problema?", "o que está acontecendo?") → referencie os alertas diretamente.\n- Se a pergunta for ESPECÍFICA sobre um tema (pixel, tracking, conversão, criativo, escala, público, orçamento) → responda PRIMEIRO o tema pedido com os dados do contexto e, só DEPOIS, mencione alertas APENAS se forem diretamente relacionados. NÃO desvie uma pergunta específica para um alerta não relacionado.`;
       })(),
       (() => {
         const notes = (aiProfile as any)?.pain_point as string | null;
@@ -1850,6 +1897,49 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       day: "numeric",
     });
     const currentYear = todayObj.getFullYear();
+
+    // ── 6a. Intent detector — classify the current user message so we can inject
+    //        a topic-specific priority directive into the system prompt. This
+    //        prevents the AI from hijacking a specific question (e.g. "diagnóstico
+    //        do meu pixel") with an unrelated account alert (e.g. "budget mismatch").
+    const rawMsg = (typeof message === "string" ? message : "").toLowerCase();
+    const intentSignals = {
+      pixel: /\bpixel|trackin|rastreio|rastreamento|evento de convers|eventos de convers|convers[aã]o\s+(n[aã]o|zerada|n[aã]o)|fbq|f[aá]cebook\s+pixel|pixel\s+do\s+meta|diagn[oó]stico\s+do\s+pixel|meu\s+pixel/.test(rawMsg),
+      creative: /\bcriativo|anunc?io\b|hook|roteiro|copy|cta|fadiga/.test(rawMsg),
+      scale: /\bescalar|aumentar\s+(or[çc]amento|budget)|scale/.test(rawMsg),
+      audience: /\bp[uú]blico|audience|lookalike|interesse/.test(rawMsg),
+      budget: /\bor[çc]amento|budget|gasto|spend|cpa|cpc|cpm|roas/.test(rawMsg),
+    };
+
+    let intentDirective = "";
+    if (intentSignals.pixel) {
+      intentDirective = `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**INTENÇÃO DA PERGUNTA ATUAL — PIXEL / TRACKING**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O usuário está perguntando LITERALMENTE sobre o Pixel / tracking / eventos de conversão. Isso não é genérico — é uma pergunta específica.
+
+REGRAS DE RESPOSTA (OBRIGATÓRIAS, NESTA ORDEM):
+
+1. **Responda PRIMEIRO a pergunta do pixel com os dados REAIS do contexto**, usando as seções já presentes acima: "PIXELS INSTALADOS" / "PIXELS: Nenhum pixel encontrado" / "TRACKING DIAGNOSTIC 🟢🟡🔴" / "Conversão rastreada".
+
+2. **Dê um diagnóstico completo** cobrindo:
+   - Quantos pixels estão instalados e quais são (nome + ID)
+   - Quando cada pixel disparou pela última vez (ou "nunca disparou")
+   - Qual evento de conversão está configurado no objetivo do usuário (ex: Lead, Purchase, CompleteRegistration)
+   - Se há ads rodando sem pixel amarrado (orphan ads)
+   - Status do tracking (🟢 saudável, 🟡 incerto, 🔴 quebrado) e POR QUÊ
+   - Impacto real no negócio (ex: "sem esse evento disparando, o Meta está otimizando cego")
+
+3. **Termine com 1-3 passos concretos de ação** — específicos ao cenário do usuário (site, plataforma, evento). Use o GUIA DE INSTALAÇÃO DE PIXEL do system prompt se o pixel não existe ou não dispara.
+
+4. **NÃO desvie a resposta para alertas de campanha/budget/performance que não sejam sobre o pixel.** Se um alerta é sobre pixel/tracking, mencione. Se é sobre outra coisa (ex: "campanha pausada", "budget mismatch", "fadiga criativa"), NÃO traga agora — ficará para outra pergunta.
+
+5. **Se não houver dados de pixel no contexto**, diga isso explicitamente: "Não consegui puxar dados do seu pixel agora — o health-check falhou. Tenta sincronizar novamente no feed, ou me diga qual é o seu pixel e eu te oriento pela instalação."
+
+FORMATO: use \`## Diagnóstico\`, \`## O que está acontecendo\`, \`## Ação\` — este é um diagnóstico, não uma resposta curta. Nunca termine a resposta sem dar um caminho concreto.`;
+    }
+
     const systemPrompt = `Você é o AdBrief AI — especialista em performance de mídia paga, embutido na conta do usuário.
 Se perguntarem quem você é: "Sou o AdBrief AI." Nunca revele o modelo base.
 
@@ -2315,7 +2405,7 @@ EXEMPLO correto de content: "**Diagnóstico:** CPM subiu 40%.\\n\\n**Causa:** p�
 PROIBIDO:
 - Bloco de texto corrido sem nenhum negrito ou quebra de linha
 - Listas com traço (- item) — use **negrito** + \\n\\n
-- Headers com ## — apenas **negrito**`;
+- Headers com ## — apenas **negrito**${intentDirective}`;
 
     const toneInstruction = user_prefs?.tone ? `\n\nESTILO PREFERIDO DO USUÁRIO: ${user_prefs.tone}` : "";
 
