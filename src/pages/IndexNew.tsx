@@ -650,19 +650,21 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
 // Shows the AI diagnosing a ROAS drop with real metrics + action list.
 // Callouts float outside the frame on >=1024px, collapse to clean image on mobile.
 function HeroScreenshot({ t }: { t: Record<string, string> }) {
+  // Inline product mockup — sharper than a PNG at every breakpoint, and lets us
+  // zoom into the 3 most-important moments of the Central de Comando.
   return (
     <div className="product-mockup" style={{
-      width: "100%", maxWidth: 720, position: "relative",
+      width: "100%", maxWidth: 560, position: "relative",
     }}>
-      {/* Callout 1 — top-right, points at the metric cards (CTR 3.87% ▼ / FREQ 1.8 ▲) */}
+      {/* Callout 1 — top-right, points at the real-account number */}
       <div className="hero-callout hero-callout-1" style={{
         position: "absolute",
-        top: "30%", right: "-16%",
+        top: "18%", right: "-14%",
         zIndex: 3,
         fontFamily: F,
         padding: "9px 13px",
-        background: "rgba(8,8,8,0.92)",
-        border: `1px solid rgba(239,68,68,0.35)`,
+        background: "rgba(8,8,8,0.94)",
+        border: `1px solid rgba(239,68,68,0.38)`,
         borderRadius: 10,
         fontSize: 11.5, fontWeight: 600, color: TEXT,
         letterSpacing: "-0.01em",
@@ -670,6 +672,7 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         backdropFilter: "blur(8px)",
         whiteSpace: "nowrap",
         display: "flex", alignItems: "center", gap: 8,
+        maxWidth: 240,
       }}>
         <span style={{
           width: 6, height: 6, borderRadius: "50%",
@@ -678,27 +681,26 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
           flexShrink: 0,
         }} />
         {t.hero_callout_1}
-        {/* Connecting line — subtle */}
         <svg style={{
           position: "absolute", right: "100%", top: "50%",
           transform: "translateY(-50%)",
-          width: 62, height: 2, overflow: "visible",
+          width: 48, height: 2, overflow: "visible",
           pointerEvents: "none",
-        }} viewBox="0 0 62 2" preserveAspectRatio="none">
-          <line x1="0" y1="1" x2="62" y2="1"
-            stroke="rgba(239,68,68,0.4)" strokeWidth="1" strokeDasharray="3 3" />
+        }} viewBox="0 0 48 2" preserveAspectRatio="none">
+          <line x1="0" y1="1" x2="48" y2="1"
+            stroke="rgba(239,68,68,0.45)" strokeWidth="1" strokeDasharray="3 3" />
         </svg>
       </div>
 
-      {/* Callout 2 — bottom-left, points at "O QUE FAZER AGORA" action list */}
+      {/* Callout 2 — bottom-left, points at the "Resolver agora" action */}
       <div className="hero-callout hero-callout-2" style={{
         position: "absolute",
-        bottom: "14%", left: "-16%",
+        bottom: "22%", left: "-14%",
         zIndex: 3,
         fontFamily: F,
         padding: "9px 13px",
-        background: "rgba(8,8,8,0.92)",
-        border: `1px solid rgba(34,197,94,0.35)`,
+        background: "rgba(8,8,8,0.94)",
+        border: `1px solid rgba(34,197,94,0.38)`,
         borderRadius: 10,
         fontSize: 11.5, fontWeight: 600, color: TEXT,
         letterSpacing: "-0.01em",
@@ -706,6 +708,7 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         backdropFilter: "blur(8px)",
         whiteSpace: "nowrap",
         display: "flex", alignItems: "center", gap: 8,
+        maxWidth: 240,
       }}>
         <span style={{
           width: 6, height: 6, borderRadius: "50%",
@@ -717,53 +720,193 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         <svg style={{
           position: "absolute", left: "100%", top: "50%",
           transform: "translateY(-50%)",
-          width: 62, height: 2, overflow: "visible",
+          width: 48, height: 2, overflow: "visible",
           pointerEvents: "none",
-        }} viewBox="0 0 62 2" preserveAspectRatio="none">
-          <line x1="0" y1="1" x2="62" y2="1"
-            stroke="rgba(34,197,94,0.4)" strokeWidth="1" strokeDasharray="3 3" />
+        }} viewBox="0 0 48 2" preserveAspectRatio="none">
+          <line x1="0" y1="1" x2="48" y2="1"
+            stroke="rgba(34,197,94,0.45)" strokeWidth="1" strokeDasharray="3 3" />
         </svg>
       </div>
 
-      {/* The frame — aspect matches the source image (1647×902) */}
+      {/* The product window — live-built in JSX so text stays sharp at any size */}
       <div style={{
         position: "relative",
         width: "100%",
-        aspectRatio: "1647 / 902",
         borderRadius: 14,
         overflow: "hidden",
-        background: "#070707",
+        background: "#060606",
         border: `1px solid rgba(255,255,255,0.08)`,
         boxShadow: `
           0 0 0 1px rgba(255,255,255,0.03),
           0 20px 60px rgba(0,0,0,0.5),
           0 60px 140px rgba(0,0,0,0.65)
         `,
+        fontFamily: F,
       }}>
-        <img
-          src="/hero-screenshot.png"
-          alt="AdBrief AI diagnosticando queda de ROAS com métricas reais e recomendações acionáveis"
-          loading="eager"
-          decoding="async"
-          style={{
-            width: "100%", height: "100%",
-            objectFit: "cover", objectPosition: "center",
-            display: "block",
-          }}
-          onError={(e) => {
-            // Graceful fallback if image not yet uploaded
-            const el = e.currentTarget;
-            el.style.display = "none";
-            const parent = el.parentElement;
-            if (parent && !parent.querySelector('[data-hero-fallback]')) {
-              const fb = document.createElement('div');
-              fb.setAttribute('data-hero-fallback', '');
-              fb.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-family:' + F + ';font-size:12px;';
-              fb.textContent = t.hero_screenshot_label;
-              parent.appendChild(fb);
-            }
-          }}
-        />
+        {/* Traffic-light window chrome */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 7,
+          padding: "10px 14px",
+          borderBottom: "1px solid rgba(255,255,255,0.04)",
+          background: "rgba(255,255,255,0.015)",
+        }}>
+          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57", opacity: 0.8 }} />
+          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e", opacity: 0.8 }} />
+          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840", opacity: 0.8 }} />
+          <div style={{ flex: 1, textAlign: "center", fontSize: 10.5, color: "rgba(255,255,255,0.35)", fontWeight: 500, letterSpacing: "0.02em" }}>
+            adbrief.pro · Central de Comando
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: "16px 18px 20px" }}>
+          {/* Top alert — Sangria ativa */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 10,
+            background: "linear-gradient(90deg, rgba(239,68,68,0.14) 0%, rgba(239,68,68,0.06) 100%)",
+            border: "1px solid rgba(239,68,68,0.28)",
+            borderRadius: 10,
+            padding: "11px 13px",
+            marginBottom: 16,
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, minWidth: 0 }}>
+              <span style={{
+                width: 7, height: 7, borderRadius: "50%", background: RED,
+                boxShadow: `0 0 10px ${RED}`, flexShrink: 0, marginTop: 5,
+              }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em", lineHeight: 1.3 }}>
+                  Sangria ativa — UGC 03 perdeu R$2.150 em 48h
+                </div>
+                <div style={{ fontSize: 10.5, color: "rgba(239,68,68,0.85)", marginTop: 2, fontWeight: 500 }}>
+                  Perdendo -R$2.150/dia
+                </div>
+              </div>
+            </div>
+            <button style={{
+              fontFamily: F, fontSize: 11.5, fontWeight: 600,
+              padding: "6px 12px", borderRadius: 7,
+              background: RED, color: "#fff", border: "none",
+              whiteSpace: "nowrap", cursor: "pointer", letterSpacing: "-0.01em",
+              boxShadow: "0 2px 8px rgba(239,68,68,0.3)",
+            }}>
+              Pausar agora
+            </button>
+          </div>
+
+          {/* Header row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,0.55)", letterSpacing: "0.12em" }}>
+              CENTRAL DE COMANDO
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              {["7d", "14d", "30d"].map((tf, i) => (
+                <span key={tf} style={{
+                  fontSize: 10.5, fontWeight: 600,
+                  padding: "4px 9px", borderRadius: 6,
+                  background: i === 0 ? "rgba(255,255,255,0.07)" : "transparent",
+                  color: i === 0 ? TEXT : "rgba(255,255,255,0.4)",
+                  letterSpacing: "-0.01em",
+                }}>
+                  {tf}
+                </span>
+              ))}
+              <span style={{
+                marginLeft: 4, fontSize: 10.5, padding: "4px 9px", borderRadius: 6,
+                background: "rgba(14,165,233,0.10)", color: ACCENT, fontWeight: 600,
+                letterSpacing: "-0.01em",
+              }}>
+                ↻ Sync
+              </span>
+            </div>
+          </div>
+
+          {/* Saúde — compact green row */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "9px 12px",
+            background: "rgba(34,197,94,0.05)",
+            border: "1px solid rgba(34,197,94,0.16)",
+            borderLeft: `2px solid ${GREEN}`,
+            borderRadius: 8,
+            marginBottom: 12,
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: GREEN, boxShadow: `0 0 8px ${GREEN}` }} />
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,0.55)", letterSpacing: "0.1em" }}>
+              SAÚDE DA CONTA
+            </span>
+            <span style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}>Tudo certo</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>· 5 OK</span>
+            <span style={{ marginLeft: "auto", fontSize: 10, color: "rgba(255,255,255,0.32)" }}>atualizado há 5min</span>
+          </div>
+
+          {/* PERDA ATIVA — the centerpiece */}
+          <div style={{
+            padding: "14px 16px 16px",
+            background: "linear-gradient(180deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.02) 100%)",
+            border: "1px solid rgba(239,68,68,0.20)",
+            borderRadius: 12,
+            marginBottom: 12,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: RED, boxShadow: `0 0 8px ${RED}` }} />
+              <span style={{ fontSize: 10, fontWeight: 700, color: RED, letterSpacing: "0.14em" }}>PERDA ATIVA</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 4 }}>
+              <span style={{
+                fontSize: 34, fontWeight: 800, color: TEXT,
+                letterSpacing: "-0.035em", lineHeight: 1,
+                fontVariantNumeric: "tabular-nums",
+              }}>
+                R$21.500
+              </span>
+              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>/dia</span>
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(239,68,68,0.85)", fontWeight: 500, marginBottom: 12 }}>
+              2 decisões podem reduzir perdas agora
+            </div>
+            <button style={{
+              width: "100%", fontFamily: F, fontSize: 13, fontWeight: 700,
+              padding: "11px 16px", borderRadius: 9,
+              background: RED, color: "#fff", border: "none",
+              cursor: "pointer", letterSpacing: "-0.01em",
+              boxShadow: "0 4px 14px rgba(239,68,68,0.35), inset 0 1px 0 rgba(255,255,255,0.12)",
+            }}>
+              Resolver agora
+            </button>
+          </div>
+
+          {/* Two small cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{
+              padding: "11px 13px",
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 10,
+            }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.12em", marginBottom: 4 }}>
+                RECUPERÁVEL
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: ACCENT, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                +R$32.000
+              </div>
+            </div>
+            <div style={{
+              padding: "11px 13px",
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 10,
+            }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.12em", marginBottom: 4 }}>
+                ECONOMIZADO
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: GREEN, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
+                R$47.320
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Subtle caption below the frame */}
