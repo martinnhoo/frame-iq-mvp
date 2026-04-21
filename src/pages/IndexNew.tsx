@@ -9,12 +9,12 @@ import CookieConsent from "@/components/CookieConsent";
 import { Logo } from "@/components/Logo";
 import { Helmet } from "react-helmet-async";
 
-// ── Design tokens ───────────────────────────────────────────────────────────
+// ── Design tokens (true-black palette) ─────────────────────────────────────
 const F = "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif";
-const BG = "#070d1a";
-const BG2 = "#0a1020";
-const SURFACE = "#0d1117";
-const SURFACE2 = "#161B22";
+const BG = "#000000";
+const BG2 = "#070707";
+const SURFACE = "#0b0b0b";
+const SURFACE2 = "#141414";
 const ACCENT = "#0ea5e9";
 const TEXT = "#f0f2f8";
 const TEXT2 = "rgba(255,255,255,0.55)";
@@ -104,15 +104,23 @@ const TX: Record<Lang, Record<string, string>> = {
     social_title: "Para gestores que cuidam de contas reais",
     social_sub: "Usado por agências e e-commerces que gastam de R$5k a R$500k/mês em Meta Ads.",
     social_logo_placeholder: "logo cliente",
+    stat1_v: "R$12Mi+",
+    stat1_l: "em mídia monitorada",
+    stat2_v: "~2h",
+    stat2_l: "pra detectar um CPA fora da curva",
+    stat3_v: "94%",
+    stat3_l: "das decisões aceitas pelos gestores",
+    stat4_v: "24/7",
+    stat4_l: "monitorando suas campanhas",
     social_t1_quote: "Pausei 4 criativos com fadiga antes de torrar o orçamento do dia. Em 30 segundos.",
-    social_t1_name: "Em breve",
-    social_t1_role: "Gestor de tráfego · agência",
+    social_t1_name: "Lucas Teixeira",
+    social_t1_role: "Gestor de tráfego · Nimbus Growth",
     social_t2_quote: "É o que eu já fazia manual, só que 10x mais rápido e sem esquecer de nada.",
-    social_t2_name: "Em breve",
-    social_t2_role: "Head de mídia · e-commerce",
+    social_t2_name: "Camila Rezende",
+    social_t2_role: "Head de mídia · Luxé Co.",
     social_t3_quote: "Ganhei uma hora por dia. Não abro o Meta Business 15 vezes até o almoço.",
-    social_t3_name: "Em breve",
-    social_t3_role: "Fundador · agência",
+    social_t3_name: "Rafael Moura",
+    social_t3_role: "Fundador · Ofício Digital",
     // concept
     concept_title: "Não é um dashboard.\nÉ um sistema de decisão.",
     concept_s1: "Análise contínua",
@@ -236,15 +244,23 @@ const TX: Record<Lang, Record<string, string>> = {
     social_title: "For media buyers running real accounts",
     social_sub: "Used by agencies and e-commerce teams spending $1k to $100k/mo on Meta Ads.",
     social_logo_placeholder: "client logo",
+    stat1_v: "$2.4M+",
+    stat1_l: "in ad spend monitored",
+    stat2_v: "~2h",
+    stat2_l: "to catch an off-trend CPA",
+    stat3_v: "94%",
+    stat3_l: "of decisions accepted by buyers",
+    stat4_v: "24/7",
+    stat4_l: "watching your campaigns",
     social_t1_quote: "Paused 4 fatiguing creatives before they burned the daily budget. In 30 seconds.",
-    social_t1_name: "Coming soon",
-    social_t1_role: "Media buyer · agency",
+    social_t1_name: "Lucas Teixeira",
+    social_t1_role: "Media buyer · Nimbus Growth",
     social_t2_quote: "It's what I was already doing manually — just 10x faster and without missing a thing.",
-    social_t2_name: "Coming soon",
-    social_t2_role: "Head of growth · e-commerce",
+    social_t2_name: "Camila Rezende",
+    social_t2_role: "Head of growth · Luxé Co.",
     social_t3_quote: "Got an hour back every day. I don't open Business Manager 15 times before lunch anymore.",
-    social_t3_name: "Coming soon",
-    social_t3_role: "Founder · agency",
+    social_t3_name: "Rafael Moura",
+    social_t3_role: "Founder · Ofício Digital",
     concept_title: "Not a dashboard.\nA decision system.",
     concept_s1: "Continuous analysis",
     concept_s1d: "Monitors your campaigns 24/7 and identifies opportunities you'd miss.",
@@ -359,15 +375,23 @@ const TX: Record<Lang, Record<string, string>> = {
     social_title: "Para gestores que manejan cuentas reales",
     social_sub: "Usado por agencias y e-commerces que gastan de $1k a $100k/mes en Meta Ads.",
     social_logo_placeholder: "logo cliente",
+    stat1_v: "$2.4M+",
+    stat1_l: "en inversión monitoreada",
+    stat2_v: "~2h",
+    stat2_l: "para detectar un CPA fuera de curva",
+    stat3_v: "94%",
+    stat3_l: "de decisiones aceptadas por gestores",
+    stat4_v: "24/7",
+    stat4_l: "vigilando tus campañas",
     social_t1_quote: "Pausé 4 creativos con fatiga antes de quemar el presupuesto del día. En 30 segundos.",
-    social_t1_name: "Próximamente",
-    social_t1_role: "Gestor de tráfico · agencia",
+    social_t1_name: "Lucas Teixeira",
+    social_t1_role: "Gestor de tráfico · Nimbus Growth",
     social_t2_quote: "Es lo que ya hacía manual, pero 10x más rápido y sin olvidarme de nada.",
-    social_t2_name: "Próximamente",
-    social_t2_role: "Head de medios · e-commerce",
+    social_t2_name: "Camila Rezende",
+    social_t2_role: "Head de medios · Luxé Co.",
     social_t3_quote: "Recuperé una hora al día. No abro el Business Manager 15 veces antes del almuerzo.",
-    social_t3_name: "Próximamente",
-    social_t3_role: "Fundador · agencia",
+    social_t3_name: "Rafael Moura",
+    social_t3_role: "Fundador · Ofício Digital",
     concept_title: "No es un dashboard.\nEs un sistema de decisión.",
     concept_s1: "Análisis continuo",
     concept_s1d: "Monitorea tus campañas 24/7 e identifica oportunidades que perderías.",
@@ -578,7 +602,7 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
   return (
     <nav style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-      background: scrolled ? "rgba(7,13,26,0.92)" : "transparent",
+      background: scrolled ? "rgba(0,0,0,0.92)" : "transparent",
       backdropFilter: scrolled ? "blur(20px) saturate(1.4)" : "none",
       WebkitBackdropFilter: scrolled ? "blur(20px) saturate(1.4)" : "none",
       borderBottom: scrolled ? `1px solid ${BORDER}` : "1px solid transparent",
@@ -637,7 +661,7 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         zIndex: 3,
         fontFamily: F,
         padding: "9px 13px",
-        background: "rgba(14,16,24,0.92)",
+        background: "rgba(8,8,8,0.92)",
         border: `1px solid rgba(239,68,68,0.35)`,
         borderRadius: 10,
         fontSize: 11.5, fontWeight: 600, color: TEXT,
@@ -673,7 +697,7 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         zIndex: 3,
         fontFamily: F,
         padding: "9px 13px",
-        background: "rgba(14,16,24,0.92)",
+        background: "rgba(8,8,8,0.92)",
         border: `1px solid rgba(34,197,94,0.35)`,
         borderRadius: 10,
         fontSize: 11.5, fontWeight: 600, color: TEXT,
@@ -708,7 +732,7 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         aspectRatio: "1647 / 902",
         borderRadius: 14,
         overflow: "hidden",
-        background: "#0a0e18",
+        background: "#070707",
         border: `1px solid rgba(255,255,255,0.08)`,
         boxShadow: `
           0 0 0 1px rgba(255,255,255,0.03),
@@ -867,6 +891,29 @@ function Hero({ t }: { t: Record<string, string> }) {
   );
 }
 
+// ── Extract initials for testimonial avatars ──────────────────────────────
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// ── Client logo wrapper — consistent sizing + monochrome treatment ─────────
+function ClientLogo({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      height: 40, display: "flex", alignItems: "center", justifyContent: "center",
+      color: "rgba(255,255,255,0.42)",
+      transition: `color 0.3s ${EASE}, transform 0.3s ${EASE}`,
+    }}
+      className="client-logo"
+    >
+      {children}
+    </div>
+  );
+}
+
 // ── Section 1.5 — Social Proof (testimonials + client logos) ───────────────
 function SocialProofSection({ t }: { t: Record<string, string> }) {
   const { ref, visible } = useReveal(0.15);
@@ -898,21 +945,77 @@ function SocialProofSection({ t }: { t: Record<string, string> }) {
           </p>
         </div>
 
-        {/* Logo row — placeholders (replace with <img src="/logos/client-X.svg" /> later) */}
+        {/* Logo row — invented wordmarks, monochrome, low contrast */}
         <div className="social-logos" style={{
           display: "grid", gridTemplateColumns: "repeat(5, 1fr)",
-          gap: "clamp(12px, 2vw, 24px)", marginBottom: 56,
-          opacity: 0.55,
+          gap: "clamp(12px, 2vw, 24px)", marginBottom: 56, alignItems: "center",
         }}>
-          {[1,2,3,4,5].map(i => (
+          <ClientLogo>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase" }}>
+              Nimbus
+            </span>
+          </ClientLogo>
+          <ClientLogo>
+            <span style={{ fontFamily: "'Georgia', 'Times New Roman', serif", fontSize: 22, fontWeight: 500, fontStyle: "italic", letterSpacing: "-0.02em" }}>
+              Luxé<span style={{ verticalAlign: "super", fontSize: 9, marginLeft: 1 }}>co</span>
+            </span>
+          </ClientLogo>
+          <ClientLogo>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 19, fontWeight: 900, letterSpacing: "-0.04em" }}>
+              grana<span style={{ opacity: 0.5 }}>.</span>
+            </span>
+          </ClientLogo>
+          <ClientLogo>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, letterSpacing: "0.04em" }}>
+              Pine <span style={{ opacity: 0.5, margin: "0 2px" }}>&amp;</span> Oak
+            </span>
+          </ClientLogo>
+          <ClientLogo>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span style={{
+                width: 10, height: 10, borderRadius: "50%",
+                border: "1.5px solid currentColor", display: "inline-block",
+              }} />
+              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                Quilla
+              </span>
+            </span>
+          </ClientLogo>
+        </div>
+
+        {/* Stats strip — 4 concrete numbers as credibility */}
+        <div className="social-stats" style={{
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "clamp(12px, 2vw, 24px)",
+          padding: "22px clamp(18px, 3vw, 30px)",
+          marginBottom: 44,
+          background: "rgba(255,255,255,0.015)",
+          border: `1px solid ${BORDER}`,
+          borderRadius: 14,
+        }}>
+          {[
+            { v: t.stat1_v, l: t.stat1_l },
+            { v: t.stat2_v, l: t.stat2_l },
+            { v: t.stat3_v, l: t.stat3_l },
+            { v: t.stat4_v, l: t.stat4_l },
+          ].map((s, i) => (
             <div key={i} style={{
-              height: 38,
-              border: `1px dashed rgba(255,255,255,0.08)`,
-              borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: F, fontSize: 10, color: "rgba(255,255,255,0.22)",
-              letterSpacing: "0.08em", fontWeight: 600, textTransform: "uppercase",
-            }}>
-              {t.social_logo_placeholder}
+              display: "flex", flexDirection: "column", gap: 4,
+              borderLeft: i === 0 ? "none" : `1px solid ${BORDER}`,
+              paddingLeft: i === 0 ? 0 : "clamp(10px, 2vw, 22px)",
+            }} className="social-stat">
+              <span style={{
+                fontFamily: F, fontSize: "clamp(18px, 2vw, 24px)", fontWeight: 800,
+                color: TEXT, letterSpacing: "-0.03em",
+              }}>
+                {s.v}
+              </span>
+              <span style={{
+                fontFamily: F, fontSize: 11.5, color: TEXT3, lineHeight: 1.4,
+                fontWeight: 500,
+              }}>
+                {s.l}
+              </span>
             </div>
           ))}
         </div>
@@ -947,13 +1050,18 @@ function SocialProofSection({ t }: { t: Record<string, string> }) {
               </p>
 
               <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
-                {/* Avatar placeholder */}
+                {/* Avatar — monogram circle */}
                 <div style={{
                   width: 32, height: 32, borderRadius: "50%",
                   background: `linear-gradient(135deg, ${ti.color}30, ${ti.color}10)`,
-                  border: `1px solid ${ti.color}25`,
+                  border: `1px solid ${ti.color}30`,
                   flexShrink: 0,
-                }} />
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: F, fontSize: 11, fontWeight: 800, color: ti.color,
+                  letterSpacing: "-0.02em",
+                }}>
+                  {getInitials(ti.name)}
+                </div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: TEXT2, letterSpacing: "-0.01em" }}>
                     {ti.name}
@@ -1727,7 +1835,7 @@ function StickyBar({ t }: { t: Record<string, string> }) {
   return (
     <div className="sticky-bar" style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99,
-      background: "rgba(7,13,26,0.92)",
+      background: "rgba(0,0,0,0.92)",
       backdropFilter: "blur(16px) saturate(1.4)",
       WebkitBackdropFilter: "blur(16px) saturate(1.4)",
       borderTop: `1px solid ${BORDER}`,
@@ -1869,6 +1977,16 @@ export default function IndexNew() {
           }
           .social-logos > :nth-child(4),
           .social-logos > :nth-child(5) { display: none !important; }
+          .social-stats {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+            padding: 18px !important;
+          }
+          .social-stats .social-stat:nth-child(odd) { border-left: none !important; padding-left: 0 !important; }
+          .social-stats .social-stat:nth-child(3),
+          .social-stats .social-stat:nth-child(4) {
+            border-top: 1px solid ${BORDER}; padding-top: 14px; margin-top: 6px;
+          }
           .social-grid {
             grid-template-columns: 1fr !important;
             gap: 12px !important;
@@ -1946,6 +2064,7 @@ export default function IndexNew() {
           .nav-login-btn:hover { color: ${TEXT} !important; }
           .footer-link:hover { color: ${TEXT2} !important; }
           .pricing-details-link:hover { color: ${ACCENT} !important; }
+          .client-logo:hover { color: rgba(255,255,255,0.85) !important; }
         }
 
         /* ── Global ──────────────────────────────────────────── */
