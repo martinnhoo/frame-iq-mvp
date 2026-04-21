@@ -4205,10 +4205,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       <div style={{flexShrink:0,position:"relative" as const,zIndex:2,display:undefined}}>
 
         {/* Fade from chat → input */}
-        <div style={{height:40,background:"linear-gradient(to bottom,transparent,rgba(6,10,20,0.98))",pointerEvents:"none",marginBottom:-1}}/>
+        <div style={{height:40,background:"linear-gradient(to bottom,transparent,var(--bg-main))",pointerEvents:"none",marginBottom:-1}}/>
 
-        {/* Main input surface */}
-        <div style={{background:"#060A14",padding:"0 0 max(env(safe-area-inset-bottom, 0px), 14px)"}}>
+        {/* Main input surface — bg matches the app so there's no seam with the sidebar */}
+        <div style={{background:"var(--bg-main)",padding:"0 0 max(env(safe-area-inset-bottom, 0px), 14px)"}}>
           <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
@@ -4226,30 +4226,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   zIndex:30,
                 }}
               >
-                {/* Stem / tail — visually connects the stack to the [+] button */}
-                <div
-                  aria-hidden
-                  style={{
-                    position:"absolute" as const,
-                    left:18, bottom:-6,
-                    width:10,height:10,
-                    borderRadius:"50%",
-                    background:"rgba(14,18,28,0.96)",
-                    border:"1px solid rgba(255,255,255,0.08)",
-                    opacity:0.9,
-                  }}
-                />
-                <div
-                  aria-hidden
-                  style={{
-                    position:"absolute" as const,
-                    left:12, bottom:-14,
-                    width:5,height:5,
-                    borderRadius:"50%",
-                    background:"rgba(14,18,28,0.96)",
-                    border:"1px solid rgba(255,255,255,0.06)",
-                  }}
-                />
                 {/* Goal bubble — separate kind of action (focus/context) */}
                 <button
                   key="__goal__"
@@ -4263,11 +4239,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     border:"1px solid rgba(14,165,233,0.28)",
                     borderLeft:"3px solid #0ea5e9",
                     borderRadius:14,
-                    background:"linear-gradient(135deg, rgba(14,165,233,0.10), rgba(14,18,28,0.96) 55%)",
+                    backgroundColor:"#0c121f",
+                    backgroundImage:"linear-gradient(135deg, rgba(14,165,233,0.14), transparent 62%)",
                     color:"#f0f2f8",
                     cursor:"pointer",
                     fontFamily:"'Plus Jakarta Sans', sans-serif",
-                    boxShadow:"0 8px 30px -12px rgba(14,165,233,0.45), 0 1px 0 0 rgba(255,255,255,0.04) inset",
+                    boxShadow:"0 14px 36px -14px rgba(0,0,0,0.85), 0 8px 24px -16px rgba(14,165,233,0.35), 0 1px 0 0 rgba(255,255,255,0.04) inset",
                     animation:`bubblePop 0.32s cubic-bezier(0.34,1.56,0.64,1) ${TOOLS.length*0.04}s backwards`,
                     transition:"transform 0.15s ease, border-color 0.15s",
                   }}
@@ -4328,11 +4305,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                         border:`1px solid ${tool.color}30`,
                         borderLeft:`3px solid ${tool.color}`,
                         borderRadius:14,
-                        background:`linear-gradient(135deg, ${tool.color}14, rgba(14,18,28,0.96) 55%)`,
+                        backgroundColor:"#0c121f",
+                        backgroundImage:`linear-gradient(135deg, ${tool.color}1a, transparent 62%)`,
                         color:"#f0f2f8",
                         cursor:"pointer",
                         fontFamily:"'Plus Jakarta Sans', sans-serif",
-                        boxShadow:`0 8px 30px -12px ${tool.color}50, 0 1px 0 0 rgba(255,255,255,0.04) inset`,
+                        boxShadow:`0 14px 36px -14px rgba(0,0,0,0.85), 0 8px 24px -16px ${tool.color}45, 0 1px 0 0 rgba(255,255,255,0.04) inset`,
                         animation:`bubblePop 0.32s cubic-bezier(0.34,1.56,0.64,1) ${i*0.04}s backwards`,
                         transition:"transform 0.15s ease, border-color 0.15s",
                       }}
