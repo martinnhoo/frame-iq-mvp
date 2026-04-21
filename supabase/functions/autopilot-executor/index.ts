@@ -17,7 +17,7 @@
  *   • X-Cron-Secret header (external schedulers like GitHub Actions or uptime monitors)
  *
  * Schedule (recommended): pg_cron every 5 minutes
- *   SELECT cron.schedule('autopilot-tick', '*/5 * * * *',
+ *   SELECT cron.schedule('autopilot-tick', '* / 5 * * * *' (no spaces),
  *     $$SELECT net.http_post(
  *       'https://<proj>.supabase.co/functions/v1/autopilot-executor',
  *       '{}'::jsonb,
