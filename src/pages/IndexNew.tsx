@@ -1097,14 +1097,6 @@ function Hero({ t }: { t: Record<string, string> }) {
   );
 }
 
-// ── Extract initials for testimonial avatars ──────────────────────────────
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 // ── Client logo wrapper — consistent sizing + monochrome treatment ─────────
 function ClientLogo({ children }: { children: React.ReactNode }) {
   return (
@@ -1255,27 +1247,22 @@ function SocialProofSection({ t }: { t: Record<string, string> }) {
                 “{ti.quote}”
               </p>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 14, borderTop: `1px solid ${BORDER}` }}>
-                {/* Avatar — monogram circle */}
-                <div style={{
-                  width: 32, height: 32, borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${ti.color}30, ${ti.color}10)`,
-                  border: `1px solid ${ti.color}30`,
-                  flexShrink: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontFamily: F, fontSize: 11, fontWeight: 800, color: ti.color,
-                  letterSpacing: "-0.02em",
-                }}>
-                  {getInitials(ti.name)}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: TEXT2, letterSpacing: "-0.01em" }}>
-                    {ti.name}
-                  </div>
-                  <div style={{ fontFamily: F, fontSize: 10.5, color: TEXT3, marginTop: 1 }}>
-                    {ti.role}
-                  </div>
-                </div>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8,
+                paddingTop: 14, borderTop: `1px solid ${BORDER}`,
+                minWidth: 0, flexWrap: "wrap",
+              }}>
+                {/* Small color accent dot — replaces the monogram circle */}
+                <span style={{
+                  width: 5, height: 5, borderRadius: "50%", background: ti.color,
+                  flexShrink: 0, opacity: 0.8,
+                }} />
+                <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: TEXT2, letterSpacing: "-0.01em" }}>
+                  {ti.name}
+                </span>
+                <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, fontWeight: 500 }}>
+                  · {ti.role}
+                </span>
               </div>
             </div>
           ))}
