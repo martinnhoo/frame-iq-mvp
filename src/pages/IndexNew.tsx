@@ -2,7 +2,7 @@
 // Complete from-scratch rebuild with depth system, real SVG logos, visual flow
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
-import { Globe, ChevronDown, ArrowRight, CheckCircle2, TrendingUp, Zap, Brain, X, Plus, Minus } from "lucide-react";
+import { Globe, ChevronDown, ArrowRight, CheckCircle2, TrendingUp, Zap, Brain, X, Plus, Minus, Plug, Radar, Bell, Sparkles, Activity } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import CookieConsent from "@/components/CookieConsent";
@@ -122,6 +122,7 @@ const TX: Record<Lang, Record<string, string>> = {
     social_t3_name: "Rafael Moura",
     social_t3_role: "Fundador · Ofício Digital",
     // concept
+    concept_kicker: "O conceito",
     concept_title: "Não é um dashboard.\nÉ um sistema de decisão.",
     concept_s1: "Análise contínua",
     concept_s1d: "Monitora suas campanhas 24/7 e identifica oportunidades que você perderia.",
@@ -130,12 +131,35 @@ const TX: Record<Lang, Record<string, string>> = {
     concept_s3: "Execução imediata",
     concept_s3d: "Aplique a melhoria direto no AdBrief. Sem abrir o Gerenciador de Anúncios.",
     // flow
-    flow_title: "Como funciona",
+    flow_kicker: "Como funciona",
+    flow_title: "Do primeiro clique\nà primeira decisão.",
+    flow_sub: "Cinco passos. Em minutos, o AdBrief já está lendo sua conta e sugerindo as primeiras ações.",
     flow_s1: "Você conecta sua conta",
+    flow_s1d: "OAuth com a Meta em menos de 30 segundos. Seus dados ficam na sua conta — a gente só lê.",
+    flow_s1b: "Autenticado",
     flow_s2: "O sistema analisa",
+    flow_s2d: "A cada 15 minutos varremos campanhas, criativos, públicos e tendências. CTR, hook rate, CPA, fadiga.",
+    flow_s2b: "Analisando…",
     flow_s3: "Oportunidades aparecem",
+    flow_s3d: "Cada insight chega com a decisão já pronta: o que fazer, por que, e quanto você economiza ou ganha.",
+    flow_s3b: "3 decisões novas",
     flow_s4: "Você aplica",
+    flow_s4d: "Revisa a recomendação, clica aprovar. A gente executa dentro da sua conta — sem você abrir o Ads Manager.",
+    flow_s4b: "Aprovar e aplicar",
     flow_s5: "A performance melhora",
+    flow_s5d: "Cada decisão aprovada vira padrão aprendido. Quanto mais tempo rodando, mais afinado com a sua conta.",
+    flow_s5b: "CPA ↓ 28%",
+    // mini mocks inside flow timeline
+    flow_m_acct_meta: "Meta Ads",
+    flow_m_acct_sub: "2 contas · 12 campanhas",
+    flow_m_dec_urgent: "URGENTE",
+    flow_m_dec_scale: "ESCALAR",
+    flow_m_dec_test: "TESTAR",
+    flow_m_dec_urgent_text: "Pausar UGC 03 — CPA R$87 (meta R$35)",
+    flow_m_dec_scale_text: "Subir +30% no criativo Hook-A",
+    flow_m_dec_test_text: "Nova variação: ângulo de prova social",
+    flow_m_btn_approve: "Aprovar e aplicar",
+    flow_m_btn_details: "Detalhes",
     // compare
     compare_title: "Ads Manager mostra o que aconteceu.\nAdBrief diz o que fazer.",
     compare_sub: "A diferença entre olhar relatório e tomar decisão.",
@@ -261,6 +285,7 @@ const TX: Record<Lang, Record<string, string>> = {
     social_t3_quote: "We run 30+ accounts in parallel. AdBrief gave my whole team hours back every day — my buyers stopped firefighting and got back to strategy. Optimized spend across every account and their time.",
     social_t3_name: "Rafael Moura",
     social_t3_role: "Founder · Ofício Digital",
+    concept_kicker: "The concept",
     concept_title: "Not a dashboard.\nA decision system.",
     concept_s1: "Continuous analysis",
     concept_s1d: "Monitors your campaigns 24/7 and identifies opportunities you'd miss.",
@@ -268,12 +293,34 @@ const TX: Record<Lang, Record<string, string>> = {
     concept_s2d: "Each opportunity comes with a specific recommendation: pause, scale, or adjust.",
     concept_s3: "Immediate execution",
     concept_s3d: "Apply the improvement directly in AdBrief. No need to open Ads Manager.",
-    flow_title: "How it works",
+    flow_kicker: "How it works",
+    flow_title: "From first click\nto first decision.",
+    flow_sub: "Five steps. In minutes, AdBrief is already reading your account and suggesting the first actions.",
     flow_s1: "You connect your account",
+    flow_s1d: "OAuth with Meta in under 30 seconds. Your data stays in your account — we just read it.",
+    flow_s1b: "Connected",
     flow_s2: "The system analyzes",
+    flow_s2d: "Every 15 minutes we sweep campaigns, creatives, audiences and trends. CTR, hook rate, CPA, fatigue.",
+    flow_s2b: "Analyzing…",
     flow_s3: "Opportunities appear",
+    flow_s3d: "Each insight arrives with the decision ready: what to do, why, and how much you save or gain.",
+    flow_s3b: "3 new decisions",
     flow_s4: "You apply",
+    flow_s4d: "Review the recommendation, click approve. We execute inside your account — no Ads Manager needed.",
+    flow_s4b: "Approve & apply",
     flow_s5: "Performance improves",
+    flow_s5d: "Every approved decision becomes a learned pattern. The longer it runs, the more tuned to your account.",
+    flow_s5b: "CPA ↓ 28%",
+    flow_m_acct_meta: "Meta Ads",
+    flow_m_acct_sub: "2 accounts · 12 campaigns",
+    flow_m_dec_urgent: "URGENT",
+    flow_m_dec_scale: "SCALE",
+    flow_m_dec_test: "TEST",
+    flow_m_dec_urgent_text: "Pause UGC 03 — CPA $87 (target $35)",
+    flow_m_dec_scale_text: "Raise budget +30% on Hook-A creative",
+    flow_m_dec_test_text: "New variant: social proof angle",
+    flow_m_btn_approve: "Approve & apply",
+    flow_m_btn_details: "Details",
     compare_title: "Ads Manager shows what happened.\nAdBrief tells you what to do.",
     compare_sub: "The difference between reading a report and making a decision.",
     compare_ads_title: "Meta Ads Manager",
@@ -392,6 +439,7 @@ const TX: Record<Lang, Record<string, string>> = {
     social_t3_quote: "Gestionamos más de 30 cuentas en paralelo. AdBrief le devolvió horas a todo mi equipo cada día — los gestores dejaron de apagar incendios y volvieron a enfocarse en estrategia. Optimizó el gasto de las cuentas y su tiempo.",
     social_t3_name: "Rafael Moura",
     social_t3_role: "Fundador · Ofício Digital",
+    concept_kicker: "El concepto",
     concept_title: "No es un dashboard.\nEs un sistema de decisión.",
     concept_s1: "Análisis continuo",
     concept_s1d: "Monitorea tus campañas 24/7 e identifica oportunidades que perderías.",
@@ -399,12 +447,34 @@ const TX: Record<Lang, Record<string, string>> = {
     concept_s2d: "Cada oportunidad viene con una recomendación específica: pausar, escalar o ajustar.",
     concept_s3: "Ejecución inmediata",
     concept_s3d: "Aplica la mejora directo en AdBrief. Sin abrir el Administrador de Anuncios.",
-    flow_title: "Cómo funciona",
+    flow_kicker: "Cómo funciona",
+    flow_title: "Del primer clic\na la primera decisión.",
+    flow_sub: "Cinco pasos. En minutos, AdBrief ya está leyendo tu cuenta y sugiriendo las primeras acciones.",
     flow_s1: "Conectas tu cuenta",
+    flow_s1d: "OAuth con Meta en menos de 30 segundos. Tus datos se quedan en tu cuenta — nosotros solo leemos.",
+    flow_s1b: "Conectado",
     flow_s2: "El sistema analiza",
+    flow_s2d: "Cada 15 minutos revisamos campañas, creativos, audiencias y tendencias. CTR, hook rate, CPA, fatiga.",
+    flow_s2b: "Analizando…",
     flow_s3: "Aparecen oportunidades",
+    flow_s3d: "Cada insight llega con la decisión lista: qué hacer, por qué, y cuánto ahorras o ganas.",
+    flow_s3b: "3 decisiones nuevas",
     flow_s4: "Las aplicas",
+    flow_s4d: "Revisas la recomendación, haces clic en aprobar. Ejecutamos dentro de tu cuenta — sin abrir Ads Manager.",
+    flow_s4b: "Aprobar y aplicar",
     flow_s5: "La performance mejora",
+    flow_s5d: "Cada decisión aprobada se vuelve un patrón aprendido. Cuanto más tiempo corre, más afinada a tu cuenta.",
+    flow_s5b: "CPA ↓ 28%",
+    flow_m_acct_meta: "Meta Ads",
+    flow_m_acct_sub: "2 cuentas · 12 campañas",
+    flow_m_dec_urgent: "URGENTE",
+    flow_m_dec_scale: "ESCALAR",
+    flow_m_dec_test: "PROBAR",
+    flow_m_dec_urgent_text: "Pausar UGC 03 — CPA R$87 (meta R$35)",
+    flow_m_dec_scale_text: "Subir +30% en el creativo Hook-A",
+    flow_m_dec_test_text: "Nueva variante: ángulo de prueba social",
+    flow_m_btn_approve: "Aprobar y aplicar",
+    flow_m_btn_details: "Detalles",
     compare_title: "Ads Manager muestra lo que pasó.\nAdBrief te dice qué hacer.",
     compare_sub: "La diferencia entre leer un reporte y tomar una decisión.",
     compare_ads_title: "Meta Ads Manager",
@@ -521,6 +591,37 @@ function useReveal(threshold = 0.15) {
     return () => obs.disconnect();
   }, [threshold]);
   return { ref, visible };
+}
+
+// Track scroll progress through an element (0 = just entered viewport, 1 = exiting bottom).
+// Used to animate the vertical timeline "fill" in FlowSection.
+function useScrollProgress() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let raf = 0;
+    const tick = () => {
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      // Start filling when top enters 85% of viewport, finish when bottom passes 40%.
+      const total = r.height + vh * 0.45;
+      const traveled = vh * 0.85 - r.top;
+      const p = Math.max(0, Math.min(1, traveled / total));
+      setProgress(p);
+    };
+    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); };
+    tick();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+  return { ref, progress };
 }
 
 // ── Language switcher ────────────────────────────────────────────────────────
@@ -1296,142 +1397,497 @@ function SocialProofSection({ t }: { t: Record<string, string> }) {
   );
 }
 
-// ── Section 2 — Concept break (asymmetric) ──────────────────────────────────
+// ── Section 2 — Concept: "Not a dashboard. A decision system." ──────────────
+// Redesign: full-width stage with ambient spotlight, 3 pillar tiles with real
+// icons (not dots), staggered scroll reveal. Shares bg with FlowSection below
+// so the whole "how it works" arc feels like one continuous story.
 function ConceptSection({ t }: { t: Record<string, string> }) {
-  const r1 = useReveal();
-  const r2 = useReveal();
-  const r3 = useReveal();
+  const headReveal = useReveal(0.25);
+  const r1 = useReveal(0.25);
+  const r2 = useReveal(0.25);
+  const r3 = useReveal(0.25);
 
   const items = [
-    { title: t.concept_s1, desc: t.concept_s1d, color: ACCENT },
-    { title: t.concept_s2, desc: t.concept_s2d, color: INDIGO },
-    { title: t.concept_s3, desc: t.concept_s3d, color: GREEN },
+    { title: t.concept_s1, desc: t.concept_s1d, color: ACCENT, Icon: Brain },
+    { title: t.concept_s2, desc: t.concept_s2d, color: INDIGO, Icon: Zap },
+    { title: t.concept_s3, desc: t.concept_s3d, color: GREEN, Icon: CheckCircle2 },
   ];
 
   const refs = [r1, r2, r3];
 
   return (
     <section style={{
-      background: BG2, padding: "clamp(80px,10vw,120px) clamp(20px,4vw,40px)",
+      background: BG,
+      padding: "clamp(96px,12vw,160px) clamp(20px,4vw,40px) clamp(60px,8vw,80px)",
       borderTop: `1px solid ${BORDER}`,
+      position: "relative",
+      overflow: "hidden",
     }}>
-      <div className="concept-grid" style={{
-        maxWidth: 960, margin: "0 auto",
-        display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "clamp(48px,6vw,80px)", alignItems: "start",
-      }}>
-        {/* Left — big statement */}
-        <div>
+      {/* Ambient spotlight — subtle, draws eye to headline */}
+      <div aria-hidden="true" style={{
+        position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)",
+        width: "120%", height: "60%", pointerEvents: "none",
+        background: `radial-gradient(ellipse 60% 100% at 50% 0%, ${ACCENT}12 0%, transparent 60%)`,
+      }} />
+      {/* Faint grid overlay */}
+      <div aria-hidden="true" style={{
+        position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.35,
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)`,
+        backgroundSize: "48px 48px",
+        maskImage: "radial-gradient(ellipse 70% 70% at 50% 30%, #000 0%, transparent 75%)",
+        WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 30%, #000 0%, transparent 75%)",
+      }} />
+
+      <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative" }}>
+        {/* Headline — centered, commanding */}
+        <div
+          ref={headReveal.ref}
+          style={{
+            textAlign: "center", maxWidth: 760, margin: "0 auto clamp(56px,7vw,88px)",
+            opacity: headReveal.visible ? 1 : 0,
+            transform: headReveal.visible ? "translateY(0)" : "translateY(18px)",
+            transition: `all 0.7s ${EASE}`,
+          }}
+        >
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "6px 12px", borderRadius: 99,
+            background: "rgba(14,165,233,0.06)", border: `1px solid ${ACCENT}22`,
+            marginBottom: 22,
+          }}>
+            <Sparkles size={11} strokeWidth={2.4} color={ACCENT} />
+            <span style={{
+              fontFamily: F, fontSize: 10.5, fontWeight: 700, color: ACCENT,
+              letterSpacing: "0.12em", textTransform: "uppercase",
+            }}>
+              {t.concept_kicker}
+            </span>
+          </div>
           <h2 style={{
-            fontFamily: F, fontSize: "clamp(28px,3.5vw,44px)", fontWeight: 800,
-            letterSpacing: "-0.04em", lineHeight: 1.08,
+            fontFamily: F, fontSize: "clamp(32px,4.4vw,56px)", fontWeight: 800,
+            letterSpacing: "-0.045em", lineHeight: 1.04,
             color: TEXT, margin: 0, whiteSpace: "pre-line",
           }}>
             {t.concept_title}
           </h2>
         </div>
 
-        {/* Right — stacked explanation blocks */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 28, paddingTop: 8 }}>
-          {items.map((item, i) => (
-            <div
-              key={i}
-              ref={refs[i].ref}
-              style={{
-                opacity: refs[i].visible ? 1 : 0,
-                transform: refs[i].visible ? "translateY(0)" : "translateY(16px)",
-                transition: `all 0.6s ${EASE} ${i * 0.12}s`,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+        {/* Pillar tiles — 3 up on desktop, stacked on mobile */}
+        <div className="concept-pillars" style={{
+          display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "clamp(14px,2vw,22px)",
+        }}>
+          {items.map((item, i) => {
+            const { Icon } = item;
+            return (
+              <div
+                key={i}
+                ref={refs[i].ref}
+                style={{
+                  position: "relative", overflow: "hidden",
+                  padding: "28px 24px 26px",
+                  borderRadius: 18,
+                  background: `linear-gradient(180deg, ${item.color}08 0%, rgba(255,255,255,0.01) 60%)`,
+                  border: `1px solid ${item.color}18`,
+                  boxShadow: `0 0 0 1px rgba(255,255,255,0.015) inset, 0 24px 48px -28px ${item.color}30`,
+                  opacity: refs[i].visible ? 1 : 0,
+                  transform: refs[i].visible ? "translateY(0) scale(1)" : "translateY(24px) scale(0.98)",
+                  transition: `all 0.7s ${EASE} ${i * 0.12}s, border-color 0.2s, box-shadow 0.2s`,
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.borderColor = `${item.color}3c`;
+                  el.style.boxShadow = `0 0 0 1px rgba(255,255,255,0.025) inset, 0 32px 64px -28px ${item.color}50`;
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLDivElement;
+                  el.style.borderColor = `${item.color}18`;
+                  el.style.boxShadow = `0 0 0 1px rgba(255,255,255,0.015) inset, 0 24px 48px -28px ${item.color}30`;
+                }}
+              >
+                {/* Icon tile */}
                 <div style={{
-                  width: 6, height: 6, borderRadius: "50%", background: item.color,
-                  boxShadow: `0 0 10px ${item.color}40`,
-                }} />
-                <span style={{
-                  fontFamily: F, fontSize: 14, fontWeight: 700, color: TEXT,
-                  letterSpacing: "-0.02em",
+                  width: 44, height: 44, borderRadius: 12,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: `${item.color}10`,
+                  border: `1px solid ${item.color}32`,
+                  boxShadow: `0 0 24px ${item.color}22, inset 0 0 0 1px rgba(255,255,255,0.03)`,
+                  marginBottom: 18,
+                  position: "relative",
+                }}>
+                  <Icon size={20} strokeWidth={2} color={item.color} />
+                  {/* Soft glow ring */}
+                  <div aria-hidden="true" style={{
+                    position: "absolute", inset: -6, borderRadius: 16,
+                    background: `radial-gradient(circle at 50% 50%, ${item.color}18 0%, transparent 70%)`,
+                    pointerEvents: "none",
+                  }} />
+                </div>
+                <h3 style={{
+                  fontFamily: F, fontSize: 16, fontWeight: 700, color: TEXT,
+                  letterSpacing: "-0.02em", margin: "0 0 8px",
                 }}>
                   {item.title}
-                </span>
+                </h3>
+                <p style={{
+                  fontFamily: F, fontSize: 13.5, color: TEXT2, lineHeight: 1.6,
+                  margin: 0, fontWeight: 400,
+                }}>
+                  {item.desc}
+                </p>
               </div>
-              <p style={{
-                fontFamily: F, fontSize: 13, color: TEXT3, lineHeight: 1.65, margin: 0,
-                paddingLeft: 16, fontWeight: 400,
-              }}>
-                {item.desc}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
 
-// ── Section 3 — Visual flow "How it works" ──────────────────────────────────
-function FlowSection({ t }: { t: Record<string, string> }) {
-  const { ref, visible } = useReveal(0.2);
-  const steps = [
-    { text: t.flow_s1, icon: <MetaLogo size={18} opacity={0.8} />, color: "#0082FB" },
-    { text: t.flow_s2, icon: null, color: ACCENT },
-    { text: t.flow_s3, icon: null, color: INDIGO },
-    { text: t.flow_s4, icon: null, color: GREEN },
-    { text: t.flow_s5, icon: null, color: GREEN },
-  ];
+// ── Section 3 — "How it works" timeline ─────────────────────────────────────
+// Redesign: vertical timeline with scroll-driven connector fill, rich step
+// cards with icon tile + mini mock preview, staggered reveal per row.
+function FlowStep({
+  index, total, step, progress, reveal,
+}: {
+  index: number;
+  total: number;
+  step: {
+    title: string; desc: string; badge: string;
+    color: string; Icon: any; mock: React.ReactNode;
+  };
+  progress: number;   // 0–1 overall scroll progress (for fill line anchor logic)
+  reveal: boolean;
+}) {
+  const { Icon } = step;
+  // Staggered per-step threshold along the progress band
+  const stepStart = index / (total + 0.3);
+  const stepEnd = (index + 1) / (total + 0.3);
+  const localReveal = reveal && progress >= stepStart * 0.4; // relax threshold
 
   return (
-    <section style={{
-      background: BG, padding: "clamp(80px,10vw,120px) clamp(20px,4vw,40px)",
-      borderTop: `1px solid ${BORDER}`,
-    }}>
-      <div style={{ maxWidth: 800, margin: "0 auto" }} ref={ref}>
-        <h2 style={{
-          fontFamily: F, fontSize: "clamp(24px,2.8vw,34px)", fontWeight: 800,
-          letterSpacing: "-0.04em", color: TEXT, margin: "0 0 56px",
+    <div
+      className="flow-step"
+      style={{
+        position: "relative",
+        display: "grid",
+        gridTemplateColumns: "72px 1fr",
+        gap: 24,
+        paddingBottom: index === total - 1 ? 0 : 44,
+        opacity: localReveal ? 1 : 0,
+        transform: localReveal ? "translateY(0)" : "translateY(24px)",
+        transition: `opacity 0.7s ${EASE}, transform 0.7s ${EASE}`,
+      }}
+    >
+      {/* Left rail — number + glowing node */}
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{
+          width: 56, height: 56, borderRadius: 16,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: `linear-gradient(135deg, ${step.color}18 0%, ${step.color}05 100%)`,
+          border: `1px solid ${step.color}40`,
+          boxShadow: `0 0 0 1px rgba(255,255,255,0.02) inset, 0 18px 40px -20px ${step.color}60, 0 0 32px ${step.color}22`,
+          position: "relative", zIndex: 2,
+          transition: `transform 0.4s ${EASE}`,
+          transform: localReveal ? "scale(1)" : "scale(0.85)",
         }}>
-          {t.flow_title}
-        </h2>
+          <Icon size={22} strokeWidth={1.9} color={step.color} />
+          {/* Pulse ring for active step */}
+          {localReveal && (
+            <span aria-hidden="true" style={{
+              position: "absolute", inset: -4, borderRadius: 20,
+              border: `1px solid ${step.color}40`,
+              animation: "flowNodePulse 2.4s ease-out infinite",
+              pointerEvents: "none",
+            }} />
+          )}
+        </div>
+        <div style={{
+          fontFamily: F, fontSize: 10, fontWeight: 700,
+          color: TEXT3, letterSpacing: "0.18em",
+          marginTop: 10,
+        }}>
+          0{index + 1}
+        </div>
+      </div>
 
-        <div className="flow-steps" style={{
-          display: "flex", flexDirection: "column", gap: 0, position: "relative",
+      {/* Right — card with copy + mock */}
+      <div style={{
+        padding: "20px 22px 20px",
+        borderRadius: 16,
+        background: "linear-gradient(180deg, rgba(255,255,255,0.022) 0%, rgba(255,255,255,0.008) 100%)",
+        border: `1px solid ${BORDER}`,
+        transition: `border-color 0.3s ${EASE}, transform 0.6s ${EASE}`,
+        transform: localReveal ? "translateX(0)" : "translateX(-14px)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+          <h3 style={{
+            fontFamily: F, fontSize: 18, fontWeight: 700, color: TEXT,
+            letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2,
+          }}>
+            {step.title}
+          </h3>
+          <span style={{
+            fontFamily: F, fontSize: 10.5, fontWeight: 700,
+            color: step.color, letterSpacing: "0.06em", textTransform: "uppercase",
+            padding: "3px 8px", borderRadius: 99,
+            background: `${step.color}14`, border: `1px solid ${step.color}2a`,
+            fontVariantNumeric: "tabular-nums",
+          }}>
+            {step.badge}
+          </span>
+        </div>
+        <p style={{
+          fontFamily: F, fontSize: 13.5, color: TEXT2, lineHeight: 1.6,
+          margin: "0 0 16px", fontWeight: 400,
         }}>
-          {/* Vertical connector line */}
+          {step.desc}
+        </p>
+        {/* Mini mock */}
+        <div style={{
+          padding: "12px 14px",
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.018)",
+          border: `1px solid rgba(255,255,255,0.04)`,
+        }}>
+          {step.mock}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FlowSection({ t }: { t: Record<string, string> }) {
+  const head = useReveal(0.25);
+  const timeline = useScrollProgress();
+
+  const steps = [
+    {
+      title: t.flow_s1, desc: t.flow_s1d, badge: t.flow_s1b,
+      color: "#0082FB", Icon: Plug,
+      mock: (
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
-            position: "absolute", left: 15, top: 20, bottom: 20, width: 1,
-            background: `linear-gradient(to bottom, ${ACCENT}30, ${GREEN}30)`,
-          }} />
-
-          {steps.map((step, i) => (
+            width: 26, height: 26, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,130,251,0.08)", border: "1px solid rgba(0,130,251,0.25)",
+          }}>
+            <MetaLogo size={14} opacity={0.95} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: F, fontSize: 12, fontWeight: 600, color: TEXT }}>{t.flow_m_acct_meta}</div>
+            <div style={{ fontFamily: F, fontSize: 11, color: TEXT3 }}>{t.flow_m_acct_sub}</div>
+          </div>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            fontFamily: F, fontSize: 10, fontWeight: 700, color: GREEN,
+            padding: "3px 8px", borderRadius: 99,
+            background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
+          }}>
+            <span style={{
+              display: "inline-block", width: 5, height: 5, borderRadius: "50%",
+              background: GREEN,
+              boxShadow: `0 0 6px ${GREEN}`,
+            }} />
+            {t.flow_s1b}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: t.flow_s2, desc: t.flow_s2d, badge: t.flow_s2b,
+      color: ACCENT, Icon: Radar,
+      mock: (
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 38 }}>
+          {[32, 58, 41, 74, 52, 88, 46, 70, 38, 64, 78, 50].map((h, i) => (
             <div key={i} style={{
-              display: "flex", alignItems: "center", gap: 20, padding: "16px 0",
-              opacity: visible ? 1 : 0,
-              transform: visible ? "translateX(0)" : "translateX(-20px)",
-              transition: `all 0.5s ${EASE} ${i * 0.1}s`,
+              flex: 1, height: `${h}%`, borderRadius: 2,
+              background: `linear-gradient(to top, ${ACCENT}aa, ${ACCENT}40)`,
+              animation: `flowBar 1.4s ease-in-out ${i * 0.08}s infinite alternate`,
+              minHeight: 3,
+            }} />
+          ))}
+        </div>
+      ),
+    },
+    {
+      title: t.flow_s3, desc: t.flow_s3d, badge: t.flow_s3b,
+      color: INDIGO, Icon: Bell,
+      mock: (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {[
+            { tag: t.flow_m_dec_urgent, color: RED, text: t.flow_m_dec_urgent_text },
+            { tag: t.flow_m_dec_scale, color: GREEN, text: t.flow_m_dec_scale_text },
+            { tag: t.flow_m_dec_test, color: INDIGO, text: t.flow_m_dec_test_text },
+          ].map((it, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "6px 9px", borderRadius: 7,
+              background: `${it.color}0c`, border: `1px solid ${it.color}28`,
             }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 10, flexShrink: 0,
-                background: `${step.color}08`, border: `1px solid ${step.color}18`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                position: "relative", zIndex: 1,
-                boxShadow: `0 0 20px ${step.color}10`,
-              }}>
-                {step.icon || (
-                  <div style={{
-                    width: 6, height: 6, borderRadius: "50%",
-                    background: step.color, boxShadow: `0 0 8px ${step.color}40`,
-                  }} />
-                )}
-              </div>
               <span style={{
-                fontFamily: F, fontSize: 14, fontWeight: 600, color: TEXT2,
-                letterSpacing: "-0.01em",
-              }}>
-                {step.text}
+                fontFamily: F, fontSize: 9.5, fontWeight: 800, color: it.color,
+                letterSpacing: "0.1em", minWidth: 54,
+              }}>{it.tag}</span>
+              <span style={{ fontFamily: F, fontSize: 11.5, color: TEXT2, fontWeight: 500 }}>
+                {it.text}
               </span>
             </div>
           ))}
         </div>
+      ),
+    },
+    {
+      title: t.flow_s4, desc: t.flow_s4d, badge: t.flow_s4b,
+      color: GREEN, Icon: CheckCircle2,
+      mock: (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button style={{
+            flex: 1, padding: "9px 12px",
+            borderRadius: 9, border: "none", cursor: "pointer",
+            background: "#ffffff", color: "#0a0a0a",
+            fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: "-0.01em",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            boxShadow: `0 0 0 1px rgba(255,255,255,0.08), 0 10px 24px -8px ${GREEN}66`,
+          }}>
+            <CheckCircle2 size={12} strokeWidth={2.4} /> {t.flow_m_btn_approve}
+          </button>
+          <button style={{
+            padding: "9px 12px", borderRadius: 9,
+            border: `1px solid ${BORDER}`, background: "transparent",
+            color: TEXT2, fontFamily: F, fontSize: 12, fontWeight: 600, cursor: "pointer",
+          }}>
+            {t.flow_m_btn_details}
+          </button>
+        </div>
+      ),
+    },
+    {
+      title: t.flow_s5, desc: t.flow_s5d, badge: t.flow_s5b,
+      color: GREEN, Icon: TrendingUp,
+      mock: (
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <svg viewBox="0 0 120 38" width="100%" height="38" style={{ flex: 1, display: "block" }}>
+            <defs>
+              <linearGradient id="flowSpark" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor={GREEN} stopOpacity="0.45" />
+                <stop offset="100%" stopColor={GREEN} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M0,30 L15,28 L30,25 L45,22 L60,20 L75,14 L90,10 L105,6 L120,3 L120,38 L0,38 Z" fill="url(#flowSpark)" />
+            <path d="M0,30 L15,28 L30,25 L45,22 L60,20 L75,14 L90,10 L105,6 L120,3" fill="none" stroke={GREEN} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            <div style={{ fontFamily: F, fontSize: 10.5, color: TEXT3, fontWeight: 600, letterSpacing: "0.1em" }}>ROAS</div>
+            <div style={{ fontFamily: F, fontSize: 18, fontWeight: 800, color: GREEN, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>3.2x</div>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <section style={{
+      background: BG,
+      padding: "clamp(40px,6vw,72px) clamp(20px,4vw,40px) clamp(96px,12vw,160px)",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Ambient bottom glow — hands off visually to next section */}
+      <div aria-hidden="true" style={{
+        position: "absolute", bottom: "-20%", left: "50%", transform: "translateX(-50%)",
+        width: "120%", height: "55%", pointerEvents: "none",
+        background: `radial-gradient(ellipse 60% 100% at 50% 100%, ${GREEN}10 0%, transparent 60%)`,
+      }} />
+
+      <div style={{ maxWidth: 840, margin: "0 auto", position: "relative" }}>
+        {/* Header */}
+        <div
+          ref={head.ref}
+          style={{
+            textAlign: "center", maxWidth: 640, margin: "0 auto clamp(56px,7vw,80px)",
+            opacity: head.visible ? 1 : 0,
+            transform: head.visible ? "translateY(0)" : "translateY(16px)",
+            transition: `all 0.7s ${EASE}`,
+          }}
+        >
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "6px 12px", borderRadius: 99,
+            background: "rgba(34,197,94,0.06)", border: `1px solid ${GREEN}22`,
+            marginBottom: 20,
+          }}>
+            <Activity size={11} strokeWidth={2.4} color={GREEN} />
+            <span style={{
+              fontFamily: F, fontSize: 10.5, fontWeight: 700, color: GREEN,
+              letterSpacing: "0.12em", textTransform: "uppercase",
+            }}>
+              {t.flow_kicker}
+            </span>
+          </div>
+          <h2 style={{
+            fontFamily: F, fontSize: "clamp(28px,3.8vw,46px)", fontWeight: 800,
+            letterSpacing: "-0.045em", lineHeight: 1.06,
+            color: TEXT, margin: "0 0 14px", whiteSpace: "pre-line",
+          }}>
+            {t.flow_title}
+          </h2>
+          <p style={{
+            fontFamily: F, fontSize: 15, color: TEXT2, lineHeight: 1.55,
+            margin: 0, maxWidth: 520, marginLeft: "auto", marginRight: "auto",
+          }}>
+            {t.flow_sub}
+          </p>
+        </div>
+
+        {/* Timeline */}
+        <div ref={timeline.ref} style={{ position: "relative" }}>
+          {/* Connector rail — full-length faint track */}
+          <div aria-hidden="true" style={{
+            position: "absolute", left: 35, top: 28, bottom: 28,
+            width: 2, borderRadius: 2,
+            background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+          }} />
+          {/* Connector fill — driven by scroll progress */}
+          <div aria-hidden="true" style={{
+            position: "absolute", left: 35, top: 28,
+            width: 2, borderRadius: 2,
+            height: `calc(${Math.min(timeline.progress * 100, 100)}% - 56px)`,
+            maxHeight: "calc(100% - 56px)",
+            background: `linear-gradient(to bottom, ${ACCENT} 0%, ${INDIGO} 45%, ${GREEN} 100%)`,
+            boxShadow: `0 0 16px ${ACCENT}60`,
+            transition: "height 0.1s linear",
+          }} />
+
+          {steps.map((step, i) => (
+            <FlowStep
+              key={i}
+              index={i}
+              total={steps.length}
+              step={step}
+              progress={timeline.progress}
+              reveal={head.visible}
+            />
+          ))}
+        </div>
       </div>
+
+      <style>{`
+        @keyframes flowNodePulse {
+          0% { transform: scale(1); opacity: 0.6; }
+          80% { transform: scale(1.35); opacity: 0; }
+          100% { transform: scale(1.35); opacity: 0; }
+        }
+        @keyframes flowBar {
+          from { transform: scaleY(0.85); opacity: 0.7; }
+          to { transform: scaleY(1); opacity: 1; }
+        }
+        @media (max-width: 720px) {
+          .flow-step { grid-template-columns: 56px 1fr !important; gap: 16px !important; padding-bottom: 32px !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .flow-step { transition: none !important; opacity: 1 !important; transform: none !important; }
+        }
+      `}</style>
     </section>
   );
 }
