@@ -787,25 +787,88 @@ function Hero({ t }: { t: Record<string, string> }) {
       padding: "120px clamp(20px,4vw,40px) 56px",
       background: BG, position: "relative", overflow: "hidden",
     }}>
-      {/* Ambient light sources */}
-      <div style={{
-        position: "absolute", top: "-5%", right: "0%",
-        width: 800, height: 800, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(14,165,233,0.04) 0%, transparent 50%)",
-        pointerEvents: "none", filter: "blur(100px)",
-      }} />
-      <div style={{
-        position: "absolute", bottom: "5%", left: "-5%",
-        width: 600, height: 600, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(99,102,241,0.025) 0%, transparent 50%)",
-        pointerEvents: "none", filter: "blur(80px)",
-      }} />
-      {/* Noise texture overlay */}
-      <div style={{
-        position: "absolute", inset: 0, opacity: 0.015, pointerEvents: "none",
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "repeat", backgroundSize: "128px",
-      }} />
+      {/* Layer 1 — Dot grid (technical feel, masked at edges) */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+          backgroundPosition: "0 0",
+          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 85%)",
+          maskImage: "radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 85%)",
+          opacity: 0.55,
+        }}
+      />
+
+      {/* Layer 2 — Primary spotlight (top-center, brand blue) */}
+      <div
+        aria-hidden
+        className="hero-bg-spotlight"
+        style={{
+          position: "absolute", top: "-30%", left: "50%",
+          width: 1200, height: 900, marginLeft: -600,
+          background: "radial-gradient(ellipse at center, rgba(14,165,233,0.22) 0%, rgba(14,165,233,0.08) 25%, rgba(14,165,233,0) 55%)",
+          filter: "blur(20px)", pointerEvents: "none",
+        }}
+      />
+
+      {/* Layer 3 — Ambient indigo (bottom right, adds depth) */}
+      <div
+        aria-hidden
+        className="hero-bg-ambient"
+        style={{
+          position: "absolute", bottom: "-20%", right: "-10%",
+          width: 700, height: 700, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99,102,241,0.18) 0%, rgba(99,102,241,0.04) 40%, transparent 70%)",
+          filter: "blur(80px)", pointerEvents: "none",
+        }}
+      />
+
+      {/* Layer 4 — Subtle green accent (top-left, completes the triad) */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute", top: "10%", left: "-15%",
+          width: 500, height: 500, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 60%)",
+          filter: "blur(90px)", pointerEvents: "none",
+        }}
+      />
+
+      {/* Layer 5 — Diagonal streak (modernity cue, inspired by Framer/Vercel) */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute", top: "20%", right: "-10%",
+          width: "60%", height: 1,
+          background: "linear-gradient(90deg, transparent 0%, rgba(14,165,233,0.30) 40%, rgba(14,165,233,0.50) 60%, transparent 100%)",
+          transform: "rotate(-18deg)",
+          transformOrigin: "right center",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Layer 6 — Noise texture (grain, prevents banding) */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute", inset: 0, opacity: 0.025, pointerEvents: "none",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "repeat", backgroundSize: "128px",
+          mixBlendMode: "overlay",
+        }}
+      />
+
+      {/* Layer 7 — Bottom vignette (fades into next section) */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute", left: 0, right: 0, bottom: 0, height: 240,
+          background: "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.8) 80%, #000 100%)",
+          pointerEvents: "none",
+        }}
+      />
 
       <div className="hero-grid" style={{
         maxWidth: 1100, width: "100%", margin: "0 auto",
@@ -1935,6 +1998,22 @@ export default function IndexNew() {
         .hero-sub-fade { animation: fadeUp 0.6s ${EASE} 0.15s both; }
         .hero-cta-fade { animation: fadeUp 0.6s ${EASE} 0.25s both; }
         .hero-detail-fade { animation: fadeUp 0.5s ${EASE} 0.35s both; }
+
+        /* ── Hero background breathing ────────────────────────── */
+        @keyframes heroSpotlightPulse {
+          0%, 100% { opacity: 0.85; transform: scale(1); }
+          50%      { opacity: 1;    transform: scale(1.04); }
+        }
+        @keyframes heroAmbientDrift {
+          0%, 100% { transform: translate(0, 0); opacity: 0.9; }
+          50%      { transform: translate(-30px, -20px); opacity: 1; }
+        }
+        .hero-bg-spotlight { animation: heroSpotlightPulse 9s ${EASE} infinite; }
+        .hero-bg-ambient   { animation: heroAmbientDrift 14s ${EASE} infinite; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .hero-bg-spotlight, .hero-bg-ambient { animation: none !important; }
+        }
 
         /* ── Hero callouts — fade in after image ───────────────── */
         .hero-callout {
