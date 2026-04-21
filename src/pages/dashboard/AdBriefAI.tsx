@@ -4205,10 +4205,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       <div style={{flexShrink:0,position:"relative" as const,zIndex:2,display:undefined}}>
 
         {/* Fade from chat → input */}
-        <div style={{height:40,background:"linear-gradient(to bottom,transparent,var(--bg-main))",pointerEvents:"none",marginBottom:-1}}/>
+        <div className="chat-input-fade" style={{height:40,background:"linear-gradient(to bottom,transparent,var(--bg-main))",pointerEvents:"none",marginBottom:-1}}/>
 
         {/* Main input surface — bg matches the app so there's no seam with the sidebar */}
-        <div style={{background:"var(--bg-main)",padding:"0 0 max(env(safe-area-inset-bottom, 0px), 14px)"}}>
+        <div style={{background:"var(--bg-main)",padding:"14px 0 max(env(safe-area-inset-bottom, 0px), 14px)"}}>
           <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
@@ -4638,8 +4638,14 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           .tool-pills-row::-webkit-scrollbar{display:none}
           /* Proactive block: padding menor */
           .proactive-wrap{padding:32px 20px 24px!important}
-          /* Input wrap: padding menor */
-          .chat-input-wrap{padding:8px 12px 12px!important}
+          /* Input fade: menor no mobile para não roubar tanto espaço */
+          .chat-input-fade{height:24px!important}
+          /* Input wrap: padding horizontal apenas; vertical vem do parent */
+          .chat-input-wrap{padding:0 12px!important}
+          /* Input box: padding interno mais justo no mobile */
+          .input-box-wrap{padding:10px 10px 10px 12px!important;border-radius:16px!important}
+          /* Tool trigger e action buttons um pouco menores no mobile */
+          .input-box-wrap .tool-trigger{width:30px!important;height:30px!important}
           /* Suggestions: scroll horizontal */
           .suggestions-bar{overflow-x:auto!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
           .suggestions-bar::-webkit-scrollbar{display:none}
