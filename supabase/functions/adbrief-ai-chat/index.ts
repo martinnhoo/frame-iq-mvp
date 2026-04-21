@@ -34,6 +34,15 @@ const _lap = (label: string) => console.log(`[ai-chat] ${label}: ${Date.now() - 
 // Landing-page URL extraction, HTML→text and structural-signal detection
 // live in ./detect-signals.ts (pure functions, unit-tested).
 
+async function md5(s: string): Promise<string> {
+  const data = new TextEncoder().encode(s);
+  const hash = await crypto.subtle.digest("MD5", data).catch(() => null);
+  if (hash) return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  // Fallback: SHA-256 first 32 chars (MD5 unavailable in some runtimes)
+  const sha = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(sha)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+}
+
 async function fetchWithTimeout(url: string, init: RequestInit = {}, ms = 10000): Promise<Response> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), ms);
