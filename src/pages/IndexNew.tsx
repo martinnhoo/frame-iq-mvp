@@ -98,8 +98,8 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta_sub: "30 segundos · Sem cartão · 15 decisões grátis",
     hero_login: "Já tem conta? Entrar",
     hero_screenshot_label: "O feed do AdBrief — decisões aplicadas hoje",
-    hero_callout_1: "Detecta a sangria em tempo real",
-    hero_callout_2: "E resolve em 1 clique — sem abrir o Meta",
+    hero_callout_1: "Diagnóstico com os números reais da conta",
+    hero_callout_2: "E te diz exatamente o que fazer agora",
     // social proof
     social_title: "Para gestores que cuidam de contas reais",
     social_sub: "Usado por agências e e-commerces que gastam de R$5k a R$500k/mês em Meta Ads.",
@@ -231,8 +231,8 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta_sub: "30 seconds · No card · 15 free decisions",
     hero_login: "Already have an account? Log in",
     hero_screenshot_label: "The AdBrief feed — decisions applied today",
-    hero_callout_1: "Catches the bleed in real time",
-    hero_callout_2: "Fixes it in one click — no Ads Manager needed",
+    hero_callout_1: "Real diagnosis with your actual account data",
+    hero_callout_2: "And tells you exactly what to do next",
     social_title: "For media buyers running real accounts",
     social_sub: "Used by agencies and e-commerce teams spending $1k to $100k/mo on Meta Ads.",
     social_logo_placeholder: "client logo",
@@ -354,8 +354,8 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta_sub: "30 segundos · Sin tarjeta · 15 decisiones gratis",
     hero_login: "¿Ya tienes cuenta? Entrar",
     hero_screenshot_label: "El feed de AdBrief — decisiones aplicadas hoy",
-    hero_callout_1: "Detecta la fuga en tiempo real",
-    hero_callout_2: "Y la resuelve en 1 clic — sin abrir Meta",
+    hero_callout_1: "Diagnóstico con los datos reales de tu cuenta",
+    hero_callout_2: "Y te dice exactamente qué hacer ahora",
     social_title: "Para gestores que manejan cuentas reales",
     social_sub: "Usado por agencias y e-commerces que gastan de $1k a $100k/mes en Meta Ads.",
     social_logo_placeholder: "logo cliente",
@@ -622,17 +622,18 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
 }
 
 // ── HeroScreenshot — Real product screenshot with callouts ──────────────────
-// Image lives at /public/hero-screenshot.png (1482×926, 16:10).
+// Image lives at /public/hero-screenshot.png (1647×902, ~1.83:1).
+// Shows the AI diagnosing a ROAS drop with real metrics + action list.
 // Callouts float outside the frame on >=1024px, collapse to clean image on mobile.
 function HeroScreenshot({ t }: { t: Record<string, string> }) {
   return (
     <div className="product-mockup" style={{
-      width: "100%", maxWidth: 640, position: "relative",
+      width: "100%", maxWidth: 720, position: "relative",
     }}>
-      {/* Callout 1 — top-right, points at "Perda Ativa R$21.500/dia" */}
+      {/* Callout 1 — top-right, points at the metric cards (CTR 3.87% ▼ / FREQ 1.8 ▲) */}
       <div className="hero-callout hero-callout-1" style={{
         position: "absolute",
-        top: "22%", right: "-18%",
+        top: "30%", right: "-16%",
         zIndex: 3,
         fontFamily: F,
         padding: "9px 13px",
@@ -665,10 +666,10 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         </svg>
       </div>
 
-      {/* Callout 2 — bottom-left, points at "Pausar anúncio agora / Resolver agora" */}
+      {/* Callout 2 — bottom-left, points at "O QUE FAZER AGORA" action list */}
       <div className="hero-callout hero-callout-2" style={{
         position: "absolute",
-        bottom: "18%", left: "-18%",
+        bottom: "14%", left: "-16%",
         zIndex: 3,
         fontFamily: F,
         padding: "9px 13px",
@@ -700,11 +701,11 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
         </svg>
       </div>
 
-      {/* The frame */}
+      {/* The frame — aspect matches the source image (1647×902) */}
       <div style={{
         position: "relative",
         width: "100%",
-        aspectRatio: "16 / 10",
+        aspectRatio: "1647 / 902",
         borderRadius: 14,
         overflow: "hidden",
         background: "#0a0e18",
@@ -717,12 +718,12 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
       }}>
         <img
           src="/hero-screenshot.png"
-          alt="AdBrief dashboard — decisões automáticas para Meta Ads"
+          alt="AdBrief AI diagnosticando queda de ROAS com métricas reais e recomendações acionáveis"
           loading="eager"
           decoding="async"
           style={{
             width: "100%", height: "100%",
-            objectFit: "cover", objectPosition: "top left",
+            objectFit: "cover", objectPosition: "center",
             display: "block",
           }}
           onError={(e) => {
