@@ -1332,7 +1332,7 @@ function generateDemoFeed(accountId: string): FeedItem[] {
       type: "kill",
       score: 89,
       headline: "Anúncio sugando R$95/dia sem retorno",
-      reason: "Gastou R$665 nos últimos 7 dias e 0 conversões. Sangria pura. Orçamento melhor alocado em anúncios que convertem.",
+      reason: "Gastou R$665 nos últimos 7 dias e 0 conversões. Prejuízo direto. Orçamento melhor alocado em anúncios que convertem.",
       impact_type: "waste",
       impact_daily_cents: 9500,
       impact_7d_cents: 66500,
