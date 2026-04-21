@@ -746,6 +746,78 @@ export type Database = {
           },
         ]
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          ip: unknown
+          metadata: Json
+          request_id: string | null
+          target_resource: string | null
+          target_resource_id: string | null
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          ip?: unknown
+          metadata?: Json
+          request_id?: string | null
+          target_resource?: string | null
+          target_resource_id?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          ip?: unknown
+          metadata?: Json
+          request_id?: string | null
+          target_resource?: string | null
+          target_resource_id?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          created_at: string
+          granted_at: string
+          granted_by: string | null
+          note: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_at?: string
+          granted_by?: string | null
+          note?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_at?: string
+          granted_by?: string | null
+          note?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ads: {
         Row: {
           account_id: string
@@ -3328,6 +3400,7 @@ export type Database = {
         Args: { p_account_id: string; p_amount: number; p_field: string }
         Returns: undefined
       }
+      is_admin: { Args: { check_user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
