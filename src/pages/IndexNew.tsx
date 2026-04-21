@@ -98,6 +98,8 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta_sub: "30 segundos · Sem cartão · 15 decisões grátis",
     hero_login: "Já tem conta? Entrar",
     hero_screenshot_label: "O feed do AdBrief — decisões aplicadas hoje",
+    hero_callout_1: "Detecta a sangria em tempo real",
+    hero_callout_2: "E resolve em 1 clique — sem abrir o Meta",
     // social proof
     social_title: "Para gestores que cuidam de contas reais",
     social_sub: "Usado por agências e e-commerces que gastam de R$5k a R$500k/mês em Meta Ads.",
@@ -229,6 +231,8 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta_sub: "30 seconds · No card · 15 free decisions",
     hero_login: "Already have an account? Log in",
     hero_screenshot_label: "The AdBrief feed — decisions applied today",
+    hero_callout_1: "Catches the bleed in real time",
+    hero_callout_2: "Fixes it in one click — no Ads Manager needed",
     social_title: "For media buyers running real accounts",
     social_sub: "Used by agencies and e-commerce teams spending $1k to $100k/mo on Meta Ads.",
     social_logo_placeholder: "client logo",
@@ -350,6 +354,8 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_cta_sub: "30 segundos · Sin tarjeta · 15 decisiones gratis",
     hero_login: "¿Ya tienes cuenta? Entrar",
     hero_screenshot_label: "El feed de AdBrief — decisiones aplicadas hoy",
+    hero_callout_1: "Detecta la fuga en tiempo real",
+    hero_callout_2: "Y la resuelve en 1 clic — sin abrir Meta",
     social_title: "Para gestores que manejan cuentas reales",
     social_sub: "Usado por agencias y e-commerces que gastan de $1k a $100k/mes en Meta Ads.",
     social_logo_placeholder: "logo cliente",
@@ -615,15 +621,86 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
   );
 }
 
-// ── HeroScreenshot — Clean slot for a real product screenshot ───────────────
-// Replace the <HeroSlotPlaceholder /> below with <img src="/hero-screenshot.png" />
-// once Martinho takes the screenshot. Keep aspect ratio 16:10 for best fit.
+// ── HeroScreenshot — Real product screenshot with callouts ──────────────────
+// Image lives at /public/hero-screenshot.png (1482×926, 16:10).
+// Callouts float outside the frame on >=1024px, collapse to clean image on mobile.
 function HeroScreenshot({ t }: { t: Record<string, string> }) {
   return (
     <div className="product-mockup" style={{
-      width: "100%", maxWidth: 560, position: "relative",
+      width: "100%", maxWidth: 640, position: "relative",
     }}>
-      {/* The frame — sits flat (no 3D perspective, no float animation) */}
+      {/* Callout 1 — top-right, points at "Perda Ativa R$21.500/dia" */}
+      <div className="hero-callout hero-callout-1" style={{
+        position: "absolute",
+        top: "22%", right: "-18%",
+        zIndex: 3,
+        fontFamily: F,
+        padding: "9px 13px",
+        background: "rgba(14,16,24,0.92)",
+        border: `1px solid rgba(239,68,68,0.35)`,
+        borderRadius: 10,
+        fontSize: 11.5, fontWeight: 600, color: TEXT,
+        letterSpacing: "-0.01em",
+        boxShadow: "0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(239,68,68,0.1)",
+        backdropFilter: "blur(8px)",
+        whiteSpace: "nowrap",
+        display: "flex", alignItems: "center", gap: 8,
+      }}>
+        <span style={{
+          width: 6, height: 6, borderRadius: "50%",
+          background: RED,
+          boxShadow: `0 0 10px ${RED}`,
+          flexShrink: 0,
+        }} />
+        {t.hero_callout_1}
+        {/* Connecting line — subtle */}
+        <svg style={{
+          position: "absolute", right: "100%", top: "50%",
+          transform: "translateY(-50%)",
+          width: 62, height: 2, overflow: "visible",
+          pointerEvents: "none",
+        }} viewBox="0 0 62 2" preserveAspectRatio="none">
+          <line x1="0" y1="1" x2="62" y2="1"
+            stroke="rgba(239,68,68,0.4)" strokeWidth="1" strokeDasharray="3 3" />
+        </svg>
+      </div>
+
+      {/* Callout 2 — bottom-left, points at "Pausar anúncio agora / Resolver agora" */}
+      <div className="hero-callout hero-callout-2" style={{
+        position: "absolute",
+        bottom: "18%", left: "-18%",
+        zIndex: 3,
+        fontFamily: F,
+        padding: "9px 13px",
+        background: "rgba(14,16,24,0.92)",
+        border: `1px solid rgba(34,197,94,0.35)`,
+        borderRadius: 10,
+        fontSize: 11.5, fontWeight: 600, color: TEXT,
+        letterSpacing: "-0.01em",
+        boxShadow: "0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,197,94,0.1)",
+        backdropFilter: "blur(8px)",
+        whiteSpace: "nowrap",
+        display: "flex", alignItems: "center", gap: 8,
+      }}>
+        <span style={{
+          width: 6, height: 6, borderRadius: "50%",
+          background: GREEN,
+          boxShadow: `0 0 10px ${GREEN}`,
+          flexShrink: 0,
+        }} />
+        {t.hero_callout_2}
+        <svg style={{
+          position: "absolute", left: "100%", top: "50%",
+          transform: "translateY(-50%)",
+          width: 62, height: 2, overflow: "visible",
+          pointerEvents: "none",
+        }} viewBox="0 0 62 2" preserveAspectRatio="none">
+          <line x1="0" y1="1" x2="62" y2="1"
+            stroke="rgba(34,197,94,0.4)" strokeWidth="1" strokeDasharray="3 3" />
+        </svg>
+      </div>
+
+      {/* The frame */}
       <div style={{
         position: "relative",
         width: "100%",
@@ -638,21 +715,30 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
           0 60px 140px rgba(0,0,0,0.65)
         `,
       }}>
-        {/*
-          ┌──────────────────────────────────────────────────────────┐
-          │  REPLACE the <HeroSlotPlaceholder/> below with:          │
-          │                                                          │
-          │    <img                                                  │
-          │      src="/hero-screenshot.png"                          │
-          │      alt="AdBrief dashboard"                             │
-          │      style={{ width: "100%", height: "100%",             │
-          │               objectFit: "cover", display: "block" }}    │
-          │    />                                                    │
-          │                                                          │
-          │  Recommended size: 1600×1000 PNG (2x retina).            │
-          └──────────────────────────────────────────────────────────┘
-        */}
-        <HeroSlotPlaceholder label={t.hero_screenshot_label} />
+        <img
+          src="/hero-screenshot.png"
+          alt="AdBrief dashboard — decisões automáticas para Meta Ads"
+          loading="eager"
+          decoding="async"
+          style={{
+            width: "100%", height: "100%",
+            objectFit: "cover", objectPosition: "top left",
+            display: "block",
+          }}
+          onError={(e) => {
+            // Graceful fallback if image not yet uploaded
+            const el = e.currentTarget;
+            el.style.display = "none";
+            const parent = el.parentElement;
+            if (parent && !parent.querySelector('[data-hero-fallback]')) {
+              const fb = document.createElement('div');
+              fb.setAttribute('data-hero-fallback', '');
+              fb.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-family:' + F + ';font-size:12px;';
+              fb.textContent = t.hero_screenshot_label;
+              parent.appendChild(fb);
+            }
+          }}
+        />
       </div>
 
       {/* Subtle caption below the frame */}
@@ -662,53 +748,6 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
       }}>
         {t.hero_screenshot_label}
       </p>
-    </div>
-  );
-}
-
-function HeroSlotPlaceholder({ label }: { label: string }) {
-  return (
-    <div style={{
-      position: "absolute", inset: 0,
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      gap: 14, padding: 32,
-      background: `
-        radial-gradient(circle at 50% 40%, rgba(14,165,233,0.08) 0%, transparent 60%),
-        linear-gradient(180deg, rgba(99,102,241,0.03) 0%, transparent 100%)
-      `,
-    }}>
-      <div style={{
-        width: 56, height: 56, borderRadius: 14,
-        border: `1.5px dashed rgba(255,255,255,0.14)`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(255,255,255,0.015)",
-      }}>
-        <div style={{
-          width: 8, height: 8, borderRadius: "50%", background: ACCENT,
-          boxShadow: `0 0 18px ${ACCENT}, 0 0 6px ${ACCENT}`,
-        }} />
-      </div>
-      <div style={{
-        fontFamily: F, fontSize: 10, fontWeight: 800, letterSpacing: "0.18em",
-        color: "rgba(255,255,255,0.45)", textTransform: "uppercase",
-      }}>
-        SCREENSHOT
-      </div>
-      <div style={{
-        fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.32)",
-        maxWidth: 280, textAlign: "center", lineHeight: 1.55,
-      }}>
-        {label}
-      </div>
-      <div style={{
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-        fontSize: 10, color: "rgba(255,255,255,0.18)",
-        padding: "4px 10px", borderRadius: 5,
-        border: `1px solid rgba(255,255,255,0.06)`,
-        background: "rgba(0,0,0,0.2)",
-      }}>
-        /public/hero-screenshot.png
-      </div>
     </div>
   );
 }
@@ -1788,6 +1827,16 @@ export default function IndexNew() {
         .hero-cta-fade { animation: fadeUp 0.6s ${EASE} 0.25s both; }
         .hero-detail-fade { animation: fadeUp 0.5s ${EASE} 0.35s both; }
 
+        /* ── Hero callouts — fade in after image ───────────────── */
+        .hero-callout {
+          animation: calloutIn 0.6s ${EASE} 0.8s both;
+        }
+        .hero-callout-2 { animation-delay: 1.05s; }
+        @keyframes calloutIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
         /* ── Mobile ≤768px ────────────────────────────────────── */
         @media (max-width: 768px) {
           .nav-signup-btn { display: none !important; }
@@ -1805,6 +1854,8 @@ export default function IndexNew() {
           .product-mockup {
             max-width: 100% !important;
           }
+          /* Hide callouts on mobile — they'd overflow the screen */
+          .hero-callout { display: none !important; }
           .concept-grid {
             grid-template-columns: 1fr !important;
             gap: 32px !important;
@@ -1857,6 +1908,8 @@ export default function IndexNew() {
             gap: 36px !important;
           }
           .product-mockup { max-width: 100% !important; }
+          /* Callouts overflow the narrow column on tablet — hide */
+          .hero-callout { display: none !important; }
           .concept-grid { gap: 40px !important; }
           .social-grid { gap: 14px !important; }
           .pricing-grid {
