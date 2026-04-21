@@ -14,6 +14,7 @@ import {
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
   Zap, Clapperboard, ScanEye, X, Sparkles, Target, FileText,
   TrendingUp, TrendingDown, BarChart2, BarChart3, Stethoscope,
+  ChevronRight, Plus,
 } from "lucide-react";
 // v20: removed unused — Brain, Upload, Activity, ExternalLink,
 //      DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
@@ -62,27 +63,31 @@ const PLATFORM_ICONS_INLINE: Record<string,React.ReactNode> = {
 // ─────────────────────────────────────────────────────────────────────────────
 // SKILLS system removed — AI always operates in full expert mode
 
-const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string}>> = {
+// TOOLBAR — shown as "thought-bubble" cards when user opens the tool menu.
+// Each tool has its own color + a 1-line description shown inside the bubble.
+// `desc` is the thing that makes the menu feel informative instead of just
+// being a wall of labels.
+const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string; desc: string}>> = {
   en: [
-    { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
-    { icon: Clapperboard,   label: "Script",           action: "script",       color: "#34d399" },
-    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b" },
-    { icon: ScanEye,        label: "Competitor",       action: "competitor",   color: "#a78bfa" },
-    { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc" },
+    { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "New hook variations based on your winners" },
+    { icon: Clapperboard,   label: "Script",           action: "script",       color: "#34d399", desc: "Full script for your next video creative" },
+    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b", desc: "Brief ready to hand to your creative team" },
+    { icon: ScanEye,        label: "Competitor",       action: "competitor",   color: "#a78bfa", desc: "Decode a competitor ad and their strategy" },
+    { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Update who you're selling to" },
   ],
   pt: [
-    { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
-    { icon: Clapperboard,   label: "Roteiro",          action: "script",       color: "#34d399" },
-    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b" },
-    { icon: ScanEye,        label: "Concorrente",      action: "competitor",   color: "#a78bfa" },
-    { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc" },
+    { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "Variações de abertura com base nos seus vencedores" },
+    { icon: Clapperboard,   label: "Roteiro",          action: "script",       color: "#34d399", desc: "Script completo pro seu próximo vídeo" },
+    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b", desc: "Briefing pronto pra passar pra equipe criativa" },
+    { icon: ScanEye,        label: "Concorrente",      action: "competitor",   color: "#a78bfa", desc: "Decodifica um anúncio concorrente e a estratégia dele" },
+    { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Atualiza o perfil de quem você tá vendendo" },
   ],
   es: [
-    { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4" },
-    { icon: Clapperboard,   label: "Guión",            action: "script",       color: "#34d399" },
-    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b" },
-    { icon: ScanEye,        label: "Competidor",       action: "competitor",   color: "#a78bfa" },
-    { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc" },
+    { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "Variaciones de gancho basadas en tus ganadores" },
+    { icon: Clapperboard,   label: "Guión",            action: "script",       color: "#34d399", desc: "Guión completo para tu próximo video" },
+    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b", desc: "Brief listo para tu equipo creativo" },
+    { icon: ScanEye,        label: "Competidor",       action: "competitor",   color: "#a78bfa", desc: "Decodifica un anuncio competidor y su estrategia" },
+    { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Actualiza a quién le vendes" },
   ],
 };
 
@@ -2013,6 +2018,10 @@ export default function AdBriefAI() {
   const [copiedId,setCopiedId]=useState<number|null>(null);
   const [activeTool,setActiveTool]=useState<string|null>(null);
   const [activeToolParams,setActiveToolParams]=useState<Record<string,string>>({});
+  // Tool menu (thought-bubble stack) — opens from the [+] trigger inside the composer
+  const [showToolMenu,setShowToolMenu]=useState(false);
+  const toolMenuRef=useRef<HTMLDivElement>(null);
+  const toolTriggerRef=useRef<HTMLButtonElement>(null);
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   // Credit balance from the new credit system
   const [creditBalance,setCreditBalance]=useState<{remaining:number,total:number}|null>(null);
@@ -2039,6 +2048,21 @@ export default function AdBriefAI() {
   useEffect(()=>{
     initialScrollDone.current=false;
   },[selectedPersona?.id]);
+
+  // ── Tool menu: close on click-outside + ESC ──
+  useEffect(()=>{
+    if(!showToolMenu) return;
+    const onDown=(e:MouseEvent)=>{
+      const t=e.target as Node;
+      if(toolMenuRef.current?.contains(t)) return;
+      if(toolTriggerRef.current?.contains(t)) return;
+      setShowToolMenu(false);
+    };
+    const onKey=(e:KeyboardEvent)=>{ if(e.key==="Escape") setShowToolMenu(false); };
+    document.addEventListener("mousedown",onDown);
+    document.addEventListener("keydown",onKey);
+    return ()=>{ document.removeEventListener("mousedown",onDown); document.removeEventListener("keydown",onKey); };
+  },[showToolMenu]);
 
   // ── Load credit balance on mount ──
   useEffect(()=>{
@@ -4185,61 +4209,219 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
         {/* Main input surface */}
         <div style={{background:"#060A14",padding:"0 0 max(env(safe-area-inset-bottom, 0px), 14px)"}}>
-          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const}}>
+          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const,position:"relative" as const}}>
 
-            {/* Tool actions — clean horizontal chips */}
-            <div className="tool-pills-row" style={{display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",marginBottom:8,alignItems:"center",paddingBottom:2} as any}>
-              {/* Goal chip — inline with tools */}
-              <button
-                onClick={()=>setShowGoalInput(s=>!s)}
+            {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
+            {showToolMenu && (
+              <div
+                ref={toolMenuRef}
+                className="tool-bubble-stack"
                 style={{
-                  display:"flex",alignItems:"center",gap:4,
-                  padding:"5px 10px",borderRadius:99,flexShrink:0,
-                  background: sessionGoal ? "rgba(14,165,233,0.06)" : "transparent",
-                  border: `1px solid ${sessionGoal ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.06)"}`,
-                  color: sessionGoal ? "rgba(14,165,233,0.65)" : "rgba(255,255,255,0.20)",
-                  fontSize:11,fontWeight:500,cursor:"pointer",
-                  fontFamily:"'Plus Jakarta Sans', sans-serif",
-                  transition:"all 0.15s",
-                  maxWidth:160,overflow:"hidden",
+                  position:"absolute" as const,
+                  bottom:"calc(100% - 8px)",
+                  left:20,
+                  right:20,
+                  display:"flex",flexDirection:"column-reverse",gap:7,
+                  pointerEvents:"none" as const,
+                  zIndex:30,
                 }}
               >
-                <Target size={10} strokeWidth={2}/>
-                <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" as const}}>
-                  {sessionGoal || (lang==="pt"?"Objetivo":lang==="es"?"Objetivo":"Goal")}
-                </span>
-              </button>
-              <div style={{width:1,height:14,background:"rgba(255,255,255,0.06)",flexShrink:0}}/>
-              {TOOLS.map(tool=>{
-                const isOn = activeTool===tool.action;
-                return (
-                  <button key={tool.action}
-                    className={`tool-pill${isOn?" tool-pill-on":""}`}
-                    onClick={()=>{
-                      if(tool.action === "analyze_ad"){
-                        imageInputRef.current?.click();
-                        return;
-                      }
-                      setActiveTool(isOn?null:tool.action);
-                    }}
-                    style={{
-                      display:"flex",alignItems:"center",gap:4,
-                      padding:"5px 11px",borderRadius:99,flexShrink:0,
-                      background: isOn ? `${tool.color}14` : "transparent",
-                      border:`1px solid ${isOn ? tool.color+"35" : "rgba(255,255,255,0.06)"}`,
-                      color: isOn ? tool.color : "rgba(255,255,255,0.35)",
-                      fontSize:11.5,fontWeight:isOn?600:500,cursor:"pointer",
+                {/* Stem / tail — visually connects the stack to the [+] button */}
+                <div
+                  aria-hidden
+                  style={{
+                    position:"absolute" as const,
+                    left:18, bottom:-6,
+                    width:10,height:10,
+                    borderRadius:"50%",
+                    background:"rgba(14,18,28,0.96)",
+                    border:"1px solid rgba(255,255,255,0.08)",
+                    opacity:0.9,
+                  }}
+                />
+                <div
+                  aria-hidden
+                  style={{
+                    position:"absolute" as const,
+                    left:12, bottom:-14,
+                    width:5,height:5,
+                    borderRadius:"50%",
+                    background:"rgba(14,18,28,0.96)",
+                    border:"1px solid rgba(255,255,255,0.06)",
+                  }}
+                />
+                {/* Goal bubble — separate kind of action (focus/context) */}
+                <button
+                  key="__goal__"
+                  onClick={()=>{ setShowGoalInput(true); setShowToolMenu(false); }}
+                  className="tool-bubble"
+                  style={{
+                    pointerEvents:"auto" as const,
+                    display:"flex",alignItems:"center",gap:12,
+                    textAlign:"left" as const,
+                    padding:"11px 14px 11px 12px",
+                    border:"1px solid rgba(14,165,233,0.28)",
+                    borderLeft:"3px solid #0ea5e9",
+                    borderRadius:14,
+                    background:"linear-gradient(135deg, rgba(14,165,233,0.10), rgba(14,18,28,0.96) 55%)",
+                    color:"#f0f2f8",
+                    cursor:"pointer",
+                    fontFamily:"'Plus Jakarta Sans', sans-serif",
+                    boxShadow:"0 8px 30px -12px rgba(14,165,233,0.45), 0 1px 0 0 rgba(255,255,255,0.04) inset",
+                    animation:`bubblePop 0.32s cubic-bezier(0.34,1.56,0.64,1) ${TOOLS.length*0.04}s backwards`,
+                    transition:"transform 0.15s ease, border-color 0.15s",
+                  }}
+                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateX(-2px)";}}
+                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="translateX(0)";}}
+                >
+                  <div style={{
+                    width:34,height:34,flexShrink:0,
+                    borderRadius:10,
+                    background:"rgba(14,165,233,0.14)",
+                    border:"1px solid rgba(14,165,233,0.35)",
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    color:"#7dd3fc",
+                  }}>
+                    <Target size={16} strokeWidth={2.2}/>
+                  </div>
+                  <div style={{minWidth:0,flex:1}}>
+                    <div style={{
+                      fontSize:13.5,fontWeight:600,letterSpacing:"-0.01em",
+                      color:"#f5f7fb",
+                      lineHeight:1.1,marginBottom:3,
+                    }}>
+                      {lang==="pt"?"Foco da semana":lang==="es"?"Foco semanal":"Weekly focus"}
+                      {sessionGoal && <span style={{fontSize:10,marginLeft:6,color:"#7dd3fc",opacity:0.85}}>✓ definido</span>}
+                    </div>
+                    <div style={{
+                      fontSize:11,color:"rgba(255,255,255,0.50)",
+                      lineHeight:1.3,
+                      overflow:"hidden",textOverflow:"ellipsis",
+                      display:"-webkit-box",WebkitLineClamp:1,WebkitBoxOrient:"vertical" as const,
+                    }}>
+                      {sessionGoal || (lang==="pt"?"O que você quer destravar essa semana?":lang==="es"?"¿Qué quieres desbloquear esta semana?":"What are you trying to unlock this week?")}
+                    </div>
+                  </div>
+                  <ChevronRight size={14} strokeWidth={2} color="rgba(125,211,252,0.6)" style={{flexShrink:0}}/>
+                </button>
+
+                {TOOLS.map((tool,i)=>{
+                  const isOn = activeTool===tool.action;
+                  return (
+                    <button
+                      key={tool.action}
+                      onClick={()=>{
+                        if(tool.action === "analyze_ad"){
+                          imageInputRef.current?.click();
+                          setShowToolMenu(false);
+                          return;
+                        }
+                        setActiveTool(isOn?null:tool.action);
+                        setShowToolMenu(false);
+                      }}
+                      className="tool-bubble"
+                      style={{
+                        pointerEvents:"auto" as const,
+                        display:"flex",alignItems:"center",gap:12,
+                        textAlign:"left" as const,
+                        padding:"11px 14px 11px 12px",
+                        border:`1px solid ${tool.color}30`,
+                        borderLeft:`3px solid ${tool.color}`,
+                        borderRadius:14,
+                        background:`linear-gradient(135deg, ${tool.color}14, rgba(14,18,28,0.96) 55%)`,
+                        color:"#f0f2f8",
+                        cursor:"pointer",
+                        fontFamily:"'Plus Jakarta Sans', sans-serif",
+                        boxShadow:`0 8px 30px -12px ${tool.color}50, 0 1px 0 0 rgba(255,255,255,0.04) inset`,
+                        animation:`bubblePop 0.32s cubic-bezier(0.34,1.56,0.64,1) ${i*0.04}s backwards`,
+                        transition:"transform 0.15s ease, border-color 0.15s",
+                      }}
+                      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateX(-2px)";}}
+                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="translateX(0)";}}
+                    >
+                      <div style={{
+                        width:34,height:34,flexShrink:0,
+                        borderRadius:10,
+                        background:`${tool.color}1c`,
+                        border:`1px solid ${tool.color}40`,
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        color:tool.color,
+                      }}>
+                        <tool.icon size={16} strokeWidth={2.2}/>
+                      </div>
+                      <div style={{minWidth:0,flex:1}}>
+                        <div style={{
+                          fontSize:13.5,fontWeight:600,letterSpacing:"-0.01em",
+                          color:isOn?tool.color:"#f5f7fb",
+                          lineHeight:1.1,marginBottom:3,
+                        }}>
+                          {tool.label}{isOn && <span style={{fontSize:10,marginLeft:6,color:tool.color,opacity:0.85}}>✓ ativo</span>}
+                        </div>
+                        <div style={{
+                          fontSize:11,color:"rgba(255,255,255,0.50)",
+                          lineHeight:1.3,
+                          overflow:"hidden",textOverflow:"ellipsis",
+                          display:"-webkit-box",WebkitLineClamp:1,WebkitBoxOrient:"vertical" as const,
+                        }}>
+                          {tool.desc}
+                        </div>
+                      </div>
+                      <ChevronRight size={14} strokeWidth={2} color={`${tool.color}99`} style={{flexShrink:0}}/>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Meta-row: active tool chip + goal chip (only shown when set) */}
+            {(activeTool || sessionGoal) && (
+              <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:8,flexWrap:"wrap" as const}}>
+                {activeTool && (()=>{
+                  const t=TOOLS.find(x=>x.action===activeTool);
+                  if(!t) return null;
+                  return (
+                    <div style={{
+                      display:"flex",alignItems:"center",gap:6,
+                      padding:"5px 6px 5px 10px",borderRadius:99,
+                      background:`${t.color}14`,
+                      border:`1px solid ${t.color}38`,
+                      color:t.color,
+                      fontSize:11,fontWeight:600,letterSpacing:"-0.01em",
                       fontFamily:"'Plus Jakarta Sans', sans-serif",
-                      letterSpacing:"-0.01em",
-                      transition:"all 0.15s",
+                      animation:"fadeUp 0.18s ease",
+                    }}>
+                      <t.icon size={11} strokeWidth={2.4}/>
+                      {t.label}
+                      <button onClick={()=>setActiveTool(null)} style={{
+                        width:16,height:16,borderRadius:"50%",
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        background:"rgba(255,255,255,0.06)",border:"none",cursor:"pointer",
+                        color:t.color,fontSize:12,lineHeight:1,padding:0,
+                      }}>×</button>
+                    </div>
+                  );
+                })()}
+                {sessionGoal && (
+                  <button
+                    onClick={()=>setShowGoalInput(s=>!s)}
+                    style={{
+                      display:"flex",alignItems:"center",gap:5,
+                      padding:"5px 10px",borderRadius:99,
+                      background:"rgba(14,165,233,0.08)",
+                      border:"1px solid rgba(14,165,233,0.25)",
+                      color:"rgba(125,211,252,0.95)",
+                      fontSize:11,fontWeight:500,cursor:"pointer",
+                      fontFamily:"'Plus Jakarta Sans', sans-serif",
+                      maxWidth:240,overflow:"hidden",
+                      animation:"fadeUp 0.18s ease",
                     }}
                   >
-                    <tool.icon size={11} strokeWidth={isOn?2.5:1.8}/>
-                    {tool.label}
+                    <Target size={10} strokeWidth={2.4}/>
+                    <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" as const}}>{sessionGoal}</span>
                   </button>
-                );
-              })}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Goal input — expandable */}
             {showGoalInput && (
@@ -4297,6 +4479,32 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 </div>
               )}
               <div style={{ display:"flex", alignItems:"flex-end", gap:8 }}>
+              {/* [+] Tool trigger — opens thought-bubble menu above composer */}
+              <button
+                ref={toolTriggerRef}
+                onClick={()=>setShowToolMenu(s=>!s)}
+                title={lang==="pt"?"Ferramentas":lang==="es"?"Herramientas":"Tools"}
+                aria-expanded={showToolMenu}
+                aria-haspopup="menu"
+                className={`tool-trigger${showToolMenu?" tool-trigger-on":""}`}
+                style={{
+                  width:32,height:32,borderRadius:9,flexShrink:0,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  background: showToolMenu
+                    ? "rgba(14,165,233,0.12)"
+                    : "rgba(255,255,255,0.03)",
+                  border: showToolMenu
+                    ? "1px solid rgba(14,165,233,0.40)"
+                    : "1px solid rgba(255,255,255,0.08)",
+                  color: showToolMenu ? "#7dd3fc" : "rgba(255,255,255,0.55)",
+                  cursor:"pointer",
+                  transition:"all 0.18s cubic-bezier(0.34,1.56,0.64,1)",
+                  transform: showToolMenu ? "rotate(45deg)" : "rotate(0deg)",
+                  marginBottom:2,
+                }}
+              >
+                <Plus size={16} strokeWidth={2.2}/>
+              </button>
               <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
                 placeholder={L.placeholder} rows={1}
@@ -4390,6 +4598,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         @keyframes orbFloat1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(8%,12%) scale(1.08)}}
         @keyframes orbFloat2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-10%,-8%) scale(1.05)}}
         @keyframes toolSlideIn{from{opacity:0;transform:translateY(10px) scale(0.98);filter:blur(3px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0px)}}
+        @keyframes bubblePop{0%{opacity:0;transform:translateY(14px) scale(0.88);filter:blur(4px)}60%{opacity:1;transform:translateY(-2px) scale(1.02);filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+        .tool-trigger:hover{background:rgba(14,165,233,0.08)!important;border-color:rgba(14,165,233,0.28)!important;color:#7dd3fc!important;}
+        .tool-trigger-on{box-shadow:0 0 0 3px rgba(14,165,233,0.14);}
+        .tool-bubble:hover{border-color:currentColor;filter:brightness(1.1);}
         @keyframes lp-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes bubbleIn{from{opacity:0;transform:translateX(10px) scale(0.95);filter:blur(2px)}to{opacity:1;transform:translateX(0) scale(1);filter:blur(0px)}}
         @keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(0.995)}to{opacity:1;transform:translateY(0) scale(1)}}
