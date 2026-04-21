@@ -69,6 +69,13 @@ const AutopilotLogPage = lazy(() => import("./pages/dashboard/AutopilotLogPage")
 // Internal diagnostics (owner only)
 const DebugPage        = lazy(() => import("./pages/dashboard/DebugPage"));
 
+// Cockpit — privileged backoffice (admin-only, obscure path, noindex)
+const CockpitLayout      = lazy(() => import("./pages/cockpit/CockpitLayout"));
+const CockpitOverview    = lazy(() => import("./pages/cockpit/CockpitOverview"));
+const CockpitUsers       = lazy(() => import("./pages/cockpit/CockpitUsers"));
+const CockpitUserDetail  = lazy(() => import("./pages/cockpit/CockpitUserDetail"));
+const CockpitAuditLog    = lazy(() => import("./pages/cockpit/CockpitAuditLog"));
+
 // V2 Decision Engine pages
 const FeedPage         = lazy(() => import("./pages/dashboard/FeedPage"));
 const PatternsPage     = lazy(() => import("./pages/dashboard/PatternsPage"));
@@ -190,6 +197,15 @@ const App = () => (
                 <Route path="referral" element={<ReferralPage />} />
                 <Route path="autopilot-log" element={<AutopilotLogPage />} />
                 <Route path="*" element={<Navigate to="/dashboard/feed" replace />} />
+              </Route>
+
+              {/* ── Cockpit: admin-only backoffice (obscure path; guarded by edge fn) ── */}
+              <Route path="/cockpit" element={<CockpitLayout />}>
+                <Route index element={<CockpitOverview />} />
+                <Route path="users" element={<CockpitUsers />} />
+                <Route path="users/:id" element={<CockpitUserDetail />} />
+                <Route path="audit" element={<CockpitAuditLog />} />
+                <Route path="*" element={<Navigate to="/cockpit" replace />} />
               </Route>
 
               {/* ── SEO: Tools ── */}

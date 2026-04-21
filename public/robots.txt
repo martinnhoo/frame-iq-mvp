@@ -3,6 +3,8 @@ Allow: /
 
 # Block private/app routes from indexing
 Disallow: /dashboard/
+Disallow: /cockpit
+Disallow: /cockpit/
 Disallow: /login
 Disallow: /signup
 Disallow: /onboarding
