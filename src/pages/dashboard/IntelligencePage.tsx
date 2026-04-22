@@ -346,7 +346,10 @@ export default function IntelligencePage() {
       else memQ.is("persona_id", null);
 
       // Patterns: scoped by persona — only the performance-grounded ones,
-      // filter out the noisy meta/system keys (business_profile, chat_hooks, etc.)
+      // filter out the noisy meta/system keys (business_profile, chat_hooks, etc.).
+      // Mirror the memories scoping: when no persona is selected we show only
+      // global patterns (persona_id IS NULL), not a cross-persona mix — the
+      // scope badge says "Global" and should mean just that.
       const patQ = (supabase as any).from("learned_patterns")
         .select("id,pattern_key,insight_text,avg_ctr,avg_roas,sample_size,confidence,is_winner")
         .eq("user_id", user.id)
@@ -354,6 +357,7 @@ export default function IntelligencePage() {
         .order("confidence", { ascending:false })
         .limit(20);
       if (selectedPersona?.id) patQ.eq("persona_id", selectedPersona.id);
+      else patQ.is("persona_id", null);
 
       // Examples: global per user (style preference, not account-specific)
       const exQ = (supabase as any).from("chat_examples")
