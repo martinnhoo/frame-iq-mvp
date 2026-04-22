@@ -4,14 +4,13 @@
  * Only accessible by admin emails.
  */
 import { ADMIN_EMAILS } from "../_shared/credits.ts";
+import { adminCors } from "../_shared/admin-guard.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 Deno.serve(async (req) => {
+  // Lock CORS to the AdBrief web app + approved preview origins. The old
+  // `*` policy let any origin read admin credit data if an admin JWT leaked.
+  const corsHeaders = adminCors(req);
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
   try {

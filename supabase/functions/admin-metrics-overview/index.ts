@@ -45,9 +45,9 @@ const PLAN_PRICE_BRL: Record<string, number> = {
 const USD_FX = 5.0; // rough BRL→USD for dashboard display only.
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: adminCors });
+  if (req.method === "OPTIONS") return new Response(null, { headers: adminCors(req) });
   if (req.method !== "GET" && req.method !== "POST") {
-    return jsonResponse({ error: "method_not_allowed" }, { status: 405 });
+    return jsonResponse({ error: "method_not_allowed" }, { status: 405 }, req);
   }
 
   const gate = await requireAdmin(req);
@@ -330,7 +330,7 @@ Deno.serve(async (req: Request) => {
       signups_by_day_30d: signupsSeries,
       plan_upgrades_7d: planUpgrades7d,
     },
-  });
+  }, {}, req);
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────

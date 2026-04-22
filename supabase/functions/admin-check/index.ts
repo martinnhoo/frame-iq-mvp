@@ -9,35 +9,29 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { adminCors } from "../_shared/admin-guard.ts";
 
-const cors: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
-
-function json(body: unknown, status = 200): Response {
+function json(req: Request, body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...cors, "Content-Type": "application/json" },
+    headers: { ...adminCors(req), "Content-Type": "application/json" },
   });
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method === "OPTIONS") return new Response(null, { headers: adminCors(req) });
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
   if (!SUPABASE_URL || !SERVICE_KEY) {
-    return json({ admin: false, error: "misconfigured" }, 500);
+    return json(req, { admin: false, error: "misconfigured" }, 500);
   }
 
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
-    return json({ admin: false });
+    return json(req, { admin: false });
   }
   const token = authHeader.slice(7);
 
@@ -47,7 +41,7 @@ Deno.serve(async (req: Request) => {
   });
   const { data: userData, error: userErr } = await anon.auth.getUser(token);
   if (userErr || !userData?.user) {
-    return json({ admin: false });
+    return json(req, { admin: false });
   }
   const user = userData.user;
 
@@ -63,7 +57,7 @@ Deno.serve(async (req: Request) => {
 
   const isAdmin = !!row && !row.revoked_at;
 
-  return json({
+  return json(req, {
     admin: isAdmin,
     email: isAdmin ? user.email ?? null : null,
   });

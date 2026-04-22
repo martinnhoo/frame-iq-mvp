@@ -48,9 +48,9 @@ interface LogBody {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: adminCors });
+  if (req.method === "OPTIONS") return new Response(null, { headers: adminCors(req) });
   if (req.method !== "POST") {
-    return jsonResponse({ error: "method_not_allowed" }, { status: 405 });
+    return jsonResponse({ error: "method_not_allowed" }, { status: 405 }, req);
   }
 
   let body: LogBody = {};
@@ -95,7 +95,8 @@ Deno.serve(async (req: Request) => {
   if (error) {
     return jsonResponse(
       { error: "audit_query_failed", detail: error.message },
-      { status: 500 }
+      { status: 500 },
+      req,
     );
   }
 
@@ -156,5 +157,5 @@ Deno.serve(async (req: Request) => {
       total_count: total,
       total_pages: Math.max(1, Math.ceil(total / pageSize)),
     },
-  });
+  }, {}, req);
 });

@@ -198,6 +198,68 @@ Deno.test("normalizeUrl rejects non-http schemes and social hosts", () => {
   assertEquals(normalizeUrl("not a url"), null);
 });
 
+// ─── SSRF — private/reserved hosts must be refused ─────────────────────────
+
+Deno.test("SSRF: blocks AWS/GCP metadata IP (169.254.169.254)", () => {
+  assertEquals(normalizeUrl("http://169.254.169.254/latest/meta-data/"), null);
+  assertEquals(normalizeUrl("https://169.254.169.254/computeMetadata/v1/"), null);
+});
+
+Deno.test("SSRF: blocks loopback IPv4 addresses (127/8)", () => {
+  assertEquals(normalizeUrl("http://127.0.0.1/admin"), null);
+  assertEquals(normalizeUrl("http://127.1.2.3/"), null);
+});
+
+Deno.test("SSRF: blocks RFC1918 private nets (10/8, 172.16/12, 192.168/16)", () => {
+  assertEquals(normalizeUrl("http://10.0.0.1/"), null);
+  assertEquals(normalizeUrl("http://10.255.255.255/"), null);
+  assertEquals(normalizeUrl("http://172.16.0.1/"), null);
+  assertEquals(normalizeUrl("http://172.31.255.255/"), null);
+  assertEquals(normalizeUrl("http://192.168.1.1/"), null);
+});
+
+Deno.test("SSRF: allows public-range 172 addresses (outside 172.16/12)", () => {
+  // 172.32+ is public; make sure we don't over-block the 172/8 range.
+  const out = normalizeUrl("https://172.217.0.1/");
+  assertEquals(out !== null, true);
+});
+
+Deno.test("SSRF: blocks 0.0.0.0, CGNAT (100.64/10), multicast (224+)", () => {
+  assertEquals(normalizeUrl("http://0.0.0.0/"), null);
+  assertEquals(normalizeUrl("http://100.64.0.1/"), null);
+  assertEquals(normalizeUrl("http://224.0.0.1/"), null);
+  assertEquals(normalizeUrl("http://255.255.255.255/"), null);
+});
+
+Deno.test("SSRF: blocks IPv6 loopback + link-local + unique-local", () => {
+  assertEquals(normalizeUrl("http://[::1]/admin"), null);
+  assertEquals(normalizeUrl("http://[fe80::1234]/"), null);
+  assertEquals(normalizeUrl("http://[fc00::1]/"), null);
+  assertEquals(normalizeUrl("http://[::ffff:127.0.0.1]/"), null);
+});
+
+Deno.test("SSRF: blocks 'localhost' and internal TLDs", () => {
+  assertEquals(normalizeUrl("http://localhost/"), null);
+  assertEquals(normalizeUrl("http://localhost:8888/admin"), null);
+  assertEquals(normalizeUrl("http://foo.local/"), null);
+  assertEquals(normalizeUrl("http://intranet.internal/"), null);
+  assertEquals(normalizeUrl("http://server.lan/"), null);
+  assertEquals(normalizeUrl("http://router.home.arpa/"), null);
+});
+
+Deno.test("SSRF: blocks URLs with embedded basic-auth credentials", () => {
+  // Attackers use `http://trusted@evil.com/` to make malicious URLs look safe.
+  assertEquals(normalizeUrl("http://user@example.com/"), null);
+  assertEquals(normalizeUrl("http://user:pass@example.com/"), null);
+});
+
+Deno.test("SSRF: extractLandingUrls drops SSRF attempts from message", () => {
+  const msg = `Minha LP é https://meusite.com/oferta mas testa tambem http://169.254.169.254/ e http://localhost:3000/`;
+  const urls = extractLandingUrls(msg);
+  assertEquals(urls.length, 1);
+  assertEquals(urls[0], "https://meusite.com/oferta");
+});
+
 Deno.test("normalizeUrl produces stable hash-friendly param order", () => {
   const a = normalizeUrl("https://x.com/?b=2&a=1");
   const b = normalizeUrl("https://x.com/?a=1&b=2");

@@ -19,15 +19,21 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // ── JWT auth — verify caller before processing expensive API calls ────────
+    // ── JWT auth — REQUIRED. Reject anonymous callers before any expensive work.
+    // We used to accept formData.user_id as a legacy fallback; that path allowed
+    // a caller to spend another tenant's credits by forging the body. Removed.
     const authHeader = req.headers.get('Authorization') ?? '';
     let verified_user_id = '';
     if (authHeader.startsWith('Bearer ')) {
       const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
       if (authUser) verified_user_id = authUser.id;
     }
-    // Fall back to formData user_id only if JWT validation failed (legacy clients)
-    // but log a warning — this path should eventually be removed
+    if (!verified_user_id) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const formData = await req.formData();
     const videoFile = formData.get('video_file') as File | null;
@@ -35,8 +41,8 @@ Deno.serve(async (req) => {
     const meta_performance_data = formData.get('meta_performance_data') as string | null;
     const meta_ad_name = formData.get('meta_ad_name') as string | null;
     const campaign_goal = formData.get('campaign_goal') as string | null;
-    // Always prefer JWT-verified identity
-    const user_id = verified_user_id || (formData.get('user_id') as string) || '';
+    // JWT-verified identity is the only source of truth.
+    const user_id = verified_user_id;
     analysisId = (formData.get('analysis_id') as string | null) ?? null;
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';

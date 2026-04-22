@@ -32,9 +32,9 @@ import {
 } from "../_shared/admin-guard.ts";
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: adminCors });
+  if (req.method === "OPTIONS") return new Response(null, { headers: adminCors(req) });
   if (req.method !== "POST") {
-    return jsonResponse({ error: "method_not_allowed" }, { status: 405 });
+    return jsonResponse({ error: "method_not_allowed" }, { status: 405 }, req);
   }
 
   // Parse input
@@ -42,13 +42,14 @@ Deno.serve(async (req: Request) => {
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "invalid_json" }, { status: 400 });
+    return jsonResponse({ error: "invalid_json" }, { status: 400 }, req);
   }
   const { target_user_id, target_email } = body;
   if (!target_user_id && !target_email) {
     return jsonResponse(
       { error: "missing_target", hint: "provide target_user_id or target_email" },
-      { status: 400 }
+      { status: 400 },
+      req,
     );
   }
 
@@ -77,7 +78,7 @@ Deno.serve(async (req: Request) => {
       perPage: 1000,
     });
     if (listErr) {
-      return jsonResponse({ error: "auth_list_failed", detail: listErr.message }, { status: 500 });
+      return jsonResponse({ error: "auth_list_failed", detail: listErr.message }, { status: 500 }, req);
     }
     const match = list.users.find(
       (u) => (u.email ?? "").toLowerCase() === target_email.toLowerCase()
@@ -89,7 +90,7 @@ Deno.serve(async (req: Request) => {
         metadata: { target_email },
         req,
       });
-      return jsonResponse({ error: "target_not_found", target_email }, { status: 404 });
+      return jsonResponse({ error: "target_not_found", target_email }, { status: 404 }, req);
     }
     targetId = match.id;
   }
@@ -99,7 +100,8 @@ Deno.serve(async (req: Request) => {
     if (authErr || !authUser?.user) {
       return jsonResponse(
         { error: "target_not_found", target_user_id: targetId, detail: authErr?.message },
-        { status: 404 }
+        { status: 404 },
+        req,
       );
     }
     targetAuthUser = {
@@ -112,7 +114,7 @@ Deno.serve(async (req: Request) => {
     targetEmail = targetAuthUser.email;
   }
   if (!targetId || !targetAuthUser) {
-    return jsonResponse({ error: "target_resolution_failed" }, { status: 500 });
+    return jsonResponse({ error: "target_resolution_failed" }, { status: 500 }, req);
   }
 
   // ── 2. Parallel fetches — profile, accounts, aggregates ──────────────────
@@ -440,7 +442,7 @@ Deno.serve(async (req: Request) => {
     anomalies,
   };
 
-  return jsonResponse({ data: summary });
+  return jsonResponse({ data: summary }, {}, req);
 });
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

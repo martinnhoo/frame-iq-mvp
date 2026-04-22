@@ -10,7 +10,7 @@
  *   import { requireAdmin, logAdminAction, adminCors, jsonResponse } from "../_shared/admin-guard.ts";
  *
  *   Deno.serve(async (req) => {
- *     if (req.method === "OPTIONS") return new Response(null, { headers: adminCors });
+ *     if (req.method === "OPTIONS") return new Response(null, { headers: adminCors(req) });
  *
  *     const gate = await requireAdmin(req);
  *     if (!gate.ok) return gate.response;
@@ -25,24 +25,70 @@
  *       metadata: { ... },
  *       req,
  *     });
- *     return jsonResponse({ data: result });
+ *     return jsonResponse({ data: result }, {}, req);
  *   });
+ *
+ * CORS is locked to the production web app + local dev + Vercel preview
+ * deployments. Admin endpoints return service-role data, so we don't want
+ * a random third-party origin to be able to read responses even if an admin
+ * lands on a malicious page with a stolen JWT.
  */
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-export const adminCors: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-};
+// Production + staging origins we accept. Anything else echoes the primary
+// domain back so browsers on foreign origins get a CORS-blocked response.
+const ADMIN_ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
+  "https://adbrief.pro",
+  "https://www.adbrief.pro",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:4173",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:3000",
+]);
+// Vercel preview deployments (frame-iq-mvp-<hash>-martinho.vercel.app etc.).
+const ADMIN_ALLOWED_ORIGIN_PATTERNS: readonly RegExp[] = [
+  /^https:\/\/[a-z0-9-]+\.vercel\.app$/i,
+];
+const ADMIN_DEFAULT_ORIGIN = "https://adbrief.pro";
 
-export function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
+function pickAllowedOrigin(req: Request): string {
+  const origin = req.headers.get("Origin") ?? "";
+  if (!origin) return ADMIN_DEFAULT_ORIGIN;
+  if (ADMIN_ALLOWED_ORIGINS.has(origin)) return origin;
+  if (ADMIN_ALLOWED_ORIGIN_PATTERNS.some((re) => re.test(origin))) return origin;
+  return ADMIN_DEFAULT_ORIGIN;
+}
+
+export function adminCors(req: Request): Record<string, string> {
+  return {
+    "Access-Control-Allow-Origin": pickAllowedOrigin(req),
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  };
+}
+
+export function jsonResponse(
+  body: unknown,
+  init: ResponseInit = {},
+  req?: Request,
+): Response {
+  const cors = req ? adminCors(req) : {
+    // Safe default for internal-only call sites (no cross-origin client ever
+    // sees this path): still lock to the production origin.
+    "Access-Control-Allow-Origin": ADMIN_DEFAULT_ORIGIN,
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  };
   return new Response(JSON.stringify(body), {
     status: init.status ?? 200,
     headers: {
-      ...adminCors,
+      ...cors,
       "Content-Type": "application/json",
       ...(init.headers ?? {}),
     },
@@ -73,14 +119,15 @@ export async function requireAdmin(req: Request): Promise<GateResult> {
       ok: false,
       response: jsonResponse(
         { error: "server_misconfigured" },
-        { status: 500 }
+        { status: 500 },
+        req,
       ),
     };
   }
 
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
-    return { ok: false, response: jsonResponse({ error: "unauthorized" }, { status: 401 }) };
+    return { ok: false, response: jsonResponse({ error: "unauthorized" }, { status: 401 }, req) };
   }
   const token = authHeader.slice(7);
 
@@ -90,7 +137,7 @@ export async function requireAdmin(req: Request): Promise<GateResult> {
   });
   const { data: userData, error: userErr } = await anon.auth.getUser(token);
   if (userErr || !userData?.user) {
-    return { ok: false, response: jsonResponse({ error: "unauthorized" }, { status: 401 }) };
+    return { ok: false, response: jsonResponse({ error: "unauthorized" }, { status: 401 }, req) };
   }
   const authUser = userData.user;
 
@@ -109,12 +156,12 @@ export async function requireAdmin(req: Request): Promise<GateResult> {
   if (adminErr) {
     return {
       ok: false,
-      response: jsonResponse({ error: "admin_lookup_failed" }, { status: 500 }),
+      response: jsonResponse({ error: "admin_lookup_failed" }, { status: 500 }, req),
     };
   }
   if (!adminRow || adminRow.revoked_at) {
     // 404 on purpose — don't reveal that the endpoint exists to non-admins.
-    return { ok: false, response: jsonResponse({ error: "not_found" }, { status: 404 }) };
+    return { ok: false, response: jsonResponse({ error: "not_found" }, { status: 404 }, req) };
   }
 
   return {
