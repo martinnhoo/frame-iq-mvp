@@ -379,7 +379,7 @@ export default function CockpitUsers() {
                     <Td>
                       <SubscriptionStatus status={r.subscription_status} />
                     </Td>
-                    <Td>{/* no-op cell for invisible plan-asc sort column */}</Td>
+                    <Td>{null}</Td>
                     <Td>
                       {r.meta_connected ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: r.meta_has_synced ? COLORS.successSoft : COLORS.warnSoft }}>

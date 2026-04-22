@@ -56,7 +56,7 @@ const Signup = () => {
     // Guard: block disposable domains and probe/bot local-part patterns
     // before we ever hit Supabase. Edge function re-validates server-side.
     const guard = validateEmailForSignup(email.trim());
-    if (!guard.ok) {
+    if (guard.ok === false) {
       toast.error(guardMessage(guard.reason, language as "pt" | "en" | "es"));
       trackEvent("signup_blocked", { reason: guard.reason });
       return;
