@@ -13,7 +13,8 @@ const PLANS = [
   {
     id: "maker",
     name: "Maker",
-    price: "$19",
+    price_monthly: 19,
+    price_annual:  15.2,
     gradient: "from-blue-500/20 to-blue-900/5",
     border: "border-blue-500/20 hover:border-blue-500/40",
     accent: "text-blue-400",
@@ -27,7 +28,8 @@ const PLANS = [
   {
     id: "pro",
     name: "Pro",
-    price: "$49",
+    price_monthly: 49,
+    price_annual:  39.2,
     gradient: "from-sky-500/20 to-sky-900/5",
     border: "border-sky-500/20 hover:border-sky-500/40",
     accent: "text-sky-400",
@@ -41,7 +43,8 @@ const PLANS = [
   {
     id: "studio",
     name: "Studio",
-    price: "$299",
+    price_monthly: 299,
+    price_annual:  239.2,
     gradient: "from-pink-500/20 to-pink-900/5",
     border: "border-pink-500/20 hover:border-pink-500/40",
     accent: "text-pink-400",
@@ -62,8 +65,13 @@ const T = {
     start: "Começar",
     footer: "Powered by Stripe · Cancele quando quiser · Sem taxas ocultas",
     period: "/mês",
+    monthly: "Mensal",
+    annual: "Anual",
+    save: "Economize 20%",
     error: "Algo deu errado. Tente novamente.",
     error_checkout: "Não foi possível criar a sessão de pagamento.",
+    error_disposable: "Email temporário não é aceito. Use um email permanente.",
+    error_rate: "Muitas tentativas. Tente novamente em algumas horas.",
   },
   es: {
     title: "Mejora tu plan",
@@ -72,8 +80,13 @@ const T = {
     start: "Comenzar",
     footer: "Powered by Stripe · Cancela cuando quieras · Sin tarifas ocultas",
     period: "/mes",
+    monthly: "Mensual",
+    annual: "Anual",
+    save: "Ahorra 20%",
     error: "Algo salió mal. Inténtalo de nuevo.",
     error_checkout: "No se pudo crear la sesión de pago.",
+    error_disposable: "Email temporal no aceptado. Usa un email permanente.",
+    error_rate: "Demasiados intentos. Intenta en unas horas.",
   },
   en: {
     title: "Upgrade your plan",
@@ -82,8 +95,13 @@ const T = {
     start: "Start",
     footer: "Powered by Stripe · Cancel anytime · No hidden fees",
     period: "/mo",
+    monthly: "Monthly",
+    annual: "Annual",
+    save: "Save 20%",
     error: "Something went wrong. Please try again.",
     error_checkout: "Could not create checkout session.",
+    error_disposable: "Disposable email not accepted. Use a permanent email.",
+    error_rate: "Too many attempts. Try again in a few hours.",
   },
 };
 
@@ -96,6 +114,7 @@ interface Props {
 
 export function PlanUpgradeModal({ open, onClose, currentPlan = "free", language = "pt" }: Props) {
   const [selecting, setSelecting] = useState<string | null>(null);
+  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
   const lang = (language === "pt" || language === "es" || language === "en") ? language : "pt";
   const t = T[lang];
 
@@ -103,22 +122,45 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free", language
     setSelecting(planId);
     try {
       const priceId = PLAN_PRICES[planId];
-      if (!priceId) return;
+      if (!priceId) { setSelecting(null); return; }
+
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { price_id: priceId },
+        body: { price_id: priceId, billing: cycle },
       });
-      if (error) throw error;
+
+      if (error) {
+        const errMsg = (error as any)?.message || "";
+        const errData = (error as any)?.context?.body;
+        let parsed: any = null;
+        try { parsed = typeof errData === "string" ? JSON.parse(errData) : errData; } catch {}
+
+        if (parsed?.error_code === "disposable_email") {
+          toast.error(t.error_disposable);
+        } else if (parsed?.error_code === "ip_rate_limit") {
+          toast.error(t.error_rate);
+        } else {
+          toast.error(t.error_checkout, { description: errMsg || parsed?.error });
+        }
+        setSelecting(null);
+        return;
+      }
+
       if (data?.url) {
         window.location.href = data.url;
-      } else {
-        toast.error(t.error_checkout);
+        return;
       }
-    } catch {
-      toast.error(t.error);
+      toast.error(t.error_checkout);
+    } catch (e) {
+      toast.error(t.error, { description: e instanceof Error ? e.message : undefined });
     } finally {
       setSelecting(null);
     }
   };
+
+  const fmt = (n: number) =>
+    lang === "en"
+      ? `$${n % 1 === 0 ? n : n.toFixed(2)}`
+      : `$${(n % 1 === 0 ? n.toString() : n.toFixed(2)).replace(".", ",")}`;
 
   if (!open) return null;
 
@@ -157,12 +199,38 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free", language
             </button>
           </div>
 
+          {/* Billing cycle toggle */}
+          <div className="px-6 pt-5 flex justify-center">
+            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-white/[0.04] border border-white/[0.08]">
+              <button
+                type="button"
+                onClick={() => setCycle("monthly")}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  cycle === "monthly" ? "bg-white/[0.10] text-white" : "text-white/50 hover:text-white/80"
+                }`}
+              >
+                {t.monthly}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCycle("annual")}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  cycle === "annual" ? "bg-white/[0.10] text-white" : "text-white/50 hover:text-white/80"
+                }`}
+              >
+                {t.annual}
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">{t.save}</span>
+              </button>
+            </div>
+          </div>
+
           {/* Plans */}
           <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
             {PLANS.map(plan => {
               const isCurrent = plan.id === currentPlan;
               const features = plan.features[lang] || plan.features.en;
               const badge = plan.badge ? plan.badge[lang] : null;
+              const displayPrice = fmt(cycle === "annual" ? plan.price_annual : plan.price_monthly);
               return (
                 <div
                   key={plan.id}
@@ -179,7 +247,7 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free", language
                   <div className="mb-3">
                     <p className={`text-base font-bold ${plan.accent}`}>{plan.name}</p>
                     <p className="mt-1">
-                      <span className="text-2xl font-black text-white">{plan.price}</span>
+                      <span className="text-2xl font-black text-white">{displayPrice}</span>
                       <span className="text-xs text-white/50">{t.period}</span>
                     </p>
                   </div>

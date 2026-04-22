@@ -2,7 +2,7 @@
 // Auth required. Each user can only be referred once.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { REFERRAL_BONUS_CREDITS, isBlockedEmailDomain } from "../_shared/credits.ts";
+import { REFERRAL_BONUS_CREDITS, REFERRAL_BONUS_IMPROVEMENTS, isBlockedEmailDomain } from "../_shared/credits.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -72,10 +72,18 @@ Deno.serve(async (req) => {
 
       // Get bonus credits from current period
       const { data: balance } = await supabase.rpc("get_credit_balance", { p_user_id: user.id });
+      const bonusCreditsNow = balance?.bonus ?? 0;
+      // Lifetime: each successful referral = REFERRAL_BONUS_CREDITS granted to referrer.
+      // We return both current-period bonus_credits AND lifetime bonus_improvements for UX.
+      const lifetimeBonusCredits = (count || 0) * REFERRAL_BONUS_CREDITS;
+      const lifetimeBonusImprovements = (count || 0) * REFERRAL_BONUS_IMPROVEMENTS;
 
       return new Response(JSON.stringify({
         referral_code: profile?.referral_code,
-        bonus_credits: balance?.bonus ?? 0,
+        bonus_credits: bonusCreditsNow,
+        bonus_credits_lifetime: lifetimeBonusCredits,
+        bonus_improvements_lifetime: lifetimeBonusImprovements,
+        bonus_analyses: lifetimeBonusImprovements, // legacy alias for old UI code
         total_referrals: count || 0,
         already_referred: !!profile?.referred_by,
       }), { headers: { ...cors, "Content-Type": "application/json" } });
@@ -226,7 +234,8 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       bonus: BONUS,
-      message: `You earned +${BONUS} bonus credits! Your referrer also got +${BONUS}.`,
+      bonus_improvements: REFERRAL_BONUS_IMPROVEMENTS,
+      message: `You earned +${REFERRAL_BONUS_IMPROVEMENTS} free improvements (${BONUS} credits)! Your referrer also got +${REFERRAL_BONUS_IMPROVEMENTS}.`,
     }), { headers: { ...cors, "Content-Type": "application/json" } });
 
   } catch (e) {

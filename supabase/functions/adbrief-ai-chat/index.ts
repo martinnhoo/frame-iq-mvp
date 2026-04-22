@@ -665,10 +665,11 @@ Deno.serve(async (req) => {
       //   studio → buy credits only (already max plan)
 
       const PLAN_NAMES: Record<string, string> = { free: "Free", maker: "Maker", pro: "Pro", studio: "Studio" };
-      const NEXT_PLAN: Record<string, { name: string; credits: number; price: string } | null> = {
-        free: { name: "Maker", credits: 1000, price: "$19/mo" },
-        maker: { name: "Pro", credits: 2500, price: "$49/mo" },
-        pro: { name: "Studio", credits: 99999, price: "$299/mo" },
+      // Labels are left blank — frontend renders them from its i18n dict keyed by `key`.
+      const NEXT_PLAN: Record<string, { key: string; name: string; credits: number; price_monthly: number } | null> = {
+        free:   { key: "maker",  name: "Maker",  credits: 1000,  price_monthly: 19  },
+        maker:  { key: "pro",    name: "Pro",    credits: 2500,  price_monthly: 49  },
+        pro:    { key: "studio", name: "Studio", credits: 99999, price_monthly: 299 },
         studio: null,
       };
 
@@ -677,14 +678,15 @@ Deno.serve(async (req) => {
       const blocks: any[] = [];
 
       if (planKey === "free") {
-        // FREE → plans only, no credit option
+        // FREE → plans only, no credit option. Frontend renders all human-readable
+        // text from its i18n map, keyed by `key`. Only machine-readable metadata here.
         blocks.push({
           type: "credits_exhausted_free",
           plan: "free",
           plans: [
-            { name: "Maker", price: "$19/mo", credits: "~33 improvements", highlight: "1 ad account" },
-            { name: "Pro", price: "$49/mo", credits: "~166 improvements", highlight: "3 ad accounts", recommended: true },
-            { name: "Studio", price: "$299/mo", credits: "Unlimited", highlight: "Unlimited accounts" },
+            { key: "maker",  price_monthly: 19  },
+            { key: "pro",    price_monthly: 49,  recommended: true },
+            { key: "studio", price_monthly: 299 },
           ],
         });
       } else if (planKey === "studio") {

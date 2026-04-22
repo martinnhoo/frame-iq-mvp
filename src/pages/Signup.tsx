@@ -24,10 +24,21 @@ const Signup = () => {
   const planParam = searchParams.get("plan"); // e.g. "maker", "pro", "studio"
   const billingParam = searchParams.get("billing"); // "annual" | null
   const redirectParam = searchParams.get("redirect"); // e.g. "/demo?unlocked=1"
+  const refParam = searchParams.get("ref"); // referral code from landing URL
   const { t, language } = useLanguage();
+
+  // Persist referral code so it survives email-confirmation round trip
+  // (user clicks email link → lands without query params → Onboarding reads from storage).
+  if (refParam && typeof window !== "undefined") {
+    try { window.localStorage.setItem("adbrief_ref_code", refParam.toUpperCase()); } catch {}
+  }
 
   const handleGoogleSignup = async () => {
     setLoading(true);
+    // Persist ref before bouncing to Google OAuth — returned URL is set by provider.
+    if (refParam && typeof window !== "undefined") {
+      try { window.localStorage.setItem("adbrief_ref_code", refParam.toUpperCase()); } catch {}
+    }
     // If coming from demo flow, redirect to /dashboard/ai?from_demo=1 after OAuth
     const oauthRedirect = redirectParam
       ? window.location.origin + redirectParam
@@ -92,7 +103,8 @@ const Signup = () => {
       // Google OAuth users skip this entirely (verified email at provider).
       if (!data.session) {
         const planQuery = planParam ? `&plan=${planParam}` : '';
-        navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}${planQuery}`);
+        const refQuery = refParam ? `&ref=${encodeURIComponent(refParam)}` : '';
+        navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}${planQuery}${refQuery}`);
         setEmailLoading(false);
         return;
       }
@@ -100,7 +112,10 @@ const Signup = () => {
       // (Fallback — only reached if email confirmation is disabled on Supabase side)
       const billingQuery = billingParam ? `&billing=${billingParam}` : '';
       const redirectQuery = redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : '';
-      const redirectUrl = planParam ? `/onboarding?checkout=${planParam}${billingQuery}${redirectQuery}` : `/onboarding?${redirectQuery.replace('&', '')}`;
+      const refQuery = refParam ? `&ref=${encodeURIComponent(refParam)}` : '';
+      const redirectUrl = planParam
+        ? `/onboarding?checkout=${planParam}${billingQuery}${redirectQuery}${refQuery}`
+        : `/onboarding?${(redirectQuery + refQuery).replace(/^&/, '')}`;
       navigate(redirectUrl);
       setEmailLoading(false);
     }

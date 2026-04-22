@@ -20,6 +20,7 @@ import {
 //      DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
 import UpgradeWall from "@/components/UpgradeWall";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
@@ -775,12 +776,81 @@ function CreativeCheckCard({ block }: { block: any }) {
   );
 }
 
+// ── Plan checkout wiring (shared across in-chat upgrade cards) ──
+const PRICE_IDS_CHAT: Record<string, string> = {
+  maker:  "price_1T9sd1Dr9So14XztT3Mqddch",
+  pro:    "price_1T9sdfDr9So14XztPR3tI14Y",
+  studio: "price_1TMzhCDr9So14Xzt1rUmfs7h",
+};
+
+// Labels rendered client-side so they localize with the user's language.
+const PLAN_LABELS: Record<string, Record<"pt"|"en"|"es", { name: string; credits: string; accounts: string }>> = {
+  maker: {
+    pt: { name: "Maker",  credits: "~33 melhorias/mês",  accounts: "1 conta de anúncios" },
+    en: { name: "Maker",  credits: "~33 improvements/mo", accounts: "1 ad account" },
+    es: { name: "Maker",  credits: "~33 mejoras/mes",    accounts: "1 cuenta de anuncios" },
+  },
+  pro: {
+    pt: { name: "Pro",    credits: "~166 melhorias/mês", accounts: "3 contas de anúncios" },
+    en: { name: "Pro",    credits: "~166 improvements/mo", accounts: "3 ad accounts" },
+    es: { name: "Pro",    credits: "~166 mejoras/mes",   accounts: "3 cuentas de anuncios" },
+  },
+  studio: {
+    pt: { name: "Studio", credits: "Créditos ilimitados", accounts: "Contas ilimitadas" },
+    en: { name: "Studio", credits: "Unlimited credits",   accounts: "Unlimited accounts" },
+    es: { name: "Studio", credits: "Créditos ilimitados", accounts: "Cuentas ilimitadas" },
+  },
+};
+
+const formatChatPlanPrice = (price: number, l: string) => {
+  const suffix = l === "pt" ? "/mês" : l === "es" ? "/mes" : "/mo";
+  return `$${price}${suffix}`;
+};
+
 function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void;onSend?:(msg:string)=>void;accountCtx?:{product?:string;niche?:string;market?:string;platform?:string};stream?:boolean}) {
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const [scriptLoadingIdx,setScriptLoadingIdx]=useState<number|null>(null);
+  const [checkoutLoading,setCheckoutLoading]=useState<string|null>(null);
   const F="'Plus Jakarta Sans', sans-serif";
   const M="'Plus Jakarta Sans', system-ui, sans-serif";
   const MONO="'DM Mono',monospace";
+
+  // ── In-chat Stripe checkout ────────────────────────────────────────────────
+  // Paid plan cards in chat MUST go straight to Stripe, not /pricing. Matches
+  // UpgradeWall error-handling policy: surface real errors via toast, never
+  // swallow with a silent redirect.
+  const startChatCheckout = async (planKey: string) => {
+    const l = (lang === "pt" || lang === "es") ? lang : "en";
+    const priceId = PRICE_IDS_CHAT[planKey];
+    if (!priceId) { onNavigate("/pricing"); return; }
+    setCheckoutLoading(planKey);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { price_id: priceId, billing: "monthly" },
+      });
+      if (error) {
+        const errMsg = (error as any)?.message || "";
+        const errData = (error as any)?.context?.body;
+        let parsed: any = null;
+        try { parsed = typeof errData === "string" ? JSON.parse(errData) : errData; } catch {}
+        if (parsed?.error_code === "disposable_email") {
+          toast.error(l==="pt"?"Email temporário não é aceito. Use um email permanente.":l==="es"?"Email temporal no aceptado. Usa un email permanente.":"Disposable email not accepted. Use a permanent email.");
+        } else if (parsed?.error_code === "ip_rate_limit") {
+          toast.error(l==="pt"?"Muitas tentativas. Tente novamente em algumas horas.":l==="es"?"Demasiados intentos. Intenta en unas horas.":"Too many attempts. Try again in a few hours.");
+        } else {
+          toast.error(l==="pt"?"Não conseguimos iniciar o checkout. Tente novamente.":l==="es"?"No pudimos iniciar el checkout. Intenta de nuevo.":"Couldn't start checkout. Please try again.", { description: errMsg||parsed?.error });
+        }
+        setCheckoutLoading(null);
+        return;
+      }
+      if (data?.url) { window.location.href = data.url; return; }
+      toast.error(l==="pt"?"Resposta inesperada do servidor. Tente novamente.":l==="es"?"Respuesta inesperada del servidor. Intenta de nuevo.":"Unexpected server response. Please try again.");
+    } catch (e) {
+      toast.error(l==="pt"?"Erro de conexão. Verifique sua internet.":l==="es"?"Error de conexión. Verifica tu internet.":"Connection error. Check your internet.", { description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
 
   const copyItem=(text:string,idx:number)=>{
     navigator.clipboard.writeText(text);
@@ -826,32 +896,51 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
   // ── CREDITS EXHAUSTED (FREE) — plan cards ──
   if(block.type==="credits_exhausted_free") {
     const plans = (block as any).plans || [];
+    const l: "pt"|"en"|"es" = (lang === "pt" || lang === "es") ? lang : "en";
     return(
       <div style={{margin:"4px 0 12px"}}>
         <div style={{fontSize:13,color:"rgba(255,255,255,0.50)",fontFamily:F,marginBottom:12,lineHeight:1.5}}>
-          {lang==="pt"?"Seus créditos gratuitos acabaram. Escolha um plano para continuar:":lang==="es"?"Tus créditos gratuitos se agotaron. Elige un plan para continuar:":"Your free credits have run out. Choose a plan to continue:"}
+          {l==="pt"?"Seus créditos gratuitos acabaram. Escolha um plano para continuar:":l==="es"?"Tus créditos gratuitos se agotaron. Elige un plan para continuar:":"Your free credits have run out. Choose a plan to continue:"}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
-          {plans.map((p:any,i:number)=>(
-            <div key={i} onClick={()=>onNavigate("/pricing")} style={{
-              padding:"14px 16px",borderRadius:10,cursor:"pointer",transition:"all 0.18s",
-              background: p.recommended ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)",
-              border: p.recommended ? "1px solid rgba(14,165,233,0.25)" : "1px solid rgba(255,255,255,0.06)",
-            }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background=p.recommended?"rgba(14,165,233,0.12)":"rgba(255,255,255,0.05)"}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=p.recommended?"rgba(14,165,233,0.08)":"rgba(255,255,255,0.03)"}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:14,fontWeight:700,color:p.recommended?"#0ea5e9":"#F0F6FC",fontFamily:F}}>{p.name}</span>
-                  {p.recommended&&<span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>{lang==="pt"?"RECOMENDADO":lang==="es"?"RECOMENDADO":"RECOMMENDED"}</span>}
+          {plans.map((p:any,i:number)=>{
+            // Fallback for old edge-fn responses that don't yet send a `key`.
+            const key: string = p.key || (typeof p.name === "string" ? p.name.toLowerCase() : "");
+            const label = PLAN_LABELS[key]?.[l] || PLAN_LABELS[key]?.en;
+            const priceNum: number | undefined = p.price_monthly;
+            const priceText = typeof priceNum === "number" ? formatChatPlanPrice(priceNum, l) : (p.price || "");
+            const isLoading = checkoutLoading === key;
+            return (
+              <div key={i}
+                role="button"
+                tabIndex={0}
+                onClick={()=>{ if (!checkoutLoading) startChatCheckout(key); }}
+                onKeyDown={e=>{ if ((e.key==="Enter"||e.key===" ") && !checkoutLoading) { e.preventDefault(); startChatCheckout(key); } }}
+                aria-disabled={!!checkoutLoading}
+                style={{
+                  padding:"14px 16px",borderRadius:10,cursor: checkoutLoading ? "wait" : "pointer",transition:"all 0.18s",
+                  background: p.recommended ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)",
+                  border: p.recommended ? "1px solid rgba(14,165,233,0.25)" : "1px solid rgba(255,255,255,0.06)",
+                  opacity: (checkoutLoading && !isLoading) ? 0.5 : 1,
+                }}
+                onMouseEnter={e=>{ if (!checkoutLoading) (e.currentTarget as HTMLElement).style.background=p.recommended?"rgba(14,165,233,0.12)":"rgba(255,255,255,0.05)"; }}
+                onMouseLeave={e=>{ if (!checkoutLoading) (e.currentTarget as HTMLElement).style.background=p.recommended?"rgba(14,165,233,0.08)":"rgba(255,255,255,0.03)"; }}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:14,fontWeight:700,color:p.recommended?"#0ea5e9":"#F0F6FC",fontFamily:F}}>{label?.name || p.name}</span>
+                    {p.recommended&&<span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>{l==="pt"?"RECOMENDADO":l==="es"?"RECOMENDADO":"RECOMMENDED"}</span>}
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    {isLoading && <Loader2 size={12} className="animate-spin" color="#0ea5e9" />}
+                    <span style={{fontSize:13,fontWeight:700,color:"#F0F6FC",fontFamily:F}}>{priceText}</span>
+                  </div>
                 </div>
-                <span style={{fontSize:13,fontWeight:700,color:"#F0F6FC",fontFamily:F}}>{p.price}</span>
+                <div style={{fontSize:11.5,color:"rgba(255,255,255,0.45)",fontFamily:F}}>
+                  {label ? `${label.credits} · ${label.accounts}` : `${p.credits||""}${p.credits&&p.highlight?" · ":""}${p.highlight||""}`}
+                </div>
               </div>
-              <div style={{fontSize:11.5,color:"rgba(255,255,255,0.45)",fontFamily:F}}>
-                {p.credits} · {p.highlight}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
@@ -865,13 +954,20 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
     const options: string[] = (block as any).options || [];
     const showUpgrade = options.includes("upgrade") && nextPlan;
     const showCredits = options.includes("buy_credits");
+    const l: "pt"|"en"|"es" = (lang === "pt" || lang === "es") ? lang : "en";
+    // Next-plan key may not be present in older edge-fn responses — derive from name.
+    const nextKey: string = nextPlan?.key || (typeof nextPlan?.name === "string" ? nextPlan.name.toLowerCase() : "");
+    const nextPriceText = typeof nextPlan?.price_monthly === "number"
+      ? formatChatPlanPrice(nextPlan.price_monthly, l)
+      : (nextPlan?.price || "");
+    const isLoadingUpgrade = checkoutLoading === nextKey;
     return(
       <div style={{margin:"4px 0 12px"}}>
         <div style={{fontSize:13,color:"rgba(255,255,255,0.50)",fontFamily:F,marginBottom:12,lineHeight:1.5}}>
-          {lang==="pt"?`Você usou todos os ${totalCredits.toLocaleString("pt-BR")} créditos do plano ${planName} este mês.`:lang==="es"?`Has usado todos los ${totalCredits.toLocaleString("es")} créditos del plan ${planName} este mes.`:`You've used all ${totalCredits.toLocaleString("en-US")} credits on the ${planName} plan this month.`}
+          {l==="pt"?`Você usou todos os ${totalCredits.toLocaleString("pt-BR")} créditos do plano ${planName} este mês.`:l==="es"?`Has usado todos los ${totalCredits.toLocaleString("es")} créditos del plan ${planName} este mes.`:`You've used all ${totalCredits.toLocaleString("en-US")} credits on the ${planName} plan this month.`}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {/* Buy credits */}
+          {/* Buy credits — routes to /pricing for credit pack selection */}
           {showCredits&&(
             <div onClick={()=>onNavigate("/pricing")} style={{
               padding:"14px 16px",borderRadius:10,cursor:"pointer",transition:"all 0.18s",
@@ -881,31 +977,40 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
             onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)"}}
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)"}}>
               <div>
-                <div style={{fontSize:13.5,fontWeight:700,color:"#F0F6FC",fontFamily:F,marginBottom:3}}>{lang==="pt"?"Comprar créditos extras":lang==="es"?"Comprar créditos extras":"Buy extra credits"}</div>
-                <div style={{fontSize:11,color:"rgba(255,255,255,0.40)",fontFamily:F}}>{lang==="pt"?"Receba mais créditos sem mudar de plano":lang==="es"?"Obtén más créditos sin cambiar de plan":"Get more credits without changing plans"}</div>
+                <div style={{fontSize:13.5,fontWeight:700,color:"#F0F6FC",fontFamily:F,marginBottom:3}}>{l==="pt"?"Comprar créditos extras":l==="es"?"Comprar créditos extras":"Buy extra credits"}</div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.40)",fontFamily:F}}>{l==="pt"?"Receba mais créditos sem mudar de plano":l==="es"?"Obtén más créditos sin cambiar de plan":"Get more credits without changing plans"}</div>
               </div>
               <span style={{fontSize:16,color:"rgba(255,255,255,0.30)"}}>→</span>
             </div>
           )}
-          {/* Upgrade plan */}
+          {/* Upgrade plan — straight to Stripe checkout */}
           {showUpgrade&&(
-            <div onClick={()=>onNavigate("/pricing")} style={{
-              padding:"14px 16px",borderRadius:10,cursor:"pointer",transition:"all 0.18s",
-              background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.20)",
-              display:"flex",alignItems:"center",justifyContent:"space-between",
-            }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.12)"}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.08)"}}>
+            <div
+              role="button"
+              tabIndex={0}
+              aria-disabled={!!checkoutLoading}
+              onClick={()=>{ if (!checkoutLoading) startChatCheckout(nextKey); }}
+              onKeyDown={e=>{ if ((e.key==="Enter"||e.key===" ") && !checkoutLoading) { e.preventDefault(); startChatCheckout(nextKey); } }}
+              style={{
+                padding:"14px 16px",borderRadius:10,cursor: checkoutLoading ? "wait" : "pointer",transition:"all 0.18s",
+                background:"rgba(14,165,233,0.08)",border:"1px solid rgba(14,165,233,0.20)",
+                display:"flex",alignItems:"center",justifyContent:"space-between",
+                opacity: (checkoutLoading && !isLoadingUpgrade) ? 0.5 : 1,
+              }}
+              onMouseEnter={e=>{ if (!checkoutLoading) (e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.12)"; }}
+              onMouseLeave={e=>{ if (!checkoutLoading) (e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.08)"; }}>
               <div>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
-                  <span style={{fontSize:13.5,fontWeight:700,color:"#0ea5e9",fontFamily:F}}>{lang==="pt"?`Subir para ${nextPlan.name}`:lang==="es"?`Subir a ${nextPlan.name}`:`Upgrade to ${nextPlan.name}`}</span>
-                  <span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>+{((nextPlan.credits/totalCredits-1)*100).toFixed(0)}% {lang==="en"?"credits":"créditos"}</span>
+                  <span style={{fontSize:13.5,fontWeight:700,color:"#0ea5e9",fontFamily:F}}>{l==="pt"?`Subir para ${nextPlan.name}`:l==="es"?`Subir a ${nextPlan.name}`:`Upgrade to ${nextPlan.name}`}</span>
+                  <span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>+{((nextPlan.credits/totalCredits-1)*100).toFixed(0)}% {l==="en"?"credits":"créditos"}</span>
                 </div>
                 <div style={{fontSize:11,color:"rgba(255,255,255,0.45)",fontFamily:F}}>
-                  {nextPlan.credits.toLocaleString(lang==="pt"?"pt-BR":lang==="es"?"es":"en-US")} {lang==="en"?"credits":"créditos"} · {nextPlan.price}
+                  {nextPlan.credits.toLocaleString(l==="pt"?"pt-BR":l==="es"?"es":"en-US")} {l==="en"?"credits":"créditos"} · {nextPriceText}
                 </div>
               </div>
-              <span style={{fontSize:16,color:"rgba(14,165,233,0.50)"}}>→</span>
+              {isLoadingUpgrade
+                ? <Loader2 size={14} className="animate-spin" color="#0ea5e9" />
+                : <span style={{fontSize:16,color:"rgba(14,165,233,0.50)"}}>→</span>}
             </div>
           )}
         </div>

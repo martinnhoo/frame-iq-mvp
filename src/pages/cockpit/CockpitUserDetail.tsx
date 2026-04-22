@@ -17,7 +17,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, MessageSquare, Zap, TrendingUp, AlertTriangle,
   ExternalLink, Clock, Building2, Sparkles, CreditCard,
-  User as UserIcon, Copy as CopyIcon, LinkIcon,
+  User as UserIcon, Copy as CopyIcon, LinkIcon, Gift,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -75,6 +75,20 @@ interface Summary {
   timeline: Array<{ kind: string; ts: string; summary: string; data: any }>;
   errors: Array<{ error_type: string; message: string; component: string | null; url: string | null; created_at: string }>;
   anomalies: Array<{ code: string; severity: 'info' | 'warn' | 'critical'; note: string }>;
+  referrals?: {
+    code: string | null;
+    referred_by: { id: string; email: string | null; name: string | null } | null;
+    total_referrals: number;
+    total_bonus_credits_granted: number;
+    recent_claims: Array<{
+      referee_id: string;
+      referee_email: string | null;
+      referee_name: string | null;
+      referee_plan: string | null;
+      bonus_granted: number;
+      created_at: string;
+    }>;
+  };
 }
 
 type TimelineFilter = 'all' | 'chat' | 'action' | 'decision' | 'upgrade_event' | 'error';
@@ -142,7 +156,7 @@ export default function CockpitUserDetail() {
     );
   }
 
-  const { identity, billing, ad_accounts, usage, credits, free_usage, ai_intelligence, errors, anomalies } = data;
+  const { identity, billing, ad_accounts, usage, credits, free_usage, ai_intelligence, errors, anomalies, referrals } = data;
 
   const stripeUrl = billing.stripe_customer_id
     ? `https://dashboard.stripe.com/customers/${billing.stripe_customer_id}`
@@ -510,6 +524,61 @@ export default function CockpitUserDetail() {
               </div>
             )}
           </Card>
+
+          {/* Referrals */}
+          {referrals && (
+            <Card>
+              <SectionHead icon={Gift} title="Referrals" />
+              <RowWithCopy label="Code" value={referrals.code ?? '—'} mono copyable={!!referrals.code} />
+              <Row
+                label="Referred by"
+                value={
+                  referrals.referred_by
+                    ? (referrals.referred_by.email || referrals.referred_by.name || referrals.referred_by.id)
+                    : 'Organic signup'
+                }
+              />
+              <Row label="Total referrals made" value={String(referrals.total_referrals)} />
+              <Row
+                label="Bonus credits granted"
+                value={`${referrals.total_bonus_credits_granted.toLocaleString()} cr (~${Math.round(referrals.total_bonus_credits_granted / 30)} melhorias)`}
+              />
+
+              {referrals.recent_claims.length > 0 && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${COLORS.border}` }}>
+                  <div style={{ fontSize: 11, color: COLORS.textDim, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                    Recent referred users
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 240, overflowY: 'auto' }}>
+                    {referrals.recent_claims.map((c) => (
+                      <div
+                        key={c.referee_id + c.created_at}
+                        style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '6px 8px', borderRadius: 6,
+                          background: 'rgba(255,255,255,0.02)',
+                          fontSize: 12,
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
+                          <span style={{ color: COLORS.textMid, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {c.referee_email || c.referee_name || c.referee_id.slice(0, 8)}
+                          </span>
+                          <span style={{ color: COLORS.textDim, fontSize: 10.5 }}>
+                            {relativeTime(c.created_at)}
+                            {c.referee_plan && c.referee_plan !== 'free' && ` · ${c.referee_plan}`}
+                          </span>
+                        </div>
+                        <span style={{ color: COLORS.textDim, fontSize: 11, fontFamily: MONO, flexShrink: 0, marginLeft: 8 }}>
+                          +{c.bonus_granted}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
 
           {/* Actions by type */}
           {Object.keys(usage.actions_executed.by_type).length > 0 && (

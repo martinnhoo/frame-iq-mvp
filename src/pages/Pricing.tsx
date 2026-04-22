@@ -166,18 +166,57 @@ const Pricing = () => {
 
   const handleUpgrade = async (planKey: Exclude<PlanKey, "free">) => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { navigate(`/signup?plan=${planKey}&cycle=${cycle}`); return; }
+    // Not logged in → route through signup, preserving billing preference
+    if (!session) {
+      const billingParam = cycle === "annual" ? "&billing=annual" : "";
+      navigate(`/signup?plan=${planKey}${billingParam}`);
+      return;
+    }
     const plan = PLANS[planKey];
     if (!plan) return;
     setUpgrading(planKey);
     try {
-      const priceId = cycle === "annual" ? plan.price_id_annual : plan.price_id_monthly;
-      const { data, error } = await supabase.functions.invoke("create-checkout", { body: { price_id: priceId } });
-      if (error) throw error;
-      if (data?.url) window.location.href = data.url;
-      else toast.error("Could not create checkout session");
-    } catch {
-      toast.error("Something went wrong. Please try again.");
+      // Send monthly price_id + billing flag. Edge fn maps to annual via ANNUAL_PRICES.
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: {
+          price_id: plan.price_id_monthly,
+          billing: cycle === "annual" ? "annual" : "monthly",
+        },
+      });
+
+      if (error) {
+        const errMsg = (error as any)?.message || "";
+        const errData = (error as any)?.context?.body;
+        let parsed: any = null;
+        try { parsed = typeof errData === "string" ? JSON.parse(errData) : errData; } catch {}
+
+        if (parsed?.error_code === "disposable_email") {
+          toast.error(lang === "pt" ? "Email temporário não é aceito. Use um email permanente." :
+                      lang === "es" ? "Email temporal no aceptado. Usa un email permanente." :
+                      "Disposable email not accepted. Use a permanent email.");
+        } else if (parsed?.error_code === "ip_rate_limit") {
+          toast.error(lang === "pt" ? "Muitas tentativas. Tente novamente em algumas horas." :
+                      lang === "es" ? "Demasiados intentos. Intenta en unas horas." :
+                      "Too many attempts. Try again in a few hours.");
+        } else {
+          toast.error(lang === "pt" ? "Não conseguimos iniciar o checkout. Tente novamente." :
+                      lang === "es" ? "No pudimos iniciar el checkout. Intenta de nuevo." :
+                      "Couldn't start checkout. Please try again.",
+                      { description: errMsg || parsed?.error });
+        }
+        return;
+      }
+
+      if (data?.url) { window.location.href = data.url; return; }
+
+      toast.error(lang === "pt" ? "Resposta inesperada do servidor. Tente novamente." :
+                  lang === "es" ? "Respuesta inesperada del servidor. Intenta de nuevo." :
+                  "Unexpected server response. Please try again.");
+    } catch (e) {
+      toast.error(lang === "pt" ? "Erro de conexão. Verifique sua internet." :
+                  lang === "es" ? "Error de conexión. Verifica tu internet." :
+                  "Connection error. Check your internet.",
+                  { description: e instanceof Error ? e.message : undefined });
     } finally { setUpgrading(null); }
   };
 

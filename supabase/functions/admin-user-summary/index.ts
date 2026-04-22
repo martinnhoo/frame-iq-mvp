@@ -149,7 +149,7 @@ Deno.serve(async (req: Request) => {
     supabase
       .from("profiles")
       .select(
-        "id, email, name, avatar_url, plan, subscription_status, stripe_customer_id, trial_end, current_period_end, plan_started_at, last_ai_action_at, onboarding_data"
+        "id, email, name, avatar_url, plan, subscription_status, stripe_customer_id, trial_end, current_period_end, plan_started_at, last_ai_action_at, onboarding_data, referral_code, referred_by"
       )
       .eq("id", targetId)
       .maybeSingle(),
@@ -377,6 +377,70 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  // ── 6b. Referral data ────────────────────────────────────────────────────
+  // Referrals this user has made (as referrer) + who referred this user (if any).
+  const referralCode = profile?.referral_code ?? null;
+  const referredBy = profile?.referred_by ?? null;
+
+  const [refClaimsAsReferrerRes, refClaimsAsRefereeRes] = await Promise.all([
+    supabase
+      .from("referral_claims")
+      .select("referee_id, bonus_granted, created_at")
+      .eq("referrer_id", targetId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    referredBy
+      ? supabase
+          .from("referral_claims")
+          .select("referrer_id, bonus_granted, created_at")
+          .eq("referee_id", targetId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  // Enrich claims with referee emails (show who signed up using this user's code).
+  const refereeIds = (refClaimsAsReferrerRes.data ?? []).map((c: any) => c.referee_id);
+  let refereeProfiles: Array<{ id: string; email: string | null; name: string | null; plan: string | null }> = [];
+  if (refereeIds.length > 0) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, email, name, plan")
+      .in("id", refereeIds);
+    refereeProfiles = data ?? [];
+  }
+  const refereeMap = new Map(refereeProfiles.map(p => [p.id, p]));
+
+  // If user was referred, fetch referrer info.
+  let referrerInfo: { id: string; email: string | null; name: string | null } | null = null;
+  if (referredBy) {
+    const { data: r } = await supabase
+      .from("profiles")
+      .select("id, email, name")
+      .eq("id", referredBy)
+      .maybeSingle();
+    if (r) referrerInfo = { id: r.id, email: r.email, name: r.name };
+  }
+
+  const totalReferrals = (refClaimsAsReferrerRes.data ?? []).length;
+  const totalBonusGrantedToReferrer = (refClaimsAsReferrerRes.data ?? [])
+    .reduce((sum: number, c: any) => sum + (c.bonus_granted ?? 0), 0);
+
+  const referrals = {
+    code: referralCode,
+    referred_by: referrerInfo, // who referred THIS user (null if they signed up organically)
+    total_referrals: totalReferrals,
+    total_bonus_credits_granted: totalBonusGrantedToReferrer,
+    // Each claim delivers REFERRAL_BONUS_CREDITS to referrer AND referee.
+    recent_claims: (refClaimsAsReferrerRes.data ?? []).map((c: any) => ({
+      referee_id: c.referee_id,
+      referee_email: refereeMap.get(c.referee_id)?.email ?? null,
+      referee_name: refereeMap.get(c.referee_id)?.name ?? null,
+      referee_plan: refereeMap.get(c.referee_id)?.plan ?? null,
+      bonus_granted: c.bonus_granted,
+      created_at: c.created_at,
+    })),
+  };
+
   // ── 7. Audit log ─────────────────────────────────────────────────────────
   await logAdminAction(supabase, {
     admin_user_id: admin.id,
@@ -431,6 +495,7 @@ Deno.serve(async (req: Request) => {
       current: userCreditsRes.data ?? null,
       recent_transactions: creditTxAllRes.data ?? [],
     },
+    referrals,
     free_usage: freeUsageRes.data ?? null,
     ai_intelligence: {
       profile: userAiProfileRes.data ?? null,

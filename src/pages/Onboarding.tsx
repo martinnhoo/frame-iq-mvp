@@ -149,7 +149,12 @@ export default function Onboarding() {
   const checkoutPlan    = searchParams.get("checkout");
   const checkoutBilling = searchParams.get("billing");
   const redirectAfter   = searchParams.get("redirect"); // e.g. "/demo?unlocked=1"
-  const refParam        = searchParams.get("ref");       // referral code from URL
+  // Referral code: prefer URL, fall back to localStorage (survives email confirm / OAuth bounce).
+  const urlRef          = searchParams.get("ref");
+  const storedRef       = (typeof window !== "undefined")
+    ? (() => { try { return window.localStorage.getItem("adbrief_ref_code"); } catch { return null; } })()
+    : null;
+  const refParam        = urlRef || storedRef;
   const { language: globalLang } = useLanguage();
   const lang = (["pt","en","es"].includes(globalLang) ? globalLang : "en") as "pt"|"en"|"es";
   const t = T[lang];
@@ -213,7 +218,10 @@ export default function Onboarding() {
           toast.error(msg);
         } else if (claimResult?.success) {
           setReferralClaimed(true);
-          toast.success(lang === "pt" ? `+${claimResult.bonus} de capacidade extra!` : lang === "es" ? `+${claimResult.bonus} de capacidad extra!` : `+${claimResult.bonus} extra capacity!`);
+          // Clear stored ref so it can't be re-attempted on future logins.
+          try { window.localStorage.removeItem("adbrief_ref_code"); } catch {}
+          const improvements = claimResult.bonus_improvements || 10;
+          toast.success(lang === "pt" ? `+${improvements} melhorias grátis desbloqueadas!` : lang === "es" ? `¡+${improvements} mejoras gratis desbloqueadas!` : `+${improvements} free improvements unlocked!`);
         } else if (claimResult?.error) {
           // Edge function returned 200 but with error field (shouldn't happen, safety net)
           const errCode = claimResult.error;

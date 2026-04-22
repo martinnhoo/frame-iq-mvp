@@ -72,7 +72,13 @@ export const TRIAL_CREDITS: Record<string, number> = {
 };
 
 // ── Referral bonus ────────────────────────────────────────────────────────────
-export const REFERRAL_BONUS_CREDITS = 10;
+// 300 credits = 10 melhorias on Maker (30 credits each), 20 on Pro (15 each),
+// irrelevant on Studio (unlimited). UI promises "+10 melhorias grátis" so
+// this constant is calibrated to the Maker plan (entry-level, most common).
+export const REFERRAL_BONUS_CREDITS = 300;
+
+// For UI display: how many "melhorias" 300 credits buys on the Maker plan.
+export const REFERRAL_BONUS_IMPROVEMENTS = 10;
 
 // ── Conversation cap (safety: prevents unbounded context cost) ────────────────
 export const MAX_CONVERSATION_MESSAGES = 20;
