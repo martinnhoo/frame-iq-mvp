@@ -13,6 +13,7 @@ import type { Decision, DecisionAction } from '../../types/v2-database';
 import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
 import { GoalSetup } from '../../components/feed/GoalSetup';
 import { HealthPanel, type HealthSignal } from '../../components/feed/HealthPanel';
+import { AccountHealthGauge, type AccountStatusSummary } from '../../components/feed/AccountHealthGauge';
 import { Pause, Play } from 'lucide-react';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
@@ -4631,6 +4632,70 @@ const FeedPage: React.FC = () => {
     setPixelHealthRetryNonce((n) => n + 1);
   }, []);
 
+  // ── Account Status (Meta account-level health) — deterministic via edge fn.
+  // Populates the "Saúde da conta" gauge. Default state is green; severity
+  // only escalates when Meta flags the account or balance/cap are in trouble.
+  // Cached 15 min server-side.
+  const [accountStatus, setAccountStatus] = useState<AccountStatusSummary | null>(null);
+  const [accountStatusLoading, setAccountStatusLoading] = useState(true);
+  const [accountStatusError, setAccountStatusError] = useState(false);
+  const [accountStatusRetryNonce, setAccountStatusRetryNonce] = useState(0);
+
+  useEffect(() => {
+    if (!userId || isDemo || !metaSelId) {
+      setAccountStatus(null);
+      setAccountStatusError(false);
+      setAccountStatusLoading(false);
+      return;
+    }
+    if (!accountId) {
+      setAccountStatusLoading(true);
+      setAccountStatusError(false);
+      return;
+    }
+    let cancelled = false;
+    setAccountStatusLoading(true);
+    setAccountStatusError(false);
+    (async () => {
+      try {
+        const accountIdForStatus = metaSelId && metaSelId.startsWith('act_')
+          ? metaSelId
+          : accountId;
+        const { data, error } = await supabase.functions.invoke('account-status-check', {
+          body: { user_id: userId, account_id: accountIdForStatus },
+        });
+        if (cancelled) return;
+        if (error || !data || (data as any).error) {
+          // Edge fn returns 200 with severity='unknown' on soft failure.
+          // Only treat as a hard error when there's no payload at all.
+          if (!data) {
+            setAccountStatus(null);
+            setAccountStatusError(true);
+          } else {
+            setAccountStatus(data as AccountStatusSummary);
+            setAccountStatusError(false);
+          }
+        } else {
+          setAccountStatus(data as AccountStatusSummary);
+          setAccountStatusError(false);
+        }
+      } catch (err) {
+        console.warn('[feed] account-status-check failed:', err);
+        if (!cancelled) {
+          setAccountStatus(null);
+          setAccountStatusError(true);
+        }
+      } finally {
+        if (!cancelled) setAccountStatusLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [accountId, metaSelId, userId, isDemo, accountStatusRetryNonce]);
+
+  const retryAccountStatus = useCallback(() => {
+    setAccountStatusRetryNonce((n) => n + 1);
+  }, []);
+
   // ── Tracking health — PIXEL-ONLY.
   // The big card only fires for deterministic pixel issues from Meta API (no_pixel,
   // pixel_stale, pixel_orphan). The heuristic "0 conversions + spend" case is
@@ -5774,6 +5839,27 @@ const FeedPage: React.FC = () => {
           <CommandKPIStrip
             m={adMetrics}
             periodLabel={PERIODS.find(p => p.key === period)!.label}
+          />
+        )}
+
+        {/* ═══════════════════════════════════════════════
+            LAYER 1.7 — SAÚDE DA CONTA (functional score gauge)
+            Default green. Only turns yellow/red when Meta flags the account,
+            balance/cap is in trouble, pixel is broken, no active ads, or
+            spend without conversions. All signals come from REAL data —
+            account-status-check + pixel-health-check + live-metrics.
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && !isDemo && (
+          <AccountHealthGauge
+            accountStatus={accountStatus}
+            accountStatusLoading={accountStatusLoading}
+            accountStatusError={accountStatusError}
+            onRetryAccountStatus={retryAccountStatus}
+            pixelHealth={pixelHealth}
+            pixelHealthLoading={pixelHealthLoading}
+            adMetrics={adMetrics}
+            activeAdsCount={activeAdsCount}
+            hasMetaConnection={metaConnected}
           />
         )}
 
