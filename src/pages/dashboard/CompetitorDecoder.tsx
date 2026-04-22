@@ -405,7 +405,7 @@ ${t.link_placeholder}`} rows={5}
             <div style={{ padding: "18px", borderRadius: 12, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.18)" }}>
               <p style={{ ...M, fontSize: 13, color: "rgba(238,240,246,0.75)", lineHeight: 1.7, margin: "0 0 14px" }}>{(result as any)._message}</p>
               <button onClick={() => { setTab("text"); setAdText(tab === "video" ? "" : adText); setResult(null); }}
-                style={{ ...M, fontSize: 12, fontWeight: 600, color: "#38bdf8", background: "rgba(14,165,233,0.10)", border: "1px solid rgba(14,165,233,0.22)", padding: "7px 14px", borderRadius: 7, cursor: "pointer" }}>
+                style={{ ...M, fontSize: 12, fontWeight: 600, color: "#f0f9ff", background: "#0284c7", border: "1px solid #0ea5e9", padding: "7px 14px", borderRadius: 7, cursor: "pointer" }}>
                 {lang === "pt" ? "Cole o texto manualmente" : lang === "es" ? "Pega el texto manualmente" : "Paste text manually"}
               </button>
             </div>

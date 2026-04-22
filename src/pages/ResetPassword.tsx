@@ -153,7 +153,7 @@ export default function ResetPassword() {
           <p style={{ fontFamily: M, fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65, marginBottom: 24 }}>
             {t("reset_invalid_text")}
           </p>
-          <Link to="/forgot-password" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "11px 22px", borderRadius: 10, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#0ea5e9", textDecoration: "none", fontFamily: F, fontSize: 13, fontWeight: 600 }}>
+          <Link to="/forgot-password" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "11px 22px", borderRadius: 10, background: "#0284c7", border: "1px solid #0ea5e9", color: "#f0f9ff", textDecoration: "none", fontFamily: F, fontSize: 13, fontWeight: 600 }}>
             {t("reset_invalid_btn")} <ArrowRight size={14} />
           </Link>
         </div>

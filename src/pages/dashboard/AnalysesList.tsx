@@ -133,7 +133,7 @@ export default function AnalysesList() {
           <p style={{ fontFamily: F, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.45)", marginBottom: 6 }}>{t.empty_title}</p>
           <p style={{ fontFamily: F, fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>{t.empty_sub}</p>
           <button onClick={() => navigate("/dashboard/analyses/new")}
-            style={{ padding: "9px 20px", borderRadius: 10, fontFamily: F, fontSize: 13, fontWeight: 600, background: "rgba(14,165,233,0.1)", color: "#0ea5e9", border: "1px solid rgba(14,165,233,0.2)", cursor: "pointer" }}>
+            style={{ padding: "9px 20px", borderRadius: 10, fontFamily: F, fontSize: 13, fontWeight: 600, background: "#0284c7", color: "#f0f9ff", border: "1px solid #0ea5e9", cursor: "pointer" }}>
             {t.empty_btn}
           </button>
         </div>

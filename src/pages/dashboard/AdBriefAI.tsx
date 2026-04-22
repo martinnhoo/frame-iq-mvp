@@ -895,9 +895,9 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
     <div style={{margin:"4px 0 8px"}}>
       {block.content&&<p style={{fontFamily:M,fontSize:13.5,color:"rgba(255,255,255,0.55)",lineHeight:1.65,marginBottom:10}}>{block.content}</p>}
       <button onClick={()=>onNavigate(block.route!,block.params)}
-        style={{fontFamily:F,fontSize:12,fontWeight:700,padding:"7px 16px",borderRadius:8,background:"rgba(14,165,233,0.1)",color:"rgba(14,165,233,0.9)",border:"1px solid rgba(14,165,233,0.2)",cursor:"pointer",letterSpacing:"-0.01em",transition:"all 0.15s"}}
-        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.18)"}}
-        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.1)"}}>
+        style={{fontFamily:F,fontSize:12,fontWeight:700,padding:"7px 16px",borderRadius:8,background:"#0284c7",color:"#f0f9ff",border:"1px solid #0ea5e9",cursor:"pointer",letterSpacing:"-0.01em",transition:"all 0.15s"}}
+        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="#0ea5e9"}}
+        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="#0284c7"}}>
         {block.cta||"Abrir →"}
       </button>
     </div>

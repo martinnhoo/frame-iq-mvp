@@ -683,15 +683,15 @@ export default function IntelligencePage() {
             </h1>
           </div>
           <p style={{ margin:0, fontSize:13, color:"rgba(255,255,255,0.4)" }}>{t.subtitle}</p>
-          {/* Scope badge */}
+          {/* Scope badge — solid fill on active persona, neutral pill when global. */}
           <div style={{ marginTop:8, display:"inline-flex", alignItems:"center", gap:5,
             padding:"3px 10px", borderRadius:99,
-            background: selectedPersona ? "rgba(14,165,233,0.10)" : "rgba(255,255,255,0.06)",
-            border: selectedPersona ? "1px solid rgba(14,165,233,0.25)" : "1px solid rgba(255,255,255,0.10)" }}>
+            background: selectedPersona ? "#0284c7" : "rgba(255,255,255,0.06)",
+            border: selectedPersona ? "1px solid #0ea5e9" : "1px solid rgba(255,255,255,0.10)" }}>
             <div style={{ width:6, height:6, borderRadius:"50%",
-              background: selectedPersona ? "#0ea5e9" : "rgba(255,255,255,0.3)" }}/>
+              background: selectedPersona ? "#f0f9ff" : "rgba(255,255,255,0.3)" }}/>
             <span style={{ fontFamily:F, fontSize:12, fontWeight:600,
-              color: selectedPersona ? "#38bdf8" : "rgba(255,255,255,0.5)" }}>
+              color: selectedPersona ? "#f0f9ff" : "rgba(255,255,255,0.5)" }}>
               {accountLabel}
             </span>
           </div>

@@ -1833,7 +1833,7 @@ const TemplatesPage = () => {
             onClick={() => { setActiveDuration(d); setPage(1); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all min-h-[36px]"
             style={activeDuration === d
-              ? { background: "rgba(14,165,233,0.15)", borderColor: "rgba(14,165,233,0.4)", color: "#0ea5e9" }
+              ? { background: "#0284c7", borderColor: "#0ea5e9", color: "#f0f9ff" }
               : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.35)" }}
           >
             <Clock className="h-3 w-3" />{label}

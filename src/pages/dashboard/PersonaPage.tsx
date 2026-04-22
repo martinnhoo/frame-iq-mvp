@@ -509,7 +509,7 @@ function PersonaDetailEditable({
           {activeDetail && globalPersona?.id === activeDetail.id ? (
             <button onClick={() => setGlobalPersona(null)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={{ background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.4)", color: "#0ea5e9" }}>
+              style={{ background: "#0284c7", border: "1px solid #0ea5e9", color: "#f0f9ff" }}>
               <Check className="h-3.5 w-3.5" /> {dt("pe_active_deactivate")}
             </button>
           ) : activeDetail ? (
