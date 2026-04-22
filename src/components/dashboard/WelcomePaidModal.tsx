@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   X, Check, ArrowRight, Sparkles, LayoutGrid, Gauge, Send, Crown,
+  type LucideIcon,
 } from "lucide-react";
 
 const F = "'Plus Jakarta Sans', sans-serif";
