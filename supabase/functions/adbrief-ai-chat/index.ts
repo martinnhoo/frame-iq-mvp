@@ -830,9 +830,10 @@ Deno.serve(async (req) => {
         .eq("user_id", user_id)
         .order("created_at", { ascending: false })
         .limit(3),
-      // 6. Persona row
+      // 6. Persona row — bring the full business context (name, site, description) so
+      //    the AI never asks for what the user already configured.
       persona_id
-        ? supabase.from("personas").select("result").eq("id", persona_id).maybeSingle()
+        ? supabase.from("personas").select("result, name, website, description").eq("id", persona_id).maybeSingle()
         : Promise.resolve({ data: null }),
       // 7. Learned patterns — STRICT persona scope (limit 20)
       persona_id
@@ -1057,7 +1058,15 @@ Deno.serve(async (req) => {
     const businessGoal = (aiProfile as any)?.ai_recommendations?.business_goal || null;
 
     // ── Load user-defined account goal (Conversion Intelligence) ──
-    let accountGoal: { objective: string; primary_metric: string; conversion_event: string; target_value: number | null } | null = null;
+    let accountGoal:
+      | {
+          objective: string;
+          primary_metric: string;
+          conversion_event: string;
+          target_value: number | null;
+          profit_margin_pct: number | null;
+        }
+      | null = null;
     try {
       const metaConn = (platformConns || []).find((c: any) => c.platform === "meta" && c.ad_accounts?.length);
       if (metaConn) {
@@ -1066,7 +1075,9 @@ Deno.serve(async (req) => {
         if (selId) {
           const { data: goalRow } = await (supabase as any)
             .from("ad_accounts")
-            .select("goal_objective, goal_primary_metric, goal_conversion_event, goal_target_value")
+            .select(
+              "goal_objective, goal_primary_metric, goal_conversion_event, goal_target_value, profit_margin_pct",
+            )
             .eq("user_id", user_id)
             .eq("meta_account_id", String(selId).replace("act_", ""))
             .maybeSingle();
@@ -1076,6 +1087,7 @@ Deno.serve(async (req) => {
               primary_metric: goalRow.goal_primary_metric,
               conversion_event: goalRow.goal_conversion_event,
               target_value: goalRow.goal_target_value,
+              profit_margin_pct: goalRow.profit_margin_pct ?? null,
             };
           }
         }
@@ -1083,13 +1095,63 @@ Deno.serve(async (req) => {
     } catch (e) { console.error("[adbrief-ai-chat] accountGoal load error:", e); }
 
     const persona = personaRow as any;
-    const personaName = (persona?.result as any)?.name || "";
+    // Business-level fields live on the persona row itself (top-level columns),
+    // while audience/tone/etc live inside `result`.
+    const personaBusinessName = persona?.name || (persona?.result as any)?.name || "";
+    const personaSite = (persona?.website || "").trim();
+    const personaDescription = (persona?.description || "").trim();
+    const personaName = personaBusinessName;
     const personaCtx = persona?.result
       ? `ACTIVE WORKSPACE: ${personaName} | ${(persona.result as any)?.headline || ""}
 Market: ${(persona.result as any)?.preferred_market || "unknown"} | Age: ${(persona.result as any)?.age || "—"}
 Platforms: ${((persona.result as any)?.best_platforms || []).join(", ")}
 Language style: ${(persona.result as any)?.language_style || "—"}`
+      : persona?.name
+      ? `ACTIVE WORKSPACE: ${personaName}`
       : "";
+
+    // ── USER DEFAULTS ──────────────────────────────────────────────────────────
+    // Single source-of-truth block. The AI must read this BEFORE asking clarifying
+    // questions about objective, target CPA/ROAS, margin, or landing page.
+    const defaultsBlock = (() => {
+      const hasGoal = !!accountGoal;
+      const hasSite = !!personaSite;
+      const hasMargin = accountGoal?.profit_margin_pct != null;
+      if (!hasGoal && !hasSite && !hasMargin && !personaDescription) return "";
+
+      const lines: string[] = [];
+      lines.push("=== DADOS JÁ CONFIGURADOS PELO USUÁRIO — NÃO PERGUNTE DE NOVO ===");
+      if (personaBusinessName) lines.push(`Negócio: ${personaBusinessName}`);
+      if (personaSite) lines.push(`Site/Landing Page configurada: ${personaSite.startsWith("http") ? personaSite : `https://${personaSite}`}`);
+      if (personaDescription) lines.push(`Descrição: ${personaDescription.slice(0, 200)}`);
+      if (accountGoal) {
+        const objLabel =
+          accountGoal.objective === "leads"
+            ? "Gerar leads/cadastros"
+            : accountGoal.objective === "sales"
+            ? "Vendas/E-commerce"
+            : accountGoal.objective === "traffic"
+            ? "Tráfego/Visitas"
+            : accountGoal.objective;
+        lines.push(`Objetivo: ${objLabel}`);
+        lines.push(`Métrica principal: ${accountGoal.primary_metric.toUpperCase()}`);
+        lines.push(`Evento de conversão: ${accountGoal.conversion_event}`);
+        if (accountGoal.target_value != null) {
+          const target =
+            accountGoal.primary_metric === "roas"
+              ? `${(accountGoal.target_value / 10000).toFixed(2)}x ROAS`
+              : `R$${(accountGoal.target_value / 100).toFixed(2)} ${accountGoal.primary_metric.toUpperCase()}`;
+          lines.push(`Meta definida: ${target}`);
+        }
+      }
+      if (accountGoal?.profit_margin_pct != null) {
+        lines.push(`Margem de lucro: ${accountGoal.profit_margin_pct}% (usa isso pra calcular ROAS mínimo e custo máximo aceitável por conversão)`);
+      }
+      lines.push(
+        "REGRA: Esses campos JÁ ESTÃO CONFIGURADOS. NUNCA pergunte 'qual é o objetivo?', 'qual o CPA alvo?', 'qual sua margem?', 'qual a landing?'. Use os valores acima como verdade. Se o usuário quiser analisar outra LP, ele vai colar o link — até lá, assuma a configurada.",
+      );
+      return lines.join("\n");
+    })();
 
     const importInsights = imports
       .map((i: any) => {
@@ -1863,6 +1925,7 @@ IDIOMA DO USUÁRIO: ${uiLang === "pt" ? "Português — responda SEMPRE em portu
 REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre planos. NUNCA invente limitações de features baseado no plano.`;
       })(),
       personaCtx,
+      defaultsBlock,
       `CONNECTED PLATFORMS: ${connectedPlatforms.length ? connectedPlatforms.join(", ") : "none"}`,
       liveMetaData || "",
       // liveGoogleData — disabled
@@ -1904,16 +1967,13 @@ REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre pl
         if (!profile) return "";
         const directive = profile?.ai_recommendations?.weekly_directive;
         const lines = [
-          // Account goal (user-configured) — HIGHEST PRIORITY
+          // Account goal — reinforces the defaultsBlock with an operational rule.
+          // The full config already lives in defaultsBlock above; here we only
+          // state how to USE it during analysis.
           accountGoal
-            ? `=== OBJETIVO DEFINIDO PELO USUÁRIO (PRIORIDADE MÁXIMA) ===
-Objetivo: ${accountGoal.objective === "leads" ? "Gerar leads/cadastros" : accountGoal.objective === "sales" ? "Vendas/E-commerce" : accountGoal.objective === "traffic" ? "Tráfego/Visitas" : accountGoal.objective}
-MÉTRICA PRINCIPAL: ${accountGoal.primary_metric.toUpperCase()} — TODAS as análises de performance DEVEM usar essa métrica como referência principal. CTR é apenas complemento.
-Conversão rastreada: ${accountGoal.conversion_event} (evento do Pixel do Meta)
-${accountGoal.target_value ? `Meta: ${accountGoal.primary_metric === "roas" ? (accountGoal.target_value / 10000).toFixed(1) + "x ROAS" : "R$" + (accountGoal.target_value / 100).toFixed(2) + " " + accountGoal.primary_metric.toUpperCase()}` : "Sem meta definida — pergunte ao usuário se quiser definir"}
-REGRA: Quando comparar campanhas ou julgar performance, use ${accountGoal.primary_metric.toUpperCase()} como critério principal. Se conversões = 0, isso é SEMPRE o diagnóstico #1.`
-            : `=== SEM OBJETIVO DEFINIDO ===
-O usuário NÃO configurou objetivo de negócio ainda. Quando perguntarem "qual campanha é melhor?" ou pedirem análise de performance, PERGUNTE PRIMEIRO: "Qual é o objetivo — leads, vendas, tráfego?" Sem isso, qualquer veredito é incompleto.`,
+            ? `REGRA DE JULGAMENTO: Use ${accountGoal.primary_metric.toUpperCase()} como métrica principal de performance (CTR é só complemento). Se conversões = 0 sobre spend relevante, isso é SEMPRE o diagnóstico #1.`
+            : `=== OBJETIVO AINDA NÃO CONFIGURADO ===
+Este usuário ainda não definiu objetivo de negócio. Se ele pedir análise de performance sem contexto, sugira definir o objetivo nas configurações da conta ANTES de cravar um veredito, mas ainda assim entregue o que der pra dizer com os dados disponíveis (CTR, frequência, tendências). Não faça do objetivo uma barreira pra ajudar.`,
           // Business goal from AI (secondary — inferred, not user-confirmed)
           businessGoal && !accountGoal
             ? `OBJETIVO INFERIDO (não confirmado pelo usuário): ${businessGoal.goal}${businessGoal.target_cpa ? ` | CPA sugerido: ${businessGoal.target_cpa}` : ""}${businessGoal.budget ? ` | Budget: ${businessGoal.budget}` : ""}`
@@ -2045,27 +2105,61 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
     // predictable and let the user control when a page is (re)read.
     const originalMsg = typeof message === "string" ? message : "";
     const landingUrls = extractLandingUrls(originalMsg);
-    const landingSnapshots: Array<Awaited<ReturnType<typeof getOrFetchLanding>>> = [];
+    type LandingSnap = Awaited<ReturnType<typeof getOrFetchLanding>> & { auto?: boolean };
+    const landingSnapshots: LandingSnap[] = [];
     if (landingUrls.length > 0 && user_id) {
       _lap(`lp-fetch-start (${landingUrls.length})`);
       const fetched = await Promise.allSettled(
         landingUrls.map((u) => getOrFetchLanding(supabase, user_id, u)),
       );
       for (const r of fetched) {
-        if (r.status === "fulfilled" && r.value) landingSnapshots.push(r.value);
+        if (r.status === "fulfilled" && r.value) landingSnapshots.push(r.value as LandingSnap);
       }
       _lap(`lp-fetch-done (${landingSnapshots.length})`);
+    }
+
+    // ── Proactive LP fetch ───────────────────────────────────────────────────
+    // If the user has a configured site on the active persona, didn't paste a
+    // URL in this message, and is asking something where the LP would add
+    // signal (performance, conversion, pixel, "analisa minha conta", etc.),
+    // auto-fetch the configured site. 24h cache keeps this cheap on repeat.
+    if (
+      landingSnapshots.length === 0 &&
+      personaSite &&
+      user_id &&
+      originalMsg.trim().length > 8
+    ) {
+      const rawLower = originalMsg.toLowerCase();
+      const wantsLPSignal =
+        /\b(conver[ts][aã]o|0\s*conver|sem\s*conver|nenhuma\s*conver|cpa|roas|custo|lucro|margem|pixel|track|evento|analis[ea]|auditoria|revis[ae]|diagn[oó]stico|por\s*qu[eê].*(n[aã]o|sem)|o que\s+(est[áa]|t[áa])|problema|baixo|caro|ruim|melhor[ae]?\s+a|reativar|prioriz|o que\s+fa[zç]o|do que\s+precis|minha\s+conta)/
+          .test(rawLower);
+      if (wantsLPSignal) {
+        try {
+          const autoUrl = personaSite.startsWith("http") ? personaSite : `https://${personaSite}`;
+          _lap("lp-auto-fetch-start");
+          const auto = await getOrFetchLanding(supabase, user_id, autoUrl);
+          if (auto) landingSnapshots.push({ ...auto, auto: true });
+          _lap(`lp-auto-fetch-done (${landingSnapshots.length})`);
+        } catch (e) {
+          console.warn("[adbrief-ai-chat] auto LP fetch failed:", e);
+        }
+      }
     }
 
     // Build the prompt block — empty string when there are no URLs, so the AI
     // doesn't even know the capability exists and won't prompt for links.
     const landingPageBlock = (() => {
       if (!landingSnapshots.length) return "";
+      const anyAuto = landingSnapshots.some((lp: any) => lp?.auto);
+      const anyPasted = landingSnapshots.some((lp: any) => !lp?.auto);
       const rendered = landingSnapshots
-        .map((lp) => {
+        .map((lp: any) => {
           if (!lp) return "";
+          const header = lp.auto
+            ? `### LP CONFIGURADA (auto-carregada): ${lp.url}`
+            : `### LP: ${lp.url}`;
           if (lp.source === "error" || !lp.content) {
-            return `### LP: ${lp.url}\nNão foi possível acessar esta página (${lp.error || "fetch error"}). Comente isso honestamente ao usuário — não invente o conteúdo.`;
+            return `${header}\nNão foi possível acessar esta página (${lp.error || "fetch error"}). Comente isso honestamente ao usuário — não invente o conteúdo.`;
           }
           const pixelLine = lp.hasFbPixel
             ? (lp.hasConvEvent
@@ -2075,7 +2169,7 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
           const ctaLine = lp.primaryCta ? `CTA principal detectado: "${lp.primaryCta}"` : "Nenhum CTA claro detectado no texto principal.";
           const content = (lp.content || "").slice(0, 4000);
           return [
-            `### LP: ${lp.url}`,
+            header,
             lp.title ? `Título: ${lp.title}` : "",
             `Fonte: ${lp.source}`,
             pixelLine,
@@ -2089,8 +2183,16 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
         .filter(Boolean)
         .join("\n\n");
 
+      const blockTitle = anyPasted
+        ? "LANDING PAGES QUE O USUÁRIO ACABOU DE COMPARTILHAR"
+        : "LANDING PAGE CONFIGURADA (PUXADA AUTOMATICAMENTE)";
+
+      const proactivityFooter = anyAuto && !anyPasted
+        ? `\nEste é o site que o usuário configurou para esta workspace. Ele NÃO colou a URL nesta mensagem — você puxou por conta própria porque a pergunta dele pede esse contexto (conversão, performance, análise da conta, etc.).\n\nCOMO USAR:\n- Incorpore o insight da LP naturalmente na resposta. Não peça permissão.\n- Abra SE fizer sentido com algo como "olhei sua landing em ${landingSnapshots[0]?.url}..." pra deixar claro que você analisou.\n- Se o usuário quiser analisar OUTRA LP, ele cola o link — aí você troca.`
+        : "";
+
       return `\n\n═══════════════════════════════════
-LANDING PAGES QUE O USUÁRIO ACABOU DE COMPARTILHAR
+${blockTitle}
 ═══════════════════════════════════
 
 ${rendered}
@@ -2101,7 +2203,7 @@ REGRAS AO ANALISAR ESTA(S) LANDING PAGE(S):
 - Se detectamos "NENHUM pixel" ou "sem evento de conversão" acima, CITE isso como causa provável quando o usuário reclamar de 0 conversões — é dado concreto, não suposição.
 - Avalie o CTA: clareza, posição implícita no fluxo, fricção do formulário (se mencionado no extrato).
 - Se a página tem MUITO texto técnico antes da oferta, ou o CTA aparece só no final, levante isso como fricção.
-- Se falhou em acessar (source=error), fale com o usuário — ofereça caminhos (site com paywall/login, bot-wall, SPA pesado) em vez de alucinar.
+- Se falhou em acessar (source=error), fale com o usuário — ofereça caminhos (site com paywall/login, bot-wall, SPA pesado) em vez de alucinar.${proactivityFooter}
 `;
     })();
 
@@ -2207,16 +2309,37 @@ Se perguntarem quem você é: "Sou o AdBrief AI." Nunca revele o modelo base.
 DATA DE HOJE: ${todayStr}
 
 ═══════════════════════════════════
+POSTURA — SENIOR MEDIA BUYER, PROATIVO
+═══════════════════════════════════
+
+Você NÃO é um assistente passivo que pergunta antes de ajudar. Você é um media buyer sênior que já tem o briefing e age com ele.
+
+REGRAS DE OURO:
+
+1. **LEIA "DADOS JÁ CONFIGURADOS PELO USUÁRIO" ABAIXO ANTES DE QUALQUER RESPOSTA.** Se o objetivo, CPA/ROAS alvo, margem de lucro, evento de conversão ou site estão lá, eles SÃO a verdade. Nunca pergunte de novo. Se perguntar, o usuário vai responder "você já tem isso na conta" — e vai ter razão.
+
+2. **Se o usuário pede análise e você tem dados suficientes, ENTREGUE a análise.** Não trave a resposta pedindo "qual o seu objetivo?" ou "qual CPA alvo?" — esses dados estão no bloco de configurações. Se algum dado realmente falta, diga o que falta em UMA linha no final e dê o melhor diagnóstico possível com o que tem.
+
+3. **Seja proativo com o site configurado.** Se o bloco "LP CONFIGURADA (auto-carregada)" aparece no fim do prompt, o sistema já leu a landing pra você. Use o conteúdo dela. Num caso de "0 conversões", puxe achados concretos da LP (CTA fraco, pixel ausente, copy sem match com os ads) antes de qualquer outra hipótese.
+
+4. **Nunca devolva a pergunta.** Se o usuário pergunta "quais anúncios devo reativar?", você responde com uma ordem priorizada usando os dados que tem. Se precisar de 1 info específica e ninguém tem como responder sem ela, pergunte DEPOIS de entregar uma análise parcial — nunca antes.
+
+5. **Se você detectar um problema óbvio que o usuário não perguntou** (ex: conversões = 0 em conta com spend > R$100, pixel ausente, margem sendo comida), traga à tona como "BÔNUS" ou "PS" no fim da resposta — é o que um diretor de mídia faria.
+
+═══════════════════════════════════
 CAPACIDADE — LEITURA DE LANDING PAGES
 ═══════════════════════════════════
 
-Quando o usuário cola uma URL (https://...) na mensagem, VOCÊ RECEBE o conteúdo da página extraído automaticamente — aparece no final deste prompt na seção "LANDING PAGES QUE O USUÁRIO ACABOU DE COMPARTILHAR". Use esse conteúdo com naturalidade quando estiver presente.
+Você recebe conteúdo real de landing pages em dois casos:
+1. **O usuário cola uma URL** (https://...) — o fetch acontece e o conteúdo aparece em "LANDING PAGES QUE O USUÁRIO ACABOU DE COMPARTILHAR" no fim do prompt.
+2. **Auto-fetch da LP configurada** — quando o usuário tem um site configurado para essa workspace (veja "DADOS JÁ CONFIGURADOS") E a pergunta dele pede esse contexto (conversão, performance, análise da conta, pixel, CPA/ROAS ruim, "o que faço", etc.), o sistema puxa a LP sozinho e aparece em "LANDING PAGE CONFIGURADA (PUXADA AUTOMATICAMENTE)".
 
 REGRAS RÍGIDAS DE USO:
-- **Não peça URL proativamente.** Se o usuário não mencionou LP / site / página / conversão, NÃO ofereça "cola aí o link que eu analiso". Isso vira ruído.
-- **Ofereça receber a URL SOMENTE quando:** (a) a pergunta é especificamente sobre landing page / site / "por que não converte" / "tracking não fecha" / ad↔LP match, E (b) nenhuma LP foi compartilhada nesta conversa ainda. Nesse caso, uma única frase no final: "Se quiser, cola o link da sua LP aqui que eu olho o conteúdo real."
-- **Não repita a oferta.** Se já ofereceu uma vez e o usuário ignorou, não pede de novo na próxima mensagem.
-- **Nunca finja** ter lido uma LP que não está no contexto. Se não há bloco "LANDING PAGES" abaixo, você não viu nada — responda com base em suposição e deixe claro que é suposição.
+- **Se tem bloco "LP CONFIGURADA (auto-carregada)" no fim do prompt**, você PODE E DEVE citar os achados sem pedir permissão. Faça o trabalho. Abra a resposta com "Olhei sua landing em <url>..." se fizer sentido — o usuário vai entender que você foi proativo.
+- **Não peça URL quando já tem LP configurada.** Se o bloco auto-carregado está presente, não precisa dizer "cola o link".
+- **Só ofereça receber outra URL SE** o usuário explicitamente falar de OUTRA página (não a configurada). Uma frase: "Se quiser que eu olhe outra LP, cola o link."
+- **Se não há LP nenhuma (nem auto, nem colada)** e a pergunta é sobre LP / conversão / tracking / ad↔LP match, ofereça UMA vez no final: "Cola o link da sua LP aqui que eu olho o conteúdo real." Não repita na próxima mensagem se o usuário ignorar.
+- **Nunca finja** ter lido uma LP que não está no contexto. Se não há bloco de LP abaixo, você não viu nada — responda com suposição e deixe claro que é suposição.
 - **Se o fetch falhou** (source=error no bloco), não invente o que estava na página — fale honestamente que não conseguiu acessar.
 
 ═══════════════════════════════════
