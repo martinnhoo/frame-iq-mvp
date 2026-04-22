@@ -16,6 +16,7 @@ import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import { UserProfilePanel } from "@/components/dashboard/UserProfilePanel";
+import WelcomePaidModal from "@/components/dashboard/WelcomePaidModal";
 import { identifyUser } from "@/lib/posthog";
 
 
@@ -135,6 +136,7 @@ export default function DashboardLayout() {
   const [savedPersonas, setSavedPersonas] = useState<ActivePersona[]>([]);
   const [vikaPopup, setVikaPopup] = useState(false);
   const [welcomeMsg, setWelcomeMsg] = useState<{ title: string; body: string } | null>(null);
+  const [paidWelcomeOpen, setPaidWelcomeOpen] = useState(false);
   // bannerDismissed removed — limit notifications via email now
   const navigate = useNavigate();
   const location = useLocation();
@@ -327,23 +329,15 @@ export default function DashboardLayout() {
         setVikaPopup(true);
         storage.set(popup.key, "1");
       }
-      // Checkout success — show toast once and clean the URL param
+      // Checkout success — open the Welcome modal once and clean the URL param.
+      // We defer by ~1.4s so check-subscription (fired above) has a chance to
+      // sync the plan from Stripe before the modal renders with a stale "free".
       const checkoutResult = new URLSearchParams(window.location.search).get("checkout");
       if (checkoutResult === "success") {
-        const planName = profileData?.plan
-          ? (profileData.plan || "").charAt(0).toUpperCase() + (profileData.plan || "").slice(1)
-          : "";
-        const lang = profileData?.preferred_language || storage.get("adbrief_language") || "pt";
-        const msg = lang === "es"
-          ? `¡Plan ${planName} activado! 3 días gratis — sin cargo hasta el día 4.`
-          : lang === "en"
-          ? `${planName} plan activated! 3 days free — no charge until day 4.`
-          : `Plano ${planName} ativado! 3 dias grátis — sem cobrança até o 4º dia.`;
-        // Remove param from URL without reload
         const url = new URL(window.location.href);
         url.searchParams.delete("checkout");
         window.history.replaceState({}, "", url.toString());
-        setTimeout(() => toast.success(msg, { duration: 6000 }), 800);
+        setTimeout(() => { if (mounted) setPaidWelcomeOpen(true); }, 1400);
       }
 
       // Capacity pack purchase success — poll until webhook processes, then toast
@@ -866,6 +860,15 @@ export default function DashboardLayout() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Post-checkout welcome modal */}
+      <WelcomePaidModal
+        open={paidWelcomeOpen}
+        onClose={() => setPaidWelcomeOpen(false)}
+        plan={profile?.plan}
+        firstName={profile?.name ? profile.name.split(" ")[0] : null}
+        language={profile?.preferred_language || language || "pt"}
+      />
 
       {/* Welcome popup */}
       {vikaPopup && welcomeMsg && (
