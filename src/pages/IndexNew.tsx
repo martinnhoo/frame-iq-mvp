@@ -94,33 +94,20 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_title: "Não contrate outro gestor de tráfego.\nAtive um.",
     hero_sub: "AdBrief é um gestor sênior com IA, dentro da sua conta Meta. Lê a performance a cada 15 minutos, decide o que fazer e executa — com o seu OK.",
     hero_support: "Pausar, escalar, ajustar orçamento, reescrever criativo — sem você abrir o Gerenciador de Anúncios.",
-    hero_cta: "Conectar minha conta Meta",
-    hero_cta_sub: "30 segundos · Sem cartão · 15 decisões grátis",
+    hero_cta: "Testar 3 dias grátis",
+    hero_cta_sub: "Sem cartão · Conecta Meta depois, no onboarding",
     hero_login: "Já tem conta? Entrar",
     hero_screenshot_label: "O feed do AdBrief — decisões aplicadas hoje",
     hero_callout_1: "Diagnóstico com os números reais da conta",
     hero_callout_2: "E te diz exatamente o que fazer agora",
-    // social proof
-    social_title: "Para gestores que cuidam de contas reais",
-    social_sub: "Usado por agências e e-commerces que gastam de R$5k a R$500k/mês em Meta Ads.",
-    social_logo_placeholder: "logo cliente",
-    stat1_v: "R$12Mi+",
-    stat1_l: "em mídia monitorada",
-    stat2_v: "15min",
-    stat2_l: "pra detectar um CPA fora da curva",
-    stat3_v: "94%",
-    stat3_l: "das decisões aceitas pelos gestores",
-    stat4_v: "24/7",
-    stat4_l: "monitorando suas campanhas",
-    social_t1_quote: "Esses caras são surreais. Depois que a IA pega o padrão, é só aprovar as decisões. Acelerou demais a escala de criativos e a tomada de decisão.",
-    social_t1_name: "Lucas Teixeira",
-    social_t1_role: "Head de Mídia · Nimbus Growth",
-    social_t2_quote: "É o que eu já fazia manual, só que 10x mais rápido e sem esquecer de nada.",
-    social_t2_name: "Camila Rezende",
-    social_t2_role: "Head de mídia · Luxé Co.",
-    social_t3_quote: "Rodamos mais de 30 contas em paralelo. O AdBrief devolveu horas pro meu time todo dia — os gestores pararam de apagar incêndio e voltaram a focar em estratégia. Otimizou o gasto das contas e o tempo deles.",
-    social_t3_name: "Rafael Moura",
-    social_t3_role: "Fundador · Ofício Digital",
+    // founder note — substitui social proof enquanto não tem clientes reais suficientes
+    founder_kicker: "De quem está construindo",
+    founder_title: "Por que isso existe.",
+    founder_body_1: "Queimei $6 em créditos de API testando anúncios no Meta em 11 dias de uso leve. Fiquei horas olhando dashboard tentando entender pra onde o dinheiro tinha ido.",
+    founder_body_2: "Percebi que o problema não era falta de dado — era falta de decisão. Todos os números estavam lá, ninguém conectava eles ao próximo passo.",
+    founder_body_3: "AdBrief é a camada que faltava: lê os dados, identifica o que importa, e entrega a decisão num cartão. O humano aprova. O sistema executa.",
+    founder_signature: "Martinho, fundador",
+    founder_stage: "Em beta · aceitando os primeiros usuários",
     // concept
     concept_kicker: "O conceito",
     concept_title: "Não é um dashboard.\nÉ um sistema de decisão.",
@@ -231,11 +218,18 @@ const TX: Record<Lang, Record<string, string>> = {
     faq_a5: "Free dá acesso completo com 1 conta Meta conectada e 15 decisões aplicadas (sem cartão). Maker $19/mês para 1 conta com decisões ilimitadas. Pro $49/mês para 3 contas. Studio $299/mês sem limite de contas nem decisões.",
     faq_q6: "Posso cancelar?",
     faq_a6: "Sim. Mensal, sem contrato, sem multa. Desconectar da Meta também é 1 clique.",
+    faq_q7: "Meus dados ficam seguros?",
+    faq_a7: "Sim. A conexão é OAuth oficial da Meta — você autoriza leitura, nada é armazenado além do necessário pra análise. Nenhum credencial da sua conta passa pelo AdBrief. Pode revogar o acesso a qualquer momento no próprio Meta Business. Dados de performance são criptografados em trânsito e em repouso no Supabase (hospedado nos EUA, compliance SOC 2).",
+    // pricing CTA banner
+    pricing_cta_title: "Preço simples por volume de decisões.",
+    pricing_cta_sub: "Free pra testar. Pagos a partir de $19/mês.",
+    pricing_cta_btn: "Ver planos",
+    pricing_cta_secondary: "Começar grátis",
     // final
     final_title: "Você já viu como funciona.",
-    final_sub: "Conecte sua conta em 30 segundos.",
-    final_cta: "Conectar Meta Ads",
-    final_sub2: "15 decisões grátis · sem cartão",
+    final_sub: "Teste 3 dias sem cartão.",
+    final_cta: "Testar grátis",
+    final_sub2: "Conecte a conta Meta só no onboarding",
     final_login: "Já tem conta? Entrar",
     // sticky
     sticky_cta: "Conectar agora",
@@ -262,32 +256,20 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_title: "Don't hire another media buyer.\nActivate one.",
     hero_sub: "AdBrief is a senior AI media buyer living inside your Meta Ads account. Reads performance every 15 minutes, decides what to do, and executes — with your approval.",
     hero_support: "Pause, scale, adjust budgets, rewrite creative — without ever opening Ads Manager.",
-    hero_cta: "Connect my Meta account",
-    hero_cta_sub: "30 seconds · No card · 15 free decisions",
+    hero_cta: "Try 3 days free",
+    hero_cta_sub: "No card · Connect Meta later, during onboarding",
     hero_login: "Already have an account? Log in",
     hero_screenshot_label: "The AdBrief feed — decisions applied today",
     hero_callout_1: "Real diagnosis with your actual account data",
     hero_callout_2: "And tells you exactly what to do next",
-    social_title: "For media buyers running real accounts",
-    social_sub: "Used by agencies and e-commerce teams spending $1k to $100k/mo on Meta Ads.",
-    social_logo_placeholder: "client logo",
-    stat1_v: "$2.4M+",
-    stat1_l: "in ad spend monitored",
-    stat2_v: "15min",
-    stat2_l: "to catch an off-trend CPA",
-    stat3_v: "94%",
-    stat3_l: "of decisions accepted by buyers",
-    stat4_v: "24/7",
-    stat4_l: "watching your campaigns",
-    social_t1_quote: "These guys are unreal. Once the AI locks in the pattern, I just approve the decisions. Massively sped up how fast we scale creative and make calls.",
-    social_t1_name: "Lucas Teixeira",
-    social_t1_role: "Head of Media · Nimbus Growth",
-    social_t2_quote: "It's what I was already doing manually — just 10x faster and without missing a thing.",
-    social_t2_name: "Camila Rezende",
-    social_t2_role: "Head of growth · Luxé Co.",
-    social_t3_quote: "We run 30+ accounts in parallel. AdBrief gave my whole team hours back every day — my buyers stopped firefighting and got back to strategy. Optimized spend across every account and their time.",
-    social_t3_name: "Rafael Moura",
-    social_t3_role: "Founder · Ofício Digital",
+    // founder note — replaces social proof while real-customer proof is still being gathered
+    founder_kicker: "From the builder",
+    founder_title: "Why this exists.",
+    founder_body_1: "I burned through $6 in API credits testing Meta Ads in 11 days of light use. Spent hours staring at dashboards trying to figure out where the money went.",
+    founder_body_2: "The problem wasn't missing data — it was missing decisions. Every number was there, nothing connected them to the next action.",
+    founder_body_3: "AdBrief is the missing layer: it reads the data, identifies what matters, and hands you the decision on a card. You approve. The system executes.",
+    founder_signature: "Martinho, founder",
+    founder_stage: "In beta · accepting early users",
     concept_kicker: "The concept",
     concept_title: "Not a dashboard.\nA decision system.",
     concept_s1: "Continuous analysis",
@@ -392,10 +374,16 @@ const TX: Record<Lang, Record<string, string>> = {
     faq_a5: "Free gives full access with 1 connected Meta account and 15 applied decisions (no card). Maker is $19/mo for 1 account with unlimited decisions. Pro is $49/mo for 3 accounts. Studio is $299/mo, no cap on accounts or decisions.",
     faq_q6: "Can I cancel?",
     faq_a6: "Yes. Monthly, no contract, no fee. Disconnecting from Meta is also one click.",
+    faq_q7: "Is my data safe?",
+    faq_a7: "Yes. We use Meta's official OAuth — you authorize read access, nothing beyond what's needed for analysis is stored. No account credentials pass through AdBrief. You can revoke access anytime from Meta Business. Performance data is encrypted in transit and at rest on Supabase (US-hosted, SOC 2 compliant).",
+    pricing_cta_title: "Simple pricing by decision volume.",
+    pricing_cta_sub: "Free to try. Paid plans from $19/mo.",
+    pricing_cta_btn: "See pricing",
+    pricing_cta_secondary: "Start free",
     final_title: "You've seen how it works.",
-    final_sub: "Connect your account in 30 seconds.",
-    final_cta: "Connect Meta Ads",
-    final_sub2: "15 free decisions · no card",
+    final_sub: "Try 3 days, no card needed.",
+    final_cta: "Start free trial",
+    final_sub2: "Connect your Meta account during onboarding",
     final_login: "Already have an account? Log in",
     sticky_cta: "Connect now",
     footer_tagline: "Decision system for Meta Ads",
@@ -420,32 +408,20 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_title: "No contrates otro media buyer.\nActiva uno.",
     hero_sub: "AdBrief es un media buyer sénior con IA, viviendo dentro de tu cuenta Meta. Lee la performance cada 15 minutos, decide qué hacer y ejecuta — con tu OK.",
     hero_support: "Pausar, escalar, ajustar presupuesto, reescribir creativo — sin abrir el Administrador de Anuncios.",
-    hero_cta: "Conectar mi cuenta Meta",
-    hero_cta_sub: "30 segundos · Sin tarjeta · 15 decisiones gratis",
+    hero_cta: "Probar 3 días gratis",
+    hero_cta_sub: "Sin tarjeta · Conectá Meta después, en el onboarding",
     hero_login: "¿Ya tienes cuenta? Entrar",
     hero_screenshot_label: "El feed de AdBrief — decisiones aplicadas hoy",
     hero_callout_1: "Diagnóstico con los datos reales de tu cuenta",
     hero_callout_2: "Y te dice exactamente qué hacer ahora",
-    social_title: "Para gestores que manejan cuentas reales",
-    social_sub: "Usado por agencias y e-commerces que gastan de $1k a $100k/mes en Meta Ads.",
-    social_logo_placeholder: "logo cliente",
-    stat1_v: "$2.4M+",
-    stat1_l: "en inversión monitoreada",
-    stat2_v: "15min",
-    stat2_l: "para detectar un CPA fuera de curva",
-    stat3_v: "94%",
-    stat3_l: "de decisiones aceptadas por gestores",
-    stat4_v: "24/7",
-    stat4_l: "vigilando tus campañas",
-    social_t1_quote: "Estos tipos son surreales. Después de que la IA aprende el patrón, solo hay que aprobar las decisiones. Aceleró muchísimo la escala de creativos y la toma de decisión.",
-    social_t1_name: "Lucas Teixeira",
-    social_t1_role: "Head de Medios · Nimbus Growth",
-    social_t2_quote: "Es lo que ya hacía manual, pero 10x más rápido y sin olvidarme de nada.",
-    social_t2_name: "Camila Rezende",
-    social_t2_role: "Head de medios · Luxé Co.",
-    social_t3_quote: "Gestionamos más de 30 cuentas en paralelo. AdBrief le devolvió horas a todo mi equipo cada día — los gestores dejaron de apagar incendios y volvieron a enfocarse en estrategia. Optimizó el gasto de las cuentas y su tiempo.",
-    social_t3_name: "Rafael Moura",
-    social_t3_role: "Fundador · Ofício Digital",
+    // founder note — reemplaza social proof mientras no haya prueba real de clientes suficiente
+    founder_kicker: "De quien está construyendo",
+    founder_title: "Por qué existe esto.",
+    founder_body_1: "Quemé $6 en créditos de API testeando anuncios en Meta en 11 días de uso ligero. Pasé horas mirando el dashboard tratando de entender a dónde se había ido la plata.",
+    founder_body_2: "Me di cuenta de que el problema no era falta de datos — era falta de decisión. Todos los números estaban ahí, nadie los conectaba al siguiente paso.",
+    founder_body_3: "AdBrief es la capa que faltaba: lee los datos, identifica lo que importa y te entrega la decisión en una tarjeta. El humano aprueba. El sistema ejecuta.",
+    founder_signature: "Martinho, fundador",
+    founder_stage: "En beta · aceptando los primeros usuarios",
     concept_kicker: "El concepto",
     concept_title: "No es un dashboard.\nEs un sistema de decisión.",
     concept_s1: "Análisis continuo",
@@ -550,10 +526,16 @@ const TX: Record<Lang, Record<string, string>> = {
     faq_a5: "Free da acceso completo con 1 cuenta Meta conectada y 15 decisiones aplicadas (sin tarjeta). Maker $19/mes para 1 cuenta con decisiones ilimitadas. Pro $49/mes para 3 cuentas. Studio $299/mes sin límite de cuentas ni decisiones.",
     faq_q6: "¿Puedo cancelar?",
     faq_a6: "Sí. Mensual, sin contrato, sin multa. Desconectar de Meta también es 1 clic.",
+    faq_q7: "¿Mis datos están seguros?",
+    faq_a7: "Sí. Usamos el OAuth oficial de Meta — autorizas acceso de lectura, nada más que lo necesario para el análisis se almacena. Ninguna credencial de cuenta pasa por AdBrief. Puedes revocar el acceso en cualquier momento desde Meta Business. Los datos de performance se cifran en tránsito y en reposo en Supabase (hospedado en EE.UU., compatible con SOC 2).",
+    pricing_cta_title: "Precio simple por volumen de decisiones.",
+    pricing_cta_sub: "Free para probar. Planes pagos desde $19/mes.",
+    pricing_cta_btn: "Ver planes",
+    pricing_cta_secondary: "Empezar gratis",
     final_title: "Ya viste cómo funciona.",
-    final_sub: "Conecta tu cuenta en 30 segundos.",
-    final_cta: "Conectar Meta Ads",
-    final_sub2: "15 decisiones gratis · sin tarjeta",
+    final_sub: "Probá 3 días sin tarjeta.",
+    final_cta: "Probar gratis",
+    final_sub2: "Conecta tu cuenta Meta en el onboarding",
     final_login: "¿Ya tienes cuenta? Entrar",
     sticky_cta: "Conectar ahora",
     footer_tagline: "Sistema de decisión para Meta Ads",
@@ -1233,175 +1215,88 @@ function Hero({ t }: { t: Record<string, string> }) {
   );
 }
 
-// ── Client logo wrapper — consistent sizing + monochrome treatment ─────────
-function ClientLogo({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{
-      height: 40, display: "flex", alignItems: "center", justifyContent: "center",
-      color: "rgba(255,255,255,0.42)",
-      transition: `color 0.3s ${EASE}, transform 0.3s ${EASE}`,
-    }}
-      className="client-logo"
-    >
-      {children}
-    </div>
-  );
-}
-
-// ── Section 1.5 — Social Proof (testimonials + client logos) ───────────────
-function SocialProofSection({ t }: { t: Record<string, string> }) {
-  const { ref, visible } = useReveal(0.15);
-
-  const testimonials = [
-    { quote: t.social_t1_quote, name: t.social_t1_name, role: t.social_t1_role, color: ACCENT },
-    { quote: t.social_t2_quote, name: t.social_t2_name, role: t.social_t2_role, color: INDIGO },
-    { quote: t.social_t3_quote, name: t.social_t3_name, role: t.social_t3_role, color: GREEN },
-  ];
+// ── Section 1.5 — Founder Note (replaces fake testimonials) ───────────────
+function FounderNote({ t }: { t: Record<string, string> }) {
+  const { ref, visible } = useReveal(0.2);
 
   return (
     <section style={{
-      background: BG2, padding: "clamp(64px,8vw,96px) clamp(20px,4vw,40px)",
+      background: BG2, padding: "clamp(72px,10vw,120px) clamp(20px,4vw,40px)",
       borderTop: `1px solid ${BORDER}`,
     }} ref={ref}>
-      <div style={{ maxWidth: 1040, margin: "0 auto" }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 48, maxWidth: 640, marginLeft: "auto", marginRight: "auto" }}>
-          <h2 style={{
-            fontFamily: F, fontSize: "clamp(22px,2.4vw,28px)", fontWeight: 800,
-            letterSpacing: "-0.03em", color: TEXT, margin: "0 0 10px",
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        {/* Kicker */}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          marginBottom: 22,
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(8px)",
+          transition: `all 0.45s ${EASE}`,
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: GREEN, boxShadow: `0 0 8px ${GREEN}`,
+            animation: "pulse 2s ease-in-out infinite",
+          }} />
+          <span style={{
+            fontFamily: F, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em",
+            textTransform: "uppercase", color: TEXT3,
           }}>
-            {t.social_title}
-          </h2>
-          <p style={{
-            fontFamily: F, fontSize: 13.5, color: TEXT3, margin: 0, lineHeight: 1.55,
+            {t.founder_kicker}
+          </span>
+        </div>
+
+        {/* Title */}
+        <h2 style={{
+          fontFamily: F, fontSize: "clamp(24px,3vw,34px)", fontWeight: 800,
+          letterSpacing: "-0.035em", color: TEXT, margin: "0 0 28px", lineHeight: 1.15,
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(10px)",
+          transition: `all 0.5s ${EASE} 0.08s`,
+        }}>
+          {t.founder_title}
+        </h2>
+
+        {/* Body paragraphs */}
+        {[t.founder_body_1, t.founder_body_2, t.founder_body_3].map((p, i) => (
+          <p key={i} style={{
+            fontFamily: F, fontSize: 15.5, color: TEXT2, lineHeight: 1.65,
+            margin: "0 0 18px", fontWeight: 400, letterSpacing: "-0.005em",
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(8px)",
+            transition: `all 0.5s ${EASE} ${0.18 + i * 0.08}s`,
           }}>
-            {t.social_sub}
+            {p}
           </p>
-        </div>
+        ))}
 
-        {/* Logo row — invented wordmarks, monochrome, low contrast */}
-        <div className="social-logos" style={{
-          display: "grid", gridTemplateColumns: "repeat(5, 1fr)",
-          gap: "clamp(12px, 2vw, 24px)", marginBottom: 56, alignItems: "center",
+        {/* Signature + stage */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+          marginTop: 30, paddingTop: 24, borderTop: `1px solid ${BORDER}`,
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(8px)",
+          transition: `all 0.5s ${EASE} 0.46s`,
         }}>
-          <ClientLogo>
-            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase" }}>
-              Nimbus
-            </span>
-          </ClientLogo>
-          <ClientLogo>
-            <span style={{ fontFamily: "'Georgia', 'Times New Roman', serif", fontSize: 22, fontWeight: 500, fontStyle: "italic", letterSpacing: "-0.02em" }}>
-              Luxé<span style={{ verticalAlign: "super", fontSize: 9, marginLeft: 1 }}>co</span>
-            </span>
-          </ClientLogo>
-          <ClientLogo>
-            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 19, fontWeight: 900, letterSpacing: "-0.04em" }}>
-              grana<span style={{ opacity: 0.5 }}>.</span>
-            </span>
-          </ClientLogo>
-          <ClientLogo>
-            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 600, letterSpacing: "0.04em" }}>
-              Pine <span style={{ opacity: 0.5, margin: "0 2px" }}>&amp;</span> Oak
-            </span>
-          </ClientLogo>
-          <ClientLogo>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <span style={{
-                width: 10, height: 10, borderRadius: "50%",
-                border: "1.5px solid currentColor", display: "inline-block",
-              }} />
-              <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 16, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                Quilla
-              </span>
-            </span>
-          </ClientLogo>
-        </div>
-
-        {/* Stats strip — 4 concrete numbers as credibility */}
-        <div className="social-stats" style={{
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "clamp(12px, 2vw, 24px)",
-          padding: "22px clamp(18px, 3vw, 30px)",
-          marginBottom: 44,
-          background: "rgba(255,255,255,0.015)",
-          border: `1px solid ${BORDER}`,
-          borderRadius: 14,
-        }}>
-          {[
-            { v: t.stat1_v, l: t.stat1_l },
-            { v: t.stat2_v, l: t.stat2_l },
-            { v: t.stat3_v, l: t.stat3_l },
-            { v: t.stat4_v, l: t.stat4_l },
-          ].map((s, i) => (
-            <div key={i} style={{
-              display: "flex", flexDirection: "column", gap: 4,
-              borderLeft: i === 0 ? "none" : `1px solid ${BORDER}`,
-              paddingLeft: i === 0 ? 0 : "clamp(10px, 2vw, 22px)",
-            }} className="social-stat">
-              <span style={{
-                fontFamily: F, fontSize: "clamp(18px, 2vw, 24px)", fontWeight: 800,
-                color: TEXT, letterSpacing: "-0.03em",
-              }}>
-                {s.v}
-              </span>
-              <span style={{
-                fontFamily: F, fontSize: 11.5, color: TEXT3, lineHeight: 1.4,
-                fontWeight: 500,
-              }}>
-                {s.l}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Testimonials row */}
-        <div className="social-grid" style={{
-          display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "clamp(12px, 2vw, 20px)",
-        }}>
-          {testimonials.map((ti, i) => (
-            <div key={i} style={{
-              padding: "22px 22px 20px",
-              borderRadius: 12,
-              background: SURFACE,
-              border: `1px solid ${BORDER}`,
-              display: "flex", flexDirection: "column",
-              opacity: visible ? 1 : 0,
-              transform: visible ? "translateY(0)" : "translateY(14px)",
-              transition: `all 0.5s ${EASE} ${i * 0.08}s`,
-            }}>
-              {/* Small accent mark */}
-              <div style={{
-                width: 22, height: 2, background: ti.color, borderRadius: 1,
-                marginBottom: 14, opacity: 0.7,
-              }} />
-
-              <p style={{
-                fontFamily: F, fontSize: 14, color: TEXT, lineHeight: 1.55,
-                margin: "0 0 18px", fontWeight: 500, letterSpacing: "-0.01em", flex: 1,
-              }}>
-                “{ti.quote}”
-              </p>
-
-              <div style={{
-                display: "flex", alignItems: "center", gap: 8,
-                paddingTop: 14, borderTop: `1px solid ${BORDER}`,
-                minWidth: 0, flexWrap: "wrap",
-              }}>
-                {/* Small color accent dot — replaces the monogram circle */}
-                <span style={{
-                  width: 5, height: 5, borderRadius: "50%", background: ti.color,
-                  flexShrink: 0, opacity: 0.8,
-                }} />
-                <span style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: TEXT2, letterSpacing: "-0.01em" }}>
-                  {ti.name}
-                </span>
-                <span style={{ fontFamily: F, fontSize: 11, color: TEXT3, fontWeight: 500 }}>
-                  · {ti.role}
-                </span>
-              </div>
-            </div>
-          ))}
+          <span style={{
+            fontFamily: F, fontSize: 13, fontWeight: 700, color: TEXT,
+            letterSpacing: "-0.01em",
+          }}>
+            — {t.founder_signature}
+          </span>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            fontFamily: F, fontSize: 11, fontWeight: 600, color: TEXT3,
+            padding: "4px 10px", borderRadius: 99,
+            background: "rgba(255,255,255,0.02)",
+            border: `1px solid ${BORDER}`,
+          }}>
+            <span style={{
+              width: 5, height: 5, borderRadius: "50%",
+              background: ACCENT, boxShadow: `0 0 6px ${ACCENT}`,
+            }} />
+            {t.founder_stage}
+          </span>
         </div>
       </div>
     </section>
@@ -1798,7 +1693,7 @@ function FlowSection({ t }: { t: Record<string, string> }) {
   ];
 
   return (
-    <section style={{
+    <section id="flow" style={{
       background: BG,
       padding: "clamp(40px,6vw,72px) clamp(20px,4vw,40px) clamp(96px,12vw,160px)",
       position: "relative",
@@ -2282,153 +2177,63 @@ function CompareSection({ t }: { t: Record<string, string> }) {
 }
 
 // ── Section 5 — Pricing (non-generic, with hierarchy) ──────────────────────
-function PricingSection({ t }: { t: Record<string, string> }) {
+function PricingCTA({ t }: { t: Record<string, string> }) {
   const navigate = useNavigate();
-
-  const plans = [
-    {
-      name: t.pricing_free, desc: t.pricing_free_d, price: "$0", mo: false,
-      f1: t.pricing_free_f1, f2: t.pricing_free_f2, f3: t.pricing_free_f3,
-      cta: t.pricing_free_cta, action: () => navigate("/signup"),
-      tier: "free" as const,
-    },
-    {
-      name: t.pricing_maker, desc: t.pricing_maker_d, price: "$19", mo: true,
-      f1: t.pricing_maker_f1, f2: t.pricing_maker_f2, f3: t.pricing_maker_f3,
-      cta: t.pricing_maker_cta, action: () => navigate("/signup?plan=maker"),
-      tier: "maker" as const,
-    },
-    {
-      name: t.pricing_pro, desc: t.pricing_pro_d, price: "$49", mo: true,
-      f1: t.pricing_pro_f1, f2: t.pricing_pro_f2, f3: t.pricing_pro_f3,
-      cta: t.pricing_pro_cta, action: () => navigate("/signup?plan=pro"),
-      tier: "pro" as const,
-    },
-    {
-      name: t.pricing_studio, desc: t.pricing_studio_d, price: "$299", mo: true,
-      f1: t.pricing_studio_f1, f2: t.pricing_studio_f2, f3: t.pricing_studio_f3,
-      cta: t.pricing_studio_cta, action: () => navigate("/signup?plan=studio"),
-      tier: "studio" as const,
-    },
-  ];
+  const { ref, visible } = useReveal(0.2);
 
   return (
     <section id="pricing" style={{
       background: BG, padding: "clamp(72px,9vw,100px) clamp(20px,4vw,40px)",
       borderTop: `1px solid ${BORDER}`,
-    }}>
-      <div style={{ maxWidth: 980, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <h2 style={{
-            fontFamily: F, fontSize: "clamp(24px,2.8vw,34px)", fontWeight: 800,
-            letterSpacing: "-0.04em", color: TEXT, margin: "0 0 10px",
-          }}>
-            {t.pricing_title}
-          </h2>
-          <p style={{
-            fontFamily: F, fontSize: 14, color: TEXT3, margin: 0,
-          }}>
-            {t.pricing_sub}
-          </p>
-        </div>
-
-        <div className="pricing-grid" style={{
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "clamp(10px, 1.5vw, 16px)", alignItems: "stretch",
+    }} ref={ref}>
+      <div style={{
+        maxWidth: 680, margin: "0 auto", textAlign: "center",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(10px)",
+        transition: `all 0.5s ${EASE}`,
+      }}>
+        <h2 style={{
+          fontFamily: F, fontSize: "clamp(24px,2.8vw,34px)", fontWeight: 800,
+          letterSpacing: "-0.04em", color: TEXT, margin: "0 0 12px", lineHeight: 1.15,
         }}>
-          {plans.map((plan) => {
-            const isPro = plan.tier === "pro";
-            return (
-              <div key={plan.tier} className="pricing-card" style={{
-                background: isPro ? "rgba(99,102,241,0.05)" : SURFACE,
-                border: isPro
-                  ? "1.5px solid rgba(99,102,241,0.30)"
-                  : `1px solid ${BORDER}`,
-                borderRadius: 14,
-                padding: "clamp(20px, 2.5vw, 28px) clamp(16px, 2vw, 22px)",
-                display: "flex", flexDirection: "column",
-                position: "relative",
-                transition: `all 0.3s ${EASE}`,
-                boxShadow: isPro ? "0 0 40px rgba(99,102,241,0.08), 0 8px 32px rgba(0,0,0,0.2)" : "none",
-              }}>
-                {/* Badge — Pro only */}
-                {isPro && t.pricing_pro_badge && (
-                  <span style={{
-                    fontFamily: F, fontSize: 9, fontWeight: 800, letterSpacing: "0.06em",
-                    color: INDIGO, marginBottom: 14, display: "inline-block",
-                    background: "rgba(99,102,241,0.10)", padding: "4px 10px", borderRadius: 5,
-                    border: "1px solid rgba(99,102,241,0.18)", alignSelf: "flex-start",
-                  }}>
-                    {t.pricing_pro_badge}
-                  </span>
-                )}
+          {t.pricing_cta_title}
+        </h2>
+        <p style={{
+          fontFamily: F, fontSize: 15, color: TEXT3, margin: "0 0 32px", lineHeight: 1.5,
+        }}>
+          {t.pricing_cta_sub}
+        </p>
 
-                {/* Name */}
-                <h3 style={{
-                  fontFamily: F, fontSize: 16, fontWeight: 700,
-                  color: isPro ? TEXT : "rgba(255,255,255,0.85)",
-                  margin: "0 0 3px", letterSpacing: "-0.02em",
-                }}>
-                  {plan.name}
-                </h3>
-
-                {/* Description */}
-                <p style={{
-                  fontFamily: F, fontSize: 11.5, color: TEXT3, margin: "0 0 20px",
-                  fontWeight: 400, lineHeight: 1.4,
-                }}>
-                  {plan.desc}
-                </p>
-
-                {/* Price */}
-                <div style={{ marginBottom: 20 }}>
-                  <span style={{
-                    fontFamily: F, fontSize: 32, fontWeight: 900,
-                    color: isPro ? TEXT : "rgba(255,255,255,0.88)", letterSpacing: "-0.04em",
-                  }}>
-                    {plan.price}
-                  </span>
-                  {plan.mo && (
-                    <span style={{ fontFamily: F, fontSize: 12, color: TEXT3, marginLeft: 2 }}>{t.pricing_mo}</span>
-                  )}
-                </div>
-
-                {/* Features */}
-                <div style={{ marginBottom: 24, flex: 1, display: "flex", flexDirection: "column", gap: 9 }}>
-                  {[plan.f1, plan.f2, plan.f3].filter(Boolean).map((feat, fi) => (
-                    <div key={fi} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                      <CheckCircle2 size={13} color={isPro ? INDIGO : GREEN} strokeWidth={2.2} style={{ flexShrink: 0, marginTop: 1, opacity: 0.85 }} />
-                      <span style={{ fontFamily: F, fontSize: 12.5, color: TEXT2, lineHeight: 1.4, fontWeight: 500 }}>{feat}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* CTA */}
-                <button onClick={plan.action} className="pricing-cta-btn" style={{
-                  width: "100%", fontFamily: F, fontSize: 13,
-                  fontWeight: 700, padding: "11px 0", borderRadius: 8,
-                  background: isPro ? INDIGO : "rgba(255,255,255,0.04)",
-                  color: isPro ? "#fff" : TEXT2,
-                  border: isPro ? "none" : `1px solid rgba(255,255,255,0.08)`,
-                  cursor: "pointer", transition: `all 0.2s ${EASE}`,
-                  boxShadow: isPro ? "0 2px 16px rgba(99,102,241,0.25)" : "none",
-                  marginTop: "auto",
-                }}>
-                  {plan.cta}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-
-        <div style={{ textAlign: "center", marginTop: 32 }}>
-          <a href="/pricing" className="pricing-details-link" style={{
-            fontFamily: F, fontSize: 13, fontWeight: 500, color: TEXT3,
-            textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5,
-            transition: `color 0.2s ${EASE}`,
-          }}>
-            {t.pricing_details} <ArrowRight size={13} />
-          </a>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+          justifyContent: "center",
+        }}>
+          <button
+            onClick={() => navigate("/pricing")}
+            style={{
+              fontFamily: F, fontSize: 14, fontWeight: 700,
+              padding: "12px 22px", borderRadius: 10,
+              background: TEXT, color: "#000",
+              border: "none", cursor: "pointer",
+              transition: `all 0.2s ${EASE}`,
+              display: "inline-flex", alignItems: "center", gap: 7,
+            }}
+          >
+            {t.pricing_cta_btn}
+            <ArrowRight size={14} strokeWidth={2.4} />
+          </button>
+          <button
+            onClick={() => navigate("/signup")}
+            style={{
+              fontFamily: F, fontSize: 14, fontWeight: 600,
+              padding: "12px 22px", borderRadius: 10,
+              background: "transparent", color: TEXT2,
+              border: `1px solid ${BORDER}`, cursor: "pointer",
+              transition: `all 0.2s ${EASE}`,
+            }}
+          >
+            {t.pricing_cta_secondary}
+          </button>
         </div>
       </div>
     </section>
@@ -2444,6 +2249,7 @@ function FAQSection({ t }: { t: Record<string, string> }) {
     { q: t.faq_q4, a: t.faq_a4 },
     { q: t.faq_q5, a: t.faq_a5 },
     { q: t.faq_q6, a: t.faq_a6 },
+    { q: t.faq_q7, a: t.faq_a7 },
   ];
   const [open, setOpen] = useState<number | null>(0);
 
@@ -2631,7 +2437,7 @@ function Footer({ t }: { t: Record<string, string> }) {
         maxWidth: 1120, margin: "0 auto", paddingTop: 28, marginTop: 28,
         borderTop: `1px solid ${BORDER}`,
       }}>
-        <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.15)" }}>{t.footer_copy}</span>
+        <span style={{ fontFamily: F, fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{t.footer_copy}</span>
       </div>
     </footer>
   );
@@ -2728,11 +2534,11 @@ export default function IndexNew() {
 
       <Nav t={t} lang={lang} setLang={setLang} />
       <Hero t={t} />
-      <SocialProofSection t={t} />
+      <FounderNote t={t} />
       <ConceptSection t={t} />
       <FlowSection t={t} />
       <CompareSection t={t} />
-      <PricingSection t={t} />
+      <PricingCTA t={t} />
       <FAQSection t={t} />
       <FinalCTA t={t} />
       <Footer t={t} />
