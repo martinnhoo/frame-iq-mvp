@@ -161,29 +161,32 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_m_btn_approve: "Aprovar e aplicar",
     flow_m_btn_details: "Detalhes",
     // compare
+    compare_kicker: "Comparativo",
     compare_title: "Ads Manager mostra o que aconteceu.\nAdBrief diz o que fazer.",
     compare_sub: "A diferença entre olhar relatório e tomar decisão.",
     compare_ads_title: "Meta Ads Manager",
+    compare_ads_sublabel: "O que aconteceu",
+    compare_ads_caption: "Números sem contexto. Você lê, interpreta, decide e executa — tudo sozinho.",
+    compare_ads_chart_label: "CTR · últimos 14 dias",
     compare_ads_1: "Mostra métricas passadas",
     compare_ads_2: "Você interpreta sozinho",
     compare_ads_3: "Você decide na base do achismo",
     compare_ads_4: "Você executa manualmente",
     compare_ads_5: "Nenhum aprendizado entre contas",
     compare_adbrief_title: "AdBrief",
+    compare_adbrief_sublabel: "O que fazer agora",
+    compare_adbrief_caption: "Uma decisão por vez, com o motivo, o impacto estimado e um clique pra aplicar.",
+    compare_adbrief_mock_tag: "URGENTE",
+    compare_adbrief_mock_time: "há 4 min",
+    compare_adbrief_mock_headline: "Pausar UGC 03 — economia R$2.150/dia",
+    compare_adbrief_mock_reason: "CTR caiu 62% em 48h, CPA R$87 (meta R$35). Sem sinal de recuperação.",
+    compare_adbrief_mock_btn: "Aprovar e pausar",
+    compare_adbrief_mock_btn2: "Detalhes",
     compare_adbrief_1: "Detecta o problema em 2h",
     compare_adbrief_2: "Explica o que está acontecendo",
     compare_adbrief_3: "Recomenda a ação específica",
     compare_adbrief_4: "Aplica em 1 clique",
     compare_adbrief_5: "Aprende com cada resultado",
-    // loop
-    loop_title: "Cada decisão gera a próxima.",
-    loop_sub: "O sistema aprende com cada ação e fica mais preciso a cada ciclo.",
-    loop_s1: "Você aplica",
-    loop_s1d: "Aceita a decisão direto no feed. Um clique.",
-    loop_s2: "O sistema aprende",
-    loop_s2d: "Cada resultado vira padrão. A IA evolui com seus dados.",
-    loop_s3: "Nova oportunidade",
-    loop_s3d: "Recomendações cada vez mais específicas pro seu negócio.",
     // pricing
     pricing_title: "Preço claro, escala real.",
     pricing_sub: "Comece grátis. Faça upgrade quando a conta crescer.",
@@ -321,28 +324,32 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_m_dec_test_text: "New variant: social proof angle",
     flow_m_btn_approve: "Approve & apply",
     flow_m_btn_details: "Details",
+    compare_kicker: "Comparison",
     compare_title: "Ads Manager shows what happened.\nAdBrief tells you what to do.",
     compare_sub: "The difference between reading a report and making a decision.",
     compare_ads_title: "Meta Ads Manager",
+    compare_ads_sublabel: "What happened",
+    compare_ads_caption: "Numbers with no context. You read, interpret, decide and execute — all on your own.",
+    compare_ads_chart_label: "CTR · last 14 days",
     compare_ads_1: "Shows past metrics",
     compare_ads_2: "You interpret it yourself",
     compare_ads_3: "You decide on gut feel",
     compare_ads_4: "You execute manually",
     compare_ads_5: "No learning across accounts",
     compare_adbrief_title: "AdBrief",
+    compare_adbrief_sublabel: "What to do now",
+    compare_adbrief_caption: "One decision at a time, with the reason, estimated impact and one click to apply.",
+    compare_adbrief_mock_tag: "URGENT",
+    compare_adbrief_mock_time: "4 min ago",
+    compare_adbrief_mock_headline: "Pause UGC 03 — save $430/day",
+    compare_adbrief_mock_reason: "CTR dropped 62% in 48h, CPA $87 (target $35). No sign of recovery.",
+    compare_adbrief_mock_btn: "Approve & pause",
+    compare_adbrief_mock_btn2: "Details",
     compare_adbrief_1: "Catches the problem in 2h",
     compare_adbrief_2: "Explains what's happening",
     compare_adbrief_3: "Recommends the specific action",
     compare_adbrief_4: "Applies it in 1 click",
     compare_adbrief_5: "Learns from every result",
-    loop_title: "Each decision generates the next.",
-    loop_sub: "The system learns from every action and gets sharper each cycle.",
-    loop_s1: "You apply",
-    loop_s1d: "Accept the decision right in the feed. One click.",
-    loop_s2: "System learns",
-    loop_s2d: "Every result becomes a pattern. The AI evolves with your data.",
-    loop_s3: "New opportunity",
-    loop_s3d: "Recommendations increasingly specific to your business.",
     pricing_title: "Clear pricing. Real scale.",
     pricing_sub: "Start free. Upgrade when your account grows.",
     pricing_free: "Free",
@@ -475,28 +482,32 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_m_dec_test_text: "Nueva variante: ángulo de prueba social",
     flow_m_btn_approve: "Aprobar y aplicar",
     flow_m_btn_details: "Detalles",
+    compare_kicker: "Comparativo",
     compare_title: "Ads Manager muestra lo que pasó.\nAdBrief te dice qué hacer.",
     compare_sub: "La diferencia entre leer un reporte y tomar una decisión.",
     compare_ads_title: "Meta Ads Manager",
+    compare_ads_sublabel: "Lo que pasó",
+    compare_ads_caption: "Números sin contexto. Tú lees, interpretas, decides y ejecutas — todo solo.",
+    compare_ads_chart_label: "CTR · últimos 14 días",
     compare_ads_1: "Muestra métricas pasadas",
     compare_ads_2: "Lo interpretas tú",
     compare_ads_3: "Decides a ciegas",
     compare_ads_4: "Ejecutas manualmente",
     compare_ads_5: "No aprende entre cuentas",
     compare_adbrief_title: "AdBrief",
+    compare_adbrief_sublabel: "Qué hacer ahora",
+    compare_adbrief_caption: "Una decisión a la vez, con el motivo, el impacto estimado y un clic para aplicar.",
+    compare_adbrief_mock_tag: "URGENTE",
+    compare_adbrief_mock_time: "hace 4 min",
+    compare_adbrief_mock_headline: "Pausar UGC 03 — ahorro $430/día",
+    compare_adbrief_mock_reason: "CTR cayó 62% en 48h, CPA $87 (meta $35). Sin señal de recuperación.",
+    compare_adbrief_mock_btn: "Aprobar y pausar",
+    compare_adbrief_mock_btn2: "Detalles",
     compare_adbrief_1: "Detecta el problema en 2h",
     compare_adbrief_2: "Explica qué está pasando",
     compare_adbrief_3: "Recomienda la acción específica",
     compare_adbrief_4: "Lo aplica en 1 clic",
     compare_adbrief_5: "Aprende de cada resultado",
-    loop_title: "Cada decisión genera la siguiente.",
-    loop_sub: "El sistema aprende de cada acción y se vuelve más preciso en cada ciclo.",
-    loop_s1: "Tú aplicas",
-    loop_s1d: "Acepta la decisión directo en el feed. Un clic.",
-    loop_s2: "El sistema aprende",
-    loop_s2d: "Cada resultado se vuelve patrón. La IA evoluciona con tus datos.",
-    loop_s3: "Nueva oportunidad",
-    loop_s3d: "Recomendaciones cada vez más específicas para tu negocio.",
     pricing_title: "Precio claro. Escala real.",
     pricing_sub: "Empieza gratis. Sube de plan cuando tu cuenta crezca.",
     pricing_free: "Free",
@@ -1893,66 +1904,193 @@ function FlowSection({ t }: { t: Record<string, string> }) {
 }
 
 // ── Section 3.5 — Compare (AdBrief vs Ads Manager) ─────────────────────────
+// Side-by-side comparison. Each column leads with a real product-like
+// visual so the difference reads at a glance before any copy does.
 function CompareSection({ t }: { t: Record<string, string> }) {
-  const { ref, visible } = useReveal(0.2);
+  const head = useReveal(0.25);
+  const left = useReveal(0.2);
+  const right = useReveal(0.2);
 
-  const adsRows = [t.compare_ads_1, t.compare_ads_2, t.compare_ads_3, t.compare_ads_4, t.compare_ads_5];
-  const adbriefRows = [t.compare_adbrief_1, t.compare_adbrief_2, t.compare_adbrief_3, t.compare_adbrief_4, t.compare_adbrief_5];
+  const adsRows = [t.compare_ads_1, t.compare_ads_2, t.compare_ads_3, t.compare_ads_4];
+  const adbriefRows = [t.compare_adbrief_1, t.compare_adbrief_2, t.compare_adbrief_3, t.compare_adbrief_4];
+
+  // Left mock: a dense, cold KPI grid + messy little chart. Numbers without
+  // narrative — the "dashboard" experience.
+  const kpis = [
+    { label: "Spend", val: "R$21.540", hint: "7d" },
+    { label: "CTR", val: "0.82%", hint: "↓" },
+    { label: "CPM", val: "R$42.10", hint: "↑" },
+    { label: "Freq", val: "3.8", hint: "7d" },
+    { label: "Conv", val: "24", hint: "7d" },
+    { label: "CPA", val: "R$87", hint: "↑" },
+  ];
 
   return (
     <section style={{
-      background: BG2, padding: "clamp(72px,9vw,100px) clamp(20px,4vw,40px)",
+      background: BG2,
+      padding: "clamp(88px,11vw,140px) clamp(20px,4vw,40px)",
       borderTop: `1px solid ${BORDER}`,
-    }} ref={ref}>
-      <div style={{ maxWidth: 880, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 44, maxWidth: 620, marginLeft: "auto", marginRight: "auto" }}>
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Soft ambient divide — top edge of section catches a slight cool tint */}
+      <div aria-hidden="true" style={{
+        position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)",
+        width: "120%", height: "55%", pointerEvents: "none",
+        background: `radial-gradient(ellipse 60% 100% at 50% 0%, rgba(255,255,255,0.02) 0%, transparent 60%)`,
+      }} />
+
+      <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative" }}>
+        {/* Header */}
+        <div
+          ref={head.ref}
+          style={{
+            textAlign: "center", maxWidth: 720, margin: "0 auto clamp(48px,6vw,72px)",
+            opacity: head.visible ? 1 : 0,
+            transform: head.visible ? "translateY(0)" : "translateY(16px)",
+            transition: `all 0.7s ${EASE}`,
+          }}
+        >
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "6px 12px", borderRadius: 99,
+            background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}`,
+            marginBottom: 20,
+          }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: TEXT3 }} />
+            <span style={{
+              fontFamily: F, fontSize: 10.5, fontWeight: 700, color: TEXT2,
+              letterSpacing: "0.14em", textTransform: "uppercase",
+            }}>
+              {t.compare_kicker}
+            </span>
+          </div>
           <h2 style={{
-            fontFamily: F, fontSize: "clamp(24px,2.8vw,34px)", fontWeight: 800,
-            letterSpacing: "-0.04em", color: TEXT, margin: "0 0 12px", whiteSpace: "pre-line", lineHeight: 1.15,
+            fontFamily: F, fontSize: "clamp(28px,3.6vw,42px)", fontWeight: 800,
+            letterSpacing: "-0.045em", lineHeight: 1.08,
+            color: TEXT, margin: "0 0 12px", whiteSpace: "pre-line",
           }}>
             {t.compare_title}
           </h2>
           <p style={{
-            fontFamily: F, fontSize: 13.5, color: TEXT3, margin: 0, lineHeight: 1.55,
+            fontFamily: F, fontSize: 15, color: TEXT2, margin: 0, lineHeight: 1.55,
           }}>
             {t.compare_sub}
           </p>
         </div>
 
         <div className="compare-grid" style={{
-          display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(10px,1.5vw,14px)",
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(12px)",
-          transition: `all 0.5s ${EASE}`,
+          display: "grid", gridTemplateColumns: "1fr 1fr",
+          gap: "clamp(14px,2vw,22px)",
+          alignItems: "stretch",
         }}>
-          {/* Ads Manager — muted column */}
-          <div style={{
-            padding: "26px 24px 24px",
-            borderRadius: 12,
-            background: "rgba(255,255,255,0.015)",
-            border: `1px solid ${BORDER}`,
-          }}>
+          {/* ─────── Left: Meta Ads Manager — cold, dense, "what happened" ─────── */}
+          <div
+            ref={left.ref}
+            style={{
+              position: "relative",
+              padding: "28px 26px 28px",
+              borderRadius: 18,
+              background: "rgba(255,255,255,0.018)",
+              border: `1px solid ${BORDER}`,
+              display: "flex", flexDirection: "column",
+              opacity: left.visible ? 1 : 0,
+              transform: left.visible ? "translateY(0)" : "translateY(20px)",
+              transition: `all 0.7s ${EASE}`,
+            }}
+          >
             <div style={{
-              display: "flex", alignItems: "center", gap: 8, marginBottom: 20,
-              paddingBottom: 14, borderBottom: `1px solid ${BORDER}`,
+              display: "flex", alignItems: "center", gap: 10, marginBottom: 6,
             }}>
-              <MetaLogo size={16} opacity={0.55} />
-              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: TEXT2, letterSpacing: "-0.01em" }}>
+              <MetaLogo size={18} opacity={0.6} />
+              <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: TEXT2, letterSpacing: "-0.01em" }}>
                 {t.compare_ads_title}
               </span>
+              <span style={{
+                marginLeft: "auto",
+                fontFamily: F, fontSize: 9.5, fontWeight: 700,
+                color: TEXT3, letterSpacing: "0.14em", textTransform: "uppercase",
+                padding: "3px 8px", borderRadius: 99,
+                background: "rgba(255,255,255,0.025)", border: `1px solid ${BORDER}`,
+              }}>
+                {t.compare_ads_sublabel}
+              </span>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <p style={{
+              fontFamily: F, fontSize: 12.5, color: TEXT3, lineHeight: 1.55,
+              margin: "0 0 20px",
+            }}>
+              {t.compare_ads_caption}
+            </p>
+
+            {/* KPI grid mock — dense numbers, no narrative */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 6, marginBottom: 14,
+            }}>
+              {kpis.map((k, i) => (
+                <div key={i} style={{
+                  padding: "10px 11px",
+                  borderRadius: 9,
+                  background: "rgba(255,255,255,0.02)",
+                  border: `1px solid ${BORDER}`,
+                }}>
+                  <div style={{
+                    fontFamily: F, fontSize: 9.5, color: TEXT3,
+                    letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 3,
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4,
+                  }}>
+                    <span>{k.label}</span>
+                    <span style={{ fontWeight: 700, opacity: 0.7 }}>{k.hint}</span>
+                  </div>
+                  <div style={{
+                    fontFamily: F, fontSize: 13.5, fontWeight: 700, color: TEXT2,
+                    letterSpacing: "-0.015em", fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {k.val}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tiny bar chart — "you figure it out" energy */}
+            <div style={{
+              padding: "12px 14px 10px",
+              borderRadius: 9,
+              background: "rgba(255,255,255,0.015)",
+              border: `1px solid ${BORDER}`,
+              marginBottom: 22,
+            }}>
+              <div style={{
+                fontFamily: F, fontSize: 9.5, color: TEXT3,
+                letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8,
+              }}>
+                {t.compare_ads_chart_label}
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 30 }}>
+                {[42, 58, 31, 74, 29, 55, 46, 68, 52, 35, 48, 62, 40, 30].map((h, i) => (
+                  <div key={i} style={{
+                    flex: 1, height: `${h}%`,
+                    background: "rgba(255,255,255,0.16)", borderRadius: 1.5,
+                    minHeight: 2,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            {/* Limitations list — muted */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
               {adsRows.map((row, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <span style={{
                     width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
-                    background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)",
+                    background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.16)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     marginTop: 1,
                   }}>
-                    <X size={9} color={RED} strokeWidth={2.5} />
+                    <X size={9} color={RED} strokeWidth={2.6} />
                   </span>
-                  <span style={{ fontFamily: F, fontSize: 13, color: TEXT3, lineHeight: 1.5 }}>
+                  <span style={{ fontFamily: F, fontSize: 12.5, color: TEXT3, lineHeight: 1.5 }}>
                     {row}
                   </span>
                 </div>
@@ -1960,18 +2098,29 @@ function CompareSection({ t }: { t: Record<string, string> }) {
             </div>
           </div>
 
-          {/* AdBrief — active column */}
-          <div style={{
-            padding: "26px 24px 24px",
-            borderRadius: 12,
-            background: `linear-gradient(180deg, rgba(14,165,233,0.04) 0%, rgba(99,102,241,0.02) 100%)`,
-            border: `1px solid rgba(14,165,233,0.18)`,
-            boxShadow: `0 0 32px rgba(14,165,233,0.06)`,
-          }}>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 8, marginBottom: 20,
-              paddingBottom: 14, borderBottom: `1px solid rgba(14,165,233,0.12)`,
-            }}>
+          {/* ─────── Right: AdBrief — warm, focused, "what to do" ─────── */}
+          <div
+            ref={right.ref}
+            style={{
+              position: "relative",
+              padding: "28px 26px 28px",
+              borderRadius: 18,
+              background: `linear-gradient(180deg, rgba(14,165,233,0.06) 0%, rgba(34,197,94,0.03) 100%)`,
+              border: `1px solid rgba(14,165,233,0.22)`,
+              boxShadow: `0 0 0 1px rgba(255,255,255,0.02) inset, 0 32px 64px -32px rgba(14,165,233,0.35)`,
+              display: "flex", flexDirection: "column",
+              opacity: right.visible ? 1 : 0,
+              transform: right.visible ? "translateY(0)" : "translateY(20px)",
+              transition: `all 0.7s ${EASE} 0.08s`,
+            }}
+          >
+            {/* Subtle internal glow */}
+            <div aria-hidden="true" style={{
+              position: "absolute", inset: 0, borderRadius: 18, pointerEvents: "none",
+              background: `radial-gradient(ellipse 80% 50% at 50% 0%, rgba(14,165,233,0.08) 0%, transparent 70%)`,
+            }} />
+
+            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
               <img
                 src="/ab-avatar.png"
                 alt="AdBrief"
@@ -1982,25 +2131,131 @@ function CompareSection({ t }: { t: Record<string, string> }) {
                 style={{
                   width: 18, height: 18, borderRadius: 4,
                   objectFit: "cover", display: "block",
-                  boxShadow: "0 0 0 1px rgba(255,255,255,0.04)",
+                  boxShadow: "0 0 0 1px rgba(255,255,255,0.08)",
                 }}
               />
-              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>
+              <span style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>
                 {t.compare_adbrief_title}
               </span>
+              <span style={{
+                marginLeft: "auto",
+                fontFamily: F, fontSize: 9.5, fontWeight: 700,
+                color: ACCENT, letterSpacing: "0.14em", textTransform: "uppercase",
+                padding: "3px 8px", borderRadius: 99,
+                background: "rgba(14,165,233,0.1)", border: `1px solid rgba(14,165,233,0.3)`,
+              }}>
+                {t.compare_adbrief_sublabel}
+              </span>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <p style={{
+              fontFamily: F, fontSize: 12.5, color: TEXT2, lineHeight: 1.55,
+              margin: "0 0 20px",
+              position: "relative",
+            }}>
+              {t.compare_adbrief_caption}
+            </p>
+
+            {/* Decision card mock — single focus, actionable */}
+            <div style={{
+              position: "relative",
+              padding: "16px 16px 14px",
+              borderRadius: 12,
+              background: "rgba(10,12,18,0.55)",
+              border: `1px solid rgba(14,165,233,0.28)`,
+              boxShadow: `0 0 0 1px rgba(255,255,255,0.02) inset, 0 18px 40px -20px rgba(14,165,233,0.5)`,
+              marginBottom: 22,
+            }}>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+              }}>
+                <span style={{
+                  fontFamily: F, fontSize: 9.5, fontWeight: 800,
+                  color: "#fca5a5", letterSpacing: "0.14em", textTransform: "uppercase",
+                  padding: "3px 8px", borderRadius: 99,
+                  background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.28)",
+                }}>
+                  {t.compare_adbrief_mock_tag}
+                </span>
+                <span style={{
+                  fontFamily: F, fontSize: 10.5, color: TEXT3,
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  {t.compare_adbrief_mock_time}
+                </span>
+              </div>
+              <div style={{
+                fontFamily: F, fontSize: 14, fontWeight: 700, color: TEXT,
+                letterSpacing: "-0.02em", lineHeight: 1.3, marginBottom: 4,
+              }}>
+                {t.compare_adbrief_mock_headline}
+              </div>
+              <div style={{
+                fontFamily: F, fontSize: 12, color: TEXT2, lineHeight: 1.5,
+                marginBottom: 12,
+              }}>
+                {t.compare_adbrief_mock_reason}
+              </div>
+
+              {/* Confidence bar */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8, marginBottom: 12,
+              }}>
+                <div style={{
+                  flex: 1, height: 4, borderRadius: 99,
+                  background: "rgba(255,255,255,0.04)", overflow: "hidden",
+                }}>
+                  <div style={{
+                    height: "100%", width: "94%",
+                    background: `linear-gradient(to right, ${ACCENT}, ${GREEN})`,
+                    borderRadius: 99,
+                    boxShadow: `0 0 10px ${ACCENT}80`,
+                  }} />
+                </div>
+                <span style={{
+                  fontFamily: F, fontSize: 10.5, fontWeight: 700,
+                  color: GREEN, letterSpacing: "-0.01em",
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  94%
+                </span>
+              </div>
+
+              {/* Action row */}
+              <div style={{ display: "flex", gap: 6 }}>
+                <button style={{
+                  flex: 1, padding: "8px 12px", border: "none", cursor: "pointer",
+                  borderRadius: 8,
+                  background: "#ffffff", color: "#0a0a0a",
+                  fontFamily: F, fontSize: 12, fontWeight: 700, letterSpacing: "-0.01em",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  boxShadow: `0 8px 20px -8px ${ACCENT}66`,
+                }}>
+                  <CheckCircle2 size={12} strokeWidth={2.4} /> {t.compare_adbrief_mock_btn}
+                </button>
+                <button style={{
+                  padding: "8px 12px", borderRadius: 8,
+                  border: `1px solid rgba(255,255,255,0.1)`, background: "transparent",
+                  color: TEXT2, fontFamily: F, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                }}>
+                  {t.compare_adbrief_mock_btn2}
+                </button>
+              </div>
+            </div>
+
+            {/* Advantages list */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "auto" }}>
               {adbriefRows.map((row, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <span style={{
                     width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
-                    background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.22)",
+                    background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.26)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     marginTop: 1,
+                    boxShadow: `0 0 10px rgba(34,197,94,0.15)`,
                   }}>
                     <CheckCircle2 size={10} color={GREEN} strokeWidth={2.5} />
                   </span>
-                  <span style={{ fontFamily: F, fontSize: 13, color: TEXT, lineHeight: 1.5, fontWeight: 500 }}>
+                  <span style={{ fontFamily: F, fontSize: 12.5, color: TEXT, lineHeight: 1.5, fontWeight: 500 }}>
                     {row}
                   </span>
                 </div>
@@ -2009,139 +2264,15 @@ function CompareSection({ t }: { t: Record<string, string> }) {
           </div>
         </div>
       </div>
-    </section>
-  );
-}
 
-// ── Section 4 — Loop (horizontal + animated) ───────────────────────────────
-function LoopSection({ t }: { t: Record<string, string> }) {
-  const [active, setActive] = useState(0);
-  const steps = [
-    { label: t.loop_s1, icon: <Zap size={18} />, color: GREEN, desc: t.loop_s1d || "" },
-    { label: t.loop_s2, icon: <Brain size={18} />, color: INDIGO, desc: t.loop_s2d || "" },
-    { label: t.loop_s3, icon: <TrendingUp size={18} />, color: ACCENT, desc: t.loop_s3d || "" },
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => setActive(a => (a + 1) % 3), 2200);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <section style={{
-      background: BG2, padding: "clamp(72px,9vw,100px) clamp(20px,4vw,40px)",
-      borderTop: `1px solid ${BORDER}`,
-    }}>
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
-        <h2 style={{
-          fontFamily: F, fontSize: "clamp(24px,2.8vw,34px)", fontWeight: 800,
-          letterSpacing: "-0.04em", color: TEXT, margin: "0 0 16px", textAlign: "center",
-        }}>
-          {t.loop_title}
-        </h2>
-        <p style={{
-          fontFamily: F, fontSize: "clamp(13px,1.1vw,15px)", color: TEXT3,
-          margin: "0 0 48px", textAlign: "center", maxWidth: 480, marginLeft: "auto", marginRight: "auto",
-          lineHeight: 1.6,
-        }}>
-          {t.loop_sub || ""}
-        </p>
-
-        {/* Cards grid */}
-        <div className="loop-flow" style={{
-          display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
-          gap: "clamp(10px, 2vw, 16px)", position: "relative",
-        }}>
-          {steps.map((step, i) => {
-            const isActive = active === i;
-            return (
-              <div key={i} style={{
-                padding: "clamp(20px,2.5vw,28px) clamp(16px,2vw,22px)",
-                borderRadius: 14,
-                background: isActive ? `${step.color}08` : "rgba(255,255,255,0.015)",
-                border: `1px solid ${isActive ? `${step.color}25` : BORDER}`,
-                boxShadow: isActive ? `0 0 32px ${step.color}10, 0 8px 24px rgba(0,0,0,0.2)` : "0 2px 8px rgba(0,0,0,0.1)",
-                transition: `all 0.5s ${EASE}`,
-                transform: isActive ? "translateY(-4px)" : "translateY(0)",
-                textAlign: "center", position: "relative", overflow: "hidden",
-              }}>
-                {/* Step number */}
-                <div style={{
-                  fontSize: 10, fontWeight: 800, color: isActive ? step.color : TEXT3,
-                  letterSpacing: "0.1em", marginBottom: 12, opacity: isActive ? 0.6 : 0.3,
-                  transition: `all 0.4s ${EASE}`,
-                }}>
-                  0{i + 1}
-                </div>
-
-                {/* Icon */}
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10, margin: "0 auto 14px",
-                  background: isActive ? `${step.color}12` : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${isActive ? `${step.color}20` : "rgba(255,255,255,0.04)"}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: isActive ? step.color : TEXT3,
-                  transition: `all 0.4s ${EASE}`,
-                  boxShadow: isActive ? `0 0 16px ${step.color}15` : "none",
-                }}>
-                  {step.icon}
-                </div>
-
-                {/* Label */}
-                <div style={{
-                  fontFamily: F, fontSize: "clamp(13px,1.1vw,15px)", fontWeight: 700,
-                  color: isActive ? TEXT : TEXT2,
-                  marginBottom: 8, transition: `color 0.4s ${EASE}`,
-                }}>
-                  {step.label}
-                </div>
-
-                {/* Description */}
-                {step.desc && (
-                  <div style={{
-                    fontFamily: F, fontSize: 11, color: TEXT3,
-                    lineHeight: 1.55, opacity: isActive ? 0.8 : 0.5,
-                    transition: `opacity 0.4s ${EASE}`,
-                  }}>
-                    {step.desc}
-                  </div>
-                )}
-
-                {/* Active indicator dot */}
-                <div style={{
-                  width: 4, height: 4, borderRadius: "50%",
-                  background: step.color, margin: "14px auto 0",
-                  opacity: isActive ? 1 : 0.15,
-                  boxShadow: isActive ? `0 0 8px ${step.color}` : "none",
-                  transition: `all 0.4s ${EASE}`,
-                }} />
-              </div>
-            );
-          })}
-
-          {/* Connecting arrows between cards — desktop only */}
-          <div className="loop-arrows" style={{
-            position: "absolute", top: "50%", left: 0, right: 0,
-            display: "flex", justifyContent: "center", gap: "30%",
-            pointerEvents: "none", transform: "translateY(-50%)",
-          }}>
-            <ArrowRight size={14} style={{ color: "rgba(255,255,255,0.08)" }} />
-            <ArrowRight size={14} style={{ color: "rgba(255,255,255,0.08)" }} />
-          </div>
-        </div>
-
-        {/* Loop-back indicator */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          gap: 8, marginTop: 28, opacity: 0.25,
-        }}>
-          <div style={{ width: 40, height: 1, background: `linear-gradient(to right, transparent, ${ACCENT})` }} />
-          <ArrowRight size={11} style={{ color: ACCENT, transform: "rotate(180deg)" }} />
-          <span style={{ fontFamily: F, fontSize: 9, color: ACCENT, fontWeight: 600, letterSpacing: "0.1em" }}>LOOP</span>
-          <ArrowRight size={11} style={{ color: ACCENT }} />
-          <div style={{ width: 40, height: 1, background: `linear-gradient(to left, transparent, ${ACCENT})` }} />
-        </div>
-      </div>
+      <style>{`
+        @media (max-width: 720px) {
+          .compare-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .compare-grid > div { opacity: 1 !important; transform: none !important; transition: none !important; }
+        }
+      `}</style>
     </section>
   );
 }
@@ -2597,7 +2728,6 @@ export default function IndexNew() {
       <ConceptSection t={t} />
       <FlowSection t={t} />
       <CompareSection t={t} />
-      <LoopSection t={t} />
       <PricingSection t={t} />
       <FAQSection t={t} />
       <FinalCTA t={t} />
