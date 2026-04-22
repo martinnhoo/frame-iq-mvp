@@ -12,8 +12,7 @@ import { storage } from '@/lib/storage';
 import type { Decision, DecisionAction } from '../../types/v2-database';
 import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
 import { GoalSetup } from '../../components/feed/GoalSetup';
-import { HealthPanel, type HealthSignal } from '../../components/feed/HealthPanel';
-import { AccountHealthGauge, computeAccountHealth, type AccountStatusSummary } from '../../components/feed/AccountHealthGauge';
+import { AccountHealthGauge, type AccountStatusSummary } from '../../components/feed/AccountHealthGauge';
 import { FeedSidebar, type FeedActivityEvent } from '../../components/feed/FeedSidebar';
 import { Pause, Play } from 'lucide-react';
 
@@ -2791,37 +2790,14 @@ type KpiTile = {
   deltaPct: number | null;
   /** If true, a NEGATIVE delta is good (e.g. wasted spend going down). */
   invertDelta?: boolean;
-  /** Absolute delta in points, used when deltaPct isn't the right frame (AdScore). */
-  deltaPoints?: number | null;
 };
 
 /** Compact delta pill — "↑ 24,7% vs 7 dias anteriores" / "↓ 12,1% vs 7 dias anteriores". */
 const KPIDeltaLine: React.FC<{
   pct: number | null;
-  points?: number | null;
   invert?: boolean;
   periodLabel: string;
-}> = ({ pct, points, invert, periodLabel }) => {
-  // Absolute-points variant (for AdScore)
-  if (typeof points === 'number' && isFinite(points) && Math.abs(points) >= 1) {
-    const isUp = points > 0;
-    const isGood = invert ? !isUp : isUp;
-    const color = isGood ? T.green : T.red;
-    return (
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        fontSize: 11, fontFamily: F, letterSpacing: '-0.01em',
-        whiteSpace: 'nowrap', lineHeight: 1.3,
-      }}>
-        <span style={{ color, fontWeight: 700 }}>
-          {isUp ? '↑' : '↓'} {isUp ? '+' : ''}{points} pts
-        </span>
-        <span style={{ color: T.text3 }}>vs {periodLabel.toLowerCase()} anteriores</span>
-      </div>
-    );
-  }
-
-  // Percentage variant (default)
+}> = ({ pct, invert, periodLabel }) => {
   if (pct === null || !isFinite(pct) || Math.abs(pct) < 1) {
     return (
       <div style={{
@@ -2855,11 +2831,7 @@ const CommandKPIStrip: React.FC<{
   periodLabel: string;
   /** Pending decisions — used to compute wasted spend (sum of kill impact_daily). */
   decisions?: Decision[];
-  /** Account health score (0-100) — used for the AdScore tile. null = hide. */
-  healthScore?: number | null;
-  /** Prior-period health score (0-100). Falls back to null if unknown. */
-  healthScorePrev?: number | null;
-}> = ({ m, periodLabel, decisions = [], healthScore = null, healthScorePrev = null }) => {
+}> = ({ m, periodLabel, decisions = [] }) => {
   const hasData = !!m && m.daysOfData > 0 && m.totalSpend > 0;
 
   // ── Gasto perdido ──
@@ -2870,13 +2842,6 @@ const CommandKPIStrip: React.FC<{
     .filter(d => d.type === 'kill' && d.status === 'pending')
     .reduce((sum, d) => sum + Math.abs(d.impact_daily || 0), 0);
   const hasWasted = wastedDailyCentavos > 0;
-
-  // ── AdScore médio ──
-  // Delta is absolute-points based (e.g. "+4 pts"), not percent.
-  const hasScore = typeof healthScore === 'number' && healthScore >= 0;
-  const scoreDeltaPoints = (hasScore && typeof healthScorePrev === 'number')
-    ? Math.round(healthScore! - healthScorePrev)
-    : null;
 
   const tiles: KpiTile[] = [
     {
@@ -2903,13 +2868,6 @@ const CommandKPIStrip: React.FC<{
       label: 'Conversões',
       value: hasData ? m!.totalConversions.toLocaleString('pt-BR') : '—',
       deltaPct: hasData ? (m!.deltaConversionsPct ?? null) : null,
-    },
-    {
-      key: 'adscore',
-      label: 'AdScore médio',
-      value: hasScore ? `${healthScore}/100` : '—',
-      deltaPct: null,
-      deltaPoints: scoreDeltaPoints,
     },
   ];
 
@@ -2947,7 +2905,6 @@ const CommandKPIStrip: React.FC<{
             {t.value !== '—' && (
               <KPIDeltaLine
                 pct={t.deltaPct}
-                points={t.deltaPoints}
                 invert={t.invertDelta}
                 periodLabel={periodLabel}
               />
@@ -5986,22 +5943,6 @@ const FeedPage: React.FC = () => {
             m={adMetrics}
             periodLabel={PERIODS.find(p => p.key === period)!.label}
             decisions={pendingDecisions}
-            healthScore={
-              // Derive a live AdScore from the same signals the sidebar uses.
-              // Null = "—" (no data yet). Never a hardcoded number.
-              metaConnected
-                ? computeAccountHealth({
-                    accountStatus,
-                    accountStatusLoading,
-                    pixelHealth,
-                    pixelHealthLoading,
-                    adMetrics,
-                    activeAdsCount,
-                    hasMetaConnection: metaConnected,
-                  }).score
-                : null
-            }
-            healthScorePrev={null}
           />
         )}
 
@@ -6017,137 +5958,9 @@ const FeedPage: React.FC = () => {
           <BrainOverwatch userId={userId} />
         )}
 
-        {/* ═══════════════════════════════════════════════
-            LAYER 2.5 — HEALTH PANEL (always visible when connected)
-            Semáforo: pixel, gasto, anúncios, padrões da IA.
-            Verde = tudo certo. Amarelo = atenção. Vermelho = ação.
-            ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && (() => {
-          const signals: HealthSignal[] = [];
-
-          // 1) Pixel — derived from pixelHealth. Cockpit tile: headline is the
-          // pixel's status word (Instalado / Parou / 2 órfãos); detail gives
-          // the context (name, days, orphan count).
-          if (pixelHealthLoading) {
-            signals.push({
-              key: 'pixel', label: 'Pixel',
-              status: 'unknown', value: '—',
-              detail: 'Verificando…',
-            });
-          } else if (pixelHealthError) {
-            signals.push({
-              key: 'pixel', label: 'Pixel',
-              status: 'warn', value: 'Indisponível',
-              detail: 'Clique pra tentar de novo',
-              onClick: () => retryPixelHealth(),
-            });
-          } else if (!pixelHealth) {
-            signals.push({
-              key: 'pixel', label: 'Pixel',
-              status: 'unknown', value: '—',
-              detail: 'Sem dados · clique pra checar',
-              onClick: () => retryPixelHealth(),
-            });
-          } else if (pixelHealth.status === 'pixel_ok') {
-            signals.push({
-              key: 'pixel', label: 'Pixel',
-              status: 'ok',
-              value: pixelHealth.primary_pixel_name || 'Instalado',
-              detail: 'Disparando eventos',
-              onClick: () => navigate('/dashboard/ai', { state: { prompt: 'Me mostra o diagnóstico completo do meu pixel e eventos de conversão.' } }),
-            });
-          } else if (pixelHealth.status === 'no_pixel') {
-            signals.push({
-              key: 'pixel', label: 'Pixel',
-              status: 'error', value: 'Não instalado',
-              detail: '0 conversões rastreadas',
-              onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: 'Minha conta não tem pixel. Como instalar passo a passo?' } }); },
-            });
-          } else if (pixelHealth.status === 'pixel_stale') {
-            const days = (pixelHealth as any).daysSinceFire || 0;
-            signals.push({
-              key: 'pixel', label: 'Pixel',
-              status: 'error',
-              value: 'Parou',
-              detail: days > 0 ? `Sem disparar há ${days} dia${days === 1 ? '' : 's'}` : 'Parou de disparar',
-              onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: 'Meu pixel parou de disparar. Por quê e como resolver?' } }); },
-            });
-          } else if (pixelHealth.status === 'pixel_orphan') {
-            const orphans = pixelHealth.orphan_ads_count || 0;
-            const checked = (pixelHealth as any).active_ads_checked || 0;
-            signals.push({
-              key: 'pixel', label: 'Pixel',
-              status: 'warn',
-              value: `${orphans} órfão${orphans === 1 ? '' : 's'}`,
-              detail: checked > 0 ? `De ${checked} ad${checked === 1 ? '' : 's'} ativos` : 'Ads sem pixel amarrado',
-              onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: `Tenho ${orphans} anúncios sem pixel amarrado. Quais são e como corrigir?` } }); },
-            });
-          } else {
-            signals.push({
-              key: 'pixel', label: 'Pixel',
-              status: 'unknown', value: '—',
-              detail: 'Status desconhecido',
-              onClick: () => retryPixelHealth(),
-            });
-          }
-
-          // 2) Gasto & conversões (period window). Headline = spend, detail =
-          // convs + CPA. Keeps a user's eyes on what matters at a glance.
-          const spend = adMetrics?.totalSpend || 0;
-          const convs = adMetrics?.totalConversions || 0;
-          const clicks = adMetrics?.totalClicks || 0;
-          if (spend === 0) {
-            signals.push({
-              key: 'spend', label: 'Gasto & conversões',
-              status: noActiveTraffic ? 'warn' : 'unknown',
-              value: fmtReais(0),
-              detail: noActiveTraffic ? 'Nenhum ad rodando' : 'Sem gasto no período',
-              onClick: () => navigate('/dashboard/feed/campanhas'),
-            });
-          } else if (convs > 0) {
-            const cpa = spend / convs;
-            signals.push({
-              key: 'spend', label: 'Gasto & conversões',
-              status: 'ok',
-              value: fmtReais(spend),
-              detail: `${convs} conv · CPA ${fmtReais(cpa)}`,
-              onClick: () => navigate('/dashboard/feed/campanhas'),
-            });
-          } else {
-            // Spending without conversions — most common pain we see.
-            signals.push({
-              key: 'spend', label: 'Gasto & conversões',
-              status: 'warn',
-              value: fmtReais(spend),
-              detail: clicks > 0 ? `${clicks} cliques · 0 conversões` : '0 conversões rastreadas',
-              onClick: () => startTrackingInvestigation(),
-            });
-          }
-
-          // 3) Anúncios ativos. Headline = count, detail = where they live.
-          signals.push({
-            key: 'ads', label: 'Anúncios ativos',
-            status: activeAdsCount > 0 ? 'ok' : 'warn',
-            value: String(activeAdsCount),
-            detail: activeAdsCount > 0
-              ? `em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}`
-              : 'Nenhum rodando agora',
-            onClick: () => navigate('/dashboard/feed/campanhas'),
-          });
-
-          // 4) IA aprendendo. Headline = patterns learned, detail = status.
-          signals.push({
-            key: 'patterns', label: 'IA aprendendo',
-            status: patternsCount > 0 ? 'ok' : 'unknown',
-            value: patternsCount > 0 ? String(patternsCount) : 'Coletando',
-            detail: patternsCount > 0
-              ? `padr${patternsCount === 1 ? 'ão aprendido' : 'ões aprendidos'}`
-              : 'Aguardando dados suficientes',
-            onClick: () => navigate('/dashboard/intelligence'),
-          });
-
-          return <HealthPanel signals={signals} lastCheckedMin={lastAnalysisMin} />;
-        })()}
+        {/* LAYER 2.5 (HealthPanel) removed — Saúde da conta now lives exclusively
+            in the right sidebar (FeedSidebar). Keeping a second summary bar in
+            the main column was redundant. */}
 
         {/* ═══════════════════════════════════════════════
             LAYER 3 — ACCOUNT HEALTH ALERTS (if any)
@@ -6378,9 +6191,10 @@ const FeedPage: React.FC = () => {
                 FlowSection mode='all' renders kills+fixes, scales, patterns.
                 ═══════════════════════════════════════════════ */}
             {pendingDecisions.length > 0 && (
-              <div style={{
+              <div id="acoes-prioritarias" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 gap: 12, marginTop: 6, marginBottom: 12, flexWrap: 'wrap',
+                scrollMarginTop: 16,
               }}>
                 <div style={{
                   fontSize: 15, fontWeight: 700, color: T.text1,
@@ -6538,98 +6352,9 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Discreet tracking status pill */}
-        {(trackingUserStatus === 'confirmed_no_conversion' || trackingUserStatus === 'verified_ok' || trackingUserStatus === 'verified_issue' || trackingUserStatus === 'investigating') && adMetrics && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', marginTop: -2 }}>
-            <span style={{
-              width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
-              background: trackingUserStatus === 'verified_ok' ? T.green : trackingUserStatus === 'verified_issue' ? T.red : trackingUserStatus === 'investigating' ? T.blue : T.yellow,
-            }} />
-            <span style={{ fontSize: 10, color: T.text3, fontWeight: 500 }}>
-              {trackingUserStatus === 'confirmed_no_conversion' && 'Sem conversões — confirmado'}
-              {trackingUserStatus === 'verified_ok' && 'Rastreamento verificado'}
-              {trackingUserStatus === 'verified_issue' && 'Problema no rastreamento detectado'}
-              {trackingUserStatus === 'investigating' && 'Diagnóstico em andamento'}
-            </span>
-            <button onClick={resetTrackingStatus} style={{ background: 'none', border: 'none', color: T.text3, cursor: 'pointer', fontSize: 9.5, opacity: 0.6, padding: 0, marginLeft: 2 }}
-              onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.textDecoration = 'underline'; }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.textDecoration = 'none'; }}>
-              reverificar
-            </button>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════
-            LAYER 6.5 — SISTEMA ATIVO FOOTER (status strip)
-            Matches Central de Comando v2 print: pulse dot + status
-            label on the left; 3 inline stats on the right (análises hoje,
-            ações disponíveis, conta analisada N min atrás).
-            All values derived — no hardcoded numbers.
-            ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && (() => {
-          const todayStart = new Date();
-          todayStart.setHours(0, 0, 0, 0);
-          const analysesToday = activityEvents.filter(e => {
-            const ts = new Date(e.created_at).getTime();
-            return ts >= todayStart.getTime();
-          }).length;
-          const availableActions = pendingDecisions.length;
-          const analyzedAgo = lastAnalysisMin < 60
-            ? `${lastAnalysisMin} min atrás`
-            : `${Math.round(lastAnalysisMin / 60)}h atrás`;
-          const stats: { label: string; value: string }[] = [
-            { label: 'Análises hoje', value: analysesToday.toString() },
-            { label: 'Ações disponíveis', value: availableActions.toString() },
-            { label: 'Conta analisada', value: analyzedAgo },
-          ];
-          return (
-            <div style={{
-              marginTop: 18,
-              background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 12,
-              padding: '14px 18px', fontFamily: F,
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              gap: 14, flexWrap: 'wrap',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                <span style={{
-                  position: 'relative', width: 8, height: 8, borderRadius: '50%',
-                  background: T.green, boxShadow: `0 0 0 3px rgba(74,222,128,0.18)`,
-                  display: 'inline-block', flexShrink: 0,
-                }} />
-                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                  <span style={{
-                    fontSize: 12.5, fontWeight: 700, color: T.text1,
-                    letterSpacing: '-0.01em', lineHeight: 1.2,
-                  }}>Sistema ativo</span>
-                  <span style={{
-                    fontSize: 11, color: T.text3, letterSpacing: '-0.005em',
-                    lineHeight: 1.3, marginTop: 1,
-                  }}>Monitorando sua conta 24/7</span>
-                </div>
-              </div>
-              <div style={{
-                display: 'flex', alignItems: 'stretch', gap: 0,
-              }}>
-                {stats.map((s, i) => (
-                  <div key={s.label} style={{
-                    padding: '2px 18px',
-                    display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2,
-                    borderRight: i < stats.length - 1 ? `1px solid ${T.border0}` : 'none',
-                  }}>
-                    <span style={{
-                      fontSize: 14, fontWeight: 700, color: T.text1,
-                      letterSpacing: '-0.015em', lineHeight: 1.1,
-                    }}>{s.value}</span>
-                    <span style={{
-                      fontSize: 10.5, color: T.text3, letterSpacing: '-0.005em',
-                      lineHeight: 1.2, whiteSpace: 'nowrap',
-                    }}>{s.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })()}
+        {/* Tracking status pill removed — the Saúde da conta sidebar card
+            surfaces the same information (tracking issues appear as issues
+            with "Verificar tracking" action links). */}
 
         {/* ═══════════════════════════════════════════════
             LAYER 7 — PATTERNS & LEARNING (collapsible)
@@ -6672,6 +6397,46 @@ const FeedPage: React.FC = () => {
           onDecisionAction={handleAction}
           activityEvents={activityEvents}
           activityLoading={activityLoading}
+          // ── Sidebar CTAs wired to real navigation + AI prompts ──
+          onOpenDiagnostic={() => {
+            // "Ver diagnóstico completo" → full health diagnostic via AI
+            navigate('/dashboard/ai', {
+              state: {
+                prompt: 'Me faz um diagnóstico completo da minha conta: pixel, eventos, limites, status do fatturamento, anúncios ativos, tracking. Aponta cada problema com ação concreta.',
+              },
+            });
+          }}
+          onActOnIssue={(issue) => {
+            // Numbered issue links ("Verificar tracking", "Otimizar", "Reativar")
+            // → open AI chat with a context-aware prompt for that specific issue.
+            const promptByKey: Record<string, string> = {
+              account_critical: 'Minha conta de anúncios está com status crítico. Explica o que aconteceu e me dá o passo-a-passo pra reativar.',
+              account_warn: 'Minha conta de anúncios está com alerta. O que significa e como resolver?',
+              pixel_missing: 'Minha conta não tem pixel instalado. Me mostra como instalar e configurar eventos de conversão passo-a-passo.',
+              pixel_stale: 'Meu pixel parou de disparar eventos. Diagnostica o motivo e me dá a correção.',
+              pixel_orphan: 'Tenho anúncios sem pixel amarrado. Quais são e como corrigir?',
+              no_active_ads: 'Nenhum anúncio meu está ativo. Analisa o histórico das campanhas pausadas e sugere o que vale reativar primeiro.',
+              spend_no_conv: 'Estou gastando mas não tenho conversões registradas. Diagnostica se é problema de tracking, oferta ou criativo.',
+            };
+            const prompt = promptByKey[issue.key]
+              ?? `Me ajuda a resolver: ${issue.label}.`;
+            navigate('/dashboard/ai', { state: { prompt } });
+          }}
+          onOpenAllDecisions={() => {
+            // "Ver recomendações" → scroll to Ações prioritárias section
+            const el = document.getElementById('acoes-prioritarias');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+              navigate('/dashboard/ai', {
+                state: { prompt: 'Me mostra todas as ações recomendadas pra minha conta agora, em ordem de prioridade.' },
+              });
+            }
+          }}
+          onOpenAllActivity={() => {
+            // "Ver todas" (Atividade recente) → full action log
+            navigate('/dashboard/intelligence');
+          }}
         />
       )}
       </div>
