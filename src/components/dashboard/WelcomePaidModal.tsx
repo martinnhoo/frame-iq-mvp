@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   X, Check, ArrowRight, Sparkles, LayoutGrid, Gauge, Send, Crown,
+  type LucideIcon,
 } from "lucide-react";
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -59,7 +60,7 @@ const COPY: Record<Lang, {
 // ── Per-plan feature list ─────────────────────────────────────────────────────
 // Each line is [icon, copy per language]. Icon choice leans on lucide semantics:
 // Sparkles=AI, LayoutGrid=accounts, Gauge=usage, Send=telegram, Crown=premium.
-type Feature = { icon: React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>; label: Record<Lang, string> };
+type Feature = { icon: LucideIcon; label: Record<Lang, string> };
 
 const FEATURES: Record<Plan, Feature[]> = {
   maker: [
