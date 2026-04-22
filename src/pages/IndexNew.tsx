@@ -106,7 +106,7 @@ const TX: Record<Lang, Record<string, string>> = {
     social_logo_placeholder: "logo cliente",
     stat1_v: "R$12Mi+",
     stat1_l: "em mídia monitorada",
-    stat2_v: "~2h",
+    stat2_v: "15min",
     stat2_l: "pra detectar um CPA fora da curva",
     stat3_v: "94%",
     stat3_l: "das decisões aceitas pelos gestores",
@@ -182,7 +182,7 @@ const TX: Record<Lang, Record<string, string>> = {
     compare_adbrief_mock_reason: "CTR caiu 62% em 48h, CPA R$87 (meta R$35). Sem sinal de recuperação.",
     compare_adbrief_mock_btn: "Aprovar e pausar",
     compare_adbrief_mock_btn2: "Detalhes",
-    compare_adbrief_1: "Detecta o problema em 2h",
+    compare_adbrief_1: "Detecta o problema em 15min",
     compare_adbrief_2: "Explica o que está acontecendo",
     compare_adbrief_3: "Recomenda a ação específica",
     compare_adbrief_4: "Aplica em 1 clique",
@@ -220,7 +220,7 @@ const TX: Record<Lang, Record<string, string>> = {
     // faq
     faq_title: "Perguntas que todo gestor faz antes",
     faq_q1: "O AdBrief mexe na minha conta sozinho?",
-    faq_a1: "Não. Toda decisão precisa do seu clique. O AdBrief monitora, analisa e recomenda — você aceita ou ignora.",
+    faq_a1: "Por padrão, não — toda recomendação passa pelo seu clique (escalar, pausar, duplicar, ajustar budget). A única exceção é a proteção automática contra prejuízo: em casos extremos (CPA muito acima da meta, 0 conversões e spend queimando em velocidade anormal), o AdBrief pausa sozinho pra te evitar dano. Essa proteção vem ligada por padrão e pode ser desligada nas configurações.",
     faq_q2: "Preciso ser admin da conta de anúncios?",
     faq_a2: "Precisa de permissão de anunciante ou superior. Funciona com BM compartilhada de cliente e com conta pessoal.",
     faq_q3: "E se o AdBrief recomendar algo errado?",
@@ -228,7 +228,7 @@ const TX: Record<Lang, Record<string, string>> = {
     faq_q4: "Funciona pra e-commerce? Agência? Infoproduto?",
     faq_a4: "Sim pros três. O sistema aprende com a sua conta específica — o que funciona pro seu nicho, não genérico.",
     faq_q5: "Quanto custa?",
-    faq_a5: "Free dá 15 decisões grátis (sem cartão). Maker $19/mês para 1 conta. Pro $49/mês para 3 contas. Studio $299/mês sem limite.",
+    faq_a5: "Free dá acesso completo com 1 conta Meta conectada e 15 decisões aplicadas (sem cartão). Maker $19/mês para 1 conta com decisões ilimitadas. Pro $49/mês para 3 contas. Studio $299/mês sem limite de contas nem decisões.",
     faq_q6: "Posso cancelar?",
     faq_a6: "Sim. Mensal, sem contrato, sem multa. Desconectar da Meta também é 1 clique.",
     // final
@@ -273,7 +273,7 @@ const TX: Record<Lang, Record<string, string>> = {
     social_logo_placeholder: "client logo",
     stat1_v: "$2.4M+",
     stat1_l: "in ad spend monitored",
-    stat2_v: "~2h",
+    stat2_v: "15min",
     stat2_l: "to catch an off-trend CPA",
     stat3_v: "94%",
     stat3_l: "of decisions accepted by buyers",
@@ -345,7 +345,7 @@ const TX: Record<Lang, Record<string, string>> = {
     compare_adbrief_mock_reason: "CTR dropped 62% in 48h, CPA $87 (target $35). No sign of recovery.",
     compare_adbrief_mock_btn: "Approve & pause",
     compare_adbrief_mock_btn2: "Details",
-    compare_adbrief_1: "Catches the problem in 2h",
+    compare_adbrief_1: "Catches the problem in 15min",
     compare_adbrief_2: "Explains what's happening",
     compare_adbrief_3: "Recommends the specific action",
     compare_adbrief_4: "Applies it in 1 click",
@@ -381,7 +381,7 @@ const TX: Record<Lang, Record<string, string>> = {
     pricing_mo: "/mo",
     faq_title: "Questions every media buyer asks first",
     faq_q1: "Will AdBrief touch my account on its own?",
-    faq_a1: "No. Every decision needs your click. AdBrief monitors, analyzes, and recommends — you accept or ignore.",
+    faq_a1: "By default, no — every recommendation needs your click (scale, pause, duplicate, adjust budget). The only exception is loss protection: in extreme cases (CPA way above target, 0 conversions, and spend burning at an abnormal pace), AdBrief auto-pauses to save you money. This protection is on by default and can be turned off in settings.",
     faq_q2: "Do I need to be admin on the ad account?",
     faq_a2: "Advertiser permission or above works. It runs fine with shared client BMs and personal accounts.",
     faq_q3: "What if AdBrief recommends the wrong thing?",
@@ -389,7 +389,7 @@ const TX: Record<Lang, Record<string, string>> = {
     faq_q4: "Does it work for e-commerce? Agency? Infoproduct?",
     faq_a4: "Yes to all three. The system learns from your specific account — what works for your niche, not generic advice.",
     faq_q5: "What does it cost?",
-    faq_a5: "Free gives 15 decisions (no card). Maker is $19/mo for 1 account. Pro is $49/mo for 3. Studio is $299/mo, no cap.",
+    faq_a5: "Free gives full access with 1 connected Meta account and 15 applied decisions (no card). Maker is $19/mo for 1 account with unlimited decisions. Pro is $49/mo for 3 accounts. Studio is $299/mo, no cap on accounts or decisions.",
     faq_q6: "Can I cancel?",
     faq_a6: "Yes. Monthly, no contract, no fee. Disconnecting from Meta is also one click.",
     final_title: "You've seen how it works.",
@@ -431,7 +431,7 @@ const TX: Record<Lang, Record<string, string>> = {
     social_logo_placeholder: "logo cliente",
     stat1_v: "$2.4M+",
     stat1_l: "en inversión monitoreada",
-    stat2_v: "~2h",
+    stat2_v: "15min",
     stat2_l: "para detectar un CPA fuera de curva",
     stat3_v: "94%",
     stat3_l: "de decisiones aceptadas por gestores",
@@ -503,7 +503,7 @@ const TX: Record<Lang, Record<string, string>> = {
     compare_adbrief_mock_reason: "CTR cayó 62% en 48h, CPA $87 (meta $35). Sin señal de recuperación.",
     compare_adbrief_mock_btn: "Aprobar y pausar",
     compare_adbrief_mock_btn2: "Detalles",
-    compare_adbrief_1: "Detecta el problema en 2h",
+    compare_adbrief_1: "Detecta el problema en 15min",
     compare_adbrief_2: "Explica qué está pasando",
     compare_adbrief_3: "Recomienda la acción específica",
     compare_adbrief_4: "Lo aplica en 1 clic",
@@ -539,7 +539,7 @@ const TX: Record<Lang, Record<string, string>> = {
     pricing_mo: "/mes",
     faq_title: "Preguntas que todo gestor hace antes",
     faq_q1: "¿AdBrief toca mi cuenta solo?",
-    faq_a1: "No. Toda decisión necesita tu clic. AdBrief monitorea, analiza y recomienda — tú aceptas o ignoras.",
+    faq_a1: "Por defecto, no — cada recomendación pasa por tu clic (escalar, pausar, duplicar, ajustar budget). La única excepción es la protección automática contra pérdida: en casos extremos (CPA muy por encima de la meta, 0 conversiones y spend quemando a ritmo anormal), AdBrief pausa solo para evitarte el daño. Esa protección viene activada por defecto y se puede desactivar en configuración.",
     faq_q2: "¿Tengo que ser admin de la cuenta?",
     faq_a2: "Permiso de anunciante o superior basta. Funciona con BM compartidas de cliente y cuenta personal.",
     faq_q3: "¿Y si recomienda algo mal?",
@@ -547,7 +547,7 @@ const TX: Record<Lang, Record<string, string>> = {
     faq_q4: "¿Funciona para e-commerce? ¿Agencia? ¿Infoproducto?",
     faq_a4: "Sí a los tres. El sistema aprende de tu cuenta específica — lo que funciona para tu nicho, no genérico.",
     faq_q5: "¿Cuánto cuesta?",
-    faq_a5: "Free da 15 decisiones gratis (sin tarjeta). Maker $19/mes para 1 cuenta. Pro $49/mes para 3. Studio $299/mes sin límite.",
+    faq_a5: "Free da acceso completo con 1 cuenta Meta conectada y 15 decisiones aplicadas (sin tarjeta). Maker $19/mes para 1 cuenta con decisiones ilimitadas. Pro $49/mes para 3 cuentas. Studio $299/mes sin límite de cuentas ni decisiones.",
     faq_q6: "¿Puedo cancelar?",
     faq_a6: "Sí. Mensual, sin contrato, sin multa. Desconectar de Meta también es 1 clic.",
     final_title: "Ya viste cómo funciona.",
@@ -1588,6 +1588,7 @@ function FlowStep({
         opacity: localReveal ? 1 : 0,
         transform: localReveal ? "translateY(0)" : "translateY(24px)",
         transition: `opacity 0.7s ${EASE}, transform 0.7s ${EASE}`,
+        zIndex: 1,
       }}
     >
       {/* Left rail — number + glowing node */}
@@ -1852,21 +1853,24 @@ function FlowSection({ t }: { t: Record<string, string> }) {
 
         {/* Timeline */}
         <div ref={timeline.ref} style={{ position: "relative" }}>
-          {/* Connector rail — full-length faint track */}
+          {/* Connector rail — full-length faint track (behind everything) */}
           <div aria-hidden="true" style={{
             position: "absolute", left: 35, top: 28, bottom: 28,
             width: 2, borderRadius: 2,
             background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+            zIndex: 0, pointerEvents: "none",
           }} />
-          {/* Connector fill — driven by scroll progress */}
+          {/* Connector fill — driven by scroll progress, behind cards and nodes */}
           <div aria-hidden="true" style={{
             position: "absolute", left: 35, top: 28,
             width: 2, borderRadius: 2,
             height: `calc(${Math.min(timeline.progress * 100, 100)}% - 56px)`,
             maxHeight: "calc(100% - 56px)",
             background: `linear-gradient(to bottom, ${ACCENT} 0%, ${INDIGO} 45%, ${GREEN} 100%)`,
-            boxShadow: `0 0 16px ${ACCENT}60`,
-            transition: "height 0.1s linear",
+            boxShadow: `0 0 12px ${ACCENT}40`,
+            transition: `height 0.5s cubic-bezier(0.22, 1, 0.36, 1)`,
+            zIndex: 0, pointerEvents: "none",
+            willChange: "height",
           }} />
 
           {steps.map((step, i) => (
