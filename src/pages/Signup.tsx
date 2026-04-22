@@ -53,7 +53,7 @@ const Signup = () => {
     }
 
     setEmailLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
@@ -71,16 +71,26 @@ const Signup = () => {
       setEmailLoading(false);
     } else {
       // Send branded confirmation email (non-blocking)
-      // Always redirects to /email-confirmed — never to demo or onboarding
       supabase.functions.invoke("send-confirmation-email", {
         body: { email: email.trim(), name: name.trim(), language },
       }).catch(() => {}); // fire-and-forget
 
-      // Go directly to onboarding (no blocking email confirmation)
+      trackEvent("signup_completed", { plan: planParam || "free", verified: !!data.session });
+
+      // If Supabase email confirmation is required, `data.session` will be null.
+      // In that case, park the user on /confirm-email until they click the link.
+      // Google OAuth users skip this entirely (verified email at provider).
+      if (!data.session) {
+        const planQuery = planParam ? `&plan=${planParam}` : '';
+        navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}${planQuery}`);
+        setEmailLoading(false);
+        return;
+      }
+
+      // (Fallback — only reached if email confirmation is disabled on Supabase side)
       const billingQuery = billingParam ? `&billing=${billingParam}` : '';
       const redirectQuery = redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : '';
       const redirectUrl = planParam ? `/onboarding?checkout=${planParam}${billingQuery}${redirectQuery}` : `/onboarding?${redirectQuery.replace('&', '')}`;
-      trackEvent("signup_completed", { plan: planParam || "free" });
       navigate(redirectUrl);
       setEmailLoading(false);
     }
