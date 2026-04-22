@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain, TrendingUp, Star, Trash2, RefreshCw, ChevronRight, ChevronDown } from "lucide-react";
+import { Brain, TrendingUp, Star, Trash2, RefreshCw, ChevronRight, ChevronDown, Package, Users, Palette, BookOpen, Target, Sparkles } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
@@ -22,6 +22,15 @@ interface Pattern {
   sample_size:number|null;
   confidence:number;
   is_winner:boolean;
+}
+interface Knowledge {
+  id:string;
+  knowledge_type:"product"|"audience"|"brand"|"playbook"|"constraints";
+  slug:string;
+  data:any;
+  confidence:number;
+  source:string;
+  last_updated:string;
 }
 
 // ── Pattern-key parser: turns "perf_urgency_meta" → { label:"Urgency", platform:"meta" }
@@ -239,6 +248,214 @@ function ExampleRow({ e, lang, deleting, onDelete, showLess, showMore }: {
   );
 }
 
+// ── Knowledge row — one typed record (brand/playbook/product/audience/constraints)
+const K_COLOR: Record<Knowledge["knowledge_type"], string> = {
+  product:     "#f59e0b",  // amber
+  audience:    "#38bdf8",  // sky
+  brand:       "#e879f9",  // fuchsia
+  playbook:    "#34d399",  // emerald
+  constraints: "#f87171",  // red
+};
+const K_ICON: Record<Knowledge["knowledge_type"], React.ReactNode> = {
+  product:     <Package size={13}/>,
+  audience:    <Users size={13}/>,
+  brand:       <Palette size={13}/>,
+  playbook:    <BookOpen size={13}/>,
+  constraints: <Target size={13}/>,
+};
+const K_LABEL: Record<Knowledge["knowledge_type"], Record<string,string>> = {
+  product:     { pt:"Produto",    es:"Producto",    en:"Product"     },
+  audience:    { pt:"Público",    es:"Audiencia",   en:"Audience"    },
+  brand:       { pt:"Marca",      es:"Marca",       en:"Brand"       },
+  playbook:    { pt:"Playbook",   es:"Playbook",    en:"Playbook"    },
+  constraints: { pt:"Limites",    es:"Límites",     en:"Constraints" },
+};
+
+// Human-render a knowledge record's contents (below the display_summary).
+function renderKnowledgeDetails(k: Knowledge, lang: string): React.ReactNode {
+  const d = k.data || {};
+  const lines: Array<{ label:string; value:string }> = [];
+  const push = (label:string, v:any) => {
+    if (v === undefined || v === null || v === "") return;
+    if (Array.isArray(v)) {
+      if (!v.length) return;
+      lines.push({ label, value: v.join(" · ") });
+    } else if (typeof v === "object") {
+      const parts: string[] = [];
+      for (const [k2, v2] of Object.entries(v)) {
+        if (v2 === undefined || v2 === null || v2 === "") continue;
+        if (Array.isArray(v2)) parts.push(`${k2}: ${v2.join(", ")}`);
+        else parts.push(`${k2}: ${v2}`);
+      }
+      if (parts.length) lines.push({ label, value: parts.join(" · ") });
+    } else {
+      lines.push({ label, value: String(v) });
+    }
+  };
+
+  switch (k.knowledge_type) {
+    case "product":
+      if (d.price !== undefined) push(lang==="pt"?"preço":lang==="es"?"precio":"price", `${d.currency||""} ${d.price}`.trim());
+      if (d.price_range) push(lang==="pt"?"faixa":lang==="es"?"rango":"range", `${d.currency||""} ${d.price_range[0]}–${d.price_range[1]}`.trim());
+      if (d.category) push(lang==="pt"?"categoria":lang==="es"?"categoría":"category", d.category);
+      if (d.margin_pct !== undefined) push(lang==="pt"?"margem":lang==="es"?"margen":"margin", `${d.margin_pct}%`);
+      if (d.usp) push("USP", d.usp);
+      if (d.key_benefits) push(lang==="pt"?"benefícios":lang==="es"?"beneficios":"benefits", d.key_benefits);
+      if (d.objections) push(lang==="pt"?"objeções":lang==="es"?"objeciones":"objections", d.objections);
+      break;
+    case "audience":
+      if (d.demographics) push(lang==="pt"?"demografia":lang==="es"?"demografía":"demographics", d.demographics);
+      if (d.pain_points) push(lang==="pt"?"dores":lang==="es"?"dolores":"pain points", d.pain_points);
+      if (d.buying_triggers) push(lang==="pt"?"gatilhos":lang==="es"?"gatillos":"triggers", d.buying_triggers);
+      if (d.psychographics) push("psicografia", d.psychographics);
+      if (d.funnel_stage) push(lang==="pt"?"etapa":lang==="es"?"etapa":"funnel stage", d.funnel_stage);
+      break;
+    case "brand":
+      if (d.tone) push(lang==="pt"?"tom":"tone", d.tone);
+      if (d.voice) push(lang==="pt"?"voz":"voice", d.voice);
+      if (d.key_messages) push(lang==="pt"?"mensagens-chave":lang==="es"?"mensajes clave":"key messages", d.key_messages);
+      if (d.forbidden_words) push(lang==="pt"?"palavras proibidas":lang==="es"?"palabras prohibidas":"forbidden words", d.forbidden_words);
+      if (d.forbidden_angles) push(lang==="pt"?"ângulos proibidos":lang==="es"?"ángulos prohibidos":"forbidden angles", d.forbidden_angles);
+      if (d.compliance_flags) push("compliance", d.compliance_flags);
+      if (d.visual_style) push(lang==="pt"?"estilo visual":lang==="es"?"estilo visual":"visual style", d.visual_style);
+      break;
+    case "playbook":
+      if (Array.isArray(d.rules) && d.rules.length) {
+        return (
+          <div style={{ display:"flex", flexDirection:"column", gap:4, marginTop:6 }}>
+            {d.rules.map((r:any, i:number) => (
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:6, padding:"5px 8px",
+                borderRadius:6, background:"rgba(52,211,153,0.06)", border:"1px solid rgba(52,211,153,0.14)" }}>
+                <span style={{ fontFamily:F, fontSize:11, fontWeight:700, color:"#34d399", flexShrink:0,
+                  padding:"1px 6px", borderRadius:99, background:"rgba(52,211,153,0.14)", lineHeight:1.4 }}>
+                  SE
+                </span>
+                <span style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.72)", flex:1, lineHeight:1.5 }}>
+                  {r.trigger} <span style={{ color:"#34d399", fontWeight:600 }}>→ {r.action}</span>
+                </span>
+              </div>
+            ))}
+            {d.winning_angles && <div style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.35)", marginTop:4 }}>
+              {lang==="pt"?"Ângulos vencedores":lang==="es"?"Ángulos ganadores":"Winning angles"}: {d.winning_angles.join(", ")}
+            </div>}
+            {d.losing_angles && <div style={{ fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.35)" }}>
+              {lang==="pt"?"Ângulos perdedores":lang==="es"?"Ángulos perdedores":"Losing angles"}: {d.losing_angles.join(", ")}
+            </div>}
+          </div>
+        );
+      }
+      if (d.preferred_formats) push(lang==="pt"?"formatos":"formats", d.preferred_formats);
+      if (d.winning_angles) push(lang==="pt"?"vencedores":"winning", d.winning_angles);
+      if (d.losing_angles) push(lang==="pt"?"perdedores":"losing", d.losing_angles);
+      break;
+    case "constraints":
+      if (d.monthly_budget_cap !== undefined) push(lang==="pt"?"orçamento/mês":lang==="es"?"presupuesto/mes":"monthly budget", `R$${d.monthly_budget_cap}`);
+      if (d.daily_floor !== undefined) push(lang==="pt"?"piso diário":lang==="es"?"piso diario":"daily floor", `R$${d.daily_floor}`);
+      if (d.daily_ceiling !== undefined) push(lang==="pt"?"teto diário":lang==="es"?"techo diario":"daily ceiling", `R$${d.daily_ceiling}`);
+      if (d.target_cpa !== undefined) push(lang==="pt"?"CPA meta":"target CPA", `R$${d.target_cpa}`);
+      if (d.max_cpa !== undefined) push(lang==="pt"?"CPA máx.":"max CPA", `R$${d.max_cpa}`);
+      if (d.target_roas !== undefined) push(lang==="pt"?"ROAS meta":"target ROAS", `${d.target_roas}x`);
+      if (d.min_roas !== undefined) push(lang==="pt"?"ROAS mín.":"min ROAS", `${d.min_roas}x`);
+      if (d.working_hours) push(lang==="pt"?"horário":"hours", d.working_hours);
+      if (d.blocked_platforms) push(lang==="pt"?"bloqueadas":"blocked", d.blocked_platforms);
+      break;
+  }
+  if (d.notes) push("notes", d.notes);
+
+  if (!lines.length) return null;
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:3, marginTop:6 }}>
+      {lines.map((l, i) => (
+        <div key={i} style={{ display:"flex", alignItems:"baseline", gap:6, minWidth:0 }}>
+          <span style={{ fontFamily:F, fontSize:10.5, fontWeight:700, color:"rgba(255,255,255,0.32)",
+            letterSpacing:"0.06em", textTransform:"uppercase" as const, flexShrink:0, minWidth:78 }}>
+            {l.label}
+          </span>
+          <span style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.7)", lineHeight:1.5,
+            overflow:"hidden", textOverflow:"ellipsis" }}>
+            {l.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function KnowledgeRow({ k, lang, deleting, onDelete }: {
+  k: Knowledge; lang: string; deleting: boolean; onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const color = K_COLOR[k.knowledge_type];
+  const label = K_LABEL[k.knowledge_type]?.[lang] || k.knowledge_type;
+  const summary = k.data?.display_summary
+    || k.data?.name
+    || (lang==="pt" ? "(sem resumo)" : lang==="es" ? "(sin resumen)" : "(no summary)");
+  const confPct = Math.round((k.confidence || 0) * 100);
+  const details = renderKnowledgeDetails(k, lang);
+
+  return (
+    <div style={{
+      padding:"10px 12px", borderRadius:10,
+      background: `${color}08`,
+      border: `1px solid ${color}22`,
+      transition:"background 0.15s",
+    }}>
+      <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+        <div style={{ width:22, height:22, borderRadius:6, background:`${color}20`,
+          border:`1px solid ${color}30`, display:"flex", alignItems:"center", justifyContent:"center",
+          flexShrink:0, color, marginTop:1 }}>
+          {K_ICON[k.knowledge_type]}
+        </div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:3, flexWrap:"wrap" as const }}>
+            <span style={{ fontFamily:F, fontSize:10, fontWeight:700, color, letterSpacing:"0.07em",
+              textTransform:"uppercase" as const }}>
+              {label}
+            </span>
+            {k.knowledge_type !== "brand" && k.knowledge_type !== "playbook" && k.knowledge_type !== "constraints" && (
+              <span style={{ fontFamily:M, fontSize:10.5, color:"rgba(255,255,255,0.32)" }}>
+                · {k.slug}
+              </span>
+            )}
+            <span style={{ fontFamily:M, fontSize:10, color:"rgba(255,255,255,0.3)" }}>
+              · {confPct}%
+            </span>
+            {k.source !== "chat" && (
+              <span style={{ fontFamily:F, fontSize:9.5, fontWeight:600, color:"rgba(255,255,255,0.4)",
+                background:"rgba(255,255,255,0.06)", padding:"1px 6px", borderRadius:99,
+                letterSpacing:"0.04em", textTransform:"uppercase" as const }}>
+                {k.source}
+              </span>
+            )}
+          </div>
+          <p style={{ fontFamily:F, fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.85)",
+            lineHeight:1.5, margin:0 }}>
+            {summary}
+          </p>
+          {details && (
+            <button onClick={() => setOpen(o => !o)}
+              style={{ marginTop:5, background:"none", border:"none", cursor:"pointer", padding:0,
+                fontFamily:F, fontSize:11, color:"rgba(255,255,255,0.35)", display:"flex", alignItems:"center", gap:2 }}>
+              {open
+                ? <><ChevronDown size={10}/>{lang==="pt"?"Ocultar detalhes":lang==="es"?"Ocultar detalles":"Hide details"}</>
+                : <><ChevronRight size={10}/>{lang==="pt"?"Ver detalhes":lang==="es"?"Ver detalles":"See details"}</>}
+            </button>
+          )}
+          {open && details}
+        </div>
+        <button onClick={onDelete} disabled={deleting}
+          style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 4px",
+            color:"rgba(255,255,255,0.2)", display:"flex", alignItems:"center", flexShrink:0,
+            transition:"color 0.15s" }}
+          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="#f87171"}}
+          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.2)"}}>
+          {deleting ? <span style={{fontSize:11}}>…</span> : <Trash2 size={12}/>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Collapsible section ───────────────────────────────────────────────────────
 function Section({ icon, color, title, subtitle, count, children }: {
   icon: React.ReactNode; color:string; title:string; subtitle:string;
@@ -290,6 +507,7 @@ export default function IntelligencePage() {
   const [memories, setMemories]     = useState<Memory[]>([]);
   const [examples, setExamples]     = useState<Example[]>([]);
   const [patterns, setPatterns]     = useState<Pattern[]>([]);
+  const [knowledge, setKnowledge]   = useState<Knowledge[]>([]);
   const [loading, setLoading]       = useState(true);
   const [deleting, setDeleting]     = useState<string | null>(null);
 
@@ -314,6 +532,16 @@ export default function IntelligencePage() {
     ex_sub:      isPT ? "Quando você curte  uma resposta, salvo o estilo"
                      : isES ? "Cuando das  a una respuesta, guardo el estilo"
                      : "When you  a response, I save the style",
+    knowledge:   isPT ? "O que sei da conta" : isES ? "Lo que sé de la cuenta" : "What I know about this account",
+    knw_sub:     isPT ? "Produto, público, marca, regras e limites — estruturado"
+                     : isES ? "Producto, audiencia, marca, reglas y límites — estructurado"
+                     : "Product, audience, brand, rules, limits — structured",
+    no_knowledge:isPT ? "Ainda não tenho conhecimento estruturado da conta"
+                     : isES ? "Aún no tengo conocimiento estructurado de la cuenta"
+                     : "No structured knowledge yet",
+    knw_hint:    isPT ? "Me conte sobre o produto, público ou regras no chat — eu extraio e guardo aqui."
+                     : isES ? "Cuéntame del producto, la audiencia o las reglas en el chat — extraigo y guardo aquí."
+                     : "Tell me about your product, audience or rules in chat — I extract and save here.",
     empty:       isPT ? "Ainda sem inteligência acumulada"
                      : isES ? "Aún sin inteligencia acumulada"
                      : "No intelligence accumulated yet",
@@ -365,7 +593,17 @@ export default function IntelligencePage() {
         .eq("user_id", user.id)
         .order("created_at", { ascending:false }).limit(10);
 
-      const [mR, pR, eR] = await Promise.all([memQ, patQ, exQ]);
+      // Knowledge: typed structured records — scoped by persona like memories.
+      const knQ = (supabase as any).from("account_knowledge")
+        .select("id,knowledge_type,slug,data,confidence,source,last_updated")
+        .eq("user_id", user.id)
+        .order("confidence", { ascending:false })
+        .order("last_updated", { ascending:false })
+        .limit(40);
+      if (selectedPersona?.id) knQ.eq("persona_id", selectedPersona.id);
+      else knQ.is("persona_id", null);
+
+      const [mR, pR, eR, kR] = await Promise.all([memQ, patQ, exQ, knQ]);
       // Filter patterns: keep perf_*, market_*, trend_*; drop internal keys
       const rawPatterns: Pattern[] = pR.data || [];
       const cleanPatterns = rawPatterns.filter((p: Pattern) => {
@@ -380,6 +618,7 @@ export default function IntelligencePage() {
       setMemories(mR.data || []);
       setPatterns(cleanPatterns);
       setExamples(eR.data || []);
+      setKnowledge(((kR.data || []) as Knowledge[]).filter(k => k && k.data));
     } finally { setLoading(false); }
   }, [user?.id, selectedPersona?.id]);
 
@@ -404,10 +643,26 @@ export default function IntelligencePage() {
     finally { setDeleting(null); }
   };
 
+  const deleteKnowledge = async (id: string) => {
+    setDeleting(id);
+    try {
+      await (supabase as any).from("account_knowledge").delete().eq("id", id);
+      setKnowledge(p => p.filter(k => k.id !== id));
+      toast.success(isPT ? "Conhecimento removido" : isES ? "Conocimiento eliminado" : "Knowledge removed");
+    } catch { toast.error("Error"); }
+    finally { setDeleting(null); }
+  };
+
   if (!user) return null;
 
   const accountLabel = selectedPersona?.name || t.global;
-  const hasAny = memories.length > 0 || examples.length > 0 || patterns.length > 0;
+  const hasAny = memories.length > 0 || examples.length > 0 || patterns.length > 0 || knowledge.length > 0;
+
+  // Group knowledge by type for display order: brand, constraints, playbook, products, audiences.
+  const knowledgeOrder: Knowledge["knowledge_type"][] = ["brand","constraints","playbook","product","audience"];
+  const knowledgeGrouped = knowledgeOrder
+    .map(type => ({ type, items: knowledge.filter(k => k.knowledge_type === type) }))
+    .filter(g => g.items.length > 0);
 
   return (
     <div className="tool-page-wrap" style={{ maxWidth:720, margin:"0 auto", fontFamily:F }}>
@@ -449,11 +704,12 @@ export default function IntelligencePage() {
       </div>
 
       {/* Stats row */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:8, marginBottom:28 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:8, marginBottom:28 }}>
         {[
-          { n:memories.length,  label:t.memories, color:"#0ea5e9" },
-          { n:patterns.length,  label:t.patterns, color:"#34d399" },
-          { n:examples.length,  label:t.examples, color:"#a78bfa" },
+          { n:knowledge.length, label:t.knowledge, color:"#e879f9" },
+          { n:memories.length,  label:t.memories,  color:"#0ea5e9" },
+          { n:patterns.length,  label:t.patterns,  color:"#34d399" },
+          { n:examples.length,  label:t.examples,  color:"#a78bfa" },
         ].map(s => (
           <div key={s.label} style={{ padding:"12px 14px", borderRadius:12,
             background:"linear-gradient(160deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.02) 100%)",
@@ -489,6 +745,49 @@ export default function IntelligencePage() {
 
       {!loading && hasAny && (
         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+
+          {/* Knowledge — typed structured ontology (brand/playbook/constraints/products/audiences) */}
+          <Section icon={<Sparkles size={14}/>} color="#e879f9"
+            title={t.knowledge} subtitle={t.knw_sub} count={knowledge.length}>
+            {knowledgeGrouped.length === 0 ? (
+              <div style={{ padding:"14px", borderRadius:10, background:"rgba(255,255,255,0.02)",
+                border:"1px dashed rgba(255,255,255,0.08)" }}>
+                <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.45)", margin:0, marginBottom:4 }}>
+                  {t.no_knowledge}
+                </p>
+                <p style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.3)", margin:0, lineHeight:1.5 }}>
+                  {t.knw_hint}
+                </p>
+              </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+                {knowledgeGrouped.map(g => (
+                  <div key={g.type}>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6, paddingLeft:2 }}>
+                      <span style={{ color:K_COLOR[g.type], display:"flex", alignItems:"center" }}>
+                        {K_ICON[g.type]}
+                      </span>
+                      <span style={{ fontFamily:F, fontSize:11, fontWeight:700,
+                        color:"rgba(255,255,255,0.5)", letterSpacing:"0.08em",
+                        textTransform:"uppercase" as const }}>
+                        {K_LABEL[g.type]?.[lang] || g.type}
+                      </span>
+                      <span style={{ fontFamily:M, fontSize:10.5, color:"rgba(255,255,255,0.25)" }}>
+                        · {g.items.length}
+                      </span>
+                    </div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                      {g.items.map(k => (
+                        <KnowledgeRow key={k.id} k={k} lang={lang}
+                          deleting={deleting === k.id}
+                          onDelete={() => deleteKnowledge(k.id)}/>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Section>
 
           {/* Memories */}
           <Section icon={<Brain size={14}/>} color="#0ea5e9"
