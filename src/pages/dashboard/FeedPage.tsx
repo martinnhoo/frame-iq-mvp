@@ -4856,10 +4856,15 @@ const FeedPage: React.FC = () => {
   // Skeleton policy (unified — one skeleton, no flicker):
   // - While the connection lookup is still in flight (localStorage + DB fallback),
   //   stay on the skeleton so StateNoConnection doesn't flash before we know.
-  // - If connected, stay on the skeleton until the account UUID is resolved
-  //   AND the first ad page has loaded. This collapses three intermediate states
-  //   (StateNoConnection → account-resolving skeleton → empty feed with 'loading'
-  //   shimmer) into a single skeleton that hands off directly to the real UI.
+  // - If connected, stay on the skeleton until EVERY data source backing the
+  //   feedState resolver has resolved: account UUID, first ad page, campaigns,
+  //   live metrics, decisions, and money-tracker. Before this gate was extended
+  //   the skeleton lifted as soon as ads were loaded — the feed would then
+  //   paint 'demo' (buildDemoDecisions fallback while decisionsLoading was
+  //   still true), then flip to 'few-data' once metrics/decisions/tracker
+  //   settled, then land on the real state. Users saw three distinct screens
+  //   before the final one. Waiting for all signals collapses that into a
+  //   single skeleton → final UI transition.
   // - After the first successful load for an account, never show the skeleton
   //   again for that account (prevents flash on sync/refresh).
   // - Hard cap of 6s as an absolute safety net in case any lookup hangs.
@@ -4872,7 +4877,13 @@ const FeedPage: React.FC = () => {
 
   const isLoading = (
     !connectionLookupDone
-    || (metaConnected && (accountResolving || !adsLoaded))
+    || (metaConnected && (
+      accountResolving
+      || !adsLoaded
+      || !metricsReady
+      || decisionsLoading
+      || trackerLoading
+    ))
   ) && !hasSyncedRef.current && !skeletonExpired;
 
   // ── Sync handler: sync Meta data FIRST, then run decision engine ──
