@@ -2,6 +2,7 @@
 // Roda: (1) todo dia às 12h via cron, (2) ao abrir o chat se sem snapshot hoje
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { recordCost } from "../_shared/cost-cap.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -748,45 +749,40 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 800,
-          system: `Você é o AdBrief AI — gestor sênior de tráfego pago embutido na conta. Responda SEMPRE em Português Brasileiro.
+          max_tokens: 600,
+          system: `AdBrief AI — gestor sênior de tráfego. Responda em PT-BR.
 
-RACIOCÍNIO OBRIGATÓRIO antes de qualquer conclusão:
-1. O que os números dizem de fato? (padrão, não sintoma)
-2. Qual a causa mais provável? (não a mais óbvia)
-3. Segunda e terceira causa possível?
-4. O que eu faria se esse dinheiro fosse meu?
+Diagnostique causa-raiz antes de recomendar. Cite o dado específico.
 
-HIERARQUIA CAUSAL:
-CPM subindo → cheque PRIMEIRO leilão/audiência/sazonalidade → só então criativo
-CTR caindo → cheque PRIMEIRO frequência/overlap → só então copy
-CPC subindo → diagnostique se vem de CPM ou CTR — problemas diferentes
-CPA/CPR subindo → cheque PRIMEIRO landing/pixel/funil → só então campanha
-ROAS caindo → segmente por campanha e público ANTES de qualquer conclusão
-Conversões zero → cheque pixel/tracking PRIMEIRO
+Hierarquia causal (cheque nesta ordem):
+• CPM↑ → leilão/audiência antes de criativo
+• CTR↓ → frequência/overlap antes de copy
+• CPC↑ → vem de CPM ou CTR?
+• CPA/CPR↑ → landing/pixel antes de campanha
+• ROAS↓ → segmente por campanha/público primeiro
+• Conversões=0 → pixel/tracking primeiro
 
-LINGUAGEM CAUSAL OBRIGATÓRIA:
-✅ "CTR caiu 23% + frequência 4.1 = fadiga criativa, não sazonalidade (sazonalidade afetaria todas as campanhas)"
-✅ "CPM subiu 40% com CTR estável = pressão de leilão, não problema de criativo"
-🚫 "Você deveria tentar X" sem diagnóstico
-🚫 "Pode ser várias coisas" sem priorizar
-
-Retorne JSON:
+JSON:
 {
-  "resumo": "<1 frase: situação real — diagnóstico, não descrição>",
-  "insight_principal": "<2 frases: causa provável com dado específico que sustenta>",
-  "causa_provavel": "<hipótese causal #1 com raciocínio explícito>",
+  "resumo": "<1 frase diagnóstica>",
+  "insight_principal": "<2 frases: causa + dado que sustenta>",
+  "causa_provavel": "<hipótese #1 com raciocínio>",
   "confianca_causa": "alta|media|baixa",
-  "acoes": [
-    {"tipo": "escalar|pausar|criar|revisar", "anuncio": "<nome>", "motivo": "<dado específico>", "urgencia": "alta|media|baixa"}
-  ],
-  "alerta": "<urgente em 1 frase ou null>",
-  "monitorar_24h": "<o que observar amanhã para confirmar ou refutar o diagnóstico>"
+  "acoes": [{"tipo":"escalar|pausar|criar|revisar","anuncio":"<nome>","motivo":"<dado>","urgencia":"alta|media|baixa"}],
+  "alerta": "<1 frase ou null>",
+  "monitorar_24h": "<o que observar para confirmar>"
 }`,
           messages: [{ role: 'user', content: JSON.stringify(ctx, null, 2) }],
         }),
       });
       const aiData = await aiRes.json();
+      // Record cost (non-blocking, cron-attributed to account owner)
+      try {
+        const u = aiData?.usage || {};
+        const inTok = Number(u.input_tokens || 0);
+        const outTok = Number(u.output_tokens || 0);
+        if (inTok || outTok) recordCost(sb, user_id, aiData?.model || 'claude-haiku-4-5-20251001', inTok, outTok).catch(() => {});
+      } catch (_) { /* non-fatal */ }
       const rawText = aiData.content?.[0]?.text || '{}';
       const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
       aiInsight = parsed.insight_principal || parsed.resumo || '';
@@ -852,7 +848,15 @@ Retorne JSON:
         })
       });
       if (classRes.ok) {
-        const raw = (await classRes.json()).content?.[0]?.text?.trim() || "{}";
+        const classData = await classRes.json();
+        // Record cost
+        try {
+          const u = classData?.usage || {};
+          const inTok = Number(u.input_tokens || 0);
+          const outTok = Number(u.output_tokens || 0);
+          if (inTok || outTok) recordCost(sb, user_id, classData?.model || 'claude-haiku-4-5-20251001', inTok, outTok).catch(() => {});
+        } catch (_) { /* non-fatal */ }
+        const raw = classData.content?.[0]?.text?.trim() || "{}";
         const parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
         adsToClassify.forEach((ad: any, i: number) => {
           hookClassifications[ad.name] = parsed[String(i+1)] || "direct";

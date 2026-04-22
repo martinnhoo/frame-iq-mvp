@@ -1,5 +1,6 @@
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
+import { recordCost } from "../_shared/cost-cap.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 
@@ -315,6 +316,15 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
       }
 
       const claudeData = await claudeRes.json();
+      // Record cost (non-blocking)
+      try {
+        const usage = claudeData?.usage || {};
+        const inTok = Number(usage.input_tokens || 0);
+        const outTok = Number(usage.output_tokens || 0);
+        if (inTok || outTok) {
+          recordCost(supabase, user_id, claudeData?.model || 'claude-haiku-4-5-20251001', inTok, outTok).catch(() => {});
+        }
+      } catch (_) { /* non-fatal */ }
       const rawText = claudeData.content?.[0]?.text || '{}';
       const clean = rawText.replace(/```json|```/g, '').trim();
       analysis = JSON.parse(clean);

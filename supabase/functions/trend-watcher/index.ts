@@ -301,28 +301,55 @@ function computeRelevanceScore(trend: Record<string, any>, baseline: Record<stri
 }
 
 Deno.serve(async (req) => {
-
-  // ── Active user guard: skip if no connected account in last 7 days ──
-  // Uses platform_connections (reliable) not chat_memory (can be empty for new users)
-  // Prevents burning API credits when nobody is using the app
-  try {
-    const sb_guard = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { count } = await sb_guard
-      .from("platform_connections")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "active")
-      .gte("updated_at", sevenDaysAgo);
-    if (!count || count === 0) {
-      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "no_active_connections" }), {
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-  } catch (_) { /* guard failed — continue anyway */ }
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
+
+  // Peek at body to know mode without consuming the stream
+  let peekedBody: any = {};
+  try {
+    const cloned = req.clone();
+    peekedBody = await cloned.json().catch(() => ({}));
+  } catch (_) { /* no body — treat as auto */ }
+  const peekedMode = peekedBody?.mode || "auto";
+
+  // ── Active user guard (AUTO mode only) ──
+  // Manual/status requests come from actual user interaction — let them through.
+  // AUTO runs on cron every 2h — gate it hard to avoid burning credits when nobody is using the app.
+  //   • Require at least one account touched in the last 24h (was 7 days — too loose)
+  //   • Skip entirely if we ran successfully in the last 3h (cron may fire more often than needed)
+  if (peekedMode === "auto") {
+    try {
+      const sb_guard = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count } = await sb_guard
+        .from("platform_connections")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active")
+        .gte("updated_at", oneDayAgo);
+      if (!count || count === 0) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "no_active_connections_24h" }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      // Short-circuit: if we already ran in the last 3h, skip this tick.
+      const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+      const { data: recent } = await sb_guard
+        .from("trend_intelligence")
+        .select("updated_at")
+        .gte("updated_at", threeHoursAgo)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (recent) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "ran_recently_lt_3h" }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    } catch (_) { /* guard failed — continue anyway */ }
+  }
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
   try {
     const body = await req.json().catch(() => ({}));

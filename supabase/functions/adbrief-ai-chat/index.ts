@@ -2,6 +2,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
+import { checkCostCap, recordCost, capExceededResponse } from "../_shared/cost-cap.ts";
 import {
   NON_LP_HOSTS,
   normalizeUrl,
@@ -715,7 +716,14 @@ Deno.serve(async (req) => {
       }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-
+    // ── 2a. Hard cost cap — daily USD ceiling per plan ─────────────────────────
+    // Independent safety net beyond credits. Protects the Anthropic account from
+    // runaway spend (e.g. a prompt-injection loop or a misbehaving client).
+    const costCap = await checkCostCap(supabase, user_id, effectivePlanKey);
+    if (!costCap.allowed) {
+      console.warn(`[ai-chat] Cost cap hit: user=${user_id} spent=$${costCap.spent_usd.toFixed(4)} cap=$${costCap.cap_usd}`);
+      return capExceededResponse(costCap, corsHeaders);
+    }
 
     // ── 2b. Detect "remember this" instructions — save before fetching context ──
     // Tolerante a typos: lemnre, lembr, lemb etc.
@@ -2870,30 +2878,29 @@ PROIBIDO:
         "anthropic-beta": "prompt-caching-2024-07-31",
       },
       body: JSON.stringify({
-        // Smart model routing: Sonnet for rich-context responses, Haiku for simple ones
+        // Model routing: Haiku 4.5 as default (3x cheaper than Sonnet).
+        // Sonnet only used for explicit deep-analysis opt-in or vision (Haiku vision
+        // is materially weaker). Most chat turns don't need Sonnet quality.
         model: (() => {
-          // Always use Sonnet for image analysis (vision)
+          // Vision: Sonnet only when user explicitly sent an image
           if (body.image_base64) return "claude-sonnet-4-20250514";
-          const richCtx =
-            (typeof context === "string" && context.length > 200) ||
-            systemPrompt.includes("PADRÕES VENCEDORES") ||
-            systemPrompt.includes("DADOS DA CONTA") ||
-            (systemPrompt.includes("Meta Ads") && systemPrompt.includes("ROAS")) ||
-            systemPrompt.includes("TRENDS ATIVAS");
-          return richCtx ? "claude-sonnet-4-20250514" : "claude-haiku-4-5-20251001";
+          // Explicit opt-in from client for deep analysis (e.g. heavy strategy work)
+          if (body.deep_mode === true) return "claude-sonnet-4-20250514";
+          // Default: Haiku 4.5 for everything else
+          return "claude-haiku-4-5-20251001";
         })(),
         max_tokens: (() => {
           const msg = message.toLowerCase().trim();
-          // Image analysis needs full output
-          if (body.image_base64) return 2500;
+          // Image analysis still needs room for structured output
+          if (body.image_base64) return 2000;
           // Simple queries: greetings, short questions
-          if (msg.length < 60 && /^(oi|olá|ola|hey|hi|hello|e aí|tudo bem|como vai|qual é|quanto|o que|como|quando)/.test(msg)) return 800;
-          // Tool requests need full output
-          if (/hook|roteiro|script|brief|criativo|copy|ugc/.test(msg)) return 3000;
-          // Analysis/performance needs space
-          if (/analisa|performance|relatório|resumo/.test(msg)) return 2000;
-          // Default: medium
-          return 1500;
+          if (msg.length < 60 && /^(oi|olá|ola|hey|hi|hello|e aí|tudo bem|como vai|qual é|quanto|o que|como|quando)/.test(msg)) return 600;
+          // Tool requests (hooks/scripts/briefs) — 2000 is plenty for 10 hooks or a 60s script
+          if (/hook|roteiro|script|brief|criativo|copy|ugc/.test(msg)) return 2000;
+          // Analysis/performance — narrative summary fits in 1500
+          if (/analisa|performance|relatório|resumo/.test(msg)) return 1500;
+          // Default: tight
+          return 1000;
         })(),
         system: systemBlocks,
         messages: aiMessages,
@@ -2924,6 +2931,19 @@ PROIBIDO:
     }
 
     const anthropicResult = await anthropicRes.json();
+
+    // ── Record actual cost (fire-and-forget, non-blocking) ───────────────────
+    try {
+      const usage = anthropicResult?.usage || {};
+      const inTok  = Number(usage.input_tokens || 0) + Number(usage.cache_creation_input_tokens || 0) + Number(usage.cache_read_input_tokens || 0);
+      const outTok = Number(usage.output_tokens || 0);
+      const modelUsed = anthropicResult?.model || "claude-haiku-4-5-20251001";
+      if (inTok > 0 || outTok > 0) {
+        // Don't await — never let accounting block user response
+        recordCost(supabase, user_id, modelUsed, inTok, outTok).catch(() => {});
+      }
+    } catch (_) { /* non-fatal */ }
+
     const raw = anthropicResult.content?.[0]?.type === "text" ? anthropicResult.content[0].text : "[]";
     let blocks;
     try {
