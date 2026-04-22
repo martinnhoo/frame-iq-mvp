@@ -3488,34 +3488,54 @@ User note: ${userIntent}
 Platform: ${platformCtx}
 Market: ${marketCtx}
 
-You are a senior performance creative strategist. Analyze this STATIC ad image using the EXACT rubric below. Apply every rule mechanically — do not invent criteria outside this list. Be deterministic: the same image must produce the same scores every time you analyze it. Do not vary based on phrasing, time, or order of analysis.
+You are a senior performance creative strategist with 10 years of Meta Ads experience. Analyze this STATIC ad image using the rubric below. Be decisive and specific — most creatives are NOT average. Your job is to DIFFERENTIATE. Be deterministic: the same image must produce the same scores every time.
 
 ═══════════════════════════════════════
-SCORING RUBRIC (deterministic — score by what is visible in the image, nothing else)
+CRITICAL — DIFFERENTIATION MANDATE
+═══════════════════════════════════════
+Do NOT default to the middle. A truthful evaluation almost never lands at 5/10 — real creatives cluster at the extremes because they either stop the scroll or they don't. Before scoring, list 2–3 specific visible traits that push the score up or down. If you cannot find clear strengths, the score is LOW (2–4). If you find even two strong traits, the score is HIGH (7–9). Scores of 5–6 should be rare and reserved for creatives with equal strengths and weaknesses.
+
+═══════════════════════════════════════
+HOOK SCORE CALIBRATION (1–10) — with visual anchors
 ═══════════════════════════════════════
 
-HOOK SCORE (1–10) — evaluate only what is visible:
-10 = Specific number/promise + clear pain or desire + stops scroll in <1s
-7–9 = Clear benefit, specific, missing one element (urgency or differentiator)
-5–6 = Generic benefit without specificity or differentiator
-3–4 = Weak/unclear — audience won't know what is offered in 3s
-1–2 = No discernible headline or hook
+10 — Instant scroll-stopper. Bold specific promise + strong visual pattern interrupt + clear desire/pain framed in <1s. Examples: giant "R$47" price slash with face reacting; shocking before/after with dramatic transformation; unexpected juxtaposition with bold claim.
 
-HOOK RATE ESTIMATE (0–100%) — Static Feed baseline 15–25%. Compute mechanically:
-Start at 20.
-  +15 if strong specific number (price, % off, quantity)
-  +10 if faces/people clearly visible
-  +8  if clear urgency indicator (countdown, "últimas unidades", deadline)
-  +5  if product clearly visible and well-lit
-  –10 if text overlay covers >30% of image
-  –8  if generic CTA like "Saiba mais", "Clique aqui"
-  –5  if background busy or low contrast
-Clamp to 0–100. Round to integer.
+8–9 — Strong hook. Clear specific benefit, compelling visual, one element could be tighter. Real promise the target reader wants. Example: close-up of product solving a visible problem with punchy 4-word headline.
 
-VERDICT logic (purely from hook score):
-READY  = hook ≥ 7
-REVIEW = hook 4–6
-BLOCKED = hook ≤ 3 (rare — only when there is essentially no creative direction)
+6–7 — Above average. Benefit is clear and visual is clean, but hook lacks specificity or emotional punch. Example: well-lit product shot with generic benefit ("Sleep better tonight").
+
+4–5 — Mediocre. Image exists but hook is vague, visual is forgettable, or promise is buried. Target viewer keeps scrolling. Example: lifestyle photo with small text, unclear offer.
+
+2–3 — Weak. Confusing, cluttered, or offers nothing the viewer wants in 3 seconds. Stock-looking imagery, buried text, or product photo with no context.
+
+1 — No hook whatsoever. Scroll-past guaranteed.
+
+SCORE IS DRIVEN BY:
+- Specificity of the promise (generic benefit vs. concrete number/outcome)
+- Visual pattern interrupt (does it break the feed pattern?)
+- Emotional resonance (pain recognized, desire triggered, curiosity sparked)
+- Clarity in <3 seconds (is the offer readable and understandable?)
+- Pattern-interrupting element (face direction, color contrast, unexpected scene)
+
+═══════════════════════════════════════
+HOOK RATE ESTIMATE (0–100%)
+═══════════════════════════════════════
+Derive from hook score, NOT an additive formula. Static Feed hook rates realistically span 8% (weak) to 55% (elite). Use this mapping then adjust ±5% based on visual polish:
+
+Hook 10 → 48–55%
+Hook 8–9 → 35–47%
+Hook 6–7 → 22–34%
+Hook 4–5 → 14–21%
+Hook 2–3 → 8–13%
+Hook 1 → under 8%
+
+Adjust within the band: +3–5% if production is premium (lighting, contrast, composition); –3–5% if it looks amateur or has heavy cluttered text overlay. Never default to 25% — pick the exact number that reflects the image.
+
+VERDICT logic:
+READY   = hook ≥ 7 AND no critical issues
+REVIEW  = hook 4–6 OR strong hook with one fixable flaw
+BLOCKED = hook ≤ 3 OR obvious policy/quality breaker
 
 WRITING ERRORS — check only:
 - Accents (GRÁTIS not GRATIS, É not E, etc.)
@@ -3531,15 +3551,20 @@ DO NOT FLAG: product names, brand names, model numbers, opinions about quality, 
 CONTEXT MEMORY: After this analysis, remember the file name "${pendingImage.name}" and the scores you assigned. If the user asks follow-up questions about THIS image (e.g. "como ficaria 10/10?", "o que trocar?", "what about the hook?"), refer back to the SAME scores and SAME observations you made here. Do NOT re-analyze with different numbers. Do NOT give generic video-ad advice for a static image (no "hook nos primeiros 3 segundos" — this is a static image).
 
 ═══════════════════════════════════════
+FINAL CHECK before returning JSON:
+1. Did you default to 5/10? If yes, RE-EVALUATE — is it really balanced, or did you avoid committing? Commit to a decisive score.
+2. Did you estimate 20–25% hook rate? If yes, RE-EVALUATE — the hook score determines the band, pick the exact number for the band.
+3. Do your "strengths" and "top_fixes" actually reflect what's visible in THIS image? No generic advice.
+
 Return ONLY this JSON (no markdown, no other text):
 {
   "verdict": "READY"|"REVIEW"|"BLOCKED",
   "verdict_reason": "one diagnostic sentence max 12 words",
-  "hook_analysis": { "score": 1-10, "detail": "what specifically makes the hook strong or weak — 2 sentences" },
-  "estimated_hook_score": 0-100,
+  "hook_analysis": { "score": 1-10 (be decisive — avoid 5 unless truly balanced), "detail": "cite 2–3 SPECIFIC visible traits driving the score — no generic platitudes" },
+  "estimated_hook_score": 0-100 (pick exact number inside the band that matches hook_analysis.score),
   "cta_check": { "detail": "evaluate the CTA button/text: is it specific, urgent, clear?" },
-  "top_fixes": ["specific fix 1", "specific fix 2", "specific fix 3"],
-  "strengths": ["specific strength 1", "specific strength 2"],
+  "top_fixes": ["specific fix tied to a visible flaw", "specific fix tied to a visible flaw", "specific fix tied to a visible flaw"],
+  "strengths": ["specific strength visible in this image", "specific strength visible in this image"],
   "language_check": { "issues": [{ "found": "wrong spelling visible in image", "fix": "correct spelling" }] },
   "account_killer_warning": null | "one short sentence ONLY if this ad would clearly get the account banned"
 }`;
