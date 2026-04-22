@@ -1733,6 +1733,19 @@ interface AdMetricsSummary {
   freshnessFactor: number;       // float 0-1
   // Whether 30d anchor data was available (for trust messaging)
   hasAnchorBaseline: boolean;
+  // ── Period-over-period (prior window of same length) ──
+  // All optional: null means "prior data not available" — UI should hide delta.
+  // Rates are in the same units as the current fields (centavos / basis points / ratio / count).
+  prevSpend?: number | null;
+  prevCtr?: number | null;
+  prevCpa?: number | null;
+  prevRoas?: number | null;
+  prevConversions?: number | null;
+  deltaSpendPct?: number | null;       // e.g. +12.3 means current +12.3% vs prior
+  deltaCtrPct?: number | null;
+  deltaCpaPct?: number | null;         // NOTE: lower is better — UI inverts color
+  deltaRoasPct?: number | null;
+  deltaConversionsPct?: number | null;
 }
 
 /** Robust median: filters P5-P95 outliers, then computes median.
@@ -2756,6 +2769,175 @@ const TrendBadge: React.FC<{ pct: number | null; invert?: boolean }> = ({ pct, i
     }}>
       {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{pct.toFixed(0)}%
     </span>
+  );
+};
+
+// ================================================================
+// COMMAND KPI STRIP — the Central de Comando headline
+// 5 traffic-manager tiles with period-over-period deltas.
+// No AdScore. No proprietary composite. Just real Meta Ads metrics.
+// Reads adMetrics (single source of truth) and its prev* fields.
+// ================================================================
+
+type KpiTile = {
+  key: string;
+  label: string;
+  value: string;
+  /** Percent delta vs prior period. null = hide. */
+  deltaPct: number | null;
+  /** If true, a NEGATIVE delta is good (e.g. CPA going down). */
+  invertDelta?: boolean;
+  /** Optional tiny sub-line under the value, e.g. "vs período anterior". */
+  footnote?: string;
+  /** When true the tile is rendered as the primary visual anchor. */
+  primary?: boolean;
+};
+
+const KPIDelta: React.FC<{ pct: number | null; invert?: boolean }> = ({ pct, invert }) => {
+  if (pct === null || !isFinite(pct) || Math.abs(pct) < 1) return (
+    <span style={{
+      fontSize: 10.5, fontWeight: 600, color: T.text3, letterSpacing: '-0.01em',
+    }}>estável</span>
+  );
+  const isUp = pct > 0;
+  const isGood = invert ? !isUp : isUp;
+  const color = isGood ? T.green : T.red;
+  const tint = isGood ? 'rgba(74,222,128,0.10)' : 'rgba(248,113,113,0.10)';
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+      fontSize: 10.5, fontWeight: 700, color,
+      background: tint, padding: '2px 6px', borderRadius: 4,
+      letterSpacing: '-0.01em', whiteSpace: 'nowrap',
+    }}>
+      {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{pct.toFixed(Math.abs(pct) < 10 ? 1 : 0).replace('.', ',')}%
+    </span>
+  );
+};
+
+const CommandKPIStrip: React.FC<{
+  m: AdMetricsSummary | null;
+  periodLabel: string;
+}> = ({ m, periodLabel }) => {
+  const hasData = !!m && m.daysOfData > 0 && m.totalSpend > 0;
+
+  // Build the 5 traffic-manager tiles. Order reflects priority:
+  // 1. Money spent (the lens every gestor opens with)
+  // 2. CPA médio (what each conversion is costing)
+  // 3. ROAS médio (how much each R$ returned)
+  // 4. CTR médio (creative quality signal)
+  // 5. Conversões (volume signal)
+  const tiles: KpiTile[] = [
+    {
+      key: 'spend',
+      label: 'Investido',
+      value: hasData ? fmtReais(m!.totalSpend) : '—',
+      deltaPct: hasData ? (m!.deltaSpendPct ?? null) : null,
+      footnote: `vs período anterior`,
+      primary: true,
+    },
+    {
+      key: 'cpa',
+      label: 'CPA médio',
+      value: hasData && m!.avgCpa > 0 ? fmtReais(m!.avgCpa) : '—',
+      deltaPct: hasData ? (m!.deltaCpaPct ?? null) : null,
+      invertDelta: true, // lower CPA = better
+      footnote: 'por conversão',
+    },
+    {
+      key: 'roas',
+      label: 'ROAS médio',
+      value: hasData && m!.avgRoas > 0 ? `${m!.avgRoas.toFixed(2).replace('.', ',')}x` : '—',
+      deltaPct: hasData ? (m!.deltaRoasPct ?? null) : null,
+      footnote: 'retorno sobre gasto',
+    },
+    {
+      key: 'ctr',
+      label: 'CTR médio',
+      value: hasData && m!.avgCtr > 0 ? fmtPct(m!.avgCtr) : '—',
+      deltaPct: hasData ? (m!.deltaCtrPct ?? null) : null,
+      footnote: 'cliques / impressões',
+    },
+    {
+      key: 'conv',
+      label: 'Conversões',
+      value: hasData ? m!.totalConversions.toLocaleString('pt-BR') : '—',
+      deltaPct: hasData ? (m!.deltaConversionsPct ?? null) : null,
+      footnote: 'no período',
+    },
+  ];
+
+  return (
+    <div style={{
+      background: T.bg1,
+      border: `1px solid ${T.border1}`,
+      borderRadius: 12,
+      padding: '14px 16px',
+      marginBottom: 14,
+      fontFamily: F,
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 8, marginBottom: 12, flexWrap: 'wrap',
+      }}>
+        <div style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+          textTransform: 'uppercase', color: T.labelColor,
+        }}>Painel do gestor</div>
+        <div style={{
+          fontSize: 10.5, color: T.text3, letterSpacing: '-0.01em',
+        }}>{periodLabel}</div>
+      </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: 10,
+      }}>
+        {tiles.map(t => (
+          <div key={t.key} style={{
+            background: t.primary ? T.bg2 : 'transparent',
+            border: t.primary ? `1px solid ${T.border2}` : `1px solid ${T.border1}`,
+            borderRadius: 10,
+            padding: '12px 14px',
+            minWidth: 0,
+            display: 'flex', flexDirection: 'column', gap: 4,
+          }}>
+            <div style={{
+              fontSize: 10.5, fontWeight: 600, letterSpacing: '0.02em',
+              color: T.text3, textTransform: 'uppercase',
+            }}>{t.label}</div>
+            <div style={{
+              display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap',
+              marginTop: 2,
+            }}>
+              <span style={{
+                fontSize: t.primary ? 22 : 20,
+                fontWeight: 800,
+                color: t.value === '—' ? T.text3 : T.text1,
+                letterSpacing: '-0.02em', lineHeight: 1.1,
+              }}>{t.value}</span>
+              {t.value !== '—' && (
+                <KPIDelta pct={t.deltaPct} invert={t.invertDelta} />
+              )}
+            </div>
+            {t.footnote && (
+              <div style={{
+                fontSize: 10, color: T.text3, letterSpacing: '-0.005em',
+                marginTop: 2,
+              }}>{t.footnote}</div>
+            )}
+          </div>
+        ))}
+      </div>
+      {!hasData && (
+        <div style={{
+          marginTop: 10, fontSize: 11, color: T.text3, fontStyle: 'italic',
+          lineHeight: 1.5,
+        }}>
+          Sem gasto no período selecionado. Quando os anúncios começarem a rodar os números entram aqui.
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -4731,6 +4913,18 @@ const FeedPage: React.FC = () => {
       const dailyCpaBp = daily.filter(d => d.spend > 0).map(() => avgCpa); // approx — no per-day conversions
       const daysOfData = daily.length || 1;
 
+      // Prior-period values from backend (reais/decimal → centavos/basis-points)
+      const prevSpendRaw = m.prev_spend;
+      const prevCtrRaw = m.prev_ctr;
+      const prevConvRaw = m.prev_conversions;
+      const prevRoasRaw = m.prev_roas;
+      const prevCpaRaw = m.prev_cpa;
+      const asCentavos = (v: unknown) => (typeof v === 'number' && isFinite(v) ? Math.round(v * 100) : null);
+      const asBp       = (v: unknown) => (typeof v === 'number' && isFinite(v) ? Math.round(v * 10000) : null);
+      const asInt      = (v: unknown) => (typeof v === 'number' && isFinite(v) ? Math.round(v) : null);
+      const asRatio    = (v: unknown) => (typeof v === 'number' && isFinite(v) ? v : null);
+      const asPct      = (v: unknown) => (typeof v === 'number' && isFinite(v) ? v : null);
+
       setAdMetrics({
         totalSpend,
         totalConversions,
@@ -4749,6 +4943,16 @@ const FeedPage: React.FC = () => {
         volatilityCpa: coefficientOfVariation(dailyCpaBp),
         freshnessFactor: 1, // live data is always fresh
         hasAnchorBaseline: false,
+        prevSpend: asCentavos(prevSpendRaw),
+        prevCtr: asBp(prevCtrRaw),
+        prevCpa: asCentavos(prevCpaRaw),
+        prevRoas: asRatio(prevRoasRaw),
+        prevConversions: asInt(prevConvRaw),
+        deltaSpendPct: asPct(m.delta_spend),
+        deltaCtrPct: asPct(m.delta_ctr),
+        deltaCpaPct: asPct(m.delta_cpa),
+        deltaRoasPct: asPct(m.delta_roas),
+        deltaConversionsPct: asPct(m.delta_conversions),
       });
       setMetricsReady(true); // ✓ Path A: live-metrics API success
     } catch {
@@ -4789,6 +4993,10 @@ const FeedPage: React.FC = () => {
           volatilityCpa: 0,
           freshnessFactor: 0,
           hasAnchorBaseline: false,
+          // Fallback path cannot compute period-over-period without another query.
+          // Leaving null hides deltas — better than a misleading 0%.
+          prevSpend: null, prevCtr: null, prevCpa: null, prevRoas: null, prevConversions: null,
+          deltaSpendPct: null, deltaCtrPct: null, deltaCpaPct: null, deltaRoasPct: null, deltaConversionsPct: null,
         });
       } catch { setAdMetrics(null); }
       setMetricsReady(true); // ✓ Path B: fallback success OR fallback error
@@ -5456,21 +5664,34 @@ const FeedPage: React.FC = () => {
         )}
 
         {/* ═══════════════════════════════════════════════
-            LAYER 1 — HEADER (compact, utilitarian)
+            LAYER 1 — HEADER
+            Title + subtitle speak like a gestor de tráfego:
+            decisions that move today's numbers, not product jargon.
             ═══════════════════════════════════════════════ */}
         <div style={{ marginBottom: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              <h1 style={{ fontSize: 14, fontWeight: 800, color: T.text1, fontFamily: F, letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0 }}>
-                CENTRAL DE COMANDO
-              </h1>
-              {isDemo && (
-                <span style={{
-                  fontSize: 9, fontWeight: 700, color: T.text3,
-                  background: T.bg2,
-                  padding: '2px 6px', borderRadius: 3, letterSpacing: '0.08em',
-                }}>DEMO</span>
-              )}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h1 style={{
+                  fontSize: 20, fontWeight: 800, color: T.text1, fontFamily: F,
+                  letterSpacing: '-0.02em', margin: 0, lineHeight: 1.15,
+                }}>
+                  Central de comando
+                </h1>
+                {isDemo && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, color: T.text3,
+                    background: T.bg2,
+                    padding: '2px 6px', borderRadius: 3, letterSpacing: '0.08em',
+                  }}>DEMO</span>
+                )}
+              </div>
+              <p style={{
+                fontSize: 12.5, color: T.text2, fontFamily: F, margin: 0,
+                lineHeight: 1.5, letterSpacing: '-0.005em',
+              }}>
+                Decisões que impactam seus resultados agora.
+              </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               {!isDemo && metaConnected && (
@@ -5541,6 +5762,20 @@ const FeedPage: React.FC = () => {
 
         {/* Inline sync progress */}
         {syncing && <SyncBanner />}
+
+        {/* ═══════════════════════════════════════════════
+            LAYER 1.5 — PAINEL DO GESTOR (KPI strip)
+            5 real Meta Ads metrics with period-over-period delta:
+            Investido · CPA · ROAS · CTR · Conversões.
+            This is the first thing a gestor de tráfego looks at.
+            Renders only when we have an account connected (demo or real).
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && (
+          <CommandKPIStrip
+            m={adMetrics}
+            periodLabel={PERIODS.find(p => p.key === period)!.label}
+          />
+        )}
 
         {/* ═══════════════════════════════════════════════
             LAYER 2 — BRAIN OVERWATCH

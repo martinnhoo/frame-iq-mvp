@@ -114,6 +114,11 @@ serve(async (req) => {
           const metaConvVal = getConvValue(c);
           const metaRoas  = metaSpend > 0 && metaConvVal > 0 ? metaConvVal / metaSpend : null;
           const metaCpa   = metaConv > 0 ? metaSpend / metaConv : null;
+          // Prior-period conversion metrics for delta computation
+          const prevConv    = getConversions(p);
+          const prevConvVal = getConvValue(p);
+          const prevRoas    = prevSpend > 0 && prevConvVal > 0 ? prevConvVal / prevSpend : null;
+          const prevCpa     = prevConv > 0 ? prevSpend / prevConv : null;
 
           // Top ads — separate request
           const adsFields = "ad_id,ad_name,adset_name,campaign_name,spend,ctr,cpc,impressions,actions,action_values,website_purchase_roas";
@@ -188,9 +193,17 @@ serve(async (req) => {
             conv_value: metaConvVal,
             roas: metaRoas,
             cpa: metaCpa,
+            prev_conversions: prevConv,
+            prev_conv_value: prevConvVal,
+            prev_roas: prevRoas,
+            prev_cpa: prevCpa,
             delta_spend: deltaRatio(metaSpend, prevSpend),
             delta_ctr: deltaRatio(metaCtr, prevCtr),
             delta_clicks: deltaRatio(metaClicks, prevClicks),
+            delta_conversions: deltaRatio(metaConv, prevConv),
+            delta_roas: metaRoas !== null && prevRoas !== null ? deltaRatio(metaRoas, prevRoas) : null,
+            // Lower CPA is better, so the delta is the inverse (drop in CPA = positive)
+            delta_cpa: metaCpa !== null && prevCpa !== null ? deltaRatio(metaCpa, prevCpa) : null,
             top_ads: topAds,
             daily,
             account_name: acc.name || "Meta Ads",
@@ -233,6 +246,14 @@ serve(async (req) => {
       const prevTotalClicks = sum("prev_clicks");
       const avgCtr = validPlatforms.reduce((s, p) => s + (p.ctr || 0), 0) / validPlatforms.length;
       const prevAvgCtr = validPlatforms.reduce((s, p) => s + (p.prev_ctr || 0), 0) / validPlatforms.length;
+      const totalConv = sum("conversions");
+      const totalConvVal = sum("conv_value");
+      const prevTotalConv = sum("prev_conversions");
+      const prevTotalConvVal = sum("prev_conv_value");
+      const combinedRoas = totalSpend > 0 && totalConvVal > 0 ? totalConvVal / totalSpend : null;
+      const combinedCpa  = totalConv > 0 ? totalSpend / totalConv : null;
+      const prevCombinedRoas = prevTotalSpend > 0 && prevTotalConvVal > 0 ? prevTotalConvVal / prevTotalSpend : null;
+      const prevCombinedCpa  = prevTotalConv > 0 ? prevTotalSpend / prevTotalConv : null;
 
       const deltaRatio = (cur: number, prev: number) => prev > 0 ? ((cur - prev) / prev) * 100 : null;
 
@@ -240,12 +261,23 @@ serve(async (req) => {
         spend: totalSpend,
         ctr: avgCtr,
         clicks: totalClicks,
-        conversions: sum("conversions"),
-        conv_value: sum("conv_value"),
-        roas: totalSpend > 0 && sum("conv_value") > 0 ? sum("conv_value") / totalSpend : null,
+        conversions: totalConv,
+        conv_value: totalConvVal,
+        roas: combinedRoas,
+        cpa: combinedCpa,
+        prev_spend: prevTotalSpend,
+        prev_ctr: prevAvgCtr,
+        prev_clicks: prevTotalClicks,
+        prev_conversions: prevTotalConv,
+        prev_conv_value: prevTotalConvVal,
+        prev_roas: prevCombinedRoas,
+        prev_cpa: prevCombinedCpa,
         delta_spend: deltaRatio(totalSpend, prevTotalSpend),
         delta_ctr: deltaRatio(avgCtr, prevAvgCtr),
         delta_clicks: deltaRatio(totalClicks, prevTotalClicks),
+        delta_conversions: deltaRatio(totalConv, prevTotalConv),
+        delta_roas: combinedRoas !== null && prevCombinedRoas !== null ? deltaRatio(combinedRoas, prevCombinedRoas) : null,
+        delta_cpa: combinedCpa !== null && prevCombinedCpa !== null ? deltaRatio(combinedCpa, prevCombinedCpa) : null,
         top_ads: allAds,
         daily: combinedDaily,
         platforms: validPlatforms.map(p => p.account_name || "").filter(Boolean),
