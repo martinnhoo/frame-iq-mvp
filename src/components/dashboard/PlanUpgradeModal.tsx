@@ -13,8 +13,7 @@ const PLANS = [
   {
     id: "maker",
     name: "Maker",
-    price_monthly: 19,
-    price_annual:  15.2,
+    price: 19,
     gradient: "from-blue-500/20 to-blue-900/5",
     border: "border-blue-500/20 hover:border-blue-500/40",
     accent: "text-blue-400",
@@ -28,8 +27,7 @@ const PLANS = [
   {
     id: "pro",
     name: "Pro",
-    price_monthly: 49,
-    price_annual:  39.2,
+    price: 49,
     gradient: "from-sky-500/20 to-sky-900/5",
     border: "border-sky-500/20 hover:border-sky-500/40",
     accent: "text-sky-400",
@@ -43,8 +41,7 @@ const PLANS = [
   {
     id: "studio",
     name: "Studio",
-    price_monthly: 299,
-    price_annual:  239.2,
+    price: 299,
     gradient: "from-pink-500/20 to-pink-900/5",
     border: "border-pink-500/20 hover:border-pink-500/40",
     accent: "text-pink-400",
@@ -65,9 +62,6 @@ const T = {
     start: "Começar",
     footer: "Powered by Stripe · Cancele quando quiser · Sem taxas ocultas",
     period: "/mês",
-    monthly: "Mensal",
-    annual: "Anual",
-    save: "Economize 20%",
     error: "Algo deu errado. Tente novamente.",
     error_checkout: "Não foi possível criar a sessão de pagamento.",
     error_disposable: "Email temporário não é aceito. Use um email permanente.",
@@ -80,9 +74,6 @@ const T = {
     start: "Comenzar",
     footer: "Powered by Stripe · Cancela cuando quieras · Sin tarifas ocultas",
     period: "/mes",
-    monthly: "Mensual",
-    annual: "Anual",
-    save: "Ahorra 20%",
     error: "Algo salió mal. Inténtalo de nuevo.",
     error_checkout: "No se pudo crear la sesión de pago.",
     error_disposable: "Email temporal no aceptado. Usa un email permanente.",
@@ -95,9 +86,6 @@ const T = {
     start: "Start",
     footer: "Powered by Stripe · Cancel anytime · No hidden fees",
     period: "/mo",
-    monthly: "Monthly",
-    annual: "Annual",
-    save: "Save 20%",
     error: "Something went wrong. Please try again.",
     error_checkout: "Could not create checkout session.",
     error_disposable: "Disposable email not accepted. Use a permanent email.",
@@ -114,7 +102,6 @@ interface Props {
 
 export function PlanUpgradeModal({ open, onClose, currentPlan = "free", language = "pt" }: Props) {
   const [selecting, setSelecting] = useState<string | null>(null);
-  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
   const lang = (language === "pt" || language === "es" || language === "en") ? language : "pt";
   const t = T[lang];
 
@@ -125,7 +112,7 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free", language
       if (!priceId) { setSelecting(null); return; }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { price_id: priceId, billing: cycle },
+        body: { price_id: priceId },
       });
 
       if (error) {
@@ -199,38 +186,13 @@ export function PlanUpgradeModal({ open, onClose, currentPlan = "free", language
             </button>
           </div>
 
-          {/* Billing cycle toggle */}
-          <div className="px-6 pt-5 flex justify-center">
-            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-white/[0.04] border border-white/[0.08]">
-              <button
-                type="button"
-                onClick={() => setCycle("monthly")}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  cycle === "monthly" ? "bg-white/[0.10] text-white" : "text-white/50 hover:text-white/80"
-                }`}
-              >
-                {t.monthly}
-              </button>
-              <button
-                type="button"
-                onClick={() => setCycle("annual")}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                  cycle === "annual" ? "bg-white/[0.10] text-white" : "text-white/50 hover:text-white/80"
-                }`}
-              >
-                {t.annual}
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">{t.save}</span>
-              </button>
-            </div>
-          </div>
-
           {/* Plans */}
           <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
             {PLANS.map(plan => {
               const isCurrent = plan.id === currentPlan;
               const features = plan.features[lang] || plan.features.en;
               const badge = plan.badge ? plan.badge[lang] : null;
-              const displayPrice = fmt(cycle === "annual" ? plan.price_annual : plan.price_monthly);
+              const displayPrice = fmt(plan.price);
               return (
                 <div
                   key={plan.id}

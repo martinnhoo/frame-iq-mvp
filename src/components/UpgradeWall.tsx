@@ -73,57 +73,51 @@ const BADGES: Record<string, string[]> = {
   en: ["Unlimited AI", "Multiple accounts", "All tools unlocked", "Hooks + Scripts", "Telegram alerts"],
 };
 
-// Prices are numbers — we format with currency/suffix per language and cycle below.
-// Annual = monthly × 0.8 (20% off), rounded to 1 decimal.
-const PLANS: Record<string, { name: string; price_monthly: number; price_annual: number; badge?: string; features: Record<string, string[]>; key: string; action: string; highlight: boolean }[]> = {
+// Monthly pricing only — annual toggle is kept on the marketing page (Pricing.tsx)
+// and will be wired up later once Stripe annual price IDs are configured.
+const PLANS: Record<string, { name: string; price: number; badge?: string; features: Record<string, string[]>; key: string; action: string; highlight: boolean }[]> = {
   en: [
     {
-      key: "maker", name: "Maker", price_monthly: 19, price_annual: 15.2, highlight: false, action: "/signup?plan=maker",
+      key: "maker", name: "Maker", price: 19, highlight: false, action: "/signup?plan=maker",
       features: { en: ["1 ad account", "~33 improvements/mo", "All AI tools", "30 credits per improvement"] },
     },
     {
-      key: "pro", name: "Pro", price_monthly: 49, price_annual: 39.2, badge: "Most popular", highlight: true, action: "/signup?plan=pro",
+      key: "pro", name: "Pro", price: 49, badge: "Most popular", highlight: true, action: "/signup?plan=pro",
       features: { en: ["3 ad accounts", "~166 improvements/mo", "All AI tools", "50% off per action"] },
     },
     {
-      key: "studio", name: "Studio", price_monthly: 299, price_annual: 239.2, highlight: false, action: "/signup?plan=studio",
+      key: "studio", name: "Studio", price: 299, highlight: false, action: "/signup?plan=studio",
       features: { en: ["Unlimited accounts", "Unlimited improvements", "Unlimited credits", "Priority support"] },
     },
   ],
   pt: [
     {
-      key: "maker", name: "Maker", price_monthly: 19, price_annual: 15.2, highlight: false, action: "/signup?plan=maker",
+      key: "maker", name: "Maker", price: 19, highlight: false, action: "/signup?plan=maker",
       features: { pt: ["1 conta de anúncios", "~33 melhorias/mês", "Todas as ferramentas IA", "30 créditos por melhoria"] },
     },
     {
-      key: "pro", name: "Pro", price_monthly: 49, price_annual: 39.2, badge: "Mais popular", highlight: true, action: "/signup?plan=pro",
+      key: "pro", name: "Pro", price: 49, badge: "Mais popular", highlight: true, action: "/signup?plan=pro",
       features: { pt: ["3 contas de anúncios", "~166 melhorias/mês", "Todas as ferramentas IA", "50% off por ação"] },
     },
     {
-      key: "studio", name: "Studio", price_monthly: 299, price_annual: 239.2, highlight: false, action: "/signup?plan=studio",
+      key: "studio", name: "Studio", price: 299, highlight: false, action: "/signup?plan=studio",
       features: { pt: ["Contas ilimitadas", "Melhorias ilimitadas", "Créditos ilimitados", "Suporte prioritário"] },
     },
   ],
   es: [
     {
-      key: "maker", name: "Maker", price_monthly: 19, price_annual: 15.2, highlight: false, action: "/signup?plan=maker",
+      key: "maker", name: "Maker", price: 19, highlight: false, action: "/signup?plan=maker",
       features: { es: ["1 cuenta de anuncios", "~33 mejoras/mes", "Todas las herramientas IA", "30 créditos por mejora"] },
     },
     {
-      key: "pro", name: "Pro", price_monthly: 49, price_annual: 39.2, badge: "Más popular", highlight: true, action: "/signup?plan=pro",
+      key: "pro", name: "Pro", price: 49, badge: "Más popular", highlight: true, action: "/signup?plan=pro",
       features: { es: ["3 cuentas de anuncios", "~166 mejoras/mes", "Todas las herramientas IA", "50% off por acción"] },
     },
     {
-      key: "studio", name: "Studio", price_monthly: 299, price_annual: 239.2, highlight: false, action: "/signup?plan=studio",
+      key: "studio", name: "Studio", price: 299, highlight: false, action: "/signup?plan=studio",
       features: { es: ["Cuentas ilimitadas", "Mejoras ilimitadas", "Créditos ilimitados", "Soporte prioritario"] },
     },
   ],
-};
-
-const TOGGLE_LABELS: Record<string, { monthly: string; annual: string; save: string }> = {
-  pt: { monthly: "Mensal",  annual: "Anual",  save: "Economize 20%" },
-  es: { monthly: "Mensual", annual: "Anual",  save: "Ahorra 20%" },
-  en: { monthly: "Monthly", annual: "Annual", save: "Save 20%" },
 };
 
 const formatWallPrice = (n: number, l: string) => {
@@ -145,11 +139,9 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
   const { language } = useLanguage();
   const lang = ["pt", "es"].includes(language) ? language : "en";
   const [loading, setLoading] = useState<string | null>(null);
-  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
   const plans = PLANS[lang] || PLANS.en;
   const sub = SUBLINE[trigger]?.[lang] || SUBLINE[trigger]?.en || "";
   const badges = BADGES[lang] || BADGES.en;
-  const toggleLabels = TOGGLE_LABELS[lang] || TOGGLE_LABELS.en;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -164,10 +156,9 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
   const handlePlan = async (planKey: string, fallback: string) => {
     const { data: { session } } = await supabase.auth.getSession();
 
-    // Not logged in → go to signup with plan + billing preselected
+    // Not logged in → go to signup with plan preselected
     if (!session) {
-      const extra = cycle === "annual" ? "&billing=annual" : "";
-      navigate(`${fallback}${extra}`);
+      navigate(fallback);
       return;
     }
 
@@ -175,7 +166,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
     setLoading(planKey);
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { price_id: PRICE_IDS[planKey], billing: cycle },
+        body: { price_id: PRICE_IDS[planKey] },
       });
 
       if (error) {
@@ -265,27 +256,6 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
           ))}
         </div>
 
-        {/* Billing cycle toggle (mobile) */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: 4, borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <button
-              type="button"
-              onClick={() => setCycle("monthly")}
-              style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 999, background: cycle === "monthly" ? "rgba(255,255,255,0.10)" : "transparent", color: cycle === "monthly" ? "#fff" : "rgba(255,255,255,0.5)", border: "none", cursor: "pointer", transition: "all 0.15s" }}
-            >
-              {toggleLabels.monthly}
-            </button>
-            <button
-              type="button"
-              onClick={() => setCycle("annual")}
-              style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 999, background: cycle === "annual" ? "rgba(255,255,255,0.10)" : "transparent", color: cycle === "annual" ? "#fff" : "rgba(255,255,255,0.5)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s" }}
-            >
-              {toggleLabels.annual}
-              <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, padding: "2px 6px", borderRadius: 999, background: "rgba(52,211,153,0.15)", color: "#34d399", letterSpacing: "0.02em" }}>{toggleLabels.save}</span>
-            </button>
-          </div>
-        </div>
-
         {/* Plans — vertical on mobile */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {plans.map(plan => (
@@ -298,7 +268,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div>
                   <p style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 3 }}>{plan.name}</p>
-                  <p style={{ fontFamily: F, fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{formatWallPrice(cycle === "annual" ? plan.price_annual : plan.price_monthly, lang)}</p>
+                  <p style={{ fontFamily: F, fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>{formatWallPrice(plan.price, lang)}</p>
                 </div>
                 <button
                   onClick={() => handlePlan(plan.key, plan.action)}
@@ -360,27 +330,6 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
         </div>
       </div>
 
-      {/* Billing cycle toggle (desktop) */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: 4, borderRadius: 999, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <button
-            type="button"
-            onClick={() => setCycle("monthly")}
-            style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "6px 16px", borderRadius: 999, background: cycle === "monthly" ? "rgba(255,255,255,0.10)" : "transparent", color: cycle === "monthly" ? "#fff" : "rgba(255,255,255,0.5)", border: "none", cursor: "pointer", transition: "all 0.15s" }}
-          >
-            {toggleLabels.monthly}
-          </button>
-          <button
-            type="button"
-            onClick={() => setCycle("annual")}
-            style={{ fontFamily: F, fontSize: 12, fontWeight: 700, padding: "6px 16px", borderRadius: 999, background: cycle === "annual" ? "rgba(255,255,255,0.10)" : "transparent", color: cycle === "annual" ? "#fff" : "rgba(255,255,255,0.5)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.15s" }}
-          >
-            {toggleLabels.annual}
-            <span style={{ fontFamily: F, fontSize: 9, fontWeight: 800, padding: "2px 6px", borderRadius: 999, background: "rgba(52,211,153,0.15)", color: "#34d399", letterSpacing: "0.02em" }}>{toggleLabels.save}</span>
-          </button>
-        </div>
-      </div>
-
       {/* Plans — 3 columns on desktop */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
         {plans.map(plan => (
@@ -392,7 +341,7 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
             )}
             <div>
               <p style={{ fontFamily: F, fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase" }}>{plan.name}</p>
-              <p style={{ fontFamily: F, fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{formatWallPrice(cycle === "annual" ? plan.price_annual : plan.price_monthly, lang)}</p>
+              <p style={{ fontFamily: F, fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{formatWallPrice(plan.price, lang)}</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7, flex: 1 }}>
               {((plan.features as any)[lang] || (plan.features as any).en).map((f: string) => (
