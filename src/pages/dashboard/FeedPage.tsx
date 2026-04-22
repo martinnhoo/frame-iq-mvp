@@ -5560,42 +5560,42 @@ const FeedPage: React.FC = () => {
         {metaConnected && !isDemo && (() => {
           const signals: HealthSignal[] = [];
 
-          // 1) Meta connection
-          signals.push({
-            key: 'meta',
-            label: 'Conta Meta',
-            status: 'ok',
-            detail: metaSelId ? `act_${metaSelId.replace('act_', '').slice(0, 10)}…` : 'Conectado',
-            onClick: () => navigate('/dashboard/contas'),
-          });
-
-          // 2) Pixel — derived from trackingHealth + pixelHealth
+          // 1) Pixel — derived from pixelHealth. Cockpit tile: headline is the
+          // pixel's status word (Instalado / Parou / 2 órfãos); detail gives
+          // the context (name, days, orphan count).
           if (pixelHealthLoading) {
-            signals.push({ key: 'pixel', label: 'Pixel', status: 'unknown', detail: 'Verificando…' });
+            signals.push({
+              key: 'pixel', label: 'Pixel',
+              status: 'unknown', value: '—',
+              detail: 'Verificando…',
+            });
           } else if (pixelHealthError) {
             signals.push({
               key: 'pixel', label: 'Pixel',
-              status: 'warn',
-              detail: 'Indisponível · tentar',
+              status: 'warn', value: 'Indisponível',
+              detail: 'Clique pra tentar de novo',
               onClick: () => retryPixelHealth(),
             });
           } else if (!pixelHealth) {
             signals.push({
               key: 'pixel', label: 'Pixel',
-              status: 'unknown', detail: 'Sem dados',
+              status: 'unknown', value: '—',
+              detail: 'Sem dados · clique pra checar',
               onClick: () => retryPixelHealth(),
             });
           } else if (pixelHealth.status === 'pixel_ok') {
             signals.push({
               key: 'pixel', label: 'Pixel',
               status: 'ok',
-              detail: pixelHealth.primary_pixel_name ? `${pixelHealth.primary_pixel_name} · OK` : 'Disparando',
+              value: pixelHealth.primary_pixel_name || 'Instalado',
+              detail: 'Disparando eventos',
               onClick: () => navigate('/dashboard/ai', { state: { prompt: 'Me mostra o diagnóstico completo do meu pixel e eventos de conversão.' } }),
             });
           } else if (pixelHealth.status === 'no_pixel') {
             signals.push({
               key: 'pixel', label: 'Pixel',
-              status: 'error', detail: 'Não instalado',
+              status: 'error', value: 'Não instalado',
+              detail: '0 conversões rastreadas',
               onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: 'Minha conta não tem pixel. Como instalar passo a passo?' } }); },
             });
           } else if (pixelHealth.status === 'pixel_stale') {
@@ -5603,35 +5603,40 @@ const FeedPage: React.FC = () => {
             signals.push({
               key: 'pixel', label: 'Pixel',
               status: 'error',
-              detail: days > 0 ? `Parou há ${days}d` : 'Parou de disparar',
+              value: 'Parou',
+              detail: days > 0 ? `Sem disparar há ${days} dia${days === 1 ? '' : 's'}` : 'Parou de disparar',
               onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: 'Meu pixel parou de disparar. Por quê e como resolver?' } }); },
             });
           } else if (pixelHealth.status === 'pixel_orphan') {
             const orphans = pixelHealth.orphan_ads_count || 0;
+            const checked = (pixelHealth as any).active_ads_checked || 0;
             signals.push({
               key: 'pixel', label: 'Pixel',
               status: 'warn',
-              detail: `${orphans} ads órfãos`,
+              value: `${orphans} órfão${orphans === 1 ? '' : 's'}`,
+              detail: checked > 0 ? `De ${checked} ad${checked === 1 ? '' : 's'} ativos` : 'Ads sem pixel amarrado',
               onClick: () => { startTrackingInvestigation(); navigate('/dashboard/ai', { state: { prompt: `Tenho ${orphans} anúncios sem pixel amarrado. Quais são e como corrigir?` } }); },
             });
           } else {
-            // Unknown status value returned by the edge fn — treat as recoverable.
             signals.push({
               key: 'pixel', label: 'Pixel',
-              status: 'unknown', detail: 'Status desconhecido',
+              status: 'unknown', value: '—',
+              detail: 'Status desconhecido',
               onClick: () => retryPixelHealth(),
             });
           }
 
-          // 3) Gasto & conversões (period window)
-          // NOTE: AdMetricsSummary stores spend in centavos (int) — fmtReais() handles display.
+          // 2) Gasto & conversões (period window). Headline = spend, detail =
+          // convs + CPA. Keeps a user's eyes on what matters at a glance.
           const spend = adMetrics?.totalSpend || 0;
           const convs = adMetrics?.totalConversions || 0;
+          const clicks = adMetrics?.totalClicks || 0;
           if (spend === 0) {
             signals.push({
               key: 'spend', label: 'Gasto & conversões',
               status: noActiveTraffic ? 'warn' : 'unknown',
-              detail: noActiveTraffic ? 'Nenhum ad rodando' : 'Sem dados',
+              value: fmtReais(0),
+              detail: noActiveTraffic ? 'Nenhum ad rodando' : 'Sem gasto no período',
               onClick: () => navigate('/dashboard/feed/campanhas'),
             });
           } else if (convs > 0) {
@@ -5639,36 +5644,40 @@ const FeedPage: React.FC = () => {
             signals.push({
               key: 'spend', label: 'Gasto & conversões',
               status: 'ok',
-              detail: `${fmtReais(spend)} · ${convs} conv · CPA ${fmtReais(cpa)}`,
+              value: fmtReais(spend),
+              detail: `${convs} conv · CPA ${fmtReais(cpa)}`,
               onClick: () => navigate('/dashboard/feed/campanhas'),
             });
           } else {
+            // Spending without conversions — most common pain we see.
             signals.push({
               key: 'spend', label: 'Gasto & conversões',
               status: 'warn',
-              detail: `${fmtReais(spend)} · 0 conversões`,
+              value: fmtReais(spend),
+              detail: clicks > 0 ? `${clicks} cliques · 0 conversões` : '0 conversões rastreadas',
               onClick: () => startTrackingInvestigation(),
             });
           }
 
-          // 4) Anúncios ativos
+          // 3) Anúncios ativos. Headline = count, detail = where they live.
           signals.push({
             key: 'ads', label: 'Anúncios ativos',
             status: activeAdsCount > 0 ? 'ok' : 'warn',
+            value: String(activeAdsCount),
             detail: activeAdsCount > 0
-              ? `${activeAdsCount} em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}`
-              : 'Nenhum rodando',
+              ? `em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}`
+              : 'Nenhum rodando agora',
             onClick: () => navigate('/dashboard/feed/campanhas'),
           });
 
-          // 5) Aprendizado Meta — hidden until delivery_info per adset is wired.
-          // Shipping "Em breve" makes the panel look unfinished; we'd rather show 5 tiles.
-
-          // 6) IA aprendendo padrões
+          // 4) IA aprendendo. Headline = patterns learned, detail = status.
           signals.push({
             key: 'patterns', label: 'IA aprendendo',
             status: patternsCount > 0 ? 'ok' : 'unknown',
-            detail: patternsCount > 0 ? `${patternsCount} padr${patternsCount === 1 ? 'ão' : 'ões'}` : 'Coletando',
+            value: patternsCount > 0 ? String(patternsCount) : 'Coletando',
+            detail: patternsCount > 0
+              ? `padr${patternsCount === 1 ? 'ão aprendido' : 'ões aprendidos'}`
+              : 'Aguardando dados suficientes',
             onClick: () => navigate('/dashboard/intelligence'),
           });
 
