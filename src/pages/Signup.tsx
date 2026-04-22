@@ -12,6 +12,22 @@ import { Logo } from "@/components/Logo";
 import { trackEvent } from "@/lib/posthog";
 import { validateEmailForSignup, guardMessage } from "@/lib/emailGuard";
 
+// ── Meta Pixel — fire conversion events on signup.
+// Without these the Meta Ads campaign can't optimize (zero reported conversions).
+// Both Lead and CompleteRegistration are fired so campaigns optimizing for either
+// work out of the box. Meta dedupes by fbp/fbc cookie across events.
+const fireMetaPixelSignup = (plan: string | null) => {
+  if (typeof window === "undefined") return;
+  const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+  if (typeof fbq !== "function") return;
+  try {
+    fbq("track", "Lead", { content_name: "signup", content_category: plan || "free" });
+    fbq("track", "CompleteRegistration", { content_name: "signup", status: "submitted", content_category: plan || "free" });
+  } catch {
+    // Silent — Pixel fires are best-effort, never block signup UX.
+  }
+};
+
 const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
@@ -43,6 +59,10 @@ const Signup = () => {
     const oauthRedirect = redirectParam
       ? window.location.origin + redirectParam
       : window.location.origin + "/dashboard";
+    // Fire Pixel BEFORE the redirect — user leaves the page and we can't fire post-auth
+    // without extra plumbing. Most users complete the Google consent screen, so the
+    // false positive rate is low. Meta dedupes by fbp/fbc cookie when the user returns.
+    fireMetaPixelSignup(planParam);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -97,6 +117,11 @@ const Signup = () => {
       }).catch(() => {}); // fire-and-forget
 
       trackEvent("signup_completed", { plan: planParam || "free", verified: !!data.session });
+
+      // Meta Pixel — fire Lead + CompleteRegistration so the ad campaign can optimize.
+      // Fires for BOTH paths (session null → /confirm-email, session present → /onboarding)
+      // since the Supabase account was created successfully in either case.
+      fireMetaPixelSignup(planParam);
 
       // If Supabase email confirmation is required, `data.session` will be null.
       // In that case, park the user on /confirm-email until they click the link.
