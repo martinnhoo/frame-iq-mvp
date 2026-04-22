@@ -3344,10 +3344,16 @@ const TopPriorityBar: React.FC<{
       actionLabel: 'Otimizar',
     };
   } else if (trackingHealth) {
+    const text =
+      trackingHealth.status === 'no_pixel'
+        ? 'Pixel Meta não instalado'
+        : trackingHealth.status === 'pixel_stale'
+          ? 'Pixel parou de disparar'
+          : 'Anúncios ativos sem pixel amarrado';
     bar = {
-      color: T.yellow,
+      color: trackingHealth.status === 'pixel_orphan' ? T.yellow : T.red,
       icon: '📡',
-      text: trackingHealth.status === 'no_conversions' ? 'Nenhuma conversão registrada' : 'Taxa de conversão muito baixa',
+      text,
       subtext: `${trackingHealth.clicks} cliques · ${fmtReais(trackingHealth.spend)} investidos`,
       action: () => navigate('/dashboard/ai', { state: { prompt: trackingHealth.chatMsg } }),
       actionLabel: 'Diagnosticar',
@@ -4443,74 +4449,46 @@ const FeedPage: React.FC = () => {
     setPixelHealthRetryNonce((n) => n + 1);
   }, []);
 
-  // ── Tracking health — pixel-first, heuristic fallback.
-  // Priority order:
-  //   1. pixelHealth=pixel_ok → null (no warning, even if heuristic would trigger)
-  //   2. pixelHealth=no_pixel/pixel_stale/pixel_orphan → specific message from edge fn
-  //   3. fallback heuristic (spend + clicks + 0 conv) — only if pixelHealth not loaded
+  // ── Tracking health — PIXEL-ONLY.
+  // The big card only fires for deterministic pixel issues from Meta API (no_pixel,
+  // pixel_stale, pixel_orphan). The heuristic "0 conversions + spend" case is
+  // intentionally NOT surfaced here — the HealthPanel "Gasto & conversões" tile
+  // already conveys that signal, and doubling up creates visual noise when the
+  // user's pixel is actually fine. Same for "low_conversions" — tile + AI chat
+  // already cover the diagnostic path.
   const trackingHealth = useMemo(() => {
     if (!adMetrics) return null;
     // Suppress tracking card when diagnosis is resolved (any terminal state except investigating)
     if (trackingUserStatus === 'confirmed_no_conversion' || trackingUserStatus === 'verified_ok' || trackingUserStatus === 'verified_issue') return null;
+    if (!pixelHealth) return null;
+    if (pixelHealth.status === 'pixel_ok') return null;
+
+    const issueType: 'no_pixel' | 'pixel_stale' | 'pixel_orphan' | null =
+      pixelHealth.status === 'no_pixel' || pixelHealth.status === 'pixel_stale' || pixelHealth.status === 'pixel_orphan'
+        ? pixelHealth.status
+        : null;
+    if (!issueType) return null;
 
     const spend = adMetrics.totalSpend; // centavos
     const clicks = adMetrics.totalClicks;
     const conversions = adMetrics.totalConversions;
 
-    // ── PIXEL-FIRST: deterministic result from Meta API overrides everything ──
-    if (pixelHealth) {
-      if (pixelHealth.status === 'pixel_ok') return null; // hard override — no warning when pixel is healthy
+    const chatMsg = pixelHealth.message +
+      `\n\nContexto: ${clicks} cliques, ${fmtReais(spend)} investidos, ${conversions} conversões nos últimos dias.` +
+      `\n\nPrecisamos diagnosticar passo a passo: pixel instalado, eventos chegando, ads amarrados ao pixel, CAPI.`;
 
-      const issueType: 'no_pixel' | 'pixel_stale' | 'pixel_orphan' | null =
-        pixelHealth.status === 'no_pixel' || pixelHealth.status === 'pixel_stale' || pixelHealth.status === 'pixel_orphan'
-          ? pixelHealth.status
-          : null;
-
-      if (issueType) {
-        // Shape compatible with existing UI (status/clicks/spend/conversions/chatMsg)
-        const chatMsg = pixelHealth.message +
-          `\n\nContexto: ${clicks} cliques, ${fmtReais(spend)} investidos, ${conversions} conversões nos últimos dias.` +
-          `\n\nPrecisamos diagnosticar passo a passo: pixel instalado, eventos chegando, ads amarrados ao pixel, CAPI.`;
-        return {
-          status: issueType,
-          clicks,
-          spend,
-          conversions,
-          chatMsg,
-          pixelMessage: pixelHealth.message,
-          pixelName: pixelHealth.primary_pixel_name || null,
-          daysSinceFire: pixelHealth.days_since_fire,
-          orphanCount: pixelHealth.orphan_ads_count,
-          activeAdsChecked: pixelHealth.active_ads_checked,
-        } as const;
-      }
-      // status='unknown' falls through to heuristic
-    }
-
-    // ── FALLBACK HEURISTIC (only runs if pixelHealth is null or 'unknown') ──
-    // Fact: meaningful traffic + zero conversions
-    if (spend > 5000 && clicks > 20 && conversions === 0) {
-      return {
-        status: 'no_conversions' as const,
-        clicks,
-        spend,
-        conversions: 0,
-        chatMsg: `Nenhuma conversão registrada\n\n${clicks} cliques · ${fmtReais(spend)} investidos\n\nVamos verificar o rastreamento em alguns passos rápidos.`,
-      };
-    }
-    // Fact: conversions exist but extremely low rate
-    if (spend > 10000 && conversions > 0 && clicks > 0 && conversions < clicks * 0.005) {
-      const rate = (conversions / clicks * 100).toFixed(2);
-      return {
-        status: 'low_conversions' as const,
-        clicks,
-        spend,
-        conversions,
-        rate,
-        chatMsg: `${conversions} conversões em ${clicks} cliques (${rate}%)\n\n${fmtReais(spend)} investidos\n\nVamos verificar se o rastreamento está registrando todas as conversões.`,
-      };
-    }
-    return null;
+    return {
+      status: issueType,
+      clicks,
+      spend,
+      conversions,
+      chatMsg,
+      pixelMessage: pixelHealth.message,
+      pixelName: pixelHealth.primary_pixel_name || null,
+      daysSinceFire: pixelHealth.days_since_fire,
+      orphanCount: pixelHealth.orphan_ads_count,
+      activeAdsChecked: pixelHealth.active_ads_checked,
+    } as const;
   }, [adMetrics, trackingUserStatus, pixelHealth]);
 
   // ── Metric Intelligence Engine v2 — adaptive, anti-spam, priority-scored ──
@@ -5749,7 +5727,8 @@ const FeedPage: React.FC = () => {
               { label: 'Domínio verificado', detail: 'Verificar após religar', status: 'unknown' },
             ];
             primaryCta = 'Por que parou? →';
-          } else if (th.status === 'pixel_orphan') {
+          } else {
+            // pixel_orphan (only remaining branch — trackingHealth is pixel-issue-only now)
             title = `${th.orphanCount ?? 0} de ${th.activeAdsChecked ?? 0} anúncios ativos não estão amarrados ao pixel.`;
             borderColor = T.yellow;
             checklist = [
@@ -5759,26 +5738,6 @@ const FeedPage: React.FC = () => {
               { label: 'Domínio verificado', detail: 'Verificar tracking_specs dos ads', status: 'unknown' },
             ];
             primaryCta = 'Quais ads estão órfãos? →';
-          } else if (th.status === 'no_conversions') {
-            title = 'Zero conversões detectadas. Ação necessária.';
-            borderColor = T.yellow;
-            checklist = [
-              { label: 'Pixel Meta instalado', detail: 'Presente em todas as páginas do site', status: trackingHealth.clicks > 0 ? 'ok' : 'warn' },
-              { label: 'Eventos de conversão', detail: 'Nenhum evento Purchase/Lead registrado', status: 'error' },
-              { label: 'Conversions API (CAPI)', detail: 'Server-side tracking', status: 'unknown' },
-              { label: 'Domínio verificado', detail: 'Necessário para iOS 14+', status: 'unknown' },
-            ];
-          } else {
-            // low_conversions
-            const rate = (th as any).rate ?? '';
-            title = `Apenas ${th.conversions} conversões em ${th.clicks} cliques — taxa ${rate}% anormalmente baixa`;
-            borderColor = T.yellow;
-            checklist = [
-              { label: 'Pixel Meta instalado', detail: 'Presente em todas as páginas do site', status: 'ok' },
-              { label: 'Eventos de conversão', detail: `${th.conversions} eventos registrados`, status: 'warn' },
-              { label: 'Conversions API (CAPI)', detail: 'Server-side tracking', status: 'unknown' },
-              { label: 'Domínio verificado', detail: 'Necessário para iOS 14+', status: 'unknown' },
-            ];
           }
 
           return (
@@ -5826,19 +5785,12 @@ const FeedPage: React.FC = () => {
               <button onClick={confirmNoConversion} style={{ flex: 1, background: T.bg2, color: T.text2, border: `1px solid ${T.border1}`, borderRadius: 8, padding: '10px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.18s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.bg3; e.currentTarget.style.borderColor = T.text3; }}
                 onMouseLeave={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border1; }}>
-                {th.status === 'no_pixel' || th.status === 'pixel_stale' || th.status === 'pixel_orphan'
-                  ? 'Depois vejo isso'
-                  : th.status === 'no_conversions'
-                    ? 'Não houve conversões'
-                    : 'Taxa está correta'}
+                Depois vejo isso
               </button>
               <button className="feed-cta" onClick={() => {
                 startTrackingInvestigation();
-                // Use chatMsg produced upstream — already status-specific for pixel-based diagnoses
-                const fallback = th.status === 'no_conversions'
-                  ? `Minha conta tem ${th.clicks} cliques, ${fmtReais(th.spend)} investidos e ZERO conversões nos últimos ${adMetrics?.daysOfData || 7} dias. Diagnóstico completo: pixel, eventos, CAPI, domínio.`
-                  : `${th.clicks} cliques, ${th.conversions} conversões (${(th as any).rate || ''}%), ${fmtReais(th.spend)} investidos. Taxa muito baixa — verificar rastreamento.`;
-                const msg = (th as any).chatMsg || fallback;
+                // chatMsg is always produced upstream for pixel-based diagnoses
+                const msg = (th as any).chatMsg || `${th.clicks} cliques, ${fmtReais(th.spend)} investidos. Vamos diagnosticar o rastreamento.`;
                 navigate('/dashboard/ai', { state: { prompt: msg } });
               }} style={{ flex: 1, background: T.blue, color: T.text1, border: 'none', borderRadius: 8, padding: '10px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.18s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.blueHover; e.currentTarget.style.boxShadow = `0 4px 14px ${T.blue}30`; }}
