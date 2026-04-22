@@ -261,6 +261,36 @@ export type Database = {
           },
         ]
       }
+      account_status_cache: {
+        Row: {
+          checked_at: string
+          created_at: string | null
+          data: Json
+          id: string
+          meta_account_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          checked_at?: string
+          created_at?: string | null
+          data?: Json
+          id?: string
+          meta_account_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          checked_at?: string
+          created_at?: string | null
+          data?: Json
+          id?: string
+          meta_account_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       action_log: {
         Row: {
           account_id: string
