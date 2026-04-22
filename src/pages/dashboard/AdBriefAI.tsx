@@ -1975,52 +1975,11 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BACKGROUND MEMORY EXTRACTION — fire & forget, never blocks UI
+// Memory extraction runs backend-side in adbrief-ai-chat → extract-chat-memory
+// edge function (fire-and-forget, with Haiku dedup + 50/persona cap). The
+// browser never touches the Anthropic API directly — API keys stay in the
+// edge environment where they belong.
 // ─────────────────────────────────────────────────────────────────────────────
-
-async function extractAndSaveMemory(
-  userMessage: string,
-  userId: string,
-  personaId: string,
-  lang: string
-) {
-  try {
-    // Use Anthropic API directly — lightweight haiku call
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 400,
-        system: `You extract factual memories from user messages in a marketing/advertising context.
-Return ONLY a JSON array (no markdown) of facts worth remembering for future AI conversations.
-Each fact: { "text": "concise fact in same language as input", "type": "context"|"preference"|"decision", "importance": 1-5 }
-Examples of good facts: "vendeu o Ford Fiesta", "decidiu focar em carros acima de R$25k", "público é comprador pessoa física"
-Return [] if no relevant facts found. Max 3 facts per call.`,
-        messages: [{ role: "user", content: `Extract factual memories from: "${userMessage}"` }],
-      }),
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    const text = data?.content?.[0]?.text || "[]";
-    let facts: Array<{ text: string; type: string; importance: number }> = [];
-    try { facts = JSON.parse(text.replace(/```json|```/g, "").trim()); } catch { return; }
-    if (!Array.isArray(facts) || facts.length === 0) return;
-
-    // Save to chat_memory table
-    const rows = facts.map(f => ({
-      user_id: userId,
-      persona_id: personaId,
-      memory_text: f.text,
-      memory_type: f.type || "context",
-      importance: Math.min(5, Math.max(1, f.importance || 3)),
-    }));
-
-    await (supabase as any).from("chat_memory").insert(rows);
-  } catch {
-    // Silent fail — never break the chat
-  }
-}
 
 export default function AdBriefAI() {
   usePageTitle("IA Chat");
@@ -3985,16 +3944,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       streamTimerRef.current=setTimeout(()=>setStreamingMsgId(null),3500);
 
 
-      // ── Background memory extraction (fire & forget) ──────────────────────
-      // Only run if user message seems factual (not just a question or tool req)
-      if (user?.id && selectedPersona?.id && !pendingImage) {
-        const lastUserMsg = msg || "";
-        const isFactual = /(vendi|comprei|mudei|trabalho com|meu produto|minha conta|tenho|não tenho|agora|decidi|parei|comecei|meu preço|meu cliente|meu mercado|meu público|minha meta|meu objetivo|meu nicho)/i.test(lastUserMsg);
-        const isTool = /\[HOOKS\]|\[ROTEIRO\]|\[REPORT\]|\[CAMPAIGN_PLAN\]|\[ANALYZE_AD\]/i.test(lastUserMsg);
-        if (isFactual && !isTool && lastUserMsg.length > 15) {
-          extractAndSaveMemory(lastUserMsg, user.id, selectedPersona.id, lang);
-        }
-      }
+      // Memory extraction runs backend-side in adbrief-ai-chat → extract-chat-memory.
+      // The edge function already fires Haiku with dedup + 50/persona cap; doing it
+      // again from the browser would require exposing ANTHROPIC_API_KEY client-side.
       // Credit balance already updated above from response payload
     }catch(e:any){
       const eid=Date.now()+1;
