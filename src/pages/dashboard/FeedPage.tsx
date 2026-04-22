@@ -14,6 +14,7 @@ import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
 import { GoalSetup } from '../../components/feed/GoalSetup';
 import { HealthPanel, type HealthSignal } from '../../components/feed/HealthPanel';
 import { AccountHealthGauge, type AccountStatusSummary } from '../../components/feed/AccountHealthGauge';
+import { FeedSidebar, type FeedActivityEvent } from '../../components/feed/FeedSidebar';
 import { Pause, Play } from 'lucide-react';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
@@ -4696,6 +4697,41 @@ const FeedPage: React.FC = () => {
     setAccountStatusRetryNonce((n) => n + 1);
   }, []);
 
+  // ── Activity log — feeds the right sidebar "Atividade recente" card.
+  // Same source as BrainOverwatch (autopilot_action_log), but a wider window
+  // (48h) so the sidebar isn't empty on quieter days. Only fetches when the
+  // user is real + has a connection.
+  const [activityEvents, setActivityEvents] = useState<FeedActivityEvent[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  useEffect(() => {
+    if (!userId || isDemo) {
+      setActivityEvents([]);
+      setActivityLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setActivityLoading(true);
+    (async () => {
+      try {
+        const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        const { data } = await (supabase as any)
+          .from('autopilot_action_log')
+          .select('id, action_type, target_name, reason, executed_at, amount_at_risk_brl')
+          .eq('user_id', userId)
+          .eq('status', 'executed')
+          .gte('executed_at', since)
+          .order('executed_at', { ascending: false })
+          .limit(8);
+        if (!cancelled) setActivityEvents((data || []) as FeedActivityEvent[]);
+      } catch {
+        // Table may not exist yet — fail silent (sidebar will just render empty state).
+      } finally {
+        if (!cancelled) setActivityLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, isDemo]);
+
   // ── Tracking health — PIXEL-ONLY.
   // The big card only fires for deterministic pixel issues from Meta API (no_pixel,
   // pixel_stale, pixel_orphan). The heuristic "0 conversions + spend" case is
@@ -5672,9 +5708,23 @@ const FeedPage: React.FC = () => {
 
   // Syncing is now an inline banner — no full-page overlay
 
+  // ── Top decision for the right-sidebar "Próximo passo recomendado" ──
+  // Already priority-sorted inside useDecisions. Sidebar only ever shows [0].
+  const topDecision = pendingDecisions[0] || null;
+
   return (
     <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+      <div
+        className="feed-layout"
+        style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 20,
+        }}
+      >
+      <div className="feed-main-col" style={{ flex: 1, minWidth: 0, maxWidth: 760 }}>
 
         {/* ═══════════════════════════════════════════════
             LAYER 0 — TOP PRIORITY BAR (sticky, high-contrast)
@@ -5842,26 +5892,7 @@ const FeedPage: React.FC = () => {
           />
         )}
 
-        {/* ═══════════════════════════════════════════════
-            LAYER 1.7 — SAÚDE DA CONTA (functional score gauge)
-            Default green. Only turns yellow/red when Meta flags the account,
-            balance/cap is in trouble, pixel is broken, no active ads, or
-            spend without conversions. All signals come from REAL data —
-            account-status-check + pixel-health-check + live-metrics.
-            ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && (
-          <AccountHealthGauge
-            accountStatus={accountStatus}
-            accountStatusLoading={accountStatusLoading}
-            accountStatusError={accountStatusError}
-            onRetryAccountStatus={retryAccountStatus}
-            pixelHealth={pixelHealth}
-            pixelHealthLoading={pixelHealthLoading}
-            adMetrics={adMetrics}
-            activeAdsCount={activeAdsCount}
-            hasMetaConnection={metaConnected}
-          />
-        )}
+        {/* Saúde da conta agora vive na sidebar direita (FeedSidebar). */}
 
         {/* ═══════════════════════════════════════════════
             LAYER 2 — BRAIN OVERWATCH
@@ -6428,6 +6459,34 @@ const FeedPage: React.FC = () => {
         {/* Telegram */}
         {metaConnected && !isDemo && userId && <TelegramCard userId={userId} />}
       </div>
+      {/* END feed-main-col */}
+
+      {/* ═══════════════════════════════════════════════
+          RIGHT SIDEBAR — Saúde da conta · Próximo passo · Atividade
+          All three cards are dynamic: score from real signals,
+          next-best-action from decisions[0] (priority × confidence),
+          activity from autopilot_action_log.
+          ═══════════════════════════════════════════════ */}
+      {metaConnected && !isDemo && (
+        <FeedSidebar
+          accountStatus={accountStatus}
+          accountStatusLoading={accountStatusLoading}
+          accountStatusError={accountStatusError}
+          onRetryAccountStatus={retryAccountStatus}
+          pixelHealth={pixelHealth}
+          pixelHealthLoading={pixelHealthLoading}
+          adMetrics={adMetrics}
+          activeAdsCount={activeAdsCount}
+          hasMetaConnection={metaConnected}
+          topDecision={topDecision}
+          decisionsLoading={decisionsLoading}
+          onDecisionAction={handleAction}
+          activityEvents={activityEvents}
+          activityLoading={activityLoading}
+        />
+      )}
+      </div>
+      {/* END feed-layout */}
 
       {/* Global feed animations */}
       <style>{`
@@ -6454,6 +6513,11 @@ const FeedPage: React.FC = () => {
         .feed-linear-btn:hover:not(:disabled){opacity:1!important;text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
         .feed-linear-btn:active:not(:disabled){transform:translateY(0.5px)}
         .feed-linear-btn:disabled{cursor:default}
+        @media(max-width:1100px){
+          .feed-layout{flex-direction:column!important;max-width:760px!important}
+          .feed-main-col{max-width:100%!important;width:100%}
+          .feed-sidebar-col{width:100%!important}
+        }
         @media(max-width:768px){
           .feed-kpis-grid{grid-template-columns:repeat(2,1fr)!important;gap:6px!important}
           .feed-decisions-list{gap:6px!important}
