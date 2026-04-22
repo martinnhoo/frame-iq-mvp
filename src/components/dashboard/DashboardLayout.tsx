@@ -332,12 +332,26 @@ export default function DashboardLayout() {
       // Checkout success — open the Welcome modal once and clean the URL param.
       // We defer by ~1.4s so check-subscription (fired above) has a chance to
       // sync the plan from Stripe before the modal renders with a stale "free".
-      const checkoutResult = new URLSearchParams(window.location.search).get("checkout");
+      const searchParams = new URLSearchParams(window.location.search);
+      const checkoutResult = searchParams.get("checkout");
       if (checkoutResult === "success") {
         const url = new URL(window.location.href);
         url.searchParams.delete("checkout");
         window.history.replaceState({}, "", url.toString());
         setTimeout(() => { if (mounted) setPaidWelcomeOpen(true); }, 1400);
+      }
+
+      // Preview hook — `?welcome_preview=pro` forces the welcome modal open
+      // with a chosen plan, bypassing the real profile.plan check. Only used
+      // for visual QA; no side effects (no DB write, no plan change).
+      const previewPlan = searchParams.get("welcome_preview");
+      if (previewPlan && ["maker", "pro", "studio"].includes(previewPlan.toLowerCase())) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("welcome_preview");
+        window.history.replaceState({}, "", url.toString());
+        // Stash the preview plan on window so the modal reads it. Cleared on close.
+        (window as any).__adbriefWelcomePreviewPlan = previewPlan.toLowerCase();
+        setTimeout(() => { if (mounted) setPaidWelcomeOpen(true); }, 500);
       }
 
       // Capacity pack purchase success — poll until webhook processes, then toast
@@ -864,8 +878,11 @@ export default function DashboardLayout() {
       {/* Post-checkout welcome modal */}
       <WelcomePaidModal
         open={paidWelcomeOpen}
-        onClose={() => setPaidWelcomeOpen(false)}
-        plan={profile?.plan}
+        onClose={() => {
+          setPaidWelcomeOpen(false);
+          try { delete (window as any).__adbriefWelcomePreviewPlan; } catch {}
+        }}
+        plan={((window as any).__adbriefWelcomePreviewPlan as string | undefined) || profile?.plan}
         firstName={profile?.name ? profile.name.split(" ")[0] : null}
         language={profile?.preferred_language || language || "pt"}
       />
