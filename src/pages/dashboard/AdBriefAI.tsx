@@ -3362,11 +3362,19 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     setFeedback(f=>({...f,[id]:type}));
     // Fire-and-forget: capture learning
     if(user?.id){
-      const msg=messages.find(m=>m.id===id);
+      // message_text = the USER message that this assistant msg was replying to.
+      // Previously we read msg?.userText from the assistant message (which never
+      // has userText), so message_text was always "" and capture-learning
+      // silently skipped the chat_examples insert. Find the prior user turn.
+      const aIdx = messages.findIndex(m=>m.id===id);
+      const priorUser = aIdx > 0
+        ? [...messages].slice(0, aIdx).reverse().find(m => m.role === "user")
+        : null;
+      const userMessageText = (priorUser?.userText || "").trim();
       supabase.functions.invoke("capture-learning",{body:{
         user_id:user.id,
         event_type:"chat_feedback",
-        data:{ blocks, feedback:type, message_text:msg?.userText||"", persona_id:selectedPersona?.id||null }
+        data:{ blocks, feedback:type, message_text:userMessageText, persona_id:selectedPersona?.id||null }
       }}).catch(()=>{});
     }
   };

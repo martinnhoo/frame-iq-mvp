@@ -12,6 +12,7 @@
 //     upsert; invalid patches are rejected loudly, not silently written
 //   - Fire-and-forget from caller — we never throw back to the user
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isCronAuthorized } from "../_shared/cron-auth.ts";
 import {
   KnowledgeType,
   KNOWLEDGE_TYPES,
@@ -69,14 +70,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Auth: verify JWT matches user_id ─────────────────────────────────────
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ ok: false, reason: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
-    }
-    const { data: { user: authUser }, error: authErr } = await sb.auth.getUser(authHeader.slice(7));
-    if (authErr || !authUser || authUser.id !== user_id) {
-      return new Response(JSON.stringify({ ok: false, reason: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    // ── Auth: accept service-role (internal invocations from adbrief-ai-chat)
+    // OR a user JWT whose uid matches the claimed user_id. Without this the
+    // internal invocation from adbrief-ai-chat was silently 401'ing and no
+    // memory was ever extracted.
+    if (!isCronAuthorized(req)) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ ok: false, reason: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+      }
+      const { data: { user: authUser }, error: authErr } = await sb.auth.getUser(authHeader.slice(7));
+      if (authErr || !authUser || authUser.id !== user_id) {
+        return new Response(JSON.stringify({ ok: false, reason: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+      }
     }
 
     // Filtro rápido — skip exchanges with no memory value (saves a Haiku call)

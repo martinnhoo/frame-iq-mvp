@@ -850,11 +850,15 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: TEXT, letterSpacing: "-0.01em" }}>AdBrief</span>
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 4,
-                  fontSize: 9.5, fontWeight: 700, color: ACCENT,
-                  padding: "2px 7px", borderRadius: 5,
-                  background: "rgba(14,165,233,0.10)",
-                  border: "1px solid rgba(14,165,233,0.22)",
+                  fontSize: 9.5, fontWeight: 700,
+                  // High-contrast: bright sky-100 text on solid sky-600 fill.
+                  // Previously used ACCENT on ACCENT-tint — text blended into bg.
+                  color: "#f0f9ff",
+                  padding: "3px 8px", borderRadius: 5,
+                  background: "#0284c7",
+                  border: "1px solid #0ea5e9",
                   letterSpacing: "0.06em", textTransform: "uppercase",
+                  boxShadow: "0 1px 0 rgba(0,0,0,0.18), 0 0 0 1px rgba(14,165,233,0.18)",
                 }}>
                   Decisão sugerida
                 </span>
@@ -1924,9 +1928,10 @@ function CompareSection({ t }: { t: Record<string, string> }) {
               <span style={{
                 marginLeft: "auto",
                 fontFamily: F, fontSize: 9.5, fontWeight: 700,
-                color: ACCENT, letterSpacing: "0.14em", textTransform: "uppercase",
+                // Bright sky-100 on solid sky-600 — readable against the chip fill.
+                color: "#f0f9ff", letterSpacing: "0.14em", textTransform: "uppercase",
                 padding: "3px 8px", borderRadius: 99,
-                background: "rgba(14,165,233,0.1)", border: `1px solid rgba(14,165,233,0.3)`,
+                background: "#0284c7", border: "1px solid #0ea5e9",
               }}>
                 {t.compare_adbrief_sublabel}
               </span>

@@ -146,15 +146,15 @@ function PatternRow({ p, lang }: { p: Pattern; lang:string }) {
       padding:"11px 14px", borderRadius:10,
       background: p.is_winner ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
       border: `1px solid ${p.is_winner ? "rgba(52,211,153,0.16)" : "rgba(255,255,255,0.06)"}`,
+      flexWrap:"wrap" as const,
     }}>
       {/* Left cluster — label + meta badges */}
-      <div style={{ flex:1, minWidth:0 }}>
+      <div style={{ flex:"1 1 55%", minWidth:0 }}>
         <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:4, flexWrap:"wrap" as const }}>
           <span style={{
             fontFamily:F, fontSize:13.5, fontWeight:700, color:"#f5f7fb",
             letterSpacing:"-0.01em",
-            overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" as const,
-            maxWidth:"100%",
+            minWidth:0, wordBreak:"break-word" as const,
           }}>{label}</span>
           {platform && (
             <span style={{
@@ -188,8 +188,9 @@ function PatternRow({ p, lang }: { p: Pattern; lang:string }) {
           )}
         </div>
       </div>
-      {/* Right cluster — metrics */}
-      <div style={{ display:"flex", gap:14, flexShrink:0, alignItems:"center" }}>
+      {/* Right cluster — metrics. Wraps below on narrow viewports. */}
+      <div style={{ display:"flex", gap:14, flexShrink:0, alignItems:"center",
+        marginLeft:"auto" }}>
         {ctrPct !== null && (
           <div style={{ textAlign:"right" as const }}>
             <div style={{ fontFamily:M, fontSize:13, fontWeight:700, color:"#34d399", lineHeight:1 }}>
@@ -234,7 +235,7 @@ function ExampleRow({ e, lang, deleting, onDelete, showLess, showMore }: {
           </button>
         )}
       </div>
-      <span style={{ fontFamily:M, fontSize:11, color:"rgba(255,255,255,0.2)", flexShrink:0, marginRight:4 }}>
+      <span style={{ fontFamily:M, fontSize:11, color:"rgba(255,255,255,0.2)", flexShrink:0, marginRight:4, whiteSpace:"nowrap" as const }}>
         {new Date(e.created_at).toLocaleDateString(lang==="pt"?"pt-BR":"en-US", { day:"2-digit", month:"short" })}
       </span>
       <button onClick={onDelete} disabled={deleting}
@@ -364,15 +365,19 @@ function renderKnowledgeDetails(k: Knowledge, lang: string): React.ReactNode {
 
   if (!lines.length) return null;
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:3, marginTop:6 }}>
+    <div style={{ display:"flex", flexDirection:"column", gap:4, marginTop:6 }}>
       {lines.map((l, i) => (
-        <div key={i} style={{ display:"flex", alignItems:"baseline", gap:6, minWidth:0 }}>
+        // Responsive: on wide viewports label sits on the left column; on
+        // narrow viewports (≤ 380px) the label wraps above the value so long
+        // translations never push value offscreen.
+        <div key={i} style={{ display:"flex", alignItems:"baseline", gap:6,
+          flexWrap:"wrap" as const, minWidth:0 }}>
           <span style={{ fontFamily:F, fontSize:10.5, fontWeight:700, color:"rgba(255,255,255,0.32)",
-            letterSpacing:"0.06em", textTransform:"uppercase" as const, flexShrink:0, minWidth:78 }}>
+            letterSpacing:"0.06em", textTransform:"uppercase" as const, flexShrink:0 }}>
             {l.label}
           </span>
           <span style={{ fontFamily:F, fontSize:12, color:"rgba(255,255,255,0.7)", lineHeight:1.5,
-            overflow:"hidden", textOverflow:"ellipsis" }}>
+            flex:1, minWidth:0, wordBreak:"break-word" as const }}>
             {l.value}
           </span>
         </div>
@@ -703,8 +708,8 @@ export default function IntelligencePage() {
         </button>
       </div>
 
-      {/* Stats row */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:8, marginBottom:28 }}>
+      {/* Stats row — 4 tiles. At ~390px viewport renders as 2×2; wider shows 4-up. */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:8, marginBottom:28 }}>
         {[
           { n:knowledge.length, label:t.knowledge, color:"#e879f9" },
           { n:memories.length,  label:t.memories,  color:"#0ea5e9" },

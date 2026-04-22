@@ -80,12 +80,25 @@ Deno.serve(async (req) => {
           }
         }
 
-        // FEW-SHOT: save liked responses as examples for future prompts
-        if (feedback === 'like' && message_text && blocks?.length) {
-          // Only save substantive responses (insight/action/dashboard blocks)
-          const goodBlocks = (blocks || []).filter((b: any) =>
-            ['insight', 'action', 'dashboard', 'warning'].includes(b.type) && b.content && b.content.length > 30
-          );
+        // FEW-SHOT: save liked responses as examples for future prompts.
+        // Substantive = block has content / items / a useful shape. We accept
+        // more block types than before (hooks, compare, checklist, metric, kpi)
+        // because those are legitimate AI outputs users thumbs-up. We ALSO
+        // accept an empty message_text — if the user liked a proactive reply
+        // with no preceding user text, we still save the style via a placeholder.
+        if (feedback === 'like' && blocks?.length) {
+          const goodBlocks = (blocks || []).filter((b: any) => {
+            if (!b?.type) return false;
+            if (['limit_warning','meta_action','navigate','proactive'].includes(b.type)) return false;
+            const hasContent = typeof b.content === 'string' && b.content.trim().length >= 20;
+            const hasItems = Array.isArray(b.items) && b.items.length > 0;
+            const hasTable = b.table && Array.isArray(b.table.rows) && b.table.rows.length > 0;
+            const hasTitle = typeof b.title === 'string' && b.title.trim().length >= 3;
+            return hasContent || hasItems || hasTable || hasTitle;
+          });
+          const safeMessageText = (message_text && String(message_text).trim())
+            || goodBlocks[0]?.title?.slice(0, 80)
+            || '(liked response)';
           if (goodBlocks.length > 0) {
             // Cap at 20 examples per persona — remove oldest if over limit
             const existingQuery = (sb as any).from('chat_examples')
@@ -104,24 +117,28 @@ Deno.serve(async (req) => {
               }
             }
 
-            // Deduplication: check if very similar message already saved
-            const msgNorm = String(message_text).toLowerCase().slice(0, 80);
-            const dupQuery = (sb as any).from('chat_examples')
-              .select('id')
-              .eq('user_id', user_id)
-              .ilike('user_message', `%${msgNorm.slice(0, 40)}%`);
-            const { data: dup } = feedbackPersonaId
-              ? await dupQuery.eq('persona_id', feedbackPersonaId)
-              : await dupQuery.is('persona_id', null);
-            if (dup && dup.length > 0) {
-              console.log('chat_examples: duplicate detected, skipping insert');
-              break;
+            // Deduplication: check if very similar message already saved.
+            // Only dedup when we have a real message_text — placeholder likes
+            // should always be allowed through.
+            if (safeMessageText && safeMessageText !== '(liked response)') {
+              const msgNorm = safeMessageText.toLowerCase().slice(0, 80);
+              const dupQuery = (sb as any).from('chat_examples')
+                .select('id')
+                .eq('user_id', user_id)
+                .ilike('user_message', `%${msgNorm.slice(0, 40)}%`);
+              const { data: dup } = feedbackPersonaId
+                ? await dupQuery.eq('persona_id', feedbackPersonaId)
+                : await dupQuery.is('persona_id', null);
+              if (dup && dup.length > 0) {
+                console.log('chat_examples: duplicate detected, skipping insert');
+                break;
+              }
             }
 
             const insertResult = await (sb as any).from('chat_examples').insert({
               user_id,
               persona_id: feedbackPersonaId || null,
-              user_message: String(message_text).slice(0, 400),
+              user_message: safeMessageText.slice(0, 400),
               assistant_blocks: goodBlocks.slice(0, 3),
               quality_score: 5,
             });
@@ -130,12 +147,14 @@ Deno.serve(async (req) => {
           }
         }
 
-        // FEW-SHOT: remove disliked responses if they were previously saved
-        if (feedback === 'dislike' && message_text) {
+        // FEW-SHOT: remove disliked responses if they were previously saved.
+        // Require a non-empty message_text — otherwise a dislike with no text
+        // would erase unrelated examples.
+        if (feedback === 'dislike' && message_text && String(message_text).trim().length >= 10) {
           await (sb as any).from('chat_examples')
             .delete()
             .eq('user_id', user_id)
-            .ilike('user_message', `%${String(message_text).slice(0, 50)}%`);
+            .ilike('user_message', `%${String(message_text).trim().slice(0, 50)}%`);
         }
 
         break;
