@@ -13,7 +13,7 @@ import type { Decision, DecisionAction } from '../../types/v2-database';
 import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
 import { GoalSetup } from '../../components/feed/GoalSetup';
 import { HealthPanel, type HealthSignal } from '../../components/feed/HealthPanel';
-import { AccountHealthGauge, type AccountStatusSummary } from '../../components/feed/AccountHealthGauge';
+import { AccountHealthGauge, computeAccountHealth, type AccountStatusSummary } from '../../components/feed/AccountHealthGauge';
 import { FeedSidebar, type FeedActivityEvent } from '../../components/feed/FeedSidebar';
 import { Pause, Play } from 'lucide-react';
 
@@ -2777,8 +2777,10 @@ const TrendBadge: React.FC<{ pct: number | null; invert?: boolean }> = ({ pct, i
 // ================================================================
 // COMMAND KPI STRIP — the Central de Comando headline
 // 5 traffic-manager tiles with period-over-period deltas.
-// No AdScore. No proprietary composite. Just real Meta Ads metrics.
-// Reads adMetrics (single source of truth) and its prev* fields.
+// Layout: horizontal row with vertical dividers between cells.
+// Matches the Central de Comando v2 print 1:1.
+// Tiles: Investido · Gasto perdido · ROAS médio · Conversões · AdScore médio
+// Data: adMetrics + pending decisions (wasted spend) + health score.
 // ================================================================
 
 type KpiTile = {
@@ -2787,85 +2789,127 @@ type KpiTile = {
   value: string;
   /** Percent delta vs prior period. null = hide. */
   deltaPct: number | null;
-  /** If true, a NEGATIVE delta is good (e.g. CPA going down). */
+  /** If true, a NEGATIVE delta is good (e.g. wasted spend going down). */
   invertDelta?: boolean;
-  /** Optional tiny sub-line under the value, e.g. "vs período anterior". */
-  footnote?: string;
-  /** When true the tile is rendered as the primary visual anchor. */
-  primary?: boolean;
+  /** Absolute delta in points, used when deltaPct isn't the right frame (AdScore). */
+  deltaPoints?: number | null;
 };
 
-const KPIDelta: React.FC<{ pct: number | null; invert?: boolean }> = ({ pct, invert }) => {
-  if (pct === null || !isFinite(pct) || Math.abs(pct) < 1) return (
-    <span style={{
-      fontSize: 10.5, fontWeight: 600, color: T.text3, letterSpacing: '-0.01em',
-    }}>estável</span>
-  );
+/** Compact delta pill — "↑ 24,7% vs 7 dias anteriores" / "↓ 12,1% vs 7 dias anteriores". */
+const KPIDeltaLine: React.FC<{
+  pct: number | null;
+  points?: number | null;
+  invert?: boolean;
+  periodLabel: string;
+}> = ({ pct, points, invert, periodLabel }) => {
+  // Absolute-points variant (for AdScore)
+  if (typeof points === 'number' && isFinite(points) && Math.abs(points) >= 1) {
+    const isUp = points > 0;
+    const isGood = invert ? !isUp : isUp;
+    const color = isGood ? T.green : T.red;
+    return (
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        fontSize: 11, fontFamily: F, letterSpacing: '-0.01em',
+        whiteSpace: 'nowrap', lineHeight: 1.3,
+      }}>
+        <span style={{ color, fontWeight: 700 }}>
+          {isUp ? '↑' : '↓'} {isUp ? '+' : ''}{points} pts
+        </span>
+        <span style={{ color: T.text3 }}>vs {periodLabel.toLowerCase()} anteriores</span>
+      </div>
+    );
+  }
+
+  // Percentage variant (default)
+  if (pct === null || !isFinite(pct) || Math.abs(pct) < 1) {
+    return (
+      <div style={{
+        fontSize: 11, color: T.text3, fontFamily: F,
+        letterSpacing: '-0.01em', lineHeight: 1.3,
+      }}>
+        estável vs {periodLabel.toLowerCase()} anteriores
+      </div>
+    );
+  }
   const isUp = pct > 0;
   const isGood = invert ? !isUp : isUp;
   const color = isGood ? T.green : T.red;
-  const tint = isGood ? 'rgba(74,222,128,0.10)' : 'rgba(248,113,113,0.10)';
+  const fmt = pct.toFixed(Math.abs(pct) < 10 ? 1 : 1).replace('.', ',');
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 3,
-      fontSize: 10.5, fontWeight: 700, color,
-      background: tint, padding: '2px 6px', borderRadius: 4,
-      letterSpacing: '-0.01em', whiteSpace: 'nowrap',
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      fontSize: 11, fontFamily: F, letterSpacing: '-0.01em',
+      whiteSpace: 'nowrap', lineHeight: 1.3,
     }}>
-      {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{pct.toFixed(Math.abs(pct) < 10 ? 1 : 0).replace('.', ',')}%
-    </span>
+      <span style={{ color, fontWeight: 700 }}>
+        {isUp ? '↑' : '↓'} {isUp ? '+' : ''}{fmt}%
+      </span>
+      <span style={{ color: T.text3 }}>vs {periodLabel.toLowerCase()} anteriores</span>
+    </div>
   );
 };
 
 const CommandKPIStrip: React.FC<{
   m: AdMetricsSummary | null;
   periodLabel: string;
-}> = ({ m, periodLabel }) => {
+  /** Pending decisions — used to compute wasted spend (sum of kill impact_daily). */
+  decisions?: Decision[];
+  /** Account health score (0-100) — used for the AdScore tile. null = hide. */
+  healthScore?: number | null;
+  /** Prior-period health score (0-100). Falls back to null if unknown. */
+  healthScorePrev?: number | null;
+}> = ({ m, periodLabel, decisions = [], healthScore = null, healthScorePrev = null }) => {
   const hasData = !!m && m.daysOfData > 0 && m.totalSpend > 0;
 
-  // Build the 5 traffic-manager tiles. Order reflects priority:
-  // 1. Money spent (the lens every gestor opens with)
-  // 2. CPA médio (what each conversion is costing)
-  // 3. ROAS médio (how much each R$ returned)
-  // 4. CTR médio (creative quality signal)
-  // 5. Conversões (volume signal)
+  // ── Gasto perdido ──
+  // Sum of daily potential savings from pending KILL-type decisions.
+  // This is money the pipeline has flagged as wasted spend that can be recovered
+  // by pausing losing ads. Purely derived — no invented numbers.
+  const wastedDailyCentavos = decisions
+    .filter(d => d.type === 'kill' && d.status === 'pending')
+    .reduce((sum, d) => sum + Math.abs(d.impact_daily || 0), 0);
+  const hasWasted = wastedDailyCentavos > 0;
+
+  // ── AdScore médio ──
+  // Delta is absolute-points based (e.g. "+4 pts"), not percent.
+  const hasScore = typeof healthScore === 'number' && healthScore >= 0;
+  const scoreDeltaPoints = (hasScore && typeof healthScorePrev === 'number')
+    ? Math.round(healthScore! - healthScorePrev)
+    : null;
+
   const tiles: KpiTile[] = [
     {
       key: 'spend',
       label: 'Investido',
       value: hasData ? fmtReais(m!.totalSpend) : '—',
       deltaPct: hasData ? (m!.deltaSpendPct ?? null) : null,
-      footnote: `vs período anterior`,
-      primary: true,
     },
     {
-      key: 'cpa',
-      label: 'CPA médio',
-      value: hasData && m!.avgCpa > 0 ? fmtReais(m!.avgCpa) : '—',
-      deltaPct: hasData ? (m!.deltaCpaPct ?? null) : null,
-      invertDelta: true, // lower CPA = better
-      footnote: 'por conversão',
+      key: 'wasted',
+      label: 'Gasto perdido',
+      value: hasWasted ? fmtReais(wastedDailyCentavos) : 'R$ 0',
+      deltaPct: null, // Gasto perdido is a snapshot, no period-over-period yet
+      invertDelta: true,
     },
     {
       key: 'roas',
       label: 'ROAS médio',
       value: hasData && m!.avgRoas > 0 ? `${m!.avgRoas.toFixed(2).replace('.', ',')}x` : '—',
       deltaPct: hasData ? (m!.deltaRoasPct ?? null) : null,
-      footnote: 'retorno sobre gasto',
-    },
-    {
-      key: 'ctr',
-      label: 'CTR médio',
-      value: hasData && m!.avgCtr > 0 ? fmtPct(m!.avgCtr) : '—',
-      deltaPct: hasData ? (m!.deltaCtrPct ?? null) : null,
-      footnote: 'cliques / impressões',
     },
     {
       key: 'conv',
       label: 'Conversões',
       value: hasData ? m!.totalConversions.toLocaleString('pt-BR') : '—',
       deltaPct: hasData ? (m!.deltaConversionsPct ?? null) : null,
-      footnote: 'no período',
+    },
+    {
+      key: 'adscore',
+      label: 'AdScore médio',
+      value: hasScore ? `${healthScore}/100` : '—',
+      deltaPct: null,
+      deltaPoints: scoreDeltaPoints,
     },
   ];
 
@@ -2874,66 +2918,47 @@ const CommandKPIStrip: React.FC<{
       background: T.bg1,
       border: `1px solid ${T.border1}`,
       borderRadius: 12,
-      padding: '14px 16px',
+      padding: '18px 4px',
       marginBottom: 14,
       fontFamily: F,
     }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        gap: 8, marginBottom: 12, flexWrap: 'wrap',
-      }}>
-        <div style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-          textTransform: 'uppercase', color: T.labelColor,
-        }}>Painel do gestor</div>
-        <div style={{
-          fontSize: 10.5, color: T.text3, letterSpacing: '-0.01em',
-        }}>{periodLabel}</div>
-      </div>
-      <div style={{
+      <div className="feed-kpi-row" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: 10,
+        gridTemplateColumns: `repeat(${tiles.length}, 1fr)`,
+        alignItems: 'stretch',
       }}>
-        {tiles.map(t => (
+        {tiles.map((t, i) => (
           <div key={t.key} style={{
-            background: t.primary ? T.bg2 : 'transparent',
-            border: t.primary ? `1px solid ${T.border2}` : `1px solid ${T.border1}`,
-            borderRadius: 10,
-            padding: '12px 14px',
+            padding: '4px 18px',
             minWidth: 0,
-            display: 'flex', flexDirection: 'column', gap: 4,
+            display: 'flex', flexDirection: 'column', gap: 6,
+            borderRight: i < tiles.length - 1 ? `1px solid ${T.border0}` : 'none',
           }}>
             <div style={{
-              fontSize: 10.5, fontWeight: 600, letterSpacing: '0.02em',
-              color: T.text3, textTransform: 'uppercase',
+              fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em',
+              color: T.labelColor, textTransform: 'uppercase',
             }}>{t.label}</div>
             <div style={{
-              display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap',
+              fontSize: 24, fontWeight: 800,
+              color: t.value === '—' ? T.text3 : T.text1,
+              letterSpacing: '-0.02em', lineHeight: 1.1,
               marginTop: 2,
-            }}>
-              <span style={{
-                fontSize: t.primary ? 22 : 20,
-                fontWeight: 800,
-                color: t.value === '—' ? T.text3 : T.text1,
-                letterSpacing: '-0.02em', lineHeight: 1.1,
-              }}>{t.value}</span>
-              {t.value !== '—' && (
-                <KPIDelta pct={t.deltaPct} invert={t.invertDelta} />
-              )}
-            </div>
-            {t.footnote && (
-              <div style={{
-                fontSize: 10, color: T.text3, letterSpacing: '-0.005em',
-                marginTop: 2,
-              }}>{t.footnote}</div>
+            }}>{t.value}</div>
+            {t.value !== '—' && (
+              <KPIDeltaLine
+                pct={t.deltaPct}
+                points={t.deltaPoints}
+                invert={t.invertDelta}
+                periodLabel={periodLabel}
+              />
             )}
           </div>
         ))}
       </div>
       {!hasData && (
         <div style={{
-          marginTop: 10, fontSize: 11, color: T.text3, fontStyle: 'italic',
+          marginTop: 10, padding: '0 18px',
+          fontSize: 11, color: T.text3, fontStyle: 'italic',
           lineHeight: 1.5,
         }}>
           Sem gasto no período selecionado. Quando os anúncios começarem a rodar os números entram aqui.
@@ -5960,6 +5985,23 @@ const FeedPage: React.FC = () => {
           <CommandKPIStrip
             m={adMetrics}
             periodLabel={PERIODS.find(p => p.key === period)!.label}
+            decisions={pendingDecisions}
+            healthScore={
+              // Derive a live AdScore from the same signals the sidebar uses.
+              // Null = "—" (no data yet). Never a hardcoded number.
+              metaConnected
+                ? computeAccountHealth({
+                    accountStatus,
+                    accountStatusLoading,
+                    pixelHealth,
+                    pixelHealthLoading,
+                    adMetrics,
+                    activeAdsCount,
+                    hasMetaConnection: metaConnected,
+                  }).score
+                : null
+            }
+            healthScorePrev={null}
           />
         )}
 
@@ -6330,38 +6372,42 @@ const FeedPage: React.FC = () => {
             )}
 
             {/* ═══════════════════════════════════════════════
-                ZONE 2 — DECISÕES PENDENTES (ação guiada)
-                kills + fixes: o que precisa parar ou ser corrigido.
+                ZONE 2 — AÇÕES PRIORITÁRIAS (ação guiada)
+                Unified section header matching the Central de Comando
+                print 1:1: title left · count badge + "Ver todas" right.
+                FlowSection mode='all' renders kills+fixes, scales, patterns.
                 ═══════════════════════════════════════════════ */}
-            {pendingDecisions.some(d => d.type === 'kill' || d.type === 'fix') && (
+            {pendingDecisions.length > 0 && (
               <div style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-                textTransform: 'uppercase' as const, color: T.labelColor,
-                marginTop: 2, marginBottom: 10,
-                display: 'flex', alignItems: 'center', gap: 6,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 12, marginTop: 6, marginBottom: 12, flexWrap: 'wrap',
               }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.yellow, boxShadow: `0 0 6px ${T.yellow}50` }} />
-                <span>Decisões pendentes</span>
+                <div style={{
+                  fontSize: 15, fontWeight: 700, color: T.text1,
+                  letterSpacing: '-0.01em', fontFamily: F,
+                }}>Ações prioritárias</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 600, letterSpacing: '-0.005em',
+                    color: T.text3, fontFamily: F,
+                    background: T.bg2, border: `1px solid ${T.border1}`,
+                    padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap',
+                  }}>
+                    {pendingDecisions.length} {pendingDecisions.length === 1 ? 'ação encontrada' : 'ações encontradas'}
+                  </span>
+                  <button
+                    className="feed-linear-btn"
+                    onClick={() => navigate('/dashboard/ai')}
+                    style={{
+                      background: 'transparent', border: 'none', padding: 0,
+                      fontSize: 11.5, fontWeight: 700, color: T.blue, fontFamily: F,
+                      cursor: 'pointer', letterSpacing: '-0.01em', whiteSpace: 'nowrap',
+                    }}
+                  >Ver todas as ações →</button>
+                </div>
               </div>
             )}
-            <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="decisions" />
-
-            {/* ═══════════════════════════════════════════════
-                ZONE 3 — OPORTUNIDADES (escala + padrões)
-                scales + patterns: onde seu próximo ganho está.
-                ═══════════════════════════════════════════════ */}
-            {pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (
-              <div style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-                textTransform: 'uppercase' as const, color: T.labelColor,
-                marginTop: 18, marginBottom: 10,
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.green, boxShadow: `0 0 6px ${T.green}50` }} />
-                <span>Oportunidades</span>
-              </div>
-            )}
-            <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="opportunities" />
+            <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="all" />
           </>
         ) : feedState === 'no-ads' ? (
           <CommandHero
@@ -6514,6 +6560,78 @@ const FeedPage: React.FC = () => {
         )}
 
         {/* ═══════════════════════════════════════════════
+            LAYER 6.5 — SISTEMA ATIVO FOOTER (status strip)
+            Matches Central de Comando v2 print: pulse dot + status
+            label on the left; 3 inline stats on the right (análises hoje,
+            ações disponíveis, conta analisada N min atrás).
+            All values derived — no hardcoded numbers.
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && !isDemo && (() => {
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const analysesToday = activityEvents.filter(e => {
+            const ts = new Date(e.created_at).getTime();
+            return ts >= todayStart.getTime();
+          }).length;
+          const availableActions = pendingDecisions.length;
+          const analyzedAgo = lastAnalysisMin < 60
+            ? `${lastAnalysisMin} min atrás`
+            : `${Math.round(lastAnalysisMin / 60)}h atrás`;
+          const stats: { label: string; value: string }[] = [
+            { label: 'Análises hoje', value: analysesToday.toString() },
+            { label: 'Ações disponíveis', value: availableActions.toString() },
+            { label: 'Conta analisada', value: analyzedAgo },
+          ];
+          return (
+            <div style={{
+              marginTop: 18,
+              background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 12,
+              padding: '14px 18px', fontFamily: F,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 14, flexWrap: 'wrap',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <span style={{
+                  position: 'relative', width: 8, height: 8, borderRadius: '50%',
+                  background: T.green, boxShadow: `0 0 0 3px rgba(74,222,128,0.18)`,
+                  display: 'inline-block', flexShrink: 0,
+                }} />
+                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <span style={{
+                    fontSize: 12.5, fontWeight: 700, color: T.text1,
+                    letterSpacing: '-0.01em', lineHeight: 1.2,
+                  }}>Sistema ativo</span>
+                  <span style={{
+                    fontSize: 11, color: T.text3, letterSpacing: '-0.005em',
+                    lineHeight: 1.3, marginTop: 1,
+                  }}>Monitorando sua conta 24/7</span>
+                </div>
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'stretch', gap: 0,
+              }}>
+                {stats.map((s, i) => (
+                  <div key={s.label} style={{
+                    padding: '2px 18px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2,
+                    borderRight: i < stats.length - 1 ? `1px solid ${T.border0}` : 'none',
+                  }}>
+                    <span style={{
+                      fontSize: 14, fontWeight: 700, color: T.text1,
+                      letterSpacing: '-0.015em', lineHeight: 1.1,
+                    }}>{s.value}</span>
+                    <span style={{
+                      fontSize: 10.5, color: T.text3, letterSpacing: '-0.005em',
+                      lineHeight: 1.2, whiteSpace: 'nowrap',
+                    }}>{s.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ═══════════════════════════════════════════════
             LAYER 7 — PATTERNS & LEARNING (collapsible)
             ═══════════════════════════════════════════════ */}
         {metaConnected && !isDemo && userId && personaId && (
@@ -6588,6 +6706,10 @@ const FeedPage: React.FC = () => {
           .feed-layout{flex-direction:column!important;max-width:760px!important}
           .feed-main-col{max-width:100%!important;width:100%}
           .feed-sidebar-col{width:100%!important}
+        }
+        @media(max-width:720px){
+          .feed-kpi-row{grid-template-columns:repeat(2,1fr)!important}
+          .feed-kpi-row>div{border-right:none!important;border-bottom:1px solid rgba(240,246,252,0.04);padding:10px 12px!important}
         }
         @media(max-width:768px){
           .feed-kpis-grid{grid-template-columns:repeat(2,1fr)!important;gap:6px!important}
