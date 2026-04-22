@@ -4356,16 +4356,36 @@ const FeedPage: React.FC = () => {
   //   pixelHealthError=true + !loading → fetch failed (show "Indisponível · tentar")
   //   pixelHealth=null + !loading      → not applicable (no account / demo)
   //   pixelHealth={...}                → render real status
+  //
+  // IMPORTANT: loading defaults to `true`, not `false`. On mount the HealthPanel
+  // renders before this effect has had a chance to fire, so if the default were
+  // false the pixel tile would paint "Sem dados" for one frame, then flip to
+  // "Verificando…", then to the real status — a three-step flash users
+  // reported. Defaulting to `true` collapses that to the last two steps, and
+  // the gate branch below explicitly clears it when we truly won't fetch.
   const [pixelHealth, setPixelHealth] = useState<PixelHealthSummary | null>(null);
-  const [pixelHealthLoading, setPixelHealthLoading] = useState(false);
+  const [pixelHealthLoading, setPixelHealthLoading] = useState(true);
   const [pixelHealthError, setPixelHealthError] = useState(false);
   const [pixelHealthRetryNonce, setPixelHealthRetryNonce] = useState(0);
 
   useEffect(() => {
-    if (!accountId || !userId || isDemo) {
+    // ── Gate 1: definitively won't fetch ──
+    // No user, demo mode, or no Meta connection at all. Clear loading so the
+    // tile shows its "no data" fallback (or the HealthPanel isn't rendered
+    // at all in the !metaSelId/isDemo branches).
+    if (!userId || isDemo || !metaSelId) {
       setPixelHealth(null);
       setPixelHealthError(false);
       setPixelHealthLoading(false);
+      return;
+    }
+    // ── Gate 2: transitional — we have a Meta connection but the account
+    // hasn't resolved yet (act_… → UUID lookup is in flight). Keep the tile
+    // in "Verificando…" so it doesn't flash "Sem dados" between account
+    // resolution and pixel fetch. The effect re-runs once accountId lands.
+    if (!accountId) {
+      setPixelHealthLoading(true);
+      setPixelHealthError(false);
       return;
     }
     let cancelled = false;
