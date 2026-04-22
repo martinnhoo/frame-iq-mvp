@@ -367,6 +367,38 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           {decision.headline}
         </div>
 
+        {/* TRAIT CHIPS — always visible scan row (top 3 metrics, non-empty) */}
+        {decision.metrics && decision.metrics.length > 0 && (
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: 6,
+            marginBottom: 8, marginTop: 4,
+          }}>
+            {decision.metrics.slice(0, 3).map((m, i) => {
+              const trendColor = m.trend === 'down' ? '#F87171'
+                : m.trend === 'up' ? '#38BDF8'
+                : L2;
+              return (
+                <span key={i} style={{
+                  fontSize: 10.5, fontWeight: 600,
+                  color: trendColor,
+                  background: 'rgba(255,255,255,0.035)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 999,
+                  padding: '2px 8px',
+                  lineHeight: 1.35,
+                  fontFamily: F,
+                  letterSpacing: '-0.005em',
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  whiteSpace: 'nowrap',
+                }}>
+                  <span style={{ color: L3, fontWeight: 500 }}>{m.key}</span>
+                  <span>{m.value}</span>
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         {/* Financial verdict bar — pipeline v2 */}
         {hasPipeline && financialVerdict && (
           <div style={{

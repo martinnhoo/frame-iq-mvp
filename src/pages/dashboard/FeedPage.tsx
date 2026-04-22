@@ -3617,6 +3617,23 @@ const TopPriorityBar: React.FC<{
 // FLOW SECTION — Step-based grouping (Fix → Scale → Create)
 // Groups decisions into actionable steps
 // ================================================================
+// ── Priority scoring — impact × confidence ──
+// Used by FlowSection to ensure the user always sees the most valuable
+// decisions first regardless of type order. Confidence falls back through:
+//   data_confidence (0-1, pipeline v2)  →  score/100  →  impact_confidence enum
+const confidenceOf = (d: Decision): number => {
+  const dc = (d as any).data_confidence;
+  if (typeof dc === 'number' && dc >= 0 && dc <= 1) return dc;
+  if (typeof d.score === 'number' && d.score > 0) return Math.min(1, d.score / 100);
+  const ic = d.impact_confidence;
+  return ic === 'high' ? 0.9 : ic === 'medium' ? 0.7 : ic === 'low' ? 0.5 : 0.6;
+};
+const priorityOf = (d: Decision): number => Math.abs(d.impact_daily || 0) * confidenceOf(d);
+const byPriority = (a: Decision, b: Decision) => priorityOf(b) - priorityOf(a);
+
+// Cap per step to keep the feed scannable. Users can unfold the rest.
+const STEP_VISIBLE_CAP = 5;
+
 const FlowSection: React.FC<{
   decisions: Decision[];
   onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
@@ -3625,11 +3642,12 @@ const FlowSection: React.FC<{
   mode?: 'all' | 'decisions' | 'opportunities';
 }> = ({ decisions, onAction, isDemo, mode = 'all' }) => {
   const navigate = useNavigate();
+  const [expandedSteps, setExpandedSteps] = useState<Record<string, boolean>>({});
 
-  const kills = decisions.filter(d => d.type === 'kill' && d.status === 'pending');
-  const fixes = decisions.filter(d => d.type === 'fix' && d.status === 'pending');
-  const scales = decisions.filter(d => d.type === 'scale' && d.status === 'pending');
-  const patterns = decisions.filter(d => (d.type === 'pattern' || d.type === 'insight') && d.status === 'pending');
+  const kills = decisions.filter(d => d.type === 'kill' && d.status === 'pending').sort(byPriority);
+  const fixes = decisions.filter(d => d.type === 'fix' && d.status === 'pending').sort(byPriority);
+  const scales = decisions.filter(d => d.type === 'scale' && d.status === 'pending').sort(byPriority);
+  const patterns = decisions.filter(d => (d.type === 'pattern' || d.type === 'insight') && d.status === 'pending').sort(byPriority);
 
   const steps: { label: string; sublabel: string; color: string; icon: string; items: Decision[] }[] = [];
 
@@ -3637,12 +3655,13 @@ const FlowSection: React.FC<{
   const showOpportunities = mode === 'all' || mode === 'opportunities';
 
   if (showDecisions && kills.length + fixes.length > 0) {
+    const merged = [...kills, ...fixes].sort(byPriority);
     steps.push({
       label: 'Cortar perdas',
-      sublabel: `${kills.length + fixes.length} ${kills.length + fixes.length === 1 ? 'ação' : 'ações'}`,
+      sublabel: `${merged.length} ${merged.length === 1 ? 'ação' : 'ações'}`,
       color: T.red,
       icon: '🛑',
-      items: [...kills, ...fixes],
+      items: merged,
     });
   }
   if (showOpportunities && scales.length > 0) {
@@ -3708,26 +3727,78 @@ const FlowSection: React.FC<{
         ))}
       </div>
 
-      {/* Grouped cards */}
-      {steps.map((step) => (
-        <div key={step.label} style={{ marginBottom: 16 }}>
-          {step.items.map((d) => {
-            const typeColor = d.type === 'kill' || d.type === 'fix' ? T.red
-              : d.type === 'scale' ? T.green : T.blue;
-            const typeLabel = d.type === 'kill' ? 'PARAR' : d.type === 'fix' ? 'CORRIGIR'
-              : d.type === 'scale' ? 'ESCALAR' : 'PADRÃO';
+      {/* Grouped cards — top-N visible, rest foldable */}
+      {steps.map((step) => {
+        const isExpanded = expandedSteps[step.label] === true;
+        const visible = isExpanded ? step.items : step.items.slice(0, STEP_VISIBLE_CAP);
+        const hiddenCount = step.items.length - visible.length;
+        return (
+          <div key={step.label} style={{ marginBottom: 16 }}>
+            {visible.map((d, idx) => (
+              <div key={d.id} style={{
+                borderTop: idx > 0 ? `1px solid ${T.border0}` : 'none',
+              }}>
+                <DecisionCard
+                  decision={d}
+                  onAction={onAction}
+                  isDemo={isDemo}
+                  isHero={idx === 0 && step.items.length > 1}
+                />
+              </div>
+            ))}
 
-            return (
-              <DecisionCard
-                key={d.id}
-                decision={d}
-                onAction={onAction}
-                isDemo={isDemo}
-              />
-            );
-          })}
-        </div>
-      ))}
+            {hiddenCount > 0 && !isExpanded && (
+              <button
+                onClick={() => setExpandedSteps(prev => ({ ...prev, [step.label]: true }))}
+                style={{
+                  width: '100%',
+                  background: 'transparent',
+                  border: `1px dashed ${T.border1}`,
+                  borderRadius: 8,
+                  padding: '8px 12px',
+                  marginTop: 8,
+                  fontSize: 11.5, fontWeight: 600,
+                  color: T.text3,
+                  cursor: 'pointer',
+                  fontFamily: F,
+                  letterSpacing: '-0.005em',
+                  transition: 'background 0.15s ease, color 0.15s ease',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)';
+                  (e.currentTarget as HTMLElement).style.color = T.text2;
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.background = 'transparent';
+                  (e.currentTarget as HTMLElement).style.color = T.text3;
+                }}
+              >
+                Ver mais {hiddenCount} {hiddenCount === 1 ? 'decisão' : 'decisões'}
+              </button>
+            )}
+
+            {isExpanded && step.items.length > STEP_VISIBLE_CAP && (
+              <button
+                onClick={() => setExpandedSteps(prev => ({ ...prev, [step.label]: false }))}
+                style={{
+                  width: '100%',
+                  background: 'transparent',
+                  border: `1px dashed ${T.border1}`,
+                  borderRadius: 8,
+                  padding: '8px 12px',
+                  marginTop: 8,
+                  fontSize: 11.5, fontWeight: 600,
+                  color: T.text3,
+                  cursor: 'pointer',
+                  fontFamily: F,
+                }}
+              >
+                Ver menos
+              </button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
