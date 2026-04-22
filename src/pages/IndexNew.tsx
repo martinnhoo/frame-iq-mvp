@@ -1354,14 +1354,12 @@ function FlowStep({
     title: string; desc: string; badge: string;
     color: string; Icon: any; mock: React.ReactNode;
   };
-  progress: number;   // 0–1 overall scroll progress (for fill line anchor logic)
+  progress: number;
   reveal: boolean;
 }) {
   const { Icon } = step;
-  // Staggered per-step threshold along the progress band
   const stepStart = index / (total + 0.3);
-  const stepEnd = (index + 1) / (total + 0.3);
-  const localReveal = reveal && progress >= stepStart * 0.4; // relax threshold
+  const localReveal = reveal && progress >= stepStart * 0.4;
 
   return (
     <div
@@ -1369,68 +1367,69 @@ function FlowStep({
       style={{
         position: "relative",
         display: "grid",
-        gridTemplateColumns: "72px 1fr",
-        gap: 24,
-        paddingBottom: index === total - 1 ? 0 : 44,
+        gridTemplateColumns: "32px 1fr",
+        gap: 20,
+        paddingBottom: index === total - 1 ? 0 : 36,
         opacity: localReveal ? 1 : 0,
-        transform: localReveal ? "translateY(0)" : "translateY(24px)",
-        transition: `opacity 0.7s ${EASE}, transform 0.7s ${EASE}`,
+        transform: localReveal ? "translateY(0)" : "translateY(20px)",
+        transition: `opacity 0.6s ${EASE}, transform 0.6s ${EASE}`,
         zIndex: 1,
       }}
     >
-      {/* Left rail — number + glowing node */}
-      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {/* Left rail — tiny monochrome number dot */}
+      <div style={{
+        position: "relative",
+        display: "flex", justifyContent: "center",
+        paddingTop: 18,
+      }}>
         <div style={{
-          width: 56, height: 56, borderRadius: 16,
+          width: 26, height: 26, borderRadius: "50%",
           display: "flex", alignItems: "center", justifyContent: "center",
-          background: `linear-gradient(135deg, ${step.color}18 0%, ${step.color}05 100%)`,
-          border: `1px solid ${step.color}40`,
-          boxShadow: `0 0 0 1px rgba(255,255,255,0.02) inset, 0 18px 40px -20px ${step.color}60, 0 0 32px ${step.color}22`,
+          background: BG,
+          border: `1px solid ${BORDER}`,
           position: "relative", zIndex: 2,
-          transition: `transform 0.4s ${EASE}`,
-          transform: localReveal ? "scale(1)" : "scale(0.85)",
+          fontFamily: F, fontSize: 11, fontWeight: 700,
+          color: TEXT3, letterSpacing: "-0.01em",
+          fontVariantNumeric: "tabular-nums",
         }}>
-          <Icon size={22} strokeWidth={1.9} color={step.color} />
-          {/* Pulse ring for active step */}
-          {localReveal && (
-            <span aria-hidden="true" style={{
-              position: "absolute", inset: -4, borderRadius: 20,
-              border: `1px solid ${step.color}40`,
-              animation: "flowNodePulse 2.4s ease-out infinite",
-              pointerEvents: "none",
-            }} />
-          )}
-        </div>
-        <div style={{
-          fontFamily: F, fontSize: 10, fontWeight: 700,
-          color: TEXT3, letterSpacing: "0.18em",
-          marginTop: 10,
-        }}>
-          0{index + 1}
+          {index + 1}
         </div>
       </div>
 
-      {/* Right — card with copy + mock */}
+      {/* Right — card with icon + copy + mock */}
       <div style={{
-        padding: "20px 22px 20px",
-        borderRadius: 16,
-        background: "linear-gradient(180deg, rgba(255,255,255,0.022) 0%, rgba(255,255,255,0.008) 100%)",
+        padding: "18px 20px 18px",
+        borderRadius: 14,
+        background: SURFACE,
         border: `1px solid ${BORDER}`,
         transition: `border-color 0.3s ${EASE}, transform 0.6s ${EASE}`,
-        transform: localReveal ? "translateX(0)" : "translateX(-14px)",
+        transform: localReveal ? "translateX(0)" : "translateX(-10px)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+        {/* Header row — small icon + title + badge */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12, marginBottom: 8, flexWrap: "wrap",
+        }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 8,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(255,255,255,0.03)",
+            border: `1px solid ${BORDER}`,
+            flexShrink: 0,
+          }}>
+            <Icon size={15} strokeWidth={1.8} color={TEXT2} />
+          </div>
           <h3 style={{
-            fontFamily: F, fontSize: 18, fontWeight: 700, color: TEXT,
-            letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2,
+            fontFamily: F, fontSize: 16.5, fontWeight: 700, color: TEXT,
+            letterSpacing: "-0.02em", margin: 0, lineHeight: 1.2, flex: 1, minWidth: 0,
           }}>
             {step.title}
           </h3>
           <span style={{
-            fontFamily: F, fontSize: 10.5, fontWeight: 700,
-            color: step.color, letterSpacing: "0.06em", textTransform: "uppercase",
-            padding: "3px 8px", borderRadius: 99,
-            background: `${step.color}14`, border: `1px solid ${step.color}2a`,
+            fontFamily: F, fontSize: 10, fontWeight: 700,
+            color: TEXT3, letterSpacing: "0.08em", textTransform: "uppercase",
+            padding: "3px 8px", borderRadius: 5,
+            background: "rgba(255,255,255,0.03)",
+            border: `1px solid ${BORDER}`,
             fontVariantNumeric: "tabular-nums",
           }}>
             {step.badge}
@@ -1438,7 +1437,7 @@ function FlowStep({
         </div>
         <p style={{
           fontFamily: F, fontSize: 13.5, color: TEXT2, lineHeight: 1.6,
-          margin: "0 0 16px", fontWeight: 400,
+          margin: "0 0 14px", fontWeight: 400,
         }}>
           {step.desc}
         </p>
@@ -1446,7 +1445,7 @@ function FlowStep({
         <div style={{
           padding: "12px 14px",
           borderRadius: 10,
-          background: "rgba(255,255,255,0.018)",
+          background: "rgba(255,255,255,0.015)",
           border: `1px solid rgba(255,255,255,0.04)`,
         }}>
           {step.mock}
@@ -1640,21 +1639,20 @@ function FlowSection({ t }: { t: Record<string, string> }) {
 
         {/* Timeline */}
         <div ref={timeline.ref} style={{ position: "relative" }}>
-          {/* Connector rail — full-length faint track (behind everything) */}
+          {/* Connector rail — subtle monochrome track */}
           <div aria-hidden="true" style={{
-            position: "absolute", left: 35, top: 28, bottom: 28,
-            width: 2, borderRadius: 2,
-            background: "linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
+            position: "absolute", left: 15, top: 32, bottom: 32,
+            width: 1,
+            background: "rgba(255,255,255,0.06)",
             zIndex: 0, pointerEvents: "none",
           }} />
-          {/* Connector fill — driven by scroll progress, behind cards and nodes */}
+          {/* Connector fill — driven by scroll, subtle white fade */}
           <div aria-hidden="true" style={{
-            position: "absolute", left: 35, top: 28,
-            width: 2, borderRadius: 2,
-            height: `calc(${Math.min(timeline.progress * 100, 100)}% - 56px)`,
-            maxHeight: "calc(100% - 56px)",
-            background: `linear-gradient(to bottom, ${ACCENT} 0%, ${INDIGO} 45%, ${GREEN} 100%)`,
-            boxShadow: `0 0 12px ${ACCENT}40`,
+            position: "absolute", left: 15, top: 32,
+            width: 1,
+            height: `calc(${Math.min(timeline.progress * 100, 100)}% - 64px)`,
+            maxHeight: "calc(100% - 64px)",
+            background: "rgba(255,255,255,0.28)",
             transition: `height 0.5s cubic-bezier(0.22, 1, 0.36, 1)`,
             zIndex: 0, pointerEvents: "none",
             willChange: "height",
@@ -1674,17 +1672,12 @@ function FlowSection({ t }: { t: Record<string, string> }) {
       </div>
 
       <style>{`
-        @keyframes flowNodePulse {
-          0% { transform: scale(1); opacity: 0.6; }
-          80% { transform: scale(1.35); opacity: 0; }
-          100% { transform: scale(1.35); opacity: 0; }
-        }
         @keyframes flowBar {
           from { transform: scaleY(0.85); opacity: 0.7; }
           to { transform: scaleY(1); opacity: 1; }
         }
         @media (max-width: 720px) {
-          .flow-step { grid-template-columns: 56px 1fr !important; gap: 16px !important; padding-bottom: 32px !important; }
+          .flow-step { grid-template-columns: 28px 1fr !important; gap: 14px !important; padding-bottom: 28px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           .flow-step { transition: none !important; opacity: 1 !important; transform: none !important; }
