@@ -7,6 +7,163 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── Email guard (authoritative server-side copy) ───────────────────────────────
+// Keep in sync with src/lib/emailGuard.ts. Client-side check is UX courtesy;
+// this is the real gate — a blocked signup here means no confirmation email
+// gets sent, and since we require email confirmation for non-Google signups,
+// the user can never log in.
+const DISPOSABLE_DOMAINS = new Set<string>([
+  "resend.app",
+  "resend.dev",
+  "mailinator.com",
+  "mailinator.net",
+  "mailinator.org",
+  "mailinater.com",
+  "notmailinator.com",
+  "reallymymail.com",
+  "sogetthis.com",
+  "spamherelots.com",
+  "spamhereplease.com",
+  "streetwisemail.com",
+  "thisisnotmyrealemail.com",
+  "tradermail.info",
+  "veryrealemail.com",
+  "guerrillamail.com",
+  "guerrillamail.net",
+  "guerrillamail.org",
+  "guerrillamail.biz",
+  "guerrillamail.de",
+  "guerrillamailblock.com",
+  "sharklasers.com",
+  "grr.la",
+  "10minutemail.com",
+  "10minutemail.net",
+  "10minutemail.org",
+  "10minutemail.co.uk",
+  "tempmail.com",
+  "temp-mail.com",
+  "temp-mail.io",
+  "temp-mail.org",
+  "tempmail.net",
+  "tempmail.plus",
+  "tempmailo.com",
+  "tempmailer.com",
+  "tempmail.ninja",
+  "throwawaymail.com",
+  "throwaway.email",
+  "throwam.com",
+  "trashmail.com",
+  "trashmail.net",
+  "trashmail.io",
+  "trashmail.de",
+  "mytrashmail.com",
+  "yopmail.com",
+  "yopmail.net",
+  "yopmail.fr",
+  "cool.fr.nf",
+  "jetable.org",
+  "jetable.fr.nf",
+  "nospam.ze.tc",
+  "dispostable.com",
+  "getairmail.com",
+  "maildrop.cc",
+  "mohmal.com",
+  "fakeinbox.com",
+  "mintemail.com",
+  "tempr.email",
+  "discard.email",
+  "emailondeck.com",
+  "moakt.com",
+  "mailcatch.com",
+  "mailnesia.com",
+  "spambox.us",
+  "spam.la",
+  "spam4.me",
+  "spamex.com",
+  "mailnull.com",
+  "linshiyouxiang.net",
+  "burnermail.io",
+  "getnada.com",
+  "nada.email",
+  "email-fake.com",
+  "fakemail.net",
+  "fakemailgenerator.com",
+  "mailsac.com",
+  "dropmail.me",
+  "anonbox.net",
+  "spamgourmet.com",
+  "dodgit.com",
+  "inboxbear.com",
+  "duckmail.pro",
+  "tmail.io",
+  "anonaddy.me",
+  "minutebox.com",
+  "mail-temp.com",
+  "inboxkitten.com",
+  "mailpoof.com",
+  "tempinbox.com",
+  "tempemail.net",
+  "tempemail.co",
+  "tempail.com",
+  "disposableemailaddresses.com",
+  "getonemail.com",
+  "dropjar.com",
+  "boun.cr",
+  "emlpro.com",
+  "emlhub.com",
+  "harakirimail.com",
+  "armyspy.com",
+  "cuvox.de",
+  "dayrep.com",
+  "einrot.com",
+  "fleckens.hu",
+  "gustr.com",
+  "jourrapide.com",
+  "rhyta.com",
+  "superrito.com",
+  "teleworm.us",
+]);
+
+const PROBE_PATTERNS: RegExp[] = [
+  /^probe[-_]?\d{3,}@/i,
+  /^test[-_]?\d{3,}@/i,
+  /^user[-_]?\d{3,}@/i,
+  /^bot[-_]?\d{3,}@/i,
+  /^check[-_]?\d{3,}@/i,
+  /^scan[-_]?\d{3,}@/i,
+  /^crawl[-_]?\d{3,}@/i,
+  /^spider[-_]?\d{3,}@/i,
+  /^monitor[-_]?\d{3,}@/i,
+  /^health[-_]?\d{3,}@/i,
+  /^[a-z]{0,8}\d{10,}@/i,
+];
+
+type GuardBlock = {
+  ok: false;
+  reason: "invalid_format" | "disposable_domain" | "probe_pattern";
+  domain?: string;
+};
+
+function guardEmail(raw: string): { ok: true } | GuardBlock {
+  const email = (raw || "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { ok: false, reason: "invalid_format" };
+  }
+  for (const re of PROBE_PATTERNS) {
+    if (re.test(email)) return { ok: false, reason: "probe_pattern" };
+  }
+  const domain = email.slice(email.indexOf("@") + 1);
+  if (DISPOSABLE_DOMAINS.has(domain)) {
+    return { ok: false, reason: "disposable_domain", domain };
+  }
+  for (const d of DISPOSABLE_DOMAINS) {
+    if (domain.endsWith("." + d)) {
+      return { ok: false, reason: "disposable_domain", domain };
+    }
+  }
+  return { ok: true };
+}
+
 type Lang = "en" | "pt" | "es";
 
 const T: Record<Lang, {
@@ -145,6 +302,17 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: false, error: "missing_email" }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },
       });
+    }
+
+    // Server-side guard — authoritative. Blocks disposable domains + probe patterns
+    // even if the client was bypassed (e.g. direct curl to the edge function).
+    const guard = guardEmail(email);
+    if (!guard.ok) {
+      console.warn("[CONFIRM-EMAIL] Blocked signup:", email, "reason:", guard.reason, guard.domain ?? "");
+      return new Response(
+        JSON.stringify({ ok: false, error: "email_blocked", reason: guard.reason, domain: guard.domain }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
+      );
     }
 
     const lang = detectLang(language);

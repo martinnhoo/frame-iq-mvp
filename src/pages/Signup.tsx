@@ -10,6 +10,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Logo } from "@/components/Logo";
 import { trackEvent } from "@/lib/posthog";
+import { validateEmailForSignup, guardMessage } from "@/lib/emailGuard";
 
 const Signup = () => {
   const [loading, setLoading] = useState(false);
@@ -49,6 +50,15 @@ const Signup = () => {
 
     if (password.length < 8) {
       toast.error(language === "pt" ? "A senha deve ter pelo menos 8 caracteres." : language === "es" ? "La contraseña debe tener al menos 8 caracteres." : "Password must be at least 8 characters.");
+      return;
+    }
+
+    // Guard: block disposable domains and probe/bot local-part patterns
+    // before we ever hit Supabase. Edge function re-validates server-side.
+    const guard = validateEmailForSignup(email.trim());
+    if (!guard.ok) {
+      toast.error(guardMessage(guard.reason, language as "pt" | "en" | "es"));
+      trackEvent("signup_blocked", { reason: guard.reason });
       return;
     }
 
