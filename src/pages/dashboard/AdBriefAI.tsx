@@ -2385,12 +2385,26 @@ export default function AdBriefAI() {
       // CRITICAL: pass the same account_id LivePanel uses, otherwise the edge fn
       // falls back to a different account and the briefing ends up showing the
       // wrong totals (e.g. top chips R$112 vs briefing R$51).
+      //
+      // Date-range parity with LivePanel:
+      // LivePanel defaults to {from: today-6, to: today} which is an INCLUSIVE
+      // 7-day window. If we just send period:"7d" the backend computes
+      // since = today - 7 days → 8-day window → higher spend number.
+      // We replicate LivePanel's math here so the briefing card and the top
+      // KPI chips can never disagree.
+      const fmtISO = (d: Date) => d.toISOString().split("T")[0];
+      const briefTo = new Date();
+      const briefFrom = new Date(briefTo.getTime() - 6 * 86400000);
       const fetchLive = async (): Promise<{ spend: number; ctr: number; clicks: number; impressions: number; active_ads: number } | null> => {
         if (!hasMetaConn) return null;
         try {
           const selectedAccId = pid ? (storage.get(`meta_sel_${pid}`, "") || undefined) : undefined;
           const { data, error } = await supabase.functions.invoke("live-metrics", {
-            body: { user_id: user.id, persona_id: pid, period: "7d", account_id: selectedAccId },
+            body: {
+              user_id: user.id, persona_id: pid, period: "7d",
+              date_from: fmtISO(briefFrom), date_to: fmtISO(briefTo),
+              account_id: selectedAccId,
+            },
           });
           if (error || !data?.ok) return null;
           // Prefer Meta (same as LivePanel) over combined — LivePanel shows meta KPIs.
@@ -3134,10 +3148,18 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
         const briefSpend = liveMetrics?.spend ?? snapshot.total_spend ?? 0;
         // live-metrics CTR is decimal (0.042), snapshot.avg_ctr is already normalized to decimal
         const briefCtr = liveMetrics?.ctr ?? snapshot.avg_ctr ?? 0;
+        // "N anúncios com gasto" is the HONEST number: it counts ads that had
+        // spend inside the briefing window. The previous copy said "anúncios
+        // ativos" which is wrong — ads can be paused now and still show here
+        // because they had spend earlier in the window. This was confusing
+        // users (screenshot: "2 anúncios ativos" when current active = 0).
         const briefAds = liveMetrics?.active_ads || snapshot.active_ads || topAds.length;
+        const adsLabel = lang === "pt"
+          ? `${briefAds} anúncio${briefAds === 1 ? "" : "s"} com gasto`
+          : `${briefAds} ad${briefAds === 1 ? "" : "s"} with spend`;
         const overviewDetail = lang === "pt"
-          ? `${currSymbol}${briefSpend?.toFixed(0)} investidos · CTR ${(briefCtr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${briefAds} anúncios ativos`
-          : `${currSymbol}${briefSpend?.toFixed(0)} spent · CTR ${(briefCtr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${briefAds} active ads`;
+          ? `${currSymbol}${briefSpend?.toFixed(0)} investidos · CTR ${(briefCtr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${adsLabel}`
+          : `${currSymbol}${briefSpend?.toFixed(0)} spent · CTR ${(briefCtr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${adsLabel}`;
         cards.push({
           tag: "BRIEFING",
           tagColor: "#0ea5e9",
