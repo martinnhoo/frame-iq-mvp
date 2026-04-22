@@ -273,8 +273,8 @@ Deno.serve(async (req) => {
     logStep("Price ID resolved", { price_id, effective_price_id, billing });
 
     let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    if (customersList.length > 0) {
+      customerId = customersList[0].id;
       logStep("Existing customer found", { customerId });
 
       // Check if already has active subscription

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { X, Zap, Loader2, Check, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { toast } from "sonner";
 
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -145,17 +146,62 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
 
   const handlePlan = async (planKey: string, fallback: string) => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      setLoading(planKey);
-      try {
-        const { data, error } = await supabase.functions.invoke("create-checkout", {
-          body: { price_id: PRICE_IDS[planKey] },
-        });
-        if (!error && data?.url) { window.location.href = data.url; return; }
-      } catch {}
+
+    // Not logged in → go to signup with plan preselected (account creation required first)
+    if (!session) {
+      navigate(fallback);
+      return;
+    }
+
+    // Logged in → go DIRECTLY to Stripe checkout. Never redirect to signup.
+    setLoading(planKey);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { price_id: PRICE_IDS[planKey] },
+      });
+
+      if (error) {
+        // Edge function returned non-2xx — surface the error, don't silently redirect
+        const errMsg = (error as any)?.message || "";
+        const errData = (error as any)?.context?.body;
+        let parsed: any = null;
+        try { parsed = typeof errData === "string" ? JSON.parse(errData) : errData; } catch {}
+
+        if (parsed?.error_code === "disposable_email") {
+          toast.error(lang === "pt" ? "Email temporário não é aceito. Use um email permanente." :
+                      lang === "es" ? "Email temporal no aceptado. Usa un email permanente." :
+                      "Disposable email not accepted. Use a permanent email.");
+        } else if (parsed?.error_code === "ip_rate_limit") {
+          toast.error(lang === "pt" ? "Muitas tentativas. Tente novamente em algumas horas." :
+                      lang === "es" ? "Demasiados intentos. Intenta en unas horas." :
+                      "Too many attempts. Try again in a few hours.");
+        } else {
+          toast.error(lang === "pt" ? "Não conseguimos iniciar o checkout. Tente novamente em instantes." :
+                      lang === "es" ? "No pudimos iniciar el checkout. Intenta de nuevo." :
+                      "Couldn't start checkout. Please try again.",
+                      { description: errMsg || parsed?.error });
+        }
+        setLoading(null);
+        return;
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      // Unexpected: no url in response
+      toast.error(lang === "pt" ? "Resposta inesperada do servidor. Tente novamente." :
+                  lang === "es" ? "Respuesta inesperada del servidor. Intenta de nuevo." :
+                  "Unexpected server response. Please try again.");
+    } catch (e) {
+      toast.error(lang === "pt" ? "Erro de conexão. Verifique sua internet e tente novamente." :
+                  lang === "es" ? "Error de conexión. Verifica tu internet e intenta de nuevo." :
+                  "Connection error. Check your internet and try again.",
+                  { description: e instanceof Error ? e.message : undefined });
+    } finally {
       setLoading(null);
     }
-    navigate(fallback);
   };
 
   // ── MOBILE: bottom sheet ──────────────────────────────────────────────────
