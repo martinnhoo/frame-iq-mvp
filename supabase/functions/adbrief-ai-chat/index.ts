@@ -2904,6 +2904,14 @@ PROIBIDO:
           // Default: tight
           return 1000;
         })(),
+        // Determinism pin for vision calls. The image-analysis card returns a
+        // structured JSON scorecard (hook score, verdict, fixes, strengths).
+        // Users complained that the SAME image produced different scores across
+        // turns — compliance "Ok" one moment, "Risco" the next. At temperature 1
+        // (default) the model samples freely; at 0.2 it stays near the mode and
+        // same image → same scores. We only pin for vision; text chat keeps the
+        // default so creative tasks (hooks, scripts) retain their variety.
+        temperature: body.image_base64 ? 0.2 : undefined,
         system: systemBlocks,
         messages: aiMessages,
       }),

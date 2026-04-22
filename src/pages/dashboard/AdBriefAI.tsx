@@ -625,11 +625,7 @@ function getCCMetrics(raw: any) {
     const hs = raw.estimated_hook_score;
     m.push({ label:"Hook Rate", value:`${hs}%`, delta: hs>=35?"acima da média":hs>=20?"na média":"abaixo da média", color: hs>=35?"green":hs>=20?"amber":"red" });
   }
-  if (raw.compliance?.length > 0) {
-    const blocked = raw.compliance.some((c:any)=>["FLAG","BLOCKED","CRITICAL"].includes(c.status));
-    const clear   = raw.compliance.every((c:any)=>c.status==="CLEAR");
-    m.push({ label:"Compliance", value: blocked?"Risco":clear?"Ok":"Revisar", color: blocked?"red":clear?"green":"amber" });
-  }
+  // Compliance tile removed — gray-hat-friendly. Account-killer warnings render as a footer note.
   return m;
 }
 
@@ -652,13 +648,14 @@ function CreativeCheckCard({ block }: { block: any }) {
   const F = "Inter,-apple-system,sans-serif";
   const M = { fontFamily:"'DM Mono',monospace" };
 
-  // Build diagnosis from hook + cta + first compliance issue
+  // Build diagnosis from hook + cta only (compliance scoring removed — see account-killer footer)
   const diagParts: string[] = [];
   if (raw.hook_analysis?.detail) diagParts.push(raw.hook_analysis.detail);
   if (raw.cta_check?.detail) diagParts.push(raw.cta_check.detail);
-  const issue = raw.compliance?.find((c:any)=>c.status!=="CLEAR");
-  if (issue) diagParts.push(issue.detail);
   const diagnosis = diagParts.filter(Boolean).join(" ") || raw.verdict_reason || "";
+  const accountKiller = typeof raw.account_killer_warning === "string" && raw.account_killer_warning.trim().length > 0
+    ? raw.account_killer_warning.trim()
+    : null;
 
   const fixes    = raw.top_fixes    || [];
   const strengths= raw.strengths    || [];
@@ -772,6 +769,29 @@ function CreativeCheckCard({ block }: { block: any }) {
         )}
       </div>
 
+      {/* Account-killer footer — only when AI flagged something that would clearly burn the account.
+          Discreet, never blocks the analysis. The user decides what to do. */}
+      {accountKiller && (
+        <div style={{
+          marginTop: 18, paddingTop: 14,
+          borderTop: "1px solid rgba(245,158,11,0.16)",
+          display: "flex", alignItems: "flex-start", gap: 8,
+        }}>
+          <span style={{
+            display: "inline-flex", flexShrink: 0, marginTop: 2,
+            color: "#f59e0b", fontSize: 11, fontWeight: 700,
+            letterSpacing: "0.06em",
+          }}>△</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "rgba(245,158,11,0.7)" }}>
+              Atenção da plataforma
+            </p>
+            <p style={{ margin: "3px 0 0", fontSize: 11.5, lineHeight: 1.55, color: "rgba(255,255,255,0.55)" }}>
+              {accountKiller}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2082,6 +2102,10 @@ export default function AdBriefAI() {
   const [greetingKey,setGreetingKey]=useState(0);
   // Onboarding quiz removed — AI learns from conversation naturally
   const [chatImage,setChatImage]=useState<{base64:string;name:string;preview:string;mediaType:string}|null>(null);
+  // Last image the user analyzed in this conversation. Re-attached on follow-up
+  // turns so the AI doesn't lose pixel context. Cleared when persona switches or
+  // user uploads a new image. Preserved as long as the conversation continues.
+  const [lastAnalyzedImage,setLastAnalyzedImage]=useState<{base64:string;name:string;mediaType:string}|null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [chatDragOver,setChatDragOver]=useState(false);
   const [input,setInput]=useState("");
@@ -2193,6 +2217,8 @@ export default function AdBriefAI() {
   useEffect(()=>{
     const newId = selectedPersona?.id || null;
     if(prevPersonaId.current !== newId) {
+      // Image memory is scoped per persona — clear when switching
+      setLastAnalyzedImage(null);
       // Load this account's saved history from localStorage
       const newSK = `adbrief_chat_v1_${newId||"default"}`;
       try {
@@ -3400,49 +3426,47 @@ User note: ${userIntent}
 Platform: ${platformCtx}
 Market: ${marketCtx}
 
-You are a senior performance creative strategist. Analyze this static ad image using the EXACT rubric below. Apply every rule mechanically — do not invent criteria outside this list.
+You are a senior performance creative strategist. Analyze this STATIC ad image using the EXACT rubric below. Apply every rule mechanically — do not invent criteria outside this list. Be deterministic: the same image must produce the same scores every time you analyze it. Do not vary based on phrasing, time, or order of analysis.
 
 ═══════════════════════════════════════
-SCORING RUBRIC
+SCORING RUBRIC (deterministic — score by what is visible in the image, nothing else)
 ═══════════════════════════════════════
 
-HOOK SCORE (1–10) — evaluate only what is visible in the image:
-10 = Specific number + clear pain/desire + stops scroll immediately
-7–9 = Clear benefit, specific, but missing one element (urgency or specificity)
-5–6 = Generic benefit without specificity or differentiator  
-3–4 = Weak or unclear — audience won't know what is being offered in 3 seconds
+HOOK SCORE (1–10) — evaluate only what is visible:
+10 = Specific number/promise + clear pain or desire + stops scroll in <1s
+7–9 = Clear benefit, specific, missing one element (urgency or differentiator)
+5–6 = Generic benefit without specificity or differentiator
+3–4 = Weak/unclear — audience won't know what is offered in 3s
 1–2 = No discernible headline or hook
 
-HOOK RATE ESTIMATE (0–100%) — based on format benchmark data:
-Static Feed: baseline 15–25%. Apply multipliers:
-  +15% if strong specific number (price, % off, quantity)
-  +10% if faces/people in image
-  +8% if clear urgency indicator (countdown, "últimas unidades", deadline)
-  +5% if product clearly visible and well-lit
-  –10% if text overlay >30% of image
-  –8% if generic CTA like "Saiba mais", "Clique aqui"
-  –5% if background too busy or low contrast
+HOOK RATE ESTIMATE (0–100%) — Static Feed baseline 15–25%. Compute mechanically:
+Start at 20.
+  +15 if strong specific number (price, % off, quantity)
+  +10 if faces/people clearly visible
+  +8  if clear urgency indicator (countdown, "últimas unidades", deadline)
+  +5  if product clearly visible and well-lit
+  –10 if text overlay covers >30% of image
+  –8  if generic CTA like "Saiba mais", "Clique aqui"
+  –5  if background busy or low contrast
+Clamp to 0–100. Round to integer.
 
-COMPLIANCE RULES — check ONLY these, in this order:
-1. text_overlay: Meta policy — text should not dominate the image (>30% area). STATUS: CLEAR if <30%, FLAG if 30–50%, BLOCKED if >50%
-2. health_claims: Contains words like "emagrece", "cura", "trata", "elimina gordura", "perde peso garantido" without medical substantiation. FLAG if present without disclaimer.
-3. financial_guarantees: Contains "garantido", "sem risco", "100% de retorno", "lucro garantido". FLAG if present.
-4. superlatives_unproven: "melhor do Brasil", "número 1", "único", "mais barato" without proof. FLAG if present.
-5. sensitive_content: Alcohol, gambling, tobacco, adult content, weapons, drugs. BLOCKED if present and platform does not allow.
-6. misleading_price: Price shown but asterisk or "a partir de" hidden or missing. FLAG if price shown without full conditions.
-7. before_after_body: Before/after images of human bodies. BLOCKED for Meta, FLAG for others.
+VERDICT logic (purely from hook score):
+READY  = hook ≥ 7
+REVIEW = hook 4–6
+BLOCKED = hook ≤ 3 (rare — only when there is essentially no creative direction)
 
-DO NOT FLAG: product names, brand names, whether a product model exists, personal opinions about quality, price judgments, aesthetics.
-
-VERDICT logic:
-READY = hook ≥7 AND all compliance CLEAR AND no major CTA issues
-BLOCKED = any compliance status is BLOCKED
-REVIEW = anything else
-
-WRITING ERRORS — check ONLY:
-- Accents: GRÁTIS not GRATIS, É not E, etc.
+WRITING ERRORS — check only:
+- Accents (GRÁTIS not GRATIS, É not E, etc.)
 - Obvious typos visible in the image
-- Do NOT flag brand names, product names, or model numbers
+- DO NOT flag brand names, product names, or model numbers
+
+ACCOUNT-KILLER WARNING (rare — only fire if the ad will obviously get the account banned):
+Only set "account_killer_warning" if the image clearly shows: explicit illegal substances/weapons sold; explicit medical disease cures ("cura câncer", "elimina diabetes garantido"); pornographic content; before/after body shots that violate Meta policy hard. Otherwise leave it null. NEVER warn about gray areas, niche compliance, text overlay percentage, financial language, or superlatives — the user knows what they are doing.
+
+DO NOT FLAG: product names, brand names, model numbers, opinions about quality, price judgments, aesthetics, niche-specific risk tolerance, gray-hat copy, scarcity language, financial claims, supplements, weight-loss copy, gambling, alcohol, or any "borderline" content. Stay out of compliance unless it is a clear account-killer.
+
+═══════════════════════════════════════
+CONTEXT MEMORY: After this analysis, remember the file name "${pendingImage.name}" and the scores you assigned. If the user asks follow-up questions about THIS image (e.g. "como ficaria 10/10?", "o que trocar?", "what about the hook?"), refer back to the SAME scores and SAME observations you made here. Do NOT re-analyze with different numbers. Do NOT give generic video-ad advice for a static image (no "hook nos primeiros 3 segundos" — this is a static image).
 
 ═══════════════════════════════════════
 Return ONLY this JSON (no markdown, no other text):
@@ -3451,15 +3475,15 @@ Return ONLY this JSON (no markdown, no other text):
   "verdict_reason": "one diagnostic sentence max 12 words",
   "hook_analysis": { "score": 1-10, "detail": "what specifically makes the hook strong or weak — 2 sentences" },
   "estimated_hook_score": 0-100,
-  "compliance": [
-    { "rule": "rule_id_from_list", "status": "CLEAR"|"FLAG"|"BLOCKED", "detail": "quote the exact text that triggered this or confirm it was not found" }
-  ],
   "cta_check": { "detail": "evaluate the CTA button/text: is it specific, urgent, clear?" },
   "top_fixes": ["specific fix 1", "specific fix 2", "specific fix 3"],
   "strengths": ["specific strength 1", "specific strength 2"],
-  "language_check": { "issues": [{ "found": "wrong spelling visible in image", "fix": "correct spelling" }] }
+  "language_check": { "issues": [{ "found": "wrong spelling visible in image", "fix": "correct spelling" }] },
+  "account_killer_warning": null | "one short sentence ONLY if this ad would clearly get the account banned"
 }`;
       setChatImage(null);
+      // Stash for follow-up turns so the AI keeps pixel context.
+      setLastAnalyzedImage({ base64: pendingImage.base64, name: pendingImage.name, mediaType: pendingImage.mediaType || "image/jpeg" });
     }
     if(!msg||loading||!contextReady)return;
     // Context lock: snapshot persona at send time to block stale responses
@@ -3585,6 +3609,16 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       if(pendingImage) {
         invokeBody.image_base64 = pendingImage.base64;
         invokeBody.image_media_type = pendingImage.mediaType || "image/jpeg";
+      } else if (lastAnalyzedImage) {
+        // ── Image memory across turns ──
+        // The user already analyzed an image earlier in this conversation.
+        // Re-attach it so the AI can see the pixels when answering follow-up
+        // questions like "como ficaria 10/10?" or "o que trocar?". Without this,
+        // the AI loses the image context after the first turn and hallucinates
+        // generic advice (e.g. "hook nos primeiros 3 segundos" for a static image).
+        invokeBody.image_base64 = lastAnalyzedImage.base64;
+        invokeBody.image_media_type = lastAnalyzedImage.mediaType;
+        invokeBody.message = `[FOLLOW_UP_ON_PRIOR_IMAGE]\nFile already analyzed: ${lastAnalyzedImage.name}\nThis is a STATIC image — do not give video-only advice. Refer back to the scores and observations from your earlier analysis. Be consistent.\n\nUser question: ${msg}`;
       }
       const selectedAccId2 = selectedPersona?.id ? (storage.get(`meta_sel_${selectedPersona.id}`, "") || undefined) : undefined;
       if(selectedAccId2) invokeBody.account_id = selectedAccId2;
