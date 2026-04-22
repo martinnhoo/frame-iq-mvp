@@ -960,6 +960,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_cost_config: {
+        Row: {
+          daily_usd_cap: number
+          plan: string
+          updated_at: string
+        }
+        Insert: {
+          daily_usd_cap: number
+          plan: string
+          updated_at?: string
+        }
+        Update: {
+          daily_usd_cap?: number
+          plan?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_cost_daily: {
+        Row: {
+          call_count: number
+          date: string
+          spent_usd: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          call_count?: number
+          date?: string
+          spent_usd?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          call_count?: number
+          date?: string
+          spent_usd?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_daily_usage: {
         Row: {
           id: string
