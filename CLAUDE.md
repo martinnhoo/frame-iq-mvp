@@ -173,8 +173,36 @@ const { data } = await (supabase.from('ad_accounts' as any).select('*').eq('id',
 npx tsc --noEmit --skipLibCheck  # Must pass before commit
 npx vite build                    # Must build before push
 git add <specific files>           # Never git add -A
-git push                          # Vercel auto-deploys
+git push                          # Vercel auto-deploys frontend
 ```
+
+---
+
+## 🚨 DEPLOY WORKFLOW — MARTINHO HANDLES SUPABASE VIA LOVABLE
+
+**Claude does NOT run `supabase functions deploy`, `supabase db push`, or touch any Supabase CLI. Martinho publishes everything through Lovable himself.**
+
+### After any change, surface what needs deploying:
+
+**Frontend only** (`src/**`, `public/**`, `index.html`, etc.) → git push, Vercel auto-deploys. No deploy list needed.
+
+**Supabase changes** → Claude MUST produce an explicit deploy list at the end of the response:
+
+```
+📦 PRECISA DEPLOY NO LOVABLE:
+  • Edge function: <function-name> — <what changed, 1 line>
+  • Migration: <filename> — <what it does>
+  • Secret: <KEY_NAME> — <where/why>
+  • Cron/schedule: <name> — <change>
+```
+
+Categories that always trigger a deploy list:
+- `supabase/functions/**` → per-function deploy
+- `supabase/migrations/**` → db push
+- Any env var / secret change
+- Cron or scheduled task edits
+
+If the commit mixes frontend + backend, separate them in the summary so Martinho knows which part is live and which is waiting on him.
 
 ---
 

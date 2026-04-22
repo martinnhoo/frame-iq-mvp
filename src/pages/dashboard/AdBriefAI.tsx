@@ -331,10 +331,74 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   );
 }
 
+// ── Defensive cleanup: strip raw JSON wrappers if the backend leaks them ─────
+// This catches the case where the edge function parser falls through and
+// dumps `\`\`\`json [{"type":"insight","content":"..."}]` as content.
+function sanitizeLeakedJson(raw: string): string {
+  if (!raw || typeof raw !== "string") return raw;
+  let s = raw;
+
+  // Quick exit if it doesn't look like leaked JSON
+  const looksLikeJson = /```json|^\s*\[?\s*\{?\s*"type"\s*:|"content"\s*:\s*"/i.test(s);
+  if (!looksLikeJson) return raw;
+
+  // 1) Strip code fences
+  s = s.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+
+  // 2) Try to extract all "content": "..." values
+  const contentMatches: string[] = [];
+  const titleMatches: string[] = [];
+  const contentRegex = /"content"\s*:\s*"((?:\\.|[^"\\])*)"/g;
+  const titleRegex   = /"title"\s*:\s*"((?:\\.|[^"\\])*)"/g;
+  let m: RegExpExecArray | null;
+  while ((m = contentRegex.exec(s)) !== null) {
+    try {
+      const decoded = JSON.parse(`"${m[1]}"`);
+      if (typeof decoded === "string" && decoded.trim().length > 0) contentMatches.push(decoded);
+    } catch {
+      contentMatches.push(m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\"));
+    }
+  }
+  let tm: RegExpExecArray | null;
+  while ((tm = titleRegex.exec(s)) !== null) {
+    try {
+      const decoded = JSON.parse(`"${tm[1]}"`);
+      if (typeof decoded === "string") titleMatches.push(decoded);
+    } catch {
+      titleMatches.push(tm[1].replace(/\\n/g, "\n").replace(/\\"/g, '"'));
+    }
+  }
+
+  if (contentMatches.length > 0) {
+    if (titleMatches.length === contentMatches.length) {
+      return contentMatches
+        .map((c, i) => {
+          const t = titleMatches[i]?.trim();
+          return t ? `## ${t}\n\n${c}` : c;
+        })
+        .join("\n\n");
+    }
+    return contentMatches.join("\n\n");
+  }
+
+  // 3) Last resort: strip JSON syntax cruft
+  return s
+    .replace(/^\s*\[|\]\s*$/g, "")
+    .replace(/"(type|title|content|priority_rank|impact_daily|id)"\s*:\s*"[^"]*"\s*,?/gi, "")
+    .replace(/"(type|title|content|priority_rank|impact_daily|id)"\s*:\s*[^,}\]]+,?/gi, "")
+    .replace(/\{|\}/g, "")
+    .replace(/\\n/g, "\n")
+    .replace(/\\"/g, '"')
+    .replace(/\\\\/g, "\\")
+    .replace(/^\s*,\s*/gm, "")
+    .trim();
+}
+
 // ── renderMarkdown — premium word-by-word streaming like ChatGPT/Claude ──────
 function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   if (!text || typeof text !== "string") return [];
-  const normalized = text.replace(/\\n\\n/g, "\n\n").replace(/\\n/g, "\n");
+  const cleaned = sanitizeLeakedJson(text);
+  const normalized = cleaned.replace(/\\n\\n/g, "\n\n").replace(/\\n/g, "\n");
   const lines = normalized.split("\n");
   const nodes: React.ReactNode[] = [];
   let listBuffer: { text: string; ordered: boolean; num?: number }[] = [];
