@@ -2985,7 +2985,83 @@ PROIBIDO:
           throw new Error("no valid arrays");
         }
       } catch {
-        blocks = [{ type: "insight", title: "Response", content: raw }];
+        // ── Resilient fallback: recover clean markdown from malformed JSON ──
+        // Claude occasionally returns truncated/malformed JSON with code fences.
+        // Instead of dumping raw JSON syntax to the user, extract the readable content.
+        const recoverMarkdown = (input: string): string => {
+          let s = String(input || "");
+
+          // Strip code fences
+          s = s.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+
+          // Try to extract all "content": "..." values (handles both single object and array forms)
+          // Greedy match across the string since JSON is already malformed
+          const contentMatches: string[] = [];
+          const contentRegex = /"content"\s*:\s*"((?:\\.|[^"\\])*)"/g;
+          let m: RegExpExecArray | null;
+          while ((m = contentRegex.exec(s)) !== null) {
+            try {
+              // Decode JSON string escapes properly
+              const decoded = JSON.parse(`"${m[1]}"`);
+              if (typeof decoded === "string" && decoded.trim().length > 0) {
+                contentMatches.push(decoded);
+              }
+            } catch {
+              // Fallback to manual unescape if JSON.parse fails
+              const unescaped = m[1]
+                .replace(/\\n/g, "\n")
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, "\\")
+                .replace(/\\t/g, "\t");
+              if (unescaped.trim().length > 0) contentMatches.push(unescaped);
+            }
+          }
+
+          // Also extract "title" values to prepend as headings
+          const titleMatches: string[] = [];
+          const titleRegex = /"title"\s*:\s*"((?:\\.|[^"\\])*)"/g;
+          let tm: RegExpExecArray | null;
+          while ((tm = titleRegex.exec(s)) !== null) {
+            try {
+              const decoded = JSON.parse(`"${tm[1]}"`);
+              if (typeof decoded === "string") titleMatches.push(decoded);
+            } catch {
+              titleMatches.push(tm[1].replace(/\\n/g, "\n").replace(/\\"/g, '"'));
+            }
+          }
+
+          if (contentMatches.length > 0) {
+            // Interleave title + content when counts match
+            if (titleMatches.length === contentMatches.length) {
+              return contentMatches
+                .map((c, i) => {
+                  const t = titleMatches[i]?.trim();
+                  return t ? `## ${t}\n\n${c}` : c;
+                })
+                .join("\n\n");
+            }
+            return contentMatches.join("\n\n");
+          }
+
+          // Last resort: strip all JSON syntax cruft — brackets, quotes, keys, commas
+          return s
+            .replace(/^\s*\[|\]\s*$/g, "")
+            .replace(/"(type|title|content|priority_rank|impact_daily|id)"\s*:\s*"[^"]*"\s*,?/gi, "")
+            .replace(/"(type|title|content|priority_rank|impact_daily|id)"\s*:\s*[^,}\]]+,?/gi, "")
+            .replace(/\{|\}/g, "")
+            .replace(/\\n/g, "\n")
+            .replace(/\\"/g, '"')
+            .replace(/\\\\/g, "\\")
+            .replace(/^\s*,\s*/gm, "")
+            .trim();
+        };
+
+        const markdown = recoverMarkdown(raw);
+        blocks = [{
+          type: "insight",
+          title: "",
+          content: markdown || "Desculpe, não consegui processar a resposta. Tente novamente.",
+        }];
       }
     }
 

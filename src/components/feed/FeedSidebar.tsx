@@ -96,26 +96,67 @@ function issueActionText(issue: HealthIssue): string {
   return 'Resolver';
 }
 
-/** Score dot — tiny severity indicator replacing the ring gauge. Text + data lead the card now. */
-const ScoreDot: React.FC<{ color: string; score: number }> = ({ color, score }) => (
-  <div style={{
-    display: 'inline-flex', alignItems: 'center', gap: 8,
-    fontFamily: F,
-  }}>
-    <span style={{
-      width: 8, height: 8, borderRadius: '50%',
-      background: color,
-      boxShadow: `0 0 10px ${color}60`,
-      flexShrink: 0,
-    }} />
-    <span style={{
-      fontSize: 11, color: T.text3, fontWeight: 600,
-      letterSpacing: '0.02em',
-    }}>
-      {Math.round(score)}/100
-    </span>
-  </div>
-);
+/** Ring gauge — SVG arc that visualizes the health score. Muted colors keep
+ *  it informative without stealing attention from the data bullets below. */
+const RingGauge: React.FC<{
+  score: number;
+  color: string;
+  size?: number;
+  stroke?: number;
+}> = ({ score, color, size = 68, stroke = 6 }) => {
+  const s = Math.max(0, Math.min(100, Math.round(score)));
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (s / 100) * c;
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      style={{ flexShrink: 0, display: 'block' }}
+      aria-label={`Saúde da conta: ${s} de 100`}
+      role="img"
+    >
+      {/* Track */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={T.border1}
+        strokeWidth={stroke}
+      />
+      {/* Progress arc */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={c}
+        strokeDashoffset={offset}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.16,1,0.3,1)' }}
+      />
+      {/* Score text */}
+      <text
+        x="50%"
+        y="50%"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontFamily={F}
+        fontSize={size * 0.32}
+        fontWeight={700}
+        fill={T.text1}
+        letterSpacing="-0.02em"
+      >
+        {s}
+      </text>
+    </svg>
+  );
+};
 
 const AccountHealthCard: React.FC<{
   accountStatus: AccountStatusSummary | null;
@@ -148,40 +189,44 @@ const AccountHealthCard: React.FC<{
 
   return (
     <Card>
-      {/* Header row — label + severity pill. Title leads, severity supports. */}
+      {/* Header row — ring gauge + label/headline column + severity pill. */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        display: 'flex', alignItems: 'flex-start', gap: 14,
         marginBottom: 14,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{
-            fontSize: 14, fontWeight: 700, color: T.text1,
-            fontFamily: F, letterSpacing: '-0.01em',
+        <RingGauge score={health.score} color={sevColor} size={64} />
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const,
           }}>
-            Saúde da conta
-          </span>
-          <ScoreDot color={sevColor} score={health.score} />
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: T.text3,
+              fontFamily: F, letterSpacing: '0.04em',
+              textTransform: 'uppercase' as const,
+            }}>
+              Saúde da conta
+            </span>
+            <span style={{
+              fontSize: 10, fontWeight: 700,
+              color: sevColor,
+              background: `${sevColor}14`,
+              border: `1px solid ${sevColor}33`,
+              borderRadius: 999,
+              padding: '2px 8px',
+              fontFamily: F, letterSpacing: '0.02em',
+              textTransform: 'uppercase' as const,
+            }}>
+              {sevLabel}
+            </span>
+          </div>
+          {/* Headline — what's happening, in one line. */}
+          <div style={{
+            fontSize: 13.5, fontWeight: 700, color: T.text1,
+            lineHeight: 1.4, letterSpacing: '-0.01em',
+          }}>
+            {bandHeadline(band, health.headline)}
+          </div>
         </div>
-        <span style={{
-          fontSize: 10.5, fontWeight: 700,
-          color: sevColor,
-          background: `${sevColor}14`,
-          border: `1px solid ${sevColor}33`,
-          borderRadius: 999,
-          padding: '2px 9px',
-          fontFamily: F, letterSpacing: '0.02em',
-          textTransform: 'uppercase' as const,
-        }}>
-          {sevLabel}
-        </span>
-      </div>
-
-      {/* Headline — what's happening, in one line. */}
-      <div style={{
-        fontSize: 14, fontWeight: 700, color: T.text1,
-        lineHeight: 1.4, letterSpacing: '-0.01em', marginBottom: 14,
-      }}>
-        {bandHeadline(band, health.headline)}
       </div>
 
       {/* Data bullets — what's specifically wrong, derived from real issues. */}

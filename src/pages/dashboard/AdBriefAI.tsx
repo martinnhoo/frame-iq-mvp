@@ -382,9 +382,14 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
     return parts.length === 1 ? parts[0] : <>{parts}</>;
   };
 
-  // Wrap text into individually animated words
+  // Wrap text into individually animated words.
+  // DOM structure is identical whether streaming or not — this prevents a flash
+  // when stream prop transitions true→false (React would otherwise unmount the
+  // word spans and remount a single span, causing mid-animation words to snap
+  // to their final state all at once).
   function wrapWords(text: string, key: number, style: React.CSSProperties, bold = false): React.ReactNode {
     if (!stream) {
+      // Non-streaming: plain span/strong, no per-word wrapping needed
       return bold ? <strong key={key} style={style}>{text}</strong> : <span key={key} style={style}>{text}</span>;
     }
     const words = text.split(/(\s+)/);
@@ -394,17 +399,21 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
         {words.map((w, wi) => {
           if (/^\s+$/.test(w)) return w; // preserve whitespace as-is
           const delay = (globalWordIdx++) * WORD_DELAY;
+          // `both` fill-mode keeps final state pinned after animation finishes,
+          // so words stay visible even if stream prop is cleared later.
           return <span key={wi} style={{ display: "inline", animation: `wordReveal ${WORD_DUR}s ease-out ${delay}s both` }}>{w}</span>;
         })}
       </Tag>
     );
   }
 
-  const blockAnim = (i: number): React.CSSProperties => stream ? {
-    animation: `blockSlideIn 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(i * 0.08, 0.4)}s both`,
-  } : {
-    animation: `fadeUp 0.2s ease-out ${i * 0.04}s both`,
-  };
+  // Block-level animation is intentionally stream-INDEPENDENT so the animation
+  // property doesn't change when streamingMsgId clears (which would replay the
+  // animation and cause a visible flash). The streaming feel is driven entirely
+  // by word-level wordReveal animations below.
+  const blockAnim = (_i: number): React.CSSProperties => ({
+    animation: `fadeUp 0.22s ease-out both`,
+  });
 
   const flushList = (key: string) => {
     if (listBuffer.length === 0) return;
@@ -3949,7 +3958,15 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       // Trigger streaming effect for this message
       setStreamingMsgId(aid);
       if(streamTimerRef.current) clearTimeout(streamTimerRef.current);
-      streamTimerRef.current=setTimeout(()=>setStreamingMsgId(null),3500);
+      // Dynamic timeout — cover the full word-reveal duration so the stream
+      // prop never clears mid-animation (which would cause a visible flash).
+      // 22ms per word + 120ms reveal + 500ms buffer, min 3.5s, max 30s.
+      const totalText = (blocks || [])
+        .map((b:any) => `${b.title || ""} ${b.content || ""}`)
+        .join(" ");
+      const wordCount = totalText.split(/\s+/).filter(Boolean).length;
+      const streamDuration = Math.min(30000, Math.max(3500, wordCount * 22 + 620));
+      streamTimerRef.current=setTimeout(()=>setStreamingMsgId(null),streamDuration);
 
 
       // Memory extraction runs backend-side in adbrief-ai-chat → extract-chat-memory.
@@ -4238,7 +4255,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     padding:"16px 20px",
                     boxShadow:"0 2px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
                     backdropFilter:"blur(8px)",
-                    animation:isLatest?"cardIn 0.28s cubic-bezier(0.16,1,0.3,1)":"cardIn 0.22s ease-out",
+                    animation:"cardIn 0.25s cubic-bezier(0.16,1,0.3,1)",
                   }}>
                     {msg.blocks?.map((b,bi)=>
                       b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
