@@ -101,13 +101,6 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_callout_1: "Diagnóstico com os números reais da conta",
     hero_callout_2: "E te diz exatamente o que fazer agora",
     // founder note — substitui social proof enquanto não tem clientes reais suficientes
-    founder_kicker: "De quem está construindo",
-    founder_title: "Por que isso existe.",
-    founder_body_1: "Queimei $6 em créditos de API testando anúncios no Meta em 11 dias de uso leve. Fiquei horas olhando dashboard tentando entender pra onde o dinheiro tinha ido.",
-    founder_body_2: "Percebi que o problema não era falta de dado — era falta de decisão. Todos os números estavam lá, ninguém conectava eles ao próximo passo.",
-    founder_body_3: "AdBrief é a camada que faltava: lê os dados, identifica o que importa, e entrega a decisão num cartão. O humano aprova. O sistema executa.",
-    founder_signature: "Martinho, fundador",
-    founder_stage: "Em beta · aceitando os primeiros usuários",
     // concept
     concept_kicker: "O conceito",
     concept_title: "Não é um dashboard.\nÉ um sistema de decisão.",
@@ -263,13 +256,6 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_callout_1: "Real diagnosis with your actual account data",
     hero_callout_2: "And tells you exactly what to do next",
     // founder note — replaces social proof while real-customer proof is still being gathered
-    founder_kicker: "From the builder",
-    founder_title: "Why this exists.",
-    founder_body_1: "I burned through $6 in API credits testing Meta Ads in 11 days of light use. Spent hours staring at dashboards trying to figure out where the money went.",
-    founder_body_2: "The problem wasn't missing data — it was missing decisions. Every number was there, nothing connected them to the next action.",
-    founder_body_3: "AdBrief is the missing layer: it reads the data, identifies what matters, and hands you the decision on a card. You approve. The system executes.",
-    founder_signature: "Martinho, founder",
-    founder_stage: "In beta · accepting early users",
     concept_kicker: "The concept",
     concept_title: "Not a dashboard.\nA decision system.",
     concept_s1: "Continuous analysis",
@@ -415,13 +401,6 @@ const TX: Record<Lang, Record<string, string>> = {
     hero_callout_1: "Diagnóstico con los datos reales de tu cuenta",
     hero_callout_2: "Y te dice exactamente qué hacer ahora",
     // founder note — reemplaza social proof mientras no haya prueba real de clientes suficiente
-    founder_kicker: "De quien está construyendo",
-    founder_title: "Por qué existe esto.",
-    founder_body_1: "Quemé $6 en créditos de API testeando anuncios en Meta en 11 días de uso ligero. Pasé horas mirando el dashboard tratando de entender a dónde se había ido la plata.",
-    founder_body_2: "Me di cuenta de que el problema no era falta de datos — era falta de decisión. Todos los números estaban ahí, nadie los conectaba al siguiente paso.",
-    founder_body_3: "AdBrief es la capa que faltaba: lee los datos, identifica lo que importa y te entrega la decisión en una tarjeta. El humano aprueba. El sistema ejecuta.",
-    founder_signature: "Martinho, fundador",
-    founder_stage: "En beta · aceptando los primeros usuarios",
     concept_kicker: "El concepto",
     concept_title: "No es un dashboard.\nEs un sistema de decisión.",
     concept_s1: "Análisis continuo",
@@ -1215,93 +1194,6 @@ function Hero({ t }: { t: Record<string, string> }) {
   );
 }
 
-// ── Section 1.5 — Founder Note (replaces fake testimonials) ───────────────
-function FounderNote({ t }: { t: Record<string, string> }) {
-  const { ref, visible } = useReveal(0.2);
-
-  return (
-    <section style={{
-      background: BG2, padding: "clamp(72px,10vw,120px) clamp(20px,4vw,40px)",
-      borderTop: `1px solid ${BORDER}`,
-    }} ref={ref}>
-      <div style={{ maxWidth: 720, margin: "0 auto" }}>
-        {/* Kicker */}
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 8,
-          marginBottom: 22,
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(8px)",
-          transition: `all 0.45s ${EASE}`,
-        }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: "50%",
-            background: GREEN, boxShadow: `0 0 8px ${GREEN}`,
-            animation: "pulse 2s ease-in-out infinite",
-          }} />
-          <span style={{
-            fontFamily: F, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em",
-            textTransform: "uppercase", color: TEXT3,
-          }}>
-            {t.founder_kicker}
-          </span>
-        </div>
-
-        {/* Title */}
-        <h2 style={{
-          fontFamily: F, fontSize: "clamp(24px,3vw,34px)", fontWeight: 800,
-          letterSpacing: "-0.035em", color: TEXT, margin: "0 0 28px", lineHeight: 1.15,
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-          transition: `all 0.5s ${EASE} 0.08s`,
-        }}>
-          {t.founder_title}
-        </h2>
-
-        {/* Body paragraphs */}
-        {[t.founder_body_1, t.founder_body_2, t.founder_body_3].map((p, i) => (
-          <p key={i} style={{
-            fontFamily: F, fontSize: 15.5, color: TEXT2, lineHeight: 1.65,
-            margin: "0 0 18px", fontWeight: 400, letterSpacing: "-0.005em",
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(8px)",
-            transition: `all 0.5s ${EASE} ${0.18 + i * 0.08}s`,
-          }}>
-            {p}
-          </p>
-        ))}
-
-        {/* Signature + stage */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
-          marginTop: 30, paddingTop: 24, borderTop: `1px solid ${BORDER}`,
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(8px)",
-          transition: `all 0.5s ${EASE} 0.46s`,
-        }}>
-          <span style={{
-            fontFamily: F, fontSize: 13, fontWeight: 700, color: TEXT,
-            letterSpacing: "-0.01em",
-          }}>
-            — {t.founder_signature}
-          </span>
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            fontFamily: F, fontSize: 11, fontWeight: 600, color: TEXT3,
-            padding: "4px 10px", borderRadius: 99,
-            background: "rgba(255,255,255,0.02)",
-            border: `1px solid ${BORDER}`,
-          }}>
-            <span style={{
-              width: 5, height: 5, borderRadius: "50%",
-              background: ACCENT, boxShadow: `0 0 6px ${ACCENT}`,
-            }} />
-            {t.founder_stage}
-          </span>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 // ── Section 2 — Concept: "Not a dashboard. A decision system." ──────────────
 // Redesign: full-width stage with ambient spotlight, 3 pillar tiles with real
@@ -2534,7 +2426,6 @@ export default function IndexNew() {
 
       <Nav t={t} lang={lang} setLang={setLang} />
       <Hero t={t} />
-      <FounderNote t={t} />
       <ConceptSection t={t} />
       <FlowSection t={t} />
       <CompareSection t={t} />
