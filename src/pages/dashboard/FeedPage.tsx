@@ -2790,7 +2790,15 @@ type KpiTile = {
   deltaPct: number | null;
   /** If true, a NEGATIVE delta is good (e.g. wasted spend going down). */
   invertDelta?: boolean;
+  /** One-line context derived from dataset (e.g. "Poucos dias medidos"). null = hide. */
+  context?: string | null;
 };
+
+// ── Muted accent tokens for KPI deltas ──
+// Full-saturation T.green/T.red are reserved for alerts/CTAs. KPI comparisons
+// get a desaturated version so the strip reads calmly — Bloomberg, not dashboard demo.
+const DELTA_GREEN = 'rgba(74,222,128,0.78)';
+const DELTA_RED = 'rgba(248,113,113,0.78)';
 
 /** Compact delta pill — "↑ 24,7% vs 7 dias anteriores" / "↓ 12,1% vs 7 dias anteriores". */
 const KPIDeltaLine: React.FC<{
@@ -2810,7 +2818,7 @@ const KPIDeltaLine: React.FC<{
   }
   const isUp = pct > 0;
   const isGood = invert ? !isUp : isUp;
-  const color = isGood ? T.green : T.red;
+  const color = isGood ? DELTA_GREEN : DELTA_RED;
   const fmt = pct.toFixed(Math.abs(pct) < 10 ? 1 : 1).replace('.', ',');
   return (
     <div style={{
@@ -2826,7 +2834,56 @@ const KPIDeltaLine: React.FC<{
   );
 };
 
-const CommandKPIStrip: React.FC<{
+/**
+ * Derive the "contexto" line for each KPI.
+ * Pure function of AdMetricsSummary + pending-decision counts. Never invents.
+ * Returns null when there's nothing honest to say.
+ */
+function kpiContext(
+  key: 'spend' | 'wasted' | 'roas' | 'conv',
+  m: AdMetricsSummary | null,
+  killsCount: number,
+): string | null {
+  const hasData = !!m && m.daysOfData > 0;
+
+  switch (key) {
+    case 'spend': {
+      if (!hasData) return null;
+      if (m!.daysOfData < 7) return 'Poucos dias medidos';
+      if (m!.totalSpend < 5000 /* R$50 */) return 'Baixo volume de dados';
+      if (m!.freshnessFactor > 0.5) return 'Muita data recente — pode mudar';
+      return null;
+    }
+    case 'wasted': {
+      if (killsCount === 0) return 'Sem anúncios problemáticos';
+      return `${killsCount} anúncio${killsCount === 1 ? '' : 's'} flagrado${killsCount === 1 ? '' : 's'} para pausar`;
+    }
+    case 'roas': {
+      if (!hasData) return null;
+      if (m!.avgRoas === 0 && m!.totalSpend > 0) return 'Sem receita rastreada';
+      if (m!.volatilityCpa > 0.5) return 'Alta volatilidade';
+      if (m!.hasAnchorBaseline && m!.baselineRoas && m!.baselineRoas > 0) {
+        const diff = m!.avgRoas - m!.baselineRoas;
+        if (Math.abs(diff) < 0.1) return 'No padrão da conta';
+        return diff > 0 ? 'Acima do baseline 30d' : 'Abaixo do baseline 30d';
+      }
+      return null;
+    }
+    case 'conv': {
+      if (!hasData) return null;
+      if (m!.totalSpend > 10000 && m!.totalConversions === 0) return 'Possível falha de tracking';
+      if (m!.daysOfData < 7) return 'Poucos dias medidos';
+      if (m!.totalConversions > 0) {
+        const perDay = m!.totalConversions / Math.max(m!.daysOfData, 1);
+        if (perDay < 1) return `${perDay.toFixed(1).replace('.', ',')} por dia`;
+        return `${Math.round(perDay)} por dia`;
+      }
+      return null;
+    }
+  }
+}
+
+const CommandKPIRow: React.FC<{
   m: AdMetricsSummary | null;
   periodLabel: string;
   /** Pending decisions — used to compute wasted spend (sum of kill impact_daily). */
@@ -2836,11 +2893,9 @@ const CommandKPIStrip: React.FC<{
 
   // ── Gasto perdido ──
   // Sum of daily potential savings from pending KILL-type decisions.
-  // This is money the pipeline has flagged as wasted spend that can be recovered
-  // by pausing losing ads. Purely derived — no invented numbers.
-  const wastedDailyCentavos = decisions
-    .filter(d => d.type === 'kill' && d.status === 'pending')
-    .reduce((sum, d) => sum + Math.abs(d.impact_daily || 0), 0);
+  const killDecisions = decisions.filter(d => d.type === 'kill' && d.status === 'pending');
+  const killsCount = killDecisions.length;
+  const wastedDailyCentavos = killDecisions.reduce((sum, d) => sum + Math.abs(d.impact_daily || 0), 0);
   const hasWasted = wastedDailyCentavos > 0;
 
   const tiles: KpiTile[] = [
@@ -2849,45 +2904,44 @@ const CommandKPIStrip: React.FC<{
       label: 'Investido',
       value: hasData ? fmtReais(m!.totalSpend) : '—',
       deltaPct: hasData ? (m!.deltaSpendPct ?? null) : null,
+      context: kpiContext('spend', m, killsCount),
     },
     {
       key: 'wasted',
       label: 'Gasto perdido',
       value: hasWasted ? fmtReais(wastedDailyCentavos) : 'R$ 0',
-      deltaPct: null, // Gasto perdido is a snapshot, no period-over-period yet
+      deltaPct: null, // snapshot — no prior window
       invertDelta: true,
+      context: kpiContext('wasted', m, killsCount),
     },
     {
       key: 'roas',
       label: 'ROAS médio',
       value: hasData && m!.avgRoas > 0 ? `${m!.avgRoas.toFixed(2).replace('.', ',')}x` : '—',
       deltaPct: hasData ? (m!.deltaRoasPct ?? null) : null,
+      context: kpiContext('roas', m, killsCount),
     },
     {
       key: 'conv',
       label: 'Conversões',
       value: hasData ? m!.totalConversions.toLocaleString('pt-BR') : '—',
       deltaPct: hasData ? (m!.deltaConversionsPct ?? null) : null,
+      context: kpiContext('conv', m, killsCount),
     },
   ];
 
   return (
-    <div style={{
-      background: T.bg1,
-      border: `1px solid ${T.border1}`,
-      borderRadius: 12,
-      padding: '18px 4px',
-      marginBottom: 14,
+    <div className="feed-kpi-row" style={{
+      display: 'grid',
+      gridTemplateColumns: `repeat(${tiles.length}, 1fr)`,
+      alignItems: 'stretch',
       fontFamily: F,
     }}>
-      <div className="feed-kpi-row" style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${tiles.length}, 1fr)`,
-        alignItems: 'stretch',
-      }}>
-        {tiles.map((t, i) => (
+      {tiles.map((t, i) => {
+        const isEmpty = t.value === '—';
+        return (
           <div key={t.key} style={{
-            padding: '4px 18px',
+            padding: i === 0 ? '2px 20px 2px 0' : i === tiles.length - 1 ? '2px 0 2px 20px' : '2px 20px',
             minWidth: 0,
             display: 'flex', flexDirection: 'column', gap: 6,
             borderRight: i < tiles.length - 1 ? `1px solid ${T.border0}` : 'none',
@@ -2897,30 +2951,30 @@ const CommandKPIStrip: React.FC<{
               color: T.labelColor, textTransform: 'uppercase',
             }}>{t.label}</div>
             <div style={{
-              fontSize: 24, fontWeight: 800,
-              color: t.value === '—' ? T.text3 : T.text1,
-              letterSpacing: '-0.02em', lineHeight: 1.1,
+              fontSize: 26, fontWeight: 800,
+              color: isEmpty ? T.text3 : T.text1,
+              letterSpacing: '-0.025em', lineHeight: 1.08,
               marginTop: 2,
             }}>{t.value}</div>
-            {t.value !== '—' && (
+            {!isEmpty && (
               <KPIDeltaLine
                 pct={t.deltaPct}
                 invert={t.invertDelta}
                 periodLabel={periodLabel}
               />
             )}
+            {t.context && (
+              <div style={{
+                fontSize: 10.5, color: T.text3, fontFamily: F,
+                letterSpacing: '-0.005em', lineHeight: 1.35,
+                marginTop: 1,
+              }}>
+                {t.context}
+              </div>
+            )}
           </div>
-        ))}
-      </div>
-      {!hasData && (
-        <div style={{
-          marginTop: 10, padding: '0 18px',
-          fontSize: 11, color: T.text3, fontStyle: 'italic',
-          lineHeight: 1.5,
-        }}>
-          Sem gasto no período selecionado. Quando os anúncios começarem a rodar os números entram aqui.
-        </div>
-      )}
+        );
+      })}
     </div>
   );
 };
@@ -3958,7 +4012,8 @@ const CommandHero: React.FC<{
   headline: string;
   subtext?: string;
   primaryCta: { label: string; onClick: () => void };
-  secondaryCta?: { label: string; onClick: () => void };
+  /** variant: 'button' (default, bordered) or 'link' (muted text link — won't compete with primary). */
+  secondaryCta?: { label: string; onClick: () => void; variant?: 'button' | 'link' };
   meta?: string; // optional right-aligned meta text in header
   children?: React.ReactNode; // optional inline content below CTAs (campaign list, metrics, etc)
 }> = ({ variant, headline, subtext, primaryCta, secondaryCta, meta, children }) => {
@@ -4050,7 +4105,24 @@ const CommandHero: React.FC<{
         >
           {primaryCta.label}
         </button>
-        {secondaryCta && (
+        {secondaryCta && (secondaryCta.variant === 'link' ? (
+          <button
+            onClick={secondaryCta.onClick}
+            style={{
+              background: 'transparent',
+              color: T.text3,
+              border: 'none',
+              padding: '12px 8px',
+              fontSize: 12.5, fontWeight: 600, fontFamily: F,
+              cursor: 'pointer', transition: 'color 0.15s ease',
+              letterSpacing: '-0.005em',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = T.text1; e.currentTarget.style.textDecoration = 'underline'; e.currentTarget.style.textUnderlineOffset = '3px'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = T.text3; e.currentTarget.style.textDecoration = 'none'; }}
+          >
+            {secondaryCta.label}
+          </button>
+        ) : (
           <button
             onClick={secondaryCta.onClick}
             style={{
@@ -4066,7 +4138,7 @@ const CommandHero: React.FC<{
           >
             {secondaryCta.label}
           </button>
-        )}
+        ))}
       </div>
 
       {/* Inline content slot */}
@@ -4112,9 +4184,11 @@ const NoActiveAdsHero: React.FC<{
   onLoadMoreAds, loadingMoreAds,
 }) => {
   const hasPaused = pausedCampaigns > 0 || pausedAds > 0;
+
+  // ── Copy: short, factual, no motivation theater. One idea per line. ──
   const subtext = hasPaused
-    ? `${pausedCampaigns > 0 ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} pausada${pausedCampaigns === 1 ? '' : 's'}` : `${pausedAds} anúncio${pausedAds === 1 ? '' : 's'} pausado${pausedAds === 1 ? '' : 's'}`} abaixo. Peça à IA para analisar o histórico e te dizer o que vale reativar primeiro. Assim que voltar a rodar, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.`
-    : 'Conecte ou crie uma campanha. Assim que houver tráfego, eu assumo: monitoro a cada 20 min, pauso o que sangra, escalo o que converte.';
+    ? `${pausedCampaigns > 0 ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} pausada${pausedCampaigns === 1 ? '' : 's'}` : `${pausedAds} anúncio${pausedAds === 1 ? '' : 's'} pausado${pausedAds === 1 ? '' : 's'}` } no histórico. Posso analisar cada uma e te dizer o que vale reativar primeiro.`
+    : 'Sem tráfego rodando. Crie uma campanha ou peça um plano inicial à IA.';
 
   const pausedPrompt = hasPaused
     ? `Tenho ${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} e ${pausedAds} anúncio${pausedAds === 1 ? '' : 's'} pausado${pausedAds === 1 ? '' : 's'}. Analisa o histórico de cada um — CTR, ROAS, CPA, conversões — e me diz quais devo reativar primeiro, em ordem de prioridade. Se algum não vale reativar, me avisa também e sugere o que testar no lugar.`
@@ -4125,10 +4199,12 @@ const NoActiveAdsHero: React.FC<{
     else onOpenAI();
   };
 
+  // One dominant primary CTA. Secondary falls back to a muted text link
+  // rendered by CommandHero so it doesn't compete visually with the chat.
   return (
     <CommandHero
       variant="no-traffic"
-      headline={hasPaused ? 'Nada está rodando agora.' : 'Você não tem anúncio ativo.'}
+      headline={hasPaused ? 'Nenhuma campanha ativa no momento.' : 'Nenhuma campanha ativa no momento.'}
       subtext={subtext}
       primaryCta={{
         label: hasPaused ? 'Pedir plano de reativação à IA' : 'Falar com a IA',
@@ -4137,10 +4213,12 @@ const NoActiveAdsHero: React.FC<{
       secondaryCta={{
         label: hasPaused ? 'Abrir chat livre' : 'Criar campanha',
         onClick: hasPaused ? onOpenAI : onCreateCampaign,
+        variant: 'link',
       }}
       meta={hasPaused ? `${pausedCampaigns} campanha${pausedCampaigns === 1 ? '' : 's'} · ${pausedAds} anúncio${pausedAds === 1 ? '' : 's'}` : undefined}
     >
-      {/* Inline paused campaign list so manual controls + AI analysis are right here */}
+      {/* Paused campaign list — secondary context. Starts collapsed so it
+          doesn't compete with the CTA; users open it when they want. */}
       {hasPaused && campaigns.length > 0 && (
         <CampaignList
           campaigns={campaigns}
@@ -4156,7 +4234,6 @@ const NoActiveAdsHero: React.FC<{
           onRequestCampaignToggle={onRequestCampaignToggle}
           onAnalyzeAiCampaign={onAnalyzeAiCampaign}
           onAnalyzeAiAd={onAnalyzeAiAd}
-          defaultOpen
         />
       )}
       {hasPaused && campaigns.length === 0 && ads.length > 0 && (
@@ -5832,13 +5909,28 @@ const FeedPage: React.FC = () => {
         )}
 
         {/* ═══════════════════════════════════════════════
-            LAYER 1 — HEADER
-            Title + subtitle speak like a gestor de tráfego:
-            decisions that move today's numbers, not product jargon.
+            LAYER 1 — COMMAND DECK (header + KPI strip, unified)
+            One elevated container that answers:
+              "what happened, how much moved, and how honest is this data".
+            Title + subtitle sit at the top; the KPI row sits under a
+            1px rule inside the same surface so the gestor sees the whole
+            picture as a single block — Bloomberg, not dashboard demo.
             ═══════════════════════════════════════════════ */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 12px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+        <div style={{
+          background: '#0B1220',
+          border: `1px solid ${T.border1}`,
+          borderRadius: 12,
+          padding: 24,
+          marginBottom: 14,
+          fontFamily: F,
+        }}>
+          {/* Top row: title + subtitle + controls */}
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+            flexWrap: 'wrap', gap: '10px 14px',
+            marginBottom: metaConnected ? 18 : 0,
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <h1 style={{
                   fontSize: 20, fontWeight: 800, color: T.text1, fontFamily: F,
@@ -5884,6 +5976,33 @@ const FeedPage: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Inner rule + KPI row. Only rendered when we have a connection to
+              show. If no metrics yet, the row is suppressed and the block
+              stays tight to the title/subtitle alone. */}
+          {metaConnected && (
+            <>
+              <div style={{
+                height: 1, width: '100%',
+                background: T.border0,
+                marginBottom: 18,
+              }} />
+              <CommandKPIRow
+                m={adMetrics}
+                periodLabel={PERIODS.find(p => p.key === period)!.label}
+                decisions={pendingDecisions}
+              />
+              {(!adMetrics || adMetrics.daysOfData === 0 || adMetrics.totalSpend === 0) && (
+                <div style={{
+                  marginTop: 14,
+                  fontSize: 11, color: T.text3, fontStyle: 'italic',
+                  lineHeight: 1.5,
+                }}>
+                  Sem gasto no período selecionado. Quando os anúncios começarem a rodar os números entram aqui.
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Demo banner */}
@@ -5931,22 +6050,8 @@ const FeedPage: React.FC = () => {
         {/* Inline sync progress */}
         {syncing && <SyncBanner />}
 
-        {/* ═══════════════════════════════════════════════
-            LAYER 1.5 — PAINEL DO GESTOR (KPI strip)
-            5 real Meta Ads metrics with period-over-period delta:
-            Investido · CPA · ROAS · CTR · Conversões.
-            This is the first thing a gestor de tráfego looks at.
-            Renders only when we have an account connected (demo or real).
-            ═══════════════════════════════════════════════ */}
-        {metaConnected && (
-          <CommandKPIStrip
-            m={adMetrics}
-            periodLabel={PERIODS.find(p => p.key === period)!.label}
-            decisions={pendingDecisions}
-          />
-        )}
-
-        {/* Saúde da conta agora vive na sidebar direita (FeedSidebar). */}
+        {/* Painel do gestor (KPI row) now lives inside the Command Deck above.
+            Saúde da conta lives exclusively in the right sidebar (FeedSidebar). */}
 
         {/* ═══════════════════════════════════════════════
             LAYER 2 — BRAIN OVERWATCH
@@ -6372,6 +6477,51 @@ const FeedPage: React.FC = () => {
 
         {/* Telegram */}
         {metaConnected && !isDemo && userId && <TelegramCard userId={userId} />}
+
+        {/* ═══════════════════════════════════════════════
+            FOOTER — STATUS TÉCNICO
+            Technical status line. No pill, no gradient, no celebration.
+            Answers: when was the last analysis, how many decisions are
+            available right now, and is monitoring on. If the gestor wants
+            to trust the numbers above, this is where they verify.
+            ═══════════════════════════════════════════════ */}
+        {metaConnected && !isDemo && (
+          <div style={{
+            marginTop: 28,
+            paddingTop: 14,
+            borderTop: `1px solid ${T.border0}`,
+            display: 'flex', alignItems: 'center', gap: 8,
+            flexWrap: 'wrap',
+            fontFamily: F,
+            fontSize: 10.5,
+            color: T.text3,
+            letterSpacing: '-0.005em',
+          }}>
+            <span>
+              Última análise:{' '}
+              <span style={{ color: T.text2, fontWeight: 600 }}>
+                {lastAnalysisMin < 60
+                  ? `${lastAnalysisMin} min atrás`
+                  : `${Math.round(lastAnalysisMin / 60)}h atrás`}
+              </span>
+            </span>
+            <span style={{ opacity: 0.5 }}>·</span>
+            <span>
+              <span style={{ color: T.text2, fontWeight: 600 }}>
+                {pendingDecisions.length}
+              </span>{' '}
+              decis{pendingDecisions.length === 1 ? 'ão disponível' : 'ões disponíveis'}
+            </span>
+            <span style={{ opacity: 0.5 }}>·</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <span style={{
+                width: 5, height: 5, borderRadius: '50%',
+                background: T.green, boxShadow: `0 0 6px ${T.green}60`,
+              }} />
+              Monitoramento contínuo ativo
+            </span>
+          </div>
+        )}
       </div>
       {/* END feed-main-col */}
 

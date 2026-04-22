@@ -83,56 +83,39 @@ function bandHeadline(band: Band, fallback: string): string {
   return fallback || 'Sua conta está saudável';
 }
 
-/** Ring gauge — score on left, orange stroke arc. */
-const RingGauge: React.FC<{ score: number; color: string; size?: number }> = ({
-  score, color, size = 88,
-}) => {
-  const r = (size - 10) / 2;
-  const cx = size / 2;
-  const cy = size / 2;
-  const circ = 2 * Math.PI * r;
-  const clamped = Math.max(0, Math.min(100, score));
-  const dash = (clamped / 100) * circ;
-  return (
-    <div style={{ width: size, height: size, position: 'relative', flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={cx} cy={cy} r={r}
-          stroke="rgba(255,255,255,0.06)" strokeWidth={6} fill="none" />
-        <circle cx={cx} cy={cy} r={r}
-          stroke={color} strokeWidth={6} fill="none"
-          strokeLinecap="round"
-          strokeDasharray={`${dash} ${circ}`}
-          style={{ transition: 'stroke-dasharray 0.6s ease' }}
-        />
-      </svg>
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        lineHeight: 1,
-      }}>
-        <span style={{
-          fontSize: 22, fontWeight: 800, color: T.text1,
-          letterSpacing: '-0.03em', fontFamily: F,
-        }}>{Math.round(clamped)}</span>
-        <span style={{
-          fontSize: 9, color: T.text3, marginTop: 3,
-          letterSpacing: '-0.005em', fontFamily: F,
-        }}>de 100</span>
-      </div>
-    </div>
-  );
-};
-
-/** Action label for each issue — drives the right-side colored link. */
+/** Action label for each issue — text-based, specific verbs. */
 function issueActionText(issue: HealthIssue): string {
   const k = issue.key;
-  if (k.includes('pixel') || k.includes('tracking') || k.includes('conv')) return 'Verificar tracking';
-  if (k.includes('balance') || k.includes('spend_cap') || k.includes('cap')) return 'Repor saldo';
-  if (k.includes('disabled') || k.includes('status') || k.includes('account_critical')) return 'Reativar';
-  if (k.includes('delivery') || k.includes('ads') || k.includes('freq') || k.includes('active')) return 'Otimizar';
-  return 'Verificar';
+  if (k === 'pixel_missing' || k === 'pixel_stale' || k === 'pixel_orphan') return 'Verificar rastreamento';
+  if (k === 'spend_no_conv') return 'Verificar rastreamento';
+  if (k === 'no_active_ads') return 'Reativar campanhas';
+  if (k === 'account_critical') return 'Reativar conta';
+  if (k === 'account_warn') return 'Ajustar conta';
+  if (k.includes('delivery') || k.includes('freq')) return 'Ajustar entrega';
+  if (k.includes('balance') || k.includes('cap')) return 'Repor saldo';
+  return 'Resolver';
 }
+
+/** Score dot — tiny severity indicator replacing the ring gauge. Text + data lead the card now. */
+const ScoreDot: React.FC<{ color: string; score: number }> = ({ color, score }) => (
+  <div style={{
+    display: 'inline-flex', alignItems: 'center', gap: 8,
+    fontFamily: F,
+  }}>
+    <span style={{
+      width: 8, height: 8, borderRadius: '50%',
+      background: color,
+      boxShadow: `0 0 10px ${color}60`,
+      flexShrink: 0,
+    }} />
+    <span style={{
+      fontSize: 11, color: T.text3, fontWeight: 600,
+      letterSpacing: '0.02em',
+    }}>
+      {Math.round(score)}/100
+    </span>
+  </div>
+);
 
 const AccountHealthCard: React.FC<{
   accountStatus: AccountStatusSummary | null;
@@ -165,104 +148,106 @@ const AccountHealthCard: React.FC<{
 
   return (
     <Card>
-      {/* Header row */}
+      {/* Header row — label + severity pill. Title leads, severity supports. */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: 16,
+        marginBottom: 14,
       }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{
+            fontSize: 14, fontWeight: 700, color: T.text1,
+            fontFamily: F, letterSpacing: '-0.01em',
+          }}>
+            Saúde da conta
+          </span>
+          <ScoreDot color={sevColor} score={health.score} />
+        </div>
         <span style={{
-          fontSize: 14, fontWeight: 700, color: T.text1,
-          fontFamily: F, letterSpacing: '-0.01em',
-        }}>
-          Saúde da conta
-        </span>
-        <span style={{
-          fontSize: 11, fontWeight: 700,
+          fontSize: 10.5, fontWeight: 700,
           color: sevColor,
-          background: `${sevColor}1A`,
-          border: `1px solid ${sevColor}40`,
+          background: `${sevColor}14`,
+          border: `1px solid ${sevColor}33`,
           borderRadius: 999,
-          padding: '3px 10px',
-          fontFamily: F, letterSpacing: '-0.005em',
+          padding: '2px 9px',
+          fontFamily: F, letterSpacing: '0.02em',
+          textTransform: 'uppercase' as const,
         }}>
           {sevLabel}
         </span>
       </div>
 
-      {/* Gauge + copy */}
+      {/* Headline — what's happening, in one line. */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 14,
-        marginBottom: issues.length > 0 ? 16 : 10,
+        fontSize: 14, fontWeight: 700, color: T.text1,
+        lineHeight: 1.4, letterSpacing: '-0.01em', marginBottom: 14,
       }}>
-        <RingGauge score={health.score} color={sevColor} size={88} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: 13.5, fontWeight: 700, color: T.text1,
-            lineHeight: 1.35, letterSpacing: '-0.01em', marginBottom: 4,
-          }}>
-            {bandHeadline(band, health.headline)}
-          </div>
-          <div style={{
-            fontSize: 11.5, color: T.text2, lineHeight: 1.5,
-            letterSpacing: '-0.005em',
-          }}>
-            {issues.length > 0
-              ? `Detectamos ${issues.length} ${issues.length === 1 ? 'ponto que pode' : 'pontos que podem'} estar limitando seus resultados.`
-              : band === 'ok'
-                ? 'Tudo rodando dentro do esperado. Continuo monitorando 24/7.'
-                : 'Aguardando sinais da sua conta…'}
-          </div>
-        </div>
+        {bandHeadline(band, health.headline)}
       </div>
 
-      {/* Numbered issue list */}
-      {issues.length > 0 && (
+      {/* Data bullets — what's specifically wrong, derived from real issues. */}
+      {issues.length > 0 ? (
         <div style={{
-          display: 'flex', flexDirection: 'column', gap: 0,
-          marginBottom: 14,
+          display: 'flex', flexDirection: 'column',
+          gap: 0,
+          marginBottom: 16,
+          borderTop: `1px solid ${T.border0}`,
         }}>
-          {issues.slice(0, 4).map((issue, idx) => (
+          {issues.slice(0, 4).map((issue) => (
             <div key={issue.key} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '9px 0',
-              borderTop: idx === 0 ? 'none' : `1px solid ${T.border0}`,
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+              padding: '10px 0',
+              borderBottom: `1px solid ${T.border0}`,
             }}>
               <span style={{
-                width: 18, height: 18, borderRadius: 6,
-                background: 'rgba(255,255,255,0.05)',
-                color: T.text2, fontSize: 10.5, fontWeight: 700,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, fontFamily: F,
+                width: 4, height: 4, borderRadius: '50%',
+                background: issue.severity === 'critical' ? T.red
+                          : issue.severity === 'warn' ? T.yellow
+                          : T.text3,
+                marginTop: 7, flexShrink: 0,
+              }} />
+              <div style={{
+                flex: 1, minWidth: 0,
+                display: 'flex', flexDirection: 'column', gap: 3,
               }}>
-                {idx + 1}
-              </span>
-              <span style={{
-                flex: 1, fontSize: 12, color: T.text1,
-                lineHeight: 1.4, letterSpacing: '-0.005em',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {issue.label}
-              </span>
-              <button
-                onClick={() => props.onActOnIssue?.(issue)}
-                style={{
-                  background: 'transparent', border: 'none',
-                  color: T.yellowSoft, fontSize: 11.5, fontWeight: 600,
-                  cursor: 'pointer', padding: 0,
-                  fontFamily: F, letterSpacing: '-0.005em',
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'underline'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'none'; }}
-              >
-                {issueActionText(issue)}
-              </button>
+                <span style={{
+                  fontSize: 12.5, color: T.text1,
+                  lineHeight: 1.4, letterSpacing: '-0.005em',
+                  fontWeight: 500,
+                }}>
+                  {issue.label}
+                </span>
+                <button
+                  onClick={() => props.onActOnIssue?.(issue)}
+                  style={{
+                    alignSelf: 'flex-start',
+                    background: 'transparent', border: 'none',
+                    color: T.blueSoft, fontSize: 11, fontWeight: 600,
+                    cursor: 'pointer', padding: 0,
+                    fontFamily: F, letterSpacing: '-0.005em',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'underline'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'none'; }}
+                >
+                  {issueActionText(issue)} →
+                </button>
+              </div>
             </div>
           ))}
         </div>
+      ) : (
+        <div style={{
+          fontSize: 12, color: T.text3, lineHeight: 1.5,
+          letterSpacing: '-0.005em', marginBottom: 16,
+          fontStyle: 'italic',
+        }}>
+          {band === 'ok'
+            ? 'Nenhum ponto de atenção detectado. Monitoramento contínuo ativo.'
+            : 'Aguardando sinais suficientes da sua conta para o diagnóstico.'}
+        </div>
       )}
 
-      {/* Primary CTA */}
+      {/* Primary CTA — single, low-emphasis. Full diagnostic via AI. */}
       <button
         onClick={props.onOpenDiagnostic}
         style={{
@@ -359,6 +344,51 @@ const NextStepCard: React.FC<{
 }> = ({ decision, onAction, onOpenAll, loading }) => {
   const derived = deriveNextStep(decision);
 
+  // ── Calm / empty state ─────────────────────────────────────────────
+  // When there's no pending decision we don't invent an action. We tell
+  // the truth: the system is monitoring and will surface something when
+  // signals justify it. No CTA, no fake urgency.
+  if (!derived && !loading) {
+    return (
+      <Card>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%',
+            background: T.greenSoft, boxShadow: `0 0 8px ${T.greenSoft}66`,
+            flexShrink: 0,
+          }} />
+          <span style={{
+            fontSize: 14, fontWeight: 700, color: T.text1,
+            fontFamily: F, letterSpacing: '-0.01em',
+          }}>
+            Próximo passo
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{
+            fontSize: 12.5, color: T.text2, lineHeight: 1.5,
+            letterSpacing: '-0.005em', fontWeight: 500,
+          }}>
+            Sistema monitorando sua conta.
+          </div>
+          <div style={{
+            fontSize: 12, color: T.text3, lineHeight: 1.55,
+            letterSpacing: '-0.005em',
+          }}>
+            Nenhuma ação crítica no momento.
+          </div>
+          <div style={{
+            fontSize: 11, color: T.text3, lineHeight: 1.55,
+            letterSpacing: '-0.005em', fontStyle: 'italic',
+          }}>
+            Novas decisões aparecem conforme novos dados.
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       {/* Header */}
@@ -388,9 +418,7 @@ const NextStepCard: React.FC<{
           fontSize: 12.5, color: T.text2, lineHeight: 1.5,
           letterSpacing: '-0.005em', marginBottom: 14,
         }}>
-          {loading
-            ? 'Analisando sua conta para encontrar a próxima ação de maior impacto…'
-            : 'Nenhuma ação crítica agora. Continuo monitorando — quando algo mudar, aparece aqui.'}
+          Analisando sua conta para encontrar a próxima ação de maior impacto…
         </div>
       ) : (
         <>
