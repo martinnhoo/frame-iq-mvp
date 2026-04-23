@@ -176,9 +176,28 @@ Deno.serve(async (req) => {
       return r.json();
     };
 
+    // get — Meta Graph GET with 15s timeout. Returns the parsed JSON as-is;
+    // caller is responsible for checking `.error` (all the list_* paths do).
+    // We used to swallow timeouts silently, which produced the agency-
+    // scenario "conjuntos não aparecem" bug: the frontend got an empty
+    // adset list and assumed the campaign had none, instead of surfacing
+    // that Meta timed out.
     const get = async (path: string) => {
-      const r = await fetch(`${BASE}/${path}&access_token=${token}`);
-      return r.json();
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 15000);
+      try {
+        const r = await fetch(`${BASE}/${path}&access_token=${token}`, { signal: ctrl.signal });
+        const d = await r.json();
+        if (!r.ok && !d?.error) {
+          // Response was non-2xx but body doesn't carry a Meta error — synthesize one
+          return { error: { message: `HTTP ${r.status}`, code: r.status } };
+        }
+        return d;
+      } catch (e: any) {
+        return { error: { message: e?.name === "AbortError" ? "Meta API timeout (15s)" : (e?.message || "fetch failed") } };
+      } finally {
+        clearTimeout(tid);
+      }
     };
 
     // ── Validate target_id for write actions ────────────────────────────

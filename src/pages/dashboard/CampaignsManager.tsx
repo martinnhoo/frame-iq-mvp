@@ -397,6 +397,11 @@ export default function CampaignsManager() {
   const [adsByAdset, setAdsByAdset] = useState<Record<string, Ad[]>>({});
   const [loadingAdsets, setLoadingAdsets] = useState<Record<string, boolean>>({});
   const [loadingAds, setLoadingAds] = useState<Record<string, boolean>>({});
+  // Per-campaign / per-adset error state so we can show an inline
+  // "falha ao carregar" message instead of pretending everything loaded
+  // fine when Meta returned an error body.
+  const [adsetErrors, setAdsetErrors] = useState<Record<string, string>>({});
+  const [adErrors, setAdErrors] = useState<Record<string, string>>({});
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(new Set());
   const [expandedAdsets, setExpandedAdsets] = useState<Set<string>>(new Set());
 
@@ -445,20 +450,39 @@ export default function CampaignsManager() {
     if (!adsetsByCampaign[campaignId] && userId) {
       setLoadingAdsets(prev => ({ ...prev, [campaignId]: true }));
       try {
-        const { data } = await supabase.functions.invoke('meta-actions', {
+        const { data, error: fnErr } = await supabase.functions.invoke('meta-actions', {
           body: { user_id: userId, persona_id: personaId, account_id: accountId, action: 'list_adsets', target_id: campaignId },
         });
-        const list: AdSet[] = (((data as any)?.adsets) || []).map((a: any) => ({
-          ...a, campaign_id: campaignId,
-        }));
-        setAdsetsByCampaign(prev => ({ ...prev, [campaignId]: list }));
-      } catch {
+        // Meta returns status 200 with { error: {...} } on auth/rate-limit
+        // problems — surface that here so "conjuntos não aparecem" gives
+        // a real error message instead of a silently empty list.
+        if (fnErr || !data || (data as any).error) {
+          const msg = (data as any)?.error?.message
+            || (data as any)?.error
+            || fnErr?.message
+            || 'Falha ao carregar conjuntos';
+          console.warn('[CampaignsManager] list_adsets failed:', msg);
+          setAdsetErrors(prev => ({ ...prev, [campaignId]: String(msg) }));
+          setAdsetsByCampaign(prev => ({ ...prev, [campaignId]: [] }));
+        } else {
+          const list: AdSet[] = (((data as any).adsets) || []).map((a: any) => ({
+            ...a, campaign_id: campaignId,
+          }));
+          setAdsetsByCampaign(prev => ({ ...prev, [campaignId]: list }));
+          setAdsetErrors(prev => { const n = { ...prev }; delete n[campaignId]; return n; });
+        }
+      } catch (e: any) {
+        console.warn('[CampaignsManager] list_adsets threw:', e?.message);
+        setAdsetErrors(prev => ({ ...prev, [campaignId]: e?.message || 'Erro de conexão' }));
         setAdsetsByCampaign(prev => ({ ...prev, [campaignId]: [] }));
       } finally {
         setLoadingAdsets(prev => ({ ...prev, [campaignId]: false }));
       }
     }
-  }, [adsetsByCampaign, userId, personaId, accountId]);
+    // Intentionally NOT depending on adsetsByCampaign — it's read-only
+    // here and including it rebuilds the callback on every fetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, personaId, accountId]);
 
   // ── Toggle adset expand ─────────────────────────────────────────────────
   const toggleAdset = useCallback(async (adsetId: string, campaignId: string) => {
@@ -470,20 +494,34 @@ export default function CampaignsManager() {
     if (!adsByAdset[adsetId] && userId) {
       setLoadingAds(prev => ({ ...prev, [adsetId]: true }));
       try {
-        const { data } = await supabase.functions.invoke('meta-actions', {
+        const { data, error: fnErr } = await supabase.functions.invoke('meta-actions', {
           body: { user_id: userId, persona_id: personaId, account_id: accountId, action: 'list_ads', target_id: adsetId },
         });
-        const list: Ad[] = (((data as any)?.ads) || []).map((a: any) => ({
-          ...a, adset_id: adsetId, campaign_id: campaignId,
-        }));
-        setAdsByAdset(prev => ({ ...prev, [adsetId]: list }));
-      } catch {
+        if (fnErr || !data || (data as any).error) {
+          const msg = (data as any)?.error?.message
+            || (data as any)?.error
+            || fnErr?.message
+            || 'Falha ao carregar anúncios';
+          console.warn('[CampaignsManager] list_ads failed:', msg);
+          setAdErrors(prev => ({ ...prev, [adsetId]: String(msg) }));
+          setAdsByAdset(prev => ({ ...prev, [adsetId]: [] }));
+        } else {
+          const list: Ad[] = (((data as any).ads) || []).map((a: any) => ({
+            ...a, adset_id: adsetId, campaign_id: campaignId,
+          }));
+          setAdsByAdset(prev => ({ ...prev, [adsetId]: list }));
+          setAdErrors(prev => { const n = { ...prev }; delete n[adsetId]; return n; });
+        }
+      } catch (e: any) {
+        console.warn('[CampaignsManager] list_ads threw:', e?.message);
+        setAdErrors(prev => ({ ...prev, [adsetId]: e?.message || 'Erro de conexão' }));
         setAdsByAdset(prev => ({ ...prev, [adsetId]: [] }));
       } finally {
         setLoadingAds(prev => ({ ...prev, [adsetId]: false }));
       }
     }
-  }, [adsByAdset, userId, personaId, accountId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, personaId, accountId]);
 
   // ── Toggle status (pause/activate) — the core Phase B flow ──────────────
   // 1. Call meta-actions to flip status on Meta API
@@ -859,7 +897,16 @@ export default function CampaignsManager() {
                       Carregando conjuntos…
                     </div>
                   )}
-                  {!loadingThisAdsets && adsets.length === 0 && (
+                  {!loadingThisAdsets && adsetErrors[c.id] && (
+                    <div style={{
+                      padding: '10px 14px', fontSize: 11.5, color: '#F87171',
+                      textAlign: 'center', background: 'rgba(248,113,113,0.06)',
+                      borderTop: `1px solid rgba(248,113,113,0.15)`,
+                    }}>
+                      Falha ao carregar conjuntos: {adsetErrors[c.id]}
+                    </div>
+                  )}
+                  {!loadingThisAdsets && !adsetErrors[c.id] && adsets.length === 0 && (
                     <div style={{ padding: 12, fontSize: 11.5, color: T.text3, textAlign: 'center' }}>
                       Nenhum conjunto de anúncios.
                     </div>
@@ -930,7 +977,15 @@ export default function CampaignsManager() {
                                 Carregando anúncios…
                               </div>
                             )}
-                            {!loadingThisAds && ads_.length === 0 && (
+                            {!loadingThisAds && adErrors[ads.id] && (
+                              <div style={{
+                                padding: '8px 14px 8px 60px', fontSize: 11, color: '#F87171',
+                                background: 'rgba(248,113,113,0.06)',
+                              }}>
+                                Falha ao carregar anúncios: {adErrors[ads.id]}
+                              </div>
+                            )}
+                            {!loadingThisAds && !adErrors[ads.id] && ads_.length === 0 && (
                               <div style={{ padding: 10, paddingLeft: 60, fontSize: 11, color: T.text3 }}>
                                 Nenhum anúncio neste conjunto.
                               </div>
