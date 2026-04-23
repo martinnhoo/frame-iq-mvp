@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { Undo2, Check, X, RotateCcw, Loader2, CircleSlash, CirclePlay, ArrowUpRight, ArrowDownRight, CopyPlus, Sparkles, Calendar, Filter, ChevronDown, Zap } from 'lucide-react';
+import { Undo2, Check, X, RotateCcw, Loader2, CircleSlash, CirclePlay, ArrowUpRight, ArrowDownRight, CopyPlus, Sparkles, Calendar, Filter, ChevronDown, Zap, Hand, Bot } from 'lucide-react';
 import { toast } from 'sonner';
 import { DESIGN_TOKENS as DT } from '@/hooks/useDesignTokens';
 import { storage } from '@/lib/storage';
@@ -82,6 +82,21 @@ const ACTION_FILTERS: { key: ActionFilter; label: string; color: string }[] = [
   { key: 'creative', label: 'Criativos', color: CYAN },
 ];
 
+// ── Source filter (IA vs Manual) ─────────────────────────────────────────────
+// Distinguishes decisions taken by the Feed's AI engine (through
+// execute-action) from actions the user ran directly in the Manager
+// (tagged with source='manager_manual' in action_log.new_state._source).
+type SourceFilter = 'all' | 'ai' | 'manual';
+
+/** Extract the origin of an action log entry. Defaults to 'ai' since
+ *  the engine is the primary source — manual has to be opted into via
+ *  source='manager_manual'. */
+function getEntrySource(entry: ActionLogEntry): 'ai' | 'manual' {
+  const src = (entry as any)?.new_state?._source;
+  if (src === 'manager_manual' || src === 'manual') return 'manual';
+  return 'ai';
+}
+
 // ── Action icon ───────────────────────────────────────────────────────────────
 function ActionIcon({ type }: { type: string }) {
   const size = 16;
@@ -133,6 +148,7 @@ const HistoryPage: React.FC = () => {
   const [undoingId, setUndoingId] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<DatePreset>('all');
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   // Force re-read of localStorage when Meta account changes
   const [accTick, setAccTick] = useState(0);
   const metaSelId = React.useMemo(() => {
@@ -181,11 +197,26 @@ const HistoryPage: React.FC = () => {
 
   // ── Filtered list ──
   const filtered = useMemo(() =>
-    history.filter(h =>
+    history.filter(h => {
+      if (!matchesDateFilter(h.executed_at, dateFilter)) return false;
+      if (!matchesActionFilter(h.action_type, actionFilter)) return false;
+      if (sourceFilter !== 'all' && getEntrySource(h) !== sourceFilter) return false;
+      return true;
+    }),
+  [history, dateFilter, actionFilter, sourceFilter]);
+
+  // Counts for the source toggle — shown inline so the user knows before
+  // clicking how the split looks. Computed against the date+action-filtered
+  // set so the numbers make sense with other filters already applied.
+  const sourceCounts = useMemo(() => {
+    const aiOrManual = history.filter(h =>
       matchesDateFilter(h.executed_at, dateFilter) &&
-      matchesActionFilter(h.action_type, actionFilter)
-    ),
-  [history, dateFilter, actionFilter]);
+      matchesActionFilter(h.action_type, actionFilter),
+    );
+    const ai = aiOrManual.filter(h => getEntrySource(h) === 'ai').length;
+    const manual = aiOrManual.filter(h => getEntrySource(h) === 'manual').length;
+    return { all: aiOrManual.length, ai, manual };
+  }, [history, dateFilter, actionFilter]);
 
   const handleUndo = async (entry: ActionLogEntry) => {
     setUndoingId(entry.id);
@@ -213,18 +244,25 @@ const HistoryPage: React.FC = () => {
     }
   };
 
-  const getActionLabel = (type: string) => {
+  const getActionLabel = (type: string, source: 'ai' | 'manual' = 'ai') => {
+    const suffix = source === 'ai' ? ' pela IA' : '';
     const labels: Record<string, string> = {
-      pause_ad: 'Anúncio pausado pela IA',
-      pause_adset: 'Conjunto pausado pela IA',
-      pause_campaign: 'Campanha pausada pela IA',
-      reactivate_ad: 'Anúncio reativado pela IA',
-      reactivate_adset: 'Conjunto reativado pela IA',
-      reactivate_campaign: 'Campanha reativada pela IA',
-      increase_budget: 'Budget aumentado pela IA',
-      decrease_budget: 'Budget reduzido pela IA',
+      pause_ad: `Anúncio pausado${suffix}`,
+      pause_adset: `Conjunto pausado${suffix}`,
+      pause_campaign: `Campanha pausada${suffix}`,
+      reactivate_ad: `Anúncio reativado${suffix}`,
+      reactivate_adset: `Conjunto reativado${suffix}`,
+      reactivate_campaign: `Campanha reativada${suffix}`,
+      enable_ad: `Anúncio ativado${suffix}`,
+      enable_adset: `Conjunto ativado${suffix}`,
+      enable_campaign: `Campanha ativada${suffix}`,
+      increase_budget: `Budget aumentado${suffix}`,
+      decrease_budget: `Budget reduzido${suffix}`,
+      update_budget_campaign: `Budget ajustado${suffix}`,
+      update_budget_adset: `Budget ajustado${suffix}`,
       duplicate_ad: 'Anúncio duplicado',
       duplicate_campaign: 'Campanha duplicada',
+      duplicate_adset: 'Conjunto duplicado',
       generate_hook: 'Hook gerado pela IA',
       generate_variation: 'Variação criativa gerada',
     };
@@ -403,6 +441,74 @@ const HistoryPage: React.FC = () => {
         </div>
       </div>
 
+      {/* ── Source filter — "IA vs Manual" segmented toggle ──
+          Sits below the main filter bar with breathing room so it reads
+          as a distinct dimension (origem da ação) rather than a chip in
+          the same family. Elevated card shell + gradient-lit selection
+          matches the glassmorphism of the rest of the page. */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        marginBottom: 20, flexWrap: 'wrap' as const,
+      }}>
+        <span style={{
+          fontSize: 10, fontWeight: 700, color: TL,
+          letterSpacing: '0.10em', textTransform: 'uppercase' as const,
+          flexShrink: 0,
+        }}>
+          Origem
+        </span>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center',
+          background: CARD, border: `1px solid ${B1}`,
+          borderRadius: 10, padding: 3, boxShadow: SHD,
+          backdropFilter: GLASS,
+          gap: 2,
+        }}>
+          {([
+            { key: 'all' as const, label: 'Todas', icon: null, color: T1, count: sourceCounts.all },
+            { key: 'ai' as const, label: 'IA', icon: <Bot size={11.5} strokeWidth={2.3} />, color: BLUE, count: sourceCounts.ai },
+            { key: 'manual' as const, label: 'Manual', icon: <Hand size={11} strokeWidth={2.3} />, color: AMBER, count: sourceCounts.manual },
+          ]).map(opt => {
+            const sel = sourceFilter === opt.key;
+            return (
+              <button
+                key={opt.key}
+                onClick={() => setSourceFilter(opt.key)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 12px', borderRadius: 7,
+                  fontSize: 11.5, fontWeight: 600, fontFamily: F,
+                  cursor: 'pointer', border: 'none',
+                  background: sel
+                    ? opt.key === 'ai'
+                      ? 'linear-gradient(135deg, rgba(37,99,235,0.22), rgba(6,182,212,0.14))'
+                      : opt.key === 'manual'
+                        ? 'linear-gradient(135deg, rgba(245,158,11,0.22), rgba(239,68,68,0.08))'
+                        : 'rgba(148,163,184,0.12)'
+                    : 'transparent',
+                  color: sel ? opt.color : T3,
+                  boxShadow: sel ? `inset 0 0 0 1px ${opt.color}30` : 'none',
+                  transition: `all 0.18s ${EASE}`,
+                  letterSpacing: '0.01em',
+                }}
+              >
+                {opt.icon}
+                <span>{opt.label}</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700,
+                  color: sel ? opt.color : TL,
+                  fontVariantNumeric: 'tabular-nums' as const,
+                  opacity: sel ? 0.9 : 0.7,
+                  marginLeft: 2,
+                }}>
+                  {opt.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── Empty state ── */}
       {filtered.length === 0 && (
         <div style={{
@@ -447,6 +553,8 @@ const HistoryPage: React.FC = () => {
         {filtered.map(entry => {
           const status = getStatusConfig(entry.result);
           const actionColor = getActionColor(entry.action_type);
+          const source = getEntrySource(entry);
+          const sourceTint = source === 'ai' ? BLUE : AMBER;
           const canRollback = entry.decision_id
             && entry.rollback_available
             && entry.result === 'success'
@@ -454,7 +562,10 @@ const HistoryPage: React.FC = () => {
 
           return (
             <div key={entry.id} className="hist-card" style={{
+              // Subtle left-edge accent in the source color — readable at a
+              // glance without adding chrome. IA = blue, Manual = amber.
               background: CARD, border: `1px solid ${B1}`,
+              borderLeft: `2px solid ${sourceTint}55`,
               borderRadius: 14, padding: '16px 18px',
               backdropFilter: GLASS,
               transition: `all 0.2s ${EASE}`,
@@ -491,11 +602,27 @@ const HistoryPage: React.FC = () => {
                     }}>
                       {status.icon} {status.label}
                     </span>
+                    {/* Source badge — IA (gradient blue+cyan) or Manual
+                        (gradient amber). Tiny, premium, immediately parseable. */}
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 5,
+                      color: source === 'ai' ? '#93C5FD' : '#FCD34D',
+                      background: source === 'ai'
+                        ? 'linear-gradient(135deg, rgba(37,99,235,0.18), rgba(6,182,212,0.10))'
+                        : 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(239,68,68,0.08))',
+                      border: `1px solid ${sourceTint}33`,
+                      display: 'inline-flex', alignItems: 'center', gap: 3,
+                      flexShrink: 0, letterSpacing: '0.03em',
+                      textTransform: 'uppercase' as const,
+                    }}>
+                      {source === 'ai' ? <Bot size={9} strokeWidth={2.5} /> : <Hand size={9} strokeWidth={2.5} />}
+                      {source === 'ai' ? 'IA' : 'Manual'}
+                    </span>
                   </div>
 
                   {/* Description */}
                   <p style={{ fontSize: 12, color: T3, margin: 0 }}>
-                    {getActionLabel(entry.action_type)}
+                    {getActionLabel(entry.action_type, source)}
                     {(entry.action_type === 'increase_budget' || entry.action_type === 'decrease_budget') &&
                       (entry as any).new_state?.budget_change ? (() => {
                         const bc = (entry as any).new_state.budget_change;
