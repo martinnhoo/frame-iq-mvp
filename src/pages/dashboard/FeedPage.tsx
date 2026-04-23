@@ -6551,6 +6551,7 @@ const FeedPage: React.FC = () => {
               account_warn: 'Minha conta de anúncios está com alerta. O que significa e como resolver?',
               balance_critical: 'Meu saldo pré-pago tá quase acabando e os anúncios podem pausar. Me explica como adicionar saldo na Meta agora — qual a forma mais rápida (pix, cartão) e quanto vale a pena colocar pra não quebrar o ciclo.',
               balance_low: 'Meu saldo pré-pago tá baixo. Quanto vale colocar pra segurar o próximo ciclo sem travar? Considera meu ritmo de gasto atual.',
+              cap_exhausted: 'Minha conta atingiu o limite de gastos (spend cap) que a Meta define e os anúncios foram pausados. Me explica o que aconteceu, quando a Meta costuma liberar mais limite, e o que eu posso fazer enquanto isso (ex: solicitar revisão, rodar em outra conta, etc). Considera meu histórico de gasto.',
               pixel_missing: 'Minha conta não tem pixel instalado. Me mostra como instalar e configurar eventos de conversão passo-a-passo.',
               pixel_stale: 'Meu pixel parou de disparar eventos. Diagnostica o motivo e me dá a correção.',
               pixel_orphan: 'Tenho anúncios sem pixel amarrado. Quais são e como corrigir?',

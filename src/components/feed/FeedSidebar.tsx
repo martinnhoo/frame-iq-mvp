@@ -91,6 +91,7 @@ function issueActionText(issue: HealthIssue): string {
   if (k === 'no_active_ads') return 'Reativar campanhas';
   if (k === 'balance_critical') return 'Adicionar saldo';
   if (k === 'balance_low') return 'Repor saldo';
+  if (k === 'cap_exhausted') return 'Entender o limite';
   if (k === 'account_critical') return 'Reativar conta';
   if (k === 'account_warn') return 'Ajustar conta';
   if (k.includes('delivery') || k.includes('freq')) return 'Ajustar entrega';

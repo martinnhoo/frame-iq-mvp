@@ -38,7 +38,7 @@ const CACHE_TTL_MS = 15 * 60 * 1000;
 // (written by an older version of this function) are invalidated and a
 // fresh Meta check runs. Prior versions flagged spend_cap pressure as
 // critical — bumping this invalidates those stuck "critical" results.
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 type Severity = "ok" | "warn" | "critical" | "unknown";
 
@@ -263,22 +263,32 @@ Deno.serve(async (req) => {
     let severity: Severity = statusSeverity;
     let message = reasonText ? `${label} — ${reasonText}` : label;
 
-    // Note: we intentionally do NOT flag spend_cap pressure (capPct) nor low
-    // prepaid balance as warn/critical. Reasoning:
-    //   • spend_cap is set automatically by Meta for most accounts (especially
-    //     BR prepaid); users can't edit it and Meta raises it as the account
-    //     matures. Flagging it produced an un-actionable alert.
-    //   • balance is only meaningful for strictly prepaid accounts. Post-paid
-    //     accounts (credit card on file — auto-charged by Meta) routinely
-    //     show balance near zero: it's normal and NOT a problem. We can't
-    //     reliably tell from the Graph API which funding mode the account is
-    //     on, so flagging balance produces false positives (ex: "R$ 15 saldo
-    //     crítico" when actually there's a card set to auto-charge).
-    // We still return balance / cap_remaining in the payload for diagnostics
-    // and the AI chat context — the AI can reason about it with full context,
-    // but we won't surface it as a health-score alert.
+    // Severity refinements beyond account_status:
+    //
+    //   • spend_cap PRESSURE (80%/95%) is NOT flagged. Meta sets the cap
+    //     automatically, users can't edit it from the UI, and Meta raises it
+    //     organically. Mid-pressure is noise.
+    //   • spend_cap EXHAUSTED (≥99%) IS flagged critical. At that point Meta
+    //     pauses ad delivery until the cap is raised — the user sees ads
+    //     stop without knowing why, so it's a real, actionable state worth
+    //     surfacing (the CTA just points the user to the AI chat for
+    //     explanation; Meta auto-raises the cap after review).
+    //   • prepaid balance is NOT flagged. Post-paid accounts (credit card
+    //     auto-charged by Meta) routinely show low balance — normal, not a
+    //     problem. We can't reliably tell funding mode from the Graph API,
+    //     so any balance-based alert produces false positives. Real billing
+    //     failures are already caught by Meta's account_status codes
+    //     (status=3 "pendência de pagamento" maps to critical upstream).
+    //
+    // Balance + cap_remaining still ship in the payload for AI-chat context
+    // and diagnostics — just not surfaced as health-score alerts.
     if (severity === "ok") {
-      message = "Conta ativa";
+      if (capPct !== null && capPct >= 0.99) {
+        severity = "critical";
+        message = "Limite de gastos atingido — entrega pausada pela Meta";
+      } else {
+        message = "Conta ativa";
+      }
     }
 
     const result: AccountStatusResult = {

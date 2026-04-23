@@ -145,10 +145,14 @@ export function computeAccountHealth(input: {
   if (accountStatus) {
     const msg = (accountStatus.message || '').toLowerCase();
     const isBalance = msg.includes('saldo');
+    const isCapExhausted = msg.includes('limite de gastos');
+    let critKey = 'account_critical';
+    if (isCapExhausted) critKey = 'cap_exhausted';
+    else if (isBalance) critKey = 'balance_critical';
     if (accountStatus.severity === 'critical') {
       score -= 55;
       issues.push({
-        key: isBalance ? 'balance_critical' : 'account_critical',
+        key: critKey,
         label: accountStatus.message || 'Conta com problema na Meta',
         severity: 'critical',
       });
