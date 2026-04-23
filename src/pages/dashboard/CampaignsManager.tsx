@@ -1103,12 +1103,18 @@ export default function CampaignsManager() {
                     { label: 'Frequência', value: `${p.context!.freq.toFixed(1)}x`,
                       tone: (p.context!.freq > 3.5 ? 'bad' : p.context!.freq > 2.5 ? undefined : undefined) as 'good' | 'bad' | undefined },
                   ];
-                  return cells.map((m, i) => (
-                    <React.Fragment key={i}>
-                      {i > 0 && (
-                        <div style={{ width: 1, background: T.border1, alignSelf: 'stretch', margin: '4px 0' }} />
-                      )}
-                      <div style={{ padding: '2px 18px', minWidth: 0 }}>
+                  // NOTE: using an array of elements with explicit keys
+                  // instead of React.Fragment — this file doesn't import
+                  // React as default, so React.Fragment would crash in
+                  // runtime with "React is not defined". Fragment
+                  // shorthand <></> can't carry a key, and we need keys
+                  // on the row since it's inside a map, so we just emit
+                  // sibling elements with composite keys.
+                  return cells.flatMap((m, i) => [
+                    ...(i > 0
+                      ? [<div key={`d-${i}`} style={{ width: 1, background: T.border1, alignSelf: 'stretch', margin: '4px 0' }} />]
+                      : []),
+                      <div key={`m-${i}`} style={{ padding: '2px 18px', minWidth: 0 }}>
                         <div style={{
                           fontSize: 9.5, fontWeight: 700, color: T.text3,
                           letterSpacing: '0.08em', textTransform: 'uppercase' as const,
@@ -1133,9 +1139,8 @@ export default function CampaignsManager() {
                             {m.sub}
                           </div>
                         )}
-                      </div>
-                    </React.Fragment>
-                  ));
+                      </div>,
+                  ]);
                 })()}
               </div>
             )}
