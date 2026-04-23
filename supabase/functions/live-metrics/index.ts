@@ -12,6 +12,72 @@ const cors = {
 
 const parseN = (v: any) => parseFloat(String(v || "0")) || 0;
 
+/**
+ * Conversion action_type alias map — Meta returns the same logical event
+ * under multiple names depending on firing source (pixel web, server CAPI,
+ * onsite shop, etc). Exact-string matching on a single name routinely
+ * under-counted conversions to 0, which then triggered false "spend without
+ * conversions" alerts on the account health gauge.
+ *
+ * Usage: given a user-configured goal event, expand it to the family of all
+ * Meta action_types that represent the same real-world conversion, then sum
+ * their values across the ad's actions[] array.
+ */
+const CONVERSION_ALIASES: Record<string, string[]> = {
+  purchase: [
+    "purchase",
+    "offsite_conversion.fb_pixel_purchase",
+    "omni_purchase",
+    "onsite_conversion.purchase",
+  ],
+  lead: [
+    "lead",
+    "offsite_conversion.fb_pixel_lead",
+    "onsite_conversion.lead_grouped",
+  ],
+  complete_registration: [
+    "complete_registration",
+    "completed_registration",
+    "offsite_conversion.fb_pixel_complete_registration",
+    "onsite_conversion.complete_registration",
+  ],
+  add_to_cart: [
+    "add_to_cart",
+    "offsite_conversion.fb_pixel_add_to_cart",
+    "omni_add_to_cart",
+  ],
+  initiate_checkout: [
+    "initiate_checkout",
+    "offsite_conversion.fb_pixel_initiate_checkout",
+    "omni_initiated_checkout",
+  ],
+  contact: ["contact", "offsite_conversion.fb_pixel_contact"],
+  subscribe: ["subscribe", "offsite_conversion.fb_pixel_subscribe"],
+  schedule: ["schedule", "offsite_conversion.fb_pixel_schedule"],
+  submit_application: [
+    "submit_application",
+    "offsite_conversion.fb_pixel_submit_application",
+  ],
+};
+
+// All known conversion-family types (used when goalEvent is unset — we
+// count ANY conversion signal so the health gauge isn't forced to 0).
+const ANY_CONVERSION_TYPES = Array.from(
+  new Set(Object.values(CONVERSION_ALIASES).flat()),
+);
+
+function conversionAliasesFor(goalEvent: string | null): string[] {
+  if (!goalEvent) return ANY_CONVERSION_TYPES;
+  const key = goalEvent.toLowerCase().trim();
+  const aliases = CONVERSION_ALIASES[key];
+  // If the user-configured event isn't in our map, at least try the raw
+  // value as-is plus the offsite_conversion prefix — covers custom events.
+  if (!aliases) {
+    return [key, `offsite_conversion.fb_pixel_${key}`];
+  }
+  return aliases;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
   const ok = (d: object) => new Response(JSON.stringify(d), { headers: { ...cors, "Content-Type": "application/json" } });
@@ -86,17 +152,28 @@ serve(async (req) => {
           const c = curr.data?.[0] || {};
           const p = prev.data?.[0] || {};
 
-          // Extract conversions from actions — use goal event if configured, else purchase
-          const convEvent = goalEvent || "purchase";
+          // Extract conversions from actions. Meta returns the same logical
+          // event under multiple action_types (pixel, server-side, onsite),
+          // so we sum across the family of aliases for the user's goal
+          // event. If no goal is configured, we count ANY conversion signal
+          // (still better than defaulting to "purchase" and reporting 0
+          // when the user's ads are driving leads/registrations).
+          const aliases = conversionAliasesFor(goalEvent);
           const getConversions = (d: any) => {
             const actions = d.actions || [];
-            const match = actions.find((a: any) => a.action_type === convEvent);
-            return match ? parseN(match.value) : 0;
+            let total = 0;
+            for (const a of actions) {
+              if (aliases.includes(a.action_type)) total += parseN(a.value);
+            }
+            return total;
           };
           const getConvValue = (d: any) => {
             const vals = d.action_values || [];
-            const match = vals.find((a: any) => a.action_type === convEvent);
-            return match ? parseN(match.value) : 0;
+            let total = 0;
+            for (const a of vals) {
+              if (aliases.includes(a.action_type)) total += parseN(a.value);
+            }
+            return total;
           };
 
           const metaSpend = parseN(c.spend);
