@@ -176,7 +176,6 @@ const AccountHealthCard: React.FC<{
   const health = computeAccountHealth({
     accountStatus: props.accountStatus,
     accountStatusLoading: props.accountStatusLoading,
-    accountStatusError: props.accountStatusError,
     pixelHealth: props.pixelHealth,
     pixelHealthLoading: props.pixelHealthLoading,
     adMetrics: props.adMetrics,
@@ -350,10 +349,10 @@ function deriveNextStep(d: Decision | null): {
   let impactLabel = 'Potencial de impacto';
   let impactValue = '—';
   if (d.impact_daily && d.impact_daily !== 0) {
-    const positive = d.impact_type === 'saves' || d.impact_type === 'gain' || d.type === 'scale';
+    const positive = d.impact_type === 'savings' || d.impact_type === 'revenue' || d.type === 'scale';
     impactValue = `${positive ? '+' : '-'}${centsToBrl(Math.abs(d.impact_daily))} /dia`;
   } else if (d.impact_7d && d.impact_7d !== 0) {
-    const positive = d.impact_type === 'saves' || d.impact_type === 'gain' || d.type === 'scale';
+    const positive = d.impact_type === 'savings' || d.impact_type === 'revenue' || d.type === 'scale';
     impactValue = `${positive ? '+' : '-'}${centsToBrl(Math.abs(d.impact_7d))} /7d`;
   }
 
