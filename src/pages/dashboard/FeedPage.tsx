@@ -2001,39 +2001,77 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns:
   const activeCount = campaigns.filter(c => (c.status || '').toUpperCase() !== 'PAUSED' && (c.status || '').toUpperCase() !== 'ARCHIVED').length;
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Linear-style manual strip — no pill, no box-chrome. Just a
+          typographic line with a slim vertical bar accent and a tiny
+          SVG cursor glyph for "manual". Hover deepens the bar + animates
+          the arrow right. The whole row is the click target. */}
       <button
+        className="feed-manual-strip"
         onClick={() => navigate('/dashboard/feed/campanhas', { state: { fromFeed: true } })}
         style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          background: T.bg1, border: `1px solid ${T.border1}`,
-          borderLeft: `2px solid ${T.blue}`,
-          borderRadius: 8, padding: '10px 14px',
+          display: 'flex', alignItems: 'center', gap: 12,
+          background: 'transparent',
+          border: `1px solid ${T.border1}`,
+          borderRadius: 10, padding: '10px 14px',
           cursor: 'pointer', fontFamily: F, textAlign: 'left',
-          transition: 'border-color 0.15s, background 0.15s',
+          width: '100%',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'border-color 0.18s ease, background 0.18s ease',
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.bg2; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.bg1; }}
       >
+        {/* Slim vertical bar — AdBrief cyan/blue, replaces the old
+            MANUAL pill. Two tones of blue give it a subtle gradient
+            without any actual gradient (which flashes during stream). */}
+        <span aria-hidden style={{
+          width: 2, alignSelf: 'stretch',
+          background: '#0ea5e9',
+          borderRadius: 1,
+          boxShadow: '0 0 8px rgba(14,165,233,0.35)',
+          flexShrink: 0,
+        }} />
+        {/* Cursor glyph — tells you this is MANUAL operation without
+            needing a "MANUAL" label. */}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: '#7DD3FC' }}>
+          <path d="M5 3l6 16 2-7 7-2L5 3z"
+            stroke="currentColor" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        {/* Single typographic line: eyebrow + question + context all
+            inline. No stacked text, no chip background. */}
         <span style={{
-          fontSize: 9.5, fontWeight: 700, color: T.blue,
-          letterSpacing: '0.08em', textTransform: 'uppercase',
-          background: 'rgba(37,99,235,0.10)', borderRadius: 4,
-          padding: '2px 6px', flexShrink: 0,
+          flex: 1, fontSize: 12, color: T.text2, lineHeight: 1.45,
+          letterSpacing: '-0.005em',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
-          Manual
-        </span>
-        <span style={{ fontSize: 12, color: T.text2, flex: 1, lineHeight: 1.5 }}>
-          Precisa ajustar alguma campanha específica?
+          <span style={{
+            fontSize: 9.5, fontWeight: 800, color: '#7DD3FC',
+            letterSpacing: '0.14em', textTransform: 'uppercase' as const,
+            marginRight: 10,
+          }}>
+            Gerenciador manual
+          </span>
+          <span style={{ color: T.text1, fontWeight: 600 }}>
+            Ajustar campanha específica
+          </span>
           {activeCount > 0 && (
-            <span style={{ color: T.text3, marginLeft: 6 }}>
-              {activeCount} ativa{activeCount !== 1 ? 's' : ''} no momento.
+            <span style={{ color: T.text3, marginLeft: 8 }}>
+              · {activeCount} ativa{activeCount !== 1 ? 's' : ''}
             </span>
           )}
         </span>
-        <span style={{
-          fontSize: 11, fontWeight: 600, color: T.blue, flexShrink: 0,
+        {/* Trailing arrow — reveals on hover, replaces the "Abrir
+            gerenciador" label. Lighter touch, more confident. */}
+        <span aria-hidden className="feed-manual-arrow" style={{
+          fontSize: 13, fontWeight: 700, color: '#7DD3FC', flexShrink: 0,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          letterSpacing: '-0.01em',
+          transition: 'transform 0.18s ease, color 0.15s ease',
         }}>
-          Abrir gerenciador →
+          <span className="feed-manual-label" style={{
+            fontSize: 10.5, fontWeight: 700, letterSpacing: '-0.005em',
+          }}>Abrir</span>
+          <span className="feed-manual-arrow-glyph">→</span>
         </span>
       </button>
     </div>
@@ -3106,30 +3144,26 @@ const CommandKPIRow: React.FC<{
               position: 'relative',
             }}
           >
+            {/* Linear-style label row — no chip, no box. Primary is
+                marked by (a) cyan color on the label and (b) a single
+                character prefix '→' in cyan that whispers without
+                shouting. Typography-first. */}
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 6,
+              display: 'flex', alignItems: 'center', gap: 5,
             }}>
+              {isPrimary && (
+                <span aria-hidden style={{
+                  fontSize: 9.5, fontWeight: 800, color: '#7DD3FC',
+                  letterSpacing: 0, lineHeight: 1, opacity: 0.9,
+                }}>→</span>
+              )}
               <div style={{
-                fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em',
+                fontSize: 9.5, fontWeight: 700,
+                letterSpacing: isPrimary ? '0.14em' : '0.12em',
                 color: isPrimary ? '#7DD3FC' : T.labelColor,
                 textTransform: 'uppercase' as const,
-                transition: 'color 0.2s ease',
+                transition: 'color 0.2s ease, letter-spacing 0.2s ease',
               }}>{t.label}</div>
-              {/* Primary chip — tiny cyan pill beside the label so the
-                  operator instantly knows which metric matters most. */}
-              {isPrimary && (
-                <span style={{
-                  fontSize: 8.5, fontWeight: 800, letterSpacing: '0.10em',
-                  color: '#7DD3FC',
-                  background: 'rgba(14,165,233,0.10)',
-                  border: '1px solid rgba(14,165,233,0.28)',
-                  padding: '1px 6px', borderRadius: 3,
-                  textTransform: 'uppercase' as const,
-                  fontFamily: F,
-                }}>
-                  Primário
-                </span>
-              )}
             </div>
             {/* Dominant number — bigger, tighter, tabular so digits
                 align perfectly vertically when they cascade in. The
@@ -3170,16 +3204,10 @@ const CommandKPIRow: React.FC<{
                 {t.context}
               </div>
             )}
-            {/* Cyan underline on the primary tile — a faint 2px bar
-                below the tile that sets it visually apart without
-                competing with the number itself. */}
-            {isPrimary && (
-              <div aria-hidden style={{
-                position: 'absolute', left: 0, right: i < tiles.length - 1 ? 12 : 0,
-                bottom: -10, height: 2, borderRadius: 1,
-                background: 'linear-gradient(90deg, rgba(14,165,233,0.45), rgba(14,165,233,0))',
-              }} />
-            )}
+            {/* No colored bar/gradient on the primary tile — the cyan
+                label + arrow prefix already marks it. Adding a
+                gradient line below read as "generic dashboard demo"
+                per user feedback. Linear-style: mark it in text. */}
           </div>
         );
       })}
@@ -3257,12 +3285,25 @@ const CommandStatusStrip: React.FC<{
       fontFamily: F,
       animation: 'feed-fadeIn 0.32s ease 0.05s both',
     }}>
-      <span style={{
-        width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-        background: tp.dot,
-        boxShadow: `0 0 0 3px ${tp.glow.replace(/[\d.]+\)$/, '0.14)')}, 0 0 12px ${tp.glow}`,
-        animation: pulsing ? 'feed-status-pulse 1.6s ease-in-out infinite' : undefined,
-      }} />
+      {/* Linear-flat live indicator. Slim 2px vertical bar replaces
+          the triple-halo orb the previous revision shipped — the orb
+          looked too "generic dashboard demo" next to a tight status
+          line. Keeps the dot only when actively pulsing (critical /
+          still resolving) so there's a motion cue that matters. */}
+      {pulsing ? (
+        <span style={{
+          width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+          background: tp.dot,
+          boxShadow: `0 0 8px ${tp.glow}`,
+          animation: 'feed-status-pulse 1.6s ease-in-out infinite',
+        }} />
+      ) : (
+        <span aria-hidden style={{
+          width: 2, height: 11, borderRadius: 1, flexShrink: 0,
+          background: tp.dot,
+          boxShadow: `0 0 6px ${tp.glow}`,
+        }} />
+      )}
       <span style={{
         fontSize: 11.5, fontWeight: 700, color: T.text1,
         letterSpacing: '-0.005em',
@@ -4406,23 +4447,22 @@ const CommandHero: React.FC<{
         </div>
       )}
 
-      {/* Compact eyebrow — tiny AdBrief-purple label only, no big pill */}
+      {/* Compact eyebrow — Linear style: thin vertical bar + uppercase
+          label in the accent color. No chip, no box, no dot-in-orb.
+          All the color work is in typography. */}
       {isCompact && (
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 7,
+          display: 'flex', alignItems: 'center', gap: 8,
           marginBottom: 6,
         }}>
-          <span style={{
-            width: 14, height: 14, borderRadius: 4,
-            background: 'rgba(167,139,250,0.16)',
-            border: '1px solid rgba(167,139,250,0.32)',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          <span aria-hidden style={{
+            width: 2, height: 11, borderRadius: 1,
+            background: '#A78BFA',
+            boxShadow: '0 0 6px rgba(167,139,250,0.45)',
             flexShrink: 0,
-          }}>
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#A78BFA' }} />
-          </span>
+          }} />
           <span style={{
-            fontSize: 9.5, fontWeight: 800, letterSpacing: '0.12em',
+            fontSize: 9.5, fontWeight: 800, letterSpacing: '0.14em',
             textTransform: 'uppercase' as const, color: '#A78BFA',
             fontFamily: F,
           }}>
@@ -7069,6 +7109,15 @@ const FeedPage: React.FC = () => {
           50%{opacity:1;transform:scale(1.06)}
         }
         @keyframes feed-spin{to{transform:rotate(360deg)}}
+        /* Manual strip — Linear-style hover: border + arrow subtly
+           respond, no colored fill flood. */
+        .feed-manual-strip:hover{
+          border-color:rgba(14,165,233,0.28)!important;
+          background:rgba(14,165,233,0.03)!important;
+        }
+        .feed-manual-strip:hover .feed-manual-arrow{color:#7DD3FC;transform:translateX(2px);}
+        .feed-manual-strip:hover .feed-manual-arrow-glyph{display:inline-block;animation:feed-arrow-shift 0.4s ease;}
+        @keyframes feed-arrow-shift{0%{transform:translateX(-2px);opacity:0.6}100%{transform:translateX(0);opacity:1}}
         @keyframes feed-shimmer{0%,100%{opacity:1}50%{opacity:0.5}}
         @keyframes feed-success{0%{opacity:0;transform:scale(0.9)}40%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
         @keyframes feed-btn-press{0%{transform:scale(1)}50%{transform:scale(0.96)}100%{transform:scale(1)}}
