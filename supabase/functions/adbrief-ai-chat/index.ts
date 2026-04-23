@@ -420,19 +420,37 @@ Deno.serve(async (req) => {
                   panelTrackingLabel = "Tracking ativo";
                   panelTrackingCase = "none";
                 }
-              } else if (totalSpend > 50 && totalClicks > 20 && totalConv === 0) {
-                // Case 1: traffic flowing but zero conversions
-                panelTrackingStatus = "broken";
-                panelTrackingCase = "case1";
-                panelTrackingLabel = "Nenhuma conversão detectada";
-                panelTrackingProblem = `Campanhas gerando tráfego (${totalClicks} cliques, $${totalSpend.toFixed(0)} investidos) mas nenhuma conversão registrada`;
-                panelTrackingCauses = [
-                  "Evento de conversão não está disparando no site",
-                  "Evento selecionado não corresponde à ação real do usuário",
-                  "Landing page com problema impedindo a conversão",
-                ];
-                panelTrackingImpact = "AdBrief não consegue calcular CPA. Otimização de performance está limitada.";
-                panelTrackingChatMsg = `Diagnóstico de Tracking\n\nMinhas campanhas estão gerando tráfego (${totalClicks} cliques, $${totalSpend.toFixed(0)} investidos) mas nenhuma conversão está sendo registrada.\n\nPreciso diagnosticar o que está errado com o tracking. Em qual plataforma meu site foi construído?`;
+              } else if (totalSpend > 0 && totalConv === 0) {
+                // Zero conversions with spend — need to decide if this is a real
+                // tracking problem or just a young campaign. Use the time-series
+                // to count days of actual delivery.
+                const panelDaysWithSpend = Array.isArray(ts?.data)
+                  ? ts.data.filter((d: any) => parseFloat(d.spend || 0) > 0).length
+                  : 0;
+                if (panelDaysWithSpend > 0 && panelDaysWithSpend < 3) {
+                  // Fresh campaign — attribution window (24–72h) still settling.
+                  panelTrackingStatus = "uncertain";
+                  panelTrackingCase = "none";
+                  panelTrackingLabel = `Campanha nova (${panelDaysWithSpend} dia${panelDaysWithSpend === 1 ? "" : "s"})`;
+                } else if (panelDaysWithSpend >= 3 && totalSpend > 300 && totalClicks > 100) {
+                  // 3+ days, material spend, real click volume, still 0 → real flag.
+                  panelTrackingStatus = "broken";
+                  panelTrackingCase = "case1";
+                  panelTrackingLabel = "Nenhuma conversão detectada";
+                  panelTrackingProblem = `${panelDaysWithSpend} dias rodando — ${totalClicks} cliques, $${totalSpend.toFixed(0)} investidos, 0 conversões registradas`;
+                  panelTrackingCauses = [
+                    "Evento de conversão não está disparando no site",
+                    "Evento selecionado não corresponde à ação real do usuário",
+                    "Landing page com problema impedindo a conversão",
+                  ];
+                  panelTrackingImpact = "AdBrief não consegue calcular CPA. Otimização de performance está limitada.";
+                  panelTrackingChatMsg = `Diagnóstico de Tracking\n\nMinhas campanhas estão rodando há ${panelDaysWithSpend} dias (${totalClicks} cliques, $${totalSpend.toFixed(0)} investidos) mas nenhuma conversão está sendo registrada.\n\nPreciso diagnosticar o que está errado com o tracking. Em qual plataforma meu site foi construído?`;
+                } else {
+                  // Has spend but not enough signal yet to blame tracking.
+                  panelTrackingStatus = "uncertain";
+                  panelTrackingCase = "none";
+                  panelTrackingLabel = "Volume ainda baixo";
+                }
               } else if (totalSpend === 0) {
                 panelTrackingStatus = "uncertain";
                 panelTrackingCase = "none";
@@ -1762,6 +1780,13 @@ ${errorLine}
               const hasPixel = pixelInfo.includes("Pixel") && !pixelInfo.includes("Nenhum pixel");
               const pixelFired = pixelInfo.includes("último disparo") && !pixelInfo.includes("NUNCA disparou");
 
+              // Count days of actual delivery (spend > 0) — tells us how mature
+              // the signal is. A brand-new campaign that just spent $178 today
+              // on day 1 shouldn't be called a tracking problem.
+              const daysWithSpend = Array.isArray(timeSeriesRaw?.data)
+                ? timeSeriesRaw.data.filter((d: any) => parseFloat(d.spend || 0) > 0).length
+                : 0;
+
               // Classify tracking health
               let trackingStatus: "healthy" | "uncertain" | "broken" = "broken";
               let trackingDiagnosis = "";
@@ -1777,13 +1802,34 @@ ${errorLine}
                 trackingStatus = "broken";
                 trackingDiagnosis = "Pixel instalado mas NUNCA disparou. O código pode não estar no site.";
                 trackingConfidence = "high";
-              } else if (totalSpend > 50 && totalClicks > 20 && totalConversions === 0) {
-                // Money spent, clicks happening, but ZERO conversions → likely tracking issue
+              } else if (daysWithSpend > 0 && daysWithSpend < 3 && totalConversions === 0) {
+                // Fresh campaign — less than 3 full days of delivery. Attribution
+                // windows (click → conversion) routinely take 24–72h; calling
+                // this "tracking broken" produces false positives. Tell the AI
+                // to wait, not to diagnose.
+                trackingStatus = "uncertain";
+                trackingDiagnosis = `Campanha recém-lançada (${daysWithSpend} dia${daysWithSpend === 1 ? "" : "s"} de entrega). ` +
+                  `Ainda é cedo para avaliar tracking — a janela de atribuição (clique → conversão) leva 24–72h pra estabilizar. ` +
+                  `Aguardar mais 1–2 dias antes de diagnosticar problema de pixel/evento.`;
+                trackingConfidence = "low";
+              } else if (daysWithSpend >= 3 && totalSpend > 300 && totalClicks > 100 && totalConversions === 0) {
+                // 3+ days of delivery, material spend (>R$300), meaningful click
+                // volume (>100), and still zero conversions → now it's a real
+                // tracking red flag. Thresholds raised from $50/20-clicks to
+                // avoid false positives on just-started campaigns.
                 trackingStatus = "uncertain";
                 const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions * 100) : 0;
-                trackingDiagnosis = `Spend $${totalSpend.toFixed(0)} com ${totalClicks} cliques (CTR ${avgCtr.toFixed(2)}%) mas 0 conversões. ` +
+                trackingDiagnosis = `${daysWithSpend} dias rodando, spend $${totalSpend.toFixed(0)}, ${totalClicks} cliques (CTR ${avgCtr.toFixed(2)}%) e 0 conversões. ` +
                   `Possíveis causas: evento de conversão não dispara no site, landing page com problema, ou evento selecionado não corresponde à ação real do usuário.`;
                 trackingConfidence = "medium";
+              } else if (totalSpend > 0 && totalConversions === 0) {
+                // Has spend and clicks but doesn't clear the "broken" thresholds
+                // (e.g. low spend, mid-volume clicks, or 3+ days but under R$300).
+                // Don't call tracking broken — just flag as "too early / thin".
+                trackingStatus = "uncertain";
+                trackingDiagnosis = `Spend $${totalSpend.toFixed(0)} com ${totalClicks} cliques em ${daysWithSpend || "menos de 1"} dia(s) e 0 conversões. ` +
+                  `Volume ainda baixo para afirmar que é problema de tracking — pode ser só cedo. Continuar acompanhando.`;
+                trackingConfidence = "low";
               } else if (totalSpend > 100 && totalConversions > 0 && totalConversions < totalClicks * 0.005) {
                 // Conversions exist but suspiciously low relative to clicks (<0.5% conv rate)
                 trackingStatus = "uncertain";
@@ -1981,7 +2027,7 @@ REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre pl
           // The full config already lives in defaultsBlock above; here we only
           // state how to USE it during analysis.
           accountGoal
-            ? `REGRA DE JULGAMENTO: Use ${accountGoal.primary_metric.toUpperCase()} como métrica principal de performance (CTR é só complemento). Se conversões = 0 sobre spend relevante, isso é SEMPRE o diagnóstico #1.`
+            ? `REGRA DE JULGAMENTO: Use ${accountGoal.primary_metric.toUpperCase()} como métrica principal de performance (CTR é só complemento). Se conversões = 0 sobre spend relevante, investigue o motivo — MAS antes de cravar "tracking quebrado" verifique idade da campanha: com menos de 3 dias rodando, atribuição ainda está em janela de estabilização (24–72h) e zero conversões é normal. Nessa janela, diga pro usuário esperar, não diagnostique. Só chame de problema de tracking quando: 3+ dias de entrega, spend > R$300 e > 100 cliques sem 1 conversão sequer.`
             : `=== OBJETIVO AINDA NÃO CONFIGURADO ===
 Este usuário ainda não definiu objetivo de negócio. Se ele pedir análise de performance sem contexto, sugira definir o objetivo nas configurações da conta ANTES de cravar um veredito, mas ainda assim entregue o que der pra dizer com os dados disponíveis (CTR, frequência, tendências). Não faça do objetivo uma barreira pra ajudar.`,
           // Business goal from AI (secondary — inferred, not user-confirmed)

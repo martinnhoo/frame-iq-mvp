@@ -146,16 +146,45 @@ export function computeAccountHealth(input: {
     const msg = (accountStatus.message || '').toLowerCase();
     const isBalance = msg.includes('saldo');
     const isCapExhausted = msg.includes('limite de gastos');
-    let critKey = 'account_critical';
-    if (isCapExhausted) critKey = 'cap_exhausted';
-    else if (isBalance) critKey = 'balance_critical';
+
+    // Gradient penalty from spend_cap usage. The cap is Meta-imposed and
+    // not editable, but as the account fills it up delivery becomes more
+    // constrained — and at 100% Meta pauses entirely. We want the score
+    // to degrade gradually so the user sees pressure building before the
+    // cliff. Anchors: 10% used → -10, 100% used → -55. Below 10% it
+    // ramps up from 0 so a fresh account doesn't eat a penalty.
+    const capPct = (typeof accountStatus.spend_cap === 'number'
+      && accountStatus.spend_cap > 0
+      && typeof accountStatus.amount_spent === 'number')
+      ? Math.min(1, accountStatus.amount_spent / accountStatus.spend_cap)
+      : null;
+    if (capPct !== null) {
+      const capPenalty = capPct < 0.10
+        ? capPct * 100                              // 0–10%: ramp 0→10
+        : Math.min(55, 5 + capPct * 50);            // 10–100%: linear 10→55
+      score -= capPenalty;
+    }
+
     if (accountStatus.severity === 'critical') {
-      score -= 55;
-      issues.push({
-        key: critKey,
-        label: accountStatus.message || 'Conta com problema na Meta',
-        severity: 'critical',
-      });
+      if (isCapExhausted) {
+        // Cap already fully penalised via gradient above (caps at -55).
+        // Don't double-count — just attach the actionable issue so the
+        // sidebar surfaces the "Entender o limite" CTA.
+        issues.push({
+          key: 'cap_exhausted',
+          label: accountStatus.message || 'Limite de gastos atingido — entrega pausada',
+          severity: 'critical',
+        });
+      } else {
+        // Other criticals (disabled account, billing pending, etc) stay
+        // on the flat -55 cliff since they're binary states.
+        score -= 55;
+        issues.push({
+          key: isBalance ? 'balance_critical' : 'account_critical',
+          label: accountStatus.message || 'Conta com problema na Meta',
+          severity: 'critical',
+        });
+      }
     } else if (accountStatus.severity === 'warn') {
       score -= 25;
       issues.push({
