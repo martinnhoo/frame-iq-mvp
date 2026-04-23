@@ -31,7 +31,12 @@ interface Row {
   subscription_status: string | null;
   trial_end: string | null;
   signup_at: string;
+  /** Last time the user chatted with the AI. Narrow — use last_seen_at for "active". */
   last_ai_action_at: string | null;
+  /** Last auth sign-in from auth.users. */
+  last_sign_in_at: string | null;
+  /** MAX(last_ai_action_at, last_sign_in_at) — the canonical "last seen" signal. */
+  last_seen_at: string | null;
   meta_accounts_count: number;
   meta_connected: boolean;
   meta_has_synced: boolean;
@@ -57,7 +62,7 @@ const SORT_KEYS: SortKey[] = ['signup_desc', 'signup_asc', 'last_action_desc', '
 const SORT_LABELS: Record<SortKey, string> = {
   signup_desc: 'Newest signup',
   signup_asc: 'Oldest signup',
-  last_action_desc: 'Most recently active',
+  last_action_desc: 'Most recently seen',
   plan_asc: 'Plan (asc)',
 };
 
@@ -330,7 +335,7 @@ export default function CockpitUsers() {
                   <Th align="right">Actions 7d</Th>
                   <Th>Signup</Th>
                   <SortableTh
-                    label="Last action"
+                    label="Last seen"
                     ascKey="last_action_desc"
                     descKey="last_action_desc"
                     currentSort={sort}
@@ -397,8 +402,8 @@ export default function CockpitUsers() {
                       <MetricCell value={r.actions_7d} />
                     </Td>
                     <Td>{shortDateCompact(r.signup_at)}</Td>
-                    <Td>{r.last_ai_action_at
-                      ? relativeTime(r.last_ai_action_at)
+                    <Td>{r.last_seen_at
+                      ? relativeTime(r.last_seen_at)
                       : <span style={{ color: COLORS.textFaint }}>never</span>}</Td>
                     <Td>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>

@@ -10,10 +10,16 @@
  *     plan?: string | "any",       // free | maker | pro | studio | any
  *     status?: string | "any",     // active | trialing | past_due | canceled | any
  *     has_meta?: boolean,          // true = only users with ≥1 ad_account
- *     inactive_7d?: boolean,       // true = last_ai_action_at older than 7d (or null)
+ *     inactive_7d?: boolean,       // true = last_seen_at older than 7d (or null)
  *     signup_since?: string,       // ISO date — only users who signed up after
  *     sort?: "signup_desc" | "signup_asc" | "last_action_desc" | "plan_asc",
  *   }
+ *
+ * "Last seen" signal:
+ *   We compute last_seen_at = MAX(last_ai_action_at, last_sign_in_at).
+ *   Previously we used last_ai_action_at alone, which only ticked when the
+ *   user chatted with the AI — users who opened the app daily but didn't
+ *   chat were wrongly marked inactive. Now a real login also counts.
  *
  * Output:
  *   {
@@ -88,62 +94,139 @@ Deno.serve(async (req: Request) => {
   const { admin, supabase } = gate;
 
   const now = new Date();
-  const iso7d = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
+  const nowMs = now.getTime();
+  const iso7d = new Date(nowMs - 7 * 24 * 3600 * 1000).toISOString();
 
-  // ── 1. Build profiles query ──────────────────────────────────────────────
-  // We intentionally keep the column set tight to minimize payload.
-  let q = supabase
-    .from("profiles")
-    .select(
-      "id, email, name, avatar_url, plan, subscription_status, trial_end, current_period_end, plan_started_at, last_ai_action_at, created_at",
-      { count: "exact" }
-    );
+  // ── 1a. Build the base profiles filter (search/plan/status/signup_since).
+  // We split the query into two shapes:
+  //   FAST PATH — when sort/filter only need fields on profiles, let Postgres
+  //   paginate server-side. Best performance.
+  //   MEMORY PATH — when sort is "last_action_desc" or inactive_7d filter is
+  //   on, we need last_seen_at (which depends on auth.users.last_sign_in_at
+  //   and isn't a column on profiles). We fetch all matching IDs, enrich,
+  //   sort/filter in memory, then paginate the result set.
+  const needsMemoryPass = inactive7d || sort === "last_action_desc";
 
-  if (search) {
-    // Escape % and , which have special meaning in PostgREST `or` filter strings.
-    const safe = search.replace(/[%,]/g, " ").trim();
-    if (safe) {
-      q = q.or(`email.ilike.%${safe}%,name.ilike.%${safe}%`);
+  const applyBaseFilters = (q: any) => {
+    if (search) {
+      const safe = search.replace(/[%,]/g, " ").trim();
+      if (safe) {
+        q = q.or(`email.ilike.%${safe}%,name.ilike.%${safe}%`);
+      }
     }
-  }
-  if (plan) q = q.eq("plan", plan);
-  if (status) q = q.eq("subscription_status", status);
-  if (signupSince) q = q.gte("created_at", signupSince);
+    if (plan) q = q.eq("plan", plan);
+    if (status) q = q.eq("subscription_status", status);
+    if (signupSince) q = q.gte("created_at", signupSince);
+    return q;
+  };
 
-  // inactive_7d is an "OR null" filter — PostgREST: `or(last_ai_action_at.lt.X,last_ai_action_at.is.null)`.
-  if (inactive7d) {
-    q = q.or(`last_ai_action_at.lt.${iso7d},last_ai_action_at.is.null`);
-  }
+  // ── 1b. Fetch auth users → userId → last_sign_in_at map. Needed in every
+  // path so we can always return last_seen_at to the frontend (used for the
+  // "Last seen" column display and inactive flag).
+  // auth.admin.listUsers paginates; we take up to 10 pages of 1000 (10k users)
+  // which is comfortably above the current AdBrief user base.
+  const lastSignInByUser = new Map<string, string | null>();
+  try {
+    for (let authPage = 1; authPage <= 10; authPage++) {
+      const { data: authList, error: authErr } = await supabase.auth.admin.listUsers({
+        page: authPage,
+        perPage: 1000,
+      });
+      if (authErr) break;
+      const users = authList?.users ?? [];
+      for (const u of users) {
+        lastSignInByUser.set(u.id, (u as any).last_sign_in_at ?? null);
+      }
+      if (users.length < 1000) break; // end reached
+    }
+  } catch { /* best-effort enrichment */ }
 
-  // Sort
-  switch (sort) {
-    case "signup_asc":
-      q = q.order("created_at", { ascending: true });
-      break;
-    case "last_action_desc":
-      q = q.order("last_ai_action_at", { ascending: false, nullsFirst: false });
-      break;
-    case "plan_asc":
-      q = q.order("plan", { ascending: true }).order("created_at", { ascending: false });
-      break;
-    case "signup_desc":
-    default:
-      q = q.order("created_at", { ascending: false });
-      break;
-  }
+  // Helper: compute last_seen_at from the two signals.
+  const computeLastSeen = (lastAi: string | null, lastSignIn: string | null): string | null => {
+    const aiMs = lastAi ? new Date(lastAi).getTime() : 0;
+    const siMs = lastSignIn ? new Date(lastSignIn).getTime() : 0;
+    const m = Math.max(aiMs, siMs);
+    return m > 0 ? new Date(m).toISOString() : null;
+  };
 
-  // Pagination (inclusive range)
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-  q = q.range(from, to);
+  let profileRows: any[] = [];
+  let totalCount = 0;
 
-  const { data: profileRows, count: totalCount, error: profileErr } = await q;
-  if (profileErr) {
-    return jsonResponse(
-      { error: "profiles_query_failed", detail: profileErr.message },
-      { status: 500 },
-      req,
-    );
+  const SELECT_COLS =
+    "id, email, name, avatar_url, plan, subscription_status, trial_end, current_period_end, plan_started_at, last_ai_action_at, created_at";
+
+  if (!needsMemoryPass) {
+    // ── FAST PATH — server-side sort + paginate ─────────────────────────────
+    let q = supabase
+      .from("profiles")
+      .select(SELECT_COLS, { count: "exact" });
+    q = applyBaseFilters(q);
+
+    switch (sort) {
+      case "signup_asc":
+        q = q.order("created_at", { ascending: true });
+        break;
+      case "plan_asc":
+        q = q.order("plan", { ascending: true }).order("created_at", { ascending: false });
+        break;
+      case "signup_desc":
+      default:
+        q = q.order("created_at", { ascending: false });
+        break;
+    }
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    q = q.range(from, to);
+
+    const { data, count, error: profileErr } = await q;
+    if (profileErr) {
+      return jsonResponse(
+        { error: "profiles_query_failed", detail: profileErr.message },
+        { status: 500 }, req,
+      );
+    }
+    profileRows = data ?? [];
+    totalCount = count ?? 0;
+  } else {
+    // ── MEMORY PATH — fetch matching IDs, enrich, sort/filter, paginate ─────
+    let q = supabase.from("profiles").select(SELECT_COLS);
+    q = applyBaseFilters(q);
+    // Defensive cap to avoid pulling the entire table if filters are loose.
+    q = q.limit(10000);
+
+    const { data, error: profileErr } = await q;
+    if (profileErr) {
+      return jsonResponse(
+        { error: "profiles_query_failed", detail: profileErr.message },
+        { status: 500 }, req,
+      );
+    }
+
+    const allRows = (data ?? []) as any[];
+
+    // Attach last_seen + inactive flag for memory-pass sorting / filtering.
+    const withSeen = allRows.map((p) => {
+      const lsi = lastSignInByUser.get(p.id) ?? null;
+      const seen = computeLastSeen(p.last_ai_action_at ?? null, lsi);
+      const inactive = !seen || new Date(seen).getTime() < nowMs - 7 * 24 * 3600 * 1000;
+      return { ...p, __last_seen_at: seen, __inactive_7d: inactive };
+    });
+
+    const filtered = inactive7d
+      ? withSeen.filter((r) => r.__inactive_7d)
+      : withSeen;
+
+    const sorted = [...filtered].sort((a, b) => {
+      // sort === "last_action_desc" → most recent seen first, nulls last.
+      const am = a.__last_seen_at ? new Date(a.__last_seen_at).getTime() : -1;
+      const bm = b.__last_seen_at ? new Date(b.__last_seen_at).getTime() : -1;
+      return bm - am;
+    });
+
+    totalCount = sorted.length;
+    const from = (page - 1) * pageSize;
+    profileRows = sorted.slice(from, from + pageSize);
   }
 
   const userIds = (profileRows ?? []).map((p: any) => p.id);
@@ -194,14 +277,16 @@ Deno.serve(async (req: Request) => {
   // alongside all other filters without a join.
   const composed = (profileRows ?? []).map((p: any) => {
     const metaCount = metaCountByUser[p.id] ?? 0;
-    const lastAction = p.last_ai_action_at;
-    const inactive =
-      !lastAction || new Date(lastAction).getTime() < now.getTime() - 7 * 24 * 3600 * 1000;
+    const lastAction = p.last_ai_action_at ?? null;
+    const lastSignIn = lastSignInByUser.get(p.id) ?? null;
+    // Memory-pass already computed __last_seen_at; fast path recomputes.
+    const lastSeen = p.__last_seen_at ?? computeLastSeen(lastAction, lastSignIn);
+    const inactive = !lastSeen || new Date(lastSeen).getTime() < nowMs - 7 * 24 * 3600 * 1000;
     const trialEndMs = p.trial_end ? new Date(p.trial_end).getTime() : null;
     const trialEndingSoon =
       trialEndMs !== null &&
-      trialEndMs >= now.getTime() &&
-      trialEndMs - now.getTime() <= 3 * 24 * 3600 * 1000;
+      trialEndMs >= nowMs &&
+      trialEndMs - nowMs <= 3 * 24 * 3600 * 1000;
 
     return {
       user_id: p.id,
@@ -213,7 +298,9 @@ Deno.serve(async (req: Request) => {
       trial_end: p.trial_end ?? null,
       current_period_end: p.current_period_end ?? null,
       signup_at: p.created_at,
-      last_ai_action_at: lastAction ?? null,
+      last_ai_action_at: lastAction,
+      last_sign_in_at: lastSignIn,
+      last_seen_at: lastSeen,
       meta_accounts_count: metaCount,
       meta_connected: metaCount > 0,
       meta_has_synced: !!metaHasSyncedByUser[p.id],
