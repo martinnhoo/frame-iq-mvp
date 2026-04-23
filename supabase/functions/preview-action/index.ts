@@ -48,7 +48,8 @@ type ProposedAction =
   | "activate"
   | "duplicate"
   | "increase_budget"
-  | "decrease_budget";
+  | "decrease_budget"
+  | "analyze";        // open-ended — AI decides what to suggest
 
 type Verdict = "recommend" | "reject" | "wait" | "depends";
 
@@ -235,6 +236,77 @@ function evaluateRules(
   const brl = (c: number) => (c / 100).toFixed(2).replace(".", ",");
   const tLabel = targetLabel(targetType);
   const tCap = targetLabelCap(targetType);
+
+  // ── ANALYZE — open-ended IA recommendation ────────────────────────────
+  // User clicks "✨ Analisar" without pre-choosing an action. Read the
+  // context and propose the natural next move. Returns a `suggested_action`
+  // baked into the alternatives list so the frontend can wire a one-click
+  // execution from the suggestion.
+  if (action === "analyze") {
+    // Too young — always recommend keeping watch
+    if (daysActual > 0 && daysActual < 3) {
+      return {
+        verdict: "wait",
+        headline: `${tCap} ainda jovem — continue monitorando`,
+        reasoning:
+          `Rodando há ${daysActual} dia${daysActual === 1 ? "" : "s"} (janela de atribuição do Meta: 24-72h). Qualquer ação agora é baseada em dados pré-estabilização — e isso quebra aprendizado ou gera falso positivo.`,
+        alternatives: [
+          `Aguardar 2-3 dias pra ter dados estáveis`,
+          `Se tem pressa, abrir o chat da IA pra revisar configuração (público, evento, criativo)`,
+        ],
+      };
+    }
+
+    // Performing — recommend scale
+    const minConv = targetType === "campaign" ? 5 : targetType === "adset" ? 3 : 2;
+    if (ctx.conversions >= minConv && ctx.cpa_cents !== null &&
+        (targetCpaCents === null || ctx.cpa_cents <= targetCpaCents)) {
+      return {
+        verdict: "recommend",
+        headline: `${tCap} performando — momento de escalar`,
+        reasoning:
+          `CPA em R$ ${brl(ctx.cpa_cents)}${targetCpaCents ? ` (meta: R$ ${brl(targetCpaCents)})` : ""} com ${ctx.conversions.toFixed(0)} conversões. Frequência em ${ctx.freq.toFixed(1)}x ainda saudável. Sugestão: aumentar 20-30% de budget pra capturar mais volume sem quebrar aprendizado.`,
+        alternatives: [
+          `↑ Aumentar budget em 20-30%`,
+          `Duplicar com nova variação pra estender vida útil do vencedor`,
+        ],
+      };
+    }
+
+    // Clear failure
+    const minSpend = targetType === "campaign" ? 100000
+      : targetType === "adset" ? 50000
+      : 20000;
+    if (daysActual >= 7 && ctx.spend_cents > minSpend && ctx.conversions === 0) {
+      return {
+        verdict: "reject",
+        headline: `${tCap} sem retorno — hora de cortar`,
+        reasoning:
+          `${daysActual} dias rodando, R$ ${brl(ctx.spend_cents)} gastos, zero conversão. Frequência em ${ctx.freq.toFixed(1)}x e CTR ${ctx.ctr.toFixed(2)}% confirmam que não conecta. Sugestão: pausar e investigar antes de queimar mais orçamento.`,
+        alternatives: [
+          `⏸ Pausar ${tLabel}`,
+          `Antes de pausar: diagnosticar (tracking? público? hook?) no chat da IA`,
+        ],
+      };
+    }
+
+    // Fatigue signal
+    if (ctx.freq > 3.5 && ctx.trend === "down") {
+      return {
+        verdict: "depends",
+        headline: `${tCap} com sinais de fadiga — vale rotacionar criativo`,
+        reasoning:
+          `Frequência em ${ctx.freq.toFixed(1)}x e CTR caindo (tendência ${ctx.trend === "down" ? "↓" : "→"}). Audiência já viu o criativo muitas vezes — performance continua caindo. Sugestão: duplicar com nova variação enquanto o original ainda gera algum resultado.`,
+        alternatives: [
+          `Duplicar com novo hook`,
+          `Se resultado já zerou, pausar em vez de duplicar`,
+        ],
+      };
+    }
+
+    // Fall through to AI fallback for ambiguous cases
+    // (the aiFallback handles action==='analyze' below)
+  }
 
   // ── PAUSE rules ────────────────────────────────────────────────────────
   if (action === "pause") {

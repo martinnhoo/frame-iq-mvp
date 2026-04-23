@@ -181,6 +181,66 @@ function ActionButton({
   );
 }
 
+// ── Primary component: Analyze button — "convida a IA a julgar" ──────────
+// Carrega a filosofia do produto: cada linha tem um atalho pro copiloto
+// avaliar a situação e sugerir o próximo passo, sem o usuário precisar
+// pré-escolher (Pausar/Duplicar/etc). Diferente dos outros botões, esse
+// é SEMPRE azul — é o botão-IA.
+function AnalyzeButton({
+  onClick,
+  inflight,
+  size = 'md',
+}: {
+  onClick: (e: React.MouseEvent) => void;
+  inflight: boolean;
+  size?: 'md' | 'sm';
+}) {
+  const iconSize = size === 'sm' ? 10 : 12;
+  const paddingV = size === 'sm' ? 3 : 4;
+  const paddingH = size === 'sm' ? 8 : 10;
+  const fontSize = size === 'sm' ? 9.5 : 10.5;
+  const bg = 'rgba(37,99,235,0.14)';
+  const bgHover = 'rgba(37,99,235,0.22)';
+  const border = 'rgba(37,99,235,0.36)';
+  const color = '#93C5FD';
+  return (
+    <button
+      onClick={onClick}
+      disabled={inflight}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        background: bg, color,
+        border: `1px solid ${border}`,
+        borderRadius: 5,
+        padding: `${paddingV}px ${paddingH}px`,
+        fontSize, fontWeight: 700, fontFamily: F,
+        cursor: inflight ? 'default' : 'pointer',
+        opacity: inflight ? 0.6 : 1,
+        whiteSpace: 'nowrap',
+        letterSpacing: '-0.005em',
+        boxShadow: '0 0 12px rgba(37,99,235,0.15)',
+        transition: 'background 0.14s, box-shadow 0.14s, transform 0.08s',
+      }}
+      onMouseEnter={(e) => {
+        if (inflight) return;
+        e.currentTarget.style.background = bgHover;
+        e.currentTarget.style.boxShadow = '0 0 16px rgba(37,99,235,0.28)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = bg;
+        e.currentTarget.style.boxShadow = '0 0 12px rgba(37,99,235,0.15)';
+      }}
+      title="Pedir análise à IA — sugere a ação certa pra essa linha agora"
+    >
+      {inflight
+        ? <Loader2 size={iconSize} className="spin" />
+        : <Sparkles size={iconSize} strokeWidth={2.3} />
+      }
+      Analisar
+    </button>
+  );
+}
+
 // ── Small component: duplicate button ─────────────────────────────────────
 function DuplicateButton({
   onClick,
@@ -1066,7 +1126,16 @@ export default function CampaignsManager() {
 
     const brl = (c: number) => (c / 100).toFixed(2).replace('.', ',');
     const isContrary = p.verdict === 'reject' || p.verdict === 'wait';
-    const confirmLabel = isContrary ? `Executar mesmo assim` : `Confirmar ${p.proposedActionLabel.toLowerCase()}`;
+    // In 'analyze' mode there's no action to confirm — the preview is
+    // pure judgment. The primary button becomes "Fechar análise" which
+    // just dismisses the panel. For any other mode keep the existing
+    // confirm/override button.
+    const isAnalyzeMode = p.proposedAction === 'analyze';
+    const confirmLabel = isAnalyzeMode
+      ? 'Fechar análise'
+      : isContrary
+        ? `Executar mesmo assim`
+        : `Confirmar ${p.proposedActionLabel.toLowerCase()}`;
 
     // Pad top/bottom for breathing room, left indent matches the row's
     // nesting level so the panel visually belongs to its parent.
@@ -1340,31 +1409,57 @@ export default function CampaignsManager() {
                 </span>
               )}
 
-              <button
-                onClick={() => confirmPreview(targetId)}
-                disabled={!!p.executing}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 7,
-                  background: isContrary ? T.red : T.blue,
-                  border: 'none',
-                  color: '#FFFFFF',
-                  borderRadius: 7,
-                  padding: '9px 16px', fontSize: 12.5, fontWeight: 700,
-                  cursor: p.executing ? 'default' : 'pointer',
-                  fontFamily: F,
-                  letterSpacing: '-0.005em',
-                  boxShadow: isContrary
-                    ? `0 0 0 1px ${T.red}66, 0 1px 2px rgba(0,0,0,0.4)`
-                    : `0 0 0 1px ${T.blue}66, 0 1px 2px rgba(0,0,0,0.4)`,
-                  opacity: p.executing ? 0.7 : 1,
-                  transition: 'transform 0.08s ease, opacity 0.12s ease',
-                }}
-                onMouseEnter={e => { if (!p.executing) (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; }}
-              >
-                {p.executing ? <Loader2 size={12} className="spin" /> : null}
-                {confirmLabel}
-              </button>
+              {isAnalyzeMode ? (
+                // Analyze-only: primary button just closes the panel.
+                <button
+                  onClick={() => cancelPreview(targetId)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 7,
+                    background: T.bg2, border: `1px solid ${T.border2}`,
+                    color: T.text1, borderRadius: 7,
+                    padding: '9px 16px', fontSize: 12.5, fontWeight: 700,
+                    cursor: 'pointer', fontFamily: F, letterSpacing: '-0.005em',
+                    transition: 'transform 0.08s ease, border-color 0.12s ease',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+                    (e.currentTarget as HTMLElement).style.borderColor = T.blue;
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.transform = 'none';
+                    (e.currentTarget as HTMLElement).style.borderColor = T.border2;
+                  }}
+                >
+                  <Check size={12} strokeWidth={2.3} />
+                  Fechar análise
+                </button>
+              ) : (
+                <button
+                  onClick={() => confirmPreview(targetId)}
+                  disabled={!!p.executing}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 7,
+                    background: isContrary ? T.red : T.blue,
+                    border: 'none',
+                    color: '#FFFFFF',
+                    borderRadius: 7,
+                    padding: '9px 16px', fontSize: 12.5, fontWeight: 700,
+                    cursor: p.executing ? 'default' : 'pointer',
+                    fontFamily: F,
+                    letterSpacing: '-0.005em',
+                    boxShadow: isContrary
+                      ? `0 0 0 1px ${T.red}66, 0 1px 2px rgba(0,0,0,0.4)`
+                      : `0 0 0 1px ${T.blue}66, 0 1px 2px rgba(0,0,0,0.4)`,
+                    opacity: p.executing ? 0.7 : 1,
+                    transition: 'transform 0.08s ease, opacity 0.12s ease',
+                  }}
+                  onMouseEnter={e => { if (!p.executing) (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+                >
+                  {p.executing ? <Loader2 size={12} className="spin" /> : null}
+                  {confirmLabel}
+                </button>
+              )}
             </div>
           </>
         )}
@@ -1754,6 +1849,13 @@ export default function CampaignsManager() {
                   {sc.label}
                 </span>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <AnalyzeButton
+                    inflight={cInflight || !!previews[c.id]?.loading}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      requestPreview(c.id, 'campaign', c.name, 'analyze');
+                    }}
+                  />
                   <ActionButton
                     kind={cPaused ? 'activate' : 'pause'}
                     inflight={cInflight || !!previews[c.id]?.loading}
@@ -1850,6 +1952,14 @@ export default function CampaignsManager() {
                             {sa.label}
                           </span>
                           <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                            <AnalyzeButton
+                              inflight={aInflight || !!previews[ads.id]?.loading}
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                requestPreview(ads.id, 'adset', ads.name, 'analyze');
+                              }}
+                            />
                             <ActionButton
                               kind={aPaused ? 'activate' : 'pause'}
                               inflight={aInflight || !!previews[ads.id]?.loading}
@@ -1955,6 +2065,14 @@ export default function CampaignsManager() {
                                       {sAd.label}
                                     </span>
                                     <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                                      <AnalyzeButton
+                                        inflight={adInflight || !!previews[ad.id]?.loading}
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          requestPreview(ad.id, 'ad', ad.name, 'analyze');
+                                        }}
+                                      />
                                       <ActionButton
                                         kind={adPaused ? 'activate' : 'pause'}
                                         inflight={adInflight || !!previews[ad.id]?.loading}
