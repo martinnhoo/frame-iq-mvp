@@ -1193,27 +1193,36 @@ input, textarea, select {
   --border-top-light: rgba(255,255,255,0.12); /* borda superior mais clara = luz de cima */
 }
 
-/* ── Dashboard root — fundo mais profundo ────────────────────────────────── */
+/* ── Dashboard root — unified dark canvas ────────────────────────────────── */
+/* Previously used var(--surface-0) = #070d1a which is bluish and
+   differs from the sidebar's #060709. When any child didn't fully
+   cover its area, the bluish root showed through and looked like a
+   seam. Now matches the sidebar and main. */
 .dashboard-root {
-  background: var(--surface-0) !important;
+  background: var(--bg-main) !important;
 }
 
-/* ── Sidebar — elevada da base com borda direita ─────────────────────────── */
+/* ── Sidebar — no blue gradient override ─────────────────────────────────── */
+/* The `.sidebar-transition` class shipped a `linear-gradient(180deg,
+   #0b1020, #080c18)` (bluish) that overrode the inline #060709 on the
+   <aside>. Class isn't referenced in TSX right now but the CSS rule
+   kept the gradient alive as tech debt waiting to flash whenever
+   something added the class. Replaced with flat #060709 to match
+   the sidebar's inline bg — consistent source of truth either way. */
 @media (min-width: 1024px) {
   .sidebar-transition {
-    background: linear-gradient(180deg, #0b1020 0%, #080c18 100%) !important;
+    background: var(--bg-main) !important;
     border-right: 1px solid var(--border-dim) !important;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.4) !important;
   }
 }
 
-/* ── Topbar — glassmorphism real ──────────────────────────────────────────── */
+/* ── Topbar — flat ghost surface, no glassmorphism ───────────────────────── */
+/* Was rgba(7, 10, 18, 0.88) + blur(20px) + saturate(1.4) which
+   produced a subtle blue tint + a brighter-than-surrounding band
+   any time it rendered. Money panel = solid colors, no tinted glass. */
 .dashboard-topbar {
-  background: rgba(7, 10, 18, 0.88) !important;
-  backdrop-filter: blur(20px) saturate(1.4) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+  background: var(--bg-main) !important;
   border-bottom: 1px solid rgba(255,255,255,0.07) !important;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.3) !important;
 }
 
 /* ── KPI cards — profundidade real ───────────────────────────────────────── */
