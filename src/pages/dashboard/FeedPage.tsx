@@ -2047,12 +2047,13 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns:
           letterSpacing: '-0.005em',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
+          {/* Softer eyebrow: shorter word, same vocabulary */}
           <span style={{
             fontSize: 9.5, fontWeight: 800, color: '#7DD3FC',
-            letterSpacing: '0.14em', textTransform: 'uppercase' as const,
+            letterSpacing: '0.12em', textTransform: 'uppercase' as const,
             marginRight: 10,
           }}>
-            Gerenciador manual
+            Manual
           </span>
           <span style={{ color: T.text1, fontWeight: 600 }}>
             Ajustar campanha específica
@@ -6372,7 +6373,13 @@ const FeedPage: React.FC = () => {
   const topDecision = pendingDecisions[0] || null;
 
   return (
-    <div style={{ flex: 1, minHeight: 0, background: '#06080C', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
+    // Background seam bug fix: previously hard-coded '#06080C' which
+    // was 1 LSB off from DashboardLayout's --bg-main (#060709). When
+    // the FeedPage content didn't fill the viewport, the layout bg
+    // (#060709) showed through below the page bg (#06080C) — creating
+    // a visible horizontal seam at the bottom of short pages.
+    // Using var(--bg-main) guarantees a single, uniform surface.
+    <div style={{ flex: 1, minHeight: 0, background: 'var(--bg-main)', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
       <div
         className="feed-layout"
         style={{
@@ -7196,6 +7203,34 @@ const FeedPage: React.FC = () => {
         /* feed-glow-breathe removed — the radial background wash
            it animated was cut to keep the deck flat. */
         @keyframes feed-spin{to{transform:rotate(360deg)}}
+        /* KPI tile hover — subtle cyan vertical bar fades in on the
+           left edge, label color brightens slightly, number lifts by
+           1px. No bg fill, no shadow flood. Money panel discipline. */
+        .feed-kpi-tile{position:relative;transition:transform 0.2s cubic-bezier(0.22,1,0.36,1);}
+        .feed-kpi-tile::before{
+          content:'';position:absolute;left:-1px;top:12%;bottom:12%;width:1.5px;
+          background:rgba(14,165,233,0.0);border-radius:1px;
+          transition:background 0.22s ease, transform 0.22s ease;
+          transform:scaleY(0.3);
+        }
+        .feed-kpi-tile:hover::before{background:rgba(14,165,233,0.55);transform:scaleY(1);}
+        .feed-kpi-tile:hover{transform:translateY(-1px);}
+        /* Command Deck ambient sheen — single pass across the top
+           after mount. Very subtle, one-shot, doesn't loop. */
+        .feed-command-deck::after{
+          content:'';position:absolute;inset:0;
+          background:linear-gradient(90deg,transparent 0%,rgba(240,246,252,0.025) 50%,transparent 100%);
+          pointer-events:none;transform:translateX(-100%);
+          animation:feed-deck-sheen 1.6s cubic-bezier(0.22,1,0.36,1) 0.45s 1 forwards;
+        }
+        @keyframes feed-deck-sheen{
+          0%{transform:translateX(-100%)}
+          100%{transform:translateX(100%)}
+        }
+        /* Period selector pill — smoother pill-slide between 7/14/30
+           tabs. The active state already transitions, this ensures
+           the color ramp is smooth too. */
+        .feed-micro-btn button{transition:background 0.18s cubic-bezier(0.22,1,0.36,1), color 0.18s ease, font-weight 0.15s ease!important;}
         /* Manual strip — Linear-style hover: border + arrow subtly
            respond, no colored fill flood. */
         .feed-manual-strip:hover{

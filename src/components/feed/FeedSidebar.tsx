@@ -268,17 +268,23 @@ const AccountHealthCard: React.FC<{
             }}>
               Saúde da conta
             </span>
+            {/* Severity marker — Linear-style: slim vertical bar +
+                uppercase colored label. Same vocabulary as the
+                Command Deck status strip. No chip, no pill. */}
             <span style={{
-              fontSize: 10, fontWeight: 700,
-              color: sevColor,
-              background: `${sevColor}14`,
-              border: `1px solid ${sevColor}33`,
-              borderRadius: 999,
-              padding: '2px 8px',
-              fontFamily: F, letterSpacing: '0.02em',
-              textTransform: 'uppercase' as const,
+              display: 'inline-flex', alignItems: 'center', gap: 5,
             }}>
-              {sevLabel}
+              <span aria-hidden style={{
+                width: 2, height: 10, background: sevColor, flexShrink: 0,
+              }} />
+              <span style={{
+                fontSize: 10, fontWeight: 800,
+                color: sevColor,
+                fontFamily: F, letterSpacing: '0.12em',
+                textTransform: 'uppercase' as const,
+              }}>
+                {sevLabel}
+              </span>
             </span>
           </div>
           {/* Headline — what's happening, in one line. */}
