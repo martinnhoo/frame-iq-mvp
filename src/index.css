@@ -1231,13 +1231,16 @@ input, textarea, select {
   transform: translateY(-1px) !important;
 }
 
-/* ── Dashboard main — fundo com gradiente radial sutil ───────────────────── */
+/* ── Dashboard main — solid bg, unified with the sidebar ──────────────────
+   Previously shipped a radial-gradient cyan (rgba(14,165,233,0.04) at
+   top-center) layered over var(--surface-0) (#070d1a). Two problems:
+     1. --surface-0 is #070d1a but the sidebar is #060709 → visible
+        vertical seam between nav and content.
+     2. The cyan radial gradient made the top-center of the money
+        panel bluer than the rest of the page.
+   One solid color now — same as --bg-main and the sidebar. Zero seam. */
 .dashboard-main {
-  background: radial-gradient(
-    ellipse 80% 50% at 50% 0%,
-    rgba(14,165,233,0.04) 0%,
-    transparent 60%
-  ), var(--surface-0) !important;
+  background: var(--bg-main) !important;
 }
 
 /* ── Cards genéricos — profundidade ──────────────────────────────────────── */
