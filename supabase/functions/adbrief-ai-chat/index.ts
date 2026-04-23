@@ -55,6 +55,51 @@ async function fetchWithTimeout(url: string, init: RequestInit = {}, ms = 10000)
 }
 
 /**
+ * fetchMetaWithRetry — exponential backoff on Meta Graph API failures.
+ * Essential for agency-scale accounts (100+ campaigns) that routinely hit
+ * Meta's user-level rate limits (429) or transient 5xx during peak hours.
+ *
+ * Retries only on:
+ *   - 429 (rate limited) — honor Retry-After header if present
+ *   - 5xx (server error) — backoff + retry
+ *   - Network errors (aborted, timeout)
+ *
+ * Does NOT retry on 4xx (bad request, auth) — those are not transient.
+ */
+async function fetchMetaWithRetry(
+  url: string,
+  init: RequestInit = {},
+  opts: { timeoutMs?: number; maxRetries?: number } = {},
+): Promise<Response> {
+  const { timeoutMs = 10000, maxRetries = 3 } = opts;
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetchWithTimeout(url, init, timeoutMs);
+      // Retry on transient HTTP
+      if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
+        if (attempt === maxRetries) return res; // give up, caller handles
+        const retryAfter = res.headers.get("retry-after");
+        const hinted = retryAfter ? Math.min(parseInt(retryAfter, 10) * 1000, 8000) : 0;
+        const backoff = Math.min(Math.pow(2, attempt) * 500, 8000);
+        const wait = Math.max(hinted, backoff);
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+      return res;
+    } catch (e) {
+      lastErr = e;
+      if (attempt === maxRetries) break;
+      const backoff = Math.min(Math.pow(2, attempt) * 500, 8000);
+      await new Promise((r) => setTimeout(r, backoff));
+    }
+  }
+  // Exhausted retries from a caught error — rethrow so caller's catch block
+  // lights up the same way it did before (Promise.allSettled handles this).
+  throw lastErr ?? new Error("fetchMetaWithRetry: exhausted retries");
+}
+
+/**
  * Fetch a URL and return cleaned text + structural hints.
  * Tries Jina Reader first (handles JS-heavy SPAs), falls back to raw fetch().
  */
@@ -312,16 +357,16 @@ Deno.serve(async (req) => {
             const fields =
               "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
             const [r1, r2, r3, r4] = await Promise.allSettled([
-              fetch(
-                `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=50&access_token=${token}`,
+              fetchMetaWithRetry(
+                `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=100&access_token=${token}`,
               ),
-              fetch(
-                `https://graph.facebook.com/v21.0/${acc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=50&access_token=${token}`,
+              fetchMetaWithRetry(
+                `https://graph.facebook.com/v21.0/${acc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=100&access_token=${token}`,
               ),
-              fetch(
+              fetchMetaWithRetry(
                 `https://graph.facebook.com/v21.0/${acc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${today}"}&time_increment=1&limit=60&access_token=${token}`,
               ),
-              fetch(`https://graph.facebook.com/v21.0/${acc.id}?fields=currency,timezone_name&access_token=${token}`),
+              fetchMetaWithRetry(`https://graph.facebook.com/v21.0/${acc.id}?fields=currency,timezone_name&access_token=${token}`),
             ]);
             const ads = r1.status === "fulfilled" ? await r1.value.json() : null;
             const camps = r2.status === "fulfilled" ? await r2.value.json() : null;
@@ -1501,30 +1546,35 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               const periodDays = Math.round((new Date(until).getTime() - new Date(since).getTime()) / 86400000) + 1;
               const timeIncrement = periodDays <= 31 ? "1" : "monthly";
               const timeSeriesLimit = periodDays <= 31 ? periodDays : 6;
+              // Limits raised from 25/30/20/15 → 100/100/50/50 to support
+              // agency-scale accounts. Previously top-25-by-spend was hiding
+              // long-tail campaigns (fresh tests, paused gems) from analysis.
+              // Each call wrapped in retry-with-backoff so transient 429s
+              // from Meta don't blank out a data slice silently.
               const [r1, r2, r3, r4, r5, r6] = await Promise.allSettled([
-                // Ad insights for period — limit 25
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=25&access_token=${token}`,
+                // Ad insights for period
+                fetchMetaWithRetry(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=100&access_token=${token}`,
                 ),
-                // Campaigns — limit 30
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=30&access_token=${token}`,
+                // Campaigns
+                fetchMetaWithRetry(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=100&access_token=${token}`,
                 ),
-                // Adsets — limit 20, trimmed fields
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,optimization_goal&limit=20&access_token=${token}`,
+                // Adsets
+                fetchMetaWithRetry(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,optimization_goal&limit=50&access_token=${token}`,
                 ),
                 // Time series — daily or monthly depending on period
-                fetch(
+                fetchMetaWithRetry(
                   `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&time_range={"since":"${since}","until":"${until}"}&time_increment=${timeIncrement}&limit=${timeSeriesLimit}&access_token=${token}`,
                 ),
-                // Placement breakdown — limit 10 (was 20)
-                fetch(
+                // Placement breakdown
+                fetchMetaWithRetry(
                   `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?fields=spend,impressions,clicks,ctr,cpm&breakdowns=publisher_platform,platform_position&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=10&access_token=${token}`,
                 ),
-                // Lifetime top ads — limit 15 (was 50)
-                fetch(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${lifetimeSince}","until":"${until}"}&sort=spend_descending&limit=15&access_token=${token}`,
+                // Lifetime top ads
+                fetchMetaWithRetry(
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${lifetimeSince}","until":"${until}"}&sort=spend_descending&limit=50&access_token=${token}`,
                 ),
               ]);
               adsRaw = r1.status === "fulfilled" ? await r1.value.json() : null;
