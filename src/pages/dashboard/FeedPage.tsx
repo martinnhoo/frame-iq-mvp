@@ -6552,6 +6552,8 @@ const FeedPage: React.FC = () => {
               balance_critical: 'Meu saldo pré-pago tá quase acabando e os anúncios podem pausar. Me explica como adicionar saldo na Meta agora — qual a forma mais rápida (pix, cartão) e quanto vale a pena colocar pra não quebrar o ciclo.',
               balance_low: 'Meu saldo pré-pago tá baixo. Quanto vale colocar pra segurar o próximo ciclo sem travar? Considera meu ritmo de gasto atual.',
               cap_exhausted: 'Minha conta atingiu o limite de gastos (spend cap) que a Meta define e os anúncios foram pausados. Me explica o que aconteceu, quando a Meta costuma liberar mais limite, e o que eu posso fazer enquanto isso (ex: solicitar revisão, rodar em outra conta, etc). Considera meu histórico de gasto.',
+              cap_pressure: 'Meu cap vitalício da Meta tá ficando cheio e pode pausar a entrega em breve. Me explica como esse limite funciona, se tem como subir, em quanto tempo a Meta normalmente ajusta e o que faço pra não perder ritmo quando bater o teto.',
+              cap_pressure_high: 'Meu cap vitalício da Meta tá quase no limite e a entrega pode pausar a qualquer momento. Preciso entender: a Meta ajusta isso automático? Em quanto tempo? Tem algo que eu posso fazer pra adiantar, ou devo já preparar outra conta pra rodar em paralelo? Considera meu ritmo de gasto atual.',
               pixel_missing: 'Minha conta não tem pixel instalado. Me mostra como instalar e configurar eventos de conversão passo-a-passo.',
               pixel_stale: 'Meu pixel parou de disparar eventos. Diagnostica o motivo e me dá a correção.',
               pixel_orphan: 'Tenho anúncios sem pixel amarrado. Quais são e como corrigir?',

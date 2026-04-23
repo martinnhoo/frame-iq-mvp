@@ -163,6 +163,28 @@ export function computeAccountHealth(input: {
         ? capPct * 100                              // 0–10%: ramp 0→10
         : Math.min(55, 5 + capPct * 50);            // 10–100%: linear 10→55
       score -= capPenalty;
+
+      // Surface the reason for score degradation once pressure is
+      // material. Without this, the user sees a low score with no issue
+      // in the list — opaque UX ("why is it 46?"). Only shown when
+      // severity isn't already critical from accountStatus (which will
+      // drive its own issue below).
+      if (capPct >= 0.80 && accountStatus.severity !== 'critical') {
+        const pctLabel = `${Math.round(capPct * 100)}%`;
+        if (capPct >= 0.95) {
+          issues.push({
+            key: 'cap_pressure_high',
+            label: `Limite de gastos em ${pctLabel} — entrega pode pausar a qualquer momento`,
+            severity: 'critical',
+          });
+        } else {
+          issues.push({
+            key: 'cap_pressure',
+            label: `Limite de gastos em ${pctLabel} — Meta pode pausar ao atingir 100%`,
+            severity: 'warn',
+          });
+        }
+      }
     }
 
     if (accountStatus.severity === 'critical') {
