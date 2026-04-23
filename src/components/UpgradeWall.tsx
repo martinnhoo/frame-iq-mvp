@@ -146,10 +146,13 @@ export default function UpgradeWall({ onClose, trigger = "chat", inline = false 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) return;
+      // fire-and-forget: Supabase query builder is a thenable but doesn't
+      // expose .catch() directly. Use the two-arg .then(onSuccess, onError)
+      // form so a failed insert can't surface as an unhandled_rejection.
       (supabase as any).from("upgrade_events").insert({
         user_id: session.user.id, trigger,
         created_at: new Date().toISOString(),
-      }).catch(() => {});
+      }).then(() => {}, () => {});
     });
   }, [trigger]);
 
