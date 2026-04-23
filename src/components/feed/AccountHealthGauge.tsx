@@ -153,9 +153,22 @@ export function computeAccountHealth(input: {
     // to degrade gradually so the user sees pressure building before the
     // cliff. Anchors: 10% used → -10, 100% used → -55. Below 10% it
     // ramps up from 0 so a fresh account doesn't eat a penalty.
+    // Cap pressure gradient.
+    // Only meaningful when the account has spent enough that the lifetime
+    // cap would actually block real delivery. For fresh/small accounts
+    // (<R$500 total spend), Meta routinely returns a tiny lifetime cap
+    // that it raises organically as the account matures — penalizing in
+    // that window produces a score like 46 for an account that's actually
+    // fine (auto-refill ON + sub-daily-throttle spend). We keep the
+    // gradient for mature accounts where it's a real signal, skip it for
+    // small accounts.
+    const MIN_SPEND_FOR_CAP_FLAG = 50000; // R$500 in centavos
+    const amountSpent = typeof accountStatus.amount_spent === 'number'
+      ? accountStatus.amount_spent : 0;
     const capPct = (typeof accountStatus.spend_cap === 'number'
       && accountStatus.spend_cap > 0
-      && typeof accountStatus.amount_spent === 'number')
+      && typeof accountStatus.amount_spent === 'number'
+      && amountSpent >= MIN_SPEND_FOR_CAP_FLAG)
       ? Math.min(1, accountStatus.amount_spent / accountStatus.spend_cap)
       : null;
     if (capPct !== null) {
