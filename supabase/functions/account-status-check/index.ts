@@ -38,7 +38,7 @@ const CACHE_TTL_MS = 15 * 60 * 1000;
 // (written by an older version of this function) are invalidated and a
 // fresh Meta check runs. Prior versions flagged spend_cap pressure as
 // critical — bumping this invalidates those stuck "critical" results.
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 type Severity = "ok" | "warn" | "critical" | "unknown";
 
@@ -263,23 +263,22 @@ Deno.serve(async (req) => {
     let severity: Severity = statusSeverity;
     let message = reasonText ? `${label} — ${reasonText}` : label;
 
-    // Note: we intentionally do NOT flag spend_cap pressure (capPct) as warn/critical.
-    // Meta defines spend_cap automatically for most accounts (especially BR prepaid);
-    // the user has no way to edit it from the UI and Meta raises it organically as the
-    // account matures. Flagging it produced an un-actionable alert ("critical" score
-    // with no path to resolve), so it's been removed. We still return cap_remaining in
-    // the payload for diagnostics and the AI chat context.
+    // Note: we intentionally do NOT flag spend_cap pressure (capPct) nor low
+    // prepaid balance as warn/critical. Reasoning:
+    //   • spend_cap is set automatically by Meta for most accounts (especially
+    //     BR prepaid); users can't edit it and Meta raises it as the account
+    //     matures. Flagging it produced an un-actionable alert.
+    //   • balance is only meaningful for strictly prepaid accounts. Post-paid
+    //     accounts (credit card on file — auto-charged by Meta) routinely
+    //     show balance near zero: it's normal and NOT a problem. We can't
+    //     reliably tell from the Graph API which funding mode the account is
+    //     on, so flagging balance produces false positives (ex: "R$ 15 saldo
+    //     crítico" when actually there's a card set to auto-charge).
+    // We still return balance / cap_remaining in the payload for diagnostics
+    // and the AI chat context — the AI can reason about it with full context,
+    // but we won't surface it as a health-score alert.
     if (severity === "ok") {
-      if (balance !== null && balance > 0 && balance < 2000 /* < R$20 */) {
-        severity = "critical";
-        message = "Saldo pré-pago quase acabando";
-      } else if (balance !== null && balance > 0 && balance < 10000 /* < R$100 */) {
-        severity = "warn";
-        message = "Saldo pré-pago baixo";
-      } else {
-        severity = "ok";
-        message = "Conta ativa e com saldo";
-      }
+      message = "Conta ativa";
     }
 
     const result: AccountStatusResult = {
