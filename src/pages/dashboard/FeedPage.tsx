@@ -4175,6 +4175,95 @@ const byPriority = (a: Decision, b: Decision) => priorityOf(b) - priorityOf(a);
 
 // Cap per step to keep the feed scannable. Users can unfold the rest.
 const STEP_VISIBLE_CAP = 5;
+/** Minimum items for a root-cause cluster to collapse. Below this
+ *  each decision renders as its own card (no grouping overhead for
+ *  small accounts). */
+const CLUSTER_MIN_ITEMS = 3;
+
+// ================================================================
+// ROOT-CAUSE GROUPING
+// Buckets decisions by a cause key derived from reason + headline.
+// Matters only for high-volume accounts — when 20 ads fail for the
+// same pattern ("frequência alta"), we surface a single collapsible
+// cluster with a batch action instead of 20 near-identical cards.
+// ================================================================
+type CauseKey =
+  | 'freq_high'
+  | 'no_conv'
+  | 'cpa_high'
+  | 'ctr_low'
+  | 'fatigue'
+  | 'tracking'
+  | 'audience'
+  | 'budget_wasted'
+  | 'unknown';
+
+interface CauseMeta {
+  key: CauseKey;
+  label: string;
+}
+
+function deriveRootCause(d: Decision): CauseMeta {
+  const text = `${d.reason || ''} ${d.headline || ''}`.toLowerCase();
+  // Order matters — more specific patterns first.
+  if (/frequ[êe]ncia.*(alta|\d\.\d|\d+x)|fadiga.*freq|freq.*alta/.test(text))
+    return { key: 'freq_high', label: 'Frequência alta' };
+  if (/fadiga|hook cansad|criativo cansad|rotacion/.test(text))
+    return { key: 'fatigue', label: 'Fadiga de criativo' };
+  if (/sem convers[ãa]o|0 convers|zero convers|nenhuma convers/.test(text))
+    return { key: 'no_conv', label: 'Sem conversão' };
+  if (/cpa.*(acim|alto|>|excede)|custo.*conv.*alto/.test(text))
+    return { key: 'cpa_high', label: 'CPA acima da meta' };
+  if (/ctr.*(baix|caind|<|abaixo)|engagement.*baix/.test(text))
+    return { key: 'ctr_low', label: 'CTR baixo' };
+  if (/tracking|pixel.*(n[ãa]o|falh|quebr)|evento.*(n[ãa]o|zero)|sem rastreamento/.test(text))
+    return { key: 'tracking', label: 'Tracking quebrado' };
+  if (/p[úu]blico|audience|segmenta|interesse/.test(text))
+    return { key: 'audience', label: 'Público errado' };
+  if (/gasto|budget.*(queim|desperd)|dinheiro.*perd/.test(text))
+    return { key: 'budget_wasted', label: 'Orçamento queimando' };
+  return { key: 'unknown', label: 'Outros' };
+}
+
+interface DecisionCluster {
+  cause: CauseMeta;
+  items: Decision[];
+  totalImpactDaily: number; // sum of impact_daily in centavos
+}
+
+/** Groups decisions by derived cause. Clusters with < CLUSTER_MIN_ITEMS
+ *  items stay ungrouped (return as "solo" clusters of size 1) so the
+ *  visual density matches the data — small accounts keep seeing
+ *  individual cards, big accounts see clusters. */
+function clusterByCause(items: Decision[]): DecisionCluster[] {
+  const buckets = new Map<CauseKey, Decision[]>();
+  for (const d of items) {
+    const { key } = deriveRootCause(d);
+    const bucket = buckets.get(key) || [];
+    bucket.push(d);
+    buckets.set(key, bucket);
+  }
+  // Expand small buckets back to 1-item clusters (no grouping for
+  // sparse data); keep big buckets grouped.
+  const out: DecisionCluster[] = [];
+  for (const [key, list] of buckets.entries()) {
+    const cause = { key, label: deriveRootCause(list[0]).label };
+    if (list.length < CLUSTER_MIN_ITEMS) {
+      for (const d of list) {
+        out.push({ cause, items: [d], totalImpactDaily: Math.abs(d.impact_daily || 0) });
+      }
+    } else {
+      out.push({
+        cause,
+        items: list,
+        totalImpactDaily: list.reduce((s, d) => s + Math.abs(d.impact_daily || 0), 0),
+      });
+    }
+  }
+  // Sort: biggest impact clusters first, within same tier biggest first.
+  out.sort((a, b) => b.totalImpactDaily - a.totalImpactDaily);
+  return out;
+}
 
 const FlowSection: React.FC<{
   decisions: Decision[];
@@ -4269,23 +4358,47 @@ const FlowSection: React.FC<{
         ))}
       </div>
 
-      {/* Grouped cards — top-N visible, rest foldable */}
+      {/* Grouped cards — cluster by root cause when the category has
+          enough mass, top-N visible, rest foldable.
+          Two-level fold:
+            • Category: "Ver mais X ações" expands past STEP_VISIBLE_CAP
+            • Cluster: click the cluster row to expand individual cards
+          A 1-item cluster renders as a plain DecisionCard — no cluster
+          row shown, zero overhead for small accounts. */}
       {steps.map((step) => {
         const isExpanded = expandedSteps[step.label] === true;
-        const visible = isExpanded ? step.items : step.items.slice(0, STEP_VISIBLE_CAP);
-        const hiddenCount = step.items.length - visible.length;
+        const clusters = clusterByCause(step.items);
+        const visibleClusters = isExpanded ? clusters : clusters.slice(0, STEP_VISIBLE_CAP);
+        const hiddenCount = clusters.length - visibleClusters.length;
         return (
           <div key={step.label} style={{ marginBottom: 16 }}>
-            {visible.map((d, idx) => (
-              <div key={d.id} style={{
+            {visibleClusters.map((cluster, idx) => (
+              <div key={`${step.label}-${cluster.cause.key}-${idx}`} style={{
                 borderTop: idx > 0 ? `1px solid ${T.border0}` : 'none',
               }}>
-                <DecisionCard
-                  decision={d}
-                  onAction={onAction}
-                  isDemo={isDemo}
-                  isHero={idx === 0 && step.items.length > 1}
-                />
+                {cluster.items.length === 1 ? (
+                  <DecisionCard
+                    decision={cluster.items[0]}
+                    onAction={onAction}
+                    isDemo={isDemo}
+                    isHero={idx === 0 && clusters.length > 1}
+                  />
+                ) : (
+                  <ClusterRow
+                    cluster={cluster}
+                    stepColor={step.color}
+                    onBatchAction={async () => {
+                      // Fire the primary action on every item in the
+                      // cluster. Sequential to avoid Meta rate limits.
+                      for (const d of cluster.items) {
+                        const primary = d.actions?.[0];
+                        if (primary) await onAction(d.id, primary);
+                      }
+                    }}
+                    onAction={onAction}
+                    isDemo={isDemo}
+                  />
+                )}
               </div>
             ))}
 
@@ -4315,11 +4428,11 @@ const FlowSection: React.FC<{
                   (e.currentTarget as HTMLElement).style.color = T.text3;
                 }}
               >
-                Ver mais {hiddenCount} {hiddenCount === 1 ? 'decisão' : 'decisões'}
+                Ver mais {hiddenCount} {hiddenCount === 1 ? 'grupo' : 'grupos'}
               </button>
             )}
 
-            {isExpanded && step.items.length > STEP_VISIBLE_CAP && (
+            {isExpanded && clusters.length > STEP_VISIBLE_CAP && (
               <button
                 onClick={() => setExpandedSteps(prev => ({ ...prev, [step.label]: false }))}
                 style={{
@@ -4341,6 +4454,139 @@ const FlowSection: React.FC<{
           </div>
         );
       })}
+    </div>
+  );
+};
+
+// ================================================================
+// CLUSTER ROW — high-volume decisions grouped by root cause
+// Shows: cause label + count + total impact + batch action button.
+// Click the row to expand and see individual DecisionCards inside.
+// ================================================================
+const ClusterRow: React.FC<{
+  cluster: DecisionCluster;
+  stepColor: string;
+  onBatchAction: () => Promise<void>;
+  onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
+  isDemo: boolean;
+}> = ({ cluster, stepColor, onBatchAction, onAction, isDemo }) => {
+  const [open, setOpen] = useState(false);
+  const [batching, setBatching] = useState(false);
+  const count = cluster.items.length;
+  const impactLabel = cluster.totalImpactDaily > 0
+    ? `R$ ${Math.round(cluster.totalImpactDaily / 100).toLocaleString('pt-BR')}/dia`
+    : '';
+  // Use the first action's label as the batch label — almost always
+  // "Pausar" for kill clusters, "Escalar" for scale clusters.
+  const batchLabel = cluster.items[0]?.actions?.[0]?.label || 'Aplicar em todas';
+
+  return (
+    <div style={{ fontFamily: F }}>
+      {/* Cluster summary row — click to expand */}
+      <div
+        onClick={() => setOpen(v => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '12px 14px',
+          cursor: 'pointer', userSelect: 'none' as const,
+          background: 'transparent',
+          borderLeft: `2px solid ${stepColor}`,
+          transition: 'background 0.15s ease',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.03)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+      >
+        <span style={{
+          fontSize: 14, lineHeight: 1,
+          color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
+          transition: 'transform 0.2s ease, color 0.15s',
+          transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+          flexShrink: 0,
+        }}>›</span>
+        <span style={{
+          fontSize: 11, fontWeight: 800,
+          color: stepColor,
+          background: `${stepColor}12`,
+          border: `1px solid ${stepColor}33`,
+          padding: '2px 7px', borderRadius: 5,
+          flexShrink: 0,
+          letterSpacing: '-0.005em',
+          fontVariantNumeric: 'tabular-nums' as const,
+        }}>
+          {count}
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: 12.5, fontWeight: 700, color: T.text1,
+            letterSpacing: '-0.005em', lineHeight: 1.3,
+          }}>
+            {cluster.cause.label}
+          </div>
+          <div style={{
+            fontSize: 10.5, color: T.text3,
+            letterSpacing: '-0.005em', marginTop: 1,
+          }}>
+            {count} {count === 1 ? 'anúncio' : 'anúncios'} com a mesma causa
+          </div>
+        </div>
+        {impactLabel && (
+          <span style={{
+            fontSize: 11.5, fontWeight: 800, color: stepColor,
+            fontVariantNumeric: 'tabular-nums' as const,
+            flexShrink: 0,
+            letterSpacing: '-0.005em',
+          }}>
+            {impactLabel}
+          </span>
+        )}
+        {!isDemo && (
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              if (batching) return;
+              setBatching(true);
+              try { await onBatchAction(); } finally { setBatching(false); }
+            }}
+            disabled={batching}
+            style={{
+              background: stepColor, color: '#0A0F1C',
+              border: 'none', borderRadius: 6,
+              padding: '5px 10px',
+              fontSize: 10.5, fontWeight: 800,
+              cursor: batching ? 'default' : 'pointer',
+              opacity: batching ? 0.65 : 1,
+              fontFamily: F, letterSpacing: '-0.005em',
+              flexShrink: 0, whiteSpace: 'nowrap',
+              transition: 'transform 0.1s ease',
+            }}
+            onMouseEnter={e => { if (!batching) (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; }}
+          >
+            {batching ? 'Processando…' : `${batchLabel} ${count} →`}
+          </button>
+        )}
+      </div>
+
+      {/* Expanded: individual decision cards inside the cluster */}
+      {open && (
+        <div style={{
+          paddingLeft: 14,
+          borderLeft: `2px solid ${stepColor}33`,
+          background: 'rgba(148,163,184,0.02)',
+        }}>
+          {cluster.items.map((d, i) => (
+            <div key={d.id} style={{
+              borderTop: i > 0 ? `1px solid ${T.border0}` : 'none',
+            }}>
+              <DecisionCard
+                decision={d}
+                onAction={onAction}
+                isDemo={isDemo}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
