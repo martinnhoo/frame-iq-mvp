@@ -158,16 +158,46 @@ Deno.serve(async (req) => {
     }
     const token = conn.access_token;
 
+    // ── Fetch helper — 15s timeout + Meta error surfacing ──────────────
+    // Meta Graph frequently returns HTTP 200 with { error: { code, message } }
+    // in the body. Raw fetch() doesn't know this is an error. Without the
+    // error check below we'd blindly call aggregateInsights([]) and tell
+    // the user "sem dados" when the real issue is an expired token or a
+    // rate limit — confusing during a client demo.
+    async function fetchMeta(url: string, timeoutMs = 15000): Promise<any> {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), timeoutMs);
+      try {
+        const r = await fetch(url, { signal: ctrl.signal });
+        if (!r.ok) {
+          throw new Error(`meta_http_${r.status}`);
+        }
+        const d = await r.json();
+        if (d?.error) {
+          const code = d.error.code ?? "?";
+          const msg = String(d.error.message || "unknown").slice(0, 200);
+          // Code 190 = OAuthException (expired / invalid token) — most
+          // common failure mode. Label it so the caller can react.
+          if (code === 190 || String(d.error.type || "").includes("OAuthException")) {
+            throw new Error("meta_token_expired");
+          }
+          throw new Error(`meta_api_error_${code}: ${msg}`);
+        }
+        return d;
+      } finally {
+        clearTimeout(t);
+      }
+    }
+
     // ── Fetch target name + status ────────────────────────────────────
     let targetName: string | null = null;
     let targetStatus: string | null = null;
     try {
-      const r = await fetch(`${BASE}/${target_id}?fields=name,status,effective_status&access_token=${token}`);
-      const d = await r.json();
+      const d = await fetchMeta(`${BASE}/${target_id}?fields=name,status,effective_status&access_token=${token}`);
       targetName = d?.name || null;
       targetStatus = d?.effective_status || d?.status || null;
     } catch {
-      /* ignore */
+      /* non-critical — continue without name/status */
     }
 
     // ── Fetch 30d + 7d insights for this specific object ──────────────
@@ -187,13 +217,36 @@ Deno.serve(async (req) => {
         JSON.stringify({ since, until }),
       )}&access_token=${token}`;
 
-    const [res30, res7, resPrev7] = await Promise.all([
-      fetch(insightsUrl(since30, today)),
-      fetch(insightsUrl(since7, today)),
-      fetch(insightsUrl(sincePrev7, untilPrev7)),
-    ]);
-
-    const [d30, d7, dPrev7] = await Promise.all([res30.json(), res7.json(), resPrev7.json()]);
+    // Parallel fetch with timeout + error surfacing. If Meta is down,
+    // rate-limiting, or token expired, we throw a specific error up so
+    // the client sees "reconecta Meta" or "tente de novo em 30s" —
+    // not a silently-wrong "sem dados pra analisar".
+    let d30: any, d7: any, dPrev7: any;
+    try {
+      [d30, d7, dPrev7] = await Promise.all([
+        fetchMeta(insightsUrl(since30, today)),
+        fetchMeta(insightsUrl(since7, today)),
+        fetchMeta(insightsUrl(sincePrev7, untilPrev7)),
+      ]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg === "meta_token_expired") {
+        return new Response(
+          JSON.stringify({
+            error: "meta_token_expired",
+            user_message: "Token do Meta Ads expirou. Reconecta a conta em Contas → Meta Ads.",
+          }),
+          { status: 401, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          error: msg,
+          user_message: "Não foi possível puxar dados do Meta agora. Tenta novamente em 30 segundos.",
+        }),
+        { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
 
     const period30 = aggregateInsights(d30?.data || []);
     const period7 = aggregateInsights(d7?.data || []);
