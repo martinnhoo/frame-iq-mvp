@@ -32,10 +32,15 @@ const T = {
   border1: 'rgba(240,246,252,0.07)',  // default card border
   border2: 'rgba(240,246,252,0.12)',  // emphasized / active
 
-  // Text — 3-tier hierarchy
+  // Text — 3-tier hierarchy.
+  // Contrast bumped on text3 + labelColor (0.48 → 0.62, 0.40 → 0.56)
+  // so sub-lines like "estável vs 7 dias anteriores", "Sem receita
+  // rastreada", "Meta Ads · últimos 7 dias", and "Poucos dias medidos"
+  // pass closer to WCAG AA against the #080B11 page bg. Before this
+  // change they were below 3:1 — barely legible on a bright screen.
   text1: '#F0F6FC',                     // primary (headings, values, key info)
   text2: 'rgba(240,246,252,0.72)',      // secondary (body, descriptions)
-  text3: 'rgba(240,246,252,0.48)',      // tertiary (captions, timestamps, labels)
+  text3: 'rgba(240,246,252,0.62)',      // tertiary (captions, timestamps, labels)
 
   // Accent — functional only
   blue: '#0ea5e9',         // action (CTAs, links)
@@ -46,7 +51,7 @@ const T = {
   purple: '#A78BFA',       // intelligence / patterns
 
   // Functional
-  labelColor: 'rgba(240,246,252,0.40)', // section labels, uppercase headers
+  labelColor: 'rgba(240,246,252,0.56)', // section labels, uppercase headers — bumped for contrast
 };
 
 // ── localStorage helpers ──
@@ -2020,14 +2025,12 @@ const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns:
           transition: 'border-color 0.18s ease, background 0.18s ease',
         }}
       >
-        {/* Slim vertical bar — AdBrief cyan/blue, replaces the old
-            MANUAL pill. Two tones of blue give it a subtle gradient
-            without any actual gradient (which flashes during stream). */}
+        {/* Slim vertical bar — AdBrief cyan, pure flat. Same accent
+            vocabulary as the status strip + PRÓXIMO PASSO bars. */}
         <span aria-hidden style={{
           width: 2, alignSelf: 'stretch',
           background: '#0ea5e9',
-          borderRadius: 1,
-          boxShadow: '0 0 8px rgba(14,165,233,0.35)',
+          borderRadius: 0,
           flexShrink: 0,
         }} />
         {/* Cursor glyph — tells you this is MANUAL operation without
@@ -3285,23 +3288,22 @@ const CommandStatusStrip: React.FC<{
       fontFamily: F,
       animation: 'feed-fadeIn 0.32s ease 0.05s both',
     }}>
-      {/* Linear-flat live indicator. Slim 2px vertical bar replaces
-          the triple-halo orb the previous revision shipped — the orb
-          looked too "generic dashboard demo" next to a tight status
-          line. Keeps the dot only when actively pulsing (critical /
-          still resolving) so there's a motion cue that matters. */}
+      {/* Flat accent bar — NO glow. The glow was making the slim bar
+          read as a dot/orb. Pure solid color is enough when there's
+          tone contrast against the bg. Pulsing variants keep a single
+          subtle box-shadow because the motion needs something to
+          breathe with. */}
       {pulsing ? (
         <span style={{
           width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
           background: tp.dot,
-          boxShadow: `0 0 8px ${tp.glow}`,
+          boxShadow: `0 0 6px ${tp.glow}`,
           animation: 'feed-status-pulse 1.6s ease-in-out infinite',
         }} />
       ) : (
         <span aria-hidden style={{
-          width: 2, height: 11, borderRadius: 1, flexShrink: 0,
+          width: 2, height: 12, borderRadius: 0, flexShrink: 0,
           background: tp.dot,
-          boxShadow: `0 0 6px ${tp.glow}`,
         }} />
       )}
       <span style={{
@@ -3324,24 +3326,29 @@ const CommandStatusStrip: React.FC<{
           disabled={!!syncing}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
-            background: 'rgba(14,165,233,0.10)',
-            color: '#7DD3FC',
-            border: '1px solid rgba(14,165,233,0.28)',
+            // Ghost treatment — no colored fill, no glow. Just a thin
+            // outline + text. Hover reveals a soft cyan tint. Stops
+            // the button from reading as an orb/chip.
+            background: 'transparent',
+            color: syncing ? '#7DD3FC' : 'rgba(240,246,252,0.82)',
+            border: `1px solid ${T.border1}`,
             borderRadius: 6, padding: '4px 10px',
             fontSize: 10.5, fontWeight: 700, fontFamily: F,
             cursor: syncing ? 'default' : 'pointer',
-            opacity: syncing ? 0.6 : 1,
+            opacity: syncing ? 0.8 : 1,
             letterSpacing: '-0.005em',
-            transition: 'background 0.15s ease, box-shadow 0.15s ease',
+            transition: 'color 0.15s ease, border-color 0.15s ease, background 0.15s ease',
           }}
           onMouseEnter={e => {
             if (syncing) return;
-            (e.currentTarget as HTMLElement).style.background = 'rgba(14,165,233,0.18)';
-            (e.currentTarget as HTMLElement).style.boxShadow = '0 0 12px rgba(14,165,233,0.25)';
+            (e.currentTarget as HTMLElement).style.color = '#7DD3FC';
+            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(14,165,233,0.32)';
+            (e.currentTarget as HTMLElement).style.background = 'rgba(14,165,233,0.04)';
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.background = 'rgba(14,165,233,0.10)';
-            (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+            (e.currentTarget as HTMLElement).style.color = 'rgba(240,246,252,0.82)';
+            (e.currentTarget as HTMLElement).style.borderColor = T.border1;
+            (e.currentTarget as HTMLElement).style.background = 'transparent';
           }}
         >
           <svg width="11" height="11" viewBox="0 0 16 16" fill="none" style={{
@@ -4456,9 +4463,11 @@ const CommandHero: React.FC<{
           marginBottom: 6,
         }}>
           <span aria-hidden style={{
-            width: 2, height: 11, borderRadius: 1,
+            // Pure flat accent bar — no box-shadow. Matches the status
+            // strip bar vocabulary so every slim marker on the page
+            // reads as "typographic accent", never as "orb".
+            width: 2, height: 12, borderRadius: 0,
             background: '#A78BFA',
-            boxShadow: '0 0 6px rgba(167,139,250,0.45)',
             flexShrink: 0,
           }} />
           <span style={{

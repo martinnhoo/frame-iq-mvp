@@ -32,9 +32,9 @@ const T = {
   border1: 'rgba(240,246,252,0.08)',
   border2: 'rgba(240,246,252,0.14)',
   text1: '#F0F6FC',
-  text2: 'rgba(240,246,252,0.72)',
-  text3: 'rgba(240,246,252,0.50)',
-  labelColor: 'rgba(240,246,252,0.42)',
+  text2: 'rgba(240,246,252,0.76)',      // bumped from 0.72
+  text3: 'rgba(240,246,252,0.62)',      // bumped from 0.50 — captions + issue meta
+  labelColor: 'rgba(240,246,252,0.56)', // bumped from 0.42 — uppercase eyebrows
   blue: '#2563EB',
   blueSoft: '#3B82F6',
   green: '#22C55E',
