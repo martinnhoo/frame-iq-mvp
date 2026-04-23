@@ -405,6 +405,50 @@ export default function CampaignsManager() {
   // Search query — filters campaigns by name (case-insensitive). Essential
   // once agency users have 20+ campaigns and scrolling becomes painful.
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // ── Preview-before-confirm flow ──────────────────────────────────────────
+  // Every manual action (pause/activate/duplicate/budget) first opens a
+  // Preview panel. The panel shows the AI's read on whether the action
+  // makes sense given current context (days running, spend, conversions,
+  // CPA vs goal, etc). User confirms before anything touches Meta.
+  //
+  // Keyed by target Meta ID. Null means "no preview open for this target".
+  type ActionVerdict = 'recommend' | 'reject' | 'wait' | 'depends';
+  interface PreviewData {
+    loading: boolean;
+    error?: string | null;
+    // Request metadata
+    proposedAction: 'pause' | 'activate' | 'duplicate' | 'increase_budget' | 'decrease_budget';
+    proposedActionLabel: string;        // "Pausar", "Duplicar", etc
+    proposedBudgetCents?: number;       // only for budget changes
+    targetType: 'campaign' | 'adset' | 'ad';
+    targetName: string;
+    // Response
+    verdict?: ActionVerdict;
+    verdict_label?: string;
+    headline?: string;
+    reasoning?: string;
+    alternatives?: string[];
+    context?: {
+      days_running: number;
+      days_with_spend: number;
+      spend_cents: number;
+      clicks: number;
+      conversions: number;
+      cpa_cents: number | null;
+      ctr: number;
+      freq: number;
+      status: string;
+      effective_status: string;
+      trend: 'up' | 'down' | 'flat' | null;
+    };
+    target_cpa_cents?: number | null;
+    // Execution state (after user clicks Confirmar)
+    executing?: boolean;
+    executed?: boolean;
+    executionError?: string;
+  }
+  const [previews, setPreviews] = useState<Record<string, PreviewData>>({});
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(new Set());
   const [expandedAdsets, setExpandedAdsets] = useState<Set<string>>(new Set());
 
@@ -525,6 +569,89 @@ export default function CampaignsManager() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, personaId, accountId]);
+
+  // ── Preview flow — open AI analysis before confirming action ────────────
+  // Every manual button (Pausar/Ativar/Duplicar/Ajustar budget) calls
+  // requestPreview first. The Preview panel shows verdict + reasoning,
+  // and only then the user confirms or cancels. Executes via the same
+  // toggleStatus/updateBudget/duplicate helpers that used to fire
+  // immediately — just gated behind the preview gate now.
+  const requestPreview = useCallback(async (
+    targetId: string,
+    targetType: TargetType,
+    targetName: string,
+    proposedAction: 'pause' | 'activate' | 'duplicate' | 'increase_budget' | 'decrease_budget',
+    proposedBudgetCents?: number,
+  ) => {
+    const actionLabel = proposedAction === 'pause' ? 'Pausar'
+      : proposedAction === 'activate' ? 'Ativar'
+      : proposedAction === 'duplicate' ? 'Duplicar'
+      : 'Ajustar budget';
+
+    setPreviews(prev => ({
+      ...prev,
+      [targetId]: {
+        loading: true,
+        error: null,
+        proposedAction,
+        proposedActionLabel: actionLabel,
+        proposedBudgetCents,
+        targetType,
+        targetName,
+      },
+    }));
+
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('preview-action', {
+        body: {
+          user_id: userId,
+          persona_id: personaId,
+          target_id: targetId,
+          target_type: targetType,
+          proposed_action: proposedAction,
+          proposed_budget_cents: proposedBudgetCents,
+        },
+      });
+      if (fnErr || !data || (data as any).error) {
+        const msg = (data as any)?.error || fnErr?.message || 'Falha ao analisar ação';
+        setPreviews(prev => ({
+          ...prev,
+          [targetId]: { ...(prev[targetId] || {}), loading: false, error: String(msg) } as PreviewData,
+        }));
+        return;
+      }
+      const d = data as any;
+      setPreviews(prev => ({
+        ...prev,
+        [targetId]: {
+          ...(prev[targetId] || {}),
+          loading: false,
+          error: null,
+          verdict: d.verdict,
+          verdict_label: d.verdict_label,
+          headline: d.headline,
+          reasoning: d.reasoning,
+          alternatives: d.alternatives || [],
+          context: d.context || undefined,
+          target_cpa_cents: d.target_cpa_cents ?? null,
+        } as PreviewData,
+      }));
+    } catch (e: any) {
+      setPreviews(prev => ({
+        ...prev,
+        [targetId]: { ...(prev[targetId] || {}), loading: false, error: e?.message || 'Erro de conexão' } as PreviewData,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, personaId]);
+
+  const cancelPreview = useCallback((targetId: string) => {
+    setPreviews(prev => {
+      const next = { ...prev };
+      delete next[targetId];
+      return next;
+    });
+  }, []);
 
   // ── Toggle status (pause/activate) — the core Phase B flow ──────────────
   // 1. Call meta-actions to flip status on Meta API
@@ -756,6 +883,51 @@ export default function CampaignsManager() {
     }
   }, [userId, personaId]);
 
+  /**
+   * Dispatch the confirmed action from an open preview panel. Routes
+   * to the existing toggleStatus / updateBudget / duplicate helpers,
+   * then clears the preview on success.
+   */
+  const confirmPreview = useCallback(async (targetId: string) => {
+    const preview = previews[targetId];
+    if (!preview || !preview.context) return;
+
+    setPreviews(prev => ({
+      ...prev,
+      [targetId]: { ...(prev[targetId] || {}), executing: true, executionError: undefined } as PreviewData,
+    }));
+
+    try {
+      const { proposedAction, targetType, targetName, proposedBudgetCents } = preview;
+      const currentStatus = preview.context.effective_status;
+
+      if (proposedAction === 'pause' || proposedAction === 'activate') {
+        await toggleStatus(targetId, targetType, currentStatus, targetName);
+      } else if (proposedAction === 'duplicate') {
+        await duplicate(targetId, targetType, targetName);
+      } else if (proposedAction === 'increase_budget' || proposedAction === 'decrease_budget') {
+        if (proposedBudgetCents !== undefined) {
+          await updateBudget(targetId, targetType, 0, proposedBudgetCents, targetName);
+        }
+      }
+      setPreviews(prev => {
+        const next = { ...prev };
+        delete next[targetId];
+        return next;
+      });
+    } catch (e: any) {
+      setPreviews(prev => ({
+        ...prev,
+        [targetId]: {
+          ...(prev[targetId] || {}),
+          executing: false,
+          executionError: e?.message || 'Falha ao executar',
+        } as PreviewData,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previews, toggleStatus, updateBudget, duplicate]);
+
   const sortedCampaigns = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const filtered = q
@@ -768,6 +940,228 @@ export default function CampaignsManager() {
       return order(sa) - order(sb);
     });
   }, [campaigns, searchQuery]);
+
+  // ══════════════════════════════════════════════════════════════════════
+  // PREVIEW PANEL — renders inline below a row when the user requests an
+  // action. Shows AI verdict, real context (days running / spend / conv /
+  // CPA / freq / trend), reasoning and alternatives, then Confirmar /
+  // Cancelar buttons. Confirmar triggers the real meta-actions call.
+  // ══════════════════════════════════════════════════════════════════════
+  const PreviewPanel: React.FC<{ targetId: string; indent?: number }> = ({ targetId, indent = 0 }) => {
+    const p = previews[targetId];
+    if (!p) return null;
+
+    // Colors per verdict
+    const verdictTone = (() => {
+      if (p.verdict === 'recommend') return { bg: 'rgba(34,197,94,0.10)', border: 'rgba(34,197,94,0.35)', color: '#4ADE80' };
+      if (p.verdict === 'reject')    return { bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.35)', color: '#F87171' };
+      if (p.verdict === 'wait')      return { bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.35)', color: '#FBBF24' };
+      return { bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.22)', color: T.text2 };
+    })();
+
+    const brl = (c: number) => (c / 100).toFixed(2).replace('.', ',');
+
+    const isContrary = p.verdict === 'reject' || p.verdict === 'wait';
+    const confirmLabel = isContrary
+      ? `Executar mesmo assim`
+      : `Confirmar ${p.proposedActionLabel.toLowerCase()}`;
+
+    return (
+      <div style={{
+        background: T.bg0,
+        borderTop: `1px solid ${T.border0}`,
+        padding: `16px 20px 16px ${20 + indent}px`,
+        fontFamily: F,
+        animation: 'mgr-fade-in 0.18s ease',
+      }}>
+        <style>{`@keyframes mgr-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }`}</style>
+
+        {/* Loading state */}
+        {p.loading && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: T.text3, fontSize: 12.5 }}>
+            <Loader2 size={14} className="spin" />
+            Analisando: rodando há {p.proposedActionLabel.toLowerCase()} em <strong style={{ color: T.text2, fontWeight: 600 }}>{p.targetName}</strong>…
+          </div>
+        )}
+
+        {/* Error state */}
+        {!p.loading && p.error && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            color: '#F87171', fontSize: 12.5,
+            background: 'rgba(239,68,68,0.06)', border: `1px solid rgba(239,68,68,0.20)`,
+            borderRadius: 8, padding: '10px 12px',
+          }}>
+            <X size={14} /> Falha na análise: {p.error}
+            <button
+              onClick={() => cancelPreview(targetId)}
+              style={{ marginLeft: 'auto', background: 'none', border: 'none', color: T.text3, cursor: 'pointer', fontSize: 11 }}
+            >
+              Fechar
+            </button>
+          </div>
+        )}
+
+        {/* Verdict + content */}
+        {!p.loading && !p.error && p.verdict && (
+          <>
+            {/* Verdict header */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 8,
+                background: verdictTone.bg,
+                border: `1px solid ${verdictTone.border}`,
+                color: verdictTone.color,
+                fontSize: 10.5, fontWeight: 700,
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+                flexShrink: 0, whiteSpace: 'nowrap',
+              }}>
+                <Sparkles size={11} /> {p.verdict_label}
+              </div>
+              <p style={{
+                flex: 1, fontSize: 14, fontWeight: 600, color: T.text1,
+                margin: 0, lineHeight: 1.4, letterSpacing: '-0.01em',
+              }}>
+                {p.headline}
+              </p>
+            </div>
+
+            {/* Context grid — the numbers the AI based its call on */}
+            {p.context && (
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+                gap: 8, marginBottom: 14,
+              }}>
+                {[
+                  { label: 'Rodando há', value: `${p.context.days_running}d`, sub: `${p.context.days_with_spend}d c/ entrega` },
+                  { label: 'Spend', value: `R$ ${brl(p.context.spend_cents)}` },
+                  { label: 'Conversões', value: String(Math.round(p.context.conversions)) },
+                  { label: 'CPA', value: p.context.cpa_cents !== null ? `R$ ${brl(p.context.cpa_cents)}` : '—',
+                    sub: p.target_cpa_cents ? `meta R$ ${brl(p.target_cpa_cents)}` : undefined,
+                    tone: p.context.cpa_cents !== null && p.target_cpa_cents
+                      ? (p.context.cpa_cents <= p.target_cpa_cents ? 'good' : 'bad') : undefined },
+                  { label: 'CTR', value: `${p.context.ctr.toFixed(2)}%`, sub: p.context.trend ? `trend: ${p.context.trend === 'up' ? '↑' : p.context.trend === 'down' ? '↓' : '→'}` : undefined },
+                  { label: 'Frequência', value: `${p.context.freq.toFixed(1)}x`,
+                    tone: p.context.freq > 3.5 ? 'bad' : undefined },
+                ].map((m, i) => (
+                  <div key={i} style={{
+                    background: T.bg1, border: `1px solid ${T.border0}`,
+                    borderRadius: 8, padding: '8px 10px',
+                  }}>
+                    <div style={{
+                      fontSize: 9.5, fontWeight: 700, color: T.text3,
+                      letterSpacing: '0.06em', textTransform: 'uppercase',
+                      marginBottom: 2,
+                    }}>
+                      {m.label}
+                    </div>
+                    <div style={{
+                      fontSize: 13, fontWeight: 700,
+                      color: m.tone === 'good' ? '#4ADE80' : m.tone === 'bad' ? '#F87171' : T.text1,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}>
+                      {m.value}
+                    </div>
+                    {m.sub && (
+                      <div style={{ fontSize: 9.5, color: T.text3, marginTop: 1 }}>{m.sub}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Reasoning */}
+            {p.reasoning && (
+              <p style={{
+                fontSize: 12.5, color: T.text2, margin: '0 0 12px',
+                lineHeight: 1.6,
+              }}>
+                {p.reasoning}
+              </p>
+            )}
+
+            {/* Alternatives */}
+            {p.alternatives && p.alternatives.length > 0 && (
+              <div style={{
+                background: T.bg1, border: `1px solid ${T.border0}`,
+                borderRadius: 8, padding: '10px 14px', marginBottom: 14,
+              }}>
+                <div style={{
+                  fontSize: 9.5, fontWeight: 700, color: T.text3,
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  marginBottom: 6,
+                }}>
+                  Alternativas
+                </div>
+                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {p.alternatives.map((alt, i) => (
+                    <li key={i} style={{ fontSize: 12, color: T.text2, lineHeight: 1.5, paddingLeft: 14, position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 2, color: T.blue }}>→</span>
+                      {alt}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Execution error */}
+            {p.executionError && (
+              <div style={{
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
+                borderRadius: 6, padding: '8px 12px', marginBottom: 10,
+                fontSize: 12, color: '#F87171',
+              }}>
+                {p.executionError}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                onClick={() => cancelPreview(targetId)}
+                disabled={!!p.executing}
+                style={{
+                  background: T.bg2, border: `1px solid ${T.border1}`,
+                  color: T.text2, borderRadius: 8,
+                  padding: '8px 14px', fontSize: 12, fontWeight: 600,
+                  cursor: p.executing ? 'default' : 'pointer',
+                  fontFamily: F, opacity: p.executing ? 0.5 : 1,
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => confirmPreview(targetId)}
+                disabled={!!p.executing}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: isContrary
+                    ? 'rgba(239,68,68,0.12)'
+                    : verdictTone.bg,
+                  border: `1px solid ${isContrary ? 'rgba(239,68,68,0.40)' : verdictTone.border}`,
+                  color: isContrary ? '#F87171' : verdictTone.color,
+                  borderRadius: 8,
+                  padding: '8px 14px', fontSize: 12, fontWeight: 700,
+                  cursor: p.executing ? 'default' : 'pointer',
+                  fontFamily: F,
+                  letterSpacing: '0.01em',
+                }}
+              >
+                {p.executing ? <Loader2 size={12} className="spin" /> : null}
+                {confirmLabel}
+              </button>
+              {p.verdict === 'wait' && (
+                <span style={{ fontSize: 10.5, color: T.text3, marginLeft: 'auto', fontStyle: 'italic' }}>
+                  Recomendado: aguardar
+                </span>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   // ══════════════════════════════════════════════════════════════════════
   // RENDER
@@ -824,8 +1218,9 @@ export default function CampaignsManager() {
             fontSize: 11.5, color: T.text3, lineHeight: 1.55,
             margin: 0, flex: 1,
           }}>
-            Esta é uma visão direta da sua conta Meta pra ajustes pontuais.
-            O fluxo principal continua sendo o <a
+            Ajustes pontuais direto na conta Meta. Antes de confirmar qualquer ação,
+            a IA analisa o contexto (idade, performance, tendência) e te diz se
+            faz sentido agora. O fluxo principal continua sendo o <a
               href="/dashboard/feed"
               style={{ color: T.text2, textDecoration: 'underline', textDecorationColor: T.border2 }}
             >Feed</a> — aqui cada ação fica marcada como manual no <a
@@ -964,21 +1359,24 @@ export default function CampaignsManager() {
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <ActionButton
                     kind={cPaused ? 'activate' : 'pause'}
-                    inflight={cInflight}
+                    inflight={cInflight || !!previews[c.id]?.loading}
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleStatus(c.id, 'campaign', c.effective_status || c.status, c.name);
+                      requestPreview(c.id, 'campaign', c.name, cPaused ? 'activate' : 'pause');
                     }}
                   />
                   <DuplicateButton
-                    inflight={cInflight}
+                    inflight={cInflight || !!previews[c.id]?.loading}
                     onClick={(e) => {
                       e.stopPropagation();
-                      duplicate(c.id, 'campaign', c.name);
+                      requestPreview(c.id, 'campaign', c.name, 'duplicate');
                     }}
                   />
                 </div>
               </div>
+
+              {/* AI analysis preview — shown after the user clicks a button, before execution */}
+              <PreviewPanel targetId={c.id} indent={16} />
 
               <InlineComment feedback={cFeedback} indent={40} />
 
@@ -1045,19 +1443,19 @@ export default function CampaignsManager() {
                           <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
                             <ActionButton
                               kind={aPaused ? 'activate' : 'pause'}
-                              inflight={aInflight}
+                              inflight={aInflight || !!previews[ads.id]?.loading}
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleStatus(ads.id, 'adset', ads.effective_status || ads.status, ads.name);
+                                requestPreview(ads.id, 'adset', ads.name, aPaused ? 'activate' : 'pause');
                               }}
                             />
                             <DuplicateButton
-                              inflight={aInflight}
+                              inflight={aInflight || !!previews[ads.id]?.loading}
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                duplicate(ads.id, 'adset', ads.name);
+                                requestPreview(ads.id, 'adset', ads.name, 'duplicate');
                               }}
                             />
                             {/* Open in Meta Ads Manager — lets the user inspect
@@ -1090,6 +1488,9 @@ export default function CampaignsManager() {
                             </a>
                           </div>
                         </div>
+
+                        {/* AI analysis preview for this adset */}
+                        <PreviewPanel targetId={ads.id} indent={40} />
 
                         <InlineComment feedback={aFeedback} indent={60} />
 
@@ -1139,23 +1540,24 @@ export default function CampaignsManager() {
                                     <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
                                       <ActionButton
                                         kind={adPaused ? 'activate' : 'pause'}
-                                        inflight={adInflight}
+                                        inflight={adInflight || !!previews[ad.id]?.loading}
                                         size="sm"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          toggleStatus(ad.id, 'ad', ad.effective_status || ad.status, ad.name);
+                                          requestPreview(ad.id, 'ad', ad.name, adPaused ? 'activate' : 'pause');
                                         }}
                                       />
                                       <DuplicateButton
-                                        inflight={adInflight}
+                                        inflight={adInflight || !!previews[ad.id]?.loading}
                                         size="sm"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          duplicate(ad.id, 'ad', ad.name);
+                                          requestPreview(ad.id, 'ad', ad.name, 'duplicate');
                                         }}
                                       />
                                     </div>
                                   </div>
+                                  <PreviewPanel targetId={ad.id} indent={80} />
                                   <InlineComment feedback={adFeedback} indent={80} />
                                 </div>
                               );
