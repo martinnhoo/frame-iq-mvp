@@ -129,9 +129,31 @@ export default function CockpitLayout() {
 
   // Live clock in the sidebar footer. Updates every 30s — enough for a
   // "what time is it for the system" signal without burning renders.
+  // Visibility-aware: pauses while the cockpit tab is in the background
+  // (admin panels often sit behind prod tabs for hours); resumes with
+  // an immediate tick when the user returns so the clock is fresh.
   useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 30_000);
-    return () => window.clearInterval(id);
+    let id: number | undefined;
+    const tick = () => setNow(new Date());
+    const start = () => {
+      if (id !== undefined) return;
+      id = window.setInterval(tick, 30_000);
+    };
+    const stop = () => {
+      if (id === undefined) return;
+      window.clearInterval(id);
+      id = undefined;
+    };
+    const onVis = () => {
+      if (document.visibilityState === 'visible') { tick(); start(); }
+      else stop();
+    };
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      stop();
+    };
   }, []);
 
   // ⌘K / Ctrl-K opens the palette. Only wire when the gate is 'ok' so the

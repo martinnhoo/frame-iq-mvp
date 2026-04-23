@@ -167,25 +167,67 @@ const HistoryPage: React.FC = () => {
       .then(({ data }) => setLiveAccountId(data?.id ?? null));
   }, [metaSelId]);
 
+  // Cursor pagination — accounts with 5k+ history rows need "carregar
+  // mais" instead of seeing only the top 100. `cursor` is the oldest
+  // executed_at we've already loaded; next page fetches rows strictly
+  // older than that timestamp.
+  const PAGE_SIZE = 100;
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const cursorRef = React.useRef<string | null>(null);
+
   const loadHistory = useCallback(async () => {
     const aid = liveAccountId;
     if (!aid) { setHistory([]); setLoading(false); return; }
     try {
       setLoading(true);
+      cursorRef.current = null;
       const { data, error } = await (supabase
         .from('action_log' as any)
         .select('*')
         .eq('account_id', aid)
         .order('executed_at', { ascending: false })
-        .limit(100) as any);
+        .limit(PAGE_SIZE + 1) as any); // +1 to know if there's more
       if (error) throw error;
-      setHistory((data || []) as ActionLogEntry[]);
+      const rows = (data || []) as ActionLogEntry[];
+      const more = rows.length > PAGE_SIZE;
+      const page = rows.slice(0, PAGE_SIZE);
+      setHistory(page);
+      setHasMore(more);
+      if (page.length > 0) cursorRef.current = page[page.length - 1].executed_at as any;
     } catch (err) {
       console.error('[HistoryPage] load error:', err);
     } finally {
       setLoading(false);
     }
   }, [liveAccountId]);
+
+  const loadMore = useCallback(async () => {
+    const aid = liveAccountId;
+    if (!aid || !cursorRef.current || loadingMore) return;
+    try {
+      setLoadingMore(true);
+      const { data, error } = await (supabase
+        .from('action_log' as any)
+        .select('*')
+        .eq('account_id', aid)
+        .lt('executed_at', cursorRef.current)
+        .order('executed_at', { ascending: false })
+        .limit(PAGE_SIZE + 1) as any);
+      if (error) throw error;
+      const rows = (data || []) as ActionLogEntry[];
+      const more = rows.length > PAGE_SIZE;
+      const page = rows.slice(0, PAGE_SIZE);
+      setHistory(prev => [...prev, ...page]);
+      setHasMore(more);
+      if (page.length > 0) cursorRef.current = page[page.length - 1].executed_at as any;
+      else setHasMore(false);
+    } catch (err) {
+      console.error('[HistoryPage] loadMore error:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [liveAccountId, loadingMore]);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
 
@@ -355,10 +397,10 @@ const HistoryPage: React.FC = () => {
       {/* ── Header ── */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: T1, letterSpacing: '-0.04em', lineHeight: 1.2 }}>
-          Decisões da IA
+          Histórico de ações
         </h1>
         <p style={{ margin: '6px 0 0', fontSize: 14, color: T3, lineHeight: 1.5 }}>
-          Tudo que a IA fez com seu dinheiro — cada ação, cada resultado.
+          Cada movimento na sua conta — IA e manual — com valor, resultado e contexto.
         </p>
       </div>
 
@@ -742,6 +784,43 @@ const HistoryPage: React.FC = () => {
         <p style={{ fontFamily: F, fontSize: 11, color: TL, margin: '14px 0 0', textAlign: 'center' }}>
           {filtered.length} de {history.length} decisões
         </p>
+      )}
+
+      {/* Carregar mais — only shows when there are more rows on the
+          server than what's currently loaded. Uses cursor pagination
+          (executed_at < last loaded) so it works even if the account
+          has 10k+ history entries without any offset performance hit. */}
+      {hasMore && history.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            style={{
+              background: 'transparent',
+              border: '1px dashed rgba(148,163,184,0.18)',
+              borderRadius: 10,
+              padding: '10px 18px',
+              fontSize: 12, fontWeight: 700,
+              color: loadingMore ? TL : T2,
+              cursor: loadingMore ? 'default' : 'pointer',
+              fontFamily: F, letterSpacing: '-0.005em',
+              transition: 'background 0.15s ease, color 0.15s ease, border-color 0.15s ease',
+            }}
+            onMouseEnter={e => {
+              if (loadingMore) return;
+              (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.04)';
+              (e.currentTarget as HTMLElement).style.color = T1;
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(148,163,184,0.28)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = 'transparent';
+              (e.currentTarget as HTMLElement).style.color = T2;
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(148,163,184,0.18)';
+            }}
+          >
+            {loadingMore ? 'Carregando…' : `Carregar mais 100 ações →`}
+          </button>
+        </div>
       )}
     </div>
   );

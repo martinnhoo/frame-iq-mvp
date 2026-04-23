@@ -66,11 +66,28 @@ export function DemoTabs({ onCTA }: { onCTA: () => void }) {
     setTimeout(() => setIsTransitioning(false), 500);
   }, [idx, isTransitioning]);
 
-  // Auto-advance
+  // Auto-advance — pauses when tab is hidden or when zoomed.
+  // A background tab shouldn't cycle demo cards wasting render cycles
+  // + triggering re-renders across the page.
   useEffect(() => {
     if (zoomed) return;
-    const id = setInterval(() => goTo((idx + 1) % ITEMS.length), 5000);
-    return () => clearInterval(id);
+    let id: number | undefined;
+    const start = () => {
+      if (id !== undefined) return;
+      id = window.setInterval(() => goTo((idx + 1) % ITEMS.length), 5000);
+    };
+    const stop = () => {
+      if (id === undefined) return;
+      window.clearInterval(id);
+      id = undefined;
+    };
+    const onVis = () => { document.visibilityState === 'visible' ? start() : stop(); };
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      stop();
+    };
   }, [zoomed, idx, goTo]);
 
   // ESC to close lightbox
