@@ -97,16 +97,21 @@ const T = {
 const F = 'system-ui, -apple-system, "SF Pro Display", sans-serif';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-function statusColor(s: string | undefined): { color: string; dot: string; label: string } {
+function statusColor(s: string | undefined): { color: string; dot: string; glow: string; label: string } {
   const u = (s || '').toUpperCase();
-  if (u === 'ACTIVE') return { color: T.green, dot: 'rgba(74,222,128,0.50)', label: 'Ativo' };
+  // dot = solid body of the status indicator
+  // glow = same color at high transparency, used for box-shadow halo
+  if (u === 'ACTIVE')
+    return { color: T.green, dot: '#10B981', glow: 'rgba(16,185,129,0.50)', label: 'Ativo' };
   if (u === 'PAUSED' || u === 'CAMPAIGN_PAUSED' || u === 'ADSET_PAUSED')
-    return { color: T.text2, dot: 'rgba(255,255,255,0.35)', label: 'Pausado' };
+    return { color: T.text2, dot: '#64748B', glow: 'rgba(100,116,139,0.35)', label: 'Pausado' };
   if (u === 'LEARNING' || u === 'IN_PROCESS' || u === 'PENDING_REVIEW')
-    return { color: T.yellow, dot: 'rgba(251,191,36,0.45)', label: 'Aprendizado' };
-  if (u === 'DISAPPROVED' || u === 'WITH_ISSUES') return { color: T.red, dot: 'rgba(248,113,113,0.50)', label: 'Problema' };
-  if (u === 'ARCHIVED' || u === 'DELETED') return { color: T.text3, dot: 'rgba(255,255,255,0.20)', label: 'Arquivado' };
-  return { color: T.text2, dot: 'rgba(255,255,255,0.30)', label: u || '—' };
+    return { color: T.yellow, dot: '#F59E0B', glow: 'rgba(245,158,11,0.50)', label: 'Aprendizado' };
+  if (u === 'DISAPPROVED' || u === 'WITH_ISSUES')
+    return { color: T.red, dot: '#EF4444', glow: 'rgba(239,68,68,0.50)', label: 'Problema' };
+  if (u === 'ARCHIVED' || u === 'DELETED')
+    return { color: T.text3, dot: '#475569', glow: 'rgba(71,85,105,0.30)', label: 'Arquivado' };
+  return { color: T.text2, dot: '#64748B', glow: 'rgba(100,116,139,0.30)', label: u || '—' };
 }
 
 function isPausedStatus(s: string | undefined): boolean {
@@ -1552,7 +1557,11 @@ export default function CampaignsManager() {
                   }}
                 >
                   {isOpen ? <ChevronDown size={14} style={{ color: T.text3, flexShrink: 0 }} /> : <ChevronRight size={14} style={{ color: T.text3, flexShrink: 0 }} />}
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot, flexShrink: 0 }} />
+                  <span style={{
+                    width: 7, height: 7, borderRadius: '50%',
+                    background: sc.dot, flexShrink: 0,
+                    boxShadow: `0 0 0 3px ${sc.glow.replace(/[\d.]+\)$/, '0.15)')}, 0 0 8px ${sc.glow}`,
+                  }} />
                   <span
                     title={c.name}
                     style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
@@ -1594,7 +1603,10 @@ export default function CampaignsManager() {
 
               {/* Adsets */}
               {isOpen && (
-                <div style={{ background: T.bg0, borderTop: `1px solid ${T.border0}` }}>
+                <div style={{
+                  background: 'rgba(6,10,20,0.55)',
+                  borderTop: `1px solid ${T.border1}`,
+                }}>
                   {loadingThisAdsets && (
                     <div style={{ padding: 12, fontSize: 11.5, color: T.text3, textAlign: 'center' }}>
                       Carregando conjuntos…
@@ -1635,7 +1647,12 @@ export default function CampaignsManager() {
                             }}
                           >
                             {isAdsetOpen ? <ChevronDown size={12} style={{ color: T.text3, flexShrink: 0 }} /> : <ChevronRight size={12} style={{ color: T.text3, flexShrink: 0 }} />}
-                            <Target size={11} style={{ color: T.text3, flexShrink: 0 }} />
+                            <span style={{
+                              width: 5, height: 5, borderRadius: '50%',
+                              background: sa.dot, flexShrink: 0,
+                              boxShadow: `0 0 6px ${sa.glow}`,
+                            }} />
+                            <Target size={10} style={{ color: T.text3, flexShrink: 0 }} strokeWidth={2.2} />
                             <span
                               title={ads.name}
                               style={{ flex: 1, fontSize: 12, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
@@ -1708,7 +1725,10 @@ export default function CampaignsManager() {
 
                         {/* Ads inside this adset */}
                         {isAdsetOpen && (
-                          <div style={{ background: T.bg1, borderTop: `1px solid ${T.border0}` }}>
+                          <div style={{
+                            background: 'rgba(15,23,42,0.45)',
+                            borderTop: `1px solid ${T.border1}`,
+                          }}>
                             {loadingThisAds && (
                               <div style={{ padding: 10, paddingLeft: 60, fontSize: 11, color: T.text3 }}>
                                 Carregando anúncios…
@@ -1739,7 +1759,12 @@ export default function CampaignsManager() {
                                     padding: '9px 12px 9px 60px',
                                     borderTop: `1px solid ${T.border0}`,
                                   }}>
-                                    <Sparkles size={10} style={{ color: T.purple, flexShrink: 0 }} />
+                                    <span style={{
+                                      width: 4, height: 4, borderRadius: '50%',
+                                      background: sAd.dot, flexShrink: 0,
+                                      boxShadow: `0 0 5px ${sAd.glow}`,
+                                    }} />
+                                    <Sparkles size={9} style={{ color: T.purple, flexShrink: 0 }} strokeWidth={2.3} />
                                     <span
                                       title={ad.name}
                                       style={{ flex: 1, fontSize: 11.5, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
