@@ -1989,22 +1989,53 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // STATE 4 — NO CRITICAL ACTION (dados OK, sem problemas)
 // Suggest improvement — never "nothing to do"
 // ================================================================
-const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns: CampaignSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void; togglingCampaign?: string | null; campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void; onAnalyzeAiCampaign?: (campaign: CampaignSummary) => void; onAnalyzeAiAd?: (ad: AdSummary) => void }> = ({ totalAds, ads, campaigns, onLoadMoreAds, loadingMoreAds, togglingAd, toggleSuccess, onRequestToggle, togglingCampaign, campaignToggleSuccess, onRequestCampaignToggle, onAnalyzeAiCampaign, onAnalyzeAiAd }) => {
-  // Only renders the actual campaign/ad list. No hero filler — that's the
-  // parent's job (hero is chosen contextually by the main render).
+const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns: CampaignSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void; togglingCampaign?: string | null; campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void; onAnalyzeAiCampaign?: (campaign: CampaignSummary) => void; onAnalyzeAiAd?: (ad: AdSummary) => void }> = ({ campaigns, ads }) => {
+  // In the healthy/no-critical state we used to dump the whole campaign
+  // tree here — CampaignList + AdList mixed with the decisions column.
+  // That duplicated the Gerenciador and crowded the Feed. Now: a quiet
+  // one-line strip pointing at the manual manager, nothing more. The
+  // Feed stays focused on decisions; the tree only shows up for users
+  // who go looking for it.
   if (campaigns.length === 0 && ads.length === 0) return null;
+  const navigate = useNavigate();
+  const activeCount = campaigns.filter(c => (c.status || '').toUpperCase() !== 'PAUSED' && (c.status || '').toUpperCase() !== 'ARCHIVED').length;
   return (
     <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{
-        background: T.bg1, border: `1px solid ${T.border1}`,
-        borderRadius: 8, padding: 'clamp(14px, 3vw, 18px)',
-      }}>
-        {campaigns.length > 0 ? (
-          <CampaignList campaigns={campaigns} ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} togglingCampaign={togglingCampaign} campaignToggleSuccess={campaignToggleSuccess} onRequestCampaignToggle={onRequestCampaignToggle} onAnalyzeAiCampaign={onAnalyzeAiCampaign} onAnalyzeAiAd={onAnalyzeAiAd} defaultOpen />
-        ) : (
-          <AdList ads={ads} totalAds={totalAds} onLoadMore={onLoadMoreAds} loadingMore={loadingMoreAds} togglingAd={togglingAd} toggleSuccess={toggleSuccess} onRequestToggle={onRequestToggle} onAnalyzeAiAd={onAnalyzeAiAd} />
-        )}
-      </div>
+      <button
+        onClick={() => navigate('/dashboard/feed/campanhas', { state: { fromFeed: true } })}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: T.bg1, border: `1px solid ${T.border1}`,
+          borderLeft: `2px solid ${T.blue}`,
+          borderRadius: 8, padding: '10px 14px',
+          cursor: 'pointer', fontFamily: F, textAlign: 'left',
+          transition: 'border-color 0.15s, background 0.15s',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.bg2; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.bg1; }}
+      >
+        <span style={{
+          fontSize: 9.5, fontWeight: 700, color: T.blue,
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          background: 'rgba(37,99,235,0.10)', borderRadius: 4,
+          padding: '2px 6px', flexShrink: 0,
+        }}>
+          Manual
+        </span>
+        <span style={{ fontSize: 12, color: T.text2, flex: 1, lineHeight: 1.5 }}>
+          Precisa ajustar alguma campanha específica?
+          {activeCount > 0 && (
+            <span style={{ color: T.text3, marginLeft: 6 }}>
+              {activeCount} ativa{activeCount !== 1 ? 's' : ''} no momento.
+            </span>
+          )}
+        </span>
+        <span style={{
+          fontSize: 11, fontWeight: 600, color: T.blue, flexShrink: 0,
+        }}>
+          Abrir gerenciador →
+        </span>
+      </button>
     </div>
   );
 };

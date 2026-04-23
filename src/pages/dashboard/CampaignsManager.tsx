@@ -547,6 +547,10 @@ export default function CampaignsManager() {
 
     try {
       // ── 1. Execute action ────────────────────────────────────────────
+      // `source: 'manager_manual'` tags this as a human-driven action in
+      // action_log (vs decision-engine-driven via execute-action). Makes
+      // History filterable and gives the "manual" vs "autopilot" split
+      // on the dashboard honest.
       const { data: actionData, error: actionErr } = await supabase.functions.invoke('meta-actions', {
         body: {
           user_id: userId,
@@ -555,6 +559,7 @@ export default function CampaignsManager() {
           target_id: targetId,
           target_type: targetType,
           target_name: targetName,
+          source: 'manager_manual',
         },
       });
       if (actionErr || !actionData || (actionData as any).error) {
@@ -641,6 +646,7 @@ export default function CampaignsManager() {
           target_name: targetName,
           value: newReais,
           budget_type: 'daily',
+          source: 'manager_manual',
         },
       });
       if (actionErr || !actionData || (actionData as any).error) {
@@ -710,6 +716,7 @@ export default function CampaignsManager() {
           target_id: targetId,
           target_type: targetType,
           target_name: targetName,
+          source: 'manager_manual',
         },
       });
       if (actionErr || !actionData || (actionData as any).error) {
@@ -787,14 +794,46 @@ export default function CampaignsManager() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Layers size={16} style={{ color: T.purple }} />
             <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>
-              Campanhas
+              Gerenciador manual
             </h1>
           </div>
         </div>
 
-        <p style={{ fontSize: 12, color: T.text3, margin: '0 0 18px' }}>
-          Pause, ative ou ajuste qualquer campanha, conjunto ou anúncio. A cada ação, o Estrategista analisa os últimos 30 dias e explica o impacto.
-        </p>
+        {/* Subtle manual-mode banner — matches the Feed's elevated-card
+            aesthetic (T.bg1 + T.border1) with a muted blue left rule so
+            it reads as "sidebar tool" instead of "primary surface".
+            Mensagem discreta: o Feed é o canal canônico, isso aqui é
+            override manual pra casos raros. Toda ação é registrada em
+            Histórico com marca 'manual'. */}
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: 10,
+          background: T.bg1, border: `1px solid ${T.border1}`,
+          borderLeft: `2px solid ${T.blue}`,
+          borderRadius: 8, padding: '10px 14px',
+          marginBottom: 18,
+        }}>
+          <div style={{
+            fontSize: 9.5, fontWeight: 700, color: T.blue,
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            background: 'rgba(37,99,235,0.10)', borderRadius: 4,
+            padding: '2px 6px', flexShrink: 0, marginTop: 1,
+          }}>
+            Manual
+          </div>
+          <p style={{
+            fontSize: 11.5, color: T.text3, lineHeight: 1.55,
+            margin: 0, flex: 1,
+          }}>
+            Esta é uma visão direta da sua conta Meta pra ajustes pontuais.
+            O fluxo principal continua sendo o <a
+              href="/dashboard/feed"
+              style={{ color: T.text2, textDecoration: 'underline', textDecorationColor: T.border2 }}
+            >Feed</a> — aqui cada ação fica marcada como manual no <a
+              href="/dashboard/history"
+              style={{ color: T.text2, textDecoration: 'underline', textDecorationColor: T.border2 }}
+            >Histórico</a>.
+          </p>
+        </div>
 
         {loading && (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: T.text3, fontSize: 13 }}>
