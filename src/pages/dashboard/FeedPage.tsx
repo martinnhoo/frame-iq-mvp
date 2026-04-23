@@ -3362,7 +3362,12 @@ const CommandStatusStrip: React.FC<{
       display: 'flex', alignItems: 'center', gap: 10,
       padding: '10px 14px',
       borderBottom: `1px solid ${T.border0}`,
-      background: `linear-gradient(90deg, ${tp.bar} 0%, transparent 32%)`,
+      // Solid transparent background — no tone-colored gradient wash.
+      // This strip used to carry a `linear-gradient(90deg, tp.bar 0%,
+      // transparent 32%)` that bled a 32% green (or amber / red) haze
+      // across the top of the deck. It's a money dashboard — solid
+      // colors only, no tinted fog behind numbers.
+      background: 'transparent',
       fontFamily: F,
       animation: 'feed-fadeIn 0.32s ease 0.05s both',
     }}>
@@ -4489,7 +4494,9 @@ const CommandHero: React.FC<{
   return (
     <div className="feed-command-hero" style={{
       position: 'relative',
-      background: `linear-gradient(135deg, ${T.bg1} 0%, ${T.bg2} 100%)`,
+      // Solid fill. Previously a 135deg bg1→bg2 wash which, combined
+      // with the accent border-left, read as a tinted panel.
+      background: T.bg1,
       border: `1px solid ${T.border1}`,
       borderLeft: `3px solid ${accent.color}`,
       borderRadius: 12,
@@ -4498,13 +4505,11 @@ const CommandHero: React.FC<{
       overflow: 'hidden',
       animation: 'feed-deck-in 0.42s cubic-bezier(0.22,1,0.36,1) 0.12s both',
     }}>
-      {/* Glow accent on top-right */}
-      <div aria-hidden style={{
-        position: 'absolute', top: -60, right: -60, width: isCompact ? 140 : 180, height: isCompact ? 140 : 180,
-        borderRadius: '50%',
-        background: `radial-gradient(circle, ${accent.color}14 0%, transparent 70%)`,
-        pointerEvents: 'none',
-      }} />
+      {/* Background glow accent removed — the radial-gradient circle
+          in the top-right corner was painting a soft green haze
+          (for calm variant), amber for tracking, red for critical.
+          Money dashboard = solid colors only. The left border +
+          eyebrow label already carry the tone cue. */}
 
       {/* Header label row — suppressed in compact mode since the Command
           Deck above already shows the same status chip. */}
@@ -6467,7 +6472,11 @@ const FeedPage: React.FC = () => {
           return (
             <div className="feed-command-deck" style={{
               position: 'relative',
-              background: 'linear-gradient(180deg, #0B1220 0%, #0A111E 100%)',
+              // Solid fill. No gradient. Previously carried a subtle
+              // 180deg dark wash that — combined with everything else
+              // — made the background read as tinted. Money dashboard
+              // = one single bg color, no ambient anything.
+              background: '#0B1220',
               border: `1px solid ${T.border1}`,
               borderRadius: 14,
               marginBottom: 14,
@@ -7040,12 +7049,14 @@ const FeedPage: React.FC = () => {
             animation: 'feed-deck-in 0.42s cubic-bezier(0.22,1,0.36,1) 0.12s both',
             fontFamily: F,
           }}>
-            {/* Unified header */}
+            {/* Unified header — solid transparent, no gradient. Same
+                rule as the rest of the money panel: one bg color per
+                surface, no tinted washes. */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '10px 16px',
               borderBottom: `1px solid ${T.border0}`,
-              background: 'linear-gradient(90deg, rgba(167,139,250,0.08) 0%, transparent 45%)',
+              background: 'transparent',
             }}>
               <span style={{
                 fontSize: 9.5, fontWeight: 800, letterSpacing: '0.14em',
