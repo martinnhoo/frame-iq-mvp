@@ -147,64 +147,33 @@ export function computeAccountHealth(input: {
     const isBalance = msg.includes('saldo');
     const isCapExhausted = msg.includes('limite de gastos');
 
-    // Gradient penalty from spend_cap usage. The cap is Meta-imposed and
-    // not editable, but as the account fills it up delivery becomes more
-    // constrained — and at 100% Meta pauses entirely. We want the score
-    // to degrade gradually so the user sees pressure building before the
-    // cliff. Anchors: 10% used → -10, 100% used → -55. Below 10% it
-    // ramps up from 0 so a fresh account doesn't eat a penalty.
-    // Cap pressure gradient.
-    // Only meaningful when the account has spent enough that the lifetime
-    // cap would actually block real delivery. For fresh/small accounts
-    // (<R$500 total spend), Meta routinely returns a tiny lifetime cap
-    // that it raises organically as the account matures — penalizing in
-    // that window produces a score like 46 for an account that's actually
-    // fine (auto-refill ON + sub-daily-throttle spend). We keep the
-    // gradient for mature accounts where it's a real signal, skip it for
-    // small accounts.
-    const MIN_SPEND_FOR_CAP_FLAG = 50000; // R$500 in centavos
-    const amountSpent = typeof accountStatus.amount_spent === 'number'
-      ? accountStatus.amount_spent : 0;
-    const capPct = (typeof accountStatus.spend_cap === 'number'
-      && accountStatus.spend_cap > 0
-      && typeof accountStatus.amount_spent === 'number'
-      && amountSpent >= MIN_SPEND_FOR_CAP_FLAG)
-      ? Math.min(1, accountStatus.amount_spent / accountStatus.spend_cap)
-      : null;
-    if (capPct !== null) {
-      const capPenalty = capPct < 0.10
-        ? capPct * 100                              // 0–10%: ramp 0→10
-        : Math.min(55, 5 + capPct * 50);            // 10–100%: linear 10→55
-      score -= capPenalty;
-
-      // Surface the reason for score degradation once pressure is
-      // material. Without this, the user sees a low score with no issue
-      // in the list — opaque UX ("why is it 46?"). Only shown when
-      // severity isn't already critical from accountStatus (which will
-      // drive its own issue below).
-      if (capPct >= 0.80 && accountStatus.severity !== 'critical') {
-        const pctLabel = `${Math.round(capPct * 100)}%`;
-        if (capPct >= 0.95) {
-          issues.push({
-            key: 'cap_pressure_high',
-            label: `Limite de gastos em ${pctLabel} — entrega pode pausar a qualquer momento`,
-            severity: 'critical',
-          });
-        } else {
-          issues.push({
-            key: 'cap_pressure',
-            label: `Limite de gastos em ${pctLabel} — Meta pode pausar ao atingir 100%`,
-            severity: 'warn',
-          });
-        }
-      }
-    }
+    // NOTE on spend_cap handling:
+    //   We used to compute a gradient penalty from amount_spent/spend_cap
+    //   to preemptively warn the user before Meta actually paused ads.
+    //   In practice that logic produced false positives on every test
+    //   account because Meta's `spend_cap` field means different things
+    //   for different funding modes:
+    //     • Fresh prepaid account  → tiny auto-set cap that Meta raises
+    //       silently as the account matures (not a real block)
+    //     • Post-paid w/ auto-refill → cap often irrelevant because
+    //       balance auto-tops up before spend can plateau
+    //     • Mature account        → cap reflects a real billing ceiling
+    //   Detecting which mode you're in from the Graph API alone is
+    //   unreliable, so we stopped trying. The authoritative signal is
+    //   Meta's own `account_status` + `disable_reason`: if Meta
+    //   actually pauses delivery for cap/billing reasons, those fields
+    //   change and our severity router below catches it cleanly. Until
+    //   then we assume the account is fine.
+    //
+    //   cap_remaining / spend_cap / amount_spent are still returned in
+    //   the account-status-check payload for AI-chat context, just
+    //   never surfaced as a health-gauge penalty.
 
     if (accountStatus.severity === 'critical') {
       if (isCapExhausted) {
-        // Cap already fully penalised via gradient above (caps at -55).
-        // Don't double-count — just attach the actionable issue so the
-        // sidebar surfaces the "Entender o limite" CTA.
+        // Meta has actually paused delivery for cap reasons. This is a
+        // real, actionable state — surface it with its own CTA.
+        score -= 55;
         issues.push({
           key: 'cap_exhausted',
           label: accountStatus.message || 'Limite de gastos atingido — entrega pausada',
