@@ -4275,10 +4275,23 @@ const FlowSection: React.FC<{
   const navigate = useNavigate();
   const [expandedSteps, setExpandedSteps] = useState<Record<string, boolean>>({});
 
-  const kills = decisions.filter(d => d.type === 'kill' && d.status === 'pending').sort(byPriority);
-  const fixes = decisions.filter(d => d.type === 'fix' && d.status === 'pending').sort(byPriority);
-  const scales = decisions.filter(d => d.type === 'scale' && d.status === 'pending').sort(byPriority);
-  const patterns = decisions.filter(d => (d.type === 'pattern' || d.type === 'insight') && d.status === 'pending').sort(byPriority);
+  // Memoized category buckets — single-pass filter + sort, re-computed
+  // only when the `decisions` array identity changes. On accounts with
+  // 200+ pending decisions this avoids re-sorting 4 times on every
+  // parent re-render (KPI tick, hover state, etc).
+  const { kills, fixes, scales, patterns } = useMemo(() => {
+    const k: Decision[] = []; const fx: Decision[] = [];
+    const sc: Decision[] = []; const pt: Decision[] = [];
+    for (const d of decisions) {
+      if (d.status !== 'pending') continue;
+      if (d.type === 'kill') k.push(d);
+      else if (d.type === 'fix') fx.push(d);
+      else if (d.type === 'scale') sc.push(d);
+      else if (d.type === 'pattern' || d.type === 'insight') pt.push(d);
+    }
+    k.sort(byPriority); fx.sort(byPriority); sc.sort(byPriority); pt.sort(byPriority);
+    return { kills: k, fixes: fx, scales: sc, patterns: pt };
+  }, [decisions]);
 
   const steps: { label: string; sublabel: string; color: string; icon: string; items: Decision[] }[] = [];
 
@@ -7592,7 +7605,15 @@ const FeedPage: React.FC = () => {
         @media(max-width:1280px){
           .feed-layout{flex-direction:column!important;max-width:860px!important}
           .feed-main-col{max-width:100%!important;width:100%}
-          .feed-sidebar-col{width:100%!important}
+          /* Sidebar on narrow viewports: stop being sticky (layout is
+             single-column, pinning no longer makes sense) and take
+             full width below the main content. */
+          .feed-sidebar-col{
+            width:100%!important;
+            position:static!important;
+            max-height:none!important;
+            overflow:visible!important;
+          }
         }
         @media(max-width:720px){
           .feed-kpi-row{grid-template-columns:repeat(2,1fr)!important}

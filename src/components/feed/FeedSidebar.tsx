@@ -865,7 +865,23 @@ export const FeedSidebar: React.FC<{
       // Wider sidebar — 400 vs old 340. Gives health gauge + next step
       // + activity list more breathing room on the 1520px canvas so
       // content doesn't feel cramped against a long main column.
-      style={{ width: 400, flexShrink: 0, fontFamily: F }}
+      //
+      // Sticky on desktop — when the main column grows long (200+
+      // decisions, NoActiveAdsHero campaign tree, etc), the sidebar
+      // stays pinned at the top-right so score + next-step + activity
+      // remain visible during scroll. The top offset accounts for the
+      // page's 24px top padding. Below 1280px the 2-col layout
+      // collapses, so sticky only applies at desktop width.
+      style={{
+        width: 400,
+        flexShrink: 0,
+        fontFamily: F,
+        position: 'sticky',
+        top: 24,
+        alignSelf: 'flex-start',
+        maxHeight: 'calc(100vh - 48px)',
+        overflowY: 'auto',
+      }}
     >
       {/* Premium v3: ONE card, THREE zones. Replaces the previous
           3-separate-cards stack. Each zone carries a thin divider
