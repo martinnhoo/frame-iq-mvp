@@ -59,6 +59,7 @@ export interface AccountStatusSummary {
   cap_remaining: number | null;   // centavos
   checked_at: string;
   cached?: boolean;
+  schema_version?: number;
   error?: string;
 }
 

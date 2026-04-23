@@ -34,6 +34,11 @@ const cors = {
 };
 
 const CACHE_TTL_MS = 15 * 60 * 1000;
+// Bump when the severity/message logic changes so stale cache entries
+// (written by an older version of this function) are invalidated and a
+// fresh Meta check runs. Prior versions flagged spend_cap pressure as
+// critical — bumping this invalidates those stuck "critical" results.
+const SCHEMA_VERSION = 2;
 
 type Severity = "ok" | "warn" | "critical" | "unknown";
 
@@ -55,6 +60,8 @@ interface AccountStatusResult {
   cap_remaining: number | null;
   checked_at: string;
   cached: boolean;
+  /** Schema version of the result shape / severity logic. */
+  schema_version?: number;
   error?: string;
 }
 
@@ -196,7 +203,10 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (cached?.checked_at) {
           const age = Date.now() - new Date(cached.checked_at).getTime();
-          if (age < CACHE_TTL_MS && cached.data) {
+          const cachedVer = typeof cached.data?.schema_version === "number"
+            ? cached.data.schema_version
+            : 0;
+          if (age < CACHE_TTL_MS && cached.data && cachedVer === SCHEMA_VERSION) {
             return new Response(JSON.stringify({ ...cached.data, cached: true }), {
               headers: { ...cors, "Content-Type": "application/json" },
             });
@@ -284,6 +294,7 @@ Deno.serve(async (req) => {
       cap_remaining: capRemaining,
       checked_at: new Date().toISOString(),
       cached: false,
+      schema_version: SCHEMA_VERSION,
     };
 
     // Best-effort cache write — never let it block the response.
