@@ -1427,22 +1427,41 @@ export default function CampaignsManager() {
       `}</style>
 
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        {/* Sticky header — glass backdrop so the breadcrumb stays
+            readable over scrolling content. Negative margins cancel the
+            page padding so the blur extends edge-to-edge. */}
+        <div className="mgr-sticky-header" style={{
+          display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20,
+        }}>
           <button
             onClick={() => navigate('/dashboard/feed')}
             style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: T.bg2, color: T.text2, border: `1px solid ${T.border1}`,
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: T.bg2, color: T.text2,
+              border: `1px solid ${T.border1}`,
               borderRadius: 8, padding: '8px 12px', cursor: 'pointer',
               fontSize: 12, fontWeight: 600, fontFamily: F,
+              transition: `color 0.15s ${T.EASE}, border-color 0.15s ${T.EASE}, background 0.15s ${T.EASE}`,
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = T.text1;
+              (e.currentTarget as HTMLElement).style.borderColor = T.border2;
+              (e.currentTarget as HTMLElement).style.background = T.bg3;
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = T.text2;
+              (e.currentTarget as HTMLElement).style.borderColor = T.border1;
+              (e.currentTarget as HTMLElement).style.background = T.bg2;
             }}
           >
-            <ArrowLeft size={14} /> Voltar ao Feed
+            <ArrowLeft size={14} strokeWidth={2.3} /> Voltar ao Feed
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Layers size={16} style={{ color: T.purple }} />
-            <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' }}>
+            <Layers size={16} style={{ color: T.purple }} strokeWidth={2.2} />
+            <h1 style={{
+              fontSize: 18, fontWeight: 700, margin: 0,
+              letterSpacing: '-0.015em', color: T.text1,
+            }}>
               Gerenciador manual
             </h1>
           </div>
@@ -1635,11 +1654,54 @@ export default function CampaignsManager() {
           </div>
         )}
 
-        {/* Empty-filter state — avoid a silent blank list when search
-            returns nothing. */}
+        {/* Empty-filter state — glass card with search icon so the page
+            doesn't feel broken when the user mistypes. */}
         {!loading && !error && metaConnected && campaigns.length > 0 && sortedCampaigns.length === 0 && (
-          <div style={{ padding: '28px 20px', textAlign: 'center', color: T.text3, fontSize: 12.5 }}>
-            Nenhuma campanha com "{searchQuery}".
+          <div style={{
+            background: T.CARD, border: `1px solid ${T.border1}`,
+            borderRadius: 14, padding: '32px 20px',
+            textAlign: 'center', boxShadow: T.SHD, backdropFilter: T.GLASS,
+            animation: 'mgr-fade-up 0.25s ease both',
+          }}>
+            <div style={{
+              width: 44, height: 44, margin: '0 auto 12px',
+              borderRadius: 12,
+              background: 'linear-gradient(135deg, rgba(37,99,235,0.10), rgba(6,182,212,0.06))',
+              border: `1px solid ${T.border1}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: T.text3,
+            }}>
+              <Search size={18} strokeWidth={2.2} />
+            </div>
+            <p style={{
+              fontSize: 13.5, fontWeight: 600, color: T.text1, margin: '0 0 4px',
+              letterSpacing: '-0.01em',
+            }}>
+              Nenhuma campanha com <span style={{ color: T.blue }}>&quot;{searchQuery}&quot;</span>
+            </p>
+            <p style={{ fontSize: 12, color: T.text3, margin: '0 0 14px' }}>
+              Verifica o nome ou limpa a busca pra ver todas.
+            </p>
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{
+                background: T.bg2, color: T.text2,
+                border: `1px solid ${T.border2}`,
+                borderRadius: 8, padding: '8px 14px',
+                fontSize: 12, fontWeight: 600, fontFamily: F, cursor: 'pointer',
+                transition: `color 0.15s ${T.EASE}, border-color 0.15s ${T.EASE}`,
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.color = T.text1;
+                (e.currentTarget as HTMLElement).style.borderColor = T.blue;
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.color = T.text2;
+                (e.currentTarget as HTMLElement).style.borderColor = T.border2;
+              }}
+            >
+              Limpar busca
+            </button>
           </div>
         )}
 
@@ -1713,7 +1775,11 @@ export default function CampaignsManager() {
               {/* AI analysis preview — shown after the user clicks a button, before execution */}
               <PreviewPanel targetId={c.id} indent={16} />
 
-              <InlineComment feedback={cFeedback} indent={40} />
+              {/* InlineComment removed — legacy post-action commentary from
+                  the old "execute-then-analyze" flow. Now redundant since
+                  the Preview panel already carries the full AI analysis
+                  BEFORE the user confirms. Keeping `cFeedback.inflight`
+                  in place (feeds the action button loading state). */}
 
               {/* Adsets */}
               {isOpen && (
@@ -1751,7 +1817,7 @@ export default function CampaignsManager() {
 
                     return (
                       <div key={ads.id}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 12px 11px 36px', borderTop: `1px solid ${T.border0}`, minWidth: 0 }}>
+                        <div className="mgr-row" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 12px 11px 36px', borderTop: `1px solid ${T.border1}`, minWidth: 0 }}>
                           <button
                             onClick={() => toggleAdset(ads.id, c.id)}
                             style={{
@@ -1835,7 +1901,7 @@ export default function CampaignsManager() {
                         {/* AI analysis preview for this adset */}
                         <PreviewPanel targetId={ads.id} indent={40} />
 
-                        <InlineComment feedback={aFeedback} indent={60} />
+                        {/* Legacy InlineComment removed — see campaign row. */}
 
                         {/* Ads inside this adset */}
                         {isAdsetOpen && (
@@ -1868,10 +1934,10 @@ export default function CampaignsManager() {
                               const adPaused = isPausedStatus(ad.effective_status || ad.status);
                               return (
                                 <div key={ad.id}>
-                                  <div style={{
+                                  <div className="mgr-row" style={{
                                     display: 'flex', alignItems: 'center', gap: 10,
                                     padding: '9px 12px 9px 60px',
-                                    borderTop: `1px solid ${T.border0}`,
+                                    borderTop: `1px solid ${T.border1}`,
                                   }}>
                                     <span style={{
                                       width: 4, height: 4, borderRadius: '50%',
@@ -1909,7 +1975,7 @@ export default function CampaignsManager() {
                                     </div>
                                   </div>
                                   <PreviewPanel targetId={ad.id} indent={80} />
-                                  <InlineComment feedback={adFeedback} indent={80} />
+                                  {/* Legacy InlineComment removed — see campaign row. */}
                                 </div>
                               );
                             })}
