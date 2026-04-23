@@ -2914,12 +2914,103 @@ function kpiContext(
   }
 }
 
+// ================================================================
+// ANIMATED NUMBER
+// Counts from 0 → target on mount using rAF. Uses easeOutCubic so the
+// number sprints in and settles — feels alive, never sluggish. The
+// render stays in sync with format() so currency, % and multiplier
+// values all animate cleanly. Respects `prefers-reduced-motion`.
+// ================================================================
+const AnimatedNumber: React.FC<{
+  /** The final numeric value to animate to (numeric, not the display string). */
+  value: number;
+  /** Formatter that turns a numeric value into the display string. */
+  format: (v: number) => string;
+  /** Total animation duration in ms. Default 900ms feels premium without drag. */
+  duration?: number;
+  /** Delay before animation starts in ms. Used to chain with tile cascade. */
+  delay?: number;
+  /** When the parent wants a static render (SSR, reduced motion, empty). */
+  disabled?: boolean;
+  style?: React.CSSProperties;
+}> = ({ value, format, duration = 900, delay = 0, disabled, style }) => {
+  const [display, setDisplay] = useState<number>(disabled ? value : 0);
+  const rafRef = useRef<number | null>(null);
+  const startRef = useRef<number | null>(null);
+  const finalRef = useRef<number>(value);
+
+  useEffect(() => {
+    finalRef.current = value;
+    if (disabled) { setDisplay(value); return; }
+
+    // Honor reduced-motion preference — no animation, just land on value.
+    const reduce = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { setDisplay(value); return; }
+
+    // Don't animate for zero or near-zero values — just show them directly.
+    if (!Number.isFinite(value) || Math.abs(value) < 0.0001) {
+      setDisplay(value);
+      return;
+    }
+
+    startRef.current = null;
+    const timeoutId = window.setTimeout(() => {
+      const step = (ts: number) => {
+        if (startRef.current === null) startRef.current = ts;
+        const elapsed = ts - startRef.current;
+        const p = Math.min(1, elapsed / duration);
+        // easeOutCubic — quick sprint to ~85% in the first half, then settle
+        const eased = 1 - Math.pow(1 - p, 3);
+        setDisplay(finalRef.current * eased);
+        if (p < 1) {
+          rafRef.current = requestAnimationFrame(step);
+        } else {
+          setDisplay(finalRef.current);
+          rafRef.current = null;
+        }
+      };
+      rafRef.current = requestAnimationFrame(step);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+    // re-run only when the TARGET value changes meaningfully. Re-running
+    // on every format reference change would re-trigger the cascade on
+    // every parent render, which looks jittery.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, duration, delay, disabled]);
+
+  return <span style={style}>{format(display)}</span>;
+};
+
+// ================================================================
+// GOAL → PRIMARY KPI MAPPING
+// The user's goal metric drives which tile wears the accent. The
+// accent is a subtle cyan glow on the number + a tiny uppercase
+// "PRIMÁRIO" label above the name. Everything else stays neutral
+// so the eye lands on the tile that matters most first.
+// ================================================================
+function primaryKpiKeyFor(goalMetric: string | null | undefined): string | null {
+  if (!goalMetric) return null;
+  const g = goalMetric.toLowerCase();
+  if (g === 'roas') return 'roas';
+  if (g === 'cpa' || g === 'conversions' || g === 'conv') return 'conv';
+  if (g === 'spend' || g === 'cost') return 'spend';
+  return null;
+}
+
 const CommandKPIRow: React.FC<{
   m: AdMetricsSummary | null;
   periodLabel: string;
   /** Pending decisions — used to compute wasted spend (sum of kill impact_daily). */
   decisions?: Decision[];
-}> = ({ m, periodLabel, decisions = [] }) => {
+  /** User's goal metric (from ad_accounts.goal_primary_metric). Drives which
+   *  tile wears the primary accent — "this is the one I care about most". */
+  goalMetric?: string | null;
+}> = ({ m, periodLabel, decisions = [], goalMetric }) => {
   const hasData = !!m && m.daysOfData > 0 && m.totalSpend > 0;
 
   // ── Gasto perdido ──
@@ -2929,11 +3020,27 @@ const CommandKPIRow: React.FC<{
   const wastedDailyCentavos = killDecisions.reduce((sum, d) => sum + Math.abs(d.impact_daily || 0), 0);
   const hasWasted = wastedDailyCentavos > 0;
 
-  const tiles: KpiTile[] = [
+  // Formatters — shared by both animated and static render paths so
+  // the final value always matches exactly what the count-up lands on.
+  const fmtBRL = (v: number) => `R$ ${Math.round(v).toLocaleString('pt-BR')}`;
+  const fmtROAS = (v: number) => `${v.toFixed(2).replace('.', ',')}x`;
+  const fmtInt = (v: number) => Math.round(v).toLocaleString('pt-BR');
+
+  // Spend & wasted come in centavos — animation target is in R$.
+  const spendReais = hasData ? m!.totalSpend / 100 : 0;
+  const wastedReais = wastedDailyCentavos / 100;
+
+  type TileExt = KpiTile & {
+    numericValue?: number;
+    valueFormatter?: (v: number) => string;
+  };
+  const tiles: TileExt[] = [
     {
       key: 'spend',
       label: 'Investido',
       value: hasData ? fmtReais(m!.totalSpend) : '—',
+      numericValue: hasData ? spendReais : undefined,
+      valueFormatter: fmtBRL,
       deltaPct: hasData ? (m!.deltaSpendPct ?? null) : null,
       context: kpiContext('spend', m, killsCount),
     },
@@ -2941,6 +3048,8 @@ const CommandKPIRow: React.FC<{
       key: 'wasted',
       label: 'Gasto perdido',
       value: hasWasted ? fmtReais(wastedDailyCentavos) : 'R$ 0',
+      numericValue: wastedReais,
+      valueFormatter: fmtBRL,
       deltaPct: null, // snapshot — no prior window
       invertDelta: true,
       context: kpiContext('wasted', m, killsCount),
@@ -2949,6 +3058,8 @@ const CommandKPIRow: React.FC<{
       key: 'roas',
       label: 'ROAS médio',
       value: hasData && m!.avgRoas > 0 ? `${m!.avgRoas.toFixed(2).replace('.', ',')}x` : '—',
+      numericValue: hasData && m!.avgRoas > 0 ? m!.avgRoas : undefined,
+      valueFormatter: fmtROAS,
       deltaPct: hasData ? (m!.deltaRoasPct ?? null) : null,
       context: kpiContext('roas', m, killsCount),
     },
@@ -2956,10 +3067,14 @@ const CommandKPIRow: React.FC<{
       key: 'conv',
       label: 'Conversões',
       value: hasData ? m!.totalConversions.toLocaleString('pt-BR') : '—',
+      numericValue: hasData ? m!.totalConversions : undefined,
+      valueFormatter: fmtInt,
       deltaPct: hasData ? (m!.deltaConversionsPct ?? null) : null,
       context: kpiContext('conv', m, killsCount),
     },
   ];
+
+  const primaryKey = primaryKpiKeyFor(goalMetric);
 
   return (
     <div className="feed-kpi-row" style={{
@@ -2970,10 +3085,14 @@ const CommandKPIRow: React.FC<{
     }}>
       {tiles.map((t, i) => {
         const isEmpty = t.value === '—';
+        const isPrimary = !isEmpty && primaryKey === t.key;
         // Staggered entry animation: each tile lands 60ms after the one
         // before it. Cinematic feel without slowing down interaction
         // because the whole cascade completes under 400ms.
         const delay = 0.06 * i;
+        // Number animation starts a hair after the tile itself appears
+        // (in ms), so the viewer's eye can settle on the label first.
+        const numDelay = 140 + i * 60;
         return (
           <div
             key={t.key}
@@ -2984,22 +3103,57 @@ const CommandKPIRow: React.FC<{
               display: 'flex', flexDirection: 'column', gap: 6,
               borderRight: i < tiles.length - 1 ? `1px solid ${T.border0}` : 'none',
               animation: `feed-kpi-in 0.45s cubic-bezier(0.22,1,0.36,1) ${delay}s both`,
+              position: 'relative',
             }}
           >
             <div style={{
-              fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em',
-              color: T.labelColor, textTransform: 'uppercase',
-            }}>{t.label}</div>
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <div style={{
+                fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em',
+                color: isPrimary ? '#7DD3FC' : T.labelColor,
+                textTransform: 'uppercase' as const,
+                transition: 'color 0.2s ease',
+              }}>{t.label}</div>
+              {/* Primary chip — tiny cyan pill beside the label so the
+                  operator instantly knows which metric matters most. */}
+              {isPrimary && (
+                <span style={{
+                  fontSize: 8.5, fontWeight: 800, letterSpacing: '0.10em',
+                  color: '#7DD3FC',
+                  background: 'rgba(14,165,233,0.10)',
+                  border: '1px solid rgba(14,165,233,0.28)',
+                  padding: '1px 6px', borderRadius: 3,
+                  textTransform: 'uppercase' as const,
+                  fontFamily: F,
+                }}>
+                  Primário
+                </span>
+              )}
+            </div>
             {/* Dominant number — bigger, tighter, tabular so digits
-                align perfectly vertically when they cascade in. */}
+                align perfectly vertically when they cascade in. The
+                primary tile gets a cyan hue + subtle glow to draw the
+                eye first. Counts up from 0 on mount. */}
             <div style={{
-              fontSize: 34, fontWeight: 800,
-              color: isEmpty ? T.text3 : T.text1,
+              fontSize: isPrimary ? 38 : 34,
+              fontWeight: 800,
+              color: isEmpty ? T.text3 : (isPrimary ? '#F1F5F9' : T.text1),
               letterSpacing: '-0.035em', lineHeight: 1.0,
               marginTop: 3,
               fontVariantNumeric: 'tabular-nums' as const,
               fontFeatureSettings: '"tnum" 1, "cv11" 1',
-            }}>{t.value}</div>
+              textShadow: isPrimary ? '0 0 24px rgba(14,165,233,0.30)' : 'none',
+              transition: 'font-size 0.2s ease, text-shadow 0.3s ease',
+            }}>
+              {!isEmpty && t.numericValue !== undefined && t.valueFormatter
+                ? <AnimatedNumber
+                    value={t.numericValue}
+                    format={t.valueFormatter}
+                    delay={numDelay}
+                  />
+                : t.value}
+            </div>
             {!isEmpty && (
               <KPIDeltaLine
                 pct={t.deltaPct}
@@ -3015,6 +3169,16 @@ const CommandKPIRow: React.FC<{
               }}>
                 {t.context}
               </div>
+            )}
+            {/* Cyan underline on the primary tile — a faint 2px bar
+                below the tile that sets it visually apart without
+                competing with the number itself. */}
+            {isPrimary && (
+              <div aria-hidden style={{
+                position: 'absolute', left: 0, right: i < tiles.length - 1 ? 12 : 0,
+                bottom: -10, height: 2, borderRadius: 1,
+                background: 'linear-gradient(90deg, rgba(14,165,233,0.45), rgba(14,165,233,0))',
+              }} />
             )}
           </div>
         );
@@ -6272,6 +6436,7 @@ const FeedPage: React.FC = () => {
                       m={adMetrics}
                       periodLabel={PERIODS.find(p => p.key === period)!.label}
                       decisions={pendingDecisions}
+                      goalMetric={goalData?.metric || null}
                     />
                     {(!adMetrics || adMetrics.daysOfData === 0 || adMetrics.totalSpend === 0) && (
                       <div style={{
@@ -6733,21 +6898,71 @@ const FeedPage: React.FC = () => {
             with "Verificar tracking" action links). */}
 
         {/* ═══════════════════════════════════════════════
-            LAYER 7 — PATTERNS & LEARNING (collapsible)
+            LAYER 7 — FONTES CONECTADAS
+            One premium card that groups every data source feeding the
+            brain: PatternsPanel (intelligence / what the IA learned
+            from your account) + TelegramCard (where alerts go). Before
+            this pass they were two loose accordions with 8px gap
+            between them — looked unfinished. Now they share:
+              • a single elevated surface
+              • a unified uppercase header ("FONTES CONECTADAS")
+              • hairline dividers between rows
+              • the sidebar-in entry animation for premium feel
             ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && userId && personaId && (
-          <div style={{ marginTop: 20, borderTop: `1px solid ${T.border0}`, paddingTop: 8 }}>
-            <PatternsPanel
-              userId={userId}
-              personaId={personaId}
-              onGenerateVariation={handleGenerateVariation}
-              onPatternsLoaded={handlePatternsLoaded}
-            />
+        {metaConnected && !isDemo && userId && (
+          <div style={{
+            marginTop: 20,
+            background: 'rgba(13,17,23,0.85)',
+            border: `1px solid ${T.border1}`,
+            borderRadius: 14,
+            overflow: 'hidden',
+            boxShadow: `0 0 0 1px ${T.border0}, 0 10px 30px rgba(0,0,0,0.30)`,
+            animation: 'feed-deck-in 0.42s cubic-bezier(0.22,1,0.36,1) 0.12s both',
+            fontFamily: F,
+          }}>
+            {/* Unified header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '10px 16px',
+              borderBottom: `1px solid ${T.border0}`,
+              background: 'linear-gradient(90deg, rgba(167,139,250,0.08) 0%, transparent 45%)',
+            }}>
+              <span style={{
+                fontSize: 9.5, fontWeight: 800, letterSpacing: '0.14em',
+                textTransform: 'uppercase' as const,
+                color: T.labelColor,
+              }}>
+                Fontes conectadas
+              </span>
+              <span style={{
+                fontSize: 10, color: T.text3,
+                letterSpacing: '-0.005em',
+              }}>
+                Inteligência · Alertas
+              </span>
+            </div>
+
+            {/* Zone 1 — Inteligência / Patterns */}
+            {personaId && (
+              <div style={{ padding: '8px 4px 4px' }}>
+                <PatternsPanel
+                  userId={userId}
+                  personaId={personaId}
+                  onGenerateVariation={handleGenerateVariation}
+                  onPatternsLoaded={handlePatternsLoaded}
+                />
+              </div>
+            )}
+
+            {/* Hairline between zones */}
+            <div style={{ height: 1, background: T.border0 }} />
+
+            {/* Zone 2 — Telegram */}
+            <div style={{ padding: '4px 16px 4px' }}>
+              <TelegramCard userId={userId} />
+            </div>
           </div>
         )}
-
-        {/* Telegram */}
-        {metaConnected && !isDemo && userId && <TelegramCard userId={userId} />}
 
         {/* FOOTER status removed — the Command Deck status strip at the
             top already carries "Operação estável · análise há Xmin" +

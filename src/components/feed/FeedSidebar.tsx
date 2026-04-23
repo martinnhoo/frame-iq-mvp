@@ -47,6 +47,14 @@ const T = {
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
 // ── Shared card shell ──────────────────────────────────────────────
+//
+// Two flavors:
+//   • <Card>       → legacy standalone card (still used in tests / isolated renders).
+//   • <CardZone>   → no wrapper, no border. Just padding + a hairline top divider.
+//                    Designed to be stacked inside a single <UnifiedCard> so
+//                    the sidebar reads as ONE widget with three semantic zones
+//                    instead of three floating cards. Matches the approved
+//                    mockup that Martinho signed off on.
 const Card: React.FC<{
   children: React.ReactNode;
   style?: React.CSSProperties;
@@ -58,6 +66,50 @@ const Card: React.FC<{
     padding: '18px 18px',
     marginBottom: 14,
     fontFamily: F,
+    ...style,
+  }}>
+    {children}
+  </div>
+);
+
+/** Wraps multiple zones in a single elevated surface with subtle divider
+ *  hairlines. Premium feel: one card, three zones. */
+const UnifiedCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div style={{
+    background: T.bg1,
+    border: `1px solid ${T.border1}`,
+    borderRadius: 14,
+    fontFamily: F,
+    overflow: 'hidden',
+    boxShadow: `0 0 0 1px ${T.border0}, 0 12px 40px rgba(0,0,0,0.35)`,
+    animation: 'feed-sidebar-in 0.42s cubic-bezier(0.22,1,0.36,1) 0.08s both',
+  }}>
+    {children}
+    <style>{`
+      @keyframes feed-sidebar-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes feed-sidebar-zone {
+        from { opacity: 0; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+    `}</style>
+  </div>
+);
+
+/** Single zone inside a UnifiedCard. `divider` adds the 1px hairline on top. */
+const CardZone: React.FC<{
+  children: React.ReactNode;
+  divider?: boolean;
+  delay?: number;
+  style?: React.CSSProperties;
+}> = ({ children, divider, delay = 0, style }) => (
+  <div style={{
+    padding: '18px 18px',
+    borderTop: divider ? `1px solid ${T.border0}` : 'none',
+    fontFamily: F,
+    animation: `feed-sidebar-zone 0.32s cubic-bezier(0.22,1,0.36,1) ${delay}s both`,
     ...style,
   }}>
     {children}
@@ -173,6 +225,10 @@ const AccountHealthCard: React.FC<{
   hasMetaConnection: boolean;
   onOpenDiagnostic?: () => void;
   onActOnIssue?: (issue: HealthIssue) => void;
+  /** When true the component renders its content WITHOUT the standalone
+   *  Card wrapper — used when it's stacked inside a UnifiedCard as a
+   *  zone. */
+  bare?: boolean;
 }> = (props) => {
   const health = computeAccountHealth({
     accountStatus: props.accountStatus,
@@ -189,8 +245,12 @@ const AccountHealthCard: React.FC<{
   const sevLabel = bandLabel(band);
   const issues = health.issues || [];
 
+  const Wrapper: React.FC<{ children: React.ReactNode }> = props.bare
+    ? ({ children }) => <>{children}</>
+    : ({ children }) => <Card>{children}</Card>;
+
   return (
-    <Card>
+    <Wrapper>
       {/* Header row — ring gauge + label/headline column + severity pill. */}
       <div style={{
         display: 'flex', alignItems: 'flex-start', gap: 14,
@@ -321,7 +381,7 @@ const AccountHealthCard: React.FC<{
         Ver diagnóstico completo
         <span style={{ fontSize: 14, lineHeight: 1 }}>→</span>
       </button>
-    </Card>
+    </Wrapper>
   );
 };
 
@@ -388,8 +448,15 @@ const NextStepCard: React.FC<{
   onAction?: (decisionId: string, action: DecisionAction) => void | Promise<void>;
   onOpenAll?: () => void;
   loading?: boolean;
-}> = ({ decision, onAction, onOpenAll, loading }) => {
+  /** When true the component renders its content WITHOUT the standalone
+   *  Card wrapper — used when stacked inside a UnifiedCard zone. */
+  bare?: boolean;
+}> = ({ decision, onAction, onOpenAll, loading, bare }) => {
   const derived = deriveNextStep(decision);
+
+  const Wrapper: React.FC<{ children: React.ReactNode }> = bare
+    ? ({ children }) => <>{children}</>
+    : ({ children }) => <Card>{children}</Card>;
 
   // ── Calm / empty state ─────────────────────────────────────────────
   // When there's no pending decision we don't invent an action. We tell
@@ -397,7 +464,7 @@ const NextStepCard: React.FC<{
   // signals justify it. No CTA, no fake urgency.
   if (!derived && !loading) {
     return (
-      <Card>
+      <Wrapper>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <span style={{
             width: 8, height: 8, borderRadius: '50%',
@@ -432,12 +499,12 @@ const NextStepCard: React.FC<{
             Novas decisões aparecem conforme novos dados.
           </div>
         </div>
-      </Card>
+      </Wrapper>
     );
   }
 
   return (
-    <Card>
+    <Wrapper>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <span style={{
@@ -528,7 +595,7 @@ const NextStepCard: React.FC<{
           {derived.actionLabel || 'Ver recomendações'}
         </button>
       )}
-    </Card>
+    </Wrapper>
   );
 };
 
@@ -633,9 +700,13 @@ const RecentActivityCard: React.FC<{
   events: FeedActivityEvent[];
   loading?: boolean;
   onOpenAll?: () => void;
-}> = ({ events, loading, onOpenAll }) => {
+  bare?: boolean;
+}> = ({ events, loading, onOpenAll, bare }) => {
+  const Wrapper: React.FC<{ children: React.ReactNode }> = bare
+    ? ({ children }) => <>{children}</>
+    : ({ children }) => <Card>{children}</Card>;
   return (
-    <Card>
+    <Wrapper>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         marginBottom: 14,
@@ -697,7 +768,7 @@ const RecentActivityCard: React.FC<{
           ))}
         </div>
       )}
-    </Card>
+    </Wrapper>
   );
 };
 
@@ -728,30 +799,45 @@ export const FeedSidebar: React.FC<{
       className="feed-sidebar-col"
       style={{ width: 340, flexShrink: 0, fontFamily: F }}
     >
-      <AccountHealthCard
-        accountStatus={props.accountStatus}
-        accountStatusLoading={props.accountStatusLoading}
-        accountStatusError={props.accountStatusError}
-        onRetryAccountStatus={props.onRetryAccountStatus}
-        pixelHealth={props.pixelHealth}
-        pixelHealthLoading={props.pixelHealthLoading}
-        adMetrics={props.adMetrics}
-        activeAdsCount={props.activeAdsCount}
-        hasMetaConnection={props.hasMetaConnection}
-        onOpenDiagnostic={props.onOpenDiagnostic}
-        onActOnIssue={props.onActOnIssue}
-      />
-      <NextStepCard
-        decision={props.topDecision}
-        loading={props.decisionsLoading}
-        onAction={props.onDecisionAction}
-        onOpenAll={props.onOpenAllDecisions}
-      />
-      <RecentActivityCard
-        events={props.activityEvents}
-        loading={props.activityLoading}
-        onOpenAll={props.onOpenAllActivity}
-      />
+      {/* Premium v3: ONE card, THREE zones. Replaces the previous
+          3-separate-cards stack. Each zone carries a thin divider
+          on top (except the first), and the whole widget shares a
+          single drop-shadow + border radius. Matches the mockup. */}
+      <UnifiedCard>
+        <CardZone delay={0}>
+          <AccountHealthCard
+            accountStatus={props.accountStatus}
+            accountStatusLoading={props.accountStatusLoading}
+            accountStatusError={props.accountStatusError}
+            onRetryAccountStatus={props.onRetryAccountStatus}
+            pixelHealth={props.pixelHealth}
+            pixelHealthLoading={props.pixelHealthLoading}
+            adMetrics={props.adMetrics}
+            activeAdsCount={props.activeAdsCount}
+            hasMetaConnection={props.hasMetaConnection}
+            onOpenDiagnostic={props.onOpenDiagnostic}
+            onActOnIssue={props.onActOnIssue}
+            bare
+          />
+        </CardZone>
+        <CardZone divider delay={0.08}>
+          <NextStepCard
+            decision={props.topDecision}
+            loading={props.decisionsLoading}
+            onAction={props.onDecisionAction}
+            onOpenAll={props.onOpenAllDecisions}
+            bare
+          />
+        </CardZone>
+        <CardZone divider delay={0.16}>
+          <RecentActivityCard
+            events={props.activityEvents}
+            loading={props.activityLoading}
+            onOpenAll={props.onOpenAllActivity}
+            bare
+          />
+        </CardZone>
+      </UnifiedCard>
     </aside>
   );
 };
