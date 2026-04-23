@@ -16,13 +16,19 @@ function errResp(msg: string, status = 400) {
 }
 
 // Map meta-actions action names to action_log action_type format
-function mapActionType(action: string, targetType: string): string {
+// `intent` is the frontend-provided refinement: for budget changes, tells
+// us whether the user chose to increase or decrease. Without it we can't
+// tell from the payload alone (old budget isn't required by Meta API).
+function mapActionType(action: string, targetType: string, intent?: string | null): string {
   const t = targetType || "ad";
   switch (action) {
     case "pause": return `pause_${t}`;
     case "enable":
     case "publish": return `reactivate_${t}`;
-    case "update_budget": return `increase_budget`; // will refine below if decrease
+    case "update_budget":
+      if (intent === "decrease_budget") return "decrease_budget";
+      if (intent === "increase_budget") return "increase_budget";
+      return "change_budget"; // unknown diff — caller didn't pass intent
     case "duplicate": return `duplicate_${t}`;
     default: return action;
   }
@@ -69,6 +75,20 @@ async function estimateAdDailyImpact(targetId: string, token: string): Promise<n
 }
 
 // Write to action_log so it appears in Histórico de Ações
+//
+// The row is intentionally "fat" — History needs to show WHY an action
+// happened, not just WHAT. We record:
+//   • previous_state + new_state : both sides of the diff
+//   • _ai_reasoning              : headline + reasoning shown in the Preview
+//                                   panel before the user confirmed. This
+//                                   is what turns History into a story
+//                                   ("IA: sinais de fadiga, rotacionar
+//                                   criativo") vs. a raw event log.
+//   • _source                    : 'manager_manual' / 'autopilot' / …
+//   • _intent                    : refined action (increase vs decrease
+//                                   budget, for example)
+//   • _action_label              : human-readable label ("Aumentar budget")
+//   • _confirmed_at              : timestamp the user clicked Confirm
 async function logToActionHistory(
   supabase: any,
   userId: string,
@@ -81,6 +101,8 @@ async function logToActionHistory(
   estimatedDailyImpact: number | null = null,
   aiReasoning: string | null = null,
   source: string | null = null,
+  intent: string | null = null,
+  actionLabel: string | null = null,
 ) {
   try {
     // Get user's ad_account id (our internal UUID)
@@ -96,14 +118,16 @@ async function logToActionHistory(
       return;
     }
 
-    const actionType = mapActionType(action, targetType);
+    const actionType = mapActionType(action, targetType, intent);
 
     // Enriched new_state includes the AI reasoning shown to the user before
-    // they confirmed + where they clicked from. Stored inline (JSONB) so no
-    // schema migration required. HistoryPage can read it back for audit.
+    // they confirmed + where they clicked from + the user's refined
+    // intent. Stored inline (JSONB) so no schema migration required.
     const enrichedNewState: Record<string, any> = { ...(newState || {}) };
     if (aiReasoning) enrichedNewState._ai_reasoning = aiReasoning;
     if (source) enrichedNewState._source = source;
+    if (intent) enrichedNewState._intent = intent;
+    if (actionLabel) enrichedNewState._action_label = actionLabel;
     enrichedNewState._confirmed_at = new Date().toISOString();
 
     const row: Record<string, any> = {
@@ -136,7 +160,11 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { action, user_id, persona_id, account_id, target_id, target_type, value, ai_reasoning, source } = body;
+    const {
+      action, user_id, persona_id, account_id,
+      target_id, target_type, value, old_value,
+      ai_reasoning, source, intent,
+    } = body;
 
     if (!user_id || !action) return errResp("missing user_id or action");
 
@@ -230,12 +258,15 @@ Deno.serve(async (req) => {
       if (d.error) return errResp(d.error.message);
 
       // Log to action_log (non-blocking) — includes AI reasoning shown before confirm
+      const actionLabel = action === "pause" ? "Pausar" : "Ativar";
       logToActionHistory(supabase, user_id, action, target_id, tType, targetName,
         { status: action === "pause" ? "ACTIVE" : "PAUSED" },
         { status },
         dailyImpact,
         ai_reasoning || null,
         source || null,
+        null,
+        actionLabel,
       );
 
       const label = target_type === "campaign" ? "Campanha" : target_type === "adset" ? "Conjunto" : "Anúncio";
@@ -245,18 +276,39 @@ Deno.serve(async (req) => {
     if (action === "update_budget") {
       if (!value) return errResp("value required");
       const cents = Math.round(parseFloat(String(value)) * 100);
+      const oldCents = old_value !== undefined && old_value !== null
+        ? Math.round(parseFloat(String(old_value)) * 100)
+        : null;
       const budgetField = (body.budget_type === "lifetime") ? "lifetime_budget" : "daily_budget";
       const info = await fetchTargetInfo(target_id, target_type || "campaign", token);
       const targetName = body.target_name || info.name;
       const d = await post(target_id, { [budgetField]: cents });
       if (d.error) return errResp(d.error.message);
 
+      // Human-readable label for the history row. The intent is what the
+      // user chose in the UI (↑ or ↓) — we trust it. If the caller didn't
+      // pass intent, derive it from the diff.
+      const resolvedIntent = intent
+        || (oldCents !== null && cents > oldCents ? "increase_budget"
+            : oldCents !== null && cents < oldCents ? "decrease_budget"
+            : "change_budget");
+      const actionLabel = resolvedIntent === "increase_budget" ? "Aumentar budget"
+        : resolvedIntent === "decrease_budget" ? "Reduzir budget"
+        : "Ajustar budget";
+
+      // previous_state now carries the real old value so Histórico can
+      // show "R$50,00/dia → R$80,00/dia" (the old "{}" was useless).
+      const prevState: Record<string, any> = {};
+      if (oldCents !== null) prevState[budgetField] = oldCents;
+
       logToActionHistory(supabase, user_id, action, target_id, target_type || "campaign", targetName,
-        {},
+        prevState,
         { [budgetField]: cents },
         null,
         ai_reasoning || null,
         source || null,
+        resolvedIntent,
+        actionLabel,
       );
 
       const label = budgetField === "lifetime_budget" ? "vitalício" : "/dia";
@@ -275,6 +327,8 @@ Deno.serve(async (req) => {
         null,
         ai_reasoning || null,
         source || null,
+        null,
+        "Publicar",
       );
 
       return ok({ success: true, target_id, message: `Publicado e definido como ATIVO.` });
@@ -298,6 +352,8 @@ Deno.serve(async (req) => {
         null,
         ai_reasoning || null,
         source || null,
+        null,
+        "Duplicar",
       );
 
       return ok({ success: true, new_id: newId, message: `Duplicado e pausado. Novo ID: ${newId}` });

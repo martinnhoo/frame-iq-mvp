@@ -258,6 +258,7 @@ const HistoryPage: React.FC = () => {
       enable_campaign: `Campanha ativada${suffix}`,
       increase_budget: `Budget aumentado${suffix}`,
       decrease_budget: `Budget reduzido${suffix}`,
+      change_budget: `Budget alterado${suffix}`,
       update_budget_campaign: `Budget ajustado${suffix}`,
       update_budget_adset: `Budget ajustado${suffix}`,
       duplicate_ad: 'Anúncio duplicado',
@@ -623,21 +624,56 @@ const HistoryPage: React.FC = () => {
                   {/* Description */}
                   <p style={{ fontSize: 12, color: T3, margin: 0 }}>
                     {getActionLabel(entry.action_type, source)}
-                    {(entry.action_type === 'increase_budget' || entry.action_type === 'decrease_budget') &&
+                    {/* Budget diff — covers both the new schema
+                        (budget_change) AND the enriched daily_budget
+                        diff emitted by Gerenciador manual since the
+                        preview-first flow. */}
+                    {(entry.action_type === 'increase_budget'
+                      || entry.action_type === 'decrease_budget'
+                      || entry.action_type === 'change_budget') &&
                       (entry as any).new_state?.budget_change ? (() => {
                         const bc = (entry as any).new_state.budget_change;
                         const fromVal = (bc.from / 100).toFixed(2).replace('.', ',');
                         const toVal = (bc.to / 100).toFixed(2).replace('.', ',');
                         return ` · R$ ${fromVal} → R$ ${toVal} (${bc.change_pct > 0 ? '+' : ''}${bc.change_pct}%)`;
-                      })() : (entry.action_type === 'increase_budget' || entry.action_type === 'decrease_budget') &&
+                      })() : (entry.action_type === 'increase_budget'
+                        || entry.action_type === 'decrease_budget'
+                        || entry.action_type === 'change_budget') &&
                         (entry as any).previous_state?.daily_budget && (entry as any).new_state?.daily_budget ? (() => {
-                          const fromVal = (Number((entry as any).previous_state.daily_budget) / 100).toFixed(2).replace('.', ',');
-                          const toVal = (Number((entry as any).new_state.daily_budget) / 100).toFixed(2).replace('.', ',');
-                          return ` · R$ ${fromVal} → R$ ${toVal}`;
+                          const oldC = Number((entry as any).previous_state.daily_budget);
+                          const newC = Number((entry as any).new_state.daily_budget);
+                          const fromVal = (oldC / 100).toFixed(2).replace('.', ',');
+                          const toVal = (newC / 100).toFixed(2).replace('.', ',');
+                          const pct = oldC > 0 ? Math.round(((newC - oldC) / oldC) * 100) : 0;
+                          return ` · R$ ${fromVal} → R$ ${toVal}${pct ? ` (${pct > 0 ? '+' : ''}${pct}%)` : ''}`;
                         })() : null}
                     {entry.target_type && ` · ${getTargetLabel(entry.target_type)}`}
                     {' · '}{formatDate(entry.executed_at)}
                   </p>
+
+                  {/* AI reasoning — the Preview-panel analysis shown to
+                      the user BEFORE they confirmed. This is what turns
+                      History from an event log into a story. Only shown
+                      if present so older rows stay clean. */}
+                  {(entry as any).new_state?._ai_reasoning && (
+                    <div style={{
+                      marginTop: 8,
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      border: '1px solid rgba(37,99,235,0.18)',
+                      background: 'linear-gradient(135deg, rgba(37,99,235,0.06), rgba(6,182,212,0.03))',
+                      display: 'flex', alignItems: 'flex-start', gap: 8,
+                    }}>
+                      <Bot size={11} strokeWidth={2.5} style={{ color: '#93C5FD', marginTop: 2, flexShrink: 0 }} />
+                      <p style={{
+                        fontSize: 11.5, color: T2, margin: 0,
+                        lineHeight: 1.5, letterSpacing: '-0.005em',
+                        fontFamily: F,
+                      }}>
+                        {String((entry as any).new_state._ai_reasoning)}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Impact metrics */}
                   {(entry.estimated_daily_impact || entry.actual_impact_48h) ? (

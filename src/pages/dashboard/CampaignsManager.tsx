@@ -287,25 +287,49 @@ function DuplicateButton({
 }
 
 // ── Small component: inline editable budget ───────────────────────────────
+// IMPORTANT: this component NEVER triggers an action on its own. It asks
+// the parent to OPEN an AI preview (via onRequestChange) and the parent
+// handles confirmation + execution through the shared preview flow. This
+// is the fix for the bug where clicking the pencil → typing → clicking X
+// was logging a phantom "increase_budget" action in Histórico.
+//
+// Cancel semantics:
+//   • X button        → closes editor, does NOT commit
+//   • Escape key      → closes editor, does NOT commit
+//   • Click outside   → closes editor, does NOT commit (no onBlur commit)
+//   • ✓ button        → commits, opens AI preview
+//   • Enter key       → commits, opens AI preview
+//
+// Only ✓ / Enter count as "I want to change this". Everything else is
+// interpreted as "abandon edit" so accidental fires disappear.
 function BudgetInlineEdit({
   cents,
-  onSave,
+  onRequestChange,
   saving,
   size = 'md',
 }: {
   cents: number | null | undefined;
-  onSave: (newCents: number) => void;
+  /** Called with the new cents value when the user EXPLICITLY commits
+   *  (✓ or Enter). The parent should open the AI preview — NOT fire
+   *  the update directly. */
+  onRequestChange: (newCents: number) => void;
   saving: boolean;
   size?: 'md' | 'sm';
 }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  // Tracks whether the user explicitly committed this edit. We use this
+  // to guard against any path that could fire onRequestChange from a
+  // teardown/unmount event. Belt-and-suspenders.
+  const committedRef = useRef(false);
   const fontSize = size === 'sm' ? 10 : 10;
 
   useEffect(() => {
     if (editing) {
-      // Preload current budget in reais
+      committedRef.current = false;
+      // Preload current budget in reais so the user sees what they're
+      // about to change (instead of an empty box that invites typing).
       const reais = cents ? (cents / 100) : 0;
       setValue(reais ? reais.toFixed(2).replace('.', ',') : '');
       setTimeout(() => inputRef.current?.focus(), 0);
@@ -313,6 +337,7 @@ function BudgetInlineEdit({
   }, [editing, cents]);
 
   const commit = () => {
+    if (committedRef.current) return;
     const raw = value.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '');
     const reais = parseFloat(raw);
     if (isNaN(reais) || reais <= 0) {
@@ -321,10 +346,19 @@ function BudgetInlineEdit({
     }
     const newCents = Math.round(reais * 100);
     if (newCents === (cents || 0)) {
+      // No change — just close. Do NOT request a preview. This is the
+      // hot path that used to leak phantom actions when the input
+      // lost focus.
       setEditing(false);
       return;
     }
-    onSave(newCents);
+    committedRef.current = true;
+    onRequestChange(newCents);
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    committedRef.current = true; // lock out any late fire
     setEditing(false);
   };
 
@@ -358,7 +392,7 @@ function BudgetInlineEdit({
           e.currentTarget.style.background = 'transparent';
           e.currentTarget.style.color = T.text3;
         }}
-        title={cents ? 'Clique para editar orçamento diário' : 'Orçamento gerenciado pela campanha (CBO)'}
+        title={cents ? 'Clique para editar orçamento — a IA vai avaliar antes de aplicar' : 'Orçamento gerenciado pela campanha (CBO)'}
       >
         {saving ? <Loader2 size={10} className="spin" /> : cents ? <Pencil size={9} style={{ opacity: 0.6 }} /> : null}
         {display}
@@ -367,17 +401,21 @@ function BudgetInlineEdit({
   }
 
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={(e) => e.stopPropagation()}>
+    <div
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+      onClick={(e) => e.stopPropagation()}
+    >
       <span style={{ fontSize: 10, color: T.text3 }}>R$</span>
       <input
         ref={inputRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') commit();
-          if (e.key === 'Escape') setEditing(false);
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { e.preventDefault(); cancel(); }
         }}
-        onBlur={commit}
+        // NO onBlur — onBlur + click-outside was the phantom-action
+        // vector. Commit only via explicit ✓ / Enter.
         style={{
           width: 70, fontSize: 11, fontFamily: F,
           background: T.bg2, border: `1px solid ${T.border2}`, color: T.text1,
@@ -387,13 +425,19 @@ function BudgetInlineEdit({
       />
       <span style={{ fontSize: 9.5, color: T.text3 }}>/dia</span>
       <button
-        onClick={(e) => { e.stopPropagation(); commit(); }}
+        type="button"
+        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); commit(); }}
+        title="Pedir análise da IA antes de aplicar"
         style={{ background: 'rgba(74,222,128,0.12)', border: `1px solid rgba(74,222,128,0.3)`, borderRadius: 4, padding: 3, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
       >
         <Check size={10} style={{ color: T.green }} />
       </button>
       <button
-        onClick={(e) => { e.stopPropagation(); setEditing(false); }}
+        type="button"
+        // onMouseDown fires BEFORE the input's blur, so even if we ever
+        // re-introduced onBlur, this path would still cancel cleanly.
+        onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); cancel(); }}
+        title="Cancelar edição"
         style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${T.border1}`, borderRadius: 4, padding: 3, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
       >
         <X size={10} style={{ color: T.text3 }} />
@@ -506,9 +550,10 @@ export default function CampaignsManager() {
     loading: boolean;
     error?: string | null;
     // Request metadata
-    proposedAction: 'pause' | 'activate' | 'duplicate' | 'increase_budget' | 'decrease_budget';
-    proposedActionLabel: string;        // "Pausar", "Duplicar", etc
+    proposedAction: 'pause' | 'activate' | 'duplicate' | 'increase_budget' | 'decrease_budget' | 'analyze';
+    proposedActionLabel: string;        // "Pausar", "Duplicar", "Aumentar budget", etc
     proposedBudgetCents?: number;       // only for budget changes
+    oldBudgetCents?: number | null;     // current budget — so we can show the diff + log it in History
     targetType: 'campaign' | 'adset' | 'ad';
     targetName: string;
     // Response
@@ -537,6 +582,10 @@ export default function CampaignsManager() {
     executionError?: string;
   }
   const [previews, setPreviews] = useState<Record<string, PreviewData>>({});
+
+  // Track how many previews are currently in-flight. If stuck loading
+  // becomes a pain, the user can bail out via cancel inside the panel.
+  // Surfaced here just in case we want a global "cancel all" shortcut.
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(new Set());
   const [expandedAdsets, setExpandedAdsets] = useState<Set<string>>(new Set());
 
@@ -703,13 +752,20 @@ export default function CampaignsManager() {
     targetId: string,
     targetType: TargetType,
     targetName: string,
-    proposedAction: 'pause' | 'activate' | 'duplicate' | 'increase_budget' | 'decrease_budget',
+    proposedAction: 'pause' | 'activate' | 'duplicate' | 'increase_budget' | 'decrease_budget' | 'analyze',
     proposedBudgetCents?: number,
+    oldBudgetCents?: number | null,
   ) => {
+    // Human-friendly label that ends up in the button ("Confirmar X")
+    // AND in the History row (the user sees the same wording twice,
+    // so it has to match).
     const actionLabel = proposedAction === 'pause' ? 'Pausar'
       : proposedAction === 'activate' ? 'Ativar'
       : proposedAction === 'duplicate' ? 'Duplicar'
-      : 'Ajustar budget';
+      : proposedAction === 'increase_budget' ? 'Aumentar budget'
+      : proposedAction === 'decrease_budget' ? 'Reduzir budget'
+      : proposedAction === 'analyze' ? 'Analisar'
+      : 'Ajustar';
 
     setPreviews(prev => ({
       ...prev,
@@ -719,6 +775,7 @@ export default function CampaignsManager() {
         proposedAction,
         proposedActionLabel: actionLabel,
         proposedBudgetCents,
+        oldBudgetCents,
         targetType,
         targetName,
       },
@@ -793,6 +850,7 @@ export default function CampaignsManager() {
     targetType: TargetType,
     currentStatus: string,
     targetName: string,
+    aiReasoning: string | null = null,
   ) => {
     if (!userId) return;
     const isPaused = isPausedStatus(currentStatus);
@@ -808,6 +866,9 @@ export default function CampaignsManager() {
       // action_log (vs decision-engine-driven via execute-action). Makes
       // History filterable and gives the "manual" vs "autopilot" split
       // on the dashboard honest.
+      // `ai_reasoning` carries the Preview panel's headline+reasoning so
+      // Histórico shows the CONTEXT behind each action instead of a bare
+      // "pause_campaign" event.
       const { data: actionData, error: actionErr } = await supabase.functions.invoke('meta-actions', {
         body: {
           user_id: userId,
@@ -817,6 +878,7 @@ export default function CampaignsManager() {
           target_type: targetType,
           target_name: targetName,
           source: 'manager_manual',
+          ai_reasoning: aiReasoning,
         },
       });
       if (actionErr || !actionData || (actionData as any).error) {
@@ -881,18 +943,27 @@ export default function CampaignsManager() {
   }, [userId, personaId]);
 
   // ── Update daily budget (campaign or adset) ─────────────────────────────
+  // Now carries the OLD budget + AI reasoning + intent (increase/decrease)
+  // downstream so Histórico can show "R$50 → R$80 • IA: sinais de
+  // escala sustentável" instead of just "budget changed".
   const updateBudget = useCallback(async (
     targetId: string,
     targetType: 'campaign' | 'adset',
     oldCents: number | null | undefined,
     newCents: number,
     targetName: string,
+    aiReasoning: string | null = null,
+    intent: 'increase_budget' | 'decrease_budget' | null = null,
   ) => {
     if (!userId) return;
     setFeedback(prev => ({ ...prev, [targetId]: { inflight: true, timestamp: Date.now() } }));
 
     try {
       const newReais = newCents / 100;
+      const oldReais = oldCents ? oldCents / 100 : 0;
+      // Determine the intent from the diff if caller didn't pass one
+      const resolvedIntent = intent
+        || (newCents > (oldCents || 0) ? 'increase_budget' : 'decrease_budget');
       const { data: actionData, error: actionErr } = await supabase.functions.invoke('meta-actions', {
         body: {
           user_id: userId,
@@ -902,8 +973,11 @@ export default function CampaignsManager() {
           target_type: targetType,
           target_name: targetName,
           value: newReais,
+          old_value: oldReais,                 // so action_log gets both sides of the diff
+          intent: resolvedIntent,              // explicit increase vs decrease
           budget_type: 'daily',
           source: 'manager_manual',
+          ai_reasoning: aiReasoning,
         },
       });
       if (actionErr || !actionData || (actionData as any).error) {
@@ -927,7 +1001,6 @@ export default function CampaignsManager() {
 
       // AI comment
       setFeedback(prev => ({ ...prev, [targetId]: { analyzing: true, timestamp: Date.now() } }));
-      const oldReais = oldCents ? oldCents / 100 : 0;
       const { data: aiData, error: aiErr } = await supabase.functions.invoke('ai-campaign-comment', {
         body: {
           user_id: userId,
@@ -935,7 +1008,7 @@ export default function CampaignsManager() {
           target_id: targetId,
           target_type: targetType,
           action: 'update_budget',
-          context: { old_budget: oldReais, new_budget: newReais },
+          context: { old_budget: oldReais, new_budget: newReais, intent: resolvedIntent },
         },
       });
 
@@ -960,6 +1033,7 @@ export default function CampaignsManager() {
     targetId: string,
     targetType: TargetType,
     targetName: string,
+    aiReasoning: string | null = null,
   ) => {
     if (!userId) return;
     setFeedback(prev => ({ ...prev, [targetId]: { inflight: true, timestamp: Date.now() } }));
@@ -974,6 +1048,7 @@ export default function CampaignsManager() {
           target_type: targetType,
           target_name: targetName,
           source: 'manager_manual',
+          ai_reasoning: aiReasoning,
         },
       });
       if (actionErr || !actionData || (actionData as any).error) {
@@ -1028,17 +1103,41 @@ export default function CampaignsManager() {
     }));
 
     try {
-      const { proposedAction, targetType, targetName, proposedBudgetCents } = preview;
+      const {
+        proposedAction, targetType, targetName,
+        proposedBudgetCents, oldBudgetCents,
+        headline, reasoning,
+      } = preview;
       const currentStatus = preview.context.effective_status;
 
+      // Compose the reasoning that will land in History. This is what
+      // makes the log DETAILED instead of a one-line "budget changed".
+      const aiReasoning = [headline, reasoning].filter(Boolean).join(' — ') || null;
+
       if (proposedAction === 'pause' || proposedAction === 'activate') {
-        await toggleStatus(targetId, targetType, currentStatus, targetName);
+        await toggleStatus(targetId, targetType, currentStatus, targetName, aiReasoning);
       } else if (proposedAction === 'duplicate') {
-        await duplicate(targetId, targetType, targetName);
+        await duplicate(targetId, targetType, targetName, aiReasoning);
       } else if (proposedAction === 'increase_budget' || proposedAction === 'decrease_budget') {
         if (proposedBudgetCents !== undefined) {
-          await updateBudget(targetId, targetType, 0, proposedBudgetCents, targetName);
+          await updateBudget(
+            targetId,
+            targetType,
+            oldBudgetCents ?? null,
+            proposedBudgetCents,
+            targetName,
+            aiReasoning,
+            proposedAction,
+          );
         }
+      } else if (proposedAction === 'analyze') {
+        // Analyze-only: nothing to execute. Treat confirm as close.
+        setPreviews(prev => {
+          const next = { ...prev };
+          delete next[targetId];
+          return next;
+        });
+        return;
       }
       setPreviews(prev => {
         const next = { ...prev };
@@ -1155,6 +1254,10 @@ export default function CampaignsManager() {
         `}</style>
 
         {/* ── Loading ─────────────────────────────────────────────────── */}
+        {/* Shown while the preview-action edge fn reads Meta + runs
+            the AI. Must carry a Cancel button — otherwise a slow Meta
+            request looks like "só fica carregando" and the user has no
+            way to bail without refreshing the page. */}
         {p.loading && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
@@ -1165,9 +1268,31 @@ export default function CampaignsManager() {
             }}>
               <Sparkles size={12} color={T.blue} />
             </div>
-            <span style={{ fontSize: 12.5, color: T.text2, fontWeight: 500 }}>
+            <span style={{ fontSize: 12.5, color: T.text2, fontWeight: 500, flex: 1 }}>
               AdBrief AI lendo contexto…
             </span>
+            <button
+              onClick={() => cancelPreview(targetId)}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${T.border1}`,
+                color: T.text3,
+                borderRadius: 6, padding: '4px 10px',
+                fontSize: 11, fontWeight: 600, fontFamily: F,
+                cursor: 'pointer', letterSpacing: '-0.005em',
+                transition: 'color 0.12s ease, border-color 0.12s ease',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.color = T.text2;
+                (e.currentTarget as HTMLElement).style.borderColor = T.border2;
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.color = T.text3;
+                (e.currentTarget as HTMLElement).style.borderColor = T.border1;
+              }}
+            >
+              Cancelar
+            </button>
           </div>
         )}
 
@@ -1842,8 +1967,15 @@ export default function CampaignsManager() {
                 </button>
                 <BudgetInlineEdit
                   cents={c.daily_budget}
-                  saving={cInflight}
-                  onSave={(newCents) => updateBudget(c.id, 'campaign', c.daily_budget, newCents, c.name)}
+                  saving={cInflight || !!previews[c.id]?.executing}
+                  // Route through the AI preview instead of firing the
+                  // update directly. The operator sees the IA's read on
+                  // the budget change BEFORE any action hits Meta.
+                  onRequestChange={(newCents) => {
+                    const old = c.daily_budget || 0;
+                    const action = newCents > old ? 'increase_budget' : 'decrease_budget';
+                    requestPreview(c.id, 'campaign', c.name, action, newCents, old);
+                  }}
                 />
                 <span style={{ fontSize: 10, fontWeight: 700, color: sc.color, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
                   {sc.label}
@@ -1944,8 +2076,13 @@ export default function CampaignsManager() {
                           </button>
                           <BudgetInlineEdit
                             cents={ads.daily_budget}
-                            saving={aInflight}
-                            onSave={(newCents) => updateBudget(ads.id, 'adset', ads.daily_budget, newCents, ads.name)}
+                            saving={aInflight || !!previews[ads.id]?.executing}
+                            // Same preview-first flow as campaign-level
+                            onRequestChange={(newCents) => {
+                              const old = ads.daily_budget || 0;
+                              const action = newCents > old ? 'increase_budget' : 'decrease_budget';
+                              requestPreview(ads.id, 'adset', ads.name, action, newCents, old);
+                            }}
                             size="sm"
                           />
                           <span style={{ fontSize: 9.5, fontWeight: 700, color: sa.color, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
