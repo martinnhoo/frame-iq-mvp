@@ -1518,9 +1518,20 @@ Esta conta ainda não tem padrões validados com dados suficientes.
             // Lifetime since (for all-time top performers)
             const lifetimeSince = new Date(Date.now() - 3 * 365 * 24 * 3600 * 1000).toISOString().split("T")[0];
 
-            // ── In-memory cache (15 min per account) ─────────────────────────
-            // Prevents redundant Meta API calls. Evicts expired keys on each write.
+            // ── Two-tier cache (15 min) ──────────────────────────────────────
+            // Level 1: in-memory per edge-fn instance. Fastest — zero DB hit.
+            //   Evicts expired keys on each write. Frail across cold starts.
+            // Level 2: ai_context_cache table. Persistent, survives cold
+            //   starts and different edge-fn instances. ~1 DB round-trip on
+            //   miss.
+            // Level 3 fallback: Meta Graph API (expensive, rate-limited).
+            //
+            // Why bother with both: an agency-scale account running ~10
+            // chats per session would otherwise pay 10x the Meta API budget
+            // and 10x the token cost on repeated context — for data that
+            // doesn't meaningfully change in 15 minutes.
             const cacheKey = `${activeAcc.id}:${since}:${until}`;
+            const dbCacheKey = `${user_id}:${cacheKey}`;
             const now_ts = Date.now();
             const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
             if (!(globalThis as any).__metaCache) (globalThis as any).__metaCache = {};
@@ -1532,13 +1543,48 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               placementRaw: any = null,
               lifetimeAdsRaw: any = null;
 
+            let cacheHitSource: "memory" | "db" | "miss" = "miss";
+
             if (cached && now_ts - cached.ts < CACHE_TTL) {
               adsRaw = cached.adsRaw;
               campsRaw = cached.campsRaw;
               adsetsRaw = cached.adsetsRaw;
               timeSeriesRaw = cached.timeSeriesRaw;
               placementRaw = cached.placementRaw;
+              lifetimeAdsRaw = cached.lifetimeAdsRaw;
+              cacheHitSource = "memory";
             } else {
+              // Miss in-memory — try DB cache before hitting Meta.
+              try {
+                const { data: dbCached } = await supabase
+                  .from("ai_context_cache" as any)
+                  .select("data, checked_at")
+                  .eq("cache_key", dbCacheKey)
+                  .maybeSingle();
+                if (dbCached?.checked_at) {
+                  const age = now_ts - new Date(dbCached.checked_at).getTime();
+                  if (age < CACHE_TTL && dbCached.data) {
+                    const d: any = dbCached.data;
+                    adsRaw = d.adsRaw ?? null;
+                    campsRaw = d.campsRaw ?? null;
+                    adsetsRaw = d.adsetsRaw ?? null;
+                    timeSeriesRaw = d.timeSeriesRaw ?? null;
+                    placementRaw = d.placementRaw ?? null;
+                    lifetimeAdsRaw = d.lifetimeAdsRaw ?? null;
+                    // Warm the in-memory tier so sibling requests in the same
+                    // instance don't repeat the DB round-trip.
+                    (globalThis as any).__metaCache[cacheKey] = {
+                      ts: now_ts,
+                      adsRaw, campsRaw, adsetsRaw, timeSeriesRaw, placementRaw, lifetimeAdsRaw,
+                    };
+                    cacheHitSource = "db";
+                    _lap("meta-cache-db-hit");
+                  }
+                }
+              } catch { /* table may not exist yet — proceed to fetch */ }
+            }
+
+            if (cacheHitSource === "miss") {
               // Comprehensive Meta Ads data fetch: period-aware + lifetime top performers
               const fields =
                 "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency";
@@ -1585,12 +1631,27 @@ Esta conta ainda não tem padrões validados com dados suficientes.
               lifetimeAdsRaw = r6.status === "fulfilled" ? await r6.value.json() : null;
 
               _lap("meta-api-done");
-              // Cache results — evict stale entries first to prevent unbounded growth
+              // Write-through to both cache tiers.
               const metaCache = (globalThis as any).__metaCache;
+              // Evict stale in-memory entries to prevent unbounded growth.
               for (const k of Object.keys(metaCache)) {
                 if (now_ts - metaCache[k].ts >= CACHE_TTL) delete metaCache[k];
               }
-              metaCache[cacheKey] = { ts: now_ts, adsRaw, campsRaw, adsetsRaw, timeSeriesRaw, placementRaw };
+              metaCache[cacheKey] = {
+                ts: now_ts,
+                adsRaw, campsRaw, adsetsRaw, timeSeriesRaw, placementRaw, lifetimeAdsRaw,
+              };
+              // Persist to DB (best-effort — never blocks the response).
+              try {
+                await supabase.from("ai_context_cache" as any).upsert({
+                  cache_key: dbCacheKey,
+                  user_id,
+                  meta_account_id: activeAcc.id,
+                  persona_id: persona_id || null,
+                  data: { adsRaw, campsRaw, adsetsRaw, timeSeriesRaw, placementRaw, lifetimeAdsRaw, schema_version: 1 },
+                  checked_at: new Date().toISOString(),
+                } as any, { onConflict: "cache_key" });
+              } catch { /* DB cache write failed — in-memory still works */ }
             }
 
             // ── Pixel detection (lightweight, cached separately) ──
