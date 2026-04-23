@@ -89,10 +89,11 @@ function issueActionText(issue: HealthIssue): string {
   if (k === 'pixel_missing' || k === 'pixel_stale' || k === 'pixel_orphan') return 'Verificar rastreamento';
   if (k === 'spend_no_conv') return 'Verificar rastreamento';
   if (k === 'no_active_ads') return 'Reativar campanhas';
+  if (k === 'balance_critical') return 'Adicionar saldo';
+  if (k === 'balance_low') return 'Repor saldo';
   if (k === 'account_critical') return 'Reativar conta';
   if (k === 'account_warn') return 'Ajustar conta';
   if (k.includes('delivery') || k.includes('freq')) return 'Ajustar entrega';
-  if (k.includes('balance') || k.includes('cap')) return 'Repor saldo';
   return 'Resolver';
 }
 
@@ -494,29 +495,38 @@ const NextStepCard: React.FC<{
         </>
       )}
 
-      <button
-        onClick={() => {
-          if (decision && onAction && decision.actions?.[0]) {
-            onAction(decision.id, decision.actions[0]);
-          } else {
-            onOpenAll?.();
-          }
-        }}
-        style={{
-          width: '100%',
-          background: T.blue,
-          color: '#fff', border: 'none',
-          borderRadius: 10, padding: '11px 14px',
-          fontSize: 12.5, fontWeight: 700,
-          cursor: 'pointer', fontFamily: F,
-          letterSpacing: '-0.005em',
-          transition: 'background 0.15s, transform 0.1s',
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#1D4ED8'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.blue; }}
-      >
-        {derived?.actionLabel || 'Ver recomendações'}
-      </button>
+      {/*
+        Blue CTA — only render when we have a real derived step. Previously this
+        button rendered during loading too, so users saw a "Ver recomendações"
+        flash for a fraction of a second before the calm empty state replaced it.
+        Keeping the button gated on `derived` means: no flash during load, no
+        orphan CTA when the empty state is what's actually going to show.
+      */}
+      {derived && (
+        <button
+          onClick={() => {
+            if (decision && onAction && decision.actions?.[0]) {
+              onAction(decision.id, decision.actions[0]);
+            } else {
+              onOpenAll?.();
+            }
+          }}
+          style={{
+            width: '100%',
+            background: T.blue,
+            color: '#fff', border: 'none',
+            borderRadius: 10, padding: '11px 14px',
+            fontSize: 12.5, fontWeight: 700,
+            cursor: 'pointer', fontFamily: F,
+            letterSpacing: '-0.005em',
+            transition: 'background 0.15s, transform 0.1s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#1D4ED8'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.blue; }}
+        >
+          {derived.actionLabel || 'Ver recomendações'}
+        </button>
+      )}
     </Card>
   );
 };

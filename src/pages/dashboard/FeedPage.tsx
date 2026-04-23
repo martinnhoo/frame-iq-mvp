@@ -6440,22 +6440,9 @@ const FeedPage: React.FC = () => {
           </div>
         ) : null}
 
-        {/* ═══════════════════════════════════════════════
-            LAYER 6 — PERFORMANCE SNAPSHOT (secondary)
-            KPIs moved BELOW decisions — data supports, not leads.
-            Suppressed when there's no active traffic: showing metrics
-            from paused/historical ads alongside a "create campaign" CTA
-            is noise. Users with R$2,50 economizados and 0 ads don't
-            need a hero strip of dead numbers.
-            ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && metricsReady && adMetrics && !noActiveTraffic && (
-          <div style={{ marginTop: 4 }}>
-            <PerformancePulse data={{
-              ...performancePulseData,
-              totalAds: totalAdCount,
-            }} savings={savingsTotal} goalMetric={goalData?.metric} adMetrics={adMetrics} trackingBroken={trackingHealth !== null && trackingUserStatus !== 'confirmed_no_conversion'} periodLabel={PERIODS.find(p => p.key === period)?.label} />
-          </div>
-        )}
+        {/* LAYER 6 — Performance snapshot removed: duplicated the "Central de
+            comando" KPI strip at the top of the page. Keeping a single source
+            of truth (the header KPIs) — no "Resumo · 7 dias" block below. */}
 
         {/* Tracking status pill removed — the Saúde da conta sidebar card
             surfaces the same information (tracking issues appear as issues
@@ -6562,6 +6549,8 @@ const FeedPage: React.FC = () => {
             const promptByKey: Record<string, string> = {
               account_critical: 'Minha conta de anúncios está com status crítico. Explica o que aconteceu e me dá o passo-a-passo pra reativar.',
               account_warn: 'Minha conta de anúncios está com alerta. O que significa e como resolver?',
+              balance_critical: 'Meu saldo pré-pago tá quase acabando e os anúncios podem pausar. Me explica como adicionar saldo na Meta agora — qual a forma mais rápida (pix, cartão) e quanto vale a pena colocar pra não quebrar o ciclo.',
+              balance_low: 'Meu saldo pré-pago tá baixo. Quanto vale colocar pra segurar o próximo ciclo sem travar? Considera meu ritmo de gasto atual.',
               pixel_missing: 'Minha conta não tem pixel instalado. Me mostra como instalar e configurar eventos de conversão passo-a-passo.',
               pixel_stale: 'Meu pixel parou de disparar eventos. Diagnostica o motivo e me dá a correção.',
               pixel_orphan: 'Tenho anúncios sem pixel amarrado. Quais são e como corrigir?',

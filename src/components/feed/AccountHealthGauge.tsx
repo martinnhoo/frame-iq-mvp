@@ -138,18 +138,23 @@ export function computeAccountHealth(input: {
 
   // ── 1) Meta account status ──────────────────────────────────────────
   // Highest-impact signal: if Meta has flagged the account, nothing else matters.
+  // We peek at the message to route between truly-disabled accounts (account_*)
+  // and low-balance flags (balance_*) so the sidebar CTA can be specific — the
+  // action for "conta desativada" is very different from "repor saldo".
   if (accountStatus) {
+    const msg = (accountStatus.message || '').toLowerCase();
+    const isBalance = msg.includes('saldo');
     if (accountStatus.severity === 'critical') {
       score -= 55;
       issues.push({
-        key: 'account_critical',
+        key: isBalance ? 'balance_critical' : 'account_critical',
         label: accountStatus.message || 'Conta com problema na Meta',
         severity: 'critical',
       });
     } else if (accountStatus.severity === 'warn') {
       score -= 25;
       issues.push({
-        key: 'account_warn',
+        key: isBalance ? 'balance_low' : 'account_warn',
         label: accountStatus.message || 'Conta com pendência',
         severity: 'warn',
       });
@@ -411,17 +416,15 @@ export const AccountHealthGauge: React.FC<{
     adMetrics, activeAdsCount, hasMetaConnection,
   ]);
 
-  // Balance / cap hint line — only when we actually have numbers from Meta.
+  // Balance hint line — only when we actually have numbers from Meta. We no
+  // longer surface cap_remaining because the spend_cap is Meta-defined and
+  // non-editable by the user (see account-status-check rationale).
   const balanceLine = useMemo(() => {
     if (!accountStatus) return null;
-    const pieces: string[] = [];
     if (typeof accountStatus.balance === 'number' && accountStatus.balance > 0) {
-      pieces.push(`Saldo: ${fmtReaisExact(accountStatus.balance)}`);
+      return `Saldo: ${fmtReaisExact(accountStatus.balance)}`;
     }
-    if (typeof accountStatus.cap_remaining === 'number' && accountStatus.cap_remaining > 0) {
-      pieces.push(`Teto: ${fmtReaisExact(accountStatus.cap_remaining)} restante`);
-    }
-    return pieces.length ? pieces.join(' · ') : null;
+    return null;
   }, [accountStatus]);
 
   const isLoading = accountStatusLoading || pixelHealthLoading;
