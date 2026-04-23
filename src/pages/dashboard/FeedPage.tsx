@@ -6385,7 +6385,6 @@ const FeedPage: React.FC = () => {
                 : accountStatus?.severity === 'ok'
                   ? 'ok'
                   : 'unknown';
-          const tp = TONE_PALETTE[tone];
 
           return (
             <div className="feed-command-deck" style={{
@@ -6399,18 +6398,12 @@ const FeedPage: React.FC = () => {
               boxShadow: `0 0 0 1px ${T.border0}, 0 12px 40px rgba(0,0,0,0.35)`,
               animation: 'feed-deck-in 0.42s cubic-bezier(0.22,1,0.36,1) both',
             }}>
-              {/* Tone-adaptive ambient glow. Sits under the content
-                  (zIndex 0) and bleeds from the top-right corner so the
-                  eye naturally travels left-to-right across the KPIs. */}
-              <div aria-hidden style={{
-                position: 'absolute',
-                top: -120, right: -80, width: 340, height: 340,
-                borderRadius: '50%',
-                background: `radial-gradient(circle, ${tp.glow.replace(/[\d.]+\)$/, '0.18)')} 0%, transparent 62%)`,
-                pointerEvents: 'none',
-                zIndex: 0,
-                animation: 'feed-glow-breathe 6s ease-in-out infinite',
-              }} />
+              {/* Ambient glow removed — the radial color wash in the
+                  top-right of the deck was reading as a stray green
+                  (or amber / red) stain on the background, which
+                  fights the Linear-flat aesthetic everywhere else.
+                  The tone cue now comes ONLY from the status strip
+                  at the top — one source of color, not two. */}
 
               {/* Status strip — only when Meta is connected. For the
                   empty/unconnected state we fall through to the simpler
@@ -7111,12 +7104,8 @@ const FeedPage: React.FC = () => {
           0%,100%{box-shadow:0 0 0 3px rgba(255,255,255,0.03),0 0 12px currentColor;transform:scale(1)}
           50%{box-shadow:0 0 0 6px rgba(255,255,255,0.06),0 0 18px currentColor;transform:scale(1.08)}
         }
-        /* Ambient glow breathing — 6s cycle so it feels alive but
-           doesn't draw the eye away from the data. */
-        @keyframes feed-glow-breathe{
-          0%,100%{opacity:0.85;transform:scale(1)}
-          50%{opacity:1;transform:scale(1.06)}
-        }
+        /* feed-glow-breathe removed — the radial background wash
+           it animated was cut to keep the deck flat. */
         @keyframes feed-spin{to{transform:rotate(360deg)}}
         /* Manual strip — Linear-style hover: border + arrow subtly
            respond, no colored fill flood. */
