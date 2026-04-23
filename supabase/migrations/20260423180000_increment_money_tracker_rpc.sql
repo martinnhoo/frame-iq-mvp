@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION increment_money_tracker(
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $fn$
 BEGIN
   IF p_amount IS NULL OR p_amount < 0 THEN
     RAISE EXCEPTION 'increment_money_tracker: amount must be non-negative (got %)', p_amount;
@@ -78,7 +78,7 @@ BEGIN
     last_active_date = CURRENT_DATE,
     updated_at = NOW();
 END;
-$$;
+$fn$;
 
 -- Service role + authenticated users can call. Row-level filtering still
 -- applies via money_tracker's RLS policies (own_account_data).
