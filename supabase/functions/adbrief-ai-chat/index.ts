@@ -1626,14 +1626,27 @@ ${errorLine}
                 ? `CAMPAIGNS: Token expirado — peça ao usuário para reconectar o Meta Ads em Contas. NÃO emita tool_call.\n`
                 : `CAMPAIGNS: Error — ${campsRaw.error.message}. Answer based on this error, do NOT emit list_campaigns tool_call.\n`;
             } else if (campsRaw?.data?.length) {
-              const lines = campsRaw.data
+              // Sort: ACTIVE campaigns FIRST, then paused/archived. The AI
+              // should focus on what's running. Paused campaigns are noise
+              // unless the user explicitly asks about them.
+              const isActiveStatus = (s: string) =>
+                String(s || "").toUpperCase() === "ACTIVE";
+              const sorted = [...campsRaw.data].sort((a: any, b: any) => {
+                const aActive = isActiveStatus(a.effective_status || a.status) ? 0 : 1;
+                const bActive = isActiveStatus(b.effective_status || b.status) ? 0 : 1;
+                return aActive - bActive;
+              });
+              const activeCount = sorted.filter((c: any) =>
+                isActiveStatus(c.effective_status || c.status),
+              ).length;
+              const lines = sorted
                 .slice(0, 15)
                 .map(
                   (c: any) =>
                     `  [${c.id}] ${c.name}: ${c.effective_status || c.status} | budget=${c.daily_budget ? `$${(parseInt(c.daily_budget) / 100).toFixed(0)}/day` : c.lifetime_budget ? `$${(parseInt(c.lifetime_budget) / 100).toFixed(0)} total` : "no budget"} | ${c.objective}`,
                 )
                 .join("\n");
-              liveMetaData += `CAMPAIGNS (${campsRaw.data.length}):\n${lines}\n`;
+              liveMetaData += `CAMPAIGNS (${campsRaw.data.length} total, ${activeCount} ACTIVE — foque nessas primeiro a menos que o usuário pergunte explicitamente sobre pausadas):\n${lines}\n`;
             } else {
               liveMetaData += `CAMPAIGNS: Nenhuma campanha encontrada.\n`;
             }
@@ -2332,31 +2345,21 @@ REGRAS AO ANALISAR ESTA(S) LANDING PAGE(S):
 
     let intentDirective = "";
     if (intentSignals.pixel) {
-      intentDirective = `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-**INTENÇÃO DA PERGUNTA ATUAL — PIXEL / TRACKING**
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      intentDirective = `\n\n**INTENÇÃO DETECTADA — PIXEL / TRACKING**
 
-O usuário está perguntando LITERALMENTE sobre o Pixel / tracking / eventos de conversão. Isso não é genérico — é uma pergunta específica.
+Responde SÓ o que foi perguntado, em tom de media buyer conversando.
 
-REGRAS DE RESPOSTA (OBRIGATÓRIAS, NESTA ORDEM):
+REGRAS:
 
-1. **Responda PRIMEIRO a pergunta do pixel com os dados REAIS do contexto**, usando as seções já presentes acima: "PIXELS INSTALADOS" / "PIXELS: Nenhum pixel encontrado" / "TRACKING DIAGNOSTIC 🟢🟡🔴" / "Conversão rastreada".
+1. Use os dados reais do contexto ("PIXELS INSTALADOS", "TRACKING DIAGNOSTIC", evento configurado). Não invente.
 
-2. **Dê um diagnóstico completo** cobrindo:
-   - Quantos pixels estão instalados e quais são (nome + ID)
-   - Quando cada pixel disparou pela última vez (ou "nunca disparou")
-   - Qual evento de conversão está configurado no objetivo do usuário (ex: Lead, Purchase, CompleteRegistration)
-   - Se há ads rodando sem pixel amarrado (orphan ads)
-   - Status do tracking (🟢 saudável, 🟡 incerto, 🔴 quebrado) e POR QUÊ
-   - Impacto real no negócio (ex: "sem esse evento disparando, o Meta está otimizando cego")
+2. Se o TRACKING DIAGNOSTIC estiver como "uncertain" + mensagem falando que a campanha é recém-lançada (menos de 3 dias), NÃO diagnostique como "pixel quebrado". Diga que é cedo pra avaliar e que a janela de atribuição ainda está estabilizando. Pare por aí. NÃO sugira "abra o Facebook Pixel Helper" nesse cenário — é desnecessário.
 
-3. **Termine com 1-3 passos concretos de ação** — específicos ao cenário do usuário (site, plataforma, evento). Use o GUIA DE INSTALAÇÃO DE PIXEL do system prompt se o pixel não existe ou não dispara.
+3. Se o pixel REALMENTE não existe ou nunca disparou (status: broken, confidence: high), aí sim dê o passo-a-passo de instalação.
 
-4. **NÃO desvie a resposta para alertas de campanha/budget/performance que não sejam sobre o pixel.** Se um alerta é sobre pixel/tracking, mencione. Se é sobre outra coisa (ex: "campanha pausada", "budget mismatch", "fadiga criativa"), NÃO traga agora — ficará para outra pergunta.
+4. FORMATO CURTO POR DEFAULT. 3-6 linhas, direto. Use ## headers SÓ se tiver 3 ou mais pontos distintos e não-relacionados. Evite listas numeradas de 5+ itens. Evite emojis de seção (✅ 🔴 ⚠️) em excesso — use um, no máximo, pra sinalizar severidade.
 
-5. **Se não houver dados de pixel no contexto**, diga isso explicitamente: "Não consegui puxar dados do seu pixel agora — o health-check falhou. Tenta sincronizar novamente no feed, ou me diga qual é o seu pixel e eu te oriento pela instalação."
-
-FORMATO: use \`## Diagnóstico\`, \`## O que está acontecendo\`, \`## Ação\` — este é um diagnóstico, não uma resposta curta. Nunca termine a resposta sem dar um caminho concreto.`;
+5. Não traga outros problemas (campanhas pausadas, fadiga criativa, budget) a menos que o usuário tenha perguntado. Foco cirúrgico no que foi perguntado.`;
     }
 
     const systemPrompt = `Você é o AdBrief AI — especialista em performance de mídia paga, embutido na conta do usuário.
@@ -2413,28 +2416,34 @@ O frontend renderiza markdown. Use sempre. Nunca retorne texto corrido sem estru
 - "1." para listas ordenadas / passos de ação
 - "---" para separar seções distintas numa resposta longa
 
-**ESTRUTURA IDEAL para análise:**
+**DISCIPLINA DE TAMANHO — IMPORTANTE:**
+
+RESPOSTA CURTA É O DEFAULT. Média ideal: 4-8 linhas. Pergunta simples → responde em 1-3 linhas. Pergunta complexa ou diagnóstico pedido explicitamente → até 10-15 linhas com ## headers.
+
+NUNCA use ## headers para perguntas curtas ou quando a resposta cabe em 1 parágrafo. Headers são pra separar tópicos distintos — não pra decorar uma resposta simples.
+
+**QUANDO USAR ## HEADERS:**
+Só quando a resposta cobre 3+ pontos independentes (ex: "diagnóstico completo"). Caso contrário, responde em prosa direta com **negrito** nos pontos-chave.
+
+**EXEMPLO DE RESPOSTA CURTA (PREFERIDA):**
+O **CTR caiu 40%** nos últimos 3 dias porque a **frequência chegou em 4.2x** — audiência esgotada. **Pause o conjunto** e cria uma variação com hook novo pra ativar pública fresca.
+
+**EXEMPLO DE RESPOSTA ESTRUTURADA (só quando o usuário pediu diagnóstico completo):**
 
 ## Diagnóstico
-**CTR caiu 40%** nos últimos 3 dias.
+**CTR caiu 40%** em 3 dias.
 
 ## Causa
-Frequência chegou em **4.2x** — audiência esgotada.
+Frequência em **4.2x** — audiência esgotada.
 
 ## Ação
-- Pause o conjunto agora
-- Crie variação com novo ângulo de hook
-- Reative com orçamento 20% menor para testar nova audiência
-
-**ESTRUTURA IDEAL para resposta curta/direta:**
-Sem headers. Parágrafo direto com **negrito** nos pontos-chave.\\n\\n Segunda linha se necessário.
+Pause o conjunto e cria variação com hook novo.
 
 **REGRAS:**
-1. Toda resposta com mais de 2 parágrafos DEVE usar "##" para separar blocos
-2. Toda lista de ações DEVE usar "-" ou "1." — nunca vírgulas ou "e também"
-3. **negrito** obrigatório em: números reais, nomes de campanha, CTAs de ação
-4. Nunca tudo em um bloco só — "\\n\\n" entre parágrafos sempre
-5. Respostas longas (3+ seções) sempre com "##" headers
+- **negrito** obrigatório em números reais, nomes de campanha, ações
+- Use "-" ou "1." em listas de 3+ itens só
+- Evite emojis decorativos (✅ 🔴 ⚠️ em excesso) — use um, no máximo, pra sinalizar severidade
+- Não invente estrutura — se uma frase resolve, uma frase basta
 
 ═══════════════════════════════════
 INTELIGÊNCIA DE CONVERSÃO (PRIMARY METRIC)
@@ -2620,19 +2629,24 @@ QUANDO O USUÁRIO PERGUNTAR SOBRE PIXEL:
 2. Se tem pixel mas nunca disparou → o problema é a instalação no site, não criar um novo
 3. Se NÃO tem pixel → guie passo a passo para criar E instalar
 
-GUIA PERSONALIZADO DE INSTALAÇÃO:
-- Use o SITE do usuário (disponível no contexto do workspace) para dar instruções específicas
-- Se o site é WordPress/WooCommerce → recomende plugin "PixelYourSite" ou "Facebook for WooCommerce"
-- Se é Shopify → App "Facebook & Instagram" nativo
-- Se é site customizado → código manual no <head>
-- SEMPRE dê o código exato do evento que o usuário configurou como conversão (disponível em "Conversão rastreada" no objetivo)
-  Exemplo: se conversão = complete_registration → fbq('track', 'CompleteRegistration');
-  Se conversão = purchase → fbq('track', 'Purchase', {value: VALOR, currency: 'BRL'});
-  Se conversão = lead → fbq('track', 'Lead');
-- SEMPRE mencione o Facebook Pixel Helper (extensão Chrome) para teste
-- Se o evento do Meta não bate com o nome fbq: lead→Lead, purchase→Purchase, complete_registration→CompleteRegistration, contact→Contact, schedule→Schedule, add_to_cart→AddToCart, initiate_checkout→InitiateCheckout
+GUIA PERSONALIZADO DE INSTALAÇÃO — USAR APENAS QUANDO:
+- O pixel NÃO existe, OU
+- O pixel existe mas o TRACKING DIAGNOSTIC indica "broken" com confidence "high" (ex: "Pixel instalado mas NUNCA disparou")
 
-NUNCA dê resposta genérica sobre pixel. Use os dados reais: nome do pixel, ID, site do usuário, evento de conversão configurado.
+NÃO use este guia quando:
+- Pixel existe e tá disparando (TRACKING = healthy)
+- Campanha é recém-lançada (TRACKING = uncertain, motivo "campanha recém-lançada") — NÃO é problema de pixel, é janela de atribuição
+- Você já sugeriu isso num turno anterior desta conversa (verifique o histórico)
+
+Conteúdo do guia (quando aplicável):
+- WordPress/WooCommerce → plugin "PixelYourSite" ou "Facebook for WooCommerce"
+- Shopify → App "Facebook & Instagram" nativo
+- Site customizado → código no <head>
+- Código exato do evento configurado (ver "Conversão rastreada"): lead→Lead, purchase→Purchase, complete_registration→CompleteRegistration, contact→Contact, schedule→Schedule, add_to_cart→AddToCart, initiate_checkout→InitiateCheckout
+- Exemplo: fbq('track', 'CompleteRegistration');
+- Pode mencionar Facebook Pixel Helper (Chrome) UMA vez, só se relevante — não em todo turno.
+
+NUNCA dê resposta genérica sobre pixel. Use os dados reais: nome do pixel, ID, site do usuário, evento configurado.
 
 ═══════════════════════════════════
 TRACKING DIAGNOSTIC — INTELIGÊNCIA AUTOMÁTICA
@@ -2942,13 +2956,16 @@ PROIBIDO:
           // Image analysis still needs room for structured output
           if (body.image_base64) return 2000;
           // Simple queries: greetings, short questions
-          if (msg.length < 60 && /^(oi|olá|ola|hey|hi|hello|e aí|tudo bem|como vai|qual é|quanto|o que|como|quando)/.test(msg)) return 600;
+          if (msg.length < 60 && /^(oi|olá|ola|hey|hi|hello|e aí|tudo bem|como vai|qual é|quanto|o que|como|quando)/.test(msg)) return 500;
           // Tool requests (hooks/scripts/briefs) — 2000 is plenty for 10 hooks or a 60s script
           if (/hook|roteiro|script|brief|criativo|copy|ugc/.test(msg)) return 2000;
-          // Analysis/performance — narrative summary fits in 1500
-          if (/analisa|performance|relatório|resumo/.test(msg)) return 1500;
-          // Default: tight
-          return 1000;
+          // Explicit deep-diagnostic requests deserve more room
+          if (/diagn[oó]stico\s+completo|análise\s+completa|analise\s+completa|tudo\s+que\s+pode|me\s+faz\s+um\s+diagn/.test(msg)) return 1200;
+          // Analysis/performance — narrative summary fits in 900. Prev: 1500.
+          // Lower budget forces the AI to be concise and not pad with sections.
+          if (/analisa|performance|relatório|resumo/.test(msg)) return 900;
+          // Default: tight — 700 is enough for a focused 4-8 line answer
+          return 700;
         })(),
         // Determinism pin for vision calls. The image-analysis card returns a
         // structured JSON scorecard (hook score, verdict, fixes, strengths).
