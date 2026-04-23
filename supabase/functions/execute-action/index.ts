@@ -177,12 +177,16 @@ async function executeAction(
     };
   }
 
-  // Get the ad account ID and headline from the decision
+  // Get the ad account ID and headline from the decision.
+  // The decisions table has `account_id` (not `ad_account_id`) and no
+  // `user_id` column — ownership is enforced downstream by
+  // getAdAccountMetaToken which requires a matching (id, user_id) on
+  // ad_accounts. An invalid user will fail there with a meaningful
+  // error instead of silently returning no decision.
   const { data: decisionData, error: decisionError } = await supabase
     .from("decisions")
-    .select("ad_account_id, impact_daily, headline, type")
+    .select("account_id, impact_daily, headline, type")
     .eq("id", decision_id)
-    .eq("user_id", userId)
     .single();
 
   if (decisionError || !decisionData) {
@@ -191,7 +195,7 @@ async function executeAction(
     );
   }
 
-  const { ad_account_id: adAccountId, impact_daily: estimated_daily_impact } = decisionData;
+  const { account_id: adAccountId, impact_daily: estimated_daily_impact } = decisionData;
 
   // Get Meta access token
   const metaAccessToken = await getAdAccountMetaToken(
@@ -501,10 +505,11 @@ async function rollbackAction(
     throw new Error("Rollback window has expired (30 minutes)");
   }
 
-  // Get Meta access token
+  // Get Meta access token (rollback path). Same note as above:
+  // decisions uses `account_id`, not `ad_account_id`.
   const { data: decisionData, error: decisionError } = await supabase
     .from("decisions")
-    .select("ad_account_id")
+    .select("account_id")
     .eq("id", logData.decision_id)
     .single();
 
@@ -514,7 +519,7 @@ async function rollbackAction(
 
   const metaAccessToken = await getAdAccountMetaToken(
     supabase,
-    decisionData.ad_account_id,
+    decisionData.account_id,
     userId
   );
 
