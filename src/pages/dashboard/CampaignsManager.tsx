@@ -1011,6 +1011,38 @@ export default function CampaignsManager() {
     });
   }, [campaigns, searchQuery]);
 
+  // ── Account-level KPIs for the top strip ────────────────────────────────
+  // Computed locally from the loaded campaigns list (no extra API call).
+  // Shows what the operator needs to glance at before diving into detail:
+  // total / active / paused / daily budget committed. Uses Meta's
+  // effective_status so "LEARNING" counts as active (it is delivering).
+  const kpis = useMemo(() => {
+    const isActiveEffective = (s: string) => {
+      const u = (s || '').toUpperCase();
+      return u === 'ACTIVE' || u === 'LEARNING' || u === 'IN_PROCESS' || u === 'LEARNING_LIMITED';
+    };
+    const isPausedEffective = (s: string) => {
+      const u = (s || '').toUpperCase();
+      return u === 'PAUSED' || u === 'CAMPAIGN_PAUSED' || u === 'ADSET_PAUSED';
+    };
+    let active = 0, paused = 0, dailyBudgetActive = 0;
+    for (const c of campaigns) {
+      const s = (c.effective_status || c.status || '').toString();
+      if (isActiveEffective(s)) {
+        active += 1;
+        dailyBudgetActive += (c.daily_budget || 0);
+      } else if (isPausedEffective(s)) {
+        paused += 1;
+      }
+    }
+    return {
+      total: campaigns.length,
+      active,
+      paused,
+      dailyBudgetActiveCents: dailyBudgetActive,
+    };
+  }, [campaigns]);
+
   // ══════════════════════════════════════════════════════════════════════
   // PREVIEW PANEL — AI copiloto inline abaixo da row.
   // Design: Linear-style, sem boxes cinza uniformes. Métricas em linha
@@ -1345,7 +1377,7 @@ export default function CampaignsManager() {
   // ══════════════════════════════════════════════════════════════════════
   return (
     <div style={{ flex: 1, minHeight: 0, background: T.bg0, padding: '28px 28px 64px', fontFamily: F, color: T.text1, overflow: 'auto' }}>
-      {/* Global keyframes for the page. */}
+      {/* Global keyframes + micro-interactions. */}
       <style>{`
         .spin { animation: mgr-spin 0.9s linear infinite; }
         @keyframes mgr-spin { to { transform: rotate(360deg); } }
@@ -1357,11 +1389,40 @@ export default function CampaignsManager() {
           from { opacity: 0; transform: translateY(-4px); max-height: 0; }
           to { opacity: 1; transform: none; max-height: 1200px; }
         }
-        .mgr-card:hover {
-          border-color: rgba(148,163,184,0.18) !important;
+        /* Campaign card lifts on hover — subtle border + shadow */
+        .mgr-camp-card {
+          transition: border-color 0.18s cubic-bezier(0.4,0,0.2,1),
+                      box-shadow 0.18s cubic-bezier(0.4,0,0.2,1);
         }
-        .mgr-row-btn:hover .mgr-row-name {
+        .mgr-camp-card:hover {
+          border-color: rgba(148,163,184,0.16);
+          box-shadow: 0 0 0 1px rgba(148,163,184,0.12),
+                      0 12px 40px rgba(0,0,0,0.55);
+        }
+        /* Hover on any row inside card — sutil background tint */
+        .mgr-row {
+          transition: background 0.12s cubic-bezier(0.4,0,0.2,1);
+        }
+        .mgr-row:hover {
+          background: rgba(148,163,184,0.05);
+        }
+        .mgr-row-name {
+          transition: color 0.12s cubic-bezier(0.4,0,0.2,1);
+        }
+        .mgr-row:hover .mgr-row-name {
           color: #F1F5F9;
+        }
+        /* Sticky header — applied to the breadcrumb row so it stays
+           visible as the user scrolls through a long campaign tree. */
+        .mgr-sticky-header {
+          position: sticky;
+          top: 0;
+          z-index: 8;
+          backdrop-filter: blur(16px) saturate(180%);
+          background: rgba(6,10,20,0.72);
+          margin-left: -28px; margin-right: -28px;
+          padding: 12px 28px;
+          border-bottom: 1px solid rgba(148,163,184,0.06);
         }
       `}</style>
 
@@ -1469,6 +1530,60 @@ export default function CampaignsManager() {
           </div>
         )}
 
+        {/* ── KPI strip — 4 glass cards with live account-level numbers.
+            Uses the horizontal space that used to sit empty to the right.
+            Each card carries: small uppercase label, big tabular number,
+            optional color accent. Matches Histórico's stat pattern. */}
+        {!loading && !error && metaConnected && campaigns.length > 0 && (() => {
+          const brl = (c: number) => {
+            if (c >= 100000) return `R$ ${(c / 100000).toFixed(1).replace('.', ',')}k`;
+            return `R$ ${(c / 100).toFixed(2).replace('.', ',')}`;
+          };
+          const tiles = [
+            { label: 'Total', value: String(kpis.total), sub: 'campanhas', tone: T.text1 },
+            { label: 'Ativas', value: String(kpis.active), sub: kpis.active === 1 ? 'entregando' : 'entregando', tone: T.green, glow: 'rgba(16,185,129,0.18)' },
+            { label: 'Pausadas', value: String(kpis.paused), sub: kpis.paused === 1 ? 'sem entrega' : 'sem entrega', tone: T.text2 },
+            { label: 'Budget/dia', value: kpis.dailyBudgetActiveCents > 0 ? brl(kpis.dailyBudgetActiveCents) : '—', sub: 'só ativas', tone: T.blue, glow: 'rgba(37,99,235,0.18)' },
+          ];
+          return (
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 10, marginBottom: 14,
+              animation: 'mgr-fade-up 0.32s ease 0.06s both',
+            }}>
+              {tiles.map((t, i) => (
+                <div key={i} style={{
+                  background: T.CARD, border: `1px solid ${T.border1}`,
+                  borderRadius: 12, padding: '14px 16px',
+                  boxShadow: t.glow ? `0 0 0 1px ${T.border1}, 0 8px 24px ${t.glow}` : T.SHD,
+                  backdropFilter: T.GLASS,
+                }}>
+                  <div style={{
+                    fontSize: 10, fontWeight: 700, color: T.textL,
+                    letterSpacing: '0.10em', textTransform: 'uppercase' as const,
+                    marginBottom: 6,
+                  }}>
+                    {t.label}
+                  </div>
+                  <div style={{
+                    fontSize: 22, fontWeight: 700, color: t.tone,
+                    fontVariantNumeric: 'tabular-nums' as const,
+                    letterSpacing: '-0.02em', lineHeight: 1.1,
+                  }}>
+                    {t.value}
+                  </div>
+                  <div style={{
+                    fontSize: 11, color: T.text3, marginTop: 4,
+                    letterSpacing: '-0.005em',
+                  }}>
+                    {t.sub}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
         {/* Search — glass pill matching the Histórico filter bar. */}
         {!loading && !error && metaConnected && campaigns.length >= 3 && (
           <div style={{
@@ -1539,15 +1654,14 @@ export default function CampaignsManager() {
           const cPaused = isPausedStatus(c.effective_status || c.status);
 
           return (
-            <div key={c.id} style={{
+            <div key={c.id} className="mgr-camp-card" style={{
               background: T.CARD, border: `1px solid ${T.border1}`,
               borderRadius: 14, marginBottom: 10, overflow: 'hidden',
               boxShadow: T.SHD, backdropFilter: T.GLASS,
               animation: 'mgr-fade-up 0.3s ease both',
-              transition: `border-color 0.18s ${T.EASE}, transform 0.18s ${T.EASE}`,
             }}>
               {/* Campaign row */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 12px 14px 16px', minWidth: 0 }}>
+              <div className="mgr-row" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 12px 14px 16px', minWidth: 0 }}>
                 <button
                   onClick={() => toggleCampaign(c.id)}
                   style={{
