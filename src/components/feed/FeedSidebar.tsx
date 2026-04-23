@@ -387,17 +387,32 @@ const AccountHealthCard: React.FC<{
 
 // ─── 2) PRÓXIMO PASSO RECOMENDADO ──────────────────────────────────
 
+// Compact BRL — switches to k/M/B past 10k so the 22px impact number
+// never overflows its sidebar zone. Tooltip on the element carries the
+// full precise value.
 function centsToBrl(cents: number): string {
   const v = cents / 100;
   const abs = Math.abs(v);
-  if (abs >= 1000) return `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  return `R$ ${v.toFixed(2).replace('.', ',')}`;
+  if (abs < 10000) {
+    return abs < 1000
+      ? `R$ ${v.toFixed(2).replace('.', ',')}`
+      : `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  if (abs < 1_000_000) return `R$ ${(v / 1000).toFixed(abs < 100000 ? 1 : 0).replace('.', ',')}k`;
+  if (abs < 1_000_000_000) return `R$ ${(v / 1_000_000).toFixed(abs < 10_000_000 ? 1 : 0).replace('.', ',')}M`;
+  return `R$ ${(v / 1_000_000_000).toFixed(1).replace('.', ',')}B`;
+}
+/** Full-precision version for tooltips — no abbreviation, used as title. */
+function centsToBrlPrecise(cents: number): string {
+  return `R$ ${(cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function deriveNextStep(d: Decision | null): {
   description: string;
   impactLabel: string;
   impactValue: string;
+  /** Full-precision form, shown as title/tooltip when impactValue is compact. */
+  impactValuePrecise: string;
   actionLabel: string;
   actionKind: 'destructive' | 'constructive' | 'neutral';
   confidencePct: number;
@@ -409,12 +424,17 @@ function deriveNextStep(d: Decision | null): {
 
   let impactLabel = 'Potencial de impacto';
   let impactValue = '—';
+  let impactValuePrecise = '—';
   if (d.impact_daily && d.impact_daily !== 0) {
     const positive = d.impact_type === 'savings' || d.impact_type === 'revenue' || d.type === 'scale';
-    impactValue = `${positive ? '+' : '-'}${centsToBrl(Math.abs(d.impact_daily))} /dia`;
+    const sign = positive ? '+' : '-';
+    impactValue = `${sign}${centsToBrl(Math.abs(d.impact_daily))} /dia`;
+    impactValuePrecise = `${sign}${centsToBrlPrecise(Math.abs(d.impact_daily))} /dia`;
   } else if (d.impact_7d && d.impact_7d !== 0) {
     const positive = d.impact_type === 'savings' || d.impact_type === 'revenue' || d.type === 'scale';
-    impactValue = `${positive ? '+' : '-'}${centsToBrl(Math.abs(d.impact_7d))} /7d`;
+    const sign = positive ? '+' : '-';
+    impactValue = `${sign}${centsToBrl(Math.abs(d.impact_7d))} /7d`;
+    impactValuePrecise = `${sign}${centsToBrlPrecise(Math.abs(d.impact_7d))} /7d`;
   }
 
   const primary = d.actions?.[0];
@@ -437,6 +457,7 @@ function deriveNextStep(d: Decision | null): {
     description,
     impactLabel,
     impactValue,
+    impactValuePrecise,
     actionLabel,
     actionKind,
     confidencePct: Math.round(confidence * 100),
@@ -543,23 +564,36 @@ const NextStepCard: React.FC<{
             {derived.description}
           </div>
 
-          {derived.impactValue !== '—' && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{
-                fontSize: 11.5, color: T.text3, fontFamily: F,
-                letterSpacing: '-0.005em', marginBottom: 4,
-              }}>
-                {derived.impactLabel}
+          {derived.impactValue !== '—' && (() => {
+            // Step-down font size when the (already compacted) string
+            // still exceeds the sidebar zone's comfortable width.
+            const len = derived.impactValue.length;
+            const base = 22;
+            const adjusted = len > 14 ? base - 4 : len > 11 ? base - 2 : base;
+            return (
+              <div style={{ marginBottom: 14, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 11.5, color: T.text3, fontFamily: F,
+                  letterSpacing: '-0.005em', marginBottom: 4,
+                }}>
+                  {derived.impactLabel}
+                </div>
+                <div
+                  title={derived.impactValuePrecise !== derived.impactValue ? derived.impactValuePrecise : undefined}
+                  style={{
+                    fontSize: adjusted, fontWeight: 800,
+                    color: derived.impactValue.startsWith('+') ? T.greenSoft : T.red,
+                    letterSpacing: '-0.025em', fontFamily: F, lineHeight: 1.15,
+                    fontVariantNumeric: 'tabular-nums' as const,
+                    minWidth: 0, overflow: 'hidden',
+                    textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}
+                >
+                  {derived.impactValue}
+                </div>
               </div>
-              <div style={{
-                fontSize: 22, fontWeight: 800,
-                color: derived.impactValue.startsWith('+') ? T.greenSoft : T.red,
-                letterSpacing: '-0.025em', fontFamily: F, lineHeight: 1.15,
-              }}>
-                {derived.impactValue}
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </>
       )}
 

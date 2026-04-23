@@ -3063,9 +3063,42 @@ const CommandKPIRow: React.FC<{
 
   // Formatters — shared by both animated and static render paths so
   // the final value always matches exactly what the count-up lands on.
-  const fmtBRL = (v: number) => `R$ ${Math.round(v).toLocaleString('pt-BR')}`;
-  const fmtROAS = (v: number) => `${v.toFixed(2).replace('.', ',')}x`;
-  const fmtInt = (v: number) => Math.round(v).toLocaleString('pt-BR');
+  //
+  // CRITICAL: these auto-compact for large values so the number NEVER
+  // overflows its tile column. Tiles at 1280px viewport have about
+  // 245px of usable width after padding — enough for 10 chars at
+  // 38px tabular tracking. Past that we switch to k/M/B shorthand.
+  //
+  // Thresholds:
+  //   < 10.000        → precise  ("R$ 9.999")
+  //   10k - 999k      → compact  ("R$ 12,5k", "R$ 850k")
+  //   1M - 999M       → compact  ("R$ 1,2M", "R$ 12M")
+  //   1B+             → compact  ("R$ 1,2B")
+  // Same thresholds for bare integer counts (conversões).
+  //
+  // NB: every branch rounds/fixes before display — never let raw JS
+  // float math (0.1+0.2=0.30000000000000004) hit the screen.
+  const fmtBRL = (v: number) => {
+    const abs = Math.abs(v);
+    if (abs < 10000) return `R$ ${Math.round(v).toLocaleString('pt-BR')}`;
+    if (abs < 1_000_000) return `R$ ${(v / 1000).toFixed(abs < 100000 ? 1 : 0).replace('.', ',')}k`;
+    if (abs < 1_000_000_000) return `R$ ${(v / 1_000_000).toFixed(abs < 10_000_000 ? 1 : 0).replace('.', ',')}M`;
+    return `R$ ${(v / 1_000_000_000).toFixed(1).replace('.', ',')}B`;
+  };
+  const fmtROAS = (v: number) => {
+    // ROAS beyond 99x is extremely unusual but we clamp format just
+    // in case: 2 decimal under 10x, 1 decimal under 100x, integer beyond.
+    if (v < 10) return `${v.toFixed(2).replace('.', ',')}x`;
+    if (v < 100) return `${v.toFixed(1).replace('.', ',')}x`;
+    return `${Math.round(v)}x`;
+  };
+  const fmtInt = (v: number) => {
+    const abs = Math.abs(v);
+    if (abs < 10000) return Math.round(v).toLocaleString('pt-BR');
+    if (abs < 1_000_000) return `${(v / 1000).toFixed(abs < 100000 ? 1 : 0).replace('.', ',')}k`;
+    if (abs < 1_000_000_000) return `${(v / 1_000_000).toFixed(abs < 10_000_000 ? 1 : 0).replace('.', ',')}M`;
+    return `${(v / 1_000_000_000).toFixed(1).replace('.', ',')}B`;
+  };
 
   // Spend & wasted come in centavos — animation target is in R$.
   const spendReais = hasData ? m!.totalSpend / 100 : 0;
@@ -3171,26 +3204,71 @@ const CommandKPIRow: React.FC<{
             {/* Dominant number — bigger, tighter, tabular so digits
                 align perfectly vertically when they cascade in. The
                 primary tile gets a cyan hue + subtle glow to draw the
-                eye first. Counts up from 0 on mount. */}
-            <div style={{
-              fontSize: isPrimary ? 38 : 34,
-              fontWeight: 800,
-              color: isEmpty ? T.text3 : (isPrimary ? '#F1F5F9' : T.text1),
-              letterSpacing: '-0.035em', lineHeight: 1.0,
-              marginTop: 3,
-              fontVariantNumeric: 'tabular-nums' as const,
-              fontFeatureSettings: '"tnum" 1, "cv11" 1',
-              textShadow: isPrimary ? '0 0 24px rgba(14,165,233,0.30)' : 'none',
-              transition: 'font-size 0.2s ease, text-shadow 0.3s ease',
-            }}>
-              {!isEmpty && t.numericValue !== undefined && t.valueFormatter
-                ? <AnimatedNumber
-                    value={t.numericValue}
-                    format={t.valueFormatter}
-                    delay={numDelay}
-                  />
-                : t.value}
-            </div>
+                eye first. Counts up from 0 on mount.
+                Safety nets against overflow:
+                  • Container has min-width:0 so it can shrink below
+                    its content's intrinsic width
+                  • overflow:hidden + text-overflow:ellipsis is the
+                    last line of defense if the formatter misses a
+                    case (extremely rare with compact BRL)
+                  • title attribute carries the FULL precise string so
+                    hovering still shows "R$ 1.234.567" even when the
+                    displayed text is "R$ 1,2M"
+                  • step-down fontSize when rendered length > 9 chars,
+                    so "R$ 999.999" (10 chars) keeps the premium feel
+                    without overflowing narrower viewports */}
+            {(() => {
+              const displayValue = !isEmpty && t.numericValue !== undefined && t.valueFormatter
+                ? undefined /* animated — length varies, use max-target for sizing */
+                : t.value;
+              const lengthProxy = !isEmpty && t.numericValue !== undefined && t.valueFormatter
+                ? t.valueFormatter(t.numericValue).length
+                : (displayValue || '').length;
+              const baseSize = isPrimary ? 38 : 34;
+              const adjustedSize = lengthProxy > 11
+                ? baseSize - 8
+                : lengthProxy > 9
+                  ? baseSize - 4
+                  : baseSize;
+              // Full-precision value for the tooltip. Falls back to
+              // t.value for empty / static rows.
+              const fullPrecise = t.numericValue !== undefined
+                ? (t.key === 'roas'
+                    ? `${t.numericValue.toFixed(2).replace('.', ',')}x`
+                    : t.key === 'conv'
+                      ? Math.round(t.numericValue).toLocaleString('pt-BR')
+                      : `R$ ${Math.round(t.numericValue).toLocaleString('pt-BR')}`)
+                : t.value;
+              return (
+                <div
+                  title={fullPrecise}
+                  style={{
+                    fontSize: adjustedSize,
+                    fontWeight: 800,
+                    color: isEmpty ? T.text3 : (isPrimary ? '#F1F5F9' : T.text1),
+                    letterSpacing: '-0.035em', lineHeight: 1.0,
+                    marginTop: 3,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    fontVariantNumeric: 'tabular-nums' as const,
+                    fontFeatureSettings: '"tnum" 1, "cv11" 1',
+                    textShadow: isPrimary ? '0 0 24px rgba(14,165,233,0.30)' : 'none',
+                    transition: 'font-size 0.22s ease, text-shadow 0.3s ease',
+                  }}
+                >
+                  {!isEmpty && t.numericValue !== undefined && t.valueFormatter
+                    ? <AnimatedNumber
+                        value={t.numericValue}
+                        format={t.valueFormatter}
+                        delay={numDelay}
+                      />
+                    : t.value}
+                </div>
+              );
+            })()}
             {!isEmpty && (
               <KPIDeltaLine
                 pct={t.deltaPct}

@@ -1774,15 +1774,29 @@ export default function CampaignsManager() {
             Each card carries: small uppercase label, big tabular number,
             optional color accent. Matches Histórico's stat pattern. */}
         {!loading && !error && metaConnected && campaigns.length > 0 && (() => {
-          const brl = (c: number) => {
-            if (c >= 100000) return `R$ ${(c / 100000).toFixed(1).replace('.', ',')}k`;
-            return `R$ ${(c / 100).toFixed(2).replace('.', ',')}`;
+          // Compact BRL that NEVER overflows a KPI tile. Cents → R$ with
+          // threshold-based shorthand: precise up to R$ 9.999,99, then
+          // k / M / B. Tooltip on the tile carries the full precise value.
+          const brl = (cents: number) => {
+            const reais = cents / 100;
+            const abs = Math.abs(reais);
+            if (abs < 10000) return `R$ ${reais.toFixed(2).replace('.', ',')}`;
+            if (abs < 1_000_000) return `R$ ${(reais / 1000).toFixed(abs < 100000 ? 1 : 0).replace('.', ',')}k`;
+            if (abs < 1_000_000_000) return `R$ ${(reais / 1_000_000).toFixed(abs < 10_000_000 ? 1 : 0).replace('.', ',')}M`;
+            return `R$ ${(reais / 1_000_000_000).toFixed(1).replace('.', ',')}B`;
+          };
+          const brlPrecise = (cents: number) =>
+            `R$ ${(cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          const fmtCount = (n: number) => {
+            if (n < 10000) return n.toLocaleString('pt-BR');
+            if (n < 1_000_000) return `${(n / 1000).toFixed(n < 100000 ? 1 : 0).replace('.', ',')}k`;
+            return `${(n / 1_000_000).toFixed(1).replace('.', ',')}M`;
           };
           const tiles = [
-            { label: 'Total', value: String(kpis.total), sub: 'campanhas', tone: T.text1 },
-            { label: 'Ativas', value: String(kpis.active), sub: kpis.active === 1 ? 'entregando' : 'entregando', tone: T.green, glow: 'rgba(16,185,129,0.18)' },
-            { label: 'Pausadas', value: String(kpis.paused), sub: kpis.paused === 1 ? 'sem entrega' : 'sem entrega', tone: T.text2 },
-            { label: 'Budget/dia', value: kpis.dailyBudgetActiveCents > 0 ? brl(kpis.dailyBudgetActiveCents) : '—', sub: 'só ativas', tone: T.blue, glow: 'rgba(37,99,235,0.18)' },
+            { label: 'Total', value: fmtCount(kpis.total), full: String(kpis.total), sub: 'campanhas', tone: T.text1 },
+            { label: 'Ativas', value: fmtCount(kpis.active), full: String(kpis.active), sub: kpis.active === 1 ? 'entregando' : 'entregando', tone: T.green, glow: 'rgba(16,185,129,0.18)' },
+            { label: 'Pausadas', value: fmtCount(kpis.paused), full: String(kpis.paused), sub: kpis.paused === 1 ? 'sem entrega' : 'sem entrega', tone: T.text2 },
+            { label: 'Budget/dia', value: kpis.dailyBudgetActiveCents > 0 ? brl(kpis.dailyBudgetActiveCents) : '—', full: kpis.dailyBudgetActiveCents > 0 ? brlPrecise(kpis.dailyBudgetActiveCents) : '—', sub: 'só ativas', tone: T.blue, glow: 'rgba(37,99,235,0.18)' },
           ];
           return (
             <div style={{
@@ -1790,35 +1804,55 @@ export default function CampaignsManager() {
               gap: 10, marginBottom: 14,
               animation: 'mgr-fade-up 0.32s ease 0.06s both',
             }}>
-              {tiles.map((t, i) => (
-                <div key={i} style={{
-                  background: T.CARD, border: `1px solid ${T.border1}`,
-                  borderRadius: 12, padding: '14px 16px',
-                  boxShadow: t.glow ? `0 0 0 1px ${T.border1}, 0 8px 24px ${t.glow}` : T.SHD,
-                  backdropFilter: T.GLASS,
-                }}>
-                  <div style={{
-                    fontSize: 10, fontWeight: 700, color: T.textL,
-                    letterSpacing: '0.10em', textTransform: 'uppercase' as const,
-                    marginBottom: 6,
-                  }}>
-                    {t.label}
+              {tiles.map((t, i) => {
+                // Step-down sizing when the compacted string still goes
+                // long (edge case: "R$ 999,9M" is 9 chars and fine,
+                // "R$ 1,2B" is 7 — both OK). Ellipsis is the ultimate
+                // fallback if something slips through.
+                const baseSize = 22;
+                const adjustedSize = t.value.length > 10 ? baseSize - 3
+                  : t.value.length > 8 ? baseSize - 1
+                  : baseSize;
+                return (
+                  <div
+                    key={i}
+                    title={t.full !== t.value ? t.full : undefined}
+                    style={{
+                      background: T.CARD, border: `1px solid ${T.border1}`,
+                      borderRadius: 12, padding: '14px 16px',
+                      boxShadow: t.glow ? `0 0 0 1px ${T.border1}, 0 8px 24px ${t.glow}` : T.SHD,
+                      backdropFilter: T.GLASS,
+                      minWidth: 0,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div style={{
+                      fontSize: 10, fontWeight: 700, color: T.textL,
+                      letterSpacing: '0.10em', textTransform: 'uppercase' as const,
+                      marginBottom: 6,
+                    }}>
+                      {t.label}
+                    </div>
+                    <div style={{
+                      fontSize: adjustedSize, fontWeight: 700, color: t.tone,
+                      fontVariantNumeric: 'tabular-nums' as const,
+                      letterSpacing: '-0.02em', lineHeight: 1.1,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      minWidth: 0,
+                    }}>
+                      {t.value}
+                    </div>
+                    <div style={{
+                      fontSize: 11, color: T.text3, marginTop: 4,
+                      letterSpacing: '-0.005em',
+                    }}>
+                      {t.sub}
+                    </div>
                   </div>
-                  <div style={{
-                    fontSize: 22, fontWeight: 700, color: t.tone,
-                    fontVariantNumeric: 'tabular-nums' as const,
-                    letterSpacing: '-0.02em', lineHeight: 1.1,
-                  }}>
-                    {t.value}
-                  </div>
-                  <div style={{
-                    fontSize: 11, color: T.text3, marginTop: 4,
-                    letterSpacing: '-0.005em',
-                  }}>
-                    {t.sub}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })()}
