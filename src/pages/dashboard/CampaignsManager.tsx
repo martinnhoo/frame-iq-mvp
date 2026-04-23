@@ -64,12 +64,35 @@ interface ActionFeedback {
 }
 
 // ── Design tokens (match FeedPage) ────────────────────────────────────────
+// Design tokens — matching AccountsPage / HistoryPage so the Gerenciador
+// reads as part of the same surface. Solid slate palette (not the old
+// cinza-com-cinza whitewash) + slate text + named colors for semantics.
 const T = {
-  bg0: '#06080C', bg1: 'rgba(255,255,255,0.02)', bg2: 'rgba(255,255,255,0.04)', bg3: 'rgba(255,255,255,0.06)',
-  text1: 'rgba(255,255,255,0.95)', text2: 'rgba(255,255,255,0.65)', text3: 'rgba(255,255,255,0.40)',
-  border0: 'rgba(255,255,255,0.05)', border1: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.12)',
-  green: '#4ADE80', red: '#F87171', yellow: '#FBBF24', blue: '#0EA5E9', purple: '#A78BFA',
-  labelColor: 'rgba(255,255,255,0.45)',
+  bg0: '#060A14',                             // page bg — same as /accounts
+  bg1: '#0A0F1C',                             // card bg solid
+  bg2: '#0F172A',                             // elevated
+  bg3: '#1E293B',                             // pressed / active
+  text1: '#F1F5F9',                           // primary bright
+  text2: '#94A3B8',                           // secondary slate
+  text3: '#64748B',                           // tertiary muted
+  textL: '#475569',                           // very muted label
+  border0: 'rgba(148,163,184,0.04)',
+  border1: 'rgba(148,163,184,0.08)',
+  border2: 'rgba(148,163,184,0.14)',
+  green: '#10B981',                           // solid emerald — matches /history
+  red:   '#EF4444',
+  yellow:'#F59E0B',                           // amber
+  blue:  '#2563EB',                           // indigo-blue, same as /history
+  cyan:  '#06B6D4',
+  purple:'#A78BFA',
+  // Legacy aliases used by pre-existing helpers throughout the file.
+  // Keep the names so I don't have to rewrite 30 references — just
+  // point them at the new palette.
+  labelColor: '#64748B',
+  CARD:  'rgba(15,23,42,0.80)',
+  SHD:   '0 0 0 1px rgba(148,163,184,0.08), 0 8px 32px rgba(0,0,0,0.40)',
+  GLASS: 'blur(16px) saturate(180%)',
+  EASE:  'cubic-bezier(0.4,0,0.2,1)',
 };
 const F = 'system-ui, -apple-system, "SF Pro Display", sans-serif';
 
@@ -489,9 +512,30 @@ export default function CampaignsManager() {
 
   // ── Toggle campaign expand ──────────────────────────────────────────────
   const toggleCampaign = useCallback(async (campaignId: string) => {
+    // If the user is COLLAPSING and there's an open preview on this
+    // campaign or any of its child rows, auto-cancel them — otherwise
+    // they linger in state and the UI feels stuck ("impossível recolher").
     setExpandedCampaigns(prev => {
       const next = new Set(prev);
-      if (next.has(campaignId)) next.delete(campaignId); else next.add(campaignId);
+      const wasOpen = next.has(campaignId);
+      if (wasOpen) {
+        next.delete(campaignId);
+        // Collapse path: clear any preview on this campaign AND on its
+        // adsets/ads (they're about to be hidden anyway).
+        setPreviews(pp => {
+          const clean = { ...pp };
+          delete clean[campaignId];
+          const childAdsets = adsetsByCampaign[campaignId] || [];
+          for (const ads of childAdsets) {
+            delete clean[ads.id];
+            const childAds = adsByAdset[ads.id] || [];
+            for (const ad of childAds) delete clean[ad.id];
+          }
+          return clean;
+        });
+      } else {
+        next.add(campaignId);
+      }
       return next;
     });
     if (!adsetsByCampaign[campaignId] && userId) {
@@ -535,7 +579,21 @@ export default function CampaignsManager() {
   const toggleAdset = useCallback(async (adsetId: string, campaignId: string) => {
     setExpandedAdsets(prev => {
       const next = new Set(prev);
-      if (next.has(adsetId)) next.delete(adsetId); else next.add(adsetId);
+      const wasOpen = next.has(adsetId);
+      if (wasOpen) {
+        next.delete(adsetId);
+        // Same cleanup as campaign: when collapsing an adset, kill any
+        // open preview on it and on its ad children.
+        setPreviews(pp => {
+          const clean = { ...pp };
+          delete clean[adsetId];
+          const childAds = adsByAdset[adsetId] || [];
+          for (const ad of childAds) delete clean[ad.id];
+          return clean;
+        });
+      } else {
+        next.add(adsetId);
+      }
       return next;
     });
     if (!adsByAdset[adsetId] && userId) {
@@ -651,6 +709,13 @@ export default function CampaignsManager() {
       delete next[targetId];
       return next;
     });
+  }, []);
+
+  /** Cancel every preview key. Used when collapsing a parent that
+   *  contains rows with open previews — otherwise they linger in state
+   *  and make the UI feel stuck. */
+  const cancelAllPreviews = useCallback(() => {
+    setPreviews({});
   }, []);
 
   // ── Toggle status (pause/activate) — the core Phase B flow ──────────────
@@ -1274,11 +1339,28 @@ export default function CampaignsManager() {
   // RENDER
   // ══════════════════════════════════════════════════════════════════════
   return (
-    <div style={{ flex: 1, minHeight: 0, background: T.bg0, padding: '24px 16px', fontFamily: F, color: T.text1, overflow: 'auto' }}>
-      {/* Local CSS for spin animation (Loader2 icon) */}
-      <style>{`.spin { animation: mgr-spin 0.9s linear infinite; } @keyframes mgr-spin { to { transform: rotate(360deg); } }`}</style>
+    <div style={{ flex: 1, minHeight: 0, background: T.bg0, padding: '28px 28px 64px', fontFamily: F, color: T.text1, overflow: 'auto' }}>
+      {/* Global keyframes for the page. */}
+      <style>{`
+        .spin { animation: mgr-spin 0.9s linear infinite; }
+        @keyframes mgr-spin { to { transform: rotate(360deg); } }
+        @keyframes mgr-fade-up {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: none; }
+        }
+        @keyframes mgr-slide-down {
+          from { opacity: 0; transform: translateY(-4px); max-height: 0; }
+          to { opacity: 1; transform: none; max-height: 1200px; }
+        }
+        .mgr-card:hover {
+          border-color: rgba(148,163,184,0.18) !important;
+        }
+        .mgr-row-btn:hover .mgr-row-name {
+          color: #F1F5F9;
+        }
+      `}</style>
 
-      <div style={{ maxWidth: 920, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <button
@@ -1300,39 +1382,41 @@ export default function CampaignsManager() {
           </div>
         </div>
 
-        {/* Subtle manual-mode banner — matches the Feed's elevated-card
-            aesthetic (T.bg1 + T.border1) with a muted blue left rule so
-            it reads as "sidebar tool" instead of "primary surface".
-            Mensagem discreta: o Feed é o canal canônico, isso aqui é
-            override manual pra casos raros. Toda ação é registrada em
-            Histórico com marca 'manual'. */}
+        {/* Manual-mode banner — glass card matching Histórico/Contas
+            aesthetic: solid slate background, subtle border, blue rail on
+            the left, glass backdrop. The "IA analisa" sub-line carries
+            the key product promise inline. */}
         <div style={{
-          display: 'flex', alignItems: 'flex-start', gap: 10,
-          background: T.bg1, border: `1px solid ${T.border1}`,
+          display: 'flex', alignItems: 'center', gap: 14,
+          background: T.CARD, border: `1px solid ${T.border1}`,
           borderLeft: `2px solid ${T.blue}`,
-          borderRadius: 8, padding: '10px 14px',
-          marginBottom: 18,
+          borderRadius: 12, padding: '14px 18px',
+          marginBottom: 20, boxShadow: T.SHD,
+          backdropFilter: T.GLASS,
+          animation: 'mgr-fade-up 0.28s ease both',
         }}>
           <div style={{
-            fontSize: 9.5, fontWeight: 700, color: T.blue,
-            letterSpacing: '0.08em', textTransform: 'uppercase',
-            background: 'rgba(37,99,235,0.10)', borderRadius: 4,
-            padding: '2px 6px', flexShrink: 0, marginTop: 1,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            fontSize: 10, fontWeight: 700, color: T.blue,
+            letterSpacing: '0.10em', textTransform: 'uppercase' as const,
+            background: 'rgba(37,99,235,0.12)',
+            border: '1px solid rgba(37,99,235,0.28)',
+            borderRadius: 6,
+            padding: '4px 8px', flexShrink: 0,
           }}>
-            Manual
+            <Sparkles size={10} strokeWidth={2.3} />
+            Manual + IA
           </div>
           <p style={{
-            fontSize: 11.5, color: T.text3, lineHeight: 1.55,
-            margin: 0, flex: 1,
+            fontSize: 12.5, color: T.text2, lineHeight: 1.6,
+            margin: 0, flex: 1, letterSpacing: '-0.005em',
           }}>
-            Ajustes pontuais direto na conta Meta. Antes de confirmar qualquer ação,
-            a IA analisa o contexto (idade, performance, tendência) e te diz se
-            faz sentido agora. O fluxo principal continua sendo o <a
+            Ajustes pontuais direto na conta Meta. <strong style={{ color: T.text1, fontWeight: 600 }}>Antes de confirmar qualquer ação, a IA analisa o contexto</strong> (idade, performance, tendência) e te diz se faz sentido agora. O fluxo principal continua sendo o <a
               href="/dashboard/feed"
-              style={{ color: T.text2, textDecoration: 'underline', textDecorationColor: T.border2 }}
+              style={{ color: T.text2, textDecoration: 'underline', textDecorationColor: T.border2, textUnderlineOffset: 2 }}
             >Feed</a> — aqui cada ação fica marcada como manual no <a
               href="/dashboard/history"
-              style={{ color: T.text2, textDecoration: 'underline', textDecorationColor: T.border2 }}
+              style={{ color: T.text2, textDecoration: 'underline', textDecorationColor: T.border2, textUnderlineOffset: 2 }}
             >Histórico</a>.
           </p>
         </div>
@@ -1380,22 +1464,24 @@ export default function CampaignsManager() {
           </div>
         )}
 
-        {/* Search — filters the campaign tree by name. Shown once the user
-            has enough campaigns that scrolling is worse than typing (3+). */}
+        {/* Search — glass pill matching the Histórico filter bar. */}
         {!loading && !error && metaConnected && campaigns.length >= 3 && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
-            background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 10,
-            padding: '10px 14px', marginBottom: 10,
+            background: T.CARD, border: `1px solid ${T.border1}`, borderRadius: 12,
+            padding: '11px 16px', marginBottom: 14, boxShadow: T.SHD,
+            backdropFilter: T.GLASS,
+            animation: 'mgr-fade-up 0.3s ease 0.04s both',
           }}>
-            <Search size={14} style={{ color: T.text3, flexShrink: 0 }} />
+            <Search size={15} style={{ color: T.text3, flexShrink: 0 }} strokeWidth={2.2} />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar campanha pelo nome…"
               style={{
                 flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                color: T.text1, fontSize: 13, fontFamily: F,
+                color: T.text1, fontSize: 13.5, fontFamily: F,
+                letterSpacing: '-0.005em',
               }}
             />
             {searchQuery && (
@@ -1403,14 +1489,27 @@ export default function CampaignsManager() {
                 onClick={() => setSearchQuery('')}
                 title="Limpar busca"
                 style={{
-                  background: 'transparent', border: 'none', padding: 2,
+                  background: 'transparent', border: 'none', padding: 4,
                   color: T.text3, cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  borderRadius: 6,
+                  transition: `color 0.15s ${T.EASE}, background 0.15s ${T.EASE}`,
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.color = T.text1;
+                  (e.currentTarget as HTMLElement).style.background = T.bg2;
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.color = T.text3;
+                  (e.currentTarget as HTMLElement).style.background = 'transparent';
                 }}
               >
-                <X size={12} />
+                <X size={13} strokeWidth={2.3} />
               </button>
             )}
-            <span style={{ fontSize: 11, color: T.text3, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{
+              fontSize: 11, color: T.textL, fontVariantNumeric: 'tabular-nums' as const,
+              fontWeight: 600, letterSpacing: '0.02em',
+            }}>
               {sortedCampaigns.length} de {campaigns.length}
             </span>
           </div>
@@ -1435,7 +1534,13 @@ export default function CampaignsManager() {
           const cPaused = isPausedStatus(c.effective_status || c.status);
 
           return (
-            <div key={c.id} style={{ background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 10, marginBottom: 8, overflow: 'hidden' }}>
+            <div key={c.id} style={{
+              background: T.CARD, border: `1px solid ${T.border1}`,
+              borderRadius: 14, marginBottom: 10, overflow: 'hidden',
+              boxShadow: T.SHD, backdropFilter: T.GLASS,
+              animation: 'mgr-fade-up 0.3s ease both',
+              transition: `border-color 0.18s ${T.EASE}, transform 0.18s ${T.EASE}`,
+            }}>
               {/* Campaign row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 12px 14px 16px', minWidth: 0 }}>
                 <button
