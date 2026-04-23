@@ -942,162 +942,230 @@ export default function CampaignsManager() {
   }, [campaigns, searchQuery]);
 
   // ══════════════════════════════════════════════════════════════════════
-  // PREVIEW PANEL — renders inline below a row when the user requests an
-  // action. Shows AI verdict, real context (days running / spend / conv /
-  // CPA / freq / trend), reasoning and alternatives, then Confirmar /
-  // Cancelar buttons. Confirmar triggers the real meta-actions call.
+  // PREVIEW PANEL — AI copiloto inline abaixo da row.
+  // Design: Linear-style, sem boxes cinza uniformes. Métricas em linha
+  // com dividers verticais, hierarquia por tamanho de fonte e peso.
+  // Cor semântica só onde carrega informação (CPA verde/vermelho, freq
+  // alta vermelho, verdict color accent no label). IA visível como
+  // copiloto através de uma "assinatura" no topo.
   // ══════════════════════════════════════════════════════════════════════
   const PreviewPanel: React.FC<{ targetId: string; indent?: number }> = ({ targetId, indent = 0 }) => {
     const p = previews[targetId];
     if (!p) return null;
 
-    // Colors per verdict
-    const verdictTone = (() => {
-      if (p.verdict === 'recommend') return { bg: 'rgba(34,197,94,0.10)', border: 'rgba(34,197,94,0.35)', color: '#4ADE80' };
-      if (p.verdict === 'reject')    return { bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.35)', color: '#F87171' };
-      if (p.verdict === 'wait')      return { bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.35)', color: '#FBBF24' };
-      return { bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.22)', color: T.text2 };
+    // Cor do verdict — usada SÓ no label pequeno e no glow da assinatura IA,
+    // não em backgrounds de boxes.
+    const verdictColor = (() => {
+      if (p.verdict === 'recommend') return T.green;     // #22C55E
+      if (p.verdict === 'reject')    return T.red;       // #EF4444
+      if (p.verdict === 'wait')      return T.yellow;    // #F59E0B
+      return T.text3;
     })();
 
     const brl = (c: number) => (c / 100).toFixed(2).replace('.', ',');
-
     const isContrary = p.verdict === 'reject' || p.verdict === 'wait';
-    const confirmLabel = isContrary
-      ? `Executar mesmo assim`
-      : `Confirmar ${p.proposedActionLabel.toLowerCase()}`;
+    const confirmLabel = isContrary ? `Executar mesmo assim` : `Confirmar ${p.proposedActionLabel.toLowerCase()}`;
+
+    // Pad top/bottom for breathing room, left indent matches the row's
+    // nesting level so the panel visually belongs to its parent.
+    const pad = `20px 24px 18px ${24 + indent}px`;
 
     return (
       <div style={{
         background: T.bg0,
-        borderTop: `1px solid ${T.border0}`,
-        padding: `16px 20px 16px ${20 + indent}px`,
+        borderTop: `1px solid ${T.border1}`,
+        padding: pad,
         fontFamily: F,
-        animation: 'mgr-fade-in 0.18s ease',
+        animation: 'mgr-fade-in 0.2s ease',
       }}>
-        <style>{`@keyframes mgr-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }`}</style>
+        <style>{`
+          @keyframes mgr-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+          @keyframes mgr-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        `}</style>
 
-        {/* Loading state */}
+        {/* ── Loading ─────────────────────────────────────────────────── */}
         {p.loading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: T.text3, fontSize: 12.5 }}>
-            <Loader2 size={14} className="spin" />
-            Analisando: rodando há {p.proposedActionLabel.toLowerCase()} em <strong style={{ color: T.text2, fontWeight: 600 }}>{p.targetName}</strong>…
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: '50%',
+              background: `radial-gradient(circle, ${T.blue}33, transparent 70%)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              animation: 'mgr-pulse 1.2s ease-in-out infinite',
+            }}>
+              <Sparkles size={12} color={T.blue} />
+            </div>
+            <span style={{ fontSize: 12.5, color: T.text2, fontWeight: 500 }}>
+              AdBrief AI lendo contexto…
+            </span>
           </div>
         )}
 
-        {/* Error state */}
+        {/* ── Error ──────────────────────────────────────────────────── */}
         {!p.loading && p.error && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
-            color: '#F87171', fontSize: 12.5,
-            background: 'rgba(239,68,68,0.06)', border: `1px solid rgba(239,68,68,0.20)`,
-            borderRadius: 8, padding: '10px 12px',
+            fontSize: 12.5, color: T.red,
           }}>
-            <X size={14} /> Falha na análise: {p.error}
+            <X size={14} strokeWidth={2.5} />
+            <span style={{ flex: 1 }}>Falha na análise: {p.error}</span>
             <button
               onClick={() => cancelPreview(targetId)}
-              style={{ marginLeft: 'auto', background: 'none', border: 'none', color: T.text3, cursor: 'pointer', fontSize: 11 }}
+              style={{
+                background: 'transparent', border: 'none', padding: '4px 8px',
+                color: T.text3, fontSize: 11, fontWeight: 600,
+                cursor: 'pointer', fontFamily: F,
+              }}
             >
               Fechar
             </button>
           </div>
         )}
 
-        {/* Verdict + content */}
+        {/* ── Content ────────────────────────────────────────────────── */}
         {!p.loading && !p.error && p.verdict && (
           <>
-            {/* Verdict header */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+            {/* Copiloto signature + verdict label
+                Linha de assinatura em um único fluxo horizontal. IA marca
+                presença com glow no avatar; verdict fica como label de
+                severidade ao lado, pequeno mas com peso. */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              marginBottom: 10,
+            }}>
               <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '6px 12px', borderRadius: 8,
-                background: verdictTone.bg,
-                border: `1px solid ${verdictTone.border}`,
-                color: verdictTone.color,
-                fontSize: 10.5, fontWeight: 700,
-                textTransform: 'uppercase', letterSpacing: '0.08em',
-                flexShrink: 0, whiteSpace: 'nowrap',
+                width: 18, height: 18, borderRadius: '50%',
+                background: `radial-gradient(circle, ${verdictColor}40, transparent 70%)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
               }}>
-                <Sparkles size={11} /> {p.verdict_label}
+                <Sparkles size={10.5} color={verdictColor} strokeWidth={2.3} />
               </div>
-              <p style={{
-                flex: 1, fontSize: 14, fontWeight: 600, color: T.text1,
-                margin: 0, lineHeight: 1.4, letterSpacing: '-0.01em',
+              <span style={{
+                fontSize: 11.5, fontWeight: 600, color: T.text2,
+                letterSpacing: '-0.005em',
               }}>
-                {p.headline}
-              </p>
+                AdBrief AI
+              </span>
+              <span style={{ fontSize: 10.5, color: T.text3, fontWeight: 500 }}>·</span>
+              <span style={{
+                fontSize: 10, fontWeight: 700, color: verdictColor,
+                letterSpacing: '0.12em', textTransform: 'uppercase' as const,
+              }}>
+                {p.verdict_label}
+              </span>
             </div>
 
-            {/* Context grid — the numbers the AI based its call on */}
-            {p.context && (
-              <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
-                gap: 8, marginBottom: 14,
-              }}>
-                {[
-                  { label: 'Rodando há', value: `${p.context.days_running}d`, sub: `${p.context.days_with_spend}d c/ entrega` },
-                  { label: 'Spend', value: `R$ ${brl(p.context.spend_cents)}` },
-                  { label: 'Conversões', value: String(Math.round(p.context.conversions)) },
-                  { label: 'CPA', value: p.context.cpa_cents !== null ? `R$ ${brl(p.context.cpa_cents)}` : '—',
-                    sub: p.target_cpa_cents ? `meta R$ ${brl(p.target_cpa_cents)}` : undefined,
-                    tone: p.context.cpa_cents !== null && p.target_cpa_cents
-                      ? (p.context.cpa_cents <= p.target_cpa_cents ? 'good' : 'bad') : undefined },
-                  { label: 'CTR', value: `${p.context.ctr.toFixed(2)}%`, sub: p.context.trend ? `trend: ${p.context.trend === 'up' ? '↑' : p.context.trend === 'down' ? '↓' : '→'}` : undefined },
-                  { label: 'Frequência', value: `${p.context.freq.toFixed(1)}x`,
-                    tone: p.context.freq > 3.5 ? 'bad' : undefined },
-                ].map((m, i) => (
-                  <div key={i} style={{
-                    background: T.bg1, border: `1px solid ${T.border0}`,
-                    borderRadius: 8, padding: '8px 10px',
-                  }}>
-                    <div style={{
-                      fontSize: 9.5, fontWeight: 700, color: T.text3,
-                      letterSpacing: '0.06em', textTransform: 'uppercase',
-                      marginBottom: 2,
-                    }}>
-                      {m.label}
-                    </div>
-                    <div style={{
-                      fontSize: 13, fontWeight: 700,
-                      color: m.tone === 'good' ? '#4ADE80' : m.tone === 'bad' ? '#F87171' : T.text1,
-                      fontVariantNumeric: 'tabular-nums',
-                    }}>
-                      {m.value}
-                    </div>
-                    {m.sub && (
-                      <div style={{ fontSize: 9.5, color: T.text3, marginTop: 1 }}>{m.sub}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Headline — o mais alto contraste da tela, linear */}
+            <p style={{
+              fontSize: 17, fontWeight: 700, color: T.text1,
+              margin: '0 0 14px', lineHeight: 1.35,
+              letterSpacing: '-0.02em',
+              maxWidth: '68ch',
+            }}>
+              {p.headline}
+            </p>
 
-            {/* Reasoning */}
+            {/* Reasoning — texto corrido, tom explicativo */}
             {p.reasoning && (
               <p style={{
-                fontSize: 12.5, color: T.text2, margin: '0 0 12px',
-                lineHeight: 1.6,
+                fontSize: 13, color: T.text2, lineHeight: 1.65,
+                margin: '0 0 18px', maxWidth: '72ch',
+                letterSpacing: '-0.005em',
               }}>
                 {p.reasoning}
               </p>
             )}
 
-            {/* Alternatives */}
-            {p.alternatives && p.alternatives.length > 0 && (
+            {/* Métricas em linha — SEM boxes. Cada uma é label + valor,
+                separadas por dividers verticais sutis. Valor grande e
+                bold pra carregar peso; label minúsculo uppercase.
+                Cor semântica SÓ no valor quando informa (CPA vs meta,
+                freq alta, trend). */}
+            {p.context && (
               <div style={{
-                background: T.bg1, border: `1px solid ${T.border0}`,
-                borderRadius: 8, padding: '10px 14px', marginBottom: 14,
+                display: 'flex', alignItems: 'stretch',
+                gap: 0, marginBottom: 18,
+                flexWrap: 'wrap' as const,
               }}>
+                {(() => {
+                  const cells = [
+                    { label: 'Rodando há', value: `${p.context!.days_running}d`, sub: `${p.context!.days_with_spend}d c/ entrega`, tone: undefined as 'good' | 'bad' | undefined },
+                    { label: 'Spend', value: `R$ ${brl(p.context!.spend_cents)}` },
+                    { label: 'Conversões', value: String(Math.round(p.context!.conversions)),
+                      tone: (p.context!.conversions >= 3 ? 'good' : p.context!.conversions === 0 && p.context!.days_with_spend >= 5 ? 'bad' : undefined) as 'good' | 'bad' | undefined },
+                    { label: 'CPA', value: p.context!.cpa_cents !== null ? `R$ ${brl(p.context!.cpa_cents)}` : '—',
+                      sub: p.target_cpa_cents ? `meta R$ ${brl(p.target_cpa_cents)}` : undefined,
+                      tone: (p.context!.cpa_cents !== null && p.target_cpa_cents
+                        ? (p.context!.cpa_cents <= p.target_cpa_cents ? 'good' : 'bad') : undefined) as 'good' | 'bad' | undefined },
+                    { label: 'CTR', value: `${p.context!.ctr.toFixed(2)}%`,
+                      sub: p.context!.trend ? (p.context!.trend === 'up' ? '↑ subindo' : p.context!.trend === 'down' ? '↓ caindo' : '→ estável') : undefined,
+                      tone: (p.context!.trend === 'down' ? 'bad' : p.context!.trend === 'up' ? 'good' : undefined) as 'good' | 'bad' | undefined },
+                    { label: 'Frequência', value: `${p.context!.freq.toFixed(1)}x`,
+                      tone: (p.context!.freq > 3.5 ? 'bad' : p.context!.freq > 2.5 ? undefined : undefined) as 'good' | 'bad' | undefined },
+                  ];
+                  return cells.map((m, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && (
+                        <div style={{ width: 1, background: T.border1, alignSelf: 'stretch', margin: '4px 0' }} />
+                      )}
+                      <div style={{ padding: '2px 18px', minWidth: 0 }}>
+                        <div style={{
+                          fontSize: 9.5, fontWeight: 700, color: T.text3,
+                          letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                          marginBottom: 4,
+                        }}>
+                          {m.label}
+                        </div>
+                        <div style={{
+                          fontSize: 16, fontWeight: 700,
+                          color: m.tone === 'good' ? T.green : m.tone === 'bad' ? T.red : T.text1,
+                          fontVariantNumeric: 'tabular-nums' as const,
+                          letterSpacing: '-0.015em',
+                          lineHeight: 1.1,
+                        }}>
+                          {m.value}
+                        </div>
+                        {m.sub && (
+                          <div style={{
+                            fontSize: 10, color: T.text3, marginTop: 3,
+                            letterSpacing: '-0.005em',
+                          }}>
+                            {m.sub}
+                          </div>
+                        )}
+                      </div>
+                    </React.Fragment>
+                  ));
+                })()}
+              </div>
+            )}
+
+            {/* Alternativas — lista linear com seta azul, sem box */}
+            {p.alternatives && p.alternatives.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
                 <div style={{
                   fontSize: 9.5, fontWeight: 700, color: T.text3,
-                  letterSpacing: '0.08em', textTransform: 'uppercase',
-                  marginBottom: 6,
+                  letterSpacing: '0.10em', textTransform: 'uppercase' as const,
+                  marginBottom: 8,
                 }}>
-                  Alternativas
+                  Sugestões da IA
                 </div>
-                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <ul style={{
+                  margin: 0, padding: 0, listStyle: 'none',
+                  display: 'flex', flexDirection: 'column', gap: 6,
+                }}>
                   {p.alternatives.map((alt, i) => (
-                    <li key={i} style={{ fontSize: 12, color: T.text2, lineHeight: 1.5, paddingLeft: 14, position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: 2, color: T.blue }}>→</span>
+                    <li key={i} style={{
+                      fontSize: 12.5, color: T.text2, lineHeight: 1.55,
+                      paddingLeft: 18, position: 'relative' as const,
+                      letterSpacing: '-0.005em',
+                    }}>
+                      <span style={{
+                        position: 'absolute', left: 2, top: 0,
+                        color: T.blue, fontWeight: 700,
+                      }}>
+                        →
+                      </span>
                       {alt}
                     </li>
                   ))}
@@ -1107,55 +1175,89 @@ export default function CampaignsManager() {
 
             {/* Execution error */}
             {p.executionError && (
-              <div style={{
-                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
-                borderRadius: 6, padding: '8px 12px', marginBottom: 10,
-                fontSize: 12, color: '#F87171',
+              <p style={{
+                fontSize: 12, color: T.red, margin: '0 0 10px',
+                letterSpacing: '-0.005em',
               }}>
-                {p.executionError}
-              </div>
+                ⚠ {p.executionError}
+              </p>
             )}
 
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* Divider antes dos CTAs — separa a ação do contexto */}
+            <div style={{
+              height: 1, background: T.border1,
+              margin: '0 -12px 16px', opacity: 0.6,
+            }} />
+
+            {/* Action buttons — Linear-style: minimalistas, contraste alto
+                no primary (vermelho se IA não recomenda, azul se OK). */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}>
               <button
                 onClick={() => cancelPreview(targetId)}
                 disabled={!!p.executing}
                 style={{
-                  background: T.bg2, border: `1px solid ${T.border1}`,
-                  color: T.text2, borderRadius: 8,
-                  padding: '8px 14px', fontSize: 12, fontWeight: 600,
+                  background: 'transparent',
+                  border: 'none',
+                  color: T.text3,
+                  padding: '8px 12px', fontSize: 12.5, fontWeight: 600,
                   cursor: p.executing ? 'default' : 'pointer',
-                  fontFamily: F, opacity: p.executing ? 0.5 : 1,
+                  fontFamily: F,
+                  letterSpacing: '-0.005em',
+                  transition: 'color 0.12s ease',
                 }}
+                onMouseEnter={e => { if (!p.executing) (e.currentTarget as HTMLElement).style.color = T.text2; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = T.text3; }}
               >
                 Cancelar
               </button>
+
+              {/* Spacer */}
+              <div style={{ flex: 1 }} />
+
+              {p.verdict === 'wait' && (
+                <span style={{
+                  fontSize: 11, color: T.yellow, fontWeight: 600,
+                  letterSpacing: '-0.005em',
+                }}>
+                  IA sugere aguardar
+                </span>
+              )}
+              {p.verdict === 'reject' && (
+                <span style={{
+                  fontSize: 11, color: T.red, fontWeight: 600,
+                  letterSpacing: '-0.005em',
+                }}>
+                  IA não recomenda
+                </span>
+              )}
+
               <button
                 onClick={() => confirmPreview(targetId)}
                 disabled={!!p.executing}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: isContrary
-                    ? 'rgba(239,68,68,0.12)'
-                    : verdictTone.bg,
-                  border: `1px solid ${isContrary ? 'rgba(239,68,68,0.40)' : verdictTone.border}`,
-                  color: isContrary ? '#F87171' : verdictTone.color,
-                  borderRadius: 8,
-                  padding: '8px 14px', fontSize: 12, fontWeight: 700,
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                  background: isContrary ? T.red : T.blue,
+                  border: 'none',
+                  color: '#FFFFFF',
+                  borderRadius: 7,
+                  padding: '9px 16px', fontSize: 12.5, fontWeight: 700,
                   cursor: p.executing ? 'default' : 'pointer',
                   fontFamily: F,
-                  letterSpacing: '0.01em',
+                  letterSpacing: '-0.005em',
+                  boxShadow: isContrary
+                    ? `0 0 0 1px ${T.red}66, 0 1px 2px rgba(0,0,0,0.4)`
+                    : `0 0 0 1px ${T.blue}66, 0 1px 2px rgba(0,0,0,0.4)`,
+                  opacity: p.executing ? 0.7 : 1,
+                  transition: 'transform 0.08s ease, opacity 0.12s ease',
                 }}
+                onMouseEnter={e => { if (!p.executing) (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; }}
               >
                 {p.executing ? <Loader2 size={12} className="spin" /> : null}
                 {confirmLabel}
               </button>
-              {p.verdict === 'wait' && (
-                <span style={{ fontSize: 10.5, color: T.text3, marginLeft: 'auto', fontStyle: 'italic' }}>
-                  Recomendado: aguardar
-                </span>
-              )}
             </div>
           </>
         )}
