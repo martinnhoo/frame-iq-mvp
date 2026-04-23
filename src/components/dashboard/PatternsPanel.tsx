@@ -8,7 +8,7 @@
  * - Content bg: #0D1117 (elevated from page #06080C)
  * - Colors at full signal strength
  */
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { ChevronRight, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -372,7 +372,9 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
   // ── INTELLIGENCE FILTER ──
   // CORE RULE: If the system does NOT know WHY something worked, do NOT show it.
   // Every pattern must pass: (1) has real intelligence, (2) has metric or is gap.
-  const worthShowing = patterns.filter((p) => {
+  // Memoized so re-renders (hover, polling sibling hooks) don't iterate
+  // the whole patterns array + call evaluateHeroMetric on every tick.
+  const worthShowing = useMemo(() => patterns.filter((p) => {
     const ft = p.feature_type || p.variables?.feature_type || "";
 
     // Gap patterns — always actionable (suggest what to test)
@@ -389,9 +391,12 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
     if (p.sample_size < 2) return false;
 
     return true;
-  });
+  }), [patterns]);
 
-  const displayPatterns = compact ? worthShowing.slice(0, 3) : worthShowing.slice(0, 5);
+  const displayPatterns = useMemo(
+    () => compact ? worthShowing.slice(0, 3) : worthShowing.slice(0, 5),
+    [worthShowing, compact]
+  );
   const isEmpty = !loading && !detecting && displayPatterns.length === 0;
   const hasContent = displayPatterns.length > 0 || (loading || detecting) || isEmpty;
 

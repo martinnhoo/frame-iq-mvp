@@ -48,12 +48,33 @@ export function useMoneyTracker(accountId: string | null): UseMoneyTrackerReturn
   useEffect(() => {
     if (!accountId) return;
 
-    const intervalId = window.setInterval(() => {
-      fetchTracker();
-    }, MONEY_TRACKER_POLL_MS);
+    // Visibility-aware polling — pauses when tab is hidden, resumes
+    // with an immediate refetch when the tab regains focus. Matches
+    // the useDecisions pattern so the two hooks don't drift.
+    let intervalId: number | undefined;
+    const start = () => {
+      if (intervalId !== undefined) return;
+      intervalId = window.setInterval(() => { fetchTracker(); }, MONEY_TRACKER_POLL_MS);
+    };
+    const stop = () => {
+      if (intervalId === undefined) return;
+      window.clearInterval(intervalId);
+      intervalId = undefined;
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchTracker();
+        start();
+      } else {
+        stop();
+      }
+    };
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
-      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      stop();
     };
   }, [accountId, fetchTracker]);
 

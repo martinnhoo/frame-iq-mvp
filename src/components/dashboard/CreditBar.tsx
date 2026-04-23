@@ -101,9 +101,35 @@ export function UsageBar({ userId, plan }: Props) {
   }, [userId]);
 
   useEffect(() => {
+    // Visibility-aware polling — pauses in background tabs so a user
+    // who leaves 5 tabs open all day doesn't make 300 wasted requests
+    // per hour on check-usage. Refreshes immediately when the tab
+    // regains focus so the credit pill stays accurate.
     fetchUsage();
-    const interval = setInterval(fetchUsage, 60_000);
-    return () => clearInterval(interval);
+    let intervalId: number | undefined;
+    const start = () => {
+      if (intervalId !== undefined) return;
+      intervalId = window.setInterval(fetchUsage, 60_000);
+    };
+    const stop = () => {
+      if (intervalId === undefined) return;
+      window.clearInterval(intervalId);
+      intervalId = undefined;
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchUsage();
+        start();
+      } else {
+        stop();
+      }
+    };
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      stop();
+    };
   }, [fetchUsage]);
 
   useEffect(() => {

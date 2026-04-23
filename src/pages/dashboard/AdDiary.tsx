@@ -392,7 +392,19 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
     setSyncing(null);
   };
 
-  const filteredEntries = entries.filter(e => filter === "all" || e.verdict === filter);
+  // Filter + cap visible rows. On a heavy account with 500 entries,
+  // rendering all 500 rows upfront melts the DOM (each row has
+  // expandable detail, thumbnail, AI annotation). Start with 50 and
+  // let the user "load more" in chunks of 50. The UNDERLYING entries
+  // still holds all 500 for filter counts + stats math.
+  const filteredEntriesAll = useMemo(
+    () => entries.filter(e => filter === "all" || e.verdict === filter),
+    [entries, filter]
+  );
+  const [visibleCount, setVisibleCount] = useState(50);
+  useEffect(() => { setVisibleCount(50); }, [filter]); // reset on tab switch
+  const filteredEntries = filteredEntriesAll.slice(0, visibleCount);
+  const hasMoreToShow = filteredEntriesAll.length > visibleCount;
 
   const stats = useMemo(() => {
     const winners = entries.filter(e => e.verdict === "winner" || e.verdict === "scaled").length;
@@ -646,6 +658,33 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
               onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
             />
           ))}
+          {hasMoreToShow && (
+            <button
+              onClick={() => setVisibleCount(c => c + 50)}
+              style={{
+                marginTop: 8,
+                background: "transparent",
+                border: "1px dashed rgba(255,255,255,0.10)",
+                borderRadius: 8,
+                padding: "10px 14px",
+                fontSize: 12, fontWeight: 600,
+                color: "rgba(255,255,255,0.50)",
+                cursor: "pointer",
+                fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                transition: "background 0.15s ease, color 0.15s ease",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
+                (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.72)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+                (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.50)";
+              }}
+            >
+              Ver mais {Math.min(50, filteredEntriesAll.length - visibleCount)} de {filteredEntriesAll.length - visibleCount} restantes
+            </button>
+          )}
         </div>
       )}
 
