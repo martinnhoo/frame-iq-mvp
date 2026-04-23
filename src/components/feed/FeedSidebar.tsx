@@ -862,7 +862,10 @@ export const FeedSidebar: React.FC<{
   return (
     <aside
       className="feed-sidebar-col"
-      style={{ width: 340, flexShrink: 0, fontFamily: F }}
+      // Wider sidebar — 400 vs old 340. Gives health gauge + next step
+      // + activity list more breathing room on the 1520px canvas so
+      // content doesn't feel cramped against a long main column.
+      style={{ width: 400, flexShrink: 0, fontFamily: F }}
     >
       {/* Premium v3: ONE card, THREE zones. Replaces the previous
           3-separate-cards stack. Each zone carries a thin divider

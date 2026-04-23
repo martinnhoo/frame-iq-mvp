@@ -6455,18 +6455,22 @@ const FeedPage: React.FC = () => {
     // (#060709) showed through below the page bg (#06080C) — creating
     // a visible horizontal seam at the bottom of short pages.
     // Using var(--bg-main) guarantees a single, uniform surface.
-    <div style={{ flex: 1, minHeight: 0, background: 'var(--bg-main)', padding: 'max(24px, env(safe-area-inset-top, 24px)) 16px 24px 16px' }}>
+    <div style={{ flex: 1, minHeight: 0, background: 'var(--bg-main)', padding: 'max(24px, env(safe-area-inset-top, 24px)) clamp(16px, 3vw, 40px) 24px' }}>
       <div
         className="feed-layout"
         style={{
-          maxWidth: 1200,
+          // Wider canvas — was 1200/760 which left big empty strips on
+          // 1440px+ monitors. Now 1520px total cap, main column fluid
+          // up to 1020px, sidebar 400px. Content breathes across the
+          // whole viewport instead of hugging a narrow center.
+          maxWidth: 1520,
           margin: '0 auto',
           display: 'flex',
           alignItems: 'flex-start',
-          gap: 20,
+          gap: 24,
         }}
       >
-      <div className="feed-main-col" style={{ flex: 1, minWidth: 0, maxWidth: 760 }}>
+      <div className="feed-main-col" style={{ flex: 1, minWidth: 0, maxWidth: 1020 }}>
 
         {/* ═══════════════════════════════════════════════
             LAYER 0 — TOP PRIORITY BAR (sticky, high-contrast)
@@ -6622,7 +6626,7 @@ const FeedPage: React.FC = () => {
                   letterSpacing: '-0.022em', margin: '0 0 4px',
                   lineHeight: 1.15,
                 }}>
-                  Decisões que impactam seu resultado agora
+                  Sua operação em tempo real
                 </h1>
                 <p style={{
                   fontSize: 12, color: T.text3, fontFamily: F, margin: 0,
@@ -7339,8 +7343,8 @@ const FeedPage: React.FC = () => {
         .feed-linear-btn:hover:not(:disabled){opacity:1!important;text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
         .feed-linear-btn:active:not(:disabled){transform:translateY(0.5px)}
         .feed-linear-btn:disabled{cursor:default}
-        @media(max-width:1100px){
-          .feed-layout{flex-direction:column!important;max-width:760px!important}
+        @media(max-width:1280px){
+          .feed-layout{flex-direction:column!important;max-width:860px!important}
           .feed-main-col{max-width:100%!important;width:100%}
           .feed-sidebar-col{width:100%!important}
         }
