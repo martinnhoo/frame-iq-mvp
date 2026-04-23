@@ -907,37 +907,50 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
 
   return (
     <div style={{ fontFamily: F, marginBottom: 8 }}>
-      {/* ── Collapsible header ── */}
-      <div
-        onClick={() => setOpen(prev => !prev)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '8px 2px', cursor: 'pointer', userSelect: 'none',
-        }}
-      >
-        <span style={{
-          fontSize: 14, lineHeight: 1,
-          color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
-          transition: 'transform 0.2s ease, color 0.15s',
-          transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-        }}>›</span>
-        <TelegramIcon size={16} />
-        <span style={{ fontSize: 13, fontWeight: 700, color: T.text1, letterSpacing: '-0.01em', flexShrink: 0 }}>
-          Telegram
-        </span>
-        {conn && (
-          <span style={{
-            width: 5, height: 5, borderRadius: '50%', background: '#2AABEE',
-            boxShadow: '0 0 4px rgba(42,171,238,0.5)', flexShrink: 0,
-          }} />
-        )}
-        <span style={{ fontSize: 10.5, fontWeight: 500, color: summaryColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
-          {summaryText}
-        </span>
-      </div>
+      {/* ── Header ─
+          When connected, this row is TERMINAL — there's no useful
+          content to expand (just a 1-line "você será notificado
+          quando..."), so we drop the chevron and inline the whole
+          thing. When pairing or not-connected, keep the chevron so
+          users can trigger/resume the flow. */}
+      {(() => {
+        const isTerminal = !!conn;
+        return (
+          <div
+            onClick={() => { if (!isTerminal) setOpen(prev => !prev); }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 2px',
+              cursor: isTerminal ? 'default' : 'pointer',
+              userSelect: 'none',
+            }}
+          >
+            {!isTerminal && (
+              <span style={{
+                fontSize: 14, lineHeight: 1,
+                color: open ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.30)',
+                transition: 'transform 0.2s ease, color 0.15s',
+                transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+              }}>›</span>
+            )}
+            <TelegramIcon size={16} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: T.text1, letterSpacing: '-0.01em', flexShrink: 0 }}>
+              Telegram
+            </span>
+            {conn && (
+              <span aria-hidden style={{
+                width: 2, height: 10, background: '#2AABEE', flexShrink: 0,
+              }} />
+            )}
+            <span style={{ fontSize: 10.5, fontWeight: 500, color: summaryColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+              {summaryText}
+            </span>
+          </div>
+        );
+      })()}
 
-      {/* ── Collapsible body ── */}
-      <FeedExpandable open={open}>
+      {/* ── Expandable body — suppressed when terminal (connected) ── */}
+      <FeedExpandable open={open && !conn}>
         <div>
           {/* CONNECTED — plain text, same style as Intelligence empty state */}
           {conn && (
@@ -3246,7 +3259,10 @@ const CommandKPIRow: React.FC<{
                   style={{
                     fontSize: adjustedSize,
                     fontWeight: 800,
-                    color: isEmpty ? T.text3 : (isPrimary ? '#F1F5F9' : T.text1),
+                    // Primary number now wears cyan — the tile's number
+                    // is the star, not just the label. Empty state
+                    // stays muted; non-primary stays bright white.
+                    color: isEmpty ? T.text3 : (isPrimary ? '#7DD3FC' : T.text1),
                     letterSpacing: '-0.035em', lineHeight: 1.0,
                     marginTop: 3,
                     minWidth: 0,
@@ -3256,8 +3272,8 @@ const CommandKPIRow: React.FC<{
                     whiteSpace: 'nowrap',
                     fontVariantNumeric: 'tabular-nums' as const,
                     fontFeatureSettings: '"tnum" 1, "cv11" 1',
-                    textShadow: isPrimary ? '0 0 24px rgba(14,165,233,0.30)' : 'none',
-                    transition: 'font-size 0.22s ease, text-shadow 0.3s ease',
+                    textShadow: isPrimary ? '0 0 24px rgba(14,165,233,0.25)' : 'none',
+                    transition: 'font-size 0.22s ease, text-shadow 0.3s ease, color 0.22s ease',
                   }}
                 >
                   {!isEmpty && t.numericValue !== undefined && t.valueFormatter
@@ -3270,6 +3286,16 @@ const CommandKPIRow: React.FC<{
                 </div>
               );
             })()}
+            {/* Sub-line region — delta + context. Wrapped in a
+                fixed min-height block so every tile's baseline lines
+                up even when some tiles render shorter / longer
+                context strings. Without this, tiles ended at
+                different vertical positions and the card felt
+                misaligned. */}
+            <div style={{
+              minHeight: 40, display: 'flex', flexDirection: 'column',
+              gap: 4, marginTop: 2,
+            }}>
             {!isEmpty && (
               <KPIDeltaLine
                 pct={t.deltaPct}
@@ -3286,6 +3312,7 @@ const CommandKPIRow: React.FC<{
                 {t.context}
               </div>
             )}
+            </div>
             {/* No colored bar/gradient on the primary tile — the cyan
                 label + arrow prefix already marks it. Adding a
                 gradient line below read as "generic dashboard demo"

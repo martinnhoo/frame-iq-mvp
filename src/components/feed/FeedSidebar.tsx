@@ -195,17 +195,20 @@ const RingGauge: React.FC<{
         transform={`rotate(-90 ${size / 2} ${size / 2})`}
         style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.16,1,0.3,1)' }}
       />
-      {/* Score text */}
+      {/* Score text — premium typography: larger relative size,
+          800 weight, tighter tracking. The score is the single
+          most important number on the sidebar so it should win
+          the visual hierarchy over neighbouring UI. */}
       <text
         x="50%"
         y="50%"
         textAnchor="middle"
         dominantBaseline="central"
         fontFamily={F}
-        fontSize={size * 0.32}
-        fontWeight={700}
+        fontSize={size * 0.42}
+        fontWeight={800}
         fill={T.text1}
-        letterSpacing="-0.02em"
+        letterSpacing="-0.03em"
       >
         {s}
       </text>
@@ -360,32 +363,33 @@ const AccountHealthCard: React.FC<{
         </div>
       )}
 
-      {/* Primary CTA — single, low-emphasis. Full diagnostic via AI. */}
+      {/* Ghost CTA — no bg, no border. When the account is healthy
+          (majority of views), this lives as a quiet text link so it
+          doesn't dominate the zone. Hover underlines + nudges arrow,
+          same Linear vocabulary as "Ver todas" in Atividade. */}
       <button
+        className="feed-linear-btn"
         onClick={props.onOpenDiagnostic}
         style={{
-          width: '100%',
-          background: T.bg2,
-          border: `1px solid ${T.border2}`,
-          borderRadius: 10,
-          padding: '10px 14px',
-          fontSize: 12.5, fontWeight: 700,
-          color: T.text1, cursor: 'pointer',
+          background: 'transparent',
+          border: 'none',
+          padding: '4px 0',
+          fontSize: 11.5, fontWeight: 700,
+          color: T.blueSoft, cursor: 'pointer',
           fontFamily: F, letterSpacing: '-0.005em',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          transition: 'background 0.15s, border-color 0.15s',
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          transition: 'color 0.15s ease',
         }}
         onMouseEnter={e => {
-          (e.currentTarget as HTMLElement).style.background = T.bg3;
-          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.22)';
+          (e.currentTarget as HTMLElement).style.textDecoration = 'underline';
+          (e.currentTarget as HTMLElement).style.textUnderlineOffset = '3px';
         }}
         onMouseLeave={e => {
-          (e.currentTarget as HTMLElement).style.background = T.bg2;
-          (e.currentTarget as HTMLElement).style.borderColor = T.border2;
+          (e.currentTarget as HTMLElement).style.textDecoration = 'none';
         }}
       >
         Ver diagnóstico completo
-        <span style={{ fontSize: 14, lineHeight: 1 }}>→</span>
+        <span style={{ fontSize: 12, lineHeight: 1 }}>→</span>
       </button>
     </Wrapper>
   );
@@ -777,11 +781,29 @@ const RecentActivityCard: React.FC<{
           Carregando…
         </div>
       ) : !events.length ? (
+        // Compact empty state — one line with a small dash icon, not
+        // a 3-line paragraph. Respects the sidebar's vertical rhythm.
         <div style={{
-          fontSize: 12.5, color: T.text2, lineHeight: 1.5,
-          letterSpacing: '-0.005em', fontFamily: F,
+          display: 'flex', alignItems: 'center', gap: 8,
+          fontFamily: F,
         }}>
-          Nenhuma ação executada nas últimas 48h. Quando o sistema agir, o histórico aparece aqui.
+          <span aria-hidden style={{
+            width: 16, height: 16, borderRadius: 4,
+            background: 'rgba(148,163,184,0.06)',
+            border: `1px solid ${T.border0}`,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, color: T.text3,
+          }}>
+            <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden>
+              <path d="M3 6h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </span>
+          <span style={{
+            fontSize: 12, color: T.text3, letterSpacing: '-0.005em',
+            lineHeight: 1.4,
+          }}>
+            Nada nas últimas 48h
+          </span>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
