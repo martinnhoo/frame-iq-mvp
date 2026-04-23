@@ -20,7 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { DashboardContext } from '@/components/dashboard/DashboardLayout';
 import {
   ChevronRight, ChevronDown, ArrowLeft, Layers, Target, Sparkles,
-  Pause, Play, Loader2, Copy, Check, X, Pencil,
+  Pause, Play, Loader2, Copy, Check, X, Pencil, Search, ExternalLink,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -402,6 +402,9 @@ export default function CampaignsManager() {
   // fine when Meta returned an error body.
   const [adsetErrors, setAdsetErrors] = useState<Record<string, string>>({});
   const [adErrors, setAdErrors] = useState<Record<string, string>>({});
+  // Search query — filters campaigns by name (case-insensitive). Essential
+  // once agency users have 20+ campaigns and scrolling becomes painful.
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedCampaigns, setExpandedCampaigns] = useState<Set<string>>(new Set());
   const [expandedAdsets, setExpandedAdsets] = useState<Set<string>>(new Set());
 
@@ -747,13 +750,17 @@ export default function CampaignsManager() {
   }, [userId, personaId]);
 
   const sortedCampaigns = useMemo(() => {
-    return [...campaigns].sort((a, b) => {
+    const q = searchQuery.trim().toLowerCase();
+    const filtered = q
+      ? campaigns.filter(c => (c.name || '').toLowerCase().includes(q))
+      : campaigns;
+    return [...filtered].sort((a, b) => {
       const sa = (a.effective_status || a.status || '').toUpperCase();
       const sb = (b.effective_status || b.status || '').toUpperCase();
       const order = (s: string) => s === 'ACTIVE' ? 0 : s === 'PAUSED' ? 1 : s.includes('LEARNING') ? 0 : 2;
       return order(sa) - order(sb);
     });
-  }, [campaigns]);
+  }, [campaigns, searchQuery]);
 
   // ══════════════════════════════════════════════════════════════════════
   // RENDER
@@ -832,6 +839,50 @@ export default function CampaignsManager() {
           </div>
         )}
 
+        {/* Search — filters the campaign tree by name. Shown once the user
+            has enough campaigns that scrolling is worse than typing (3+). */}
+        {!loading && !error && metaConnected && campaigns.length >= 3 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 10,
+            padding: '10px 14px', marginBottom: 10,
+          }}>
+            <Search size={14} style={{ color: T.text3, flexShrink: 0 }} />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar campanha pelo nome…"
+              style={{
+                flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                color: T.text1, fontSize: 13, fontFamily: F,
+              }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                title="Limpar busca"
+                style={{
+                  background: 'transparent', border: 'none', padding: 2,
+                  color: T.text3, cursor: 'pointer', display: 'flex', alignItems: 'center',
+                }}
+              >
+                <X size={12} />
+              </button>
+            )}
+            <span style={{ fontSize: 11, color: T.text3, fontVariantNumeric: 'tabular-nums' }}>
+              {sortedCampaigns.length} de {campaigns.length}
+            </span>
+          </div>
+        )}
+
+        {/* Empty-filter state — avoid a silent blank list when search
+            returns nothing. */}
+        {!loading && !error && metaConnected && campaigns.length > 0 && sortedCampaigns.length === 0 && (
+          <div style={{ padding: '28px 20px', textAlign: 'center', color: T.text3, fontSize: 12.5 }}>
+            Nenhuma campanha com "{searchQuery}".
+          </div>
+        )}
+
         {/* Campaign tree */}
         {!loading && !error && sortedCampaigns.map((c) => {
           const sc = statusColor(c.effective_status || c.status);
@@ -856,7 +907,10 @@ export default function CampaignsManager() {
                 >
                   {isOpen ? <ChevronDown size={14} style={{ color: T.text3, flexShrink: 0 }} /> : <ChevronRight size={14} style={{ color: T.text3, flexShrink: 0 }} />}
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: sc.dot, flexShrink: 0 }} />
-                  <span style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span
+                    title={c.name}
+                    style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  >
                     {c.name}
                   </span>
                 </button>
@@ -933,7 +987,10 @@ export default function CampaignsManager() {
                           >
                             {isAdsetOpen ? <ChevronDown size={12} style={{ color: T.text3, flexShrink: 0 }} /> : <ChevronRight size={12} style={{ color: T.text3, flexShrink: 0 }} />}
                             <Target size={11} style={{ color: T.text3, flexShrink: 0 }} />
-                            <span style={{ flex: 1, fontSize: 12, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span
+                              title={ads.name}
+                              style={{ flex: 1, fontSize: 12, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                            >
                               {ads.name}
                             </span>
                           </button>
@@ -964,6 +1021,34 @@ export default function CampaignsManager() {
                                 duplicate(ads.id, 'adset', ads.name);
                               }}
                             />
+                            {/* Open in Meta Ads Manager — lets the user inspect
+                                targeting/placements/audiences without us
+                                having to parse Meta's complex targeting spec
+                                inside the app. Deep link opens in new tab. */}
+                            <a
+                              href={`https://business.facebook.com/adsmanager/manage/adsets?selected_adset_ids=${ads.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Abrir conjunto no Gerenciador da Meta"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: 24, height: 24, borderRadius: 6,
+                                background: T.bg2, border: `1px solid ${T.border1}`,
+                                color: T.text3, textDecoration: 'none',
+                                transition: 'color 0.12s, border-color 0.12s',
+                              }}
+                              onMouseEnter={(e) => {
+                                (e.currentTarget as HTMLElement).style.color = T.text1;
+                                (e.currentTarget as HTMLElement).style.borderColor = T.border2;
+                              }}
+                              onMouseLeave={(e) => {
+                                (e.currentTarget as HTMLElement).style.color = T.text3;
+                                (e.currentTarget as HTMLElement).style.borderColor = T.border1;
+                              }}
+                            >
+                              <ExternalLink size={11} />
+                            </a>
                           </div>
                         </div>
 
@@ -1003,7 +1088,10 @@ export default function CampaignsManager() {
                                     borderTop: `1px solid ${T.border0}`,
                                   }}>
                                     <Sparkles size={10} style={{ color: T.purple, flexShrink: 0 }} />
-                                    <span style={{ flex: 1, fontSize: 11.5, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <span
+                                      title={ad.name}
+                                      style={{ flex: 1, fontSize: 11.5, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                    >
                                       {ad.name}
                                     </span>
                                     <span style={{ fontSize: 9, fontWeight: 700, color: sAd.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
