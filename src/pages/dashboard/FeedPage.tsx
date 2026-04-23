@@ -3253,9 +3253,16 @@ const CommandKPIRow: React.FC<{
                       ? Math.round(t.numericValue).toLocaleString('pt-BR')
                       : `R$ ${Math.round(t.numericValue).toLocaleString('pt-BR')}`)
                 : t.value;
+              // Only show the native tooltip when the DISPLAYED value
+              // differs from the FULL-PRECISE value (i.e., when the
+              // compact formatter actually kicked in). Same value in
+              // both = redundant ugly browser tooltip on hover.
+              const showTooltip = fullPrecise !== (!isEmpty && t.numericValue !== undefined && t.valueFormatter
+                ? t.valueFormatter(t.numericValue)
+                : t.value);
               return (
                 <div
-                  title={fullPrecise}
+                  title={showTooltip ? fullPrecise : undefined}
                   style={{
                     fontSize: adjustedSize,
                     fontWeight: 800,
@@ -6988,17 +6995,31 @@ const FeedPage: React.FC = () => {
               />
             ) : (
               <>
-                {/* Calm hero when the account is running and nothing urgent is pending */}
-                {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && !pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (
-                  <CommandHero
-                    variant="calm"
-                    headline="Operação estável. Estou monitorando tudo."
-                    subtext={`${activeAdsCount} anúncio${activeAdsCount === 1 ? '' : 's'} rodando${activeCampaignsCount > 0 ? ` em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}` : ''}. Análise a cada 20 minutos — se algo fugir do padrão, eu ajo automaticamente ou te aviso.`}
-                    primaryCta={{ label: 'Abrir chat com a IA', onClick: () => navigate('/dashboard/ai') }}
-                    secondaryCta={{ label: 'Gerar novo criativo', onClick: () => navigate('/dashboard/hooks') }}
-                    meta={`Última análise há ${lastAnalysisMin < 60 ? `${lastAnalysisMin}min` : `${Math.round(lastAnalysisMin / 60)}h`}`}
-                  />
-                )}
+                {/* Calm hero when the account is running and nothing urgent is pending.
+                    Headline rotates on every mount (F5 / session start) so the page
+                    doesn't feel robotic — the IA has a tiny voice that varies. All
+                    lines carry the same meaning: "I'm watching, nothing to do". */}
+                {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && !pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (() => {
+                  const calmLines = [
+                    'Operação estável. Estou monitorando tudo.',
+                    'Tudo tranquilo. Sigo de olho em cada anúncio.',
+                    'Sem alarmes agora. Continuo vigiando os sinais.',
+                    'Nada urgente no momento. Eu aviso se algo mudar.',
+                    'Rodando limpo. Acompanho a entrega em tempo real.',
+                    'Conta calibrada. Se algo sair do padrão, eu ajo.',
+                  ];
+                  const picked = calmLines[Math.floor(Math.random() * calmLines.length)];
+                  return (
+                    <CommandHero
+                      variant="calm"
+                      headline={picked}
+                      subtext={`${activeAdsCount} anúncio${activeAdsCount === 1 ? '' : 's'} rodando${activeCampaignsCount > 0 ? ` em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}` : ''}. Análise a cada 20 minutos — se algo fugir do padrão, eu ajo automaticamente ou te aviso.`}
+                      primaryCta={{ label: 'Abrir chat com a IA', onClick: () => navigate('/dashboard/ai') }}
+                      secondaryCta={{ label: 'Gerar novo criativo', onClick: () => navigate('/dashboard/hooks') }}
+                      meta={`Última análise há ${lastAnalysisMin < 60 ? `${lastAnalysisMin}min` : `${Math.round(lastAnalysisMin / 60)}h`}`}
+                    />
+                  );
+                })()}
 
                 {/* Scale-opportunity hero when there IS a real opportunity */}
                 {pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (

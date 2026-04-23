@@ -81,7 +81,10 @@
 
 html, body {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  background: var(--bg-main);
+  /* Hard-coded to the unified canvas color so deploy-cache lag can
+     never create a body-vs-main seam again. Matches --bg-main and
+     every AppLayout surface. */
+  background: #060A14;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -89,6 +92,10 @@ html, body {
   line-height: 1.6;
   text-rendering: optimizeLegibility;
 }
+
+/* Safety net — any overflow/scroll area that slips through still
+   renders the canvas color, never the default white. */
+#root { background: #060A14; }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;

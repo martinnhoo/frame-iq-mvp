@@ -414,8 +414,33 @@ export function AppLayout() {
               {selectedPersona?.name || 'Selecionar conta'}
             </p>
             {metaConnected && !accountResolving && (
-              <span style={{ flexShrink: 0, opacity: 0.7, display: 'flex' }}>
-                <MetaLogo size={16} />
+              // Meta-connected badge — used to be a naked MetaLogo with
+              // 0.7 opacity, read as a random floating icon with no
+              // context ("muito morto, não dá pra entender"). Now it's
+              // a tight pill with the Meta mark + "Ads" label so any
+              // user knows at a glance: "yes, this account is wired to
+              // Meta Ads". Cyan tint matches the rest of the copilot
+              // color voice.
+              <span
+                title="Conta conectada ao Meta Ads"
+                style={{
+                  flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  padding: '2px 6px 2px 4px',
+                  borderRadius: 5,
+                  background: 'rgba(14,165,233,0.08)',
+                  border: '1px solid rgba(14,165,233,0.20)',
+                  color: '#7DD3FC',
+                }}
+              >
+                <MetaLogo size={12} />
+                <span style={{
+                  fontSize: 9, fontWeight: 800,
+                  letterSpacing: '0.10em', textTransform: 'uppercase',
+                  fontFamily: F, lineHeight: 1,
+                }}>
+                  Ads
+                </span>
               </span>
             )}
           </div>
