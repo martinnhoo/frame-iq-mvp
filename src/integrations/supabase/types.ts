@@ -990,6 +990,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_context_cache: {
+        Row: {
+          cache_key: string
+          checked_at: string
+          created_at: string | null
+          data: Json
+          id: string
+          meta_account_id: string
+          persona_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cache_key: string
+          checked_at?: string
+          created_at?: string | null
+          data?: Json
+          id?: string
+          meta_account_id: string
+          persona_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cache_key?: string
+          checked_at?: string
+          created_at?: string | null
+          data?: Json
+          id?: string
+          meta_account_id?: string
+          persona_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_cost_config: {
         Row: {
           daily_usd_cap: number
