@@ -3341,9 +3341,12 @@ type StatusTone = 'ok' | 'warn' | 'critical' | 'unknown';
 
 const TONE_PALETTE: Record<StatusTone, { dot: string; glow: string; label: string; description: string; bar: string }> = {
   ok: {
-    dot: '#4ADE80',
-    glow: 'rgba(74,222,128,0.55)',
-    bar: 'rgba(74,222,128,0.22)',
+    // Deeper emerald — feels more trustworthy than the old
+    // #4ADE80 mint, which read as candy-bright for a money panel.
+    // Matches the emerald used across Histórico and Contas.
+    dot: '#10B981',
+    glow: 'rgba(16,185,129,0.55)',
+    bar: 'rgba(16,185,129,0.22)',
     label: 'Operação estável',
     description: 'Monitoramento contínuo',
   },
@@ -4567,23 +4570,24 @@ const CommandHero: React.FC<{
 
       {/* Compact eyebrow — Linear style: thin vertical bar + uppercase
           label in the accent color. No chip, no box, no dot-in-orb.
-          All the color work is in typography. */}
+          All the color work is in typography.
+          Tone unified to cyan — the copilot color. The page now reads
+          as a single voice: cyan status, cyan primary KPI, cyan MANUAL
+          bar, cyan PRÓXIMO PASSO. Purple was a third color with no
+          distinct job; dropped for hierarchy + trust. */}
       {isCompact && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           marginBottom: 6,
         }}>
           <span aria-hidden style={{
-            // Pure flat accent bar — no box-shadow. Matches the status
-            // strip bar vocabulary so every slim marker on the page
-            // reads as "typographic accent", never as "orb".
             width: 2, height: 12, borderRadius: 0,
-            background: '#A78BFA',
+            background: '#0ea5e9',
             flexShrink: 0,
           }} />
           <span style={{
             fontSize: 9.5, fontWeight: 800, letterSpacing: '0.14em',
-            textTransform: 'uppercase' as const, color: '#A78BFA',
+            textTransform: 'uppercase' as const, color: '#7DD3FC',
             fontFamily: F,
           }}>
             Próximo passo

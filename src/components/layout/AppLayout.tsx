@@ -579,12 +579,12 @@ export function AppLayout() {
   );
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#060A14' }}>
+    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-main)' }}>
       {/* ── Mobile top bar ── */}
       {isMobile && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-          height: 52, background: '#060A14',
+          height: 52, background: 'var(--bg-main)',
           borderBottom: '1px solid rgba(148,163,184,0.06)',
           display: 'flex', alignItems: 'center', padding: '0 12px',
           fontFamily: F,
@@ -619,7 +619,7 @@ export function AppLayout() {
       <aside style={{
         width: 220,
         height: '100%',
-        background: '#060A14',
+        background: 'var(--bg-main)',
         borderRight: '1px solid rgba(148,163,184,0.06)',
         display: 'flex', flexDirection: 'column', flexShrink: 0,
         fontFamily: F, overflow: 'hidden',
@@ -635,7 +635,7 @@ export function AppLayout() {
 
       {/* Main content */}
       <main style={{
-        flex: 1, overflow: 'auto', background: '#060A14',
+        flex: 1, overflow: 'auto', background: 'var(--bg-main)',
         ...(isMobile ? { paddingTop: 52 } : {}),
       }}>
         {profile ? (

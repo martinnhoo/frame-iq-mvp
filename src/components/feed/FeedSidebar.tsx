@@ -37,8 +37,11 @@ const T = {
   labelColor: 'rgba(240,246,252,0.56)', // bumped from 0.42 — uppercase eyebrows
   blue: '#2563EB',
   blueSoft: '#3B82F6',
-  green: '#22C55E',
-  greenSoft: '#4ADE80',
+  // Deeper emerald ramp for health/success signals. Was the candy-
+  // bright #22C55E / #4ADE80 pair; swapped for a richer #10B981
+  // that reads trustworthy in a money panel.
+  green: '#10B981',
+  greenSoft: '#10B981',
   red: '#EF4444',
   yellow: '#F59E0B',
   yellowSoft: '#FBBF24',
