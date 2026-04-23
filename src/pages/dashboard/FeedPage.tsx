@@ -4478,6 +4478,44 @@ const IntelligencePanel: React.FC<{
 // Replaces the big "Conta estável" card. Only shows when there's
 // genuinely nothing else on the page to say.
 // ================================================================
+// ================================================================
+// CALM HERO ROTATOR
+// Picks ONE random calm-state headline on mount and keeps it
+// stable for the rest of the session — the previous inline
+// Math.random() re-ran on every parent render, which made the
+// phrase flicker between variants whenever adMetrics refreshed.
+// Using useState(() => ...) freezes the pick at mount time.
+// ================================================================
+const CalmHeroRotator: React.FC<{
+  activeAdsCount: number;
+  activeCampaignsCount: number;
+  lastAnalysisMin: number;
+  onAi: () => void;
+  onHooks: () => void;
+}> = ({ activeAdsCount, activeCampaignsCount, lastAnalysisMin, onAi, onHooks }) => {
+  const [headline] = useState(() => {
+    const calmLines = [
+      'Operação estável. Estou monitorando tudo.',
+      'Tudo tranquilo. Sigo de olho em cada anúncio.',
+      'Sem alarmes agora. Continuo vigiando os sinais.',
+      'Nada urgente no momento. Eu aviso se algo mudar.',
+      'Rodando limpo. Acompanho a entrega em tempo real.',
+      'Conta calibrada. Se algo sair do padrão, eu ajo.',
+    ];
+    return calmLines[Math.floor(Math.random() * calmLines.length)];
+  });
+  return (
+    <CommandHero
+      variant="calm"
+      headline={headline}
+      subtext={`${activeAdsCount} anúncio${activeAdsCount === 1 ? '' : 's'} rodando${activeCampaignsCount > 0 ? ` em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}` : ''}. Análise a cada 20 minutos — se algo fugir do padrão, eu ajo automaticamente ou te aviso.`}
+      primaryCta={{ label: 'Abrir chat com a IA', onClick: onAi }}
+      secondaryCta={{ label: 'Gerar novo criativo', onClick: onHooks }}
+      meta={`Última análise há ${lastAnalysisMin < 60 ? `${lastAnalysisMin}min` : `${Math.round(lastAnalysisMin / 60)}h`}`}
+    />
+  );
+};
+
 const QuietPill: React.FC<{ lastAnalysisMin: number }> = ({ lastAnalysisMin }) => (
   <div style={{
     display: 'flex', alignItems: 'center', gap: 8,
@@ -6996,30 +7034,19 @@ const FeedPage: React.FC = () => {
             ) : (
               <>
                 {/* Calm hero when the account is running and nothing urgent is pending.
-                    Headline rotates on every mount (F5 / session start) so the page
-                    doesn't feel robotic — the IA has a tiny voice that varies. All
-                    lines carry the same meaning: "I'm watching, nothing to do". */}
-                {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && !pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (() => {
-                  const calmLines = [
-                    'Operação estável. Estou monitorando tudo.',
-                    'Tudo tranquilo. Sigo de olho em cada anúncio.',
-                    'Sem alarmes agora. Continuo vigiando os sinais.',
-                    'Nada urgente no momento. Eu aviso se algo mudar.',
-                    'Rodando limpo. Acompanho a entrega em tempo real.',
-                    'Conta calibrada. Se algo sair do padrão, eu ajo.',
-                  ];
-                  const picked = calmLines[Math.floor(Math.random() * calmLines.length)];
-                  return (
-                    <CommandHero
-                      variant="calm"
-                      headline={picked}
-                      subtext={`${activeAdsCount} anúncio${activeAdsCount === 1 ? '' : 's'} rodando${activeCampaignsCount > 0 ? ` em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}` : ''}. Análise a cada 20 minutos — se algo fugir do padrão, eu ajo automaticamente ou te aviso.`}
-                      primaryCta={{ label: 'Abrir chat com a IA', onClick: () => navigate('/dashboard/ai') }}
-                      secondaryCta={{ label: 'Gerar novo criativo', onClick: () => navigate('/dashboard/hooks') }}
-                      meta={`Última análise há ${lastAnalysisMin < 60 ? `${lastAnalysisMin}min` : `${Math.round(lastAnalysisMin / 60)}h`}`}
-                    />
-                  );
-                })()}
+                    Headline rotates on F5 (session start) but stays STABLE across
+                    re-renders. The picked line lives in the component's useRef so
+                    the parent's state updates (adMetrics refreshing, hover, etc)
+                    don't reshuffle the phrase mid-session. */}
+                {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && !pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (
+                  <CalmHeroRotator
+                    activeAdsCount={activeAdsCount}
+                    activeCampaignsCount={activeCampaignsCount}
+                    lastAnalysisMin={lastAnalysisMin}
+                    onAi={() => navigate('/dashboard/ai')}
+                    onHooks={() => navigate('/dashboard/hooks')}
+                  />
+                )}
 
                 {/* Scale-opportunity hero when there IS a real opportunity */}
                 {pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (

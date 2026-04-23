@@ -416,20 +416,15 @@ export function PatternsPanel({ userId, personaId, onGenerateVariation, onPatter
           }}>
             ›
           </span>
-          {/* Leading glyph — matches the Telegram row's icon rhythm so
-              both Fontes rows share the same visual structure:
-              chevron + icon + name + meta. */}
+          {/* Leading accent — slim purple vertical bar, same vocabulary
+              as the accent bars everywhere else on the page (status
+              strip, PRÓXIMO PASSO, MANUAL). Much cleaner than the
+              tinted square with a sparkle inside. */}
           <span aria-hidden style={{
-            width: 16, height: 16, borderRadius: 4,
-            background: "rgba(167,139,250,0.10)",
-            border: "1px solid rgba(167,139,250,0.28)",
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            color: "#A78BFA", flexShrink: 0,
-          }}>
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" fill="currentColor" />
-            </svg>
-          </span>
+            width: 2, height: 12, borderRadius: 0,
+            background: "#A78BFA",
+            flexShrink: 0,
+          }} />
           <span style={{
             fontSize: 13, fontWeight: 700, color: L1,
             fontFamily: F, letterSpacing: "-0.01em",
