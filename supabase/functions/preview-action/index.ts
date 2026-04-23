@@ -200,13 +200,30 @@ async function buildContext(
 }
 
 /**
+ * Nome do objeto em PT-BR pro target_type.
+ */
+function targetLabel(type: "campaign" | "adset" | "ad"): string {
+  if (type === "campaign") return "campanha";
+  if (type === "adset") return "conjunto";
+  return "anúncio";
+}
+function targetLabelCap(type: "campaign" | "adset" | "ad"): string {
+  if (type === "campaign") return "Campanha";
+  if (type === "adset") return "Conjunto";
+  return "Anúncio";
+}
+
+/**
  * Deterministic pre-AI rules. Returns a verdict + reasoning when the
- * situation is unambiguous (e.g. "pause a 1-day campaign" is always wait,
- * no judgment call required). Returns null to let the AI handle it.
+ * situation is unambiguous. The rules are tier-aware — pausing a
+ * 1-day CAMPAIGN is a mistake, but pausing a 1-day AD inside an
+ * active adset to rotate creatives is normal operator behavior.
+ * Returns null to let the AI handle ambiguous cases.
  */
 function evaluateRules(
   ctx: Context,
   action: ProposedAction,
+  targetType: "campaign" | "adset" | "ad",
   targetCpaCents: number | null,
 ): {
   verdict: Verdict;
@@ -216,52 +233,97 @@ function evaluateRules(
 } | null {
   const daysActual = Math.max(ctx.days_running, ctx.days_with_spend);
   const brl = (c: number) => (c / 100).toFixed(2).replace(".", ",");
+  const tLabel = targetLabel(targetType);
+  const tCap = targetLabelCap(targetType);
 
   // ── PAUSE rules ────────────────────────────────────────────────────────
   if (action === "pause") {
-    // Fresh campaign — don't pause, attribution still stabilizing
+    // Age check applies differently per tier:
+    //   - CAMPAIGN or ADSET < 3 days: blocking wait (attribution window)
+    //   - AD < 3 days: allowed — rotating creatives is normal, BUT only
+    //     if the ad itself is underperforming; if freq/ctr look fine on
+    //     the ad, still warn the user.
     if (daysActual > 0 && daysActual < 3) {
+      if (targetType === "campaign" || targetType === "adset") {
+        return {
+          verdict: "wait",
+          headline: `Muito cedo pra pausar ${targetType === "campaign" ? "a campanha" : "o conjunto"} — rodando há ${daysActual} dia${daysActual === 1 ? "" : "s"}`,
+          reasoning:
+            `A janela de atribuição do Meta (24-72h) ainda não fechou. Pausar ${tLabel} ${targetType === "campaign" ? "inteira" : "inteiro"} agora descarta a fase de aprendizado — o algoritmo mal começou a calibrar.`,
+          alternatives: [
+            targetType === "campaign"
+              ? "Pausar anúncios específicos dentro da campanha em vez da campanha toda"
+              : "Pausar anúncios específicos dentro do conjunto em vez do conjunto todo",
+            "Aguardar mais 2-3 dias e reavaliar com dados estabilizados",
+            "Abrir o chat da IA pra diagnosticar o que incomoda",
+          ],
+        };
+      }
+      // AD < 3 days: allowed if data suggests the ad is clearly bad
+      if (ctx.clicks >= 50 && ctx.ctr < 0.5 && ctx.conversions === 0) {
+        return {
+          verdict: "recommend",
+          headline: `Anúncio sem tração — pausar e rotacionar`,
+          reasoning:
+            `${ctx.clicks} cliques em ${daysActual} dia(s) com CTR ${ctx.ctr.toFixed(2)}% e zero conversão. Sinaliza hook/ângulo fraco — pausar e testar variação é a jogada certa.`,
+          alternatives: [
+            "Pausar e deixar os outros anúncios do conjunto absorverem o budget",
+            "Duplicar com novo hook antes de pausar o original",
+          ],
+        };
+      }
+      // AD < 3 days with OK or unclear metrics
       return {
         verdict: "wait",
-        headline: `Muito cedo pra pausar — rodando há ${daysActual} dia${daysActual === 1 ? "" : "s"}`,
+        headline: `Anúncio com poucos dados ainda (${daysActual} dia${daysActual === 1 ? "" : "s"})`,
         reasoning:
-          `A janela de atribuição do Meta (24-72h) ainda não fechou. Pausar agora significa descartar a fase de aprendizado inteira — o algoritmo mal começou a calibrar.`,
+          `Com pouco volume, qualquer decisão é baseada em ruído. Frequência ${ctx.freq.toFixed(1)}x e CTR ${ctx.ctr.toFixed(2)}% ainda podem mudar.`,
         alternatives: [
-          "Aguardar mais 2-3 dias e reavaliar com dados estabilizados",
-          "Ajustar budget em vez de pausar, se o problema é ritmo de gasto",
-          "Abrir o chat da IA pra diagnosticar o que você tá vendo que incomoda",
+          "Aguardar pelo menos 3 dias com 50+ cliques pra decidir",
+          "Se a pressa é rotacionar criativo, duplicar o original antes de pausar",
         ],
       };
     }
 
-    // Performing — converting AND CPA within target (if defined)
-    if (ctx.conversions >= 3 && ctx.cpa_cents !== null) {
+    // Performing — converting AND CPA within target. Harder rule for ads
+    // (3 conv), softer for adsets (2 conv), hardest for campaigns (5 conv)
+    // since impact of pausing scales with tier.
+    const minConv = targetType === "campaign" ? 5 : targetType === "adset" ? 3 : 2;
+    if (ctx.conversions >= minConv && ctx.cpa_cents !== null) {
       const withinTarget = targetCpaCents === null || ctx.cpa_cents <= targetCpaCents;
       if (withinTarget) {
         return {
           verdict: "reject",
-          headline: `Campanha performando — pausar é jogar resultado fora`,
+          headline: `${tCap} performando — pausar é jogar resultado fora`,
           reasoning:
-            `CPA em R$ ${brl(ctx.cpa_cents)}${targetCpaCents ? ` (meta: R$ ${brl(targetCpaCents)})` : ""} com ${ctx.conversions.toFixed(0)} conversões em ${ctx.days_with_spend} dia(s) de entrega. Isso é uma campanha saudável.`,
+            `CPA em R$ ${brl(ctx.cpa_cents)}${targetCpaCents ? ` (meta: R$ ${brl(targetCpaCents)})` : ""} com ${ctx.conversions.toFixed(0)} conversões em ${ctx.days_with_spend} dia(s) de entrega. ${tCap} saudável.`,
           alternatives: [
-            `Aumentar budget em 20-30% pra escalar o que já funciona`,
-            `Duplicar com novo criativo em paralelo pra evitar fadiga`,
-            `Só pausar se há motivo não-performance (saturação de público, rotatividade)`,
+            targetType === "ad"
+              ? `Duplicar com variação em paralelo antes de pausar`
+              : `Aumentar budget em 20-30% pra escalar o que já funciona`,
+            targetType === "ad"
+              ? `Só pausar se há fadiga (freq > 4x) ou CTR caindo forte`
+              : `Duplicar com novo criativo em paralelo pra evitar fadiga`,
           ],
         };
       }
     }
 
-    // Clear failure: 7+ days, material spend, 0 conversions
-    if (daysActual >= 7 && ctx.spend_cents > 50000 && ctx.conversions === 0) {
+    // Clear failure threshold scales with tier
+    const minSpend = targetType === "campaign" ? 100000 /* R$1000 */
+      : targetType === "adset" ? 50000 /* R$500 */
+      : 20000 /* R$200 */;
+    if (daysActual >= 7 && ctx.spend_cents > minSpend && ctx.conversions === 0) {
       return {
         verdict: "recommend",
         headline: `Pode pausar — ${daysActual} dias, R$ ${brl(ctx.spend_cents)} e zero conversão`,
         reasoning:
-          `Passou da fase de aprendizado e não entregou resultado. Frequência em ${ctx.freq.toFixed(1)}x e CTR ${ctx.ctr.toFixed(2)}% confirmam que o criativo não está conectando.`,
+          `${tCap} passou da fase de aprendizado e não entregou resultado. Frequência em ${ctx.freq.toFixed(1)}x e CTR ${ctx.ctr.toFixed(2)}% confirmam que não conecta.`,
         alternatives: [
-          "Pausar e criar variação com novo hook",
-          "Analisar se o público tá mal segmentado antes de descartar o criativo",
+          targetType === "ad"
+            ? "Pausar e deixar o conjunto rotacionar pra outros criativos"
+            : "Pausar e criar variação com novo hook",
+          "Diagnosticar se o público tá mal segmentado antes de descartar",
         ],
       };
     }
@@ -277,18 +339,16 @@ function evaluateRules(
           `Escalar antes da fase de aprendizado terminar (3-5 dias) costuma inflar CPA em 40-80% porque o algoritmo perde a calibração e reentra em aprendizado. Dinheiro perdido.`,
         alternatives: [
           "Aguardar CPA estabilizar por pelo menos 3 dias antes de escalar",
-          "Duplicar o conjunto com +budget em vez de editar — preserva o aprendizado",
+          `Duplicar ${tLabel} com +budget em vez de editar — preserva o aprendizado`,
         ],
       };
     }
-
-    // If conversions=0 and we're in learning
     if (ctx.conversions === 0 && ctx.spend_cents > 30000) {
       return {
         verdict: "reject",
         headline: `Zero conversão — escalar vai multiplicar o erro`,
         reasoning:
-          `Com ${daysActual} dia(s) e R$ ${brl(ctx.spend_cents)} gastos sem converter, aumentar budget é apostar mais fichas num criativo/público que ainda não performou.`,
+          `Com ${daysActual} dia(s) e R$ ${brl(ctx.spend_cents)} gastos sem converter, aumentar budget aqui é apostar mais fichas num criativo/público que ainda não performou.`,
         alternatives: [
           "Diagnosticar o motivo das 0 conversões (tracking? público? hook?) antes de escalar",
           "Testar variação de criativo em paralelo em vez de aumentar o existente",
@@ -299,16 +359,17 @@ function evaluateRules(
 
   // ── DECREASE BUDGET rules ──────────────────────────────────────────────
   if (action === "decrease_budget") {
-    if (ctx.conversions >= 3 && ctx.cpa_cents !== null &&
+    const minConv = targetType === "campaign" ? 5 : targetType === "adset" ? 3 : 2;
+    if (ctx.conversions >= minConv && ctx.cpa_cents !== null &&
         (targetCpaCents === null || ctx.cpa_cents <= targetCpaCents)) {
       return {
         verdict: "reject",
-        headline: `Está performando — reduzir budget corta resultado`,
+        headline: `${tCap} performando — reduzir budget corta resultado`,
         reasoning:
           `CPA em R$ ${brl(ctx.cpa_cents)} com ${ctx.conversions.toFixed(0)} conversões. Reduzir budget aqui é voluntariamente entregar menos resultado.`,
         alternatives: [
           "Manter budget se a meta está sendo batida",
-          "Pausar outros conjuntos ruins em vez de cortar esse",
+          `Pausar outros ${tLabel === "campanha" ? "conjuntos" : tLabel === "conjunto" ? "anúncios" : "criativos"} ruins em vez de cortar esse`,
         ],
       };
     }
@@ -318,9 +379,9 @@ function evaluateRules(
   if (action === "duplicate") {
     return {
       verdict: "recommend",
-      headline: `Duplicar preserva o original e testa a variação em paralelo`,
+      headline: `Duplicar ${tLabel} preserva o original e testa a variação em paralelo`,
       reasoning:
-        `Duplicar é ação de baixo risco — Meta isola as duas cópias em aprendizado separado. Bom pra estender vida útil de vencedor ou testar nova audiência sem arriscar o que já funciona.`,
+        `Duplicar é baixo risco — o Meta isola as duas cópias em aprendizado separado. Bom pra estender vida útil de vencedor ou testar nova audiência/criativo sem arriscar o que já funciona.`,
       alternatives: [],
     };
   }
@@ -329,9 +390,9 @@ function evaluateRules(
   if (action === "activate") {
     return {
       verdict: "recommend",
-      headline: `Reativar é seguro — Meta retoma onde parou`,
+      headline: `Reativar ${tLabel} é seguro — Meta retoma onde parou`,
       reasoning:
-        `Reativar uma campanha pausada restaura o estado anterior. Se ficou pausada por pouco tempo, o aprendizado do algoritmo costuma ser recuperado rapidamente.`,
+        `Reativar ${tLabel === "anúncio" ? "o anúncio" : targetType === "campaign" ? "a campanha" : "o conjunto"} pausado restaura o estado anterior. Se ficou pausado por pouco tempo, o aprendizado costuma ser recuperado rapidamente.`,
       alternatives: [],
     };
   }
@@ -347,11 +408,14 @@ function evaluateRules(
 async function aiFallback(
   ctx: Context,
   action: ProposedAction,
+  targetType: "campaign" | "adset" | "ad",
   targetCpaCents: number | null,
   proposedBudgetCents: number | null,
 ) {
   const brl = (c: number) => (c / 100).toFixed(2).replace(".", ",");
+  const tLabel = targetLabel(targetType);
   const contextBlock = `
+NÍVEL DO ALVO: ${targetType} (${tLabel})
 CONTEXTO:
 - Nome: ${ctx.name}
 - Status: ${ctx.effective_status}
@@ -366,24 +430,29 @@ CONTEXTO:
 - Tendência (CTR 7d vs 7d anterior): ${ctx.trend || "sem dados"}
 ${proposedBudgetCents ? `- Novo budget proposto: R$ ${brl(proposedBudgetCents)}` : ""}
 
-AÇÃO PROPOSTA: ${action}
+AÇÃO PROPOSTA: ${action} (no nível de ${tLabel})
 `.trim();
 
   const system = `Você é o AdBrief AI — media buyer sênior analisando uma ação manual antes de confirmar.
 
 Sua tarefa: avaliar se a ação proposta faz sentido agora, dado o contexto real.
 
+IMPORTANTE — o NÍVEL do alvo muda o juízo:
+- CAMPANHA: mais conservador. Pausar/escalar campanha inteira é decisão grande.
+- CONJUNTO (adset): moderado. Pode pausar conjunto ruim dentro de campanha saudável.
+- ANÚNCIO (ad): mais flexível. Rotacionar criativos é parte normal da operação — pausar anúncio individual pode ser OK mesmo cedo.
+
 REGRAS DE OURO:
-1. Respeite a idade da campanha. Nunca recomende pausar ou escalar campanha com menos de 3 dias — janela de atribuição ainda não fechou.
-2. Se há conversões e CPA está dentro da meta, raramente é boa ideia pausar ou reduzir budget.
-3. Se há 0 conversões depois de 7+ dias e R$500+, pausar é sensato.
-4. Escalar budget antes de 3 dias sempre quebra aprendizado.
+1. Idade: CAMPANHA ou CONJUNTO com menos de 3 dias = "wait" sempre (janela de atribuição 24-72h). Anúncio <3 dias pode ser pausado se estiver claramente ruim (50+ cliques, CTR <0.5%, 0 conversões).
+2. Se há conversões e CPA dentro da meta, raramente pausar ou reduzir budget é boa ideia.
+3. 0 conversões após 7+ dias e spend relevante (>R$1000 campanha / >R$500 conjunto / >R$200 anúncio) → pausar é sensato.
+4. Escalar budget antes de 3 dias quebra aprendizado, independente do nível.
 
 RETORNE APENAS JSON VÁLIDO no formato:
 {
   "verdict": "recommend" | "reject" | "wait" | "depends",
-  "headline": "uma linha curta e direta, tom de media buyer brasileiro",
-  "reasoning": "2-3 frases explicando o motivo, citando números específicos do contexto",
+  "headline": "uma linha curta e direta em tom de media buyer brasileiro, mencionando o nível (campanha/conjunto/anúncio) quando relevante",
+  "reasoning": "2-3 frases explicando o motivo, citando números específicos e considerando o nível",
   "alternatives": ["1-3 ações alternativas concretas, ou lista vazia se recommend"]
 }`;
 
@@ -497,14 +566,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 1) Deterministic rules
-    let result = evaluateRules(ctx, proposed_action as ProposedAction, targetCpaCents);
+    // 1) Deterministic rules (tier-aware: ad/adset/campaign have
+    //    different thresholds)
+    let result = evaluateRules(
+      ctx,
+      proposed_action as ProposedAction,
+      target_type as "campaign" | "adset" | "ad",
+      targetCpaCents,
+    );
 
     // 2) AI fallback for ambiguous cases
     if (!result) {
       result = await aiFallback(
         ctx,
         proposed_action as ProposedAction,
+        target_type as "campaign" | "adset" | "ad",
         targetCpaCents,
         proposed_budget_cents ?? null,
       );
