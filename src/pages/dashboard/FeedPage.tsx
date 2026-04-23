@@ -2970,22 +2970,35 @@ const CommandKPIRow: React.FC<{
     }}>
       {tiles.map((t, i) => {
         const isEmpty = t.value === '—';
+        // Staggered entry animation: each tile lands 60ms after the one
+        // before it. Cinematic feel without slowing down interaction
+        // because the whole cascade completes under 400ms.
+        const delay = 0.06 * i;
         return (
-          <div key={t.key} style={{
-            padding: i === 0 ? '2px 20px 2px 0' : i === tiles.length - 1 ? '2px 0 2px 20px' : '2px 20px',
-            minWidth: 0,
-            display: 'flex', flexDirection: 'column', gap: 6,
-            borderRight: i < tiles.length - 1 ? `1px solid ${T.border0}` : 'none',
-          }}>
+          <div
+            key={t.key}
+            className="feed-kpi-tile"
+            style={{
+              padding: i === 0 ? '2px 24px 2px 0' : i === tiles.length - 1 ? '2px 0 2px 24px' : '2px 24px',
+              minWidth: 0,
+              display: 'flex', flexDirection: 'column', gap: 6,
+              borderRight: i < tiles.length - 1 ? `1px solid ${T.border0}` : 'none',
+              animation: `feed-kpi-in 0.45s cubic-bezier(0.22,1,0.36,1) ${delay}s both`,
+            }}
+          >
             <div style={{
-              fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em',
+              fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em',
               color: T.labelColor, textTransform: 'uppercase',
             }}>{t.label}</div>
+            {/* Dominant number — bigger, tighter, tabular so digits
+                align perfectly vertically when they cascade in. */}
             <div style={{
-              fontSize: 26, fontWeight: 800,
+              fontSize: 34, fontWeight: 800,
               color: isEmpty ? T.text3 : T.text1,
-              letterSpacing: '-0.025em', lineHeight: 1.08,
-              marginTop: 2,
+              letterSpacing: '-0.035em', lineHeight: 1.0,
+              marginTop: 3,
+              fontVariantNumeric: 'tabular-nums' as const,
+              fontFeatureSettings: '"tnum" 1, "cv11" 1',
             }}>{t.value}</div>
             {!isEmpty && (
               <KPIDeltaLine
@@ -2997,7 +3010,7 @@ const CommandKPIRow: React.FC<{
             {t.context && (
               <div style={{
                 fontSize: 10.5, color: T.text3, fontFamily: F,
-                letterSpacing: '-0.005em', lineHeight: 1.35,
+                letterSpacing: '-0.005em', lineHeight: 1.4,
                 marginTop: 1,
               }}>
                 {t.context}
@@ -3006,6 +3019,135 @@ const CommandKPIRow: React.FC<{
           </div>
         );
       })}
+    </div>
+  );
+};
+
+// ================================================================
+// COMMAND STATUS STRIP
+// Top-of-hero strip carrying the ambient state: live dot, state
+// label, last-analysis time, period picker, sync. Replaces the big
+// green-bordered "Operação estável" card — one sentence, inline.
+//
+// The accent follows account severity so the whole Command Deck
+// inherits the right emotional tone:
+//   • ok       → emerald dot, emerald glow on strip border
+//   • warn     → amber
+//   • critical → red, pulsing
+//   • unknown  → cyan (monitoring)
+// ================================================================
+type StatusTone = 'ok' | 'warn' | 'critical' | 'unknown';
+
+const TONE_PALETTE: Record<StatusTone, { dot: string; glow: string; label: string; description: string; bar: string }> = {
+  ok: {
+    dot: '#4ADE80',
+    glow: 'rgba(74,222,128,0.55)',
+    bar: 'rgba(74,222,128,0.22)',
+    label: 'Operação estável',
+    description: 'Monitoramento contínuo',
+  },
+  warn: {
+    dot: '#FBBF24',
+    glow: 'rgba(251,191,36,0.55)',
+    bar: 'rgba(251,191,36,0.28)',
+    label: 'Atenção necessária',
+    description: 'Sinais pra verificar',
+  },
+  critical: {
+    dot: '#F87171',
+    glow: 'rgba(248,113,113,0.70)',
+    bar: 'rgba(248,113,113,0.38)',
+    label: 'Ação urgente',
+    description: 'Decisão crítica aberta',
+  },
+  unknown: {
+    dot: '#0ea5e9',
+    glow: 'rgba(14,165,233,0.50)',
+    bar: 'rgba(14,165,233,0.25)',
+    label: 'Monitorando',
+    description: 'Lendo contexto',
+  },
+};
+
+const CommandStatusStrip: React.FC<{
+  tone: StatusTone;
+  lastAnalysisMin: number;
+  period?: PeriodKey;
+  onPeriodChange?: (k: PeriodKey) => void;
+  onSync?: () => void;
+  syncing?: boolean;
+  showPeriod?: boolean;
+  showSync?: boolean;
+}> = ({ tone, lastAnalysisMin, period, onPeriodChange, onSync, syncing, showPeriod, showSync }) => {
+  const tp = TONE_PALETTE[tone];
+  const pulsing = tone === 'critical' || tone === 'unknown';
+  const timeLabel = lastAnalysisMin < 60
+    ? `${lastAnalysisMin}min`
+    : `${Math.round(lastAnalysisMin / 60)}h`;
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '10px 14px',
+      borderBottom: `1px solid ${T.border0}`,
+      background: `linear-gradient(90deg, ${tp.bar} 0%, transparent 32%)`,
+      fontFamily: F,
+      animation: 'feed-fadeIn 0.32s ease 0.05s both',
+    }}>
+      <span style={{
+        width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+        background: tp.dot,
+        boxShadow: `0 0 0 3px ${tp.glow.replace(/[\d.]+\)$/, '0.14)')}, 0 0 12px ${tp.glow}`,
+        animation: pulsing ? 'feed-status-pulse 1.6s ease-in-out infinite' : undefined,
+      }} />
+      <span style={{
+        fontSize: 11.5, fontWeight: 700, color: T.text1,
+        letterSpacing: '-0.005em',
+      }}>
+        {tp.label}
+      </span>
+      <span style={{ fontSize: 10.5, color: T.text3 }}>·</span>
+      <span style={{ fontSize: 11, color: T.text3, letterSpacing: '-0.005em' }}>
+        análise há <span style={{ color: T.text2, fontWeight: 600 }}>{timeLabel}</span>
+      </span>
+      <div style={{ flex: 1 }} />
+      {showPeriod && period && onPeriodChange && (
+        <PeriodSelector value={period} onChange={onPeriodChange} />
+      )}
+      {showSync && onSync && (
+        <button
+          onClick={onSync}
+          disabled={!!syncing}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            background: 'rgba(14,165,233,0.10)',
+            color: '#7DD3FC',
+            border: '1px solid rgba(14,165,233,0.28)',
+            borderRadius: 6, padding: '4px 10px',
+            fontSize: 10.5, fontWeight: 700, fontFamily: F,
+            cursor: syncing ? 'default' : 'pointer',
+            opacity: syncing ? 0.6 : 1,
+            letterSpacing: '-0.005em',
+            transition: 'background 0.15s ease, box-shadow 0.15s ease',
+          }}
+          onMouseEnter={e => {
+            if (syncing) return;
+            (e.currentTarget as HTMLElement).style.background = 'rgba(14,165,233,0.18)';
+            (e.currentTarget as HTMLElement).style.boxShadow = '0 0 12px rgba(14,165,233,0.25)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.background = 'rgba(14,165,233,0.10)';
+            (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+          }}
+        >
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" style={{
+            animation: syncing ? 'feed-spin 0.9s linear infinite' : undefined,
+          }}>
+            <path d="M14 8A6 6 0 1 1 8 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            <path d="M8 0v4l3-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {syncing ? 'Sincronizando' : 'Sync'}
+        </button>
+      )}
     </div>
   );
 };
@@ -4049,6 +4191,11 @@ const CommandHero: React.FC<{
   children?: React.ReactNode; // optional inline content below CTAs (campaign list, metrics, etc)
 }> = ({ variant, headline, subtext, primaryCta, secondaryCta, meta, children }) => {
   const accent = HERO_ACCENT[variant];
+  // When the state is just "tudo calmo", the hero should WHISPER instead
+  // of shouting — the Command Deck above already carries the status
+  // strip, so a full-size celebratory card here becomes redundant.
+  // Urgent variants (critical, tracking) keep the dominant treatment.
+  const isCompact = variant === 'calm';
   return (
     <div className="feed-command-hero" style={{
       position: 'relative',
@@ -4056,51 +4203,87 @@ const CommandHero: React.FC<{
       border: `1px solid ${T.border1}`,
       borderLeft: `3px solid ${accent.color}`,
       borderRadius: 12,
-      padding: 'clamp(20px, 3.5vw, 28px)',
+      padding: isCompact ? '16px 20px' : 'clamp(20px, 3.5vw, 28px)',
       marginBottom: 16,
       overflow: 'hidden',
-      animation: 'feed-fadeUp 0.3s ease',
+      animation: 'feed-deck-in 0.42s cubic-bezier(0.22,1,0.36,1) 0.12s both',
     }}>
       {/* Glow accent on top-right */}
       <div aria-hidden style={{
-        position: 'absolute', top: -60, right: -60, width: 180, height: 180,
+        position: 'absolute', top: -60, right: -60, width: isCompact ? 140 : 180, height: isCompact ? 140 : 180,
         borderRadius: '50%',
         background: `radial-gradient(circle, ${accent.color}14 0%, transparent 70%)`,
         pointerEvents: 'none',
       }} />
 
-      {/* Header label row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+      {/* Header label row — suppressed in compact mode since the Command
+          Deck above already shows the same status chip. */}
+      {!isCompact && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{
+              width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+              background: accent.dot, boxShadow: `0 0 10px ${accent.dot}70`,
+              animation: variant === 'critical' ? 'pulse 1.8s ease-in-out infinite' : undefined,
+            }} />
+            <span style={{
+              fontSize: 10, fontWeight: 800, letterSpacing: '0.12em',
+              textTransform: 'uppercase' as const, color: accent.color,
+              fontFamily: F,
+            }}>
+              {accent.label}
+            </span>
+          </div>
+          {meta && (
+            <span style={{ fontSize: 10.5, color: T.text3, fontWeight: 500, fontFamily: F }}>
+              {meta}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Compact eyebrow — tiny AdBrief-purple label only, no big pill */}
+      {isCompact && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 7,
+          marginBottom: 6,
+        }}>
           <span style={{
-            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-            background: accent.dot, boxShadow: `0 0 10px ${accent.dot}70`,
-            animation: variant === 'critical' ? 'pulse 1.8s ease-in-out infinite' : undefined,
-          }} />
+            width: 14, height: 14, borderRadius: 4,
+            background: 'rgba(167,139,250,0.16)',
+            border: '1px solid rgba(167,139,250,0.32)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#A78BFA' }} />
+          </span>
           <span style={{
-            fontSize: 10, fontWeight: 800, letterSpacing: '0.12em',
-            textTransform: 'uppercase' as const, color: accent.color,
+            fontSize: 9.5, fontWeight: 800, letterSpacing: '0.12em',
+            textTransform: 'uppercase' as const, color: '#A78BFA',
             fontFamily: F,
           }}>
-            {accent.label}
+            Próximo passo
           </span>
+          {meta && (
+            <span style={{
+              fontSize: 10.5, color: T.text3, fontWeight: 500,
+              fontFamily: F, marginLeft: 'auto',
+            }}>
+              {meta}
+            </span>
+          )}
         </div>
-        {meta && (
-          <span style={{ fontSize: 10.5, color: T.text3, fontWeight: 500, fontFamily: F }}>
-            {meta}
-          </span>
-        )}
-      </div>
+      )}
 
-      {/* Headline — dominant */}
+      {/* Headline — dominant in default, condensed in compact */}
       <h2 style={{
-        fontSize: 'clamp(22px, 3.2vw, 28px)',
-        lineHeight: 1.2,
+        fontSize: isCompact ? 16 : 'clamp(22px, 3.2vw, 28px)',
+        lineHeight: isCompact ? 1.3 : 1.2,
         color: T.text1,
-        fontWeight: 800,
-        margin: '0 0 10px',
+        fontWeight: isCompact ? 700 : 800,
+        margin: isCompact ? '0 0 4px' : '0 0 10px',
         fontFamily: F,
-        letterSpacing: '-0.02em',
+        letterSpacing: '-0.018em',
       }}>
         {headline}
       </h2>
@@ -4108,8 +4291,10 @@ const CommandHero: React.FC<{
       {/* Subtext */}
       {subtext && (
         <p style={{
-          fontSize: 13.5, color: T.text2, fontWeight: 500,
-          margin: '0 0 20px', lineHeight: 1.55, fontFamily: F,
+          fontSize: isCompact ? 12 : 13.5,
+          color: T.text2, fontWeight: 500,
+          margin: isCompact ? '0 0 14px' : '0 0 20px',
+          lineHeight: 1.55, fontFamily: F,
           maxWidth: 560,
         }}>
           {subtext}
@@ -4117,22 +4302,36 @@ const CommandHero: React.FC<{
       )}
 
       {/* CTAs */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: isCompact ? 6 : 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <button
           className="feed-cta"
           onClick={primaryCta.onClick}
           style={{
             background: accent.color,
             color: variant === 'scale-opp' || variant === 'calm' ? '#0B1117' : '#fff',
-            border: 'none', borderRadius: 8,
-            padding: '13px 26px', fontSize: 13.5, fontWeight: 800,
+            border: 'none', borderRadius: isCompact ? 7 : 8,
+            padding: isCompact ? '8px 14px' : '13px 26px',
+            fontSize: isCompact ? 12 : 13.5,
+            fontWeight: isCompact ? 700 : 800,
             fontFamily: F, cursor: 'pointer',
             letterSpacing: '-0.005em',
-            boxShadow: `0 6px 22px ${accent.color}40, 0 2px 6px ${accent.color}30`,
+            boxShadow: isCompact
+              ? `0 2px 12px ${accent.color}38`
+              : `0 6px 22px ${accent.color}40, 0 2px 6px ${accent.color}30`,
             transition: 'all 0.2s ease',
           }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 8px 26px ${accent.color}55, 0 3px 8px ${accent.color}40`; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 6px 22px ${accent.color}40, 0 2px 6px ${accent.color}30`; }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = isCompact
+              ? `0 4px 16px ${accent.color}55`
+              : `0 8px 26px ${accent.color}55, 0 3px 8px ${accent.color}40`;
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.boxShadow = isCompact
+              ? `0 2px 12px ${accent.color}38`
+              : `0 6px 22px ${accent.color}40, 0 2px 6px ${accent.color}30`;
+          }}
         >
           {primaryCta.label}
         </button>
@@ -4160,8 +4359,11 @@ const CommandHero: React.FC<{
               background: 'transparent',
               color: T.text2,
               border: `1px solid ${T.border1}`,
-              borderRadius: 8, padding: '12px 20px',
-              fontSize: 12.5, fontWeight: 600, fontFamily: F,
+              borderRadius: isCompact ? 7 : 8,
+              padding: isCompact ? '8px 12px' : '12px 20px',
+              fontSize: isCompact ? 11.5 : 12.5,
+              fontWeight: isCompact ? 700 : 600,
+              fontFamily: F,
               cursor: 'pointer', transition: 'all 0.18s ease',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.borderColor = T.border2; e.currentTarget.style.color = T.text1; }}
@@ -5940,101 +6142,152 @@ const FeedPage: React.FC = () => {
         )}
 
         {/* ═══════════════════════════════════════════════
-            LAYER 1 — COMMAND DECK (header + KPI strip, unified)
-            One elevated container that answers:
-              "what happened, how much moved, and how honest is this data".
-            Title + subtitle sit at the top; the KPI row sits under a
-            1px rule inside the same surface so the gestor sees the whole
-            picture as a single block — Bloomberg, not dashboard demo.
+            LAYER 1 — COMMAND DECK (premium, v3)
+            One elevated surface answering "what's happening, how much
+            moved, and how honest is this data". Now carries:
+              • Top status strip — live tone-adaptive dot, state label,
+                last-analysis, period picker, sync. Replaces the old big
+                green "monitorando tudo" card.
+              • Body — eyebrow label, headline, subtitle.
+              • KPI row — staggered fade-up, bigger tabular numbers,
+                vertical dividers.
+              • Ambient glow — radial wash in the tone color behind the
+                headline, so the whole deck inherits the account's mood.
             ═══════════════════════════════════════════════ */}
-        <div style={{
-          background: '#0B1220',
-          border: `1px solid ${T.border1}`,
-          borderRadius: 12,
-          padding: 24,
-          marginBottom: 14,
-          fontFamily: F,
-        }}>
-          {/* Top row: title + subtitle + controls */}
-          <div style={{
-            display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
-            flexWrap: 'wrap', gap: '10px 14px',
-            marginBottom: metaConnected ? 18 : 0,
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <h1 style={{
-                  fontSize: 20, fontWeight: 800, color: T.text1, fontFamily: F,
-                  letterSpacing: '-0.02em', margin: 0, lineHeight: 1.15,
-                }}>
-                  Central de comando
-                </h1>
-                {isDemo && (
-                  <span style={{
-                    fontSize: 9, fontWeight: 700, color: T.text3,
-                    background: T.bg2,
-                    padding: '2px 6px', borderRadius: 3, letterSpacing: '0.08em',
-                  }}>DEMO</span>
-                )}
-              </div>
-              <p style={{
-                fontSize: 12.5, color: T.text2, fontFamily: F, margin: 0,
-                lineHeight: 1.5, letterSpacing: '-0.005em',
-              }}>
-                Decisões que impactam seus resultados agora.
-              </p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              {!isDemo && metaConnected && (
-                <PeriodSelector value={period} onChange={setPeriod} />
-              )}
-              {metaConnected && !syncing && (
-                <button onClick={handleSync} style={{
-                  background: T.bg2, color: T.text2,
-                  border: 'none', borderRadius: 4,
-                  padding: '4px 10px', fontSize: 11, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: F, display: 'flex', alignItems: 'center', gap: 4,
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = T.bg3; }}
-                onMouseLeave={e => { e.currentTarget.style.background = T.bg2; }}>
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.5 }}>
-                    <path d="M14 8A6 6 0 1 1 8 2" stroke={T.text3} strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M8 0v4l3-2" stroke={T.text3} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Sincronizar
-                </button>
-              )}
-            </div>
-          </div>
+        {(() => {
+          // Derive the ambient tone from real signals. Priority:
+          //   1. critical decisions → 'critical'
+          //   2. account status warn/critical → matches
+          //   3. healthy monitoring → 'ok'
+          //   4. unknown / still resolving → 'unknown' (cyan)
+          const hasCriticalDecision = pendingDecisions.some(d =>
+            d.type === 'kill' || d.type === 'fix' || (d as any).priority === 'critical'
+          );
+          const tone: StatusTone = hasCriticalDecision
+            ? 'critical'
+            : accountStatus?.severity === 'critical'
+              ? 'critical'
+              : accountStatus?.severity === 'warn'
+                ? 'warn'
+                : accountStatus?.severity === 'ok'
+                  ? 'ok'
+                  : 'unknown';
+          const tp = TONE_PALETTE[tone];
 
-          {/* Inner rule + KPI row. Only rendered when we have a connection to
-              show. If no metrics yet, the row is suppressed and the block
-              stays tight to the title/subtitle alone. */}
-          {metaConnected && (
-            <>
-              <div style={{
-                height: 1, width: '100%',
-                background: T.border0,
-                marginBottom: 18,
+          return (
+            <div className="feed-command-deck" style={{
+              position: 'relative',
+              background: 'linear-gradient(180deg, #0B1220 0%, #0A111E 100%)',
+              border: `1px solid ${T.border1}`,
+              borderRadius: 14,
+              marginBottom: 14,
+              fontFamily: F,
+              overflow: 'hidden',
+              boxShadow: `0 0 0 1px ${T.border0}, 0 12px 40px rgba(0,0,0,0.35)`,
+              animation: 'feed-deck-in 0.42s cubic-bezier(0.22,1,0.36,1) both',
+            }}>
+              {/* Tone-adaptive ambient glow. Sits under the content
+                  (zIndex 0) and bleeds from the top-right corner so the
+                  eye naturally travels left-to-right across the KPIs. */}
+              <div aria-hidden style={{
+                position: 'absolute',
+                top: -120, right: -80, width: 340, height: 340,
+                borderRadius: '50%',
+                background: `radial-gradient(circle, ${tp.glow.replace(/[\d.]+\)$/, '0.18)')} 0%, transparent 62%)`,
+                pointerEvents: 'none',
+                zIndex: 0,
+                animation: 'feed-glow-breathe 6s ease-in-out infinite',
               }} />
-              <CommandKPIRow
-                m={adMetrics}
-                periodLabel={PERIODS.find(p => p.key === period)!.label}
-                decisions={pendingDecisions}
-              />
-              {(!adMetrics || adMetrics.daysOfData === 0 || adMetrics.totalSpend === 0) && (
-                <div style={{
-                  marginTop: 14,
-                  fontSize: 11, color: T.text3, fontStyle: 'italic',
-                  lineHeight: 1.5,
-                }}>
-                  Sem gasto no período selecionado. Quando os anúncios começarem a rodar os números entram aqui.
+
+              {/* Status strip — only when Meta is connected. For the
+                  empty/unconnected state we fall through to the simpler
+                  header-only view below. */}
+              {metaConnected && !isDemo && (
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <CommandStatusStrip
+                    tone={tone}
+                    lastAnalysisMin={lastAnalysisMin}
+                    period={period}
+                    onPeriodChange={setPeriod}
+                    onSync={handleSync}
+                    syncing={syncing}
+                    showPeriod
+                    showSync
+                  />
                 </div>
               )}
-            </>
-          )}
-        </div>
+
+              {/* Body — eyebrow + headline + subtitle */}
+              <div style={{
+                position: 'relative', zIndex: 1,
+                padding: '22px 24px 18px',
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  marginBottom: 6,
+                }}>
+                  <span style={{
+                    fontSize: 9.5, fontWeight: 800, letterSpacing: '0.14em',
+                    textTransform: 'uppercase' as const,
+                    color: T.labelColor,
+                  }}>
+                    Central de comando
+                  </span>
+                  {isDemo && (
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, color: T.text3,
+                      background: T.bg2, padding: '2px 6px',
+                      borderRadius: 3, letterSpacing: '0.08em',
+                    }}>DEMO</span>
+                  )}
+                </div>
+                <h1 style={{
+                  fontSize: 22, fontWeight: 800, color: T.text1, fontFamily: F,
+                  letterSpacing: '-0.022em', margin: '0 0 4px',
+                  lineHeight: 1.15,
+                }}>
+                  Decisões que impactam seu resultado agora
+                </h1>
+                <p style={{
+                  fontSize: 12, color: T.text3, fontFamily: F, margin: 0,
+                  lineHeight: 1.5, letterSpacing: '-0.005em',
+                }}>
+                  Meta Ads · últimos {PERIODS.find(p => p.key === period)!.label.toLowerCase()}
+                </p>
+              </div>
+
+              {/* KPI row */}
+              {metaConnected && (
+                <>
+                  <div style={{
+                    height: 1, width: '100%',
+                    background: T.border0,
+                    position: 'relative', zIndex: 1,
+                  }} />
+                  <div style={{
+                    position: 'relative', zIndex: 1,
+                    padding: '18px 24px 22px',
+                  }}>
+                    <CommandKPIRow
+                      m={adMetrics}
+                      periodLabel={PERIODS.find(p => p.key === period)!.label}
+                      decisions={pendingDecisions}
+                    />
+                    {(!adMetrics || adMetrics.daysOfData === 0 || adMetrics.totalSpend === 0) && (
+                      <div style={{
+                        marginTop: 14,
+                        fontSize: 11, color: T.text3, fontStyle: 'italic',
+                        lineHeight: 1.5,
+                      }}>
+                        Sem gasto no período selecionado. Quando os anúncios começarem a rodar os números entram aqui.
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Demo banner */}
         {isDemo && (
@@ -6496,50 +6749,11 @@ const FeedPage: React.FC = () => {
         {/* Telegram */}
         {metaConnected && !isDemo && userId && <TelegramCard userId={userId} />}
 
-        {/* ═══════════════════════════════════════════════
-            FOOTER — STATUS TÉCNICO
-            Technical status line. No pill, no gradient, no celebration.
-            Answers: when was the last analysis, how many decisions are
-            available right now, and is monitoring on. If the gestor wants
-            to trust the numbers above, this is where they verify.
-            ═══════════════════════════════════════════════ */}
-        {metaConnected && !isDemo && (
-          <div style={{
-            marginTop: 28,
-            paddingTop: 14,
-            borderTop: `1px solid ${T.border0}`,
-            display: 'flex', alignItems: 'center', gap: 8,
-            flexWrap: 'wrap',
-            fontFamily: F,
-            fontSize: 10.5,
-            color: T.text3,
-            letterSpacing: '-0.005em',
-          }}>
-            <span>
-              Última análise:{' '}
-              <span style={{ color: T.text2, fontWeight: 600 }}>
-                {lastAnalysisMin < 60
-                  ? `${lastAnalysisMin} min atrás`
-                  : `${Math.round(lastAnalysisMin / 60)}h atrás`}
-              </span>
-            </span>
-            <span style={{ opacity: 0.5 }}>·</span>
-            <span>
-              <span style={{ color: T.text2, fontWeight: 600 }}>
-                {pendingDecisions.length}
-              </span>{' '}
-              decis{pendingDecisions.length === 1 ? 'ão disponível' : 'ões disponíveis'}
-            </span>
-            <span style={{ opacity: 0.5 }}>·</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <span style={{
-                width: 5, height: 5, borderRadius: '50%',
-                background: T.green, boxShadow: `0 0 6px ${T.green}60`,
-              }} />
-              Monitoramento contínuo ativo
-            </span>
-          </div>
-        )}
+        {/* FOOTER status removed — the Command Deck status strip at the
+            top already carries "Operação estável · análise há Xmin" +
+            sync + period picker, so duplicating it down here just read
+            as redundant noise. Pending decisions count is already
+            surfaced inside the "Ações prioritárias" section header. */}
       </div>
       {/* END feed-main-col */}
 
@@ -6620,6 +6834,26 @@ const FeedPage: React.FC = () => {
         @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
         @keyframes feed-fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes feed-fadeIn{from{opacity:0}to{opacity:1}}
+        /* Premium entry — bigger displacement + cubic-bezier(0.22,1,0.36,1)
+           is the "easeOutExpo-ish" curve that reads cinematic without
+           feeling slow. Used by the Command Deck container. */
+        @keyframes feed-deck-in{from{opacity:0;transform:translateY(12px) scale(0.992)}to{opacity:1;transform:translateY(0) scale(1)}}
+        /* KPI tile cascade — each tile inherits the animation with a
+           stagger (60ms per index) so the row "unfolds" left-to-right. */
+        @keyframes feed-kpi-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        /* Live-status dot pulse. Separate from the generic 'pulse' so
+           tuning one does not affect the other. */
+        @keyframes feed-status-pulse{
+          0%,100%{box-shadow:0 0 0 3px rgba(255,255,255,0.03),0 0 12px currentColor;transform:scale(1)}
+          50%{box-shadow:0 0 0 6px rgba(255,255,255,0.06),0 0 18px currentColor;transform:scale(1.08)}
+        }
+        /* Ambient glow breathing — 6s cycle so it feels alive but
+           doesn't draw the eye away from the data. */
+        @keyframes feed-glow-breathe{
+          0%,100%{opacity:0.85;transform:scale(1)}
+          50%{opacity:1;transform:scale(1.06)}
+        }
+        @keyframes feed-spin{to{transform:rotate(360deg)}}
         @keyframes feed-shimmer{0%,100%{opacity:1}50%{opacity:0.5}}
         @keyframes feed-success{0%{opacity:0;transform:scale(0.9)}40%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
         @keyframes feed-btn-press{0%{transform:scale(1)}50%{transform:scale(0.96)}100%{transform:scale(1)}}
