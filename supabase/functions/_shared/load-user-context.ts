@@ -70,11 +70,17 @@ export interface BrainSnapshotLite {
 }
 
 export interface BrainCreativeMemory {
-  ad_id?: string | null;
-  metric_type?: string | null;
-  metric_value?: number | null;
-  insight_text?: string | null;
-  tags?: string[] | null;
+  // Projected from the real creative_memory columns. `hook_type`
+  // doubles as our "feature" name (hooks / script / brief / ...).
+  // `notes` is JSON we pack at save time — decoded into label/tags.
+  hook_type?: string | null;
+  creative_model?: string | null;
+  platform?: string | null;
+  market?: string | null;
+  hook_score?: number | null;
+  ctr?: number | null;
+  roas?: number | null;
+  notes?: string | null;
   created_at?: string | null;
 }
 
@@ -186,8 +192,11 @@ export async function loadUserContext(opts: LoadContextOptions): Promise<Adbrief
       { data: null },
     ),
     safely(
+      // learned_patterns (prod) has no `label` / `feature_type` columns.
+      // Both are carried inside `variables` JSONB by save-learning.ts.
+      // We project those fields back on the client side below.
       (scopePersona((sb as any).from("learned_patterns")
-        .select("pattern_key,label,insight_text,avg_ctr,avg_roas,sample_size,confidence,is_winner,feature_type,variables")
+        .select("pattern_key,insight_text,avg_ctr,avg_roas,sample_size,confidence,is_winner,variables")
         .eq("user_id", userId)) as any)
         .order("is_winner", { ascending: false })
         .order("confidence", { ascending: false, nullsFirst: false })
@@ -211,10 +220,15 @@ export async function loadUserContext(opts: LoadContextOptions): Promise<Adbrief
       { data: [] },
     ),
     safely(
+      // creative_memory (prod) schema: hook_type, creative_model,
+      // platform, market, hook_score, ctr, cpc, roas, analysis_id,
+      // notes, created_at. save-learning.ts packs {label, tags,
+      // payload} into `notes` as JSON, and stores the feature name
+      // in `hook_type`. We decode both below when formatting.
       (scopePersona((sb as any).from("creative_memory")
-        .select("ad_id,metric_type,metric_value,insight_text,tags,created_at")
+        .select("hook_type,creative_model,platform,market,hook_score,ctr,roas,notes,created_at")
         .eq("user_id", userId)) as any)
-        .order("metric_value", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
         .limit(caps.creativeMemory) as Promise<{ data: BrainCreativeMemory[] | null }>,
       { data: [] },
     ),
@@ -306,20 +320,43 @@ export function formatContextBlock(ctx: AdbriefBrainContext): string {
         : p.avg_ctr != null ? ` CTR ${(p.avg_ctr * 100).toFixed(2)}%`
         : "";
       const insight = p.insight_text ? ` — ${p.insight_text}` : "";
-      parts.push(`${tag} ${p.label || p.pattern_key}${metric}${conf}${insight}`);
+      // label lives in variables.label when save-learning.ts wrote it
+      const labelFromVars = (p.variables as any)?.label as string | undefined;
+      const displayLabel = p.label || labelFromVars || p.pattern_key;
+      parts.push(`${tag} ${displayLabel}${metric}${conf}${insight}`);
     }
     parts.push("");
   }
 
   if (ctx.creativeMemory.length) {
-    parts.push(`## CRIATIVOS DE REFERÊNCIA (top ${Math.min(5, ctx.creativeMemory.length)} por performance)`);
+    parts.push(`## CRIATIVOS DE REFERÊNCIA (últimos ${Math.min(5, ctx.creativeMemory.length)})`);
     for (const c of ctx.creativeMemory.slice(0, 5)) {
-      const tags = c.tags?.length ? ` [${c.tags.slice(0, 4).join(", ")}]` : "";
-      const metric = c.metric_type && c.metric_value != null
-        ? ` — ${c.metric_type} ${c.metric_value}`
+      // Decode the JSON blob we pack into `notes` at save time so we can
+      // surface label + tags back into the prompt. Older rows that
+      // predate save-learning.ts (e.g. analyze-video analysis rows) won't
+      // parse — we fall back to showing the raw note as insight.
+      let label = "";
+      let tags: string[] = [];
+      let insightFromNotes = "";
+      if (c.notes) {
+        try {
+          const parsed = JSON.parse(c.notes);
+          if (parsed && typeof parsed === "object") {
+            label = (parsed.label as string) || "";
+            tags = Array.isArray(parsed.tags) ? parsed.tags : [];
+          }
+        } catch {
+          insightFromNotes = c.notes.slice(0, 120);
+        }
+      }
+      const feature = c.hook_type || "criativo";
+      const score = c.hook_score != null ? ` — score ${c.hook_score}`
+        : c.roas != null ? ` — ROAS ${Number(c.roas).toFixed(1)}x`
+        : c.ctr != null ? ` — CTR ${(Number(c.ctr) * 100).toFixed(2)}%`
         : "";
-      const insight = c.insight_text ? ` — ${c.insight_text}` : "";
-      parts.push(`· ${c.ad_id || "ad"}${metric}${tags}${insight}`);
+      const tagStr = tags.length ? ` [${tags.slice(0, 4).join(", ")}]` : "";
+      const labelStr = label ? ` — ${label}` : (insightFromNotes ? ` — ${insightFromNotes}` : "");
+      parts.push(`· ${feature}${score}${tagStr}${labelStr}`);
     }
     parts.push("");
   }

@@ -60,17 +60,49 @@ export async function saveCreativeOutput(opts: SaveCreativeOutputOpts): Promise<
     const payloadStr = typeof opts.payload === "string"
       ? opts.payload
       : JSON.stringify(opts.payload);
-    const bounded = payloadStr.length > 4096 ? payloadStr.slice(0, 4096) + "…" : payloadStr;
+
+    // creative_memory schema (prod) has NO persona_id / metric_type /
+    // insight_text / tags / payload columns. It was designed for video
+    // analysis rows. We map our creative-output shape onto the columns
+    // that DO exist by packing label + tags + payload into `notes` as a
+    // JSON blob, and using `hook_type` for the feature name. Readers
+    // that know this convention can decode; legacy rows stay untouched.
     const label = (opts.label || "").slice(0, 200);
-    await (sb as any).from("creative_memory").insert({
-      user_id: opts.userId,
+    const tags = [opts.feature, ...(opts.tags || [])].slice(0, 10);
+    const notesObj = {
+      v: 1, // schema version marker so future readers can evolve
       persona_id: opts.personaId ?? null,
-      metric_type: opts.feature,
-      insight_text: label,
-      tags: [opts.feature, ...(opts.tags || [])].slice(0, 10),
-      payload: bounded,
+      feature: opts.feature,
+      label,
+      tags,
+      payload: payloadStr,
+    };
+    let notesStr = JSON.stringify(notesObj);
+    if (notesStr.length > 5500) {
+      // Trim the payload field to keep the whole row under Postgres TEXT
+      // limits comfortably. Label + tags stay intact for fast filtering.
+      const overflow = notesStr.length - 5500;
+      notesObj.payload = payloadStr.slice(0, Math.max(200, payloadStr.length - overflow - 100)) + "…";
+      notesStr = JSON.stringify(notesObj);
+    }
+
+    // Infer platform / market from tags when the caller put them there
+    // (generators do — see generate-hooks / captions / ab-variants).
+    const tagsLower = tags.map(t => String(t).toLowerCase());
+    const platform = ["meta", "tiktok", "reels", "facebook", "linkedin", "instagram"]
+      .find(p => tagsLower.includes(p)) ?? null;
+    const market = tagsLower.find(t => /^(br|us|global|generic|[a-z]{2}_[a-z]{2})$/i.test(t)) ?? null;
+
+    const { error } = await (sb as any).from("creative_memory").insert({
+      user_id: opts.userId,
+      hook_type: opts.feature.slice(0, 40),
+      creative_model: "claude-haiku-4-5",
+      platform,
+      market,
+      notes: notesStr,
       created_at: new Date().toISOString(),
     });
+    if (error) console.error("[save-learning] creative insert error:", error.message || error);
   } catch (e) {
     console.error("[save-learning] creative failed:", (e as any)?.message || e);
   }
@@ -117,45 +149,66 @@ export async function savePatternDiscovery(opts: SavePatternOpts): Promise<void>
   try {
     const sb = getClient(opts.supabase);
     const patternKey = opts.patternKey.slice(0, 120);
+
+    // learned_patterns schema (prod) has: user_id, persona_id,
+    // pattern_key, variables, avg_ctr/cpc/roas/thumb_stop, sample_size,
+    // confidence, is_winner, insight_text, last_updated, created_at.
+    // There is NO `label` or `feature_type` column — we fold label into
+    // insight_text and feature_type into the pattern_key prefix
+    // (already done by all callers: "competitor_", "trend_",
+    // "preflight_", "alert_"). Timestamp column is `last_updated`.
+    const insightCombined = [
+      opts.label ? opts.label.slice(0, 120) : null,
+      opts.insightText ? opts.insightText.slice(0, 400) : null,
+    ].filter(Boolean).join(" — ").slice(0, 500) || null;
+
+    const variablesWithMeta = {
+      ...(opts.variables || {}),
+      feature_type: opts.featureType ?? "detected",
+      ...(opts.label ? { label: opts.label.slice(0, 200) } : {}),
+    };
+
     const row: Record<string, unknown> = {
       user_id: opts.userId,
       persona_id: opts.personaId ?? null,
       pattern_key: patternKey,
-      label: (opts.label || "").slice(0, 200) || null,
       confidence: opts.confidence ?? 0.7,
       is_winner: opts.isWinner ?? null,
-      insight_text: (opts.insightText || "").slice(0, 400) || null,
-      feature_type: opts.featureType ?? "detected",
-      variables: opts.variables ?? null,
+      insight_text: insightCombined,
+      variables: variablesWithMeta,
       avg_ctr: opts.avgCtr ?? null,
       avg_roas: opts.avgRoas ?? null,
       sample_size: opts.sampleSize ?? 1,
-      last_seen_at: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
     };
 
     // Upsert by (user_id, persona_id, pattern_key). When the row
     // already exists we bump sample_size and update the metrics
-    // instead of creating a duplicate.
-    const existing = await (sb as any).from("learned_patterns")
+    // instead of creating a duplicate. Supabase .is(col, null) only
+    // matches NULL — for a concrete UUID we must use .eq, so we branch.
+    let existingQuery = (sb as any).from("learned_patterns")
       .select("id, sample_size")
       .eq("user_id", opts.userId)
-      .eq("pattern_key", patternKey)
-      .is("persona_id", opts.personaId ?? null)
-      .limit(1)
-      .maybeSingle();
+      .eq("pattern_key", patternKey);
+    existingQuery = opts.personaId
+      ? existingQuery.eq("persona_id", opts.personaId)
+      : existingQuery.is("persona_id", null);
+    const existing = await existingQuery.limit(1).maybeSingle();
 
     if (existing?.data?.id) {
-      await (sb as any).from("learned_patterns")
+      const { error } = await (sb as any).from("learned_patterns")
         .update({
           ...row,
           sample_size: (existing.data.sample_size || 0) + (opts.sampleSize ?? 1),
         })
         .eq("id", existing.data.id);
+      if (error) console.error("[save-learning] pattern update error:", error.message || error);
     } else {
-      await (sb as any).from("learned_patterns").insert({
+      const { error } = await (sb as any).from("learned_patterns").insert({
         ...row,
         created_at: new Date().toISOString(),
       });
+      if (error) console.error("[save-learning] pattern insert error:", error.message || error);
     }
   } catch (e) {
     console.error("[save-learning] pattern failed:", (e as any)?.message || e);
