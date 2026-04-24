@@ -4520,11 +4520,21 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       {/* ── Input area ── */}
       <div style={{flexShrink:0,position:"relative" as const,zIndex:2,display:undefined}}>
 
-        {/* Fade from chat → input */}
-        <div className="chat-input-fade" style={{height:40,background:"linear-gradient(to bottom,transparent,var(--bg-main))",pointerEvents:"none",marginBottom:-1}}/>
+        {/* Fade from chat → input station. Taller + includes a mid-stop so
+            the eye reads a soft descent into the darker station instead of
+            a hard edge (which the old 40px transparent→bg-main was giving). */}
+        <div className="chat-input-fade" style={{height:72,background:"linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.22) 55%, rgba(0,0,0,0.42) 100%)",pointerEvents:"none",marginBottom:-1}}/>
 
-        {/* Main input surface — bg matches the app so there's no seam with the sidebar */}
-        <div style={{background:"var(--bg-main)",padding:"14px 0 max(env(safe-area-inset-bottom, 0px), 14px)"}}>
+        {/* Main input surface — this is the "station". Slightly darker than
+            var(--bg-main) + a hairline top border so the composer reads as
+            a dedicated zone, not floating bg. Shadow flips upward to lift
+            the station above the chat scroll. */}
+        <div style={{
+          background:"linear-gradient(180deg, rgba(0,0,0,0.42), rgba(0,0,0,0.58))",
+          borderTop:"1px solid rgba(240,246,252,0.06)",
+          boxShadow:"0 -12px 40px -18px rgba(0,0,0,0.6)",
+          padding:"16px 0 max(env(safe-area-inset-bottom, 0px), 16px)",
+        }}>
           <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
@@ -4735,13 +4745,23 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             )}
 
-            {/* Input card — premium glass */}
+            {/* Input card — premium glass. Previous version was
+                nearly invisible (rgba(255,255,255,0.025) over bg-main).
+                Now: subtle vertical gradient for depth, stronger border,
+                elevation shadow, inner top-highlight for glass feel. */}
             <div className="input-box-wrap" style={{
               display:"flex",flexDirection:"column",gap:0,
-              background: chatDragOver ? "rgba(37,99,235,0.05)" : "rgba(255,255,255,0.025)",
-              border: chatDragOver ? "1px solid rgba(37,99,235,0.35)" : "1px solid rgba(255,255,255,0.07)",
+              background: chatDragOver
+                ? "rgba(37,99,235,0.08)"
+                : "linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.020) 100%)",
+              border: chatDragOver
+                ? "1px solid rgba(37,99,235,0.40)"
+                : "1px solid rgba(240,246,252,0.11)",
               borderRadius:14,
               padding:"12px 12px 12px 18px",
+              boxShadow: chatDragOver
+                ? "0 0 0 3px rgba(37,99,235,0.12), 0 10px 30px -14px rgba(0,0,0,0.5)"
+                : "0 10px 30px -16px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.05) inset",
               transition:"border-color 0.2s, box-shadow 0.2s, background 0.2s",
             }}
             onDragOver={e => { e.preventDefault(); setChatDragOver(true); }}
