@@ -568,9 +568,23 @@ serve(async (req) => {
           const deviation = Math.abs((ad.ctr - groupCtr) / groupCtr);
           if (deviation > 0.5) {
             const isOver = ad.ctr > groupCtr;
+            const ctrPct = (ad.ctr * 100).toFixed(2);
+            const groupCtrPct = (groupCtr * 100).toFixed(2);
+            const devPct = Math.round(deviation * 100);
+            // Copilot voice: we OBSERVED, we REPORT, we suggest the next
+            // action the user can take. No "investigar" — a copilot doesn't
+            // punt the analysis back to the human. We name the metric (CTR),
+            // show both values (ad vs group baseline), give a direction
+            // label (acima / abaixo), and close with a concrete next step
+            // the user can trigger in the chat.
+            const insightText = isOver
+              ? `"${ad.ad_name}" com CTR ${ctrPct}% — ${devPct}% acima da média do conjunto "${group.label}" (${groupCtrPct}%). Candidato a escalar — abra no chat pra entender o que fez ele vencer.`
+              : `"${ad.ad_name}" com CTR ${ctrPct}% — ${devPct}% abaixo da média do conjunto "${group.label}" (${groupCtrPct}%). Candidato a pausa — revise no chat antes de agir.`;
             validPatterns.push({
               pattern_key: `persona:${persona_id}:deviation:${ad.ad_id}`,
-              label: `Desvio: "${ad.ad_name}" ${isOver ? "acima" : "abaixo"} do grupo`,
+              label: isOver
+                ? `Winner emergente: ${ad.ad_name}`
+                : `Underperformer: ${ad.ad_name}`,
               feature_type: "deviation",
               feature_value: ad.ad_id,
               variables: { persona_id, feature_type: "deviation", feature_value: ad.ad_id, group_key: group.key },
@@ -583,7 +597,7 @@ serve(async (req) => {
               impact_ctr_pct: impactPct(ad.ctr, groupCtr),
               impact_roas_pct: "",
               consistency: 0,
-              insight_text: `"${ad.ad_name}" desvia ${Math.round(deviation * 100)}% do grupo "${group.label}". ${isOver ? "Investigar o que o diferencia para replicar." : "Considerar pausar ou ajustar."}`,
+              insight_text: insightText,
               top_ads: [{ ad_id: ad.ad_id, ad_name: ad.ad_name, ctr: ad.ctr, thumbnail_url: ad.thumbnail_url }],
             });
           }

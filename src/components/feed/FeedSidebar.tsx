@@ -496,7 +496,14 @@ const NextStepCard: React.FC<{
   // When there's no pending decision we don't invent an action. We tell
   // the truth: the system is monitoring and will surface something when
   // signals justify it. No CTA, no fake urgency.
-  if (!derived && !loading) {
+  //
+  // We also use this branch WHILE LOADING — previously the blue-star
+  // "Próximo passo recomendado" header rendered during load and then
+  // collapsed into the calm state once fetch resolved with no decision,
+  // producing a visible flash. Going straight to the calm state during
+  // load eliminates the flash entirely. If a real decision arrives
+  // afterwards, the upward transition (calm → blue) is non-jarring.
+  if (!derived) {
     return (
       <Wrapper>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -561,54 +568,46 @@ const NextStepCard: React.FC<{
         </span>
       </div>
 
-      {!derived ? (
-        <div style={{
-          fontSize: 12.5, color: T.text2, lineHeight: 1.5,
-          letterSpacing: '-0.005em', marginBottom: 14,
-        }}>
-          Analisando sua conta para encontrar a próxima ação de maior impacto…
-        </div>
-      ) : (
-        <>
-          <div style={{
-            fontSize: 12.5, color: T.text2, lineHeight: 1.55,
-            letterSpacing: '-0.005em', marginBottom: 16,
-          }}>
-            {derived.description}
-          </div>
+      {/* At this point `derived` is guaranteed truthy — the calm branch
+          above returns early when it's missing, during loading or otherwise.
+          So no `!derived` placeholder path is reachable here anymore. */}
+      <div style={{
+        fontSize: 12.5, color: T.text2, lineHeight: 1.55,
+        letterSpacing: '-0.005em', marginBottom: 16,
+      }}>
+        {derived.description}
+      </div>
 
-          {derived.impactValue !== '—' && (() => {
-            // Step-down font size when the (already compacted) string
-            // still exceeds the sidebar zone's comfortable width.
-            const len = derived.impactValue.length;
-            const base = 22;
-            const adjusted = len > 14 ? base - 4 : len > 11 ? base - 2 : base;
-            return (
-              <div style={{ marginBottom: 14, minWidth: 0 }}>
-                <div style={{
-                  fontSize: 11.5, color: T.text3, fontFamily: F,
-                  letterSpacing: '-0.005em', marginBottom: 4,
-                }}>
-                  {derived.impactLabel}
-                </div>
-                <div
-                  title={derived.impactValuePrecise !== derived.impactValue ? derived.impactValuePrecise : undefined}
-                  style={{
-                    fontSize: adjusted, fontWeight: 800,
-                    color: derived.impactValue.startsWith('+') ? T.greenSoft : T.red,
-                    letterSpacing: '-0.025em', fontFamily: F, lineHeight: 1.15,
-                    fontVariantNumeric: 'tabular-nums' as const,
-                    minWidth: 0, overflow: 'hidden',
-                    textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}
-                >
-                  {derived.impactValue}
-                </div>
-              </div>
-            );
-          })()}
-        </>
-      )}
+      {derived.impactValue !== '—' && (() => {
+        // Step-down font size when the (already compacted) string
+        // still exceeds the sidebar zone's comfortable width.
+        const len = derived.impactValue.length;
+        const base = 22;
+        const adjusted = len > 14 ? base - 4 : len > 11 ? base - 2 : base;
+        return (
+          <div style={{ marginBottom: 14, minWidth: 0 }}>
+            <div style={{
+              fontSize: 11.5, color: T.text3, fontFamily: F,
+              letterSpacing: '-0.005em', marginBottom: 4,
+            }}>
+              {derived.impactLabel}
+            </div>
+            <div
+              title={derived.impactValuePrecise !== derived.impactValue ? derived.impactValuePrecise : undefined}
+              style={{
+                fontSize: adjusted, fontWeight: 800,
+                color: derived.impactValue.startsWith('+') ? T.greenSoft : T.red,
+                letterSpacing: '-0.025em', fontFamily: F, lineHeight: 1.15,
+                fontVariantNumeric: 'tabular-nums' as const,
+                minWidth: 0, overflow: 'hidden',
+                textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}
+            >
+              {derived.impactValue}
+            </div>
+          </div>
+        );
+      })()}
 
       {/*
         Blue CTA — only render when we have a real derived step. Previously this
