@@ -68,28 +68,40 @@ const PLATFORM_ICONS_INLINE: Record<string,React.ReactNode> = {
 // Each tool has its own color + a 1-line description shown inside the bubble.
 // `desc` is the thing that makes the menu feel informative instead of just
 // being a wall of labels.
+// ⚠ "Brief" action temporarily hidden from the public toolbar — generate-brief
+// was returning non-2xx for common prompts and was confusing users. The
+// standalone page at `/dashboard/brief` and the InlineToolPanel config for
+// `action: "brief"` are INTENTIONALLY LEFT INTACT so the owner can still
+// reach it by: (a) direct URL /dashboard/brief, or (b) appending ?brief=1 to
+// /dashboard/ai which re-enables the pill in the toolbar. Remove this note
+// and re-add the entries below once generate-brief is fixed end-to-end.
 const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string; desc: string}>> = {
   en: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "New hook variations based on your winners" },
     { icon: Clapperboard,   label: "Script",           action: "script",       color: "#34d399", desc: "Full script for your next video creative" },
-    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b", desc: "Brief ready to hand to your creative team" },
     { icon: ScanEye,        label: "Competitor",       action: "competitor",   color: "#a78bfa", desc: "Decode a competitor ad and their strategy" },
     { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Update who you're selling to" },
   ],
   pt: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "Variações de abertura com base nos seus vencedores" },
     { icon: Clapperboard,   label: "Roteiro",          action: "script",       color: "#34d399", desc: "Script completo pro seu próximo vídeo" },
-    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b", desc: "Briefing pronto pra passar pra equipe criativa" },
     { icon: ScanEye,        label: "Concorrente",      action: "competitor",   color: "#a78bfa", desc: "Decodifica um anúncio concorrente e a estratégia dele" },
     { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Atualiza o perfil de quem você tá vendendo" },
   ],
   es: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "Variaciones de gancho basadas en tus ganadores" },
     { icon: Clapperboard,   label: "Guión",            action: "script",       color: "#34d399", desc: "Guión completo para tu próximo video" },
-    { icon: FileText,       label: "Brief",            action: "brief",        color: "#f59e0b", desc: "Brief listo para tu equipo creativo" },
     { icon: ScanEye,        label: "Competidor",       action: "competitor",   color: "#a78bfa", desc: "Decodifica un anuncio competidor y su estrategia" },
     { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Actualiza a quién le vendes" },
   ],
+};
+
+// Hidden re-enable: if the URL has ?brief=1 on /dashboard/ai, the owner gets
+// the pill back in the toolbar without exposing it to everyone else.
+const BRIEF_PILL_BY_LANG: Record<string, {icon: any; label: string; action: string; color: string; desc: string}> = {
+  en: { icon: FileText, label: "Brief",    action: "brief", color: "#f59e0b", desc: "Brief ready to hand to your creative team" },
+  pt: { icon: FileText, label: "Brief",    action: "brief", color: "#f59e0b", desc: "Briefing pronto pra passar pra equipe criativa" },
+  es: { icon: FileText, label: "Brief",    action: "brief", color: "#f59e0b", desc: "Brief listo para tu equipo creativo" },
 };
 
 // ── Block types ────────────────────────────────────────────────────────────────
@@ -4137,7 +4149,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     setTimeout(() => send(prompt), 300);
   }, [selectedPersona?.id, contextReady, loading]);
 
-    const TOOLS=TOOLBAR[lang]||TOOLBAR.en;
+    // Base toolbar for this language. Brief is intentionally missing from
+    // the public toolbar (see TOOLBAR definition above). Re-add it when
+    // the URL carries ?brief=1 so the owner can still trigger the
+    // in-chat InlineToolPanel for brief generation. Everyone else just
+    // doesn't see the pill.
+    const BRIEF_UNLOCK = typeof window !== "undefined" && /[?&]brief=1\b/.test(window.location.search);
+    const baseTools = TOOLBAR[lang] || TOOLBAR.en;
+    const briefPill = BRIEF_PILL_BY_LANG[lang] || BRIEF_PILL_BY_LANG.en;
+    const TOOLS = BRIEF_UNLOCK
+      ? [baseTools[0], baseTools[1], briefPill, ...baseTools.slice(2)]
+      : baseTools;
   const hasData=connections.length>0;
 
   const LABEL: Record<string,Record<string,string>>={
