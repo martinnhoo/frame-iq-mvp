@@ -4769,7 +4769,7 @@ const CalmHeroRotator: React.FC<{
       headline={headline}
       subtext={`${activeAdsCount} anúncio${activeAdsCount === 1 ? '' : 's'} rodando${activeCampaignsCount > 0 ? ` em ${activeCampaignsCount} campanha${activeCampaignsCount === 1 ? '' : 's'}` : ''}. Análise a cada 20 minutos — se algo fugir do padrão, eu ajo automaticamente ou te aviso.`}
       primaryCta={{ label: 'Abrir chat com a IA', onClick: onAi }}
-      secondaryCta={{ label: 'Gerar novo criativo', onClick: onHooks }}
+      secondaryCta={{ label: 'Gerar hooks', onClick: onHooks }}
       meta={`Última análise há ${lastAnalysisMin < 60 ? `${lastAnalysisMin}min` : `${Math.round(lastAnalysisMin / 60)}h`}`}
     />
   );
@@ -5967,6 +5967,16 @@ const FeedPage: React.FC = () => {
   // Falls back to ad_metrics DB table if live-metrics fails.
   // Auto-refreshes every 60s so data stays current.
   const liveMetricsInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Sequence counter to guard against stale-response races: if the user
+  // toggles 7d→14d→30d rapidly, the slowest response used to win, so the
+  // screen could flash 30d data then revert to 7d. Each fetch now tags
+  // itself with an increasing id; on completion we discard the result if
+  // a newer fetch has started. Also lets us drop late responses from
+  // the 60s auto-refresh interval when the user has since changed period.
+  const fetchSeq = useRef(0);
+  // Freeze the period that this fetch was started with, so the completion
+  // handler can verify period didn't change mid-flight.
+  const fetchPeriodRef = useRef<typeof period>(period);
 
   const fetchLiveMetrics = useCallback(async (silent = false) => {
     // Early return: missing context. Set metricsReady so the skeleton doesn't
@@ -5981,11 +5991,20 @@ const FeedPage: React.FC = () => {
     const safetyTimer = setTimeout(() => setMetricsReady(true), 8000);
     // Real fetch starting — gate stays closed until this completes
     if (!silent) setMetricsReady(false);
+    // Tag this invocation so late responses can be discarded.
+    const mySeq = ++fetchSeq.current;
+    const myPeriod = period;
+    fetchPeriodRef.current = myPeriod;
+    // Helper: true if this fetch is still the latest one AND the period
+    // hasn't changed. When false, the caller must NOT write state.
+    const isStillFresh = () =>
+      mySeq === fetchSeq.current && fetchPeriodRef.current === myPeriod;
     try {
-      const periodKey = period === '30d' ? '30d' : period === '14d' ? '14d' : '7d';
+      const periodKey = myPeriod === '30d' ? '30d' : myPeriod === '14d' ? '14d' : '7d';
       const { data, error } = await supabase.functions.invoke('live-metrics', {
         body: { user_id: userId, persona_id: personaId, period: periodKey },
       });
+      if (!isStillFresh()) return; // user switched period; drop stale response
       if (error || !data?.ok) throw new Error(error?.message || 'live-metrics failed');
 
       // Use combined (multi-platform) or meta-specific data
@@ -6021,6 +6040,7 @@ const FeedPage: React.FC = () => {
       const asRatio    = (v: unknown) => (typeof v === 'number' && isFinite(v) ? v : null);
       const asPct      = (v: unknown) => (typeof v === 'number' && isFinite(v) ? v : null);
 
+      if (!isStillFresh()) return; // discard: user clicked a different period while we were computing
       setAdMetrics({
         totalSpend,
         totalConversions,
@@ -6060,6 +6080,7 @@ const FeedPage: React.FC = () => {
           .select('spend, conversions, revenue, clicks, impressions, ctr, cpa, cpc, roas, date')
           .eq('account_id', accountId)
           .gte('date', since) as any);
+        if (!isStillFresh()) return; // user changed period while fallback was running
         if (!mData || mData.length === 0) { setAdMetrics(null); setMetricsReady(true); return; }
 
         const totalSpend = mData.reduce((s: number, r: any) => s + (r.spend || 0), 0);
@@ -6071,6 +6092,7 @@ const FeedPage: React.FC = () => {
         const cpaVals = mData.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
         const uniqueDates = new Set(mData.map((r: any) => r.date));
 
+        if (!isStillFresh()) return; // last guard before committing fallback values
         setAdMetrics({
           totalSpend,
           totalConversions,
@@ -6094,8 +6116,8 @@ const FeedPage: React.FC = () => {
           prevSpend: null, prevCtr: null, prevCpa: null, prevRoas: null, prevConversions: null,
           deltaSpendPct: null, deltaCtrPct: null, deltaCpaPct: null, deltaRoasPct: null, deltaConversionsPct: null,
         });
-      } catch { setAdMetrics(null); }
-      setMetricsReady(true); // ✓ Path B: fallback success OR fallback error
+      } catch { if (isStillFresh()) setAdMetrics(null); }
+      if (isStillFresh()) setMetricsReady(true); // ✓ Path B: fallback success OR fallback error
     } finally {
       clearTimeout(safetyTimer);
     }
@@ -7516,8 +7538,11 @@ const FeedPage: React.FC = () => {
             }
           }}
           onOpenAllActivity={() => {
-            // "Ver todas" (Atividade recente) → full action log
-            navigate('/dashboard/intelligence');
+            // "Ver todas" under Atividade recente → the real action log lives
+            // on /dashboard/history. Previously we routed to /intelligence
+            // (memories/patterns), which confused users because the label
+            // promises "todas as atividades", not "todas as memórias".
+            navigate('/dashboard/history');
           }}
         />
       )}

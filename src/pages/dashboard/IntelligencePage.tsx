@@ -79,6 +79,21 @@ const TYPE_LABEL: Record<string,Record<string,string>> = {
   context:   { pt:"Contexto",     es:"Contexto",      en:"Context"     },
 };
 
+function formatRelativeAge(iso: string, lang: string): string {
+  try {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return lang === "pt" ? "agora" : lang === "es" ? "ahora" : "now";
+    if (mins < 60) return lang === "pt" ? `há ${mins}min` : lang === "es" ? `hace ${mins}min` : `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return lang === "pt" ? `há ${hrs}h` : lang === "es" ? `hace ${hrs}h` : `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 30) return lang === "pt" ? `há ${days}d` : lang === "es" ? `hace ${days}d` : `${days}d ago`;
+    const months = Math.floor(days / 30);
+    return lang === "pt" ? `há ${months}mês` : lang === "es" ? `hace ${months}mes` : `${months}mo ago`;
+  } catch { return ""; }
+}
+
 function MemoryRow({ m, lang, deleting, onDelete }: {
   m: Memory; lang: string; deleting: boolean; onDelete: () => void;
 }) {
@@ -86,6 +101,12 @@ function MemoryRow({ m, lang, deleting, onDelete }: {
   const isLong = m.memory_text.length > 90;
   const color = TYPE_COLOR[m.memory_type] || "#888";
   const label = TYPE_LABEL[m.memory_type]?.[lang] || m.memory_type;
+  // Show age so users see CONTEXTO as a snapshot rather than live truth —
+  // fixes the confusing mismatch where Feed shows "Saudável 100" and the
+  // same account memory says "status crítico" from weeks ago.
+  const age = formatRelativeAge(m.created_at, lang);
+  const ageMs = Date.now() - new Date(m.created_at).getTime();
+  const isStale = ageMs > 3 * 24 * 60 * 60 * 1000; // ≥3 days old
 
   return (
     <div style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"10px 12px", borderRadius:10,
@@ -100,6 +121,18 @@ function MemoryRow({ m, lang, deleting, onDelete }: {
           <span style={{ fontFamily:M, fontSize:10, color:"rgba(255,255,255,0.2)" }}>
             {"".repeat(Math.min(m.importance, 5))}
           </span>
+          {age && (
+            <span
+              title={lang === "pt"
+                ? (isStale ? "Memória antiga — pode não refletir o estado atual da conta" : "Quando esta memória foi registrada")
+                : (isStale ? "Older memory — may not reflect current account state" : "When this memory was captured")}
+              style={{
+                fontFamily: F, fontSize: 10, fontWeight: 500,
+                color: isStale ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.28)",
+                marginLeft: "auto",
+              }}
+            >· {age}{isStale ? " (antiga)" : ""}</span>
+          )}
         </div>
         <p style={{ fontFamily:F, fontSize:13, color:"rgba(255,255,255,0.75)", lineHeight:1.55, margin:0,
           ...(isLong && !expanded ? { overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" as const } : {}) }}>

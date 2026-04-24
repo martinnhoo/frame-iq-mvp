@@ -391,7 +391,7 @@ const AccountHealthCard: React.FC<{
           (e.currentTarget as HTMLElement).style.textDecoration = 'none';
         }}
       >
-        Ver diagnóstico completo
+        Analisar com a IA
         <span style={{ fontSize: 12, lineHeight: 1 }}>→</span>
       </button>
     </Wrapper>
