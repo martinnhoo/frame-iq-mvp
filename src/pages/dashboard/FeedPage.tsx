@@ -7501,7 +7501,7 @@ const FeedPage: React.FC = () => {
             // "Ver diagnóstico completo" → full health diagnostic via AI
             navigate('/dashboard/ai', {
               state: {
-                prompt: 'Me faz um diagnóstico completo da minha conta: pixel, eventos, limites, status do fatturamento, anúncios ativos, tracking. Aponta cada problema com ação concreta.',
+                prompt: 'Me faz um diagnóstico completo da minha conta: pixel, eventos, limites, status do faturamento, anúncios ativos, tracking. Aponta cada problema com ação concreta.',
               },
             });
           }}
