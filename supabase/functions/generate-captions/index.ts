@@ -1,5 +1,4 @@
 // generate-captions — Anthropic Claude via direct fetch (no SDK)
-import { saveCreativeOutput } from "../_shared/save-learning.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -159,24 +158,6 @@ Each caption must be distinctly different in angle, not just rephrased. All must
 
       return { fileId: file.id, filename: file.name, results: platformResults };
     }));
-
-    // ── Close the learning loop ─────────────────────────────────────
-    // Captions across platforms all share context + tone guidance.
-    // Persist the batch so future hook / script / brief generations
-    // can reference caption voice this user has validated before.
-    saveCreativeOutput({
-      userId: user.id,
-      feature: 'captions',
-      label: (context || `Legendas · ${platforms.join('+')}`).toString().slice(0, 180),
-      payload: {
-        results,
-        platforms,
-        context: context || null,
-        fileCount: files.length,
-      },
-      tags: ['captions', ...platforms].slice(0, 5),
-      supabase,
-    }).catch(() => { /* helper already logs */ });
 
     return new Response(JSON.stringify({ results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,7 +1,6 @@
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { saveCreativeOutput } from "../_shared/save-learning.ts";
 const createSvcClient = createClient;
 import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.39.0";
 
@@ -211,31 +210,6 @@ Return ONLY a JSON object — no markdown, no explanation:
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // ── Close the learning loop ─────────────────────────────────────
-    // Persist brief to creative_memory so the Estrategista + future
-    // hook/script generations can reference the strategy this user
-    // has asked us to produce before.
-    saveCreativeOutput({
-      userId: user_id,
-      feature: 'brief',
-      label: (
-        (brief as any)?.headline
-        || (brief as any)?.concept
-        || (brief as any)?.name
-        || `Brief ${product}${objective ? ` · ${objective}` : ''}`
-      ).toString().slice(0, 180),
-      payload: {
-        brief,
-        product,
-        objective: objective || null,
-        audience: audience || null,
-        market: market || null,
-        offer: offer || null,
-      },
-      tags: [objective || 'brief', market || 'generic'].slice(0, 5),
-      supabase,
-    }).catch(() => { /* already logged inside helper */ });
 
     return new Response(JSON.stringify({ brief }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

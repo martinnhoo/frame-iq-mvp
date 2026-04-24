@@ -1,7 +1,6 @@
 // decode-competitor v6 — CS sênior briefing, prosa densa, copy pronto
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireCredits } from "../_shared/deductCredits.ts";
-import { saveCompetitiveInsight } from "../_shared/save-learning.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -221,36 +220,6 @@ Retorne este JSON exato (todos os valores em ${langName}, prosa densa, sem bulle
     // Prepend '{' because we prefilled the assistant response with it
     const raw = '{' + rawText;
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
-
-    // ── Close the learning loop ─────────────────────────────────────
-    // Persist competitor decoding so the brain remembers this URL /
-    // competitor. Keyed by domain so re-decoding the same competitor
-    // doesn't create duplicates — it refreshes the insight in place.
-    try {
-      let competitorKey = ad_text.slice(0, 80);
-      if (isUrl) {
-        try { competitorKey = new URL(ad_text.trim()).hostname.replace('www.', ''); }
-        catch { /* fall through to raw slice */ }
-      }
-      const insightSummary = [
-        (parsed as any)?.resumo,
-        (parsed as any)?.hook_analise,
-        (parsed as any)?.summary,
-        (parsed as any)?.angle,
-      ].filter(Boolean)[0];
-      const tactics = (parsed as any)?.hooks_extraidos
-        || (parsed as any)?.hooks
-        || (parsed as any)?.angles
-        || [];
-      saveCompetitiveInsight({
-        userId: authUser.id,
-        competitor: competitorKey,
-        insightText: (insightSummary || `Análise do concorrente ${competitorKey}`).toString().slice(0, 400),
-        tactics: Array.isArray(tactics) ? tactics.map((t: any) => String(t)).slice(0, 10) : [],
-        confidence: 0.75,
-        supabase: sb,
-      }).catch(() => { /* helper already logs */ });
-    } catch { /* never block response on save */ }
 
     return new Response(JSON.stringify({ ...parsed, mock_mode: false }), { headers: { ...cors, 'Content-Type': 'application/json' } });
   } catch (e) {

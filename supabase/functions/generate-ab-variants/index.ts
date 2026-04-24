@@ -1,5 +1,3 @@
-import { saveCreativeOutput } from "../_shared/save-learning.ts";
-
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -127,23 +125,6 @@ Return ONLY valid JSON:
     let parsed: any;
     try { parsed = JSON.parse(text); }
     catch(e) { throw new Error('JSON parse failed: ' + String(e).slice(0,100)); }
-
-    // ── Close the learning loop ─────────────────────────────────────
-    // A/B variants are hook-angle experiments — persist so the brain
-    // remembers what angles were tested for this user/product.
-    saveCreativeOutput({
-      userId: user.id,
-      feature: 'ab_variant',
-      label: `Variantes A/B · ${product || 'script'}`,
-      payload: {
-        variants: parsed.variants,
-        product: product || null,
-        platform: platform || null,
-        market: market || null,
-      },
-      tags: ['ab_variant', platform || 'meta', market || 'generic'].slice(0, 5),
-      supabase,
-    }).catch(() => { /* helper already logs */ });
 
     return new Response(JSON.stringify({ variants: parsed.variants, mock_mode: false }), {
       headers: { ...cors, 'Content-Type': 'application/json' }

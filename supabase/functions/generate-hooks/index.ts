@@ -1,7 +1,6 @@
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { saveCreativeOutput } from "../_shared/save-learning.ts";
 
 
 const cors = {
@@ -433,33 +432,6 @@ Return ONLY valid JSON:
       }
       return h;
     });
-
-    // ── Close the learning loop ─────────────────────────────────────
-    // Persist this generation to creative_memory so future hook /
-    // script / brief calls can reference what we already produced
-    // for this user. Fire-and-forget — never blocks the response,
-    // never throws. The brain accumulates; the user doesn't wait.
-    saveCreativeOutput({
-      userId: user_id,
-      personaId: persona_id || null,
-      feature: 'hooks',
-      label: (filteredHooks[0]?.hook || filteredHooks[0]?.text || `${effectiveCount} hooks para ${effectiveProduct}`).toString().slice(0, 180),
-      payload: {
-        hooks: filteredHooks.slice(0, 10),
-        product: effectiveProduct,
-        funnel_stage,
-        tone,
-        platform,
-        market,
-        angle: angle || null,
-      },
-      tags: [
-        funnel_stage || 'tofu',
-        platform || 'meta',
-        ...(tone ? [String(tone).slice(0, 30)] : []),
-      ],
-      supabase,
-    }).catch(() => { /* already logged inside helper */ });
 
     return new Response(JSON.stringify({ hooks: filteredHooks, mock_mode: false }), {
       headers: { ...cors, 'Content-Type': 'application/json' }
