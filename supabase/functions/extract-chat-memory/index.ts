@@ -129,7 +129,23 @@ Write ALL text fields in the SAME LANGUAGE the user is writing in (PT/EN/ES).
 ${isExplicitSave ? "⚠ USER EXPLICITLY ASKED TO REMEMBER THIS — extract with high importance / confidence, do not skip." : ""}
 
 Focus on: business context, product/price/margin, audience/persona traits, brand tone, rules the user wants enforced, budgets, goals (CPA/ROAS), compliance constraints, winning/losing angles.
-IGNORE: pure questions with no context given, one-word responses, temporary states, anything already in existing memories/knowledge below.
+
+STRICTLY IGNORE (these are EPHEMERAL STATE, not durable facts — NEVER extract as memory):
+  ❌ current account status labels like "crítico", "saudável", "em alerta", "estável"
+  ❌ current ad counts ("X anúncios ativos", "Y campanhas pausadas", "Z em entrega")
+  ❌ spend totals tied to a window ("R$174 gastos 30d", "R$1200 última semana", "gastou R$X esse mês")
+  ❌ current metric values ("CTR 5.76%", "ROAS 2.1x agora", "CPA de R$45")
+  ❌ live performance deltas ("caiu 30% ontem", "subiu esta semana")
+  ❌ recent click/impression/conversion counts
+  These change hour-by-hour. Storing them as memories creates stale lies the AI will repeat weeks later.
+
+Instead, if the user TARGETS a metric, store the target as a rule/constraint:
+  ✓ "target ROAS 3x" → constraint
+  ✓ "CPA máximo R$50" → constraint
+  ✓ "pausar se frequência > 4" → playbook rule
+  ✓ "não gastar mais que R$100/dia em MoFu" → constraint
+
+ALSO IGNORE: pure questions with no context given, one-word responses, anything already in existing memories/knowledge below.
 
 EXISTING FLAT MEMORIES (do NOT duplicate):
 ${existingTexts.length ? existingTexts.map((t: string) => `- ${t}`).join("\n") : "none"}
@@ -213,8 +229,35 @@ Return ONLY the JSON object. Nothing else.`;
     const knowledgeUpdates: any[] = Array.isArray(parsed?.knowledge_updates) ? parsed.knowledge_updates : [];
 
     // ── (A) Flat memory writes ───────────────────────────────────────────────
+    // Safety net for ephemeral-state leaks: even with the prompt rules,
+    // Haiku occasionally extracts things like "Conta em status crítico:
+    // 2 campanhas pausadas, 0 anúncios ativos, R$174 gastos (30d), 871
+    // cliques, CTR 5.76%" — which are hour-fresh snapshots, not durable
+    // facts. Storing them as permanent memories makes the AI confidently
+    // recite stale numbers weeks later. This regex is intentionally loose
+    // and catches the common patterns we've seen in prod.
+    const EPHEMERAL_PATTERNS: RegExp[] = [
+      /\b(?:status\s+(?:cr[ií]tico|saud[aá]vel|em\s+alerta|est[aá]vel))\b/i,
+      /\b\d+\s+an[úu]ncios?\s+(?:ativos?|em\s+entrega|rodando|pausados?)\b/i,
+      /\b\d+\s+campanhas?\s+(?:ativas?|pausadas?|em\s+entrega)\b/i,
+      /R\$\s?[\d.,]+\s*(?:gastos?|investidos?)?\s*(?:\(?\s*\d+\s*d\s*\)?|nos?\s+[úu]ltimos?)/i,
+      /\bCTR\s+[\d.,]+\s*%/i,
+      /\bROAS\s+[\d.,]+\s*x/i,
+      /\bCPA\s+(?:de\s+)?R?\$?\s?[\d.,]+/i,
+      /\bconversões?\s+[\d.,]+\s*(?:por\s+dia|hoje|ontem)/i,
+    ];
+    const isEphemeral = (text: string): boolean =>
+      EPHEMERAL_PATTERNS.some(rx => rx.test(text));
+
     const rows = newMemories
       .filter((m: any) => m?.memory_text && String(m.memory_text).trim().length > 5)
+      .filter((m: any) => {
+        if (isEphemeral(String(m.memory_text))) {
+          console.log("[extract-chat-memory] dropped ephemeral:", String(m.memory_text).slice(0, 120));
+          return false;
+        }
+        return true;
+      })
       .map((m: any) => ({
         user_id,
         persona_id: persona_id || null,
@@ -224,6 +267,34 @@ Return ONLY the JSON object. Nothing else.`;
         source: "chat",
         created_at: new Date().toISOString(),
       }));
+
+    // Opportunistic cleanup: every extraction run sweeps ≥14-day-old memories
+    // in this scope whose text matches our ephemeral regex. Conservative by
+    // design — only deletes rows that BOTH match the regex AND are old.
+    // Fresh inserts of ephemeral stuff are already blocked by the filter
+    // above; this retroactively clears the mess written to prod BEFORE this
+    // fix shipped. Runs even when rows.length is 0 so cleanup isn't gated
+    // on new extractions.
+    try {
+      const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+      const staleQ = persona_id
+        ? (sb as any).from("chat_memory").select("id, memory_text")
+            .eq("user_id", user_id).eq("persona_id", persona_id)
+            .lt("created_at", cutoff)
+        : (sb as any).from("chat_memory").select("id, memory_text")
+            .eq("user_id", user_id).is("persona_id", null)
+            .lt("created_at", cutoff);
+      const { data: candidates } = await staleQ.limit(50);
+      const toPurge = ((candidates || []) as any[])
+        .filter(r => r?.memory_text && isEphemeral(String(r.memory_text)))
+        .map(r => r.id);
+      if (toPurge.length > 0) {
+        await (sb as any).from("chat_memory").delete().in("id", toPurge);
+        console.log(`[extract-chat-memory] purged ${toPurge.length} stale ephemeral memories`);
+      }
+    } catch (e) {
+      console.error("[extract-chat-memory] cleanup failed (non-blocking):", (e as any)?.message || e);
+    }
 
     if (rows.length) {
       await (sb as any).from("chat_memory").insert(rows);
