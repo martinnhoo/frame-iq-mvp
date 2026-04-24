@@ -1119,7 +1119,7 @@ export default function CampaignsManager() {
       } else if (proposedAction === 'duplicate') {
         await duplicate(targetId, targetType, targetName, aiReasoning);
       } else if (proposedAction === 'increase_budget' || proposedAction === 'decrease_budget') {
-        if (proposedBudgetCents !== undefined) {
+        if (proposedBudgetCents !== undefined && (targetType === 'campaign' || targetType === 'adset')) {
           await updateBudget(
             targetId,
             targetType,
