@@ -1405,8 +1405,29 @@ Esta conta ainda não tem padrões validados com dados suficientes.
 ═══════════════════════════════════`,
       winners.length
         ? `PADRÕES VENCEDORES:\n${winners
-            .map((p) => `  ✓ ${(p.insight_text || "").slice(0, 120)} (conf: ${((p.confidence || 0) * 100).toFixed(0)}%)`)
-            .join("\n")}`
+            .map((p) => {
+              const confPct = ((p.confidence || 0) * 100);
+              // Rotulagem que o usuário vê na UI (AdBriefAI.tsx). Incluído
+              // aqui pra Claude reconhecer o padrão quando o usuário citar
+              // "Sinal inicial detectado" / "Padrão emergente" etc.
+              const uiLabel = confPct >= 40
+                ? '[UI: "PADRÃO APRENDIDO"]'
+                : '[UI: "PADRÃO EMERGENTE — Sinal inicial detectado"]';
+              // If the pattern_key is the machine-style deviation key,
+              // surface the ad name that IS in insight_text so Claude can
+              // speak about "that ad" naturally.
+              const adHint = (p.pattern_key || "").startsWith("persona:") && (p.pattern_key || "").includes(":deviation:")
+                ? " [tipo: winner emergente de ad individual no conjunto]"
+                : "";
+              return `  ✓ ${uiLabel}${adHint} ${(p.insight_text || "").slice(0, 200)} (conf: ${confPct.toFixed(0)}%)`;
+            })
+            .join("\n")}
+
+CONVENÇÃO DE ROTULAGEM NA UI — o usuário vê estes termos, você precisa reconhecê-los:
+  • "Padrão aprendido" / "LEARNED PATTERN" = padrão com confiança ≥ 40% (validado)
+  • "Padrão emergente" / "EMERGING PATTERN" / "Sinal inicial detectado" / "early signal" = padrão com confiança < 40% (preliminar, amostra pequena)
+  • "Winner emergente: <ad>" / "Underperformer: <ad>" = padrão de desvio de um ad individual vs a média do conjunto dele
+Quando o usuário se referir a qualquer desses termos, ele tá falando de um dos padrões listados acima. Não responda "não é uma coisa real" — é real, mas é sinal preliminar. Valide com os dados acima e responda direto.`
         : "",
       perfPatterns.length
         ? `PERFORMANCE:\n${perfPatterns
