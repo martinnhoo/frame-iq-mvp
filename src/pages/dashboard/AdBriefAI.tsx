@@ -4517,20 +4517,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div ref={bottomRef} style={{height:4}}/>
       </div>
 
-      {/* ── Input area ──
-          Design principle: the composer is the visual element, NOT a zone
-          containing it. No "station" background, no top divider, no dark
-          stripe. Just the page bg-main with a short fade so scrolled chat
-          content doesn't butt up against the box. The box itself carries
-          all the weight (bg, border, shadow). Claude/ChatGPT/Linear pattern. */}
-      <div style={{flexShrink:0,position:"relative" as const,zIndex:2}}>
-        {/* Short, clean fade — chat content gently dissolves into bg-main
-            as it approaches the composer. No color stripe, no plateau. */}
-        <div className="chat-input-fade" style={{height:40,background:"linear-gradient(to bottom, transparent, var(--bg-main))",pointerEvents:"none",marginBottom:-1}}/>
-
-        {/* Composer pad — same bg as the page. Just breathing room. */}
-        <div style={{background:"var(--bg-main)",padding:"8px 0 max(env(safe-area-inset-bottom, 0px), 14px)"}}>
-          <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const,position:"relative" as const}}>
+      {/* ── Input area (redo limpo) ──
+          Pulou fora de fades, stations, gradientes e hairlines. O composer
+          é um card sólido #0F1521 (1 tom mais claro que o bg-main), com
+          borda + shadow. Nada ao redor tem tratamento — só padding. */}
+      <div style={{flexShrink:0,position:"relative" as const,zIndex:2,padding:"12px 0 max(env(safe-area-inset-bottom, 0px), 16px)"}}>
+        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
             {showToolMenu && (
@@ -4740,23 +4732,21 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             )}
 
-            {/* Input card — premium glass. Previous version was
-                nearly invisible (rgba(255,255,255,0.025) over bg-main).
-                Now: subtle vertical gradient for depth, stronger border,
-                elevation shadow, inner top-highlight for glass feel. */}
+            {/* Composer card — sólido, não translúcido. #0F1521 é
+                um tom acima do bg-main (#060A14), então lê claramente
+                como um elemento e não como camada invisível. Nada de
+                gradiente, inset highlight, nem glass effect. */}
             <div className="input-box-wrap" style={{
               display:"flex",flexDirection:"column",gap:0,
-              background: chatDragOver
-                ? "rgba(37,99,235,0.08)"
-                : "linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.020) 100%)",
+              background: chatDragOver ? "#0E1C2E" : "#0F1521",
               border: chatDragOver
                 ? "1px solid rgba(37,99,235,0.40)"
-                : "1px solid rgba(240,246,252,0.11)",
+                : "1px solid rgba(255,255,255,0.08)",
               borderRadius:14,
-              padding:"12px 12px 12px 18px",
+              padding:"10px 10px 10px 14px",
               boxShadow: chatDragOver
-                ? "0 0 0 3px rgba(37,99,235,0.12), 0 10px 30px -14px rgba(0,0,0,0.5)"
-                : "0 10px 30px -16px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.05) inset",
+                ? "0 0 0 3px rgba(37,99,235,0.12)"
+                : "0 6px 20px rgba(0,0,0,0.30)",
               transition:"border-color 0.2s, box-shadow 0.2s, background 0.2s",
             }}
             onDragOver={e => { e.preventDefault(); setChatDragOver(true); }}
@@ -4899,7 +4889,6 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             </p>
 
           </div>
-        </div>
       </div>
 
       <style>{`
