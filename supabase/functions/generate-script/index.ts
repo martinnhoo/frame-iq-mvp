@@ -1,6 +1,7 @@
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { saveCreativeOutput } from "../_shared/save-learning.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -310,6 +311,32 @@ Each script needs 8–15 lines alternating VO/on-screen/visual. Vary the angle d
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // ── Close the learning loop ─────────────────────────────────────
+    // Persist script output to creative_memory so future hook /
+    // script / brief calls see what we generated before. Fire-and-
+    // forget — never blocks the user's response.
+    saveCreativeOutput({
+      userId: effectiveUserId,
+      feature: 'script',
+      label: (
+        (result as any)?.title
+        || (result as any)?.headline
+        || (Array.isArray((result as any)?.scenes) && (result as any).scenes[0]?.text)
+        || `Script ${format || ''} · ${product}`
+      ).toString().slice(0, 180),
+      payload: {
+        result,
+        product,
+        format,
+        duration,
+        audience,
+        offer: offer || null,
+        angle: angle || null,
+      },
+      tags: [format || 'video', audience || 'generic'].slice(0, 5),
+      supabase,
+    }).catch(() => { /* already logged inside helper */ });
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
