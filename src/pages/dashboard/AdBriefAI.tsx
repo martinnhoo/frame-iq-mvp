@@ -4517,24 +4517,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div ref={bottomRef} style={{height:4}}/>
       </div>
 
-      {/* ── Input area ── */}
-      <div style={{flexShrink:0,position:"relative" as const,zIndex:2,display:undefined}}>
+      {/* ── Input area ──
+          Design principle: the composer is the visual element, NOT a zone
+          containing it. No "station" background, no top divider, no dark
+          stripe. Just the page bg-main with a short fade so scrolled chat
+          content doesn't butt up against the box. The box itself carries
+          all the weight (bg, border, shadow). Claude/ChatGPT/Linear pattern. */}
+      <div style={{flexShrink:0,position:"relative" as const,zIndex:2}}>
+        {/* Short, clean fade — chat content gently dissolves into bg-main
+            as it approaches the composer. No color stripe, no plateau. */}
+        <div className="chat-input-fade" style={{height:40,background:"linear-gradient(to bottom, transparent, var(--bg-main))",pointerEvents:"none",marginBottom:-1}}/>
 
-        {/* Fade from chat → input station. Taller + includes a mid-stop so
-            the eye reads a soft descent into the darker station instead of
-            a hard edge (which the old 40px transparent→bg-main was giving). */}
-        <div className="chat-input-fade" style={{height:72,background:"linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.22) 55%, rgba(0,0,0,0.42) 100%)",pointerEvents:"none",marginBottom:-1}}/>
-
-        {/* Main input surface — this is the "station". Slightly darker than
-            var(--bg-main) + a hairline top border so the composer reads as
-            a dedicated zone, not floating bg. Shadow flips upward to lift
-            the station above the chat scroll. */}
-        <div style={{
-          background:"linear-gradient(180deg, rgba(0,0,0,0.42), rgba(0,0,0,0.58))",
-          borderTop:"1px solid rgba(240,246,252,0.06)",
-          boxShadow:"0 -12px 40px -18px rgba(0,0,0,0.6)",
-          padding:"16px 0 max(env(safe-area-inset-bottom, 0px), 16px)",
-        }}>
+        {/* Composer pad — same bg as the page. Just breathing room. */}
+        <div style={{background:"var(--bg-main)",padding:"8px 0 max(env(safe-area-inset-bottom, 0px), 14px)"}}>
           <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
