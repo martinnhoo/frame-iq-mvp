@@ -220,27 +220,3 @@ If the commit mixes frontend + backend, separate them in the summary so Martinho
 
 ## About the User
 **Martinho** (martinhovff@gmail.com) — Founder. Portuguese speaker. Thinks visually. Strong design opinions. When he says "faz do zero" = rebuild from scratch. When he shares screenshots = analyze carefully, that's what needs to change. He wants premium, cinematic quality — never generic templates.
-
----
-
-## 🧠 LESSONS LEARNED (read before any significant change)
-
-### Never design a helper for a table you haven't read from prod.
-On 2026-04-22/23 I wrote a `save-learning.ts` + `load-user-context.ts` shared helper pair to "connect the AI brain", referenced from 8 edge functions, and committed it claiming the brain went from 35% → 90% connected. **It was all broken and all unnecessary.**
-
-What went wrong:
-1. **Assumed schema from a setup-database.ts file instead of querying prod.** The real `creative_memory` had NO `metric_type`/`persona_id`/`tags`/`payload`. The real `learned_patterns` had NO `label`/`feature_type` and used `last_updated` not `last_seen_at`. All writes would have silently failed under the `.catch(() => {})` wrapper.
-2. **Didn't audit what already existed.** The generators (`generate-hooks`, `generate-script`, etc.) ALREADY had inline writes to `creative_memory`. `detect-patterns` ALREADY upserts to `learned_patterns`. My "connect the brain" work was pure duplication. The brain was already connected via legacy paths — I just didn't look.
-3. **Called it done without testing.** Edge functions on this project don't auto-deploy (Lovable handles it). So my "verified" work wasn't even running. The browser QA test finally exposed that the 5 new `creative_memory` rows came from legacy inline code, not my helper.
-
-Martinho's correct pushback: "conserte tudo". Full revert — 925 lines deleted, 10 files reverted.
-
-### Rules derived (follow these, not my previous mental model):
-- **Before writing a helper that touches table X: query `information_schema.columns` for X in prod.** Don't trust migrations folder (it may not reflect reality when schema was changed via Supabase UI / Lovable / ad-hoc).
-- **Before "connecting" a system: grep for existing writes to the target tables.** If there are already inline writes, you're duplicating — either migrate them to the helper OR leave them alone. Don't do both.
-- **Don't claim "connected" / "fixed" / "deployed" until you've seen the result in prod.** For edge functions on this project, that means Martinho has to push to Lovable. "Committed" ≠ "live".
-- **`.catch(() => {})` is a silent failure time bomb.** If I use it, the `catch` arm MUST log via `console.error` so the failure is visible in Functions logs. Better: don't swallow errors at all unless the caller explicitly asked for fire-and-forget.
-- **Percentage claims about system health ("35% → 90% connected") are hand-wavy and usually wrong when I haven't read the actual wiring.** Prefer concrete statements: "generate-hooks writes N rows to creative_memory per call" vs "brain is 65% connected".
-
-### The meta-lesson.
-When Martinho asks "faz X" and X sounds like a big refactor (connect the brain, audit everything, fix the scale issue), the failure mode is me jumping to clever-looking solutions before auditing what's already there. The audit is the work. Confidence after audit is real; confidence before audit is a trap I've fallen into twice now.
