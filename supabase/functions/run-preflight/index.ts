@@ -1,5 +1,6 @@
 import { requireCredits } from "../_shared/deductCredits.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { saveDetectionFinding } from "../_shared/save-learning.ts";
 
 
 const corsHeaders = {
@@ -378,6 +379,40 @@ Return ONLY valid JSON (no markdown, no backticks):
     const clean = rawText.replace(/```json|```/g, "").trim();
     console.log("AI response length:", clean.length);
     const result = JSON.parse(clean);
+
+    // ── Close the learning loop ─────────────────────────────────────
+    // Persist preflight findings so the brain accumulates "what
+    // issues this user's ads typically have." Future preflights +
+    // hook/script generators can cite this history ("the 3rd time
+    // we flag this pattern for you"). Only save when the user_id
+    // was actually verified — anonymous/demo runs don't write.
+    if (verified_user_id) {
+      const severity = (result as any)?.severity
+        || ((result as any)?.score && (result as any).score < 5 ? "high"
+            : (result as any)?.score && (result as any).score < 7 ? "medium"
+            : "low");
+      const findingKey = (result as any)?.primary_issue
+        || (result as any)?.flag
+        || (result as any)?.verdict
+        || "preflight_check";
+      const insight = [
+        (result as any)?.summary,
+        (result as any)?.main_risk,
+        Array.isArray((result as any)?.issues) ? (result as any).issues.slice(0, 3).join(" · ") : null,
+      ].filter(Boolean).join(" — ") || "Preflight executado";
+      saveDetectionFinding({
+        userId: verified_user_id,
+        detector: "preflight",
+        findingKey: String(findingKey).slice(0, 80),
+        insightText: insight,
+        severity: severity as any,
+        variables: {
+          score: (result as any)?.score ?? null,
+          verdict: (result as any)?.verdict ?? null,
+          video_filename: video_filename || null,
+        },
+      }).catch(() => { /* helper already logs */ });
+    }
 
     return new Response(JSON.stringify({ ...result, transcribed_from_video, video_filename, transcript: transcribed_from_video ? script : undefined }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

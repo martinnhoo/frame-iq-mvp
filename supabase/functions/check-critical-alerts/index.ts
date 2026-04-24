@@ -16,6 +16,7 @@ import { runShadowPipeline, getEngineVersion, loadAccountConfig, type AlertInput
 import { enrichDecision, toActionLogEntry } from "../_shared/decision-pipeline/decision-output.ts";
 import type { RawDecision, EnrichedDecision } from "../_shared/decision-pipeline/types.ts";
 import { detectAlerts, topAlerts, type DetectedAlert } from "../_shared/detect-alerts.ts";
+import { saveDetectionFinding } from "../_shared/save-learning.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -443,6 +444,32 @@ Deno.serve(async (req) => {
         }));
         if (dbAlertRows.length > 0) {
           try { await sb.from("account_alerts" as any).insert(dbAlertRows as any); } catch { /* silent */ }
+        }
+
+        // ── Close the learning loop ─────────────────────────────────────
+        // Persist each alert to learned_patterns via save-learning helper so
+        // the brain remembers what fired for this account. Future brief /
+        // hook generations can warn against patterns that have triggered
+        // repeat critical alerts. Fire-and-forget, never blocks email flow.
+        for (const a of sorted) {
+          const severity = a.urgency === "🔴" ? "high" : "medium";
+          saveDetectionFinding({
+            userId: conn.user_id,
+            personaId: conn.persona_id || null,
+            detector: "alert",
+            findingKey: `${a.type}_${(a.ad || "unknown").slice(0, 40)}`.toLowerCase(),
+            insightText: a.detail || summaryInsight || a.type,
+            severity: severity as any,
+            variables: {
+              type: a.type,
+              ad: a.ad || null,
+              campaign: a.campaign || null,
+              urgency: a.urgency,
+              week_key: weekKey,
+              account_id: account.id,
+            },
+            supabase: sb,
+          }).catch(() => { /* helper already logs */ });
         }
 
       } catch (e) {
