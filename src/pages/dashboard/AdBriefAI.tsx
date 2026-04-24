@@ -4517,11 +4517,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         <div ref={bottomRef} style={{height:4}}/>
       </div>
 
-      {/* ── Input area (redo limpo) ──
-          Pulou fora de fades, stations, gradientes e hairlines. O composer
-          é um card sólido #0F1521 (1 tom mais claro que o bg-main), com
-          borda + shadow. Nada ao redor tem tratamento — só padding. */}
-      <div style={{flexShrink:0,position:"relative" as const,zIndex:2,padding:"12px 0 max(env(safe-area-inset-bottom, 0px), 16px)"}}>
+      {/* ── Composer (rebuild do zero) ──
+          Layout Claude/ChatGPT: textarea full-width em cima, action bar
+          com [+], anexo, limpar e send em baixo. Tudo dentro de UM card
+          sólido #141924. Sem fade, sem station, sem banner externo. */}
+      <div style={{flexShrink:0,position:"relative" as const,zIndex:2,padding:"16px 0 max(env(safe-area-inset-bottom, 0px), 20px)"}}>
         <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
@@ -4732,21 +4732,22 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             )}
 
-            {/* Composer card — sólido, não translúcido. #0F1521 é
-                um tom acima do bg-main (#060A14), então lê claramente
-                como um elemento e não como camada invisível. Nada de
-                gradiente, inset highlight, nem glass effect. */}
+            {/* Composer card — stacked layout:
+                  [image preview?]
+                  [textarea full-width]
+                  [action bar: + attach | clear send]
+                Sólido #141924, borda 9%, shadow suave. O card é o
+                único elemento visual — nada em volta. */}
             <div className="input-box-wrap" style={{
-              display:"flex",flexDirection:"column",gap:0,
-              background: chatDragOver ? "#0E1C2E" : "#0F1521",
+              background: chatDragOver ? "#0E1C2E" : "#141924",
               border: chatDragOver
                 ? "1px solid rgba(37,99,235,0.40)"
-                : "1px solid rgba(255,255,255,0.08)",
-              borderRadius:14,
-              padding:"10px 10px 10px 14px",
+                : "1px solid rgba(255,255,255,0.09)",
+              borderRadius:16,
+              overflow:"hidden" as const,
               boxShadow: chatDragOver
-                ? "0 0 0 3px rgba(37,99,235,0.12)"
-                : "0 6px 20px rgba(0,0,0,0.30)",
+                ? "0 0 0 3px rgba(37,99,235,0.12), 0 8px 32px rgba(0,0,0,0.40)"
+                : "0 8px 32px rgba(0,0,0,0.40)",
               transition:"border-color 0.2s, box-shadow 0.2s, background 0.2s",
             }}
             onDragOver={e => { e.preventDefault(); setChatDragOver(true); }}
@@ -4766,121 +4767,166 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               }
             }}
             >
-              {/* Image preview strip */}
+              {/* Image preview — appears above textarea when user attached a file */}
               {chatImage && (
-                <div style={{ display:"flex", alignItems:"center", gap:10, padding:"4px 0 10px", borderBottom:"1px solid rgba(255,255,255,0.05)", marginBottom:8 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 14px 0" }}>
                   <img src={chatImage.preview} alt="criativo" style={{ width:40, height:40, borderRadius:8, objectFit:"cover", border:"1px solid rgba(255,255,255,0.08)" }} />
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ ...m, fontSize:11, color:"rgba(255,255,255,0.55)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", margin:0 }}>{chatImage.name}</p>
-                    <p style={{ ...m, fontSize:10, color:"rgba(13,162,231,0.6)", margin:"2px 0 0" }}>{lang==="pt"?"Descreva o que quer analisar":lang==="es"?"Describe qué quieres analizar":"Describe what to analyze"}</p>
+                    <p style={{ ...m, fontSize:11, color:"rgba(255,255,255,0.65)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", margin:0 }}>{chatImage.name}</p>
+                    <p style={{ ...m, fontSize:10, color:"rgba(13,162,231,0.7)", margin:"2px 0 0" }}>{lang==="pt"?"Descreva o que quer analisar":lang==="es"?"Describe qué quieres analizar":"Describe what to analyze"}</p>
                   </div>
-                  <button onClick={() => setChatImage(null)} style={{ background:"rgba(255,255,255,0.04)", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.25)", padding:"4px 6px", lineHeight:1, borderRadius:6, fontSize:12 }}>×</button>
+                  <button onClick={() => setChatImage(null)} style={{ background:"rgba(255,255,255,0.04)", border:"none", cursor:"pointer", color:"rgba(255,255,255,0.35)", padding:"4px 6px", lineHeight:1, borderRadius:6, fontSize:12 }}>×</button>
                 </div>
               )}
-              <div style={{ display:"flex", alignItems:"flex-end", gap:8 }}>
-              {/* [+] Tool trigger — opens thought-bubble menu above composer */}
-              <button
-                ref={toolTriggerRef}
-                onClick={()=>setShowToolMenu(s=>!s)}
-                title={lang==="pt"?"Ferramentas":lang==="es"?"Herramientas":"Tools"}
-                aria-expanded={showToolMenu}
-                aria-haspopup="menu"
-                className={`tool-trigger${showToolMenu?" tool-trigger-on":""}`}
-                style={{
-                  width:32,height:32,borderRadius:9,flexShrink:0,
-                  display:"flex",alignItems:"center",justifyContent:"center",
-                  background: showToolMenu
-                    ? "rgba(14,165,233,0.12)"
-                    : "rgba(255,255,255,0.03)",
-                  border: showToolMenu
-                    ? "1px solid rgba(14,165,233,0.40)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                  color: showToolMenu ? "#7dd3fc" : "rgba(255,255,255,0.55)",
-                  cursor:"pointer",
-                  transition:"all 0.18s cubic-bezier(0.34,1.56,0.64,1)",
-                  transform: showToolMenu ? "rotate(45deg)" : "rotate(0deg)",
-                  marginBottom:2,
-                }}
-              >
-                <Plus size={16} strokeWidth={2.2}/>
-              </button>
-              <textarea ref={textareaRef} value={input} onChange={e=>setInput(e.target.value)}
+
+              {/* Row 1 — Textarea, full width */}
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
-                placeholder={L.placeholder} rows={1}
-                style={{flex:1,background:"transparent",border:"none",padding:"4px 0",color:"#f0f2f8",fontSize:15,resize:"none",outline:"none",...m,lineHeight:1.55,minHeight:28,maxHeight:140,caretColor:"#0ea5e9"}}
+                placeholder={L.placeholder}
+                rows={1}
                 className="chat-textarea"
+                style={{
+                  display:"block",
+                  width:"100%",
+                  boxSizing:"border-box" as const,
+                  background:"transparent",
+                  border:"none",
+                  outline:"none",
+                  padding:"14px 16px 6px",
+                  color:"#f0f2f8",
+                  fontSize:15,
+                  resize:"none" as const,
+                  ...m,
+                  lineHeight:1.55,
+                  minHeight:28,
+                  maxHeight:140,
+                  caretColor:"#0ea5e9",
+                }}
                 onInput={e=>{const t=e.target as HTMLTextAreaElement;requestAnimationFrame(()=>{t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";});}}
               />
-              <div style={{display:"flex",gap:4,alignItems:"center",flexShrink:0,paddingBottom:2}}>
-                {/* Image attach */}
-                <label title={lang==="pt"?"Anexar criativo":lang==="es"?"Adjuntar imagen":"Attach image"}
-                  style={{width:32,height:32,borderRadius:8,background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.18)"}}
-                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(13,162,231,0.65)";(e.currentTarget as HTMLElement).style.background="rgba(13,162,231,0.06)";}}
-                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.18)";(e.currentTarget as HTMLElement).style.background="transparent";}}>
-                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" style={{display:"none"}}
-                    onChange={e=>{
-                      const file=e.target.files?.[0];
-                      if(file){
-                        const reader=new FileReader();
-                        reader.onload=ev=>{
-                          const dataUrl=ev.target?.result as string;
-                          const mediaType=dataUrl.split(",")[0].split(":")[1]?.split(";")[0]||"image/jpeg";
-                          setChatImage({base64:dataUrl.split(",")[1],name:file.name,preview:dataUrl,mediaType});
-                        };
-                        reader.readAsDataURL(file);
-                        e.target.value="";
-                      }
+
+              {/* Row 2 — Action bar */}
+              <div style={{
+                display:"flex",
+                alignItems:"center",
+                justifyContent:"space-between",
+                padding:"6px 8px 8px",
+                gap:8,
+              }}>
+                {/* Left group: [+] tools + image attach */}
+                <div style={{display:"flex",gap:2,alignItems:"center"}}>
+                  <button
+                    ref={toolTriggerRef}
+                    onClick={()=>setShowToolMenu(s=>!s)}
+                    title={lang==="pt"?"Ferramentas":lang==="es"?"Herramientas":"Tools"}
+                    aria-expanded={showToolMenu}
+                    aria-haspopup="menu"
+                    className={`tool-trigger${showToolMenu?" tool-trigger-on":""}`}
+                    style={{
+                      width:32,height:32,borderRadius:9,flexShrink:0,
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      background: showToolMenu ? "rgba(14,165,233,0.12)" : "transparent",
+                      border: showToolMenu ? "1px solid rgba(14,165,233,0.40)" : "1px solid transparent",
+                      color: showToolMenu ? "#7dd3fc" : "rgba(255,255,255,0.55)",
+                      cursor:"pointer",
+                      transition:"all 0.18s cubic-bezier(0.34,1.56,0.64,1)",
+                      transform: showToolMenu ? "rotate(45deg)" : "rotate(0deg)",
                     }}
-                  />
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                </label>
-                {messages.length>0&&(
-                  <button onClick={()=>{
-                    const confirmed = window.confirm(
-                      lang==="pt" ? "Limpar toda a conversa? Isso não pode ser desfeito." :
-                      lang==="es" ? "¿Limpiar toda la conversación? Esto no se puede deshacer." :
-                      "Clear the entire conversation? This cannot be undone."
-                    );
-                    if(!confirmed) return;
-                    setMessages([]);
-                    storage.remove(SK);
-                    executedTools.current.clear();
-                    onboardingSessionDone.current = true;
-                    setShowOnboardingWelcome(false);
-                    setOnboardingStep(-1);
-                    setVisibleCount(MSG_PAGE);
-                    proactiveFired.current = false;
-                    setProactiveLoading(true);
-                    setGreetingKey(k => k + 1);
-                  }}
-                    title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
-                    style={{width:32,height:32,borderRadius:8,background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s",color:"rgba(255,255,255,0.18)"}}
-                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)";(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.04)";}}
-                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.18)";(e.currentTarget as HTMLElement).style.background="transparent";}}>
-                    <RotateCcw size={12}/>
+                  >
+                    <Plus size={16} strokeWidth={2.2}/>
                   </button>
-                )}
-                <button onClick={()=>{
-                  if(creditBalance&&creditBalance.remaining<=0){
-                    if(profile?.plan&&profile.plan!=="free"){window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));}else{setShowUpgradeWall(true);}
-                    return;
-                  }
-                  send();
-                }} disabled={!input.trim()||loading||!contextReady}
-                  style={{
-                    width:32,height:32,borderRadius:8,border:"none",
-                    background:input.trim()&&!loading&&contextReady?"#0ea5e9":"rgba(255,255,255,0.04)",
-                    cursor:input.trim()&&contextReady?"pointer":"not-allowed",
-                    display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
-                    transition:"all 0.2s",
-                  }}>
-                  {loading
-                    ?<Loader2 size={14} color="rgba(255,255,255,0.8)" className="animate-spin"/>
-                    :<Send size={14} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.15)"}/>
-                  }
-                </button>
+
+                  <label
+                    title={lang==="pt"?"Anexar criativo":lang==="es"?"Adjuntar imagen":"Attach image"}
+                    style={{
+                      width:32,height:32,borderRadius:9,background:"transparent",cursor:"pointer",
+                      display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
+                      transition:"all 0.15s",color:"rgba(255,255,255,0.45)",
+                    }}
+                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(125,211,252,0.95)";(e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.08)";}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)";(e.currentTarget as HTMLElement).style.background="transparent";}}
+                  >
+                    <input ref={imageInputRef} type="file" accept="image/*" style={{display:"none"}}
+                      onChange={e=>{
+                        const file=e.target.files?.[0];
+                        if(file){
+                          const reader=new FileReader();
+                          reader.onload=ev=>{
+                            const dataUrl=ev.target?.result as string;
+                            const mediaType=dataUrl.split(",")[0].split(":")[1]?.split(";")[0]||"image/jpeg";
+                            setChatImage({base64:dataUrl.split(",")[1],name:file.name,preview:dataUrl,mediaType});
+                          };
+                          reader.readAsDataURL(file);
+                          e.target.value="";
+                        }
+                      }}
+                    />
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                  </label>
+                </div>
+
+                {/* Right group: clear + send */}
+                <div style={{display:"flex",gap:4,alignItems:"center"}}>
+                  {messages.length>0 && (
+                    <button
+                      onClick={()=>{
+                        const confirmed = window.confirm(
+                          lang==="pt" ? "Limpar toda a conversa? Isso não pode ser desfeito." :
+                          lang==="es" ? "¿Limpiar toda la conversación? Esto no se puede deshacer." :
+                          "Clear the entire conversation? This cannot be undone."
+                        );
+                        if(!confirmed) return;
+                        setMessages([]);
+                        storage.remove(SK);
+                        executedTools.current.clear();
+                        onboardingSessionDone.current = true;
+                        setShowOnboardingWelcome(false);
+                        setOnboardingStep(-1);
+                        setVisibleCount(MSG_PAGE);
+                        proactiveFired.current = false;
+                        setProactiveLoading(true);
+                        setGreetingKey(k => k + 1);
+                      }}
+                      title={lang==="pt"?"Limpar conversa":lang==="es"?"Limpiar chat":"Clear chat"}
+                      style={{
+                        width:32,height:32,borderRadius:9,background:"transparent",cursor:"pointer",
+                        display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:"none",
+                        transition:"all 0.15s",color:"rgba(255,255,255,0.45)",
+                      }}
+                      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.75)";(e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.05)";}}
+                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,0.45)";(e.currentTarget as HTMLElement).style.background="transparent";}}
+                    >
+                      <RotateCcw size={13}/>
+                    </button>
+                  )}
+                  <button
+                    onClick={()=>{
+                      if(creditBalance&&creditBalance.remaining<=0){
+                        if(profile?.plan&&profile.plan!=="free"){window.dispatchEvent(new CustomEvent("adbrief:open-capacity-modal"));}else{setShowUpgradeWall(true);}
+                        return;
+                      }
+                      send();
+                    }}
+                    disabled={!input.trim()||loading||!contextReady}
+                    title={lang==="pt"?"Enviar":lang==="es"?"Enviar":"Send"}
+                    style={{
+                      width:36,height:32,borderRadius:9,border:"none",
+                      background: input.trim()&&!loading&&contextReady ? "#0ea5e9" : "rgba(255,255,255,0.06)",
+                      cursor: input.trim()&&contextReady ? "pointer" : "not-allowed",
+                      display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
+                      transition:"all 0.2s",
+                    }}
+                  >
+                    {loading
+                      ? <Loader2 size={14} color="rgba(255,255,255,0.85)" className="animate-spin"/>
+                      : <Send size={14} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.25)"}/>
+                    }
+                  </button>
+                </div>
               </div>
-              </div>{/* close inner flex row */}
             </div>{/* close input-box-wrap */}
 
             {/* Footer hint */}
