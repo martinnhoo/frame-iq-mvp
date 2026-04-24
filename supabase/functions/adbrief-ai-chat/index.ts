@@ -3159,8 +3159,12 @@ PROIBIDO:
           if (msg.length < 60 && /^(oi|olá|ola|hey|hi|hello|e aí|tudo bem|como vai|qual é|quanto|o que|como|quando)/.test(msg)) return 500;
           // Tool requests (hooks/scripts/briefs) — 2000 is plenty for 10 hooks or a 60s script
           if (/hook|roteiro|script|brief|criativo|copy|ugc/.test(msg)) return 2000;
-          // Explicit deep-diagnostic requests deserve more room
-          if (/diagn[oó]stico\s+completo|análise\s+completa|analise\s+completa|tudo\s+que\s+pode|me\s+faz\s+um\s+diagn/.test(msg)) return 1200;
+          // Explicit deep-diagnostic requests — these enumerate 5-7 sections
+          // (pixel, eventos, tracking, anúncios, faturamento, limites…) and
+          // each one needs a verdict + concrete action. 1200 was hitting the
+          // ceiling mid-section. 3500 is enough headroom for a full 6-7
+          // section diagnostic in pt-BR without mid-sentence truncation.
+          if (/diagn[oó]stico|an[aá]lise\s+completa|analise\s+completa|an[aá]lis\w+\s+(minha|da)\s+conta|me\s+faz\s+um\s+diagn|tudo\s+(que\s+pode|sobre\s+minha\s+conta)|status\s+(da\s+)?conta/.test(msg)) return 3500;
           // Analysis/performance — narrative summary fits in 900. Prev: 1500.
           // Lower budget forces the AI to be concise and not pad with sections.
           if (/analisa|performance|relatório|resumo/.test(msg)) return 900;
