@@ -1285,19 +1285,87 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
             return { ...t, relevance_score: Math.min(score, 100) };
           })
           .sort((a: any, b: any) => b.relevance_score - a.relevance_score);
+        // Infer STRUCTURAL format from the trend's term + angle, so
+        // Claude can actually apply it as architecture (not flavor).
+        // Without this, trends like "2026 é o novo 2016" read as
+        // "mention 2016 somewhere" instead of "structure the video as
+        // before/after split 2016 vs 2026." Pure heuristics over the
+        // text we already have — no new DB columns required.
+        const inferTrendFormat = (t: any): { format: string; howToUse: string } => {
+          const blob = `${t.term || ""} ${t.angle || ""} ${t.ad_angle || ""}`.toLowerCase();
+          // Before/after, nostalgia split-screen — e.g. "2026 é o novo
+          // 2016", "antes vs depois", "X virou Y"
+          if (/\b(antes\s+vs\s+depois|passado\s+vs|vs\s+agora|é\s+o\s+novo|virou\s+o\s+novo|anos?\s+\d{4}.*\d{4}|nostalg)/i.test(blob)
+              || /\b(20\d\d).*(20\d\d)\b/.test(blob)) {
+            return {
+              format: "split_screen_before_after",
+              howToUse: "Estruture em 2 blocos explícitos: 'antes' (tom + visual antigo) × 'agora' (tom + visual novo). NÃO mencione a trend só por citação — faça o formato aparecer na edição (sépia/filtro vs limpo, música retrô vs atual, texto ANTES/AGORA na tela).",
+            };
+          }
+          // Music/audio-driven trends — e.g. "Hits do TikTok", "trending audio"
+          if (/\b(hit|música|musica|trilha|áudio|audio|som\s+viral|trending\s+sound|beat)/i.test(blob)) {
+            return {
+              format: "music_sync",
+              howToUse: "O áudio É a estrutura. Sincronize cortes e on-screen com os beats/drops do som viral. Hook visual nos primeiros 0.5s deve bater com a primeira batida. Sem o som não existe o formato.",
+            };
+          }
+          // Challenge / participation trends
+          if (/\b(desafio|challenge|trend\s+de\s+dança|coreografia)/i.test(blob)) {
+            return {
+              format: "challenge_participation",
+              howToUse: "O formato exige participação visível do usuário no challenge em si (imitar a ação, dança, gesto). Marca aparece como contexto/pano-de-fundo, não narração.",
+            };
+          }
+          // POV / first-person storytelling trend
+          if (/\b(pov|point\s+of\s+view|perspectiva)/i.test(blob)) {
+            return {
+              format: "pov_first_person",
+              howToUse: "Tudo filmado em 1ª pessoa. Texto on-screen começa com 'POV:'. A marca entra como elemento do ambiente do POV, não como pitch.",
+            };
+          }
+          // Storytelling / narrative trend
+          if (/\b(história|story|depoiment|relato|confiss)/i.test(blob)) {
+            return {
+              format: "storytelling",
+              howToUse: "Estrutura narrativa em 3 atos: gancho pessoal (1-2s) → conflito (midsection) → resolução com a marca. Voz em 1ª pessoa, não 3ª.",
+            };
+          }
+          // Meme / humor trend — hard to enforce format, use format as vibe
+          if (/\b(meme|piada|humor|engraç|zoeir)/i.test(blob)) {
+            return {
+              format: "meme_humor",
+              howToUse: "Formato depende do meme específico. Identifique o gatilho cômico (reação, frase, gesto) e replique literalmente — o meme não funciona se você só 'mencionar que é meme'.",
+            };
+          }
+          // Default: no clear structural format — use as creative angle only
+          return {
+            format: "thematic",
+            howToUse: "Use como referência temática/de copy, não como estrutura forçada.",
+          };
+        };
+
         trendContext =
           `=== TRENDS ATIVAS NO BRASIL HOJE ===\n` +
           `(Baseline: normal=${p75}, viral>=${p90})\n` +
           scored
-            .map(
-              (t: any) =>
+            .map((t: any) => {
+              const fmt = inferTrendFormat(t);
+              return (
                 `• "${t.term}" [${t.category}] — ${t.angle} | Score: ${t.relevance_score}/100` +
                 (t.appearances > 1 ? ` | 🔄 voltou ${t.appearances}x` : "") +
                 (t.days_active > 1 ? ` | ${t.days_active} dias ativa` : "") +
                 `\n  → Ângulo criativo: ${t.ad_angle}` +
-                (t.niches?.length ? `\n  → Nichos: ${t.niches.join(", ")}` : ""),
-            )
-            .join("\n");
+                (t.niches?.length ? `\n  → Nichos: ${t.niches.join(", ")}` : "") +
+                `\n  → FORMATO (${fmt.format}): ${fmt.howToUse}`
+              );
+            })
+            .join("\n") +
+          `\n\nREGRA DE USO DE TREND EM SCRIPT/HOOK:\n` +
+          `Quando o usuário pedir roteiro, hook ou criativo E houver trend com format ≠ 'thematic' acima:\n` +
+          `  • Pelo menos UM dos scripts DEVE seguir o FORMATO da trend top (não só o tema).\n` +
+          `  • "Seguir o formato" = replicar a estrutura (split-screen, sync com áudio, POV, etc.), não citar a trend na copy.\n` +
+          `  • Se a trend for split_screen_before_after, a cena 1 é o ANTES e a cena 2 é o DEPOIS — literal, não metafórico.\n` +
+          `  • Se o usuário NÃO pediu roteiro/hook, só mencione a trend proativamente quando score >= 80.`;
       }
     } catch (trendErr) {
       console.error("[trend-ctx error]", String(trendErr));
