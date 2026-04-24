@@ -3239,10 +3239,31 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
               perf_discount_offer: { pt: "Oferta com desconto", en: "Discount offer" },
               perf_scarcity: { pt: "Escassez", en: "Scarcity" },
             };
-            const keyClean = p.pattern_key?.replace(/^perf_/, "") || "";
-            const humanLabel = PATTERN_LABELS[p.pattern_key]
-              ? PATTERN_LABELS[p.pattern_key][lang === "pt" ? "pt" : "en"]
-              : keyClean.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+            // Try humanizers in order:
+            //   1. Known dict entry (perf_* keys)
+            //   2. Row's own `label` field IF it's already human-readable
+            //      (not another raw machine key — e.g. "Winner emergente:
+            //      <ad_name>", "Competitor: <domain>", etc.)
+            //   3. No label at all — in which case we drop the quoted
+            //      headline and fall back to a generic "signal detected"
+            //      headline, because showing something like
+            //      `"Persona:Edf9fa6e-...:Deviation:52685..."` as a title
+            //      is worse than showing nothing.
+            let humanLabel: string | null = null;
+            const dictEntry = PATTERN_LABELS[p.pattern_key];
+            if (dictEntry) {
+              humanLabel = dictEntry[lang === "pt" ? "pt" : "en"];
+            } else if (
+              typeof (p as any).label === "string" &&
+              (p as any).label.length > 0 &&
+              (p as any).label.length < 80 &&
+              // Reject machine-looking labels (uuid:deviation:id, etc.).
+              !/^[a-z]+:[a-f0-9-]+(:|$)/i.test((p as any).label) &&
+              // Reject raw snake_case keys that slipped through.
+              !/^(perf|persona|trend|competitor|preflight|alert)[:_]/i.test((p as any).label)
+            ) {
+              humanLabel = (p as any).label;
+            }
             // Format CTR — handle both decimal (0.079) and percentage (7.9) formats
             const ctrVal = p.avg_ctr != null
               ? (p.avg_ctr < 1 ? (p.avg_ctr * 100).toFixed(2) : Number(p.avg_ctr).toFixed(2))
@@ -3252,9 +3273,16 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             const patternTag = isStrong
               ? (lang === "pt" ? "PADRÃO APRENDIDO" : lang === "es" ? "PATRÓN APRENDIDO" : "LEARNED PATTERN")
               : (lang === "pt" ? "PADRÃO EMERGENTE" : lang === "es" ? "PATRÓN EMERGENTE" : "EMERGING PATTERN");
-            const patternHeadline = isStrong
-              ? (lang === "pt" ? `"${humanLabel}" tem boa performance` : `"${humanLabel}" performs well`)
-              : (lang === "pt" ? `"${humanLabel}" — sinal inicial` : lang === "es" ? `"${humanLabel}" — señal inicial` : `"${humanLabel}" — early signal`);
+            const patternHeadline = humanLabel
+              ? (isStrong
+                  ? (lang === "pt" ? `"${humanLabel}" tem boa performance` : lang === "es" ? `"${humanLabel}" tiene buen rendimiento` : `"${humanLabel}" performs well`)
+                  : (lang === "pt" ? `"${humanLabel}" — sinal inicial` : lang === "es" ? `"${humanLabel}" — señal inicial` : `"${humanLabel}" — early signal`))
+              // No clean label — use a generic headline so the card still
+              // reads professional. The `insight_text` (card body) carries
+              // the real detail; no value lost by dropping a garbage title.
+              : (isStrong
+                  ? (lang === "pt" ? "Padrão forte detectado" : lang === "es" ? "Patrón fuerte detectado" : "Strong pattern detected")
+                  : (lang === "pt" ? "Sinal inicial detectado" : lang === "es" ? "Señal inicial detectada" : "Early signal detected"));
             // Detail copy matches confidence level — don't claim certainty we don't have.
             const weakSuffix = lang === "pt"
               ? " — amostra ainda pequena, vou validar com mais dados."
@@ -3267,11 +3295,25 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             const metrics = lang === "pt"
               ? `${ctrVal ? `CTR ${ctrVal}%` : ""}${ctrVal && confVal ? " · " : ""}${confVal ? `confiança ${confVal}%` : ""}`
               : `${ctrVal ? `CTR ${ctrVal}%` : ""}${ctrVal && confVal ? " · " : ""}${confVal ? `${confVal}% confidence` : ""}`;
+            // Filter insight_text for garbage the user shouldn't see:
+            //   - pattern_key leaks (raw DB key)
+            //   - "ROAS null" / CTR with 4+ decimals (broken format)
+            //   - OLD deviation template: "desvia X% do grupo ... Investigar"
+            //     — shipped before the copilot-voice rewrite, reads as if
+            //     we're punting work back to the user. Filtered so it
+            //     falls back to the metrics summary until the pattern
+            //     row is regenerated with the new template.
+            const insightLooksClean = p.insight_text
+              && !p.insight_text.includes("pattern_key")
+              && !p.insight_text.match(/ROAS\s+null/i)
+              && !p.insight_text.match(/CTR\s+\d+\.\d{4,}/)
+              && !p.insight_text.match(/\bdesvia\s+\d+%/i)
+              && !p.insight_text.match(/\bInvestigar\s+o\s+que\b/i);
             cards.push({
               tag: patternTag,
               tagColor: isStrong ? "#A78BFA" : "#64748B",
               headline: patternHeadline,
-              detail: p.insight_text && !p.insight_text.includes("pattern_key") && !p.insight_text.match(/ROAS\s+null/i) && !p.insight_text.match(/CTR\s+\d+\.\d{4,}/)
+              detail: insightLooksClean
                 ? p.insight_text
                 : `${metrics}${isStrong ? strongSuffix : weakSuffix}`,
             });
