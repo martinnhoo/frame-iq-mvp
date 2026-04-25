@@ -2,7 +2,7 @@
 // Removed: dead imports (Sparkles, Brain, Radio, Wifi etc), unused vars (PLATFORMS, BS, SUGGS, metaConn),
 //          duplicate LP_CSS injection, LP_CSS as separate string
 // Fixed: single CSS block (no more split/duplicate style tags)
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { storage } from "@/lib/storage";
 import { SectionBoundary } from "@/components/SectionBoundary";
@@ -2198,6 +2198,41 @@ export default function AdBriefAI() {
   const [showUpgradeWall,setShowUpgradeWall]=useState(false);
   // Credit balance from the new credit system
   const [creditBalance,setCreditBalance]=useState<{remaining:number,total:number}|null>(null);
+
+  // ── Custom confirm modal — replaces native window.confirm() ─────────────
+  // Promise-based so callsites stay async/clean: `if (await confirmAsync({...})) ...`
+  // Queue-backed: when N parallel actions all hit a force-confirm guard
+  // (e.g. bulk pause, 3 cards clicked fast), each one's modal waits its
+  // turn instead of overwriting the previous and orphaning its Promise.
+  // Two visual variants: "default" (clear chat, neutral) and "warning" (force-pause,
+  // orange/danger). Variant drives accent color, button copy, and the optional
+  // detail block (e.g. snapshot stats from the pause-safety guard).
+  type ConfirmRequest = {
+    variant: "default" | "warning";
+    title: string;
+    message: string;
+    detail?: string | null;       // optional secondary line (smaller, dimmer)
+    confirmLabel: string;
+    cancelLabel: string;
+    onResolve: (ok: boolean) => void;
+  };
+  const [confirmQueue, setConfirmQueue] = useState<ConfirmRequest[]>([]);
+  const confirmModal = confirmQueue[0] || null;
+  const confirmAsync = useCallback((opts: Omit<ConfirmRequest, "onResolve">): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const req: ConfirmRequest = {
+        ...opts,
+        onResolve: (ok) => {
+          // Pop only THIS request from the queue. Use a ref-style filter so
+          // we don't accidentally drop a sibling that snuck in between
+          // mount and click (rare, but harmless to guard against).
+          setConfirmQueue((prev) => prev.filter((r) => r !== req));
+          resolve(ok);
+        },
+      };
+      setConfirmQueue((prev) => [...prev, req]);
+    });
+  }, []);
   const [proactiveLoading,setProactiveLoading]=useState(true); // start true to prevent "Conecte" flash
   const proactiveFired=useRef(false);
   const onboardingSessionDone=useRef(false);
@@ -3438,10 +3473,18 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     // snapshot to the user and ask explicitly: "still pause?" If yes, retry
     // with force:true. This protects winning audiences from accidental cuts.
     if(data?.requires_force && !opts?.force){
-      const ok = window.confirm(
-        `${data.warning || "Este anúncio está convertendo. Pausar mesmo assim?"}\n\n` +
-        `Clique OK pra pausar mesmo assim, ou Cancelar pra desistir.`
-      );
+      // Custom modal — replaces the native browser dialog. Uses warning
+      // variant (orange/danger accent) and surfaces the snapshot stats so
+      // the user has the full economic picture before overriding.
+      const targetLabel = block.target_name || block.target_id || "este anúncio";
+      const ok = await confirmAsync({
+        variant: "warning",
+        title: lang === "pt" ? "Esse anúncio está convertendo" : lang === "es" ? "Este anuncio está convirtiendo" : "This ad is converting",
+        message: data.warning || (lang === "pt" ? `${targetLabel} está gerando conversões. Pausar mesmo assim?` : `${targetLabel} is converting. Pause anyway?`),
+        detail: lang === "pt" ? "Anúncios com conversão geralmente são audiências pequenas qualificadas (winners). Pause só se tiver certeza." : null,
+        confirmLabel: lang === "pt" ? "Pausar mesmo assim" : lang === "es" ? "Pausar de todos modos" : "Pause anyway",
+        cancelLabel: lang === "pt" ? "Manter ativo" : lang === "es" ? "Mantener activo" : "Keep active",
+      });
       if(ok){
         return executeMetaAction(block, { force: true });
       } else {
@@ -4935,12 +4978,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 <div style={{display:"flex",gap:4,alignItems:"center"}}>
                   {messages.length>0 && (
                     <button
-                      onClick={()=>{
-                        const confirmed = window.confirm(
-                          lang==="pt" ? "Limpar toda a conversa? Isso não pode ser desfeito." :
-                          lang==="es" ? "¿Limpiar toda la conversación? Esto no se puede deshacer." :
-                          "Clear the entire conversation? This cannot be undone."
-                        );
+                      onClick={async()=>{
+                        const confirmed = await confirmAsync({
+                          variant: "default",
+                          title: lang==="pt" ? "Limpar conversa" : lang==="es" ? "Limpiar conversación" : "Clear chat",
+                          message:
+                            lang==="pt" ? "Limpar toda a conversa? Isso não pode ser desfeito." :
+                            lang==="es" ? "¿Limpiar toda la conversación? Esto no se puede deshacer." :
+                            "Clear the entire conversation? This cannot be undone.",
+                          confirmLabel: lang==="pt" ? "Limpar tudo" : lang==="es" ? "Limpiar todo" : "Clear everything",
+                          cancelLabel: lang==="pt" ? "Cancelar" : lang==="es" ? "Cancelar" : "Cancel",
+                        });
                         if(!confirmed) return;
                         setMessages([]);
                         storage.remove(SK);
@@ -5113,6 +5161,85 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       `}</style>
 
       {showUpgradeWall&&<UpgradeWall trigger="chat" onClose={()=>setShowUpgradeWall(false)}/>}
+      {/* ── Custom confirm modal — replaces native browser dialog ─────── */}
+      {confirmModal && (() => {
+        const isWarn = confirmModal.variant === "warning";
+        // Color tokens echo the inline confirmation card (orange for warn,
+        // neutral white-on-dark for default). Keeps visual language tight.
+        const accent = isWarn ? "#fb923c" : "rgba(255,255,255,0.85)";
+        const accentBg = isWarn ? "rgba(251,146,60,0.04)" : "rgba(255,255,255,0.02)";
+        const accentBorder = isWarn ? "rgba(251,146,60,0.3)" : "rgba(255,255,255,0.08)";
+        const accentBorderSoft = isWarn ? "rgba(251,146,60,0.12)" : "rgba(255,255,255,0.06)";
+        const detailBg = isWarn ? "rgba(251,146,60,0.06)" : "rgba(255,255,255,0.03)";
+        return (
+          <div
+            onClick={(e) => { if (e.target === e.currentTarget) confirmModal.onResolve(false); }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 9999,
+              background: "rgba(0,0,0,0.72)", backdropFilter: "blur(8px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "16px", animation: "fadeIn 120ms ease-out",
+            }}
+          >
+            <div
+              style={{
+                width: "100%", maxWidth: 460,
+                borderRadius: 16, border: `1px solid ${accentBorder}`,
+                background: `linear-gradient(180deg, #0e0e0e 0%, #0a0a0a 100%)`,
+                boxShadow: "0 24px 56px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02)",
+                overflow: "hidden",
+                animation: "modalIn 140ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+              }}
+            >
+              {/* Header — title + question */}
+              <div style={{ padding: "20px 20px 14px", borderBottom: `1px solid ${accentBorderSoft}`, background: accentBg }}>
+                <p style={{ ...j, fontSize: 13, fontWeight: 700, color: accent, margin: "0 0 8px", letterSpacing: 0.2 }}>
+                  {confirmModal.title}
+                </p>
+                <p style={{ ...m, fontSize: 14, color: "rgba(255,255,255,0.88)", lineHeight: 1.5, margin: 0 }}>
+                  {confirmModal.message}
+                </p>
+              </div>
+              {/* Detail (optional secondary line, dimmer) */}
+              {confirmModal.detail && (
+                <div style={{ padding: "10px 20px", background: detailBg, borderBottom: `1px solid ${accentBorderSoft}` }}>
+                  <p style={{ ...m, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, margin: 0 }}>
+                    {confirmModal.detail}
+                  </p>
+                </div>
+              )}
+              {/* Buttons */}
+              <div style={{ padding: 16, display: "flex", gap: 8 }}>
+                <button
+                  onClick={() => confirmModal.onResolve(true)}
+                  style={{
+                    ...j, fontSize: 13, fontWeight: 700, padding: "11px 20px", borderRadius: 10,
+                    background: isWarn ? "#fb923c" : "rgba(255,255,255,0.95)",
+                    color: "#000", border: "none", cursor: "pointer",
+                    flex: 1, textAlign: "center",
+                  }}
+                >
+                  {confirmModal.confirmLabel}
+                </button>
+                <button
+                  onClick={() => confirmModal.onResolve(false)}
+                  style={{
+                    ...m, fontSize: 12, padding: "11px 16px", borderRadius: 10,
+                    background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.6)", cursor: "pointer", fontWeight: 500,
+                  }}
+                >
+                  {confirmModal.cancelLabel}
+                </button>
+              </div>
+            </div>
+            <style>{`
+              @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+              @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            `}</style>
+          </div>
+        );
+      })()}
       <ReferralNudge messageCount={messages.filter(m=>m.role==="user").length}/>
     </div>
   );
