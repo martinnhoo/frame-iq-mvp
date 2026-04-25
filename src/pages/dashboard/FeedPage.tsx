@@ -7508,56 +7508,49 @@ const FeedPage: React.FC = () => {
             LAYER 5 — DECISION STACK + FLOW SECTIONS
             The heart of the Command Center.
             ═══════════════════════════════════════════════ */}
+        {/* ═══════════════════════════════════════════════
+            COMMAND CENTER — TOP-FOLD (renderiza em TODOS os feedStates)
+
+            Lifted out of the feedState branch so the user gets the same
+            top-fold experience regardless of account state. Variants
+            inside CommandStrip + HeroDecisionAnchor resolve automatically:
+              urgent  → kills exist or recoverable > 0
+              stable  → no kills, account has data
+              loading → no data yet (first sync running)
+
+            Hero absorbs the lead message of MoneyBar; MoneyBar is kept
+            further down (or removed if redundant) so the detailed
+            leaking/capturable/saved trio still exists for power users.
+            ═══════════════════════════════════════════════ */}
+        <CommandStrip
+          userId={ctx.user?.id}
+          killCount={pendingDecisions.filter(d => d.type === 'kill').length}
+          criticalAlertCount={pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length}
+          lastAnalysisAt={(tracker as any)?.last_active_date || null}
+        />
+
+        <HeroDecisionAnchor
+          recoverableDailyCents={tracker ? ((tracker as any).leaking_now || tracker.leaking_now || 0) : 0}
+          killCount={pendingDecisions.filter(d => d.type === 'kill').length}
+          otherActionCount={pendingDecisions.filter(d => d.type !== 'kill').length}
+          topOpportunityName={(() => {
+            const sorted = [...pendingDecisions].sort((a, b) => (b.impact_daily || 0) - (a.impact_daily || 0));
+            return sorted[0]?.ad?.name || sorted[0]?.headline || null;
+          })()}
+          hasData={adsLoaded && totalAdCount > 0}
+          onPrimaryClick={() => {
+            if (hasKills && !isDemo) {
+              handleStopLosses();
+            } else {
+              // No urgency — scroll to the decisions stack.
+              const el = document.getElementById('acoes-prioritarias');
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }}
+        />
+
         {feedState === 'full' || feedState === 'demo' ? (
           <>
-            {/* ═══════════════════════════════════════════════
-                COMMAND CENTER REDESIGN — top of feed.
-
-                Replaced (in order): the old IntelligenceImpactStrip + the
-                "Dinheiro em risco" header + MoneyBar block. Same data is
-                still available below for users who want the full
-                breakdown — what changed is the FRONT PAGE narrative.
-
-                New top-fold structure:
-                  1) CommandStrip   — sticky, status + freshness + R$ + accuracy
-                  2) HeroDecisionAnchor — the dominant visual anchor
-                  3) [decisions stack — existing, below]
-                  4) LearningPanel — patterns surfaced (after decisions)
-
-                Hero absorbs the lead message of MoneyBar; MoneyBar is
-                kept further down (or removed if redundant) so the
-                detailed leaking/capturable/saved trio still exists for
-                power users who want the dashboard view.
-                ═══════════════════════════════════════════════ */}
-            <CommandStrip
-              userId={ctx.user?.id}
-              killCount={pendingDecisions.filter(d => d.type === 'kill').length}
-              criticalAlertCount={pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length}
-              lastAnalysisAt={(tracker as any)?.last_active_date || null}
-            />
-
-            {/* HERO — single dominant block. Variant resolves automatically:
-                urgent | stable | loading. Receives raw decision counts
-                so it can frame the message correctly. */}
-            <HeroDecisionAnchor
-              recoverableDailyCents={tracker ? ((tracker as any).leaking_now || tracker.leaking_now || 0) : 0}
-              killCount={pendingDecisions.filter(d => d.type === 'kill').length}
-              otherActionCount={pendingDecisions.filter(d => d.type !== 'kill').length}
-              topOpportunityName={(() => {
-                const sorted = [...pendingDecisions].sort((a, b) => (b.impact_daily || 0) - (a.impact_daily || 0));
-                return sorted[0]?.ad?.name || sorted[0]?.headline || null;
-              })()}
-              hasData={adsLoaded && totalAdCount > 0}
-              onPrimaryClick={() => {
-                if (hasKills && !isDemo) {
-                  handleStopLosses();
-                } else {
-                  // No urgency — scroll to the decisions stack.
-                  const el = document.getElementById('acoes-prioritarias');
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
-            />
 
             {/* ═══════════════════════════════════════════════
                 ZONE 2 — AÇÕES PRIORITÁRIAS (ação guiada)
@@ -7597,23 +7590,6 @@ const FeedPage: React.FC = () => {
               </div>
             )}
             <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="all" />
-
-            {/* ═══════════════════════════════════════════════
-                ZONE 3 — APRENDIZADO DA CONTA (LearningPanel)
-                Surfaces patterns the system has learned from THIS user's
-                actions. Renders honest 3-state UI:
-                  empty   → motivational empty state
-                  forming → "X / 3 actions until first pattern"
-                  active  → top patterns with bar + n/m + context
-
-                Lives below the priority decisions stack so the user
-                sees the IMMEDIATE actions first, then the META-knowledge
-                ("here's what the system has learned about your account
-                from past decisions").
-                ═══════════════════════════════════════════════ */}
-            <div style={{ marginTop: 18 }}>
-              <LearningPanel userId={ctx.user?.id} maxRows={4} />
-            </div>
           </>
         ) : feedState === 'no-ads' ? (
           <CommandHero
@@ -7729,6 +7705,16 @@ const FeedPage: React.FC = () => {
             ))}
           </div>
         ) : null}
+
+        {/* APRENDIZADO DA CONTA — renderiza em todos os estados de feed
+            (não só 'full'), porque patterns são contexto válido mesmo
+            quando não há decisões pendentes hoje. Estado vazio do
+            componente lida com o caso de zero outcomes. */}
+        {metaConnected && !accountResolving && adsLoaded && (
+          <div style={{ marginTop: 18 }}>
+            <LearningPanel userId={ctx.user?.id} maxRows={4} />
+          </div>
+        )}
 
         {/* LAYER 6 — Performance snapshot removed: duplicated the "Central de
             comando" KPI strip at the top of the page. Keeping a single source
