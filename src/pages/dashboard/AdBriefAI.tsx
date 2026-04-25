@@ -3771,6 +3771,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       // Tone: free-text from localStorage (replaces hardcoded 3 options)
       const aiTonePref = (() => { return storage.get("adbrief_ai_tone", "") })();
       const invokeBody: any = {message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref||undefined}};
+      // active_metric_alert tells the backend we're in a structured
+      // resolution flow for a specific Feed metric alert (CTR/CPA/ROAS).
+      // Backend swaps to Resolution Mode in the system prompt: diagnose →
+      // propose 1 specific action → emit meta_action → close loop.
+      if (activeMetricAlert) invokeBody.active_metric_alert = activeMetricAlert;
       // Pass image to vision-capable adbrief-ai-chat
       if(pendingImage) {
         invokeBody.image_base64 = pendingImage.base64;
@@ -4155,10 +4160,22 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
     (location.state as any)?.prompt || null
   );
   const navPromptSent = useRef(false);
+  // ── Active metric investigation context ──
+  // When the user comes from "Melhorar CTR" (or similar feed alert), Feed
+  // passes activeMetricAlert in nav state. We hold it for the rest of the
+  // chat session so every message tells the backend "this is a resolution
+  // flow for ctr_deviation". Backend uses it to swap into Resolution Mode
+  // and constrain the AI to a diagnose → propose action → confirm cadence.
+  const [activeMetricAlert, setActiveMetricAlert] = useState<string | null>(
+    (location.state as any)?.activeMetricAlert || null
+  );
   useEffect(() => {
     // Also capture on location change (in case ref missed it)
     if (!navPromptSent.current && (location.state as any)?.prompt) {
       pendingNavPrompt.current = (location.state as any).prompt;
+    }
+    if ((location.state as any)?.activeMetricAlert) {
+      setActiveMetricAlert((location.state as any).activeMetricAlert);
     }
   }, [location.state]);
   useEffect(() => {

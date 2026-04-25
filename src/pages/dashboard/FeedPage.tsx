@@ -7316,11 +7316,32 @@ const FeedPage: React.FC = () => {
             // ── State: RESOLVED (auto or manual) ──
             if (action === 'resolved') {
               const elapsed = entry?.startedAt && entry.resolvedAt ? fmtElapsed(entry.startedAt, entry.resolvedAt) : null;
+              // Concrete delta — pulled from snapshot at investigation start
+              // vs current live metric. Tells the user EXACTLY what changed.
+              // E.g. "CTR voltou de 2.13% pra 3.80%" instead of vague "resolvido".
+              let deltaText: string | null = null;
+              const m = adMetrics;
+              if (entry?.startMetricValue != null && m) {
+                let nowVal: number | null = null;
+                let unit = '';
+                if (id === 'ctr_deviation') { nowVal = m.avgCtr / 10000; unit = '%'; }
+                else if (id === 'cpa_deviation' || id === 'cpa_no_data') { nowVal = m.avgCpa / 100; unit = ''; }
+                else if (id === 'roas_deviation') { nowVal = m.avgRoas; unit = 'x'; }
+                if (nowVal != null && nowVal !== entry.startMetricValue) {
+                  const fmtV = (v: number) => unit === '%'
+                    ? `${(v * 100).toFixed(2)}%`
+                    : unit === 'x'
+                      ? `${v.toFixed(2)}x`
+                      : `R$${v.toFixed(2)}`;
+                  deltaText = `de ${fmtV(entry.startMetricValue)} pra ${fmtV(nowVal)}`;
+                }
+              }
               return (
                 <div key={`inv-${id}`} style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', animation: 'feed-fadeUp 0.3s ease' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 13, color: '#10B981' }}>✓</span>
                     <span style={{ fontSize: 11.5, color: T.text1, fontWeight: 600 }}>{metricName} resolvido</span>
+                    {deltaText && <span style={{ fontSize: 11, color: '#10B981', fontWeight: 600 }}>{deltaText}</span>}
                     {elapsed && <span style={{ fontSize: 10.5, color: T.text3, fontWeight: 500 }}>· em {elapsed}</span>}
                   </div>
                   <button onClick={() => resetMetricAlert(id)} style={{ background: 'transparent', color: T.text3, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 500, padding: '4px 0' }}>Fechar</button>

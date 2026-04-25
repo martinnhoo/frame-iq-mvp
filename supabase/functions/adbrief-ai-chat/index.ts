@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data } = body;
+    const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data, active_metric_alert } = body;
 
     // ── Auth check — runs first for ALL modes including panel_data ────────────
     const sbAuth = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
@@ -3134,6 +3134,56 @@ PROIBIDO:
           },
         ]
       : [{ type: "text" as const, text: systemPrompt + prefStr }];
+
+    // ── RESOLUTION MODE ─────────────────────────────────────────────────
+    // When the chat was opened from a Feed metric alert ("Melhorar CTR"
+    // etc), we get active_metric_alert in the body. In this mode the AI
+    // is no longer in free-form Q&A — it's running a specific issue to
+    // closure. Inject a constrained playbook so Claude follows the same
+    // 3-step cadence every time, keeps the user oriented, and emits an
+    // actionable meta_action when justified.
+    if (active_metric_alert) {
+      const metricLabel = ({
+        cpa_no_data: "CPA (sem dados de conversão)",
+        cpa_deviation: "CPA acima do padrão",
+        ctr_deviation: "CTR abaixo do padrão",
+        roas_deviation: "ROAS abaixo do padrão",
+      } as Record<string, string>)[active_metric_alert] || active_metric_alert;
+      systemBlocks.push({
+        type: "text" as const,
+        text: `\n\n═══════════════════════════════════════
+RESOLUTION MODE — ATIVO
+Métrica em investigação: ${metricLabel}
+═══════════════════════════════════════
+
+Esta conversa foi iniciada do Feed pelo botão de investigação dessa métrica. O usuário NÃO está aqui pra papo — ele veio resolver um problema específico. Siga este playbook em até 3 turnos:
+
+TURNO 1 — DIAGNÓSTICO (uma resposta concisa):
+- Olhe os dados do contexto (PADRÕES, ANÚNCIOS, MÉTRICAS).
+- Identifique a causa MAIS PROVÁVEL em 1 frase.
+- Se houver 1 ad ou conjunto específico drenando: nomeie-o.
+- Se há 2+ candidatos a causa, peça 1 esclarecimento curto (ex: "qual sua meta de CPA?"). Nunca abra leque de 5 hipóteses.
+
+TURNO 2 — AÇÃO ESPECÍFICA (uma proposta concreta):
+- Proponha UMA ação que você consegue executar via meta_action: pause, enable, update_budget, duplicate.
+- Justifique com 2+ métricas (CTR + conversões + spend, NÃO só CTR).
+- Se a ação for pause de um ad com conversões: NÃO emita pause — explique o conflito e pergunte.
+- Se nenhuma meta_action resolve (ex: precisa trocar criativo, mudar LP), seja honesto: "Isso requer ação fora do meu alcance — vou te dizer exatamente o que mudar."
+
+TURNO 3 — EXECUÇÃO + CIERRE:
+- Quando o usuário confirmar a ação: emita o tool_call do meta_action (resposta INTEIRA é só o JSON, sem prosa).
+- Após execução, próxima resposta confirma o que foi feito + diz "vou monitorar nas próximas Xh; se a métrica voltar ao padrão, marco como resolvido automaticamente".
+- Se o usuário insistir em outra abordagem ou disser que não resolveu: ofereça 1 alternativa, não repita a mesma sugestão.
+
+REGRAS DE COMPORTAMENTO NESTE MODO:
+- Não desvie do tópico. Se o usuário perguntar outra coisa, responda mas volte: "voltando ao seu CTR..."
+- Não despeje 5 sugestões — escolha A MELHOR e cite o porquê.
+- Não diga "preciso de mais dados" — trabalhe com o que tem.
+- Mantenha respostas curtas (3-6 linhas) — esse é fluxo de execução, não brainstorm.
+- Cada turno deve mover o caso pra frente: nunca repita análise.
+═══════════════════════════════════════`,
+      });
+    }
 
     // Log context size before AI call
     const systemTextSize = systemBlocks.reduce((s, b) => s + (b.text?.length || 0), 0);
