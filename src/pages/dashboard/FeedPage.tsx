@@ -7899,43 +7899,50 @@ const FeedPage: React.FC = () => {
               • the sidebar-in entry animation for premium feel
             ═══════════════════════════════════════════════ */}
         {metaConnected && !isDemo && userId && (
+          // Shell + Header tokens match LearningPanel exactly so the two
+          // sit side-by-side in the same vertical rhythm. Same gradient,
+          // same border opacity, same borderRadius (12), same header
+          // letterspacing (0.10em), same hairline opacity (0.05). The
+          // right-side "Inteligência · Alertas" pill was dropped — it was
+          // a redundant restatement of the two zones below.
           <div style={{
-            marginTop: 20,
-            background: 'rgba(13,17,23,0.85)',
-            border: `1px solid ${T.border1}`,
-            borderRadius: 14,
+            marginTop: 18,
+            background: 'linear-gradient(180deg, rgba(15,23,42,0.7) 0%, rgba(10,15,28,0.85) 100%)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 12,
             overflow: 'hidden',
-            boxShadow: `0 0 0 1px ${T.border0}, 0 10px 30px rgba(0,0,0,0.30)`,
-            animation: 'feed-deck-in 0.42s cubic-bezier(0.22,1,0.36,1) 0.12s both',
             fontFamily: F,
+            animation: 'feed-deck-in 0.42s cubic-bezier(0.22,1,0.36,1) 0.12s both',
           }}>
-            {/* Unified header — solid transparent, no gradient. Same
-                rule as the rest of the money panel: one bg color per
-                surface, no tinted washes. */}
+            {/* Header — same shape as LearningPanel's <Header>:
+                padding 12px 14px 10px, letterSpacing 0.10em, sub label
+                in the second row instead of a side pill. */}
             <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 16px',
-              borderBottom: `1px solid ${T.border0}`,
-              background: 'transparent',
+              padding: '12px 14px 10px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              borderBottom: '1px solid rgba(255,255,255,0.05)',
             }}>
               <span style={{
-                fontSize: 9.5, fontWeight: 800, letterSpacing: '0.14em',
+                fontSize: 9.5, fontWeight: 800,
+                color: 'rgba(240,246,252,0.42)',
+                letterSpacing: '0.10em',
                 textTransform: 'uppercase' as const,
-                color: T.labelColor,
               }}>
                 Fontes conectadas
               </span>
               <span style={{
-                fontSize: 10, color: T.text3,
-                letterSpacing: '-0.005em',
+                fontSize: 11.5, color: 'rgba(240,246,252,0.55)',
+                fontWeight: 500,
               }}>
-                Inteligência · Alertas
+                inteligência da conta + canal de alertas
               </span>
             </div>
 
             {/* Zone 1 — Inteligência / Patterns */}
             {personaId && (
-              <div style={{ padding: '8px 4px 4px' }}>
+              <div style={{ padding: '6px 4px 2px' }}>
                 <PatternsPanel
                   userId={userId}
                   personaId={personaId}
@@ -7945,11 +7952,11 @@ const FeedPage: React.FC = () => {
               </div>
             )}
 
-            {/* Hairline between zones */}
-            <div style={{ height: 1, background: T.border0 }} />
+            {/* Hairline between zones — same opacity as Header bottom */}
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
 
             {/* Zone 2 — Telegram */}
-            <div style={{ padding: '4px 16px 4px' }}>
+            <div style={{ padding: '4px 16px' }}>
               <TelegramCard userId={userId} />
             </div>
           </div>
