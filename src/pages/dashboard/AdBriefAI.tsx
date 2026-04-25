@@ -2541,6 +2541,26 @@ export default function AdBriefAI() {
     }
   }, [selectedPersona?.id]);
 
+  // Support ?welcome=1 query param — first-session entry point.
+  // Triggered by FirstMomentOverlay's "Falar com a IA" CTA. Pre-fills
+  // a diagnostic-asking message AND sets a session-level flag so the
+  // backend gets richer context for the first response (signal threaded
+  // through body.is_first_session in the chat invocation below).
+  const welcomeParam = useRef(searchParams.get("welcome") === "1");
+  const isFirstSessionRef = useRef(welcomeParam.current);
+  useEffect(() => {
+    if (welcomeParam.current && selectedPersona?.id) {
+      // Default ask if no explicit prompt was passed alongside ?welcome=1.
+      // The phrasing is intentionally specific — it forces the AI to do
+      // the diagnostic work the FirstMoment overlay already teased.
+      const defaultAsk = "Acabei de conectar minha conta. Me dê um diagnóstico completo agora: o que está perdendo dinheiro, o que está performando bem, e qual a UMA ação mais urgente?";
+      if (!input) setInput(defaultAsk);
+      searchParams.delete("welcome");
+      setSearchParams(searchParams, { replace: true });
+      welcomeParam.current = null;
+    }
+  }, [selectedPersona?.id]);
+
 
   // Session goal — persists 7 days, resets automatically
   const GOAL_KEY = `adbrief_goal_${selectedPersona?.id || "default"}`;
@@ -4230,6 +4250,18 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       // Backend swaps to Resolution Mode in the system prompt: diagnose →
       // propose 1 specific action → emit meta_action → close loop.
       if (activeMetricAlert) invokeBody.active_metric_alert = activeMetricAlert;
+      // First-session signal — set by ?welcome=1 entry from FirstMomentOverlay.
+      // Backend uses it to prepend a "first-impression diagnostic" framing
+      // to the system prompt so the response is calibrated for a user who
+      // JUST connected (lots of context, no prior conversation, expecting
+      // a clear initial map of the account). Only fires on the first
+      // message of the session — afterward the user is in normal flow.
+      if (isFirstSessionRef.current) {
+        invokeBody.is_first_session = true;
+        // Consume the flag — second message in the same session is no
+        // longer "first" from the AI's perspective.
+        isFirstSessionRef.current = false;
+      }
       // Pass image to vision-capable adbrief-ai-chat
       if(pendingImage) {
         invokeBody.image_base64 = pendingImage.base64;

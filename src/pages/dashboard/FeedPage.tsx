@@ -3,6 +3,7 @@ import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { DashboardContext, AccountAlert } from '@/components/dashboard/DashboardLayout';
 import { MoneyBar } from '../../components/feed/MoneyBar';
 import { IntelligenceImpactStrip } from '../../components/feed/IntelligenceImpactStrip';
+import { FirstMomentOverlay } from '../../components/feed/FirstMomentOverlay';
 import { SummaryBar } from '../../components/feed/SummaryBar';
 import { DecisionCard } from '../../components/feed/DecisionCard';
 import { useDecisions } from '../../hooks/useDecisions';
@@ -6444,6 +6445,27 @@ const FeedPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId, metaConnected, adsLoaded, totalAdCount]);
 
+  // ── First Moment overlay trigger ──────────────────────────────────────
+  // Shows ONCE per account, right after the first sync brings in real ads.
+  // Triggered when: account is connected, sync isn't in flight, adsLoaded,
+  // we have at least one ad imported, and the localStorage flag isn't set.
+  // Skips for demo accounts (no real data to celebrate) and for sessions
+  // where the user has already dismissed it (flag is sticky per account).
+  const [showFirstMoment, setShowFirstMoment] = useState(false);
+  useEffect(() => {
+    if (isDemo) return;
+    if (!accountId || !userId) return;
+    if (!metaConnected) return;
+    if (syncing || !adsLoaded) return;
+    if (totalAdCount === 0) return;
+    const key = `adbrief_first_moment_${accountId}`;
+    if (localStorage.getItem(key)) return;
+    // Mark immediately to ensure idempotency even if effect re-fires before
+    // user dismisses (mounting twice = still shown only once).
+    localStorage.setItem(key, new Date().toISOString());
+    setShowFirstMoment(true);
+  }, [isDemo, accountId, userId, metaConnected, syncing, adsLoaded, totalAdCount]);
+
   // ── Performance Pulse: daily_snapshots + savings ──
   const [pulseData, setPulseData] = useState<{
     spend7d: number; ctr7d: number; activeAds: number;
@@ -7971,6 +7993,18 @@ const FeedPage: React.FC = () => {
           onConfirm={handleConfirmCampaignToggle}
           onCancel={() => setCampaignToggleRequest(null)}
           loading={!!togglingCampaign}
+        />
+      )}
+
+      {/* First Moment overlay — fires once per account on first sync.
+          Triggered higher up via showFirstMoment state; localStorage flag
+          is set BEFORE render to guarantee idempotency. Sits at the end
+          of the JSX tree so it overlays everything else (z-index 9000). */}
+      {showFirstMoment && userId && accountId && (
+        <FirstMomentOverlay
+          userId={userId}
+          accountId={accountId}
+          onDismiss={() => setShowFirstMoment(false)}
         />
       )}
     </div>

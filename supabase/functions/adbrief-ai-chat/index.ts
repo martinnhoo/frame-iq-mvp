@@ -254,7 +254,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data, active_metric_alert } = body;
+    const { message, context, user_id, persona_id, history, user_language, user_prefs, panel_data, active_metric_alert, is_first_session } = body;
 
     // ── Auth check — runs first for ALL modes including panel_data ────────────
     const sbAuth = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
@@ -3257,6 +3257,71 @@ REGRAS DE COMPORTAMENTO NESTE MODO:
 - Não diga "preciso de mais dados" — trabalhe com o que tem.
 - Mantenha respostas curtas (3-6 linhas) — esse é fluxo de execução, não brainstorm.
 - Cada turno deve mover o caso pra frente: nunca repita análise.
+═══════════════════════════════════════`,
+      });
+    }
+
+    // ── FIRST SESSION MODE — pós-conexão Meta, primeira pergunta ─────
+    // Threaded from the FirstMomentOverlay's "Falar com a IA" CTA via
+    // ?welcome=1 in the URL → frontend sets is_first_session: true on
+    // the first chat message. This mode gives the AI explicit context
+    // about who's on the other side: a user who JUST connected, never
+    // talked to the system before, just saw a 6-second analysis reveal,
+    // and now expects a substantial diagnostic — not a greeting.
+    //
+    // The active_metric_alert mode and this mode are mutually exclusive
+    // by intent (different entry points), but if both fire, both blocks
+    // append — Anthropic resolves the most-specific instructions first.
+    if (is_first_session) {
+      systemBlocks.push({
+        type: "text" as const,
+        text: `\n\n═══════════════════════════════════════
+FIRST SESSION MODE — primeira interação pós-conexão
+═══════════════════════════════════════
+
+O usuário ACABOU de conectar a conta Meta e está te falando pela
+primeira vez. Antes de chegar até aqui, ele viu um overlay de 6
+segundos que mostrou uma análise inicial do dataset (campanhas, ads,
+spend mapeado, oportunidades identificadas).
+
+REGRAS PARA ESSA RESPOSTA:
+
+1. NÃO cumprimente. Sem "Olá!", "Bem-vindo!", "Estou aqui pra ajudar".
+   O onboarding visual já fez essa parte. Vai direto pro valor.
+
+2. Use os dados REAIS do contexto (DADOS DESTA CONTA mais acima) pra
+   construir um diagnóstico estruturado em 3 partes:
+
+   a) **O QUE ESTÁ PERDENDO DINHEIRO** — nomeie 1-2 itens específicos
+      com causa diagnosticada (ex: "Campanha X — fadiga criativa,
+      CTR caiu 60% em 5d, R$87/dia em risco").
+   b) **O QUE ESTÁ PERFORMANDO BEM** — nomeie 1 winner se houver
+      (ex: "Anúncio Y — CTR 4.2%, ROAS 3.8x, escalável").
+   c) **A ÚNICA AÇÃO MAIS URGENTE AGORA** — uma recomendação
+      concreta, com hypothesis estruturada se for meta_action.
+      Use as causas canônicas obrigatórias.
+
+3. Cada citação numérica DEVE vir dos dados do contexto. Nada de
+   placeholders. Se um dado não está disponível, omita aquela parte —
+   nunca invente.
+
+4. Tom: confiante, direto, condensado. Esse usuário pagou pra ver
+   sistema sério, não chatbot. Trate como se já fosse cliente.
+
+5. Se a conta está limpa (zero kills, zero alertas críticos), seja
+   honesto: "Sua conta está estável. Sem urgência. Vou te avisar
+   quando algo mudar." Não invente urgência pra preencher resposta.
+
+6. Se o user_message for genérico ("me dê um diagnóstico..."), você
+   responde como acima. Se for específico ("pause Campanha X agora"),
+   trata como ação direta — mas ainda dentro do espírito de "primeira
+   interação", então mais cuidadoso na confirmação.
+
+ESTRUTURA RECOMENDADA pra resposta inicial (2 blocks máximo):
+  Block 1 = type:"insight", title="Diagnóstico inicial", content=
+            os 3 pontos acima em formato compacto.
+  Block 2 = se houver ação clara, type:"tool_call" tool:"meta_action"
+            com hypothesis canônica + urgency_loss_brl quando aplicável.
 ═══════════════════════════════════════`,
       });
     }
