@@ -81,6 +81,12 @@ export const CANONICAL_CAUSES = new Set<string>([
   // Reserved — extend the parser to emit these when adding detectors:
   "high_frequency",
   "learning_phase",
+  // Lead-quality cause — common in lead-gen + infoproduto flows where
+  // people register/opt-in but never convert to actual users/buyers.
+  // Different from low_ctr (which is about clicks) or wrong_audience
+  // (which is about demographics) — this is about INTENT mismatch:
+  // attention is being captured, but by the wrong intent.
+  "low_intent_leads",
 ]);
 
 // PT-BR labels for canonical causes — used only for prompt readability.
@@ -98,6 +104,7 @@ const CAUSE_LABELS_PT: Record<string, string> = {
   winning_signal: "winner detectado",
   high_frequency: "frequência alta",
   learning_phase: "fase de aprendizado",
+  low_intent_leads: "leads sem intenção real",
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────

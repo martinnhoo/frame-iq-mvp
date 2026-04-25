@@ -96,6 +96,7 @@ const CAUSE_LABEL_PT: Record<string, string> = {
   winning_signal: 'winner detectado',
   high_frequency: 'frequência alta',
   learning_phase: 'fase de aprendizado',
+  low_intent_leads: 'leads sem intenção real',
 };
 
 // ── Text hierarchy ──

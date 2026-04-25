@@ -179,6 +179,10 @@ function parseHypothesisFromReasoning(reasoning: string | null, action: string):
   let primary_cause: string | null = null;
   if (/fadiga|frequ[êe]ncia|cansa[çc]o|saturad/.test(lc)) primary_cause = "creative_fatigue";
   else if (/hook|primeiros segundos|abertura|gancho/.test(lc)) primary_cause = "low_hook_strength";
+  // low_intent_leads checked BEFORE wrong_audience because the keyword
+  // overlap (cadastro/registro/lead vs público) historically misrouted
+  // lead-gen complaints into the audience bucket.
+  else if (/(cadastr|registr|lead|opt[\s-]?in|inscriç)/.test(lc) && /(sem|n[ãa]o|baix|fraco)\s+(?:real|intenç|us|convers|qualif)/.test(lc)) primary_cause = "low_intent_leads";
   else if (/p[úu]blico|audi[êe]ncia|targeting|segmenta/.test(lc)) primary_cause = "wrong_audience";
   else if (/budget|or[çc]amento/.test(lc) && /baix|insuficient|sub-?escal/.test(lc)) primary_cause = "budget_starvation";
   else if (/track|pixel|atribui/.test(lc) && /(zero|sem|n[ãa]o\s+(?:est[áa]|h[áa])|0\b|gap|falh)/.test(lc)) primary_cause = "tracking_gap";
