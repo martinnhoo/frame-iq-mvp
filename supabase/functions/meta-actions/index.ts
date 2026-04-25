@@ -126,27 +126,31 @@ function buildActionTypeEnum(
 }
 
 // Soft heuristic to derive a structured hypothesis from free-form
-// ai_reasoning when the chat didn't pass one explicitly. We do this so
-// EVERY outcome row has SOME structured cause/effect to aggregate later.
-// The chat is encouraged (system prompt) to send a richer hypothesis;
-// when it does, we use that and skip the heuristic.
+// ai_reasoning when the chat didn't pass one explicitly. Returns null
+// for primary_cause when no signal matches — better to be honest about
+// uncertainty than to write "unknown" that pollutes the learning dataset
+// (per Martinho's Phase 2a refinement: pattern_candidate must depend on
+// having a real cause, not on existence of a row).
 function parseHypothesisFromReasoning(reasoning: string | null, action: string): {
-  primary_cause: string;
-  expected_effect: string;
+  primary_cause: string | null;
+  expected_effect: string | null;
   confidence: number | null;
 } {
   const lc = (reasoning || "").toLowerCase();
-  let primary_cause = "unknown";
-  if (/fadiga|frequ[êe]ncia|cansa[çc]o/.test(lc)) primary_cause = "creative_fatigue";
+  let primary_cause: string | null = null;
+  if (/fadiga|frequ[êe]ncia|cansa[çc]o|saturad/.test(lc)) primary_cause = "creative_fatigue";
   else if (/hook|primeiros segundos|abertura|gancho/.test(lc)) primary_cause = "low_hook_strength";
-  else if (/p[úu]blico|audi[êe]ncia|targeting/.test(lc)) primary_cause = "wrong_audience";
-  else if (/budget|or[çc]amento/.test(lc)) primary_cause = "budget_starvation";
-  else if (/track|pixel|atribui|convers[ãa]o/.test(lc) && /(zero|sem|n[ãa]o|0)/.test(lc)) primary_cause = "tracking_gap";
-  else if (/cpa|custo/.test(lc) && /alto|acima|elevado/.test(lc)) primary_cause = "high_cpa";
-  else if (/ctr/.test(lc) && /baixo|caiu|abaixo/.test(lc)) primary_cause = "low_ctr";
-  else if (/roas/.test(lc) && /baixo|caiu|abaixo/.test(lc)) primary_cause = "low_roas";
+  else if (/p[úu]blico|audi[êe]ncia|targeting|segmenta/.test(lc)) primary_cause = "wrong_audience";
+  else if (/budget|or[çc]amento/.test(lc) && /baix|insuficient|sub-?escal/.test(lc)) primary_cause = "budget_starvation";
+  else if (/track|pixel|atribui/.test(lc) && /(zero|sem|n[ãa]o\s+(?:est[áa]|h[áa])|0\b|gap|falh)/.test(lc)) primary_cause = "tracking_gap";
+  else if (/cpa|custo\s+por/.test(lc) && /alto|acima|elevado|caro/.test(lc)) primary_cause = "high_cpa";
+  else if (/ctr|cliques?|engajament/.test(lc) && /baix|caiu|abaixo|fraco/.test(lc)) primary_cause = "low_ctr";
+  else if (/roas|retorno/.test(lc) && /baix|caiu|abaixo|fraco/.test(lc)) primary_cause = "low_roas";
+  else if (/desperd[ií]cio|sangran|queim/.test(lc)) primary_cause = "spend_waste";
+  else if (/winner|escal|performand/.test(lc) && /(bem|alto|forte|acima)/.test(lc)) primary_cause = "winning_signal";
 
-  let expected_effect = "unknown";
+  // expected_effect: deterministic from action — always set when action is known.
+  let expected_effect: string | null = null;
   if (action === "pause") expected_effect = "stop_waste";
   else if (action === "enable") expected_effect = "scale_winner";
   else if (action === "update_budget") expected_effect = "improve_efficiency";
@@ -193,10 +197,17 @@ async function writeActionOutcome(
       : parseHypothesisFromReasoning(params.ai_reasoning || null, params.action);
 
     // pattern_candidate: chat actions are AI-driven decisions — exactly
-    // what we want to learn from. Flag opt-in for the future aggregator.
-    // Other sources (feed manual click, autopilot) start false; cron may
-    // promote based on improved.
-    const pattern_candidate = params.source === "chat";
+    // what we want to learn from. BUT only flag when the hypothesis is
+    // actually populated (not just a row with primary_cause=null). If
+    // we flag null-cause rows, the future learned_patterns aggregator
+    // ingests noise and the dataset gets polluted.
+    // (Refinement from Martinho on Phase 2a checkpoint.)
+    const hasValidCause =
+      hypothesis &&
+      typeof hypothesis === "object" &&
+      typeof hypothesis.primary_cause === "string" &&
+      hypothesis.primary_cause.length > 0;
+    const pattern_candidate = params.source === "chat" && !!hasValidCause;
 
     const row = {
       user_id: params.user_id,
