@@ -3522,6 +3522,19 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     };
     supabase.from("ai_action_log" as any).insert(actionRecord).then(()=>{});
 
+    // ── No-op detection (must check BEFORE the error branch) ──────────
+    // Backend's deterministic guard returns success:false + skipped:'<reason>'
+    // when an action would be a no-op (pause already-paused, enable
+    // already-active, etc.). It also fills `error` for legacy frontends,
+    // but we want a friendlier UI here: a calm "Nada a fazer" insight
+    // instead of a red "Falha na ação" bubble — nothing actually went wrong.
+    if(data?.skipped){
+      const id=Date.now();
+      const niceMsg = data?.message || data?.error || "Nada a fazer — alvo já está nesse estado.";
+      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"insight",title:"Nada a fazer",content:niceMsg}]}]);
+      return;
+    }
+
     if(error||data?.error){
       const id=Date.now();
       const errMsg=data?.error||realError||"Tente novamente.";

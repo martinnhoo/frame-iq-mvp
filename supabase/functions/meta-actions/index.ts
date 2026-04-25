@@ -521,19 +521,26 @@ Deno.serve(async (req) => {
       const noop = evaluateNoOp(action as "pause" | "enable", live.effective_status, live.status);
       if (noop) {
         console.log("[meta-actions] blocked no-op", { action, target_id, ...noop });
+        // Human-readable PT-BR for the UI bubble.
+        const humanMessage = noop.reason === "already_paused"
+          ? `Já está pausado (status: ${noop.current_status}). Nenhuma ação tomada.`
+          : noop.reason === "already_active"
+          ? `Já está ativo (status: ${noop.current_status}). Nenhuma ação tomada.`
+          : `Não é possível ${action === "pause" ? "pausar" : "ativar"} no estado ${noop.current_status}.`;
+        // CRITICAL: include `error` field too — the frontend's
+        // executeMetaAction handler at AdBriefAI.tsx line ~3525 only
+        // surfaces `data?.error`. Without this duplicate field, a
+        // no-op silently shows "Executado com sucesso" because the
+        // frontend never sees a failure signal. Newer frontend can
+        // detect `skipped` and render a friendlier insight block.
         return ok({
           success: false,
-          skipped: noop.reason,                     // 'already_paused' | 'already_active' | 'cannot_enable_archived' | ...
+          skipped: noop.reason,        // canonical: 'already_paused' | 'already_active' | 'cannot_enable_*'
+          error: humanMessage,         // duplicates `message` so the legacy frontend handler picks it up
+          message: humanMessage,
           target_id,
           target_name: body.target_name || null,
           current_status: noop.current_status,
-          // Human-readable for the chat / UI to surface as a clean
-          // "nothing to do" message instead of "Meta API error".
-          message: noop.reason === "already_paused"
-            ? `Já está pausado (status: ${noop.current_status}). Nenhuma ação tomada.`
-            : noop.reason === "already_active"
-            ? `Já está ativo (status: ${noop.current_status}). Nenhuma ação tomada.`
-            : `Não é possível ${action === "pause" ? "pausar" : "ativar"} no estado ${noop.current_status}.`,
         });
       }
 
