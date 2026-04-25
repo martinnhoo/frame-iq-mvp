@@ -14,7 +14,7 @@ import {
   ThumbsUp, ThumbsDown, Copy, RefreshCw,
   Zap, Clapperboard, ScanEye, X, Sparkles, Target, FileText,
   TrendingUp, TrendingDown, BarChart2, BarChart3, Stethoscope,
-  ChevronRight, Plus,
+  ChevronRight, Plus, CheckCircle2,
 } from "lucide-react";
 // v20: removed unused — Brain, Upload, Activity, ExternalLink,
 //      DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
@@ -245,9 +245,41 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
 
 
 // ── Confirm action block ───────────────────────────────────────────────────────
-function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Block)=>Promise<void>;lang:string}) {
+// ── Enriched decision card — translates the backend's full causal context
+// into the user-facing surface. Each section maps to a question users ask
+// before clicking: WHY (cause + reasoning), HAS THIS WORKED (pattern n/m
+// with similarity match), WHAT DO I GAIN (urgency loss + expected impact).
+//
+// The visible structure is a deliberate inversion of typical "AI confirms
+// action" cards — instead of "Approve this AI suggestion", it's "Here's
+// what you're losing right now, here's the proven pattern that fixes it,
+// here's the impact". Loss-aversion framing converts ~2x ganho framing.
+//
+// Pattern lookup is async (one supabase query per card mount) so the
+// HISTÓRICO section starts in a loading state and resolves with either:
+//   - a pattern (n>=3) → confidence bar + similarity narrative
+//   - a thin signal (1 ≤ n < 3) → "X casos até agora — sinal inicial"
+//   - no history (n=0) → "Primeira vez testando esse padrão"
+// All three are honest — never invents a pattern that doesn't exist.
+//
+// Pattern type — what we aggregate from action_outcomes per (action_type
+// × primary_cause) for THIS user. Subset of the full helper in
+// _shared/learned-patterns.ts; computed inline here because we only need
+// one bucket at a time and want to avoid an extra edge-function hop.
+type CardPattern = {
+  n: number;
+  wins: number;
+  success_rate: number;          // 0-1
+  avg_recovery_pct: number | null;
+  avg_avoided_spend_brl: number | null;
+  avg_ctr_before: number | null; // 0-1 (raw ratio)
+};
+
+function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm:(b:Block)=>Promise<void>;lang:string;userId?:string|null}) {
   const [state, setState] = useState<"idle"|"running"|"done"|"cancelled">("idle");
   const [result, setResult] = useState("");
+  const [pattern, setPattern] = useState<CardPattern|null>(null);
+  const [patternLoading, setPatternLoading] = useState(true);
 
   // Auto-execute read-only actions without user confirmation
   useEffect(()=>{
@@ -257,44 +289,232 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
     }
   },[]);
 
+  // Pattern lookup — fires once on mount when we have user + action + cause
+  // identifiers. Same filter as the chat-prompt aggregation: finalized +
+  // pattern_candidate + improved IS NOT NULL. Cause comes from the
+  // structured hypothesis the chat now always emits (commit fa7eb38d).
+  useEffect(() => {
+    const cause = (block as any)?.hypothesis?.primary_cause;
+    const meta = block.meta_action;
+    const tType = block.target_type;
+    if (!userId || !cause || !meta || !tType) {
+      setPatternLoading(false);
+      return;
+    }
+    // Map runtime action+target_type to action_outcomes enum.
+    // Mirror logic in meta-actions/buildActionTypeEnum, but minimal — only
+    // the cases this card sees (pause/enable/budget/duplicate).
+    let action_type: string | null = null;
+    if (meta === "pause" || meta === "enable") action_type = `${meta}_${tType}`;
+    else if (meta === "update_budget") action_type = "budget_increase"; // aggregate both directions
+    else if (meta === "duplicate") action_type = "duplicate_ad";
+    if (!action_type) {
+      setPatternLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        // Pull all matching outcomes (cap 50 per bucket — generous, real
+        // user volume should stay much lower for the first months).
+        const { data, error } = await (supabase as any)
+          .from("action_outcomes")
+          .select("improved, recovery_pct, context, metrics_before")
+          .eq("user_id", userId)
+          .eq("action_type", action_type)
+          .eq("pattern_candidate", true)
+          .eq("finalized", true)
+          .not("improved", "is", null)
+          .filter("hypothesis->>primary_cause", "eq", cause)
+          .order("taken_at", { ascending: false })
+          .limit(50);
+        if (cancelled) return;
+        if (error || !data || data.length === 0) {
+          setPattern(null);
+          setPatternLoading(false);
+          return;
+        }
+        const rows = data as any[];
+        const wins = rows.filter(r => r.improved === true).length;
+        const n = rows.length;
+        const recoveries = rows
+          .filter(r => r.improved === true && typeof r.recovery_pct === "number")
+          .map(r => Number(r.recovery_pct));
+        const avoided = rows
+          .filter(r => r.improved === true)
+          .map(r => Number(r.context?.avoided_spend_brl))
+          .filter(x => Number.isFinite(x) && x > 0);
+        const ctrs = rows
+          .map(r => Number(r.metrics_before?.ctr))
+          .filter(x => Number.isFinite(x) && x >= 0);
+        setPattern({
+          n,
+          wins,
+          success_rate: n > 0 ? wins / n : 0,
+          avg_recovery_pct: recoveries.length
+            ? Math.round((recoveries.reduce((a,b)=>a+b,0) / recoveries.length) * 10) / 10
+            : null,
+          avg_avoided_spend_brl: avoided.length
+            ? Math.round((avoided.reduce((a,b)=>a+b,0) / avoided.length) * 100) / 100
+            : null,
+          avg_ctr_before: ctrs.length
+            ? Math.round((ctrs.reduce((a,b)=>a+b,0) / ctrs.length) * 10000) / 10000
+            : null,
+        });
+      } catch {
+        if (!cancelled) setPattern(null);
+      } finally {
+        if (!cancelled) setPatternLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, block]);
+
   if((block as any)._autoExec && state==="running") return(
     <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.06)",border:"1px solid rgba(14,165,233,0.15)",marginBottom:8}}>
       <Loader2 size={13} color="#0ea5e9" className="animate-spin"/>
       <span style={{...m,fontSize:12,color:"rgba(238,240,246,0.6)"}}>{lang==="pt"?"Buscando dados...":lang==="es"?"Buscando datos...":"Fetching data..."}</span>
     </div>
   );
-  if((block as any)._autoExec && state==="done") return null; // result shown by executeMetaAction callback
+  if((block as any)._autoExec && state==="done") return null;
 
-  const L: Record<string,Record<string,string>> = {
+  // L holds both static strings and small string-builder functions; keep
+  // the inner type loose so each entry can be either.
+  const L: Record<string, Record<string, any>> = {
     en:{
-      sure:"Are you sure you want to proceed with the action:",
-      confirm:lang==="es"?"Sí, continuar":"Sim, continuar",cancel:lang==="es"?"Cancelar":"Cancelar",running:lang==="es"?"Ejecutando...":"Executando...",done:lang==="es"?"Listo ":"Pronto ",
-      pause:lang==="es"?"Pausar":"Pausar",enable:lang==="es"?"Activar":"Ativar",update_budget:lang==="es"?"Actualizar budget":"Atualizar budget",publish:lang==="es"?"Publicar":"Publicar",duplicate:lang==="es"?"Duplicar":"Duplicar",
-      warning:"This action will be logged and cannot be undone.",
+      confirm:"Approve",cancel:"Cancel",running:"Executing...",done:"Done ",
+      pause:"Pause",enable:"Enable",update_budget:"Update budget",publish:"Publish",duplicate:"Duplicate",
+      reversible:"Reversible in 1 click for 30 min",
+      why:"WHY",cause_label:"Diagnosed cause",
+      history_label:"HISTORY ON THIS ACCOUNT",
+      history_loading:"checking pattern…",
+      history_none:"○ First time testing this pattern here — recommendation based only on current diagnosis",
+      history_thin:(n:number)=>`○ ${n} case${n===1?"":"s"} so far — early signal, not conclusive`,
+      history_strong:(w:number,n:number,pct:number)=>`✓ ${w}/${n} similar cases worked (${pct}% success)`,
+      context_label:(ctr:string)=>`Typical winning context: CTR ~${ctr}%`,
+      impact_label:"EXPECTED IMPACT",
+      impact_avoided:(amt:string)=>`💰 ~R$${amt}/day avoided (account average)`,
+      impact_unknown:"💰 Avoided spend depends on the target's current burn",
+      details:"View details",
     },
     pt:{
-      sure:"Tem certeza que deseja prosseguir com a ação:",
-      confirm:"Sim, prosseguir",cancel:"Cancelar",running:"Executando...",done:"Concluído ",
-      pause:"Pausar",enable:"Ativar",update_budget:"Atualizar orçamento",publish:"Publicar",duplicate:"Duplicar",
-      warning:"Esta ação será registrada e não pode ser desfeita.",
+      confirm:"Aprovar",cancel:"Cancelar",running:"Executando...",done:"Concluído ",
+      pause:"Pausar",enable:"Reativar",update_budget:"Atualizar orçamento",publish:"Publicar",duplicate:"Duplicar",
+      reversible:"Reversível em 1 clique por 30 min",
+      why:"POR QUÊ",cause_label:"Causa diagnosticada",
+      history_label:"HISTÓRICO NESTA CONTA",
+      history_loading:"buscando padrão…",
+      history_none:"○ Primeira vez testando esse padrão aqui — recomendação baseada só no diagnóstico atual",
+      history_thin:(n:number)=>`○ ${n} caso${n===1?"":"s"} até agora — sinal inicial, não conclusivo`,
+      history_strong:(w:number,n:number,pct:number)=>`✓ ${w}/${n} casos similares funcionaram (${pct}% de sucesso)`,
+      context_label:(ctr:string)=>`Contexto típico de sucesso: CTR ~${ctr}%`,
+      impact_label:"IMPACTO ESPERADO",
+      impact_avoided:(amt:string)=>`💰 ~R$${amt}/dia evitados (média da conta)`,
+      impact_unknown:"💰 Spend evitado depende do que o alvo está consumindo",
+      details:"Ver detalhes",
     },
     es:{
-      sure:"¿Estás seguro de que deseas proceder con la acción:",
-      confirm:"Sí, proceder",cancel:"Cancelar",running:"Ejecutando...",done:"Completado ",
+      confirm:"Aprobar",cancel:"Cancelar",running:"Ejecutando...",done:"Listo ",
       pause:"Pausar",enable:"Activar",update_budget:"Actualizar presupuesto",publish:"Publicar",duplicate:"Duplicar",
-      warning:"Esta acción quedará registrada y no se puede deshacer.",
+      reversible:"Reversible en 1 clic por 30 min",
+      why:"POR QUÉ",cause_label:"Causa diagnosticada",
+      history_label:"HISTORIAL EN ESTA CUENTA",
+      history_loading:"buscando patrón…",
+      history_none:"○ Primera vez probando este patrón aquí — recomendación basada solo en el diagnóstico actual",
+      history_thin:(n:number)=>`○ ${n} caso${n===1?"":"s"} hasta ahora — señal inicial, no concluyente`,
+      history_strong:(w:number,n:number,pct:number)=>`✓ ${w}/${n} casos similares funcionaron (${pct}% de éxito)`,
+      context_label:(ctr:string)=>`Contexto típico de éxito: CTR ~${ctr}%`,
+      impact_label:"IMPACTO ESPERADO",
+      impact_avoided:(amt:string)=>`💰 ~R$${amt}/día evitados (promedio de la cuenta)`,
+      impact_unknown:"💰 El gasto evitado depende del consumo actual del objetivo",
+      details:"Ver detalles",
     },
   };
   const t=L[lang]||L.en;
   const actionLabel=t[block.meta_action as string]||block.meta_action||"Execute";
   const target=block.target_name||block.target_id||"";
-  const icons: Record<string,string>={pause:"",enable:"",update_budget:"",publish:"",duplicate:""};
-  const icon=icons[block.meta_action||""]||"";
+
+  // Hypothesis surfaced from structured field (commit fa7eb38d) OR
+  // backwards-compat with older blocks where it might be missing.
+  const hypothesis = (block as any).hypothesis || null;
+  const cause: string | null = hypothesis?.primary_cause || null;
+  const confidence: number | null =
+    typeof hypothesis?.confidence === "number" ? hypothesis.confidence : null;
+
+  // Loss-aversion urgency line — the "this is bleeding NOW" framing.
+  // Surfaces only when the AI volunteers a concrete number in
+  // tool_params.urgency_loss_brl OR ai_reasoning includes one. Without a
+  // real number we'd be guessing — better to omit than fake urgency.
+  const urgencyLoss: number | null = (() => {
+    const direct = Number((block as any).urgency_loss_brl);
+    if (Number.isFinite(direct) && direct > 0) return direct;
+    // Soft fallback: parse from context text "R$XXX em 24h" / "R$XXX/dia"
+    const ctx = String((block as any).context || "");
+    const m24 = ctx.match(/R\$\s*([\d.,]+)\s*(?:em|in|nas?)\s*(?:últim[ao]s?\s*)?24\s*h/i);
+    if (m24) {
+      const n = Number(m24[1].replace(/\./g,"").replace(",","."));
+      if (Number.isFinite(n) && n > 0) return Math.round(n * 100) / 100;
+    }
+    const mDay = ctx.match(/R\$\s*([\d.,]+)\s*\/\s*dia/i);
+    if (mDay) {
+      const n = Number(mDay[1].replace(/\./g,"").replace(",","."));
+      if (Number.isFinite(n) && n > 0) return Math.round(n * 100) / 100;
+    }
+    return null;
+  })();
+
+  // Friendly cause label — falls back to raw string when no translation.
+  const CAUSE_LABELS: Record<string,Record<string,string>> = {
+    pt: {
+      creative_fatigue: "fadiga criativa",
+      low_hook_strength: "hook fraco",
+      wrong_audience: "público errado",
+      budget_starvation: "budget insuficiente",
+      tracking_gap: "tracking quebrado",
+      high_cpa: "CPA alto",
+      low_ctr: "CTR baixo",
+      low_roas: "ROAS baixo",
+      spend_waste: "desperdício de spend",
+      winning_signal: "winner detectado",
+      high_frequency: "frequência alta",
+      learning_phase: "fase de aprendizado",
+    },
+    en: {
+      creative_fatigue: "creative fatigue",
+      low_hook_strength: "weak hook",
+      wrong_audience: "wrong audience",
+      budget_starvation: "budget starvation",
+      tracking_gap: "tracking gap",
+      high_cpa: "high CPA",
+      low_ctr: "low CTR",
+      low_roas: "low ROAS",
+      spend_waste: "spend waste",
+      winning_signal: "winning signal",
+      high_frequency: "high frequency",
+      learning_phase: "learning phase",
+    },
+    es: {
+      creative_fatigue: "fatiga creativa",
+      low_hook_strength: "hook débil",
+      wrong_audience: "público equivocado",
+      budget_starvation: "budget insuficiente",
+      tracking_gap: "tracking roto",
+      high_cpa: "CPA alto",
+      low_ctr: "CTR bajo",
+      low_roas: "ROAS bajo",
+      spend_waste: "gasto sin retorno",
+      winning_signal: "ganador detectado",
+      high_frequency: "frecuencia alta",
+      learning_phase: "fase de aprendizaje",
+    },
+  };
+  const causeLabel = cause ? (CAUSE_LABELS[lang]?.[cause] || cause) : null;
 
   if(state==="done") return(
     <div style={{borderRadius:14,border:"1px solid rgba(52,211,153,0.25)",background:"rgba(52,211,153,0.06)",padding:"14px 16px",marginBottom:10}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-        <span style={{fontSize:16}}></span>
+        <CheckCircle2 size={14} color="#34d399"/>
         <p style={{...j,fontSize:13,fontWeight:700,color:"#34d399",margin:0}}>{t.done}</p>
       </div>
       <p style={{...m,fontSize:12,color:"rgba(52,211,153,0.7)",margin:0}}>{result}</p>
@@ -302,40 +522,197 @@ function ConfirmActionBlock({block,onConfirm,lang}:{block:Block;onConfirm:(b:Blo
   );
   if(state==="cancelled") return null;
 
-  return(
-    <div style={{borderRadius:16,border:"1px solid rgba(251,146,60,0.3)",background:"rgba(251,146,60,0.04)",marginBottom:10,overflow:"hidden"}}>
-      {/* Header */}
-      <div style={{padding:"16px 16px 12px",borderBottom:"1px solid rgba(251,146,60,0.12)"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-          <span style={{fontSize:20}}>{icon}</span>
-          <p style={{...j,fontSize:13,fontWeight:700,color:"#fb923c",margin:0}}>{block.title}</p>
+  // Color tokens — orange for attention/urgency, dim white for body.
+  const ORANGE = "#fb923c";
+  const ORANGE_BG = "rgba(251,146,60,0.04)";
+  const ORANGE_BORDER = "rgba(251,146,60,0.3)";
+  const ORANGE_SOFT = "rgba(251,146,60,0.12)";
+  const RED = "#ef4444";
+  const GREEN_TEXT = "#34d399";
+
+  return (
+    <div style={{
+      borderRadius: 16,
+      border: `1px solid ${ORANGE_BORDER}`,
+      background: ORANGE_BG,
+      marginBottom: 10,
+      overflow: "hidden",
+    }}>
+      {/* HEADER — action label + diagnostic chip + target name */}
+      <div style={{ padding: "16px 16px 14px", borderBottom: `1px solid ${ORANGE_SOFT}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" as const }}>
+          <p style={{
+            ...j, fontSize: 11, fontWeight: 800, color: ORANGE, margin: 0,
+            letterSpacing: "0.1em", textTransform: "uppercase" as const,
+          }}>
+            {actionLabel}
+          </p>
+          {causeLabel && (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "3px 9px", borderRadius: 99,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}>
+              <span style={{ ...m, fontSize: 10.5, fontWeight: 600, color: "rgba(255,255,255,0.55)" }}>
+                {t.cause_label}:
+              </span>
+              <span style={{ ...j, fontSize: 11, fontWeight: 700, color: "#fff" }}>
+                {causeLabel}
+              </span>
+              {confidence !== null && (
+                <span style={{ ...m, fontSize: 10, fontWeight: 600, color: "rgba(52,211,153,0.85)" }}>
+                  · {Math.round(confidence * 100)}%
+                </span>
+              )}
+            </div>
+          )}
         </div>
-        {/* Clear confirmation question */}
-        <p style={{...m,fontSize:13,color:"rgba(255,255,255,0.8)",lineHeight:1.5,margin:"0 0 4px"}}>
-          {t.sure}
-        </p>
-        <p style={{...j,fontSize:14,fontWeight:700,color:"#fff",margin:0}}>
-          {actionLabel}{target?` — ${target}`:""}
-          {block.value?<span style={{color:"#fb923c"}}> → {block.value}</span>:null}
+        <p style={{ ...j, fontSize: 16, fontWeight: 700, color: "#fff", margin: 0, lineHeight: 1.3 }}>
+          {target}
+          {block.value ? <span style={{ color: ORANGE }}> → {block.value}</span> : null}
         </p>
       </div>
-      {/* Warning */}
-      <div style={{padding:"8px 16px",background:"rgba(251,146,60,0.06)",borderBottom:"1px solid rgba(251,146,60,0.08)"}}>
-        <p style={{...m,fontSize:12,color:"rgba(251,146,60,0.6)",margin:0}}> {t.warning}</p>
+
+      {/* URGENCY LINE — loss-aversion framing. Only renders when we have a
+          real number; otherwise omitted (no fake urgency). */}
+      {urgencyLoss !== null && (
+        <div style={{
+          padding: "10px 16px",
+          background: "rgba(239,68,68,0.06)",
+          borderBottom: `1px solid rgba(239,68,68,0.12)`,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <span style={{ color: RED, fontSize: 13 }}>⚠</span>
+          <p style={{ ...m, fontSize: 12.5, color: "rgba(255,200,200,0.95)", margin: 0, lineHeight: 1.4 }}>
+            {lang === "pt"
+              ? <>Já consumiu <strong style={{ color: "#fff", fontWeight: 700 }}>R${urgencyLoss.toFixed(2)}</strong> nas últimas 24h</>
+              : lang === "es"
+              ? <>Ya consumió <strong style={{ color: "#fff", fontWeight: 700 }}>R${urgencyLoss.toFixed(2)}</strong> en las últimas 24h</>
+              : <>Already burned <strong style={{ color: "#fff", fontWeight: 700 }}>R${urgencyLoss.toFixed(2)}</strong> in the last 24h</>}
+          </p>
+        </div>
+      )}
+
+      {/* POR QUÊ — AI's reasoning text (block.context). Single short paragraph. */}
+      {(block as any).context && (
+        <div style={{ padding: "12px 16px 4px" }}>
+          <p style={{
+            ...j, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)",
+            letterSpacing: "0.1em", textTransform: "uppercase" as const, margin: "0 0 6px",
+          }}>
+            {t.why}
+          </p>
+          <p style={{ ...m, fontSize: 13, color: "rgba(255,255,255,0.82)", lineHeight: 1.55, margin: 0 }}>
+            {String((block as any).context)}
+          </p>
+        </div>
+      )}
+
+      {/* HISTÓRICO — pattern lookup result */}
+      <div style={{ padding: "12px 16px 6px" }}>
+        <p style={{
+          ...j, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)",
+          letterSpacing: "0.1em", textTransform: "uppercase" as const, margin: "0 0 8px",
+        }}>
+          {t.history_label}
+        </p>
+        {patternLoading ? (
+          <p style={{ ...m, fontSize: 12.5, color: "rgba(255,255,255,0.4)", margin: 0, fontStyle: "italic" }}>
+            {t.history_loading}
+          </p>
+        ) : !pattern || pattern.n === 0 ? (
+          <p style={{ ...m, fontSize: 12.5, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.5 }}>
+            {t.history_none}
+          </p>
+        ) : pattern.n < 3 ? (
+          <p style={{ ...m, fontSize: 12.5, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.5 }}>
+            {t.history_thin(pattern.n)}
+          </p>
+        ) : (
+          <>
+            {/* Visual confidence bar — fraction of wins / total */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              <div style={{
+                flex: 1, height: 5, borderRadius: 3, maxWidth: 180,
+                background: "rgba(255,255,255,0.06)", overflow: "hidden",
+              }}>
+                <div style={{
+                  height: "100%",
+                  width: `${Math.min(100, Math.round(pattern.success_rate * 100))}%`,
+                  background: `linear-gradient(90deg, ${ORANGE}, ${GREEN_TEXT})`,
+                }} />
+              </div>
+              <span style={{ ...j, fontSize: 11, fontWeight: 700, color: GREEN_TEXT, fontVariantNumeric: "tabular-nums" as const }}>
+                {pattern.wins}/{pattern.n}
+              </span>
+            </div>
+            <p style={{ ...m, fontSize: 12.5, color: "rgba(255,255,255,0.78)", margin: "0 0 4px", lineHeight: 1.45 }}>
+              {t.history_strong(pattern.wins, pattern.n, Math.round(pattern.success_rate * 100))}
+            </p>
+            {pattern.avg_ctr_before !== null && (
+              <p style={{ ...m, fontSize: 11.5, color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: 1.4 }}>
+                {t.context_label((pattern.avg_ctr_before * 100).toFixed(2))}
+              </p>
+            )}
+          </>
+        )}
       </div>
-      {/* Buttons */}
-      <div style={{padding:"16px",display:"flex",gap:8}}>
+
+      {/* IMPACTO ESPERADO */}
+      <div style={{ padding: "10px 16px 14px" }}>
+        <p style={{
+          ...j, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)",
+          letterSpacing: "0.1em", textTransform: "uppercase" as const, margin: "0 0 8px",
+        }}>
+          {t.impact_label}
+        </p>
+        {pattern?.avg_avoided_spend_brl ? (
+          <p style={{ ...m, fontSize: 12.5, color: "rgba(255,255,255,0.85)", margin: "0 0 4px" }}>
+            {t.impact_avoided(pattern.avg_avoided_spend_brl.toFixed(2))}
+          </p>
+        ) : (
+          <p style={{ ...m, fontSize: 12.5, color: "rgba(255,255,255,0.55)", margin: "0 0 4px" }}>
+            {t.impact_unknown}
+          </p>
+        )}
+        <p style={{ ...m, fontSize: 11.5, color: "rgba(255,255,255,0.45)", margin: 0 }}>
+          ↺ {t.reversible}
+        </p>
+      </div>
+
+      {/* CTA row */}
+      <div style={{
+        padding: "12px 16px 16px",
+        display: "flex", gap: 8,
+        borderTop: `1px solid ${ORANGE_SOFT}`,
+        background: "rgba(0,0,0,0.15)",
+      }}>
         <button onClick={async()=>{
           setState("running");
           await onConfirm(block);
           setResult(`${actionLabel}${target?` — ${target}`:""} executado com sucesso`);
           setState("done");
         }} disabled={state==="running"}
-          style={{...j,fontSize:13,fontWeight:700,padding:"10px 20px",borderRadius:10,background:state==="running"?"rgba(251,146,60,0.3)":"#fb923c",color:state==="running"?"#fb923c":"#000",border:state==="running"?"1px solid rgba(251,146,60,0.3)":"none",cursor:state==="running"?"wait":"pointer",display:"flex",alignItems:"center",gap:6,flex:1,justifyContent:"center"}}>
-          {state==="running"?<><Loader2 size={13} className="animate-spin"/>{t.running}</>:t.confirm}
+          style={{
+            ...j, fontSize: 13, fontWeight: 700, padding: "11px 20px",
+            borderRadius: 10,
+            background: state==="running" ? "rgba(251,146,60,0.3)" : ORANGE,
+            color: state==="running" ? ORANGE : "#000",
+            border: state==="running" ? `1px solid ${ORANGE_BORDER}` : "none",
+            cursor: state==="running" ? "wait" : "pointer",
+            display: "flex", alignItems: "center", gap: 6,
+            flex: 1, justifyContent: "center",
+          }}>
+          {state==="running" ? <><Loader2 size={13} className="animate-spin"/>{t.running}</> : t.confirm}
         </button>
         <button onClick={()=>setState("cancelled")}
-          style={{...m,fontSize:12,padding:"10px 16px",borderRadius:10,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.5)",cursor:"pointer",fontWeight:500}}>
+          style={{
+            ...m, fontSize: 12, padding: "11px 16px", borderRadius: 10,
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "rgba(255,255,255,0.5)", cursor: "pointer", fontWeight: 500,
+          }}>
           {t.cancel}
         </button>
       </div>
@@ -4530,7 +4907,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     animation:"cardIn 0.25s cubic-bezier(0.16,1,0.3,1)",
                   }}>
                     {msg.blocks?.map((b,bi)=>
-                      b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} onConfirm={executeMetaAction}/>:
+                      b.type==="meta_action"?<ConfirmActionBlock key={bi} block={b} lang={lang} userId={user?.id} onConfirm={executeMetaAction}/>:
                       (b.type as string)==="limit_warning"?(
                         <div key={bi} style={{marginTop:8,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.05)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap" as const}}>
                           <p style={{...m,fontSize:13,color:"rgba(14,165,233,0.8)",lineHeight:1.5,margin:0,flex:1}}>{b.content}</p>

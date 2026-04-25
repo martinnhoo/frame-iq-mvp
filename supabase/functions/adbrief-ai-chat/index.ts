@@ -3080,7 +3080,9 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 
 \`{ "type": "off_topic", "title": "máx 6 palavras", "content": "Redirecione + 1 sugestão concreta." }\`
 \`{ "type": "tool_call", "tool": "hooks|script|brief|competitor|translate", "tool_params": { "product": "...", "niche": "...", "market": "...", "platform": "...", "tone": "...", "angle": "...", "count": 5, "context": "..." } }\`
-\`{ "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "OBRIGATÓRIO — use o ID entre [colchetes] dos dados acima, ex: 123456789", "target_type": "campaign|adset|ad", "target_name": "nome do item", "value": "...", "hypothesis": { "primary_cause": "OBRIGATÓRIO — uma das 12 causas canônicas listadas abaixo", "expected_effect": "stop_waste|scale_winner|improve_efficiency", "confidence": 0.0 } } }\`
+\`{ "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "OBRIGATÓRIO — use o ID entre [colchetes] dos dados acima, ex: 123456789", "target_type": "campaign|adset|ad", "target_name": "nome do item", "value": "...", "hypothesis": { "primary_cause": "OBRIGATÓRIO — uma das 12 causas canônicas listadas abaixo", "expected_effect": "stop_waste|scale_winner|improve_efficiency", "confidence": 0.0 }, "urgency_loss_brl": 0.0 } }\`
+
+**urgency_loss_brl (OPCIONAL mas RECOMENDADO em pause):** quando o alvo está SANGRANDO spend nas últimas 24h, inclua o valor R$ exato que ele já consumiu (NÃO o budget diário — o spend REAL ocorrido). A UI mostra "⚠ Já consumiu R$X nas últimas 24h" — gatilho emocional de loss-aversion que dobra a taxa de aprovação. Se você não tem o número exato, omita o campo (UI não mostra a linha).
 
 **CAUSAS CANÔNICAS — \`primary_cause\` OBRIGATÓRIO em TODA emissão de pause / enable / update_budget / duplicate:**
 
