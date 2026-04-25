@@ -3402,8 +3402,11 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   };
 
   const executeMetaAction=async(block:Block)=>{
+    // source:"chat" → meta-actions logs to action_log with the right
+    // attribution, so chat-initiated pauses are distinguishable from
+    // Feed/Autopilot ones in the user's history.
     const{data,error}=await supabase.functions.invoke("meta-actions",{
-      body:{action:block.meta_action,user_id:user.id,persona_id:selectedPersona?.id||null,target_id:block.target_id,target_type:block.target_type,target_name:block.target_name||null,value:block.value}
+      body:{action:block.meta_action,user_id:user.id,persona_id:selectedPersona?.id||null,target_id:block.target_id,target_type:block.target_type,target_name:block.target_name||null,value:block.value,source:"chat",ai_reasoning:(block as any).context||null}
     });
 
     // Parse real error from edge function response (supabase SDK hides it)

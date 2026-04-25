@@ -3056,7 +3056,9 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 \`{ "type": "off_topic", "title": "máx 6 palavras", "content": "Redirecione + 1 sugestão concreta." }\`
 \`{ "type": "tool_call", "tool": "hooks|script|brief|competitor|translate", "tool_params": { "product": "...", "niche": "...", "market": "...", "platform": "...", "tone": "...", "angle": "...", "count": 5, "context": "..." } }\`
 \`{ "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "OBRIGATÓRIO — use o ID entre [colchetes] dos dados acima, ex: 123456789", "target_type": "campaign|adset|ad", "target_name": "nome do item", "value": "..." } }\`
-REGRA CRÍTICA para meta_action: target_id DEVE ser o ID numérico real do Meta (entre [colchetes] nos dados da conta). NUNCA use "undefined" ou omita. Se não encontrar o ID, pergunte ao usuário ou use list_campaigns primeiro.
+REGRA CRÍTICA para meta_action:
+- target_id DEVE ser o ID numérico real do Meta (entre [colchetes] nos dados da conta). NUNCA use "undefined" ou omita. Se não encontrar o ID, pergunte ao usuário ou use list_campaigns primeiro.
+- Quando emitir um meta_action: a resposta INTEIRA é APENAS o array JSON com o tool_call. ZERO prosa adicional. NÃO escreva "Pronto, pausado." ou "Vou pausar agora" ou "Próximo: ...". A UI vai mostrar a tela de confirmação ao usuário, ele clica, AÍ a ação roda. Se você escrever "Pronto, pausado" antes do clique, isso é mentira — a ação não foi executada ainda. Confie no fluxo.
 \`{ "type": "navigate", "route": "/dashboard/...", "cta": "..." }\`
 \`{ "type": "limit_warning", "title": "", "content": "...", "is_limit_warning": true, "will_hit_limit": true|false }\`
 
@@ -3252,6 +3254,52 @@ PROIBIDO:
           throw new Error("no valid arrays");
         }
       } catch {
+        // ── PRIORITY RECOVERY: meta_action tool_call from malformed JSON ──
+        // Specific failure mode reported by users: Claude wants to pause/
+        // enable an ad, emits a JSON-shaped fragment instead of a valid array,
+        // and tacks on "Pronto, pausado." text afterwards. Result: parser
+        // falls through to recoverMarkdown which dumps raw JSON syntax in the
+        // bubble AND no actual action ever runs.
+        //
+        // Rescue: if the malformed text contains the meta_action signature,
+        // pull the params out by regex and synthesize a proper tool_call
+        // block. The frontend will render the confirmation UI, the user
+        // clicks confirm, and the action runs for real. Also strips the
+        // hallucinated success line ("Pronto. X pausado.") so the user
+        // doesn't get gaslit about an action that didn't happen yet.
+        const recoverMetaAction = (input: string): any | null => {
+          const looksLikeMetaAction = /"tool"\s*:\s*"meta_action"|"meta_action"\s*:\s*"(?:pause|enable|update_budget|publish|duplicate|delete|archive|rename|list_campaigns)"/i.test(input);
+          if (!looksLikeMetaAction) return null;
+          const grab = (key: string): string | null => {
+            const m = input.match(new RegExp(`"${key}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`, "i"));
+            return m ? m[1].replace(/\\"/g, '"') : null;
+          };
+          const meta_action = grab("meta_action");
+          const target_id = grab("target_id");
+          const target_type = grab("target_type");
+          const target_name = grab("target_name");
+          const value = grab("value");
+          const context = grab("context") || grab("reason");
+          if (!meta_action || !target_id) return null; // not enough to act on
+          return {
+            type: "tool_call",
+            tool: "meta_action",
+            tool_params: {
+              meta_action,
+              target_id,
+              target_type: target_type || "ad",
+              target_name: target_name || "",
+              ...(value ? { value } : {}),
+              ...(context ? { context } : {}),
+            },
+          };
+        };
+        const recovered = recoverMetaAction(raw);
+        if (recovered) {
+          blocks = [recovered];
+          // No fallthrough to text recovery — we have a clean structured
+          // block now, the user will see the confirmation UI.
+        } else {
         // ── Resilient fallback: recover clean markdown from malformed JSON ──
         // Claude occasionally returns truncated/malformed JSON with code fences.
         // Instead of dumping raw JSON syntax to the user, extract the readable content.
@@ -3329,6 +3377,7 @@ PROIBIDO:
           title: "",
           content: markdown || "Desculpe, não consegui processar a resposta. Tente novamente.",
         }];
+        }
       }
     }
 
