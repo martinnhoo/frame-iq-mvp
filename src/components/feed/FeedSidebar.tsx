@@ -649,6 +649,16 @@ export interface FeedActivityEvent {
   reason: string | null;
   executed_at: string;
   amount_at_risk_brl?: number | null;
+  /** Outcome status, when available (action_outcomes-sourced rows):
+   *  - 'measuring' = taken but not yet finalized (24h/72h cron pending)
+   *  - 'won'       = finalized + improved=true
+   *  - 'lost'      = finalized + improved=false
+   *  - undefined   = source has no outcome notion (autopilot_action_log) */
+  outcome_status?: 'measuring' | 'won' | 'lost';
+  /** Recovery percentage, when finalized (e.g. 18 for +18% CTR recovery). */
+  recovery_pct?: number | null;
+  /** Avoided spend in BRL, when known and positive. */
+  avoided_spend_brl?: number | null;
 }
 
 function timeAgo(iso: string): string {
@@ -803,28 +813,91 @@ const RecentActivityCard: React.FC<{
           </span>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {events.slice(0, 5).map(ev => (
-            <div key={ev.id} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
-              <ActivityIcon type={ev.action_type} />
-              <span style={{
-                flex: 1, fontSize: 12.5, color: T.text1,
-                fontWeight: 500, letterSpacing: '-0.005em',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                fontFamily: F,
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {events.slice(0, 5).map(ev => {
+            // Outcome chip — small status badge to the right of the timestamp.
+            // 'won' = green +X%, 'lost' = red, 'measuring' = amber dot pulse.
+            const chip = (() => {
+              if (ev.outcome_status === 'won') {
+                const pct = ev.recovery_pct;
+                return {
+                  label: typeof pct === 'number' && Number.isFinite(pct)
+                    ? `validado +${Math.round(pct)}%`
+                    : 'validado',
+                  color: T.green,
+                  bg: 'rgba(16,185,129,0.10)',
+                };
+              }
+              if (ev.outcome_status === 'lost') {
+                return { label: 'sem efeito', color: T.red, bg: 'rgba(239,68,68,0.10)' };
+              }
+              if (ev.outcome_status === 'measuring') {
+                return { label: 'medindo', color: T.yellowSoft, bg: 'rgba(251,191,36,0.10)' };
+              }
+              return null;
+            })();
+            const subtitle = ev.target_name
+              ? ev.target_name
+              : (ev.reason || '').split('\n')[0] || null;
+            return (
+              <div key={ev.id} style={{
+                display: 'flex', alignItems: 'flex-start', gap: 10,
               }}>
-                {activityLabel(ev.action_type)}
-              </span>
-              <span style={{
-                fontSize: 11, color: T.text3, fontWeight: 500,
-                flexShrink: 0, fontFamily: F, letterSpacing: '-0.005em',
-              }}>
-                {timeAgo(ev.executed_at)}
-              </span>
-            </div>
-          ))}
+                <ActivityIcon type={ev.action_type} />
+                <div style={{
+                  flex: 1, minWidth: 0,
+                  display: 'flex', flexDirection: 'column', gap: 2,
+                }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    flexWrap: 'wrap' as const,
+                  }}>
+                    <span style={{
+                      fontSize: 12.5, color: T.text1, fontWeight: 600,
+                      letterSpacing: '-0.005em', fontFamily: F,
+                      lineHeight: 1.25,
+                    }}>
+                      {activityLabel(ev.action_type)}
+                    </span>
+                    {chip && (
+                      <span
+                        style={{
+                          fontSize: 9.5, fontWeight: 700,
+                          color: chip.color,
+                          background: chip.bg,
+                          padding: '2px 6px',
+                          borderRadius: 99,
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase' as const,
+                          fontFamily: F,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {chip.label}
+                      </span>
+                    )}
+                  </div>
+                  {subtitle && (
+                    <span style={{
+                      fontSize: 11, color: T.text3, fontFamily: F,
+                      letterSpacing: '-0.005em', lineHeight: 1.3,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      maxWidth: '100%',
+                    }}>
+                      {subtitle}
+                    </span>
+                  )}
+                </div>
+                <span style={{
+                  fontSize: 11, color: T.text3, fontWeight: 500,
+                  flexShrink: 0, fontFamily: F, letterSpacing: '-0.005em',
+                  marginTop: 2,
+                }}>
+                  {timeAgo(ev.executed_at)}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
     </Wrapper>

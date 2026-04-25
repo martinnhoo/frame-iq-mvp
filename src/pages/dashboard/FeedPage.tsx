@@ -5783,9 +5783,22 @@ const FeedPage: React.FC = () => {
   }, []);
 
   // ── Activity log — feeds the right sidebar "Atividade recente" card.
-  // Same source as BrainOverwatch (autopilot_action_log), but a wider window
-  // (48h) so the sidebar isn't empty on quieter days. Only fetches when the
-  // user is real + has a connection.
+  //
+  // Two sources, merged:
+  //   1) action_outcomes      — canonical record of every decision the user
+  //                             takes (via Feed, Chat, anywhere). Carries
+  //                             outcome status (finalized/improved/recovery_pct)
+  //                             so the sidebar can show "validado +18%" chips.
+  //                             This is the PRIMARY source — it's where real
+  //                             user activity lives.
+  //   2) autopilot_action_log — only populated when autopilot fires. Most users
+  //                             don't run autopilot, so this is usually empty.
+  //                             Still merged in for users who do.
+  //
+  // Window: 7d (was 48h) so even quieter accounts see history. The card shows
+  // top 5 anyway, so a wider window just gives better priors when activity is
+  // sparse. Both queries fail-silent — table-not-exist or RLS blocks won't
+  // crash the page.
   const [activityEvents, setActivityEvents] = useState<FeedActivityEvent[]>([]);
   const [activityLoading, setActivityLoading] = useState(true);
   useEffect(() => {
@@ -5797,22 +5810,87 @@ const FeedPage: React.FC = () => {
     let cancelled = false;
     setActivityLoading(true);
     (async () => {
-      try {
-        const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-        const { data } = await (supabase as any)
-          .from('autopilot_action_log')
-          .select('id, action_type, target_name, reason, executed_at, amount_at_risk_brl')
-          .eq('user_id', userId)
-          .eq('status', 'executed')
-          .gte('executed_at', since)
-          .order('executed_at', { ascending: false })
-          .limit(8);
-        if (!cancelled) setActivityEvents((data || []) as FeedActivityEvent[]);
-      } catch {
-        // Table may not exist yet — fail silent (sidebar will just render empty state).
-      } finally {
-        if (!cancelled) setActivityLoading(false);
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      // Fire both queries in parallel.
+      const [outcomesRes, autopilotRes] = await Promise.all([
+        (async () => {
+          try {
+            return await (supabase as any)
+              .from('action_outcomes')
+              .select('id, action_type, target_name, hypothesis, taken_at, finalized, improved, recovery_pct, context')
+              .eq('user_id', userId)
+              .gte('taken_at', since)
+              .order('taken_at', { ascending: false })
+              .limit(20);
+          } catch { return { data: null }; }
+        })(),
+        (async () => {
+          try {
+            return await (supabase as any)
+              .from('autopilot_action_log')
+              .select('id, action_type, target_name, reason, executed_at, amount_at_risk_brl')
+              .eq('user_id', userId)
+              .eq('status', 'executed')
+              .gte('executed_at', since)
+              .order('executed_at', { ascending: false })
+              .limit(20);
+          } catch { return { data: null }; }
+        })(),
+      ]);
+
+      if (cancelled) return;
+
+      // Map action_outcomes rows → FeedActivityEvent shape, enriched with
+      // outcome status / recovery / avoided_spend so the sidebar can render
+      // a "validado +X%" chip.
+      const fromOutcomes: FeedActivityEvent[] = (outcomesRes?.data || []).map((r: any) => {
+        const outcome_status: 'measuring' | 'won' | 'lost' = !r.finalized
+          ? 'measuring'
+          : r.improved === true
+            ? 'won'
+            : 'lost';
+        const avoided = Number(r?.context?.avoided_spend_brl);
+        const reason = r?.hypothesis?.summary
+          || r?.hypothesis?.headline
+          || r?.context?.reason
+          || null;
+        return {
+          id: `oc:${r.id}`,
+          action_type: r.action_type || 'analyze',
+          target_name: r.target_name || null,
+          reason: typeof reason === 'string' ? reason : null,
+          executed_at: r.taken_at,
+          amount_at_risk_brl: Number.isFinite(avoided) && avoided > 0 ? avoided : null,
+          outcome_status,
+          recovery_pct: typeof r.recovery_pct === 'number' ? r.recovery_pct : null,
+          avoided_spend_brl: Number.isFinite(avoided) && avoided > 0 ? avoided : null,
+        };
+      });
+
+      const fromAutopilot: FeedActivityEvent[] = (autopilotRes?.data || []).map((r: any) => ({
+        id: `ap:${r.id}`,
+        action_type: r.action_type,
+        target_name: r.target_name || null,
+        reason: r.reason || null,
+        executed_at: r.executed_at,
+        amount_at_risk_brl: r.amount_at_risk_brl ?? null,
+      }));
+
+      // Merge + dedupe (by target_name + action_type + same minute, prefer
+      // outcome row since it's richer) + sort desc by time.
+      const merged: FeedActivityEvent[] = [...fromOutcomes];
+      const seen = new Set(
+        fromOutcomes.map(e => `${e.action_type}|${e.target_name}|${e.executed_at.slice(0, 16)}`)
+      );
+      for (const ev of fromAutopilot) {
+        const k = `${ev.action_type}|${ev.target_name}|${ev.executed_at.slice(0, 16)}`;
+        if (!seen.has(k)) { merged.push(ev); seen.add(k); }
       }
+      merged.sort((a, b) => new Date(b.executed_at).getTime() - new Date(a.executed_at).getTime());
+
+      setActivityEvents(merged.slice(0, 12));
+      setActivityLoading(false);
     })();
     return () => { cancelled = true; };
   }, [userId, isDemo]);
