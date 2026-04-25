@@ -3084,6 +3084,7 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 REGRA CRÍTICA para meta_action:
 - target_id DEVE ser o ID numérico real do Meta (entre [colchetes] nos dados da conta). NUNCA use "undefined" ou omita. Se não encontrar o ID, pergunte ao usuário ou use list_campaigns primeiro.
 - Quando emitir um meta_action: a resposta INTEIRA é APENAS o array JSON com o tool_call. ZERO prosa adicional. NÃO escreva "Pronto, pausado." ou "Vou pausar agora" ou "Próximo: ...". A UI vai mostrar a tela de confirmação ao usuário, ele clica, AÍ a ação roda. Se você escrever "Pronto, pausado" antes do clique, isso é mentira — a ação não foi executada ainda. Confie no fluxo.
+- **BULK (múltiplas ações na mesma resposta)**: quando o usuário pedir algo que afeta N alvos ("pausar TODAS", "ativar todas as paradas", "mudar budget de todas as ativas"), retorne UM ÚNICO array JSON contendo N objetos tool_call separados por vírgula, dentro de \`[\` e \`]\`. Exemplo EXATO de formato esperado: \`[{"type":"tool_call","tool":"meta_action","tool_params":{"meta_action":"pause","target_id":"1","target_type":"campaign","target_name":"A"}},{"type":"tool_call","tool":"meta_action","tool_params":{"meta_action":"pause","target_id":"2","target_type":"campaign","target_name":"B"}}]\`. NUNCA emita objetos soltos sem brackets. NUNCA quebre em múltiplos arrays. NUNCA intercale prosa. Cada bloco vira UMA confirmação na UI; o usuário aprova cada uma individualmente.
 
 REGRA DE DECISÃO PRA PAUSE/ENABLE (anti-CTR-tunnel):
 - ANTES de emitir meta_action:"pause", revise os dados do alvo no contexto (não só CTR — TAMBÉM conversões, CPA, ROAS, spend, frequência). CTR baixo SOZINHO NUNCA justifica pause.
@@ -3337,51 +3338,80 @@ REGRAS DE COMPORTAMENTO NESTE MODO:
           throw new Error("no valid arrays");
         }
       } catch {
-        // ── PRIORITY RECOVERY: meta_action tool_call from malformed JSON ──
-        // Specific failure mode reported by users: Claude wants to pause/
-        // enable an ad, emits a JSON-shaped fragment instead of a valid array,
-        // and tacks on "Pronto, pausado." text afterwards. Result: parser
-        // falls through to recoverMarkdown which dumps raw JSON syntax in the
-        // bubble AND no actual action ever runs.
+        // ── PRIORITY RECOVERY: meta_action tool_call(s) from malformed JSON ──
+        // Specific failure mode: Claude wants to pause/enable one or more
+        // targets, emits a JSON-shaped fragment instead of a valid array,
+        // and the parser falls through to recoverMarkdown which dumps raw
+        // JSON syntax in the bubble AND no actual action ever runs.
         //
-        // Rescue: if the malformed text contains the meta_action signature,
-        // pull the params out by regex and synthesize a proper tool_call
-        // block. The frontend will render the confirmation UI, the user
-        // clicks confirm, and the action runs for real. Also strips the
-        // hallucinated success line ("Pronto. X pausado.") so the user
-        // doesn't get gaslit about an action that didn't happen yet.
-        const recoverMetaAction = (input: string): any | null => {
+        // BULK case (e.g. "pausar todas as campanhas"): the AI emits N
+        // tool_call objects in sequence. Old recovery only grabbed the
+        // FIRST occurrence via single-match regex, dropping the rest.
+        // New recovery splits the input by "tool_params" boundaries, runs
+        // grab() per window, and returns an ARRAY of recovered actions.
+        //
+        // Rescue produces clean tool_call blocks → frontend renders the
+        // confirmation UI per action → user clicks confirm → action runs
+        // for real and writes to action_outcomes. Fixes the bulk case
+        // without regressing the single case.
+        const recoverMetaActions = (input: string): any[] | null => {
           const looksLikeMetaAction = /"tool"\s*:\s*"meta_action"|"meta_action"\s*:\s*"(?:pause|enable|update_budget|publish|duplicate|delete|archive|rename|list_campaigns)"/i.test(input);
           if (!looksLikeMetaAction) return null;
-          const grab = (key: string): string | null => {
-            const m = input.match(new RegExp(`"${key}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`, "i"));
+
+          // Find every position in the raw text where a meta_action verb
+          // appears as a value. Each such position anchors one window.
+          const verbRegex = /"meta_action"\s*:\s*"(pause|enable|update_budget|publish|duplicate|delete|archive|rename|list_campaigns)"/gi;
+          const anchors: { start: number; verb: string }[] = [];
+          let am: RegExpExecArray | null;
+          while ((am = verbRegex.exec(input)) !== null) {
+            anchors.push({ start: am.index, verb: am[1] });
+          }
+          if (anchors.length === 0) return null;
+
+          // Per-anchor window = bytes from this anchor to the next anchor
+          // (or end of input for the last). Bulk responses interleave
+          // multiple {"tool":"meta_action", "tool_params": {...}} objects;
+          // splitting by anchor isolates each one for independent grab().
+          const grabIn = (window: string, key: string): string | null => {
+            const m = window.match(new RegExp(`"${key}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`, "i"));
             return m ? m[1].replace(/\\"/g, '"') : null;
           };
-          const meta_action = grab("meta_action");
-          const target_id = grab("target_id");
-          const target_type = grab("target_type");
-          const target_name = grab("target_name");
-          const value = grab("value");
-          const context = grab("context") || grab("reason");
-          if (!meta_action || !target_id) return null; // not enough to act on
-          return {
-            type: "tool_call",
-            tool: "meta_action",
-            tool_params: {
-              meta_action,
-              target_id,
-              target_type: target_type || "ad",
-              target_name: target_name || "",
-              ...(value ? { value } : {}),
-              ...(context ? { context } : {}),
-            },
-          };
+
+          const recovered: any[] = [];
+          for (let i = 0; i < anchors.length; i++) {
+            const startOfWindow = anchors[i].start;
+            const endOfWindow = i + 1 < anchors.length ? anchors[i + 1].start : input.length;
+            const window = input.slice(startOfWindow, endOfWindow);
+
+            const meta_action = anchors[i].verb;
+            const target_id = grabIn(window, "target_id");
+            if (!target_id) continue; // can't act without a target — skip silently
+            const target_type = grabIn(window, "target_type");
+            const target_name = grabIn(window, "target_name");
+            const value = grabIn(window, "value");
+            const context = grabIn(window, "context") || grabIn(window, "reason");
+
+            recovered.push({
+              type: "tool_call",
+              tool: "meta_action",
+              tool_params: {
+                meta_action,
+                target_id,
+                target_type: target_type || "ad",
+                target_name: target_name || "",
+                ...(value ? { value } : {}),
+                ...(context ? { context } : {}),
+              },
+            });
+          }
+
+          return recovered.length > 0 ? recovered : null;
         };
-        const recovered = recoverMetaAction(raw);
-        if (recovered) {
-          blocks = [recovered];
-          // No fallthrough to text recovery — we have a clean structured
-          // block now, the user will see the confirmation UI.
+        const recovered = recoverMetaActions(raw);
+        if (recovered && recovered.length > 0) {
+          blocks = recovered;
+          // No fallthrough to text recovery — we have N clean structured
+          // blocks now, the user will see one confirmation card per action.
         } else {
         // ── Resilient fallback: recover clean markdown from malformed JSON ──
         // Claude occasionally returns truncated/malformed JSON with code fences.
