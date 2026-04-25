@@ -429,6 +429,107 @@ export type Database = {
           },
         ]
       }
+      action_outcomes: {
+        Row: {
+          action_type: Database["public"]["Enums"]["action_type_enum"]
+          ai_reasoning: string | null
+          alert_id: string | null
+          context: Json | null
+          created_at: string | null
+          delta_24h: Json | null
+          delta_72h: Json | null
+          evaluation_metric: string | null
+          finalized: boolean | null
+          hypothesis: Json | null
+          id: string
+          impact_snapshot: number | null
+          improved: boolean | null
+          measured_24h_at: string | null
+          measured_72h_at: string | null
+          metrics_after_24h: Json | null
+          metrics_after_72h: Json | null
+          metrics_before: Json
+          metrics_window: string
+          pattern_candidate: boolean | null
+          persona_id: string | null
+          recovery_pct: number | null
+          source: string | null
+          taken_at: string
+          target_id: string
+          target_level: Database["public"]["Enums"]["target_level_enum"]
+          target_name: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["action_type_enum"]
+          ai_reasoning?: string | null
+          alert_id?: string | null
+          context?: Json | null
+          created_at?: string | null
+          delta_24h?: Json | null
+          delta_72h?: Json | null
+          evaluation_metric?: string | null
+          finalized?: boolean | null
+          hypothesis?: Json | null
+          id?: string
+          impact_snapshot?: number | null
+          improved?: boolean | null
+          measured_24h_at?: string | null
+          measured_72h_at?: string | null
+          metrics_after_24h?: Json | null
+          metrics_after_72h?: Json | null
+          metrics_before: Json
+          metrics_window?: string
+          pattern_candidate?: boolean | null
+          persona_id?: string | null
+          recovery_pct?: number | null
+          source?: string | null
+          taken_at?: string
+          target_id: string
+          target_level: Database["public"]["Enums"]["target_level_enum"]
+          target_name?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["action_type_enum"]
+          ai_reasoning?: string | null
+          alert_id?: string | null
+          context?: Json | null
+          created_at?: string | null
+          delta_24h?: Json | null
+          delta_72h?: Json | null
+          evaluation_metric?: string | null
+          finalized?: boolean | null
+          hypothesis?: Json | null
+          id?: string
+          impact_snapshot?: number | null
+          improved?: boolean | null
+          measured_24h_at?: string | null
+          measured_72h_at?: string | null
+          metrics_after_24h?: Json | null
+          metrics_after_72h?: Json | null
+          metrics_before?: Json
+          metrics_window?: string
+          pattern_candidate?: boolean | null
+          persona_id?: string | null
+          recovery_pct?: number | null
+          source?: string | null
+          taken_at?: string
+          target_id?: string
+          target_level?: Database["public"]["Enums"]["target_level_enum"]
+          target_name?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_outcomes_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_accounts: {
         Row: {
           ab_test_group: string | null
@@ -3511,7 +3612,19 @@ export type Database = {
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      action_type_enum:
+        | "pause_ad"
+        | "enable_ad"
+        | "pause_adset"
+        | "enable_adset"
+        | "pause_campaign"
+        | "enable_campaign"
+        | "budget_increase"
+        | "budget_decrease"
+        | "duplicate_ad"
+        | "change_creative"
+        | "change_audience"
+      target_level_enum: "ad" | "adset" | "campaign"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3638,6 +3751,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      action_type_enum: [
+        "pause_ad",
+        "enable_ad",
+        "pause_adset",
+        "enable_adset",
+        "pause_campaign",
+        "enable_campaign",
+        "budget_increase",
+        "budget_decrease",
+        "duplicate_ad",
+        "change_creative",
+        "change_audience",
+      ],
+      target_level_enum: ["ad", "adset", "campaign"],
+    },
   },
 } as const

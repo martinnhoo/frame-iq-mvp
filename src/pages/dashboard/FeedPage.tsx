@@ -7388,12 +7388,13 @@ const FeedPage: React.FC = () => {
           .map(id => {
             const entry = metricEntries[id];
             const action = entry?.action;
-            const metricName: Record<MetricAlertId, string> = {
+            const metricNameMap: Record<MetricAlertId, string> = {
               cpa_no_data: 'CPA',
               cpa_deviation: 'CPA',
               ctr_deviation: 'CTR',
               roas_deviation: 'ROAS',
-            }[id] && { cpa_no_data: 'CPA', cpa_deviation: 'CPA', ctr_deviation: 'CTR', roas_deviation: 'ROAS' }[id] as any || 'Métrica';
+            };
+            const metricName: string = metricNameMap[id] || 'Métrica';
             const fmtElapsed = (start: number, end: number = Date.now()): string => {
               const mins = Math.max(1, Math.floor((end - start) / 60_000));
               if (mins < 60) return `${mins}min`;

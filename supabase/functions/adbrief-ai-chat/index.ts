@@ -3064,7 +3064,7 @@ REGRA DE DECISÃO PRA PAUSE/ENABLE (anti-CTR-tunnel):
 - ANTES de emitir meta_action:"pause", revise os dados do alvo no contexto (não só CTR — TAMBÉM conversões, CPA, ROAS, spend, frequência). CTR baixo SOZINHO NUNCA justifica pause.
 - Se o alvo tem conversões > 0 OU ROAS positivo OU CPA dentro da meta: NÃO emita pause. Em vez disso, devolva um bloco "insight" explicando: "CTR 2.35% é baixo, MAS gerou X conversões a R$Y de CPA. Audiência pequena mas qualificada — geralmente é winner. Pausar?". Espere o usuário insistir antes de emitir o meta_action.
 - Pause só se justifica quando há combinação: CTR baixo + zero conversão + spend significativo (>3x CPA alvo) OU frequência >4 OU verbose claim de fadiga nos padrões. Combine 2+ sinais.
-- O campo "context" do meta_action DEVE citar pelo menos 2 métricas — ex: `"context": "CTR 2.35% + 0 conversão em R$45 spend = sangrando sem retorno"`. Nunca uma métrica só.
+- O campo "context" do meta_action DEVE citar pelo menos 2 métricas — ex: \`"context": "CTR 2.35% + 0 conversão em R\$45 spend = sangrando sem retorno"\`. Nunca uma métrica só.
 - Mesma lógica pra meta_action:"enable"/"update_budget" — não escale só porque CTR subiu, valide com conversão/ROAS antes.
 - Backend tem guard: se você emitir pause num anúncio convertendo, a ação será bloqueada e o usuário verá o snapshot. Não dependa do guard — pense antes.
 \`{ "type": "navigate", "route": "/dashboard/...", "cta": "..." }\`
