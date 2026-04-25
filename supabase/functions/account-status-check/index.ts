@@ -36,11 +36,15 @@ const cors = {
 const CACHE_TTL_MS = 15 * 60 * 1000;
 // Bump when the severity/message logic changes so stale cache entries
 // (written by an older version of this function) are invalidated and a
-// fresh Meta check runs. v5: cap-exhausted is now WARN (not critical).
-// Real account-locks come from account_status codes 2/3/8/101.
-// A small auto-cap getting hit is normal Meta behavior — Meta auto-raises
-// it within hours, so flagging it as "CONTA BLOQUEADA" is dramatic and wrong.
-const SCHEMA_VERSION = 5;
+// fresh Meta check runs.
+// v5: cap-exhausted = WARN (not critical) — Meta auto-raises small caps.
+// v6: prepaid balance is now monitored. Empty balance (< R$1) = CRITICAL
+//     (ads about to pause), low balance (< R$10) = WARN. This caught a
+//     real production bug where a user's prepaid account had R$0.10
+//     remaining and the system reported "CONTA BLOQUEADA POR META" —
+//     wrong attribution: ads were stopping for prepaid balance, not
+//     a Meta-imposed cap.
+const SCHEMA_VERSION = 6;
 
 type Severity = "ok" | "warn" | "critical" | "unknown";
 
@@ -265,31 +269,44 @@ Deno.serve(async (req) => {
     let severity: Severity = statusSeverity;
     let message = reasonText ? `${label} — ${reasonText}` : label;
 
-    // Severity refinements beyond account_status:
+    // Severity refinements beyond account_status, in priority order:
     //
-    //   • spend_cap PRESSURE (80%/95%) is NOT flagged. Meta sets the cap
-    //     automatically, users can't edit it from the UI, and Meta raises it
-    //     organically. Mid-pressure is noise.
-    //   • spend_cap EXHAUSTED (≥99%) is flagged WARN — not critical.
-    //     Meta auto-raises the cap on small/new accounts within hours,
-    //     so the situation self-resolves; calling it "CONTA BLOQUEADA"
-    //     is dramatic and wrong. We surface it (so the user knows why
-    //     delivery dipped) but only as a warning, never as a 5-alarm.
-    //     EXCEPTION: if the cap is large (> R$5000), it was likely
-    //     user-set, so it stays critical because the user has to
-    //     actively raise it.
-    //   • prepaid balance is NOT flagged. Post-paid accounts (credit card
-    //     auto-charged by Meta) routinely show low balance — normal, not a
-    //     problem. We can't reliably tell funding mode from the Graph API,
-    //     so any balance-based alert produces false positives. Real billing
-    //     failures are already caught by Meta's account_status codes
-    //     (status=3 "pendência de pagamento" maps to critical upstream).
+    //   1) prepaid BALANCE essentially empty (< R$1) → CRITICAL.
+    //      Ads are about to pause / already pausing. This is the most
+    //      actionable state: 30 seconds to resolve (add saldo) and the
+    //      account is back. Production bug we hit: a user's account had
+    //      R$0.10 remaining and the system reported the wrong cause
+    //      ("limite de gastos atingido") because we weren't checking
+    //      balance at all. Now we do.
+    //   2) prepaid BALANCE low (< R$10 but >= R$1) → WARN.
+    //      Heads-up that a top-up is coming due before the next billing
+    //      cycle pauses delivery.
+    //   3) spend_cap EXHAUSTED (≥99%):
+    //        - large cap (> R$5000) → CRITICAL (user-set, requires action)
+    //        - small cap → WARN ("Limite automático Meta — sobe sozinho")
+    //      Mid-pressure (80%/95%) is NOT flagged — too noisy.
     //
-    // Balance + cap_remaining still ship in the payload for AI-chat context
-    // and diagnostics — just not surfaced as health-score alerts.
+    // FALSE-POSITIVE GUARD: balance checks only fire when account_status
+    // and the cap field both look healthy. Post-paid accounts often show
+    // low/zero balance as normal behavior — but if account_status is OK
+    // AND there's a balance field present, we trust it. Pure post-paid
+    // accounts typically don't return a balance field at all.
     const LARGE_CAP_THRESHOLD_CENTS = 500_000; // R$5,000 — above this is user-set
+    const BALANCE_EMPTY_CENTS = 100;     // R$1 — essentially zero
+    const BALANCE_LOW_CENTS = 1000;      // R$10 — heads-up threshold
+
     if (severity === "ok") {
-      if (capPct !== null && capPct >= 0.99) {
+      // ── Balance check (highest priority — most actionable) ──
+      if (balance !== null && balance >= 0 && balance < BALANCE_EMPTY_CENTS) {
+        severity = "critical";
+        message = "Saldo pré-pago zerado — adicione saldo na Meta pra entrega não pausar";
+      } else if (balance !== null && balance >= 0 && balance < BALANCE_LOW_CENTS) {
+        severity = "warn";
+        const balanceStr = `R$ ${(balance / 100).toFixed(2).replace('.', ',')}`;
+        message = `Saldo pré-pago baixo (${balanceStr}) — repor antes que pause a entrega`;
+      }
+      // ── Cap check (only if balance is fine) ──
+      else if (capPct !== null && capPct >= 0.99) {
         const isLargeUserSetCap = (spendCap || 0) > LARGE_CAP_THRESHOLD_CENTS;
         if (isLargeUserSetCap) {
           severity = "critical";

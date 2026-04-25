@@ -7690,11 +7690,17 @@ const FeedPage: React.FC = () => {
             // ad-level action will help if delivery is paused for the
             // whole account.
             if (accountStatus?.severity === 'critical' && !isDemo) {
-              navigate('/dashboard/ai?prompt=' + encodeURIComponent(
-                'Minha conta está com problema crítico no Meta (' +
-                (accountStatus?.message || 'limite ou status') +
-                '). Me explica o que aconteceu, como resolver e o que dá pra fazer enquanto isso.'
-              ));
+              const msg = (accountStatus?.message || '').toLowerCase();
+              // Balance-zero gets its own prompt — the resolution is "go
+              // to Meta billing and add saldo", super specific. No need
+              // to ask the AI to generically "explain what happened".
+              const isBalanceZero = msg.includes('saldo') && msg.includes('zerado');
+              const prompt = isBalanceZero
+                ? 'Meu saldo pré-pago da Meta zerou e os anúncios estão pausando. Me explica o passo-a-passo pra adicionar saldo agora (qual a forma mais rápida — pix, cartão, boleto), quanto vale colocar pra segurar a próxima semana de operação considerando meu ritmo de gasto, e se tem como configurar refill automático pra não acontecer de novo.'
+                : 'Minha conta está com problema crítico no Meta (' +
+                  (accountStatus?.message || 'limite ou status') +
+                  '). Me explica o que aconteceu, como resolver e o que dá pra fazer enquanto isso.';
+              navigate('/dashboard/ai?prompt=' + encodeURIComponent(prompt));
               return;
             }
             if (hasKills && !isDemo) {

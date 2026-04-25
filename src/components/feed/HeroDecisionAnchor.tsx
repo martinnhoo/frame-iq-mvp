@@ -211,6 +211,19 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
 
   const t = tokens[variant];
 
+  // Critical_account kicker derives from the message so balance, cap,
+  // and Meta-lock cases each get the right label. The colors stay the
+  // same red palette — only the wording changes so the user immediately
+  // knows whether to add saldo, wait for cap raise, or contact Meta.
+  const criticalKicker = (() => {
+    if (variant !== 'critical_account') return t.kicker;
+    const m = (accountStatusMessage || '').toLowerCase();
+    if (m.includes('saldo') && m.includes('zerado')) return 'SALDO PRÉ-PAGO ZERADO';
+    if (m.includes('saldo')) return 'SALDO PRÉ-PAGO BAIXO';
+    if (m.includes('limite de gastos')) return 'LIMITE DE GASTOS ATINGIDO';
+    return t.kicker; // fallback: original "CONTA BLOQUEADA POR META"
+  })();
+
   return (
     <div
       style={{
@@ -269,41 +282,50 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
             textTransform: 'uppercase' as const,
           }}
         >
-          {t.kicker}
+          {criticalKicker}
         </span>
       </div>
 
       {/* Hero content */}
-      {variant === 'critical_account' && (
-        <>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 'clamp(26px, 4.4vw, 36px)',
-              fontWeight: 800,
-              color: '#F0F6FC',
-              letterSpacing: '-0.035em',
-              lineHeight: 1.18,
-              maxWidth: 720,
-            }}
-          >
-            {accountStatusMessage || 'A Meta bloqueou a entrega da sua conta.'}
-          </h2>
-          <p
-            style={{
-              margin: '12px 0 0',
-              fontSize: 'clamp(13px, 1.4vw, 15px)',
-              color: 'rgba(240,246,252,0.65)',
-              lineHeight: 1.5,
-              maxWidth: 580,
-            }}
-          >
-            Enquanto isso, qualquer recomendação de pause / escala fica em espera —
-            nada vai entregar até resolver isso primeiro. Eu te ajudo a entender o
-            que aconteceu e o que dá pra fazer agora.
-          </p>
-        </>
-      )}
+      {variant === 'critical_account' && (() => {
+        // Tailored paragraph per cause. Balance gets a 30s-resolution nudge,
+        // cap gets a "Meta will raise" reminder, default falls back to the
+        // generic Meta-blocked copy.
+        const m = (accountStatusMessage || '').toLowerCase();
+        const supporting = m.includes('saldo') && m.includes('zerado')
+          ? 'Em contas pré-pagas, a entrega pausa quando o saldo zera. Resolução leva ~30s na Meta (Cobrança · Adicionar saldo). Eu te explico o passo-a-passo e quanto colocar pra segurar a próxima semana sem travar de novo.'
+          : m.includes('limite de gastos')
+            ? 'A Meta atingiu o limite de gastos da conta e pausou a entrega. Costuma ser elevado automaticamente em algumas horas. Eu te explico o que aconteceu e o que dá pra fazer enquanto isso.'
+            : 'Enquanto isso, qualquer recomendação de pause / escala fica em espera — nada vai entregar até resolver isso primeiro. Eu te ajudo a entender o que aconteceu e o que dá pra fazer agora.';
+        return (
+          <>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: 'clamp(26px, 4.4vw, 36px)',
+                fontWeight: 800,
+                color: '#F0F6FC',
+                letterSpacing: '-0.035em',
+                lineHeight: 1.18,
+                maxWidth: 720,
+              }}
+            >
+              {accountStatusMessage || 'A Meta bloqueou a entrega da sua conta.'}
+            </h2>
+            <p
+              style={{
+                margin: '12px 0 0',
+                fontSize: 'clamp(13px, 1.4vw, 15px)',
+                color: 'rgba(240,246,252,0.65)',
+                lineHeight: 1.5,
+                maxWidth: 580,
+              }}
+            >
+              {supporting}
+            </p>
+          </>
+        );
+      })()}
 
       {variant === 'urgent' && (
         <>
