@@ -62,6 +62,54 @@ interface ActionLogEntry {
   decision_id: string | null;
 }
 
+// ── Phase 3 lifecycle — outcome attached to a logged action ───────────────
+// action_log records "Meta API accepted the call". action_outcomes records
+// "the action actually moved the needle" (or didn't), measured 24h+72h
+// later by the cron pipeline. These are TWO DIFFERENT QUESTIONS — the
+// History page now surfaces both: existing status pill = execution result,
+// new lifecycle pill = downstream outcome.
+//
+// The two tables aren't FK-linked (different writers, different release
+// cycles), so we cross-reference at read time by target_id + timestamp
+// window. Tight enough to avoid wrong matches, loose enough to handle
+// the small skew between when the API call lands and when the outcome
+// row is written.
+type OutcomeRow = {
+  id: string;
+  target_id: string;
+  taken_at: string;
+  finalized: boolean;
+  improved: boolean | null;
+  recovery_pct: number | null;
+  measured_24h_at: string | null;
+  measured_72h_at: string | null;
+  context: Record<string, any> | null;
+};
+const OUTCOME_MATCH_WINDOW_MS = 5 * 60 * 1000; // ±5 min — generous, since
+// action_log and action_outcomes are written within ~1s of each other but
+// clock skew + retries can create wider gaps. False positives are rare
+// because we also key on target_meta_id.
+
+function findMatchingOutcome(
+  index: Map<string, OutcomeRow[]>,
+  targetMetaId: string,
+  executedAt: string,
+): OutcomeRow | null {
+  const candidates = index.get(targetMetaId);
+  if (!candidates || candidates.length === 0) return null;
+  const tExec = new Date(executedAt).getTime();
+  let best: OutcomeRow | null = null;
+  let bestDist = Infinity;
+  for (const o of candidates) {
+    const dist = Math.abs(new Date(o.taken_at).getTime() - tExec);
+    if (dist <= OUTCOME_MATCH_WINDOW_MS && dist < bestDist) {
+      best = o;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
 // ── Date filter presets ───────────────────────────────────────────────────────
 type DatePreset = 'all' | 'today' | '7d' | '30d';
 const DATE_PRESETS: { key: DatePreset; label: string }[] = [
@@ -138,6 +186,105 @@ function matchesDateFilter(dateStr: string, preset: DatePreset): boolean {
   return true;
 }
 
+// ── Outcome lifecycle pill ────────────────────────────────────────────────
+// Renders the action_outcome status as a single-line pill below the title
+// row. Lifecycle has 5 honest states; each is color + icon + concise copy:
+//
+//   🟡 medindo (24h pendente)    — countdown to next cron measurement
+//   🟡 medindo (72h pendente)    — 24h done, waiting on final verdict
+//   🟢 funcionou + R$ evitados   — improved=true, with avoided spend
+//   🔴 não funcionou             — improved=false (radical honesty)
+//   ⚪ inconclusivo              — finalized but improved=null (sample thin)
+//
+// Returns null when there's no matching outcome (legacy / non-tracked
+// action). The pill never says "Meta accepted" — that's the existing
+// status pill's job. This pill answers: "did the decision actually help?"
+function OutcomeLifecyclePill({ outcome }: { outcome: OutcomeRow | null }) {
+  if (!outcome) return null;
+
+  // Compute time-until-next-measurement for in-flight outcomes.
+  // Cron 24h measures rows ≥24h old; cron 72h finalizes rows ≥72h old.
+  const now = Date.now();
+  const taken = new Date(outcome.taken_at).getTime();
+  const ageMs = now - taken;
+  const fmtRemaining = (msRemaining: number): string => {
+    const h = Math.max(0, Math.ceil(msRemaining / 3600000));
+    if (h < 24) return `${h}h`;
+    const d = Math.floor(h / 24);
+    const r = h % 24;
+    return r > 0 ? `${d}d ${r}h` : `${d}d`;
+  };
+
+  // ── 1) Still measuring (not finalized) ──
+  if (!outcome.finalized) {
+    if (!outcome.measured_24h_at) {
+      const remaining = 24 * 3600000 - ageMs;
+      return (
+        <Pill color="#FBBF24">
+          🟡 Medindo · 24h em {fmtRemaining(remaining)}
+        </Pill>
+      );
+    }
+    const remaining = 72 * 3600000 - ageMs;
+    return (
+      <Pill color="#FBBF24">
+        🟡 24h ok · veredicto final em {fmtRemaining(remaining)}
+      </Pill>
+    );
+  }
+
+  // ── 2) Finalized + improved=true (the win) ──
+  if (outcome.improved === true) {
+    const avoided = Number(outcome.context?.avoided_spend_brl);
+    const recovery = outcome.recovery_pct;
+    const detail = Number.isFinite(avoided) && avoided > 0
+      ? `R$ ${avoided.toFixed(2)} evitados`
+      : recovery !== null
+      ? `${recovery > 0 ? '+' : ''}${recovery.toFixed(1)}% de impacto`
+      : null;
+    return (
+      <Pill color="#34D399">
+        🟢 Funcionou{detail ? ` · ${detail}` : ''}
+      </Pill>
+    );
+  }
+
+  // ── 3) Finalized + improved=false (radical honesty — show the loss) ──
+  if (outcome.improved === false) {
+    return (
+      <Pill color="#F87171">
+        🔴 Não funcionou — métricas não melhoraram após a ação
+      </Pill>
+    );
+  }
+
+  // ── 4) Finalized + improved=null (sample insufficient to decide) ──
+  return (
+    <Pill color="#94A3B8">
+      ⚪ Inconclusivo — sample insuficiente pra avaliar
+    </Pill>
+  );
+}
+
+function Pill({ color, children }: { color: string; children: React.ReactNode }) {
+  return (
+    <div style={{
+      marginTop: 8,
+      display: 'inline-flex', alignItems: 'center',
+      padding: '4px 10px', borderRadius: 6,
+      background: `${color}10`,
+      border: `1px solid ${color}25`,
+      color,
+      fontFamily: F, fontSize: 11, fontWeight: 600,
+      letterSpacing: '-0.005em',
+      lineHeight: 1.4,
+      maxWidth: '100%',
+    }}>
+      {children}
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 const HistoryPage: React.FC = () => {
   const ctx = useOutletContext<DashboardContext>();
@@ -149,6 +296,12 @@ const HistoryPage: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<DatePreset>('all');
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
+
+  // ── Phase 3 — outcomes index (action_outcomes mirrored alongside log) ──
+  // Indexed by target_meta_id for O(1) lookup per row. Each entry is a
+  // small array because the same target can have multiple actions over
+  // time; matching narrows by timestamp window.
+  const [outcomesIndex, setOutcomesIndex] = useState<Map<string, OutcomeRow[]>>(new Map());
   // Force re-read of localStorage when Meta account changes
   const [accTick, setAccTick] = useState(0);
   const metaSelId = React.useMemo(() => {
@@ -230,6 +383,49 @@ const HistoryPage: React.FC = () => {
   }, [liveAccountId, loadingMore]);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  // Load outcomes for this user (NOT scoped to account_id because
+  // action_outcomes uses user_id) and index by target_id so we can
+  // overlay per-row lifecycle pills. Refreshes when history reloads
+  // (new actions might have new outcomes between fetches).
+  useEffect(() => {
+    if (history.length === 0) {
+      setOutcomesIndex(new Map());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+        if (!userId) return;
+        // Fetch outcomes since the OLDEST log entry visible — bounds
+        // the query and matches the visible window.
+        const oldestExec = history[history.length - 1]?.executed_at;
+        const since = oldestExec
+          ? new Date(new Date(oldestExec).getTime() - OUTCOME_MATCH_WINDOW_MS).toISOString()
+          : new Date(Date.now() - 90 * 86400000).toISOString();
+        const { data, error } = await (supabase as any)
+          .from('action_outcomes')
+          .select('id, target_id, taken_at, finalized, improved, recovery_pct, measured_24h_at, measured_72h_at, context')
+          .eq('user_id', userId)
+          .gte('taken_at', since)
+          .order('taken_at', { ascending: false })
+          .limit(500);
+        if (cancelled || error || !data) return;
+        const idx = new Map<string, OutcomeRow[]>();
+        for (const row of data as OutcomeRow[]) {
+          const arr = idx.get(row.target_id);
+          if (arr) arr.push(row);
+          else idx.set(row.target_id, [row]);
+        }
+        setOutcomesIndex(idx);
+      } catch {
+        // Outcomes are an enrichment, not core — silent fail keeps page usable.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [history]);
 
   useEffect(() => {
     const handler = () => { setAccTick(t => t + 1); };
@@ -342,16 +538,69 @@ const HistoryPage: React.FC = () => {
     return `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} · ${time}`;
   };
 
-  // ── Stats ──
-  const totalSaved = history
+  // ── Stats — Phase 3 honest accounting ─────────────────────────────────
+  // Replaces the old action_log-based estimates with action_outcomes-driven
+  // numbers wherever possible. Falls back to log estimates when outcomes
+  // aren't available yet (legacy rows or recent actions still being measured).
+  //
+  // R$ economizado:
+  //   - Sum of `context.avoided_spend_brl` from outcomes where improved=true
+  //   - Falls back to action_log.actual_impact_48h, then to estimated_daily_impact
+  //   - Uses cents internally (formatCurrency divides by 100)
+  //
+  // Taxa de sucesso:
+  //   - From outcomes: wins / (wins + losses), excludes inconclusive
+  //   - That's the HONEST rate. Old metric (success_count / total_log_count)
+  //     conflated "Meta API succeeded" with "decision actually helped".
+  //     They're different questions; this card answers the more useful one.
+  let outcomeSavedBrl = 0;
+  let outcomeWins = 0;
+  let outcomeLosses = 0;
+  let outcomeInconclusive = 0;
+  let outcomeMeasuring = 0;
+  for (const arr of outcomesIndex.values()) {
+    for (const o of arr) {
+      if (!o.finalized) {
+        outcomeMeasuring++;
+        continue;
+      }
+      if (o.improved === true) {
+        outcomeWins++;
+        const v = Number(o.context?.avoided_spend_brl);
+        if (Number.isFinite(v) && v > 0) outcomeSavedBrl += v;
+      } else if (o.improved === false) {
+        outcomeLosses++;
+      } else {
+        outcomeInconclusive++;
+      }
+    }
+  }
+  // Stat 1: cumulative R$ saved. Outcomes-first; fall back to log estimates
+  // when no outcomes recorded yet.
+  const totalSavedFromOutcomes = Math.round(outcomeSavedBrl * 100); // → cents
+  const totalSavedFromLog = history
     .filter(h => h.result === 'success')
     .reduce((sum, h) => {
       if (h.actual_impact_48h) return sum + h.actual_impact_48h;
       if (h.estimated_daily_impact && h.action_type.includes('pause')) return sum + h.estimated_daily_impact;
       return sum;
     }, 0);
+  const totalSaved = totalSavedFromOutcomes > 0 ? totalSavedFromOutcomes : totalSavedFromLog;
 
+  // Stat 2: success rate — outcomes-first, log fallback
+  const outcomeFinalized = outcomeWins + outcomeLosses;
+  const outcomeRatePct = outcomeFinalized > 0
+    ? Math.round((outcomeWins / outcomeFinalized) * 100)
+    : null;
   const successCount = history.filter(h => h.result === 'success').length;
+  const logRatePct = history.length > 0 ? Math.round((successCount / history.length) * 100) : null;
+  const successRatePct = outcomeRatePct ?? logRatePct;
+  const successRateLabel = outcomeFinalized > 0
+    ? `${outcomeWins}/${outcomeFinalized} (${outcomeRatePct}%)` // "8/10 (80%)"
+    : (logRatePct !== null ? `${logRatePct}%` : '—');
+
+  // Stat 3: count of actions in last 30d (still log-based — we want the
+  // event count regardless of outcome status).
   const actionsThisMonth = history.filter(h =>
     new Date(h.executed_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
   ).length;
@@ -410,7 +659,7 @@ const HistoryPage: React.FC = () => {
           {[
             { label: 'Economizado pela IA', value: formatCurrency(totalSaved), color: totalSaved > 0 ? GREEN : T2 },
             { label: 'Ações este mês', value: String(actionsThisMonth), color: T1 },
-            { label: 'Taxa de sucesso', value: history.length > 0 ? `${Math.round((successCount / history.length) * 100)}%` : '—', color: T1 },
+            { label: 'Decisões certas', value: successRateLabel, color: successRatePct !== null && successRatePct >= 70 ? GREEN : T1 },
           ].map((stat, i) => (
             <div key={i} style={{
               background: CARD, border: `1px solid ${B1}`,
@@ -692,6 +941,18 @@ const HistoryPage: React.FC = () => {
                     {entry.target_type && ` · ${getTargetLabel(entry.target_type)}`}
                     {' · '}{formatDate(entry.executed_at)}
                   </p>
+
+                  {/* OUTCOME LIFECYCLE PILL — Phase 3 enrichment.
+                      Surfaces what action_outcomes measured AFTER the
+                      action ran (24h + 72h windows). Distinct from the
+                      status pill above (which only says whether the Meta
+                      API accepted the call). This pill answers the more
+                      important question: "did the decision actually help?"
+                      Renders null when no matching outcome row exists
+                      (legacy actions, or pre-Phase-2b rows). */}
+                  <OutcomeLifecyclePill
+                    outcome={findMatchingOutcome(outcomesIndex, entry.target_meta_id, entry.executed_at)}
+                  />
 
                   {/* AI reasoning — the Preview-panel analysis shown to
                       the user BEFORE they confirmed. This is what turns
