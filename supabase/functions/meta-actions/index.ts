@@ -13,8 +13,8 @@ const cors = {
 };
 const BASE = "https://graph.facebook.com/v21.0";
 
-function ok(data: object) {
-  return new Response(JSON.stringify(data), { headers: { ...cors, "Content-Type": "application/json" } });
+function ok(data: object, status = 200) {
+  return new Response(JSON.stringify(data), { status, headers: { ...cors, "Content-Type": "application/json" } });
 }
 function errResp(msg: string, status = 400) {
   return new Response(JSON.stringify({ error: msg }), { status, headers: { ...cors, "Content-Type": "application/json" } });

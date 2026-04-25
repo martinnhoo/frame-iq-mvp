@@ -3119,7 +3119,25 @@ EXEMPLO correto de content: "**Diagnóstico:** CPM subiu 40%.\\n\\n**Causa:** p�
 PROIBIDO:
 - Bloco de texto corrido sem nenhum negrito ou quebra de linha
 - Listas com traço (- item) — use **negrito** + \\n\\n
-- Headers com ## — apenas **negrito**${intentDirective}${landingPageBlock}`;
+- Headers com ## — apenas **negrito**
+
+**FORMATO COMPACTO PARA LISTAS DE STATUS (campanhas / adsets / ads):**
+Quando o usuário pedir o status atual de várias coisas ("status de cada campanha", "como tá a conta", "lista as ativas"), use UMA linha por item com este formato EXATO:
+
+  **Nome curto** — ⏸ PAUSADA · R$50/dia · vendas\\n
+  **Nome curto** — ▶ ATIVA · R$30/dia · tráfego\\n
+  **Nome curto** — ⏸ PAUSADA · R$20/dia · tráfego
+
+REGRAS DESSE FORMATO:
+- ⏸ = PAUSED (qualquer effective_status ≠ ACTIVE: PAUSED, CAMPAIGN_PAUSED, ARCHIVED, etc.). ▶ = ACTIVE.
+- Nome do item em **negrito**, sem CAPS, sem subtítulo separado, sem bullet "-" nem "•".
+- Separador entre campos é " · " (bullet med + espaços), não "|".
+- Status SEMPRE primeiro depois do em-dash, em PT-BR (PAUSADA / ATIVA), MAIÚSCULAS pra destaque.
+- Budget em R$ por dia (converta de USD se vier em dólar — Meta retorna cents, então /100).
+- Objetivo em PT-BR minúsculo (vendas / tráfego / leads / engajamento). Nunca OUTCOME_*.
+- 1 linha por item, separadas por \\n (não \\n\\n) — quero blocos compactos.
+- Depois das linhas, UMA linha de resumo curta: "Todas pausadas — zero gasto ativo." ou "2 ativas, 1 pausada."
+- NUNCA use o formato CAPS-pequenas-no-título-+-body-separado. Isso renderiza feio.${intentDirective}${landingPageBlock}`;
 
     const toneInstruction = user_prefs?.tone ? `\n\nESTILO PREFERIDO DO USUÁRIO: ${user_prefs.tone}` : "";
 
