@@ -5,10 +5,24 @@
 // user's actual track record.
 //
 // Pipeline (intentionally simple, no ML, no new table):
-//   action_outcomes (finalized=true, pattern_candidate=true, improved≠null)
-//     → group by (action_type, evaluation_metric)
+//   action_outcomes (finalized=true, pattern_candidate=true, improved≠null,
+//                    hypothesis.primary_cause ∈ CANONICAL_CAUSES)
+//     → group by (action_type, evaluation_metric, primary_cause)
 //     → keep groups with n ≥ MIN_N (default 3)
-//     → format as "X improved Y in N1/N2 cases (Z% success, +W% recovery)"
+//     → format as
+//       "Pausar campanha por fadiga criativa: 3/3 casos (100%)
+//        — ~95% spend evitado, R$87/ação | quando CTR ~1.3%, spend ~R$45"
+//
+// Why bucketize by cause (Phase 3.1):
+//   - Same action_type can have very different outcomes depending on WHY.
+//     Pausing for creative_fatigue ≠ pausing for budget_starvation.
+//   - Without the bucket, a 50% success rate hides "always works for X,
+//     never works for Y" — exactly the signal the AI needs to reason.
+//
+// Why we ALSO compute pre-action context (avg_ctr_before, avg_spend_before):
+//   - Lets the AI say "worked when CTR was ~1.3%" instead of just
+//     "worked 4/5 times". The first is reasoning; the second is trivia.
+//   - Both fields are already stored in metrics_before — zero migration.
 //
 // Why no new table yet: we don't know the right shape until the data
 // shape settles. Aggregating on read is cheap (each user has tens to low
@@ -18,6 +32,9 @@
 // Honesty principle (mirrors action-outcomes.ts):
 //   - n < MIN_N → don't show confidence at all (we say "first time")
 //   - improved=null rows are EXCLUDED (they're "not enough signal", not 0)
+//   - primary_cause null OR not in CANONICAL_CAUSES → row excluded.
+//     Better to drop a row than poison the dataset with strings like
+//     "unknown" or random parser drift ("low_ctr" / "ctr_low" / "bad_ctr").
 //   - we never invent or extrapolate; pattern lines are tied 1:1 to evidence
 
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
@@ -36,7 +53,52 @@ const ROW_FETCH_CAP = 500;
 // How many pattern lines to surface to the model. More than this and
 // the prompt block gets noisy; the most-evidence-first sort keeps the
 // strongest signals.
-const MAX_PATTERN_LINES = 6;
+const MAX_PATTERN_LINES = 8;
+
+// ── Canonical causes — the only primary_cause values that count ──────────
+// MUST match what meta-actions/parseHypothesisFromReasoning emits, plus
+// reserved slots for upcoming detector additions. Any cause outside this
+// set is treated as noise and the row is excluded from aggregation.
+//
+// Why a hard whitelist (vs accept-anything):
+//   - String free-form drift kills longitudinal datasets. Today the parser
+//     emits "low_ctr"; tomorrow someone refactors and it becomes "ctr_low";
+//     the dataset silently fragments and patterns stop forming.
+//   - Whitelist forces ANY new cause to be added here intentionally,
+//     centralizing the contract.
+export const CANONICAL_CAUSES = new Set<string>([
+  // Currently emitted by parseHypothesisFromReasoning in meta-actions:
+  "creative_fatigue",
+  "low_hook_strength",
+  "wrong_audience",
+  "budget_starvation",
+  "tracking_gap",
+  "high_cpa",
+  "low_ctr",
+  "low_roas",
+  "spend_waste",
+  "winning_signal",
+  // Reserved — extend the parser to emit these when adding detectors:
+  "high_frequency",
+  "learning_phase",
+]);
+
+// PT-BR labels for canonical causes — used only for prompt readability.
+// Adding a key here without adding it to CANONICAL_CAUSES has no effect.
+const CAUSE_LABELS_PT: Record<string, string> = {
+  creative_fatigue: "fadiga criativa",
+  low_hook_strength: "hook fraco",
+  wrong_audience: "público errado",
+  budget_starvation: "budget insuficiente",
+  tracking_gap: "tracking quebrado",
+  high_cpa: "CPA alto",
+  low_ctr: "CTR baixo",
+  low_roas: "ROAS baixo",
+  spend_waste: "desperdício de spend",
+  winning_signal: "winner detectado",
+  high_frequency: "frequência alta",
+  learning_phase: "fase de aprendizado",
+};
 
 // ── Types ─────────────────────────────────────────────────────────────────
 export type OutcomeRow = {
@@ -46,26 +108,33 @@ export type OutcomeRow = {
   recovery_pct: number | null;
   delta_72h: Record<string, number> | null;
   context: Record<string, any> | null;
+  hypothesis: { primary_cause?: string | null; expected_effect?: string | null } | null;
+  metrics_before: Record<string, any> | null;
 };
 
 export type LearnedPattern = {
   action_type: string;
   evaluation_metric: string;
-  n: number;            // total rows in the group (improved true + false)
-  successes: number;    // count where improved = true
-  failures: number;     // count where improved = false
-  success_rate: number; // 0–1
-  avg_recovery_pct: number | null; // among successes only; null if none
-  // For pause_*: the average avoided spend per success (R$). Surfaces
-  // economic value, not just "did it work" — pivotal for the pause loop.
-  avg_avoided_spend_brl: number | null;
+  primary_cause: string;       // always set — bucket key dimension
+  n: number;                   // total rows in the group (improved true + false)
+  successes: number;           // count where improved = true
+  failures: number;            // count where improved = false
+  success_rate: number;        // 0–1
+  avg_recovery_pct: number | null;     // among successes only; null if none
+  avg_avoided_spend_brl: number | null; // pause_* econ value; null otherwise
+  // Pre-action context — averaged across ALL rows in the bucket (wins +
+  // losses) so the AI sees "the typical situation when this action was
+  // taken", not just "the situation when it worked".
+  avg_ctr_before: number | null;       // 0–1 (raw ratio, not %)
+  avg_spend_before_brl: number | null; // R$
 };
 
 // ── Fetch + aggregate ─────────────────────────────────────────────────────
 /**
  * Returns the user's learned patterns derived from finalized outcomes.
- * Patterns with n < MIN_N are EXCLUDED — caller decides how to present
- * the "first time" case. Returns [] when no candidate data exists yet.
+ * Patterns with n < MIN_N OR with primary_cause not in CANONICAL_CAUSES
+ * are EXCLUDED — caller decides how to present the "first time" case.
+ * Returns [] when no candidate data exists yet.
  */
 export async function getLearnedPatterns(
   supabase: SupabaseClient,
@@ -75,7 +144,7 @@ export async function getLearnedPatterns(
 
   const { data, error } = await supabase
     .from("action_outcomes")
-    .select("action_type, evaluation_metric, improved, recovery_pct, delta_72h, context")
+    .select("action_type, evaluation_metric, improved, recovery_pct, delta_72h, context, hypothesis, metrics_before")
     .eq("user_id", userId)
     .eq("finalized", true)
     .eq("pattern_candidate", true)
@@ -92,13 +161,16 @@ export async function getLearnedPatterns(
   const totalCandidateRows = rows.length;
   if (!rows.length) return { patterns: [], totalCandidateRows: 0 };
 
-  // Group by (action_type, evaluation_metric). evaluation_metric=null
-  // means the row has no judgeable metric (e.g. duplicate_ad) — those
-  // never become patterns.
+  // Group by (action_type, evaluation_metric, primary_cause). evaluation_metric=null
+  // never enters a bucket (e.g. duplicate_ad has no metric to judge).
+  // primary_cause must be in CANONICAL_CAUSES — guards against parser
+  // drift and "unknown" pollution.
   const groups = new Map<string, OutcomeRow[]>();
   for (const r of rows) {
     if (!r.evaluation_metric) continue;
-    const key = `${r.action_type}::${r.evaluation_metric}`;
+    const cause = r.hypothesis?.primary_cause;
+    if (!cause || typeof cause !== "string" || !CANONICAL_CAUSES.has(cause)) continue;
+    const key = `${r.action_type}::${r.evaluation_metric}::${cause}`;
     const arr = groups.get(key);
     if (arr) arr.push(r);
     else groups.set(key, [r]);
@@ -107,7 +179,7 @@ export async function getLearnedPatterns(
   const patterns: LearnedPattern[] = [];
   for (const [key, arr] of groups.entries()) {
     if (arr.length < MIN_N) continue;
-    const [action_type, evaluation_metric] = key.split("::");
+    const [action_type, evaluation_metric, primary_cause] = key.split("::");
     const successes = arr.filter((r) => r.improved === true).length;
     const failures = arr.filter((r) => r.improved === false).length;
     const n = successes + failures; // ignore stragglers (shouldn't exist after filter)
@@ -131,15 +203,36 @@ export async function getLearnedPatterns(
       ? round2(avoidedNumbers.reduce((a, b) => a + b, 0) / avoidedNumbers.length)
       : null;
 
+    // Pre-action context. Average across ALL rows (wins + losses) — we
+    // want "the situation that prompted this action", not "the situation
+    // when it worked". The first is what the AI matches on now; the
+    // second is hindsight.
+    const ctrSamples = arr
+      .map((r) => Number(r.metrics_before?.ctr))
+      .filter((x) => Number.isFinite(x) && x >= 0);
+    const avg_ctr_before = ctrSamples.length
+      ? roundTo(ctrSamples.reduce((a, b) => a + b, 0) / ctrSamples.length, 4)
+      : null;
+
+    const spendSamples = arr
+      .map((r) => Number(r.metrics_before?.spend))
+      .filter((x) => Number.isFinite(x) && x >= 0);
+    const avg_spend_before_brl = spendSamples.length
+      ? round2(spendSamples.reduce((a, b) => a + b, 0) / spendSamples.length)
+      : null;
+
     patterns.push({
       action_type,
       evaluation_metric,
+      primary_cause,
       n,
       successes,
       failures,
       success_rate: n > 0 ? successes / n : 0,
       avg_recovery_pct,
       avg_avoided_spend_brl,
+      avg_ctr_before,
+      avg_spend_before_brl,
     });
   }
 
@@ -166,42 +259,63 @@ export function formatLearnedPatternsBlock(
   // covers the "no data" case in DADOS DESTA CONTA.
   if (totalCandidateRows === 0) return "";
 
-  // Some rows finalized but none reached MIN_N → emit a short note.
-  // This actively prevents the AI from over-claiming "we always pause
-  // these" when we've only seen 1 example.
+  // Some rows finalized but none reached MIN_N (or none had a canonical
+  // cause) → emit a short note. Actively prevents the AI from over-
+  // claiming "we always pause these" when we've only seen 1 example.
   if (patterns.length === 0) {
     return [
       "=== APRENDIZADO POR AÇÕES (NESTA CONTA) ===",
-      `${totalCandidateRows} ações já foram medidas, mas nenhum padrão atingiu o mínimo de ${MIN_N} amostras ainda.`,
+      `${totalCandidateRows} ações já foram medidas, mas nenhum padrão atingiu o mínimo de ${MIN_N} amostras com causa identificada.`,
       "REGRA: Quando recomendar uma ação, diga explicitamente 'primeira vez testando isso nesta conta' — NÃO invente histórico.",
     ].join("\n");
   }
 
   const lines = patterns.map((p) => {
-    const label = humanizeAction(p.action_type, p.evaluation_metric);
+    const causeLabel = CAUSE_LABELS_PT[p.primary_cause] || p.primary_cause;
+    const actionLabel = humanizeAction(p.action_type, p.evaluation_metric);
     const pct = Math.round(p.success_rate * 100);
-    const main = `  • ${label}: ${p.successes}/${p.n} casos (${pct}% de sucesso)`;
-    const detail: string[] = [];
+    // "Pausar campanha por fadiga criativa (spend evitado): 3/3 casos (100%)"
+    const main = `  • ${actionLabel} por ${causeLabel}: ${p.successes}/${p.n} casos (${pct}% de sucesso)`;
+
+    // ── Outcome detail (what happened) ────────────────────────────────
+    const outcome: string[] = [];
     if (p.avg_recovery_pct !== null) {
-      // execution metric (used for pause_*) is binary-ish — recovery_pct
-      // is the % of expected spend avoided. Phrase accordingly.
       const isExec = p.evaluation_metric === "execution";
-      detail.push(isExec ? `recuperou ~${p.avg_recovery_pct}% do gasto previsto` : `impacto médio +${p.avg_recovery_pct}%`);
+      outcome.push(isExec
+        ? `recuperou ~${p.avg_recovery_pct}% do gasto previsto`
+        : `impacto médio +${p.avg_recovery_pct}%`);
     }
     if (p.avg_avoided_spend_brl !== null) {
-      detail.push(`R$${p.avg_avoided_spend_brl.toFixed(2)} de spend evitado por ação`);
+      outcome.push(`R$${p.avg_avoided_spend_brl.toFixed(2)} de spend evitado por ação`);
     }
-    return detail.length ? `${main} — ${detail.join(", ")}` : main;
+
+    // ── Context detail (when it was taken) ────────────────────────────
+    // Surfaces the typical pre-action situation — lets the AI match
+    // present conditions against the historical conditions of these wins.
+    const context: string[] = [];
+    if (p.avg_ctr_before !== null) {
+      context.push(`CTR ~${(p.avg_ctr_before * 100).toFixed(2)}%`);
+    }
+    if (p.avg_spend_before_brl !== null) {
+      context.push(`spend ~R$${p.avg_spend_before_brl.toFixed(2)}`);
+    }
+
+    const tail: string[] = [];
+    if (outcome.length) tail.push(outcome.join(", "));
+    if (context.length) tail.push(`quando ${context.join(", ")}`);
+    return tail.length ? `${main} — ${tail.join(" | ")}` : main;
   });
 
   return [
     "=== APRENDIZADO POR AÇÕES (NESTA CONTA) ===",
-    `Padrões aprendidos a partir de ${totalCandidateRows} ações já medidas (≥${MIN_N} amostras cada):`,
+    `Padrões aprendidos a partir de ${totalCandidateRows} ações já medidas (≥${MIN_N} amostras por bucket causa):`,
     ...lines,
     "",
     "COMO USAR:",
-    "- Ao recomendar uma dessas ações, cite o histórico naturalmente: \"funcionou em 4/5 casos aqui antes\".",
-    "- NUNCA invente padrões fora desta lista. Se a ação não está aqui, diga \"primeira vez testando isso nesta conta\".",
+    "- Ao recomendar uma das ações ACIMA, cite o histórico naturalmente: \"funcionou em 4/5 casos similares aqui — pausa por fadiga criativa quando CTR estava perto desse nível\".",
+    "- A causa importa MAIS que o tipo de ação. \"Pausar por fadiga\" e \"pausar por budget baixo\" são padrões DIFERENTES — não misture.",
+    "- Compare a situação atual com o contexto pré (CTR / spend listados). Se bater, o padrão é forte sinal. Se não bater, é só referência.",
+    "- NUNCA invente padrões fora desta lista. Se não estiver aqui, diga \"primeira vez testando isso nesta situação\".",
     "- Esses números são evidência, não promessa — apresente como histórico, não garantia futura.",
   ].join("\n");
 }
@@ -224,9 +338,9 @@ function humanizeAction(actionType: string, evalMetric: string): string {
     change_audience: "Trocar público",
   };
   const M: Record<string, string> = {
-    ctr: "para melhorar CTR",
-    cpa: "para melhorar CPA",
-    roas: "para melhorar ROAS",
+    ctr: "(CTR)",
+    cpa: "(CPA)",
+    roas: "(ROAS)",
     execution: "(spend evitado)",
   };
   return `${A[actionType] || actionType} ${M[evalMetric] || `(${evalMetric})`}`.trim();
@@ -237,4 +351,8 @@ function round1(n: number): number {
 }
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
+}
+function roundTo(n: number, decimals: number): number {
+  const f = Math.pow(10, decimals);
+  return Math.round(n * f) / f;
 }
