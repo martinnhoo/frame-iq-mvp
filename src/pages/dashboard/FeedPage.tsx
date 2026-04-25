@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { DashboardContext, AccountAlert } from '@/components/dashboard/DashboardLayout';
 import { MoneyBar } from '../../components/feed/MoneyBar';
+import { IntelligenceImpactStrip } from '../../components/feed/IntelligenceImpactStrip';
 import { SummaryBar } from '../../components/feed/SummaryBar';
 import { DecisionCard } from '../../components/feed/DecisionCard';
 import { useDecisions } from '../../hooks/useDecisions';
@@ -7484,6 +7485,22 @@ const FeedPage: React.FC = () => {
             ═══════════════════════════════════════════════ */}
         {feedState === 'full' || feedState === 'demo' ? (
           <>
+            {/* ═══════════════════════════════════════════════
+                ZONE 0 — INTELLIGENCE IMPACT STRIP (always-on)
+                Cumulative R$ saved by the AI's measured decisions over
+                the last 30 days, plus success rate. Pulled directly from
+                action_outcomes (the same dataset that drives learned
+                patterns) — so it represents real measured wins, not
+                tracker.total_saved which has separate provenance.
+
+                Lives ABOVE the "Dinheiro em risco" zone so it's visible
+                even when the account is healthy and MoneyBar collapses
+                to its no-loss state. This is the persistent proof
+                surface — every page-load reinforces "the system is
+                producing value".
+                ═══════════════════════════════════════════════ */}
+            <IntelligenceImpactStrip userId={ctx.user?.id} />
+
             {/* ═══════════════════════════════════════════════
                 ZONE 1 — DINHEIRO EM RISCO (hero)
                 Primeiro impacto: quanto está sangrando agora.
