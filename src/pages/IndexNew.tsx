@@ -2,7 +2,7 @@
 // Complete from-scratch rebuild with depth system, real SVG logos, visual flow
 import { useNavigate } from "react-router-dom";
 import { storage } from "@/lib/storage";
-import { Globe, ChevronDown, ArrowRight, CheckCircle2, TrendingUp, Zap, Brain, X, Plus, Minus, Plug, Radar, Bell, Sparkles, Activity } from "lucide-react";
+import { Globe, ChevronDown, ArrowRight, CheckCircle2, TrendingUp, Zap, Brain, X, Plus, Minus, Plug, Radar, Bell, Sparkles, Activity, ShieldCheck, Microscope, Crosshair, Timer, Database } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import CookieConsent from "@/components/CookieConsent";
@@ -128,7 +128,7 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_s4b: "Aprovar e aplicar",
     flow_s5: "A performance melhora",
     flow_s5d: "Cada decisão aprovada vira padrão aprendido. Quanto mais tempo rodando, mais afinado com a sua conta.",
-    flow_s5b: "CPA ↓ 28%",
+    flow_s5b: "Padrão aprendido",
     // mini mocks inside flow timeline
     flow_m_acct_meta: "Meta Ads",
     flow_m_acct_sub: "2 contas · 12 campanhas",
@@ -167,6 +167,21 @@ const TX: Record<Lang, Record<string, string>> = {
     compare_adbrief_3: "Recomenda a ação específica",
     compare_adbrief_4: "Aplica em 1 clique",
     compare_adbrief_5: "Aprende com cada resultado",
+    // trust — moat real do produto, anti-genérico
+    trust_kicker: "Por que confiar",
+    trust_title: "5 regras que nenhuma outra IA de Meta Ads segue.",
+    trust_intro: "A maioria das ferramentas promete \"otimizar melhor\". O problema é que elas não sabem quando estão erradas.",
+    trust_killer: "O AdBrief não só decide — sabe quando NÃO confiar na própria decisão.",
+    trust_1_t: "Causa, não correlação",
+    trust_1_d: "Cada decisão é classificada em uma das 12 causas claras (fadiga criativa, hook fraco, público errado, budget baixo…). Você vê o porquê antes de aprovar.",
+    trust_2_t: "Evidência, não confiança inventada",
+    trust_2_d: "Com poucos dados, o sistema diz \"amostra pequena — sinal inicial\". Sem 94% inventado em cima de 3 casos.",
+    trust_3_t: "Contexto, não receita pronta",
+    trust_3_d: "Algo funcionou com CTR 1.3% mas você está em 3.8%? Avisa: \"cenário diferente — usar com cautela\". Não aplica padrão fora do contexto.",
+    trust_4_t: "Medição real, não suposição",
+    trust_4_d: "Cada ação é medida em 24h e 72h depois. O aprendizado vem do que funcionou de verdade — não do que parecia bom no momento.",
+    trust_5_t: "Memória da SUA conta",
+    trust_5_d: "Decisões usam o histórico desta conta específica — nunca padrões genéricos do mercado misturados com outros nichos.",
     // pricing
     pricing_title: "Preço claro, escala real.",
     pricing_sub: "Comece grátis. Faça upgrade quando a conta crescer.",
@@ -281,7 +296,7 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_s4b: "Approve & apply",
     flow_s5: "Performance improves",
     flow_s5d: "Every approved decision becomes a learned pattern. The longer it runs, the more tuned to your account.",
-    flow_s5b: "CPA ↓ 28%",
+    flow_s5b: "Pattern learned",
     flow_m_acct_meta: "Meta Ads",
     flow_m_acct_sub: "2 accounts · 12 campaigns",
     flow_m_dec_urgent: "URGENT",
@@ -318,6 +333,20 @@ const TX: Record<Lang, Record<string, string>> = {
     compare_adbrief_3: "Recommends the specific action",
     compare_adbrief_4: "Applies it in 1 click",
     compare_adbrief_5: "Learns from every result",
+    trust_kicker: "Why trust it",
+    trust_title: "5 rules no other Meta Ads AI follows.",
+    trust_intro: "Most tools promise to \"optimize better.\" The problem is they don't know when they're wrong.",
+    trust_killer: "AdBrief doesn't just decide — it knows when NOT to trust its own decision.",
+    trust_1_t: "Cause, not correlation",
+    trust_1_d: "Every decision is classified into one of 12 clear causes (creative fatigue, weak hook, wrong audience, budget starvation…). You see the why before you approve.",
+    trust_2_t: "Evidence, not invented confidence",
+    trust_2_d: "With thin data, the system says \"small sample — early signal.\" No fake 94% on top of 3 cases.",
+    trust_3_t: "Context, not preset recipe",
+    trust_3_d: "Something worked at CTR 1.3% but you're at 3.8%? It warns: \"different scenario — use with caution.\" Never applies a pattern out of context.",
+    trust_4_t: "Real measurement, not assumption",
+    trust_4_d: "Every action is measured 24h and 72h later. Learning comes from what actually worked — not from what looked good in the moment.",
+    trust_5_t: "Memory of YOUR account",
+    trust_5_d: "Decisions use this account's specific history — never generic market patterns blended with other niches.",
     pricing_title: "Clear pricing. Real scale.",
     pricing_sub: "Start free. Upgrade when your account grows.",
     pricing_free: "Free",
@@ -426,7 +455,7 @@ const TX: Record<Lang, Record<string, string>> = {
     flow_s4b: "Aprobar y aplicar",
     flow_s5: "La performance mejora",
     flow_s5d: "Cada decisión aprobada se vuelve un patrón aprendido. Cuanto más tiempo corre, más afinada a tu cuenta.",
-    flow_s5b: "CPA ↓ 28%",
+    flow_s5b: "Patrón aprendido",
     flow_m_acct_meta: "Meta Ads",
     flow_m_acct_sub: "2 cuentas · 12 campañas",
     flow_m_dec_urgent: "URGENTE",
@@ -463,6 +492,20 @@ const TX: Record<Lang, Record<string, string>> = {
     compare_adbrief_3: "Recomienda la acción específica",
     compare_adbrief_4: "Lo aplica en 1 clic",
     compare_adbrief_5: "Aprende de cada resultado",
+    trust_kicker: "Por qué confiar",
+    trust_title: "5 reglas que ninguna otra IA de Meta Ads sigue.",
+    trust_intro: "La mayoría de herramientas promete \"optimizar mejor\". El problema es que no saben cuándo se equivocan.",
+    trust_killer: "AdBrief no solo decide — sabe cuándo NO confiar en su propia decisión.",
+    trust_1_t: "Causa, no correlación",
+    trust_1_d: "Cada decisión se clasifica en una de las 12 causas claras (fatiga creativa, hook débil, público equivocado, budget bajo…). Ves el porqué antes de aprobar.",
+    trust_2_t: "Evidencia, no confianza inventada",
+    trust_2_d: "Con pocos datos, el sistema dice \"muestra pequeña — señal inicial\". Sin 94% inventado sobre 3 casos.",
+    trust_3_t: "Contexto, no receta lista",
+    trust_3_d: "¿Algo funcionó con CTR 1.3% pero estás en 3.8%? Avisa: \"escenario diferente — usar con cautela\". Nunca aplica un patrón fuera de contexto.",
+    trust_4_t: "Medición real, no suposición",
+    trust_4_d: "Cada acción se mide 24h y 72h después. El aprendizaje viene de lo que realmente funcionó — no de lo que parecía bueno en el momento.",
+    trust_5_t: "Memoria de TU cuenta",
+    trust_5_d: "Las decisiones usan el historial específico de esta cuenta — nunca patrones genéricos del mercado mezclados con otros nichos.",
     pricing_title: "Precio claro. Escala real.",
     pricing_sub: "Empieza gratis. Sube de plan cuando tu cuenta crezca.",
     pricing_free: "Free",
@@ -925,24 +968,26 @@ function HeroScreenshot({ t }: { t: Record<string, string> }) {
             ))}
           </div>
 
-          {/* Confidence + actions */}
+          {/* Evidence — replaces fake "94% confidence" with the actual
+              evidence count (4/5 similar past cases). Honest by design:
+              the backend sample-size caveat refuses to compute % when n<=3. */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7, flex: 1 }}>
               <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.42)", fontWeight: 500 }}>
-                Confiança
+                Evidência
               </span>
               <div style={{
                 position: "relative", flex: 1, height: 4, borderRadius: 2,
                 background: "rgba(255,255,255,0.06)", overflow: "hidden", maxWidth: 110,
               }}>
                 <div style={{
-                  position: "absolute", inset: 0, width: "94%",
+                  position: "absolute", inset: 0, width: "80%",
                   background: `linear-gradient(90deg, ${ACCENT}, ${GREEN})`,
                   borderRadius: 2,
                 }} />
               </div>
               <span style={{ fontSize: 11, fontWeight: 700, color: TEXT, fontVariantNumeric: "tabular-nums" }}>
-                94%
+                4/5 casos
               </span>
             </div>
           </div>
@@ -1985,7 +2030,8 @@ function CompareSection({ t }: { t: Record<string, string> }) {
                 {t.compare_adbrief_mock_reason}
               </div>
 
-              {/* Confidence bar */}
+              {/* Evidence bar — same honesty principle as hero mockup:
+                  shows real evidence count, not fake confidence %. */}
               <div style={{
                 display: "flex", alignItems: "center", gap: 8, marginBottom: 12,
               }}>
@@ -1994,7 +2040,7 @@ function CompareSection({ t }: { t: Record<string, string> }) {
                   background: "rgba(255,255,255,0.04)", overflow: "hidden",
                 }}>
                   <div style={{
-                    height: "100%", width: "94%",
+                    height: "100%", width: "80%",
                     background: `linear-gradient(to right, ${ACCENT}, ${GREEN})`,
                     borderRadius: 99,
                     boxShadow: `0 0 10px ${ACCENT}80`,
@@ -2005,7 +2051,7 @@ function CompareSection({ t }: { t: Record<string, string> }) {
                   color: GREEN, letterSpacing: "-0.01em",
                   fontVariantNumeric: "tabular-nums",
                 }}>
-                  94%
+                  4/5 casos
                 </span>
               </div>
 
@@ -2060,6 +2106,211 @@ function CompareSection({ t }: { t: Record<string, string> }) {
         }
         @media (prefers-reduced-motion: reduce) {
           .compare-grid > div { opacity: 1 !important; transform: none !important; transition: none !important; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+// ── Section 4.5 — Trust / Moat (anti-generic positioning) ─────────────────
+// This is the section that pulls AdBrief out of the "AI that optimizes ads"
+// commodity bucket. Surfaces the 5 architectural commitments that no other
+// Meta Ads AI tool implements: causal classification, sample-size honesty,
+// context similarity check, real outcome measurement, per-account memory.
+//
+// Why these 5 and not generic feature bullets:
+//   - Each one pairs ANTI-claim (what other tools do wrong) with the
+//     specific concrete behavior the system has. Not "we're better" — it's
+//     "they make X mistake; we don't because <specific mechanism>".
+//   - The killer line at the top ("sabe quando NÃO confiar") is the
+//     one-sentence summary of the entire architectural difference.
+//   - The numbers (12 causes, 24h/72h, ±0.5pp) are deliberately concrete
+//     — sophisticated buyers recognize specificity = real implementation.
+function TrustSection({ t }: { t: Record<string, string> }) {
+  const headReveal = useReveal(0.25);
+  const r1 = useReveal(0.2);
+  const r2 = useReveal(0.2);
+  const r3 = useReveal(0.2);
+  const r4 = useReveal(0.2);
+  const r5 = useReveal(0.2);
+
+  const items = [
+    { num: "01", Icon: Crosshair,    title: t.trust_1_t, desc: t.trust_1_d, color: ACCENT },
+    { num: "02", Icon: ShieldCheck,  title: t.trust_2_t, desc: t.trust_2_d, color: GREEN },
+    { num: "03", Icon: Microscope,   title: t.trust_3_t, desc: t.trust_3_d, color: INDIGO },
+    { num: "04", Icon: Timer,        title: t.trust_4_t, desc: t.trust_4_d, color: ACCENT },
+    { num: "05", Icon: Database,     title: t.trust_5_t, desc: t.trust_5_d, color: GREEN },
+  ];
+  const refs = [r1, r2, r3, r4, r5];
+
+  return (
+    <section style={{
+      background: BG,
+      padding: "clamp(96px,12vw,140px) clamp(20px,4vw,40px)",
+      borderTop: `1px solid ${BORDER}`,
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Ambient — same treatment as ConceptSection so the visual rhythm holds */}
+      <div aria-hidden="true" style={{
+        position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)",
+        width: "120%", height: "60%", pointerEvents: "none",
+        background: `radial-gradient(ellipse 60% 100% at 50% 0%, ${GREEN}10 0%, transparent 60%)`,
+      }} />
+
+      <div style={{ maxWidth: 1080, margin: "0 auto", position: "relative" }}>
+        {/* Headline cluster — kicker + title + intro + KILLER LINE */}
+        <div
+          ref={headReveal.ref}
+          style={{
+            textAlign: "center", maxWidth: 760, margin: "0 auto clamp(48px,6vw,72px)",
+            opacity: headReveal.visible ? 1 : 0,
+            transform: headReveal.visible ? "translateY(0)" : "translateY(18px)",
+            transition: `all 0.7s ${EASE}`,
+          }}
+        >
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "6px 12px", borderRadius: 99,
+            background: `${GREEN}10`, border: `1px solid ${GREEN}30`,
+            marginBottom: 22,
+          }}>
+            <ShieldCheck size={11} strokeWidth={2.4} color={GREEN} />
+            <span style={{
+              fontFamily: F, fontSize: 10.5, fontWeight: 700, color: GREEN,
+              letterSpacing: "0.12em", textTransform: "uppercase",
+            }}>
+              {t.trust_kicker}
+            </span>
+          </div>
+
+          <h2 style={{
+            fontFamily: F, fontSize: "clamp(28px,3.6vw,44px)", fontWeight: 800,
+            letterSpacing: "-0.04em", lineHeight: 1.1,
+            color: TEXT, margin: "0 0 18px",
+          }}>
+            {t.trust_title}
+          </h2>
+
+          <p style={{
+            fontFamily: F, fontSize: "clamp(14px,1.4vw,16px)", lineHeight: 1.55,
+            color: TEXT3, margin: "0 0 24px", maxWidth: 600, marginLeft: "auto", marginRight: "auto",
+          }}>
+            {t.trust_intro}
+          </p>
+
+          {/* Killer line — single sentence that summarizes the entire moat.
+              Treated as a callout: bordered, italic, with subtle color accent. */}
+          <div style={{
+            display: "inline-block",
+            padding: "12px 20px",
+            borderRadius: 12,
+            background: `linear-gradient(180deg, ${GREEN}08 0%, transparent 100%)`,
+            border: `1px solid ${GREEN}22`,
+            maxWidth: 640,
+          }}>
+            <p style={{
+              fontFamily: F, fontSize: "clamp(14px,1.5vw,17px)", fontWeight: 600,
+              color: TEXT, lineHeight: 1.4, margin: 0, fontStyle: "normal",
+              letterSpacing: "-0.015em",
+            }}>
+              {t.trust_killer}
+            </p>
+          </div>
+        </div>
+
+        {/* 5 numbered rows — vertical stack, single column.
+            Each row: big numeral + colored icon + title + description.
+            Vertical layout chosen over grid because 5 columns is too dense
+            and each item has enough text that horizontal cards would feel
+            cramped. Reading order is sequential — that's also semantically
+            right (each item builds on the previous). */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {items.map((item, i) => {
+            const { Icon } = item;
+            return (
+              <div
+                key={i}
+                ref={refs[i].ref}
+                className="trust-row"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "auto auto 1fr",
+                  gap: "clamp(16px,2.4vw,28px)",
+                  alignItems: "flex-start",
+                  padding: "clamp(20px,2.8vw,28px) clamp(16px,2vw,24px)",
+                  borderTop: i === 0 ? `1px solid ${BORDER}` : "none",
+                  borderBottom: `1px solid ${BORDER}`,
+                  opacity: refs[i].visible ? 1 : 0,
+                  transform: refs[i].visible ? "translateY(0)" : "translateY(12px)",
+                  transition: `all 0.55s ${EASE} ${i * 0.05}s`,
+                }}
+              >
+                {/* Big numeral — anchors the row visually */}
+                <span style={{
+                  fontFamily: F, fontSize: "clamp(28px,3.4vw,40px)", fontWeight: 800,
+                  color: "rgba(255,255,255,0.08)", letterSpacing: "-0.03em",
+                  lineHeight: 1, fontVariantNumeric: "tabular-nums",
+                  minWidth: 56,
+                }}>
+                  {item.num}
+                </span>
+
+                {/* Icon — colored, framed */}
+                <div style={{
+                  width: 40, height: 40,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  borderRadius: 10,
+                  background: `${item.color}10`,
+                  border: `1px solid ${item.color}26`,
+                  flexShrink: 0,
+                  marginTop: 2,
+                }}>
+                  <Icon size={18} strokeWidth={2} color={item.color} />
+                </div>
+
+                {/* Title + description column */}
+                <div style={{ minWidth: 0 }}>
+                  <h3 style={{
+                    fontFamily: F, fontSize: "clamp(16px,1.7vw,19px)", fontWeight: 700,
+                    color: TEXT, letterSpacing: "-0.02em", lineHeight: 1.25,
+                    margin: "0 0 6px",
+                  }}>
+                    {item.title}
+                  </h3>
+                  <p style={{
+                    fontFamily: F, fontSize: "clamp(13.5px,1.35vw,15px)", lineHeight: 1.55,
+                    color: TEXT2, margin: 0,
+                  }}>
+                    {item.desc}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 720px) {
+          .trust-row {
+            grid-template-columns: auto 1fr !important;
+            gap: 14px !important;
+          }
+          .trust-row > span:first-child {
+            grid-column: 1 / -1;
+            font-size: 22px !important;
+            color: rgba(255,255,255,0.18) !important;
+            min-width: auto !important;
+            margin-bottom: 4px;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .trust-row {
+            opacity: 1 !important;
+            transform: none !important;
+            transition: none !important;
+          }
         }
       `}</style>
     </section>
@@ -2427,6 +2678,7 @@ export default function IndexNew() {
       <ConceptSection t={t} />
       <FlowSection t={t} />
       <CompareSection t={t} />
+      <TrustSection t={t} />
       <PricingCTA t={t} />
       <FAQSection t={t} />
       <FinalCTA t={t} />
