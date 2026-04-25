@@ -2,8 +2,101 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import type { Decision, DecisionAction, ImpactConfidence } from '../../types/v2-database';
 import { formatMoney, timeAgo } from '../../lib/format';
 import { ConfirmModal } from './ConfirmModal';
+import { supabase } from '@/integrations/supabase/client';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+
+// ── Pattern lookup types + helpers (Phase 3 enrichment) ───────────────────
+// Same shape & semantics as the chat-card lookup; duplicated locally to
+// keep this component self-contained (no shared utility yet because the
+// two callers differ enough — chat card derives cause from structured
+// hypothesis, Feed card derives from decision.type + signals).
+
+type CardPattern = {
+  n: number;
+  wins: number;
+  success_rate: number;          // 0-1
+  avg_recovery_pct: number | null;
+  avg_avoided_spend_brl: number | null;
+  avg_ctr_before: number | null; // raw 0-1 ratio
+};
+
+// Maps the Feed Decision pipeline output to the canonical 12-cause
+// taxonomy used in action_outcomes. The Decision Engine doesn't emit
+// canonical causes directly (it predates the taxonomy), so we infer:
+//   - decision.type narrows the action category (kill / scale / fix / ...)
+//   - keyword scan over headline + metrics keys narrows the cause within
+// Returns null when nothing maps cleanly — better to skip pattern lookup
+// than guess and pollute the comparison.
+function deriveCanonicalCause(decision: Decision): string | null {
+  const haystack = (
+    (decision.headline || '') + ' ' +
+    (decision.reason || '') + ' ' +
+    (decision.metrics || []).map(m => `${m.key} ${m.value} ${m.context || ''}`).join(' ')
+  ).toLowerCase();
+  const t = decision.type;
+
+  // Cause priority within each type — first match wins.
+  const has = (re: RegExp) => re.test(haystack);
+
+  if (t === 'scale') return 'winning_signal';
+
+  if (t === 'kill') {
+    if (has(/fadiga|fatigue|frequ[êe]ncia|frequency|cansa[çc]o|saturad/)) return 'creative_fatigue';
+    if (has(/freq\b|freq:|freq\.|frequ[êe]ncia [3-9]|\bfreq [3-9]/)) return 'high_frequency';
+    if (has(/cpa\s*(?:alto|acima|elevado|caro)|high\s*cpa/)) return 'high_cpa';
+    if (has(/roas\s*(?:baix|caiu|abaixo|fraco)|low\s*roas/)) return 'low_roas';
+    if (has(/ctr\s*(?:baix|caiu|abaixo|fraco|0[.,]\d|\b0%|\b1%)/)) return 'low_ctr';
+    if (has(/track|pixel|atribui|conversion(?:\s+gap)?/)) return 'tracking_gap';
+    return 'spend_waste'; // sensible default for kill
+  }
+
+  if (t === 'fix') {
+    if (has(/ctr\s*(?:baix|caiu|abaixo|fraco)|low\s*ctr/)) return 'low_ctr';
+    if (has(/cpa\s*(?:alto|acima|elevado|caro)|high\s*cpa/)) return 'high_cpa';
+    if (has(/roas\s*(?:baix|caiu|abaixo|fraco)|low\s*roas/)) return 'low_roas';
+    if (has(/budget\s*(?:baix|insuficient|sub-?escal)|budget\s*starv/)) return 'budget_starvation';
+    if (has(/p[úu]blico|audi[êe]ncia|targeting|audience/)) return 'wrong_audience';
+    if (has(/aprendizado|learning|early\s*phase/)) return 'learning_phase';
+    if (has(/hook|primeiros\s*\d+s/)) return 'low_hook_strength';
+    return 'low_ctr'; // most common fix scenario
+  }
+
+  return null; // pattern, insight, alert — no fixed action mapping
+}
+
+// Maps the Decision's primary action (first item in decision.actions[])
+// to the action_type enum stored in action_outcomes. Returns null when
+// the action isn't represented in the enum (e.g. read-only or alert).
+function deriveActionType(decision: Decision): string | null {
+  const action = decision.actions?.[0];
+  if (!action) return null;
+  const meta = action.meta_api_action;
+  if (!meta) return null;
+  // Direct passthrough — these enum values match action_outcomes.
+  if (meta === 'pause_ad' || meta === 'pause_adset' || meta === 'pause_campaign') return meta;
+  if (meta === 'enable_ad' || meta === 'enable_adset' || meta === 'enable_campaign') return meta;
+  if (meta === 'increase_budget') return 'budget_increase';
+  if (meta === 'decrease_budget') return 'budget_decrease';
+  if (meta === 'duplicate_ad') return 'duplicate_ad';
+  return null;
+}
+
+// PT-BR labels for canonical causes — parallels the chat card's CAUSE_LABELS.
+const CAUSE_LABEL_PT: Record<string, string> = {
+  creative_fatigue: 'fadiga criativa',
+  low_hook_strength: 'hook fraco',
+  wrong_audience: 'público errado',
+  budget_starvation: 'budget insuficiente',
+  tracking_gap: 'tracking quebrado',
+  high_cpa: 'CPA alto',
+  low_ctr: 'CTR baixo',
+  low_roas: 'ROAS baixo',
+  spend_waste: 'desperdício de spend',
+  winning_signal: 'winner detectado',
+  high_frequency: 'frequência alta',
+  learning_phase: 'fase de aprendizado',
+};
 
 // ── Text hierarchy ──
 const L1 = "#F0F6FC";
@@ -132,6 +225,114 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
   const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [pressing, setPressing] = useState(false);
   const cfg = TYPE_CONFIG[decision.type] || TYPE_CONFIG.insight;
+
+  // ── Phase 3 enrichment: derived cause + pattern lookup ─────────────────
+  // Self-fetched userId via supabase.auth — avoids prop drilling through
+  // the 4 different render sites of DecisionCard. One auth call per card
+  // mount is cheap and cached by the supabase client.
+  const [userId, setUserId] = useState<string | null>(null);
+  const [pattern, setPattern] = useState<CardPattern | null>(null);
+  const [patternLoading, setPatternLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data }) => {
+      if (!cancelled) setUserId(data.user?.id ?? null);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Cause + action_type derivation runs on every render (cheap, pure).
+  // Memoize-by-id implicitly via React's render flow — no useMemo needed.
+  const derivedCause = deriveCanonicalCause(decision);
+  const derivedActionType = deriveActionType(decision);
+
+  // Pattern lookup — fires when we have user + cause + action_type. Same
+  // filter as the chat card and the chat-prompt aggregator: finalized +
+  // pattern_candidate + improved IS NOT NULL, scoped to this user's
+  // (action_type × primary_cause) bucket.
+  useEffect(() => {
+    if (isDemo) {
+      // Demo mode shouldn't query real data — show a synthetic pattern
+      // so the card still demonstrates the section visually.
+      setPattern({ n: 4, wins: 4, success_rate: 1, avg_recovery_pct: 62, avg_avoided_spend_brl: 87.5, avg_ctr_before: 0.013 });
+      setPatternLoading(false);
+      return;
+    }
+    if (!userId || !derivedCause || !derivedActionType) {
+      setPatternLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await (supabase as any)
+          .from('action_outcomes')
+          .select('improved, recovery_pct, context, metrics_before')
+          .eq('user_id', userId)
+          .eq('action_type', derivedActionType)
+          .eq('pattern_candidate', true)
+          .eq('finalized', true)
+          .not('improved', 'is', null)
+          .filter('hypothesis->>primary_cause', 'eq', derivedCause)
+          .order('taken_at', { ascending: false })
+          .limit(50);
+        if (cancelled) return;
+        if (error || !data || data.length === 0) {
+          setPattern(null);
+          setPatternLoading(false);
+          return;
+        }
+        const rows = data as any[];
+        const wins = rows.filter(r => r.improved === true).length;
+        const n = rows.length;
+        const recoveries = rows
+          .filter(r => r.improved === true && typeof r.recovery_pct === 'number')
+          .map(r => Number(r.recovery_pct));
+        const avoided = rows
+          .filter(r => r.improved === true)
+          .map(r => Number(r.context?.avoided_spend_brl))
+          .filter(x => Number.isFinite(x) && x > 0);
+        const ctrs = rows
+          .map(r => Number(r.metrics_before?.ctr))
+          .filter(x => Number.isFinite(x) && x >= 0);
+        setPattern({
+          n,
+          wins,
+          success_rate: n > 0 ? wins / n : 0,
+          avg_recovery_pct: recoveries.length
+            ? Math.round((recoveries.reduce((a, b) => a + b, 0) / recoveries.length) * 10) / 10
+            : null,
+          avg_avoided_spend_brl: avoided.length
+            ? Math.round((avoided.reduce((a, b) => a + b, 0) / avoided.length) * 100) / 100
+            : null,
+          avg_ctr_before: ctrs.length
+            ? Math.round((ctrs.reduce((a, b) => a + b, 0) / ctrs.length) * 10000) / 10000
+            : null,
+        });
+      } catch {
+        if (!cancelled) setPattern(null);
+      } finally {
+        if (!cancelled) setPatternLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, derivedCause, derivedActionType, isDemo]);
+
+  // Similarity check — compares current target's CTR with the bucket's
+  // historical avg_ctr_before. If both are known and within ±0.5pp, the
+  // present scenario looks like the past wins → pattern is strong signal.
+  // If they diverge, surface a caution badge.
+  const currentCtr: number | null = (() => {
+    const lm = (decision.ad as any)?.latest_metrics;
+    const v = Number(lm?.ctr);
+    return Number.isFinite(v) && v >= 0 ? v : null;
+  })();
+  const similarity: 'match' | 'mismatch' | 'unknown' = (() => {
+    if (!pattern?.avg_ctr_before || currentCtr === null) return 'unknown';
+    const diffPp = Math.abs((currentCtr - pattern.avg_ctr_before) * 100);
+    return diffPp <= 0.5 ? 'match' : 'mismatch';
+  })();
 
   const executeAction = useCallback(async (action: DecisionAction) => {
     try {
@@ -396,6 +597,122 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                 </span>
               );
             })}
+          </div>
+        )}
+
+        {/* HISTÓRICO NESTA CONTA — Phase 3 enrichment.
+            Always-visible section that materializes the moat: what's the
+            track record of this exact (action × cause) pair on THIS user's
+            account? Three states, all honest:
+              loading                   → tiny spinner-style label
+              n=0 / no derivable cause  → "Primeira vez testando aqui"
+              1 ≤ n < 3                 → "X caso(s) — sinal inicial"
+              n >= 3                    → progress bar + similarity badge
+
+            We render the whole block (instead of conditionally hiding) so
+            the structural rhythm of the card stays consistent — the user's
+            eye can rely on this section being there. */}
+        {(derivedCause && derivedActionType) && (
+          <div style={{
+            marginBottom: 8, marginTop: 2,
+            padding: '8px 10px',
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: 4,
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: 5, gap: 8,
+            }}>
+              <span style={{
+                fontSize: 9, fontWeight: 800, color: L3,
+                letterSpacing: '0.10em', textTransform: 'uppercase' as const,
+              }}>
+                Histórico nesta conta
+              </span>
+              {/* Causa chip — small, always shown when derivable */}
+              <span style={{
+                fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 99, padding: '2px 7px',
+                whiteSpace: 'nowrap' as const,
+                fontVariantNumeric: 'tabular-nums' as const,
+                letterSpacing: '-0.005em',
+              }}>
+                causa: {CAUSE_LABEL_PT[derivedCause] || derivedCause}
+              </span>
+            </div>
+
+            {patternLoading ? (
+              <div style={{ fontSize: 11, color: L3, fontStyle: 'italic' as const }}>
+                buscando padrão…
+              </div>
+            ) : !pattern || pattern.n === 0 ? (
+              <div style={{ fontSize: 11.5, color: L2, lineHeight: 1.5 }}>
+                <span style={{ color: L3, marginRight: 4 }}>○</span>
+                Primeira vez testando esse padrão aqui — recomendação baseada só no diagnóstico atual.
+              </div>
+            ) : pattern.n < 3 ? (
+              <div style={{ fontSize: 11.5, color: L2, lineHeight: 1.5 }}>
+                <span style={{ color: L3, marginRight: 4 }}>○</span>
+                {pattern.n} caso{pattern.n === 1 ? '' : 's'} até agora — sinal inicial, não conclusivo.
+              </div>
+            ) : (
+              <>
+                {/* Visual bar + count — wins / total. */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4,
+                }}>
+                  <div style={{
+                    flex: 1, height: 4, borderRadius: 2, maxWidth: 160,
+                    background: 'rgba(255,255,255,0.06)', overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${Math.min(100, Math.round(pattern.success_rate * 100))}%`,
+                      background: pattern.success_rate >= 0.7 ? '#34D399'
+                        : pattern.success_rate >= 0.4 ? '#FBBF24' : '#F87171',
+                      transition: 'width 0.4s ease',
+                    }} />
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 700,
+                    color: pattern.success_rate >= 0.7 ? '#34D399'
+                      : pattern.success_rate >= 0.4 ? '#FBBF24' : '#F87171',
+                    fontVariantNumeric: 'tabular-nums' as const,
+                  }}>
+                    {pattern.wins}/{pattern.n}
+                  </span>
+                  <span style={{ fontSize: 10.5, color: L3, fontVariantNumeric: 'tabular-nums' as const }}>
+                    ({Math.round(pattern.success_rate * 100)}%)
+                  </span>
+                </div>
+                {/* Similarity badge — surfaces context match/mismatch when
+                    we know both the historical avg and the current CTR. */}
+                {pattern.avg_ctr_before !== null && (
+                  similarity === 'match' ? (
+                    <div style={{ fontSize: 11, color: '#4ADE80', fontWeight: 500, lineHeight: 1.4 }}>
+                      ✓ Cenário muito semelhante (CTR pré ~{(pattern.avg_ctr_before * 100).toFixed(2)}%)
+                    </div>
+                  ) : similarity === 'mismatch' ? (
+                    <div style={{ fontSize: 11, color: '#FBBF24', fontWeight: 500, lineHeight: 1.4 }}>
+                      ⚠ Cenário diferente — funcionou com CTR ~{(pattern.avg_ctr_before * 100).toFixed(2)}%, atual ~{((currentCtr ?? 0) * 100).toFixed(2)}%
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 10.5, color: L3, fontWeight: 500, lineHeight: 1.4 }}>
+                      Contexto típico de sucesso: CTR ~{(pattern.avg_ctr_before * 100).toFixed(2)}%
+                    </div>
+                  )
+                )}
+                {/* Avoided spend — only when historical bucket has it. */}
+                {pattern.avg_avoided_spend_brl !== null && (
+                  <div style={{ fontSize: 10.5, color: L3, marginTop: 3 }}>
+                    Spend evitado médio: R${pattern.avg_avoided_spend_brl.toFixed(2)}/ação
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 
