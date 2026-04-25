@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
 import { checkCostCap, recordCost, capExceededResponse } from "../_shared/cost-cap.ts";
+import { getLearnedPatterns, formatLearnedPatternsBlock } from "../_shared/learned-patterns.ts";
 import {
   NON_LP_HOSTS,
   normalizeUrl,
@@ -1053,6 +1054,25 @@ Deno.serve(async (req) => {
         .then((r: any) => (r.error ? { data: null } : r)),
     ]);
     _lap("db-queries-done");
+
+    // ── Phase 3: learned patterns from action_outcomes ─────────────────────
+    // Aggregates the user's finalized + pattern_candidate outcomes into
+    // pattern lines like "Pausar campanha: 4/5 casos (80%)". Injected
+    // into the system prompt below so EVERY recommendation is grounded
+    // in this user's actual track record. Empty string when n<MIN_N for
+    // every group — caller checks .length before adding the section.
+    let learnedActionPatternsBlock = "";
+    try {
+      const { patterns: actionPatterns, totalCandidateRows } =
+        await getLearnedPatterns(supabase as any, user_id);
+      learnedActionPatternsBlock = formatLearnedPatternsBlock(actionPatterns, totalCandidateRows);
+    } catch (lpErr) {
+      // Never let pattern injection break the chat — the AI can still
+      // answer without grounded confidence numbers.
+      console.error("[ai-chat] learned-patterns error:", String(lpErr));
+      learnedActionPatternsBlock = "";
+    }
+    _lap("learned-patterns-built");
 
     // ── 4. Build context ──────────────────────────────────────────────────────
     const analyses = (recentAnalyses || []) as any[];
@@ -2311,6 +2331,11 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       memorySummary
         ? `=== MEMÓRIA PERSISTENTE — FATOS CONFIRMADOS ===\n${memorySummary}\n🔴=crítico(importância 5) 🟡=importante(4) ⚪=contexto(1-3)\nESSES FATOS SÃO VERDADEIROS. Use-os diretamente. NUNCA peça confirmação de algo que já está aqui.`
         : "",
+      // ── Phase 3: in-account learned action patterns ───────────────────
+      // From action_outcomes (finalized + candidate). This sits ABOVE the
+      // cross-account block on purpose: same-account evidence beats
+      // other-account evidence when both exist.
+      learnedActionPatternsBlock,
       // Cross-account intelligence — winners from other accounts of this user
       (() => {
         const cross = (crossAccountPatterns || []) as any[];
