@@ -525,19 +525,14 @@ const NextStepCard: React.FC<{
             fontSize: 12.5, color: T.text2, lineHeight: 1.5,
             letterSpacing: '-0.005em', fontWeight: 500,
           }}>
-            Sistema monitorando sua conta.
+            Releitura a cada 15 min.
           </div>
           <div style={{
             fontSize: 12, color: T.text3, lineHeight: 1.55,
             letterSpacing: '-0.005em',
           }}>
-            Nenhuma ação crítica no momento.
-          </div>
-          <div style={{
-            fontSize: 11, color: T.text3, lineHeight: 1.55,
-            letterSpacing: '-0.005em', fontStyle: 'italic',
-          }}>
-            Novas decisões aparecem conforme novos dados.
+            Quando algo fugir do padrão (CTR, CPA, frequência), você
+            recebe a decisão pronta aqui no Feed.
           </div>
         </div>
       </Wrapper>

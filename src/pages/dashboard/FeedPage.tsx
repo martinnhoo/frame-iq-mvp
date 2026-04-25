@@ -7,6 +7,7 @@ import { FirstMomentOverlay } from '../../components/feed/FirstMomentOverlay';
 import { CommandStrip } from '../../components/feed/CommandStrip';
 import { HeroDecisionAnchor } from '../../components/feed/HeroDecisionAnchor';
 import { LearningPanel } from '../../components/feed/LearningPanel';
+import { LiveSystemState } from '../../components/feed/LiveSystemState';
 import { SummaryBar } from '../../components/feed/SummaryBar';
 import { DecisionCard } from '../../components/feed/DecisionCard';
 import { useDecisions } from '../../hooks/useDecisions';
@@ -2091,13 +2092,19 @@ const StateFewData: React.FC<{ totalAds: number; metrics: AdMetricsSummary | nul
 // Suggest improvement — never "nothing to do"
 // ================================================================
 const StateNoCritical: React.FC<{ totalAds: number; ads: AdSummary[]; campaigns: CampaignSummary[]; periodLabel: string; metaAccountId?: string; onLoadMoreAds?: () => void; loadingMoreAds?: boolean; onToggleAd?: (adId: string, action: 'pause' | 'activate') => void; togglingAd?: string | null; toggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestToggle?: (ad: AdSummary, action: 'pause' | 'activate') => void; togglingCampaign?: string | null; campaignToggleSuccess?: { id: string; action: 'pause' | 'activate' } | null; onRequestCampaignToggle?: (campaign: CampaignSummary, action: 'pause' | 'activate') => void; onAnalyzeAiCampaign?: (campaign: CampaignSummary) => void; onAnalyzeAiAd?: (ad: AdSummary) => void }> = ({ campaigns, ads }) => {
-  // In the healthy/no-critical state we used to dump the whole campaign
-  // tree here — CampaignList + AdList mixed with the decisions column.
-  // That duplicated the Gerenciador and crowded the Feed. Now: a quiet
-  // one-line strip pointing at the manual manager, nothing more. The
-  // Feed stays focused on decisions; the tree only shows up for users
-  // who go looking for it.
+  // STATE 4 — historically this rendered a "MANUAL · Ajustar campanha
+  // específica" strip pointing to the gerenciador. Per latest design
+  // brief it was hidden from the Feed: it's not core to the decision-
+  // engine narrative and competed for attention with the new Hero +
+  // LiveSystemState above. Quick path to revive: replace `return null`
+  // with the original early-return + button JSX preserved in git history
+  // (see commit f0a1b2~ for the manual strip code).
   if (campaigns.length === 0 && ads.length === 0) return null;
+  return null;
+  // Below: original implementation kept as dead code so the visual
+  // grammar (cyan bar + cursor glyph + linear-style row) can be revived
+  // in a future iteration if/when manual ops belong on the Feed again.
+  // eslint-disable-next-line no-unreachable
   const navigate = useNavigate();
   const activeCount = campaigns.filter(c => (c.status || '').toUpperCase() !== 'PAUSED' && (c.status || '').toUpperCase() !== 'ARCHIVED').length;
   return (
@@ -7559,6 +7566,15 @@ const FeedPage: React.FC = () => {
           }}
         />
 
+        {/* LIVE SYSTEM STATE — surfaces concrete activity from action_outcomes.
+            Sits between Hero and decisions stack so the user immediately sees
+            "something is happening": last action, in-measurement count, time
+            until next result, first positive signal. Returns null when the
+            account has no actions yet (Hero handles that empty case). */}
+        {!isDemo && metaConnected && adsLoaded && (
+          <LiveSystemState userId={ctx.user?.id} />
+        )}
+
         {feedState === 'full' || feedState === 'demo' ? (
           <>
 
@@ -7645,20 +7661,16 @@ const FeedPage: React.FC = () => {
               />
             ) : (
               <>
-                {/* Calm hero when the account is running and nothing urgent is pending.
-                    Headline rotates on F5 (session start) but stays STABLE across
-                    re-renders. The picked line lives in the component's useRef so
-                    the parent's state updates (adMetrics refreshing, hover, etc)
-                    don't reshuffle the phrase mid-session. */}
-                {!trackingHealth && visibleAlerts.length === 0 && metricAlerts.length === 0 && !pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (
-                  <CalmHeroRotator
-                    activeAdsCount={activeAdsCount}
-                    activeCampaignsCount={activeCampaignsCount}
-                    lastAnalysisMin={lastAnalysisMin}
-                    onAi={() => navigate('/dashboard/ai')}
-                    onHooks={() => navigate('/dashboard/hooks')}
-                  />
-                )}
+                {/* CalmHeroRotator REMOVED — the new HeroDecisionAnchor at the
+                    top of the page already conveys the "no urgency / system
+                    monitoring" message. Rendering both produced two heroes
+                    saying overlapping things ("Nenhuma perda ativa agora" vs
+                    "Operação estável. Estou monitorando tudo.") which felt
+                    repetitive and weak. Keeping the conditional structure as
+                    a comment so the original intent is recoverable from git.
+                    Original guard: !trackingHealth && visibleAlerts.length === 0
+                    && metricAlerts.length === 0 && !hasScaleOpportunity */}
+                {false && null}
 
                 {/* Scale-opportunity hero when there IS a real opportunity */}
                 {pendingDecisions.some(d => d.type === 'scale' || d.type === 'pattern' || d.type === 'insight') && (
