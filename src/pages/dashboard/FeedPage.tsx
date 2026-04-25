@@ -228,8 +228,38 @@ interface MetricAlert {
   dismissLabel: string;
   investigateLabel: string;
   chatMsg: string;
-  priority: number;         // impact * confidence (0-100)
+  priority: number;         // impact * confidence (0-100) — used for sort order
   historyNote?: string;     // e.g. "Você ignorou isso há 3 dias"
+  // ── Impact triage ──
+  // Quantifies how much money is actually at risk from this deviation.
+  // Lets us filter out alerts that are technically true but operationally
+  // irrelevant (e.g. -44% CTR on R$10 of spend isn't worth the user's
+  // attention). spendAtRisk is what we surface in the UI as "R$X em jogo".
+  impactScore: number;      // spend × deviation × metric_class_weight
+  impactTier: 'high' | 'medium' | 'low';
+  spendAtRisk: number;      // R$ — money exposed to this deviation in the window
+}
+
+// Metric class weights for impact_score. Money-affecting metrics weigh
+// more than funnel-efficiency metrics — a 30% CPA deviation hurts the
+// account directly, while a 30% CTR deviation only hurts indirectly via
+// reduced volume.
+const METRIC_CLASS_WEIGHT: Record<MetricAlertId, number> = {
+  cpa_no_data: 1.0,    // money-metric (no conversions = no business)
+  cpa_deviation: 1.0,  // money-metric
+  roas_deviation: 1.0, // money-metric
+  ctr_deviation: 0.5,  // funnel-metric (engagement, not revenue)
+};
+
+// Threshold below which we don't even fire the alert. R$30 is the floor
+// of "matters enough to bother the user" for a small/medium account.
+// Tweakable per metric in the future if needed.
+const IMPACT_THRESHOLD = 30;
+
+function impactTierOf(score: number): 'high' | 'medium' | 'low' {
+  if (score >= 200) return 'high';
+  if (score >= 80) return 'medium';
+  return 'low';
 }
 
 /** Structured confidence: f(days, spend, events, volatility, freshness).
@@ -286,8 +316,11 @@ function detectMetricAlerts(
   // ── CPA: no data ──
   if (m.totalSpend > 0 && m.totalConversions < 3 && m.avgCpa === 0 && !(m.totalSpend > 5000 && m.totalClicks > 20)) {
     const conf = computeConfidence(m.daysOfData, m.totalSpend, m.totalClicks, 0, m.freshnessFactor);
-    // RULE 2: low confidence → suppress
-    if (conf >= MIN_CONFIDENCE_THRESHOLD) alerts.push({
+    // Impact: full spend at risk (no conversion attribution = entire money is in the dark)
+    const spendAtRisk = m.totalSpend / 100; // centavos → reais
+    const impactScore = spendAtRisk * 1.0 * METRIC_CLASS_WEIGHT.cpa_no_data;
+    // RULE 2: low confidence → suppress. RULE 6: low impact → suppress (filter noise).
+    if (conf >= MIN_CONFIDENCE_THRESHOLD && impactScore >= IMPACT_THRESHOLD) alerts.push({
       id: 'cpa_no_data', label: 'CPA',
       fact: 'Sem dados suficientes de CPA',
       context: `${m.daysOfData} dias de dados · ${m.totalConversions < 3 ? 'menos de 3 conversões' : 'nenhuma conversão'}`,
@@ -301,6 +334,9 @@ function detectMetricAlerts(
       investigateLabel: 'Investigar conversões',
       chatMsg: `Sem dados de CPA\n\n${m.daysOfData} dias · ${m.totalClicks} cliques · ${fmtReais(m.totalSpend)} investidos · ${m.totalConversions} conversões\n\nPreciso entender por que há poucas conversões registradas.`,
       priority: Math.round(40 * conf * goalBoost('cpa')),
+      impactScore,
+      impactTier: impactTierOf(impactScore),
+      spendAtRisk,
     });
   }
 
@@ -313,8 +349,12 @@ function detectMetricAlerts(
       const devPct = Math.round((cpaRatio - 1) * 100);
       const conf = computeConfidence(m.daysOfData, m.totalSpend, m.totalConversions, m.volatilityCpa, m.freshnessFactor);
       const extraCost = Math.round((m.avgCpa - m.baselineCpa) * m.totalConversions * 0.7);
-      // RULE 2: low confidence → suppress
-      if (conf >= MIN_CONFIDENCE_THRESHOLD) alerts.push({
+      // Impact: extraCost (centavos) is exactly the money "wasted" by the
+      // CPA being above baseline. That's the spendAtRisk for this alert.
+      const spendAtRisk = Math.max(extraCost, 0) / 100;
+      const impactScore = spendAtRisk * (cpaRatio - 1) * METRIC_CLASS_WEIGHT.cpa_deviation;
+      // RULE 2: low confidence → suppress. RULE 6: low impact → suppress.
+      if (conf >= MIN_CONFIDENCE_THRESHOLD && impactScore >= IMPACT_THRESHOLD) alerts.push({
         id: 'cpa_deviation', label: 'CPA',
         fact: `CPA ${devPct}% acima do padrão da sua conta`,
         context: `Atual: ${fmtReais(m.avgCpa)} · Padrão: ${fmtReais(m.baselineCpa)}`,
@@ -332,6 +372,9 @@ function detectMetricAlerts(
         investigateLabel: 'Otimizar CPA →',
         chatMsg: `CPA acima do padrão da conta\n\nAtual: ${fmtReais(m.avgCpa)} · Padrão: ${fmtReais(m.baselineCpa)} (${devPct}% acima)\n${m.totalConversions} conversões · ${fmtReais(m.totalSpend)} investidos\n${confidenceLabel(conf)}${m.volatilityCpa > 0.4 ? ' · CPA volátil' : ''}\n\nVamos analisar o que pode estar elevando o custo por conversão.`,
         priority: Math.round(80 * conf * goalBoost('cpa')),
+        impactScore,
+        impactTier: impactTierOf(impactScore),
+        spendAtRisk,
       });
     }
   }
@@ -349,8 +392,16 @@ function detectMetricAlerts(
       const lostClicks = m.totalImpressions > 0
         ? Math.round((baseDec - currDec) * m.totalImpressions * 0.7)
         : 0;
-      // RULE 2: low confidence → suppress
-      if (conf >= MIN_CONFIDENCE_THRESHOLD) alerts.push({
+      // Impact for CTR: full spend × deviation × class weight (0.5 — funnel,
+      // not money). A 50% CTR drop on R$200 = score 50, just above floor.
+      // A 30% drop on R$1000 = score 150 (medium tier).
+      const spendAtRisk = m.totalSpend / 100;
+      const impactScore = spendAtRisk * (1 - ctrRatio) * METRIC_CLASS_WEIGHT.ctr_deviation;
+      // RULE 2: low confidence → suppress. RULE 6: low impact → suppress.
+      // The point of impact filtering is exactly to kill alerts like
+      // "-44% CTR on R$10 of test spend" that are technically true but
+      // operationally noise.
+      if (conf >= MIN_CONFIDENCE_THRESHOLD && impactScore >= IMPACT_THRESHOLD) alerts.push({
         id: 'ctr_deviation', label: 'CTR',
         fact: `Seu CTR está ${dropPct}% abaixo do padrão da sua conta`,
         context: `Atual: ${fmtPct(m.avgCtr)} · Padrão: ${fmtPct(m.baselineCtr)}`,
@@ -366,6 +417,9 @@ function detectMetricAlerts(
         investigateLabel: 'Melhorar CTR →',
         chatMsg: `CTR abaixo do padrão da conta\n\nAtual: ${fmtPct(m.avgCtr)} · Padrão: ${fmtPct(m.baselineCtr)} (${dropPct}% abaixo)\n${m.totalClicks} cliques · ${fmtReais(m.totalSpend)} investidos${lostClicks > 0 ? `\n~${lostClicks} cliques perdidos` : ''}\n${confidenceLabel(conf)}\n\nVamos analisar por que o CTR caiu.`,
         priority: Math.round(60 * conf * goalBoost('ctr')),
+        impactScore,
+        impactTier: impactTierOf(impactScore),
+        spendAtRisk,
       });
     }
   }
@@ -379,8 +433,12 @@ function detectMetricAlerts(
       const dropPct = Math.round((1 - roasRatio) * 100);
       const conf = computeConfidence(m.daysOfData, m.totalSpend, m.totalConversions, 0, m.freshnessFactor);
       const lostRev = Math.round(m.totalSpend * (m.baselineRoas - m.avgRoas) * 0.7);
-      // RULE 2: low confidence → suppress
-      if (conf >= MIN_CONFIDENCE_THRESHOLD) alerts.push({
+      // Impact for ROAS: lostRev (centavos) IS the money not earned. That's
+      // the most direct spendAtRisk we have for any alert.
+      const spendAtRisk = Math.max(lostRev, 0) / 100;
+      const impactScore = spendAtRisk * (1 - roasRatio) * METRIC_CLASS_WEIGHT.roas_deviation;
+      // RULE 2: low confidence → suppress. RULE 6: low impact → suppress.
+      if (conf >= MIN_CONFIDENCE_THRESHOLD && impactScore >= IMPACT_THRESHOLD) alerts.push({
         id: 'roas_deviation', label: 'ROAS',
         fact: `ROAS ${dropPct}% abaixo do padrão da sua conta`,
         context: `Atual: ${m.avgRoas.toFixed(2).replace('.', ',')}x · Padrão: ${m.baselineRoas.toFixed(2).replace('.', ',')}x`,
@@ -396,6 +454,9 @@ function detectMetricAlerts(
         investigateLabel: 'Investigar ROAS →',
         chatMsg: `ROAS abaixo do padrão da conta\n\nAtual: ${m.avgRoas.toFixed(2)}x · Padrão: ${m.baselineRoas.toFixed(2)}x (${dropPct}% abaixo)\n${fmtReais(m.totalRevenue)} receita · ${fmtReais(m.totalSpend)} investidos${lostRev > 0 ? `\n~${fmtReais(lostRev)} receita perdida` : ''}\n${confidenceLabel(conf)}\n\nVamos verificar o retorno.`,
         priority: Math.round(70 * conf * goalBoost('roas')),
+        impactScore,
+        impactTier: impactTierOf(impactScore),
+        spendAtRisk,
       });
     }
   }
@@ -7257,18 +7318,38 @@ const FeedPage: React.FC = () => {
           );
         })()}
 
-        {/* Metric Alerts — kept but improved microcopy */}
-        {metaConnected && !isDemo && metricAlerts.length > 0 && metricAlerts.map(alert => (
+        {/* Metric Alerts — kept but improved microcopy.
+            Sorted by impact tier first (high → low) so the user always
+            sees what actually matters at the top, then by priority within
+            each tier. Tier color coding: high=red, medium=blue, low=text3. */}
+        {metaConnected && !isDemo && metricAlerts.length > 0 && [...metricAlerts]
+          .sort((a, b) => {
+            const tierRank = { high: 0, medium: 1, low: 2 } as const;
+            const ta = tierRank[a.impactTier];
+            const tb = tierRank[b.impactTier];
+            if (ta !== tb) return ta - tb;
+            return b.priority - a.priority;
+          })
+          .map(alert => {
+          // Tier-aware border + chip color so user sees impact at a glance.
+          const tierStyles = {
+            high:   { border: '#F87171', chipBg: 'rgba(248,113,113,0.10)', chipFg: '#F87171', chipLabel: 'Alto impacto' },
+            medium: { border: '#0ea5e9', chipBg: 'rgba(14,165,233,0.10)',  chipFg: '#7dd3fc', chipLabel: 'Médio impacto' },
+            low:    { border: '#475569', chipBg: 'rgba(148,163,184,0.10)', chipFg: 'rgba(255,255,255,0.55)', chipLabel: 'Baixo impacto' },
+          }[alert.impactTier];
+          return (
           <div key={alert.id} className="feed-card-lift" style={{
             background: T.bg1, border: `1px solid ${T.border1}`,
             borderRadius: 10, padding: 'clamp(12px, 2.5vw, 16px)', marginBottom: 10,
-            borderLeft: `3px solid ${T.blue}`,
+            borderLeft: `3px solid ${tierStyles.border}`,
             animation: 'feed-fadeUp 0.3s ease',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, background: T.blue, boxShadow: `0 0 6px ${T.blue}50` }} />
+                <span style={{ width: 5, height: 5, borderRadius: '50%', flexShrink: 0, background: tierStyles.border, boxShadow: `0 0 6px ${tierStyles.border}50` }} />
                 <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: T.labelColor }}>{alert.label}</span>
+                {/* Impact tier chip — concrete, color-coded, not a generic "warning" */}
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: tierStyles.chipFg, background: tierStyles.chipBg, padding: '2px 6px', borderRadius: 4, marginLeft: 2 }}>{tierStyles.chipLabel}</span>
               </div>
               <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.04em', color: alert.confidenceLabel === 'Alta confiança' ? 'rgba(74,222,128,0.60)' : alert.confidenceLabel === 'Confiança moderada' ? 'rgba(14,165,233,0.50)' : 'rgba(251,191,36,0.50)' }}>{alert.confidenceLabel}</span>
             </div>
@@ -7276,6 +7357,12 @@ const FeedPage: React.FC = () => {
             <p style={{ fontSize: 11.5, color: T.text2, margin: '0 0 8px', lineHeight: 1.5 }}>{alert.context}</p>
             <div style={{ background: 'rgba(14,165,233,0.06)', borderRadius: 6, padding: '8px 12px', marginBottom: 8, borderLeft: `2px solid ${T.blue}30` }}>
               <p style={{ fontSize: 11, color: T.text2, margin: 0, lineHeight: 1.6, fontWeight: 500 }}>{alert.impact}</p>
+              {/* Concrete money line — what's literally at risk in R$ */}
+              {alert.spendAtRisk >= 1 && (
+                <p style={{ fontSize: 10.5, color: tierStyles.chipFg, margin: '4px 0 0', lineHeight: 1.5, fontWeight: 600 }}>
+                  R$ {alert.spendAtRisk.toFixed(2).replace('.', ',')} em jogo
+                </p>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => acknowledgeMetricAlert(alert.id)} style={{ flex: 1, background: T.bg2, color: T.text2, border: `1px solid ${T.border1}`, borderRadius: 6, padding: '9px 10px', cursor: 'pointer', fontSize: 11.5, fontWeight: 600, transition: 'all 0.18s' }}
@@ -7286,7 +7373,8 @@ const FeedPage: React.FC = () => {
                 onMouseLeave={e => { e.currentTarget.style.background = T.blue; e.currentTarget.style.boxShadow = 'none'; }}>{alert.investigateLabel}</button>
             </div>
           </div>
-        ))}
+          );
+        })}
 
         {/* Metric investigation lifecycle bar — shows progress + auto-resolves
             when the underlying alert clears. Not a fire-and-forget reminder
