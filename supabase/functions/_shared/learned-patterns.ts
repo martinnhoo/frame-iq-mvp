@@ -329,7 +329,7 @@ export function formatLearnedPatternsBlock(
     "- A causa importa MAIS que o tipo de ação. \"Pausar por fadiga\" e \"pausar por budget baixo\" são padrões DIFERENTES — não misture.",
     "- **Match check de similaridade (FAÇA antes de invocar o padrão)**: compare a situação atual contra o contexto pré listado.",
     "    • CTR atual dentro de ±0.5pp do CTR pré E spend atual dentro de ±50% do spend pré → **cenário muito semelhante**, padrão é forte sinal — pode citar o histórico com confiança.",
-    "    • Fora desses limites → **cenário diferente**, use o padrão APENAS como referência. NÃO cite o número de sucesso como se aplicasse aqui — diga algo como \"em situações parecidas X funcionou, mas o contexto atual é diferente; estou recomendando com cautela\".",
+    "    • Fora desses limites → **cenário diferente**, use o padrão APENAS como referência. NÃO cite o número de sucesso como se aplicasse aqui. Em vez disso, EXPLICITE a diferença com NÚMEROS CONCRETOS: \"Em cenários com CTR ~1.3% essa pausa funcionou bem; aqui estamos em ~3.8%, então o comportamento pode ser diferente — recomendando com cautela.\" Isso mantém transparência E contexto sem criar falsa confiança.",
     "- Se uma linha diz \"amostra pequena — sinal inicial\", NUNCA apresente como certeza. Use \"primeiro indício de que...\", nunca \"sempre funciona\".",
     "- NUNCA invente padrões fora desta lista. Se não estiver aqui, diga \"primeira vez testando isso nesta situação\".",
     "- Esses números são evidência, não promessa — apresente como histórico, não garantia futura.",
