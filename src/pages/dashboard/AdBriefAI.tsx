@@ -3406,9 +3406,30 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     // attribution, so chat-initiated pauses are distinguishable from
     // Feed/Autopilot ones in the user's history.
     // force:true → override the backend's "this ad is converting" guard.
-    // Only set after user explicitly confirms in the override modal.
+    //   Only set after user explicitly confirms in the override modal.
+    // alert_id → if the chat is in Resolution Mode for a metric alert,
+    //   tie the action back to the originating alert so the
+    //   action_outcomes row can later be aggregated into per-alert
+    //   success rates ("CTR-deviation pauses succeed 60% on this account").
+    // hypothesis → if the AI emitted structured hypothesis in the
+    //   meta_action params (extension over plain `context`), forward it
+    //   so the action_outcomes row stores machine-readable cause/effect
+    //   instead of just free text.
     const{data,error}=await supabase.functions.invoke("meta-actions",{
-      body:{action:block.meta_action,user_id:user.id,persona_id:selectedPersona?.id||null,target_id:block.target_id,target_type:block.target_type,target_name:block.target_name||null,value:block.value,source:"chat",ai_reasoning:(block as any).context||null,force:opts?.force===true}
+      body:{
+        action:block.meta_action,
+        user_id:user.id,
+        persona_id:selectedPersona?.id||null,
+        target_id:block.target_id,
+        target_type:block.target_type,
+        target_name:block.target_name||null,
+        value:block.value,
+        source:"chat",
+        ai_reasoning:(block as any).context||null,
+        alert_id: activeMetricAlert || null,
+        hypothesis: (block as any).hypothesis || null,
+        force:opts?.force===true,
+      }
     });
 
     // ── Pause-safety override flow ──────────────────────────────────────────

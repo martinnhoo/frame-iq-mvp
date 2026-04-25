@@ -47,29 +47,43 @@ async function fetchTargetInfo(targetId: string, targetType: string, token: stri
   }
 }
 
-// Safety snapshot: last-7-days metrics for the target. Used by the pause
-// guard so we don't blindly pause an ad that's actually converting (low CTR
-// but generating leads/sales is a winning audience pattern, not a loser).
-async function fetchRecentMetricsSnapshot(targetId: string, targetType: string, token: string): Promise<{
+// Safety snapshot: last-7-days metrics for the target. Used by:
+//   1. The pause guard — so we don't blindly pause an ad that's actually
+//      converting (low CTR but generating leads = winning audience pattern).
+//   2. The action_outcomes writer — captures full multi-metric snapshot at
+//      decision time so the 24h/72h crons can compute accurate deltas.
+// Returns the full set of fields we want stored in metrics_before, plus
+// the 4 normalized values the pause guard inspects.
+async function fetchRecentMetricsSnapshot(targetId: string, _targetType: string, token: string): Promise<{
+  // Core normalized (pause guard uses these)
   conversions: number;
   spend: number;
-  ctr: number;
+  ctr: number;        // decimal (e.g. 0.025)
   cpa: number | null;
   roas: number | null;
   days: number;
+  // Extended (for action_outcomes.metrics_before)
+  impressions: number;
+  clicks: number;
+  frequency: number | null;
+  cpc: number | null;
+  cpm: number | null;
 } | null> {
   try {
     const today = new Date().toISOString().split("T")[0];
     const since = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
-    const fields = "spend,clicks,impressions,ctr,actions,action_values,website_purchase_roas";
-    // Same insights endpoint Meta uses for adset/ad/campaign — works at all 3 levels.
+    const fields = "spend,clicks,impressions,ctr,cpc,cpm,frequency,actions,action_values,website_purchase_roas";
     const r = await fetch(`${BASE}/${targetId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${today}"}&access_token=${token}`);
     const d = await r.json();
     const row = (d.data || [])[0];
     if (!row) return null;
     const spend = parseFloat(row.spend || "0");
-    const ctr = parseFloat(row.ctr || "0") / 100; // Meta returns CTR as percentage already
-    // Sum conversion-like actions
+    const ctr = parseFloat(row.ctr || "0") / 100;
+    const impressions = parseInt(row.impressions || "0", 10);
+    const clicks = parseInt(row.clicks || "0", 10);
+    const frequency = row.frequency ? parseFloat(row.frequency) : null;
+    const cpc = row.cpc ? parseFloat(row.cpc) : null;
+    const cpm = row.cpm ? parseFloat(row.cpm) : null;
     const actions = (row.actions || []) as any[];
     const convTypes = ["purchase", "lead", "complete_registration", "app_install", "submit_application", "subscribe"];
     const conversions = actions
@@ -78,9 +92,140 @@ async function fetchRecentMetricsSnapshot(targetId: string, targetType: string, 
     const cpa = conversions > 0 ? spend / conversions : null;
     const roasArr = (row.website_purchase_roas || []) as any[];
     const roas = roasArr[0]?.value ? parseFloat(roasArr[0].value) : null;
-    return { conversions, spend, ctr, cpa, roas, days: 7 };
+    return { conversions, spend, ctr, cpa, roas, days: 7, impressions, clicks, frequency, cpc, cpm };
   } catch {
     return null;
+  }
+}
+
+// ── action_outcomes helpers ──────────────────────────────────────────────
+// Map runtime action+target_type to the canonical action_type_enum value
+// stored in action_outcomes. Returns null when the action is read-only or
+// unsupported by the enum (we skip writing outcomes for those).
+function buildActionTypeEnum(
+  action: string,
+  targetType: string,
+  oldValue?: number | null,
+  newValue?: number | null,
+): string | null {
+  const t = (targetType || "ad").toLowerCase();
+  if (action === "list_campaigns") return null;
+  if (action === "publish") return null; // not a perf-impacting action; skip outcome row
+  if (action === "pause" || action === "enable") {
+    if (!["ad", "adset", "campaign"].includes(t)) return null;
+    return `${action}_${t}`;
+  }
+  if (action === "update_budget") {
+    if (oldValue != null && newValue != null) {
+      return newValue > oldValue ? "budget_increase" : "budget_decrease";
+    }
+    return "budget_increase"; // default when intent unknown — flag for review
+  }
+  if (action === "duplicate") return "duplicate_ad";
+  return null;
+}
+
+// Soft heuristic to derive a structured hypothesis from free-form
+// ai_reasoning when the chat didn't pass one explicitly. We do this so
+// EVERY outcome row has SOME structured cause/effect to aggregate later.
+// The chat is encouraged (system prompt) to send a richer hypothesis;
+// when it does, we use that and skip the heuristic.
+function parseHypothesisFromReasoning(reasoning: string | null, action: string): {
+  primary_cause: string;
+  expected_effect: string;
+  confidence: number | null;
+} {
+  const lc = (reasoning || "").toLowerCase();
+  let primary_cause = "unknown";
+  if (/fadiga|frequ[êe]ncia|cansa[çc]o/.test(lc)) primary_cause = "creative_fatigue";
+  else if (/hook|primeiros segundos|abertura|gancho/.test(lc)) primary_cause = "low_hook_strength";
+  else if (/p[úu]blico|audi[êe]ncia|targeting/.test(lc)) primary_cause = "wrong_audience";
+  else if (/budget|or[çc]amento/.test(lc)) primary_cause = "budget_starvation";
+  else if (/track|pixel|atribui|convers[ãa]o/.test(lc) && /(zero|sem|n[ãa]o|0)/.test(lc)) primary_cause = "tracking_gap";
+  else if (/cpa|custo/.test(lc) && /alto|acima|elevado/.test(lc)) primary_cause = "high_cpa";
+  else if (/ctr/.test(lc) && /baixo|caiu|abaixo/.test(lc)) primary_cause = "low_ctr";
+  else if (/roas/.test(lc) && /baixo|caiu|abaixo/.test(lc)) primary_cause = "low_roas";
+
+  let expected_effect = "unknown";
+  if (action === "pause") expected_effect = "stop_waste";
+  else if (action === "enable") expected_effect = "scale_winner";
+  else if (action === "update_budget") expected_effect = "improve_efficiency";
+  else if (action === "duplicate") expected_effect = "scale_winner";
+
+  return { primary_cause, expected_effect, confidence: null };
+}
+
+// Insert ONE row into action_outcomes. Fail-safe: never throws, never
+// blocks the calling action. Logs errors for ops visibility.
+async function writeActionOutcome(
+  supabase: any,
+  params: {
+    user_id: string;
+    persona_id?: string | null;
+    action: string;          // raw action name from request
+    target_type: string;     // ad|adset|campaign
+    target_id: string;
+    target_name?: string | null;
+    source?: string | null;  // 'chat'|'feed'|'autopilot'|'manual'
+    alert_id?: string | null;
+    ai_reasoning?: string | null;
+    hypothesis?: any | null; // chat-passed structured hypothesis takes precedence
+    impact_snapshot?: number | null;
+    metrics_before: any;     // already a JSONB object — see fetchRecentMetricsSnapshot
+    old_budget?: number | null; // for update_budget direction inference
+    new_budget?: number | null;
+  },
+): Promise<void> {
+  try {
+    const action_type = buildActionTypeEnum(
+      params.action,
+      params.target_type,
+      params.old_budget,
+      params.new_budget,
+    );
+    if (!action_type) return; // skip read-only / unsupported actions
+
+    const target_level = (["ad", "adset", "campaign"].includes(params.target_type) ? params.target_type : "ad") as "ad" | "adset" | "campaign";
+
+    // Hypothesis: prefer chat-passed structured one; fall back to heuristic.
+    const hypothesis = (params.hypothesis && typeof params.hypothesis === "object" && params.hypothesis.primary_cause)
+      ? params.hypothesis
+      : parseHypothesisFromReasoning(params.ai_reasoning || null, params.action);
+
+    // pattern_candidate: chat actions are AI-driven decisions — exactly
+    // what we want to learn from. Flag opt-in for the future aggregator.
+    // Other sources (feed manual click, autopilot) start false; cron may
+    // promote based on improved.
+    const pattern_candidate = params.source === "chat";
+
+    const row = {
+      user_id: params.user_id,
+      persona_id: params.persona_id || null,
+      action_type,
+      target_level,
+      target_id: params.target_id,
+      target_name: params.target_name || null,
+      source: params.source || null,
+      alert_id: params.alert_id || null,
+      ai_reasoning: params.ai_reasoning || null,
+      hypothesis,
+      metrics_before: params.metrics_before || {},
+      metrics_window: "d7",
+      impact_snapshot: params.impact_snapshot ?? null,
+      // metrics_after_*, delta_*, evaluation_metric, improved, recovery_pct
+      // intentionally left null — crons populate them at 24h / 72h.
+      pattern_candidate,
+      // taken_at uses default now()
+    };
+
+    const { error } = await supabase.from("action_outcomes").insert(row);
+    if (error) {
+      console.error("[action_outcomes] insert failed:", error.message || error);
+    } else {
+      console.log("[action_outcomes] inserted", { action_type, target_id: params.target_id, source: params.source || null });
+    }
+  } catch (e) {
+    console.error("[action_outcomes] writeActionOutcome threw:", (e as any)?.message || e);
   }
 }
 
@@ -201,6 +346,11 @@ Deno.serve(async (req) => {
       action, user_id, persona_id, account_id,
       target_id, target_type, value, old_value,
       ai_reasoning, source, intent,
+      // action_outcomes inputs (Phase 2a):
+      //  alert_id        — ties this action back to a Feed metric alert
+      //  hypothesis      — structured AI reasoning (chat-emitted; may be null)
+      //  impact_snapshot — R$ at risk from the alert system (frontend computes)
+      alert_id, hypothesis, impact_snapshot,
     } = body;
 
     if (!user_id || !action) return errResp("missing user_id or action");
@@ -281,6 +431,12 @@ Deno.serve(async (req) => {
       const info = await fetchTargetInfo(target_id, tType, token);
       const targetName = body.target_name || info.name;
 
+      // Snapshot is needed both for the pause safety guard AND for the
+      // action_outcomes row. Fetch it once here so we don't double-call
+      // Meta in the common pause path. enable also gets it (cheap, one
+      // request) so the outcome row has full multi-metric context.
+      let metricsSnapshot = await fetchRecentMetricsSnapshot(target_id, tType, token);
+
       // ── Pause safety guard ────────────────────────────────────────────────
       // Block pause when the target had real conversions in the last 7 days
       // unless the caller explicitly passed force:true. This prevents the AI
@@ -289,7 +445,7 @@ Deno.serve(async (req) => {
       // pausing on a CTR-only signal. Caller can override by re-sending the
       // request with force:true after seeing the snapshot.
       if (action === "pause" && !body.force) {
-        const snapshot = await fetchRecentMetricsSnapshot(target_id, tType, token);
+        const snapshot = metricsSnapshot;
         if (snapshot && snapshot.conversions > 0) {
           return ok({
             success: false,
@@ -332,6 +488,37 @@ Deno.serve(async (req) => {
         actionLabel,
       );
 
+      // ── Phase 2a: write to action_outcomes (causal-memory dataset) ──
+      // Fire-and-forget; never blocks the action. Crons populate
+      // metrics_after_24h / 72h and compute deltas.
+      writeActionOutcome(supabase, {
+        user_id,
+        persona_id,
+        action,
+        target_type: tType,
+        target_id,
+        target_name: targetName,
+        source,
+        alert_id,
+        ai_reasoning,
+        hypothesis,
+        impact_snapshot,
+        metrics_before: metricsSnapshot
+          ? {
+              ctr: metricsSnapshot.ctr,
+              cpa: metricsSnapshot.cpa,
+              roas: metricsSnapshot.roas,
+              spend: metricsSnapshot.spend,
+              conversions: metricsSnapshot.conversions,
+              impressions: metricsSnapshot.impressions,
+              clicks: metricsSnapshot.clicks,
+              frequency: metricsSnapshot.frequency,
+              cpc: metricsSnapshot.cpc,
+              cpm: metricsSnapshot.cpm,
+            }
+          : {},
+      });
+
       const label = target_type === "campaign" ? "Campanha" : target_type === "adset" ? "Conjunto" : "Anúncio";
       return ok({ success: true, status, target_id, message: `${label} ${action === "pause" ? "pausado" : "ativado"} com sucesso.` });
     }
@@ -373,6 +560,44 @@ Deno.serve(async (req) => {
         resolvedIntent,
         actionLabel,
       );
+
+      // ── Phase 2a: action_outcomes for budget change ──
+      // Fetch metrics snapshot here (we don't have one yet at this branch).
+      // Pass old/new budget so buildActionTypeEnum picks the right enum
+      // value (budget_increase vs budget_decrease).
+      const budgetSnapshot = await fetchRecentMetricsSnapshot(target_id, target_type || "campaign", token);
+      writeActionOutcome(supabase, {
+        user_id,
+        persona_id,
+        action,
+        target_type: target_type || "campaign",
+        target_id,
+        target_name: targetName,
+        source,
+        alert_id,
+        ai_reasoning,
+        hypothesis,
+        impact_snapshot,
+        old_budget: oldCents,
+        new_budget: cents,
+        metrics_before: budgetSnapshot
+          ? {
+              ctr: budgetSnapshot.ctr,
+              cpa: budgetSnapshot.cpa,
+              roas: budgetSnapshot.roas,
+              spend: budgetSnapshot.spend,
+              conversions: budgetSnapshot.conversions,
+              impressions: budgetSnapshot.impressions,
+              clicks: budgetSnapshot.clicks,
+              frequency: budgetSnapshot.frequency,
+              cpc: budgetSnapshot.cpc,
+              cpm: budgetSnapshot.cpm,
+              // Budget change is special — capture both sides for the diff.
+              old_budget_cents: oldCents,
+              new_budget_cents: cents,
+            }
+          : { old_budget_cents: oldCents, new_budget_cents: cents },
+      });
 
       const label = budgetField === "lifetime_budget" ? "vitalício" : "/dia";
       return ok({ success: true, target_id, new_budget: value, message: `Orçamento atualizado para R$${value}${label}.` });
@@ -418,6 +643,40 @@ Deno.serve(async (req) => {
         null,
         "Duplicar",
       );
+
+      // ── Phase 2a: action_outcomes for duplicate ──
+      // Snapshot is the SOURCE ad's metrics — the duplicated copy starts
+      // fresh, but we want to know what we cloned from for later analysis
+      // ("user duplicates winners 80% of the time" type insights).
+      const dupSnapshot = await fetchRecentMetricsSnapshot(target_id, target_type || "ad", token);
+      writeActionOutcome(supabase, {
+        user_id,
+        persona_id,
+        action,
+        target_type: target_type || "ad",
+        target_id,                       // SOURCE id, not the new copy
+        target_name: targetName,
+        source,
+        alert_id,
+        ai_reasoning,
+        hypothesis,
+        impact_snapshot,
+        metrics_before: dupSnapshot
+          ? {
+              ctr: dupSnapshot.ctr,
+              cpa: dupSnapshot.cpa,
+              roas: dupSnapshot.roas,
+              spend: dupSnapshot.spend,
+              conversions: dupSnapshot.conversions,
+              impressions: dupSnapshot.impressions,
+              clicks: dupSnapshot.clicks,
+              frequency: dupSnapshot.frequency,
+              cpc: dupSnapshot.cpc,
+              cpm: dupSnapshot.cpm,
+              copied_to_id: newId,       // the new copy's id, for reference
+            }
+          : { copied_to_id: newId },
+      });
 
       return ok({ success: true, new_id: newId, message: `Duplicado e pausado. Novo ID: ${newId}` });
     }
