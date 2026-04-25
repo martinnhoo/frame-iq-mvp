@@ -171,24 +171,48 @@ async function writeActionOutcome(
       ? params.hypothesis
       : parseHypothesisFromReasoning(params.ai_reasoning || null, params.action);
 
-    // pattern_candidate filters: source=chat AND hypothesis valid AND
-    // metrics_before is real (not the no_data marker). Triple gate so
-    // we only feed the future learned_patterns aggregator with rows that
-    // can actually be reasoned about. Anything missing → false → won't
-    // pollute aggregations.
+    // pattern_candidate triple gate — every row MUST clear all three to
+    // be eligible for learned_patterns aggregation. Anything missing →
+    // false → row still saved (for audit/history) but ignored by the
+    // pattern aggregator. We err on the side of EXCLUDING here: a thin
+    // dataset that we trust beats a fat dataset we don't.
+    //
+    // 1) Source must be human-driven. 'autopilot' would feed the AI its
+    //    own recipes back as evidence — strict no. 'manager_manual'
+    //    (clicked in the Manager UI), 'feed' (clicked from an alert
+    //    card) and 'chat' (executed via AI chat) are all real human
+    //    decisions and equally valid signal. 'manual' kept for legacy.
+    const HUMAN_DRIVEN_SOURCES = new Set([
+      "chat",
+      "feed",
+      "manager_manual",
+      "manual",
+    ]);
+    const isHumanDriven =
+      typeof params.source === "string" && HUMAN_DRIVEN_SOURCES.has(params.source);
+    // 2) Hypothesis must name a concrete cause. We treat null/empty as
+    //    "no signal" (correct — the parser returns null when nothing
+    //    matched). We also explicitly reject 'unknown' because legacy
+    //    code may still return that string; treating it as valid would
+    //    poison the aggregation with rows we can't reason about.
     const hasValidCause =
       hypothesis &&
       typeof hypothesis === "object" &&
       typeof hypothesis.primary_cause === "string" &&
-      hypothesis.primary_cause.length > 0;
+      hypothesis.primary_cause.length > 0 &&
+      hypothesis.primary_cause !== "unknown";
+    // 3) Snapshot at action time must contain real Meta data. Both an
+    //    empty object (legacy fallback when fetch failed) and the
+    //    explicit {no_data: true} marker (current shared helper) are
+    //    rejected — without baseline metrics the 24h/72h delta is
+    //    meaningless.
     const metricsBefore = params.metrics_before || {};
     const hasRealMetrics =
       metricsBefore &&
       typeof metricsBefore === "object" &&
       Object.keys(metricsBefore).length > 0 &&
       !(metricsBefore as any).no_data;
-    const pattern_candidate =
-      params.source === "chat" && !!hasValidCause && !!hasRealMetrics;
+    const pattern_candidate = isHumanDriven && !!hasValidCause && !!hasRealMetrics;
 
     const row = {
       user_id: params.user_id,
