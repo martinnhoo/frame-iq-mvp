@@ -16,6 +16,7 @@ import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import { UserProfilePanel } from "@/components/dashboard/UserProfilePanel";
+import { OutcomeToastWatcher } from "@/components/feed/OutcomeToastWatcher";
 import WelcomePaidModal from "@/components/dashboard/WelcomePaidModal";
 import { identifyUser } from "@/lib/posthog";
 
@@ -1224,6 +1225,13 @@ export default function DashboardLayout() {
           selectedPersona={selectedPersona}
         />
       )}
+
+      {/* OutcomeToastWatcher — closes the dopaminergic loop. Surfaces
+          newly finalized outcomes (cron 72h) as toasts on every dashboard
+          mount. Renders nothing visually; effects only. Throttled to
+          MAX_TOASTS_PER_VISIT to avoid spam, with localStorage cursor
+          to prevent replays. */}
+      {user && <OutcomeToastWatcher userId={user.id} />}
 
       {/* Referral now inline in sidebar footer */}
     </div>
