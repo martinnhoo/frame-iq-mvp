@@ -112,12 +112,29 @@ function setTrackingStatus(accountId: string, status: TrackingStatus): void {
 // Priority-scored, anti-spam cooldowns, impact estimation, light history.
 const METRIC_STATE_KEY = 'adbrief_metric_v2';
 type MetricAlertId = 'cpa_no_data' | 'cpa_deviation' | 'ctr_deviation' | 'roas_deviation';
-type MetricAlertAction = 'unknown' | 'acknowledged' | 'investigating';
+// Full lifecycle of an investigation:
+//   unknown        → never engaged
+//   acknowledged   → user dismissed (e.g. "CTR aceitável")
+//   investigating  → user opened it in chat, working on a fix
+//   resolved       → metric improved + alert no longer present
+//                    (auto-detected by useEffect that compares
+//                    investigating entries vs current alerts list)
+//   failed         → user marked "didn't help" — suggests another approach
+type MetricAlertAction = 'unknown' | 'acknowledged' | 'investigating' | 'resolved' | 'failed';
 
 interface MetricStateEntry {
   action: MetricAlertAction;
   dismissedAt?: number;      // timestamp of last dismiss
   cooldownDays?: number;     // how many days cooldown
+  // Investigation lifecycle timestamps. Used by the bar UI to show
+  // "investigating há 3min" / "resolvido em 12min" / "falhou após 25min".
+  startedAt?: number;        // ms since epoch — when investigation opened
+  resolvedAt?: number;       // ms since epoch — when alert auto-cleared
+  failedAt?: number;         // ms since epoch — when user marked failed
+  // Snapshot of the metric value at investigation start, used to compute
+  // delta when we transition to resolved (e.g. "CTR voltou de 2.13% pra 3.6%").
+  startMetricValue?: number; // CTR/CPA/ROAS at investigation start
+  startBaseline?: number;    // baseline for the same metric
 }
 
 interface MetricHistoryEntry {
@@ -5893,7 +5910,29 @@ const FeedPage: React.FC = () => {
 
   const investigateMetricAlert = useCallback((alert: MetricAlert) => {
     if (!accountId) return;
-    const entry: MetricStateEntry = { action: 'investigating' };
+    // Snapshot the metric value at investigation start so we can compute
+    // a real delta when this transitions to resolved ("voltou de 2.13% pra 3.8%").
+    const m = adMetrics;
+    let startMetricValue: number | undefined;
+    let startBaseline: number | undefined;
+    if (m) {
+      if (alert.id === 'ctr_deviation') {
+        startMetricValue = m.avgCtr / 10000; // basis points → decimal
+        startBaseline = m.baselineCtr ? m.baselineCtr / 10000 : undefined;
+      } else if (alert.id === 'cpa_deviation' || alert.id === 'cpa_no_data') {
+        startMetricValue = m.avgCpa / 100; // centavos → reais
+        startBaseline = m.baselineCpa ? m.baselineCpa / 100 : undefined;
+      } else if (alert.id === 'roas_deviation') {
+        startMetricValue = m.avgRoas;
+        startBaseline = m.baselineRoas || undefined;
+      }
+    }
+    const entry: MetricStateEntry = {
+      action: 'investigating',
+      startedAt: Date.now(),
+      startMetricValue,
+      startBaseline,
+    };
     setMetricEntry(accountId, period, alert.id, entry);
     setMetricEntries(prev => ({ ...prev, [alert.id]: entry }));
     addMetricHistory(accountId, { metric: alert.id, action: 'investigating', date: new Date().toISOString() });
@@ -5902,15 +5941,93 @@ const FeedPage: React.FC = () => {
     navigate('/dashboard/ai', {
       state: {
         prompt: alert.chatMsg + stateCtx,
+        // Tag the conversation with the alert so chat can recognize an
+        // investigation context (used later for action-result wiring).
+        activeMetricAlert: alert.id,
       },
     });
-  }, [accountId, period, navigate, buildAiStateContext]);
+  }, [accountId, period, navigate, buildAiStateContext, adMetrics]);
 
   const resetMetricAlert = useCallback((alertId: MetricAlertId) => {
     if (!accountId) return;
     resetMetricState(accountId, period, alertId);
     setMetricEntries(prev => ({ ...prev, [alertId]: { action: 'unknown' } }));
   }, [accountId, period]);
+
+  // User explicitly marks an investigation as not-resolved. Suggests
+  // trying a different approach. Keeps the bar visible in `failed` state
+  // so the user can either reset or reopen the chat with a new angle.
+  const markMetricFailed = useCallback((alertId: MetricAlertId) => {
+    if (!accountId) return;
+    const current = getMetricEntry(accountId, period, alertId);
+    const next: MetricStateEntry = {
+      ...current,
+      action: 'failed',
+      failedAt: Date.now(),
+    };
+    setMetricEntry(accountId, period, alertId, next);
+    setMetricEntries(prev => ({ ...prev, [alertId]: next }));
+  }, [accountId, period]);
+
+  // Manual "marcar resolvido" — for cases where the user fixed it
+  // outside the system or just wants to clear the bar.
+  const markMetricResolved = useCallback((alertId: MetricAlertId) => {
+    if (!accountId) return;
+    const current = getMetricEntry(accountId, period, alertId);
+    const next: MetricStateEntry = {
+      ...current,
+      action: 'resolved',
+      resolvedAt: Date.now(),
+    };
+    setMetricEntry(accountId, period, alertId, next);
+    setMetricEntries(prev => ({ ...prev, [alertId]: next }));
+  }, [accountId, period]);
+
+  // ── Auto-resolution detector ──────────────────────────────────────────────
+  // Runs whenever the metric alerts list updates. For every entry currently
+  // in `investigating` state, if its alertId is no longer present in the
+  // recomputed `metricAlerts` list, the metric improved past the alert
+  // threshold — flip to `resolved`. This is the closing-the-loop signal the
+  // user explicitly asked for: bar shouldn't say "investigating" forever
+  // when the underlying problem already went away.
+  useEffect(() => {
+    if (!accountId) return;
+    const currentAlertIds = new Set(metricAlerts.map(a => a.id));
+    let changed = false;
+    const updated: typeof metricEntries = { ...metricEntries };
+    (Object.keys(metricEntries) as MetricAlertId[]).forEach(id => {
+      const entry = metricEntries[id];
+      if (entry?.action === 'investigating' && !currentAlertIds.has(id)) {
+        const next: MetricStateEntry = {
+          ...entry,
+          action: 'resolved',
+          resolvedAt: Date.now(),
+        };
+        setMetricEntry(accountId, period, id, next);
+        updated[id] = next;
+        changed = true;
+      }
+    });
+    if (changed) setMetricEntries(updated);
+  }, [metricAlerts, accountId, period]);
+
+  // Auto-clear `resolved` bars 2 minutes after the success state is shown,
+  // so the celebration doesn't linger forever and clutter the feed.
+  useEffect(() => {
+    if (!accountId) return;
+    const resolvedIds = (Object.keys(metricEntries) as MetricAlertId[])
+      .filter(id => {
+        const e = metricEntries[id];
+        return e?.action === 'resolved' && e.resolvedAt && (Date.now() - e.resolvedAt) > 120_000;
+      });
+    if (resolvedIds.length === 0) return;
+    resolvedIds.forEach(id => resetMetricState(accountId, period, id));
+    setMetricEntries(prev => {
+      const next = { ...prev };
+      resolvedIds.forEach(id => { next[id] = { action: 'unknown' }; });
+      return next;
+    });
+  }, [metricEntries, accountId, period]);
 
   // Ads fetch — paginated, refetchable
   const ADS_PAGE_SIZE = 40;
@@ -7171,24 +7288,74 @@ const FeedPage: React.FC = () => {
           </div>
         ))}
 
-        {/* Metric investigating reminders */}
+        {/* Metric investigation lifecycle bar — shows progress + auto-resolves
+            when the underlying alert clears. Not a fire-and-forget reminder
+            anymore: tracks time, shows state-specific copy, and offers the
+            right action for each phase (investigating / resolved / failed). */}
         {metaConnected && !isDemo && (['cpa_no_data', 'cpa_deviation', 'ctr_deviation', 'roas_deviation'] as MetricAlertId[])
-          .filter(id => metricEntries[id]?.action === 'investigating')
+          .filter(id => {
+            const e = metricEntries[id];
+            return e?.action === 'investigating' || e?.action === 'resolved' || e?.action === 'failed';
+          })
           .map(id => {
-            const labels: Record<MetricAlertId, string> = {
-              cpa_no_data: 'CPA — investigando conversões',
-              cpa_deviation: 'CPA — investigando custo',
-              ctr_deviation: 'CTR — investigando performance',
-              roas_deviation: 'ROAS — investigando retorno',
+            const entry = metricEntries[id];
+            const action = entry?.action;
+            const metricName: Record<MetricAlertId, string> = {
+              cpa_no_data: 'CPA',
+              cpa_deviation: 'CPA',
+              ctr_deviation: 'CTR',
+              roas_deviation: 'ROAS',
+            }[id] && { cpa_no_data: 'CPA', cpa_deviation: 'CPA', ctr_deviation: 'CTR', roas_deviation: 'ROAS' }[id] as any || 'Métrica';
+            const fmtElapsed = (start: number, end: number = Date.now()): string => {
+              const mins = Math.max(1, Math.floor((end - start) / 60_000));
+              if (mins < 60) return `${mins}min`;
+              const hrs = Math.floor(mins / 60);
+              if (hrs < 24) return `${hrs}h`;
+              return `${Math.floor(hrs / 24)}d`;
             };
+            // ── State: RESOLVED (auto or manual) ──
+            if (action === 'resolved') {
+              const elapsed = entry?.startedAt && entry.resolvedAt ? fmtElapsed(entry.startedAt, entry.resolvedAt) : null;
+              return (
+                <div key={`inv-${id}`} style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', animation: 'feed-fadeUp 0.3s ease' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <span style={{ fontSize: 13, color: '#10B981' }}>✓</span>
+                    <span style={{ fontSize: 11.5, color: T.text1, fontWeight: 600 }}>{metricName} resolvido</span>
+                    {elapsed && <span style={{ fontSize: 10.5, color: T.text3, fontWeight: 500 }}>· em {elapsed}</span>}
+                  </div>
+                  <button onClick={() => resetMetricAlert(id)} style={{ background: 'transparent', color: T.text3, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 500, padding: '4px 0' }}>Fechar</button>
+                </div>
+              );
+            }
+            // ── State: FAILED (user marked) ──
+            if (action === 'failed') {
+              return (
+                <div key={`inv-${id}`} style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.22)', borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', animation: 'feed-fadeUp 0.3s ease' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <span style={{ fontSize: 13, color: '#F87171' }}>⚠</span>
+                    <span style={{ fontSize: 11.5, color: T.text1, fontWeight: 600 }}>{metricName} ainda fora do padrão</span>
+                    <span style={{ fontSize: 10.5, color: T.text3, fontWeight: 500 }}>· primeira tentativa não resolveu</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <button onClick={() => navigate('/dashboard/ai', { state: { prompt: `Voltei pro caso de ${metricName}. A primeira tentativa não resolveu. Me dá outra abordagem — diferente da anterior.` } })} style={{ background: T.blue, color: '#fff', border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Outra abordagem →</button>
+                    <button onClick={() => resetMetricAlert(id)} style={{ background: 'transparent', color: T.text3, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 500, padding: '4px 0' }}>Fechar</button>
+                  </div>
+                </div>
+              );
+            }
+            // ── State: INVESTIGATING (default) ──
+            const elapsed = entry?.startedAt ? fmtElapsed(entry.startedAt) : null;
             return (
               <div key={`inv-${id}`} style={{ background: T.bg1, border: `1px solid ${T.border1}`, borderRadius: 8, padding: 'clamp(10px, 2vw, 14px)', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', animation: 'feed-fadeUp 0.3s ease' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                   <span style={{ fontSize: 12, color: T.blue }}>◉</span>
-                  <span style={{ fontSize: 11.5, color: T.text2, fontWeight: 500 }}>{labels[id]}</span>
+                  <span style={{ fontSize: 11.5, color: T.text2, fontWeight: 500 }}>{metricName} — investigando</span>
+                  {elapsed && <span style={{ fontSize: 10.5, color: T.text3, fontWeight: 500 }}>· há {elapsed}</span>}
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button onClick={() => navigate('/dashboard/ai')} style={{ background: 'transparent', color: T.blue, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, padding: '4px 0' }}>Continuar no chat</button>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <button onClick={() => navigate('/dashboard/ai', { state: { activeMetricAlert: id, prompt: `Voltei pra continuar com o caso de ${metricName}. Onde paramos?` } })} style={{ background: 'transparent', color: T.blue, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, padding: '4px 0' }}>Continuar no chat</button>
+                  <button onClick={() => markMetricResolved(id)} style={{ background: 'transparent', color: '#10B981', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, padding: '4px 0' }}>Resolvido</button>
+                  <button onClick={() => markMetricFailed(id)} style={{ background: 'transparent', color: '#F87171', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, padding: '4px 0' }}>Não ajudou</button>
                   <button onClick={() => resetMetricAlert(id)} style={{ background: 'transparent', color: T.text3, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 500, padding: '4px 0' }}>Resetar</button>
                 </div>
               </div>
