@@ -5929,20 +5929,10 @@ const FeedPage: React.FC = () => {
     return () => { cancelled = true; };
   }, [userId, isDemo]);
 
-  const lastAnalysisAt: string | null = useMemo(() => {
-    // 1) Most recent activity event taken_at.
-    const recent = activityEvents[0]?.executed_at;
-    if (recent) return recent;
-    // 2) Latest daily_snapshots.created_at.
-    if (snapshotLastAt) return snapshotLastAt;
-    // 3) tracker.last_active_date — a DATE (YYYY-MM-DD); coerce to noon UTC
-    //    so the relative-time formatter doesn't swing across midnight.
-    const d = (tracker as any)?.last_active_date;
-    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
-      return `${d}T12:00:00Z`;
-    }
-    return d || null;
-  }, [activityEvents, snapshotLastAt, tracker]);
+  // (lastAnalysisAt useMemo moved below — `tracker` isn't in scope here yet,
+  //  it's declared further down in the demo-vs-real branch. Keeping the state
+  //  declarations up here so hook order stays stable, but the derived value
+  //  has to live past the tracker declaration to avoid TDZ.)
 
   // ── Tracking health — PIXEL-ONLY.
   // The big card only fires for deterministic pixel issues from Meta API (no_pixel,
@@ -6464,6 +6454,23 @@ const FeedPage: React.FC = () => {
 
   const decisions = isDemo ? buildDemoDecisions() : realDecisions;
   const tracker = isDemo ? buildDemoMoneyTracker() : realTracker;
+
+  // ── lastAnalysisAt — drives CommandStrip "Última análise" cell.
+  // Fallback chain (first non-null wins): activityEvents[0].executed_at
+  // → snapshotLastAt → tracker.last_active_date (with noon-UTC TZ guard).
+  // Lives here (not next to its state declarations above) because `tracker`
+  // is only created on this line — placing the useMemo earlier would TDZ.
+  const lastAnalysisAt: string | null = useMemo(() => {
+    const recent = activityEvents[0]?.executed_at;
+    if (recent) return recent;
+    if (snapshotLastAt) return snapshotLastAt;
+    const d = (tracker as any)?.last_active_date;
+    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      return `${d}T12:00:00Z`;
+    }
+    return d || null;
+  }, [activityEvents, snapshotLastAt, tracker]);
+
   // Only show skeleton on the very first load — not after sync finishes (prevents flash)
   const hasSyncedRef = useRef(false);
   const hasSyncedAccountRef = useRef<string | null>(null);
