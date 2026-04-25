@@ -1,6 +1,11 @@
 // meta-actions v2 — pause/activate/budget/publish/duplicate via Meta Marketing API v21
 // Now also writes to action_log so every action appears in Histórico
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  fetchSnapshot as fetchSharedSnapshot,
+  snapshotToJsonb as sharedSnapshotToJsonb,
+  type MetricsSnapshot as SharedSnapshot,
+} from "../_shared/action-outcomes.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -47,191 +52,26 @@ async function fetchTargetInfo(targetId: string, targetType: string, token: stri
   }
 }
 
-// Snapshot type used by both the pause guard and action_outcomes writer.
-type MetricsSnapshot = {
-  conversions: number;
-  spend: number;
-  ctr: number;        // decimal (e.g. 0.025)
-  cpa: number | null;
-  roas: number | null;
-  days: number;
-  impressions: number;
-  clicks: number;
-  frequency: number | null;
-  cpc: number | null;
-  cpm: number | null;
-  // Provenance — tells us if we got the data direct or via fallback aggregation.
-  // Useful for debugging dataset quality later.
-  source_level?: "direct" | "aggregated_from_adsets" | "aggregated_from_ads";
-};
+// Local alias to the shared snapshot type, plus a thin wrapper that calls
+// the shared `fetchSnapshot` with a 7-day window — what meta-actions has
+// always used at action time. Crons use different windows (24h, 72h)
+// against taken_at; the shared helper covers both cases via parameters.
+type MetricsSnapshot = SharedSnapshot;
 
-// Parse a single Meta insights row into our normalized shape.
-function parseInsightsRow(row: any): {
-  spend: number; impressions: number; clicks: number;
-  conversions: number; revenue: number;
-  ctr: number; frequency: number | null; cpc: number | null; cpm: number | null;
-  roas: number | null;
-} {
-  const spend = parseFloat(row.spend || "0");
-  const impressions = parseInt(row.impressions || "0", 10);
-  const clicks = parseInt(row.clicks || "0", 10);
-  const ctr = parseFloat(row.ctr || "0") / 100;
-  const frequency = row.frequency ? parseFloat(row.frequency) : null;
-  const cpc = row.cpc ? parseFloat(row.cpc) : null;
-  const cpm = row.cpm ? parseFloat(row.cpm) : null;
-  const actions = (row.actions || []) as any[];
-  const convTypes = ["purchase", "lead", "complete_registration", "app_install", "submit_application", "subscribe"];
-  const conversions = actions
-    .filter((a: any) => convTypes.includes(a.action_type))
-    .reduce((s, a) => s + parseFloat(a.value || "0"), 0);
-  const actionValues = (row.action_values || []) as any[];
-  const revenue = actionValues
-    .filter((a: any) => a.action_type === "purchase" || a.action_type === "omni_purchase")
-    .reduce((s, a) => s + parseFloat(a.value || "0"), 0);
-  const roasArr = (row.website_purchase_roas || []) as any[];
-  const roas = roasArr[0]?.value ? parseFloat(roasArr[0].value) : null;
-  return { spend, impressions, clicks, conversions, revenue, ctr, frequency, cpc, cpm, roas };
+async function fetchRecentMetricsSnapshot(targetId: string, targetType: string, token: string): Promise<MetricsSnapshot | null> {
+  const today = new Date().toISOString().split("T")[0];
+  const since = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+  return fetchSharedSnapshot(targetId, targetType, since, today, token, 7);
 }
 
-// Single attempt — direct insights call for one Meta object id.
-async function fetchDirectInsights(targetId: string, token: string): Promise<any | null> {
-  try {
-    const today = new Date().toISOString().split("T")[0];
-    const since = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
-    const fields = "spend,clicks,impressions,ctr,cpc,cpm,frequency,actions,action_values,website_purchase_roas";
-    const r = await fetch(`${BASE}/${targetId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${today}"}&access_token=${token}`);
-    const d = await r.json();
-    return (d.data || [])[0] || null;
-  } catch (e) {
-    console.warn("[snapshot] direct insights fetch failed", targetId, (e as any)?.message || e);
-    return null;
-  }
-}
-
-// Aggregate insights across N children. Used by the hierarchical fallback
-// when campaign/adset-level direct insights come back empty (Meta is not
-// consistent about returning aggregated rows for parent objects in low-data
-// accounts). Sums what's summable; recomputes derived ratios from sums.
-async function aggregateFromChildren(childIds: string[], token: string): Promise<MetricsSnapshot | null> {
-  if (childIds.length === 0) return null;
-  const rows = await Promise.all(childIds.slice(0, 25).map(id => fetchDirectInsights(id, token)));
-  const valid = rows.filter(Boolean).map(parseInsightsRow);
-  if (valid.length === 0) return null;
-  const sum = (k: keyof ReturnType<typeof parseInsightsRow>) =>
-    valid.reduce((s, r) => s + (r[k] as number || 0), 0);
-  const spend = sum("spend");
-  const impressions = sum("impressions");
-  const clicks = sum("clicks");
-  const conversions = sum("conversions");
-  const revenue = sum("revenue");
-  // Recompute derived ratios from sums — averaging averages would lie.
-  const ctr = impressions > 0 ? clicks / impressions : 0;
-  const cpc = clicks > 0 ? spend / clicks : null;
-  const cpm = impressions > 0 ? (spend / impressions) * 1000 : null;
-  const cpa = conversions > 0 ? spend / conversions : null;
-  const roas = spend > 0 && revenue > 0 ? revenue / spend : null;
-  // Frequency: weighted by impressions
-  const totalImpr = impressions || 1;
-  const weightedFreq = valid.reduce((s, r) => s + ((r.frequency || 0) * (r.impressions || 0)), 0) / totalImpr;
-  const frequency = weightedFreq > 0 ? weightedFreq : null;
-  return { conversions, spend, ctr, cpa, roas, days: 7, impressions, clicks, frequency, cpc, cpm };
-}
-
-// Snapshot v2 with hierarchical fallback. Order:
-//   1. Direct insights call for the target (works for ads, sometimes adsets).
-//   2. If target is campaign → aggregate from its adsets.
-//   3. If target is adset    → aggregate from its ads.
-//   4. If campaign also failed at step 2 → drill down once more (adsets→ads).
-// Returns null only if everything failed; caller substitutes a no-data marker.
-async function fetchRecentMetricsSnapshot(
-  targetId: string,
-  targetType: string,
-  token: string,
-): Promise<MetricsSnapshot | null> {
-  // 1) Direct
-  const direct = await fetchDirectInsights(targetId, token);
-  if (direct) {
-    const p = parseInsightsRow(direct);
-    return {
-      conversions: p.conversions,
-      spend: p.spend,
-      ctr: p.ctr,
-      cpa: p.conversions > 0 ? p.spend / p.conversions : null,
-      roas: p.roas,
-      days: 7,
-      impressions: p.impressions,
-      clicks: p.clicks,
-      frequency: p.frequency,
-      cpc: p.cpc,
-      cpm: p.cpm,
-      source_level: "direct",
-    };
-  }
-  console.log("[snapshot] direct empty for", { targetId, targetType }, "— trying fallback");
-
-  // 2) Campaign → adsets
-  if (targetType === "campaign") {
-    try {
-      const r = await fetch(`${BASE}/${targetId}/adsets?fields=id&limit=50&access_token=${token}`);
-      const d = await r.json();
-      const adsetIds: string[] = (d.data || []).map((x: any) => x.id).filter(Boolean);
-      const agg = await aggregateFromChildren(adsetIds, token);
-      if (agg) return { ...agg, source_level: "aggregated_from_adsets" };
-      // 4) Drill down: campaign → adsets → ads
-      console.log("[snapshot] adset agg empty for", targetId, "— drilling to ads");
-      const allAds: string[] = [];
-      for (const asid of adsetIds.slice(0, 25)) {
-        const ar = await fetch(`${BASE}/${asid}/ads?fields=id&limit=50&access_token=${token}`);
-        const ad = await ar.json();
-        for (const a of (ad.data || [])) if (a.id) allAds.push(a.id);
-      }
-      const adAgg = await aggregateFromChildren(allAds, token);
-      if (adAgg) return { ...adAgg, source_level: "aggregated_from_ads" };
-    } catch (e) {
-      console.warn("[snapshot] campaign fallback failed", (e as any)?.message || e);
-    }
-  }
-
-  // 3) Adset → ads
-  if (targetType === "adset") {
-    try {
-      const r = await fetch(`${BASE}/${targetId}/ads?fields=id&limit=50&access_token=${token}`);
-      const d = await r.json();
-      const adIds: string[] = (d.data || []).map((x: any) => x.id).filter(Boolean);
-      const agg = await aggregateFromChildren(adIds, token);
-      if (agg) return { ...agg, source_level: "aggregated_from_ads" };
-    } catch (e) {
-      console.warn("[snapshot] adset fallback failed", (e as any)?.message || e);
-    }
-  }
-
-  console.log("[snapshot] all paths empty for", { targetId, targetType });
-  return null;
-}
-
-// Format a MetricsSnapshot (or null) into the JSONB we store in
-// action_outcomes.metrics_before. Returns a no_data marker when the
-// snapshot couldn't be fetched even via the hierarchical fallback —
-// the cron will see this and skip measurement (vs blindly calculating
-// nonsense delta against {}).
 function snapshotToJsonb(snapshot: MetricsSnapshot | null): Record<string, any> {
-  if (!snapshot) {
-    return { no_data: true, reason: "no_insights_available" };
-  }
-  return {
-    ctr: snapshot.ctr,
-    cpa: snapshot.cpa,
-    roas: snapshot.roas,
-    spend: snapshot.spend,
-    conversions: snapshot.conversions,
-    impressions: snapshot.impressions,
-    clicks: snapshot.clicks,
-    frequency: snapshot.frequency,
-    cpc: snapshot.cpc,
-    cpm: snapshot.cpm,
-    source_level: snapshot.source_level || "direct",
-  };
+  return sharedSnapshotToJsonb(snapshot);
 }
+
+// Old inline snapshot/parse/aggregate/jsonb implementations removed —
+// moved to _shared/action-outcomes.ts so both meta-actions and the
+// 24h/72h crons reuse the exact same logic. Wrappers above preserve
+// the existing call-site signatures.
 
 // ── action_outcomes helpers ──────────────────────────────────────────────
 // Map runtime action+target_type to the canonical action_type_enum value
