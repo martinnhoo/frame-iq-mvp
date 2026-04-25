@@ -206,23 +206,25 @@ export const LiveSystemState: React.FC<LiveSystemStateProps> = ({ userId }) => {
   };
 
   // ── Build the headline + bullet rows ──────────────────────────────
-  // Headline reflects the most-positive truthful framing available.
+  // Result-framed phrasing. The brief was specific: never say raw
+  // "medindo" — that reads as "system is waiting" instead of "system
+  // is generating value". Same data, different mental model.
   let headline: string;
   let headlineColor: string;
   if (snap.recentWin && snap.recentWinSavedBrl && snap.recentWinSavedBrl > 0) {
-    headline = `Última ação evitou R$ ${snap.recentWinSavedBrl.toFixed(2)} de gasto`;
+    headline = `R$ ${snap.recentWinSavedBrl.toFixed(2)} já evitados na última decisão`;
+    headlineColor = '#34D399';
+  } else if (snap.winCount > 0) {
+    headline = `${snap.winCount} decisão${snap.winCount === 1 ? '' : 'ões'} já validada${snap.winCount === 1 ? '' : 's'} pelo sistema`;
     headlineColor = '#34D399';
   } else if (snap.measuringCount > 0) {
-    headline = `Sistema medindo ${snap.measuringCount} decisão${snap.measuringCount === 1 ? '' : 'ões'}`;
-    headlineColor = '#FBBF24';
-  } else if (snap.winCount > 0) {
-    headline = `${snap.winCount} decisão${snap.winCount === 1 ? '' : 'ões'} já validada${snap.winCount === 1 ? '' : 's'}`;
-    headlineColor = '#34D399';
+    headline = `Validando o que funciona pra sua conta`;
+    headlineColor = '#38BDF8';
   } else if (snap.finalizedCount > 0) {
-    headline = `${snap.finalizedCount} decisão${snap.finalizedCount === 1 ? '' : 'ões'} medida${snap.finalizedCount === 1 ? '' : 's'} recentemente`;
+    headline = `Aprendizado em andamento`;
     headlineColor = '#F0F6FC';
   } else {
-    headline = `Sistema acompanhando ações recentes`;
+    headline = `Sistema começando a aprender com você`;
     headlineColor = '#F0F6FC';
   }
 
@@ -245,21 +247,25 @@ export const LiveSystemState: React.FC<LiveSystemStateProps> = ({ userId }) => {
   }
 
   // Bullet 2: measurement timeline — "when you'll know if it worked"
+  // Result-framed: "X sendo validadas pra identificar o que funciona"
+  // beats raw "X em medição".
   if (snap.measuringCount > 0 && snap.nextMeasurementMs !== null && snap.nextMeasurementMs > 0) {
     bullets.push({
       dot: '#FBBF24',
-      label: `${snap.measuringCount} em medição`,
-      sub: `próximo resultado em ${fmtRemaining(snap.nextMeasurementMs)}`,
+      label: `${snap.measuringCount} decisão${snap.measuringCount === 1 ? '' : 'ões'} sendo validada${snap.measuringCount === 1 ? '' : 's'}`,
+      sub: `pra identificar o que realmente funciona · próximo resultado em ${fmtRemaining(snap.nextMeasurementMs)}`,
     });
   } else if (snap.measuringCount > 0) {
     bullets.push({
       dot: '#FBBF24',
-      label: `${snap.measuringCount} em medição`,
-      sub: 'aguardando cron de medição',
+      label: `${snap.measuringCount} decisão${snap.measuringCount === 1 ? '' : 'ões'} sendo validada${snap.measuringCount === 1 ? '' : 's'}`,
+      sub: 'pra identificar o que realmente funciona · resultado em até 72h',
     });
   }
 
   // Bullet 3: positive signal already detected (if any) — celebrates
+  // Result-framed: lead with the OUTCOME (R$ evitados / impacto), not
+  // the target name. Target is sub-context.
   if (snap.recentWin && snap.recentWin !== snap.lastAction) {
     const w = snap.recentWin;
     const wSaved = snap.recentWinSavedBrl;
@@ -267,9 +273,9 @@ export const LiveSystemState: React.FC<LiveSystemStateProps> = ({ userId }) => {
     bullets.push({
       dot: '#34D399',
       label: wSaved
-        ? `${target} → R$ ${wSaved.toFixed(2)} evitados`
-        : `${target} → ação validada`,
-      sub: `${w.recovery_pct ? `~${w.recovery_pct.toFixed(0)}% de impacto · ` : ''}${fmtAgo(w.measured_72h_at || w.taken_at)}`,
+        ? `R$ ${wSaved.toFixed(2)} evitados em "${target}"`
+        : `Decisão sobre "${target}" validada com sucesso`,
+      sub: `${w.recovery_pct ? `~${w.recovery_pct.toFixed(0)}% de impacto medido · ` : ''}${fmtAgo(w.measured_72h_at || w.taken_at)}`,
     });
   }
 
@@ -293,14 +299,33 @@ export const LiveSystemState: React.FC<LiveSystemStateProps> = ({ userId }) => {
   return (
     <div
       style={{
-        background: 'linear-gradient(180deg, rgba(15,23,42,0.7) 0%, rgba(10,15,28,0.85) 100%)',
+        // Visual fusion with the Hero above: no top radius, zero top
+        // margin, no top border. Reads as a footer of the Hero card
+        // instead of a separate block. Same gradient + side borders so
+        // the seam is invisible. The user perceives ONE block doing two
+        // jobs (state on top, proof of activity below).
+        background: 'linear-gradient(180deg, #0A0F1C 0%, rgba(10,15,28,0.95) 100%)',
         border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 12,
-        padding: '14px 16px',
+        borderTop: 'none',
+        borderRadius: '0 0 14px 14px',
+        padding: '14px 18px 16px',
+        marginTop: -18,         // cancel Hero's marginBottom
         marginBottom: 18,
         fontFamily: F,
+        position: 'relative' as const,
       }}
     >
+      {/* Hairline divider mirroring an internal section break — softer
+          than a real border, gives the eye a subtle breath between
+          Hero copy and live-system bullets without splitting the card. */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: 0, left: 16, right: 16, height: 1,
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)',
+        }}
+      />
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <Activity size={13} strokeWidth={2.2} color="#38BDF8" />

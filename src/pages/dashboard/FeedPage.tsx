@@ -7544,6 +7544,12 @@ const FeedPage: React.FC = () => {
           hasData={adsLoaded && totalAdCount > 0}
           accountSeverity={accountStatus?.severity || null}
           accountStatusMessage={accountStatus?.message || null}
+          // Fuse the Hero with LiveSystemState whenever LSS will render
+          // below — same conditions used at LSS callsite. Hero loses its
+          // bottom radius + bottom border + bottom margin so the seam
+          // disappears and the two read as a single composite card.
+          fuseBottom={!isDemo && metaConnected && adsLoaded}
+          userId={ctx.user?.id}
           onPrimaryClick={() => {
             // Account-level critical issue → route the user to the chat
             // with the right diagnostic prompt instead of scrolling. No

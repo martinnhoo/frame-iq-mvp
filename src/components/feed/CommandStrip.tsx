@@ -117,15 +117,16 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
   })();
 
   // ── Stats labels ─────────────────────────────────────────────────────
-  // Empty cells don't render "—" (reads as "broken"). They render a
-  // forward-looking phrase that reinforces "system is at work, just
-  // waiting on first measurement". Honest + alive.
+  // Result-framed empty states. The brief: never "medindo..." (reads as
+  // waiting). Replace with "validando" (reads as work-in-progress with
+  // an outcome at the end). When zero history, point at the first
+  // unlock instead of saying "vazio".
   const moneyLabel = stats && stats.totalSavedBrl > 0
     ? formatMoney(Math.round(stats.totalSavedBrl * 100))
-    : (stats && stats.measuringCount > 0 ? 'medindo…' : 'sem ações ainda');
+    : (stats && stats.measuringCount > 0 ? 'validando' : 'aguardando 1ª ação');
   const accuracyLabel = stats && (stats.wins + stats.losses > 0)
     ? `${stats.wins}/${stats.wins + stats.losses} (${Math.round((stats.wins / (stats.wins + stats.losses)) * 100)}%)`
-    : (stats && stats.measuringCount > 0 ? `${stats.measuringCount} em medição` : 'sem ações ainda');
+    : (stats && stats.measuringCount > 0 ? `${stats.measuringCount} sendo validada${stats.measuringCount === 1 ? '' : 's'}` : 'aguardando 1ª ação');
 
   return (
     <div

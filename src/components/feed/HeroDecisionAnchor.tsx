@@ -33,10 +33,69 @@
 // Enough to dominate, not enough to push everything else off the
 // fold.
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
+
+// "Last validated win" — the most recent improved=true outcome with a
+// real avoided_spend_brl number. Hero's stable variant uses it to surface
+// concrete proof ("Última perda evitada: R$87 em UGC 03 · há 4d") instead
+// of generic monitoring copy. Returns null when no such win exists.
+type LastWin = {
+  targetName: string | null;
+  avoidedSpendBrl: number;
+  measuredAt: string;          // ISO — the verdict timestamp
+};
+
+function useLastWin(userId?: string | null): LastWin | null {
+  const [win, setWin] = useState<LastWin | null>(null);
+  useEffect(() => {
+    if (!userId) { setWin(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
+        const { data } = await (supabase as any)
+          .from('action_outcomes')
+          .select('target_name, context, measured_72h_at, taken_at')
+          .eq('user_id', userId)
+          .eq('finalized', true)
+          .eq('improved', true)
+          .gte('taken_at', cutoff)
+          .order('measured_72h_at', { ascending: false })
+          .limit(5);
+        if (cancelled || !data) return;
+        for (const r of data as any[]) {
+          const v = Number(r.context?.avoided_spend_brl);
+          if (Number.isFinite(v) && v > 0) {
+            setWin({
+              targetName: r.target_name || null,
+              avoidedSpendBrl: v,
+              measuredAt: r.measured_72h_at || r.taken_at,
+            });
+            return;
+          }
+        }
+        setWin(null);
+      } catch { /* silent */ }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+  return win;
+}
+
+function fmtAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(ms / 60_000);
+  if (m < 1) return 'agora';
+  if (m < 60) return `há ${m}min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `há ${h}h`;
+  const d = Math.floor(h / 24);
+  return `há ${d}d`;
+}
 
 interface HeroDecisionAnchorProps {
   /** R$/day at risk (cents). Positive number = there's loss to recover. */
@@ -62,6 +121,16 @@ interface HeroDecisionAnchorProps {
   /** Optional CTA label override (used when accountSeverity is critical
    *  to show "Entender o limite" instead of "Resolver agora"). */
   primaryCtaLabel?: string;
+  /** When true, the Hero renders WITHOUT bottom corner radius and with
+   *  zero marginBottom — designed for visual fusion with LiveSystemState
+   *  rendered immediately below. Set this from the parent based on
+   *  whether LiveSystemState will actually render. */
+  fuseBottom?: boolean;
+  /** Optional userId — when provided, Hero's stable variant pulls the
+   *  most recent validated win from action_outcomes and surfaces it
+   *  as concrete proof ("Última perda evitada: R$87 em UGC 03 · há 4d")
+   *  instead of generic monitoring copy. */
+  userId?: string | null;
 }
 
 export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
@@ -74,9 +143,12 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
   accountSeverity = null,
   accountStatusMessage = null,
   primaryCtaLabel,
+  fuseBottom = false,
+  userId,
 }) => {
   const recoverableBrl = Math.round(recoverableDailyCents / 100);
   const totalActions = killCount + otherActionCount;
+  const lastWin = useLastWin(userId);
 
   // ── Variant resolution (priority order) ───────────────────────────────
   // accountSeverity='critical' takes precedence over decision-level signals
@@ -143,11 +215,14 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
     <div
       style={{
         position: 'relative',
-        marginBottom: 18,
+        // Fusion mode: kill bottom radius + bottom margin so LiveSystemState
+        // can sit flush below as a continuation of the same card.
+        marginBottom: fuseBottom ? 0 : 18,
         padding: 'clamp(22px, 4vw, 32px) clamp(20px, 3vw, 28px)',
-        borderRadius: 14,
+        borderRadius: fuseBottom ? '14px 14px 0 0' : 14,
         background: 'linear-gradient(180deg, #0E1218 0%, #0A0F1C 100%)',
         border: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: fuseBottom ? 'none' : '1px solid rgba(255,255,255,0.06)',
         overflow: 'hidden',
         fontFamily: F,
       }}
@@ -289,30 +364,70 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
 
       {variant === 'stable' && (
         <>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 'clamp(28px, 4.6vw, 38px)',
-              fontWeight: 800,
-              color: '#F0F6FC',
-              letterSpacing: '-0.035em',
-              lineHeight: 1.15,
-            }}
-          >
-            Nenhuma perda ativa agora
-          </h2>
-          <p
-            style={{
-              margin: '12px 0 0',
-              fontSize: 'clamp(13px, 1.4vw, 15px)',
-              color: 'rgba(240,246,252,0.62)',
-              lineHeight: 1.5,
-              maxWidth: 580,
-            }}
-          >
-            Sistema monitorando suas campanhas continuamente. Cada 15 min eu releio CTR,
-            CPA e frequência — assim que algo fugir do padrão, eu te chamo aqui mesmo.
-          </p>
+          {/* Headline — when there's a recent win, lead with the
+              concrete proof ("R$ 87 já evitados na sua conta"). When
+              there isn't, keep the protective framing but still active
+              ("Sistema ativo · proteção em andamento"). The brief was
+              clear: never neutral state, always show value or activity. */}
+          {lastWin ? (
+            <h2
+              style={{
+                margin: 0,
+                fontSize: 'clamp(28px, 4.6vw, 38px)',
+                fontWeight: 800,
+                color: '#F0F6FC',
+                letterSpacing: '-0.035em',
+                lineHeight: 1.15,
+              }}
+            >
+              R$ {lastWin.avoidedSpendBrl.toFixed(2)} já evitados na sua conta
+            </h2>
+          ) : (
+            <h2
+              style={{
+                margin: 0,
+                fontSize: 'clamp(28px, 4.6vw, 38px)',
+                fontWeight: 800,
+                color: '#F0F6FC',
+                letterSpacing: '-0.035em',
+                lineHeight: 1.15,
+              }}
+            >
+              Sistema ativo · proteção em andamento
+            </h2>
+          )}
+          {/* Sub — different copy depending on whether we surfaced a
+              concrete win or are in pure protection mode. Both are
+              forward-looking, both name the specific work being done. */}
+          {lastWin ? (
+            <p
+              style={{
+                margin: '12px 0 0',
+                fontSize: 'clamp(13px, 1.4vw, 15px)',
+                color: 'rgba(240,246,252,0.62)',
+                lineHeight: 1.5,
+                maxWidth: 580,
+              }}
+            >
+              {lastWin.targetName ? <><strong style={{ color: '#F0F6FC' }}>{lastWin.targetName}</strong> · </> : ''}
+              última decisão validada {fmtAgo(lastWin.measuredAt)}.
+              Sigo lendo CTR, CPA e frequência a cada 15 min — te aviso aqui assim que outra
+              perda aparecer.
+            </p>
+          ) : (
+            <p
+              style={{
+                margin: '12px 0 0',
+                fontSize: 'clamp(13px, 1.4vw, 15px)',
+                color: 'rgba(240,246,252,0.62)',
+                lineHeight: 1.5,
+                maxWidth: 580,
+              }}
+            >
+              Releitura a cada 15 min sobre CTR, CPA e frequência. Assim que algo fugir do padrão,
+              você recebe a decisão pronta aqui — antes da perda crescer.
+            </p>
+          )}
         </>
       )}
 
