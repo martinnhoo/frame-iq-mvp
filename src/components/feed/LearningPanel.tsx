@@ -96,20 +96,46 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ userId, maxRows = 
     let cancelled = false;
     (async () => {
       try {
-        // Pull all candidate outcomes for this user; aggregate in JS.
-        // Same query shape as DecisionCard pattern lookup, but unfiltered
-        // by action_type/cause — we want ALL buckets, then group.
-        const { data, error } = await (supabase as any)
-          .from('action_outcomes')
-          .select('action_type, hypothesis, improved, recovery_pct, context, metrics_before')
-          .eq('user_id', userId)
-          .eq('finalized', true)
-          .eq('pattern_candidate', true)
-          .not('improved', 'is', null)
-          .order('taken_at', { ascending: false })
-          .limit(500);
-        if (cancelled || error || !data) {
+        // Pull TWO datasets in parallel:
+        //
+        //   1) FINALIZED + pattern_candidate outcomes — these are the
+        //      raw evidence that becomes a learned pattern (n ≥ 3
+        //      same action × cause). Used for the active rendering.
+        //   2) ALL outcomes with a primary_cause — used to count
+        //      "in-flight" measurements (not yet finalized) and
+        //      finalized-but-thin-bucket rows so the FORMING state can
+        //      report honest progress instead of falling through to
+        //      "primeira decisão" emptiness when the user has 10
+        //      actions actively being measured.
+        const [finalizedRes, allRes] = await Promise.all([
+          (supabase as any)
+            .from('action_outcomes')
+            .select('action_type, hypothesis, improved, recovery_pct, context, metrics_before')
+            .eq('user_id', userId)
+            .eq('finalized', true)
+            .eq('pattern_candidate', true)
+            .not('improved', 'is', null)
+            .order('taken_at', { ascending: false })
+            .limit(500),
+          (supabase as any)
+            .from('action_outcomes')
+            .select('action_type, hypothesis, finalized')
+            .eq('user_id', userId)
+            .order('taken_at', { ascending: false })
+            .limit(500),
+        ]);
+        const data = finalizedRes?.data;
+        const allRows = (allRes?.data || []) as any[];
+        if (cancelled || finalizedRes?.error || !data) {
+          // Even if finalized query fails, derive thinSamples from
+          // the all-outcomes query so the panel can still report
+          // forming state instead of pristine.
+          const inflight = allRows.filter((r: any) =>
+            r.hypothesis?.primary_cause &&
+            (!r.finalized || true)
+          ).length;
           setPatterns([]);
+          setThinSamples(inflight);
           setLoading(false);
           return;
         }
@@ -157,9 +183,15 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ userId, maxRows = 
         }
         // Sort by score (= wins, mathematically n × success_rate)
         computed.sort((a, b) => b.score - a.score || b.successRate - a.successRate);
+        // Add IN-FLIGHT measurements (not finalized yet) to thin so the
+        // forming-state copy reports honest progress when the user has
+        // active actions being measured.
+        const inflight = allRows.filter((r: any) =>
+          r.hypothesis?.primary_cause && !r.finalized
+        ).length;
         if (!cancelled) {
           setPatterns(computed);
-          setThinSamples(thin);
+          setThinSamples(thin + inflight);
           setLoading(false);
         }
       } catch {
@@ -196,7 +228,7 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ userId, maxRows = 
         <Header
           label="Aprendizado da conta"
           sub={isForming
-            ? `${thinSamples} ${thinSamples === 1 ? 'ação medida — primeiro padrão precisa de mais 3 do mesmo tipo' : 'ações medidas — esperando atingir 3 do mesmo tipo'}`
+            ? `${thinSamples} ${thinSamples === 1 ? 'ação sendo catalogada' : 'ações sendo catalogadas'} — primeiro padrão em até 72h`
             : 'cada ação aprovada vira evidência'}
         />
         <div style={{ padding: '18px 16px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -205,12 +237,14 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ userId, maxRows = 
             {isForming ? (
               <>
                 <p style={{ fontSize: 13, color: '#F0F6FC', lineHeight: 1.55, margin: '0 0 6px', fontWeight: 600 }}>
-                  Sistema já está catalogando suas decisões.
+                  {thinSamples === 1
+                    ? '1 ação já catalogada por causa.'
+                    : `${thinSamples} ações já catalogadas por causa.`}
                 </p>
                 <p style={{ fontSize: 12.5, color: 'rgba(240,246,252,0.6)', lineHeight: 1.5, margin: 0 }}>
                   Cada combinação <strong style={{ color: '#F0F6FC' }}>(ação × causa)</strong> precisa de 3 medições
-                  pra virar um padrão confiável. A medição leva ~72h por ação — então o primeiro padrão
-                  costuma aparecer dentro de poucos dias de uso.
+                  pra virar padrão confiável dessa conta. A medição leva ~72h por ação — assim que a 3ª
+                  do mesmo tipo finalizar, ela aparece aqui como conhecimento permanente.
                 </p>
               </>
             ) : (

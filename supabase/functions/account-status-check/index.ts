@@ -36,9 +36,11 @@ const cors = {
 const CACHE_TTL_MS = 15 * 60 * 1000;
 // Bump when the severity/message logic changes so stale cache entries
 // (written by an older version of this function) are invalidated and a
-// fresh Meta check runs. Prior versions flagged spend_cap pressure as
-// critical — bumping this invalidates those stuck "critical" results.
-const SCHEMA_VERSION = 4;
+// fresh Meta check runs. v5: cap-exhausted is now WARN (not critical).
+// Real account-locks come from account_status codes 2/3/8/101.
+// A small auto-cap getting hit is normal Meta behavior — Meta auto-raises
+// it within hours, so flagging it as "CONTA BLOQUEADA" is dramatic and wrong.
+const SCHEMA_VERSION = 5;
 
 type Severity = "ok" | "warn" | "critical" | "unknown";
 
@@ -268,11 +270,14 @@ Deno.serve(async (req) => {
     //   • spend_cap PRESSURE (80%/95%) is NOT flagged. Meta sets the cap
     //     automatically, users can't edit it from the UI, and Meta raises it
     //     organically. Mid-pressure is noise.
-    //   • spend_cap EXHAUSTED (≥99%) IS flagged critical. At that point Meta
-    //     pauses ad delivery until the cap is raised — the user sees ads
-    //     stop without knowing why, so it's a real, actionable state worth
-    //     surfacing (the CTA just points the user to the AI chat for
-    //     explanation; Meta auto-raises the cap after review).
+    //   • spend_cap EXHAUSTED (≥99%) is flagged WARN — not critical.
+    //     Meta auto-raises the cap on small/new accounts within hours,
+    //     so the situation self-resolves; calling it "CONTA BLOQUEADA"
+    //     is dramatic and wrong. We surface it (so the user knows why
+    //     delivery dipped) but only as a warning, never as a 5-alarm.
+    //     EXCEPTION: if the cap is large (> R$5000), it was likely
+    //     user-set, so it stays critical because the user has to
+    //     actively raise it.
     //   • prepaid balance is NOT flagged. Post-paid accounts (credit card
     //     auto-charged by Meta) routinely show low balance — normal, not a
     //     problem. We can't reliably tell funding mode from the Graph API,
@@ -282,10 +287,17 @@ Deno.serve(async (req) => {
     //
     // Balance + cap_remaining still ship in the payload for AI-chat context
     // and diagnostics — just not surfaced as health-score alerts.
+    const LARGE_CAP_THRESHOLD_CENTS = 500_000; // R$5,000 — above this is user-set
     if (severity === "ok") {
       if (capPct !== null && capPct >= 0.99) {
-        severity = "critical";
-        message = "Limite de gastos atingido — entrega pausada pela Meta";
+        const isLargeUserSetCap = (spendCap || 0) > LARGE_CAP_THRESHOLD_CENTS;
+        if (isLargeUserSetCap) {
+          severity = "critical";
+          message = "Limite de gastos atingido — entrega pausada pela Meta";
+        } else {
+          severity = "warn";
+          message = "Limite automático Meta atingido — costuma ser elevado nas próximas horas";
+        }
       } else {
         message = "Conta ativa";
       }

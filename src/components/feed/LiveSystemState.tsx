@@ -215,7 +215,7 @@ export const LiveSystemState: React.FC<LiveSystemStateProps> = ({ userId }) => {
     headline = `R$ ${snap.recentWinSavedBrl.toFixed(2)} já evitados na última decisão`;
     headlineColor = '#34D399';
   } else if (snap.winCount > 0) {
-    headline = `${snap.winCount} decisão${snap.winCount === 1 ? '' : 'ões'} já validada${snap.winCount === 1 ? '' : 's'} pelo sistema`;
+    headline = `${snap.winCount} ${snap.winCount === 1 ? 'decisão já validada' : 'decisões já validadas'} pelo sistema`;
     headlineColor = '#34D399';
   } else if (snap.measuringCount > 0) {
     headline = `Validando o que funciona pra sua conta`;
@@ -252,13 +252,13 @@ export const LiveSystemState: React.FC<LiveSystemStateProps> = ({ userId }) => {
   if (snap.measuringCount > 0 && snap.nextMeasurementMs !== null && snap.nextMeasurementMs > 0) {
     bullets.push({
       dot: '#FBBF24',
-      label: `${snap.measuringCount} decisão${snap.measuringCount === 1 ? '' : 'ões'} sendo validada${snap.measuringCount === 1 ? '' : 's'}`,
+      label: `${snap.measuringCount} ${snap.measuringCount === 1 ? 'decisão sendo validada' : 'decisões sendo validadas'}`,
       sub: `pra identificar o que realmente funciona · próximo resultado em ${fmtRemaining(snap.nextMeasurementMs)}`,
     });
   } else if (snap.measuringCount > 0) {
     bullets.push({
       dot: '#FBBF24',
-      label: `${snap.measuringCount} decisão${snap.measuringCount === 1 ? '' : 'ões'} sendo validada${snap.measuringCount === 1 ? '' : 's'}`,
+      label: `${snap.measuringCount} ${snap.measuringCount === 1 ? 'decisão sendo validada' : 'decisões sendo validadas'}`,
       sub: 'pra identificar o que realmente funciona · resultado em até 72h',
     });
   }

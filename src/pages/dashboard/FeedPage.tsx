@@ -5895,6 +5895,55 @@ const FeedPage: React.FC = () => {
     return () => { cancelled = true; };
   }, [userId, isDemo]);
 
+  // ── lastAnalysisAt — drives the CommandStrip "Última análise" cell.
+  //
+  // The original source (tracker.last_active_date) is a DATE column that
+  // (a) often isn't populated for accounts whose money_tracker row hasn't
+  // been written yet, and (b) parses ambiguously across timezones, so the
+  // strip would just say "sincronizando…" forever.
+  //
+  // Fallback chain — first non-null wins:
+  //   1) Most recent action_outcomes.taken_at (the user just did something)
+  //   2) Most recent daily_snapshots.created_at (the system just ran a pass)
+  //   3) tracker.last_active_date with a noon-UTC suffix to avoid TZ shift
+  //
+  // Polled via the existing activityEvents fetch (action_outcomes is already
+  // queried there) plus a fresh daily_snapshots query.
+  const [snapshotLastAt, setSnapshotLastAt] = useState<string | null>(null);
+  useEffect(() => {
+    if (!userId || isDemo) { setSnapshotLastAt(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from('daily_snapshots')
+          .select('created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (!cancelled && data && data[0]?.created_at) {
+          setSnapshotLastAt(data[0].created_at);
+        }
+      } catch { /* silent */ }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, isDemo]);
+
+  const lastAnalysisAt: string | null = useMemo(() => {
+    // 1) Most recent activity event taken_at.
+    const recent = activityEvents[0]?.executed_at;
+    if (recent) return recent;
+    // 2) Latest daily_snapshots.created_at.
+    if (snapshotLastAt) return snapshotLastAt;
+    // 3) tracker.last_active_date — a DATE (YYYY-MM-DD); coerce to noon UTC
+    //    so the relative-time formatter doesn't swing across midnight.
+    const d = (tracker as any)?.last_active_date;
+    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      return `${d}T12:00:00Z`;
+    }
+    return d || null;
+  }, [activityEvents, snapshotLastAt, tracker]);
+
   // ── Tracking health — PIXEL-ONLY.
   // The big card only fires for deterministic pixel issues from Meta API (no_pixel,
   // pixel_stale, pixel_orphan). The heuristic "0 conversions + spend" case is
@@ -7607,7 +7656,7 @@ const FeedPage: React.FC = () => {
           userId={ctx.user?.id}
           killCount={pendingDecisions.filter(d => d.type === 'kill').length}
           criticalAlertCount={pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length}
-          lastAnalysisAt={(tracker as any)?.last_active_date || null}
+          lastAnalysisAt={lastAnalysisAt}
           accountSeverity={accountStatus?.severity || null}
         />
 
