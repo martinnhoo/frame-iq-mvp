@@ -3609,6 +3609,19 @@ export type Database = {
         Args: { p_account_id: string; p_amount: number; p_field: string }
         Returns: undefined
       }
+      intelligence_health: {
+        Args: { p_user_id: string }
+        Returns: {
+          metric: string
+          section: string
+          value: Json
+        }[]
+      }
+      intelligence_health_json: { Args: { p_user_id: string }; Returns: Json }
+      intelligence_health_summary: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
     }
     Enums: {
