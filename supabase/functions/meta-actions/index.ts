@@ -52,6 +52,69 @@ async function fetchTargetInfo(targetId: string, targetType: string, token: stri
   }
 }
 
+// Live status fetch — used by the no-op guard to avoid pause-of-paused
+// or enable-of-active. Meta returns multiple status flavors:
+//   status            = ad-level status set by user (ACTIVE, PAUSED)
+//   effective_status  = aggregate including parent state + review state
+//                       (CAMPAIGN_PAUSED, ADSET_PAUSED, ARCHIVED, WITH_ISSUES,
+//                        PENDING_REVIEW, DISAPPROVED, IN_PROCESS, etc.)
+// effective_status is the source of truth for "would this action change
+// anything?" — if it's anything other than ACTIVE, a pause is a no-op.
+async function fetchTargetStatus(
+  targetId: string,
+  token: string,
+): Promise<{ status: string | null; effective_status: string | null }> {
+  try {
+    const r = await fetch(
+      `${BASE}/${targetId}?fields=status,effective_status&access_token=${token}`,
+    );
+    const d = await r.json();
+    return {
+      status: d?.status || null,
+      effective_status: d?.effective_status || null,
+    };
+  } catch {
+    return { status: null, effective_status: null };
+  }
+}
+
+// Decide if a pause/enable would actually CHANGE anything. Returns a
+// canonical reason string when the action is a no-op (caller can return
+// it to the frontend as a clean error), or null when the action is
+// genuinely needed.
+//
+// Why we treat ALL non-ACTIVE effective_statuses as "already paused":
+// from the user's POV, the campaign isn't running. Whether Meta's
+// internal taxonomy calls it CAMPAIGN_PAUSED, ADSET_PAUSED, ARCHIVED,
+// WITH_ISSUES, PENDING_REVIEW, DISAPPROVED, IN_PROCESS, REJECTED — none
+// of those benefit from another pause call. Same for enable: only
+// PAUSED-by-user can be re-activated; ARCHIVED/DISAPPROVED can't.
+function evaluateNoOp(
+  action: "pause" | "enable",
+  effectiveStatus: string | null,
+  rawStatus: string | null,
+): { skip: true; reason: string; current_status: string } | null {
+  if (!effectiveStatus && !rawStatus) return null; // unknown — let it through, Meta API decides
+  const eff = String(effectiveStatus || rawStatus || "").toUpperCase();
+  if (action === "pause") {
+    // Anything other than literal ACTIVE means it's already not running.
+    if (eff !== "ACTIVE") {
+      return { skip: true, reason: "already_paused", current_status: eff };
+    }
+  } else if (action === "enable") {
+    // Only PAUSED (by user) can be cleanly re-enabled. Other states like
+    // ARCHIVED / DISAPPROVED / WITH_ISSUES need different remediation.
+    if (eff === "ACTIVE") {
+      return { skip: true, reason: "already_active", current_status: eff };
+    }
+    // ARCHIVED can't be re-enabled via simple status change.
+    if (eff === "ARCHIVED" || eff === "DISAPPROVED" || eff === "DELETED") {
+      return { skip: true, reason: `cannot_enable_${eff.toLowerCase()}`, current_status: eff };
+    }
+  }
+  return null;
+}
+
 // Local alias to the shared snapshot type, plus a thin wrapper that calls
 // the shared `fetchSnapshot` with a 7-day window — what meta-actions has
 // always used at action time. Crons use different windows (24h, 72h)
@@ -442,6 +505,37 @@ Deno.serve(async (req) => {
     if (action === "pause" || action === "enable") {
       const status = action === "pause" ? "PAUSED" : "ACTIVE";
       const tType = target_type || "ad";
+
+      // ── No-op guard (DETERMINISTIC, runs BEFORE any other work) ───────
+      // Why this layer exists: the chat AI sometimes ignores the FILTRO
+      // DE STATUS prompt rule and emits pause for already-paused targets
+      // (or enable for already-active). Even with the rule reinforced,
+      // soft compliance is unreliable for destructive/pointless actions.
+      // This guard is the safety net — it makes the no-op IMPOSSIBLE,
+      // not just discouraged.
+      //
+      // We refuse FAST (one cheap Meta API call) before fetching the
+      // 7-day insights snapshot, before writing to action_log, before
+      // writing action_outcomes — so a no-op has zero side effects.
+      const live = await fetchTargetStatus(target_id, token);
+      const noop = evaluateNoOp(action as "pause" | "enable", live.effective_status, live.status);
+      if (noop) {
+        console.log("[meta-actions] blocked no-op", { action, target_id, ...noop });
+        return ok({
+          success: false,
+          skipped: noop.reason,                     // 'already_paused' | 'already_active' | 'cannot_enable_archived' | ...
+          target_id,
+          target_name: body.target_name || null,
+          current_status: noop.current_status,
+          // Human-readable for the chat / UI to surface as a clean
+          // "nothing to do" message instead of "Meta API error".
+          message: noop.reason === "already_paused"
+            ? `Já está pausado (status: ${noop.current_status}). Nenhuma ação tomada.`
+            : noop.reason === "already_active"
+            ? `Já está ativo (status: ${noop.current_status}). Nenhuma ação tomada.`
+            : `Não é possível ${action === "pause" ? "pausar" : "ativar"} no estado ${noop.current_status}.`,
+        });
+      }
 
       // Fetch info before action
       const info = await fetchTargetInfo(target_id, tType, token);
