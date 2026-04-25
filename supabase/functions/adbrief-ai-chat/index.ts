@@ -3080,7 +3080,32 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 
 \`{ "type": "off_topic", "title": "máx 6 palavras", "content": "Redirecione + 1 sugestão concreta." }\`
 \`{ "type": "tool_call", "tool": "hooks|script|brief|competitor|translate", "tool_params": { "product": "...", "niche": "...", "market": "...", "platform": "...", "tone": "...", "angle": "...", "count": 5, "context": "..." } }\`
-\`{ "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "OBRIGATÓRIO — use o ID entre [colchetes] dos dados acima, ex: 123456789", "target_type": "campaign|adset|ad", "target_name": "nome do item", "value": "..." } }\`
+\`{ "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "OBRIGATÓRIO — use o ID entre [colchetes] dos dados acima, ex: 123456789", "target_type": "campaign|adset|ad", "target_name": "nome do item", "value": "...", "hypothesis": { "primary_cause": "OBRIGATÓRIO — uma das 12 causas canônicas listadas abaixo", "expected_effect": "stop_waste|scale_winner|improve_efficiency", "confidence": 0.0 } } }\`
+
+**CAUSAS CANÔNICAS — \`primary_cause\` OBRIGATÓRIO em TODA emissão de pause / enable / update_budget / duplicate:**
+
+Você DEVE incluir \`hypothesis.primary_cause\` em toda meta_action. Use UMA das 12 strings abaixo, EXATAS, sem inventar. Se omitir ou usar string fora da lista, o backend descarta silenciosamente e a ação NÃO entra no aprendizado da conta.
+
+  - \`creative_fatigue\`     → frequência alta + CTR caiu + ad rodando há semanas
+  - \`low_hook_strength\`    → primeiros 3s fracos, baixa retenção do vídeo
+  - \`wrong_audience\`       → targeting errado, baixa relevância, public mismatch
+  - \`budget_starvation\`    → budget muito baixo pro CPA alvo, sub-escalado
+  - \`tracking_gap\`         → sem conversão registrada / pixel quebrado / atribuição falha
+  - \`high_cpa\`             → custo por aquisição acima da meta
+  - \`low_ctr\`              → CTR abaixo do esperado pro nicho
+  - \`low_roas\`             → ROAS abaixo do break-even
+  - \`spend_waste\`          → gastando consistentemente sem retorno
+  - \`winning_signal\`       → performando acima da média (use pra enable / scale)
+  - \`high_frequency\`       → freq > 3, audiência saturada
+  - \`learning_phase\`       → campanha < 3 dias ou < 50 conversões, em aprendizado da Meta
+
+REGRAS DA HYPOTHESIS:
+- Se você tem CERTEZA da causa principal pelos dados → use ela.
+- Se está em DÚVIDA entre 2 → escolha a que MAIS bate com as métricas que justificam a ação.
+- NUNCA omita o campo. NUNCA use "unknown", null, "outro" ou qualquer string fora da lista — backend rejeita silenciosamente.
+- \`expected_effect\` é determinístico pela ação: pause→\`"stop_waste"\`, enable→\`"scale_winner"\`, update_budget(↑)→\`"scale_winner"\`, update_budget(↓)→\`"improve_efficiency"\`, duplicate→\`"scale_winner"\`.
+- \`confidence\`: 0.9+ quando dados claros e múltiplos sinais convergem; 0.5-0.7 quando inferência razoável; <0.5 nunca emita a ação.
+
 REGRA CRÍTICA para meta_action:
 - target_id DEVE ser o ID numérico real do Meta (entre [colchetes] nos dados da conta). NUNCA use "undefined" ou omita. Se não encontrar o ID, pergunte ao usuário ou use list_campaigns primeiro.
 - Quando emitir um meta_action: a resposta INTEIRA é APENAS o array JSON com o tool_call. ZERO prosa adicional. NÃO escreva "Pronto, pausado." ou "Vou pausar agora" ou "Próximo: ...". A UI vai mostrar a tela de confirmação ao usuário, ele clica, AÍ a ação roda. Se você escrever "Pronto, pausado" antes do clique, isso é mentira — a ação não foi executada ainda. Confie no fluxo.

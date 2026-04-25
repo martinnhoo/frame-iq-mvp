@@ -6,6 +6,7 @@ import {
   snapshotToJsonb as sharedSnapshotToJsonb,
   type MetricsSnapshot as SharedSnapshot,
 } from "../_shared/action-outcomes.ts";
+import { CANONICAL_CAUSES } from "../_shared/learned-patterns.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -229,10 +230,34 @@ async function writeActionOutcome(
 
     const target_level = (["ad", "adset", "campaign"].includes(params.target_type) ? params.target_type : "ad") as "ad" | "adset" | "campaign";
 
-    // Hypothesis: prefer chat-passed structured one; fall back to heuristic.
-    const hypothesis = (params.hypothesis && typeof params.hypothesis === "object" && params.hypothesis.primary_cause)
+    // Hypothesis resolution — chat-passed wins ONLY when it carries a
+    // canonical cause. We strict-validate here because allowing free-form
+    // strings poisons learned_patterns: today the chat says "low_ctr",
+    // tomorrow a tweak makes it say "ctr_low", and the same pattern
+    // fragments into separate buckets that never reach n≥3.
+    //
+    // Order:
+    //   1) Chat-passed hypothesis with primary_cause IN CANONICAL_CAUSES → use as-is
+    //   2) Otherwise → run regex parser on ai_reasoning (returns null cause if no match)
+    //   3) If parser also returns null → row still saves, pattern_candidate=false
+    //      (downstream gate handles it)
+    //
+    // The "unknown" string from legacy code paths is explicitly NOT canonical,
+    // so it falls through to step 2 — same as if no hypothesis was passed.
+    const passedCause = (params.hypothesis as any)?.primary_cause;
+    const passedCauseValid =
+      typeof passedCause === "string" && CANONICAL_CAUSES.has(passedCause);
+
+    const hypothesis = passedCauseValid
       ? params.hypothesis
       : parseHypothesisFromReasoning(params.ai_reasoning || null, params.action);
+
+    if (passedCause && !passedCauseValid) {
+      console.warn("[meta-actions] discarded non-canonical primary_cause", {
+        passed: passedCause,
+        canonical_size: CANONICAL_CAUSES.size,
+      });
+    }
 
     // pattern_candidate triple gate — every row MUST clear all three to
     // be eligible for learned_patterns aggregation. Anything missing →
