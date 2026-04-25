@@ -4,6 +4,9 @@ import type { DashboardContext, AccountAlert } from '@/components/dashboard/Dash
 import { MoneyBar } from '../../components/feed/MoneyBar';
 import { IntelligenceImpactStrip } from '../../components/feed/IntelligenceImpactStrip';
 import { FirstMomentOverlay } from '../../components/feed/FirstMomentOverlay';
+import { CommandStrip } from '../../components/feed/CommandStrip';
+import { HeroDecisionAnchor } from '../../components/feed/HeroDecisionAnchor';
+import { LearningPanel } from '../../components/feed/LearningPanel';
 import { SummaryBar } from '../../components/feed/SummaryBar';
 import { DecisionCard } from '../../components/feed/DecisionCard';
 import { useDecisions } from '../../hooks/useDecisions';
@@ -7508,48 +7511,53 @@ const FeedPage: React.FC = () => {
         {feedState === 'full' || feedState === 'demo' ? (
           <>
             {/* ═══════════════════════════════════════════════
-                ZONE 0 — INTELLIGENCE IMPACT STRIP (always-on)
-                Cumulative R$ saved by the AI's measured decisions over
-                the last 30 days, plus success rate. Pulled directly from
-                action_outcomes (the same dataset that drives learned
-                patterns) — so it represents real measured wins, not
-                tracker.total_saved which has separate provenance.
+                COMMAND CENTER REDESIGN — top of feed.
 
-                Lives ABOVE the "Dinheiro em risco" zone so it's visible
-                even when the account is healthy and MoneyBar collapses
-                to its no-loss state. This is the persistent proof
-                surface — every page-load reinforces "the system is
-                producing value".
-                ═══════════════════════════════════════════════ */}
-            <IntelligenceImpactStrip userId={ctx.user?.id} />
+                Replaced (in order): the old IntelligenceImpactStrip + the
+                "Dinheiro em risco" header + MoneyBar block. Same data is
+                still available below for users who want the full
+                breakdown — what changed is the FRONT PAGE narrative.
 
-            {/* ═══════════════════════════════════════════════
-                ZONE 1 — DINHEIRO EM RISCO (hero)
-                Primeiro impacto: quanto está sangrando agora.
+                New top-fold structure:
+                  1) CommandStrip   — sticky, status + freshness + R$ + accuracy
+                  2) HeroDecisionAnchor — the dominant visual anchor
+                  3) [decisions stack — existing, below]
+                  4) LearningPanel — patterns surfaced (after decisions)
+
+                Hero absorbs the lead message of MoneyBar; MoneyBar is
+                kept further down (or removed if redundant) so the
+                detailed leaking/capturable/saved trio still exists for
+                power users who want the dashboard view.
                 ═══════════════════════════════════════════════ */}
-            {tracker && (
-              <>
-                <div style={{
-                  fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-                  textTransform: 'uppercase' as const, color: T.labelColor,
-                  marginTop: 2, marginBottom: 10,
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.red, boxShadow: `0 0 6px ${T.red}50` }} />
-                  <span>Dinheiro em risco</span>
-                </div>
-                <div style={{ marginBottom: 24 }}>
-                  <MoneyBar
-                    leaking={(tracker as any).leaking_now || tracker.leaking_now}
-                    capturable={(tracker as any).capturable_now || tracker.capturable_now}
-                    totalSaved={(tracker as any).total_saved || 0}
-                    urgentCount={urgentCount}
-                    onStopLosses={hasKills && !isDemo ? handleStopLosses : undefined}
-                    onResolve={() => navigate('/dashboard/ai')}
-                  />
-                </div>
-              </>
-            )}
+            <CommandStrip
+              userId={ctx.user?.id}
+              killCount={pendingDecisions.filter(d => d.type === 'kill').length}
+              criticalAlertCount={pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length}
+              lastAnalysisAt={(tracker as any)?.last_active_date || null}
+            />
+
+            {/* HERO — single dominant block. Variant resolves automatically:
+                urgent | stable | loading. Receives raw decision counts
+                so it can frame the message correctly. */}
+            <HeroDecisionAnchor
+              recoverableDailyCents={tracker ? ((tracker as any).leaking_now || tracker.leaking_now || 0) : 0}
+              killCount={pendingDecisions.filter(d => d.type === 'kill').length}
+              otherActionCount={pendingDecisions.filter(d => d.type !== 'kill').length}
+              topOpportunityName={(() => {
+                const sorted = [...pendingDecisions].sort((a, b) => (b.impact_daily || 0) - (a.impact_daily || 0));
+                return sorted[0]?.ad?.name || sorted[0]?.headline || null;
+              })()}
+              hasData={adsLoaded && totalAdCount > 0}
+              onPrimaryClick={() => {
+                if (hasKills && !isDemo) {
+                  handleStopLosses();
+                } else {
+                  // No urgency — scroll to the decisions stack.
+                  const el = document.getElementById('acoes-prioritarias');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
+            />
 
             {/* ═══════════════════════════════════════════════
                 ZONE 2 — AÇÕES PRIORITÁRIAS (ação guiada)
@@ -7589,6 +7597,23 @@ const FeedPage: React.FC = () => {
               </div>
             )}
             <FlowSection decisions={pendingDecisions} onAction={handleAction} isDemo={isDemo} mode="all" />
+
+            {/* ═══════════════════════════════════════════════
+                ZONE 3 — APRENDIZADO DA CONTA (LearningPanel)
+                Surfaces patterns the system has learned from THIS user's
+                actions. Renders honest 3-state UI:
+                  empty   → motivational empty state
+                  forming → "X / 3 actions until first pattern"
+                  active  → top patterns with bar + n/m + context
+
+                Lives below the priority decisions stack so the user
+                sees the IMMEDIATE actions first, then the META-knowledge
+                ("here's what the system has learned about your account
+                from past decisions").
+                ═══════════════════════════════════════════════ */}
+            <div style={{ marginTop: 18 }}>
+              <LearningPanel userId={ctx.user?.id} maxRows={4} />
+            </div>
           </>
         ) : feedState === 'no-ads' ? (
           <CommandHero
