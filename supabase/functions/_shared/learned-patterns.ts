@@ -236,10 +236,14 @@ export async function getLearnedPatterns(
     });
   }
 
-  // Sort by evidence strength — biggest n first, then by success_rate.
-  // This keeps "we tried this 12 times" above "we tried this 3 times"
-  // even when the latter has higher % success but weaker base.
-  patterns.sort((a, b) => (b.n - a.n) || (b.success_rate - a.success_rate));
+  // Sort by evidence strength — score = successes (mathematically equal
+  // to n * success_rate, which is the "consistency × volume" metric
+  // Martinho specified). Beats the previous (n desc, success_rate desc)
+  // sort in the case that matters: 3/3 ranks above 2/10 (3 successes >
+  // 2 successes), even though the old sort would surface 2/10 first
+  // because n=10 is larger. Surfacing failing-but-large patterns ahead
+  // of small-but-clean ones is exactly what we don't want.
+  patterns.sort((a, b) => (b.successes - a.successes) || (b.success_rate - a.success_rate));
 
   return { patterns: patterns.slice(0, MAX_PATTERN_LINES), totalCandidateRows };
 }
@@ -274,8 +278,17 @@ export function formatLearnedPatternsBlock(
     const causeLabel = CAUSE_LABELS_PT[p.primary_cause] || p.primary_cause;
     const actionLabel = humanizeAction(p.action_type, p.evaluation_metric);
     const pct = Math.round(p.success_rate * 100);
-    // "Pausar campanha por fadiga criativa (spend evitado): 3/3 casos (100%)"
-    const main = `  • ${actionLabel} por ${causeLabel}: ${p.successes}/${p.n} casos (${pct}% de sucesso)`;
+    // Sample-size caveat — when n hits the floor (3), the percentage is
+    // arithmetically true but statistically thin. "3/3 (100%)" reads as
+    // certainty; "3/3 (amostra pequena, sinal inicial)" reads as the
+    // honest signal it is. Removes the % to avoid the fake-confidence
+    // anchor while keeping the success count visible.
+    const isSmallSample = p.n <= MIN_N;
+    const sampleStr = isSmallSample
+      ? `${p.successes}/${p.n} casos (amostra pequena — sinal inicial, não conclusivo)`
+      : `${p.successes}/${p.n} casos (${pct}% de sucesso)`;
+    // "Pausar campanha por fadiga criativa (spend evitado): X/Y casos (...)"
+    const main = `  • ${actionLabel} por ${causeLabel}: ${sampleStr}`;
 
     // ── Outcome detail (what happened) ────────────────────────────────
     const outcome: string[] = [];
@@ -314,7 +327,10 @@ export function formatLearnedPatternsBlock(
     "COMO USAR:",
     "- Ao recomendar uma das ações ACIMA, cite o histórico naturalmente: \"funcionou em 4/5 casos similares aqui — pausa por fadiga criativa quando CTR estava perto desse nível\".",
     "- A causa importa MAIS que o tipo de ação. \"Pausar por fadiga\" e \"pausar por budget baixo\" são padrões DIFERENTES — não misture.",
-    "- Compare a situação atual com o contexto pré (CTR / spend listados). Se bater, o padrão é forte sinal. Se não bater, é só referência.",
+    "- **Match check de similaridade (FAÇA antes de invocar o padrão)**: compare a situação atual contra o contexto pré listado.",
+    "    • CTR atual dentro de ±0.5pp do CTR pré E spend atual dentro de ±50% do spend pré → **cenário muito semelhante**, padrão é forte sinal — pode citar o histórico com confiança.",
+    "    • Fora desses limites → **cenário diferente**, use o padrão APENAS como referência. NÃO cite o número de sucesso como se aplicasse aqui — diga algo como \"em situações parecidas X funcionou, mas o contexto atual é diferente; estou recomendando com cautela\".",
+    "- Se uma linha diz \"amostra pequena — sinal inicial\", NUNCA apresente como certeza. Use \"primeiro indício de que...\", nunca \"sempre funciona\".",
     "- NUNCA invente padrões fora desta lista. Se não estiver aqui, diga \"primeira vez testando isso nesta situação\".",
     "- Esses números são evidência, não promessa — apresente como histórico, não garantia futura.",
   ].join("\n");
