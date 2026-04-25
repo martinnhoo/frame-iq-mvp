@@ -41,6 +41,10 @@ interface CommandStripProps {
   criticalAlertCount?: number;
   /** ISO timestamp of last sync / analysis pass — drives the freshness label. */
   lastAnalysisAt?: string | null;
+  /** Account-level severity from Meta (spend cap, billing, etc).
+   *  When 'critical', forces the status pill to URGENTE regardless
+   *  of decision counts. */
+  accountSeverity?: 'ok' | 'warn' | 'critical' | 'unknown' | null;
 }
 
 type Stats = {
@@ -55,6 +59,7 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
   killCount = 0,
   criticalAlertCount = 0,
   lastAnalysisAt = null,
+  accountSeverity = null,
 }) => {
   const [stats, setStats] = useState<Stats | null>(null);
 
@@ -88,12 +93,15 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
   }, [userId]);
 
   // ── Status logic ─────────────────────────────────────────────────────
-  // Priority: critical alert > active kill > stable. Three discrete states
-  // because the strip needs to communicate at-a-glance, not nuance.
+  // Priority: account-critical > critical alert > active kill > stable.
+  // Account-critical = Meta-level issue (spend cap, billing) which trumps
+  // everything else: no point flagging an ad-level kill when delivery
+  // is paused for the entire account.
   const status = (() => {
+    if (accountSeverity === 'critical') return { label: 'CONTA BLOQUEADA', color: '#EF4444', dot: '#F87171', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.24)' };
     if (criticalAlertCount > 0) return { label: 'URGENTE', color: '#EF4444', dot: '#F87171', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.20)' };
     if (killCount > 0) return { label: 'ATENÇÃO', color: '#F59E0B', dot: '#FBBF24', bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.20)' };
-    return { label: 'ESTÁVEL', color: '#10B981', dot: '#34D399', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.18)' };
+    return { label: 'MONITORANDO', color: '#10B981', dot: '#34D399', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.18)' };
   })();
 
   // ── Freshness label ──────────────────────────────────────────────────
@@ -109,12 +117,15 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
   })();
 
   // ── Stats labels ─────────────────────────────────────────────────────
+  // Empty cells don't render "—" (reads as "broken"). They render a
+  // forward-looking phrase that reinforces "system is at work, just
+  // waiting on first measurement". Honest + alive.
   const moneyLabel = stats && stats.totalSavedBrl > 0
     ? formatMoney(Math.round(stats.totalSavedBrl * 100))
-    : '—';
+    : (stats && stats.measuringCount > 0 ? 'medindo…' : 'sem ações ainda');
   const accuracyLabel = stats && (stats.wins + stats.losses > 0)
     ? `${stats.wins}/${stats.wins + stats.losses} (${Math.round((stats.wins / (stats.wins + stats.losses)) * 100)}%)`
-    : '—';
+    : (stats && stats.measuringCount > 0 ? `${stats.measuringCount} em medição` : 'sem ações ainda');
 
   return (
     <div

@@ -7010,19 +7010,15 @@ const FeedPage: React.FC = () => {
         )}
 
         {/* ═══════════════════════════════════════════════
-            LAYER 1 — COMMAND DECK (premium, v3)
-            One elevated surface answering "what's happening, how much
-            moved, and how honest is this data". Now carries:
-              • Top status strip — live tone-adaptive dot, state label,
-                last-analysis, period picker, sync. Replaces the old big
-                green "monitorando tudo" card.
-              • Body — eyebrow label, headline, subtitle.
-              • KPI row — staggered fade-up, bigger tabular numbers,
-                vertical dividers.
-              • Ambient glow — radial wash in the tone color behind the
-                headline, so the whole deck inherits the account's mood.
+            LAYER 1 — COMMAND DECK (REMOVED — see CommandStrip + HeroDecisionAnchor above)
+            The 4-KPI card row (Investido / Gasto perdido / ROAS / Conversões) +
+            "CENTRAL DE COMANDO · Sua operação em tempo real" header was deleted
+            in commit c5e... — they competed with the new Hero for attention,
+            showed generic dashboard metrics instead of decision-driving signal,
+            and per design brief failed the "so what?" test. Old code kept in
+            git history; the new top-fold owns the lead message.
             ═══════════════════════════════════════════════ */}
-        {(() => {
+        {false && (() => {
           // Derive the ambient tone from real signals. Priority:
           //   1. critical decisions → 'critical'
           //   2. account status warn/critical → matches
@@ -7527,6 +7523,7 @@ const FeedPage: React.FC = () => {
           killCount={pendingDecisions.filter(d => d.type === 'kill').length}
           criticalAlertCount={pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length}
           lastAnalysisAt={(tracker as any)?.last_active_date || null}
+          accountSeverity={accountStatus?.severity || null}
         />
 
         <HeroDecisionAnchor
@@ -7538,11 +7535,24 @@ const FeedPage: React.FC = () => {
             return sorted[0]?.ad?.name || sorted[0]?.headline || null;
           })()}
           hasData={adsLoaded && totalAdCount > 0}
+          accountSeverity={accountStatus?.severity || null}
+          accountStatusMessage={accountStatus?.message || null}
           onPrimaryClick={() => {
+            // Account-level critical issue → route the user to the chat
+            // with the right diagnostic prompt instead of scrolling. No
+            // ad-level action will help if delivery is paused for the
+            // whole account.
+            if (accountStatus?.severity === 'critical' && !isDemo) {
+              navigate('/dashboard/ai?prompt=' + encodeURIComponent(
+                'Minha conta está com problema crítico no Meta (' +
+                (accountStatus?.message || 'limite ou status') +
+                '). Me explica o que aconteceu, como resolver e o que dá pra fazer enquanto isso.'
+              ));
+              return;
+            }
             if (hasKills && !isDemo) {
               handleStopLosses();
             } else {
-              // No urgency — scroll to the decisions stack.
               const el = document.getElementById('acoes-prioritarias');
               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }

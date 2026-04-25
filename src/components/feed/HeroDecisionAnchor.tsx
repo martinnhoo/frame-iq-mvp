@@ -51,6 +51,17 @@ interface HeroDecisionAnchorProps {
   hasData: boolean;
   /** Click handler for the primary CTA. */
   onPrimaryClick?: () => void;
+  /** Account-level severity from Meta status (spend cap, billing, etc).
+   *  When 'critical', overrides everything else and Hero renders the
+   *  account-level alert instead of decision-driven copy. */
+  accountSeverity?: 'ok' | 'warn' | 'critical' | 'unknown' | null;
+  /** Specific human message tied to accountSeverity (e.g. "Limite de gastos
+   *  atingido — entrega pausada pela Meta"). Only used when severity is
+   *  critical or warn. */
+  accountStatusMessage?: string | null;
+  /** Optional CTA label override (used when accountSeverity is critical
+   *  to show "Entender o limite" instead of "Resolver agora"). */
+  primaryCtaLabel?: string;
 }
 
 export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
@@ -60,19 +71,40 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
   topOpportunityName,
   hasData,
   onPrimaryClick,
+  accountSeverity = null,
+  accountStatusMessage = null,
+  primaryCtaLabel,
 }) => {
   const recoverableBrl = Math.round(recoverableDailyCents / 100);
   const totalActions = killCount + otherActionCount;
 
-  // ── Variant resolution ─────────────────────────────────────────────────
-  let variant: 'urgent' | 'stable' | 'loading';
-  if (!hasData) variant = 'loading';
+  // ── Variant resolution (priority order) ───────────────────────────────
+  // accountSeverity='critical' takes precedence over decision-level signals
+  // because Meta-level issues (spend cap, billing, disabled account) BLOCK
+  // ALL other actions. No point recommending "pause this ad" when delivery
+  // is paused for the entire account.
+  let variant: 'critical_account' | 'urgent' | 'stable' | 'loading';
+  if (accountSeverity === 'critical') variant = 'critical_account';
+  else if (!hasData) variant = 'loading';
   else if (killCount > 0 || recoverableBrl > 0) variant = 'urgent';
   else variant = 'stable';
 
   // Color tokens per variant. Discipline: each variant uses ONE accent
   // color. No mix. The user reads the color before the words.
   const tokens = {
+    critical_account: {
+      // Same red palette as urgent but kicker copy frames the account-
+      // level nature of the issue ("CONTA BLOQUEADA" vs "AÇÃO REQUERIDA").
+      // Tighter ambient glow because the message is text-heavy not number-heavy.
+      kicker: 'CONTA BLOQUEADA POR META',
+      kickerColor: '#F87171',
+      kickerBg: 'rgba(239,68,68,0.12)',
+      kickerBorder: 'rgba(239,68,68,0.28)',
+      number: '#F87171',
+      ctaBg: '#DC2626',
+      ctaHover: '#B91C1C',
+      ambientGlow: 'rgba(239,68,68,0.14)',
+    },
     urgent: {
       kicker: 'AÇÃO REQUERIDA',
       kickerColor: '#F87171',
@@ -167,6 +199,37 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
       </div>
 
       {/* Hero content */}
+      {variant === 'critical_account' && (
+        <>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 'clamp(26px, 4.4vw, 36px)',
+              fontWeight: 800,
+              color: '#F0F6FC',
+              letterSpacing: '-0.035em',
+              lineHeight: 1.18,
+              maxWidth: 720,
+            }}
+          >
+            {accountStatusMessage || 'A Meta bloqueou a entrega da sua conta.'}
+          </h2>
+          <p
+            style={{
+              margin: '12px 0 0',
+              fontSize: 'clamp(13px, 1.4vw, 15px)',
+              color: 'rgba(240,246,252,0.65)',
+              lineHeight: 1.5,
+              maxWidth: 580,
+            }}
+          >
+            Enquanto isso, qualquer recomendação de pause / escala fica em espera —
+            nada vai entregar até resolver isso primeiro. Eu te ajudo a entender o
+            que aconteceu e o que dá pra fazer agora.
+          </p>
+        </>
+      )}
+
       {variant === 'urgent' && (
         <>
           <h2
@@ -236,7 +299,7 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
               lineHeight: 1.15,
             }}
           >
-            Conta operando estável
+            Nenhuma perda ativa agora
           </h2>
           <p
             style={{
@@ -244,10 +307,11 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
               fontSize: 'clamp(13px, 1.4vw, 15px)',
               color: 'rgba(240,246,252,0.62)',
               lineHeight: 1.5,
-              maxWidth: 540,
+              maxWidth: 580,
             }}
           >
-            Sem urgência detectada agora. Continuo monitorando a cada 15 min — te aviso assim que algo mudar.
+            Sistema monitorando suas campanhas continuamente. Cada 15 min eu releio CTR,
+            CPA e frequência — assim que algo fugir do padrão, eu te chamo aqui mesmo.
           </p>
         </>
       )}
@@ -281,7 +345,9 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
       )}
 
       {/* CTA — primary action, only renders when there's something to do */}
-      {(variant === 'urgent' || (variant === 'stable' && totalActions > 0)) && onPrimaryClick && (
+      {(variant === 'critical_account'
+        || variant === 'urgent'
+        || (variant === 'stable' && totalActions > 0)) && onPrimaryClick && (
         <div style={{ marginTop: 22 }}>
           <button
             onClick={onPrimaryClick}
@@ -292,15 +358,15 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
               padding: '12px 22px',
               borderRadius: 10,
               background: t.ctaBg,
-              color: variant === 'urgent' ? '#fff' : 'rgba(240,246,252,0.92)',
-              border: variant === 'urgent' ? 'none' : '1px solid rgba(255,255,255,0.10)',
+              color: variant === 'urgent' || variant === 'critical_account' ? '#fff' : 'rgba(240,246,252,0.92)',
+              border: variant === 'urgent' || variant === 'critical_account' ? 'none' : '1px solid rgba(255,255,255,0.10)',
               fontFamily: F,
               fontSize: 13.5,
               fontWeight: 700,
               cursor: 'pointer',
               transition: 'all 0.18s ease',
               letterSpacing: '-0.005em',
-              boxShadow: variant === 'urgent' ? `0 0 24px ${t.ambientGlow}` : 'none',
+              boxShadow: variant === 'urgent' || variant === 'critical_account' ? `0 0 24px ${t.ambientGlow}` : 'none',
             }}
             onMouseEnter={e => {
               (e.currentTarget as HTMLElement).style.background = t.ctaHover;
@@ -311,7 +377,10 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
               (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
             }}
           >
-            {variant === 'urgent' ? 'Resolver agora' : 'Explorar oportunidades'}
+            {primaryCtaLabel
+              || (variant === 'critical_account' ? 'Entender o que fazer'
+                : variant === 'urgent' ? 'Resolver agora'
+                : 'Explorar oportunidades')}
             <ArrowRight size={14} strokeWidth={2.4} />
           </button>
         </div>

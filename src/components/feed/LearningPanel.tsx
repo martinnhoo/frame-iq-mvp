@@ -185,24 +185,46 @@ export const LearningPanel: React.FC<LearningPanelProps> = ({ userId, maxRows = 
   }
 
   if (!patterns || patterns.length === 0) {
+    // Two empty sub-states with deliberately different copy:
+    //  - FORMING: user has measured outcomes but no bucket reached n=3.
+    //    Surface progress + next-pattern timeline.
+    //  - PRISTINE: zero outcomes. Surface the deal — "first action unlocks
+    //    the loop", not "system is empty".
+    const isForming = thinSamples > 0;
     return (
       <Shell>
         <Header
           label="Aprendizado da conta"
-          sub={thinSamples > 0
-            ? `${thinSamples} ações medidas — esperando atingir ${3} casos por padrão`
-            : 'começa após sua 1ª ação'}
+          sub={isForming
+            ? `${thinSamples} ${thinSamples === 1 ? 'ação medida — primeiro padrão precisa de mais 3 do mesmo tipo' : 'ações medidas — esperando atingir 3 do mesmo tipo'}`
+            : 'cada ação aprovada vira evidência'}
         />
-        <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Brain size={28} strokeWidth={1.6} color="rgba(56,189,248,0.5)" style={{ alignSelf: 'flex-start' }} />
-          <p style={{ fontSize: 13, color: 'rgba(240,246,252,0.7)', lineHeight: 1.55, margin: 0 }}>
-            Cada decisão aprovada vira evidência catalogada por causa.
-            Quando você atingir 3 ações da mesma combinação, nasce o
-            primeiro padrão dessa conta.
-          </p>
-          <p style={{ fontSize: 11.5, color: 'rgba(240,246,252,0.4)', margin: '4px 0 0' }}>
-            Hoje: {thinSamples} / 3 (mínimo por padrão)
-          </p>
+        <div style={{ padding: '18px 16px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <Brain size={26} strokeWidth={1.6} color="rgba(56,189,248,0.55)" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {isForming ? (
+              <>
+                <p style={{ fontSize: 13, color: '#F0F6FC', lineHeight: 1.55, margin: '0 0 6px', fontWeight: 600 }}>
+                  Sistema já está catalogando suas decisões.
+                </p>
+                <p style={{ fontSize: 12.5, color: 'rgba(240,246,252,0.6)', lineHeight: 1.5, margin: 0 }}>
+                  Cada combinação <strong style={{ color: '#F0F6FC' }}>(ação × causa)</strong> precisa de 3 medições
+                  pra virar um padrão confiável. A medição leva ~72h por ação — então o primeiro padrão
+                  costuma aparecer dentro de poucos dias de uso.
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: 13, color: '#F0F6FC', lineHeight: 1.55, margin: '0 0 6px', fontWeight: 600 }}>
+                  O loop começa na sua próxima decisão.
+                </p>
+                <p style={{ fontSize: 12.5, color: 'rgba(240,246,252,0.6)', lineHeight: 1.5, margin: 0 }}>
+                  Toda ação aprovada (pause, escala, ajuste) vira evidência catalogada por causa.
+                  3 ações da mesma combinação = primeiro padrão da SUA conta.
+                </p>
+              </>
+            )}
+          </div>
         </div>
       </Shell>
     );
