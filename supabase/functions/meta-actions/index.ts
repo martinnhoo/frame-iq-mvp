@@ -47,6 +47,43 @@ async function fetchTargetInfo(targetId: string, targetType: string, token: stri
   }
 }
 
+// Safety snapshot: last-7-days metrics for the target. Used by the pause
+// guard so we don't blindly pause an ad that's actually converting (low CTR
+// but generating leads/sales is a winning audience pattern, not a loser).
+async function fetchRecentMetricsSnapshot(targetId: string, targetType: string, token: string): Promise<{
+  conversions: number;
+  spend: number;
+  ctr: number;
+  cpa: number | null;
+  roas: number | null;
+  days: number;
+} | null> {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const since = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+    const fields = "spend,clicks,impressions,ctr,actions,action_values,website_purchase_roas";
+    // Same insights endpoint Meta uses for adset/ad/campaign — works at all 3 levels.
+    const r = await fetch(`${BASE}/${targetId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${today}"}&access_token=${token}`);
+    const d = await r.json();
+    const row = (d.data || [])[0];
+    if (!row) return null;
+    const spend = parseFloat(row.spend || "0");
+    const ctr = parseFloat(row.ctr || "0") / 100; // Meta returns CTR as percentage already
+    // Sum conversion-like actions
+    const actions = (row.actions || []) as any[];
+    const convTypes = ["purchase", "lead", "complete_registration", "app_install", "submit_application", "subscribe"];
+    const conversions = actions
+      .filter((a: any) => convTypes.includes(a.action_type))
+      .reduce((s, a) => s + parseFloat(a.value || "0"), 0);
+    const cpa = conversions > 0 ? spend / conversions : null;
+    const roasArr = (row.website_purchase_roas || []) as any[];
+    const roas = roasArr[0]?.value ? parseFloat(roasArr[0].value) : null;
+    return { conversions, spend, ctr, cpa, roas, days: 7 };
+  } catch {
+    return null;
+  }
+}
+
 // For ads: estimate proportional daily impact from parent adset
 async function estimateAdDailyImpact(targetId: string, token: string): Promise<number | null> {
   try {
@@ -243,6 +280,32 @@ Deno.serve(async (req) => {
       // Fetch info before action
       const info = await fetchTargetInfo(target_id, tType, token);
       const targetName = body.target_name || info.name;
+
+      // ── Pause safety guard ────────────────────────────────────────────────
+      // Block pause when the target had real conversions in the last 7 days
+      // unless the caller explicitly passed force:true. This prevents the AI
+      // (or a hasty user) from killing a "low CTR but converting" winner —
+      // small qualified audience, exactly the kind of ad that should NOT be
+      // pausing on a CTR-only signal. Caller can override by re-sending the
+      // request with force:true after seeing the snapshot.
+      if (action === "pause" && !body.force) {
+        const snapshot = await fetchRecentMetricsSnapshot(target_id, tType, token);
+        if (snapshot && snapshot.conversions > 0) {
+          return ok({
+            success: false,
+            blocked: true,
+            requires_force: true,
+            target_id,
+            target_name: targetName,
+            snapshot,
+            // Human-readable summary the frontend can show in the
+            // override-confirmation modal.
+            warning: `Esse anúncio teve ${snapshot.conversions.toFixed(0)} conversões em ${snapshot.days}d (R$ ${snapshot.spend.toFixed(2)} gastos${snapshot.cpa ? `, CPA R$ ${snapshot.cpa.toFixed(2)}` : ''}${snapshot.roas ? `, ROAS ${snapshot.roas.toFixed(2)}x` : ''}). CTR baixo + conversão = audiência pequena qualificada, geralmente é WINNER. Pausar mesmo assim?`,
+            message: "Pause bloqueado por segurança — anúncio está convertendo. Reenvie com force:true pra confirmar.",
+          }, 200);
+        }
+      }
+      // ──────────────────────────────────────────────────────────────────────
 
       // Estimate daily impact for pause actions
       let dailyImpact: number | null = null;

@@ -3059,6 +3059,14 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 REGRA CRÍTICA para meta_action:
 - target_id DEVE ser o ID numérico real do Meta (entre [colchetes] nos dados da conta). NUNCA use "undefined" ou omita. Se não encontrar o ID, pergunte ao usuário ou use list_campaigns primeiro.
 - Quando emitir um meta_action: a resposta INTEIRA é APENAS o array JSON com o tool_call. ZERO prosa adicional. NÃO escreva "Pronto, pausado." ou "Vou pausar agora" ou "Próximo: ...". A UI vai mostrar a tela de confirmação ao usuário, ele clica, AÍ a ação roda. Se você escrever "Pronto, pausado" antes do clique, isso é mentira — a ação não foi executada ainda. Confie no fluxo.
+
+REGRA DE DECISÃO PRA PAUSE/ENABLE (anti-CTR-tunnel):
+- ANTES de emitir meta_action:"pause", revise os dados do alvo no contexto (não só CTR — TAMBÉM conversões, CPA, ROAS, spend, frequência). CTR baixo SOZINHO NUNCA justifica pause.
+- Se o alvo tem conversões > 0 OU ROAS positivo OU CPA dentro da meta: NÃO emita pause. Em vez disso, devolva um bloco "insight" explicando: "CTR 2.35% é baixo, MAS gerou X conversões a R$Y de CPA. Audiência pequena mas qualificada — geralmente é winner. Pausar?". Espere o usuário insistir antes de emitir o meta_action.
+- Pause só se justifica quando há combinação: CTR baixo + zero conversão + spend significativo (>3x CPA alvo) OU frequência >4 OU verbose claim de fadiga nos padrões. Combine 2+ sinais.
+- O campo "context" do meta_action DEVE citar pelo menos 2 métricas — ex: `"context": "CTR 2.35% + 0 conversão em R$45 spend = sangrando sem retorno"`. Nunca uma métrica só.
+- Mesma lógica pra meta_action:"enable"/"update_budget" — não escale só porque CTR subiu, valide com conversão/ROAS antes.
+- Backend tem guard: se você emitir pause num anúncio convertendo, a ação será bloqueada e o usuário verá o snapshot. Não dependa do guard — pense antes.
 \`{ "type": "navigate", "route": "/dashboard/...", "cta": "..." }\`
 \`{ "type": "limit_warning", "title": "", "content": "...", "is_limit_warning": true, "will_hit_limit": true|false }\`
 

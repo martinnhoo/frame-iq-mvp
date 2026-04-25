@@ -3401,13 +3401,35 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     catch{}
   };
 
-  const executeMetaAction=async(block:Block)=>{
+  const executeMetaAction=async(block:Block, opts?:{force?:boolean})=>{
     // source:"chat" → meta-actions logs to action_log with the right
     // attribution, so chat-initiated pauses are distinguishable from
     // Feed/Autopilot ones in the user's history.
+    // force:true → override the backend's "this ad is converting" guard.
+    // Only set after user explicitly confirms in the override modal.
     const{data,error}=await supabase.functions.invoke("meta-actions",{
-      body:{action:block.meta_action,user_id:user.id,persona_id:selectedPersona?.id||null,target_id:block.target_id,target_type:block.target_type,target_name:block.target_name||null,value:block.value,source:"chat",ai_reasoning:(block as any).context||null}
+      body:{action:block.meta_action,user_id:user.id,persona_id:selectedPersona?.id||null,target_id:block.target_id,target_type:block.target_type,target_name:block.target_name||null,value:block.value,source:"chat",ai_reasoning:(block as any).context||null,force:opts?.force===true}
     });
+
+    // ── Pause-safety override flow ──────────────────────────────────────────
+    // Backend can return success:false + requires_force:true when the user
+    // tries to pause a converting ad without force=true. We surface the
+    // snapshot to the user and ask explicitly: "still pause?" If yes, retry
+    // with force:true. This protects winning audiences from accidental cuts.
+    if(data?.requires_force && !opts?.force){
+      const ok = window.confirm(
+        `${data.warning || "Este anúncio está convertendo. Pausar mesmo assim?"}\n\n` +
+        `Clique OK pra pausar mesmo assim, ou Cancelar pra desistir.`
+      );
+      if(ok){
+        return executeMetaAction(block, { force: true });
+      } else {
+        const id=Date.now();
+        setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"insight",title:"Pause cancelado",content:"Boa decisão — anúncio com conversão é audiência qualificada. Mantido ativo."}]}]);
+        return;
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     // Parse real error from edge function response (supabase SDK hides it)
     let realError: string|null = null;
