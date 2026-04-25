@@ -3085,6 +3085,7 @@ REGRA CRÍTICA para meta_action:
 - target_id DEVE ser o ID numérico real do Meta (entre [colchetes] nos dados da conta). NUNCA use "undefined" ou omita. Se não encontrar o ID, pergunte ao usuário ou use list_campaigns primeiro.
 - Quando emitir um meta_action: a resposta INTEIRA é APENAS o array JSON com o tool_call. ZERO prosa adicional. NÃO escreva "Pronto, pausado." ou "Vou pausar agora" ou "Próximo: ...". A UI vai mostrar a tela de confirmação ao usuário, ele clica, AÍ a ação roda. Se você escrever "Pronto, pausado" antes do clique, isso é mentira — a ação não foi executada ainda. Confie no fluxo.
 - **BULK (múltiplas ações na mesma resposta)**: quando o usuário pedir algo que afeta N alvos ("pausar TODAS", "ativar todas as paradas", "mudar budget de todas as ativas"), retorne UM ÚNICO array JSON contendo N objetos tool_call separados por vírgula, dentro de \`[\` e \`]\`. Exemplo EXATO de formato esperado: \`[{"type":"tool_call","tool":"meta_action","tool_params":{"meta_action":"pause","target_id":"1","target_type":"campaign","target_name":"A"}},{"type":"tool_call","tool":"meta_action","tool_params":{"meta_action":"pause","target_id":"2","target_type":"campaign","target_name":"B"}}]\`. NUNCA emita objetos soltos sem brackets. NUNCA quebre em múltiplos arrays. NUNCA intercale prosa. Cada bloco vira UMA confirmação na UI; o usuário aprova cada uma individualmente.
+- **REGRA DE OURO ANTI-MENTIRA**: depois do \`]\` final de QUALQUER resposta meta_action (single ou bulk), ZERO caracteres. Nada de "Pronto", "Todas pausadas", "Conta em pausa total", "Próximo passo", "Aguardando confirmação" etc. Qualquer texto após \`]\` é interpretado pela UI como falha de parse E como mentira (ação não rodou ainda — está esperando o clique do usuário). Resposta meta_action válida começa com \`[\` e termina com \`]\`. Ponto.
 
 REGRA DE DECISÃO PRA PAUSE/ENABLE (anti-CTR-tunnel):
 - ANTES de emitir meta_action:"pause", revise os dados do alvo no contexto (não só CTR — TAMBÉM conversões, CPA, ROAS, spend, frequência). CTR baixo SOZINHO NUNCA justifica pause.
@@ -3308,6 +3309,10 @@ REGRAS DE COMPORTAMENTO NESTE MODO:
     } catch (_) { /* non-fatal */ }
 
     const raw = anthropicResult.content?.[0]?.type === "text" ? anthropicResult.content[0].text : "[]";
+    // Version marker to confirm in Supabase logs which parser shipped.
+    // Bump when meaningfully changing recovery logic so we can tell at
+    // a glance whether a deploy actually went out.
+    console.log("[ai-chat] response-parser v3 — bracket-balanced + bulk recovery");
     let blocks;
     try {
       const cleaned = raw.replace(/```json|```/g, "").trim();
@@ -3320,22 +3325,56 @@ REGRAS DE COMPORTAMENTO NESTE MODO:
         throw new Error("not array");
       }
     } catch {
-      // Claude sometimes returns multiple JSON arrays like [{...}][{...}] — merge them
-      try {
-        const matches = [...raw.matchAll(/\[[\s\S]*?\]/g)];
-        const merged: any[] = [];
-        for (const m of matches) {
-          try {
-            const arr = JSON.parse(m[0]);
-            if (Array.isArray(arr)) merged.push(...arr);
-          } catch {
-            /* skip invalid */
+      // ── Bracket-balanced array extractor ────────────────────────────────
+      // The previous merge regex /\[[\s\S]*?\]/g was non-greedy and would
+      // truncate at the first `]` it saw — including brackets inside string
+      // values like `"target_name": "[AdBrief] Cadastro"`. Real bug seen
+      // in production: a campaign named "[AdBrief] Cadastro · LP" caused
+      // the entire bulk-pause response to fall through to recoverMarkdown
+      // and dump raw JSON to the user's bubble.
+      //
+      // Walk the string with depth counting; treat anything inside a
+      // double-quoted string as literal. Returns the FIRST balanced array
+      // (which is what the AI is supposed to emit per the prompt rules).
+      const findBalancedArray = (s: string): string | null => {
+        const start = s.indexOf("[");
+        if (start < 0) return null;
+        let depth = 0;
+        let inStr = false;
+        let escape = false;
+        for (let i = start; i < s.length; i++) {
+          const c = s[i];
+          if (escape) { escape = false; continue; }
+          if (inStr) {
+            if (c === "\\") { escape = true; continue; }
+            if (c === "\"") { inStr = false; continue; }
+            continue;
+          }
+          if (c === "\"") { inStr = true; continue; }
+          if (c === "[") depth++;
+          else if (c === "]") {
+            depth--;
+            if (depth === 0) return s.slice(start, i + 1);
           }
         }
-        if (merged.length > 0) {
-          blocks = merged;
+        return null;
+      };
+      try {
+        const cleaned = raw.replace(/```json|```/g, "").trim();
+        const balanced = findBalancedArray(cleaned);
+        if (balanced) {
+          const parsed = JSON.parse(balanced);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            blocks = parsed;
+            console.log("[ai-chat] parser path: balanced-array recovery", {
+              n: parsed.length,
+              had_trailing_text: cleaned.length > balanced.length,
+            });
+          } else {
+            throw new Error("balanced array empty / not array");
+          }
         } else {
-          throw new Error("no valid arrays");
+          throw new Error("no balanced array found");
         }
       } catch {
         // ── PRIORITY RECOVERY: meta_action tool_call(s) from malformed JSON ──
@@ -3410,9 +3449,15 @@ REGRAS DE COMPORTAMENTO NESTE MODO:
         const recovered = recoverMetaActions(raw);
         if (recovered && recovered.length > 0) {
           blocks = recovered;
+          console.log("[ai-chat] parser path: meta-action recovery", { n: recovered.length });
           // No fallthrough to text recovery — we have N clean structured
           // blocks now, the user will see one confirmation card per action.
         } else {
+          console.warn("[ai-chat] parser path: falling through to recoverMarkdown", {
+            looks_like_meta: /"meta_action"\s*:/i.test(raw),
+            raw_len: raw.length,
+            raw_head: raw.slice(0, 200),
+          });
         // ── Resilient fallback: recover clean markdown from malformed JSON ──
         // Claude occasionally returns truncated/malformed JSON with code fences.
         // Instead of dumping raw JSON syntax to the user, extract the readable content.
