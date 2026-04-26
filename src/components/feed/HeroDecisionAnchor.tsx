@@ -528,40 +528,10 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
             <ArrowRight size={14} strokeWidth={2.4} />
           </button>
 
-          {/* Auto-resolve indicator — when account is critical, the
-              parent auto-polls every 60s + on tab focus. We surface this
-              passively so the user knows the state isn't stale. No button
-              needed: when they fix it on Meta, the next poll catches it
-              within 60s and the Hero collapses to stable. */}
-          {variant === 'critical_account' && onRetryAccountStatus && (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '8px 12px',
-                fontFamily: F,
-                fontSize: 11,
-                fontWeight: 500,
-                color: 'rgba(240,246,252,0.45)',
-                letterSpacing: '-0.005em',
-              }}
-              title="Quando você resolver na Meta, atualiza aqui em até 60s automaticamente"
-            >
-              <span aria-hidden style={{
-                width: 5, height: 5, borderRadius: '50%',
-                background: '#FBBF24',
-                animation: 'hero-poll-pulse 1.4s ease-in-out infinite',
-              }} />
-              re-checando a cada 60s
-              <style>{`
-                @keyframes hero-poll-pulse {
-                  0%, 100% { opacity: 0.4; transform: scale(1); }
-                  50% { opacity: 1; transform: scale(1.4); }
-                }
-              `}</style>
-            </span>
-          )}
+          {/* Auto-resolve runs silently in the parent: 60s polling while
+              critical + immediate re-check on tab focus. No UI surface —
+              when they fix it on Meta, Hero just collapses to stable on
+              the next poll. */}
         </div>
       )}
     </div>
