@@ -1648,14 +1648,22 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
         </div>
       </div>
 
-      {/* ── Briefing Cards — urgente/oportunidade/insight ── */}
+      {/* ── Briefing Cards — urgente/oportunidade/insight ──
+          Visual treatment matched to the Feed DecisionCard family:
+          subtle gradient, denser shadow, inset highlight, accent glow
+          tied to the card's tag color. So the chat cards and the Feed
+          decision cards read as the same surface — same product,
+          same density. */}
       {briefingCards.map((card, i) => (
         <div key={i} style={{
-          background: "rgba(15,23,42,0.65)",
-          border: `1px solid ${card.tagColor === "#F87171" ? "rgba(248,113,113,0.20)" : card.tagColor === "#4ADE80" ? "rgba(74,222,128,0.15)" : "rgba(148,163,184,0.08)"}`,
-          borderLeft: `3px solid ${card.tagColor}`,
-          borderRadius: 12, padding: "clamp(12px,2vw,16px) clamp(14px,2.5vw,18px)",
-          marginBottom: 8,
+          background: "linear-gradient(180deg, rgba(15,23,42,0.78) 0%, rgba(10,15,28,0.92) 100%)",
+          border: `1px solid ${card.tagColor === "#F87171" ? "rgba(248,113,113,0.22)" : card.tagColor === "#4ADE80" ? "rgba(74,222,128,0.18)" : "rgba(148,163,184,0.10)"}`,
+          borderLeft: `2px solid ${card.tagColor}`,
+          borderRadius: 14, padding: "clamp(12px,2vw,16px) clamp(14px,2.5vw,18px)",
+          marginBottom: 10,
+          boxShadow: `0 6px 22px rgba(0,0,0,0.42), 0 0 0 1px ${card.tagColor === "#F87171" ? "rgba(248,113,113,0.04)" : card.tagColor === "#4ADE80" ? "rgba(74,222,128,0.04)" : "rgba(56,189,248,0.04)"}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+          backdropFilter: "blur(8px) saturate(140%)",
+          WebkitBackdropFilter: "blur(8px) saturate(140%)",
           animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + i * 0.06}s both` : "none",
           opacity: 0,
         }}>
@@ -2583,7 +2591,13 @@ export default function AdBriefAI() {
   const [contextReady,setContextReady]=useState(false);
   const [context,setContext]=useState("");
   const [connections,setConnections]=useState<string[]>([]);
-  const [connectionsLoading,setConnectionsLoading]=useState(false);
+  // Start in loading state so the "Conecte seus dados" panel doesn't
+  // flash on initial mount before the connections fetch even begins.
+  // The previous default of `false` left a window where messages=[],
+  // proactiveLoading=false, contextReady=true, hasData=false, and
+  // connectionsLoading=false simultaneously — triggering the connect
+  // CTA before we'd actually checked whether Meta was connected.
+  const [connectionsLoading,setConnectionsLoading]=useState(true);
   const [feedback,setFeedback]=useState<Record<number,"like"|"dislike"|null>>({});
   const [copiedId,setCopiedId]=useState<number|null>(null);
   const [activeTool,setActiveTool]=useState<string|null>(null);
@@ -3619,29 +3633,30 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
           }
         }
 
-        // Insight: overview card (always last)
-        // Prefer live-metrics (same source as Feed/LivePanel) over stale daily_snapshots
-        const briefSpend = liveMetrics?.spend ?? snapshot.total_spend ?? 0;
-        // live-metrics CTR is decimal (0.042), snapshot.avg_ctr is already normalized to decimal
-        const briefCtr = liveMetrics?.ctr ?? snapshot.avg_ctr ?? 0;
-        // "N anúncios com gasto" is the HONEST number: it counts ads that had
-        // spend inside the briefing window. The previous copy said "anúncios
-        // ativos" which is wrong — ads can be paused now and still show here
-        // because they had spend earlier in the window. This was confusing
-        // users (screenshot: "2 anúncios ativos" when current active = 0).
-        const briefAds = liveMetrics?.active_ads || snapshot.active_ads || topAds.length;
-        const adsLabel = lang === "pt"
-          ? `${briefAds} anúncio${briefAds === 1 ? "" : "s"} com gasto`
-          : `${briefAds} ad${briefAds === 1 ? "" : "s"} with spend`;
-        const overviewDetail = lang === "pt"
-          ? `${currSymbol}${briefSpend?.toFixed(0)} investidos · CTR ${(briefCtr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${adsLabel}`
-          : `${currSymbol}${briefSpend?.toFixed(0)} spent · CTR ${(briefCtr*100)?.toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${adsLabel}`;
-        cards.push({
-          tag: "BRIEFING",
-          tagColor: "#0ea5e9",
-          headline: accountName || (lang === "pt" ? "Resumo da semana" : "Weekly summary"),
-          detail: overviewDetail + (snapshot.ai_insight ? ` · ${snapshot.ai_insight.slice(0, 100)}` : ""),
-        });
+        // Insight: overview card (always last).
+        // STRICT: only use live-metrics (same source the top KPI strip /
+        // LivePanel reads). The previous fallback to snapshot.total_spend
+        // produced visible inconsistencies — top strip would show today's
+        // R$132 while the briefing card showed yesterday's snapshot R$51.
+        // If live-metrics didn't return data, we skip this card entirely:
+        // showing nothing beats showing stale numbers next to live ones.
+        if (liveMetrics && typeof liveMetrics.spend === "number") {
+          const briefSpend = liveMetrics.spend;
+          const briefCtr = liveMetrics.ctr ?? 0;
+          const briefAds = liveMetrics.active_ads || topAds.length;
+          const adsLabel = lang === "pt"
+            ? `${briefAds} anúncio${briefAds === 1 ? "" : "s"} com gasto`
+            : `${briefAds} ad${briefAds === 1 ? "" : "s"} with spend`;
+          const overviewDetail = lang === "pt"
+            ? `${currSymbol}${briefSpend.toFixed(0)} investidos · CTR ${(briefCtr*100).toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${adsLabel}`
+            : `${currSymbol}${briefSpend.toFixed(0)} spent · CTR ${(briefCtr*100).toFixed(2)}%${ctrDelta !== null ? ` (${ctrDelta > 0 ? "↑" : "↓"}${Math.abs(ctrDelta).toFixed(1)}%)` : ""} · ${adsLabel}`;
+          cards.push({
+            tag: "BRIEFING",
+            tagColor: "#0ea5e9",
+            headline: accountName || (lang === "pt" ? "Resumo da semana" : "Weekly summary"),
+            detail: overviewDetail + (snapshot.ai_insight ? ` · ${snapshot.ai_insight.slice(0, 100)}` : ""),
+          });
+        }
 
       } else if (medAlerts.length > 0 && cards.length < 3) {
         // Medium alerts as insights if no snapshot data
@@ -4823,7 +4838,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
 
-        {messages.length===0&&!proactiveLoading&&contextReady&&!hasData&&(
+        {messages.length===0&&!proactiveLoading&&contextReady&&!hasData&&!connectionsLoading&&(
           <div style={{maxWidth:720,margin:"16px auto 0",padding:"0 16px"}}>
             {/* ── No account connected — force connect ── */}
             <div style={{textAlign:"center",padding:"48px 24px"}}>
