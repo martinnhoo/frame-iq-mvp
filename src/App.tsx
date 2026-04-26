@@ -111,6 +111,9 @@ const CompareIndex  = lazy(() => import("@/pages/seo/ComparePages").then(m => ({
 const CompareDetail = lazy(() => import("@/pages/seo/ComparePages").then(m => ({ default: m.CompareDetail })));
 const AdsLibraryIndex   = lazy(() => import("@/pages/seo/AdsLibrary").then(m => ({ default: m.AdsLibraryIndex })));
 const AdsLibraryLanding = lazy(() => import("@/pages/seo/AdsLibrary").then(m => ({ default: m.AdsLibraryLanding })));
+// Wrapper layout that injects <meta name="robots" content="noindex, follow">
+// for all the EN legacy SEO routes — see file header for context.
+const EnSeoNoIndexLayout = lazy(() => import("@/pages/seo/_EnSeoNoIndexLayout"));
 
 import ToolGate from "./components/ToolGate";
 import SupportChat from "./components/SupportChat";
@@ -216,35 +219,45 @@ const App = () => (
                 <Route path="*" element={<Navigate to="/cockpit" replace />} />
               </Route>
 
-              {/* ── SEO: Tools ── */}
-              <Route path="/tools"         element={<ToolsIndex />} />
-              <Route path="/tools/:slug"   element={<ToolPage />} />
+              {/* ── EN PROGRAMMATIC SEO (LEGACY, NOINDEX) ───────────────
+                   These 160+ routes are leftover English programmatic
+                   SEO pages from before AdBrief was repositioned for
+                   BR market. They still render (so bookmarks don't 404)
+                   but every one gets `<meta robots="noindex, follow">`
+                   via EnSeoNoIndexLayout — Google drops them from index
+                   over 1-2 weeks while preserving link-equity flow.
+                   See src/pages/seo/_EnSeoNoIndexLayout.tsx for context. */}
+              <Route element={<EnSeoNoIndexLayout />}>
+                {/* SEO: Tools */}
+                <Route path="/tools"         element={<ToolsIndex />} />
+                <Route path="/tools/:slug"   element={<ToolPage />} />
 
-              {/* ── SEO: Guides ── */}
-              <Route path="/guides"        element={<GuidesIndex />} />
-              <Route path="/guides/:slug"  element={<GuidePage />} />
+                {/* SEO: Guides */}
+                <Route path="/guides"        element={<GuidesIndex />} />
+                <Route path="/guides/:slug"  element={<GuidePage />} />
 
-              {/* ── SEO: Compare ── */}
-              <Route path="/compare"       element={<CompareIndex />} />
-              <Route path="/compare/:slug" element={<CompareDetail />} />
-              <Route path="/platform/:slug"    element={<PlatformPage />} />
-              <Route path="/solutions/:slug"   element={<IndustryPage />} />
-              <Route path="/use-case/:slug"    element={<UseCasePage />} />
-              <Route path="/for/:slug"         element={<RolePage />} />
-              <Route path="/learn/:slug"       element={<LearnPage />} />
-              <Route path="/hooks/:slug"       element={<HookTypePage />} />
-              <Route path="/markets/:slug"     element={<LocationPage />} />
-              <Route path="/examples/:slug"    element={<AdExamplesPage />} />
+                {/* SEO: Compare */}
+                <Route path="/compare"       element={<CompareIndex />} />
+                <Route path="/compare/:slug" element={<CompareDetail />} />
+                <Route path="/platform/:slug"    element={<PlatformPage />} />
+                <Route path="/solutions/:slug"   element={<IndustryPage />} />
+                <Route path="/use-case/:slug"    element={<UseCasePage />} />
+                <Route path="/for/:slug"         element={<RolePage />} />
+                <Route path="/learn/:slug"       element={<LearnPage />} />
+                <Route path="/hooks/:slug"       element={<HookTypePage />} />
+                <Route path="/markets/:slug"     element={<LocationPage />} />
+                <Route path="/examples/:slug"    element={<AdExamplesPage />} />
 
-              {/* ── SEO: Ads Library ── */}
-              <Route path="/ads-library"           element={<AdsLibraryIndex />} />
-              <Route path="/tiktok-ad-examples"    element={<AdsLibraryLanding />} />
-              <Route path="/facebook-ad-examples"  element={<AdsLibraryLanding />} />
-              <Route path="/ugc-ad-examples"       element={<AdsLibraryLanding />} />
-              <Route path="/igaming-ad-examples"   element={<AdsLibraryLanding />} />
-              <Route path="/ecommerce-ad-examples" element={<AdsLibraryLanding />} />
-              <Route path="/best-ad-hooks"         element={<AdHooksPage />} />
-              <Route path="/glossary/:slug"        element={<GlossaryPage />} />
+                {/* SEO: Ads Library */}
+                <Route path="/ads-library"           element={<AdsLibraryIndex />} />
+                <Route path="/tiktok-ad-examples"    element={<AdsLibraryLanding />} />
+                <Route path="/facebook-ad-examples"  element={<AdsLibraryLanding />} />
+                <Route path="/ugc-ad-examples"       element={<AdsLibraryLanding />} />
+                <Route path="/igaming-ad-examples"   element={<AdsLibraryLanding />} />
+                <Route path="/ecommerce-ad-examples" element={<AdsLibraryLanding />} />
+                <Route path="/best-ad-hooks"         element={<AdHooksPage />} />
+                <Route path="/glossary/:slug"        element={<GlossaryPage />} />
+              </Route>
 
               {/* ── BOFU SEO landing pages — same URLs prerendered as static HTML
                    for crawlers via scripts/prerender.mjs. React renders the same
