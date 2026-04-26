@@ -283,62 +283,56 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
         }}
       >
         {/* CELL 1 — STATUS PILL.
-            For critical states we also surface (a) when this was last
-            checked and (b) a refresh button so the user can force a
-            re-poll instead of waiting for the 60s tick — useful right
-            after they fix the upstream issue (deposit saldo, raise cap)
-            and want to see the system catch up. */}
+            When the account is critical AND a refresh handler is wired,
+            the entire pill becomes a button — clicking the pill itself
+            forces a re-check (bypasses the 3min cache). No icon, no
+            separate target: discoverable via cursor change + subtle
+            scale on hover. Saves one click and avoids the "I clicked
+            the icon and nothing happened" failure mode. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start', flexShrink: 0 }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 12px',
-              borderRadius: 99,
-              background: status.bg,
-              border: `1px solid ${status.border}`,
-            }}
-          >
-            <span
-              style={{
-                width: 6, height: 6, borderRadius: '50%',
-                background: status.dot,
-                boxShadow: `0 0 6px ${status.dot}80`,
-              }}
-              className={status.label !== 'MONITORANDO' ? 'cmd-pulse' : undefined}
-            />
-            <span
-              style={{
-                fontSize: 10.5, fontWeight: 800,
-                color: status.color,
-                letterSpacing: '0.10em',
-              }}
-            >
-              {status.label}
-            </span>
-            {accountSeverity === 'critical' && onRefreshAccountStatus && (
-              <button
-                type="button"
-                onClick={onRefreshAccountStatus}
-                title="Forçar re-checagem (bypassa o cache de 3min)"
+          {(() => {
+            const isClickable = accountSeverity === 'critical' && !!onRefreshAccountStatus;
+            const PillTag: any = isClickable ? 'button' : 'div';
+            return (
+              <PillTag
+                type={isClickable ? 'button' : undefined}
+                onClick={isClickable ? onRefreshAccountStatus : undefined}
+                title={isClickable ? 'Clique para forçar re-checagem com a Meta' : undefined}
+                className={isClickable ? 'cmd-pill-clickable' : undefined}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 16, height: 16, marginLeft: 2,
-                  padding: 0, border: 'none',
-                  background: 'transparent',
-                  color: status.color, opacity: 0.65,
-                  cursor: 'pointer',
-                  fontSize: 11, lineHeight: 1,
-                  transition: 'opacity 0.15s, transform 0.4s',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 12px',
+                  borderRadius: 99,
+                  background: status.bg,
+                  border: `1px solid ${status.border}`,
+                  cursor: isClickable ? 'pointer' : 'default',
+                  transition: 'transform 0.12s ease, background 0.15s ease',
+                  font: 'inherit',
+                  color: 'inherit',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.65'; }}
               >
-                ↻
-              </button>
-            )}
-          </div>
+                <span
+                  style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: status.dot,
+                    boxShadow: `0 0 6px ${status.dot}80`,
+                  }}
+                  className={status.label !== 'MONITORANDO' ? 'cmd-pulse' : undefined}
+                />
+                <span
+                  style={{
+                    fontSize: 10.5, fontWeight: 800,
+                    color: status.color,
+                    letterSpacing: '0.10em',
+                  }}
+                >
+                  {status.label}
+                </span>
+              </PillTag>
+            );
+          })()}
           {accountSeverity === 'critical' && accountCheckedLabel && (
             <span style={{
               fontSize: 9, fontWeight: 600,
@@ -346,7 +340,7 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
               letterSpacing: '0.04em',
               paddingLeft: 4,
             }}>
-              checado {accountCheckedLabel} · Meta atualiza em ~1h
+              checado {accountCheckedLabel} · clique para atualizar
             </span>
           )}
         </div>

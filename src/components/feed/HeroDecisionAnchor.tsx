@@ -157,6 +157,11 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
   const totalActions = killCount + otherActionCount;
   const lastWin = useLastWin(userId);
 
+  // Receipts disclosure — billboard variant hides the math by default
+  // and reveals it on user request. Loss aversion lands harder when
+  // the number is unjustified; transparency follows on demand.
+  const [showReceipts, setShowReceipts] = useState(false);
+
   // ── Variant resolution (priority order) ───────────────────────────────
   // accountSeverity='critical' takes precedence over decision-level signals
   // because Meta-level issues (spend cap, billing, disabled account) BLOCK
@@ -260,38 +265,43 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
         }}
       />
 
-      {/* Kicker */}
-      <div
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 7,
-          padding: '4px 10px',
-          borderRadius: 99,
-          background: t.kickerBg,
-          border: `1px solid ${t.kickerBorder}`,
-          marginBottom: 16,
-          position: 'relative',
-        }}
-      >
-        <span
+      {/* Kicker — suppressed in URGENT (billboard layout uses the
+          single-sentence eyebrow as its "above" element so the eye
+          isn't competing with a label + sentence stack). All other
+          variants keep the kicker for context. */}
+      {variant !== 'urgent' && (
+        <div
           style={{
-            width: 5, height: 5, borderRadius: '50%',
-            background: t.kickerColor,
-            boxShadow: `0 0 6px ${t.kickerColor}90`,
-          }}
-        />
-        <span
-          style={{
-            fontSize: 10, fontWeight: 800,
-            color: t.kickerColor,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase' as const,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+            padding: '4px 10px',
+            borderRadius: 99,
+            background: t.kickerBg,
+            border: `1px solid ${t.kickerBorder}`,
+            marginBottom: 16,
+            position: 'relative',
           }}
         >
-          {criticalKicker}
-        </span>
-      </div>
+          <span
+            style={{
+              width: 5, height: 5, borderRadius: '50%',
+              background: t.kickerColor,
+              boxShadow: `0 0 6px ${t.kickerColor}90`,
+            }}
+          />
+          <span
+            style={{
+              fontSize: 10, fontWeight: 800,
+              color: t.kickerColor,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase' as const,
+            }}
+          >
+            {criticalKicker}
+          </span>
+        </div>
+      )}
 
       {/* Hero content */}
       {variant === 'critical_account' && (() => {
@@ -334,62 +344,149 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
         );
       })()}
 
-      {variant === 'urgent' && (
-        <>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 'clamp(36px, 7vw, 56px)',
-              fontWeight: 900,
-              color: t.number,
-              letterSpacing: '-0.045em',
-              lineHeight: 1.04,
-              fontVariantNumeric: 'tabular-nums' as const,
-            }}
-          >
-            R$ {recoverableBrl.toLocaleString('pt-BR')}
-            <span
+      {variant === 'urgent' && (() => {
+        // Billboard layout (one-glance hero):
+        //   1. Single-sentence eyebrow ("5 criativos cansados estão queimando…")
+        //   2. Massive R$ number — visceral, eye lands here in <1s
+        //   3. Discrete "/dia" suffix
+        //   4. Tiny "como cheguei nesse número" disclosure for receipts
+        //
+        // The receipts (top opportunity, kill counts, breakdown) live behind
+        // the disclosure so power users can audit without polluting the
+        // first read. Loss-aversion at maximum impact requires the number
+        // to dominate; explanation follows on demand.
+        const eyebrow = (() => {
+          if (killCount > 0 && otherActionCount === 0) {
+            return killCount === 1
+              ? '1 criativo cansado está queimando seu dinheiro'
+              : `${killCount} criativos cansados estão queimando seu dinheiro`;
+          }
+          if (killCount === 0 && otherActionCount > 0) {
+            return otherActionCount === 1
+              ? '1 oportunidade detectada para recuperar gasto'
+              : `${otherActionCount} oportunidades detectadas para recuperar gasto`;
+          }
+          // Mixed: kills + opportunities
+          return `${killCount + otherActionCount} decisões pra parar de queimar`;
+        })();
+        return (
+          <>
+            {/* Eyebrow — one sentence of context */}
+            <p
               style={{
-                fontSize: 'clamp(18px, 2.6vw, 24px)',
-                fontWeight: 700,
-                color: 'rgba(248,113,113,0.65)',
-                marginLeft: 8,
+                margin: '0 0 clamp(18px, 2.4vw, 28px)',
+                fontSize: 'clamp(14px, 1.5vw, 17px)',
+                fontWeight: 500,
+                color: 'rgba(240,246,252,0.72)',
+                letterSpacing: '-0.005em',
+                lineHeight: 1.4,
+                maxWidth: 720,
               }}
             >
-              /dia em risco
-            </span>
-          </h2>
-          <p
-            style={{
-              margin: '12px 0 0',
-              fontSize: 'clamp(13px, 1.4vw, 15px)',
-              color: 'rgba(240,246,252,0.65)',
-              lineHeight: 1.5,
-              maxWidth: 580,
-            }}
-          >
-            {killCount > 0 && (
-              <>
-                <strong style={{ color: '#F0F6FC' }}>{killCount}</strong>
-                {' '}{killCount === 1 ? 'anúncio' : 'anúncios'} consumindo orçamento sem retorno
-                {otherActionCount > 0 && (
-                  <> · {otherActionCount} {otherActionCount === 1 ? 'oportunidade' : 'oportunidades'} extra</>
-                )}
-              </>
+              {eyebrow}
+            </p>
+
+            {/* Billboard number */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 'clamp(6px, 0.9vw, 12px)',
+                flexWrap: 'wrap' as const,
+                lineHeight: 0.95,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'clamp(64px, 13vw, 132px)',
+                  fontWeight: 900,
+                  color: t.number,
+                  letterSpacing: '-0.06em',
+                  fontVariantNumeric: 'tabular-nums' as const,
+                  textShadow: `0 0 60px ${t.ambientGlow}, 0 0 120px ${t.ambientGlow}`,
+                }}
+              >
+                R$ {recoverableBrl.toLocaleString('pt-BR')}
+              </span>
+              <span
+                style={{
+                  fontSize: 'clamp(20px, 2.8vw, 32px)',
+                  fontWeight: 700,
+                  color: 'rgba(248,113,113,0.62)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                /dia
+              </span>
+            </div>
+
+            {/* Receipts disclosure — collapsed by default */}
+            <button
+              type="button"
+              onClick={() => setShowReceipts((s) => !s)}
+              style={{
+                marginTop: 16,
+                padding: 0,
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(240,246,252,0.42)',
+                fontSize: 12,
+                fontWeight: 500,
+                fontFamily: F,
+                cursor: 'pointer',
+                letterSpacing: '0.01em',
+                transition: 'color 0.15s ease',
+                lineHeight: 1.2,
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(240,246,252,0.75)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(240,246,252,0.42)'; }}
+            >
+              {showReceipts ? '↑ esconder a matemática' : 'como cheguei nesse número →'}
+            </button>
+
+            {showReceipts && (
+              <div
+                style={{
+                  marginTop: 12,
+                  paddingTop: 12,
+                  borderTop: '1px solid rgba(255,255,255,0.06)',
+                  maxWidth: 620,
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 13,
+                    color: 'rgba(240,246,252,0.62)',
+                    lineHeight: 1.55,
+                  }}
+                >
+                  {killCount > 0 && (
+                    <>
+                      <strong style={{ color: '#F0F6FC' }}>{killCount}</strong>
+                      {' '}{killCount === 1 ? 'anúncio' : 'anúncios'} consumindo orçamento sem retorno
+                      {otherActionCount > 0 && (
+                        <> · {otherActionCount} {otherActionCount === 1 ? 'oportunidade' : 'oportunidades'} extra detectada</>
+                      )}
+                      .
+                    </>
+                  )}
+                  {killCount === 0 && otherActionCount > 0 && (
+                    <>
+                      <strong style={{ color: '#F0F6FC' }}>{otherActionCount}</strong>
+                      {' '}{otherActionCount === 1 ? 'oportunidade detectada' : 'oportunidades detectadas'} pra recuperar gasto.
+                    </>
+                  )}
+                  {topOpportunityName && (
+                    <> Maior impacto: <strong style={{ color: '#F0F6FC' }}>{topOpportunityName}</strong>.</>
+                  )}
+                  {' '}Cada decisão abaixo mostra a base estatística (CTR, CPA, frequência) e o histórico de casos similares.
+                </p>
+              </div>
             )}
-            {killCount === 0 && otherActionCount > 0 && (
-              <>
-                <strong style={{ color: '#F0F6FC' }}>{otherActionCount}</strong>
-                {' '}{otherActionCount === 1 ? 'oportunidade detectada' : 'oportunidades detectadas'}
-              </>
-            )}
-            {topOpportunityName && (
-              <> — maior impacto: <strong style={{ color: '#F0F6FC' }}>{topOpportunityName}</strong></>
-            )}
-            .
-          </p>
-        </>
-      )}
+          </>
+        );
+      })()}
 
       {variant === 'stable' && (
         <>

@@ -51,7 +51,13 @@ const CACHE_TTL_MS = 3 * 60 * 1000;
 // v7: TTL dropped from 15min → 3min. Bumping schema invalidates all
 //     existing 15min entries so users see the new policy immediately
 //     without waiting for natural expiry.
-const SCHEMA_VERSION = 7;
+// v8: balance check now requires funding_source_details.type to confirm
+//     prepaid funding before flagging SALDO ZERADO. Production false
+//     positive caught: postpaid accounts (credit card) return balance:0
+//     as normal billing state — we were marking them critical and showing
+//     "SALDO ZERADO" even with R$20+ in the wallet. Bumping schema so
+//     existing v7 entries (computed under the old rule) are recomputed.
+const SCHEMA_VERSION = 8;
 
 type Severity = "ok" | "warn" | "critical" | "unknown";
 
@@ -229,7 +235,13 @@ Deno.serve(async (req) => {
     }
 
     // ── Hit Meta ───────────────────────────────────────────────────────────
-    const fields = "account_status,disable_reason,spend_cap,amount_spent,balance,currency,name";
+    // funding_source_details lets us tell prepaid accounts apart from
+    // postpaid (credit card) accounts. The `balance` field has different
+    // semantics per type: prepaid = remaining balance; postpaid = amount
+    // billed-but-not-yet-paid (typically 0 in normal operation). Without
+    // this distinction we'd false-positive SALDO ZERADO on every healthy
+    // postpaid account that returns balance:0.
+    const fields = "account_status,disable_reason,spend_cap,amount_spent,balance,currency,name,funding_source_details";
     const metaRes = await fetch(
       `https://graph.facebook.com/v21.0/${accIdNormalised}?fields=${fields}&access_token=${token}`
     );
@@ -259,6 +271,24 @@ Deno.serve(async (req) => {
     const amountSpent = parseCents(metaData.amount_spent);
     const balance = parseCents(metaData.balance);
     const currency = typeof metaData.currency === "string" ? metaData.currency : null;
+
+    // Funding source detection — drives whether the `balance` field
+    // should be interpreted as "saldo restante" (prepaid) or ignored
+    // (postpaid / credit card, where balance:0 is normal).
+    //
+    // funding_source_details.type values seen in the wild:
+    //   "PREPAID_FUNDS"   → prepaid wallet (saldo)
+    //   "FACEBOOK_WALLET" → also prepaid behavior on BR accounts
+    //   "PAYPAL_BILLING_AGREEMENT" / "CREDIT_CARD" → postpaid
+    // When we can't determine the type (field missing on legacy access
+    // tokens), we DO NOT flag balance issues — failing safe (no false
+    // positive SALDO ZERADO) is more important than catching every case.
+    const fundingType: string | null = typeof metaData.funding_source_details?.type === "string"
+      ? metaData.funding_source_details.type.toUpperCase()
+      : null;
+    const isPrepaid = fundingType === "PREPAID_FUNDS"
+      || fundingType === "FACEBOOK_WALLET"
+      || fundingType === "PREPAID";
 
     // Baseline severity from account_status.
     const { severity: statusSeverity, label } = describeStatus(accStatus);
@@ -304,10 +334,16 @@ Deno.serve(async (req) => {
 
     if (severity === "ok") {
       // ── Balance check (highest priority — most actionable) ──
-      if (balance !== null && balance >= 0 && balance < BALANCE_EMPTY_CENTS) {
+      // GUARD: balance:0 is the NORMAL state for postpaid (credit card)
+      // accounts — it's the amount billed-but-not-paid, not the remaining
+      // wallet. Only flag SALDO ZERADO when funding_source_details.type
+      // confirms this is a prepaid account. When the funding type isn't
+      // returned by Meta (legacy tokens, missing permission scope), we
+      // skip the balance check entirely — safer than false-positive.
+      if (isPrepaid && balance !== null && balance >= 0 && balance < BALANCE_EMPTY_CENTS) {
         severity = "critical";
         message = "Saldo pré-pago zerado — adicione saldo na Meta pra entrega não pausar";
-      } else if (balance !== null && balance >= 0 && balance < BALANCE_LOW_CENTS) {
+      } else if (isPrepaid && balance !== null && balance >= 0 && balance < BALANCE_LOW_CENTS) {
         severity = "warn";
         const balanceStr = `R$ ${(balance / 100).toFixed(2).replace('.', ',')}`;
         message = `Saldo pré-pago baixo (${balanceStr}) — repor antes que pause a entrega`;
