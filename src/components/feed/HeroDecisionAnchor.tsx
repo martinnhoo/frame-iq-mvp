@@ -131,6 +131,12 @@ interface HeroDecisionAnchorProps {
    *  as concrete proof ("Última perda evitada: R$87 em UGC 03 · há 4d")
    *  instead of generic monitoring copy. */
   userId?: string | null;
+  /** When the user resolves the upstream issue (e.g. just deposited
+   *  saldo on Meta), this callback re-runs the account status check
+   *  with cache bypass so the Hero updates immediately instead of
+   *  waiting for the 15-min server-side TTL. Only rendered on the
+   *  critical_account variant. */
+  onRetryAccountStatus?: () => void;
 }
 
 export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
@@ -145,6 +151,7 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
   primaryCtaLabel,
   fuseBottom = false,
   userId,
+  onRetryAccountStatus,
 }) => {
   const recoverableBrl = Math.round(recoverableDailyCents / 100);
   const totalActions = killCount + otherActionCount;
@@ -485,7 +492,7 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
       {(variant === 'critical_account'
         || variant === 'urgent'
         || (variant === 'stable' && totalActions > 0)) && onPrimaryClick && (
-        <div style={{ marginTop: 22 }}>
+        <div style={{ marginTop: 22, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' as const }}>
           <button
             onClick={onPrimaryClick}
             style={{
@@ -520,6 +527,44 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
                 : 'Explorar oportunidades')}
             <ArrowRight size={14} strokeWidth={2.4} />
           </button>
+
+          {/* Secondary "já resolvi, recheca" — only on critical_account.
+              Bypasses the 15-min server-side cache so the resolved state
+              reflects immediately. Without this button users have to wait
+              for cache TTL even after fixing the upstream issue (saldo
+              repor, cap raise, etc), which feels like the system is lying. */}
+          {variant === 'critical_account' && onRetryAccountStatus && (
+            <button
+              onClick={onRetryAccountStatus}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '11px 16px',
+                borderRadius: 10,
+                background: 'transparent',
+                color: 'rgba(240,246,252,0.72)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                fontFamily: F,
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.18s ease',
+                letterSpacing: '-0.005em',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
+                (e.currentTarget as HTMLElement).style.color = '#F0F6FC';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.background = 'transparent';
+                (e.currentTarget as HTMLElement).style.color = 'rgba(240,246,252,0.72)';
+              }}
+              title="Re-checa a conta na Meta agora, ignorando cache"
+            >
+              Já resolvi · re-checar
+            </button>
+          )}
         </div>
       )}
     </div>

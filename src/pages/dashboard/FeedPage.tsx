@@ -5747,8 +5747,17 @@ const FeedPage: React.FC = () => {
         const accountIdForStatus = metaSelId && metaSelId.startsWith('act_')
           ? metaSelId
           : accountId;
+        // When the user manually retries (clicked "re-checar"), bypass the
+        // 15-min server-side cache so a freshly resolved issue (e.g. saldo
+        // just deposited) shows up immediately instead of waiting for TTL.
+        // First load uses the cached result for speed.
+        const isManualRetry = accountStatusRetryNonce > 0;
         const { data, error } = await supabase.functions.invoke('account-status-check', {
-          body: { user_id: userId, account_id: accountIdForStatus },
+          body: {
+            user_id: userId,
+            account_id: accountIdForStatus,
+            force: isManualRetry,
+          },
         });
         if (cancelled) return;
         if (error || !data || (data as any).error) {
@@ -7684,6 +7693,7 @@ const FeedPage: React.FC = () => {
           // disappears and the two read as a single composite card.
           fuseBottom={!isDemo && metaConnected && adsLoaded}
           userId={ctx.user?.id}
+          onRetryAccountStatus={retryAccountStatus}
           onPrimaryClick={() => {
             // Account-level critical issue → route the user to the chat
             // with the right diagnostic prompt instead of scrolling. No
