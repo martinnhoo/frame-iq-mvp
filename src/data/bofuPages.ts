@@ -341,6 +341,325 @@ export const BOFU_PAGES: BofuPage[] = [
       { slug: "ferramenta-gestor-trafego-ia", label: "Pra Gestor Solo" },
     ],
   },
+
+  // ── ADDITIONAL BOFU LANDING PAGES (round 2) ─────────────────────────────
+  {
+    slug: "ia-gratuita-meta-ads",
+    title: "IA Gratuita pra Meta Ads — Teste 3 Dias sem Cartão | AdBrief",
+    description:
+      "Teste a IA do AdBrief de graça por 3 dias, sem cartão. Conecte sua conta Meta e veja em 2 minutos o que está vazando R$ na sua operação.",
+    h1: "IA gratuita pra Meta Ads — teste antes de pagar",
+    bodyHTML: `
+      <p>O AdBrief tem teste de 3 dias completamente gratuito — não pede cartão, não cobra renovação automática se você não confirmar. É a forma mais honesta de provar o produto antes de qualquer compromisso.</p>
+      <h2>O que dá pra fazer no teste grátis</h2>
+      <ul>
+        <li>Conectar 1 conta Meta Ads via OAuth oficial</li>
+        <li>Receber diagnóstico causal completo dos últimos 30 dias</li>
+        <li>Ver recomendações priorizadas por R$ economizado/dia</li>
+        <li>Executar ações (pause, scale) com 1 clique de confirmação</li>
+        <li>Acessar histórico de decisões e padrões aprendidos</li>
+      </ul>
+      <h2>Por que 3 dias e não 14</h2>
+      <p>3 dias é tempo suficiente pra você ver valor real (primeiro insight em 2 min, validação em 24-72h). Trial mais longo = você esquece. Mantemos curto pra forçar decisão honesta: ou faz sentido (assina) ou não (cancela). Sem zona cinzenta.</p>
+      <p>Se quiser plano gratuito permanente, temos o Free — limite de 3 análises por dia, sem ações automatizadas. Pra explorar sem compromisso.</p>
+    `,
+    related: [
+      { slug: "auditoria-meta-ads-ia", label: "Auditoria com IA" },
+      { slug: "ferramenta-gestor-trafego-ia", label: "Pra Gestor de Tráfego" },
+    ],
+  },
+  {
+    slug: "como-criar-criativo-meta-ads-com-ia",
+    title: "Como Criar Criativo Meta Ads com IA — Guia 2026 | AdBrief",
+    description:
+      "Use IA pra acelerar produção de criativo Meta Ads sem perder qualidade. Hooks, scripts, briefs — fluxo completo pra gestor que produz no volume.",
+    h1: "Como criar criativo Meta Ads com IA (guia 2026)",
+    bodyHTML: `
+      <p>Produzir criativo é gargalo em quase toda conta. Você precisa de 3-5 variações novas por semana pra evitar fadiga, mas editar vídeo do zero leva horas. IA bem usada acelera o ciclo sem sacrificar conversão.</p>
+      <h2>Fluxo recomendado</h2>
+      <ol>
+        <li><strong>Hook (10 min)</strong> — gera 5-10 hooks com IA baseado em ângulos diferentes (problema, prova social, curiosidade, etc). Escolhe os 2-3 mais fortes.</li>
+        <li><strong>Script (15 min)</strong> — pra cada hook escolhido, IA gera script de 30s estruturado em 4 atos.</li>
+        <li><strong>Brief de produção (5 min)</strong> — IA traduz script em board com cenas, ângulos, objetos, fala. Manda direto pro editor ou UGC creator.</li>
+        <li><strong>Análise pós-publicação (2 min)</strong> — depois de 48h no ar, IA olha métricas e te diz qual variação está funcionando e qual pausar.</li>
+      </ol>
+      <p>Tempo total do "ideia" ao "publicado": 1-2h em vez de 1-2 dias. AdBrief automatiza o passo 1 e 4. Pros 2 e 3 você pode usar AdBrief também ou outras ferramentas como Runway, ElevenLabs, etc.</p>
+    `,
+    related: [
+      { slug: "como-detectar-criativo-cansado", label: "Detectar criativo cansado" },
+      { slug: "auditoria-meta-ads-ia", label: "Auditoria com IA" },
+    ],
+  },
+  {
+    slug: "automatizar-gestao-meta-ads",
+    title: "Como Automatizar Gestão de Meta Ads — Sem Perder Controle | AdBrief",
+    description:
+      "Automatize o que é repetitivo, mantenha controle no estratégico. Veja como AdBrief automatiza diagnóstico + ação sem virar piloto automático cego.",
+    h1: "Como automatizar gestão de Meta Ads sem perder o controle",
+    bodyHTML: `
+      <p>Automatizar Meta Ads é tentação grande — promete liberar tempo, eliminar erro humano, escalar operação. Mas automação burra (regras hardcoded tipo "se CPA > X, pause") é receita pra quebrar campanha. Boa automação requer inteligência por cima.</p>
+      <h2>O que automatizar (e o que NÃO)</h2>
+      <p><strong>Pode automatizar:</strong> diagnóstico (quem tá ruim e por quê), priorização (qual atacar primeiro), execução repetitiva (pause/scale com regra clara), reporting (gerar PDF mensal pro cliente).</p>
+      <p><strong>Não automatize:</strong> decisões estratégicas (qual nicho explorar), decisões irreversíveis (deletar campanha sem revisar), aprovação final de mudança crítica em conta de cliente grande.</p>
+      <h2>Como AdBrief automatiza com segurança</h2>
+      <ul>
+        <li>IA detecta problema → sugere ação → você aprova com 1 clique (humano sempre no meio)</li>
+        <li>Cada ação fica registrada com causa e resultado medido em 24-72h</li>
+        <li>Se ação não melhora, IA aprende e propõe diferente da próxima vez</li>
+        <li>Limites configuráveis (ex: nunca pausar adset com gasto > R$ X sem confirmação extra)</li>
+      </ul>
+    `,
+    related: [
+      { slug: "ferramenta-gestor-trafego-ia", label: "Pra Gestor de Tráfego" },
+      { slug: "auditoria-meta-ads-ia", label: "Auditoria com IA" },
+    ],
+  },
+  {
+    slug: "alternativa-supermetrics-portugues",
+    title: "Alternativa ao Supermetrics em Português — AdBrief",
+    description:
+      "Supermetrics extrai dados de Meta Ads pra planilhas. AdBrief vai além: lê os dados, diagnostica problemas e te diz o que fazer. Veja a diferença.",
+    h1: "Alternativa ao Supermetrics: AdBrief lê os dados E te diz o que fazer",
+    bodyHTML: `
+      <p>Supermetrics é ETL de marketing — pega dados de Meta, Google, TikTok e bota em Sheets/BigQuery. Útil pra reporting custom, mas você ainda precisa olhar a planilha e decidir tudo manualmente.</p>
+      <p>AdBrief é a camada acima: ele JÁ lê os dados (não precisa exportar pra lugar nenhum) e gera a análise + recomendação direto. Você pula a etapa de "abrir planilha, identificar padrão, escrever próxima ação". A IA faz isso.</p>
+      <h2>Quando AdBrief substitui Supermetrics</h2>
+      <ul>
+        <li>Você só usa Supermetrics pra reportar Meta Ads (não Google/TikTok consolidado)</li>
+        <li>Você precisa mais de "o que fazer" do que "número exportado"</li>
+        <li>Quer pagar em real, em PT (Supermetrics é US$ 39/mês mínimo)</li>
+      </ul>
+      <h2>Quando combinar os dois</h2>
+      <p>Se sua agência precisa consolidar 5 plataformas (Meta + Google + TikTok + LinkedIn + email) em dashboard custom, Supermetrics ainda faz sentido pra ETL. AdBrief complementa fazendo a análise causal só do Meta.</p>
+    `,
+    related: [
+      { slug: "alternativa-adspy", label: "Vs AdSpy" },
+      { slug: "ferramenta-agencia-meta-ads", label: "Pra Agências" },
+    ],
+  },
+  {
+    slug: "alternativa-triple-whale-brasil",
+    title: "Alternativa ao Triple Whale no Brasil — AdBrief",
+    description:
+      "Triple Whale é gringo, em dólar, focado em Shopify. AdBrief é brasileiro, em real, focado em Meta Ads de gestor BR. Veja qual faz sentido pra você.",
+    h1: "Alternativa ao Triple Whale: AdBrief é Meta-first, BR-first",
+    bodyHTML: `
+      <p>Triple Whale é excelente pra DTC US-based em Shopify — atribuição multi-touch, dashboard consolidado, integração nativa. Mas é caro (US$ 100+/mês), gringo, e foca DTC e-commerce.</p>
+      <p>AdBrief é diferente: foca exclusivamente em Meta Ads (não tem Shopify, não tem multi-touch attribution), em PT, pagamento em real, pra qualquer nicho (não só e-com).</p>
+      <h2>Comparativo direto</h2>
+      <ul>
+        <li><strong>Foco:</strong> Triple Whale = DTC e-commerce. AdBrief = Meta Ads pra gestor/agência BR.</li>
+        <li><strong>Preço:</strong> Triple Whale = US$ 100+/mês. AdBrief = R$ 49-349/mês.</li>
+        <li><strong>Idioma:</strong> Triple Whale = inglês. AdBrief = PT nativo.</li>
+        <li><strong>Atribuição:</strong> Triple Whale tem multi-touch. AdBrief usa atribuição da própria Meta (mais simples).</li>
+        <li><strong>Diagnóstico causal:</strong> Triple Whale mostra dados. AdBrief explica o porquê + plano de ação.</li>
+      </ul>
+    `,
+    related: [
+      { slug: "alternativa-supermetrics-portugues", label: "Vs Supermetrics" },
+      { slug: "alternativa-adspy", label: "Vs AdSpy" },
+    ],
+  },
+  {
+    slug: "como-saber-se-anuncio-cansou",
+    title: "Como Saber se Anúncio Cansou no Meta Ads — Guia 2026",
+    description:
+      "4 sinais práticos pra identificar fadiga criativa no Meta Ads antes do CPA disparar. Frequência, CTR, CPM, engajamento.",
+    h1: "Como saber se seu anúncio cansou no Meta Ads",
+    bodyHTML: `
+      <p>"Anúncio cansado" é jargão de gestor pra criativo que parou de funcionar — público viu demais, virou ruído, parou de clicar. CPA dispara e você se pergunta o que aconteceu. Tem 4 sinais cristalinos pra detectar antes do estrago.</p>
+      <h2>Os 4 sinais clássicos</h2>
+      <ol>
+        <li><strong>Frequência > 3</strong> — pessoa viu o ad 3x ou mais. A partir daí, cada exposição extra rende menos.</li>
+        <li><strong>CTR caindo dia a dia</strong> — em 7-10 dias, se CTR caiu 30%+, é fadiga.</li>
+        <li><strong>CPM subindo</strong> — Meta cobra mais quando criativo não engaja. Sinal correlato de fadiga.</li>
+        <li><strong>Comments/likes orgânicos secando</strong> — engajamento social cai antes do CTR. Leading indicator forte.</li>
+      </ol>
+      <h2>O que fazer quando confirmado</h2>
+      <p>Pause o criativo cansado, não o adset inteiro. Crie 2-3 variações novas (mesma oferta, hook diferente, ângulo diferente, formato diferente). Ative no mesmo adset — Meta usa o budget acumulado e a segmentação que já funcionava. Quase sempre o adset volta a performar.</p>
+      <p>Pra automatizar essa detecção: AdBrief monitora os 4 sinais 24/7 em todos os teus criativos e te avisa quando passa do limiar — antes do CPA explodir.</p>
+    `,
+    related: [
+      { slug: "como-detectar-criativo-cansado", label: "Detectar criativo cansado" },
+      { slug: "como-reduzir-cpa-meta-ads", label: "Como reduzir CPA" },
+    ],
+  },
+  {
+    slug: "diagnostico-conta-meta-ads-gratis",
+    title: "Diagnóstico Grátis da Sua Conta Meta Ads — AdBrief",
+    description:
+      "Diagnóstico completo da sua conta Meta Ads em 2 minutos, gratuito por 3 dias. Conecte a conta e descubra o que está vazando R$ na operação.",
+    h1: "Diagnóstico grátis da sua conta Meta Ads",
+    bodyHTML: `
+      <p>Conhece a sensação de olhar o dashboard do Meta e não saber por onde começar? AdBrief faz o diagnóstico em 2 minutos: conecta na sua conta, lê tudo, e te entrega lista priorizada do que tá vazando R$ AGORA.</p>
+      <h2>O diagnóstico inclui</h2>
+      <ul>
+        <li><strong>Health score geral da conta</strong> — saúde financeira, tracking, criativo, audience</li>
+        <li><strong>Anúncios que estão queimando R$/dia</strong> — priorizados por impacto</li>
+        <li><strong>Adsets com fadiga ou audience errada</strong></li>
+        <li><strong>Oportunidades de escala</strong> — winners detectados precocemente</li>
+        <li><strong>Problemas de tracking</strong> — pixel quebrado, eventos não disparando</li>
+        <li><strong>Plano de ação priorizado por R$</strong></li>
+      </ul>
+      <h2>Como funciona</h2>
+      <p>1. Cria conta gratuita (1 min). 2. Conecta sua Meta via OAuth oficial (30s). 3. Aguarda o AdBrief ler 30 dias de dados (1 min). 4. Recebe relatório completo. Sem cartão de crédito pro teste de 3 dias.</p>
+    `,
+    related: [
+      { slug: "auditoria-meta-ads-ia", label: "Auditoria detalhada" },
+      { slug: "ia-gratuita-meta-ads", label: "Teste 3 dias grátis" },
+    ],
+  },
+  {
+    slug: "agencia-trafego-pago-quanto-cobrar-2026",
+    title: "Quanto Cobrar como Agência de Tráfego Pago em 2026 — Guia Real",
+    description:
+      "Tabela atualizada de quanto agências brasileiras cobram pra rodar Meta Ads em 2026. Por nicho, por tamanho de conta, por modelo (fee/fixo/%).",
+    h1: "Quanto cobrar como agência de tráfego pago em 2026 (tabela real)",
+    bodyHTML: `
+      <p>Pricing de agência de tráfego é zona cinzenta — varia muito por nicho, tamanho de conta, modelo de cobrança, e estado emocional do gestor que tá cobrando. Aqui vai um benchmark realista pra 2026 baseado no mercado BR.</p>
+      <h2>Modelos de cobrança</h2>
+      <ul>
+        <li><strong>Fee fixo mensal</strong> — mais comum pra contas até R$ 30k/mês de gasto. R$ 1.500-5.000/mês.</li>
+        <li><strong>% sobre o gasto</strong> — pra contas R$ 30k+/mês. 10-20% do que o cliente gasta.</li>
+        <li><strong>Performance (% sobre venda/lead)</strong> — alto risco, alto prêmio. 5-15% sobre revenue gerada.</li>
+        <li><strong>Híbrido</strong> — fee fixo + % de bônus se bater meta. Mais comum em contas grandes.</li>
+      </ul>
+      <h2>Tabela por nicho (BR, 2026)</h2>
+      <ul>
+        <li><strong>E-commerce pequeno (gasto até R$ 10k):</strong> R$ 1.500-3.000/mês</li>
+        <li><strong>E-commerce médio (R$ 10-50k):</strong> R$ 3.000-7.000/mês ou 12-15%</li>
+        <li><strong>Info-produto:</strong> R$ 2.500-6.000/mês + bônus por venda</li>
+        <li><strong>Local (clínica, escritório):</strong> R$ 1.200-2.500/mês</li>
+        <li><strong>SaaS B2B:</strong> R$ 4.000-10.000/mês</li>
+      </ul>
+      <p>Pra escalar agência sem pirar: usa AdBrief pra automatizar diagnóstico e reduzir tempo por conta. Substitui R$ 8k/mês de gestor sênior em contas repetitivas.</p>
+    `,
+    related: [
+      { slug: "ferramenta-agencia-meta-ads", label: "Ferramenta pra Agências" },
+      { slug: "gestao-multi-conta-meta-ads", label: "Gestão Multi-Conta" },
+    ],
+  },
+  {
+    slug: "gestor-trafego-salario-quanto-ganha-2026",
+    title: "Quanto Ganha um Gestor de Tráfego em 2026 — Salário e Freelance",
+    description:
+      "Salário real de gestor de tráfego no Brasil em 2026: CLT, PJ, freelancer. Por experiência, por tamanho de empresa, por nicho.",
+    h1: "Quanto ganha um gestor de tráfego em 2026 (BR, dado real)",
+    bodyHTML: `
+      <p>Salário de gestor de tráfego no Brasil em 2026 varia bastante — depende muito de experiência, tamanho da operação, e modalidade (CLT, PJ, freelancer multi-cliente).</p>
+      <h2>Faixas reais</h2>
+      <ul>
+        <li><strong>Júnior (CLT, &lt;1 ano exp):</strong> R$ 2.500-4.500/mês</li>
+        <li><strong>Pleno (CLT, 1-3 anos):</strong> R$ 4.500-8.000/mês</li>
+        <li><strong>Sênior (CLT, 3+ anos):</strong> R$ 8.000-15.000/mês</li>
+        <li><strong>PJ em agência (1-3 contas):</strong> R$ 6.000-12.000/mês</li>
+        <li><strong>Freelancer com 5-10 clientes:</strong> R$ 10.000-25.000/mês (varia muito)</li>
+        <li><strong>Owner de agência:</strong> R$ 20.000-100.000+/mês (margem sobre fee)</li>
+      </ul>
+      <h2>O que faz subir salário</h2>
+      <ul>
+        <li>Especialização por nicho (e-commerce > info > local)</li>
+        <li>Capacidade de lead generation (vender pra mais clientes)</li>
+        <li>Capacidade de produzir criativo (não só comprar mídia)</li>
+        <li>Domínio de ferramentas avançadas (analytics, CAPI, AdBrief)</li>
+        <li>Resultado mensurável (case studies que mostram ROI)</li>
+      </ul>
+      <p>Quem usa AdBrief pra gerenciar mais contas com mesma qualidade tipicamente sai do "cobro R$ 2.5k por cliente, atendo 5" pra "cobro R$ 4k por cliente, atendo 12". É leverage real, não promessa.</p>
+    `,
+    related: [
+      { slug: "ferramenta-gestor-trafego-ia", label: "Pra Gestor de Tráfego" },
+      { slug: "agencia-trafego-pago-quanto-cobrar-2026", label: "Quanto cobrar como agência" },
+    ],
+  },
+  {
+    slug: "tracking-meta-ads-conversions-api-portugues",
+    title: "Tracking Meta Ads + Conversions API em PT — Guia 2026",
+    description:
+      "Configurar tracking Meta Ads em 2026: pixel + Conversions API + iOS 18. Passo-a-passo prático pra gestor BR não perder conversão por tracking quebrado.",
+    h1: "Tracking Meta Ads em 2026: pixel + Conversions API",
+    bodyHTML: `
+      <p>Tracking quebrado é uma das causas mais comuns de "Meta Ads parou de funcionar" em 2026. iOS 18, GDPR/LGPD, ad blockers, browser tracking prevention — tudo conspira pra que pixel sozinho perca dados.</p>
+      <h2>Stack completo recomendado</h2>
+      <ol>
+        <li><strong>Meta Pixel</strong> — base, sempre obrigatório. Captura eventos no browser.</li>
+        <li><strong>Conversions API (CAPI)</strong> — envia eventos do servidor pra Meta direto, contornando ad blocker.</li>
+        <li><strong>Server-Side GTM</strong> — opcional, mas dobra qualidade do tracking pra contas com gasto alto.</li>
+        <li><strong>UTM consistente</strong> — pra atribuição cross-device e debug.</li>
+      </ol>
+      <h2>Como saber se tracking tá quebrado</h2>
+      <ul>
+        <li>Eventos não aparecem no Meta Events Manager dentro de 5 min</li>
+        <li>Conversões muito menores que vendas reais (gap > 30% = problema sério)</li>
+        <li>Atribuição errada (tudo virando "direto" no Analytics)</li>
+        <li>Diagnóstico do AdBrief flagging "tracking gap"</li>
+      </ul>
+      <p>AdBrief detecta tracking quebrado automaticamente e te diz se é pixel, evento, ou Conversions API com problema — economiza horas de debug.</p>
+    `,
+    related: [
+      { slug: "auditoria-meta-ads-ia", label: "Auditoria com IA" },
+      { slug: "como-reduzir-cpa-meta-ads", label: "Como reduzir CPA" },
+    ],
+  },
+  {
+    slug: "como-estruturar-campanha-meta-ads-do-zero",
+    title: "Como Estruturar Campanha Meta Ads do Zero — Passo a Passo 2026",
+    description:
+      "Estrutura completa de campanha Meta Ads pra 2026: do objetivo ao retargeting. CBO vs ABO, audience, criativo, budget, escala.",
+    h1: "Como estruturar campanha Meta Ads do zero (passo a passo 2026)",
+    bodyHTML: `
+      <p>Estrutura de campanha Meta Ads em 2026 é mais simples do que era em 2020 — Meta consolidou muito da otimização internamente. Mas erro estrutural ainda destrói conta. Aqui vai o playbook que funciona.</p>
+      <h2>1. Objetivo de campanha</h2>
+      <ul>
+        <li>Pra venda direta: <strong>Vendas</strong> com otimização Compra (ou Initiate Checkout se Compra ainda não tem 50/semana)</li>
+        <li>Pra lead: <strong>Leads</strong> com otimização "Forms" se usar Lead Ad, ou "Conversões" se WhatsApp/landing</li>
+        <li>Pra agendamento (clínica, serviço): <strong>Vendas</strong> + evento custom de "Schedule"</li>
+        <li><strong>Não use:</strong> Tráfego, Engagement, Awareness — eles otimizam pra cliques baratos, não conversão</li>
+      </ul>
+      <h2>2. CBO vs ABO</h2>
+      <p>Em 2026, CBO (Campaign Budget Optimization) ganhou: Meta distribui budget entre adsets melhor que humano. Use ABO só pra teste de criativo (1 adset = 1 criativo, mesma audience, comparar performance).</p>
+      <h2>3. Audience</h2>
+      <ul>
+        <li><strong>Cold:</strong> Advantage+ Audience (a Meta escolhe) ou interest broad (1M+ pessoas)</li>
+        <li><strong>Warm:</strong> Lookalike 1-3% baseado em compradores</li>
+        <li><strong>Retargeting:</strong> Visitors 30 dias + Carrinho abandonado + Engagers Insta/FB</li>
+      </ul>
+      <h2>4. Criativo</h2>
+      <p>Mínimo 3-5 variações por adset. Mistura formato (vídeo curto, imagem, carrossel). Refresh a cada 2-3 semanas.</p>
+      <h2>5. Budget e escala</h2>
+      <p>Começa com R$ 50-100/dia por adset pra sair do learning phase em 7 dias. Quando funcionar, escala 20-30%/dia.</p>
+      <p>AdBrief monitora cada uma dessas camadas e te avisa quando algo precisa de ajuste — economiza tempo de revisar cada estrutura toda semana.</p>
+    `,
+    related: [
+      { slug: "como-escalar-meta-ads-sem-perder-roas", label: "Como escalar sem perder ROAS" },
+      { slug: "como-reduzir-cpa-meta-ads", label: "Como reduzir CPA" },
+    ],
+  },
+  {
+    slug: "ferramenta-relatorio-meta-ads-cliente",
+    title: "Ferramenta de Relatório Meta Ads pra Cliente — AdBrief",
+    description:
+      "Gere relatórios mensais lindos pra cliente em 1 clique. Métricas + insights causais + plano de ação, em PT, pronto pra mandar via WhatsApp ou email.",
+    h1: "Ferramenta pra gerar relatório Meta Ads pro cliente em 1 clique",
+    bodyHTML: `
+      <p>Toda agência odeia o ritual mensal de "compilar relatório pro cliente". Pegar dados do Meta Ads Manager, montar PDF/Slides, escrever insights — fácil consumir 4-6h por cliente. Multiplica por 10 clientes = sábado inteiro.</p>
+      <h2>O que AdBrief gera automaticamente</h2>
+      <ul>
+        <li>Resumo de spend, conversões, ROAS, CPA do mês</li>
+        <li>Comparativo vs mês anterior (delta % por métrica)</li>
+        <li>Top 3 anúncios que mais converteram</li>
+        <li>Top 3 anúncios que mais queimaram budget</li>
+        <li>Insights causais ("CPA caiu 15% porque pausamos adset X em DD/MM")</li>
+        <li>Plano de ação proposto pro próximo mês</li>
+      </ul>
+      <p>Tudo em PT direto, formato pronto pra mandar via WhatsApp ou email. Branded com sua agência (logo, cores, footer custom).</p>
+      <h2>Tempo poupado por cliente</h2>
+      <p>Antes: 4-6h por cliente, mensal. Depois: 10-15 min pra revisar e personalizar antes de mandar. Pra agência com 10 clientes, economiza 35-50h/mês — equivale a 1 funcionário PJ part-time.</p>
+    `,
+    related: [
+      { slug: "ferramenta-agencia-meta-ads", label: "Pra Agências" },
+      { slug: "gestao-multi-conta-meta-ads", label: "Multi-Conta" },
+    ],
+  },
 ];
 
 /** Lookup helper used by BofuPage component. */
