@@ -18,6 +18,12 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 
+// BOFU SEO pages: 13 hand-tuned PT-BR landing pages prerendered as static HTML
+// for crawlers (via scripts/prerender.mjs). React renders them client-side
+// using the same data so navigation feels instant after hydration.
+import { BOFU_PAGES } from "@/data/bofuPages";
+const BofuPage = lazy(() => import("./pages/BofuPage"));
+
 // ── Lazily loaded — only fetched when user navigates there ───────────────────
 const Blog         = lazy(() => import("./pages/Blog"));
 const BlogPost     = lazy(() => import("./pages/BlogPost"));
@@ -239,6 +245,15 @@ const App = () => (
               <Route path="/ecommerce-ad-examples" element={<AdsLibraryLanding />} />
               <Route path="/best-ad-hooks"         element={<AdHooksPage />} />
               <Route path="/glossary/:slug"        element={<GlossaryPage />} />
+
+              {/* ── BOFU SEO landing pages — same URLs prerendered as static HTML
+                   for crawlers via scripts/prerender.mjs. React renders the same
+                   content client-side using shared data in src/data/bofuPages.ts.
+                   Keep this list in sync with BOFU_PAGES (in that file) and the
+                   ROUTES array in scripts/prerender.mjs. ── */}
+              {BOFU_PAGES.map((p) => (
+                <Route key={p.slug} path={`/${p.slug}`} element={<BofuPage />} />
+              ))}
 
               <Route path="*" element={<NotFound />} />
             </Routes>
