@@ -777,26 +777,22 @@ const PROGRAMMATIC_SECTIONS = [
   { exportName: "SEO_MARKET_PAGES", prefix: "markets" },
   { exportName: "SEO_AD_EXAMPLES_PAGES", prefix: "examples" },
 ];
+// PT-BR-ONLY POLICY (decided 2026-04-26):
+// AdBrief is positioned 100% for the Brazilian market. The 160 programmatic
+// SEO pages from seoData.ts are still in English (legacy from earlier
+// build), and including them in the sitemap confused Google about the
+// site's primary language — penalized PT-BR ranking.
+//
+// We KEEP the EN pages in src/data/seoData.ts and the React Router
+// (so direct URLs still work for anyone who has them bookmarked, and
+// Google won't 404), but DROP them from the sitemap so Google focuses
+// crawl budget on the 25 PT-BR BOFU pages + static tops.
+//
+// When AdBrief one day expands to global (EN/ES), we'll re-translate
+// these into proper localized routes (/en/<slug>, /es/<slug>) with
+// hreflang tags. Until then, EN stays out of the sitemap.
 const programmaticEntries = [];
-for (const { exportName, prefix } of PROGRAMMATIC_SECTIONS) {
-  const slugs = extractSlugsBetween(seoTextRaw, exportName);
-  for (const slug of slugs) {
-    programmaticEntries.push({
-      loc: `${SITE_URL}/${prefix}/${slug}`,
-      priority: prefix === "tools" || prefix === "compare" ? "0.8" : "0.7",
-      changefreq: "monthly",
-    });
-  }
-}
-const landingSlugs = extractSlugsBetween(seoTextRaw, "SEO_LANDING_PAGES");
-for (const slug of landingSlugs) {
-  programmaticEntries.push({
-    loc: `${SITE_URL}/${slug}`,
-    priority: "0.7",
-    changefreq: "monthly",
-  });
-}
-console.log(`[prerender] extracted ${programmaticEntries.length} programmatic SEO URLs from seoData.ts`);
+console.log(`[prerender] EN programmatic pages excluded from sitemap (PT-BR-only policy)`);
 
 const sitemapEntries = [
   ...STATIC_TOP,
