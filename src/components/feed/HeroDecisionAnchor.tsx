@@ -528,42 +528,39 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
             <ArrowRight size={14} strokeWidth={2.4} />
           </button>
 
-          {/* Secondary "já resolvi, recheca" — only on critical_account.
-              Bypasses the 15-min server-side cache so the resolved state
-              reflects immediately. Without this button users have to wait
-              for cache TTL even after fixing the upstream issue (saldo
-              repor, cap raise, etc), which feels like the system is lying. */}
+          {/* Auto-resolve indicator — when account is critical, the
+              parent auto-polls every 60s + on tab focus. We surface this
+              passively so the user knows the state isn't stale. No button
+              needed: when they fix it on Meta, the next poll catches it
+              within 60s and the Hero collapses to stable. */}
           {variant === 'critical_account' && onRetryAccountStatus && (
-            <button
-              onClick={onRetryAccountStatus}
+            <span
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
-                padding: '11px 16px',
-                borderRadius: 10,
-                background: 'transparent',
-                color: 'rgba(240,246,252,0.72)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                padding: '8px 12px',
                 fontFamily: F,
-                fontSize: 12.5,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.18s ease',
+                fontSize: 11,
+                fontWeight: 500,
+                color: 'rgba(240,246,252,0.45)',
                 letterSpacing: '-0.005em',
               }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
-                (e.currentTarget as HTMLElement).style.color = '#F0F6FC';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.background = 'transparent';
-                (e.currentTarget as HTMLElement).style.color = 'rgba(240,246,252,0.72)';
-              }}
-              title="Re-checa a conta na Meta agora, ignorando cache"
+              title="Quando você resolver na Meta, atualiza aqui em até 60s automaticamente"
             >
-              Já resolvi · re-checar
-            </button>
+              <span aria-hidden style={{
+                width: 5, height: 5, borderRadius: '50%',
+                background: '#FBBF24',
+                animation: 'hero-poll-pulse 1.4s ease-in-out infinite',
+              }} />
+              re-checando a cada 60s
+              <style>{`
+                @keyframes hero-poll-pulse {
+                  0%, 100% { opacity: 0.4; transform: scale(1); }
+                  50% { opacity: 1; transform: scale(1.4); }
+                }
+              `}</style>
+            </span>
           )}
         </div>
       )}

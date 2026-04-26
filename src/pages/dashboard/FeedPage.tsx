@@ -5787,6 +5787,61 @@ const FeedPage: React.FC = () => {
     return () => { cancelled = true; };
   }, [accountId, metaSelId, userId, isDemo, accountStatusRetryNonce]);
 
+  // ── Auto-resolve flow when account is in critical state ──
+  //
+  // The Meta Graph API doesn't push balance/cap changes (no webhook).
+  // We have to poll. To keep cost cheap and UX honest:
+  //
+  //   1) When accountStatus.severity === 'critical' AND tab is visible,
+  //      poll every 60s with force=true (cache bypass). When the user
+  //      resolves the upstream issue (deposits saldo, gets cap raised),
+  //      next poll picks it up and severity drops to ok/warn — polling
+  //      auto-stops on the next render.
+  //   2) On window focus AFTER being away (visibilitychange → visible),
+  //      force a re-check immediately — typical pattern: user goes to
+  //      Meta to fix the issue, comes back to AdBrief, sees fresh state.
+  //   3) When severity is ok/warn/unknown, no polling at all. Cache TTL
+  //      of 15 min handles passive refresh.
+  //
+  // Worst case API cost: 60 calls/hour for a user staring at a critical
+  // alert. Meta's per-token rate limit is ~200/hr, so well within budget.
+  const isAccountCritical = accountStatus?.severity === 'critical';
+  useEffect(() => {
+    if (!isAccountCritical || !userId || isDemo) return;
+    const POLL_MS = 60_000;
+    let intervalId: number | undefined;
+    const tick = () => {
+      // Only poll when tab is visible — saves API while user is away.
+      if (document.visibilityState !== 'visible') return;
+      setAccountStatusRetryNonce((n) => n + 1);
+    };
+    const start = () => {
+      if (intervalId !== undefined) return;
+      intervalId = window.setInterval(tick, POLL_MS);
+    };
+    const stop = () => {
+      if (intervalId === undefined) return;
+      window.clearInterval(intervalId);
+      intervalId = undefined;
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // User just came back — likely resolved the issue elsewhere.
+        // Force one immediate check, then resume polling.
+        setAccountStatusRetryNonce((n) => n + 1);
+        start();
+      } else {
+        stop();
+      }
+    };
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      stop();
+    };
+  }, [isAccountCritical, userId, isDemo]);
+
   const retryAccountStatus = useCallback(() => {
     setAccountStatusRetryNonce((n) => n + 1);
   }, []);
