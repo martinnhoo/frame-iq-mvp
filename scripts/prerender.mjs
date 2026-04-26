@@ -702,6 +702,7 @@ if (failures.length) {
 
 // Sitemap with lastmod=today
 const today = new Date().toISOString().slice(0, 10);
+
 const STATIC_TOP = [
   { loc: `${SITE_URL}/`, priority: "1.0", changefreq: "daily" },
   { loc: `${SITE_URL}/blog`, priority: "0.8", changefreq: "weekly" },
@@ -709,7 +710,94 @@ const STATIC_TOP = [
   { loc: `${SITE_URL}/contact`, priority: "0.6", changefreq: "monthly" },
   { loc: `${SITE_URL}/login`, priority: "0.3", changefreq: "monthly" },
   { loc: `${SITE_URL}/signup`, priority: "0.5", changefreq: "monthly" },
+  { loc: `${SITE_URL}/features`, priority: "0.7", changefreq: "monthly" },
+  { loc: `${SITE_URL}/levels`, priority: "0.5", changefreq: "monthly" },
+  { loc: `${SITE_URL}/terms`, priority: "0.3", changefreq: "yearly" },
+  { loc: `${SITE_URL}/privacy`, priority: "0.3", changefreq: "yearly" },
+  { loc: `${SITE_URL}/refund`, priority: "0.3", changefreq: "yearly" },
+  { loc: `${SITE_URL}/careers`, priority: "0.5", changefreq: "monthly" },
+  // Index pages for the EN programmatic SEO tree
+  { loc: `${SITE_URL}/tools`, priority: "0.9", changefreq: "weekly" },
+  { loc: `${SITE_URL}/guides`, priority: "0.8", changefreq: "weekly" },
+  { loc: `${SITE_URL}/compare`, priority: "0.8", changefreq: "monthly" },
+  { loc: `${SITE_URL}/ads-library`, priority: "0.7", changefreq: "weekly" },
+  { loc: `${SITE_URL}/best-ad-hooks`, priority: "0.7", changefreq: "weekly" },
+  { loc: `${SITE_URL}/tiktok-ad-examples`, priority: "0.7", changefreq: "weekly" },
+  { loc: `${SITE_URL}/facebook-ad-examples`, priority: "0.7", changefreq: "weekly" },
+  { loc: `${SITE_URL}/ugc-ad-examples`, priority: "0.7", changefreq: "weekly" },
+  { loc: `${SITE_URL}/igaming-ad-examples`, priority: "0.7", changefreq: "weekly" },
+  { loc: `${SITE_URL}/ecommerce-ad-examples`, priority: "0.7", changefreq: "weekly" },
 ];
+
+// ── Extract all slugs from src/data/seoData.ts (programmatic EN pages) ──
+// Reads seoData.ts as plain text and regex-extracts slug values from each
+// SEO_* array. We don't need to fully parse TS — only the top-level slugs
+// each array exposes, mapped to the correct route prefix per the App.tsx
+// route definitions:
+//   SEO_TOOLS               → /tools/<slug>
+//   SEO_GUIDES              → /guides/<slug>
+//   SEO_COMPARISONS         → /compare/<slug>
+//   SEO_LEARN_PAGES         → /learn/<slug>
+//   SEO_PLATFORM_PAGES      → /platform/<slug>
+//   SEO_INDUSTRY_PAGES      → /solutions/<slug>
+//   SEO_USECASE_PAGES       → /use-case/<slug>
+//   SEO_ROLE_PAGES          → /for/<slug>
+//   SEO_HOOK_TYPE_PAGES     → /hooks/<slug>
+//   SEO_MARKET_PAGES        → /markets/<slug>
+//   SEO_AD_EXAMPLES_PAGES   → /examples/<slug>
+//   SEO_LANDING_PAGES       → /<slug>  (root-level)
+const SEODATA_PATH = path.join(ROOT, "src", "data", "seoData.ts");
+const seoTextRaw = fs.existsSync(SEODATA_PATH) ? fs.readFileSync(SEODATA_PATH, "utf-8") : "";
+function extractSlugsBetween(text, exportName) {
+  const startMarker = new RegExp(`export const ${exportName}\\s*=\\s*\\[`);
+  const startMatch = text.match(startMarker);
+  if (!startMatch) return [];
+  const startIdx = startMatch.index + startMatch[0].length;
+  // Find matching closing `];` at top level — naive bracket counting.
+  let depth = 1, i = startIdx;
+  while (i < text.length && depth > 0) {
+    const c = text[i];
+    if (c === "[") depth++;
+    else if (c === "]") depth--;
+    i++;
+  }
+  const block = text.slice(startIdx, i);
+  return [...block.matchAll(/slug:\s*"([^"]+)"/g)].map((m) => m[1]);
+}
+const PROGRAMMATIC_SECTIONS = [
+  { exportName: "SEO_TOOLS", prefix: "tools" },
+  { exportName: "SEO_GUIDES", prefix: "guides" },
+  { exportName: "SEO_COMPARISONS", prefix: "compare" },
+  { exportName: "SEO_LEARN_PAGES", prefix: "learn" },
+  { exportName: "SEO_PLATFORM_PAGES", prefix: "platform" },
+  { exportName: "SEO_INDUSTRY_PAGES", prefix: "solutions" },
+  { exportName: "SEO_USECASE_PAGES", prefix: "use-case" },
+  { exportName: "SEO_ROLE_PAGES", prefix: "for" },
+  { exportName: "SEO_HOOK_TYPE_PAGES", prefix: "hooks" },
+  { exportName: "SEO_MARKET_PAGES", prefix: "markets" },
+  { exportName: "SEO_AD_EXAMPLES_PAGES", prefix: "examples" },
+];
+const programmaticEntries = [];
+for (const { exportName, prefix } of PROGRAMMATIC_SECTIONS) {
+  const slugs = extractSlugsBetween(seoTextRaw, exportName);
+  for (const slug of slugs) {
+    programmaticEntries.push({
+      loc: `${SITE_URL}/${prefix}/${slug}`,
+      priority: prefix === "tools" || prefix === "compare" ? "0.8" : "0.7",
+      changefreq: "monthly",
+    });
+  }
+}
+const landingSlugs = extractSlugsBetween(seoTextRaw, "SEO_LANDING_PAGES");
+for (const slug of landingSlugs) {
+  programmaticEntries.push({
+    loc: `${SITE_URL}/${slug}`,
+    priority: "0.7",
+    changefreq: "monthly",
+  });
+}
+console.log(`[prerender] extracted ${programmaticEntries.length} programmatic SEO URLs from seoData.ts`);
+
 const sitemapEntries = [
   ...STATIC_TOP,
   ...ROUTES.map((r) => ({
@@ -717,11 +805,22 @@ const sitemapEntries = [
     priority: r.path.includes("alternativa") || r.path === "pricing" ? "0.9" : "0.8",
     changefreq: r.path.startsWith("como-") ? "monthly" : "weekly",
   })),
+  ...programmaticEntries,
 ];
+
+// De-dupe by loc — when a programmatic URL collides with a hand-tuned ROUTE
+// (e.g. /pricing in both), the hand-tuned one wins because it appears first.
+const seenLocs = new Set();
+const dedupedSitemap = [];
+for (const e of sitemapEntries) {
+  if (seenLocs.has(e.loc)) continue;
+  seenLocs.add(e.loc);
+  dedupedSitemap.push(e);
+}
 
 const sitemapXML = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${sitemapEntries
+${dedupedSitemap
   .map(
     (e) =>
       `  <url><loc>${e.loc}</loc><lastmod>${today}</lastmod><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`
@@ -730,6 +829,6 @@ ${sitemapEntries
 </urlset>
 `;
 fs.writeFileSync(path.join(DIST, "sitemap.xml"), sitemapXML, "utf-8");
-console.log(`[prerender] sitemap.xml regenerated with ${sitemapEntries.length} URLs · lastmod=${today}`);
+console.log(`[prerender] sitemap.xml regenerated with ${dedupedSitemap.length} URLs · lastmod=${today}`);
 
 console.log(`[prerender] DONE.`);
