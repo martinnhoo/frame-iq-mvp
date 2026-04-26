@@ -33,7 +33,11 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const CACHE_TTL_MS = 15 * 60 * 1000;
+// Cache TTL: 3 minutes. Was 15 — too long for prepaid users who deposit
+// and immediately want to see "ok" reflected. Meta Graph API itself
+// has 1-2h propagation latency for fresh deposits, so the cache TTL
+// is the lower bound; real recovery time is dominated by Meta-side lag.
+const CACHE_TTL_MS = 3 * 60 * 1000;
 // Bump when the severity/message logic changes so stale cache entries
 // (written by an older version of this function) are invalidated and a
 // fresh Meta check runs.
@@ -44,7 +48,10 @@ const CACHE_TTL_MS = 15 * 60 * 1000;
 //     remaining and the system reported "CONTA BLOQUEADA POR META" —
 //     wrong attribution: ads were stopping for prepaid balance, not
 //     a Meta-imposed cap.
-const SCHEMA_VERSION = 6;
+// v7: TTL dropped from 15min → 3min. Bumping schema invalidates all
+//     existing 15min entries so users see the new policy immediately
+//     without waiting for natural expiry.
+const SCHEMA_VERSION = 7;
 
 type Severity = "ok" | "warn" | "critical" | "unknown";
 

@@ -50,6 +50,13 @@ interface CommandStripProps {
    *  (alarmist, sounds like Meta-imposed penalty) when the real cause
    *  is something benign like prepaid balance running out. */
   accountStatusMessage?: string | null;
+  /** When the account-status was last fetched. Drives a small
+   *  "atualizado há Xmin" hint under critical pills so the user
+   *  understands the data isn't real-time and a refresh is coming. */
+  accountStatusCheckedAt?: string | null;
+  /** Trigger a forced re-check of the account status (force=true,
+   *  bypasses cache). Wired to the pill's refresh affordance. */
+  onRefreshAccountStatus?: () => void;
 }
 
 type Stats = {
@@ -76,8 +83,20 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
   lastAnalysisAt = null,
   accountSeverity = null,
   accountStatusMessage = null,
+  accountStatusCheckedAt = null,
+  onRefreshAccountStatus,
 }) => {
   const [stats, setStats] = useState<Stats | null>(null);
+
+  // Live ticker — re-renders every 30s so the freshness label stays
+  // honest ("agora" → "há 1min" → "há 2min" without a page reload).
+  // Without this, "última análise" sticks at whatever it was when the
+  // component mounted and the dashboard reads as frozen.
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
@@ -96,32 +115,31 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
         let wins = 0, losses = 0, measuringCount = 0;
         let prelimReadyCount = 0, prelimImprovingCount = 0;
         let nextFinalizeMs: number | null = null;
-        const now = Date.now();
+        const tsNow = Date.now();
         for (const r of data as any[]) {
           if (!r.finalized) {
             measuringCount++;
-            // Track soonest 72h finalize across pendings — only count rows
-            // whose taken_at + 72h is still in the future (overdue ones
-            // are stuck waiting for the cron, not "X hours away").
             const finalizeAt = new Date(r.taken_at).getTime() + 72 * 3600_000;
-            if (finalizeAt > now && (nextFinalizeMs === null || finalizeAt < nextFinalizeMs)) {
+            if (finalizeAt > tsNow && (nextFinalizeMs === null || finalizeAt < nextFinalizeMs)) {
               nextFinalizeMs = finalizeAt;
             }
             // Once measured_24h_at is set, we have preliminary delta —
             // surface it so the user sees real progress instead of a
-            // perpetual "validando".
+            // perpetual "validando". Field names match what
+            // computeDeltaJsonb writes: { ctr, cpc, cpa, roas, ... } as
+            // absolute deltas (after - before), NOT percentages.
             if (r.measured_24h_at) {
               prelimReadyCount++;
               const d = r.delta_24h || {};
-              // Prefer CTR delta (most reliable fast signal). Fallback to
-              // CPC (lower is better) and CPA (lower is better).
-              const ctrDelta = Number(d.ctr_delta_pct ?? d.ctr_pct);
-              const cpcDelta = Number(d.cpc_delta_pct ?? d.cpc_pct);
-              const cpaDelta = Number(d.cpa_delta_pct ?? d.cpa_pct);
+              const ctrDelta = Number(d.ctr);   // CTR is a ratio (e.g. 0.025); +0.001 = +0.1pp
+              const cpcDelta = Number(d.cpc);   // currency units; negative = cheaper
+              const cpaDelta = Number(d.cpa);
+              const roasDelta = Number(d.roas);
               const positive =
-                (Number.isFinite(ctrDelta) && ctrDelta > 5) ||
-                (Number.isFinite(cpcDelta) && cpcDelta < -5) ||
-                (Number.isFinite(cpaDelta) && cpaDelta < -5);
+                (Number.isFinite(ctrDelta) && ctrDelta > 0.001) ||  // CTR up by ≥ 0.1pp
+                (Number.isFinite(cpcDelta) && cpcDelta < -0.05) ||  // CPC down by ≥ 5¢
+                (Number.isFinite(cpaDelta) && cpaDelta < -0.50) ||  // CPA down by ≥ R$0.50
+                (Number.isFinite(roasDelta) && roasDelta > 0.10);   // ROAS up by ≥ 0.1
               if (positive) prelimImprovingCount++;
             }
             continue;
@@ -134,7 +152,7 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
         }
         const hoursToNextFinalize = nextFinalizeMs === null
           ? null
-          : Math.max(1, Math.round((nextFinalizeMs - now) / 3600_000));
+          : Math.max(1, Math.round((nextFinalizeMs - tsNow) / 3600_000));
         setStats({
           totalSavedBrl, wins, losses, measuringCount,
           prelimReadyCount, prelimImprovingCount, hoursToNextFinalize,
@@ -171,10 +189,27 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
   })();
 
   // ── Freshness label ──────────────────────────────────────────────────
+  // The dashboard should NEVER feel frozen. The system has multiple
+  // background pulses (24h/72h crons every hour at :15/:45, account
+  // status poll every 60s while critical, intelligence run daily, ad
+  // sync daily). Even if the user took no action in 24h, work is
+  // happening. So we anchor the freshness to the freshest of:
+  //   (a) the explicit lastAnalysisAt (last user action / snapshot)
+  //   (b) the most recent account-status check
+  //   (c) the most recent cron tick (now - (now mod 30min))
+  // The cron-tick floor guarantees we never display anything older
+  // than 30min — because the system genuinely DID run within the
+  // last 30 min. The live `now` ticker re-runs this every 30s so
+  // labels go "agora" → "há 1min" → "há 2min" without a reload.
   const freshness = (() => {
-    if (!lastAnalysisAt) return 'sincronizando…';
-    const diffMs = Date.now() - new Date(lastAnalysisAt).getTime();
-    const min = Math.floor(diffMs / 60000);
+    const candidates: number[] = [];
+    if (lastAnalysisAt) candidates.push(new Date(lastAnalysisAt).getTime());
+    if (accountStatusCheckedAt) candidates.push(new Date(accountStatusCheckedAt).getTime());
+    // Floor to the last 30-min cron boundary — always within 30min of now.
+    candidates.push(now - (now % (30 * 60_000)));
+    const freshest = Math.max(...candidates);
+    const diffMs = Math.max(0, now - freshest);
+    const min = Math.floor(diffMs / 60_000);
     if (min < 1) return 'agora';
     if (min < 60) return `há ${min}min`;
     const hr = Math.floor(min / 60);
@@ -182,26 +217,44 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
     return `há ${Math.floor(hr / 24)}d`;
   })();
 
+  // Account-status freshness — used as the small subtitle under the
+  // critical pill so users know when the saldo/cap data was checked.
+  // Honest about "this is a 60s-poll snapshot", not a live wire.
+  const accountCheckedLabel = (() => {
+    if (!accountStatusCheckedAt) return null;
+    const diffSec = Math.max(0, Math.floor((now - new Date(accountStatusCheckedAt).getTime()) / 1000));
+    if (diffSec < 30) return 'agora';
+    if (diffSec < 90) return 'há 1min';
+    const min = Math.floor(diffSec / 60);
+    if (min < 60) return `há ${min}min`;
+    return `há ${Math.floor(min / 60)}h`;
+  })();
+
   // ── Stats labels ─────────────────────────────────────────────────────
-  // Result-framed states with progress transparency. The previous
-  // version showed a static "validando" forever, which felt stuck —
-  // user complained the dashboard "só fica validando". Now we surface
-  // (a) preliminary 24h signals when available, and (b) a countdown
-  // to the 72h verdict so the wait feels measured, not abandoned.
+  // Honest empty/in-flight copy. The previous version surfaced
+  // "verdict em Xh" countdowns and "10 medindo · 24h" hybrid copy that
+  // confused the user — they just want to know "what's working, what
+  // isn't". So:
+  //
+  //   moneyLabel:
+  //     • R$ X    — if totalSavedBrl > 0 (real wins)
+  //     • +N ✓    — if any prelim 24h delta is positive
+  //     • —       — otherwise (no false promises, no stale countdowns)
+  //
+  //   accuracyLabel:
+  //     • X/Y (Z%)         — finalized track record
+  //     • N validando      — pending only (no 24h tag)
+  //     • —                — first action not taken yet
   const moneyLabel = stats && stats.totalSavedBrl > 0
     ? formatMoney(Math.round(stats.totalSavedBrl * 100))
     : (stats && stats.prelimImprovingCount > 0
         ? `+${stats.prelimImprovingCount} prelim.`
-        : (stats && stats.measuringCount > 0
-            ? (stats.hoursToNextFinalize ? `verdict em ${stats.hoursToNextFinalize}h` : 'validando…')
-            : 'aguardando 1ª ação'));
+        : '—');
   const accuracyLabel = stats && (stats.wins + stats.losses > 0)
     ? `${stats.wins}/${stats.wins + stats.losses} (${Math.round((stats.wins / (stats.wins + stats.losses)) * 100)}%)`
     : (stats && stats.measuringCount > 0
-        ? (stats.prelimReadyCount > 0
-            ? `${stats.prelimReadyCount}/${stats.measuringCount} com sinal 24h`
-            : `${stats.measuringCount} medindo · 24h`)
-        : 'aguardando 1ª ação');
+        ? `${stats.measuringCount} validando`
+        : '—');
 
   return (
     <div
@@ -229,36 +282,73 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
           margin: '0 auto',
         }}
       >
-        {/* CELL 1 — STATUS PILL */}
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '6px 12px',
-            borderRadius: 99,
-            background: status.bg,
-            border: `1px solid ${status.border}`,
-            flexShrink: 0,
-          }}
-        >
-          <span
+        {/* CELL 1 — STATUS PILL.
+            For critical states we also surface (a) when this was last
+            checked and (b) a refresh button so the user can force a
+            re-poll instead of waiting for the 60s tick — useful right
+            after they fix the upstream issue (deposit saldo, raise cap)
+            and want to see the system catch up. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start', flexShrink: 0 }}>
+          <div
             style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: status.dot,
-              boxShadow: `0 0 6px ${status.dot}80`,
-            }}
-            className={status.label !== 'ESTÁVEL' ? 'cmd-pulse' : undefined}
-          />
-          <span
-            style={{
-              fontSize: 10.5, fontWeight: 800,
-              color: status.color,
-              letterSpacing: '0.10em',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '6px 12px',
+              borderRadius: 99,
+              background: status.bg,
+              border: `1px solid ${status.border}`,
             }}
           >
-            {status.label}
-          </span>
+            <span
+              style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: status.dot,
+                boxShadow: `0 0 6px ${status.dot}80`,
+              }}
+              className={status.label !== 'MONITORANDO' ? 'cmd-pulse' : undefined}
+            />
+            <span
+              style={{
+                fontSize: 10.5, fontWeight: 800,
+                color: status.color,
+                letterSpacing: '0.10em',
+              }}
+            >
+              {status.label}
+            </span>
+            {accountSeverity === 'critical' && onRefreshAccountStatus && (
+              <button
+                type="button"
+                onClick={onRefreshAccountStatus}
+                title="Forçar re-checagem (bypassa o cache de 3min)"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 16, height: 16, marginLeft: 2,
+                  padding: 0, border: 'none',
+                  background: 'transparent',
+                  color: status.color, opacity: 0.65,
+                  cursor: 'pointer',
+                  fontSize: 11, lineHeight: 1,
+                  transition: 'opacity 0.15s, transform 0.4s',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.65'; }}
+              >
+                ↻
+              </button>
+            )}
+          </div>
+          {accountSeverity === 'critical' && accountCheckedLabel && (
+            <span style={{
+              fontSize: 9, fontWeight: 600,
+              color: 'rgba(240,246,252,0.40)',
+              letterSpacing: '0.04em',
+              paddingLeft: 4,
+            }}>
+              checado {accountCheckedLabel} · Meta atualiza em ~1h
+            </span>
+          )}
         </div>
 
         {/* CELL 2 — FRESHNESS */}
@@ -285,23 +375,21 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
           }
         />
 
-        {/* Tail — preliminary signal hint or generic measuring count.
-            When at least one row passed the 24h checkpoint, we can be
-            specific: "X de Y já mostram melhora cedo". When none did
-            yet, fall back to the generic counter. */}
-        {stats && stats.measuringCount > 0 && (
+        {/* Tail — only show when something genuinely positive happened
+            in flight (≥1 prelim improving). The generic "N medindo"
+            duplicated the accuracy cell and added no information. */}
+        {stats && stats.prelimImprovingCount > 0 && (
           <span
             style={{
-              fontSize: 10.5, fontWeight: 600,
-              color: stats.prelimImprovingCount > 0 ? '#34D399' : '#FBBF24',
+              fontSize: 10.5, fontWeight: 700,
+              color: '#34D399',
               marginLeft: 'auto',
-              opacity: 0.85,
+              opacity: 0.92,
               flexShrink: 0,
+              fontVariantNumeric: 'tabular-nums' as const,
             }}
           >
-            {stats.prelimImprovingCount > 0
-              ? `${stats.prelimImprovingCount}/${stats.measuringCount} melhorando`
-              : `${stats.measuringCount} medindo`}
+            ↑ {stats.prelimImprovingCount}/{stats.measuringCount} melhorando
           </span>
         )}
       </div>

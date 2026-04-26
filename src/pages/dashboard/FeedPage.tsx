@@ -7730,6 +7730,8 @@ const FeedPage: React.FC = () => {
           lastAnalysisAt={lastAnalysisAt}
           accountSeverity={accountStatus?.severity || null}
           accountStatusMessage={accountStatus?.message || null}
+          accountStatusCheckedAt={accountStatus?.checked_at || null}
+          onRefreshAccountStatus={() => setAccountStatusRetryNonce((n) => n + 1)}
         />
 
         <HeroDecisionAnchor
