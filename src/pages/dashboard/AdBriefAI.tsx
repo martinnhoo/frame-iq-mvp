@@ -4876,9 +4876,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               <div style={{display:"flex",justifyContent:"flex-end"}} className="user-msg-row">
                 <div className="user-bubble-wrap" style={{display:"flex",flexDirection:"column" as const,alignItems:"flex-end",gap:4,maxWidth:"min(72%,calc(100vw - 80px))"}}>
                   <div style={{
-                    borderRadius:"18px 18px 4px 18px",
-                    background:"#2563EB",
-                    boxShadow:"0 2px 12px rgba(37,99,235,0.30)",
+                    borderRadius:"14px 14px 4px 14px",
+                    background:"linear-gradient(180deg, #2F6FE5 0%, #1F4FBF 100%)",
+                    border:"1px solid rgba(125,168,255,0.30)",
+                    boxShadow:"0 6px 18px rgba(37,99,235,0.32), inset 0 1px 0 rgba(255,255,255,0.16)",
                     overflow:"hidden",
                     animation:"bubbleIn 0.2s cubic-bezier(0.34,1.56,0.64,1)",
                   }}>
@@ -4927,15 +4928,22 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:12,fontWeight:600,color:"rgba(37,99,235,0.75)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
                   </div>
                 )}
-                {/* Blocks — card da IA */}
+                {/* Blocks — card da IA. Visual treatment matches the
+                    Feed DecisionCard family: subtle gradient background,
+                    a colored left accent (AdBrief blue), denser shadow
+                    and inset highlight so it reads as a "decision" card
+                    rather than a chat bubble. Keeps the tail-corner
+                    radius (4px top-left) for the conversational anchor. */}
                 {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && !msg.blocks?.every((b:any)=>b._pendingTool) ? (
                   <div style={{
-                    background:"var(--bg-card)",
-                    border:"1px solid var(--border-subtle)",
-                    borderRadius:"4px 18px 18px 18px",
+                    background:"linear-gradient(180deg, rgba(15,23,42,0.78) 0%, rgba(10,15,28,0.92) 100%)",
+                    border:"1px solid rgba(255,255,255,0.07)",
+                    borderLeft:"2px solid rgba(56,189,248,0.55)",
+                    borderRadius:"4px 14px 14px 14px",
                     padding:"16px 20px",
-                    boxShadow:"0 2px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
-                    backdropFilter:"blur(8px)",
+                    boxShadow:"0 6px 22px rgba(0,0,0,0.42), 0 0 0 1px rgba(56,189,248,0.04), inset 0 1px 0 rgba(255,255,255,0.06)",
+                    backdropFilter:"blur(10px) saturate(140%)",
+                    WebkitBackdropFilter:"blur(10px) saturate(140%)",
                     animation:"cardIn 0.25s cubic-bezier(0.16,1,0.3,1)",
                   }}>
                     {msg.blocks?.map((b,bi)=>

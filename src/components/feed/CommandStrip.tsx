@@ -45,6 +45,11 @@ interface CommandStripProps {
    *  When 'critical', forces the status pill to URGENTE regardless
    *  of decision counts. */
   accountSeverity?: 'ok' | 'warn' | 'critical' | 'unknown' | null;
+  /** Specific human message tied to accountSeverity. Used to derive a
+   *  contextual status pill label so we don't say "CONTA BLOQUEADA"
+   *  (alarmist, sounds like Meta-imposed penalty) when the real cause
+   *  is something benign like prepaid balance running out. */
+  accountStatusMessage?: string | null;
 }
 
 type Stats = {
@@ -52,6 +57,16 @@ type Stats = {
   wins: number;
   losses: number;
   measuringCount: number;
+  /** Of measuringCount, how many already passed the 24h checkpoint
+   *  (preliminary signals captured, awaiting final 72h verdict). */
+  prelimReadyCount: number;
+  /** Of prelim-ready, how many show positive delta (CTR up / CPC down).
+   *  Lets us hint "X mostrando melhora cedo" while still honest about
+   *  the unfinalized state. */
+  prelimImprovingCount: number;
+  /** Hours until the next pending measurement finalizes (72h post taken_at).
+   *  null when no pendings or all are overdue. */
+  hoursToNextFinalize: number | null;
 };
 
 export const CommandStrip: React.FC<CommandStripProps> = ({
@@ -60,6 +75,7 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
   criticalAlertCount = 0,
   lastAnalysisAt = null,
   accountSeverity = null,
+  accountStatusMessage = null,
 }) => {
   const [stats, setStats] = useState<Stats | null>(null);
 
@@ -71,22 +87,58 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
         const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
         const { data } = await (supabase as any)
           .from('action_outcomes')
-          .select('improved, finalized, context, taken_at')
+          .select('improved, finalized, context, taken_at, measured_24h_at, delta_24h')
           .eq('user_id', userId)
           .gte('taken_at', cutoff)
           .limit(500);
         if (cancelled || !data) return;
         let totalSavedBrl = 0;
         let wins = 0, losses = 0, measuringCount = 0;
+        let prelimReadyCount = 0, prelimImprovingCount = 0;
+        let nextFinalizeMs: number | null = null;
+        const now = Date.now();
         for (const r of data as any[]) {
-          if (!r.finalized) { measuringCount++; continue; }
+          if (!r.finalized) {
+            measuringCount++;
+            // Track soonest 72h finalize across pendings — only count rows
+            // whose taken_at + 72h is still in the future (overdue ones
+            // are stuck waiting for the cron, not "X hours away").
+            const finalizeAt = new Date(r.taken_at).getTime() + 72 * 3600_000;
+            if (finalizeAt > now && (nextFinalizeMs === null || finalizeAt < nextFinalizeMs)) {
+              nextFinalizeMs = finalizeAt;
+            }
+            // Once measured_24h_at is set, we have preliminary delta —
+            // surface it so the user sees real progress instead of a
+            // perpetual "validando".
+            if (r.measured_24h_at) {
+              prelimReadyCount++;
+              const d = r.delta_24h || {};
+              // Prefer CTR delta (most reliable fast signal). Fallback to
+              // CPC (lower is better) and CPA (lower is better).
+              const ctrDelta = Number(d.ctr_delta_pct ?? d.ctr_pct);
+              const cpcDelta = Number(d.cpc_delta_pct ?? d.cpc_pct);
+              const cpaDelta = Number(d.cpa_delta_pct ?? d.cpa_pct);
+              const positive =
+                (Number.isFinite(ctrDelta) && ctrDelta > 5) ||
+                (Number.isFinite(cpcDelta) && cpcDelta < -5) ||
+                (Number.isFinite(cpaDelta) && cpaDelta < -5);
+              if (positive) prelimImprovingCount++;
+            }
+            continue;
+          }
           if (r.improved === true) {
             wins++;
             const v = Number(r.context?.avoided_spend_brl);
             if (Number.isFinite(v) && v > 0) totalSavedBrl += v;
           } else if (r.improved === false) losses++;
         }
-        setStats({ totalSavedBrl, wins, losses, measuringCount });
+        const hoursToNextFinalize = nextFinalizeMs === null
+          ? null
+          : Math.max(1, Math.round((nextFinalizeMs - now) / 3600_000));
+        setStats({
+          totalSavedBrl, wins, losses, measuringCount,
+          prelimReadyCount, prelimImprovingCount, hoursToNextFinalize,
+        });
       } catch { /* silent */ }
     })();
     return () => { cancelled = true; };
@@ -94,11 +146,25 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
 
   // ── Status logic ─────────────────────────────────────────────────────
   // Priority: account-critical > critical alert > active kill > stable.
-  // Account-critical = Meta-level issue (spend cap, billing) which trumps
-  // everything else: no point flagging an ad-level kill when delivery
-  // is paused for the entire account.
+  // When the account is critical, derive the pill label from the actual
+  // cause (saldo, limite, status Meta) instead of the generic "CONTA
+  // BLOQUEADA" — which sounds like Meta imposed a penalty/suspension and
+  // alarms users when the real cause is something benign like prepaid
+  // balance running out (recoverable in 30s).
   const status = (() => {
-    if (accountSeverity === 'critical') return { label: 'CONTA BLOQUEADA', color: '#EF4444', dot: '#F87171', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.24)' };
+    if (accountSeverity === 'critical') {
+      const m = (accountStatusMessage || '').toLowerCase();
+      // Prepaid balance — most common, least alarming
+      let label = 'AÇÃO REQUERIDA';
+      if (m.includes('saldo') && m.includes('zerado')) label = 'SALDO ZERADO';
+      else if (m.includes('saldo')) label = 'SALDO BAIXO';
+      // Spend cap (large user-set) — wallet limit, not Meta penalty
+      else if (m.includes('limite de gastos')) label = 'LIMITE ATINGIDO';
+      // Real Meta-side issues (account_status 2/3/8/101)
+      else if (m.includes('desativada') || m.includes('encerrada') || m.includes('pendência')) label = 'CONTA SUSPENSA';
+      else if (m.includes('revisão')) label = 'EM REVISÃO';
+      return { label, color: '#EF4444', dot: '#F87171', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.24)' };
+    }
     if (criticalAlertCount > 0) return { label: 'URGENTE', color: '#EF4444', dot: '#F87171', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.20)' };
     if (killCount > 0) return { label: 'ATENÇÃO', color: '#F59E0B', dot: '#FBBF24', bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.20)' };
     return { label: 'MONITORANDO', color: '#10B981', dot: '#34D399', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.18)' };
@@ -117,16 +183,25 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
   })();
 
   // ── Stats labels ─────────────────────────────────────────────────────
-  // Result-framed empty states. The brief: never "medindo..." (reads as
-  // waiting). Replace with "validando" (reads as work-in-progress with
-  // an outcome at the end). When zero history, point at the first
-  // unlock instead of saying "vazio".
+  // Result-framed states with progress transparency. The previous
+  // version showed a static "validando" forever, which felt stuck —
+  // user complained the dashboard "só fica validando". Now we surface
+  // (a) preliminary 24h signals when available, and (b) a countdown
+  // to the 72h verdict so the wait feels measured, not abandoned.
   const moneyLabel = stats && stats.totalSavedBrl > 0
     ? formatMoney(Math.round(stats.totalSavedBrl * 100))
-    : (stats && stats.measuringCount > 0 ? 'validando' : 'aguardando 1ª ação');
+    : (stats && stats.prelimImprovingCount > 0
+        ? `+${stats.prelimImprovingCount} prelim.`
+        : (stats && stats.measuringCount > 0
+            ? (stats.hoursToNextFinalize ? `verdict em ${stats.hoursToNextFinalize}h` : 'validando…')
+            : 'aguardando 1ª ação'));
   const accuracyLabel = stats && (stats.wins + stats.losses > 0)
     ? `${stats.wins}/${stats.wins + stats.losses} (${Math.round((stats.wins / (stats.wins + stats.losses)) * 100)}%)`
-    : (stats && stats.measuringCount > 0 ? `${stats.measuringCount} sendo validada${stats.measuringCount === 1 ? '' : 's'}` : 'aguardando 1ª ação');
+    : (stats && stats.measuringCount > 0
+        ? (stats.prelimReadyCount > 0
+            ? `${stats.prelimReadyCount}/${stats.measuringCount} com sinal 24h`
+            : `${stats.measuringCount} medindo · 24h`)
+        : 'aguardando 1ª ação');
 
   return (
     <div
@@ -210,17 +285,23 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
           }
         />
 
-        {/* Tail trailing measuring count — small, only when relevant */}
+        {/* Tail — preliminary signal hint or generic measuring count.
+            When at least one row passed the 24h checkpoint, we can be
+            specific: "X de Y já mostram melhora cedo". When none did
+            yet, fall back to the generic counter. */}
         {stats && stats.measuringCount > 0 && (
           <span
             style={{
-              fontSize: 10.5, fontWeight: 600, color: '#FBBF24',
+              fontSize: 10.5, fontWeight: 600,
+              color: stats.prelimImprovingCount > 0 ? '#34D399' : '#FBBF24',
               marginLeft: 'auto',
               opacity: 0.85,
               flexShrink: 0,
             }}
           >
-            +{stats.measuringCount} medindo
+            {stats.prelimImprovingCount > 0
+              ? `${stats.prelimImprovingCount}/${stats.measuringCount} melhorando`
+              : `${stats.measuringCount} medindo`}
           </span>
         )}
       </div>

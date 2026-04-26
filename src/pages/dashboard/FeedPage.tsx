@@ -7729,6 +7729,7 @@ const FeedPage: React.FC = () => {
           criticalAlertCount={pendingDecisions.filter(d => d.type === 'kill' || (d.type === 'fix' && d.score >= 75)).length}
           lastAnalysisAt={lastAnalysisAt}
           accountSeverity={accountStatus?.severity || null}
+          accountStatusMessage={accountStatus?.message || null}
         />
 
         <HeroDecisionAnchor
