@@ -91,7 +91,7 @@ const TX: Record<Lang, Record<string, string>> = {
     trust_meta: "Funciona com Meta Ads",
     // hero
     hero_tag: "GESTOR DE TRÁFEGO COM IA · META ADS",
-    hero_title: "Não contrate outro gestor de tráfego.\nAtive um.",
+    hero_title: "Você não vê o dinheiro indo embora.\nA AdBrief vê.",
     hero_sub: "AdBrief é um gestor sênior com IA, dentro da sua conta Meta. Lê a performance a cada 15 minutos, decide o que fazer e executa — com o seu OK.",
     hero_support: "Pausar, escalar, ajustar orçamento, reescrever criativo — sem você abrir o Gerenciador de Anúncios.",
     hero_cta: "Testar 3 dias grátis",
@@ -261,7 +261,7 @@ const TX: Record<Lang, Record<string, string>> = {
     trust_powered: "Powered by",
     trust_meta: "Works with Meta Ads",
     hero_tag: "AI MEDIA BUYER · META ADS",
-    hero_title: "Don't hire another media buyer.\nActivate one.",
+    hero_title: "You don't see the money slipping away.\nAdBrief does.",
     hero_sub: "AdBrief is a senior AI media buyer living inside your Meta Ads account. Reads performance every 15 minutes, decides what to do, and executes — with your approval.",
     hero_support: "Pause, scale, adjust budgets, rewrite creative — without ever opening Ads Manager.",
     hero_cta: "Try 3 days free",
@@ -420,7 +420,7 @@ const TX: Record<Lang, Record<string, string>> = {
     trust_powered: "Powered by",
     trust_meta: "Funciona con Meta Ads",
     hero_tag: "MEDIA BUYER CON IA · META ADS",
-    hero_title: "No contrates otro media buyer.\nActiva uno.",
+    hero_title: "No ves el dinero irse.\nAdBrief sí.",
     hero_sub: "AdBrief es un media buyer sénior con IA, viviendo dentro de tu cuenta Meta. Lee la performance cada 15 minutos, decide qué hacer y ejecuta — con tu OK.",
     hero_support: "Pausar, escalar, ajustar presupuesto, reescribir creativo — sin abrir el Administrador de Anuncios.",
     hero_cta: "Probar 3 días gratis",
@@ -762,6 +762,325 @@ function Nav({ t, lang, setLang }: { t: Record<string, string>; lang: Lang; setL
 }
 
 // ── HeroScreenshot — Real product screenshot with callouts ──────────────────
+// FeedMockup — large, faithful HTML reproduction of the AdBrief Feed
+// dashboard. Used as the hero anchor on the LP: dominates the visual
+// real estate, communicates the product in one screen, scales cleanly
+// down to mobile (collapses sidebar, drops callouts, scales fonts).
+//
+// Mirrors the actual Feed: CommandStrip at top, billboard hero card
+// in the middle (kicker tag + huge R$ headline + supporting paragraph
+// + red CTA + "sistema ativo" log), one decision card below, and a
+// right-rail sidebar with health gauge + recommended next step +
+// recent activity. Same components the user sees once they log in.
+function FeedMockup() {
+  return (
+    <div className="lp-feed-mockup" style={{
+      width: "100%",
+      maxWidth: 1200,
+      margin: "0 auto",
+      borderRadius: 18,
+      overflow: "hidden",
+      background: "linear-gradient(180deg, #0A0F1C 0%, #060A14 100%)",
+      border: "1px solid rgba(255,255,255,0.06)",
+      boxShadow: "0 0 0 1px rgba(255,255,255,0.03), 0 30px 80px rgba(0,0,0,0.55), 0 80px 160px rgba(0,0,0,0.65), 0 0 100px rgba(14,165,233,0.06)",
+      fontFamily: F,
+      position: "relative",
+    }}>
+      {/* Browser chrome */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 7,
+        padding: "11px 16px",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        background: "rgba(255,255,255,0.012)",
+      }}>
+        <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#ff5f57", opacity: 0.85 }} />
+        <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#febc2e", opacity: 0.85 }} />
+        <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#28c840", opacity: 0.85 }} />
+        <div style={{
+          flex: 1, textAlign: "center", fontSize: 11,
+          color: "rgba(255,255,255,0.32)", fontWeight: 500, letterSpacing: "0.02em",
+        }}>
+          adbrief.pro/dashboard/feed
+        </div>
+      </div>
+
+      {/* CommandStrip */}
+      <div className="lp-cmdstrip" style={{
+        display: "flex", alignItems: "center", gap: 24,
+        padding: "12px 22px",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        background: "linear-gradient(180deg, rgba(10,15,28,0.96) 0%, rgba(6,10,20,0.94) 100%)",
+        flexWrap: "wrap" as const,
+      }}>
+        {/* Status pill */}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 7,
+          padding: "5px 11px", borderRadius: 99,
+          background: "rgba(245,158,11,0.10)",
+          border: "1px solid rgba(245,158,11,0.22)",
+          flexShrink: 0,
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: "#FBBF24",
+            boxShadow: "0 0 6px rgba(251,191,36,0.5)",
+            animation: "lp-pulse 1.6s ease-in-out infinite",
+          }} />
+          <span style={{ fontSize: 10, fontWeight: 800, color: "#F59E0B", letterSpacing: "0.10em" }}>
+            ATENÇÃO
+          </span>
+        </div>
+        {/* Cells */}
+        <FeedMockCell label="Última análise" value="há 4min" valueColor="#F0F6FC" />
+        <span style={{ width: 1, height: 22, background: "rgba(255,255,255,0.08)" }} aria-hidden />
+        <FeedMockCell label="Economizado · 30d" value="R$ 47.890,20" valueColor="#34D399" />
+        <FeedMockCell label="Decisões certas" value="142/148 (96%)" valueColor="#34D399" />
+        <span style={{
+          marginLeft: "auto", fontSize: 10.5, fontWeight: 700, color: "#34D399",
+          fontVariantNumeric: "tabular-nums" as const,
+        }}>
+          ↑ 18/18 melhorando
+        </span>
+      </div>
+
+      {/* Body — 2 cols on desktop, 1 col on mobile */}
+      <div className="lp-feed-body" style={{
+        display: "grid",
+        gridTemplateColumns: "1.55fr 1fr",
+        gap: 18,
+        padding: "20px 22px 22px",
+      }}>
+        {/* LEFT — billboard hero + decision card */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Billboard */}
+          <div style={{
+            position: "relative",
+            padding: "22px 22px 20px",
+            borderRadius: 14,
+            background: "linear-gradient(180deg, #0E1218 0%, #0A0F1C 100%)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            overflow: "hidden",
+          }}>
+            {/* Ambient red glow */}
+            <div aria-hidden style={{
+              position: "absolute", top: -120, left: "50%", transform: "translateX(-50%)",
+              width: 600, height: 280,
+              background: "radial-gradient(ellipse at center, rgba(239,68,68,0.10) 0%, transparent 70%)",
+              pointerEvents: "none" as const,
+            }} />
+            {/* Eyebrow */}
+            <p style={{
+              margin: "0 0 16px", fontSize: 13.5, fontWeight: 500,
+              color: "rgba(240,246,252,0.72)", letterSpacing: "-0.005em",
+              lineHeight: 1.4, position: "relative",
+            }}>
+              5 criativos cansados estão queimando seu dinheiro
+            </p>
+            {/* Big number */}
+            <div style={{
+              display: "flex", alignItems: "baseline", gap: 8,
+              flexWrap: "wrap" as const, lineHeight: 0.95, position: "relative",
+            }}>
+              <span className="lp-bignum" style={{
+                fontSize: "clamp(42px, 7.4vw, 84px)",
+                fontWeight: 900, color: "#F87171",
+                letterSpacing: "-0.06em",
+                fontVariantNumeric: "tabular-nums" as const,
+                textShadow: "0 0 60px rgba(239,68,68,0.18), 0 0 120px rgba(239,68,68,0.10)",
+              }}>
+                R$ 1.247
+              </span>
+              <span style={{
+                fontSize: "clamp(14px, 1.8vw, 20px)", fontWeight: 700,
+                color: "rgba(248,113,113,0.62)", letterSpacing: "-0.02em",
+              }}>
+                /dia
+              </span>
+            </div>
+            {/* CTA */}
+            <button style={{
+              marginTop: 18,
+              padding: "11px 20px", borderRadius: 10,
+              background: "#DC2626", color: "#fff", border: "none",
+              fontFamily: F, fontSize: 13, fontWeight: 700,
+              cursor: "pointer", letterSpacing: "-0.005em",
+              boxShadow: "0 0 24px rgba(239,68,68,0.20)",
+              display: "inline-flex", alignItems: "center", gap: 6,
+            }}>
+              Pausar 5 + ver variações <ArrowRight size={13} strokeWidth={2.4} />
+            </button>
+          </div>
+
+          {/* Decision card */}
+          <div className="lp-decision" style={{
+            padding: "13px 16px",
+            borderLeft: "2px solid #F87171",
+            background: "transparent",
+            display: "flex", flexDirection: "column", gap: 7,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+              <span style={{
+                fontSize: 9.5, fontWeight: 800, color: "#F87171",
+                letterSpacing: "0.08em",
+              }}>
+                PAUSAR · CRÍTICO
+              </span>
+              <span style={{
+                fontSize: 17, fontWeight: 800, color: "#F87171",
+                fontVariantNumeric: "tabular-nums" as const,
+              }}>
+                R$ 187/dia
+              </span>
+            </div>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: "#F0F6FC", lineHeight: 1.35 }}>
+              "UGC 03 — depoimento Maria" queimando R$ 187/dia
+            </span>
+            <span style={{ fontSize: 11.5, color: "rgba(240,246,252,0.55)", lineHeight: 1.5 }}>
+              Frequência 4.8 · CTR caiu de 2.1% pra 1.1% · CPA subiu 84%. Aprendi com 47 casos
+              similares: pausar + repor recupera ROAS em 96% das vezes.
+            </span>
+          </div>
+        </div>
+
+        {/* RIGHT — sidebar */}
+        <div className="lp-feed-side" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Health gauge */}
+          <div style={{
+            padding: "14px 16px", borderRadius: 12,
+            background: "linear-gradient(180deg, rgba(15,23,42,0.65) 0%, rgba(10,15,28,0.85) 100%)",
+            border: "1px solid rgba(245,158,11,0.18)",
+            display: "flex", alignItems: "center", gap: 14,
+          }}>
+            {/* Number gauge */}
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%",
+              border: "3px solid #F59E0B",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+              background: "rgba(245,158,11,0.06)",
+            }}>
+              <span style={{
+                fontSize: 18, fontWeight: 900, color: "#FBBF24",
+                fontVariantNumeric: "tabular-nums" as const,
+              }}>
+                78
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+              <span style={{
+                fontSize: 9.5, fontWeight: 700, color: "rgba(240,246,252,0.42)",
+                letterSpacing: "0.10em",
+              }}>
+                SAÚDE DA CONTA · ATENÇÃO
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#F0F6FC", lineHeight: 1.3 }}>
+                Sua conta precisa de atenção
+              </span>
+            </div>
+          </div>
+
+          {/* Próximo passo */}
+          <div style={{
+            padding: "14px 16px", borderRadius: 12,
+            background: "linear-gradient(180deg, rgba(37,99,235,0.08) 0%, rgba(15,23,42,0.65) 100%)",
+            border: "1px solid rgba(56,189,248,0.16)",
+            display: "flex", flexDirection: "column", gap: 7,
+          }}>
+            <span style={{
+              fontSize: 9.5, fontWeight: 700, color: "#7DD3FC",
+              letterSpacing: "0.10em",
+            }}>
+              PRÓXIMO PASSO RECOMENDADO
+            </span>
+            <span style={{ fontSize: 12.5, color: "rgba(240,246,252,0.78)", lineHeight: 1.5 }}>
+              Pausar "UGC 03 — Maria" agora libera R$ 187/dia + ativa a variação 2 que já
+              roteirizei. Recupera ROAS em 48h.
+            </span>
+            <div style={{
+              marginTop: 4, display: "flex", alignItems: "baseline", gap: 5,
+            }}>
+              <span style={{ fontSize: 10, color: "rgba(240,246,252,0.50)", fontWeight: 600 }}>
+                Potencial de impacto
+              </span>
+            </div>
+            <span style={{
+              fontSize: 24, fontWeight: 900, color: "#34D399",
+              fontVariantNumeric: "tabular-nums" as const,
+              letterSpacing: "-0.03em", lineHeight: 1,
+            }}>
+              +R$ 1.247<span style={{ fontSize: 14, fontWeight: 700, color: "rgba(52,211,153,0.65)", marginLeft: 4 }}>/dia</span>
+            </span>
+          </div>
+
+          {/* Atividade recente */}
+          <div style={{
+            padding: "12px 14px", borderRadius: 12,
+            background: "rgba(15,23,42,0.45)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            display: "flex", flexDirection: "column", gap: 9,
+          }}>
+            <span style={{
+              fontSize: 9.5, fontWeight: 700, color: "rgba(240,246,252,0.42)",
+              letterSpacing: "0.10em",
+            }}>
+              ATIVIDADE RECENTE
+            </span>
+            {[
+              { tag: "MEDINDO", tagColor: "#FBBF24", label: "Conjunto pausado", sub: "lal-3pct-compradoras-fadiga", time: "12 min" },
+              { tag: "VALIDADO +32%", tagColor: "#34D399", label: "Anúncio pausado", sub: "Reels — UGC oferta janeiro", time: "4h" },
+              { tag: "MEDINDO", tagColor: "#FBBF24", label: "Budget aumentado", sub: "Reels UGC depoimento João +40%", time: "6h" },
+            ].map((row, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 11 }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: 6,
+                  background: "rgba(255,255,255,0.04)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                  color: "rgba(240,246,252,0.55)", fontSize: 10,
+                }}>‖</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" as const }}>
+                    <span style={{ color: "#F0F6FC", fontWeight: 600 }}>{row.label}</span>
+                    <span style={{
+                      fontSize: 8.5, fontWeight: 800,
+                      color: row.tagColor,
+                      background: row.tagColor === "#34D399" ? "rgba(52,211,153,0.10)" : "rgba(251,191,36,0.10)",
+                      border: `1px solid ${row.tagColor === "#34D399" ? "rgba(52,211,153,0.22)" : "rgba(251,191,36,0.22)"}`,
+                      borderRadius: 4, padding: "1px 5px", letterSpacing: "0.06em",
+                    }}>{row.tag}</span>
+                  </div>
+                  <div style={{ color: "rgba(240,246,252,0.42)", fontSize: 10.5, marginTop: 1 }}>
+                    {row.sub}
+                  </div>
+                </div>
+                <span style={{ color: "rgba(240,246,252,0.32)", fontSize: 10, fontWeight: 600, flexShrink: 0 }}>
+                  {row.time}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeedMockCell({ label, value, valueColor }: { label: string; value: string; valueColor: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, lineHeight: 1.1 }}>
+      <span style={{
+        fontSize: 9, fontWeight: 700, color: "rgba(240,246,252,0.40)",
+        letterSpacing: "0.10em", textTransform: "uppercase" as const,
+      }}>{label}</span>
+      <span style={{
+        fontSize: 13, fontWeight: 700, color: valueColor,
+        fontVariantNumeric: "tabular-nums" as const,
+        letterSpacing: "-0.005em",
+      }}>{value}</span>
+    </div>
+  );
+}
+
 // Image lives at /public/hero-screenshot.png (1647×902, ~1.83:1).
 // Shows the AI diagnosing a ROAS drop with real metrics + action list.
 // Callouts float outside the frame on >=1024px, collapse to clean image on mobile.
@@ -1159,47 +1478,53 @@ function Hero({ t }: { t: Record<string, string> }) {
         }}
       />
 
-      <div className="hero-grid" style={{
-        maxWidth: 1100, width: "100%", margin: "0 auto",
-        display: "grid", gridTemplateColumns: "1fr 1.15fr",
-        gap: "clamp(48px,6vw,96px)", alignItems: "center",
+      {/* Stacked layout — billboard headline on top, gigantic Feed
+          mockup below as the dominant visual. Inspired by Apple's
+          product LPs: minimal text, dominant artifact. The headline
+          IS the entire above-the-fold copy; everything else either
+          lives inside the mockup itself (CTAs, R$ number, social
+          proof of activity) or moves below the fold. */}
+      <div className="lp-hero-stack" style={{
+        maxWidth: 1240, width: "100%", margin: "0 auto",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        gap: "clamp(36px, 5vw, 64px)",
+        position: "relative",
       }}>
-        {/* Left — copy — slight vertical offset for tension */}
-        <div style={{ paddingTop: 24 }}>
+        {/* Eyebrow + headline + thin CTA stack */}
+        <div className="lp-hero-copy" style={{
+          textAlign: "center", maxWidth: 920, padding: "0 16px",
+        }}>
           <span className="hero-tag-fade" style={{
             fontFamily: F, fontSize: 10, fontWeight: 700, letterSpacing: "0.14em",
-            color: ACCENT, display: "inline-block", marginBottom: 20, opacity: 0.7,
+            color: ACCENT, display: "inline-block", marginBottom: 18, opacity: 0.75,
           }}>
             {t.hero_tag}
           </span>
-          <h1 style={{
-            fontFamily: F, fontSize: "clamp(32px,4vw,50px)", fontWeight: 800,
-            letterSpacing: "-0.04em", lineHeight: 1.08,
-            color: TEXT, margin: "0 0 18px", whiteSpace: "pre-line",
+          <h1 className="lp-hero-h1" style={{
+            fontFamily: F,
+            fontSize: "clamp(34px, 5.6vw, 72px)",
+            fontWeight: 800,
+            letterSpacing: "-0.045em",
+            lineHeight: 1.04,
+            color: TEXT,
+            margin: "0 auto 22px",
+            whiteSpace: "pre-line",
+            maxWidth: 14 + "ch",
           }}>
             {t.hero_title}
           </h1>
-          <p className="hero-sub-fade" style={{
-            fontFamily: F, fontSize: "clamp(14px,1.15vw,16px)", color: TEXT2,
-            lineHeight: 1.65, margin: "0 0 10px", maxWidth: 420, fontWeight: 400,
-          }}>
-            {t.hero_sub}
-          </p>
-          <p className="hero-sub-fade" style={{
-            fontFamily: F, fontSize: 13, color: TEXT3, margin: "0 0 36px",
-            fontWeight: 500, letterSpacing: "-0.01em",
-          }}>
-            {t.hero_support}
-          </p>
 
-          {/* CTA */}
-          <div className="hero-cta-fade">
+          {/* CTA cluster — inline, compact */}
+          <div className="hero-cta-fade" style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+            marginTop: 8,
+          }}>
             <button
               onClick={() => navigate("/signup")}
               className="hero-cta-btn"
               style={{
                 fontFamily: F, fontSize: 15, fontWeight: 700,
-                padding: "14px 36px", borderRadius: 10,
+                padding: "14px 32px", borderRadius: 10,
                 background: "#fff", color: "#000", border: "none",
                 cursor: "pointer", transition: `all 0.25s ${EASE}`,
                 letterSpacing: "-0.01em", minWidth: 220,
@@ -1208,35 +1533,35 @@ function Hero({ t }: { t: Record<string, string> }) {
             >
               {t.hero_cta} <ArrowRight size={15} strokeWidth={2.2} style={{ marginLeft: 6, verticalAlign: "middle", position: "relative", top: -0.5 }} />
             </button>
-            <p className="hero-detail-fade" style={{
-              fontFamily: F, fontSize: 11.5, color: "rgba(255,255,255,0.22)",
-              margin: "10px 0 0", fontWeight: 400,
+            <p style={{
+              fontFamily: F, fontSize: 11.5, color: "rgba(255,255,255,0.32)",
+              margin: 0, fontWeight: 500,
             }}>
               {t.hero_cta_sub}
             </p>
-          </div>
-
-          <div style={{ marginTop: 14 }}>
             <a href="/login" style={{
-              fontFamily: F, fontSize: 12.5, color: TEXT3, textDecoration: "none", fontWeight: 400,
+              fontFamily: F, fontSize: 12, color: TEXT3, textDecoration: "none",
+              fontWeight: 500, marginTop: 4,
             }}>
               {t.hero_login}
             </a>
           </div>
         </div>
 
-        {/* Right — product carousel */}
-        <div className="hero-mockup" style={{
-          display: "flex", justifyContent: "flex-end", position: "relative",
+        {/* The mockup — dominant visual */}
+        <div className="lp-feed-wrap" style={{
+          width: "100%", padding: "0 clamp(8px, 2vw, 24px)",
+          position: "relative",
         }}>
-          <div style={{
-            position: "absolute", top: "50%", left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "90%", height: "90%", borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 60%)",
-            pointerEvents: "none", filter: "blur(60px)",
+          {/* Soft glow under the mockup */}
+          <div aria-hidden style={{
+            position: "absolute", left: "50%", top: "8%",
+            transform: "translateX(-50%)",
+            width: "85%", height: "60%",
+            background: "radial-gradient(ellipse at center, rgba(14,165,233,0.10) 0%, transparent 70%)",
+            filter: "blur(50px)", pointerEvents: "none",
           }} />
-          <HeroScreenshot t={t} />
+          <FeedMockup />
         </div>
       </div>
     </section>
@@ -2715,6 +3040,12 @@ export default function IndexNew() {
           50%      { opacity: 1;   transform: scale(1.15); box-shadow: 0 0 10px 2px rgba(245,158,11,0.35); }
         }
 
+        /* ── LP FeedMockup pulse for the live status dot ────────── */
+        @keyframes lp-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%      { opacity: 0.5; transform: scale(0.85); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .hero-bg-spotlight, .hero-bg-ambient { animation: none !important; }
         }
@@ -2748,6 +3079,36 @@ export default function IndexNew() {
           }
           /* Hide callouts on mobile — they'd overflow the screen */
           .hero-callout { display: none !important; }
+
+          /* LP Hero billboard — collapse the FeedMockup body to a single
+             column (sidebar drops below the main column) and dial down
+             the padding/font sizes so it feels native on mobile. */
+          .lp-hero-h1 {
+            font-size: clamp(28px, 8vw, 44px) !important;
+            line-height: 1.06 !important;
+            letter-spacing: -0.04em !important;
+          }
+          .lp-feed-body {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+            padding: 14px !important;
+          }
+          .lp-cmdstrip {
+            gap: 12px !important;
+            padding: 10px 14px !important;
+          }
+          .lp-cmdstrip > span:last-child {
+            margin-left: 0 !important;
+            width: 100%;
+            text-align: center;
+          }
+          .lp-bignum {
+            font-size: clamp(38px, 11vw, 56px) !important;
+          }
+          .lp-feed-mockup {
+            border-radius: 14px !important;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 16px 40px rgba(0,0,0,0.55) !important;
+          }
           .concept-grid {
             grid-template-columns: 1fr !important;
             gap: 32px !important;
