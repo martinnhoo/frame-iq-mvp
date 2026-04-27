@@ -4061,6 +4061,37 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   };
 
   const executeMetaAction=async(block:Block, opts?:{force?:boolean})=>{
+    // ── Preempt: catch missing target_id BEFORE round-tripping backend ──
+    // The AI sometimes emits enable/pause/update_budget tool_calls
+    // without target_id (system prompt asks for it but compliance is
+    // uneven). Calling meta-actions with a falsy target_id wastes a
+    // round trip and surfaces backend jargon ("target_id obrigatório
+    // para ação 'enable'...") that the user shouldn't see. Detect locally
+    // and emit a humane bubble instead. The user clicked one button —
+    // they shouldn't be punished for the AI forgetting a field.
+    const REQUIRES_TARGET = new Set(["pause", "enable", "update_budget", "duplicate"]);
+    const validTarget = (v: unknown): v is string =>
+      typeof v === "string" && v.length > 0 && v !== "undefined" && v !== "null";
+    if (REQUIRES_TARGET.has(String(block.meta_action || "")) && !validTarget(block.target_id)) {
+      const id = Date.now();
+      const tType = block.target_type === "campaign" ? "campanha"
+                  : block.target_type === "adset" ? "conjunto" : "anúncio";
+      const verb = block.meta_action === "enable" ? "ativar"
+                 : block.meta_action === "pause" ? "pausar"
+                 : block.meta_action === "duplicate" ? "duplicar" : "alterar";
+      setMessages(prev => [...prev, {
+        role: "assistant", id, ts: id,
+        blocks: [{
+          type: "warning",
+          title: "Faltou identificar o alvo",
+          content: block.target_name
+            ? `Identifiquei "${block.target_name}" no nome mas perdi o ID. Pede pra eu listar suas ${tType === "campanha" ? "campanhas" : tType + "s"} primeiro e tento de novo.`
+            : `Não consegui identificar qual ${tType} ${verb}. Me diga o nome ou peça pra eu listar primeiro.`,
+        }],
+      }]);
+      return;
+    }
+
     // source:"chat" → meta-actions logs to action_log with the right
     // attribution, so chat-initiated pauses are distinguishable from
     // Feed/Autopilot ones in the user's history.
