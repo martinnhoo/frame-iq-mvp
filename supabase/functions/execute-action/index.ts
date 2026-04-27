@@ -56,18 +56,51 @@ async function getAdAccountMetaToken(
   adAccountId: string,
   userId: string
 ) {
-  const { data, error } = await supabase
+  // Schema reality: ad_accounts has NO meta_access_token column. The Meta
+  // OAuth token lives on platform_connections. Resolve via:
+  //   ad_accounts.id (UUID) → user_id + meta_account_id → platform_connections.access_token
+  // First, fetch the ad_accounts row to confirm ownership + get meta_account_id.
+  const { data: acc, error: accErr } = await supabase
     .from("ad_accounts")
-    .select("meta_access_token")
+    .select("id, user_id, meta_account_id")
     .eq("id", adAccountId)
     .eq("user_id", userId)
     .single();
 
-  if (error || !data) {
-    throw new Error(`Failed to fetch ad account meta token: ${error?.message}`);
+  if (accErr || !acc) {
+    throw new Error(`Failed to fetch ad account: ${accErr?.message || "not found"}`);
   }
 
-  return data.meta_access_token;
+  // Then read the active Meta connection for this user. We pick the one
+  // that owns this meta_account_id when possible; fall back to the first
+  // active meta connection if the JSONB ad_accounts list isn't queryable.
+  const { data: conns, error: connErr } = await supabase
+    .from("platform_connections")
+    .select("access_token, ad_accounts, selected_account_id")
+    .eq("user_id", userId)
+    .eq("platform", "meta")
+    .eq("status", "active");
+
+  if (connErr || !conns?.length) {
+    throw new Error(`No active Meta connection for user: ${connErr?.message || "none"}`);
+  }
+
+  const wantId = acc.meta_account_id;
+  const wantNorm = wantId?.replace(/^act_/, "");
+  const conn = conns.find((c: any) => {
+    if (c.selected_account_id === wantId || c.selected_account_id === wantNorm) return true;
+    const list = Array.isArray(c.ad_accounts) ? c.ad_accounts : [];
+    return list.some((a: any) =>
+      a?.account_id === wantId || a?.account_id === wantNorm ||
+      a?.id === wantId || a?.id === wantNorm,
+    );
+  }) || conns[0];
+
+  if (!conn?.access_token) {
+    throw new Error("Meta connection has no access_token");
+  }
+
+  return conn.access_token;
 }
 
 async function snapshotAdState(
