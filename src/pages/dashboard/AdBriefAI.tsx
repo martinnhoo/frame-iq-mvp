@@ -4660,16 +4660,38 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 console.warn("[decision-layer] no ad_accounts UUID for", { metaAccId });
                 return;
               }
+              // Whitelist of columns that actually exist on the decisions
+              // table. The AI emits extra fields (target_id, target_meta_id,
+              // group_note, action_recommendation, etc.) that aren't
+              // columns — PostgREST returns PGRST204 if we send them.
+              // The in-memory render still has all the payload fields, so
+              // the DecisionCard click can read target info from memory;
+              // we only need to PERSIST the columns the table accepts.
+              const DECISION_COLUMNS = new Set([
+                "type", "score", "priority_rank", "headline", "reason",
+                "impact_type", "impact_daily", "impact_7d",
+                "impact_confidence", "impact_basis",
+                "metrics", "actions", "status", "ad_id",
+                "expires_at", "source", "invalidator",
+                "metrics_snapshot", "pipeline_approved",
+                "financial_verdict", "break_even_roas", "margin_of_safety",
+                "risk_level", "data_confidence", "confidence_gate",
+                "safety_status", "cooldown_active", "gradual_step",
+                "rollback_plan", "explanation_chain", "pipeline_mode",
+              ]);
               for (const db of decisionBlocks) {
                 const payload = (db as any).decision || (db as any).payload;
                 if (!payload) continue;
-                // Strip the AI-emitted id ("ai-7f3a2b91" — not a valid UUID).
-                // DB will generate a real UUID via the column default. We
-                // capture that UUID and propagate it back to the in-memory
-                // payload so the rendered DecisionCard's onAction sends
-                // the REAL decision_id to execute-action (otherwise the
-                // action_log FK insert fails silently and the loop breaks).
-                const { ad: _ad, id: aiTempId, ...rowFields } = payload;
+                const aiTempId = payload.id;
+                // Project the payload to only the columns the table has.
+                // The DB generates the row's UUID via the column default;
+                // we capture it after insert and propagate back so the
+                // rendered DecisionCard's click sends the REAL decision_id
+                // to execute-action (otherwise action_log FK fails).
+                const rowFields: Record<string, unknown> = {};
+                for (const [k, v] of Object.entries(payload)) {
+                  if (DECISION_COLUMNS.has(k)) rowFields[k] = v;
+                }
                 const row = {
                   ...rowFields,
                   account_id: accRow.id,        // UUID, not act_xxx
