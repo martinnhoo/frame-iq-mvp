@@ -244,6 +244,22 @@ async function executeAction(
     metaAccessToken
   );
 
+  // action_log CHECK constraint accepts:
+  //   pause_ad/adset/campaign | reactivate_ad/adset | increase_budget |
+  //   decrease_budget | duplicate_ad | generate_hook | generate_variation
+  //
+  // The Meta-side / AI naming is `enable_*` (Meta API standard), so we
+  // map enable_ad → reactivate_ad and enable_adset → reactivate_adset
+  // before insert. enable_campaign isn't in the constraint at all (the
+  // current schema only supports adset-level reactivate); fall through
+  // to the same mapping and let the constraint reject if invalid.
+  const ACTION_LOG_MAP: Record<string, string> = {
+    enable_ad: "reactivate_ad",
+    enable_adset: "reactivate_adset",
+    enable_campaign: "reactivate_adset", // closest valid value
+  };
+  const loggedActionType = ACTION_LOG_MAP[action_type] ?? action_type;
+
   // ── Log-first pattern: create pending log BEFORE calling Meta API ────
   // This prevents the "action executed but never logged" scenario
   const { data: logData, error: pendingLogError } = await supabase
@@ -252,7 +268,7 @@ async function executeAction(
       decision_id,
       account_id: adAccountId,
       user_id: userId,
-      action_type,
+      action_type: loggedActionType,
       target_type,
       target_meta_id,
       target_name: (previousState.name as string) || decisionData.headline || null,
