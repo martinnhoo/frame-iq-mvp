@@ -148,18 +148,69 @@ export function stripHtmlToText(html: string): { title: string; text: string } {
   return { title, text };
 }
 
+/**
+ * Pattern set for Meta Pixel detection. Run as a disjunction — any match → true.
+ *
+ * Each pattern is documented with what variant it catches. Any pixel install
+ * that doesn't trip at least one of these is either truly broken or doing
+ * something exotic enough that it deserves a manual eyeball anyway.
+ */
+const PIXEL_PATTERNS: RegExp[] = [
+  /fbq\s*\(\s*['"]init['"]/i,                          // fbq('init', ID) — most common
+  /connect\.facebook\.net\/[^\/'"]+\/fbevents\.js/i,   // <script src=...fbevents.js>
+  /\b_fbq\b/,                                          // _fbq global init pattern
+  /facebook\.com\/tr\?id=\d+/i,                        // <noscript><img src="…fb tracking pixel"/>
+  /<!--\s*Meta\s+Pixel\s+Code\s*-->/i,                 // standard "<!-- Meta Pixel Code -->" wrapper
+  /facebook\s+pixel/i,                                 // text mention (lowest signal — last)
+];
+
+const CONV_EVENT_PATTERNS: RegExp[] = [
+  /fbq\s*\(\s*['"]track['"]\s*,\s*['"](Purchase|Lead|CompleteRegistration|AddToCart|InitiateCheckout|Subscribe|StartTrial|Contact|SubmitApplication|Schedule|ViewContent|Search)['"]/i,
+];
+
+/** Where the inspected text came from. Affects how we interpret a NEGATIVE result. */
+export type DetectionSource = "raw_html" | "extracted_text";
+
 export interface StructuralSignals {
   hasFbPixel: boolean;
   hasConvEvent: boolean;
   primaryCta: string | null;
+  /** Whether the input was raw HTML (script tags intact) or text extracted by
+   *  a reader pipeline (Jina, stripHtmlToText) that drops <script>/<style>. */
+  detectionSource: DetectionSource;
+  /** "high" when the source can answer the question reliably; "low" when a
+   *  negative result might just mean "we couldn't see the right tag". Logic:
+   *    - Positive detection on either source → "high" (we found it for real)
+   *    - Negative detection on raw_html      → "high" (scripts were inspected)
+   *    - Negative detection on extracted_text → "low" (scripts were stripped)
+   *  This lets the LLM downgrade phrasing from "no pixel detected" to
+   *  "couldn't verify" when the source can't actually see scripts. */
+  pixelConfidence: "high" | "low";
+  conversionConfidence: "high" | "low";
 }
 
-export function detectStructuralSignals(content: string): StructuralSignals {
-  const hasFbPixel = /fbq\(\s*['"]init['"]|connect\.facebook\.net\/.*\/fbevents\.js|_fbp\b|facebook\s+pixel/i.test(content);
-  const hasConvEvent = /fbq\(\s*['"]track['"]\s*,\s*['"](Purchase|Lead|CompleteRegistration|AddToCart|InitiateCheckout|Subscribe|StartTrial)['"]/i.test(content);
+export function detectStructuralSignals(
+  content: string,
+  source: DetectionSource = "extracted_text",
+): StructuralSignals {
+  const hasFbPixel = PIXEL_PATTERNS.some((p) => p.test(content));
+  const hasConvEvent = CONV_EVENT_PATTERNS.some((p) => p.test(content));
+  const pixelConfidence: "high" | "low" =
+    hasFbPixel || source === "raw_html" ? "high" : "low";
+  const conversionConfidence: "high" | "low" =
+    hasConvEvent || source === "raw_html" ? "high" : "low";
   // Exclude `<` `>` so we don't capture trailing markup like `</button>` when
   // running CTA detection on raw HTML.
-  const ctaMatch = content.match(/\b(Comprar|Comprar agora|Assinar|Começar|Começar agora|Cadastre-se|Cadastrar|Inscrever-se|Quero|Quero agora|Baixar|Baixe|Download|Sign up|Buy now|Get started|Start free|Start now|Subscribe|Join|Agendar|Falar com|WhatsApp)\b[^.\n<>]{0,40}/i);
+  const ctaMatch = content.match(
+    /\b(Comprar|Comprar agora|Assinar|Começar|Começar agora|Cadastre-se|Cadastrar|Inscrever-se|Quero|Quero agora|Baixar|Baixe|Download|Sign up|Buy now|Get started|Start free|Start now|Subscribe|Join|Agendar|Falar com|WhatsApp)\b[^.\n<>]{0,40}/i,
+  );
   const primaryCta = ctaMatch ? ctaMatch[0].slice(0, 60).trim() : null;
-  return { hasFbPixel, hasConvEvent, primaryCta };
+  return {
+    hasFbPixel,
+    hasConvEvent,
+    primaryCta,
+    detectionSource: source,
+    pixelConfidence,
+    conversionConfidence,
+  };
 }

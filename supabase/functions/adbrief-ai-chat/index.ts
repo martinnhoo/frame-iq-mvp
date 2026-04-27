@@ -102,61 +102,112 @@ async function fetchMetaWithRetry(
 
 /**
  * Fetch a URL and return cleaned text + structural hints.
- * Tries Jina Reader first (handles JS-heavy SPAs), falls back to raw fetch().
+ *
+ * Two parallel fetches with split responsibilities:
+ *   • Jina Reader → readable text for the LLM. Strips <script>/<style>, ideal
+ *     for content but USELESS for pixel/CAPI/event detection.
+ *   • Raw fetch  → raw HTML for structural-signal regex. <script> tags intact.
+ *
+ * Both run in parallel; we wait for both to settle. The detection ALWAYS runs
+ * on the raw HTML when available (high-confidence answer), even when Jina is
+ * what we hand to the AI. This kills the "false NO PIXEL" class of bugs that
+ * came from running pixel regex on script-stripped Jina output.
+ *
+ * If only Jina succeeds, we fall back to running detection on extracted text
+ * but flag confidence: "low" so the prompt can soften phrasing.
+ * If only raw succeeds, we use stripHtmlToText for the LLM content.
  */
 async function fetchLandingContent(url: string): Promise<{
   content: string;
   title: string;
-  source: "jina" | "raw" | "error";
+  source: "jina" | "raw" | "jina+raw" | "error";
   error?: string;
   hasFbPixel: boolean;
   hasConvEvent: boolean;
   primaryCta: string | null;
+  pixelConfidence: "high" | "low";
+  conversionConfidence: "high" | "low";
+  detectionSource: "raw_html" | "extracted_text";
 }> {
-  // 1. Jina Reader — markdown-clean, SPA-capable
-  try {
-    const jinaUrl = `https://r.jina.ai/${url}`;
-    const res = await fetchWithTimeout(jinaUrl, {
-      headers: { "X-Return-Format": "text", "User-Agent": "AdBrief/1.0 (+https://adbrief.pro)" },
-    }, 12000);
-    if (res.ok) {
+  // ── Fetch 1: Jina Reader (LLM-readable text) ──────────────────────────────
+  const jinaPromise = (async () => {
+    try {
+      const jinaUrl = `https://r.jina.ai/${url}`;
+      const res = await fetchWithTimeout(jinaUrl, {
+        headers: { "X-Return-Format": "text", "User-Agent": "AdBrief/1.0 (+https://adbrief.pro)" },
+      }, 12000);
+      if (!res.ok) return null;
       const raw = await res.text();
       const content = (raw || "").slice(0, 8000);
-      // Jina includes "Title:" line at the top
       const titleMatch = content.match(/^Title:\s*(.+)$/m);
       const title = titleMatch ? titleMatch[1].trim() : "";
       const cleaned = content.replace(/^Title:.*$/m, "").replace(/^URL Source:.*$/m, "").trim();
-      const signals = detectStructuralSignals(cleaned);
-      return { content: cleaned, title, source: "jina", ...signals };
+      return { content: cleaned, title };
+    } catch (e) {
+      console.log("[ai-chat] jina fetch failed:", (e as Error).message);
+      return null;
     }
-  } catch (e) {
-    console.log("[ai-chat] jina fetch failed:", (e as Error).message);
+  })();
+
+  // ── Fetch 2: Raw HTML (for high-confidence structural detection) ──────────
+  const rawPromise = (async () => {
+    try {
+      const res = await fetchWithTimeout(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; AdBrief/1.0; +https://adbrief.pro)",
+          "Accept": "text/html,application/xhtml+xml",
+        },
+      }, 10000);
+      if (!res.ok) return null;
+      const html = (await res.text()).slice(0, 200000);
+      return { html };
+    } catch (e) {
+      console.log("[ai-chat] raw fetch failed:", (e as Error).message);
+      return null;
+    }
+  })();
+
+  const [jina, raw] = await Promise.all([jinaPromise, rawPromise]);
+
+  // Both failed — error path.
+  if (!jina && !raw) {
+    return {
+      content: "", title: "", source: "error", error: "fetch failed",
+      hasFbPixel: false, hasConvEvent: false, primaryCta: null,
+      pixelConfidence: "low", conversionConfidence: "low",
+      detectionSource: "extracted_text",
+    };
   }
 
-  // 2. Raw fetch fallback
-  try {
-    const res = await fetchWithTimeout(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; AdBrief/1.0; +https://adbrief.pro)",
-        "Accept": "text/html,application/xhtml+xml",
-      },
-    }, 10000);
-    if (!res.ok) {
-      return { content: "", title: "", source: "error", error: `HTTP ${res.status}`, hasFbPixel: false, hasConvEvent: false, primaryCta: null };
-    }
-    const html = (await res.text()).slice(0, 200000); // cap before parse
-    // Detect pixel on RAW HTML (scripts aren't stripped yet)
-    const signals = detectStructuralSignals(html);
-    const { title, text } = stripHtmlToText(html);
-    return {
-      content: text.slice(0, 8000),
-      title,
-      source: "raw",
-      ...signals,
-    };
-  } catch (e) {
-    return { content: "", title: "", source: "error", error: (e as Error).message || "fetch failed", hasFbPixel: false, hasConvEvent: false, primaryCta: null };
-  }
+  // Detection ALWAYS prefers raw HTML — it's the only source that can answer
+  // "is the pixel present?" reliably. Jina strips <script>, so a NEGATIVE on
+  // Jina text is just "we couldn't see scripts" not "pixel is missing".
+  const detectionInput = raw?.html ?? jina?.content ?? "";
+  const detectionSource: "raw_html" | "extracted_text" = raw?.html ? "raw_html" : "extracted_text";
+  const signals = detectStructuralSignals(detectionInput, detectionSource);
+
+  // Content for the LLM: prefer Jina (cleaner), fall back to stripped raw.
+  const llmContent = jina?.content
+    ? jina.content
+    : (raw?.html ? stripHtmlToText(raw.html).text.slice(0, 8000) : "");
+  const llmTitle = jina?.title
+    ? jina.title
+    : (raw?.html ? stripHtmlToText(raw.html).title : "");
+
+  const sourceTag: "jina" | "raw" | "jina+raw" =
+    jina && raw ? "jina+raw" : (jina ? "jina" : "raw");
+
+  return {
+    content: llmContent,
+    title: llmTitle,
+    source: sourceTag,
+    hasFbPixel: signals.hasFbPixel,
+    hasConvEvent: signals.hasConvEvent,
+    primaryCta: signals.primaryCta,
+    pixelConfidence: signals.pixelConfidence,
+    conversionConfidence: signals.conversionConfidence,
+    detectionSource: signals.detectionSource,
+  };
 }
 
 /**
@@ -176,6 +227,12 @@ async function getOrFetchLanding(
   hasFbPixel: boolean;
   hasConvEvent: boolean;
   primaryCta: string | null;
+  /** Confidence in the pixel/conv-event signal — drives prompt phrasing.
+   *  Always "low" on cache hits where the underlying fetch source isn't
+   *  recorded (legacy rows). Always "high" on fresh raw_html detections. */
+  pixelConfidence: "high" | "low";
+  conversionConfidence: "high" | "low";
+  detectionSource: "raw_html" | "extracted_text";
   fetchedAt: string;
 } | null> {
   if (!userId || !url) return null;
@@ -193,14 +250,27 @@ async function getOrFetchLanding(
     if (cached && cached.fetched_at) {
       const age = Date.now() - new Date(cached.fetched_at).getTime();
       if (age < TTL_MS && cached.source !== "error") {
+        // Cached rows that include "raw" in the source string came from a
+        // raw HTML fetch and can be trusted at "high" confidence. Pure
+        // "jina" rows (or legacy entries) might have been computed against
+        // script-stripped text — flag them "low" so the prompt softens.
+        const cachedSource: "raw_html" | "extracted_text" =
+          typeof cached.source === "string" && cached.source.includes("raw")
+            ? "raw_html"
+            : "extracted_text";
+        const cachedPixel = !!cached.has_fb_pixel;
+        const cachedConv = !!cached.has_conversion_event;
         return {
           url: cached.url,
           title: cached.title || "",
           content: cached.content || "",
           source: cached.source,
-          hasFbPixel: !!cached.has_fb_pixel,
-          hasConvEvent: !!cached.has_conversion_event,
+          hasFbPixel: cachedPixel,
+          hasConvEvent: cachedConv,
           primaryCta: cached.primary_cta || null,
+          pixelConfidence: cachedPixel || cachedSource === "raw_html" ? "high" : "low",
+          conversionConfidence: cachedConv || cachedSource === "raw_html" ? "high" : "low",
+          detectionSource: cachedSource,
           fetchedAt: cached.fetched_at,
         };
       }
@@ -222,8 +292,21 @@ async function getOrFetchLanding(
       content: fetched.content || null,
       source: fetched.source,
       error: fetched.error || null,
-      has_fb_pixel: fetched.source === "error" ? null : fetched.hasFbPixel,
-      has_conversion_event: fetched.source === "error" ? null : fetched.hasConvEvent,
+      // Only persist a NEGATIVE pixel/conv result when we had high confidence
+      // (raw HTML fetched). Otherwise write null so a future cache hit
+      // doesn't lock in a false-negative computed against script-stripped text.
+      has_fb_pixel:
+        fetched.source === "error"
+          ? null
+          : fetched.hasFbPixel
+            ? true
+            : (fetched.pixelConfidence === "high" ? false : null),
+      has_conversion_event:
+        fetched.source === "error"
+          ? null
+          : fetched.hasConvEvent
+            ? true
+            : (fetched.conversionConfidence === "high" ? false : null),
       primary_cta: fetched.primaryCta || null,
       fetched_at: new Date().toISOString(),
     }, { onConflict: "user_id,url_hash" });
@@ -240,6 +323,9 @@ async function getOrFetchLanding(
     hasFbPixel: fetched.hasFbPixel,
     hasConvEvent: fetched.hasConvEvent,
     primaryCta: fetched.primaryCta,
+    pixelConfidence: fetched.pixelConfidence,
+    conversionConfidence: fetched.conversionConfidence,
+    detectionSource: fetched.detectionSource,
     fetchedAt: new Date().toISOString(),
   };
 }
@@ -2455,11 +2541,21 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
           if (lp.source === "error" || !lp.content) {
             return `${header}\nNão foi possível acessar esta página (${lp.error || "fetch error"}). Comente isso honestamente ao usuário — não invente o conteúdo.`;
           }
+          // Pixel/conv lines now respect confidence. A NEGATIVE result with
+          // low confidence (we couldn't see <script> tags — Jina-only fetch
+          // or legacy cache row) becomes "couldn't verify" instead of a
+          // confident "NO PIXEL". This kills the class of false positives
+          // that had the AI confidently asserting installed pixels were
+          // missing — the bug that broke trust on the LP-audit feature.
           const pixelLine = lp.hasFbPixel
             ? (lp.hasConvEvent
                 ? "Pixel do Meta detectado E evento de conversão presente (Purchase/Lead/etc.)."
-                : "Pixel do Meta detectado, MAS nenhum evento de conversão (fbq('track',...)) foi encontrado no HTML.")
-            : "NENHUM código de pixel do Meta detectado no HTML desta página.";
+                : (lp.conversionConfidence === "high"
+                    ? "Pixel do Meta detectado, MAS nenhum evento de conversão (fbq('track',...)) foi encontrado no HTML."
+                    : "Pixel do Meta detectado. Eventos de conversão: NÃO CONSEGUI VERIFICAR (fonte sem acesso a scripts) — recomende ao usuário checar manualmente em vez de afirmar ausência."))
+            : (lp.pixelConfidence === "high"
+                ? "NENHUM código de pixel do Meta detectado no HTML desta página."
+                : "Pixel do Meta: NÃO CONSEGUI VERIFICAR (fonte sem acesso a scripts — Jina extrai apenas texto visível, scripts são removidos). NÃO afirme ausência de pixel — diga que não conseguiu verificar e ofereça caminhos: rodar Meta Pixel Helper, abrir DevTools > Network > filtrar por 'fbevents.js', ou colar o snippet do <head>.");
           const ctaLine = lp.primaryCta ? `CTA principal detectado: "${lp.primaryCta}"` : "Nenhum CTA claro detectado no texto principal.";
           const content = (lp.content || "").slice(0, 4000);
           return [
@@ -2494,7 +2590,10 @@ ${rendered}
 REGRAS AO ANALISAR ESTA(S) LANDING PAGE(S):
 - Foque no que a LP REALMENTE diz — não invente seções que não estão no extrato.
 - Compare a mensagem da LP com os criativos da conta (ad↔LP match). Mismatch mata conversão.
-- Se detectamos "NENHUM pixel" ou "sem evento de conversão" acima, CITE isso como causa provável quando o usuário reclamar de 0 conversões — é dado concreto, não suposição.
+- Pixel/conversão: cite SOMENTE o que a linha de detecção acima afirma com certeza.
+  · Se a linha disser "detectado" → trate como fato confirmado, pode usar como evidência.
+  · Se a linha disser "NENHUM ... detectado no HTML" → trate como fato confirmado (negativa de alta confiança).
+  · Se a linha disser "NÃO CONSEGUI VERIFICAR" → NUNCA afirme ausência. Diga ao usuário que não conseguiu inspecionar scripts e ofereça caminhos pra ele verificar (Meta Pixel Helper, DevTools > Network > fbevents.js, ou colar o snippet pra você analisar). Inventar "está faltando o pixel" quando não dá pra verificar quebra a confiança do usuário no produto inteiro.
 - Avalie o CTA: clareza, posição implícita no fluxo, fricção do formulário (se mencionado no extrato).
 - Se a página tem MUITO texto técnico antes da oferta, ou o CTA aparece só no final, levante isso como fricção.
 - Se falhou em acessar (source=error), fale com o usuário — ofereça caminhos (site com paywall/login, bot-wall, SPA pesado) em vez de alucinar.${proactivityFooter}
