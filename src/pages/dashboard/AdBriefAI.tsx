@@ -1737,37 +1737,41 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
           schema changes needed. */}
       {briefingCards.map((card, i) => {
         const palette = (() => {
-          // Anthropic-warm palette — kept low-saturation so the eye
-          // reads the eyebrow as a hint, not a siren.
+          // Refined-but-alive palette: more saturation than the muted v1
+          // (which read as "no color") but still nowhere near Tailwind
+          // defaults. Each card now has a left-fading tinted bg so the
+          // accent color "owns" the card visually instead of just dotting
+          // the eyebrow. Eyebrows are at full color (no opacity dampening)
+          // so the type signal lands at first glance.
           switch (card.tagColor) {
-            case "#F87171": // critical / urgente → muted coral
-              return { eyebrow: "#D88A7F", border: "rgba(216,138,127,0.20)", accent: "rgba(216,138,127,0.32)", glow: "rgba(216,138,127,0.05)", btnBg: "rgba(216,138,127,0.16)", btnText: "#E5A89C" };
-            case "#4ADE80": // success / oportunidade → sage
-              return { eyebrow: "#8FB59E", border: "rgba(143,181,158,0.18)", accent: "rgba(143,181,158,0.30)", glow: "rgba(143,181,158,0.04)", btnBg: "rgba(143,181,158,0.14)", btnText: "#A6C7B3" };
-            case "#FBBF24": // warning → warm sand
-              return { eyebrow: "#C9A96E", border: "rgba(201,169,110,0.18)", accent: "rgba(201,169,110,0.30)", glow: "rgba(201,169,110,0.04)", btnBg: "rgba(201,169,110,0.14)", btnText: "#D7BC85" };
-            case "#0ea5e9": // info / briefing → muted slate-blue
+            case "#F87171": // critical / urgente → coral, present
+              return { eyebrow: "#F08770", border: "rgba(240,135,112,0.32)", accent: "#F08770", glow: "rgba(240,135,112,0.10)", tintBg: "rgba(240,135,112,0.07)", btnBg: "rgba(240,135,112,0.18)", btnText: "#F5A695" };
+            case "#4ADE80": // success / oportunidade → sage, more vivid
+              return { eyebrow: "#7DC79E", border: "rgba(125,199,158,0.30)", accent: "#7DC79E", glow: "rgba(125,199,158,0.08)", tintBg: "rgba(125,199,158,0.05)", btnBg: "rgba(125,199,158,0.16)", btnText: "#9AD4B5" };
+            case "#FBBF24": // warning → warm tan with more body
+              return { eyebrow: "#D9B26B", border: "rgba(217,178,107,0.30)", accent: "#D9B26B", glow: "rgba(217,178,107,0.08)", tintBg: "rgba(217,178,107,0.05)", btnBg: "rgba(217,178,107,0.16)", btnText: "#E5C485" };
+            case "#0ea5e9": // info / briefing → sky-blue, refined
             default:
-              return { eyebrow: "#9AAFCC", border: "rgba(154,175,204,0.16)", accent: "rgba(154,175,204,0.28)", glow: "rgba(154,175,204,0.04)", btnBg: "rgba(154,175,204,0.12)", btnText: "#B2C2D8" };
+              return { eyebrow: "#7BB6E5", border: "rgba(123,182,229,0.28)", accent: "#7BB6E5", glow: "rgba(123,182,229,0.08)", tintBg: "rgba(123,182,229,0.05)", btnBg: "rgba(123,182,229,0.14)", btnText: "#9CC8EC" };
           }
         })();
         return (
           <div key={i} style={{
-            background: "linear-gradient(180deg, rgba(18,22,30,0.85) 0%, rgba(10,13,20,0.92) 100%)",
+            background: `linear-gradient(90deg, ${palette.tintBg} 0%, rgba(18,22,30,0.85) 50%, rgba(10,13,20,0.92) 100%)`,
             border: `1px solid ${palette.border}`,
-            borderLeft: `2px solid ${palette.accent}`,
-            borderRadius: 12, padding: "clamp(13px,2vw,17px) clamp(15px,2.5vw,19px)",
+            borderLeft: `3px solid ${palette.accent}`,
+            borderRadius: 12, padding: "clamp(14px,2vw,18px) clamp(16px,2.5vw,20px)",
             marginBottom: 10,
-            boxShadow: `0 4px 16px rgba(0,0,0,0.32), 0 0 0 1px ${palette.glow}, inset 0 1px 0 rgba(255,255,255,0.04)`,
-            backdropFilter: "blur(8px) saturate(120%)",
-            WebkitBackdropFilter: "blur(8px) saturate(120%)",
+            boxShadow: `0 4px 18px rgba(0,0,0,0.38), 0 0 0 1px ${palette.glow}, inset 0 1px 0 rgba(255,255,255,0.05)`,
+            backdropFilter: "blur(8px) saturate(130%)",
+            WebkitBackdropFilter: "blur(8px) saturate(130%)",
             animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + i * 0.06}s both` : "none",
             opacity: 0,
           }}>
-            {/* Tag eyebrow — desaturated, low intensity */}
+            {/* Tag eyebrow — full color, signal-first */}
             <span style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const,
-              color: palette.eyebrow, fontFamily: F, marginBottom: 5, display: "block",
+              fontSize: 9.5, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const,
+              color: palette.eyebrow, fontFamily: F, marginBottom: 6, display: "block",
             }}>
               {card.tag}
             </span>
@@ -4868,9 +4872,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   const hasData=connections.length>0;
 
   const LABEL: Record<string,Record<string,string>>={
-    pt:{clear:"Limpar",placeholder:"Pergunte sobre sua conta...",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
-    es:{clear:"Limpiar",placeholder:"Pregunta sobre tu cuenta...",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
-    en:{clear:"Clear",placeholder:"Ask anything...",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
+    pt:{clear:"Limpar",placeholder:"Peça uma decisão pra sua conta — o que pausar? o que escalar?",footer:"Somente performance de anúncios e inteligência criativa",connecting:"Conectando...",soon:"Em breve"},
+    es:{clear:"Limpiar",placeholder:"Pide una decisión para tu cuenta — ¿qué pausar? ¿qué escalar?",footer:"Solo inteligencia de rendimiento publicitario",connecting:"Conectando...",soon:"Pronto"},
+    en:{clear:"Clear",placeholder:"Ask for a decision — what to pause? what to scale?",footer:"Strictly ad performance & creative intelligence",connecting:"Connecting...",soon:"Soon"},
   };
   const L=LABEL[lang]||LABEL.en;
 
@@ -5458,16 +5462,20 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 Sólido #141924, borda 9%, shadow suave. O card é o
                 único elemento visual — nada em volta. */}
             <div className="input-box-wrap" style={{
-              background: chatDragOver ? "#0E1C2E" : "#141924",
+              // Composer is the action zone — pulled forward visually with
+              // a subtle blue accent border + soft glow so the eye lands
+              // here, not on passive cards. Background slightly lighter
+              // than surrounding chat to "lift" it off the surface.
+              background: chatDragOver ? "#0E1C2E" : "#161C28",
               border: chatDragOver
-                ? "1px solid rgba(37,99,235,0.40)"
-                : "1px solid rgba(255,255,255,0.09)",
-              borderRadius:16,
-              overflow:"hidden" as const,
+                ? "1px solid rgba(56,189,248,0.55)"
+                : "1px solid rgba(56,189,248,0.22)",
+              borderRadius: 16,
+              overflow: "hidden" as const,
               boxShadow: chatDragOver
-                ? "0 0 0 3px rgba(37,99,235,0.12), 0 8px 32px rgba(0,0,0,0.40)"
-                : "0 8px 32px rgba(0,0,0,0.40)",
-              transition:"border-color 0.2s, box-shadow 0.2s, background 0.2s",
+                ? "0 0 0 3px rgba(56,189,248,0.16), 0 12px 36px rgba(0,0,0,0.50), 0 0 24px rgba(56,189,248,0.10)"
+                : "0 10px 32px rgba(0,0,0,0.45), 0 0 16px rgba(56,189,248,0.06), inset 0 1px 0 rgba(255,255,255,0.04)",
+              transition: "border-color 0.2s, box-shadow 0.2s, background 0.2s",
             }}
             onDragOver={e => { e.preventDefault(); setChatDragOver(true); }}
             onDragLeave={() => setChatDragOver(false)}
@@ -5514,17 +5522,19 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   background:"transparent",
                   border:"none",
                   outline:"none",
-                  padding:"14px 16px 6px",
+                  // Bigger padding + bigger font so the input reads as
+                  // the action zone, not a side widget.
+                  padding:"18px 18px 8px",
                   color:"#f0f2f8",
-                  fontSize:15,
+                  fontSize:16,
                   resize:"none" as const,
                   ...m,
                   lineHeight:1.55,
-                  minHeight:28,
-                  maxHeight:140,
-                  caretColor:"#0ea5e9",
+                  minHeight:34,
+                  maxHeight:160,
+                  caretColor:"#38BDF8",
                 }}
-                onInput={e=>{const t=e.target as HTMLTextAreaElement;requestAnimationFrame(()=>{t.style.height="auto";t.style.height=Math.min(t.scrollHeight,140)+"px";});}}
+                onInput={e=>{const t=e.target as HTMLTextAreaElement;requestAnimationFrame(()=>{t.style.height="auto";t.style.height=Math.min(t.scrollHeight,160)+"px";});}}
               />
 
               {/* Row 2 — Action bar */}
