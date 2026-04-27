@@ -4632,6 +4632,30 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         return { type: "decision" as const, decision: recovered } as any;
       });
 
+      // ── Normalize decision blocks: hoist target_meta_id into actions ──
+      // The `decisions` table has no target_meta_id/target_id columns, so
+      // those fields would be lost on persist. The click handler reads
+      // `action.params.target_id` first — so before render+persist we
+      // copy the decision's top-level target id into every action's params.
+      // Survives the persist round-trip via the actions JSONB column.
+      blocks = blocks.map((b: any) => {
+        if (b.type !== "decision") return b;
+        const d = b.decision || b.payload;
+        if (!d) return b;
+        const tid = d.target_meta_id || d.target_id || null;
+        if (!tid || !Array.isArray(d.actions)) return b;
+        const newActions = d.actions.map((a: any) => {
+          if (!a) return a;
+          const params = (a.params && typeof a.params === "object") ? { ...a.params } : {};
+          if (!params.target_id && !params.target_meta_id) {
+            params.target_id = tid;
+          }
+          return { ...a, params };
+        });
+        const updated = { ...d, actions: newActions };
+        return { ...b, decision: updated, payload: updated };
+      });
+
       // ── Decision Layer — persist AI-emitted decisions ────────────────
       // Fire-and-forget. Any block of type 'decision' carries a payload
       // shaped like a row of the `decisions` table; we insert it with
