@@ -4496,37 +4496,60 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       // source='ai_chat' so the same decision can also surface in the
       // Feed if the user wants. Failures are logged silently and do NOT
       // block the chat render — the decision still appears in chat even
-      // if persistence fails (degraded gracefully). Expected to fail
-      // occasionally during early Decision Layer rollout while the AI
-      // learns to emit values matching the table's CHECK constraints
-      // (decisions_type_check, decisions_impact_type_check). Logs let
-      // us see those failures in console + supabase function logs.
+      // if persistence fails (degraded gracefully).
+      //
+      // SCHEMA NOTES (the table is older than this code):
+      //   - decisions has NO user_id column. Ownership is via account_id
+      //     → ad_accounts.id (UUID) → ad_accounts.user_id. We must
+      //     resolve the ad_accounts UUID from the persona's stored
+      //     meta_account_id BEFORE inserting.
+      //   - type CHECK: ('kill','fix','scale','pattern','alert','insight')
+      //   - impact_type CHECK: ('waste','savings','revenue','learning')
+      //   - Constraint violations get logged to console + supabase logs
+      //     so we can see them during early rollout and tighten the
+      //     system prompt accordingly.
       const decisionBlocks = blocks.filter((b: any) => b.type === "decision");
-      if (decisionBlocks.length > 0 && user?.id) {
-        for (const db of decisionBlocks) {
-          const payload = (db as any).decision || (db as any).payload;
-          if (!payload) continue;
-          // Strip joined fields the decisions table doesn't store
-          // (e.g. ad joined object) — keep only canonical row columns.
-          const { ad: _ad, ...rowFields } = payload;
-          const row = {
-            ...rowFields,
-            user_id: user.id,
-            source: "ai_chat",
-            status: rowFields.status || "pending",
-          };
+      if (decisionBlocks.length > 0 && user?.id && selectedPersona?.id) {
+        // Resolve ad_accounts.id (UUID) from the persona's selected
+        // meta_account_id. Without a real UUID the FK would fail.
+        const metaAccId = storage.get(`meta_sel_${selectedPersona.id}`, "") || "";
+        if (metaAccId) {
           (supabase as any)
-            .from("decisions")
-            .insert(row)
-            .then(({ error }: any) => {
-              if (error) {
-                // Silent on failure — chat render is unaffected. Surface
-                // for debugging during rollout: console + supabase logs.
-                console.warn("[decision-layer] persist failed", {
-                  error: error.message || error,
-                  decision_type: payload.type,
-                  decision_id: payload.id,
-                });
+            .from("ad_accounts")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("meta_account_id", metaAccId.replace(/^act_/, ""))
+            .maybeSingle()
+            .then(({ data: accRow }: any) => {
+              if (!accRow?.id) {
+                console.warn("[decision-layer] no ad_accounts UUID for", { metaAccId });
+                return;
+              }
+              for (const db of decisionBlocks) {
+                const payload = (db as any).decision || (db as any).payload;
+                if (!payload) continue;
+                // Strip joined / computed fields the table doesn't store.
+                const { ad: _ad, id: _aiId, ...rowFields } = payload;
+                const row = {
+                  ...rowFields,
+                  account_id: accRow.id,        // UUID, not act_xxx
+                  source: "ai_chat",
+                  status: rowFields.status || "pending",
+                };
+                (supabase as any)
+                  .from("decisions")
+                  .insert(row)
+                  .then(({ error }: any) => {
+                    if (error) {
+                      console.warn("[decision-layer] persist failed", {
+                        error: error.message || error,
+                        code: error.code,
+                        details: error.details,
+                        decision_type: payload.type,
+                        impact_type: payload.impact_type,
+                      });
+                    }
+                  });
               }
             });
         }

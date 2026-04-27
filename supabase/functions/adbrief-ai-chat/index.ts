@@ -3196,7 +3196,7 @@ Schema EXATO (toda chave aqui é obrigatória):
   "reason": "1-2 frases em PT-BR natural — explica POR QUÊ. Use a tradução da causa canônica (NUNCA a string interna).",
   "score": 0,                          // 0-100, sua avaliação de prioridade
   "priority_rank": 1,
-  "impact_type": "spend_recovery|revenue_gain|risk_mitigation",
+  "impact_type": "waste|savings|revenue|learning",  // ENUM EXATO do banco. waste=spend desperdiçado; savings=spend que será evitado; revenue=ganho de receita; learning=insight sem impacto $ direto.
   "impact_daily": 0,                   // CENTAVOS/dia. Ex: R$187/dia = 18700
   "impact_7d": 0,                      // CENTAVOS — projeção 7d
   "impact_confidence": "high|medium|low",  // Sua confiança no impact_daily
@@ -3228,7 +3228,7 @@ Schema EXATO (toda chave aqui é obrigatória):
 1. Use \`decision\` quando o usuário quer uma RESPOSTA DEFINITIVA com botão de ação. Use \`tool_call meta_action\` quando você quer só EXECUTAR uma ação sem mostrar a estrutura cheia. Use \`insight\` quando é só análise sem ação.
 2. \`impact_confidence\` — \`"high"\` quando dados convergem (>= 7d de spend + sinais consistentes); \`"medium"\` quando inferência razoável; \`"low"\` quando você está extrapolando. Usuário VÊ esse rótulo — não infle.
 3. \`invalidator\` — OBRIGATÓRIO. Se você não consegue formular uma condição falsificável, NÃO emita o decision (emita insight). Sem invalidator, a decisão soa como opinião.
-4. \`type\` deve passar no constraint do banco: \`kill|fix|scale|pattern|alert|insight\`. \`impact_type\` deve passar em \`spend_recovery|revenue_gain|risk_mitigation\`. Strings fora desse enum → backend rejeita silenciosamente.
+4. \`type\` deve passar no constraint do banco: \`kill|fix|scale|pattern|alert|insight\`. \`impact_type\` deve passar em \`waste|savings|revenue|learning\`. Strings fora desse enum → backend rejeita silenciosamente.
 5. \`actions[0].meta_api_action\` deve ser uma string EXATA do enum acima. \`requires_confirmation: true\` em todas as destrutivas (pause/decrease).
 6. Pode emitir múltiplos blocos \`decision\` numa resposta se o usuário pediu análise de várias coisas. Cada um vira um card.
 
