@@ -4643,11 +4643,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         // meta_account_id. Without a real UUID the FK would fail.
         const metaAccId = storage.get(`meta_sel_${selectedPersona.id}`, "") || "";
         if (metaAccId) {
+          // ad_accounts.meta_account_id stores the value WITH the
+          // `act_` prefix (see AccountsPage.tsx:262 — auto-created rows
+          // use the raw selId from localStorage, which includes act_).
+          // The previous version stripped the prefix and got 0 rows
+          // every time → silent persist failure → loop dead. Now we
+          // try BOTH variants to survive any legacy data inconsistency.
           (supabase as any)
             .from("ad_accounts")
-            .select("id")
+            .select("id, meta_account_id")
             .eq("user_id", user.id)
-            .eq("meta_account_id", metaAccId.replace(/^act_/, ""))
+            .in("meta_account_id", [metaAccId, metaAccId.replace(/^act_/, "")])
             .maybeSingle()
             .then(({ data: accRow }: any) => {
               if (!accRow?.id) {
