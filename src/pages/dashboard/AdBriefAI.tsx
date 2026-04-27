@@ -439,7 +439,15 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
   };
   const t=L[lang]||L.en;
   const actionLabel=t[block.meta_action as string]||block.meta_action||"Execute";
-  const target=block.target_name||block.target_id||"";
+  // Defensive: filter out the literal strings "undefined"/"null" the AI
+  // sometimes emits when it had no real value. Without this filter, the
+  // success card renders "Reativar — undefined executado com sucesso".
+  const cleanTarget = (v: unknown): string => {
+    const s = typeof v === "string" ? v.trim() : "";
+    if (!s || s === "undefined" || s === "null") return "";
+    return s;
+  };
+  const target = cleanTarget(block.target_name) || cleanTarget(block.target_id) || "";
 
   // Hypothesis surfaced from structured field (commit fa7eb38d) OR
   // backwards-compat with older blocks where it might be missing.
@@ -4070,8 +4078,13 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     // and emit a humane bubble instead. The user clicked one button —
     // they shouldn't be punished for the AI forgetting a field.
     const REQUIRES_TARGET = new Set(["pause", "enable", "update_budget", "duplicate"]);
-    const validTarget = (v: unknown): v is string =>
-      typeof v === "string" && v.length > 0 && v !== "undefined" && v !== "null";
+    const validTarget = (v: unknown): v is string => {
+      if (typeof v !== "string") return false;
+      const s = v.trim();
+      // Reject empties AND the string literals "undefined"/"null" that
+      // some AI emissions produce when they have no real ID.
+      return s.length > 0 && s !== "undefined" && s !== "null";
+    };
     if (REQUIRES_TARGET.has(String(block.meta_action || "")) && !validTarget(block.target_id)) {
       const id = Date.now();
       const tType = block.target_type === "campaign" ? "campanha"
