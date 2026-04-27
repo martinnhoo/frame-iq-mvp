@@ -181,6 +181,19 @@ export interface Decision {
   // Pipeline mode indicator
   pipeline_mode?: 'v1' | 'v2_shadow' | 'v2_active';
 
+  // ── Decision Layer fields (chat-emitted decisions) ──
+  /** Where the decision came from. Defaults to 'engine' for the legacy
+   *  pipeline; AI-chat decisions get 'ai_chat'. Lets the Feed filter or
+   *  badge by origin without mixing channels. */
+  source?: 'engine' | 'ai_chat' | 'auto_pilot';
+  /** Single-sentence falsifier — the condition under which this decision
+   *  stops making sense. Mandatory on AI-chat decisions to force the
+   *  model to commit to a measurable assumption. Example: "Se o CTR
+   *  subir acima de 1.8% nas próximas 48h, esta recomendação se invalida."
+   *  Surfaced verbatim in the DecisionCard so the user can sanity-check
+   *  the logic before clicking. */
+  invalidator?: string;
+
   // Joined data (from queries)
   ad?: Ad & {
     ad_set?: AdSet & { campaign?: Campaign };

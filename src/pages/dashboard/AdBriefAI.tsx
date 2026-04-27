@@ -26,6 +26,12 @@ import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 // FirstWinBanner removed — ProactiveBlock handles welcome flow
 import { trackEvent } from "@/lib/posthog";
+// Decision Layer — same component renders both Feed and chat decisions.
+// Reuse, not redesign: chat just gets the compact prop. Action flow,
+// hypothesis surface, CommandStrip → meta-actions all stay identical.
+import { DecisionCard } from "@/components/feed/DecisionCard";
+import type { Decision, DecisionAction } from "@/types/v2-database";
+import { useActions } from "@/hooks/useActions";
 const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
 const M = T.font; // Same as F
 const DEMO_STORAGE_KEY = "adbrief_demo_result";
@@ -106,7 +112,7 @@ const BRIEF_PILL_BY_LANG: Record<string, {icon: any; label: string; action: stri
 
 // ── Block types ────────────────────────────────────────────────────────────────
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"meta_action"|"text"|"trend_chart"|"limit_warning"|"creative_check"|"credits_exhausted_free"|"credits_exhausted_paid";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"meta_action"|"text"|"trend_chart"|"limit_warning"|"creative_check"|"credits_exhausted_free"|"credits_exhausted_paid"|"decision";
   remaining?: number;
   original_message?: string;
   title: string; content?: string; items?: string[];
@@ -1289,6 +1295,66 @@ const formatChatPlanPrice = (price: number, l: string) => {
   return `$${price}${suffix}`;
 };
 
+// ── DecisionBlockRenderer ─────────────────────────────────────────────────
+// Wraps DecisionCard with the chat-side action handler. Reuses the same
+// `execute-action` edge function the Feed uses (via useActions hook),
+// which records to action_log + queues 24h/72h measurement in
+// action_outcomes. Zero new pipeline — strictly bridging the click into
+// the existing flow. On insert/execute failure we log silently to console
+// so the issue is visible during the early Decision Layer rollout, but
+// the user-facing toast still fires (degraded gracefully).
+function DecisionBlockRenderer({ decision }: { decision: Decision }) {
+  const { executeAction } = useActions();
+  const handleAction = useCallback(
+    async (decisionId: string, action: DecisionAction) => {
+      // Insight/alert with no Meta API target → no-op (DecisionCard
+      // surfaces the read-only nature; chat doesn't need to navigate).
+      if (!action.meta_api_action) {
+        console.warn("[decision-layer] no meta_api_action on action — read-only", { decisionId, actionId: action.id });
+        return;
+      }
+      // Resolve target metadata. Chat-emitted decisions carry the meta
+      // ID either on the joined ad object (when we hydrated) or on the
+      // payload's top-level fields (when AI emitted a fresh ID).
+      const metaId =
+        decision.ad?.meta_ad_id ||
+        (decision as any).target_meta_id ||
+        (decision as any).target_id ||
+        "";
+      const targetType = action.meta_api_action.includes("adset")
+        ? "adset"
+        : action.meta_api_action.includes("campaign")
+          ? "campaign"
+          : "ad";
+      if (!metaId) {
+        console.error("[decision-layer] missing target meta_id — cannot execute", { decisionId, decision });
+        toast.error("Anúncio sem ID do Meta — não é possível executar esta ação");
+        return;
+      }
+      try {
+        const result = await executeAction(
+          decisionId,
+          action.meta_api_action,
+          targetType,
+          metaId,
+          action.params,
+        );
+        if (!result.success) {
+          console.error("[decision-layer] execute-action failed", result.error);
+          toast.error(result.error || "Falha ao executar ação");
+          return;
+        }
+        toast.success(`${action.label} aplicado`);
+      } catch (e) {
+        console.error("[decision-layer] execute-action threw", e);
+        toast.error("Falha ao executar ação");
+      }
+    },
+    [decision, executeAction],
+  );
+  return <DecisionCard decision={decision} onAction={handleAction} compact />;
+}
+
 function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {block:Block;lang:string;onNavigate:(r:string,p?:Record<string,string>)=>void;onSend?:(msg:string)=>void;accountCtx?:{product?:string;niche?:string;market?:string;platform?:string};stream?:boolean}) {
   const [copiedIdx,setCopiedIdx]=useState<number|null>(null);
   const [scriptLoadingIdx,setScriptLoadingIdx]=useState<number|null>(null);
@@ -1546,6 +1612,19 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
       })}
     </div>
   );
+
+  // ── DECISION — Decision Layer payload, rendered via DecisionCard.
+  // Wrapped in a tiny subcomponent so the useActions hook lives in a
+  // dedicated render path (not on every BlockCard call). Same component
+  // the Feed uses, same actions, same CommandStrip, same execute-action
+  // edge function under the hood. The 1:1 contract: payload shape
+  // mirrors the `decisions` table row — what the AI emits is what gets
+  // persisted is what gets rendered.
+  if (block.type === "decision") {
+    const decision = (block as any).decision || (block as any).payload;
+    if (!decision) return null;
+    return <DecisionBlockRenderer decision={decision as Decision} />;
+  }
 
   // ── ACTION — inline, sem caixa verde ──
   if(block.type==="action") return(
@@ -4410,6 +4489,48 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .replace(/#+\s/g,"").replace(/^\d+\.\s/gm,"").replace(/^[-*]\s/gm,"").trim();
 
       let blocks:Block[]=Array.isArray(data.blocks)?data.blocks:[{type:"insight",title:"Response",content:String(data.blocks)}];
+
+      // ── Decision Layer — persist AI-emitted decisions ────────────────
+      // Fire-and-forget. Any block of type 'decision' carries a payload
+      // shaped like a row of the `decisions` table; we insert it with
+      // source='ai_chat' so the same decision can also surface in the
+      // Feed if the user wants. Failures are logged silently and do NOT
+      // block the chat render — the decision still appears in chat even
+      // if persistence fails (degraded gracefully). Expected to fail
+      // occasionally during early Decision Layer rollout while the AI
+      // learns to emit values matching the table's CHECK constraints
+      // (decisions_type_check, decisions_impact_type_check). Logs let
+      // us see those failures in console + supabase function logs.
+      const decisionBlocks = blocks.filter((b: any) => b.type === "decision");
+      if (decisionBlocks.length > 0 && user?.id) {
+        for (const db of decisionBlocks) {
+          const payload = (db as any).decision || (db as any).payload;
+          if (!payload) continue;
+          // Strip joined fields the decisions table doesn't store
+          // (e.g. ad joined object) — keep only canonical row columns.
+          const { ad: _ad, ...rowFields } = payload;
+          const row = {
+            ...rowFields,
+            user_id: user.id,
+            source: "ai_chat",
+            status: rowFields.status || "pending",
+          };
+          (supabase as any)
+            .from("decisions")
+            .insert(row)
+            .then(({ error }: any) => {
+              if (error) {
+                // Silent on failure — chat render is unaffected. Surface
+                // for debugging during rollout: console + supabase logs.
+                console.warn("[decision-layer] persist failed", {
+                  error: error.message || error,
+                  decision_type: payload.type,
+                  decision_id: payload.id,
+                });
+              }
+            });
+        }
+      }
       // Detect creative check response — blocks[0] has verdict field directly
       if(pendingImage && blocks.length > 0 && (blocks[0] as any).verdict) {
         const ccData = blocks[0] as any;

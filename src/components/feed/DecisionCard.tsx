@@ -109,6 +109,10 @@ interface DecisionCardProps {
   onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
   isDemo?: boolean;
   isHero?: boolean;
+  /** Compact rendering for inline use (chat bubbles, etc). Tighter
+   *  padding, no expanded footer, but every action and signal is
+   *  preserved 1:1 with the Feed render. Same component, same logic. */
+  compact?: boolean;
 }
 
 const TYPE_CONFIG: Record<string, {
@@ -218,7 +222,7 @@ const Expandable: React.FC<{ open: boolean; children: React.ReactNode }> = ({ op
   );
 };
 
-export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, isDemo = false, isHero = false }) => {
+export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, isDemo = false, isHero = false, compact = false }) => {
   const [executingId, setExecutingId] = useState<string | null>(null);
   const [hovered, setHovered] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -439,7 +443,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         style={{
           background: hovered ? '#0D1117' : 'transparent',
           borderLeft: `2px solid ${cfg.accentColor}`,
-          padding: isHero ? '16px 18px' : '14px 16px',
+          padding: compact ? '12px 14px' : isHero ? '16px 18px' : '14px 16px',
           fontFamily: F,
           transition: 'background 0.15s ease, transform 0.1s ease',
           position: 'relative',
@@ -568,6 +572,31 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         }}>
           {decision.headline}
         </div>
+
+        {/* CONFIDENCE BADGE — explicit "CONFIANÇA: Alta/Média/Baixa".
+            The dot+percent in the top row was too subtle for users to
+            anchor a clicking decision on. This is a verbal commitment:
+            the system tells you how sure it is, in plain words, before
+            you act. Derived from impact_confidence (high/medium/low). */}
+        {decision.impact_confidence && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            marginBottom: 6,
+            fontSize: 9.5, fontWeight: 700,
+            letterSpacing: '0.10em',
+            color: confidence === 'high' ? '#7BC4D8'
+              : confidence === 'medium' ? '#D9B26B'
+              : 'rgba(240,246,252,0.50)',
+          }}>
+            <span style={{
+              width: 5, height: 5, borderRadius: '50%',
+              background: confidence === 'high' ? '#7BC4D8'
+                : confidence === 'medium' ? '#D9B26B'
+                : 'rgba(240,246,252,0.42)',
+            }} />
+            CONFIANÇA: {confidence === 'high' ? 'ALTA' : confidence === 'medium' ? 'MÉDIA' : 'BAIXA'}
+          </div>
+        )}
 
         {/* TRAIT CHIPS — always visible scan row (top 3 metrics, non-empty) */}
         {decision.metrics && decision.metrics.length > 0 && (
@@ -970,6 +999,36 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
             fontSize: 10.5, color: 'rgba(248,113,113,0.60)', fontWeight: 500, marginBottom: 6,
           }}>
             Cada hora ativo mantém esse nível de perda
+          </div>
+        )}
+
+        {/* INVALIDATOR — falsifier surfaced verbatim before the action row.
+            "Esta decisão se invalida se X". Forces the user to read the
+            assumption before clicking, and forces the AI to commit to a
+            measurable condition. Distinct visual: subtle warm-amber
+            inline note, not a colored block, so it reads as a footnote
+            to the recommendation, not a separate alert. */}
+        {(decision as any).invalidator && (
+          <div style={{
+            margin: '8px 0 10px',
+            padding: '7px 10px',
+            background: 'rgba(217,178,107,0.04)',
+            border: '1px solid rgba(217,178,107,0.18)',
+            borderRadius: 6,
+            fontSize: 11.5,
+            color: 'rgba(240,246,252,0.72)',
+            lineHeight: 1.45,
+            fontFamily: F,
+          }}>
+            <span style={{
+              fontSize: 9, fontWeight: 800,
+              letterSpacing: '0.10em',
+              color: '#D9B26B',
+              marginRight: 6,
+            }}>
+              SE INVALIDA SE
+            </span>
+            {(decision as any).invalidator}
           </div>
         )}
 

@@ -3181,6 +3181,58 @@ Retorne APENAS um array JSON válido. Zero texto fora do array.
 \`{ "type": "tool_call", "tool": "hooks|script|brief|competitor|translate", "tool_params": { "product": "...", "niche": "...", "market": "...", "platform": "...", "tone": "...", "angle": "...", "count": 5, "context": "..." } }\`
 \`{ "type": "tool_call", "tool": "meta_action", "tool_params": { "meta_action": "pause|enable|update_budget|list_campaigns|duplicate", "target_id": "OBRIGATÓRIO — use o ID entre [colchetes] dos dados acima, ex: 123456789", "target_type": "campaign|adset|ad", "target_name": "nome do item", "value": "...", "hypothesis": { "primary_cause": "OBRIGATÓRIO — uma das 12 causas canônicas listadas abaixo", "expected_effect": "stop_waste|scale_winner|improve_efficiency", "confidence": 0.0 }, "urgency_loss_brl": 0.0 } }\`
 
+**═══════════════════════════════════════**
+**DECISION LAYER — bloco \`decision\` (NOVO)**
+**═══════════════════════════════════════**
+
+Quando o usuário pede uma DECISÃO clara sobre um anúncio/adset/campanha específico ("o que fazer com X?", "vale escalar Y?", "está hora de pausar Z?", "me diz o que fazer agora"), você PODE emitir um bloco \`decision\` em vez (ou além) do tool_call meta_action. O bloco \`decision\` renderiza como o mesmo card que o usuário vê no Feed — com hypothesis, métricas, ação executável, confiança e invalidator visíveis. É a forma de você ASSUMIR uma decisão (não só sugerir).
+
+Schema EXATO (toda chave aqui é obrigatória):
+
+\`{ "type": "decision", "decision": {
+  "id": "ai-<uuid-curto>",  // gere um id único: "ai-" + 8 chars random
+  "type": "kill|fix|scale|pattern|alert|insight",  // mesmo enum do Feed
+  "headline": "máx 8 palavras — afirma a ação proposta. Ex: 'Pausar UGC 03 — está queimando R$187/dia'",
+  "reason": "1-2 frases em PT-BR natural — explica POR QUÊ. Use a tradução da causa canônica (NUNCA a string interna).",
+  "score": 0,                          // 0-100, sua avaliação de prioridade
+  "priority_rank": 1,
+  "impact_type": "spend_recovery|revenue_gain|risk_mitigation",
+  "impact_daily": 0,                   // CENTAVOS/dia. Ex: R$187/dia = 18700
+  "impact_7d": 0,                      // CENTAVOS — projeção 7d
+  "impact_confidence": "high|medium|low",  // Sua confiança no impact_daily
+  "impact_basis": "1 frase — base do cálculo. Ex: 'spend médio dos últimos 7d × dias remanescentes'",
+  "metrics": [                         // top 3 métricas que JUSTIFICAM a decisão
+    { "key": "CTR", "value": "0.8%", "context": "62% abaixo da média 7d", "trend": "down" }
+  ],
+  "actions": [                         // botões clicáveis. Primeiro = primary
+    { "id": "act-1", "label": "Pausar agora", "type": "destructive",
+      "requires_confirmation": true,
+      "meta_api_action": "pause_ad|pause_adset|pause_campaign|enable_ad|enable_adset|enable_campaign|increase_budget|decrease_budget|duplicate_ad",
+      "params": { } }
+  ],
+  "target_id": "ID do alvo (ad/adset/campaign) — usado pra executar",
+  "target_meta_id": "ID Meta do alvo — copie do contexto da conta",
+  "ad_id": null,                       // null OK pra decisões account-level
+  "account_id": "será preenchido pelo backend",
+  "status": "pending",
+  "source": "ai_chat",                 // SEMPRE 'ai_chat' aqui
+  "invalidator": "OBRIGATÓRIO — 1 frase: condição mensurável que invalida esta decisão. Ex: 'Se o CTR voltar a subir acima de 1.8% nas próximas 48h, pausar é prematuro.' Forçar você a se comprometer.",
+  "action_recommendation": null,
+  "group_note": null,
+  "acted_at": null,
+  "dismissed_at": null,
+  "created_at": "ISO timestamp"
+} }\`
+
+**REGRAS DE OURO PRO BLOCO \`decision\`:**
+1. Use \`decision\` quando o usuário quer uma RESPOSTA DEFINITIVA com botão de ação. Use \`tool_call meta_action\` quando você quer só EXECUTAR uma ação sem mostrar a estrutura cheia. Use \`insight\` quando é só análise sem ação.
+2. \`impact_confidence\` — \`"high"\` quando dados convergem (>= 7d de spend + sinais consistentes); \`"medium"\` quando inferência razoável; \`"low"\` quando você está extrapolando. Usuário VÊ esse rótulo — não infle.
+3. \`invalidator\` — OBRIGATÓRIO. Se você não consegue formular uma condição falsificável, NÃO emita o decision (emita insight). Sem invalidator, a decisão soa como opinião.
+4. \`type\` deve passar no constraint do banco: \`kill|fix|scale|pattern|alert|insight\`. \`impact_type\` deve passar em \`spend_recovery|revenue_gain|risk_mitigation\`. Strings fora desse enum → backend rejeita silenciosamente.
+5. \`actions[0].meta_api_action\` deve ser uma string EXATA do enum acima. \`requires_confirmation: true\` em todas as destrutivas (pause/decrease).
+6. Pode emitir múltiplos blocos \`decision\` numa resposta se o usuário pediu análise de várias coisas. Cada um vira um card.
+
+
 **urgency_loss_brl (OPCIONAL mas RECOMENDADO em pause):** quando o alvo está SANGRANDO spend nas últimas 24h, inclua o valor R$ exato que ele já consumiu (NÃO o budget diário — o spend REAL ocorrido). A UI mostra "⚠ Já consumiu R$X nas últimas 24h" — gatilho emocional de loss-aversion que dobra a taxa de aprovação. Se você não tem o número exato, omita o campo (UI não mostra a linha).
 
 **CAUSAS CANÔNICAS — \`primary_cause\` OBRIGATÓRIO em TODA emissão de pause / enable / update_budget / duplicate:**
