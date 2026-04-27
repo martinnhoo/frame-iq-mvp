@@ -393,7 +393,7 @@ export async function guardLiveRevalidation(input: GuardInput): Promise<GuardRes
   }
 
   // Aggregate the last 2 days into one row for revalidation
-  const totals = rows.reduce(
+  const totals = rows.reduce<{ spend: number; impressions: number; frequency: number; conversions: number }>(
     (acc, r) => {
       acc.spend += parseFloat((r.spend as string) || "0");
       acc.impressions += parseInt((r.impressions as string) || "0", 10);
