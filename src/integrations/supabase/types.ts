@@ -1935,6 +1935,7 @@ export type Database = {
           impact_confidence: string | null
           impact_daily: number | null
           impact_type: string | null
+          invalidator: string | null
           margin_of_safety: number | null
           metrics: Json | null
           metrics_snapshot: Json | null
@@ -1946,6 +1947,7 @@ export type Database = {
           rollback_plan: string | null
           safety_status: string | null
           score: number
+          source: string
           status: string | null
           type: string
           updated_at: string | null
@@ -1974,6 +1976,7 @@ export type Database = {
           impact_confidence?: string | null
           impact_daily?: number | null
           impact_type?: string | null
+          invalidator?: string | null
           margin_of_safety?: number | null
           metrics?: Json | null
           metrics_snapshot?: Json | null
@@ -1985,6 +1988,7 @@ export type Database = {
           rollback_plan?: string | null
           safety_status?: string | null
           score: number
+          source?: string
           status?: string | null
           type: string
           updated_at?: string | null
@@ -2013,6 +2017,7 @@ export type Database = {
           impact_confidence?: string | null
           impact_daily?: number | null
           impact_type?: string | null
+          invalidator?: string | null
           margin_of_safety?: number | null
           metrics?: Json | null
           metrics_snapshot?: Json | null
@@ -2024,6 +2029,7 @@ export type Database = {
           rollback_plan?: string | null
           safety_status?: string | null
           score?: number
+          source?: string
           status?: string | null
           type?: string
           updated_at?: string | null
