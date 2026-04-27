@@ -257,7 +257,10 @@ async function executeAction(
       target_meta_id,
       target_name: (previousState.name as string) || decisionData.headline || null,
       previous_state: previousState,
-      new_state: null,
+      // new_state is NOT NULL with default '{}' — passing literal null
+      // bypasses the default and trips the constraint. Empty object now,
+      // overwritten with the real new_state after the Meta API call.
+      new_state: {},
       result: "pending",
       estimated_daily_impact: estimated_daily_impact || 0,
     })
