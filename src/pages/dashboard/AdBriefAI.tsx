@@ -4575,8 +4575,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               for (const db of decisionBlocks) {
                 const payload = (db as any).decision || (db as any).payload;
                 if (!payload) continue;
-                // Strip joined / computed fields the table doesn't store.
-                const { ad: _ad, id: _aiId, ...rowFields } = payload;
+                // Strip the AI-emitted id ("ai-7f3a2b91" — not a valid UUID).
+                // DB will generate a real UUID via the column default. We
+                // capture that UUID and propagate it back to the in-memory
+                // payload so the rendered DecisionCard's onAction sends
+                // the REAL decision_id to execute-action (otherwise the
+                // action_log FK insert fails silently and the loop breaks).
+                const { ad: _ad, id: aiTempId, ...rowFields } = payload;
                 const row = {
                   ...rowFields,
                   account_id: accRow.id,        // UUID, not act_xxx
@@ -4586,16 +4591,38 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 (supabase as any)
                   .from("decisions")
                   .insert(row)
-                  .then(({ error }: any) => {
-                    if (error) {
+                  .select("id")
+                  .single()
+                  .then(({ data: inserted, error }: any) => {
+                    if (error || !inserted?.id) {
                       console.warn("[decision-layer] persist failed", {
-                        error: error.message || error,
-                        code: error.code,
-                        details: error.details,
+                        error: error?.message || error,
+                        code: error?.code,
+                        details: error?.details,
                         decision_type: payload.type,
                         impact_type: payload.impact_type,
+                        ai_temp_id: aiTempId,
                       });
+                      return;
                     }
+                    // SUCCESS — log + propagate real DB UUID to the rendered
+                    // block so click → executeAction uses the real id.
+                    console.log("[decision-layer] inserted decision_id=" + inserted.id, {
+                      ai_temp_id: aiTempId,
+                      decision_type: payload.type,
+                      headline: payload.headline?.slice(0, 60),
+                    });
+                    setMessages((prev: any[]) => prev.map(msg => {
+                      if (msg.role !== "assistant" || !msg.blocks) return msg;
+                      const newBlocks = msg.blocks.map((b: any) => {
+                        if (b.type !== "decision") return b;
+                        const p = b.decision || b.payload;
+                        if (!p || p.id !== aiTempId) return b;
+                        const updated = { ...p, id: inserted.id };
+                        return { ...b, decision: updated, payload: updated };
+                      });
+                      return { ...msg, blocks: newBlocks };
+                    }));
                   });
               }
             });

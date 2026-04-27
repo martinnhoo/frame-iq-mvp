@@ -185,7 +185,7 @@ async function executeAction(
   // error instead of silently returning no decision.
   const { data: decisionData, error: decisionError } = await supabase
     .from("decisions")
-    .select("account_id, impact_daily, headline, type")
+    .select("account_id, impact_daily, headline, type, source, metrics")
     .eq("id", decision_id)
     .single();
 
@@ -408,6 +408,79 @@ async function executeAction(
     if (logError) {
       console.error("[execute-action] Log update FAILED after retry — pending log orphaned:", logError.message);
     }
+  }
+
+  // ── action_outcomes — REQUIRED for the 24h/72h measurement cron ──
+  //
+  // Without a row here, the cron never measures the result of this
+  // action and the decision loop is broken end-to-end. Was missing
+  // entirely — only meta-actions wrote action_outcomes, but
+  // execute-action (used by Feed AND chat DecisionCard) didn't.
+  //
+  // Mapped to the canonical action_type_enum:
+  //   pause_ad/adset/campaign  → identity
+  //   enable_ad/adset/campaign → identity
+  //   increase_budget          → budget_increase
+  //   decrease_budget          → budget_decrease
+  //   duplicate_ad             → duplicate_ad
+  // Anything else → skip (action_outcomes_enum doesn't cover it,
+  // e.g. generate_hook routes — those are creative-side, not measurable).
+  const ACTION_TYPE_MAP: Record<string, string> = {
+    pause_ad: "pause_ad", pause_adset: "pause_adset", pause_campaign: "pause_campaign",
+    enable_ad: "enable_ad", enable_adset: "enable_adset", enable_campaign: "enable_campaign",
+    increase_budget: "budget_increase", decrease_budget: "budget_decrease",
+    duplicate_ad: "duplicate_ad",
+  };
+  const outcomeActionType = ACTION_TYPE_MAP[action_type];
+  if (outcomeActionType) {
+    try {
+      // metrics_before: try to extract from decision.metrics (the engine
+      // stores it there) so the cron has a baseline to delta against.
+      // Falls back to {} which is a valid JSONB and won't fail the
+      // not-null check — cron will just produce a sparse delta.
+      const decisionMetrics = (decisionData as any).metrics;
+      const metricsBefore = (() => {
+        if (!Array.isArray(decisionMetrics) || decisionMetrics.length === 0) return {};
+        const out: Record<string, unknown> = {};
+        for (const m of decisionMetrics) {
+          if (m?.key && m?.value != null) out[String(m.key).toLowerCase()] = m.value;
+        }
+        return out;
+      })();
+      const { error: aoErr } = await supabase.from("action_outcomes").insert({
+        user_id: userId,
+        action_type: outcomeActionType,
+        target_level: target_type,                  // ad | adset | campaign
+        target_id: target_meta_id,                  // Meta numeric id
+        target_name: (previousState as any)?.name || decisionData.headline || null,
+        source: (decisionData as any).source === "ai_chat" ? "chat" : "feed",
+        ai_reasoning: decisionData.headline || null,
+        metrics_before: metricsBefore,
+        metrics_window: "d7",
+        impact_snapshot: estimated_daily_impact || null,
+        // taken_at uses default now() — cron filters by this
+      });
+      if (aoErr) {
+        console.error("[execute-action] action_outcomes insert failed:", {
+          message: aoErr.message,
+          code: (aoErr as any).code,
+          details: (aoErr as any).details,
+          decision_id,
+          action_type: outcomeActionType,
+        });
+      } else {
+        console.log("[execute-action] action_outcomes created", {
+          decision_id,
+          action_type: outcomeActionType,
+          target_id: target_meta_id,
+          source: (decisionData as any).source === "ai_chat" ? "chat" : "feed",
+        });
+      }
+    } catch (e) {
+      console.error("[execute-action] action_outcomes insert threw:", (e as any)?.message || e);
+    }
+  } else {
+    console.log("[execute-action] skipping action_outcomes — action_type not in enum:", action_type);
   }
 
   // Update decision status to 'acted'
