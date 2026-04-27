@@ -1338,7 +1338,62 @@ function DecisionBlockRenderer({ decision }: { decision: Decision }) {
         : decision.ad?.meta_ad_id;
       const fromDecision = (decision as any).target_meta_id ?? (decision as any).target_id;
       const candidates: unknown[] = [fromParams, fromHierarchy, fromDecision];
-      const metaId = (candidates.find(valid) as string | undefined) || "";
+      let metaId = (candidates.find(valid) as string | undefined) || "";
+
+      // ── Fallback: name-based lookup against local DB ──────────────────
+      // The AI sometimes emits a decision without target_meta_id (just a
+      // headline like "Ativar 'v1-existe-dinheiro-vazando'"). Parse the
+      // quoted name from the headline / target_name and look up the meta
+      // ID from our cached ads/adsets/campaigns tables. This unblocks the
+      // click without requiring an edge function redeploy of the prompt.
+      if (!metaId) {
+        const headline = String(decision.headline || (decision as any).target_name || "");
+        // Match name in single or double quotes — first capture wins.
+        const nameMatch = headline.match(/['"]([^'"]{2,120})['"]/);
+        const name = nameMatch ? nameMatch[1].trim() : null;
+        if (name) {
+          try {
+            const { data: { user: authUser } } = await supabase.auth.getUser();
+            if (authUser?.id) {
+              // Resolve all ad_accounts UUIDs owned by this user. The
+              // entities tables (ads, ad_sets, campaigns) all carry an
+              // account_id FK, so we can scope the search by .in() to
+              // avoid leaking across users while keeping the query simple
+              // (no nested PostgREST joins).
+              const { data: accs } = await (supabase as any)
+                .from("ad_accounts")
+                .select("id")
+                .eq("user_id", authUser.id);
+              const accIds = (accs || []).map((a: any) => a.id).filter(Boolean);
+              if (accIds.length > 0) {
+                const needle = name.slice(0, 60);
+                const table = targetType === "ad" ? "ads"
+                  : targetType === "adset" ? "ad_sets"
+                  : "campaigns";
+                const idCol = targetType === "ad" ? "meta_ad_id"
+                  : targetType === "adset" ? "meta_adset_id"
+                  : "meta_campaign_id";
+                const { data: row } = await (supabase as any)
+                  .from(table)
+                  .select(`${idCol}, name`)
+                  .in("account_id", accIds)
+                  .ilike("name", `%${needle}%`)
+                  .limit(1)
+                  .maybeSingle();
+                if (row?.[idCol] && valid(row[idCol])) {
+                  metaId = row[idCol];
+                  console.log("[decision-layer] resolved meta_id via name lookup", {
+                    name, matched_name: row.name, targetType, metaId,
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            console.warn("[decision-layer] name lookup threw", (e as any)?.message || e);
+          }
+        }
+      }
+
       if (!metaId) {
         console.error("[decision-layer] missing target meta_id — cannot execute", { decisionId, decision });
         toast.error("Anúncio sem ID do Meta — não é possível executar esta ação");
