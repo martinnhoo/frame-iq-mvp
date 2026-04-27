@@ -51,8 +51,12 @@ function renderFallbackBody(meta) {
        </section>`
     : "";
 
+  // Same flash-prevention as index.html: hidden by default, revealed only
+  // if React doesn't hydrate within 2.5s. SEO crawlers parse the static
+  // content from the DOM; users with JS never see the fallback flicker
+  // because real hydration lands in 200-500ms.
   return `
-    <main style="font-family:'Inter',system-ui,sans-serif;max-width:780px;margin:48px auto;padding:0 24px;color:#0a0c10;line-height:1.65">
+    <main id="adbrief-ssr-fallback" style="opacity:0;visibility:hidden;font-family:'Inter',system-ui,sans-serif;max-width:780px;margin:48px auto;padding:0 24px;color:#0a0c10;line-height:1.65">
       ${bcHTML}
       <h1 style="font-size:36px;font-weight:800;letter-spacing:-0.02em;margin:0 0 16px">${safe(meta.h1)}</h1>
       <p style="font-size:18px;color:#444;margin:0 0 24px">${safe(meta.description)}</p>
@@ -61,7 +65,6 @@ function renderFallbackBody(meta) {
         <a href="/signup" style="background:#2563eb;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">Começar teste grátis de 3 dias</a>
       </p>
       ${relatedHTML}
-      <p style="font-size:13px;color:#888;margin-top:64px">Carregando aplicação interativa…</p>
     </main>
   `;
 }

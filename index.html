@@ -109,11 +109,15 @@
     src="https://www.facebook.com/tr?id=478948487618567&ev=PageView&noscript=1"
     /></noscript>
     <!-- Fallback content for crawlers when JS is disabled or hasn't loaded.
-         Hydration replaces this completely. SEO crawlers see real H1 + paragraph
-         even before React renders. Per-page prerender script overrides this with
-         page-specific copy. -->
+         Hydration replaces this completely. SEO crawlers (with or without JS)
+         see real H1 + paragraph even if React fails. Per-page prerender script
+         overrides this with page-specific copy.
+         Visually hidden for real users — the inline script below makes it
+         visible only if React hasn't replaced this div within 2.5s (real
+         hydration normally lands in 200-500ms). This kills the flash that
+         was visible on first load before the LP rendered. -->
     <div id="root">
-      <main style="font-family:system-ui,sans-serif;max-width:780px;margin:80px auto;padding:0 24px;color:#0a0c10;line-height:1.6">
+      <main id="adbrief-ssr-fallback" style="opacity:0;visibility:hidden;font-family:system-ui,sans-serif;max-width:780px;margin:80px auto;padding:0 24px;color:#0a0c10;line-height:1.6">
         <h1 style="font-size:36px;font-weight:800;letter-spacing:-0.02em;margin:0 0 16px">AdBrief — IA para Meta Ads</h1>
         <p style="font-size:18px;color:#444;margin:0 0 24px">
           A inteligência artificial que conecta na sua conta do Meta Ads e mostra
@@ -132,9 +136,22 @@
           <li>Aprende com cada decisão e melhora as próximas recomendações</li>
         </ul>
         <p style="margin:24px 0"><a href="/signup" style="background:#2563eb;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:600">Começar teste grátis de 3 dias</a></p>
-        <p style="font-size:14px;color:#666;margin-top:48px">Carregando aplicação… se a página não carregar em alguns segundos, ative JavaScript ou tente outro navegador.</p>
       </main>
     </div>
+    <noscript>
+      <style>#adbrief-ssr-fallback{opacity:1!important;visibility:visible!important}</style>
+    </noscript>
+    <script>
+      // If React hasn't replaced #root within 2.5s, reveal the fallback so
+      // the user sees something instead of a blank page. Normal hydration is
+      // 200-500ms — the timer effectively never fires for healthy loads.
+      (function(){
+        setTimeout(function(){
+          var f = document.getElementById('adbrief-ssr-fallback');
+          if (f) { f.style.opacity = '1'; f.style.visibility = 'visible'; }
+        }, 2500);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
