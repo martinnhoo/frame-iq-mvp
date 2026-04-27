@@ -1316,11 +1316,18 @@ function DecisionBlockRenderer({ decision }: { decision: Decision }) {
       // Resolve target metadata. Chat-emitted decisions carry the meta
       // ID either on the joined ad object (when we hydrated) or on the
       // payload's top-level fields (when AI emitted a fresh ID).
-      const metaId =
-        decision.ad?.meta_ad_id ||
-        (decision as any).target_meta_id ||
-        (decision as any).target_id ||
-        "";
+      // The AI sometimes emits the literal string "undefined" or "null"
+      // when it didn't have the real ID — those are truthy strings that
+      // would otherwise pass the `||` chain and reach Meta API as garbage.
+      // Filter them out explicitly so we fall through to the next source.
+      const valid = (v: unknown): v is string =>
+        typeof v === "string" && v.length > 0 && v !== "undefined" && v !== "null";
+      const candidates: unknown[] = [
+        decision.ad?.meta_ad_id,
+        (decision as any).target_meta_id,
+        (decision as any).target_id,
+      ];
+      const metaId = candidates.find(valid) as string | undefined || "";
       const targetType = action.meta_api_action.includes("adset")
         ? "adset"
         : action.meta_api_action.includes("campaign")
