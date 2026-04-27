@@ -4161,8 +4161,26 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
 
     if(error||data?.error){
       const id=Date.now();
-      const errMsg=data?.error||realError||"Tente novamente.";
-      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"warning",title:"Falha na ação",content:errMsg}]}]);
+      const rawErr=data?.error||realError||"Tente novamente.";
+      // Translate known internal-jargon errors to user-friendly copy.
+      // Backend `errResp` strings ("target_id obrigatório para ação ...",
+      // "use list_campaigns primeiro") are intended as guidance to the AI,
+      // not the human — leaking them creates the "wtf is list_campaigns"
+      // moment shown in the screenshot.
+      const lower = String(rawErr).toLowerCase();
+      let title = "Falha na ação";
+      let content = rawErr;
+      if (lower.includes("target_id obrigat") || (lower.includes("target") && lower.includes("identificar"))) {
+        title = "Preciso de mais informação";
+        content = `Não consegui identificar qual ${block.target_type === "campaign" ? "campanha" : block.target_type === "adset" ? "conjunto" : "anúncio"} ${block.meta_action === "enable" ? "ativar" : block.meta_action === "pause" ? "pausar" : "alterar"}. Me diga o nome ou peça pra eu listar primeiro.`;
+      } else if (lower.includes("list_campaigns") || lower.includes("get_campaigns")) {
+        title = "Preciso ver os dados primeiro";
+        content = "Pede pra eu listar suas campanhas antes — aí escolho o alvo certo.";
+      } else if (lower.includes("undefined") || lower.includes("null")) {
+        title = "Alvo não identificado";
+        content = "Não consegui localizar o alvo dessa ação. Me confirma qual item você quer mexer.";
+      }
+      setMessages(prev=>[...prev,{role:"assistant",id,ts:id,blocks:[{type:"warning",title,content}]}]);
       return;
     }
 
