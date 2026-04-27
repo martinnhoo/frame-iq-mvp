@@ -91,11 +91,11 @@ const TX: Record<Lang, Record<string, string>> = {
     trust_meta: "Funciona com Meta Ads",
     // hero
     hero_tag: "GESTOR DE TRÁFEGO COM IA · META ADS",
-    hero_title: "Você não vê o dinheiro indo embora.\nA AdBrief vê.",
-    hero_sub: "AdBrief é um gestor sênior com IA, dentro da sua conta Meta. Lê a performance a cada 15 minutos, decide o que fazer e executa — com o seu OK.",
-    hero_support: "Pausar, escalar, ajustar orçamento, reescrever criativo — sem você abrir o Gerenciador de Anúncios.",
-    hero_cta: "Testar 3 dias grátis",
-    hero_cta_sub: "Sem cartão · Conecta Meta depois, no onboarding",
+    hero_title: "Seu orçamento em ads está\nsendo queimado e você não vê.",
+    hero_sub: "Conecte sua conta Meta. Em 15 minutos, a AdBrief mostra exatamente o que está consumindo orçamento sem retorno — e te entrega a decisão pronta.",
+    hero_support: "Pra contas Meta com R$3k+/mês rodando agora. Não é pra iniciantes — é pra quem já gasta e quer parar de queimar.",
+    hero_cta: "Ver o que está vazando",
+    hero_cta_sub: "3 dias grátis · Sem cartão · Você aprova cada decisão antes de executar",
     hero_login: "Já tem conta? Entrar",
     hero_screenshot_label: "O feed do AdBrief — decisões aplicadas hoje",
     hero_callout_1: "Diagnóstico com os números reais da conta",
@@ -261,11 +261,11 @@ const TX: Record<Lang, Record<string, string>> = {
     trust_powered: "Powered by",
     trust_meta: "Works with Meta Ads",
     hero_tag: "AI MEDIA BUYER · META ADS",
-    hero_title: "You don't see the money slipping away.\nAdBrief does.",
-    hero_sub: "AdBrief is a senior AI media buyer living inside your Meta Ads account. Reads performance every 15 minutes, decides what to do, and executes — with your approval.",
-    hero_support: "Pause, scale, adjust budgets, rewrite creative — without ever opening Ads Manager.",
-    hero_cta: "Try 3 days free",
-    hero_cta_sub: "No card · Connect Meta later, during onboarding",
+    hero_title: "Your ad budget is being\nburned and you can't see it.",
+    hero_sub: "Connect your Meta account. In 15 minutes, AdBrief shows exactly what's consuming budget without returning — and hands you the decision, ready to apply.",
+    hero_support: "Built for Meta accounts spending $600+/mo and currently active. Not for beginners — for operators who already spend and want to stop bleeding.",
+    hero_cta: "See what's leaking",
+    hero_cta_sub: "3 days free · No card · You approve every decision before it runs",
     hero_login: "Already have an account? Log in",
     hero_screenshot_label: "The AdBrief feed — decisions applied today",
     hero_callout_1: "Real diagnosis with your actual account data",
@@ -420,11 +420,11 @@ const TX: Record<Lang, Record<string, string>> = {
     trust_powered: "Powered by",
     trust_meta: "Funciona con Meta Ads",
     hero_tag: "MEDIA BUYER CON IA · META ADS",
-    hero_title: "No ves el dinero irse.\nAdBrief sí.",
-    hero_sub: "AdBrief es un media buyer sénior con IA, viviendo dentro de tu cuenta Meta. Lee la performance cada 15 minutos, decide qué hacer y ejecuta — con tu OK.",
-    hero_support: "Pausar, escalar, ajustar presupuesto, reescribir creativo — sin abrir el Administrador de Anuncios.",
-    hero_cta: "Probar 3 días gratis",
-    hero_cta_sub: "Sin tarjeta · Conectá Meta después, en el onboarding",
+    hero_title: "Tu presupuesto en ads se está\nquemando y no lo ves.",
+    hero_sub: "Conecta tu cuenta Meta. En 15 minutos, AdBrief muestra exactamente qué está consumiendo presupuesto sin retorno — y te entrega la decisión lista.",
+    hero_support: "Para cuentas Meta gastando $600+/mes y corriendo ahora. No es para principiantes — es para quien ya gasta y quiere dejar de quemar.",
+    hero_cta: "Ver qué está fugando",
+    hero_cta_sub: "3 días gratis · Sin tarjeta · Tú apruebas cada decisión antes de ejecutar",
     hero_login: "¿Ya tienes cuenta? Entrar",
     hero_screenshot_label: "El feed de AdBrief — decisiones aplicadas hoy",
     hero_callout_1: "Diagnóstico con los datos reales de tu cuenta",
@@ -1502,17 +1502,44 @@ function Hero({ t }: { t: Record<string, string> }) {
           </span>
           <h1 className="lp-hero-h1" style={{
             fontFamily: F,
-            fontSize: "clamp(34px, 5.6vw, 72px)",
+            fontSize: "clamp(32px, 5vw, 64px)",
             fontWeight: 800,
             letterSpacing: "-0.045em",
             lineHeight: 1.04,
             color: TEXT,
-            margin: "0 auto 22px",
+            margin: "0 auto 18px",
             whiteSpace: "pre-line",
-            maxWidth: 14 + "ch",
+            maxWidth: 18 + "ch",
           }}>
             {t.hero_title}
           </h1>
+
+          {/* Subheadline — describes the mechanism honestly, no fake stats */}
+          <p className="lp-hero-sub" style={{
+            fontFamily: F,
+            fontSize: "clamp(15px, 1.5vw, 18px)",
+            color: TEXT2,
+            lineHeight: 1.55,
+            margin: "0 auto 14px",
+            fontWeight: 400,
+            maxWidth: 620,
+            letterSpacing: "-0.005em",
+          }}>
+            {t.hero_sub}
+          </p>
+
+          {/* Support — qualifier line that filters intent */}
+          <p className="lp-hero-support" style={{
+            fontFamily: F,
+            fontSize: 13,
+            color: TEXT3,
+            lineHeight: 1.5,
+            margin: "0 auto 28px",
+            maxWidth: 540,
+            fontWeight: 500,
+          }}>
+            {t.hero_support}
+          </p>
 
           {/* CTA cluster — inline, compact */}
           <div className="hero-cta-fade" style={{

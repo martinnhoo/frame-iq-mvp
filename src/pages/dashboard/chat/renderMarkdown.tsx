@@ -86,11 +86,14 @@ export function renderMarkdown(text: string): React.ReactNode[] {
   lines.forEach((line, i) => {
     const t = line.trim();
 
-    // ### heading
+    // ### heading — refined eyebrow. Was bright cyan
+    // (rgba(14,165,233,0.6)) which read as Tailwind-default and made
+    // the whole chat feel like a tutorial app. Switched to a muted
+    // warm-slate that pairs with the AdBrief AI header.
     if (/^###\s/.test(t)) {
       flushList(`fl-${i}`);
       nodes.push(
-        <p key={i} style={{ fontFamily: FONTS.sans, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.6)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "16px 0 4px" }}>
+        <p key={i} style={{ fontFamily: FONTS.sans, fontSize: 10.5, fontWeight: 700, color: "rgba(154,175,204,0.62)", letterSpacing: "0.10em", textTransform: "uppercase", margin: "16px 0 4px" }}>
           {t.replace(/^###\s/, "")}
         </p>
       );

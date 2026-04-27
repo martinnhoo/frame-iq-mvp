@@ -1648,65 +1648,83 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
         </div>
       </div>
 
-      {/* ── Briefing Cards — urgente/oportunidade/insight ──
-          Visual treatment matched to the Feed DecisionCard family:
-          subtle gradient, denser shadow, inset highlight, accent glow
-          tied to the card's tag color. So the chat cards and the Feed
-          decision cards read as the same surface — same product,
-          same density. */}
-      {briefingCards.map((card, i) => (
-        <div key={i} style={{
-          background: "linear-gradient(180deg, rgba(15,23,42,0.78) 0%, rgba(10,15,28,0.92) 100%)",
-          border: `1px solid ${card.tagColor === "#F87171" ? "rgba(248,113,113,0.22)" : card.tagColor === "#4ADE80" ? "rgba(74,222,128,0.18)" : "rgba(148,163,184,0.10)"}`,
-          borderLeft: `2px solid ${card.tagColor}`,
-          borderRadius: 14, padding: "clamp(12px,2vw,16px) clamp(14px,2.5vw,18px)",
-          marginBottom: 10,
-          boxShadow: `0 6px 22px rgba(0,0,0,0.42), 0 0 0 1px ${card.tagColor === "#F87171" ? "rgba(248,113,113,0.04)" : card.tagColor === "#4ADE80" ? "rgba(74,222,128,0.04)" : "rgba(56,189,248,0.04)"}, inset 0 1px 0 rgba(255,255,255,0.06)`,
-          backdropFilter: "blur(8px) saturate(140%)",
-          WebkitBackdropFilter: "blur(8px) saturate(140%)",
-          animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + i * 0.06}s both` : "none",
-          opacity: 0,
-        }}>
-          {/* Tag */}
-          <span style={{
-            fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const,
-            color: card.tagColor, fontFamily: F, marginBottom: 4, display: "block",
+      {/* ── Briefing Cards — refined muted palette ──
+          The original cards used Tailwind-default saturated hues
+          (#F87171 hot red, #4ADE80 kelly green, #FBBF24 amber, #0ea5e9
+          sky) which read as "tutorial app" rather than "professional
+          tool". Replaced with a desaturated palette that keeps signal
+          differentiation but lands premium. Translation table maps
+          legacy data-layer colors to refined render-time tokens — no
+          schema changes needed. */}
+      {briefingCards.map((card, i) => {
+        const palette = (() => {
+          // Anthropic-warm palette — kept low-saturation so the eye
+          // reads the eyebrow as a hint, not a siren.
+          switch (card.tagColor) {
+            case "#F87171": // critical / urgente → muted coral
+              return { eyebrow: "#D88A7F", border: "rgba(216,138,127,0.20)", accent: "rgba(216,138,127,0.32)", glow: "rgba(216,138,127,0.05)", btnBg: "rgba(216,138,127,0.16)", btnText: "#E5A89C" };
+            case "#4ADE80": // success / oportunidade → sage
+              return { eyebrow: "#8FB59E", border: "rgba(143,181,158,0.18)", accent: "rgba(143,181,158,0.30)", glow: "rgba(143,181,158,0.04)", btnBg: "rgba(143,181,158,0.14)", btnText: "#A6C7B3" };
+            case "#FBBF24": // warning → warm sand
+              return { eyebrow: "#C9A96E", border: "rgba(201,169,110,0.18)", accent: "rgba(201,169,110,0.30)", glow: "rgba(201,169,110,0.04)", btnBg: "rgba(201,169,110,0.14)", btnText: "#D7BC85" };
+            case "#0ea5e9": // info / briefing → muted slate-blue
+            default:
+              return { eyebrow: "#9AAFCC", border: "rgba(154,175,204,0.16)", accent: "rgba(154,175,204,0.28)", glow: "rgba(154,175,204,0.04)", btnBg: "rgba(154,175,204,0.12)", btnText: "#B2C2D8" };
+          }
+        })();
+        return (
+          <div key={i} style={{
+            background: "linear-gradient(180deg, rgba(18,22,30,0.85) 0%, rgba(10,13,20,0.92) 100%)",
+            border: `1px solid ${palette.border}`,
+            borderLeft: `2px solid ${palette.accent}`,
+            borderRadius: 12, padding: "clamp(13px,2vw,17px) clamp(15px,2.5vw,19px)",
+            marginBottom: 10,
+            boxShadow: `0 4px 16px rgba(0,0,0,0.32), 0 0 0 1px ${palette.glow}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+            backdropFilter: "blur(8px) saturate(120%)",
+            WebkitBackdropFilter: "blur(8px) saturate(120%)",
+            animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + i * 0.06}s both` : "none",
+            opacity: 0,
           }}>
-            {card.tag}
-          </span>
-          {/* Headline */}
-          <p style={{
-            fontSize: 14, fontWeight: 700, color: "#F0F6FC", margin: "4px 0 3px",
-            lineHeight: 1.4, fontFamily: F,
-          }}>
-            {card.headline}
-          </p>
-          {/* Detail */}
-          <p style={{
-            fontSize: 12.5, color: "rgba(240,246,252,0.72)", margin: "0 0 8px",
-            lineHeight: 1.5, fontFamily: F,
-          }}>
-            {card.detail}
-          </p>
-          {/* Action button */}
-          {card.action && (
-            <button onClick={() => onSend(card.actionPrompt || card.action!)}
-              style={{
-                background: card.tagColor === "#F87171" ? "#F87171" : card.tagColor === "#4ADE80" ? "rgba(74,222,128,0.15)" : "rgba(14,165,233,0.12)",
-                color: card.tagColor === "#F87171" ? "#fff" : card.tagColor,
-                border: card.tagColor === "#F87171" ? "none" : `1px solid ${card.tagColor}30`,
-                borderRadius: 6, padding: "5px 12px", fontSize: 11, fontWeight: 700,
-                fontFamily: F, cursor: "pointer", transition: "all 0.15s",
-                boxShadow: card.tagColor === "#F87171" ? `0 2px 8px rgba(248,113,113,0.3)` : "none",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
-            >
-              {card.action}
-            </button>
-          )}
-        </div>
-      ))}
+            {/* Tag eyebrow — desaturated, low intensity */}
+            <span style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const,
+              color: palette.eyebrow, fontFamily: F, marginBottom: 5, display: "block",
+            }}>
+              {card.tag}
+            </span>
+            {/* Headline */}
+            <p style={{
+              fontSize: 14, fontWeight: 700, color: "#F0F6FC", margin: "4px 0 4px",
+              lineHeight: 1.4, fontFamily: F, letterSpacing: "-0.005em",
+            }}>
+              {card.headline}
+            </p>
+            {/* Detail */}
+            <p style={{
+              fontSize: 12.5, color: "rgba(240,246,252,0.68)", margin: "0 0 8px",
+              lineHeight: 1.55, fontFamily: F,
+            }}>
+              {card.detail}
+            </p>
+            {/* Action button — subtle ghost style across all variants */}
+            {card.action && (
+              <button onClick={() => onSend(card.actionPrompt || card.action!)}
+                style={{
+                  background: palette.btnBg,
+                  color: palette.btnText,
+                  border: `1px solid ${palette.accent}`,
+                  borderRadius: 6, padding: "5px 12px", fontSize: 11, fontWeight: 700,
+                  fontFamily: F, cursor: "pointer", transition: "all 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.borderColor = palette.eyebrow; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = palette.accent; }}
+              >
+                {card.action}
+              </button>
+            )}
+          </div>
+        );
+      })}
 
       {/* ── Quick Actions — horizontal pills ── */}
       <div style={{
@@ -4937,10 +4955,16 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 {/* Avatar + label — só mostra se há blocks reais */}
                 {!!(msg.blocks?.length) && !(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,animation:"fadeUp 0.15s ease-out"}}>
-                    <div style={{width:26,height:26,borderRadius:8,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(37,99,235,0.12)",border:"1px solid rgba(37,99,235,0.22)"}}>
+                    {/* Neutral glass treatment — the saturated brand-blue tint
+                        on the avatar + label was reading as cheap "tailwind
+                        default". Refined: warm-neutral glass bg, hairline
+                        white border, off-white label. The AdBrief identity
+                        comes through the avatar PNG itself, not from a
+                        decorative blue plate around it. */}
+                    <div style={{width:26,height:26,borderRadius:8,flexShrink:0,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.10)"}}>
                       <ABAvatar size={26}/>
                     </div>
-                    <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:12,fontWeight:600,color:"rgba(37,99,235,0.75)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
+                    <span style={{fontFamily:"'Plus Jakarta Sans', sans-serif",fontSize:12,fontWeight:600,color:"rgba(240,246,252,0.78)",letterSpacing:"-0.01em"}}>AdBrief AI</span>
                   </div>
                 )}
                 {/* Blocks — card da IA. Visual treatment matches the
