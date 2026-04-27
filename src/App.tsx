@@ -82,6 +82,7 @@ const CockpitOverview    = lazy(() => import("./pages/cockpit/CockpitOverview"))
 const CockpitUsers       = lazy(() => import("./pages/cockpit/CockpitUsers"));
 const CockpitUserDetail  = lazy(() => import("./pages/cockpit/CockpitUserDetail"));
 const CockpitAuditLog    = lazy(() => import("./pages/cockpit/CockpitAuditLog"));
+const CockpitDecisionLayer = lazy(() => import("./pages/cockpit/CockpitDecisionLayer"));
 
 // V2 Decision Engine pages
 const FeedPage         = lazy(() => import("./pages/dashboard/FeedPage"));
@@ -216,6 +217,7 @@ const App = () => (
                 <Route path="users" element={<CockpitUsers />} />
                 <Route path="users/:id" element={<CockpitUserDetail />} />
                 <Route path="audit" element={<CockpitAuditLog />} />
+                <Route path="decision-layer" element={<CockpitDecisionLayer />} />
                 <Route path="*" element={<Navigate to="/cockpit" replace />} />
               </Route>
 

@@ -26,6 +26,7 @@ import {
   Menu,
   X,
   Command,
+  Target,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CommandPalette, MONO, useHotkey } from './_shared';
@@ -305,6 +306,7 @@ export default function CockpitLayout() {
       </div>
       <nav style={{ flex: 1, paddingTop: 2 }}>
         <NavItem url="/cockpit" label="Overview" icon={LayoutDashboard} end />
+        <NavItem url="/cockpit/decision-layer" label="Decision Layer" icon={Target} />
         <NavItem url="/cockpit/users" label="Users" icon={Users} />
         <NavItem url="/cockpit/audit" label="Audit log" icon={ScrollText} />
       </nav>
