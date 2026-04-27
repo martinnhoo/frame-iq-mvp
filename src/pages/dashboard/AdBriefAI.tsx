@@ -4537,6 +4537,88 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       let blocks:Block[]=Array.isArray(data.blocks)?data.blocks:[{type:"insight",title:"Response",content:String(data.blocks)}];
 
+      // ── Defensive: salvage malformed decision blocks ─────────────────
+      // The LLM occasionally emits a decision payload as plain text inside
+      // an `insight` block instead of as `{type:"decision", decision:{...}}`.
+      // The text usually keeps the JSON keys ("headline":, "reason":,
+      // "actions":...) but loses outer braces, so JSON.parse fails. We
+      // detect this pattern and reconstruct a usable decision payload via
+      // permissive regex extraction. Better degraded card than no card.
+      blocks = blocks.map((b: any) => {
+        if (b.type !== "insight") return b;
+        const c = String(b.content || "");
+        const looksLikeDecision = /["']?headline["']?\s*:/i.test(c)
+          && /["']?(actions|invalidator|impact_confidence|impact_type)["']?\s*:/i.test(c);
+        if (!looksLikeDecision) return b;
+        // Try direct JSON parse first (with brace injection if missing).
+        const pickStr = (key: string): string | null => {
+          const re = new RegExp(`["']?${key}["']?\\s*:\\s*["']([^"']{1,500})["']`, "i");
+          const m = c.match(re);
+          return m ? m[1] : null;
+        };
+        const pickNum = (key: string): number | null => {
+          const re = new RegExp(`["']?${key}["']?\\s*:\\s*(-?\\d+(?:\\.\\d+)?)`, "i");
+          const m = c.match(re);
+          return m ? Number(m[1]) : null;
+        };
+        const headline = pickStr("headline") || "Decisão (formato em recuperação)";
+        const reason = pickStr("reason") || "";
+        const score = pickNum("score") ?? 50;
+        const impact_type = (pickStr("impact_type") || "waste").toLowerCase();
+        const impact_daily = pickNum("impact_daily") ?? 0;
+        const impact_7d = pickNum("impact_7d") ?? impact_daily * 7;
+        const impact_confidence = (pickStr("impact_confidence") || "low").toLowerCase();
+        const impact_basis = pickStr("impact_basis") || "";
+        const invalidator = pickStr("invalidator") || "";
+        const decision_type = (pickStr("type") || "fix").toLowerCase();
+        const target_id = pickStr("target_id") || pickStr("target_meta_id") || null;
+        const target_meta_id = pickStr("target_meta_id") || target_id;
+        // Best-effort actions parse: find at least one meta_api_action.
+        const actionMatch = c.match(/["']?meta_api_action["']?\s*:\s*["']([a-z_]+)["']/i);
+        const actionLabel = pickStr("label") || "Aplicar";
+        const actions = actionMatch
+          ? [{
+              id: "act-1",
+              label: actionLabel,
+              type: "destructive" as const,
+              requires_confirmation: true,
+              meta_api_action: actionMatch[1],
+              params: {},
+            }]
+          : [];
+        const recovered: any = {
+          id: `ai-recovered-${Date.now().toString(36)}`,
+          type: decision_type,
+          headline,
+          reason,
+          score,
+          priority_rank: 1,
+          impact_type,
+          impact_daily,
+          impact_7d,
+          impact_confidence,
+          impact_basis,
+          metrics: [],
+          actions,
+          target_id,
+          target_meta_id,
+          ad_id: null,
+          account_id: null,
+          status: "pending",
+          source: "ai_chat",
+          invalidator,
+          action_recommendation: null,
+          group_note: null,
+          acted_at: null,
+          dismissed_at: null,
+          created_at: new Date().toISOString(),
+        };
+        console.warn("[decision-layer] salvaged malformed decision from insight block", {
+          headline, decision_type, impact_type, has_invalidator: !!invalidator,
+        });
+        return { type: "decision" as const, decision: recovered } as any;
+      });
+
       // ── Decision Layer — persist AI-emitted decisions ────────────────
       // Fire-and-forget. Any block of type 'decision' carries a payload
       // shaped like a row of the `decisions` table; we insert it with
