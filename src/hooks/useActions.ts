@@ -42,10 +42,25 @@ export function useActions(): UseActionsReturn {
       try {
         setIsExecuting(true);
 
+        // Normalize action_type for the deployed edge function. The Meta
+        // API + AI emit `enable_*` (Meta's standard verb) but the
+        // function's switch statement still uses legacy v1 `reactivate_*`
+        // names. Map at the call site so we don't depend on an edge
+        // function redeploy to unblock the loop. Same idea for budget
+        // direction renames if they show up later.
+        const ACTION_TYPE_MAP: Record<string, string> = {
+          enable_ad: 'reactivate_ad',
+          enable_adset: 'reactivate_adset',
+          enable_campaign: 'reactivate_campaign',
+          budget_increase: 'increase_budget',
+          budget_decrease: 'decrease_budget',
+        };
+        const normalizedActionType = ACTION_TYPE_MAP[actionType] ?? actionType;
+
         const { data, error } = await supabase.functions.invoke('execute-action', {
           body: {
             decision_id: decisionId,
-            action_type: actionType,
+            action_type: normalizedActionType,
             target_type: targetType,
             target_meta_id: targetMetaId,
             params,
