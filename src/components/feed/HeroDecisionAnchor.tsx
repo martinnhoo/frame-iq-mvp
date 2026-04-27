@@ -167,10 +167,17 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
   // because Meta-level issues (spend cap, billing, disabled account) BLOCK
   // ALL other actions. No point recommending "pause this ad" when delivery
   // is paused for the entire account.
-  let variant: 'critical_account' | 'urgent' | 'stable' | 'loading';
+  // 'opportunity' fires when there's something actionable but no kill —
+  // typical for scale/fix decisions. The previous binary (urgent ↔ stable)
+  // showed "Sistema ativo · proteção em andamento" while a real R$/dia
+  // opportunity sat in the card below. Passive copy at the top kills
+  // intent. Now we frame opportunity as loss-of-inaction so the user
+  // reads "I'm leaving money on the table" instead of "system is fine".
+  let variant: 'critical_account' | 'urgent' | 'opportunity' | 'stable' | 'loading';
   if (accountSeverity === 'critical') variant = 'critical_account';
   else if (!hasData) variant = 'loading';
   else if (killCount > 0 || recoverableBrl > 0) variant = 'urgent';
+  else if (otherActionCount > 0) variant = 'opportunity';
   else variant = 'stable';
 
   // Color tokens per variant. Discipline: each variant uses ONE accent
@@ -198,6 +205,19 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
       ctaBg: '#DC2626',
       ctaHover: '#B91C1C',
       ambientGlow: 'rgba(239,68,68,0.10)',
+    },
+    opportunity: {
+      // Loss-of-inaction frame: warm amber to imply "you're losing
+      // this if you don't act today" without the alarmist red of
+      // urgent. Sits between stable's calm green and urgent's red.
+      kicker: 'OPORTUNIDADE ABERTA',
+      kickerColor: '#FBBF24',
+      kickerBg: 'rgba(251,191,36,0.10)',
+      kickerBorder: 'rgba(251,191,36,0.24)',
+      number: '#FBBF24',
+      ctaBg: '#D97706',
+      ctaHover: '#B45309',
+      ambientGlow: 'rgba(251,191,36,0.10)',
     },
     stable: {
       kicker: 'CONTA ESTÁVEL',
@@ -488,6 +508,46 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
         );
       })()}
 
+      {variant === 'opportunity' && (
+        <>
+          {/* Loss-of-inaction frame — turns "system fine, decisions
+              waiting" into "you're leaving money on the table today".
+              Eyebrow + big number + single-line subline + CTA. The
+              actual decision card sits below this hero. */}
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 'clamp(28px, 4.8vw, 40px)',
+              fontWeight: 800,
+              color: '#F0F6FC',
+              letterSpacing: '-0.035em',
+              lineHeight: 1.12,
+              maxWidth: 720,
+            }}
+          >
+            Você está deixando dinheiro na mesa{otherActionCount > 0 ? ' agora' : ''}.
+          </h2>
+          <p
+            style={{
+              margin: '10px 0 0',
+              fontSize: 'clamp(14px, 1.5vw, 17px)',
+              color: 'rgba(240,246,252,0.68)',
+              lineHeight: 1.5,
+              maxWidth: 600,
+            }}
+          >
+            <strong style={{ color: '#FBBF24', fontWeight: 700 }}>
+              {otherActionCount} {otherActionCount === 1 ? 'oportunidade pronta' : 'oportunidades prontas'}
+            </strong>
+            {topOpportunityName ? (
+              <> — começando por <strong style={{ color: '#F0F6FC' }}>{topOpportunityName}</strong>.</>
+            ) : (
+              <> abaixo. Decida agora antes do sinal saturar.</>
+            )}
+          </p>
+        </>
+      )}
+
       {variant === 'stable' && (
         <>
           {/* Headline — when there's a recent win, lead with the
@@ -585,10 +645,12 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
         </>
       )}
 
-      {/* CTA — primary action, only renders when there's something to do */}
-      {(variant === 'critical_account'
-        || variant === 'urgent'
-        || (variant === 'stable' && totalActions > 0)) && onPrimaryClick && (
+      {/* CTA — primary action.
+          Suppressed in 'opportunity' mode because the actual decision
+          card sits right below with its own primary button. Two CTAs
+          stacked = competing intents = lower click rate. The hero
+          stops at "here's the loss"; the card does the action. */}
+      {(variant === 'critical_account' || variant === 'urgent') && onPrimaryClick && (
         <div style={{ marginTop: 22, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' as const }}>
           <button
             onClick={onPrimaryClick}
@@ -599,15 +661,15 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
               padding: '12px 22px',
               borderRadius: 10,
               background: t.ctaBg,
-              color: variant === 'urgent' || variant === 'critical_account' ? '#fff' : 'rgba(240,246,252,0.92)',
-              border: variant === 'urgent' || variant === 'critical_account' ? 'none' : '1px solid rgba(255,255,255,0.10)',
+              color: '#fff',
+              border: 'none',
               fontFamily: F,
               fontSize: 13.5,
               fontWeight: 700,
               cursor: 'pointer',
               transition: 'all 0.18s ease',
               letterSpacing: '-0.005em',
-              boxShadow: variant === 'urgent' || variant === 'critical_account' ? `0 0 24px ${t.ambientGlow}` : 'none',
+              boxShadow: `0 0 24px ${t.ambientGlow}`,
             }}
             onMouseEnter={e => {
               (e.currentTarget as HTMLElement).style.background = t.ctaHover;
@@ -620,8 +682,7 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
           >
             {primaryCtaLabel
               || (variant === 'critical_account' ? 'Entender o que fazer'
-                : variant === 'urgent' ? 'Resolver agora'
-                : 'Explorar oportunidades')}
+                : 'Resolver agora')}
             <ArrowRight size={14} strokeWidth={2.4} />
           </button>
 

@@ -1002,32 +1002,51 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         )}
 
-        {/* INVALIDATOR — falsifier surfaced verbatim before the action row.
-            "Esta decisão se invalida se X". Forces the user to read the
-            assumption before clicking, and forces the AI to commit to a
-            measurable condition. Distinct visual: subtle warm-amber
-            inline note, not a colored block, so it reads as a footnote
-            to the recommendation, not a separate alert. */}
-        {(decision as any).invalidator && (
+        {/* LOSS-OF-INACTION line — shown ONLY for scale/fix decisions
+            (not kills, where the loss frame is already explicit on the
+            recoverable amount). Quantifies what NOT clicking costs over
+            7 days. Pressure that moves intent without crying wolf. */}
+        {decision.impact_daily > 0 && (decision.type === 'scale' || decision.type === 'fix') && (
           <div style={{
-            margin: '8px 0 10px',
-            padding: '7px 10px',
-            background: 'rgba(217,178,107,0.04)',
-            border: '1px solid rgba(217,178,107,0.18)',
+            margin: '4px 0 8px',
+            padding: '6px 10px',
+            background: 'rgba(248,113,113,0.05)',
+            border: '1px solid rgba(248,113,113,0.18)',
             borderRadius: 6,
-            fontSize: 11.5,
-            color: 'rgba(240,246,252,0.72)',
+            fontSize: 12,
+            color: 'rgba(245,165,150,0.92)',
             lineHeight: 1.45,
             fontFamily: F,
+            fontWeight: 500,
           }}>
-            <span style={{
-              fontSize: 9, fontWeight: 800,
-              letterSpacing: '0.10em',
-              color: '#D9B26B',
-              marginRight: 6,
+            <span style={{ marginRight: 5, fontWeight: 700 }}>⚠</span>
+            Sem ação hoje: ~{formatMoney(decision.impact_daily * 7)} não capturados em 7 dias.
+          </div>
+        )}
+
+        {/* INVALIDATOR — falsifier surfaced verbatim. Bumped padding +
+            font + label intensity so it reads as a real safety net
+            ("posso testar sem medo") instead of a tiny footnote. */}
+        {(decision as any).invalidator && (
+          <div style={{
+            margin: '6px 0 12px',
+            padding: '10px 12px',
+            background: 'rgba(217,178,107,0.07)',
+            border: '1px solid rgba(217,178,107,0.28)',
+            borderRadius: 8,
+            fontSize: 12.5,
+            color: 'rgba(240,246,252,0.78)',
+            lineHeight: 1.5,
+            fontFamily: F,
+          }}>
+            <div style={{
+              fontSize: 9.5, fontWeight: 800,
+              letterSpacing: '0.12em',
+              color: '#E5C485',
+              marginBottom: 3,
             }}>
-              SE INVALIDA SE
-            </span>
+              QUANDO PARAR
+            </div>
             {(decision as any).invalidator}
           </div>
         )}
@@ -1092,7 +1111,25 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                       }} />
                       Executando...
                     </span>
-                  ) : action.label}
+                  ) : (
+                    // Primary buttons get a specific suffix with the
+                    // money number — turns "Ativar agora" into
+                    // "Ativar agora · +R$5/dia". Specific buttons get
+                    // clicked more than generic ones; this is the cheapest
+                    // way to inject specificity without changing data.
+                    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+                      {action.label}
+                      {isPrimary && decision.impact_daily > 0 && (
+                        <span style={{
+                          fontSize: 11.5, fontWeight: 600, opacity: 0.82,
+                          fontVariantNumeric: 'tabular-nums' as const,
+                          letterSpacing: '-0.005em',
+                        }}>
+                          · {decision.type === 'scale' ? '+' : ''}{formatMoney(decision.impact_daily)}/dia
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </button>
               );
             })
