@@ -1707,6 +1707,7 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
         @keyframes pb-fadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
         @keyframes pb-cardIn { from { opacity:0; transform:translateY(12px) scale(0.98) } to { opacity:1; transform:translateY(0) scale(1) } }
         @keyframes pb-breathe { 0%,100% { box-shadow: 0 0 0 0 rgba(13,162,231,0) } 50% { box-shadow: 0 0 12px 2px rgba(13,162,231,0.10) } }
+        @keyframes pb-pulse-dot { 0%,100% { transform:scale(1); opacity:1 } 50% { transform:scale(0.78); opacity:0.55 } }
       `}</style>
 
       {/* ── Header: avatar + greeting ── */}
@@ -1714,16 +1715,54 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
         display: "flex", alignItems: "center", gap: 10, marginBottom: 16,
         animation: mounted ? "pb-fadeUp 0.3s ease-out 0.06s both" : "none", opacity: 0,
       }}>
-        <div style={{ animation: mounted ? "pb-breathe 3.5s ease-in-out 1s infinite" : "none", borderRadius: 8 }}>
+        {/* Avatar with breathing animation + live status dot — signals
+            "this is an active system, not a static greeting." */}
+        <div style={{ position: "relative", animation: mounted ? "pb-breathe 3.5s ease-in-out 1s infinite" : "none", borderRadius: 8 }}>
           <ABAvatar size={24} />
+          <span style={{
+            position: "absolute", top: -2, right: -2,
+            width: 8, height: 8, borderRadius: "50%",
+            background: "#34D399",
+            boxShadow: "0 0 8px rgba(52,211,153,0.6), 0 0 0 2px #0a0c10",
+            animation: "pb-pulse-dot 1.6s ease-in-out infinite",
+          }} aria-hidden />
         </div>
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <h1 style={{
             fontFamily: F, fontSize: "clamp(18px,3.5vw,22px)", fontWeight: 800,
             color: "#f0f2f8", letterSpacing: "-0.03em", lineHeight: 1.2, margin: 0,
           }}>
             {block.title}
           </h1>
+          {/* Intelligence subtitle — proves the system already analyzed
+              the account before the user arrived. Composed live from
+              briefingCards (the system already detected this stuff;
+              we just verbalize it). When no cards, fall back to a
+              "monitoring" line so it never reads as dumb. */}
+          {(() => {
+            const urgent = briefingCards.filter(c => c.tagColor === "#F87171").length;
+            const opps = briefingCards.filter(c => c.tagColor === "#4ADE80").length;
+            const patterns = briefingCards.filter(c => c.tagColor === "#FBBF24").length;
+            const briefing = briefingCards.filter(c => c.tag === "BRIEFING").length;
+            const parts: string[] = [];
+            if (urgent > 0) parts.push(`${urgent} crítico${urgent > 1 ? "s" : ""}`);
+            if (opps > 0) parts.push(`${opps} oportunidade${opps > 1 ? "s" : ""} de escala`);
+            if (patterns > 0) parts.push(`${patterns} padrão${patterns > 1 ? "ões" : ""} emergente${patterns > 1 ? "s" : ""}`);
+            const summary = parts.length > 0
+              ? `Li sua conta agora — ${parts.join(", ")} ${parts.length === 1 ? "detectado" : "detectados"}.`
+              : briefing > 0
+                ? "Li sua conta agora — operando dentro do padrão, monitorando."
+                : "Conectado e monitorando sua conta em tempo real.";
+            return (
+              <p style={{
+                fontFamily: F, fontSize: 12.5, fontWeight: 500,
+                color: "rgba(240,242,248,0.62)", margin: "4px 0 0",
+                lineHeight: 1.4, letterSpacing: "-0.005em",
+              }}>
+                {summary}
+              </p>
+            );
+          })()}
         </div>
       </div>
 
@@ -1745,26 +1784,30 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
           // so the type signal lands at first glance.
           switch (card.tagColor) {
             case "#F87171": // critical / urgente → coral, present
-              return { eyebrow: "#F08770", border: "rgba(240,135,112,0.32)", accent: "#F08770", glow: "rgba(240,135,112,0.10)", tintBg: "rgba(240,135,112,0.07)", btnBg: "rgba(240,135,112,0.18)", btnText: "#F5A695" };
+              return { eyebrow: "#F08770", border: "rgba(240,135,112,0.42)", accent: "#F08770", glow: "rgba(240,135,112,0.16)", tintBg: "rgba(240,135,112,0.14)", btnBg: "rgba(240,135,112,0.22)", btnText: "#F5A695" };
             case "#4ADE80": // success / oportunidade → sage, more vivid
-              return { eyebrow: "#7DC79E", border: "rgba(125,199,158,0.30)", accent: "#7DC79E", glow: "rgba(125,199,158,0.08)", tintBg: "rgba(125,199,158,0.05)", btnBg: "rgba(125,199,158,0.16)", btnText: "#9AD4B5" };
+              return { eyebrow: "#7DC79E", border: "rgba(125,199,158,0.40)", accent: "#7DC79E", glow: "rgba(125,199,158,0.14)", tintBg: "rgba(125,199,158,0.11)", btnBg: "rgba(125,199,158,0.20)", btnText: "#9AD4B5" };
             case "#FBBF24": // warning → warm tan with more body
-              return { eyebrow: "#D9B26B", border: "rgba(217,178,107,0.30)", accent: "#D9B26B", glow: "rgba(217,178,107,0.08)", tintBg: "rgba(217,178,107,0.05)", btnBg: "rgba(217,178,107,0.16)", btnText: "#E5C485" };
+              return { eyebrow: "#D9B26B", border: "rgba(217,178,107,0.40)", accent: "#D9B26B", glow: "rgba(217,178,107,0.14)", tintBg: "rgba(217,178,107,0.11)", btnBg: "rgba(217,178,107,0.20)", btnText: "#E5C485" };
             case "#0ea5e9": // info / briefing → sky-blue, refined
             default:
-              return { eyebrow: "#7BB6E5", border: "rgba(123,182,229,0.28)", accent: "#7BB6E5", glow: "rgba(123,182,229,0.08)", tintBg: "rgba(123,182,229,0.05)", btnBg: "rgba(123,182,229,0.14)", btnText: "#9CC8EC" };
+              return { eyebrow: "#7BB6E5", border: "rgba(123,182,229,0.38)", accent: "#7BB6E5", glow: "rgba(123,182,229,0.13)", tintBg: "rgba(123,182,229,0.10)", btnBg: "rgba(123,182,229,0.18)", btnText: "#9CC8EC" };
           }
         })();
         return (
           <div key={i} style={{
-            background: `linear-gradient(90deg, ${palette.tintBg} 0%, rgba(18,22,30,0.85) 50%, rgba(10,13,20,0.92) 100%)`,
+            // Tinted bg now extends across the whole card (not just left
+            // fade) at low opacity, layered over the dark base. This is
+            // what kills the "tudo cinza" feel — every card now visibly
+            // owns its hue across its full surface, not just a thin stripe.
+            background: `linear-gradient(135deg, ${palette.tintBg} 0%, rgba(18,22,30,0.92) 60%, rgba(10,13,20,0.95) 100%)`,
             border: `1px solid ${palette.border}`,
             borderLeft: `3px solid ${palette.accent}`,
             borderRadius: 12, padding: "clamp(14px,2vw,18px) clamp(16px,2.5vw,20px)",
             marginBottom: 10,
-            boxShadow: `0 4px 18px rgba(0,0,0,0.38), 0 0 0 1px ${palette.glow}, inset 0 1px 0 rgba(255,255,255,0.05)`,
-            backdropFilter: "blur(8px) saturate(130%)",
-            WebkitBackdropFilter: "blur(8px) saturate(130%)",
+            boxShadow: `0 6px 22px rgba(0,0,0,0.42), 0 0 0 1px ${palette.glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+            backdropFilter: "blur(8px) saturate(140%)",
+            WebkitBackdropFilter: "blur(8px) saturate(140%)",
             animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + i * 0.06}s both` : "none",
             opacity: 0,
           }}>
