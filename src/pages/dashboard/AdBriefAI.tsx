@@ -1322,17 +1322,23 @@ function DecisionBlockRenderer({ decision }: { decision: Decision }) {
       // Filter them out explicitly so we fall through to the next source.
       const valid = (v: unknown): v is string =>
         typeof v === "string" && v.length > 0 && v !== "undefined" && v !== "null";
-      const candidates: unknown[] = [
-        decision.ad?.meta_ad_id,
-        (decision as any).target_meta_id,
-        (decision as any).target_id,
-      ];
-      const metaId = candidates.find(valid) as string | undefined || "";
       const targetType = action.meta_api_action.includes("adset")
         ? "adset"
         : action.meta_api_action.includes("campaign")
           ? "campaign"
           : "ad";
+      // Pull meta ID for the LEVEL the action targets — campaign actions
+      // use meta_campaign_id, adset actions use meta_adset_id. Old code
+      // always used meta_ad_id which sent the wrong ID to Meta and
+      // either flipped the wrong entity or 400'd.
+      const fromParams = (action.params as any)?.target_id ?? (action.params as any)?.target_meta_id;
+      const fromHierarchy =
+        targetType === "campaign" ? (decision as any)?.ad?.ad_set?.campaign?.meta_campaign_id
+        : targetType === "adset" ? (decision as any)?.ad?.ad_set?.meta_adset_id
+        : decision.ad?.meta_ad_id;
+      const fromDecision = (decision as any).target_meta_id ?? (decision as any).target_id;
+      const candidates: unknown[] = [fromParams, fromHierarchy, fromDecision];
+      const metaId = (candidates.find(valid) as string | undefined) || "";
       if (!metaId) {
         console.error("[decision-layer] missing target meta_id — cannot execute", { decisionId, decision });
         toast.error("Anúncio sem ID do Meta — não é possível executar esta ação");

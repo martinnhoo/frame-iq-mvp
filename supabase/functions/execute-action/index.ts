@@ -173,6 +173,134 @@ async function callMetaApi(
   };
 }
 
+// ─── Cascade activation helpers ──────────────────────────────────────────────
+// Why: a Meta ad serves only when the entire chain is ACTIVE
+// (campaign → adset → ad). Flipping just one level leaves the others
+// paused, so the user clicks "reativar" and *nothing serves*. We cascade
+// UP unconditionally (parents are singletons, low risk) and cascade DOWN
+// only when no child is currently delivering — protects users who
+// intentionally paused individual creatives.
+async function metaGet(path: string, token: string): Promise<any> {
+  const r = await fetch(`https://graph.facebook.com/${metaGraphApiVersion}/${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(`Meta GET ${path} failed: ${d.error?.message || "unknown"}`);
+  return d;
+}
+
+async function fetchEntityHierarchy(
+  metaId: string,
+  type: "ad" | "adset" | "campaign",
+  token: string,
+): Promise<{ ad?: string; adset?: string; campaign?: string }> {
+  if (type === "campaign") return { campaign: metaId };
+  if (type === "adset") {
+    const d = await metaGet(`${metaId}?fields=campaign_id`, token);
+    return { adset: metaId, campaign: d.campaign_id };
+  }
+  const d = await metaGet(`${metaId}?fields=adset_id,campaign_id`, token);
+  return { ad: metaId, adset: d.adset_id, campaign: d.campaign_id };
+}
+
+async function getEntityStatus(metaId: string, token: string): Promise<string> {
+  const d = await metaGet(`${metaId}?fields=status`, token);
+  return d.status as string;
+}
+
+async function getChildren(
+  parentId: string,
+  child: "adsets" | "ads",
+  token: string,
+): Promise<{ id: string; status: string }[]> {
+  const d = await metaGet(`${parentId}/${child}?fields=id,status&limit=200`, token);
+  return Array.isArray(d.data) ? d.data : [];
+}
+
+async function setActive(metaId: string, token: string): Promise<MetaApiResponse> {
+  return await callMetaApi(metaId, token, { status: "ACTIVE" });
+}
+
+interface CascadeResult {
+  target: string;
+  cascadeUp: string[];   // parents we had to activate
+  cascadeDown: string[]; // children we had to activate so something serves
+}
+
+async function cascadeActivate(
+  metaId: string,
+  type: "ad" | "adset" | "campaign",
+  token: string,
+): Promise<CascadeResult> {
+  const cascadeUp: string[] = [];
+  const cascadeDown: string[] = [];
+
+  // 1. Activate the named target itself
+  const r0 = await setActive(metaId, token);
+  if (!r0.success) {
+    throw new Error(r0.error?.message || `Failed to activate ${type} ${metaId}`);
+  }
+
+  // 2. Walk parents — activate any that are PAUSED so the chain serves
+  const h = await fetchEntityHierarchy(metaId, type, token);
+  if (h.adset && h.adset !== metaId) {
+    const s = await getEntityStatus(h.adset, token);
+    if (s !== "ACTIVE") {
+      const r = await setActive(h.adset, token);
+      if (r.success) cascadeUp.push(h.adset);
+    }
+  }
+  if (h.campaign && h.campaign !== metaId) {
+    const s = await getEntityStatus(h.campaign, token);
+    if (s !== "ACTIVE") {
+      const r = await setActive(h.campaign, token);
+      if (r.success) cascadeUp.push(h.campaign);
+    }
+  }
+
+  // 3. Walk children — only if the family currently delivers nothing.
+  //    If at least one child is ACTIVE we leave the rest alone (user may
+  //    have paused them on purpose).
+  if (type === "campaign") {
+    const adsets = await getChildren(metaId, "adsets", token);
+    const anyAdsetActive = adsets.some((a) => a.status === "ACTIVE");
+    if (!anyAdsetActive) {
+      for (const a of adsets) {
+        if (a.status !== "ACTIVE") {
+          const r = await setActive(a.id, token);
+          if (r.success) cascadeDown.push(a.id);
+        }
+      }
+      // For each (now active) adset, ensure at least one ad delivers
+      for (const a of adsets) {
+        const ads = await getChildren(a.id, "ads", token);
+        const anyAdActive = ads.some((x) => x.status === "ACTIVE");
+        if (!anyAdActive) {
+          for (const ad of ads) {
+            if (ad.status !== "ACTIVE") {
+              const r = await setActive(ad.id, token);
+              if (r.success) cascadeDown.push(ad.id);
+            }
+          }
+        }
+      }
+    }
+  } else if (type === "adset") {
+    const ads = await getChildren(metaId, "ads", token);
+    const anyAdActive = ads.some((x) => x.status === "ACTIVE");
+    if (!anyAdActive) {
+      for (const ad of ads) {
+        if (ad.status !== "ACTIVE") {
+          const r = await setActive(ad.id, token);
+          if (r.success) cascadeDown.push(ad.id);
+        }
+      }
+    }
+  }
+
+  return { target: metaId, cascadeUp, cascadeDown };
+}
+
 async function executeAction(
   req: ExecuteActionRequest,
   supabase: SupabaseClient,
@@ -256,7 +384,8 @@ async function executeAction(
   const ACTION_LOG_MAP: Record<string, string> = {
     enable_ad: "reactivate_ad",
     enable_adset: "reactivate_adset",
-    enable_campaign: "reactivate_adset", // closest valid value
+    enable_campaign: "reactivate_campaign", // requires the CHECK constraint
+                                            // expansion shipped 2026-04-27
   };
   const loggedActionType = ACTION_LOG_MAP[action_type] ?? action_type;
 
@@ -305,11 +434,37 @@ async function executeAction(
 
     case "reactivate_ad":
     case "reactivate_adset":
-    case "reactivate_campaign":
-      metaApiResult = await callMetaApi(target_meta_id, metaAccessToken, {
-        status: "ACTIVE",
-      });
+    case "reactivate_campaign": {
+      // Cascade — reactivating a single entity isn't enough; the entire
+      // chain has to be ACTIVE for delivery. cascadeActivate flips the
+      // target, walks parents up, and walks children down (only if no
+      // sibling is currently delivering, to avoid clobbering paused
+      // creatives). Records the chain in new_state for transparency.
+      try {
+        const cascade = await cascadeActivate(target_meta_id, target_type as "ad" | "adset" | "campaign", metaAccessToken);
+        metaApiResult = { success: true, id: target_meta_id };
+        newState = {
+          ...previousState,
+          status: "ACTIVE",
+          cascade: {
+            target: cascade.target,
+            also_activated_up: cascade.cascadeUp,
+            also_activated_down: cascade.cascadeDown,
+            total_activated: 1 + cascade.cascadeUp.length + cascade.cascadeDown.length,
+          },
+        };
+        console.log(`[execute-action] cascade activate ${target_type} ${target_meta_id}`, {
+          up: cascade.cascadeUp.length,
+          down: cascade.cascadeDown.length,
+        });
+      } catch (e) {
+        metaApiResult = {
+          success: false,
+          error: { message: (e as any)?.message || "Cascade activation failed", type: "cascade_error", code: 0 },
+        };
+      }
       break;
+    }
 
     case "increase_budget":
     case "decrease_budget": {

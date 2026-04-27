@@ -6992,13 +6992,30 @@ const FeedPage: React.FC = () => {
       return;
     }
 
-    const metaId = decision?.ad?.meta_ad_id || '';
     const targetType = action.meta_api_action.includes('adset') ? 'adset'
       : action.meta_api_action.includes('campaign') ? 'campaign' : 'ad';
 
+    // Resolve the meta ID for the LEVEL the action targets — not always
+    // the ad ID. Old code blindly used `decision.ad.meta_ad_id` even for
+    // campaign/adset actions, which sent the wrong ID to Meta and either
+    // flipped the wrong entity or 400'd. Now we walk per-level with a
+    // params override (action.params.target_id wins, then decision-level
+    // fields populated by chat decisions).
+    const valid = (v: unknown): v is string =>
+      typeof v === 'string' && v.length > 0 && v !== 'undefined' && v !== 'null';
+    const fromParams = (action.params as any)?.target_id ?? (action.params as any)?.target_meta_id;
+    const fromHierarchy =
+      targetType === 'campaign' ? (decision as any)?.ad?.ad_set?.campaign?.meta_campaign_id
+      : targetType === 'adset' ? (decision as any)?.ad?.ad_set?.meta_adset_id
+      : (decision as any)?.ad?.meta_ad_id;
+    const fromDecision = (decision as any)?.target_meta_id ?? (decision as any)?.target_id;
+    const metaId = (
+      [fromParams, fromHierarchy, fromDecision].find(valid) as string | undefined
+    ) || '';
+
     // Safety: don't call Meta without a valid target ID
     if (!metaId) {
-      throw new Error('Anúncio sem ID do Meta — não é possível executar esta ação');
+      throw new Error('Sem ID do Meta para esse alvo — não é possível executar esta ação');
     }
 
     const result = await executeAction(decisionId, action.meta_api_action, targetType, metaId, action.params);
