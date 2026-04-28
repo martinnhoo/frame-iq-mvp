@@ -265,9 +265,13 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
         background: 'linear-gradient(180deg, rgba(10,15,28,0.96) 0%, rgba(6,10,20,0.94) 100%)',
         backdropFilter: 'blur(14px) saturate(140%)',
         WebkitBackdropFilter: 'blur(14px) saturate(140%)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        // No bottom border + zero marginBottom → the strip docks
+        // visually onto whatever card follows (HeroDecisionAnchor),
+        // reading as a single composite hero unit instead of two
+        // floating elements. The hero already has a top border that
+        // closes the seam.
         padding: '10px clamp(14px, 3vw, 24px)',
-        marginBottom: 18,
+        marginBottom: 0,
         fontFamily: F,
       }}
       className="cmd-strip"
@@ -319,7 +323,11 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
                     background: status.dot,
                     boxShadow: `0 0 6px ${status.dot}80`,
                   }}
-                  className={status.label !== 'MONITORANDO' ? 'cmd-pulse' : undefined}
+                  // Always animated. MONITORANDO gets a calm "heartbeat"
+                  // pulse (cmd-pulse-soft) so the status feels alive
+                  // without nagging; critical states get the stronger
+                  // attention pulse (cmd-pulse).
+                  className={status.label === 'MONITORANDO' ? 'cmd-pulse-soft' : 'cmd-pulse'}
                 />
                 <span
                   style={{
@@ -394,6 +402,14 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
           50% { opacity: 0.5; transform: scale(0.85); }
         }
         .cmd-pulse { animation: cmd-pulse-anim 1.6s ease-in-out infinite; }
+        @keyframes cmd-pulse-soft-anim {
+          0%, 100% { opacity: 1;   transform: scale(1);    box-shadow: 0 0 6px currentColor; }
+          50%      { opacity: 0.78; transform: scale(0.92); box-shadow: 0 0 10px currentColor; }
+        }
+        .cmd-pulse-soft { animation: cmd-pulse-soft-anim 3s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .cmd-pulse, .cmd-pulse-soft { animation: none; }
+        }
         @media (max-width: 720px) {
           .cmd-strip > div {
             gap: 10px !important;
