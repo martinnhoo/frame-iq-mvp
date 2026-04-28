@@ -681,6 +681,210 @@ const ROUTES = [
     body: `<p>Toda agência odeia o ritual mensal de "compilar relatório pro cliente". Pegar dados do Meta Ads Manager, montar PDF, escrever insights — fácil consumir 4-6h por cliente.</p><h2>O que AdBrief gera automaticamente</h2><ul><li>Resumo de spend, conversões, ROAS, CPA</li><li>Comparativo vs mês anterior</li><li>Top 3 anúncios que mais converteram</li><li>Top 3 anúncios que mais queimaram budget</li><li>Insights causais</li><li>Plano de ação proposto</li></ul><p>Antes: 4-6h por cliente. Depois: 10-15 min. Pra 10 clientes = 35-50h/mês economizadas.</p>`,
     related: [{ path: "ferramenta-agencia-meta-ads", label: "Pra Agências" }, { path: "gestao-multi-conta-meta-ads", label: "Multi-Conta" }],
   },
+
+  // ── INSTITUTIONAL — about / contact / careers ─────────────────────────────
+  // Pre-rendering these closes the indexing gap in the sitemap. Without
+  // unique HTML, Google treats them as duplicates of the SPA shell and
+  // skips them. Static body is short on purpose — these aren't keyword
+  // pages, they exist to give Google something real to index for the
+  // brand-name search "AdBrief".
+  {
+    path: "about",
+    title: "Sobre o AdBrief — IA pra Meta Ads feita por gestores de tráfego",
+    description: "AdBrief é uma IA-first decision layer pra Meta Ads. Construída no Brasil pra gestores de tráfego que cansaram de planilha. Time, missão, manifesto.",
+    h1: "Sobre o AdBrief",
+    body: `
+      <p>O AdBrief nasceu de uma frustração simples: gestor de tráfego sério não precisa de mais um dashboard. Precisa de <strong>decisão</strong>.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Missão</h2>
+      <p>Transformar dado de Meta Ads em ação. Sem painel pra interpretar. Sem CSV pra importar. Sem planilha pra rodar.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Como funciona</h2>
+      <p>O AdBrief lê sua conta Meta a cada 15 minutos via Meta Marketing API v21. Detecta vazamento (criativo cansado, audience saturada, CPA alto, fadiga). Te entrega a próxima ação com causa, valor em risco e botão pra executar. Você aprova. Reversível em 30 minutos.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Time</h2>
+      <p>Construído no Brasil. Feito pra mercado brasileiro de tráfego pago. Stack: React, TypeScript, Supabase, Claude Haiku 4.5, Meta Marketing API v21.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Filosofia</h2>
+      <p><strong>Show, don't tell.</strong> Cada feature é demonstrada com produto rodando, não descrita em slide. Trate o usuário como gestor experiente, não iniciante. Confiança através de ação reversível, não promessa.</p>
+    `,
+    related: [
+      { path: "pricing", label: "Preços e Planos" },
+      { path: "faq", label: "Perguntas Frequentes" },
+      { path: "review-adbrief", label: "Review do AdBrief" },
+    ],
+    breadcrumb: [{ label: "Home", href: "/" }, { label: "Sobre", href: "/about" }],
+  },
+
+  {
+    path: "contact",
+    title: "Contato AdBrief — Suporte e parcerias",
+    description: "Fale com o time AdBrief. Suporte técnico, dúvidas comerciais, parcerias com agências. Resposta em até 24h em dias úteis.",
+    h1: "Contato",
+    body: `
+      <p>Time pequeno, resposta rápida.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Suporte e dúvidas</h2>
+      <p>Email: <a href="mailto:contato@adbrief.pro" style="color:#0DA2E7">contato@adbrief.pro</a></p>
+      <p>Resposta em até 24h em dias úteis. Pra dúvidas de uso, sugerimos primeiro ver a <a href="/faq" style="color:#0DA2E7">FAQ</a>.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Parcerias com agências</h2>
+      <p>Agência com 5+ contas Meta Ads ativas? Falamos sobre planos enterprise + integração custom. Email com assunto "Parceria Agência" pro contato acima.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Imprensa</h2>
+      <p>Pautas sobre AI no marketing digital, automação de tráfego pago, ou Meta Ads em geral — abrimos pra quem quiser entrevistar.</p>
+    `,
+    related: [
+      { path: "about", label: "Sobre o AdBrief" },
+      { path: "pricing", label: "Preços" },
+    ],
+    breadcrumb: [{ label: "Home", href: "/" }, { label: "Contato", href: "/contact" }],
+  },
+
+  {
+    path: "careers",
+    title: "Vagas AdBrief — Carreiras",
+    description: "Trabalhe no AdBrief. Time pequeno, alto rigor, remoto, foco em produto sério pra mercado brasileiro de tráfego pago.",
+    h1: "Carreiras no AdBrief",
+    body: `
+      <p>Trabalhamos em time pequeno, com rigor alto, em remoto. Cultura de <strong>show, don't tell</strong> — código e decisões pesam, slides não.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">O que valorizamos</h2>
+      <ul style="margin:0 0 16px;padding-left:24px">
+        <li>Pragmatismo &gt; teoria</li>
+        <li>Profundidade &gt; quantidade de tickets</li>
+        <li>Honestidade técnica</li>
+        <li>Disposição pra discutir e pra mudar de ideia</li>
+      </ul>
+      <h2 style="font-size:22px;margin:32px 0 12px">Vagas abertas</h2>
+      <p>No momento não temos vagas formalmente abertas, mas estamos sempre conversando com pessoas que queremos no time. Manda email pra <a href="mailto:contato@adbrief.pro" style="color:#0DA2E7">contato@adbrief.pro</a> com seu portfolio + 1 parágrafo dizendo por que AdBrief.</p>
+    `,
+    related: [
+      { path: "about", label: "Sobre o AdBrief" },
+      { path: "contact", label: "Contato" },
+    ],
+    breadcrumb: [{ label: "Home", href: "/" }, { label: "Carreiras", href: "/careers" }],
+  },
+
+  // ── LEGAL — terms / privacy / refund ──────────────────────────────────────
+  // Short institutional text. Index-ready so Google has unique HTML
+  // for each. Real legal text lives in detailed app pages (rendered by
+  // React); these prerendered versions exist to satisfy crawlers.
+  {
+    path: "terms",
+    title: "Termos de Uso — AdBrief",
+    description: "Termos de uso do AdBrief: cadastro, plano, cancelamento, uso da API Meta, propriedade dos dados, limites de responsabilidade.",
+    h1: "Termos de Uso",
+    body: `
+      <p><em>Última atualização: 28 de abril de 2026.</em></p>
+      <h2 style="font-size:20px;margin:24px 0 8px">1. Cadastro</h2>
+      <p>Você precisa ter pelo menos 18 anos pra criar conta. Forneça informações reais. Uma conta por pessoa.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">2. Conexão com a Meta</h2>
+      <p>AdBrief usa OAuth oficial da Meta. Pedimos as permissões mínimas pra ler campanhas e executar ações que você aprovar. Você pode revogar a qualquer momento direto na Meta.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">3. Plano e Cobrança</h2>
+      <p>Planos pagos são cobrados mensalmente. Você pode cancelar quando quiser pelo dashboard. Sem multa, sem fidelidade. O acesso continua até o fim do ciclo pago.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">4. Propriedade dos Dados</h2>
+      <p>Os dados da sua conta Meta são seus. Usamos exclusivamente pra operar o AdBrief pra você. Não vendemos, não compartilhamos com terceiros, não usamos pra treinar modelos públicos.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">5. Limites de Responsabilidade</h2>
+      <p>AdBrief é uma ferramenta de apoio à decisão. Recomendações são baseadas em dados — você decide o que executar. Não nos responsabilizamos por resultados financeiros decorrentes de ações que você aprovar.</p>
+      <p style="margin-top:24px"><strong>Versão completa:</strong> a versão jurídica integral fica disponível dentro do app após login. Em caso de dúvida, escreva pra <a href="mailto:contato@adbrief.pro" style="color:#0DA2E7">contato@adbrief.pro</a>.</p>
+    `,
+    related: [{ path: "privacy", label: "Política de Privacidade" }, { path: "refund", label: "Política de Reembolso" }],
+    breadcrumb: [{ label: "Home", href: "/" }, { label: "Termos", href: "/terms" }],
+  },
+
+  {
+    path: "privacy",
+    title: "Política de Privacidade — AdBrief",
+    description: "Como o AdBrief coleta, usa e protege seus dados. Conformidade com LGPD. Dados da Meta usados apenas pra operar o produto pra você.",
+    h1: "Política de Privacidade",
+    body: `
+      <p><em>Última atualização: 28 de abril de 2026. Em conformidade com a Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018).</em></p>
+      <h2 style="font-size:20px;margin:24px 0 8px">Dados que coletamos</h2>
+      <ul style="margin:0 0 16px;padding-left:24px">
+        <li><strong>De cadastro:</strong> nome, email, idioma preferido</li>
+        <li><strong>Da Meta:</strong> dados de campanhas, criativos, métricas (somente leitura, via OAuth)</li>
+        <li><strong>De uso:</strong> ações executadas no AdBrief, queries de chat, padrões aprendidos</li>
+      </ul>
+      <h2 style="font-size:20px;margin:24px 0 8px">Como usamos</h2>
+      <p>Pra operar o AdBrief pra você: gerar diagnósticos, recomendações e executar ações que você aprovar.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">O que NÃO fazemos</h2>
+      <ul style="margin:0 0 16px;padding-left:24px">
+        <li>Não vendemos seus dados</li>
+        <li>Não compartilhamos com terceiros não-essenciais</li>
+        <li>Não usamos pra treinar modelos públicos de IA</li>
+      </ul>
+      <h2 style="font-size:20px;margin:24px 0 8px">Seus direitos (LGPD)</h2>
+      <p>Acessar, corrigir, exportar, deletar seus dados. Solicitação por email pra <a href="mailto:contato@adbrief.pro" style="color:#0DA2E7">contato@adbrief.pro</a>, atendida em até 15 dias.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">Cookies</h2>
+      <p>Usamos cookies essenciais pra autenticação + analytics agregada. Sem cookies de publicidade.</p>
+    `,
+    related: [{ path: "terms", label: "Termos de Uso" }, { path: "refund", label: "Reembolso" }],
+    breadcrumb: [{ label: "Home", href: "/" }, { label: "Privacidade", href: "/privacy" }],
+  },
+
+  {
+    path: "refund",
+    title: "Política de Reembolso — AdBrief",
+    description: "Reembolso integral em 7 dias se não gostar. Cancelamento sem multa, sem fidelidade. Como solicitar.",
+    h1: "Política de Reembolso",
+    body: `
+      <h2 style="font-size:20px;margin:24px 0 8px">Garantia de 7 dias</h2>
+      <p>Se você assinou um plano pago e não gostou nos primeiros 7 dias, devolvemos integralmente. Sem perguntas, sem letra miúda.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">Como solicitar</h2>
+      <p>Email pra <a href="mailto:contato@adbrief.pro" style="color:#0DA2E7">contato@adbrief.pro</a> com assunto "Reembolso" e o email da sua conta. Reembolsamos em até 5 dias úteis pelo mesmo método de pagamento.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">Cancelamento</h2>
+      <p>Você pode cancelar a qualquer momento direto pelo dashboard, sem multa. Acesso continua até o fim do ciclo pago.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">Após os 7 dias</h2>
+      <p>A partir do 8º dia o plano vira mensal padrão (sem reembolso retroativo), mas você ainda pode cancelar a qualquer momento.</p>
+    `,
+    related: [{ path: "pricing", label: "Preços" }, { path: "terms", label: "Termos de Uso" }],
+    breadcrumb: [{ label: "Home", href: "/" }, { label: "Reembolso", href: "/refund" }],
+  },
+
+  // ── PRODUCT MARKETING — features / levels ─────────────────────────────────
+  {
+    path: "features",
+    title: "Funcionalidades AdBrief — Tudo o que a IA faz pela sua conta Meta Ads",
+    description: "Diagnóstico causal, decisões com 1 clique, painel intelligente, integração Meta API v21, aprendizado contínuo. Visão geral das features do AdBrief.",
+    h1: "Funcionalidades do AdBrief",
+    body: `
+      <p>Visão consolidada das capacidades do AdBrief, em um lugar só.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Diagnóstico causal automático</h2>
+      <p>A IA não te diz só "CTR caiu". Ela diz <strong>por quê</strong> (criativo cansado, audience saturada, fadiga, mismatch de oferta). Cada decisão tem hipótese explícita, valor em risco em R$, e condição de invalidação.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Decisões com 1 clique</h2>
+      <p>Pause, scale, ajuste de budget, troca de criativo — tudo em 1 clique direto da decisão. Confirmação obrigatória, reversível em 30 minutos via histórico.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Estrategista (chat IA)</h2>
+      <p>Pergunta livre sobre tua conta. "Por que CPA subiu?", "Vale escalar X?", "Esse criativo tá saturando?". Chat baseado em Claude Haiku 4.5, com contexto completo dos teus 30 dias de spend e padrões aprendidos.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Aprendizado contínuo</h2>
+      <p>Cada ação aprovada vira evidência. Em 30-60 dias, AdBrief sabe os padrões da TUA conta — não médias de mercado.</p>
+      <h2 style="font-size:22px;margin:32px 0 12px">Integração nativa Meta API v21</h2>
+      <p>Conexão direta via OAuth oficial. Leitura a cada 15 min. Execução de ações via Marketing API. Sem CSV, sem planilha, sem terceiros.</p>
+    `,
+    related: [
+      { path: "pricing", label: "Preços" },
+      { path: "auditoria-meta-ads-ia", label: "Auditoria Automática" },
+      { path: "tools/ad-creative-analyzer", label: "Analisador de Criativos" },
+    ],
+    breadcrumb: [{ label: "Home", href: "/" }, { label: "Funcionalidades", href: "/features" }],
+  },
+
+  {
+    path: "levels",
+    title: "Níveis AdBrief — Sistema de progressão pra gestor de tráfego",
+    description: "5 níveis de progressão: Observador, Caçador, Editor, Comandante, Diretor. Como funciona a gamificação do AdBrief.",
+    h1: "Níveis de Gestor",
+    body: `
+      <p>O AdBrief tem 5 níveis de progressão baseados em ações tomadas + resultados validados. É gamificação útil — não badge inútil.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">1. Observador</h2>
+      <p>Conta conectada, AdBrief analisa, você lê. Default ao entrar.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">2. Caçador</h2>
+      <p>Aprovou primeira decisão. AdBrief começa a aprender suas preferências.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">3. Editor</h2>
+      <p>10+ ações com taxa de acerto &gt; 65%. Você começa a ver padrões da sua conta validados.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">4. Comandante</h2>
+      <p>30+ ações, taxa &gt; 75%, streak de 7 dias. AdBrief desbloqueia recomendações mais agressivas baseadas no seu histórico.</p>
+      <h2 style="font-size:20px;margin:24px 0 8px">5. Diretor</h2>
+      <p>100+ ações validadas, taxa &gt; 80%. Acesso a autopilot opcional pra ações de alta confiança.</p>
+    `,
+    related: [
+      { path: "features", label: "Funcionalidades" },
+      { path: "pricing", label: "Preços" },
+    ],
+    breadcrumb: [{ label: "Home", href: "/" }, { label: "Níveis", href: "/levels" }],
+  },
 ];
 
 // ── Emit ──────────────────────────────────────────────────────────────────
