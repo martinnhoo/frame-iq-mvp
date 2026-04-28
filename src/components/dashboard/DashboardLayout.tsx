@@ -16,6 +16,9 @@ import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useDashT } from "@/i18n/dashboardTranslations";
 import { UserProfilePanel } from "@/components/dashboard/UserProfilePanel";
+import { AppTopbarBreadcrumb } from "@/components/dashboard/AppTopbarBreadcrumb";
+import { AppTopbarBell } from "@/components/dashboard/AppTopbarBell";
+import { AppTopbarUserMenu } from "@/components/dashboard/AppTopbarUserMenu";
 import { OutcomeToastWatcher } from "@/components/feed/OutcomeToastWatcher";
 import WelcomePaidModal from "@/components/dashboard/WelcomePaidModal";
 import { identifyUser } from "@/lib/posthog";
@@ -756,6 +759,9 @@ export default function DashboardLayout() {
 
           {/* Account picker moved to sidebar — header is clean */}
 
+          {/* ── Breadcrumb (auto-derived from route) ── */}
+          <AppTopbarBreadcrumb />
+
           {/* ── Spacer ── */}
           <div style={{ flex: 1 }} />
 
@@ -845,6 +851,17 @@ export default function DashboardLayout() {
           </button>
 
           {/* Logo removed — clean header */}
+
+          {/* ── Notification bell (account alerts) ── */}
+          <AppTopbarBell alerts={accountAlerts as any} />
+
+          {/* ── User menu (avatar + dropdown → Conta · Faturamento · Sair) ── */}
+          <AppTopbarUserMenu
+            user={user}
+            profile={profile as any}
+            plan={(profile as any)?.plan ?? null}
+            onOpenProfile={() => setProfileOpen(true)}
+          />
 
         </header>
 
