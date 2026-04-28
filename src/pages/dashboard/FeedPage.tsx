@@ -7038,6 +7038,42 @@ const FeedPage: React.FC = () => {
       }
     }
 
+    // Final-resort recovery — name-based lookup. Some decisions arrive
+    // with ad_id=null (engine generated without linking, or the chat
+    // emitted decision didn't carry the FK). The headline still has
+    // the entity name in quotes ("Rodar 'X' com R$Y"). Parse it and
+    // search the entity table by name. This is the same pattern the
+    // chat-side handler uses and unblocks orphan decisions instead of
+    // showing the dead-button error.
+    if (!metaId) {
+      const headline = String((decision as any)?.headline || '');
+      const nameMatch = headline.match(/['"]([^'"]{2,120})['"]/);
+      const name = nameMatch ? nameMatch[1].trim() : null;
+      if (name) {
+        try {
+          const table = targetType === 'campaign' ? 'campaigns'
+            : targetType === 'adset' ? 'ad_sets' : 'ads';
+          const idCol = targetType === 'campaign' ? 'meta_campaign_id'
+            : targetType === 'adset' ? 'meta_adset_id' : 'meta_ad_id';
+          const { data: row } = await (supabase as any)
+            .from(table)
+            .select(`${idCol}, name`)
+            .eq('account_id', accountId)
+            .ilike('name', `%${name.slice(0, 60)}%`)
+            .limit(1)
+            .maybeSingle();
+          if (row?.[idCol] && valid(row[idCol])) {
+            metaId = row[idCol];
+            console.log('[handleAction] recovered meta_id via name lookup', {
+              name, matched_name: row.name, targetType, metaId,
+            });
+          }
+        } catch (e) {
+          console.warn('[handleAction] name lookup threw', (e as any)?.message || e);
+        }
+      }
+    }
+
     // Safety: don't call Meta without a valid target ID
     if (!metaId) {
       // Dump enough context for diagnosis. The user-visible toast stays
