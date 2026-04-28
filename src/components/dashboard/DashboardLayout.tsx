@@ -19,6 +19,7 @@ import { UserProfilePanel } from "@/components/dashboard/UserProfilePanel";
 import { AppTopbarBreadcrumb } from "@/components/dashboard/AppTopbarBreadcrumb";
 import { AppTopbarBell } from "@/components/dashboard/AppTopbarBell";
 import { AppTopbarUserMenu } from "@/components/dashboard/AppTopbarUserMenu";
+import { CommandPalette } from "@/components/dashboard/CommandPalette";
 import { OutcomeToastWatcher } from "@/components/feed/OutcomeToastWatcher";
 import WelcomePaidModal from "@/components/dashboard/WelcomePaidModal";
 import { identifyUser } from "@/lib/posthog";
@@ -128,6 +129,23 @@ export default function DashboardLayout() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" ? window.innerWidth >= 768 : true);
   const [profileOpen, setProfileOpen] = useState(false);
+  // Cmd+K / Ctrl+K → open the global command palette. State lives here
+  // (in the layout) so the palette renders above the rest of the UI
+  // and can listen for the shortcut from anywhere inside /dashboard/*.
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const isMacShortcut = (e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K");
+      if (!isMacShortcut) return;
+      // Don't hijack Cmd+K when the user is typing into a contenteditable
+      // (rich editor) — but DO toggle in plain inputs/textareas. The
+      // palette is more useful than browser default text reformat.
+      e.preventDefault();
+      setPaletteOpen(s => !s);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
   const [telegramModalOpen, setTelegramModalOpen] = useState(false);
   const [aiProfile, setAiProfile] = useState<{ industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null>(null);
   const [accountAlerts, setAccountAlerts] = useState<AccountAlert[]>([]);
@@ -1242,6 +1260,15 @@ export default function DashboardLayout() {
           selectedPersona={selectedPersona}
         />
       )}
+
+      {/* Global command palette — Cmd+K / Ctrl+K. Lazy-fetches the
+          top 5 pending decisions for the selected account when opened. */}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        accountId={(selectedPersona as any)?.account_id ?? null}
+        onOpenProfile={() => { setPaletteOpen(false); setProfileOpen(true); }}
+      />
 
       {/* OutcomeToastWatcher — closes the dopaminergic loop. Surfaces
           newly finalized outcomes (cron 72h) as toasts on every dashboard

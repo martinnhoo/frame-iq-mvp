@@ -267,10 +267,14 @@ const AccountHealthCard: React.FC<{
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const,
           }}>
+            {/* Title — matches typography of "Próximo passo recomendado"
+                and "Atividade recente" so the three sidebar sections
+                share an identical header rhythm (14/700/text1, no
+                uppercase). The severity marker to the right carries
+                the state signal so we don't need a muted micro-label. */}
             <span style={{
-              fontSize: 11, fontWeight: 700, color: T.text3,
-              fontFamily: F, letterSpacing: '0.04em',
-              textTransform: 'uppercase' as const,
+              fontSize: 14, fontWeight: 700, color: T.text1,
+              fontFamily: F, letterSpacing: '-0.01em',
             }}>
               Saúde da conta
             </span>
