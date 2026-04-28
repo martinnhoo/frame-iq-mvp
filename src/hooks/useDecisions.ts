@@ -41,7 +41,11 @@ export function useDecisions(accountId: string | null): UseDecisionsReturn {
       // lets us compute the truncation flag without a second query.
       const { data, error: fetchError, count } = await (supabase
         .from('decisions' as any)
-        .select('*, ad:ads(name, meta_ad_id, ad_set:ad_sets(name, campaign:campaigns(name)))', { count: 'exact' })
+        // meta_adset_id + meta_campaign_id are REQUIRED for the click
+        // handler to resolve the right target. Without them, pause_campaign
+        // / enable_adset silently die with "Sem ID do Meta para esse alvo".
+        // Only ad-level actions worked before this fix.
+        .select('*, ad:ads(name, meta_ad_id, ad_set:ad_sets(name, meta_adset_id, campaign:campaigns(name, meta_campaign_id)))', { count: 'exact' })
         .eq('account_id', accountId)
         .eq('status', 'pending')
         .order('priority_rank', { ascending: true })
