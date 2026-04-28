@@ -7009,12 +7009,50 @@ const FeedPage: React.FC = () => {
       : targetType === 'adset' ? (decision as any)?.ad?.ad_set?.meta_adset_id
       : (decision as any)?.ad?.meta_ad_id;
     const fromDecision = (decision as any)?.target_meta_id ?? (decision as any)?.target_id;
-    const metaId = (
+    let metaId = (
       [fromParams, fromHierarchy, fromDecision].find(valid) as string | undefined
     ) || '';
 
+    // Last-resort recovery — if the join didn't hydrate `decision.ad` (or
+    // the chain has nulls because of stale FKs / soft-deleted rows), look
+    // up the meta IDs directly from the entity tables using the ad_id
+    // stored on the decision. This pattern catches the "decisão antiga
+    // referenciando ad deletado" case where the decision exists but the
+    // joined ad object is null, leaving the user staring at a dead button.
+    if (!metaId && (decision as any)?.ad_id) {
+      try {
+        const adId = (decision as any).ad_id;
+        const { data: adRow } = await (supabase as any)
+          .from('ads')
+          .select('meta_ad_id, ad_set_id, ad_set:ad_sets(meta_adset_id, campaign_id, campaign:campaigns(meta_campaign_id))')
+          .eq('id', adId)
+          .maybeSingle();
+        if (adRow) {
+          if (targetType === 'ad') metaId = (adRow.meta_ad_id || '') as string;
+          else if (targetType === 'adset') metaId = (adRow.ad_set?.meta_adset_id || '') as string;
+          else if (targetType === 'campaign') metaId = (adRow.ad_set?.campaign?.meta_campaign_id || '') as string;
+          if (metaId) console.log('[handleAction] recovered meta_id via ads table lookup', { decisionId, targetType, metaId });
+        }
+      } catch (e) {
+        console.warn('[handleAction] ads table fallback threw', (e as any)?.message || e);
+      }
+    }
+
     // Safety: don't call Meta without a valid target ID
     if (!metaId) {
+      // Dump enough context for diagnosis. The user-visible toast stays
+      // clean; the console gets the offending decision shape so we can
+      // tell what's missing without forcing a screenshare debug session.
+      console.error('[handleAction] missing meta_id', {
+        decisionId,
+        targetType,
+        action_meta_api: action.meta_api_action,
+        action_params: action.params,
+        decision_ad_id: (decision as any)?.ad_id,
+        decision_ad: (decision as any)?.ad,
+        decision_target_meta_id: (decision as any)?.target_meta_id,
+        decision_target_id: (decision as any)?.target_id,
+      });
       throw new Error('Sem ID do Meta para esse alvo — não é possível executar esta ação');
     }
 
