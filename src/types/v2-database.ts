@@ -131,7 +131,11 @@ export interface DecisionAction {
 export interface Decision {
   id: string;
   account_id: string;
-  ad_id: string;
+  // ad_id is NULLABLE in reality — chat-emitted decisions (source='ai_chat')
+  // can be created without a specific ad attached (e.g. broad strategy
+  // recommendations). Engine-emitted decisions always have it. Kept the
+  // joined `ad?:` field optional so handlers walk the chain defensively.
+  ad_id: string | null;
   type: DecisionType;
   score: number;
   priority_rank: number;
@@ -193,6 +197,49 @@ export interface Decision {
    *  Surfaced verbatim in the DecisionCard so the user can sanity-check
    *  the logic before clicking. */
   invalidator?: string;
+  /** Meta API target id at the level the decision targets (ad / adset /
+   *  campaign). Chat-emitted decisions carry this in-memory but it is
+   *  NOT persisted to the decisions table (no column). Click handlers
+   *  read it as a fallback when the joined ad chain is absent. */
+  target_meta_id?: string | null;
+  target_id?: string | null;
+  /** Optional human-readable name of the targeted entity. Used by the
+   *  click handler's name-based lookup as final-resort recovery when
+   *  target_meta_id is missing. Same caveat: not persisted to DB. */
+  target_name?: string | null;
+
+  // ── Narrative fields (chat-emitted enrichment) ──
+  // These ride on the in-memory Decision object for richer cards but are NOT
+  // persisted to the decisions table. The DecisionCard reads them when
+  // present and falls back gracefully when absent (engine-emitted rows).
+
+  /** Past-pattern hook: "users who saw X and acted got Y%". Surfaced as a
+   *  purple-bordered evidence block above the reason text. */
+  pattern_ref?: {
+    impact_pct?: string;
+    is_winner?: boolean;
+    insight?: string;
+  } | null;
+  /** Forward-looking hook: current → expected, with a money tag. Surfaced as
+   *  a cyan-bordered evidence block. */
+  prediction?: {
+    current_value?: string;
+    expected_value?: string;
+    estimated_impact?: string;
+  } | null;
+  /** 1-based rank within the day's queue. Card highlights #1 with a gold
+   *  "ação mais importante agora" line and shows #2/#3 as a small ordinal. */
+  priority_position?: number | null;
+  /** Soft-urgency line emitted by the model — e.g. "spend acelerando, age
+   *  até 18h". Rendered as a red micro-line under the evidence blocks. */
+  urgency?: { message: string } | null;
+  /** One-line plain-language gloss of the money math. Rendered as muted
+   *  caption under the reason. */
+  money_explanation?: string | null;
+  /** Soft criticality tag set by chat decisions (engine uses priority_rank
+   *  numerically; this string lets a chat decision flag itself as 'critical'
+   *  even when the rank isn't yet computed). */
+  priority?: 'critical' | 'high' | 'medium' | 'low' | null;
 
   // Joined data (from queries)
   ad?: Ad & {

@@ -271,6 +271,16 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
     let cancelled = false;
     (async () => {
       try {
+        // action_outcomes isn't in v2-database types (separate outcomes
+        // domain). Cast the client to skip the schema check; we narrow the
+        // returned rows below with OutcomeRow.
+        type OutcomeRow = {
+          improved: boolean | null;
+          recovery_pct: number | null;
+          context: { avoided_spend_brl?: number } | null;
+          metrics_before: { ctr?: number } | null;
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
           .from('action_outcomes')
           .select('improved, recovery_pct, context, metrics_before')
@@ -288,7 +298,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           setPatternLoading(false);
           return;
         }
-        const rows = data as any[];
+        const rows = data as OutcomeRow[];
         const wins = rows.filter(r => r.improved === true).length;
         const n = rows.length;
         const recoveries = rows
@@ -329,7 +339,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
   // present scenario looks like the past wins → pattern is strong signal.
   // If they diverge, surface a caution badge.
   const currentCtr: number | null = (() => {
-    const lm = (decision.ad as any)?.latest_metrics;
+    const lm = decision.ad?.latest_metrics;
     const v = Number(lm?.ctr);
     return Number.isFinite(v) && v >= 0 ? v : null;
   })();
@@ -392,19 +402,16 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
   const groupNote = decision.group_note;
 
   // ── Pipeline v2 data ──
-  const hasPipeline = !!(decision as any).pipeline_mode && (decision as any).pipeline_mode !== 'v1';
-  const pipelineConfidence = (decision as any).data_confidence as number | undefined;
-  const riskLevel = (decision as any).risk_level as string | undefined;
-  const financialVerdict = (decision as any).financial_verdict as string | undefined;
-  const safetyStatus = (decision as any).safety_status as string | undefined;
-  const explanationChain = (decision as any).explanation_chain as {
-    data_point: string; threshold: string;
-    financial_check: string; safety_check: string; verdict: string;
-  } | null | undefined;
-  const pipelineApproved = (decision as any).pipeline_approved as boolean | undefined;
-  const confidenceGate = (decision as any).confidence_gate as string | undefined;
-  const breakEvenRoas = (decision as any).break_even_roas as number | undefined;
-  const marginOfSafety = (decision as any).margin_of_safety as number | undefined;
+  const hasPipeline = !!decision.pipeline_mode && decision.pipeline_mode !== 'v1';
+  const pipelineConfidence = decision.data_confidence;
+  const riskLevel = decision.risk_level;
+  const financialVerdict = decision.financial_verdict;
+  const safetyStatus = decision.safety_status;
+  const explanationChain = decision.explanation_chain;
+  const pipelineApproved = decision.pipeline_approved;
+  const confidenceGate = decision.confidence_gate;
+  const breakEvenRoas = decision.break_even_roas;
+  const marginOfSafety = decision.margin_of_safety;
 
   const recItems: string[] = [];
   if (actionRec) {
@@ -421,7 +428,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
 
   // Determine if there's enough "deep" content worth expanding
   const hasDeepContent = reasonLines.length > 1 || recItems.length > 0 ||
-    (decision as any).pattern_ref || (decision as any).prediction ||
+    decision.pattern_ref || decision.prediction ||
     (decision.metrics && decision.metrics.length > 0) ||
     (hasPipeline && explanationChain);
 
@@ -800,31 +807,31 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         <Expandable open={expanded}>
           <div style={{ paddingTop: 4 }}>
             {/* STRUCTURED EVIDENCE */}
-            {((decision as any).pattern_ref || (decision as any).prediction) ? (
+            {(decision.pattern_ref || decision.prediction) ? (
               <div style={{ marginBottom: 8 }}>
-                {(decision as any).pattern_ref && (
+                {decision.pattern_ref && (
                   <div style={{
                     borderLeft: '2px solid rgba(167,139,250,0.35)',
                     paddingLeft: 10, marginBottom: 5,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
                       <span style={{ fontSize: 9, fontWeight: 800, color: '#A78BFA', letterSpacing: '0.10em' }}>PADRÃO</span>
-                      {(decision as any).pattern_ref.impact_pct && (
+                      {decision.pattern_ref.impact_pct && (
                         <span style={{
                           fontSize: 10.5, fontWeight: 700,
-                          color: (decision as any).pattern_ref.is_winner ? '#38BDF8' : '#F87171',
+                          color: decision.pattern_ref.is_winner ? '#38BDF8' : '#F87171',
                         }}>
-                          {(decision as any).pattern_ref.impact_pct}
+                          {decision.pattern_ref.impact_pct}
                         </span>
                       )}
                     </div>
                     <div style={{ fontSize: 12, color: '#C4B5FD', fontWeight: 600, lineHeight: 1.4 }}>
-                      {(decision as any).pattern_ref.insight}
+                      {decision.pattern_ref.insight}
                     </div>
                   </div>
                 )}
 
-                {(decision as any).prediction && (
+                {decision.prediction && (
                   <div style={{
                     borderLeft: '2px solid rgba(56,189,248,0.35)',
                     paddingLeft: 10, marginBottom: 5,
@@ -834,34 +841,34 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                       <span style={{ fontSize: 11.5, color: L3 }}>
-                        {(decision as any).prediction.current_value}
+                        {decision.prediction.current_value}
                       </span>
                       <span style={{ fontSize: 11.5, color: L3 }}>→</span>
                       <span style={{ fontSize: 12, color: '#38BDF8', fontWeight: 700 }}>
-                        {(decision as any).prediction.expected_value}
+                        {decision.prediction.expected_value}
                       </span>
                     </div>
-                    {(decision as any).prediction.estimated_impact && (
+                    {decision.prediction.estimated_impact && (
                       <div style={{ fontSize: 12.5, color: '#38BDF8', fontWeight: 700 }}>
-                        {(decision as any).prediction.estimated_impact}
+                        {decision.prediction.estimated_impact}
                       </div>
                     )}
                   </div>
                 )}
 
-                {(decision as any).priority_position && (decision as any).priority_position <= 3 && (
+                {decision.priority_position && decision.priority_position <= 3 && (
                   <div style={{
                     fontSize: 11, fontWeight: 700, marginBottom: 4,
-                    color: (decision as any).priority_position === 1 ? '#FBBF24' : L3,
+                    color: decision.priority_position === 1 ? '#FBBF24' : L3,
                   }}>
-                    #{(decision as any).priority_position}
-                    {(decision as any).priority_position === 1 && ' — Ação mais importante agora'}
+                    #{decision.priority_position}
+                    {decision.priority_position === 1 && ' — Ação mais importante agora'}
                   </div>
                 )}
 
-                {(decision as any).urgency && (
+                {decision.urgency && (
                   <div style={{ fontSize: 11, color: '#F87171', fontWeight: 500, marginBottom: 4 }}>
-                    {(decision as any).urgency.message}
+                    {decision.urgency.message}
                   </div>
                 )}
 
@@ -875,9 +882,9 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
                   </div>
                 )}
 
-                {(decision as any).money_explanation && (
+                {decision.money_explanation && (
                   <div style={{ fontSize: 10.5, color: L3, marginTop: 3, lineHeight: 1.4 }}>
-                    {(decision as any).money_explanation}
+                    {decision.money_explanation}
                   </div>
                 )}
               </div>
@@ -1027,7 +1034,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
         {/* INVALIDATOR — falsifier surfaced verbatim. Bumped padding +
             font + label intensity so it reads as a real safety net
             ("posso testar sem medo") instead of a tiny footnote. */}
-        {(decision as any).invalidator && (
+        {decision.invalidator && (
           <div style={{
             margin: '6px 0 12px',
             padding: '10px 12px',
@@ -1047,7 +1054,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
             }}>
               QUANDO PARAR
             </div>
-            {(decision as any).invalidator}
+            {decision.invalidator}
           </div>
         )}
 

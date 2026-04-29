@@ -4254,7 +4254,7 @@ const TopPriorityBar: React.FC<{
 // decisions first regardless of type order. Confidence falls back through:
 //   data_confidence (0-1, pipeline v2)  →  score/100  →  impact_confidence enum
 const confidenceOf = (d: Decision): number => {
-  const dc = (d as any).data_confidence;
+  const dc = d.data_confidence;
   if (typeof dc === 'number' && dc >= 0 && dc <= 1) return dc;
   if (typeof d.score === 'number' && d.score > 0) return Math.min(1, d.score / 100);
   const ic = d.impact_confidence;
@@ -7003,12 +7003,13 @@ const FeedPage: React.FC = () => {
     // fields populated by chat decisions).
     const valid = (v: unknown): v is string =>
       typeof v === 'string' && v.length > 0 && v !== 'undefined' && v !== 'null';
-    const fromParams = (action.params as any)?.target_id ?? (action.params as any)?.target_meta_id;
+    const params = (action.params || {}) as { target_id?: string; target_meta_id?: string };
+    const fromParams = params.target_id ?? params.target_meta_id;
     const fromHierarchy =
-      targetType === 'campaign' ? (decision as any)?.ad?.ad_set?.campaign?.meta_campaign_id
-      : targetType === 'adset' ? (decision as any)?.ad?.ad_set?.meta_adset_id
-      : (decision as any)?.ad?.meta_ad_id;
-    const fromDecision = (decision as any)?.target_meta_id ?? (decision as any)?.target_id;
+      targetType === 'campaign' ? decision?.ad?.ad_set?.campaign?.meta_campaign_id
+      : targetType === 'adset' ? decision?.ad?.ad_set?.meta_adset_id
+      : decision?.ad?.meta_ad_id;
+    const fromDecision = decision?.target_meta_id ?? decision?.target_id;
     let metaId = (
       [fromParams, fromHierarchy, fromDecision].find(valid) as string | undefined
     ) || '';
@@ -7019,22 +7020,32 @@ const FeedPage: React.FC = () => {
     // stored on the decision. This pattern catches the "decisão antiga
     // referenciando ad deletado" case where the decision exists but the
     // joined ad object is null, leaving the user staring at a dead button.
-    if (!metaId && (decision as any)?.ad_id) {
+    if (!metaId && decision?.ad_id) {
       try {
-        const adId = (decision as any).ad_id;
-        const { data: adRow } = await (supabase as any)
+        const adId = decision.ad_id;
+        type AdRow = {
+          meta_ad_id: string | null;
+          ad_set_id: string | null;
+          ad_set: {
+            meta_adset_id: string | null;
+            campaign_id: string | null;
+            campaign: { meta_campaign_id: string | null } | null;
+          } | null;
+        };
+        const { data: adRow } = await supabase
           .from('ads')
           .select('meta_ad_id, ad_set_id, ad_set:ad_sets(meta_adset_id, campaign_id, campaign:campaigns(meta_campaign_id))')
           .eq('id', adId)
-          .maybeSingle();
+          .maybeSingle()
+          .returns<AdRow>();
         if (adRow) {
-          if (targetType === 'ad') metaId = (adRow.meta_ad_id || '') as string;
-          else if (targetType === 'adset') metaId = (adRow.ad_set?.meta_adset_id || '') as string;
-          else if (targetType === 'campaign') metaId = (adRow.ad_set?.campaign?.meta_campaign_id || '') as string;
+          if (targetType === 'ad') metaId = adRow.meta_ad_id || '';
+          else if (targetType === 'adset') metaId = adRow.ad_set?.meta_adset_id || '';
+          else if (targetType === 'campaign') metaId = adRow.ad_set?.campaign?.meta_campaign_id || '';
           if (metaId) console.log('[handleAction] recovered meta_id via ads table lookup', { decisionId, targetType, metaId });
         }
       } catch (e) {
-        console.warn('[handleAction] ads table fallback threw', (e as any)?.message || e);
+        console.warn('[handleAction] ads table fallback threw', e instanceof Error ? e.message : e);
       }
     }
 
@@ -7046,7 +7057,7 @@ const FeedPage: React.FC = () => {
     // chat-side handler uses and unblocks orphan decisions instead of
     // showing the dead-button error.
     if (!metaId) {
-      const headline = String((decision as any)?.headline || '');
+      const headline = String(decision?.headline || '');
       const nameMatch = headline.match(/['"]([^'"]{2,120})['"]/);
       const name = nameMatch ? nameMatch[1].trim() : null;
       if (name) {
@@ -7055,7 +7066,23 @@ const FeedPage: React.FC = () => {
             : targetType === 'adset' ? 'ad_sets' : 'ads';
           const idCol = targetType === 'campaign' ? 'meta_campaign_id'
             : targetType === 'adset' ? 'meta_adset_id' : 'meta_ad_id';
-          const { data: row } = await (supabase as any)
+          // Dynamic table name forces unknown — schema-typed select() can't
+          // help here. Narrow the row to the keys we actually read.
+          const { data: row } = await (supabase as unknown as {
+            from: (t: string) => {
+              select: (s: string) => {
+                eq: (k: string, v: unknown) => {
+                  ilike: (k: string, v: string) => {
+                    limit: (n: number) => {
+                      maybeSingle: () => Promise<{
+                        data: Record<string, string | null> | null;
+                      }>;
+                    };
+                  };
+                };
+              };
+            };
+          })
             .from(table)
             .select(`${idCol}, name`)
             .eq('account_id', accountId)
@@ -7063,13 +7090,13 @@ const FeedPage: React.FC = () => {
             .limit(1)
             .maybeSingle();
           if (row?.[idCol] && valid(row[idCol])) {
-            metaId = row[idCol];
+            metaId = row[idCol] as string;
             console.log('[handleAction] recovered meta_id via name lookup', {
               name, matched_name: row.name, targetType, metaId,
             });
           }
         } catch (e) {
-          console.warn('[handleAction] name lookup threw', (e as any)?.message || e);
+          console.warn('[handleAction] name lookup threw', e instanceof Error ? e.message : e);
         }
       }
     }
@@ -7084,10 +7111,10 @@ const FeedPage: React.FC = () => {
         targetType,
         action_meta_api: action.meta_api_action,
         action_params: action.params,
-        decision_ad_id: (decision as any)?.ad_id,
-        decision_ad: (decision as any)?.ad,
-        decision_target_meta_id: (decision as any)?.target_meta_id,
-        decision_target_id: (decision as any)?.target_id,
+        decision_ad_id: decision?.ad_id,
+        decision_ad: decision?.ad,
+        decision_target_meta_id: decision?.target_meta_id,
+        decision_target_id: decision?.target_id,
       });
       throw new Error('Sem ID do Meta para esse alvo — não é possível executar esta ação');
     }
@@ -7321,7 +7348,7 @@ const FeedPage: React.FC = () => {
           //   3. healthy monitoring → 'ok'
           //   4. unknown / still resolving → 'unknown' (cyan)
           const hasCriticalDecision = pendingDecisions.some(d =>
-            d.type === 'kill' || d.type === 'fix' || (d as any).priority === 'critical'
+            d.type === 'kill' || d.type === 'fix' || d.priority === 'critical'
           );
           const tone: StatusTone = hasCriticalDecision
             ? 'critical'
