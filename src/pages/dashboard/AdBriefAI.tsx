@@ -15,6 +15,7 @@ import {
   Zap, Clapperboard, ScanEye, X, Sparkles, Target, FileText,
   TrendingUp, TrendingDown, BarChart2, BarChart3, Stethoscope,
   ChevronRight, Plus, CheckCircle2,
+  Telescope,
 } from "lucide-react";
 // v20: removed unused — Brain, Upload, Activity, ExternalLink,
 //      DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
@@ -86,18 +87,25 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "New hook variations based on your winners" },
     { icon: Clapperboard,   label: "Script",           action: "script",       color: "#34d399", desc: "Full script for your next video creative" },
     { icon: ScanEye,        label: "Competitor",       action: "competitor",   color: "#a78bfa", desc: "Decode a competitor ad and their strategy" },
+    // SPY — broader, exploratory mode. The "Competitor" tile decodes ONE
+    // specific ad you already have. Spy answers "what's running RIGHT
+    // NOW in my niche?" with no ad in hand. Different prompt routing,
+    // same backend (decode-competitor). Cyan accent picks up the brand.
+    { icon: Telescope,      label: "Spy",              action: "spy",          color: "#0DA2E7", desc: "What's running in your niche right now — top hooks + offers" },
     { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Update who you're selling to" },
   ],
   pt: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "Variações de abertura com base nos seus vencedores" },
     { icon: Clapperboard,   label: "Roteiro",          action: "script",       color: "#34d399", desc: "Script completo pro seu próximo vídeo" },
     { icon: ScanEye,        label: "Concorrente",      action: "competitor",   color: "#a78bfa", desc: "Decodifica um anúncio concorrente e a estratégia dele" },
+    { icon: Telescope,      label: "Spy",              action: "spy",          color: "#0DA2E7", desc: "O que tá rodando no seu nicho agora — hooks + ofertas vencedores" },
     { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Atualiza o perfil de quem você tá vendendo" },
   ],
   es: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "Variaciones de gancho basadas en tus ganadores" },
     { icon: Clapperboard,   label: "Guión",            action: "script",       color: "#34d399", desc: "Guión completo para tu próximo video" },
     { icon: ScanEye,        label: "Competidor",       action: "competitor",   color: "#a78bfa", desc: "Decodifica un anuncio competidor y su estrategia" },
+    { icon: Telescope,      label: "Spy",              action: "spy",          color: "#0DA2E7", desc: "Qué se está corriendo en tu nicho ahora — top hooks + ofertas" },
     { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Actualiza a quién le vendes" },
   ],
 };
@@ -4309,6 +4317,10 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       "/analise-criativo":"[ANALYZE_AD] Pronto para analisar um criativo. Manda a imagem ou descreve o anúncio (com CTR atual se tiver). Vou dar: score do hook, CTA, clareza visual, fit, veredito (Escalar/Testar/Pausar) e 3 ações.",
       "/analyze-ad":      "[ANALYZE_AD] Ready to analyze a creative. Send the image or describe the ad. I'll give: hook score, CTA, visual clarity, fit, verdict (Scale/Test/Pause) and 3 actions.",
       "/concorrentes":    "[COMPETITOR] Analisa a estratégia criativa da concorrência. Me diz o nicho/marca a analisar.",
+      // SPY — broader exploratory mode vs /concorrentes (which decodes
+      // ONE specific ad). Use when the user wants to discover what's
+      // running NOW in a niche without having a target ad in hand.
+      "/spy":             "[SPY] Quero descobrir o que tá rodando no nicho agora. Me diz: nicho/setor, mercado (BR/US/etc) e plataforma (Meta/TikTok). Vou trazer top hooks ativos, ofertas dominantes, padrão de criativo e gaps que ninguém tá explorando.",
       "/draft":           "[DRAFT_CONTENT] Vou criar variações de copy. Descreve o produto, formato (stories/feed/video) e objetivo.",
       "/draft-content":   "[DRAFT_CONTENT] I'll create copy variations. Describe the product, format and objective.",
     };
