@@ -441,8 +441,14 @@ Deno.serve(async (req) => {
           const acc =
             (mc.ad_accounts || []).find((a: any) => a.id === effectivePanelAccId) || (mc.ad_accounts || [])[0];
           if (acc) {
+            // ad_id / adset_id / campaign_id are essential — without them the
+            // chat sees `undefined` for every ad ID and can't emit precise
+            // pause/duplicate/budget actions. Used to be missing; surfaced by
+            // the AI itself in production ("IDs dos anúncios estão como
+            // undefined"). Same for campaign_id which the campaigns block
+            // also needs to deduplicate vs the campaigns endpoint.
             const fields =
-              "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency,reach";
+              "ad_id,adset_id,campaign_id,campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values,video_play_actions,frequency,reach,website_purchase_roas";
             const [r1, r2, r3, r4] = await Promise.allSettled([
               fetchMetaWithRetry(
                 `https://graph.facebook.com/v21.0/${acc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${today}"}&sort=spend_descending&limit=100&access_token=${token}`,
@@ -492,25 +498,62 @@ Deno.serve(async (req) => {
                 .map((a: any) => {
                   const spend = parseFloat(a.spend || 0),
                     ctr = parseFloat(a.ctr || 0),  // Meta returns CTR as percentage string (e.g. 7.81 = 7.81%)
-                    freq = parseFloat(a.frequency || 0);
+                    freq = parseFloat(a.frequency || 0),
+                    convs = parseFloat(
+                      a.actions?.find((x: any) => x.action_type === "purchase")?.value ||
+                        a.actions?.find((x: any) => x.action_type === "lead")?.value ||
+                        a.actions?.find((x: any) => x.action_type === "complete_registration")?.value ||
+                        0,
+                    );
                   const hookRate = () => {
                     const plays = a.video_play_actions?.find((x: any) => x.action_type === "video_play")?.value;
                     const impr = parseInt(a.impressions || 0);
                     return plays && impr ? (parseFloat(plays) / impr) * 100 : null;
                   };
+                  // Detect which conversion event the ad is actually firing.
+                  // Surfaces tracking mismatches (objective=SALES + only
+                  // complete_registration events = AI can flag misalignment).
+                  const detectedEvent: string | null = (() => {
+                    const a1 = a.actions || [];
+                    if (a1.find((x: any) => x.action_type === "purchase")) return "purchase";
+                    if (a1.find((x: any) => x.action_type === "lead")) return "lead";
+                    if (a1.find((x: any) => x.action_type === "complete_registration")) return "complete_registration";
+                    if (a1.find((x: any) => x.action_type === "subscribe")) return "subscribe";
+                    if (a1.find((x: any) => x.action_type === "add_to_cart")) return "add_to_cart";
+                    if (a1.find((x: any) => x.action_type === "initiate_checkout")) return "initiate_checkout";
+                    return null;
+                  })();
+                  // Per-ad ROAS — uses website_purchase_roas[0].value when
+                  // present, falls back to action_values.purchase / spend.
+                  const adRoas = (() => {
+                    const wpr = Array.isArray(a.website_purchase_roas) && a.website_purchase_roas[0]
+                      ? parseFloat(a.website_purchase_roas[0].value || 0)
+                      : null;
+                    if (wpr && wpr > 0) return wpr;
+                    const purchVal = parseFloat(
+                      a.action_values?.find((x: any) => x.action_type === "purchase")?.value || 0,
+                    );
+                    return spend > 0 && purchVal > 0 ? purchVal / spend : null;
+                  })();
                   return {
+                    // IDs — without these the AI can't emit precise actions.
+                    // Was the chat-side bug behind "IDs dos anúncios estão como undefined".
+                    id: a.ad_id || null,
+                    adset_id: a.adset_id || null,
+                    campaign_id: a.campaign_id || null,
                     name: a.ad_name,
                     campaign: a.campaign_name,
+                    adset: a.adset_name,
                     spend,
                     ctr,
                     cpm: parseFloat(a.cpm || 0),
+                    cpc: parseFloat(a.cpc || 0),
                     freq,
                     hookRate: hookRate(),
-                    conv: parseFloat(
-                      a.actions?.find((x: any) => x.action_type === "purchase")?.value ||
-                        a.actions?.find((x: any) => x.action_type === "lead")?.value ||
-                        0,
-                    ),
+                    conv: convs,
+                    cpa: convs > 0 ? spend / convs : null,
+                    roas: adRoas,
+                    detected_event: detectedEvent,
                     isRisk: freq > 3.5 || (ctr < 0.5 && spend > 20),
                     isWinner: ctr > 1.5 && freq < 3 && spend > 5,
                   };
@@ -593,11 +636,44 @@ Deno.serve(async (req) => {
                 panelTrackingLabel = "Avaliando tracking";
               }
 
+              // ── Account goal data — CPA/ROAS target, conversion event,
+              //    objective. Fetched from ad_accounts so the AI can compare
+              //    "did this campaign hit the target?" without asking the
+              //    user. Surfaced as `account_goal` on the meta block.
+              //    Failure is non-fatal — older accounts won't have the
+              //    columns populated yet.
+              let accountGoal: {
+                objective: string | null;
+                primary_metric: string | null;
+                target_value_cents: number | null;
+                conversion_event: string | null;
+                profit_margin_pct: number | null;
+              } | null = null;
+              try {
+                const { data: goalRow } = await sbPanel
+                  .from("ad_accounts" as any)
+                  .select("goal_objective, goal_primary_metric, goal_target_value, goal_conversion_event, profit_margin_pct")
+                  .eq("user_id", user_id)
+                  .eq("meta_account_id", acc.id)
+                  .maybeSingle();
+                if (goalRow) {
+                  accountGoal = {
+                    objective: (goalRow as any).goal_objective ?? null,
+                    primary_metric: (goalRow as any).goal_primary_metric ?? null,
+                    target_value_cents: (goalRow as any).goal_target_value ?? null,
+                    conversion_event: (goalRow as any).goal_conversion_event ?? null,
+                    profit_margin_pct: (goalRow as any).profit_margin_pct ?? null,
+                  };
+                }
+              } catch { /* goal data is optional enrichment */ }
+
               result.meta = {
                 account_name: acc.name || acc.id,
+                account_id: acc.id,
                 period: `${since} → ${today}`,
                 currency,
                 currency_symbol: currSymbol,
+                account_goal: accountGoal,
                 kpis: {
                   spend: totalSpend.toFixed(2),
                   ctr: avgCTR.toFixed(2),
@@ -619,13 +695,20 @@ Deno.serve(async (req) => {
                 at_risk: enriched.filter((a: any) => a.isRisk).slice(0, 5),
                 top_ads: enriched.slice(0, 10),
                 campaigns: (camps?.data || []).slice(0, 10).map((c: any) => ({
+                  // id surfaced so the AI can target campaigns precisely
+                  // without having to ask the user for the name first.
+                  id: c.id || null,
                   name: c.name,
                   status: c.effective_status || c.status,
+                  // Raw centavos kept alongside the formatted string —
+                  // formatted is for the UI, raw lets the AI compute deltas.
                   budget: c.daily_budget
                     ? `${currSymbol}${(parseInt(c.daily_budget) / 100).toFixed(0)}/dia`
                     : c.lifetime_budget
                       ? `${currSymbol}${(parseInt(c.lifetime_budget) / 100).toFixed(0)} total`
                       : "—",
+                  daily_budget_cents: c.daily_budget ? parseInt(c.daily_budget) : null,
+                  lifetime_budget_cents: c.lifetime_budget ? parseInt(c.lifetime_budget) : null,
                   objective: c.objective,
                 })),
                 time_series: (ts?.data || [])
@@ -1780,9 +1863,20 @@ Quando o usuário se referir a qualquer desses termos, ele tá falando de um dos
             }
 
             if (cacheHitSource === "miss") {
-              // Comprehensive Meta Ads data fetch: period-aware + lifetime top performers
+              // Comprehensive Meta Ads data fetch: period-aware + lifetime top performers.
+              //
+              // ad_id / adset_id / campaign_id are CRITICAL — without them
+              // every `[${ad.ad_id}]` reference downstream renders as
+              // `[undefined]`, which means the AI can't emit precise
+              // pause/duplicate/budget actions and has to fall back to
+              // asking the user for the ad NAME first. Reported by the
+              // production AI itself ("IDs dos anúncios estão como
+              // undefined"). action_values + website_purchase_roas are
+              // added for ROAS calc; objective gets surfaced per ad so
+              // the AI can spot mismatches between the campaign goal
+              // (OUTCOME_SALES) and what's actually firing in the pixel.
               const fields =
-                "campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,video_play_actions,frequency";
+                "ad_id,adset_id,campaign_id,campaign_name,adset_name,ad_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values,video_play_actions,frequency,website_purchase_roas";
               // Time series granularity: daily for <=31 days, monthly for longer
               const periodDays = Math.round((new Date(until).getTime() - new Date(since).getTime()) / 86400000) + 1;
               const timeIncrement = periodDays <= 31 ? "1" : "monthly";
@@ -1797,13 +1891,16 @@ Quando o usuário se referir a qualquer desses termos, ele tá falando de um dos
                 fetchMetaWithRetry(
                   `https://graph.facebook.com/v21.0/${activeAcc.id}/insights?level=ad&fields=${fields}&time_range={"since":"${since}","until":"${until}"}&sort=spend_descending&limit=100&access_token=${token}`,
                 ),
-                // Campaigns
+                // Campaigns — id added so the AI can target a specific
+                // campaign by ID (was forced to ask the user for the name).
                 fetchMetaWithRetry(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,effective_status&limit=100&access_token=${token}`,
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,objective,effective_status&limit=100&access_token=${token}`,
                 ),
-                // Adsets
+                // Adsets — id + campaign_id so adset-level actions resolve
+                // without an extra lookup, and the AI can group adsets
+                // under their parent campaign in narrative summaries.
                 fetchMetaWithRetry(
-                  `https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=name,status,effective_status,daily_budget,optimization_goal&limit=50&access_token=${token}`,
+                  `https://graph.facebook.com/v21.0/${activeAcc.id}/adsets?fields=id,campaign_id,name,status,effective_status,daily_budget,optimization_goal&limit=50&access_token=${token}`,
                 ),
                 // Time series — daily or monthly depending on period
                 fetchMetaWithRetry(
@@ -2286,6 +2383,46 @@ Não use regras fixas. Use os dados reais acima e raciocine sobre o que está ac
         .join("\n");
     })();
 
+    // ── Recent actions (action_log, last 14d) ─────────────────────────
+    // Pre-fetched here because the richContext array below is synchronous.
+    // Lets the AI answer "qual criativo foi pausado?" / "por que tá assim
+    // agora?" without making the user dig through History — surfaced as a
+    // limitation by the production AI itself.
+    let recentActionsBlock = "";
+    if (user_id) {
+      try {
+        const sinceActions = new Date(Date.now() - 14 * 86400000).toISOString();
+        const { data: recentActions } = await (supabase as any)
+          .from("action_log")
+          .select("action_type, target_type, target_name, target_meta_id, result, executed_at, new_state")
+          .eq("user_id", user_id)
+          .gte("executed_at", sinceActions)
+          .order("executed_at", { ascending: false })
+          .limit(10);
+        if (Array.isArray(recentActions) && recentActions.length > 0) {
+          const lines = recentActions.map((r: any) => {
+            const when = r.executed_at
+              ? new Date(r.executed_at).toLocaleDateString("pt-BR", {
+                  day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+                })
+              : "?";
+            const tgt = r.target_name || r.target_meta_id || "?";
+            const src = r.new_state?._source === "manager_manual" ? "manual"
+              : r.new_state?._source === "autopilot" ? "autopilot"
+              : "ai";
+            const ai = r.new_state?._ai_reasoning
+              ? ` — ${String(r.new_state._ai_reasoning).slice(0, 80)}`
+              : "";
+            const resTag = r.result === "rolled_back" ? " [revertido]"
+              : r.result === "error" ? " [erro]" : "";
+            return `  ${when} · ${r.action_type} ${r.target_type || ""} "${String(tgt).slice(0, 40)}" (${src})${resTag}${ai}`;
+          }).join("\n");
+          recentActionsBlock =
+            `=== AÇÕES RECENTES (últimos 14 dias) ===\n${lines}\nUse esse log para responder "o que foi pausado?", "por que essa campanha tá assim agora?", etc. Não pergunte ao usuário coisas que estão visíveis aqui.`;
+        }
+      } catch { /* recent-actions is enrichment, fail silent */ }
+    }
+
     let richContext: any = [];
     try {
     richContext = [
@@ -2417,6 +2554,10 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
       memorySummary
         ? `=== MEMÓRIA PERSISTENTE — FATOS CONFIRMADOS ===\n${memorySummary}\n🔴=crítico(importância 5) 🟡=importante(4) ⚪=contexto(1-3)\nESSES FATOS SÃO VERDADEIROS. Use-os diretamente. NUNCA peça confirmação de algo que já está aqui.`
         : "",
+      // Recent actions block computed BEFORE this array (see recentActionsBlock).
+      // Lets the AI answer "o que foi pausado?", "por que essa campanha tá
+      // inativa agora?" without making the user dig through History.
+      recentActionsBlock,
       // ── Phase 3: in-account learned action patterns ───────────────────
       // From action_outcomes (finalized + candidate). This sits ABOVE the
       // cross-account block on purpose: same-account evidence beats
