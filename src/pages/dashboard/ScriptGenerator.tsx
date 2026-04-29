@@ -27,8 +27,13 @@ function deriveMarket(lang?: string): string | null {
   return "GLOBAL";
 }
 
+type ScriptLine = { type: string; text: string };
+type Script = { title?: string; lines?: ScriptLine[]; notes?: string; hook_score?: number };
+type ScriptResult = { scripts?: Script[] };
+
 export default function ScriptGenerator() {
-  const { user, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
+  type AiProfile = { industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null;
+  const { user, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: AiProfile }>();
 
   const { language } = useLanguage();
   const dt = useDashT(language);
@@ -43,7 +48,7 @@ export default function ScriptGenerator() {
   const [extraContext, setExtraContext] = useState("");
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<ScriptResult | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
   const [personaApplied, setPersonaApplied] = useState(false);
 
@@ -65,7 +70,7 @@ export default function ScriptGenerator() {
 
     // Product from persona name + description
     if (p.name) {
-      const desc = p.description || (p as any)?.result?.description || "";
+      const desc = p.description || (p.result as { description?: string } | undefined)?.description || "";
       setProduct(desc ? `${p.name} — ${desc.slice(0, 100)}` : p.name);
     }
 
@@ -142,16 +147,16 @@ export default function ScriptGenerator() {
         body: { product, offer, audience, format, platform, market, duration, angle, extra_context: extraContext, user_id: user.id, persona_id: selectedPersona?.id || null, ui_language: language },
       });
       if (error) throw error;
-      setResult(data);
-    } catch (e: any) {
-      toast.error(e.message || (language === "es" ? "Falló la generación" : "Falha ao gerar roteiro"));
+      setResult(data as ScriptResult);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : (language === "es" ? "Falló la generación" : "Falha ao gerar roteiro"));
     } finally {
       setLoading(false);
     }
   };
 
-  const copyScript = (script: any, idx: number) => {
-    const text = script.lines?.map((l: any) => `[${l.type.toUpperCase()}] ${l.text}`).join("\n") || JSON.stringify(script, null, 2);
+  const copyScript = (script: Script, idx: number) => {
+    const text = script.lines?.map((l) => `[${l.type.toUpperCase()}] ${l.text}`).join("\n") || JSON.stringify(script, null, 2);
     navigator.clipboard.writeText(text);
     setCopied(idx);
     setTimeout(() => setCopied(null), 2000);
@@ -261,7 +266,7 @@ export default function ScriptGenerator() {
 
       {result?.scripts && (
         <div className="space-y-4">
-          {result.scripts.map((s: any, i: number) => (
+          {result.scripts.map((s, i) => (
             <div key={i} className="rounded-2xl border border-border/50 p-5 space-y-3" style={{ background: "linear-gradient(145deg,rgba(255,255,255,0.055) 0%,rgba(255,255,255,0.015) 100%)", borderTopColor: "rgba(255,255,255,0.14)", boxShadow: "0 4px 20px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -280,7 +285,7 @@ export default function ScriptGenerator() {
 
               {s.lines ? (
                 <div className="space-y-1.5">
-                  {s.lines.map((line: any, li: number) => {
+                  {s.lines.map((line, li) => {
                     const lc = lineColors[line.type] || lineColors.vo;
                     return (
                       <div key={li} className="flex gap-2 items-start">

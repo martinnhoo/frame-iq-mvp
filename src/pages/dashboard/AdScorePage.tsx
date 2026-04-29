@@ -18,8 +18,34 @@ const AMBER = T.amber; // #eab308
 const TX = T.textPrimary;
 const MT = T.textMuted;
 
+type Tier = "elite" | "strong" | "average" | "weak" | "critical";
+interface Badge { label: string; icon: string; color: string; }
+
+/** Ad-row shape consumed across this file. Matches what the live-metrics
+ *  edge fn returns plus a few derived fields the page enriches inline. */
+interface AdScoreRow {
+  ad_id?: string;
+  ad_name?: string;
+  campaign_name?: string;
+  ctr?: number;
+  spend?: number;
+  roas?: number;
+  conversions?: number;
+  frequency?: number;
+  impressions?: number;
+  clicks?: number;
+  reach?: number;
+  cpc?: number;
+  cpa?: number;
+  thumbnail_url?: string | null;
+  // Derived
+  score?: number;
+  tier?: Tier;
+  badges?: Badge[];
+}
+
 // ── Score engine ──
-function calcAdScore(ad: any): { score: number; tier: Tier; badges: Badge[] } {
+function calcAdScore(ad: AdScoreRow): { score: number; tier: Tier; badges: Badge[] } {
   const ctr = (ad.ctr || 0) * 100;
   const spend = ad.spend || 0;
   const roas = ad.roas || 0;
@@ -78,9 +104,6 @@ function calcAdScore(ad: any): { score: number; tier: Tier; badges: Badge[] } {
   return { score, tier, badges };
 }
 
-type Tier = "elite" | "strong" | "average" | "weak" | "critical";
-interface Badge { label: string; icon: string; color: string; }
-
 const TIER_CONFIG: Record<Tier, { label: string; labelPt: string; color: string; bg: string; border: string }> = {
   elite:    { label: "Elite",    labelPt: "Elite",    color: GREEN,  bg: `${GREEN}12`, border: `${GREEN}25` },
   strong:   { label: "Strong",   labelPt: "Forte",    color: A,      bg: `${A}12`,     border: `${A}25`     },
@@ -124,7 +147,7 @@ function ScoreRing({ score, tier, size = 56 }: { score: number; tier: Tier; size
       </svg>
       <div style={{
         position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-        fontFamily: HERO, fontSize: size * 0.34, fontWeight: 900, color: cfg.color, letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" as any,
+        fontFamily: HERO, fontSize: size * 0.34, fontWeight: 900, color: cfg.color, letterSpacing: "-0.04em", fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"],
       }}>
         {score}
       </div>
@@ -133,7 +156,7 @@ function ScoreRing({ score, tier, size = 56 }: { score: number; tier: Tier; size
 }
 
 // ── Score Detail Panel ──
-function ScoreDetail({ ad, pt, onClose }: { ad: any; pt: boolean; onClose: () => void }) {
+function ScoreDetail({ ad, pt, onClose }: { ad: AdScoreRow; pt: boolean; onClose: () => void }) {
   const { score, tier, badges } = calcAdScore(ad);
   const cfg = TIER_CONFIG[tier];
   const ctr = ((ad.ctr || 0) * 100).toFixed(2);
@@ -193,7 +216,7 @@ function ScoreDetail({ ad, pt, onClose }: { ad: any; pt: boolean; onClose: () =>
             <div key={m.label} style={{ marginBottom: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: TX, fontFamily: F }}>{m.label} <span style={{ fontSize: 10, color: MT }}>({m.weight})</span></span>
-                <span style={{ fontSize: 13, fontWeight: 800, color: m.color, fontFamily: HERO, fontVariantNumeric: "tabular-nums" as any }}>{m.value}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: m.color, fontFamily: HERO, fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"] }}>{m.value}</span>
               </div>
               <div style={{ height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 2, overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${m.pct}%`, background: m.color, borderRadius: 2, transition: "width 0.5s ease" }} />
@@ -225,7 +248,7 @@ function ScoreDetail({ ad, pt, onClose }: { ad: any; pt: boolean; onClose: () =>
               { label: roas ? `${roas.toFixed(1)}×` : "—", sub: "ROAS" },
             ].map(m => (
               <div key={m.sub} style={{ textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: TX, fontFamily: HERO, fontVariantNumeric: "tabular-nums" as any }}>{m.label}</p>
+                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: TX, fontFamily: HERO, fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"] }}>{m.label}</p>
                 <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>{m.sub}</p>
               </div>
             ))}
@@ -237,7 +260,7 @@ function ScoreDetail({ ad, pt, onClose }: { ad: any; pt: boolean; onClose: () =>
 }
 
 // ── Ad Card (TikTok style) ──
-function AdCard({ ad, allScores, pt, onSelect }: { ad: any; allScores: number[]; pt: boolean; onSelect: () => void }) {
+function AdCard({ ad, allScores, pt, onSelect }: { ad: AdScoreRow; allScores: number[]; pt: boolean; onSelect: () => void }) {
   const { score, tier, badges } = useMemo(() => calcAdScore(ad), [ad]);
   const percentile = useMemo(() => calcPercentile(score, allScores), [score, allScores]);
   const cfg = TIER_CONFIG[tier];
@@ -366,7 +389,7 @@ function AdCard({ ad, allScores, pt, onSelect }: { ad: any; allScores: number[];
           { label: ad.roas ? `${ad.roas.toFixed(1)}×` : "—", sub: "ROAS" },
         ].map(m => (
           <div key={m.sub} style={{ textAlign: "center" }}>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: TX, fontFamily: HERO, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" as any }}>{m.label}</p>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: TX, fontFamily: HERO, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"] }}>{m.label}</p>
             <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>{m.sub}</p>
           </div>
         ))}
@@ -386,19 +409,20 @@ export default function AdScorePage() {
   const pt = language === "pt";
   const navigate = useNavigate();
 
-  const [entries, setEntries] = useState<any[]>([]);
+  const [entries, setEntries] = useState<AdScoreRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>("score");
   const [filterTier, setFilterTier] = useState<Tier | "all">("all");
-  const [selectedAd, setSelectedAd] = useState<any | null>(null);
+  const [selectedAd, setSelectedAd] = useState<AdScoreRow | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.id || !selectedPersona?.id) { setLoading(false); return; }
     setLoading(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any).from("ad_diary")
       .select("*").eq("user_id", user.id).eq("persona_id", selectedPersona.id)
-      .order("spend", { ascending: false }).limit(200);
+      .order("spend", { ascending: false }).limit(200) as { data: AdScoreRow[] | null };
     setEntries(data || []);
     setLoading(false);
   }, [user?.id, selectedPersona?.id]);
@@ -412,9 +436,10 @@ export default function AdScorePage() {
       const { data: res } = await supabase.functions.invoke("live-metrics", {
         body: { user_id: user.id, persona_id: selectedPersona.id, period: "90d" }
       });
-      const metaAds: any[] = res?.meta?.top_ads || [];
+      type LiveAd = { id?: string; name?: string; campaign?: string; adset?: string; spend?: number; impressions?: number; ctr?: number; cpc?: number; conversions?: number; roas?: number };
+      const metaAds: LiveAd[] = res?.meta?.top_ads || [];
       if (metaAds.length) {
-        const rows = metaAds.map((a: any) => ({
+        const rows = metaAds.map((a) => ({
           user_id: user.id, persona_id: selectedPersona.id, platform: "meta",
           ad_id: a.id || a.name || String(Math.random()),
           ad_name: a.name || "Sem nome",
@@ -426,6 +451,7 @@ export default function AdScorePage() {
           verdict: "testing", verdict_reason: "",
           peak_ctr: a.ctr || 0, synced_at: new Date().toISOString(),
         }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any).from("ad_diary").upsert(rows, { onConflict: "user_id,persona_id,platform,ad_id" });
         await load();
       }

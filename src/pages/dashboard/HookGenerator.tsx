@@ -62,9 +62,10 @@ const HOOK_CAPS: Record<string, number> = {
 };
 
 export default function HookGenerator() {
-  const { user, profile, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
+  type AiProfile = { industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null;
+  const { user, profile, selectedPersona, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: AiProfile }>();
   const { language } = useLanguage();
-  const plan = (profile as any)?.plan || "free";
+  const plan = profile?.plan || "free";
   const hookCount = HOOK_CAPS[plan] ?? 3;
   const dt = useDashT(language);
   const [product, setProduct] = useState("");
@@ -93,14 +94,15 @@ export default function HookGenerator() {
       setProduct(selectedPersona.name);
     }
     // Pre-fill niche from persona result first, then ai_profile as fallback
-    const personaNiche = (selectedPersona as any)?.result?.niche || (selectedPersona as any)?.result?.industry || "";
-    const industryVal = personaNiche || (selectedPersona as any)?.industry || "";
+    const personaResult = (selectedPersona?.result as { niche?: string; industry?: string; preferred_market?: string } | undefined) || undefined;
+    const personaNiche = personaResult?.niche || personaResult?.industry || "";
+    const industryVal = personaNiche || selectedPersona?.industry || "";
     // Always reset niche when persona changes — never keep stale data from previous persona or ai_profile
     setNiche(industryVal);
     // Pre-fill market
     const valid = ["BR","MX","US","IN","AR","CO","ES","UK","FR","DE","GLOBAL"];
     const personaMarket = (
-      (selectedPersona as any)?.result?.preferred_market ||
+      personaResult?.preferred_market ||
       selectedPersona?.preferred_market || ""
     ).toUpperCase();
     const langMarket = (() => {
@@ -132,9 +134,20 @@ export default function HookGenerator() {
 
   // ── Pre-fill from winning pattern (from Feed → "Gerar novos hooks") ──
   const location = useLocation();
+  /** Subset of the learned-pattern object passed via location.state. */
+  type LearnedPatternHint = {
+    feature_type?: string;
+    feature_value?: string;
+    variables?: { feature_type?: string; feature_value?: string };
+    avg_ctr?: number;
+    avg_roas?: number;
+    impact_ctr_pct?: number;
+    insight_text?: string;
+    top_ads?: Array<{ ad_name?: string }>;
+  };
   const [patternApplied, setPatternApplied] = useState(false);
   useEffect(() => {
-    const fromPattern = (location.state as any)?.fromPattern;
+    const fromPattern = (location.state as { fromPattern?: LearnedPatternHint } | null)?.fromPattern;
     if (!fromPattern || patternApplied) return;
     setPatternApplied(true);
 
@@ -183,7 +196,7 @@ export default function HookGenerator() {
     setExpandedIdx(null);
     try {
       // Build pattern context if coming from a winning pattern
-      const fromPattern = (location.state as any)?.fromPattern;
+      const fromPattern = (location.state as { fromPattern?: LearnedPatternHint } | null)?.fromPattern;
       const patternContext = fromPattern ? {
         feature_type: fromPattern.feature_type || fromPattern.variables?.feature_type,
         feature_value: fromPattern.feature_value || fromPattern.variables?.feature_value,
@@ -191,7 +204,7 @@ export default function HookGenerator() {
         avg_roas: fromPattern.avg_roas,
         impact_ctr_pct: fromPattern.impact_ctr_pct,
         insight_text: fromPattern.insight_text,
-        top_ads: fromPattern.top_ads?.slice(0, 3)?.map((a: any) => a.ad_name) || [],
+        top_ads: fromPattern.top_ads?.slice(0, 3)?.map((a) => a.ad_name) || [],
       } : null;
 
       const { data, error } = await supabase.functions.invoke("generate-hooks", {
@@ -240,13 +253,15 @@ export default function HookGenerator() {
     // Save to creative_memory so update-ai-profile can learn from it
     if (user?.id) {
       try {
+        // creative_memory has columns the supabase generated insert type
+        // doesn't formally declare (notes, etc.). Cast through never.
         await supabase.from("creative_memory").insert({
           user_id: user.id,
           hook_type: hook.hook_type,
           platform: platform.toLowerCase().replace(" ", "_"),
           hook_score: vote === "up" ? hook.predicted_score : Math.max(1, hook.predicted_score - 3),
           notes: `User ${vote === "up" ? "liked" : "disliked"}: "${hook.hook.substring(0, 100)}"`,
-        } as any);
+        } as never);
       } catch (e) { console.error("[AdBrief]", e); } // non-critical — feedback loss is acceptable
       supabase.functions.invoke("update-ai-profile", {
         body: { user_id: user.id, trigger: "hook_feedback", vote, hook_type: hook.hook_type, platform, predicted_score: hook.predicted_score }

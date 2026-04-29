@@ -70,9 +70,17 @@ export function useActiveAccount(
 
       if (connErr) throw new Error('Failed to load connections');
 
-      const connections = (connData?.connections || []) as any[];
+      type ConnRow = {
+        platform: string;
+        persona_id: string;
+        status: string;
+        selected_account_id?: string | null;
+        ad_accounts?: MetaAdAccount[];
+        access_token?: string;
+      };
+      const connections: ConnRow[] = (connData?.connections || []) as ConnRow[];
       const metaConn = connections.find(
-        (c: any) => c.platform === 'meta' && c.persona_id === personaId && c.status === 'active'
+        (c) => c.platform === 'meta' && c.persona_id === personaId && c.status === 'active'
       );
 
       if (!metaConn) {
@@ -162,8 +170,9 @@ export function useActiveAccount(
   const switchAccount = useCallback(async (metaAccountId: string) => {
     if (!userId || !personaId) return;
 
-    // Update platform_connections
-    await (supabase.from('platform_connections' as any) as any)
+    // Update platform_connections (off-schema for the generated types).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('platform_connections')
       .update({ selected_account_id: metaAccountId })
       .eq('user_id', userId)
       .eq('persona_id', personaId)
@@ -199,21 +208,25 @@ async function ensureV2Account(
   metaAccount: MetaAdAccount,
 ): Promise<string | null> {
   try {
-    // Check if row already exists
-    const { data: existing } = await (supabase
-      .from('ad_accounts' as any)
+    // Check if row already exists. ad_accounts is in the supabase schema
+    // but the insert payload below has a few columns (timezone, total_*)
+    // that aren't in the strict generated insert type — cast the client
+    // once and narrow the result row.
+    const { data: existing } = await supabase
+      .from('ad_accounts')
       .select('id')
       .eq('user_id', userId)
       .eq('meta_account_id', metaAccount.id)
-      .maybeSingle() as any);
+      .maybeSingle();
 
     if (existing?.id) {
       return existing.id;
     }
 
     // Create v2 ad_accounts row — token is backfilled server-side by sync-meta-data
-    const { data: created, error: insertErr } = await (supabase
-      .from('ad_accounts' as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: created, error: insertErr } = await (supabase as any)
+      .from('ad_accounts')
       .insert({
         user_id: userId,
         meta_account_id: metaAccount.id,
@@ -225,18 +238,18 @@ async function ensureV2Account(
         total_spend_30d: 0,
       })
       .select('id')
-      .single() as any);
+      .single() as { data: { id: string } | null; error: { code?: string; message?: string } | null };
 
     if (insertErr) {
       console.error('[ensureV2Account] insert error:', insertErr.message, insertErr.code);
       // Unique constraint race — row may exist now
       if (insertErr.code === '23505') {
-        const { data: retry } = await (supabase
-          .from('ad_accounts' as any)
+        const { data: retry } = await supabase
+          .from('ad_accounts')
           .select('id')
           .eq('user_id', userId)
           .eq('meta_account_id', metaAccount.id)
-          .maybeSingle() as any);
+          .maybeSingle();
         return retry?.id || null;
       }
       return null;

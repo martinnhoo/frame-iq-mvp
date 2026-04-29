@@ -183,7 +183,9 @@ export default function Onboarding() {
     return session;
   };
 
-  const saveUserProfile = async (session: any) => {
+  // Session shape — only the fields we read.
+  type Sess = { user: { id: string; email?: string | null } };
+  const saveUserProfile = async (session: Sess) => {
     const nicheObj = NICHES.find(n => n.value === niche);
     await supabase.from("profiles").update({
       name: name || undefined,
@@ -200,9 +202,9 @@ export default function Onboarding() {
         });
         // Edge function returns errors as HTTP 400/404 — parse from error context
         if (claimError) {
-          let parsed: any = null;
+          let parsed: { error?: string } | null = null;
           try {
-            const ctx = (claimError as any).context;
+            const ctx = (claimError as { context?: Response | string | { error?: string } }).context;
             if (ctx instanceof Response) parsed = await ctx.clone().json();
             else if (typeof ctx === "string") parsed = JSON.parse(ctx);
             else if (ctx && typeof ctx === "object") parsed = ctx;
@@ -232,7 +234,7 @@ export default function Onboarding() {
     }
   };
 
-  const createFirstAccount = async (session: any): Promise<string | null> => {
+  const createFirstAccount = async (session: Sess): Promise<string | null> => {
     const effectiveNiche = niche === "other" ? (customNiche.trim() || "other") : niche;
     const nicheObj = NICHES.find(n => n.value === niche);
     const personaName = accountName.trim() || (name ? name.split(" ")[0] : nicheObj?.label || "Minha conta");
@@ -244,11 +246,12 @@ export default function Onboarding() {
     const resultPayload = { preferred_market: lang === "pt" ? "BR" : lang === "es" ? "MX" : "US", niche: effectiveNiche, industry: effectiveNiche, biz_description: accountDesc, name: personaName };
 
     if (existing?.length) {
+      const firstId = (existing[0] as { id: string }).id;
       await supabase.from("personas").update({
         name: personaName,
         result: resultPayload,
-      } as never).eq("id", (existing[0] as any).id);
-      return (existing[0] as any).id as string;
+      } as never).eq("id", firstId);
+      return firstId;
     }
 
     // 2. Insert new persona
@@ -260,7 +263,7 @@ export default function Onboarding() {
 
     
     if (!insertError && inserted?.length) {
-      const newPersonaId = (inserted[0] as any).id as string;
+      const newPersonaId = (inserted[0] as { id: string }).id;
 
       // Fire welcome email
       supabase.functions.invoke("send-welcome-email", {
@@ -276,7 +279,7 @@ export default function Onboarding() {
     const { data: retry, error: retryErr } = await supabase.from("personas")
       .select("id").eq("user_id", session.user.id).limit(1);
     
-    return retry?.length ? (retry[0] as any).id as string : null;
+    return retry?.length ? (retry[0] as { id: string }).id : null;
   };
 
   const handleConnect = async (platform: "meta") => { // google disabled
@@ -294,9 +297,8 @@ export default function Onboarding() {
       });
       if (data?.url) window.location.href = data.url;
       else throw new Error("No URL");
-    } catch (err: any) {
-      
-      toast.error("Something went wrong: " + (err?.message || "unknown"));
+    } catch (err) {
+      toast.error("Something went wrong: " + (err instanceof Error ? err.message : "unknown"));
       setConnecting(null);
     }
   };
@@ -508,7 +510,7 @@ export default function Onboarding() {
                 </div>
 
                 <div style={{ display: "flex", gap: 10 }}>
-                  <button onClick={() => navigate(-1 as any)}
+                  <button onClick={() => navigate(-1)}
                     style={{ padding: "14px 20px", borderRadius: 14, background: "none", border: "1.5px solid rgba(255,255,255,0.10)", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 13, fontFamily: F, fontWeight: 500, transition: "all 0.15s", flexShrink: 0 }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.2)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}>

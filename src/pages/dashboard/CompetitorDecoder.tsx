@@ -20,6 +20,12 @@ interface Result {
   steal_this: string;
   hooks: string[];
   mismatch_detected?: boolean; mismatch_reason?: string;
+  // Edge function emits these on URL/text input that's unusable for analysis;
+  // Result becomes a thin "we couldn't analyze this" payload instead of a
+  // full breakdown.
+  _urlError?: boolean;
+  _message?: string;
+  hook_type?: string;
 }
 
 const L: Record<string, Record<string, string>> = {
@@ -139,7 +145,8 @@ function Section({ label, content, onCopy, copied }: { label: string; content: s
 }
 
 export default function CompetitorDecoder() {
-  const { selectedPersona, user, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: any }>();
+  type AiProfile = { industry?: string | null; pain_point?: string | null; avg_hook_score?: number | null; creative_style?: string | null } | null;
+  const { selectedPersona, user, aiProfile } = useOutletContext<DashboardContext & { aiProfile?: AiProfile }>();
   const { language } = useLanguage();
   const lang = (["pt","es","en"].includes(language) ? language : "pt") as "pt"|"es"|"en";
   const t = L[lang];
@@ -175,8 +182,9 @@ export default function CompetitorDecoder() {
     const brand = searchParams.get("brand");
     if (brand) return; // don't override navigation param
     const p = selectedPersona;
-    const mkt = (p.preferred_market || (p as any)?.result?.preferred_market || "").toUpperCase();
-    const industry = p.industry || (p as any)?.result?.industry || aiProfile?.industry || "";
+    const personaResult = (p.result as { preferred_market?: string; industry?: string } | undefined) || undefined;
+    const mkt = (p.preferred_market || personaResult?.preferred_market || "").toUpperCase();
+    const industry = p.industry || personaResult?.industry || aiProfile?.industry || "";
     if (mkt || industry) {
       const ctx = [
         industry ? `Nicho: ${industry}` : "",
@@ -213,7 +221,7 @@ export default function CompetitorDecoder() {
       if (error || !data?.transcript) throw new Error(data?.message || "transcription failed");
       setTranscript(data.transcript);
       toast.success(lang === "pt" ? "Transcrição pronta!" : lang === "es" ? "¡Transcripción lista!" : "Transcript ready!");
-    } catch (e: any) {
+    } catch {
       toast.error(lang === "pt" ? "Transcrição falhou — cole o texto manualmente" : "Transcription failed — paste the text manually");
       setTab("text");
     } finally { setTranscribing(false); }
@@ -226,9 +234,11 @@ export default function CompetitorDecoder() {
     }
     setLoading(true); setResult(null);
     try {
+      const selResult = (selectedPersona?.result as { industry?: string } | undefined) || undefined;
+      const selIndustry = selectedPersona?.industry || selResult?.industry;
       const personaCtx = selectedPersona ? [
         `Account: ${selectedPersona.name}.`,
-        selectedPersona.industry || (selectedPersona as any)?.result?.industry ? `Industry: ${selectedPersona.industry || (selectedPersona as any)?.result?.industry}.` : "",
+        selIndustry ? `Industry: ${selIndustry}.` : "",
         selectedPersona.preferred_market ? `Market: ${selectedPersona.preferred_market}.` : "",
         selectedPersona.pains?.length ? `Target pains: ${selectedPersona.pains.slice(0,2).join(", ")}.` : "",
       ].filter(Boolean).join(" ") : undefined;
@@ -236,7 +246,7 @@ export default function CompetitorDecoder() {
         body: { ad_text: inputText, observation: observation.trim() || undefined, persona_context: personaCtx, ui_language: lang },
       });
       if (error) throw error;
-      if (data?.error_type) { setResult({ _urlError: true, _message: data.message } as any); return; }
+      if (data?.error_type) { setResult({ _urlError: true, _message: data.message } as Result); return; }
       setResult(data);
       // Capture learning — fire and forget
       if (data?.industry && user?.id) {
@@ -268,7 +278,7 @@ export default function CompetitorDecoder() {
       {/* Tabs */}
       <div style={{ display: "flex", gap: 4, marginBottom: 14, padding: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, width: "fit-content" }}>
         {(["video","text","brand"] as const).map(tp => (
-          <button key={tp} onClick={() => { setTab(tp as any); setResult(null); }}
+          <button key={tp} onClick={() => { setTab(tp); setResult(null); }}
             style={{ padding: "7px 16px", borderRadius: 7, border: "none", cursor: "pointer", ...M, fontSize: 12, fontWeight: 600, transition: "all 0.15s",
               background: tab === tp ? "rgba(255,255,255,0.10)" : "transparent",
               color: tab === tp ? "#eef0f6" : "rgba(238,240,246,0.40)" }}>
@@ -401,9 +411,9 @@ ${t.link_placeholder}`} rows={5}
       {/* Result */}
       {result && (
         <div>
-          {(result as any)._urlError ? (
+          {result._urlError ? (
             <div style={{ padding: "18px", borderRadius: 12, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.18)" }}>
-              <p style={{ ...M, fontSize: 13, color: "rgba(238,240,246,0.75)", lineHeight: 1.7, margin: "0 0 14px" }}>{(result as any)._message}</p>
+              <p style={{ ...M, fontSize: 13, color: "rgba(238,240,246,0.75)", lineHeight: 1.7, margin: "0 0 14px" }}>{result._message}</p>
               <button onClick={() => { setTab("text"); setAdText(tab === "video" ? "" : adText); setResult(null); }}
                 style={{ ...M, fontSize: 12, fontWeight: 600, color: "#f0f9ff", background: "#0284c7", border: "1px solid #0ea5e9", padding: "7px 14px", borderRadius: 7, cursor: "pointer" }}>
                 {lang === "pt" ? "Cole o texto manualmente" : lang === "es" ? "Pega el texto manualmente" : "Paste text manually"}
