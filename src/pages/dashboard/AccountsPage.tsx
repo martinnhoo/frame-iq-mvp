@@ -231,32 +231,51 @@ const withTimeout = async <T,>(promise: PromiseLike<T>, ms = 10000): Promise<T> 
  * Shared by GoalSection and MarginSection so both can reliably save data.
  * Returns { v2Id, metaAccountId } or null if no Meta connection.
  */
+/** Connection row returned by meta-oauth get_connections.
+ *  Local declaration since the edge fn JSON isn't part of the
+ *  generated supabase types. */
+interface ConnRow {
+  platform: string;
+  persona_id: string;
+  status: string;
+  selected_account_id?: string | null;
+  ad_accounts?: Array<{ id: string; name?: string; currency?: string }>;
+  // Index signature lets call sites read free-form fields the edge fn
+  // sometimes attaches (token_expires_at, last_synced, etc.) without
+  // having to widen ConnRow every time.
+  [k: string]: unknown;
+}
+
 async function resolveV2Account(userId: string, personaId: string): Promise<{ v2Id: string; metaAccountId: string } | null> {
   const { data: connRes } = await supabase.functions.invoke("meta-oauth", {
     body: { action: "get_connections", user_id: userId }
   });
-  const conns = (connRes?.connections || []) as any[];
-  const metaConn = conns.find((c: any) => c.platform === "meta" && c.persona_id === personaId && c.status === "active");
+  const conns: ConnRow[] = (connRes?.connections || []) as ConnRow[];
+  const metaConn = conns.find((c) => c.platform === "meta" && c.persona_id === personaId && c.status === "active");
   if (!metaConn) return null;
 
-  const ads = (metaConn.ad_accounts || []) as any[];
+  const ads = metaConn.ad_accounts || [];
   const selId = localStorage.getItem(`meta_sel_${personaId}`) || metaConn.selected_account_id || ads[0]?.id;
   if (!selId) return null;
 
   // Try to find existing v2 row
-  const { data: existing } = await (supabase
-    .from('ad_accounts' as any)
+  const { data: existing } = await supabase
+    .from('ad_accounts')
     .select('id')
     .eq('user_id', userId)
     .eq('meta_account_id', selId)
-    .maybeSingle() as any);
+    .maybeSingle();
 
   if (existing?.id) return { v2Id: existing.id, metaAccountId: selId };
 
-  // Auto-create v2 row (same logic as useActiveAccount.ensureV2Account)
-  const selMeta = ads.find((a: any) => a.id === selId) || ads[0];
-  const { data: created, error: insertErr } = await (supabase
-    .from('ad_accounts' as any)
+  // Auto-create v2 row (same logic as useActiveAccount.ensureV2Account).
+  // ad_accounts has a few columns (currency, timezone, total_*) that aren't
+  // in the generated insert types yet — cast the client to skip the strict
+  // shape check while keeping the local row narrowed.
+  const selMeta = ads.find((a) => a.id === selId) || ads[0];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: created, error: insertErr } = await (supabase as any)
+    .from('ad_accounts')
     .insert({
       user_id: userId,
       meta_account_id: selId,
@@ -268,17 +287,17 @@ async function resolveV2Account(userId: string, personaId: string): Promise<{ v2
       total_spend_30d: 0,
     })
     .select('id')
-    .single() as any);
+    .single() as { data: { id: string } | null; error: { code?: string } | null };
 
   if (insertErr) {
     // Unique constraint race — row may exist now
     if (insertErr.code === '23505') {
-      const { data: retry } = await (supabase
-        .from('ad_accounts' as any)
+      const { data: retry } = await supabase
+        .from('ad_accounts')
         .select('id')
         .eq('user_id', userId)
         .eq('meta_account_id', selId)
-        .maybeSingle() as any);
+        .maybeSingle();
       if (retry?.id) return { v2Id: retry.id, metaAccountId: selId };
     }
     console.error('[resolveV2Account] insert error:', insertErr);
@@ -310,7 +329,7 @@ function PlatformRow({ p, userId, accountId, t }: {
   p: typeof PLATFORMS[0]; userId:string; accountId:string; t: TStrings;
 }) {
   const { language: lang } = useLanguage();
-  const [conn, setConn]           = useState<any>(null);
+  const [conn, setConn]           = useState<ConnRow | null>(null);
   const [loading, setLoading]     = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [connecting, setConn2]    = useState(false);
@@ -328,8 +347,8 @@ function PlatformRow({ p, userId, accountId, t }: {
         body: { action: "get_connections", user_id: userId }
       });
       if (fnErr) throw fnErr;
-      const all = (res?.connections || []) as any[];
-      const match = all.find((c: any) => c.platform === p.id && c.persona_id === accountId) || null;
+      const all: ConnRow[] = (res?.connections || []) as ConnRow[];
+      const match = all.find((c) => c.platform === p.id && c.persona_id === accountId) || null;
       setConn(match);
     } catch (e) {
       console.error("[AdBrief] platform row load error:", String(e));
@@ -355,9 +374,10 @@ function PlatformRow({ p, userId, accountId, t }: {
       } else {
         toast.error("Não foi possível iniciar conexão — tente novamente");
       }
-    } catch (e:any) {
+    } catch (e) {
       console.error("[AdBrief] connect:", e);
-      toast.error("Erro ao conectar: " + (e?.message?.slice(0,80) || "tente novamente"));
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error("Erro ao conectar: " + (msg.slice(0,80) || "tente novamente"));
       setConn2(false);
     }
   };
@@ -366,12 +386,13 @@ function PlatformRow({ p, userId, accountId, t }: {
     if (!confirm(t.disconnect + " " + p.label + "?")) return;
     setDisc(true);
     try {
-      const { error } = await supabase.from("platform_connections" as any).delete()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from("platform_connections").delete()
         .eq("user_id", userId).eq("platform", p.id).eq("persona_id", accountId);
       if (error) throw error;
       toast.success(p.label + " desconectado");
       setConn(null); setExpanded(false);
-    } catch (e:any) {
+    } catch (e) {
       console.error("[AdBrief] disconnect:", e);
       toast.error("Erro ao desconectar — tente novamente");
     }
@@ -380,13 +401,14 @@ function PlatformRow({ p, userId, accountId, t }: {
 
   const selectAcc = async (id: string) => {
     // Update DB
-    await supabase.from("platform_connections" as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("platform_connections")
       .update({ selected_account_id: id })
       .eq("user_id", userId).eq("persona_id", accountId).eq("platform", p.id);
     // Persist locally so UI remembers after page reload
     localStorage.setItem(`meta_sel_${accountId}`, id);
     // Update local state immediately
-    setConn((prev: any) => prev ? { ...prev, selected_account_id: id } : prev);
+    setConn((prev) => prev ? { ...prev, selected_account_id: id } : prev);
     // Notify LivePanel and AI to reload with new account
     window.dispatchEvent(new CustomEvent("meta-account-changed", { detail: { personaId: accountId, accountId: id } }));
   };
@@ -420,25 +442,27 @@ function PlatformRow({ p, userId, accountId, t }: {
         else toast.error(vd?.message || t.invalid_id);
         return;
       }
-      const accs: any[] = conn?.ad_accounts || [];
-      const newAcc = { id, name: vd.name || `Account ${id}`, currency: vd.currency };
-      const updated = accs.find((a:any) => a.id === id)
-        ? accs.map((a:any) => a.id === id ? newAcc : a)
+      type AdAccount = { id: string; name?: string; currency?: string };
+      const accs: AdAccount[] = conn?.ad_accounts || [];
+      const newAcc: AdAccount = { id, name: vd.name || `Account ${id}`, currency: vd.currency };
+      const updated = accs.find((a) => a.id === id)
+        ? accs.map((a) => a.id === id ? newAcc : a)
         : [...accs, newAcc];
-      const { error: updateErr } = await supabase.from("platform_connections" as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateErr } = await (supabase as any).from("platform_connections")
         .update({ ad_accounts:updated, selected_account_id:id })
         .eq("user_id",userId).eq("persona_id",accountId).eq("platform",p.id);
       if (updateErr) { toast.error("Erro ao salvar conta"); return; }
       toast.success(` ${newAcc.name}${vd.currency ? " · " + vd.currency : ""}`);
       setCustId(""); setExpanded(false); load();
-    } catch (e:any) {
+    } catch (e) {
       console.error("[AdBrief] verifyGoogle:", e);
-      toast.error("Erro inesperado: " + (e?.message || "tente novamente"));
+      toast.error("Erro inesperado: " + (e instanceof Error ? e.message : "tente novamente"));
     }
     finally { setVerifying(false); }
   };
 
-  const ads: any[] = conn?.ad_accounts || [];
+  const ads: Array<{ id: string; name?: string; currency?: string }> = conn?.ad_accounts || [];
   // Read from localStorage first (persisted selection), then DB field, then first account
   const selId = localStorage.getItem(`meta_sel_${accountId}`) || conn?.selected_account_id || ads[0]?.id;
   const selAcc = ads.find(a => a.id === selId) || ads[0];
@@ -545,7 +569,7 @@ function PlatformRow({ p, userId, accountId, t }: {
                 {lang==="pt"?"Conta de anúncios ativa":lang==="es"?"Cuenta de anuncios activa":"Active ad account"}
               </p>
               <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                {ads.map((acc: any) => {
+                {ads.map((acc) => {
                   const isActive = acc.id === selId;
                   return (
                     <button key={acc.id} onClick={() => selectAcc(acc.id)}
@@ -604,7 +628,7 @@ function PlatformRow({ p, userId, accountId, t }: {
                   id="google-ads-customer-id"
                   name="googleAdsCustomerId"
                   style={{ ...iStyle, flex:1, padding:"9px 12px", fontSize:13, borderRadius:10 }}
-                  onFocus={focusOn as any} onBlur={focusOff as any}
+                  onFocus={focusOn} onBlur={focusOff}
                   onKeyDown={e=>{ if(e.key==="Enter") verifyGoogle(); }}
                 />
                 <button onClick={verifyGoogle} disabled={verifying || !custId.trim()}
@@ -700,9 +724,11 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
         if (!resolved) { setLoading(false); return; }
         setV2Id(resolved.v2Id);
         // Now load the actual data
-        const { data: row } = await (supabase.from('ad_accounts' as any)
+        type MarginRow = { id: string; profit_margin_pct: number | null; goal_objective: string | null };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: row } = await ((supabase as any).from('ad_accounts')
           .select('id, profit_margin_pct, goal_objective')
-          .eq('id', resolved.v2Id).maybeSingle() as any);
+          .eq('id', resolved.v2Id).maybeSingle() as Promise<{ data: MarginRow | null }>);
         if (row) {
           setMargin(row.profit_margin_pct);
           setGoalObj(row.goal_objective);
@@ -737,15 +763,16 @@ function MarginSection({ userId, personaId }: { userId: string; personaId: strin
     if (!v2Id) { toast.error('Conecte o Meta Ads primeiro — a IA precisa dos dados.'); return; }
     setSaving(true);
     try {
-      const { error: updateErr } = await (supabase.from('ad_accounts' as any).update({ profit_margin_pct: calculatedMargin }).eq('id', v2Id) as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateErr } = await ((supabase as any).from('ad_accounts').update({ profit_margin_pct: calculatedMargin }).eq('id', v2Id) as Promise<{ error: { message?: string } | null }>);
       if (updateErr) throw updateErr;
       setMargin(calculatedMargin);
       setEditing(false);
       setMode(null);
       toast.success('Margem salva — a IA já está usando');
-    } catch (e: any) {
+    } catch (e) {
       console.error('[MarginSection] save error:', e);
-      toast.error('Erro ao salvar: ' + (e?.message || 'tente novamente'));
+      toast.error('Erro ao salvar: ' + (e instanceof Error ? e.message : 'tente novamente'));
     }
     finally { setSaving(false); }
   };
@@ -1048,11 +1075,20 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
       setV2AccountId(resolved.v2Id);
 
       // 2. Load goal data from v2 row
-      const { data: accRow } = await (supabase
-        .from('ad_accounts' as any)
+      type GoalRow = {
+        id: string;
+        goal_objective: string | null;
+        goal_primary_metric: string | null;
+        goal_conversion_event: string | null;
+        goal_target_value: number | null;
+        goal_configured_at: string | null;
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: accRow } = await ((supabase as any)
+        .from('ad_accounts')
         .select('id, goal_objective, goal_primary_metric, goal_conversion_event, goal_target_value, goal_configured_at')
         .eq('id', resolved.v2Id)
-        .maybeSingle() as any);
+        .maybeSingle() as Promise<{ data: GoalRow | null }>);
 
       if (accRow) {
         setGoalData(accRow.goal_objective ? accRow : null);
@@ -1098,22 +1134,23 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
     }
 
     try {
-      const { error: updateErr } = await (supabase.from('ad_accounts' as any).update({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateErr } = await ((supabase as any).from('ad_accounts').update({
         goal_objective: editObj,
         goal_primary_metric: obj.metric,
         goal_conversion_event: editEvent,
         goal_target_value: targetCentavos > 0 ? targetCentavos : null,
         goal_configured_at: new Date().toISOString(),
-      }).eq('id', v2AccountId) as any);
+      }).eq('id', v2AccountId) as Promise<{ error: { message?: string } | null }>);
 
       if (updateErr) throw updateErr;
 
       toast.success('A IA agora sabe o que otimizar');
       setEditing(false);
       loadGoal();
-    } catch (e: any) {
+    } catch (e) {
       console.error('[GoalSection] save error:', e);
-      toast.error('Erro ao salvar: ' + (e?.message || 'tente novamente'));
+      toast.error('Erro ao salvar: ' + (e instanceof Error ? e.message : 'tente novamente'));
     } finally {
       setSaving(false);
     }
@@ -1318,8 +1355,17 @@ function GoalSection({ userId, personaId }: { userId: string; personaId: string 
 }
 
 // ── Account form (inline) ─────────────────────────────────────────────────────
+/** Persona row used by the account form. Captures only the columns the
+ *  form reads/writes so we don't have to keep the full DB shape in sync. */
+interface AccountFormPersona {
+  id?: string;
+  name?: string | null;
+  website?: string | null;
+  description?: string | null;
+  logo_url?: string | null;
+}
 function AccountForm({ account, userId, t, onSave, onCancel }: {
-  account?: any; userId:string; t: TStrings;
+  account?: AccountFormPersona; userId:string; t: TStrings;
   onSave:()=>void; onCancel:()=>void;
 }) {
   const [name, setName]         = useState(account?.name || "");
@@ -1347,8 +1393,8 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
         window.dispatchEvent(new CustomEvent('persona-updated'));
         toast.success("Logo salvo");
       }
-    } catch (e: any) {
-      toast.error("Upload falhou: " + (e?.message || "tente novamente"));
+    } catch (e) {
+      toast.error("Upload falhou: " + (e instanceof Error ? e.message : "tente novamente"));
     }
     finally { setUp(false); }
   };
@@ -1417,7 +1463,7 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
           </label>
           <input value={name} onChange={e=>setName(e.target.value)}
             placeholder={t.name_ph} autoFocus style={iStyle}
-            onFocus={focusOn as any} onBlur={focusOff as any}/>
+            onFocus={focusOn} onBlur={focusOff}/>
           {logo && (
             <button onClick={()=>setLogo("")}
               style={{ marginTop:6, fontFamily:F, fontSize:11, color:"#F87171",
@@ -1442,7 +1488,7 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
           <input value={website} onChange={e=>setWebsite(e.target.value)}
             placeholder={t.website_ph}
             style={{ ...iStyle, paddingLeft:36 }}
-            onFocus={focusOn as any} onBlur={focusOff as any}/>
+            onFocus={focusOn} onBlur={focusOff}/>
         </div>
       </div>
 
@@ -1456,7 +1502,7 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
         <textarea value={desc} onChange={e=>setDesc(e.target.value)}
           placeholder={t.desc_ph} rows={4}
           style={{ ...iStyle, resize:"none", lineHeight:1.65 }}
-          onFocus={focusOn as any} onBlur={focusOff as any}/>
+          onFocus={focusOn} onBlur={focusOff}/>
         <p style={{ fontFamily:F, fontSize:12, color:T3, margin:"6px 0 0" }}>{t.desc_hint}</p>
       </div>
 
@@ -1493,7 +1539,18 @@ export default function AccountsPage() {
   const t = T[(language as Lang)] || T.pt;
   const [searchParams] = useSearchParams();
 
-  const [accounts, setAccounts]   = useState<any[]>([]);
+  /** Persona row shape used by the accounts list (subset of the personas
+   *  table). Mirrors the columns this page reads. */
+  type AccountRow = {
+    id: string;
+    user_id: string;
+    name: string | null;
+    logo_url: string | null;
+    website: string | null;
+    description: string | null;
+    created_at: string;
+  };
+  const [accounts, setAccounts]   = useState<AccountRow[]>([]);
   const [loading, setLoading]     = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [openId, setOpenId]       = useState<string | null>(null);     // which account card is expanded
@@ -1526,7 +1583,7 @@ export default function AccountsPage() {
 
       if (error) throw error;
 
-      const list = (data || []) as any[];
+      const list: AccountRow[] = (data || []) as AccountRow[];
       setAccounts(list);
       setOpenId(prev => prev || list[0]?.id || null);
     } catch (e) {
@@ -1555,8 +1612,12 @@ export default function AccountsPage() {
     }
   }, []);
 
-  const activate = (acc: any) => {
-    setSelectedPersona({ ...acc } as any);
+  const activate = (acc: AccountRow) => {
+    // ActivePersona has many required fields the AccountRow doesn't carry
+    // (headline, age, bio, etc.) — this on-the-fly activation only fills
+    // the identity fields, the rest defaults to empty per ActivePersona's
+    // shape. Cast through unknown to skip the strict required-field check.
+    setSelectedPersona({ ...acc } as unknown as Parameters<typeof setSelectedPersona>[0]);
     window.dispatchEvent(new CustomEvent('persona-updated'));
     toast.success("IA ativada para " + acc.name);
   };

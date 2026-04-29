@@ -54,6 +54,26 @@ interface Ad {
 type TargetType = 'campaign' | 'adset' | 'ad';
 type ActionKind = 'pause' | 'activate';
 
+/** Loose shape of edge-function payloads consumed by this page. The
+ *  meta-actions / analyze-action / feedback-comment functions all share
+ *  the convention of attaching `error` on failure and one of campaigns/
+ *  adsets/ads on success. Declared once so each call site can `as`-cast
+ *  to it instead of `data as any`. */
+interface MetaActionPayload {
+  error?: string | { message?: string };
+  campaigns?: Campaign[];
+  adsets?: Array<{ id: string; name: string; campaign_id: string; status: string; effective_status?: string; daily_budget?: number | null; lifetime_budget?: number | null }>;
+  ads?: Array<{ id: string; name: string; adset_id: string; campaign_id?: string; status: string; effective_status?: string }>;
+  comment?: string;
+  new_id?: string;
+  // Diagnostic / preview fields used by the analyze step
+  predicted_outcome?: string;
+  expected_lift?: string;
+  confidence?: number;
+  warnings?: string[];
+  [k: string]: unknown;
+}
+
 interface ActionFeedback {
   // Keyed by target_id
   inflight?: boolean;        // action being executed
@@ -609,14 +629,16 @@ export default function CampaignsManager() {
           body: { user_id: userId, persona_id: personaId, account_id: accountId, action: 'list_campaigns' },
         });
         if (cancelled) return;
-        if (fnErr || !data || (data as any).error) {
-          setError((data as any)?.error || fnErr?.message || 'Falha ao carregar campanhas');
+        const payload = data as MetaActionPayload | null;
+        if (fnErr || !payload || payload.error) {
+          const msg = typeof payload?.error === 'string' ? payload.error : payload?.error?.message;
+          setError(msg || fnErr?.message || 'Falha ao carregar campanhas');
           setCampaigns([]);
         } else {
-          setCampaigns(((data as any).campaigns || []) as Campaign[]);
+          setCampaigns(payload.campaigns || []);
         }
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Erro desconhecido');
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Erro desconhecido');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -661,24 +683,26 @@ export default function CampaignsManager() {
         // Meta returns status 200 with { error: {...} } on auth/rate-limit
         // problems — surface that here so "conjuntos não aparecem" gives
         // a real error message instead of a silently empty list.
-        if (fnErr || !data || (data as any).error) {
-          const msg = (data as any)?.error?.message
-            || (data as any)?.error
+        const payload = data as MetaActionPayload | null;
+        if (fnErr || !payload || payload.error) {
+          const errVal = payload?.error;
+          const msg = (typeof errVal === 'object' && errVal?.message) || (typeof errVal === 'string' ? errVal : null)
             || fnErr?.message
             || 'Falha ao carregar conjuntos';
           console.warn('[CampaignsManager] list_adsets failed:', msg);
           setAdsetErrors(prev => ({ ...prev, [campaignId]: String(msg) }));
           setAdsetsByCampaign(prev => ({ ...prev, [campaignId]: [] }));
         } else {
-          const list: AdSet[] = (((data as any).adsets) || []).map((a: any) => ({
+          const list: AdSet[] = (payload.adsets || []).map((a) => ({
             ...a, campaign_id: campaignId,
           }));
           setAdsetsByCampaign(prev => ({ ...prev, [campaignId]: list }));
           setAdsetErrors(prev => { const n = { ...prev }; delete n[campaignId]; return n; });
         }
-      } catch (e: any) {
-        console.warn('[CampaignsManager] list_adsets threw:', e?.message);
-        setAdsetErrors(prev => ({ ...prev, [campaignId]: e?.message || 'Erro de conexão' }));
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Erro de conexão';
+        console.warn('[CampaignsManager] list_adsets threw:', msg);
+        setAdsetErrors(prev => ({ ...prev, [campaignId]: msg }));
         setAdsetsByCampaign(prev => ({ ...prev, [campaignId]: [] }));
       } finally {
         setLoadingAdsets(prev => ({ ...prev, [campaignId]: false }));
@@ -716,24 +740,26 @@ export default function CampaignsManager() {
         const { data, error: fnErr } = await supabase.functions.invoke('meta-actions', {
           body: { user_id: userId, persona_id: personaId, account_id: accountId, action: 'list_ads', target_id: adsetId },
         });
-        if (fnErr || !data || (data as any).error) {
-          const msg = (data as any)?.error?.message
-            || (data as any)?.error
+        const payload = data as MetaActionPayload | null;
+        if (fnErr || !payload || payload.error) {
+          const errVal = payload?.error;
+          const msg = (typeof errVal === 'object' && errVal?.message) || (typeof errVal === 'string' ? errVal : null)
             || fnErr?.message
             || 'Falha ao carregar anúncios';
           console.warn('[CampaignsManager] list_ads failed:', msg);
           setAdErrors(prev => ({ ...prev, [adsetId]: String(msg) }));
           setAdsByAdset(prev => ({ ...prev, [adsetId]: [] }));
         } else {
-          const list: Ad[] = (((data as any).ads) || []).map((a: any) => ({
+          const list: Ad[] = (payload.ads || []).map((a) => ({
             ...a, adset_id: adsetId, campaign_id: campaignId,
           }));
           setAdsByAdset(prev => ({ ...prev, [adsetId]: list }));
           setAdErrors(prev => { const n = { ...prev }; delete n[adsetId]; return n; });
         }
-      } catch (e: any) {
-        console.warn('[CampaignsManager] list_ads threw:', e?.message);
-        setAdErrors(prev => ({ ...prev, [adsetId]: e?.message || 'Erro de conexão' }));
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Erro de conexão';
+        console.warn('[CampaignsManager] list_ads threw:', msg);
+        setAdErrors(prev => ({ ...prev, [adsetId]: msg }));
         setAdsByAdset(prev => ({ ...prev, [adsetId]: [] }));
       } finally {
         setLoadingAds(prev => ({ ...prev, [adsetId]: false }));
@@ -792,15 +818,26 @@ export default function CampaignsManager() {
           proposed_budget_cents: proposedBudgetCents,
         },
       });
-      if (fnErr || !data || (data as any).error) {
-        const msg = (data as any)?.error || fnErr?.message || 'Falha ao analisar ação';
+      type PreviewActionResponse = {
+        error?: string | { message?: string };
+        verdict?: PreviewData['verdict'];
+        verdict_label?: PreviewData['verdict_label'];
+        headline?: PreviewData['headline'];
+        reasoning?: PreviewData['reasoning'];
+        alternatives?: PreviewData['alternatives'];
+        context?: PreviewData['context'];
+        target_cpa_cents?: PreviewData['target_cpa_cents'];
+      };
+      const d = data as PreviewActionResponse | null;
+      if (fnErr || !d || d.error) {
+        const errVal = d?.error;
+        const msg = (typeof errVal === 'object' && errVal?.message) || (typeof errVal === 'string' ? errVal : null) || fnErr?.message || 'Falha ao analisar ação';
         setPreviews(prev => ({
           ...prev,
           [targetId]: { ...(prev[targetId] || {}), loading: false, error: String(msg) } as PreviewData,
         }));
         return;
       }
-      const d = data as any;
       setPreviews(prev => ({
         ...prev,
         [targetId]: {
@@ -816,10 +853,10 @@ export default function CampaignsManager() {
           target_cpa_cents: d.target_cpa_cents ?? null,
         } as PreviewData,
       }));
-    } catch (e: any) {
+    } catch (e) {
       setPreviews(prev => ({
         ...prev,
-        [targetId]: { ...(prev[targetId] || {}), loading: false, error: e?.message || 'Erro de conexão' } as PreviewData,
+        [targetId]: { ...(prev[targetId] || {}), loading: false, error: e instanceof Error ? e.message : 'Erro de conexão' } as PreviewData,
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -881,9 +918,11 @@ export default function CampaignsManager() {
           ai_reasoning: aiReasoning,
         },
       });
-      if (actionErr || !actionData || (actionData as any).error) {
-        const msg = (actionData as any)?.error || actionErr?.message || 'Falha na ação.';
-        setFeedback(prev => ({ ...prev, [targetId]: { error: msg, timestamp: Date.now() } }));
+      const actionPayload = actionData as MetaActionPayload | null;
+      if (actionErr || !actionPayload || actionPayload.error) {
+        const errVal = actionPayload?.error;
+        const msg = (typeof errVal === 'object' && errVal?.message) || (typeof errVal === 'string' ? errVal : null) || actionErr?.message || 'Falha na ação.';
+        setFeedback(prev => ({ ...prev, [targetId]: { error: String(msg), timestamp: Date.now() } }));
         return;
       }
 
@@ -922,7 +961,8 @@ export default function CampaignsManager() {
         },
       });
 
-      if (aiErr || !aiData || (aiData as any).error) {
+      const aiPayload = aiData as MetaActionPayload | null;
+      if (aiErr || !aiPayload || aiPayload.error) {
         // Action succeeded but analysis failed — show a minimal confirmation
         const label = targetType === 'campaign' ? 'Campanha' : targetType === 'adset' ? 'Conjunto' : 'Anúncio';
         setFeedback(prev => ({
@@ -935,10 +975,10 @@ export default function CampaignsManager() {
         return;
       }
 
-      const comment = (aiData as any).comment || 'Ação executada.';
+      const comment = aiPayload.comment || 'Ação executada.';
       setFeedback(prev => ({ ...prev, [targetId]: { comment, timestamp: Date.now() } }));
-    } catch (e: any) {
-      setFeedback(prev => ({ ...prev, [targetId]: { error: e?.message || 'Erro inesperado', timestamp: Date.now() } }));
+    } catch (e) {
+      setFeedback(prev => ({ ...prev, [targetId]: { error: e instanceof Error ? e.message : 'Erro inesperado', timestamp: Date.now() } }));
     }
   }, [userId, personaId]);
 
@@ -980,9 +1020,11 @@ export default function CampaignsManager() {
           ai_reasoning: aiReasoning,
         },
       });
-      if (actionErr || !actionData || (actionData as any).error) {
-        const msg = (actionData as any)?.error || actionErr?.message || 'Falha na ação.';
-        setFeedback(prev => ({ ...prev, [targetId]: { error: msg, timestamp: Date.now() } }));
+      const actionPayload = actionData as MetaActionPayload | null;
+      if (actionErr || !actionPayload || actionPayload.error) {
+        const errVal = actionPayload?.error;
+        const msg = (typeof errVal === 'object' && errVal?.message) || (typeof errVal === 'string' ? errVal : null) || actionErr?.message || 'Falha na ação.';
+        setFeedback(prev => ({ ...prev, [targetId]: { error: String(msg), timestamp: Date.now() } }));
         return;
       }
 
@@ -1012,7 +1054,8 @@ export default function CampaignsManager() {
         },
       });
 
-      if (aiErr || !aiData || (aiData as any).error) {
+      const aiPayload = aiData as MetaActionPayload | null;
+      if (aiErr || !aiPayload || aiPayload.error) {
         setFeedback(prev => ({
           ...prev,
           [targetId]: {
@@ -1022,9 +1065,9 @@ export default function CampaignsManager() {
         }));
         return;
       }
-      setFeedback(prev => ({ ...prev, [targetId]: { comment: (aiData as any).comment, timestamp: Date.now() } }));
-    } catch (e: any) {
-      setFeedback(prev => ({ ...prev, [targetId]: { error: e?.message || 'Erro inesperado', timestamp: Date.now() } }));
+      setFeedback(prev => ({ ...prev, [targetId]: { comment: aiPayload.comment, timestamp: Date.now() } }));
+    } catch (e) {
+      setFeedback(prev => ({ ...prev, [targetId]: { error: e instanceof Error ? e.message : 'Erro inesperado', timestamp: Date.now() } }));
     }
   }, [userId, personaId]);
 
@@ -1051,12 +1094,14 @@ export default function CampaignsManager() {
           ai_reasoning: aiReasoning,
         },
       });
-      if (actionErr || !actionData || (actionData as any).error) {
-        const msg = (actionData as any)?.error || actionErr?.message || 'Falha na ação.';
-        setFeedback(prev => ({ ...prev, [targetId]: { error: msg, timestamp: Date.now() } }));
+      const actionPayload = actionData as MetaActionPayload | null;
+      if (actionErr || !actionPayload || actionPayload.error) {
+        const errVal = actionPayload?.error;
+        const msg = (typeof errVal === 'object' && errVal?.message) || (typeof errVal === 'string' ? errVal : null) || actionErr?.message || 'Falha na ação.';
+        setFeedback(prev => ({ ...prev, [targetId]: { error: String(msg), timestamp: Date.now() } }));
         return;
       }
-      const newId = (actionData as any).new_id;
+      const newId = actionPayload.new_id;
 
       setFeedback(prev => ({ ...prev, [targetId]: { analyzing: true, timestamp: Date.now() } }));
 
@@ -1071,7 +1116,8 @@ export default function CampaignsManager() {
         },
       });
 
-      if (aiErr || !aiData || (aiData as any).error) {
+      const aiPayload = aiData as MetaActionPayload | null;
+      if (aiErr || !aiPayload || aiPayload.error) {
         const label = targetType === 'campaign' ? 'Campanha' : targetType === 'adset' ? 'Conjunto' : 'Anúncio';
         setFeedback(prev => ({
           ...prev,
@@ -1082,9 +1128,9 @@ export default function CampaignsManager() {
         }));
         return;
       }
-      setFeedback(prev => ({ ...prev, [targetId]: { comment: (aiData as any).comment, timestamp: Date.now() } }));
-    } catch (e: any) {
-      setFeedback(prev => ({ ...prev, [targetId]: { error: e?.message || 'Erro inesperado', timestamp: Date.now() } }));
+      setFeedback(prev => ({ ...prev, [targetId]: { comment: aiPayload.comment, timestamp: Date.now() } }));
+    } catch (e) {
+      setFeedback(prev => ({ ...prev, [targetId]: { error: e instanceof Error ? e.message : 'Erro inesperado', timestamp: Date.now() } }));
     }
   }, [userId, personaId]);
 
@@ -1144,13 +1190,13 @@ export default function CampaignsManager() {
         delete next[targetId];
         return next;
       });
-    } catch (e: any) {
+    } catch (e) {
       setPreviews(prev => ({
         ...prev,
         [targetId]: {
           ...(prev[targetId] || {}),
           executing: false,
-          executionError: e?.message || 'Falha ao executar',
+          executionError: e instanceof Error ? e.message : 'Falha ao executar',
         } as PreviewData,
       }));
     }

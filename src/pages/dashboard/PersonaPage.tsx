@@ -19,8 +19,20 @@ const PLATFORMS = [
   { id: "google", label: "Google Ads", color: "#34d399", fn: "google-oauth"  },
 ];
 
+/** Ad account inside a connection row. account_status 1 = active. */
+type AdAccountSummary = { id: string; name?: string; currency?: string; account_status?: number };
+type ConnRow = {
+  platform: string;
+  persona_id?: string;
+  status?: string;
+  selected_account_id?: string | null;
+  ad_accounts?: AdAccountSummary[];
+  [k: string]: unknown;
+};
+type PlatformConnState = { connected: boolean; accounts: AdAccountSummary[]; selectedId: string | null };
+
 function PersonaPlatformConnections({ personaId, userId }: { personaId: string; userId: string }) {
-  const [connections, setConnections] = useState<Record<string, { connected: boolean; accounts: any[]; selectedId: string | null }>>({});
+  const [connections, setConnections] = useState<Record<string, PlatformConnState>>({});
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [changingAccount, setChangingAccount] = useState<string | null>(null);
@@ -34,15 +46,15 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
     const { data: gcRes } = await supabase.functions.invoke("meta-oauth", {
       body: { action: "get_connections", user_id: userId }
     });
-    let data: any[] | null = (gcRes?.connections || []) as any[];
-    const map: Record<string, { connected: boolean; accounts: any[]; selectedId: string | null }> = {};
-    (data || []).forEach((r: any) => {
-      const accounts = (r.ad_accounts as any[]) || [];
+    const rows: ConnRow[] = (gcRes?.connections || []) as ConnRow[];
+    const map: Record<string, PlatformConnState> = {};
+    rows.forEach((r) => {
+      const accounts = r.ad_accounts || [];
       map[r.platform] = {
         connected: true,
         accounts,
         // If no selected_account_id, auto-select first active account
-        selectedId: r.selected_account_id || accounts.find((a: any) => a.account_status === 1)?.id || accounts[0]?.id || null,
+        selectedId: r.selected_account_id || accounts.find((a) => a.account_status === 1)?.id || accounts[0]?.id || null,
       };
     });
     setConnections(map);
@@ -53,7 +65,8 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
 
   const selectAccount = async (platform: string, accountId: string) => {
     setChangingAccount(platform);
-    await supabase.from("platform_connections" as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("platform_connections")
       .update({ selected_account_id: accountId })
       .eq("user_id", userId).eq("platform", platform);
     loadConnections();
@@ -86,7 +99,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
           const connected = !!conn;
           const accounts = conn?.accounts || [];
           const selectedId = conn?.selectedId || accounts[0]?.id;
-          const selectedAcc = accounts.find((a: any) => a.id === selectedId) || accounts[0];
+          const selectedAcc = accounts.find((a) => a.id === selectedId) || accounts[0];
 
           return (
             <div key={p.id} style={{ borderRadius: 10, overflow: "hidden", background: connected ? `${p.color}07` : "rgba(255,255,255,0.02)", border: `1px solid ${connected ? p.color + "22" : "rgba(255,255,255,0.07)"}` }}>
@@ -130,7 +143,7 @@ function PersonaPlatformConnections({ personaId, userId }: { personaId: string; 
                   {expandedPlatform === p.id && (
                     <div style={{ borderTop: `1px solid ${p.color}10`, padding: "6px 12px 10px" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {accounts.map((acc: any) => {
+                        {accounts.map((acc) => {
                           const isSelected = acc.id === selectedId;
                           return (
                             <button key={acc.id} onClick={() => { selectAccount(p.id, acc.id); setExpandedPlatform(null); }}
@@ -253,9 +266,9 @@ interface SavedPersona {
 // ─── Smart Template Suggestions ──────────────────────────────────────────
 // Maps persona attributes to the most relevant template categories & specific templates
 // Ensure a field is always a proper string array regardless of what came from the DB
-const toArr = (v: any): string[] =>
-  Array.isArray(v) ? v.filter((x: any) => typeof x === "string") :
-  typeof v === "string" && v.trim() ? v.split(/[,;]+/).map((s: string) => s.trim()).filter(Boolean) : [];
+const toArr = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") :
+  typeof v === "string" && v.trim() ? v.split(/[,;]+/).map((s) => s.trim()).filter(Boolean) : [];
 
 function getSmartTemplates(persona: PersonaResult, language: string): { template: Template; reason: string }[] {
   const platforms = toArr(persona.best_platforms).map((p: string) => p.toLowerCase());
@@ -336,7 +349,7 @@ function getSmartTemplates(persona: PersonaResult, language: string): { template
 }
 
 function SuggestedTemplates({ persona, dt, language, navigate }: {
-  persona: PersonaResult; dt: (k: any) => string; language: string; navigate: (path: string, opts?: any) => void;
+  persona: PersonaResult; dt: (k: string) => string; language: string; navigate: (path: string, opts?: { state?: Record<string, unknown> }) => void;
 }) {
   const suggestions = useMemo(() => getSmartTemplates(persona, language), [persona, language]);
   if (suggestions.length === 0) return null;
@@ -397,10 +410,13 @@ function PersonaDetailEditable({
   onCopy, copied, onNew, onBack, onSave, dt, language, userId,
 }: {
   result: PersonaResult; activeDetail: SavedPersona | null;
-  globalPersona: any; setGlobalPersona: (p: any) => void;
+  /** Active persona shape — flexible because the global selectedPersona
+   *  spreads in DB columns plus on-the-fly derived fields. */
+  globalPersona: ({ id?: string } & Record<string, unknown>) | null;
+  setGlobalPersona: (p: ({ id?: string } & Record<string, unknown>) | null) => void;
   onCopy: () => void; copied: boolean; onNew: () => void; onBack: () => void;
   onSave: (updated: PersonaResult) => Promise<void>;
-  dt: (key: any) => string;
+  dt: (key: string) => string;
   language: string;
   userId: string;
 }) {
@@ -475,10 +491,12 @@ function PersonaDetailEditable({
         uploaded_at: new Date().toISOString(),
       };
       setBrandKit(newKit);
-      await supabase.from("personas").update({ result: { ...activeDetail.result, brand_kit: newKit } as any }).eq("id", activeDetail.id);
+      // result column is jsonb; the generated update type expects a strict
+      // shape but we add brand_kit which isn't formally declared on it.
+      await supabase.from("personas").update({ result: { ...activeDetail.result, brand_kit: newKit } } as never).eq("id", activeDetail.id);
       toast.success(dt("pe_brand_logo_done"));
-    } catch (e: any) {
-      setKitError(e.message || "Upload failed");
+    } catch (e) {
+      setKitError(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setKitUploading(false);
     }
@@ -487,7 +505,9 @@ function PersonaDetailEditable({
   const handleSave = async () => {
     setSaving(true);
     // Include brand_kit in the saved result
-    const updatedDraft = { ...draft, brand_kit: brandKit } as any;
+    // PersonaResult doesn't formally include brand_kit; cast through never
+    // to skip the strict-field check at the call boundary.
+    const updatedDraft = { ...draft, brand_kit: brandKit } as unknown as PersonaResult;
     await onSave(updatedDraft);
     setEditing(false);
     setSaving(false);
@@ -513,7 +533,7 @@ function PersonaDetailEditable({
               <Check className="h-3.5 w-3.5" /> {dt("pe_active_deactivate")}
             </button>
           ) : activeDetail ? (
-            <button onClick={() => setGlobalPersona({ id: activeDetail.id, ...activeDetail.result } as any)}
+            <button onClick={() => setGlobalPersona({ id: activeDetail.id, ...activeDetail.result })}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.2),rgba(6,182,212,0.2))", border: "1px solid rgba(14,165,233,0.3)", color: "#c4b5fd" }}>
               <Users className="h-3.5 w-3.5" /> {dt("pe_activate")}
@@ -739,7 +759,20 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
   const dt = useDashT(language);
   const [view, setView] = useState<View>("list");
   const [listTab, setListTab] = useState<"personas" | "companies">("personas");
-  const [companies, setCompanies] = useState<any[]>([]);
+  /** Company row read from the off-schema `companies` table. Captures the
+   *  columns this page reads/edits. */
+  type CompanyRow = {
+    id: string;
+    name: string;
+    industry: string | null;
+    website: string | null;
+    description: string | null;
+    instagram: string | null;
+    facebook: string | null;
+    tiktok: string | null;
+    created_at: string;
+  };
+  const [companies, setCompanies] = useState<CompanyRow[]>([]);
   const [showCompanyForm, setShowCompanyForm] = useState(false);
   const [companyForm, setCompanyForm] = useState({ name: "", industry: "", website: "", description: "", instagram: "", facebook: "", tiktok: "" });
   const [fetchingWebsite, setFetchingWebsite] = useState(false);
@@ -747,9 +780,10 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
 
   // Load companies
   const loadCompanies = async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any).from("companies").select("*").eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    setCompanies((data as any[]) || []);
+      .order("created_at", { ascending: false }) as { data: CompanyRow[] | null };
+    setCompanies(data || []);
   };
   useEffect(() => { if (listTab === "companies") loadCompanies(); }, [listTab]);
 
@@ -773,6 +807,7 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
     if (!companyForm.name) return;
     setSavingCompany(true);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from("companies").insert({ user_id: user.id, ...companyForm });
       setShowCompanyForm(false);
       setCompanyForm({ name: "", industry: "", website: "", description: "", instagram: "", facebook: "", tiktok: "" });
@@ -850,14 +885,20 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
         if (data) {
+          type PersonaDbRow = {
+            id: string;
+            result: PersonaResult & { brand_kit?: BrandKit };
+            answers: Record<string, string> | null;
+            created_at: string;
+          };
           setSaved(
-            data
-              .filter((d: any) => d.result && typeof d.result === "object")
-              .map((d: any) => ({
+            (data as unknown as PersonaDbRow[])
+              .filter((d) => d.result && typeof d.result === "object")
+              .map((d) => ({
                 id: d.id,
                 result: sanitizeResult(d.result),
                 answers: (d.answers || {}) as Record<string, string>,
-                brand_kit: (d.result as any)?.brand_kit as BrandKit | undefined,
+                brand_kit: d.result?.brand_kit,
                 created_at: d.created_at,
               }))
           );
@@ -916,11 +957,12 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
           .select()
           .single();
         if (inserted) {
+          const row = inserted as { id: string; created_at: string };
           newPersona = {
-            id: (inserted as any).id,
+            id: row.id,
             result: parsed,
             answers: finalAnswers,
-            created_at: (inserted as any).created_at,
+            created_at: row.created_at,
           };
           setSaved((prev) => [newPersona!, ...prev]);
         }
@@ -928,8 +970,8 @@ function PersonaPageInner({ ctx }: { ctx: DashboardContext }) {
 
       setView("detail");
       setActiveDetail(newPersona);
-    } catch (err: any) {
-      toast.error(err?.message || dt("cm_error"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : dt("cm_error"));
     } finally {
       setLoading(false);
     }
@@ -970,8 +1012,10 @@ CTA: ${persona.cta_style}`;
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Sanitize PersonaResult so no field is null/undefined — prevents black screen on any browser
-  const sanitizeResult = (r: any): PersonaResult => ({
+  // Sanitize PersonaResult so no field is null/undefined — prevents black screen on any browser.
+  // Accepts the loose DB shape (jsonb has no compile-time guarantees) and
+  // returns the strict PersonaResult.
+  const sanitizeResult = (r: Partial<PersonaResult> | null | undefined): PersonaResult => ({
     name:           String(r?.name   || "—"),
     age:            String(r?.age    || "—"),
     gender:         String(r?.gender || "—"),
@@ -1062,18 +1106,25 @@ CTA: ${persona.cta_style}`;
                   .then(({ data }) => {
                     // Context guard: discard if user changed
                     if (refreshUserId !== user?.id) { setLoadingSaved(false); return; }
-                    if (data)
+                    if (data) {
+                      type PersonaDbRow = {
+                        id: string;
+                        result: PersonaResult & { brand_kit?: BrandKit };
+                        answers: Record<string, string> | null;
+                        created_at: string;
+                      };
                       setSaved(
-                        data
-                          .filter((d: any) => d.result && typeof d.result === "object")
-                          .map((d: any) => ({
+                        (data as unknown as PersonaDbRow[])
+                          .filter((d) => d.result && typeof d.result === "object")
+                          .map((d) => ({
                             id: d.id,
                             result: sanitizeResult(d.result),
                             answers: (d.answers || {}) as Record<string, string>,
-                            brand_kit: (d.result as any)?.brand_kit as BrandKit | undefined,
+                            brand_kit: d.result?.brand_kit,
                             created_at: d.created_at,
                           }))
                       );
+                    }
                     setLoadingSaved(false);
                   });
               }}
@@ -1150,7 +1201,7 @@ CTA: ${persona.cta_style}`;
                     </div>
                   ) : (
                     <button
-                      onClick={(e) => { e.stopPropagation(); setGlobalPersona({ id: p.id, ...p.result } as any); }}
+                      onClick={(e) => { e.stopPropagation(); setGlobalPersona({ id: p.id, ...p.result } as unknown as Parameters<typeof setGlobalPersona>[0]); }}
                       className="mt-3 px-3 py-1 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-all"
                       style={{ background: "rgba(14,165,233,0.12)", color: "#c4b5fd", border: "1px solid rgba(14,165,233,0.25)" }}>
                       {dt("pe_use")}
@@ -1179,7 +1230,7 @@ CTA: ${persona.cta_style}`;
       userId={user.id}
       onSave={async (updated) => {
         if (activeDetail) {
-          const resultWithBrandKit = { ...updated, brand_kit: activeDetail.brand_kit } as any;
+          const resultWithBrandKit = { ...updated, brand_kit: activeDetail.brand_kit };
           await supabase.from("personas" as never)
             .update({ result: resultWithBrandKit } as never)
             .eq("id" as never, activeDetail.id);
