@@ -249,7 +249,15 @@ const addDays = (d: Date, n: number) => { const r = new Date(d); r.setDate(r.get
 const fmtD = (d: Date) => d.toISOString().slice(0, 10);
 const fmtLabel = (d: Date, locale: string) => d.toLocaleDateString(locale, { day: "numeric", month: "short" });
 
-export default function AdDiary({ propUser, propPersona, propLang, embedded }: { propUser?: any; propPersona?: any; propLang?: string; embedded?: boolean } = {}) {
+export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
+  /** Override the user from DashboardContext — used when AdDiary is
+   *  embedded in a dashboard widget that already has its own user. */
+  propUser?: { id: string };
+  /** Same idea for the active persona. */
+  propPersona?: { id: string; name?: string | null } | null;
+  propLang?: string;
+  embedded?: boolean;
+} = {}) {
   usePageTitle("Diário de Anúncios");
   const { user: ctxUser, selectedPersona: ctxPersona } = useOutletContext<DashboardContext>();
   const user = propUser ?? ctxUser;
@@ -294,20 +302,23 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
     if (!user?.id || !personaId) { setLoading(false); return; }
     const loadPersonaId = personaId;
     setLoading(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any).from("ad_diary")
       .select("*").eq("user_id", user.id).eq("persona_id", loadPersonaId)
-      .order("spend", { ascending: false }).limit(500);
+      .order("spend", { ascending: false }).limit(500) as { data: (Entry & { synced_at?: string })[] | null };
     // Context guard: discard if persona changed during fetch
     if (loadPersonaId !== personaId) { setLoading(false); return; }
-    let rows = (data || []) as Entry[];
+    let rows = data || [];
 
     // Enrich missing thumbnails via ads→creatives join (ads.meta_ad_id matches ad_diary.ad_id)
     const missing = rows.filter(e => !e.thumbnail_url && e.ad_id);
     if (missing.length > 0) {
       const adIds = missing.map(e => e.ad_id);
+      type AdThumbRow = { meta_ad_id: string; creative: { thumbnail_url: string | null } | null };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: adsWithThumb } = await (supabase as any).from("ads")
         .select("meta_ad_id, creative:creatives(thumbnail_url)")
-        .in("meta_ad_id", adIds.slice(0, 100));
+        .in("meta_ad_id", adIds.slice(0, 100)) as { data: AdThumbRow[] | null };
       if (loadPersonaId !== personaId) { setLoading(false); return; }
       if (adsWithThumb?.length) {
         const thumbMap: Record<string, string> = {};
@@ -320,7 +331,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
     }
 
     setEntries(rows);
-    if (data?.length) setLastSync(new Date((data[0] as any).synced_at));
+    if (data?.length && data[0].synced_at) setLastSync(new Date(data[0].synced_at));
     setLoading(false);
   }, [user?.id, personaId]);
 
@@ -348,13 +359,27 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       // Context guard: discard if persona changed during sync
       if (syncPersonaId !== personaId) { setSyncing(null); return; }
 
-      const metaAds: any[] = res?.meta?.top_ads || [];
+      type LiveAd = {
+        id?: string;
+        name?: string;
+        campaign?: string;
+        adset?: string;
+        spend?: number;
+        impressions?: number;
+        ctr?: number;
+        cpc?: number;
+        conversions?: number;
+        roas?: number;
+        freq?: number;
+        thumbnail_url?: string;
+      };
+      const metaAds: LiveAd[] = res?.meta?.top_ads || [];
       if (!metaAds.length) { setSyncError("0 anúncios encontrados"); setSyncing(null); return; }
 
-      const calcVerdict = (a: any) => {
+      const calcVerdict = (a: { ctr?: number; spend?: number; freq?: number }) => {
         const ctr = (a.ctr || 0) * 100;
         const spend = a.spend || 0;
-        if (a.freq > 3.5) return { verdict: "loser" as const, reason: `Freq ${a.freq?.toFixed(1)}× — fadiga` };
+        if ((a.freq ?? 0) > 3.5) return { verdict: "loser" as const, reason: `Freq ${a.freq?.toFixed(1)}× — fadiga` };
         if (ctr >= 2.5 && spend > 5) return { verdict: "winner" as const, reason: `CTR ${ctr.toFixed(2)}% — forte` };
         if (ctr >= 1.5 && spend > 20) return { verdict: "scaled" as const, reason: `CTR ${ctr.toFixed(2)}% com volume` };
         if (spend < 10) return { verdict: "testing" as const, reason: "Em aprendizado" };
@@ -362,7 +387,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
         return { verdict: "testing" as const, reason: "Aguardando mais dados" };
       };
 
-      const rows = metaAds.map((a: any) => {
+      const rows = metaAds.map((a) => {
         const ctr = a.ctr || 0;
         const spend = a.spend || 0;
         const roas = a.roas || null;
@@ -385,10 +410,11 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
         };
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from("ad_diary").upsert(rows, { onConflict: "user_id,persona_id,platform,ad_id" });
       await load();
       setLastSync(new Date());
-    } catch (e: any) { setSyncError(`Falha: ${String(e?.message || e)}`); }
+    } catch (e) { setSyncError(`Falha: ${e instanceof Error ? e.message : String(e)}`); }
     setSyncing(null);
   };
 

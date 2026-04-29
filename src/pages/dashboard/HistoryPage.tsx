@@ -60,6 +60,20 @@ interface ActionLogEntry {
   validated_at: string | null;
   error_message: string | null;
   decision_id: string | null;
+  // ── jsonb columns ──
+  // action_log stores hashes of pre/post state and AI reasoning in jsonb
+  // columns. Each entry uses ad-hoc keys per action type (budget_change
+  // for budget edits, _ai_reasoning for chat-driven actions, _source for
+  // origin attribution). Typed loose since the keys vary by row.
+  new_state?: {
+    _source?: string;
+    _ai_reasoning?: string;
+    daily_budget?: number;
+    budget_change?: { from: number; to: number; change_pct: number };
+  } | null;
+  previous_state?: {
+    daily_budget?: number;
+  } | null;
 }
 
 // ── Phase 3 lifecycle — outcome attached to a logged action ───────────────
@@ -140,7 +154,7 @@ type SourceFilter = 'all' | 'ai' | 'manual';
  *  the engine is the primary source — manual has to be opted into via
  *  source='manager_manual'. */
 function getEntrySource(entry: ActionLogEntry): 'ai' | 'manual' {
-  const src = (entry as any)?.new_state?._source;
+  const src = entry?.new_state?._source;
   if (src === 'manager_manual' || src === 'manual') return 'manual';
   return 'ai';
 }
@@ -335,19 +349,20 @@ const HistoryPage: React.FC = () => {
     try {
       setLoading(true);
       cursorRef.current = null;
-      const { data, error } = await (supabase
-        .from('action_log' as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await ((supabase as any)
+        .from('action_log')
         .select('*')
         .eq('account_id', aid)
         .order('executed_at', { ascending: false })
-        .limit(PAGE_SIZE + 1) as any); // +1 to know if there's more
+        .limit(PAGE_SIZE + 1) as Promise<{ data: ActionLogEntry[] | null; error: { message?: string } | null }>); // +1 to know if there's more
       if (error) throw error;
-      const rows = (data || []) as ActionLogEntry[];
+      const rows = data || [];
       const more = rows.length > PAGE_SIZE;
       const page = rows.slice(0, PAGE_SIZE);
       setHistory(page);
       setHasMore(more);
-      if (page.length > 0) cursorRef.current = page[page.length - 1].executed_at as any;
+      if (page.length > 0) cursorRef.current = page[page.length - 1].executed_at;
     } catch (err) {
       console.error('[HistoryPage] load error:', err);
     } finally {
@@ -360,20 +375,21 @@ const HistoryPage: React.FC = () => {
     if (!aid || !cursorRef.current || loadingMore) return;
     try {
       setLoadingMore(true);
-      const { data, error } = await (supabase
-        .from('action_log' as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await ((supabase as any)
+        .from('action_log')
         .select('*')
         .eq('account_id', aid)
         .lt('executed_at', cursorRef.current)
         .order('executed_at', { ascending: false })
-        .limit(PAGE_SIZE + 1) as any);
+        .limit(PAGE_SIZE + 1) as Promise<{ data: ActionLogEntry[] | null; error: { message?: string } | null }>);
       if (error) throw error;
-      const rows = (data || []) as ActionLogEntry[];
+      const rows = data || [];
       const more = rows.length > PAGE_SIZE;
       const page = rows.slice(0, PAGE_SIZE);
       setHistory(prev => [...prev, ...page]);
       setHasMore(more);
-      if (page.length > 0) cursorRef.current = page[page.length - 1].executed_at as any;
+      if (page.length > 0) cursorRef.current = page[page.length - 1].executed_at;
       else setHasMore(false);
     } catch (err) {
       console.error('[HistoryPage] loadMore error:', err);
@@ -405,16 +421,17 @@ const HistoryPage: React.FC = () => {
         const since = oldestExec
           ? new Date(new Date(oldestExec).getTime() - OUTCOME_MATCH_WINDOW_MS).toISOString()
           : new Date(Date.now() - 90 * 86400000).toISOString();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
           .from('action_outcomes')
           .select('id, target_id, taken_at, finalized, improved, recovery_pct, measured_24h_at, measured_72h_at, context')
           .eq('user_id', userId)
           .gte('taken_at', since)
           .order('taken_at', { ascending: false })
-          .limit(500);
+          .limit(500) as { data: OutcomeRow[] | null; error: { message?: string } | null };
         if (cancelled || error || !data) return;
         const idx = new Map<string, OutcomeRow[]>();
-        for (const row of data as OutcomeRow[]) {
+        for (const row of data) {
           const arr = idx.get(row.target_id);
           if (arr) arr.push(row);
           else idx.set(row.target_id, [row]);
@@ -475,8 +492,8 @@ const HistoryPage: React.FC = () => {
         )
       );
       toast.success('Ação revertida pela IA');
-    } catch (err: any) {
-      toast.error(err.message || 'Falha ao reverter');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Falha ao reverter');
     } finally {
       setUndoingId(null);
     }
@@ -922,17 +939,17 @@ const HistoryPage: React.FC = () => {
                     {(entry.action_type === 'increase_budget'
                       || entry.action_type === 'decrease_budget'
                       || entry.action_type === 'change_budget') &&
-                      (entry as any).new_state?.budget_change ? (() => {
-                        const bc = (entry as any).new_state.budget_change;
+                      entry.new_state?.budget_change ? (() => {
+                        const bc = entry.new_state!.budget_change!;
                         const fromVal = (bc.from / 100).toFixed(2).replace('.', ',');
                         const toVal = (bc.to / 100).toFixed(2).replace('.', ',');
                         return ` · R$ ${fromVal} → R$ ${toVal} (${bc.change_pct > 0 ? '+' : ''}${bc.change_pct}%)`;
                       })() : (entry.action_type === 'increase_budget'
                         || entry.action_type === 'decrease_budget'
                         || entry.action_type === 'change_budget') &&
-                        (entry as any).previous_state?.daily_budget && (entry as any).new_state?.daily_budget ? (() => {
-                          const oldC = Number((entry as any).previous_state.daily_budget);
-                          const newC = Number((entry as any).new_state.daily_budget);
+                        entry.previous_state?.daily_budget && entry.new_state?.daily_budget ? (() => {
+                          const oldC = Number(entry.previous_state!.daily_budget);
+                          const newC = Number(entry.new_state!.daily_budget);
                           const fromVal = (oldC / 100).toFixed(2).replace('.', ',');
                           const toVal = (newC / 100).toFixed(2).replace('.', ',');
                           const pct = oldC > 0 ? Math.round(((newC - oldC) / oldC) * 100) : 0;
@@ -958,7 +975,7 @@ const HistoryPage: React.FC = () => {
                       the user BEFORE they confirmed. This is what turns
                       History from an event log into a story. Only shown
                       if present so older rows stay clean. */}
-                  {(entry as any).new_state?._ai_reasoning && (
+                  {entry.new_state?._ai_reasoning && (
                     <div style={{
                       marginTop: 8,
                       padding: '8px 10px',
@@ -973,7 +990,7 @@ const HistoryPage: React.FC = () => {
                         lineHeight: 1.5, letterSpacing: '-0.005em',
                         fontFamily: F,
                       }}>
-                        {String((entry as any).new_state._ai_reasoning)}
+                        {String(entry.new_state._ai_reasoning)}
                       </p>
                     </div>
                   )}

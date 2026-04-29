@@ -140,19 +140,23 @@ export function DashboardSidebar({
   // Load KPI for selected persona
   useEffect(() => {
     if (!user?.id || !selectedPersona?.id) { setKpi(null); return; }
+    type ConnRow = { persona_id: string; status: string };
+    type SnapRow = { total_spend: number | null; avg_ctr: number | null; active_ads: number | null };
     supabase.functions.invoke("meta-oauth", {
       body: { action: "get_connections", user_id: user.id }
-    }).then(({ data }: any) => {
-      const all = (data?.connections || []) as any[];
-      const connected = all.some((c: any) => c.persona_id === selectedPersona.id && c.status === "active");
+    }).then((res) => {
+      const data = res.data as { connections?: ConnRow[] } | null;
+      const all = data?.connections || [];
+      const connected = all.some((c) => c.persona_id === selectedPersona.id && c.status === "active");
       if (!connected) { setKpi(null); return; }
       setKpi({ spend: 0, ctr: 0, ads: 0, trend: null });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any).from("daily_snapshots")
         .select("total_spend, avg_ctr, active_ads")
         .eq("user_id", user.id).eq("persona_id", selectedPersona.id)
         .order("date", { ascending: false }).limit(2)
-        .then(({ data }: any) => {
-          const rows = data || [];
+        .then((res2: { data: SnapRow[] | null }) => {
+          const rows = res2.data || [];
           const latest = rows[0], prev = rows[1];
           if (!latest || (latest.total_spend === 0 && latest.avg_ctr === 0)) return;
           // Normalize CTR: old data stored as percentage (>1), new data as decimal
@@ -172,12 +176,14 @@ export function DashboardSidebar({
   useEffect(() => {
     const handler = () => {
       if (!user?.id || !selectedPersona?.id) return;
+      type SnapRow2 = { total_spend: number | null; avg_ctr: number | null; active_ads: number | null };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any).from("daily_snapshots")
         .select("total_spend, avg_ctr, active_ads")
         .eq("user_id", user.id).eq("persona_id", selectedPersona.id)
         .order("date", { ascending: false }).limit(2)
-        .then(({ data }: any) => {
-          const rows = data || [];
+        .then((res: { data: SnapRow2[] | null }) => {
+          const rows = res.data || [];
           const latest = rows[0];
           if (!latest || (latest.total_spend === 0 && latest.avg_ctr === 0)) return;
           const rawCtr = latest.avg_ctr || 0;

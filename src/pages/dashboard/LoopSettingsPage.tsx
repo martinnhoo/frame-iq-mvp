@@ -67,11 +67,13 @@ export default function LoopSettingsPage() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase.from("nomenclature_config" as any).select("*").eq("user_id", user.id).single();
+      type NomenclatureRow = { separator: string | null; fields: NomenclatureField[] | null; example_filename: string | null };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any).from("nomenclature_config").select("*").eq("user_id", user.id).single() as { data: NomenclatureRow | null };
       if (data) {
-        setSeparator((data as any).separator || "-");
-        setFields((data as any).fields as NomenclatureField[]);
-        setExampleFilename((data as any).example_filename || exampleFilename);
+        setSeparator(data.separator || "-");
+        if (data.fields) setFields(data.fields);
+        if (data.example_filename) setExampleFilename(data.example_filename);
       }
       setLoading(false);
     };
@@ -82,17 +84,18 @@ export default function LoopSettingsPage() {
     setSaving(true);
     try {
       // Upsert
-      const { error } = await supabase.from("nomenclature_config" as any).upsert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from("nomenclature_config").upsert({
         user_id: user.id,
         separator,
         fields,
         example_filename: exampleFilename,
         updated_at: new Date().toISOString(),
-      } as any, { onConflict: "user_id" });
+      }, { onConflict: "user_id" });
       if (error) throw error;
       toast.success(language === "pt" ? "Configuração salva" : language === "es" ? "Configuración guardada" : "Settings saved");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to save");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save");
     } finally {
       setSaving(false);
     }

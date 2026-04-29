@@ -24,8 +24,10 @@ const SettingsPage = () => {
   const [saving, setSaving] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [aiTone, setAiTone] = useState<"direto" | "didático" | "técnico">(() => {
-    return storage.get("adbrief_ai_tone", "direto") as any
+  type AiTone = "direto" | "didático" | "técnico";
+  const [aiTone, setAiTone] = useState<AiTone>(() => {
+    const v = storage.get("adbrief_ai_tone", "direto");
+    return (v === "didático" || v === "técnico") ? v : "direto";
   });
 
   // ── Autopilot state ───────────────────────────────────────────────────────
@@ -44,11 +46,23 @@ const SettingsPage = () => {
   useEffect(() => {
     (async () => {
       try {
+        type AutopilotRow = {
+          enabled?: boolean;
+          accepted_terms_at?: string | null;
+          min_confidence?: number;
+          min_amount_at_risk_brl?: number;
+          daily_action_cap?: number;
+          allowed_action_types?: string[];
+          notify_telegram?: boolean;
+          notify_email?: boolean;
+          paused_until?: string | null;
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data } = await (supabase as any)
           .from("autopilot_settings")
           .select("*")
           .eq("user_id", user.id)
-          .maybeSingle();
+          .maybeSingle() as { data: AutopilotRow | null };
         if (data) {
           setApEnabled(!!data.enabled);
           setApTermsAccepted(!!data.accepted_terms_at);
@@ -75,7 +89,19 @@ const SettingsPage = () => {
   }>) => {
     setApSaving(true);
     try {
-      const payload: any = {
+      type AutopilotPayload = {
+        user_id: string;
+        enabled: boolean;
+        min_confidence: number;
+        min_amount_at_risk_brl: number;
+        daily_action_cap: number;
+        allowed_action_types: string[];
+        notify_telegram: boolean;
+        notify_email: boolean;
+        accepted_terms_at?: string | null;
+        paused_until?: string | null;
+      };
+      const payload: AutopilotPayload = {
         user_id: user.id,
         enabled: override?.enabled ?? apEnabled,
         min_confidence: apMinConfidence,
@@ -93,13 +119,14 @@ const SettingsPage = () => {
       if (override?.paused_until !== undefined) {
         payload.paused_until = override.paused_until;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any)
         .from("autopilot_settings")
         .upsert(payload, { onConflict: "user_id" });
       if (error) throw error;
       toast.success("Autopilot atualizado");
-    } catch (e: any) {
-      toast.error(e.message || "Falha ao salvar autopilot");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao salvar autopilot");
     } finally {
       setApSaving(false);
     }
@@ -179,9 +206,9 @@ const SettingsPage = () => {
       } else {
         toast.error("Não foi possível abrir o portal de cobrança. Tente novamente.");
       }
-    } catch (e: any) {
+    } catch (e) {
       console.error("Billing portal error:", e);
-      const msg = e?.message || "";
+      const msg = e instanceof Error ? e.message : "";
       toast.error(msg.includes("No Stripe customer") || msg.includes("customer")
         ? "Nenhum cliente Stripe encontrado. Faça upgrade primeiro."
         : `Erro ao abrir portal: ${msg.slice(0, 100)}`);
@@ -368,7 +395,7 @@ const SettingsPage = () => {
                 ["didático", t("toneDid"),  t("toneDidSub")] as const,
                 ["técnico",  t("toneTec"),  t("toneTecSub")] as const,
               ]).map(([val, label, sub]) => (
-                <button key={val} onClick={() => setAiTone(val as any)}
+                <button key={val} onClick={() => setAiTone(val)}
                   style={{
                     padding: "10px 12px", borderRadius: 10, cursor: "pointer", textAlign: "left",
                     background: aiTone === val ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.03)",

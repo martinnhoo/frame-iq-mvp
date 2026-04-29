@@ -603,8 +603,13 @@ export default function IntelligencePage() {
     if (!user?.id) { setLoading(false); return; }
     setLoading(true);
     try {
+      // chat_memory / learned_patterns / chat_examples / account_knowledge
+      // are off-schema for the supabase types generator. Cast the client
+      // once below; rows narrow to typed shapes on the receiving end.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
       // Memories: scoped by persona if selected, else null persona (global)
-      const memQ = (supabase as any).from("chat_memory")
+      const memQ = sb.from("chat_memory")
         .select("id,memory_text,memory_type,importance,created_at")
         .eq("user_id", user.id)
         .order("importance", { ascending:false }).limit(30);
@@ -616,7 +621,7 @@ export default function IntelligencePage() {
       // Mirror the memories scoping: when no persona is selected we show only
       // global patterns (persona_id IS NULL), not a cross-persona mix — the
       // scope badge says "Global" and should mean just that.
-      const patQ = (supabase as any).from("learned_patterns")
+      const patQ = sb.from("learned_patterns")
         .select("id,pattern_key,insight_text,avg_ctr,avg_roas,sample_size,confidence,is_winner")
         .eq("user_id", user.id)
         .order("is_winner", { ascending:false })
@@ -626,13 +631,13 @@ export default function IntelligencePage() {
       else patQ.is("persona_id", null);
 
       // Examples: global per user (style preference, not account-specific)
-      const exQ = (supabase as any).from("chat_examples")
+      const exQ = sb.from("chat_examples")
         .select("id,user_message,quality_score,created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending:false }).limit(10);
 
       // Knowledge: typed structured records — scoped by persona like memories.
-      const knQ = (supabase as any).from("account_knowledge")
+      const knQ = sb.from("account_knowledge")
         .select("id,knowledge_type,slug,data,confidence,source,last_updated")
         .eq("user_id", user.id)
         .order("confidence", { ascending:false })
@@ -665,6 +670,7 @@ export default function IntelligencePage() {
   const deleteMemory = async (id: string) => {
     setDeleting(id);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from("chat_memory").delete().eq("id", id);
       setMemories(p => p.filter(m => m.id !== id));
       toast.success(isPT ? "Memória removida" : "Memory removed");
@@ -675,6 +681,7 @@ export default function IntelligencePage() {
   const deleteExample = async (id: string) => {
     setDeleting(id);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from("chat_examples").delete().eq("id", id);
       setExamples(p => p.filter(e => e.id !== id));
     } catch { toast.error("Error"); }
@@ -684,6 +691,7 @@ export default function IntelligencePage() {
   const deleteKnowledge = async (id: string) => {
     setDeleting(id);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from("account_knowledge").delete().eq("id", id);
       setKnowledge(p => p.filter(k => k.id !== id));
       toast.success(isPT ? "Conhecimento removido" : isES ? "Conocimiento eliminado" : "Knowledge removed");
