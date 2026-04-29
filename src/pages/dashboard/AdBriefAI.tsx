@@ -7,7 +7,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { storage } from "@/lib/storage";
 import { SectionBoundary } from "@/components/SectionBoundary";
 import { useOutletContext, useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
+import type { DashboardContext, AccountAlert } from "@/components/dashboard/DashboardLayout";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
   Send, Loader2, RotateCcw,
@@ -130,7 +130,7 @@ interface BlockHypothesis {
 }
 
 interface Block {
-  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"meta_action"|"text"|"trend_chart"|"limit_warning"|"creative_check"|"credits_exhausted_free"|"credits_exhausted_paid"|"decision";
+  type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"meta_action"|"text"|"trend_chart"|"limit_warning"|"creative_check"|"credits_exhausted_free"|"credits_exhausted_paid"|"decision"|"proactive";
   remaining?: number;
   original_message?: string;
   title: string; content?: string; items?: string[];
@@ -192,6 +192,17 @@ interface Block {
   /** Creative-check edge function payload, attached when the chat embeds
    *  a creative_check block. Shape declared as CCData below. */
   _ccData?: CCData;
+
+  // ── Transient client-side fields (not persisted) ──
+  // These travel on the in-memory Block so the renderer can stage tool
+  // execution / persistence state without an external store. Stripped
+  // before the message is saved to chat_messages (see persist effect).
+  /** When set, the renderer will dispatch this tool name on mount. */
+  _pendingTool?: string;
+  /** Params to pass to _pendingTool when it fires. */
+  _toolParams?: Record<string, string>;
+  /** Marks the message as already saved to chat_messages (idempotency). */
+  _synced?: boolean;
 }
 interface AIMessage {
   role: "user"|"assistant";
@@ -200,6 +211,11 @@ interface AIMessage {
   imagePreview?: string;
   ts: number;
   id: number;
+  /** Set after the message has been written to chat_messages — guards
+   *  the persistence effect against double-saving on every re-render.
+   *  Vestigial in practice (never set anywhere yet) but the check at
+   *  send-time has been there since the early sync path landed. */
+  _synced?: boolean;
 }
 
 
@@ -2875,12 +2891,12 @@ export default function AdBriefAI() {
   const [messages,setMessages]=useState<AIMessage[]>(()=>{
     if (!selectedPersona?.id) return [];
     try {
-      const saved = storage.getJSON(SK, []);
-      const sanitized = saved.map((m: any) => ({
+      const saved = storage.getJSON(SK, []) as AIMessage[];
+      const sanitized: AIMessage[] = saved.map((m) => ({
         ...m,
-        blocks: (m.blocks||[]).filter((b: any) => b.type !== "trend_chart")
+        blocks: (m.blocks || []).filter((b) => b.type !== "trend_chart"),
       }));
-      const hasUserHistory = sanitized.some((m: any) => m?.role === "user" && String(m?.userText || "").trim().length > 0);
+      const hasUserHistory = sanitized.some((m) => m?.role === "user" && String(m?.userText || "").trim().length > 0);
       return hasUserHistory ? sanitized : [];
     } catch { return []; }
   });
@@ -2929,7 +2945,7 @@ export default function AdBriefAI() {
     } catch {}
   }, []);
 
-  const [accountAlerts,setAccountAlerts]=useState<any[]>(ctxAlerts||[]);
+  const [accountAlerts,setAccountAlerts]=useState<AccountAlert[]>(ctxAlerts||[]);
   // Virtual scroll: render only last N messages for performance
   // User can load older messages with "Ver mais"
   const MSG_PAGE = 30;
@@ -3104,10 +3120,10 @@ export default function AdBriefAI() {
         if(data?.credits){
           setCreditBalance({ remaining: data.credits.remaining, total: data.credits.total + (data.credits.bonus||0) });
         }
-      } catch(e: any){
+      } catch(e){
         // Non-fatal — credits panel will fall back to its default. Log so we
         // can see real outages instead of silent failures.
-        console.warn('[AdBriefAI] check-usage failed', e?.message || e);
+        console.warn('[AdBriefAI] check-usage failed', e instanceof Error ? e.message : e);
       }
     };
     load();
@@ -3125,25 +3141,25 @@ export default function AdBriefAI() {
         if (!newId) {
           setMessages([]);
         } else {
-          const sanitizeMessages = (items: any[]) => items.map((m: any) => ({
+          const sanitizeMessages = (items: AIMessage[]): AIMessage[] => items.map((m) => ({
             ...m,
-            blocks: (m.blocks || []).filter((b: any) => b.type !== "trend_chart")
+            blocks: (m.blocks || []).filter((b) => b.type !== "trend_chart"),
           }));
-          const hasUserHistory = (items: any[]) =>
-            items.some((m: any) => m?.role === "user" && String(m?.userText || "").trim().length > 0);
+          const hasUserHistory = (items: AIMessage[]) =>
+            items.some((m) => m?.role === "user" && String(m?.userText || "").trim().length > 0);
 
-          const saved = sanitizeMessages(storage.getJSON(newSK, []));
-          const currentVisible = sanitizeMessages(messages as any[]);
-          const defaultSaved = sanitizeMessages(storage.getJSON("adbrief_chat_v1_default", []));
+          const saved = sanitizeMessages(storage.getJSON(newSK, []) as AIMessage[]);
+          const currentVisible = sanitizeMessages(messages);
+          const defaultSaved = sanitizeMessages(storage.getJSON("adbrief_chat_v1_default", []) as AIMessage[]);
 
           if (hasUserHistory(saved)) {
             setMessages(saved);
           } else if (fromDemoParam.current && hasUserHistory(currentVisible)) {
-            setMessages(currentVisible as AIMessage[]);
+            setMessages(currentVisible);
             storage.setJSON(newSK, currentVisible);
             storage.remove("adbrief_chat_v1_default");
           } else if (fromDemoParam.current && hasUserHistory(defaultSaved)) {
-            setMessages(defaultSaved as AIMessage[]);
+            setMessages(defaultSaved);
             storage.setJSON(newSK, defaultSaved);
             storage.remove("adbrief_chat_v1_default");
           } else {
@@ -3187,17 +3203,24 @@ export default function AdBriefAI() {
     const pid = selectedPersona?.id || null;
     if(!pid) { setConnections([]); setConnectionsLoading(false); return; }
     setConnectionsLoading(true);
+    type ConnRow = {
+      persona_id: string;
+      platform: string;
+      status: string;
+      ad_accounts?: Array<{ id: string; name?: string }>;
+    };
     supabase.functions.invoke("meta-oauth", {
       body: { action: "get_connections", user_id: user.id }
-    }).then(({ data }: any) => {
+    }).then((res) => {
+      const data = res.data as { connections?: ConnRow[] } | null;
       // Context guard: discard if persona changed during fetch
       if ((selectedPersona?.id || null) !== pid) return;
-      const all = (data?.connections || []) as any[];
-      const scoped = all.filter((c: any) => c.persona_id === pid && c.status === "active");
-      setConnections(scoped.map((c: any) => c.platform));
+      const all: ConnRow[] = data?.connections || [];
+      const scoped = all.filter((c) => c.persona_id === pid && c.status === "active");
+      setConnections(scoped.map((c) => c.platform));
       setConnectionsLoading(false);
       // Save ad_accounts list to localStorage for account switcher in LivePanel
-      const metaConn = scoped.find((c: any) => c.platform === "meta");
+      const metaConn = scoped.find((c) => c.platform === "meta");
       if (metaConn?.ad_accounts?.length) {
         storage.setJSON(`meta_accounts_${pid}`, metaConn.ad_accounts);
       }
@@ -3247,7 +3270,7 @@ export default function AdBriefAI() {
       setMessages([{
         role: "assistant",
         blocks: [
-          { type: "text" as any, title: greeting + "!", content: welcome },
+          { type: "text", title: greeting + "!", content: welcome },
         ],
         ts: aid, id: aid
       }, ...demoMsgs0]);
@@ -3261,8 +3284,23 @@ export default function AdBriefAI() {
       const hasGoogleConn = false /* google disabled */;
       const hasAnyConn = hasMetaConn || hasGoogleConn;
 
+      // daily_snapshots is off-schema — narrow rows below.
+      type SnapTopAd = { ctr?: number; [k: string]: unknown };
+      type SnapRow = {
+        date: string;
+        total_spend: number | null;
+        avg_ctr: number | null;
+        active_ads: number | null;
+        winners_count?: number | null;
+        losers_count?: number | null;
+        yesterday_ctr?: number | null;
+        ai_insight?: string | null;
+        top_ads?: SnapTopAd[];
+        raw_period?: string | null;
+      };
       // Server-side filter by persona_id — prevents cross-account snapshot leakage
       const buildSnapQuery = () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const q = (supabase as any).from("daily_snapshots")
           .select("date,total_spend,avg_ctr,active_ads,winners_count,losers_count,yesterday_ctr,ai_insight,top_ads,raw_period")
           .eq("user_id", user.id)
@@ -3272,11 +3310,11 @@ export default function AdBriefAI() {
       };
       // Normalize CTR from daily_snapshots — old data stored as percentage (7.818),
       // new data (after fix) stored as decimal (0.07818). If >1, it's percentage → divide by 100.
-      const normSnap = (s: any) => {
+      const normSnap = (s: SnapRow | null): SnapRow | null => {
         if (!s) return s;
-        if (s.avg_ctr > 1) s.avg_ctr = s.avg_ctr / 100;
-        if (s.yesterday_ctr > 1) s.yesterday_ctr = s.yesterday_ctr / 100;
-        if (Array.isArray(s.top_ads)) s.top_ads = s.top_ads.map((a: any) => ({ ...a, ctr: a.ctr > 1 ? a.ctr / 100 : a.ctr }));
+        if ((s.avg_ctr ?? 0) > 1) s.avg_ctr = (s.avg_ctr ?? 0) / 100;
+        if ((s.yesterday_ctr ?? 0) > 1) s.yesterday_ctr = (s.yesterday_ctr ?? 0) / 100;
+        if (Array.isArray(s.top_ads)) s.top_ads = s.top_ads.map((a) => ({ ...a, ctr: (a.ctr ?? 0) > 1 ? (a.ctr ?? 0) / 100 : a.ctr }));
         return s;
       };
 
@@ -3316,15 +3354,15 @@ export default function AdBriefAI() {
 
       // Run snapshot + live-metrics in parallel
       Promise.all([
-        buildSnapQuery().then((r: any) => normSnap((r.data || [])[0] || null)).catch(() => null),
+        buildSnapQuery().then((r: { data: SnapRow[] | null }) => normSnap((r.data || [])[0] || null)).catch(() => null),
         fetchLive(),
       ]).then(async ([snap, live]) => {
         if (!snap && hasAnyConn) {
           // No snapshot yet — trigger daily-intelligence then retry snapshot
           try {
             await supabase.functions.invoke("daily-intelligence", { body: { user_id: user.id, persona_id: pid } });
-            const r2 = await buildSnapQuery();
-            const snap2 = normSnap(((r2 as any).data || [])[0] || null);
+            const r2 = await buildSnapQuery() as { data: SnapRow[] | null };
+            const snap2 = normSnap((r2.data || [])[0] || null);
             if (!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn, live);
           } catch {
             if (!proactiveFired.current) triggerProactiveGreeting(null, hasMetaConn, hasGoogleConn, live);
@@ -3355,57 +3393,85 @@ export default function AdBriefAI() {
     const pid=selectedPersona?.id||null;
     (async()=>{
       try{
+      // Local types for each off-schema table this builder pulls from.
+      type AnalysisRow = {
+        id: string; title: string | null; created_at: string;
+        result: { hook_score?: number; hook_type?: string; market_guess?: string } | null;
+        hook_strength?: number | null;
+      };
+      type LearnedPatternCtxRow = {
+        pattern_key: string; avg_ctr: number | null; avg_roas: number | null;
+        confidence: number | null; is_winner: boolean | null;
+        insight_text: string | null; persona_id: string | null;
+      };
+      type CreativeEntryRow = {
+        filename: string; market: string | null; editor: string | null;
+        ctr: number | null; roas: number | null; persona_id: string | null;
+      };
+      type CtxSnapRow = {
+        date: string; total_spend: number | null; avg_ctr: number;
+        avg_roas: number | null; winners_count: number | null; losers_count: number | null;
+        active_ads: number | null; ai_insight: string | null; persona_id: string | null;
+      };
+      type ChatMemoryRow = { memory_text: string; memory_type: string; importance: number | null };
+      type PersonaResult = { age_range?: string; pain_points?: string[]; platforms?: string[]; niche?: string; industry?: string; market?: string };
+      type PersonaCtxRow = { name: string | null; result: PersonaResult | null };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
       const[analysesRes,patternsRes,personaRes,entriesRes,snapRes,memoriesRes]=await Promise.all([
-        (pid ? (supabase as any).from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).eq("persona_id",pid) : (supabase as any).from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).is("persona_id",null)).order("created_at",{ascending:false}).limit(50),
+        (pid ? sb.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).eq("persona_id",pid) : sb.from("analyses").select("id,title,created_at,result,hook_strength,recommended_platforms").eq("user_id",user.id).is("persona_id",null)).order("created_at",{ascending:false}).limit(50) as Promise<{ data: AnalysisRow[] | null }>,
         // learned_patterns: filter server-side by persona_id to prevent cross-account leakage
         (pid
-          ? (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,avg_roas,confidence,is_winner,insight_text,persona_id").eq("user_id",user.id).eq("persona_id",pid)
-          : (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,avg_roas,confidence,is_winner,insight_text,persona_id").eq("user_id",user.id).is("persona_id",null)
-        ).order("confidence",{ascending:false}).limit(50),
+          ? sb.from("learned_patterns").select("pattern_key,avg_ctr,avg_roas,confidence,is_winner,insight_text,persona_id").eq("user_id",user.id).eq("persona_id",pid)
+          : sb.from("learned_patterns").select("pattern_key,avg_ctr,avg_roas,confidence,is_winner,insight_text,persona_id").eq("user_id",user.id).is("persona_id",null)
+        ).order("confidence",{ascending:false}).limit(50) as Promise<{ data: LearnedPatternCtxRow[] | null }>,
         // personas: filter to current persona only, not just the latest one
         (pid
           ? supabase.from("personas").select("name,result").eq("user_id",user.id).eq("id",pid).maybeSingle()
           : supabase.from("personas").select("name,result").eq("user_id",user.id).order("created_at",{ascending:false}).limit(1).maybeSingle()
-        ),
+        ) as Promise<{ data: PersonaCtxRow | null }>,
         // creative_entries: top 20 by CTR only — full 500 rows bloats the context desnecessariamente
         (pid
-          ? (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas,persona_id").eq("user_id",user.id).eq("persona_id",pid)
-          : (supabase as any).from("creative_entries").select("filename,market,editor,ctr,roas,persona_id").eq("user_id",user.id).is("persona_id",null)
-        ).order("ctr",{ascending:false}).limit(20),
+          ? sb.from("creative_entries").select("filename,market,editor,ctr,roas,persona_id").eq("user_id",user.id).eq("persona_id",pid)
+          : sb.from("creative_entries").select("filename,market,editor,ctr,roas,persona_id").eq("user_id",user.id).is("persona_id",null)
+        ).order("ctr",{ascending:false}).limit(20) as Promise<{ data: CreativeEntryRow[] | null }>,
         // daily_snapshots: filter server-side by persona_id
         (pid
-          ? (supabase as any).from("daily_snapshots").select("date,total_spend,avg_ctr,avg_roas,winners_count,losers_count,active_ads,ai_insight,persona_id").eq("user_id",user.id).eq("persona_id",pid)
-          : (supabase as any).from("daily_snapshots").select("date,total_spend,avg_ctr,avg_roas,winners_count,losers_count,active_ads,ai_insight,persona_id").eq("user_id",user.id).is("persona_id",null)
-        ).order("date",{ascending:false}).limit(14),
+          ? sb.from("daily_snapshots").select("date,total_spend,avg_ctr,avg_roas,winners_count,losers_count,active_ads,ai_insight,persona_id").eq("user_id",user.id).eq("persona_id",pid)
+          : sb.from("daily_snapshots").select("date,total_spend,avg_ctr,avg_roas,winners_count,losers_count,active_ads,ai_insight,persona_id").eq("user_id",user.id).is("persona_id",null)
+        ).order("date",{ascending:false}).limit(14) as Promise<{ data: CtxSnapRow[] | null }>,
         // chat_memory: factual notes extracted from past conversations
         (pid
-          ? (supabase as any).from("chat_memory").select("memory_text,memory_type,importance").eq("user_id",user.id).eq("persona_id",pid)
-          : (supabase as any).from("chat_memory").select("memory_text,memory_type,importance").eq("user_id",user.id).is("persona_id",null)
-        ).order("importance",{ascending:false}).limit(20),
+          ? sb.from("chat_memory").select("memory_text,memory_type,importance").eq("user_id",user.id).eq("persona_id",pid)
+          : sb.from("chat_memory").select("memory_text,memory_type,importance").eq("user_id",user.id).is("persona_id",null)
+        ).order("importance",{ascending:false}).limit(20) as Promise<{ data: ChatMemoryRow[] | null }>,
       ]);
-      const analyses=(analysesRes.data||[]).map((a:any)=>{const r=a.result as any||{};return`[${a.id.slice(0,8)}] ${a.title||"Untitled"} | score:${r.hook_score??""} | type:${r.hook_type??""} | market:${r.market_guess??""} | strength:${a.hook_strength??""} | date:${a.created_at?.slice(0,10)}`;}).join("\n");
-      const patterns=((patternsRes.data||[]) as any[]).map((p:any)=>`${p.is_winner?"":""} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
-      const persona=(()=>{if(!personaRes.data)return"No active persona";const r=personaRes.data.result as any||{};return`Name:${personaRes.data.name}|Age:${r.age_range}|Pain:${(r.pain_points||[]).slice(0,3).join(",")}|Platforms:${(r.platforms||[]).join("+")}`})();
-      const entries=(entriesRes.data||[]) as any[];
+      const analyses=(analysesRes.data||[]).map((a)=>{const r=a.result||{};return`[${a.id.slice(0,8)}] ${a.title||"Untitled"} | score:${r.hook_score??""} | type:${r.hook_type??""} | market:${r.market_guess??""} | strength:${a.hook_strength??""} | date:${a.created_at?.slice(0,10)}`;}).join("\n");
+      const patterns=(patternsRes.data||[]).map((p)=>`${p.is_winner?"":""} ${p.pattern_key} | CTR:${p.avg_ctr?.toFixed(3)} | ROAS:${p.avg_roas?.toFixed(2)} | conf:${p.confidence}`).join("\n");
+      const persona=(()=>{if(!personaRes.data)return"No active persona";const r=personaRes.data.result||{};return`Name:${personaRes.data.name}|Age:${r.age_range}|Pain:${(r.pain_points||[]).slice(0,3).join(",")}|Platforms:${(r.platforms||[]).join("+")}`})();
+      const entries=entriesRes.data||[];
       const byEd: Record<string,{ctr:number[],roas:number[],n:number}>={};
-      entries.forEach((e:any)=>{if(e.editor){if(!byEd[e.editor])byEd[e.editor]={ctr:[],roas:[],n:0};byEd[e.editor].n++;if(e.ctr)byEd[e.editor].ctr.push(e.ctr);if(e.roas)byEd[e.editor].roas.push(e.roas);}});
+      entries.forEach((e)=>{if(e.editor){if(!byEd[e.editor])byEd[e.editor]={ctr:[],roas:[],n:0};byEd[e.editor].n++;if(e.ctr)byEd[e.editor].ctr.push(e.ctr);if(e.roas)byEd[e.editor].roas.push(e.roas);}});
       const edSummary=Object.entries(byEd).map(([ed,d])=>`${ed}:n=${d.n}|avgCTR=${d.ctr.length?(d.ctr.reduce((a,b)=>a+b)/d.ctr.length).toFixed(3):"?"}|avgROAS=${d.roas.length?(d.roas.reduce((a,b)=>a+b)/d.roas.length).toFixed(2):"?"}`).join("\n");
       // Recent snapshots — already filtered server-side
       // Normalize CTR: old data stored as percentage (>1), new data as decimal (<1)
-      const snaps=((snapRes.data||[]) as any[]).map((s:any)=>({...s, avg_ctr: s.avg_ctr > 1 ? s.avg_ctr / 100 : s.avg_ctr}));
-      const memories=(memoriesRes.data||[]) as any[];
+      const snaps=(snapRes.data||[]).map((s)=>({...s, avg_ctr: s.avg_ctr > 1 ? s.avg_ctr / 100 : s.avg_ctr}));
+      const memories=memoriesRes.data||[];
       const memoriesStr = memories.length
-        ? memories.map((m:any) => `[${m.memory_type}] ${m.memory_text}`).join("\n")
+        ? memories.map((m) => `[${m.memory_type}] ${m.memory_text}`).join("\n")
         : "";
-      const snapSummary=snaps.length?snaps.map((s:any)=>`${s.date}: spend=R$${s.total_spend?.toFixed(0)} CTR=${(s.avg_ctr*100)?.toFixed(2)}% ads=${s.active_ads} winners=${s.winners_count}${s.ai_insight?" | insight:"+s.ai_insight.slice(0,80):""}`).join("\n"):lang==="pt"?"Sem histórico ainda":"No snapshot data yet";
+      const snapSummary=snaps.length?snaps.map((s)=>`${s.date}: spend=R$${s.total_spend?.toFixed(0)} CTR=${(s.avg_ctr*100)?.toFixed(2)}% ads=${s.active_ads} winners=${s.winners_count}${s.ai_insight?" | insight:"+s.ai_insight.slice(0,80):""}`).join("\n"):lang==="pt"?"Sem histórico ainda":"No snapshot data yet";
       const lastSnap=snaps[0];
       const perfSummary=lastSnap?`R$${lastSnap.total_spend?.toFixed(0)} spent last period, ${(lastSnap.avg_ctr*100)?.toFixed(2)}% CTR, ${lastSnap.active_ads} ads delivering${lastSnap.active_ads===0?" (NO ads running right now)":""}, ${lastSnap.winners_count} winners, ${lastSnap.losers_count} underperformers. AI insight: ${lastSnap.ai_insight||"n/a"}`:lang==="pt"?"Sem dados de performance ainda":"No performance data yet";
-      // Active account info
-      const accountInfo=selectedPersona?`Account: ${selectedPersona.name}${selectedPersona.website?` | Website: ${selectedPersona.website}`:""}${(selectedPersona as any).description?` | Description: ${(selectedPersona as any).description}`:""}`:pid?"Account ID: "+pid:"No account selected";
+      // Active account info — selectedPersona.description rides on the
+      // ActivePersona index signature; cast the lookup to string.
+      const personaDescription = (selectedPersona as { description?: string } | null)?.description;
+      const accountInfo=selectedPersona?`Account: ${selectedPersona.name}${selectedPersona.website?` | Website: ${selectedPersona.website}`:""}${personaDescription?` | Description: ${personaDescription}`:""}`:pid?"Account ID: "+pid:"No account selected";
       // Pre-compute trends so AI gets insight, not raw numbers to crunch
       const ctrTrend = (() => {
         if (snaps.length < 3) return "";
-        const vals = snaps.slice(0, 3).map((s: any) => (s.avg_ctr * 100).toFixed(2));
+        const vals = snaps.slice(0, 3).map((s) => (s.avg_ctr * 100).toFixed(2));
         const oldest = parseFloat(vals[vals.length - 1]);
         const newest = parseFloat(vals[0]);
         const pct = oldest > 0 ? ((newest - oldest) / oldest * 100).toFixed(1) : "0";
@@ -3414,7 +3480,7 @@ export default function AdBriefAI() {
       })();
       const spendTrend = (() => {
         if (snaps.length < 3) return "";
-        const vals = snaps.slice(0, 3).map((s: any) => parseFloat(s.total_spend || 0).toFixed(0));
+        const vals = snaps.slice(0, 3).map((s) => parseFloat(String(s.total_spend || 0)).toFixed(0));
         return `Spend trend 3d: R$${vals.reverse().join("→R$")}`;
       })();
       const patternNote = (patternsRes.data || []).length === 0
@@ -3424,32 +3490,34 @@ export default function AdBriefAI() {
         ? `Plataformas conectadas: ${connections.join(", ")}`
         : "Nenhuma plataforma conectada";
       const alertsNote = accountAlerts.length
-        ? `Alertas ativos: ${accountAlerts.map((a: any) => a.detail).join(" | ")}`
+        ? `Alertas ativos: ${accountAlerts.map((a) => a.detail).join(" | ")}`
         : "";
       const goalNote = sessionGoal.trim()
         ? `Objetivo desta semana: ${sessionGoal.trim()}`
         : "";
       // ── Market Intelligence: load benchmarks when account has no/low data ──
-      const hasRealData = lastSnap && (parseFloat(lastSnap.total_spend || 0) > 0 || lastSnap.active_ads > 0);
+      const hasRealData = lastSnap && (parseFloat(String(lastSnap.total_spend || 0)) > 0 || (lastSnap.active_ads || 0) > 0);
       let benchmarkCtx = "";
       if (!hasRealData && connections.includes("meta")) {
         try {
-          const personaNiche = ((selectedPersona?.result as any)?.niche || (selectedPersona?.result as any)?.industry || "geral")
+          const personaResult = (selectedPersona?.result || null) as PersonaResult | null;
+          const personaNiche = (personaResult?.niche || personaResult?.industry || "geral")
             .toLowerCase().replace(/imóvel|imobiliário|imóveis/i, "imoveis")
             .replace(/automóvel|automobilismo|veículos/i, "autos")
             .replace(/e-commerce|loja|varejo/i, "ecommerce")
             .replace(/curso|treinamento|mentoria/i, "infoprodutos")
             .replace(/casino|apostas|betting/i, "igaming");
-          const personaMarket = ((selectedPersona?.result as any)?.market || (lang === "pt" ? "BR" : lang === "es" ? "MX" : "BR")).toUpperCase();
-          const { data: benchmarks } = await (supabase as any)
+          const personaMarket = (personaResult?.market || (lang === "pt" ? "BR" : lang === "es" ? "MX" : "BR")).toUpperCase();
+          type BenchmarkRow = { metric: string; value_avg: number | null; value_min: number | null; value_max: number | null; unit: string | null };
+          const { data: benchmarks } = await (sb
             .from("market_intelligence")
             .select("metric, value_avg, value_min, value_max, unit")
             .eq("platform", "meta")
             .eq("market", personaMarket)
             .in("niche", [personaNiche, "geral"])
-            .order("niche", { ascending: false }); // niche-specific first
+            .order("niche", { ascending: false })) as { data: BenchmarkRow[] | null }; // niche-specific first
           if (benchmarks?.length) {
-            const bLines = (benchmarks as any[]).map((b: any) =>
+            const bLines = benchmarks.map((b) =>
               `${b.metric}: avg ${b.value_avg}${b.unit} (range ${b.value_min}–${b.value_max}${b.unit})`
             ).join("\n");
             benchmarkCtx = `=== MARKET BENCHMARKS (${personaNiche}/${personaMarket}) ===
@@ -3708,12 +3776,12 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
         // Strip _autoExec from saved messages to prevent re-firing on reload
         const toSave=messages.slice(-30).map(m=>({
           ...m,
-          blocks:m.blocks?.map(b=>(b as any)._autoExec
+          blocks:m.blocks?.map(b=>b._autoExec
             ? {...b,type:"insight" as const, _autoExec:undefined}
             : b
           )
         }));
-        const hasUserHistory = toSave.some((m:any)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
+        const hasUserHistory = toSave.some((m)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
         if (hasUserHistory) storage.setJSON(SK, toSave);
         else storage.remove(SK);
       }
@@ -3724,8 +3792,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     const isPaid = profile?.plan && profile.plan !== "free";
     if(!isPaid || !user?.id || !selectedPersona?.id || messages.length === 0) return;
     const last = messages[messages.length - 1];
-    if(!last || (last as any)._synced) return; // already saved
-    const hasUserHistory = messages.some((m:any)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
+    if(!last || last._synced) return; // already saved
+    const hasUserHistory = messages.some((m)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
     if(!hasUserHistory && last.role === "assistant") return;
     const pid = selectedPersona?.id || null;
     const payload = {
@@ -3734,10 +3802,11 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       role: last.role,
       content: last.role === "user"
         ? { userText: last.userText || "" }
-        : { blocks: (last.blocks||[]).map(b => { const {_pendingTool,_toolParams,_autoExec,...rest}=b as any; return rest; }) },
+        : { blocks: (last.blocks||[]).map(b => { const {_pendingTool,_toolParams,_autoExec,...rest}=b; return rest; }) },
       ts: last.ts,
     };
     // fire-and-forget — non-blocking
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     void (supabase as any).from("chat_messages").insert(payload);
   },[messages]);
 
@@ -3762,10 +3831,10 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
           ts: r.ts,
           role: r.role as "user"|"assistant",
           userText: r.content?.userText,
-          blocks: (r.content?.blocks||[]).filter((b:any) => b.type !== "trend_chart"),
+          blocks: ((r.content?.blocks as Block[] | undefined) || []).filter((b) => b.type !== "trend_chart"),
           _synced: true,
         }));
-        const hasUserHistory = restored.some((m:any)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
+        const hasUserHistory = restored.some((m)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
         if(!hasUserHistory) return;
         // Only restore if still no local data (avoid race with proactive greeting)
         const stillEmpty = (() => { try { return storage.getJSON(SK, []).length === 0; } catch { return true; } })();
@@ -3782,12 +3851,12 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   useEffect(()=>{
     messages.forEach(msg=>{
       msg.blocks?.forEach(async(block,bi)=>{
-        if(!(block as any)._pendingTool)return;
+        if(!block._pendingTool)return;
         const execKey=`${msg.id}-${bi}`;
         if(executedTools.current.has(execKey))return;
         executedTools.current.add(execKey);
-        const fn=(block as any)._pendingTool as string;
-        const params=(block as any)._toolParams||{};
+        const fn=block._pendingTool;
+        const params=block._toolParams||{};
         try{
           const{data,error}=await supabase.functions.invoke(fn,{body:params});
           if(error)throw error;
@@ -3801,7 +3870,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
               const translated=data.translation||data.translated_text||data.result||"";
               nb[bi]={type:"insight",title:lang==="pt"?"Tradução":lang==="es"?"Traducción":"Translation",content:translated};
             }else if(fn==="generate-hooks"&&data?.hooks?.length){
-              nb[bi]={type:"hooks",title:lang==="pt"?"Hooks gerados":lang==="es"?"Hooks generados":"Generated hooks",content:"",items:data.hooks.map((h:any)=>typeof h==="string"?h:h.hook||h.text||JSON.stringify(h))};
+              nb[bi]={type:"hooks",title:lang==="pt"?"Hooks gerados":lang==="es"?"Hooks generados":"Generated hooks",content:"",items:(data.hooks as Array<string | { hook?: string; text?: string }>).map((h)=>typeof h==="string"?h:h.hook||h.text||JSON.stringify(h))};
               // Capture learning — fire and forget
               if(user?.id){
                 supabase.functions.invoke("capture-learning",{body:{
@@ -3821,11 +3890,13 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
               const scripts = data.scripts || [];
               let content = "";
               if(scripts.length > 0){
-                content = scripts.map((s: any, si: number) => {
+                type ScriptLine = { type?: string; text: string };
+                type Script = { title?: string; hook_score?: number; lines?: ScriptLine[]; notes?: string };
+                content = (scripts as Script[]).map((s, si) => {
                   const lines: string[] = [];
                   if(scripts.length > 1) lines.push(`## ${s.title || `Variação ${si+1}`}${s.hook_score ? ` · Hook Score: ${s.hook_score}/100` : ""}`);
                   if(s.lines?.length){
-                    s.lines.forEach((l: any) => {
+                    s.lines.forEach((l) => {
                       const prefix = l.type === "vo" ? "**VO**" : l.type === "onscreen" ? "**ON-SCREEN**" : "**VISUAL**";
                       lines.push(`${prefix}  ${l.text}`);
                     });
@@ -3842,11 +3913,24 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
               if(user?.id){
                 supabase.functions.invoke("capture-learning",{body:{
                   user_id:user.id,event_type:"brief_generated",
-                  data:{ brief_summary:(data.brief as any)?.objective||(data.brief as any)?.core_message||"", product:params.product, market:params.market }
+                  data:{ brief_summary:(data.brief as { objective?: string; core_message?: string } | undefined)?.objective||(data.brief as { objective?: string; core_message?: string } | undefined)?.core_message||"", product:params.product, market:params.market }
                 }}).catch(()=>{});
               }
               // brief is a structured JSON object — convert to readable markdown
-              const b=data.brief as any;
+              type Brief = {
+                objective?: string;
+                core_message?: string;
+                value_proposition?: string;
+                target_audience?: { demographics?: string; psychographics?: string; pain_points?: string[] };
+                tone_and_voice?: string;
+                key_messages?: string[];
+                formats?: Array<{ format: string; duration?: string; rationale: string }>;
+                visual_direction?: string;
+                cta?: string;
+                do_not?: string[];
+                compliance_notes?: string;
+              };
+              const b=data.brief as Brief;
               const lines:string[]=[];
               if(b.objective) lines.push(`**Objetivo:** ${b.objective}`);
               if(b.core_message) lines.push(`\n**Mensagem central:** ${b.core_message}`);
@@ -3859,11 +3943,11 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
                 if(ta.pain_points?.length) lines.push(`- Dores: ${ta.pain_points.join(", ")}`);
               }
               if(b.tone_and_voice) lines.push(`\n**Tom:** ${b.tone_and_voice}`);
-              if(b.key_messages?.length) lines.push(`\n**Mensagens-chave:**\n${b.key_messages.map((m:string)=>`- ${m}`).join("\n")}`);
-              if(b.formats?.length) lines.push(`\n**Formatos:**\n${b.formats.map((f:any)=>`- ${f.format}${f.duration?` (${f.duration})`:""} — ${f.rationale}`).join("\n")}`);
+              if(b.key_messages?.length) lines.push(`\n**Mensagens-chave:**\n${b.key_messages.map((m)=>`- ${m}`).join("\n")}`);
+              if(b.formats?.length) lines.push(`\n**Formatos:**\n${b.formats.map((f)=>`- ${f.format}${f.duration?` (${f.duration})`:""} — ${f.rationale}`).join("\n")}`);
               if(b.visual_direction) lines.push(`\n**Direção visual:** ${b.visual_direction}`);
               if(b.cta) lines.push(`\n**CTA:** ${b.cta}`);
-              if(b.do_not?.length) lines.push(`\n**Não fazer:**\n${b.do_not.map((d:string)=>`- ${d}`).join("\n")}`);
+              if(b.do_not?.length) lines.push(`\n**Não fazer:**\n${b.do_not.map((d)=>`- ${d}`).join("\n")}`);
               if(b.compliance_notes) lines.push(`\n**Compliance:** ${b.compliance_notes}`);
               nb[bi]={type:"insight",title:"Brief",content:lines.join("\n")};
             }else{
@@ -3879,7 +3963,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
           setMessages(prev=>prev.map(m=>{
             if(m.id!==msg.id)return m;
             const nb=[...(m.blocks||[])];
-            nb[bi]={type:"warning",title:lang==="es"?"Fallo":"Falha",content:String((e as any)?.message||"Erro")};
+            nb[bi]={type:"warning",title:lang==="es"?"Fallo":"Falha",content:String(e instanceof Error ? e.message : e || "Erro")};
             return{...m,blocks:nb};
           }));
         }
@@ -3897,13 +3981,14 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   useEffect(() => {
     if (!user?.id || (ctxAlerts?.length ?? 0) > 0) return;
     const loadAlerts = async () => {
-      const { data, error } = await supabase
-        .from("account_alerts" as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from("account_alerts")
         .select("*")
         .eq("user_id", user.id)
         .is("dismissed_at", null)
         .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(5) as { data: AccountAlert[] | null; error: { message?: string } | null };
       if (error) console.error("[AdBrief] Chat alert fetch failed:", error);
       if (data?.length) setAccountAlerts(data);
     };
@@ -3914,12 +3999,13 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   const dismissAlert = async (alertId: string) => {
     setAlertsDismissing(prev => new Set([...prev, alertId]));
     // Fire DB update in background
-    supabase.from("account_alerts" as any)
-      .update({ dismissed_at: new Date().toISOString() } as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from("account_alerts")
+      .update({ dismissed_at: new Date().toISOString() })
       .eq("id", alertId).then(() => {});
     // Wait for exit animation then remove from state
     setTimeout(() => {
-      setAccountAlerts(prev => prev.filter((a: any) => a.id !== alertId));
+      setAccountAlerts(prev => prev.filter((a) => a.id !== alertId));
       setAlertsDismissing(prev => { const s = new Set(prev); s.delete(alertId); return s; });
     }, 280);
   };
@@ -3927,13 +4013,28 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
   // ── Proactive greeting — fires when chat opens, always speaks first ──────────
   // Onboarding quiz removed — completeOnboarding no longer needed
 
-  const triggerProactiveGreeting = async (snapshot: any, hasMetaConn?: boolean, hasGoogleConn?: boolean, liveMetrics?: { spend: number; ctr: number; clicks: number; impressions: number; active_ads: number } | null) => {
+  /** Snapshot row passed to triggerProactiveGreeting. Mirrors the columns
+   *  read inside the function — kept local because the upstream snapshot
+   *  shape is a normalized loose blob (different fetchers produce slightly
+   *  different fields). */
+  type GreetingSnapshot = {
+    date?: string;
+    total_spend?: number | null;
+    avg_ctr?: number | null;
+    yesterday_ctr?: number | null;
+    active_ads?: number | null;
+    winners_count?: number | null;
+    losers_count?: number | null;
+    ai_insight?: string | null;
+    top_ads?: unknown[];
+  } | null;
+  const triggerProactiveGreeting = async (snapshot: GreetingSnapshot, hasMetaConn?: boolean, hasGoogleConn?: boolean, liveMetrics?: { spend: number; ctr: number; clicks: number; impressions: number; active_ads: number } | null) => {
     if (proactiveFired.current) return;
     proactiveFired.current = true;
 
     // Returning user with real conversation history — don't interrupt
-    const existing = (() => { try { return storage.getJSON(SK, []); } catch { return []; } })();
-    const hasRealHistory = existing.some((m: any) => m.role === "user");
+    const existing = (() => { try { return storage.getJSON(SK, []) as AIMessage[]; } catch { return [] as AIMessage[]; } })();
+    const hasRealHistory = existing.some((m) => m.role === "user");
     if (hasRealHistory) { setProactiveLoading(false); return; }
     try {
       const accountName = selectedPersona?.name || null;
@@ -3954,8 +4055,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
 
       // Card source 1: Account alerts (from PriorityStack)
       const activeAlerts = accountAlerts || [];
-      const highAlerts = activeAlerts.filter((a: any) => a.urgency === "high");
-      const medAlerts = activeAlerts.filter((a: any) => a.urgency === "medium");
+      const highAlerts = activeAlerts.filter((a) => a.urgency === "high");
+      const medAlerts = activeAlerts.filter((a) => a.urgency === "medium");
 
       if (highAlerts.length > 0) {
         const a = highAlerts[0];
@@ -3973,7 +4074,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             tag: lang === "pt" ? "URGENTE" : "URGENT",
             tagColor: "#F87171",
             headline: lang === "pt" ? `+${highAlerts.length - 1} alerta${highAlerts.length > 2 ? "s" : ""} crítico${highAlerts.length > 2 ? "s" : ""}` : `+${highAlerts.length - 1} critical alert${highAlerts.length > 2 ? "s" : ""}`,
-            detail: highAlerts.slice(1).map((h: any) => h.ad_name ? `${h.ad_name}: ${h.detail.slice(0, 60)}` : h.detail.slice(0, 80)).join(" · "),
+            detail: highAlerts.slice(1).map((h) => h.ad_name ? `${h.ad_name}: ${h.detail.slice(0, 60)}` : h.detail.slice(0, 80)).join(" · "),
             action: lang === "pt" ? "Ver todos" : "View all",
             actionPrompt: lang === "pt" ? "Mostre todos os alertas urgentes" : "Show all urgent alerts",
           });
@@ -3986,10 +4087,11 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       // Show data cards if we have live-metrics OR snapshot with spend
       const hasSpendData = (liveMetrics && liveMetrics.spend > 0) || (snapshot && snapshot.total_spend > 0);
       if (hasSpendData) {
-        const topAds = (snapshot?.top_ads || []) as any[];
-        const toScale = topAds.filter((a: any) => a.isScalable).slice(0, 2);
-        const toPause = topAds.filter((a: any) => a.needsPause).slice(0, 1);
-        const fatigued = topAds.filter((a: any) => a.isFatigued).slice(0, 1);
+        type SnapTopAd = { name?: string; ctr?: number; spend?: number; frequency?: number; isScalable?: boolean; needsPause?: boolean; isFatigued?: boolean };
+        const topAds: SnapTopAd[] = (snapshot?.top_ads || []) as SnapTopAd[];
+        const toScale = topAds.filter((a) => a.isScalable).slice(0, 2);
+        const toPause = topAds.filter((a) => a.needsPause).slice(0, 1);
+        const fatigued = topAds.filter((a) => a.isFatigued).slice(0, 1);
         const ctrDelta = snapshot?.yesterday_ctr > 0 && snapshot?.avg_ctr > 0
           ? ((snapshot.avg_ctr - snapshot.yesterday_ctr) / snapshot.yesterday_ctr * 100) : null;
 
@@ -4064,7 +4166,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             tag: "BRIEFING",
             tagColor: "#0ea5e9",
             headline: accountName || (lang === "pt" ? "Resumo da semana" : "Weekly summary"),
-            detail: overviewDetail + (snapshot.ai_insight ? ` · ${snapshot.ai_insight.slice(0, 100)}` : ""),
+            detail: overviewDetail + (snapshot?.ai_insight ? ` · ${snapshot.ai_insight.slice(0, 100)}` : ""),
           });
         }
 
@@ -4082,10 +4184,20 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       if (cards.length < 4) {
         try {
           const pid = selectedPersona?.id || null;
+          type GreetingPatternRow = {
+            pattern_key: string;
+            avg_ctr: number | null;
+            confidence: number | null;
+            is_winner: boolean | null;
+            insight_text: string | null;
+            label?: string;
+          };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const sb2 = supabase as any;
           const { data: patterns } = await (pid
-            ? (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,confidence,is_winner,insight_text").eq("user_id", user.id).eq("persona_id", pid).eq("is_winner", true).order("confidence", { ascending: false }).limit(2)
-            : (supabase as any).from("learned_patterns").select("pattern_key,avg_ctr,confidence,is_winner,insight_text").eq("user_id", user.id).is("persona_id", null).eq("is_winner", true).order("confidence", { ascending: false }).limit(2)
-          );
+            ? sb2.from("learned_patterns").select("pattern_key,avg_ctr,confidence,is_winner,insight_text,label").eq("user_id", user.id).eq("persona_id", pid).eq("is_winner", true).order("confidence", { ascending: false }).limit(2)
+            : sb2.from("learned_patterns").select("pattern_key,avg_ctr,confidence,is_winner,insight_text,label").eq("user_id", user.id).is("persona_id", null).eq("is_winner", true).order("confidence", { ascending: false }).limit(2)
+          ) as { data: GreetingPatternRow[] | null };
           if (patterns?.length) {
             const p = patterns[0];
             // Normalize confidence to 0–100 regardless of storage format
@@ -4123,15 +4235,15 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             if (dictEntry) {
               humanLabel = dictEntry[lang === "pt" ? "pt" : "en"];
             } else if (
-              typeof (p as any).label === "string" &&
-              (p as any).label.length > 0 &&
-              (p as any).label.length < 80 &&
+              typeof p.label === "string" &&
+              p.label.length > 0 &&
+              p.label.length < 80 &&
               // Reject machine-looking labels (uuid:deviation:id, etc.).
-              !/^[a-z]+:[a-f0-9-]+(:|$)/i.test((p as any).label) &&
+              !/^[a-z]+:[a-f0-9-]+(:|$)/i.test(p.label) &&
               // Reject raw snake_case keys that slipped through.
-              !/^(perf|persona|trend|competitor|preflight|alert)[:_]/i.test((p as any).label)
+              !/^(perf|persona|trend|competitor|preflight|alert)[:_]/i.test(p.label)
             ) {
-              humanLabel = (p as any).label;
+              humanLabel = p.label;
             }
             // Format CTR — handle both decimal (0.079) and percentage (7.9) formats
             const ctrVal = p.avg_ctr != null
@@ -4204,7 +4316,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
         } else {
           // No connection — onboarding flow
           const aid = Date.now() + 1;
-          const niche = (selectedPersona?.result as any)?.niche || (selectedPersona?.result as any)?.industry || "";
+          const personaResult = (selectedPersona?.result as { niche?: string; industry?: string } | null);
+          const niche = personaResult?.niche || personaResult?.industry || "";
           const nicheHint = niche
             ? (lang === "pt" ? ` Para contas de ${niche}, já sei o que tende a funcionar.` : ` For ${niche} accounts, I already know what tends to work.`)
             : "";
@@ -4219,8 +4332,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
           setMessages([{
             role: "assistant",
             blocks: [
-              { type: "insight" as any, title: greetingTitle, content: intro },
-              { type: "navigate" as any, title: lang === "pt" ? "Conectar Meta Ads" : "Connect Meta Ads", content: lang === "pt" ? "Leva 30 segundos — depois vejo tudo da sua conta em tempo real." : "Takes 30 seconds — then I see everything in real time.", route: "/dashboard/accounts", cta },
+              { type: "insight", title: greetingTitle, content: intro },
+              { type: "navigate", title: lang === "pt" ? "Conectar Meta Ads" : "Connect Meta Ads", content: lang === "pt" ? "Leva 30 segundos — depois vejo tudo da sua conta em tempo real." : "Takes 30 seconds — then I see everything in real time.", route: "/dashboard/accounts", cta },
             ],
             ts: aid, id: aid
           }, ...demoMsgs]);
@@ -4235,7 +4348,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       demoMessagesRef.current = null;
       setMessages([{
         role: "assistant",
-        blocks: [{ type: "proactive" as any, title: greetingTitle, content: JSON.stringify(cards) }],
+        blocks: [{ type: "proactive", title: greetingTitle, content: JSON.stringify(cards) }],
         ts: aid, id: aid
       }, ...demoMsgs2]);
 
@@ -5439,18 +5552,18 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
               <span style={{width:7,height:7,borderRadius:"50%",background:"#F87171",boxShadow:"0 0 10px rgba(248,113,113,0.5)",animation:"chatAlertPulse 2s ease-in-out infinite"}} />
               <span style={{fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"#F87171",fontFamily:"'Inter','Plus Jakarta Sans',system-ui,sans-serif"}}>
-                {accountAlerts.filter((a:any)=>a.urgency==="high").length > 0
-                  ? `${accountAlerts.filter((a:any)=>a.urgency==="high").length} ALERTA${accountAlerts.filter((a:any)=>a.urgency==="high").length>1?"S":""} URGENTE${accountAlerts.filter((a:any)=>a.urgency==="high").length>1?"S":""}`
+                {accountAlerts.filter((a)=>a.urgency==="high").length > 0
+                  ? `${accountAlerts.filter((a)=>a.urgency==="high").length} ALERTA${accountAlerts.filter((a)=>a.urgency==="high").length>1?"S":""} URGENTE${accountAlerts.filter((a)=>a.urgency==="high").length>1?"S":""}`
                   : `${accountAlerts.length} ALERTA${accountAlerts.length>1?"S":""}`}
               </span>
               <div style={{flex:1,height:1,background:"rgba(248,113,113,0.15)"}} />
             </div>
             {/* Alert cards */}
-            {[...accountAlerts].sort((a:any,b:any) => {
+            {[...accountAlerts].sort((a, b) => {
               if(a.urgency==="high"&&b.urgency!=="high") return -1;
               if(a.urgency!=="high"&&b.urgency==="high") return 1;
               return new Date(b.created_at).getTime()-new Date(a.created_at).getTime();
-            }).map((alert:any,i:number) => {
+            }).map((alert, i) => {
               const isHigh = alert.urgency === "high";
               const isDismissing = alertsDismissing.has(alert.id);
               const alertIcons: Record<string,string> = {FADIGA_CRITICA:"🔥",ROAS_CRITICO:"💸",ROAS_COLAPSOU:"📉",CTR_COLAPSOU:"🧊",RETENCAO_VIDEO_BAIXA:"⏭️",SPEND_SEM_RETORNO:"🕳️"};
