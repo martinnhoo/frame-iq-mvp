@@ -26,6 +26,54 @@ interface Profile {
   onboarding_data?: Record<string, unknown> | null;
 }
 
+/** Shape of a row from `learned_patterns`. The table isn't in v2-database
+ *  types so we declare it locally — these are the columns the panel reads. */
+interface LearnedPatternRow {
+  pattern_key: string;
+  is_winner: boolean | null;
+  avg_ctr: number | null;
+  avg_roas: number | null;
+  confidence: number | null;
+  insight_text: string | null;
+  sample_size: number | null;
+}
+interface CreativeMemoryRow {
+  hook_type: string | null;
+  hook_score: number | null;
+  platform: string | null;
+  created_at: string;
+}
+interface AiProfileRow {
+  ai_summary: string | null;
+  avg_hook_score: number | null;
+  total_analyses: number | null;
+  top_performing_models: unknown;
+  ai_recommendations: unknown;
+  last_updated: string | null;
+  pain_point: string | null;
+}
+interface DailySnapshotRow {
+  date: string;
+  total_spend: number | null;
+  avg_ctr: number;
+  active_ads: number | null;
+  winners_count: number | null;
+  losers_count: number | null;
+  ai_insight: string | null;
+}
+interface IntelData {
+  patterns: LearnedPatternRow[];
+  memory: CreativeMemoryRow[];
+  profile: AiProfileRow | null;
+  snaps: DailySnapshotRow[];
+}
+interface TelegramConn {
+  chat_id: string | number;
+  telegram_username: string | null;
+  connected_at: string | null;
+}
+type Lang = "pt" | "en" | "es" | "hi";
+
 interface PersonaRecord {
   id: string;
   created_at: string;
@@ -249,12 +297,12 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const [lang, setLang] = useState("en");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [intel, setIntel] = useState<any>(null);
+  const [intel, setIntel] = useState<IntelData | null>(null);
   const [intelLoading, setIntelLoading] = useState(false);
   const [editingInstructions, setEditingInstructions] = useState(false);
   const [instructionsText, setInstructionsText] = useState("");
   const [savingInstructions, setSavingInstructions] = useState(false);
-  const [telegramConn, setTelegramConn] = useState<any>(null);
+  const [telegramConn, setTelegramConn] = useState<TelegramConn | null>(null);
   const [telegramLoading, setTelegramLoading] = useState(false);
   const [pairingLink, setPairingLink] = useState<string|null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -268,8 +316,12 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
     if (tab !== "intelligence" || !user?.id) return;
     setIntelLoading(true);
     const personaId = selectedPersona?.id || null;
-    // learned_patterns: scope by persona_id when available (persona_id column exists)
-    const patternsQuery = (supabase as any).from("learned_patterns")
+    // learned_patterns / creative_memory / user_ai_profile / daily_snapshots
+    // are off-schema — supabase generated types don't know about them. Cast
+    // the client once per query and narrow the rows with the local Row types.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any;
+    const patternsQuery = sb.from("learned_patterns")
       .select("pattern_key, is_winner, avg_ctr, avg_roas, confidence, insight_text, sample_size")
       .eq("user_id", user.id)
       .order("confidence", { ascending: false }).limit(15);
@@ -277,25 +329,33 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
     if (personaId) patternsQuery.eq("persona_id", personaId);
 
     Promise.all([
-      patternsQuery,
-      (supabase as any).from("creative_memory")
+      patternsQuery as Promise<{ data: LearnedPatternRow[] | null }>,
+      sb.from("creative_memory")
         .select("hook_type, hook_score, platform, created_at")
-        .eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
-      (supabase as any).from("user_ai_profile")
+        .eq("user_id", user.id).order("created_at", { ascending: false }).limit(50) as Promise<{ data: CreativeMemoryRow[] | null }>,
+      sb.from("user_ai_profile")
         .select("ai_summary, avg_hook_score, total_analyses, top_performing_models, ai_recommendations, last_updated, pain_point")
-        .eq("user_id", user.id).maybeSingle(),
-      (supabase as any).from("daily_snapshots")
+        .eq("user_id", user.id).maybeSingle() as Promise<{ data: AiProfileRow | null }>,
+      sb.from("daily_snapshots")
         .select("date, total_spend, avg_ctr, active_ads, winners_count, losers_count, ai_insight")
         .eq("user_id", user.id)
-        .order("date", { ascending: false }).limit(7),
+        .order("date", { ascending: false }).limit(7) as Promise<{ data: DailySnapshotRow[] | null }>,
     ]).then(([patterns, memory, aiProfile, snaps]) => {
       // Normalize CTR: old data stored as percentage (>1), new data as decimal
-      const normSnaps = (snaps.data || []).map((s: any) => ({ ...s, avg_ctr: s.avg_ctr > 1 ? s.avg_ctr / 100 : s.avg_ctr }));
-      setIntel({ patterns: patterns.data || [], memory: memory.data || [], profile: aiProfile.data, snaps: normSnaps });
+      const normSnaps: DailySnapshotRow[] = (snaps.data || []).map((s) => ({
+        ...s,
+        avg_ctr: s.avg_ctr > 1 ? s.avg_ctr / 100 : s.avg_ctr,
+      }));
+      setIntel({
+        patterns: patterns.data || [],
+        memory: memory.data || [],
+        profile: aiProfile.data,
+        snaps: normSnaps,
+      });
       // Load existing instructions
-      const rawNotes = aiProfile.data?.pain_point as string | null;
+      const rawNotes = aiProfile.data?.pain_point ?? null;
       if (rawNotes) {
-        const items = rawNotes.split("|||").filter((s: string) => !s.startsWith("Usuário:") && !s.startsWith("Nicho:") && Boolean(s.trim()));
+        const items = rawNotes.split("|||").filter((s) => !s.startsWith("Usuário:") && !s.startsWith("Nicho:") && Boolean(s.trim()));
         setInstructionsText(items.join("\n"));
       }
     }).catch(() => {}).finally(() => setIntelLoading(false));
@@ -303,10 +363,11 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
   useEffect(() => {
     if (!open || !user?.id) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from("telegram_connections")
       .select("chat_id, telegram_username, connected_at")
       .eq("user_id", user.id).eq("active", true).maybeSingle()
-      .then(({ data }: any) => setTelegramConn(data || null));
+      .then((res: { data: TelegramConn | null }) => setTelegramConn(res.data || null));
   }, [open, user?.id]);
 
   // Sync fields when panel opens
@@ -317,7 +378,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
       const savedLang = profile?.preferred_language || "en";
       setLang(savedLang);
       // Apply profile language to global context (without overriding localStorage)
-      setGlobalLanguage(savedLang as any, false);
+      setGlobalLanguage(savedLang as Lang, false);
       setAvatarUrl(profile?.avatar_url || null);
     }
   }, [open]);
@@ -333,7 +394,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
 
     if (!error && data) {
       onProfileUpdate(data as Profile);
-      setGlobalLanguage(lang as any, true);
+      setGlobalLanguage(lang as Lang, true);
       setSaved(true);
       setTimeout(() => setSaved(false), 2200);
       toast.success(language === "pt" ? "Salvo!" : "Saved!");
@@ -568,6 +629,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                         </p>
                         <p style={{ fontFamily: M, fontSize: 12, color: "rgba(255,255,255,0.3)", margin: "0 0 10px", lineHeight: 1.5 }}>Recebendo alertas via @AdBriefAlertsBot</p>
                         <button onClick={async () => {
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           await (supabase as any).from("telegram_connections").update({ active: false }).eq("user_id", user.id);
                           setTelegramConn(null); setPairingLink(null);
                         }} style={{ fontFamily: M, fontSize: 12, color: "rgba(248,113,113,0.7)", background: "none", border: "1px solid rgba(248,113,113,0.2)", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
@@ -594,6 +656,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           setTelegramLoading(true);
                           try {
                             const tok = Math.random().toString(36).slice(2,8) + Math.random().toString(36).slice(2,8);
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             await (supabase as any).from("telegram_pairing_tokens").insert({
                               user_id: user.id, token: tok,
                               expires_at: new Date(Date.now() + 10*60*1000).toISOString(),
@@ -675,15 +738,16 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               if (key.startsWith("perf_")) return (language === "pt" ? "Performance: " : "") + key.replace("perf_", "").replace(/_/g, " ");
               return key.replace(/_/g, " ");
             };
-            const realPatterns = (intel?.patterns || []).filter((p: any) => (p.avg_ctr || 0) > 0 || (p.avg_roas || 0) > 0);
-            const prefPatterns = (intel?.patterns || []).filter((p: any) => !p.avg_ctr && !p.avg_roas && p.is_winner);
+            const realPatterns = (intel?.patterns || []).filter((p) => (p.avg_ctr || 0) > 0 || (p.avg_roas || 0) > 0);
+            const prefPatterns = (intel?.patterns || []).filter((p) => !p.avg_ctr && !p.avg_roas && p.is_winner);
             const hasSnaps = (intel?.snaps || []).length > 0;
             const s0 = intel?.snaps?.[0];
             const s1 = intel?.snaps?.[1];
             const delCtr = s0 && s1 && s1.avg_ctr > 0 ? ((s0.avg_ctr - s1.avg_ctr) / s1.avg_ctr * 100) : null;
             const deletePattern = async (key: string) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               await (supabase as any).from("learned_patterns").delete().eq("pattern_key", key).eq("user_id", user.id);
-              setIntel((prev: any) => prev ? { ...prev, patterns: prev.patterns.filter((x: any) => x.pattern_key !== key) } : prev);
+              setIntel((prev) => prev ? { ...prev, patterns: prev.patterns.filter((x) => x.pattern_key !== key) } : prev);
             };
             return (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -707,15 +771,18 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           <span style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.25)" }}>{s0.date}</span>
                         </div>
                         <div style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                          {[
+                          {([
                             { val: `R$${(s0.total_spend||0).toFixed(0)}`, label: language === "pt" ? "Spend 7d" : "7d Spend", color: "#eef0f6" },
                             { val: `${((s0.avg_ctr||0)*100).toFixed(2)}%`, label: "CTR", color: (s0.avg_ctr||0) >= 0.02 ? "#34d399" : (s0.avg_ctr||0) >= 0.01 ? "#fbbf24" : "#f87171", extra: delCtr !== null ? `${delCtr > 0 ? "↑" : "↓"} ${Math.abs(delCtr).toFixed(1)}%` : null, extraColor: delCtr !== null ? (delCtr > 0 ? "#34d399" : "#f87171") : "transparent" },
                             { val: String(s0.active_ads||0), label: language === "pt" ? "Ads ativos" : "Active ads", color: "#eef0f6" },
-                          ].map((item, i) => (
+                          ] as Array<{
+                            val: string; label: string; color: string;
+                            extra?: string | null; extraColor?: string;
+                          }>).map((item, i) => (
                             <div key={i} style={{ textAlign: "center" as const }}>
                               <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 18, fontWeight: 900, color: item.color, margin: 0 }}>{item.val}</p>
                               <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.35)", margin: "2px 0 0" }}>{item.label}</p>
-                              {(item as any).extra && <p style={{ fontFamily: M, fontSize: 12, color: (item as any).extraColor, margin: "1px 0 0" }}>{(item as any).extra}</p>}
+                              {item.extra && <p style={{ fontFamily: M, fontSize: 12, color: item.extraColor, margin: "1px 0 0" }}>{item.extra}</p>}
                             </div>
                           ))}
                         </div>
@@ -738,8 +805,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           <div style={{ padding: "4px 14px 10px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                             <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.22)", marginBottom: 5, textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>7 dias</p>
                             <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 22 }}>
-                              {intel.snaps.slice(0, 7).reverse().map((sn: any, i: number) => {
-                                const maxC = Math.max(...intel.snaps.slice(0, 7).map((x: any) => x.avg_ctr || 0.001));
+                              {intel.snaps.slice(0, 7).reverse().map((sn, i) => {
+                                const maxC = Math.max(...intel.snaps.slice(0, 7).map((x) => x.avg_ctr || 0.001));
                                 const h = Math.max(3, (sn.avg_ctr / maxC) * 22);
                                 return <div key={i} title={`${sn.date}: CTR ${(sn.avg_ctr*100).toFixed(2)}%`}
                                   style={{ flex: 1, height: h, borderRadius: 2, background: i === intel.snaps.slice(0,7).length-1 ? "#0ea5e9" : "rgba(255,255,255,0.12)" }} />;
@@ -783,10 +850,11 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                                 try {
                                   const lines = instructionsText.split("\n").map((l: string) => l.trim()).filter(Boolean);
                                   // Preserve system notes (Usuário/Nicho), append user instructions
-                                  const rawNotes = (intel?.profile as any)?.pain_point as string | null;
-                                  const systemNotes = rawNotes ? rawNotes.split("|||").filter((s: string) => s.startsWith("Usuário:") || s.startsWith("Nicho:")) : [];
+                                  const rawNotes = intel?.profile?.pain_point ?? null;
+                                  const systemNotes = rawNotes ? rawNotes.split("|||").filter((s) => s.startsWith("Usuário:") || s.startsWith("Nicho:")) : [];
                                   const allNotes = [...systemNotes, ...lines].join("|||");
-                                  await (supabase.from("user_ai_profile" as any) as any).upsert({
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                  await (supabase as any).from("user_ai_profile").upsert({
                                     user_id: user.id,
                                     pain_point: allNotes,
                                     last_updated: new Date().toISOString(),
@@ -828,7 +896,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           </p>
                         </div>
                         <div style={{ padding: "8px" }}>
-                          {realPatterns.slice(0, 6).map((p: any, i: number) => (
+                          {realPatterns.slice(0, 6).map((p, i) => (
                             <div key={i} style={{ padding: "9px 10px", borderRadius: 8, marginBottom: 3, background: "rgba(255,255,255,0.025)", display: "flex", gap: 8, alignItems: "flex-start" }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <p style={{ fontFamily: M, fontSize: 12, fontWeight: 600, color: p.is_winner ? "#34d399" : "rgba(238,240,246,0.55)", margin: 0 }}>
@@ -863,7 +931,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                           </p>
                         </div>
                         <div style={{ padding: "8px" }}>
-                          {prefPatterns.slice(0, 4).map((p: any, i: number) => (
+                          {prefPatterns.slice(0, 4).map((p, i) => (
                             <div key={i} style={{ padding: "8px 10px", borderRadius: 7, marginBottom: 3, background: "rgba(255,255,255,0.015)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                               <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.45)", margin: 0 }}>{translatePatternKey(p.pattern_key)}</p>
                               <button onClick={() => deletePattern(p.pattern_key)}

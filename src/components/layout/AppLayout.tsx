@@ -12,7 +12,7 @@ import { queryClient } from '@/App';
 import { storage } from '@/lib/storage';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useActiveAccount } from '@/hooks/useActiveAccount';
-import type { DashboardContext, Profile, Usage, UsageDetails, ActivePersona } from '@/components/dashboard/DashboardLayout';
+import type { DashboardContext, Profile, Usage, UsageDetails, ActivePersona, AccountAlert } from '@/components/dashboard/DashboardLayout';
 import type { User } from '@supabase/supabase-js';
 import { AppTopbarBreadcrumb } from '@/components/dashboard/AppTopbarBreadcrumb';
 import { AppTopbarBell } from '@/components/dashboard/AppTopbarBell';
@@ -153,7 +153,7 @@ export function AppLayout() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [usage, setUsage] = useState<Usage>({ analyses_count: 0, boards_count: 0 });
   const [usageDetails, setUsageDetails] = useState<UsageDetails | null>(null);
-  const [accountAlerts, setAccountAlerts] = useState<any[]>([]);
+  const [accountAlerts, setAccountAlerts] = useState<AccountAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiProfile, setAiProfile] = useState<any>(null);
   // Start with null — persona is loaded AFTER auth to prevent cross-account leak
@@ -201,18 +201,48 @@ export function AppLayout() {
 
       const { data: profileData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
 
-      // AI profile
-      (supabase as any).from('user_ai_profile')
+      // user_ai_profile, account_alerts, personas — off-schema in the
+      // generated supabase types. Cast the client once and narrow rows
+      // with explicit types below.
+      type AiProfileLite = {
+        industry: string | null;
+        ai_summary: string | null;
+        top_performing_models: unknown;
+        best_platforms: unknown;
+      };
+      type PersonaRow = {
+        id: string;
+        name: string | null;
+        logo_url: string | null;
+        result: {
+          name?: string;
+          website?: string;
+          biz_description?: string;
+          preferred_market?: string;
+          industry?: string;
+          niche?: string;
+        } | null;
+        brand_kit: { logo_data_url?: string } | null;
+        description: string | null;
+        website: string | null;
+        created_at: string;
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+
+      sb.from('user_ai_profile')
         .select('industry, ai_summary, top_performing_models, best_platforms')
         .eq('user_id', session.user.id).maybeSingle()
-        .then(({ data, error }: any) => { if (mounted && !error) setAiProfile(data || null); });
+        .then((res: { data: AiProfileLite | null; error: unknown }) => {
+          if (mounted && !res.error) setAiProfile(res.data || null);
+        });
 
       if (profileData && mounted) {
         setProfile(profileData);
         if (profileData.preferred_language) {
           const localLang = storage.get('adbrief_language');
           if (!localLang || localLang === profileData.preferred_language) {
-            setLanguage(profileData.preferred_language as any, false);
+            setLanguage(profileData.preferred_language as Parameters<typeof setLanguage>[0], false);
           }
         }
         if (!profileData.onboarding_completed) {
@@ -223,26 +253,25 @@ export function AppLayout() {
 
       fetchUsage(session.user.id);
 
-      (supabase as any)
-        .from('account_alerts')
+      sb.from('account_alerts')
         .select('*')
         .eq('user_id', session.user.id)
         .is('dismissed_at', null)
         .order('created_at', { ascending: false })
         .limit(10)
-        .then(({ data, error }: any) => {
-          if (mounted && !error) setAccountAlerts(data || []);
+        .then((res: { data: AccountAlert[] | null; error: unknown }) => {
+          if (mounted && !res.error) setAccountAlerts(res.data || []);
         });
 
       // Load saved personas
-      const { data: rawPersonas } = await (supabase as any)
+      const { data: rawPersonas } = await sb
         .from('personas')
         .select('id, name, logo_url, result, brand_kit, description, website, created_at')
         .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { data: PersonaRow[] | null };
 
       // Flatten result jsonb into top-level fields for compatibility
-      const personas = (rawPersonas || []).map((p: any) => ({
+      const personas = (rawPersonas || []).map((p) => ({
         id: p.id,
         name: p.name || p.result?.name || 'Conta',
         logo_url: p.logo_url || p.brand_kit?.logo_data_url || null,
@@ -260,7 +289,7 @@ export function AppLayout() {
           const s = storage.get('frameiq_active_persona');
           if (s) {
             const parsed = JSON.parse(s);
-            if (parsed?._uid === session.user.id && parsed?.id && personas.find((p: any) => p.id === parsed.id)) {
+            if (parsed?._uid === session.user.id && parsed?.id && personas.find((p) => p.id === parsed.id)) {
               restored = parsed;
             }
           }
@@ -282,13 +311,31 @@ export function AppLayout() {
   // ── Reload personas when AccountsPage saves changes ──
   const reloadPersonas = useCallback(async () => {
     if (!user) return;
+    type PersonaRow = {
+      id: string;
+      name: string | null;
+      logo_url: string | null;
+      result: {
+        name?: string;
+        website?: string;
+        biz_description?: string;
+        preferred_market?: string;
+        industry?: string;
+        niche?: string;
+      } | null;
+      brand_kit: { logo_data_url?: string } | null;
+      description: string | null;
+      website: string | null;
+      created_at: string;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: rawPersonas } = await (supabase as any)
       .from('personas')
       .select('id, name, logo_url, result, brand_kit, description, website, created_at')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as { data: PersonaRow[] | null };
 
-    const personas = (rawPersonas || []).map((p: any) => ({
+    const personas = (rawPersonas || []).map((p) => ({
       id: p.id,
       name: p.name || p.result?.name || 'Conta',
       logo_url: p.logo_url || p.brand_kit?.logo_data_url || null,
@@ -302,7 +349,7 @@ export function AppLayout() {
 
     // If the currently selected persona was updated, refresh its data too
     if (selectedPersona) {
-      const updated = personas.find((p: any) => p.id === selectedPersona.id);
+      const updated = personas.find((p) => p.id === selectedPersona.id);
       if (updated) {
         setSelectedPersona(updated, user.id);
       } else if (personas.length) {
@@ -333,7 +380,7 @@ export function AppLayout() {
     navigate('/login');
   };
 
-  const plan = (profile as any)?.plan || 'free';
+  const plan = profile?.plan || 'free';
 
   // ── Upgrade wall state ──
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -688,11 +735,17 @@ export function AppLayout() {
           }}>
             <AppTopbarBreadcrumb />
             <div style={{ flex: 1 }} />
-            <AppTopbarBell alerts={accountAlerts as any} />
+            <AppTopbarBell alerts={accountAlerts.map(a => ({
+              id: a.id,
+              title: a.ad_name || a.campaign_name || a.type,
+              description: a.detail,
+              severity: a.urgency,
+              created_at: a.created_at,
+            }))} />
             <AppTopbarUserMenu
               user={user}
-              profile={profile as any}
-              plan={(profile as any)?.plan ?? null}
+              profile={profile}
+              plan={profile?.plan ?? null}
               onOpenProfile={() => setProfileOpen(true)}
             />
           </header>
@@ -715,7 +768,7 @@ export function AppLayout() {
             activeAccount,
             metaConnected,
             accountResolving,
-          } satisfies DashboardContext & { activeAccount: any; metaConnected: boolean; accountResolving: boolean }} />
+          } satisfies DashboardContext & { activeAccount: ReturnType<typeof useActiveAccount>['activeAccount']; metaConnected: boolean; accountResolving: boolean }} />
           </ErrorBoundary>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300 }}>
@@ -738,7 +791,7 @@ export function AppLayout() {
           open={profileOpen}
           onClose={() => setProfileOpen(false)}
           user={user}
-          profile={profile as any}
+          profile={profile}
           onProfileUpdate={(p) => setProfile(p as Profile)}
           selectedPersona={selectedPersona}
         />
@@ -748,7 +801,7 @@ export function AppLayout() {
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
-        accountId={(selectedPersona as any)?.account_id ?? null}
+        accountId={(selectedPersona?.account_id as string | null | undefined) ?? null}
         onOpenProfile={() => { setPaletteOpen(false); setProfileOpen(true); }}
       />
     </div>
