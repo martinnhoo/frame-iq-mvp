@@ -4316,6 +4316,10 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       "/campaign-plan":   "[CAMPAIGN_PLAN] I'll create a campaign plan. Tell me: product, objective, budget and market.",
       "/analise-criativo":"[ANALYZE_AD] Pronto para analisar um criativo. Manda a imagem ou descreve o anúncio (com CTR atual se tiver). Vou dar: score do hook, CTA, clareza visual, fit, veredito (Escalar/Testar/Pausar) e 3 ações.",
       "/analyze-ad":      "[ANALYZE_AD] Ready to analyze a creative. Send the image or describe the ad. I'll give: hook score, CTA, visual clarity, fit, verdict (Scale/Test/Pause) and 3 actions.",
+      // /score — alias mais curto/internacional do mesmo fluxo. Quem
+      // chega buscando "ad score" / "score ad" cai aqui sem precisar
+      // saber qual é o slug PT.
+      "/score":           "[ANALYZE_AD] Manda a imagem ou descreve o anúncio. Vou dar score 0-100 com breakdown (hook, CTA, clareza visual, fit), veredito e 3 ações pra subir o score.",
       "/concorrentes":    "[COMPETITOR] Analisa a estratégia criativa da concorrência. Me diz o nicho/marca a analisar.",
       // SPY — broader exploratory mode vs /concorrentes (which decodes
       // ONE specific ad). Use when the user wants to discover what's
