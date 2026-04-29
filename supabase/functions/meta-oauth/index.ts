@@ -168,8 +168,15 @@ Deno.serve(async (req) => {
         const withCtr = ads.filter((a: any) => parseFloat(a.ctr || 0) > 0);
         if (!withCtr.length) return;
 
-        // Meta returns CTR as percentage string ("2.5" = 2.5%) — normalize to decimal for consistency
-        const avgCtr = withCtr.reduce((s: number, a: any) => s + parseFloat(a.ctr) / 100, 0) / withCtr.length;
+        // Account benchmark CTR — sum-then-divide so high-volume ads dominate
+        // the baseline (which is what you want for "this ad is above the
+        // account benchmark"). Was avg(per-ad CTRs), which let a tiny ad with
+        // 1 click and 1 impression skew the benchmark and miscategorize real
+        // winners as losers.
+        // Meta returns CTR as percentage string ("2.5" = 2.5%) — normalize to decimal.
+        const totalImpr = withCtr.reduce((s: number, a: any) => s + parseFloat(a.impressions || 0), 0);
+        const totalClicks = withCtr.reduce((s: number, a: any) => s + parseFloat(a.clicks || 0), 0);
+        const avgCtr = totalImpr > 0 ? totalClicks / totalImpr : 0;
         const winners = withCtr.filter((a: any) => parseFloat(a.ctr) / 100 > avgCtr * 1.5).slice(0, 10);
         const losers = withCtr.filter((a: any) => parseFloat(a.ctr) / 100 < avgCtr * 0.5 && parseFloat(a.spend || 0) > 20).slice(0, 5);
         const topSpend = ads.slice(0, 5).map((a: any) =>

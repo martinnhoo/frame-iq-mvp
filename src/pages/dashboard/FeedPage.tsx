@@ -6552,8 +6552,6 @@ const FeedPage: React.FC = () => {
         const totalRevenue = mData.reduce((s, r) => s + (r.revenue || 0), 0);
         const totalClicks = mData.reduce((s, r) => s + (r.clicks || 0), 0);
         const totalImpressions = mData.reduce((s, r) => s + (r.impressions || 0), 0);
-        const ctrVals = mData.filter((r) => r.ctr != null).map((r) => Number(r.ctr));
-        const cpaVals = mData.filter((r) => r.cpa != null && r.cpa > 0).map((r) => Number(r.cpa));
         const uniqueDates = new Set(mData.map((r) => r.date));
 
         if (!isStillFresh()) return; // last guard before committing fallback values
@@ -6563,8 +6561,15 @@ const FeedPage: React.FC = () => {
           totalRevenue,
           totalClicks,
           totalImpressions,
-          avgCtr: ctrVals.length > 0 ? ctrVals.reduce((a, b) => a + b, 0) / ctrVals.length : 0,
-          avgCpa: cpaVals.length > 0 ? cpaVals.reduce((a, b) => a + b, 0) / cpaVals.length : 0,
+          // ── Money-math: ALL ratios computed sum-then-divide ──
+          // Previously avgCtr/avgCpa averaged per-row ratios (ctrs.reduce/length),
+          // which is wrong: a tiny ad with 1 click and 1 impression (CTR=100%)
+          // gets the same weight as a huge ad with 50 clicks and 10000
+          // impressions (CTR=0.5%). The "average" was driven by the small ad.
+          // Fix: use the totals we already computed. Real CTR is sum(clicks)/
+          // sum(impressions); real CPA is sum(spend)/sum(conversions).
+          avgCtr: totalImpressions > 0 ? totalClicks / totalImpressions : 0,
+          avgCpa: totalConversions > 0 ? totalSpend / totalConversions : 0,
           avgRoas: totalSpend > 0 && totalRevenue > 0 ? totalRevenue / totalSpend : 0,
           avgCpc: totalClicks > 0 ? totalSpend / totalClicks : 0,
           daysOfData: uniqueDates.size,

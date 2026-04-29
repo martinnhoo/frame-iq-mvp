@@ -183,6 +183,10 @@ serve(async (req) => {
           const metaClicks = parseN(c.clicks);
           const prevClicks = parseN(p.clicks);
           const metaImpr  = parseN(c.impressions);
+          // Prior-period impressions — needed so the combined CTR delta
+          // (across platforms) can be computed sum-then-divide instead of
+          // averaging per-platform ratios.
+          const prevImpr  = parseN(p.impressions);
           const metaReach  = parseN(c.reach);
           const metaFreq   = parseN(c.frequency);
           const metaCpm    = metaImpr > 0 ? (metaSpend / metaImpr) * 1000 : 0;
@@ -262,6 +266,7 @@ serve(async (req) => {
             clicks: metaClicks,
             prev_clicks: prevClicks,
             impressions: metaImpr,
+            prev_impressions: prevImpr,
             reach: metaReach,
             frequency: metaFreq,
             cpm: metaCpm,
@@ -302,27 +307,44 @@ serve(async (req) => {
       const allAds = validPlatforms.flatMap(p => p.top_ads || [])
         .sort((a, b) => b.spend - a.spend).slice(0, 15);
 
-      // Merge daily breakdowns
-      const dailyMap: Record<string, any> = {};
+      // Merge daily breakdowns. CTR is computed sum-then-divide
+      // (clicks/impressions) instead of avg(per-platform ratios) so a
+      // small-volume platform doesn't bias the day's CTR.
+      const dailyMap: Record<string, { date: string; spend: number; clicks: number; impressions: number }> = {};
       for (const p of validPlatforms) {
         for (const d of (p.daily || [])) {
-          if (!dailyMap[d.date]) dailyMap[d.date] = { date: d.date, spend: 0, clicks: 0, ctr_sum: 0, ctr_count: 0 };
-          dailyMap[d.date].spend += d.spend;
-          dailyMap[d.date].clicks += d.clicks;
-          dailyMap[d.date].ctr_sum += d.ctr;
-          dailyMap[d.date].ctr_count++;
+          if (!dailyMap[d.date]) dailyMap[d.date] = { date: d.date, spend: 0, clicks: 0, impressions: 0 };
+          dailyMap[d.date].spend += d.spend || 0;
+          dailyMap[d.date].clicks += d.clicks || 0;
+          dailyMap[d.date].impressions += d.impressions || 0;
         }
       }
       const combinedDaily = Object.values(dailyMap)
-        .map((d: any) => ({ date: d.date, spend: d.spend, ctr: d.ctr_count > 0 ? d.ctr_sum / d.ctr_count : 0, clicks: d.clicks }))
-        .sort((a: any, b: any) => a.date.localeCompare(b.date));
+        .map((d) => ({
+          date: d.date,
+          spend: d.spend,
+          clicks: d.clicks,
+          // Real CTR for the day: total clicks across all platforms divided
+          // by total impressions. Was avg(per-platform CTR) which gives a
+          // wrong number when platforms have different volumes.
+          ctr: d.impressions > 0 ? d.clicks / d.impressions : 0,
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
 
       const totalSpend = sum("spend");
       const prevTotalSpend = sum("prev_spend");
       const totalClicks = sum("clicks");
       const prevTotalClicks = sum("prev_clicks");
-      const avgCtr = validPlatforms.reduce((s, p) => s + (p.ctr || 0), 0) / validPlatforms.length;
-      const prevAvgCtr = validPlatforms.reduce((s, p) => s + (p.prev_ctr || 0), 0) / validPlatforms.length;
+      const totalImpressions = sum("impressions");
+      const prevTotalImpressions = sum("prev_impressions");
+      // Combined CTR = total clicks / total impressions across platforms.
+      // Was `sum(per-platform CTRs) / N` which is mathematically wrong:
+      // averaging ratios when platforms have very different volumes
+      // (Meta 100k impressions / Google 1k impressions) lets the small
+      // platform skew the average. Sum-then-divide is the only correct
+      // way to combine ratios.
+      const avgCtr = totalImpressions > 0 ? totalClicks / totalImpressions : 0;
+      const prevAvgCtr = prevTotalImpressions > 0 ? prevTotalClicks / prevTotalImpressions : 0;
       const totalConv = sum("conversions");
       const totalConvVal = sum("conv_value");
       const prevTotalConv = sum("prev_conversions");

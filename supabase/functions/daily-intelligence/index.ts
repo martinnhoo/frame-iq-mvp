@@ -615,11 +615,19 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
 
   const totalSpend = enriched.reduce((s: number, a: any) => s + a.spend, 0);
   const totalConversions = enriched.reduce((s: number, a: any) => s + a.conversions, 0);
-  const avgCtr = totalSpend > 0
-    ? enriched.reduce((s: number, a: any) => s + a.ctr * a.spend, 0) / totalSpend
-    : 0;
+  // Account-level CTR: sum-then-divide (clicks/impressions). Was a
+  // spend-weighted average which conflates spend with impressions —
+  // close to right when CPMs are uniform, but wrong when bids vary
+  // across audiences. Pure clicks/impressions is the only honest CTR.
+  const totalImpressions = enriched.reduce((s: number, a: any) => s + (a.impressions || 0), 0);
+  const totalClicks      = enriched.reduce((s: number, a: any) => s + (a.clicks || 0), 0);
+  const avgCtr = totalImpressions > 0 ? totalClicks / totalImpressions : 0;
   const ydSpend = yest.reduce((s: number, a: any) => s + parseN(a.spend), 0);
-  const ydCtr = yest.length ? yest.reduce((s: number, a: any) => s + parseN(a.ctr) / 100, 0) / yest.length : 0;
+  // Yesterday's CTR: same fix as avgCtr above. Was avg(per-ad ctrs/100)
+  // which gave tiny ads the same weight as high-volume ads.
+  const ydImpr   = yest.reduce((s: number, a: any) => s + parseN(a.impressions), 0);
+  const ydClicks = yest.reduce((s: number, a: any) => s + parseN(a.clicks), 0);
+  const ydCtr = ydImpr > 0 ? ydClicks / ydImpr : 0;
 
   const scalable = enriched.filter((a: any) => a.isScalable);
   const fatigued = enriched.filter((a: any) => a.isFatigued);
