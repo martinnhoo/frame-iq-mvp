@@ -15,7 +15,7 @@ import { useMoneyTracker } from '../../hooks/useMoneyTracker';
 import { useActions } from '../../hooks/useActions';
 import { supabase } from '@/integrations/supabase/client';
 import { storage } from '@/lib/storage';
-import type { Decision, DecisionAction } from '../../types/v2-database';
+import type { Decision, DecisionAction, MoneyTracker, AdMetrics } from '../../types/v2-database';
 import { PatternsPanel } from '../../components/dashboard/PatternsPanel';
 import { GoalSetup } from '../../components/feed/GoalSetup';
 import { AccountHealthGauge, type AccountStatusSummary } from '../../components/feed/AccountHealthGauge';
@@ -536,11 +536,13 @@ const PERIODS: { key: PeriodKey; label: string; days: number }[] = [
 // ── VISIBLE WIN — Celebrate results with dopamine ──
 const VisibleWin: React.FC<{
   decisions: Decision[];
-  tracker: any;
+  tracker: MoneyTracker | null;
 }> = ({ decisions, tracker }) => {
-  // Find actioned decisions (status = 'actioned' or 'resolved')
-  const actioned = decisions.filter((d: any) =>
-    d.status === 'actioned' || d.status === 'resolved'
+  // Find actioned decisions. The Decision union has 'pending' | 'acted' |
+  // 'dismissed' | 'expired' but the engine has historically also written
+  // 'actioned'/'resolved' on chat-emitted rows — keep the loose comparison.
+  const actioned = decisions.filter((d) =>
+    d.status === 'acted' || (d.status as string) === 'actioned' || (d.status as string) === 'resolved'
   );
   const totalSaved = (tracker?.total_saved || 0);
 
@@ -549,12 +551,12 @@ const VisibleWin: React.FC<{
 
   // Calculate best win from actioned decisions
   const bestWin = actioned.length > 0
-    ? actioned.reduce((best: any, d: any) =>
+    ? actioned.reduce((best: Decision, d: Decision) =>
         (d.impact_daily || 0) > (best.impact_daily || 0) ? d : best
       , actioned[0])
     : null;
 
-  const totalImpact = actioned.reduce((s: number, d: any) => s + (d.impact_daily || 0), 0);
+  const totalImpact = actioned.reduce((s: number, d) => s + (d.impact_daily || 0), 0);
   const monthlyImpact = totalImpact * 30;
 
   return (
@@ -599,7 +601,7 @@ const VisibleWin: React.FC<{
  */
 const SystemStatus: React.FC<{
   decisions: Decision[];
-  tracker: any;
+  tracker: MoneyTracker | null;
   patternsCount?: number;
   trackingStatus?: TrackingStatus;
   hasMetricAlerts?: boolean;
@@ -622,7 +624,7 @@ const SystemStatus: React.FC<{
   else if (trackingStatus === 'investigating') details.push('verificando rastreamento');
   if (isHealthy && !hasMetricAlerts) details.push('métricas estáveis');
   if (hasMetricAlerts) details.push('métricas requerem atenção');
-  const actioned = decisions.filter((d: any) => d.status === 'actioned' || d.status === 'resolved');
+  const actioned = decisions.filter((d) => d.status === 'acted' || (d.status as string) === 'actioned' || (d.status as string) === 'resolved');
   if (actioned.length > 0) details.push(`${actioned.length} ${actioned.length === 1 ? 'otimização' : 'otimizações'}`);
 
   const detailStr = details.slice(0, 3).join(' · ');
@@ -729,7 +731,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Testar novo criativo com: hook nos primeiros 2s, CTA direto, formato UGC", group_note: null,
       ad: { name: "Vídeo 03 — Hook Depoimento", meta_ad_id: "demo_meta_001",
-        ad_set: { name: "Broad BR 25-45", campaign: { name: "Conversão — Produto X" } as any } as any } as any,
+        ad_set: { name: "Broad BR 25-45", campaign: { name: "Conversão — Produto X" } } } as Decision['ad'],
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(12),
     },
     {
@@ -750,7 +752,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Considerar novo público: Lookalike 1% baseado em compradores dos últimos 30 dias",
       ad: { name: "Carrossel 01 — Benefícios", meta_ad_id: "demo_meta_002",
-        ad_set: { name: "Interesse Fitness", campaign: { name: "Conversão — Produto X" } as any } as any } as any,
+        ad_set: { name: "Interesse Fitness", campaign: { name: "Conversão — Produto X" } } } as Decision['ad'],
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(18),
     },
     {
@@ -769,7 +771,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Rotacionar criativo: manter copy atual, trocar visual por formato carrossel ou UGC", group_note: null,
       ad: { name: "Vídeo 01 — UGC Teste", meta_ad_id: "demo_meta_003",
-        ad_set: { name: "Lookalike 1% Purchase", campaign: { name: "Escala — Produto Y" } as any } as any } as any,
+        ad_set: { name: "Lookalike 1% Purchase", campaign: { name: "Escala — Produto Y" } } } as Decision['ad'],
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(25),
     },
     {
@@ -788,7 +790,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Testar LP com: headline alinhado ao hook, prova social acima do fold, CTA mais direto", group_note: null,
       ad: { name: "Imagem 02 — Before/After", meta_ad_id: "demo_meta_004",
-        ad_set: { name: "Broad BR 25-45", campaign: { name: "Conversão — Produto X" } as any } as any } as any,
+        ad_set: { name: "Broad BR 25-45", campaign: { name: "Conversão — Produto X" } } } as Decision['ad'],
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(32),
     },
     {
@@ -807,7 +809,7 @@ function buildDemoDecisions(): Decision[] {
       ],
       action_recommendation: "Escalar gradualmente: +50% budget hoje, reavaliar em 48h antes de novo aumento", group_note: null,
       ad: { name: "Vídeo 05 — Demonstração", meta_ad_id: "demo_meta_005",
-        ad_set: { name: "Lookalike 1% Purchase", campaign: { name: "Escala — Produto Y" } as any } as any } as any,
+        ad_set: { name: "Lookalike 1% Purchase", campaign: { name: "Escala — Produto Y" } } } as Decision['ad'],
       status: "pending", acted_at: null, dismissed_at: null, created_at: ago(8),
     },
     {
@@ -938,15 +940,16 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
     let cancelled = false;
     (async () => {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data } = await (supabase as any).from('telegram_connections')
           .select('chat_id, telegram_username, connected_at')
-          .eq('user_id', userId).eq('active', true).maybeSingle();
+          .eq('user_id', userId).eq('active', true).maybeSingle() as { data: TelegramConn | null };
         if (cancelled) return;
         setConn(data || null);
-      } catch (e: any) {
+      } catch (e) {
         // Query failed (RLS, network, cold start) — don't leave the skeleton hanging.
         if (cancelled) return;
-        console.warn('[TelegramCard] query failed', e?.message || e);
+        console.warn('[TelegramCard] query failed', e instanceof Error ? e.message : e);
         setConn(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -959,6 +962,7 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
     setGenerating(true);
     try {
       const tok = Math.random().toString(36).slice(2,8) + Math.random().toString(36).slice(2,8);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from('telegram_pairing_tokens').insert({
         user_id: userId, token: tok,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
@@ -973,9 +977,10 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
   useEffect(() => {
     if (!pairingLink || conn) return;
     const interval = setInterval(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any).from('telegram_connections')
         .select('chat_id, telegram_username, connected_at')
-        .eq('user_id', userId).eq('active', true).maybeSingle();
+        .eq('user_id', userId).eq('active', true).maybeSingle() as { data: TelegramConn | null };
       if (data) { setConn(data); setPairingLink(null); }
     }, 3000);
     return () => clearInterval(interval);
@@ -2350,22 +2355,26 @@ const AdToggleModal: React.FC<{
     setAiOpinion(null);
     (async () => {
       try {
-        // Fetch ad metrics for instant local recommendation
-        const { data: metrics } = await (supabase
-          .from('ad_metrics' as any)
+        // Fetch ad metrics for instant local recommendation. The
+        // ad_metrics table isn't in the generated supabase schema types,
+        // hence the cast — but the row shape we read is Pick<AdMetrics>.
+        type MetricsRow = Pick<AdMetrics, 'spend' | 'conversions' | 'ctr' | 'cpa' | 'impressions' | 'clicks' | 'date'>;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: metrics } = await ((supabase as any)
+          .from('ad_metrics')
           .select('spend, conversions, ctr, cpa, impressions, clicks, date')
           .eq('meta_ad_id', request.ad.meta_ad_id)
           .order('date', { ascending: false })
-          .limit(14) as any);
+          .limit(14) as Promise<{ data: MetricsRow[] | null }>);
 
         if (cancelled) return;
 
         // Build context from local data
-        const m = metrics || [];
-        const totalSpend = m.reduce((s: number, r: any) => s + (r.spend || 0), 0);
-        const totalConv = m.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
-        const totalImps = m.reduce((s: number, r: any) => s + (r.impressions || 0), 0);
-        const totalClicks = m.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
+        const m: MetricsRow[] = metrics || [];
+        const totalSpend = m.reduce((s, r) => s + (r.spend || 0), 0);
+        const totalConv = m.reduce((s, r) => s + (r.conversions || 0), 0);
+        const totalImps = m.reduce((s, r) => s + (r.impressions || 0), 0);
+        const totalClicks = m.reduce((s, r) => s + (r.clicks || 0), 0);
         const ctr = totalImps > 0 ? (totalClicks / totalImps * 100) : 0;
         const cpa = totalConv > 0 ? totalSpend / totalConv : 0;
         const days = m.length;
@@ -2373,7 +2382,7 @@ const AdToggleModal: React.FC<{
         const campName = request.ad.ad_set?.campaign?.name || '';
 
         // Calculate how many distinct days the ad has been running
-        const uniqueDates = new Set(m.map((r: any) => r.date).filter(Boolean));
+        const uniqueDates = new Set(m.map((r) => r.date).filter(Boolean));
         const daysRunning = uniqueDates.size;
         const firstDate = m.length > 0 ? m[m.length - 1]?.date : null;
         const daysSinceStart = firstDate ? Math.ceil((Date.now() - new Date(firstDate).getTime()) / 86400000) : 0;
@@ -2434,8 +2443,8 @@ const AdToggleModal: React.FC<{
 
         let opinion = '';
         if (aiData?.blocks && Array.isArray(aiData.blocks)) {
-          opinion = aiData.blocks
-            .map((b: any) => b.content || b.text || '')
+          opinion = (aiData.blocks as Array<{ content?: string; text?: string }>)
+            .map((b) => b.content || b.text || '')
             .filter(Boolean)
             .join(' ')
             .replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '')
@@ -2651,24 +2660,27 @@ const CampaignToggleModal: React.FC<{
     setAiOpinion(null);
     (async () => {
       try {
-        // Aggregate last 14 days of ad_metrics for this campaign
-        const { data: metrics } = await (supabase
-          .from('ad_metrics' as any)
+        // Aggregate last 14 days of ad_metrics for this campaign. ad_metrics
+        // isn't in the supabase generated types — narrow rows with MetricsRow.
+        type MetricsRow = Pick<AdMetrics, 'spend' | 'conversions' | 'ctr' | 'cpa' | 'impressions' | 'clicks' | 'date'> & { campaign_name?: string };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: metrics } = await ((supabase as any)
+          .from('ad_metrics')
           .select('spend, conversions, ctr, cpa, impressions, clicks, date, campaign_name')
           .eq('campaign_name', request.campaign.name)
           .order('date', { ascending: false })
-          .limit(200) as any);
+          .limit(200) as Promise<{ data: MetricsRow[] | null }>);
 
         if (cancelled) return;
 
-        const m = metrics || [];
-        const totalSpend = m.reduce((s: number, r: any) => s + (r.spend || 0), 0);
-        const totalConv = m.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
-        const totalImps = m.reduce((s: number, r: any) => s + (r.impressions || 0), 0);
-        const totalClicks = m.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
+        const m: MetricsRow[] = metrics || [];
+        const totalSpend = m.reduce((s, r) => s + (r.spend || 0), 0);
+        const totalConv = m.reduce((s, r) => s + (r.conversions || 0), 0);
+        const totalImps = m.reduce((s, r) => s + (r.impressions || 0), 0);
+        const totalClicks = m.reduce((s, r) => s + (r.clicks || 0), 0);
         const ctr = totalImps > 0 ? (totalClicks / totalImps * 100) : 0;
         const cpa = totalConv > 0 ? totalSpend / totalConv : 0;
-        const uniqueDates = new Set(m.map((r: any) => r.date).filter(Boolean));
+        const uniqueDates = new Set(m.map((r) => r.date).filter(Boolean));
         const daysRunning = uniqueDates.size;
 
         // ── Instant recommendation from local data ──
@@ -2722,8 +2734,8 @@ const CampaignToggleModal: React.FC<{
 
         let opinion = '';
         if (aiData?.blocks && Array.isArray(aiData.blocks)) {
-          opinion = aiData.blocks
-            .map((b: any) => b.content || b.text || '')
+          opinion = (aiData.blocks as Array<{ content?: string; text?: string }>)
+            .map((b) => b.content || b.text || '')
             .filter(Boolean)
             .join(' ')
             .replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '')
@@ -4096,10 +4108,26 @@ const PriorityStack: React.FC<{
 // TOP PRIORITY BAR — Sticky, high-contrast, ONE action
 // The most critical thing to do RIGHT NOW
 // ================================================================
+/** Shape produced by the trackingHealth memo below. Kept as a type
+ *  alias so child components can consume it without importing the
+ *  inferred `as const` object — TS doesn't surface that across files. */
+export interface TrackingHealthInfo {
+  status: 'no_pixel' | 'pixel_stale' | 'pixel_orphan';
+  clicks: number;
+  spend: number;
+  conversions: number;
+  chatMsg: string;
+  pixelMessage: string;
+  pixelName: string | null;
+  daysSinceFire: number | null;
+  orphanCount: number;
+  activeAdsChecked: number;
+}
+
 const TopPriorityBar: React.FC<{
   decisions: Decision[];
   alerts: AccountAlert[];
-  trackingHealth: any;
+  trackingHealth: TrackingHealthInfo | null;
   metricAlerts: MetricAlert[];
   isDemo: boolean;
   onAction: (decisionId: string, action: DecisionAction) => Promise<void>;
@@ -4699,7 +4727,7 @@ const ClusterRow: React.FC<{
 // ================================================================
 const IntelligencePanel: React.FC<{
   decisions: Decision[];
-  tracker: any;
+  tracker: MoneyTracker | null;
   patternsCount: number;
   trackingStatus: TrackingStatus;
   hasMetricAlerts: boolean;
@@ -4720,7 +4748,7 @@ const IntelligencePanel: React.FC<{
     : beginnerMode ? 'Coletando dados — aprendendo com sua conta'
     : 'Tudo sob controle. Operação estável.';
 
-  const actioned = decisions.filter((d: any) => d.status === 'actioned' || d.status === 'resolved');
+  const actioned = decisions.filter((d) => d.status === 'acted' || (d.status as string) === 'actioned' || (d.status as string) === 'resolved');
   const totalSaved = (tracker?.total_saved || 0);
 
   // Confidence level
@@ -5237,8 +5265,10 @@ const BrainOverwatch: React.FC<{
     (async () => {
       try {
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        // autopilot_action_log was recently added — cast through any keeps
-        // the typecheck clean across types.ts regenerations.
+        // autopilot_action_log was recently added and isn't in the
+        // generated supabase schema types yet — cast the client and narrow
+        // the rows on assignment via BrainAction[].
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data } = await (supabase as any)
           .from('autopilot_action_log')
           .select('id, action_type, target_kind, target_name, reason, confidence, amount_at_risk_brl, status, executed_at')
@@ -5246,8 +5276,8 @@ const BrainOverwatch: React.FC<{
           .eq('status', 'executed')
           .gte('executed_at', since)
           .order('executed_at', { ascending: false })
-          .limit(6);
-        if (!cancelled) setActions(((data as any) || []) as BrainAction[]);
+          .limit(6) as { data: BrainAction[] | null };
+        if (!cancelled) setActions(data || []);
       } catch {}
       if (!cancelled) setLoading(false);
     })();
@@ -5401,13 +5431,21 @@ const FeedPage: React.FC = () => {
           body: { action: "get_connections", user_id: ctx.user.id }
         });
         if (cancelled) return;
-        const all = (data?.connections || []) as any[];
-        const scoped = all.filter((c: any) => c.persona_id === ctx.selectedPersona!.id && c.platform === "meta" && c.status === "active");
+        // meta-oauth returns a loose JSON shape. Narrow only what we read.
+        type ConnRow = {
+          persona_id: string;
+          platform: string;
+          status: string;
+          ad_accounts?: Array<{ id: string; name?: string }>;
+          selected_account_id?: string | null;
+        };
+        const all: ConnRow[] = (data?.connections || []) as ConnRow[];
+        const scoped = all.filter((c) => c.persona_id === ctx.selectedPersona!.id && c.platform === "meta" && c.status === "active");
         if (scoped.length > 0) {
           const metaConn = scoped[0];
-          const accounts = (metaConn.ad_accounts || []) as any[];
+          const accounts = metaConn.ad_accounts || [];
           const selId = metaConn.selected_account_id;
-          const acc = (selId && accounts.find((a: any) => a.id === selId)) || accounts[0];
+          const acc = (selId && accounts.find((a) => a.id === selId)) || accounts[0];
           if (acc?.id) {
             // Save to localStorage so subsequent loads are instant
             storage.set(`meta_sel_${ctx.selectedPersona!.id}`, acc.id);
@@ -5449,9 +5487,9 @@ const FeedPage: React.FC = () => {
         } else {
           setAccountId(data?.id ?? null);
         }
-      } catch (e: any) {
+      } catch (e) {
         if (cancelled) return;
-        console.warn("[FeedPage] account resolve threw", e?.message || e);
+        console.warn("[FeedPage] account resolve threw", e instanceof Error ? e.message : e);
         setAccountId(null);
       } finally {
         if (!cancelled) setAccountResolving(false);
@@ -5492,6 +5530,7 @@ const FeedPage: React.FC = () => {
     setDismissedAlerts(prev => new Set(prev).add(alertId));
     // Persist dismiss to DB
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).from('account_alerts')
         .update({ dismissed_at: new Date().toISOString() })
         .eq('id', alertId);
@@ -5524,17 +5563,24 @@ const FeedPage: React.FC = () => {
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await (supabase
-          .from('ad_accounts' as any)
+        // goal_* columns may not yet be in the generated schema — narrow on read.
+        type GoalRow = {
+          goal_objective: string | null;
+          goal_primary_metric: string | null;
+          goal_target_value: number | null;
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await ((supabase as any)
+          .from('ad_accounts')
           .select('goal_objective, goal_primary_metric, goal_target_value')
           .eq('id', accountId)
-          .maybeSingle() as any);
+          .maybeSingle() as Promise<{ data: GoalRow | null }>);
         if (cancelled) return;
         setGoalConfigured(!!data?.goal_objective);
         if (data?.goal_objective) {
           setGoalData({
             objective: data.goal_objective,
-            metric: data.goal_primary_metric,
+            metric: data.goal_primary_metric || '',
             target: data.goal_target_value,
           });
         } else {
@@ -5681,22 +5727,37 @@ const FeedPage: React.FC = () => {
           body: { user_id: userId, account_id: accountIdForPixel },
         });
         if (cancelled) return;
-        if (error || !data || (data as any).error) {
+        // Edge-function payloads aren't generated types — narrow shape.
+        type PixelEntry = { id: string; name?: string; days_since_fire?: number | null };
+        type PixelHealthPayload = {
+          error?: string;
+          status?: string;
+          message?: string;
+          primary_pixel_id?: string | null;
+          last_fired_at?: string | null;
+          orphan_ads_count?: number;
+          active_ads_checked?: number;
+          checked_at?: string;
+          pixels?: PixelEntry[];
+        };
+        const payload = (data as PixelHealthPayload | null) ?? null;
+        if (error || !payload || payload.error) {
           setPixelHealth(null);
           setPixelHealthError(true);
         } else {
-          const d = data as any;
-          const primaryPixel = Array.isArray(d.pixels) ? d.pixels.find((p: any) => p.id === d.primary_pixel_id) : null;
+          const primaryPixel = Array.isArray(payload.pixels)
+            ? payload.pixels.find((p) => p.id === payload.primary_pixel_id) || null
+            : null;
           setPixelHealth({
-            status: d.status,
-            message: d.message || '',
-            primary_pixel_id: d.primary_pixel_id,
+            status: payload.status as PixelHealthSummary['status'],
+            message: payload.message || '',
+            primary_pixel_id: payload.primary_pixel_id ?? null,
             primary_pixel_name: primaryPixel?.name || null,
-            last_fired_at: d.last_fired_at,
+            last_fired_at: payload.last_fired_at ?? null,
             days_since_fire: primaryPixel?.days_since_fire ?? null,
-            orphan_ads_count: d.orphan_ads_count ?? 0,
-            active_ads_checked: d.active_ads_checked ?? 0,
-            checked_at: d.checked_at,
+            orphan_ads_count: payload.orphan_ads_count ?? 0,
+            active_ads_checked: payload.active_ads_checked ?? 0,
+            checked_at: payload.checked_at ?? '',
           });
           setPixelHealthError(false);
         }
@@ -5760,18 +5821,19 @@ const FeedPage: React.FC = () => {
           },
         });
         if (cancelled) return;
-        if (error || !data || (data as any).error) {
+        const payload = data as (AccountStatusSummary & { error?: string }) | null;
+        if (error || !payload || payload.error) {
           // Edge fn returns 200 with severity='unknown' on soft failure.
           // Only treat as a hard error when there's no payload at all.
-          if (!data) {
+          if (!payload) {
             setAccountStatus(null);
             setAccountStatusError(true);
           } else {
-            setAccountStatus(data as AccountStatusSummary);
+            setAccountStatus(payload);
             setAccountStatusError(false);
           }
         } else {
-          setAccountStatus(data as AccountStatusSummary);
+          setAccountStatus(payload);
           setAccountStatusError(false);
         }
       } catch (err) {
@@ -5876,10 +5938,33 @@ const FeedPage: React.FC = () => {
     (async () => {
       const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      // Fire both queries in parallel.
+      // Local row shapes — both tables are off-schema for the supabase types
+      // generator, but we read a small fixed set of columns that we can pin.
+      type OutcomeRow = {
+        id: string;
+        action_type: string | null;
+        target_name: string | null;
+        hypothesis: { summary?: string; headline?: string } | null;
+        taken_at: string;
+        finalized: boolean | null;
+        improved: boolean | null;
+        recovery_pct: number | null;
+        context: { avoided_spend_brl?: number; reason?: string } | null;
+      };
+      type AutopilotRow = {
+        id: string;
+        action_type: string;
+        target_name: string | null;
+        reason: string | null;
+        executed_at: string;
+        amount_at_risk_brl: number | null;
+      };
+
+      // Fire both queries in parallel. Off-schema casts are eslint-disabled.
       const [outcomesRes, autopilotRes] = await Promise.all([
-        (async () => {
+        (async (): Promise<{ data: OutcomeRow[] | null }> => {
           try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return await (supabase as any)
               .from('action_outcomes')
               .select('id, action_type, target_name, hypothesis, taken_at, finalized, improved, recovery_pct, context')
@@ -5889,8 +5974,9 @@ const FeedPage: React.FC = () => {
               .limit(20);
           } catch { return { data: null }; }
         })(),
-        (async () => {
+        (async (): Promise<{ data: AutopilotRow[] | null }> => {
           try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return await (supabase as any)
               .from('autopilot_action_log')
               .select('id, action_type, target_name, reason, executed_at, amount_at_risk_brl')
@@ -5908,7 +5994,7 @@ const FeedPage: React.FC = () => {
       // Map action_outcomes rows → FeedActivityEvent shape, enriched with
       // outcome status / recovery / avoided_spend so the sidebar can render
       // a "validado +X%" chip.
-      const fromOutcomes: FeedActivityEvent[] = (outcomesRes?.data || []).map((r: any) => {
+      const fromOutcomes: FeedActivityEvent[] = (outcomesRes?.data || []).map((r) => {
         const outcome_status: 'measuring' | 'won' | 'lost' = !r.finalized
           ? 'measuring'
           : r.improved === true
@@ -5932,7 +6018,7 @@ const FeedPage: React.FC = () => {
         };
       });
 
-      const fromAutopilot: FeedActivityEvent[] = (autopilotRes?.data || []).map((r: any) => ({
+      const fromAutopilot: FeedActivityEvent[] = (autopilotRes?.data || []).map((r) => ({
         id: `ap:${r.id}`,
         action_type: r.action_type,
         target_name: r.target_name || null,
@@ -5979,12 +6065,13 @@ const FeedPage: React.FC = () => {
     let cancelled = false;
     (async () => {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data } = await (supabase as any)
           .from('daily_snapshots')
           .select('created_at')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
-          .limit(1);
+          .limit(1) as { data: Array<{ created_at: string }> | null };
         if (!cancelled && data && data[0]?.created_at) {
           setSnapshotLastAt(data[0].created_at);
         }
@@ -6294,12 +6381,15 @@ const FeedPage: React.FC = () => {
     }
     if (offset > 0) setAdsLoadingMore(true);
     try {
-      const { data, count } = await (supabase
-        .from('ads' as any)
+      // ads is in the supabase schema, but the joined select() shape isn't
+      // narrowable through generated types — cast and pin to AdSummary[].
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, count } = await ((supabase as any)
+        .from('ads')
         .select('name, meta_ad_id, status, effective_status, ad_set:ad_sets(name, campaign:campaigns(name))', { count: 'exact' })
         .eq('account_id', accountId)
-        .range(offset, offset + ADS_PAGE_SIZE - 1) as any);
-      const newAds = (data || []) as AdSummary[];
+        .range(offset, offset + ADS_PAGE_SIZE - 1) as Promise<{ data: AdSummary[] | null; count: number | null }>);
+      const newAds = data || [];
       setUserAds(prev => append ? [...prev, ...newAds] : newAds);
       setTotalAdCount(count ?? (append ? userAds.length + newAds.length : newAds.length));
       setAdsLoaded(true);
@@ -6320,12 +6410,13 @@ const FeedPage: React.FC = () => {
   const fetchCampaigns = useCallback(async () => {
     if (!accountId) { setUserCampaigns([]); return; }
     try {
-      const { data } = await (supabase
-        .from('campaigns' as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await ((supabase as any)
+        .from('campaigns')
         .select('id, name, meta_campaign_id, status, objective, daily_budget')
         .eq('account_id', accountId)
-        .order('name') as any);
-      setUserCampaigns((data || []) as CampaignSummary[]);
+        .order('name') as Promise<{ data: CampaignSummary[] | null }>);
+      setUserCampaigns(data || []);
     } catch {
       // noop
     }
@@ -6446,22 +6537,24 @@ const FeedPage: React.FC = () => {
       // Fallback: read from ad_metrics DB table (stale but better than nothing)
       try {
         const since = new Date(Date.now() - periodDays * 86400000).toISOString().slice(0, 10);
-        const { data: mData } = await (supabase
-          .from('ad_metrics' as any)
+        type FallbackRow = Pick<AdMetrics, 'spend' | 'conversions' | 'revenue' | 'clicks' | 'impressions' | 'ctr' | 'cpa' | 'cpc' | 'roas' | 'date'>;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: mData } = await ((supabase as any)
+          .from('ad_metrics')
           .select('spend, conversions, revenue, clicks, impressions, ctr, cpa, cpc, roas, date')
           .eq('account_id', accountId)
-          .gte('date', since) as any);
+          .gte('date', since) as Promise<{ data: FallbackRow[] | null }>);
         if (!isStillFresh()) return; // user changed period while fallback was running
         if (!mData || mData.length === 0) { setAdMetrics(null); setMetricsReady(true); return; }
 
-        const totalSpend = mData.reduce((s: number, r: any) => s + (r.spend || 0), 0);
-        const totalConversions = mData.reduce((s: number, r: any) => s + (r.conversions || 0), 0);
-        const totalRevenue = mData.reduce((s: number, r: any) => s + (r.revenue || 0), 0);
-        const totalClicks = mData.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
-        const totalImpressions = mData.reduce((s: number, r: any) => s + (r.impressions || 0), 0);
-        const ctrVals = mData.filter((r: any) => r.ctr != null).map((r: any) => Number(r.ctr));
-        const cpaVals = mData.filter((r: any) => r.cpa != null && r.cpa > 0).map((r: any) => Number(r.cpa));
-        const uniqueDates = new Set(mData.map((r: any) => r.date));
+        const totalSpend = mData.reduce((s, r) => s + (r.spend || 0), 0);
+        const totalConversions = mData.reduce((s, r) => s + (r.conversions || 0), 0);
+        const totalRevenue = mData.reduce((s, r) => s + (r.revenue || 0), 0);
+        const totalClicks = mData.reduce((s, r) => s + (r.clicks || 0), 0);
+        const totalImpressions = mData.reduce((s, r) => s + (r.impressions || 0), 0);
+        const ctrVals = mData.filter((r) => r.ctr != null).map((r) => Number(r.ctr));
+        const cpaVals = mData.filter((r) => r.cpa != null && r.cpa > 0).map((r) => Number(r.cpa));
+        const uniqueDates = new Set(mData.map((r) => r.date));
 
         if (!isStillFresh()) return; // last guard before committing fallback values
         setAdMetrics({
@@ -6470,8 +6563,8 @@ const FeedPage: React.FC = () => {
           totalRevenue,
           totalClicks,
           totalImpressions,
-          avgCtr: ctrVals.length > 0 ? ctrVals.reduce((a: number, b: number) => a + b, 0) / ctrVals.length : 0,
-          avgCpa: cpaVals.length > 0 ? cpaVals.reduce((a: number, b: number) => a + b, 0) / cpaVals.length : 0,
+          avgCtr: ctrVals.length > 0 ? ctrVals.reduce((a, b) => a + b, 0) / ctrVals.length : 0,
+          avgCpa: cpaVals.length > 0 ? cpaVals.reduce((a, b) => a + b, 0) / cpaVals.length : 0,
           avgRoas: totalSpend > 0 && totalRevenue > 0 ? totalRevenue / totalSpend : 0,
           avgCpc: totalClicks > 0 ? totalSpend / totalClicks : 0,
           daysOfData: uniqueDates.size,
@@ -6528,7 +6621,7 @@ const FeedPage: React.FC = () => {
     const recent = activityEvents[0]?.executed_at;
     if (recent) return recent;
     if (snapshotLastAt) return snapshotLastAt;
-    const d = (tracker as any)?.last_active_date;
+    const d = tracker?.last_active_date;
     if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
       return `${d}T12:00:00Z`;
     }
@@ -6703,44 +6796,55 @@ const FeedPage: React.FC = () => {
         const sevenAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
         const fourteenAgo = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
 
+        // daily_snapshots is off-schema — narrow rows here.
+        type SnapRow = {
+          date: string;
+          total_spend: number | null;
+          avg_ctr: number | null;
+          active_ads?: number | null;
+          yesterday_spend?: number | null;
+          yesterday_ctr?: number | null;
+        };
         // Last 7 days snapshots — filter by account_id to prevent cross-account data
-        const { data: snaps } = await (supabase
-          .from('daily_snapshots' as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: snaps } = await ((supabase as any)
+          .from('daily_snapshots')
           .select('date, total_spend, avg_ctr, active_ads, yesterday_spend, yesterday_ctr')
           .eq('user_id', userId)
           .eq('persona_id', personaId)
           .eq('account_id', accountId)
           .gte('date', sevenAgo)
-          .order('date', { ascending: false }) as any);
+          .order('date', { ascending: false }) as Promise<{ data: SnapRow[] | null }>);
 
         // Previous 7 days for trend comparison
-        const { data: prevSnaps } = await (supabase
-          .from('daily_snapshots' as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: prevSnaps } = await ((supabase as any)
+          .from('daily_snapshots')
           .select('date, total_spend, avg_ctr')
           .eq('user_id', userId)
           .eq('persona_id', personaId)
           .eq('account_id', accountId)
           .gte('date', fourteenAgo)
           .lt('date', sevenAgo)
-          .order('date', { ascending: false }) as any);
+          .order('date', { ascending: false }) as Promise<{ data: SnapRow[] | null }>);
 
         if (cancelled) return;
         if (snaps && snaps.length > 0) {
-          const spend7d = (snaps as any[]).reduce((s: number, r: any) => s + (r.total_spend || 0), 0);
+          const spend7d = snaps.reduce((s, r) => s + (r.total_spend || 0), 0);
           const totalSpendW = spend7d || 1;
           // avg_ctr should be decimal (0.025) but legacy data may be percentage (2.5) — normalize
           const normCtr = (v: number) => v > 1 ? v / 100 : v;
-          const ctr7d = (snaps as any[]).reduce((s: number, r: any) => s + normCtr(r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendW;
-          const activeAds = (snaps as any[])[0]?.active_ads || 0;
+          const ctr7d = snaps.reduce((s, r) => s + normCtr(r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendW;
+          const activeAds = snaps[0]?.active_ads || 0;
 
-          const spendPrev = (prevSnaps || []).reduce((s: number, r: any) => s + (r.total_spend || 0), 0);
+          const spendPrev = (prevSnaps || []).reduce((s, r) => s + (r.total_spend || 0), 0);
           const totalSpendP = spendPrev || 1;
-          const ctrPrev = (prevSnaps || []).reduce((s: number, r: any) => s + normCtr(r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendP;
+          const ctrPrev = (prevSnaps || []).reduce((s, r) => s + normCtr(r.avg_ctr || 0) * (r.total_spend || 0), 0) / totalSpendP;
 
           setPulseData({
             spend7d, ctr7d, activeAds,
-            spendYesterday: (snaps as any[])[0]?.yesterday_spend || 0,
-            ctrYesterday: (snaps as any[])[0]?.yesterday_ctr || 0,
+            spendYesterday: snaps[0]?.yesterday_spend || 0,
+            ctrYesterday: snaps[0]?.yesterday_ctr || 0,
             spendPrev, ctrPrev,
           });
         } else {
@@ -6758,14 +6862,15 @@ const FeedPage: React.FC = () => {
     (async () => {
       try {
         const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-        const { data } = await (supabase
-          .from('action_log' as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await ((supabase as any)
+          .from('action_log')
           .select('estimated_daily_impact')
           .eq('user_id', userId)
           .gte('executed_at', monthStart)
-          .like('action_type', 'pause%') as any);
+          .like('action_type', 'pause%') as Promise<{ data: Array<{ estimated_daily_impact: number | null }> | null }>);
         if (cancelled) return;
-        const total = (data || []).reduce((s: number, r: any) => s + (r.estimated_daily_impact || 0), 0);
+        const total = (data || []).reduce((s, r) => s + (r.estimated_daily_impact || 0), 0);
         setSavingsTotal(total);
       } catch {}
     })();
@@ -6773,7 +6878,7 @@ const FeedPage: React.FC = () => {
   }, [userId]);
 
   // ── Stable callbacks for PatternsPanel to avoid re-render flicker ──
-  const handleGenerateVariation = useCallback((pattern: any) => {
+  const handleGenerateVariation = useCallback((pattern: { feature_type?: string; variables?: { feature_type?: string }; [k: string]: unknown }) => {
     const ft = pattern.feature_type || pattern.variables?.feature_type || "";
     const state = { state: { fromPattern: pattern } };
     if (ft === "hook_type" || ft === "hook_presence") navigate('/dashboard/hooks', state);
@@ -6850,7 +6955,7 @@ const FeedPage: React.FC = () => {
         const msg = body?.error || `Falha ao ${action === 'pause' ? 'pausar' : 'ativar'} anúncio. Tente novamente.`;
         showActionError(msg);
       }
-    } catch (e: any) {
+    } catch (e) {
       console.error('Toggle ad error:', e);
       showActionError('Erro de conexão. Verifique sua internet e tente de novo.');
     } finally {
@@ -6936,7 +7041,7 @@ const FeedPage: React.FC = () => {
           const msg = body?.error || `Falha ao ${action === 'pause' ? 'pausar' : 'ativar'} campanha. Tente novamente.`;
           showActionError(msg);
         }
-      } catch (e: any) {
+      } catch (e) {
         console.error('Toggle campaign error:', e);
         showActionError('Erro de conexão. Verifique sua internet e tente de novo.');
       } finally {
@@ -7556,8 +7661,7 @@ const FeedPage: React.FC = () => {
             ═══════════════════════════════════════════════ */}
         {metaConnected && !isDemo && trackingHealth && (() => {
           // ── Status-aware copy + checklist. All five status values handled. ──
-          type TH = typeof trackingHealth;
-          const th = trackingHealth as TH & { pixelMessage?: string; pixelName?: string | null; daysSinceFire?: number | null; orphanCount?: number; activeAdsChecked?: number };
+          const th = trackingHealth;
           type StatusRow = { label: string; detail: string; status: 'ok' | 'error' | 'warn' | 'unknown' };
 
           let title = '';
@@ -7651,7 +7755,7 @@ const FeedPage: React.FC = () => {
               <button className="feed-cta" onClick={() => {
                 startTrackingInvestigation();
                 // chatMsg is always produced upstream for pixel-based diagnoses
-                const msg = (th as any).chatMsg || `${th.clicks} cliques, ${fmtReais(th.spend)} investidos. Vamos diagnosticar o rastreamento.`;
+                const msg = th.chatMsg || `${th.clicks} cliques, ${fmtReais(th.spend)} investidos. Vamos diagnosticar o rastreamento.`;
                 navigate('/dashboard/ai', { state: { prompt: msg } });
               }} style={{ flex: 1, background: T.blue, color: T.text1, border: 'none', borderRadius: 8, padding: '10px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.18s' }}
                 onMouseEnter={e => { e.currentTarget.style.background = T.blueHover; e.currentTarget.style.boxShadow = `0 4px 14px ${T.blue}30`; }}
@@ -7853,7 +7957,7 @@ const FeedPage: React.FC = () => {
         />
 
         <HeroDecisionAnchor
-          recoverableDailyCents={tracker ? ((tracker as any).leaking_now || tracker.leaking_now || 0) : 0}
+          recoverableDailyCents={tracker?.leaking_now || 0}
           killCount={pendingDecisions.filter(d => d.type === 'kill').length}
           otherActionCount={pendingDecisions.filter(d => d.type !== 'kill').length}
           topOpportunityName={(() => {
