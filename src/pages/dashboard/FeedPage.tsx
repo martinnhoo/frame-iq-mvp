@@ -21,6 +21,7 @@ import { GoalSetup } from '../../components/feed/GoalSetup';
 import { AccountHealthGauge, type AccountStatusSummary } from '../../components/feed/AccountHealthGauge';
 import { FeedSidebar, type FeedActivityEvent } from '../../components/feed/FeedSidebar';
 import { Pause, Play } from 'lucide-react';
+import { DataSourceFooter } from '../../components/DataSourceFooter';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
@@ -8268,6 +8269,26 @@ const FeedPage: React.FC = () => {
             sync + period picker, so duplicating it down here just read
             as redundant noise. Pending decisions count is already
             surfaced inside the "Ações prioritárias" section header. */}
+
+        {/* ── DATA SOURCE — money-math transparency footer ──
+            Single line at the bottom of the Feed main column. Applies
+            to every R$ number above (Hero recoverable, decision cards,
+            tracker stats). Conversion-lag note auto-shows when the
+            visible period ends in the last 3 days. Hidden in demo mode
+            since demo numbers aren't from a real Meta account. */}
+        {!isDemo && metaConnected && adsLoaded && (
+          <div style={{
+            marginTop: 18,
+            padding: '12px 14px',
+            borderTop: `1px solid ${T.border0}`,
+            borderRadius: 0,
+          }}>
+            <DataSourceFooter
+              periodTo={new Date().toISOString().slice(0, 10)}
+              compact={false}
+            />
+          </div>
+        )}
       </div>
       {/* END feed-main-col */}
 

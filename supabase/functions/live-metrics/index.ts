@@ -128,15 +128,21 @@ serve(async (req) => {
           const token = metaConn.access_token;
           const fields = "spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,actions,action_values,website_purchase_roas,date_start";
 
-          // Load user's goal conversion event (if configured)
+          // Load user's goal conversion event + profit margin (both optional).
+          // profit_margin_pct gets surfaced on results.meta so the frontend
+          // can color ROAS against the user's break-even line without a
+          // second round-trip to the DB.
           let goalEvent: string | null = null;
+          let profitMarginPct: number | null = null;
           try {
             const { data: accRow } = await sb.from("ad_accounts" as any)
-              .select("goal_conversion_event")
+              .select("goal_conversion_event, profit_margin_pct")
               .eq("user_id", user_id).eq("meta_account_id", acc.id.replace("act_", ""))
               .maybeSingle();
             goalEvent = (accRow as any)?.goal_conversion_event || null;
-          } catch { /* ignore — fallback to purchase */ }
+            const pm = (accRow as any)?.profit_margin_pct;
+            profitMarginPct = typeof pm === "number" && Number.isFinite(pm) && pm > 0 && pm <= 100 ? pm : null;
+          } catch { /* ignore — fallback to purchase, no margin coloring */ }
 
           const [currRes, prevRes, breakdownRes] = await Promise.all([
             // Current period — account level
@@ -290,6 +296,10 @@ serve(async (req) => {
             daily,
             account_name: acc.name || "Meta Ads",
             account_id: acc.id,
+            // Surface margin so the frontend can render break-even-aware
+            // ROAS coloring (red below, green above) without a separate
+            // DB call. null when account hasn't configured margin yet.
+            profit_margin_pct: profitMarginPct,
           };
         }
       } catch (e) {

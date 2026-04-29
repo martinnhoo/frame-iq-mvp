@@ -35,6 +35,7 @@ const FeatureDetail = lazy(() => import("./pages/FeatureDetail"));
 const Features     = lazy(() => import("./pages/Features"));
 const Terms        = lazy(() => import("./pages/Terms"));
 const Privacy      = lazy(() => import("./pages/Privacy"));
+const Metodologia  = lazy(() => import("./pages/Metodologia"));
 const Refund       = lazy(() => import("./pages/Refund"));
 const Careers      = lazy(() => import("./pages/Careers"));
 const About        = lazy(() => import("./pages/About"));
@@ -156,6 +157,7 @@ const App = () => (
               <Route path="/criativo" element={<Criativo />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/metodologia" element={<Metodologia />} />
               <Route path="/refund" element={<Refund />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/about" element={<About />} />

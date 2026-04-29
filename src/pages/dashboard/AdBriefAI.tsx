@@ -25,6 +25,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
+import { DataSourceFooter } from "@/components/DataSourceFooter";
+import { RoasDisplay } from "@/components/RoasDisplay";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 // FirstWinBanner removed — ProactiveBlock handles welcome flow
 import { trackEvent } from "@/lib/posthog";
@@ -2340,6 +2342,9 @@ type LivePanelPlatformData = {
   at_risk: LiveAdRow[];
   campaigns: LiveCampRow[];
   time_series: Array<{ date: string; spend: number; ctr: number; cpm: number }>;
+  /** Profit margin from ad_accounts (1-100). When set, customer-facing
+   *  ROAS displays color against the implied break-even line. */
+  profit_margin_pct?: number | null;
   error?: unknown;
 };
 type LivePanelAdapted = { meta?: LivePanelPlatformData; google?: LivePanelPlatformData };
@@ -2352,6 +2357,9 @@ type LiveMetricsPlatform = {
   cpa?: number | null; conversions?: number; impressions?: number;
   top_ads?: Array<{ ad_name?: string; name?: string; campaign_name?: string; spend?: number; ctr?: number; cpm?: number; conversions?: number }>;
   daily?: Array<{ date: string; spend?: number; ctr?: number }>;
+  /** From ad_accounts.profit_margin_pct (1-100). Optional — only set
+   *  when the user has configured their margin in account settings. */
+  profit_margin_pct?: number | null;
   error?: unknown;
 };
 
@@ -2453,6 +2461,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             time_series: (m.daily || []).map((d) => ({
               date: d.date, spend: d.spend || 0, ctr: (d.ctr || 0) * 100, cpm: 0,
             })),
+            profit_margin_pct: m.profit_margin_pct ?? null,
           };
         }
         // google result handling — disabled (see GOOGLE_ADS_BACKUP.md)
@@ -2502,7 +2511,23 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   // ══════════════════════════════════════════════════════════════════════════
   {
     const cur = data?.currency_symbol || "R$";
-    type MetricCard = { lbl: string; val: string | number; warn: boolean; tr: "up" | "down" | "flat"; color: string; icon: string };
+    // ROAS is rendered through RoasDisplay so coloring respects the user's
+    // break-even line (driven by profit_margin_pct) instead of the legacy
+    // hard-coded 1x/2x bucketing. Carry the raw number + margin on the
+    // metric card so the renderer can switch to the component.
+    type MetricCard = {
+      lbl: string;
+      val: string | number;
+      warn: boolean;
+      tr: "up" | "down" | "flat";
+      color: string;
+      icon: string;
+      roasNum?: number;
+      profitMarginPct?: number | null;
+    };
+    const profitMarginPct = data?.profit_margin_pct ?? null;
+    const roasNum = k.roas != null ? parseFloat(String(k.roas)) : NaN;
+    const hasRoas = Number.isFinite(roasNum) && roasNum > 0;
     const metrics: MetricCard[] = data && !data.error && !busy ? ([
       k.spend       && { lbl: lang==="pt"?"Gasto":lang==="es"?"Gasto":"Spend", val: `${cur}${parseFloat(String(k.spend||0)).toLocaleString(undefined,{maximumFractionDigits:0})}`, warn: false, tr: sTr, color: "#F1F5F9", icon: "spend" },
       k.ctr         && { lbl: "CTR", val: `${parseFloat(String(k.ctr||0)).toFixed(2)}%`, warn: parseFloat(String(k.ctr)) < 0.5, tr: cTr, color: parseFloat(String(k.ctr)) > 1.5 ? "#10B981" : parseFloat(String(k.ctr)) < 0.5 ? "#EF4444" : "#F1F5F9", icon: "ctr" },
@@ -2510,7 +2535,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       k.cpc && parseFloat(String(k.cpc)) > 0 && { lbl: "CPC", val: `${cur}${parseFloat(String(k.cpc)).toFixed(2)}`, warn: false, tr: "flat" as const, color: "#F1F5F9", icon: "cpc" },
       k.frequency && parseFloat(String(k.frequency)) > 0 && { lbl: "Freq", val: `${parseFloat(String(k.frequency)).toFixed(1)}x`, warn: parseFloat(String(k.frequency)) > 3.5, tr: "flat" as const, color: parseFloat(String(k.frequency)) > 3.5 ? "#EF4444" : "#F1F5F9", icon: "freq" },
       k.conversions && k.conversions !== "0" && { lbl: "Conv", val: String(k.conversions), warn: false, tr: "flat" as const, color: "#10B981", icon: "conv" },
-      k.roas && parseFloat(String(k.roas)) > 0 && { lbl: "ROAS", val: `${parseFloat(String(k.roas)).toFixed(2)}x`, warn: parseFloat(String(k.roas)) < 1, tr: "flat" as const, color: parseFloat(String(k.roas)) >= 2 ? "#10B981" : parseFloat(String(k.roas)) < 1 ? "#EF4444" : "#F1F5F9", icon: "roas" },
+      hasRoas && { lbl: "ROAS", val: "", warn: roasNum < 1, tr: "flat" as const, color: "#F1F5F9", icon: "roas", roasNum, profitMarginPct },
     ].filter(Boolean) as MetricCard[]) : [];
     const isLive = !busy && !fail;
 
@@ -2670,16 +2695,34 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
                       </span>
                     )}
                   </div>
-                  {/* Value */}
-                  <span style={{
-                    fontSize: 14, fontWeight: 800,
-                    color: item.color || "#F1F5F9",
-                    fontFamily: F,
-                    letterSpacing: "-0.03em",
-                    lineHeight: 1,
-                  }}>
-                    {item.val}
-                  </span>
+                  {/* Value — ROAS uses RoasDisplay so coloring respects the
+                      user's break-even line. Other metrics keep the simple
+                      value rendering. */}
+                  {item.icon === "roas" && typeof item.roasNum === "number" ? (
+                    <RoasDisplay
+                      roas={item.roasNum}
+                      profitMarginPct={item.profitMarginPct}
+                      // Match the surrounding KPI card typography exactly so
+                      // the ROAS card doesn't look out-of-band next to peers.
+                      fontSize={14}
+                      fontWeight={800}
+                      decimals={2}
+                      // Chip is shown only in the AI panel (compact strip);
+                      // it lives next to the number with the muted style
+                      // already defined inside RoasDisplay.
+                      showBreakEven
+                    />
+                  ) : (
+                    <span style={{
+                      fontSize: 14, fontWeight: 800,
+                      color: item.color || "#F1F5F9",
+                      fontFamily: F,
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1,
+                    }}>
+                      {item.val}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -2857,6 +2900,26 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             )}
           </div>
         </div>
+
+        {/* ── DATA SOURCE footer ── transparency over precision claims.
+              Tells the user this is Meta-API data with the default
+              attribution window, plus the conversion-lag notice when the
+              visible period ends in the last 3 days. Suppressed during
+              load/error so the bar doesn't flicker disclaimers at empty
+              data. Lang follows the user's UI language. */}
+        {metrics.length > 0 && !fail && (
+          <div style={{
+            padding: "0 20px 8px",
+            borderTop: "1px solid rgba(148,163,184,0.04)",
+            paddingTop: 6,
+          }}>
+            <DataSourceFooter
+              periodTo={fmtAI(dateRange.to)}
+              lang={(["pt", "en", "es"] as const).includes(lang as "pt") ? (lang as "pt" | "en" | "es") : "pt"}
+              compact
+            />
+          </div>
+        )}
 
         {/* ── Keyframes ── */}
         <style>{`

@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
+import { storage } from "@/lib/storage";
+import { RoasDisplay } from "@/components/RoasDisplay";
 
 const F = DT.font;
 const M = DT.mono;
@@ -155,11 +157,12 @@ function AdThumb({ url, name, verdict }: { url?: string | null; name: string; ve
 }
 
 // ── Diary Row — card style with thumbnail ──
-const DiaryRow = React.memo(function DiaryRow({ entry, expanded, onToggle, t, lang }: { entry: Entry; expanded: boolean; onToggle: () => void; t: typeof T.pt; lang?: string }) {
+const DiaryRow = React.memo(function DiaryRow({ entry, expanded, onToggle, t, lang, profitMarginPct }: { entry: Entry; expanded: boolean; onToggle: () => void; t: typeof T.pt; lang?: string; profitMarginPct: number | null }) {
   const cfg = V_STYLE[entry.verdict] || V_STYLE.testing;
   const verdictLabel = t.verdict[entry.verdict as keyof typeof t.verdict] || entry.verdict;
   const ctr = (entry.ctr * 100).toFixed(2);
-  const isPos = entry.verdict === "winner" || entry.verdict === "scaled";
+  // ROAS coloring is now driven by break-even (RoasDisplay) — verdict-based
+  // pos/neg coloring is no longer needed for ROAS itself.
 
   return (
     <div style={{ borderRadius: 14, background: cfg.bg, border: `1px solid ${cfg.border}`, overflow: "hidden", transition: "transform 0.15s, box-shadow 0.15s" }} className="ab-diary-row">
@@ -188,7 +191,18 @@ const DiaryRow = React.memo(function DiaryRow({ entry, expanded, onToggle, t, la
             </div>
             {entry.roas && entry.roas > 0 ? (
               <div style={{ textAlign: "right", minWidth: 40 }}>
-                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: isPos ? "#2ECECE" : "#f87171", fontFamily: M, letterSpacing: "-0.03em", lineHeight: 1 }}>{entry.roas.toFixed(1)}×</p>
+                {/* RoasDisplay: when profit_margin_pct is set, the number
+                    colors against the user's break-even line instead of
+                    the verdict-based bucketing. Falls back to neutral when
+                    margin isn't configured. */}
+                <RoasDisplay
+                  roas={entry.roas}
+                  profitMarginPct={profitMarginPct}
+                  fontSize={16}
+                  fontWeight={800}
+                  decimals={1}
+                  showBreakEven={false}
+                />
                 <p style={{ margin: "1px 0 0", fontSize: 9, color: "rgba(255,255,255,0.22)", fontFamily: F, letterSpacing: "0.08em", textTransform: "uppercase" }}>ROAS</p>
               </div>
             ) : (
@@ -273,6 +287,9 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<Verdict | "all">("all");
   const [lastSync, setLastSync] = useState<Date | null>(null);
+  // Profit margin from active meta account, surfaced for break-even ROAS
+  // coloring on each diary row. null = neutral (no margin set).
+  const [profitMarginPct, setProfitMarginPct] = useState<number | null>(null);
 
   // Date range (like LivePanel)
   const today = useMemo(() => new Date(), []);
@@ -332,6 +349,27 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
 
     setEntries(rows);
     if (data?.length && data[0].synced_at) setLastSync(new Date(data[0].synced_at));
+
+    // Pull margin for the active meta account (used for break-even ROAS
+    // coloring on each row). Best-effort — failure leaves margin null
+    // and rows fall back to neutral display.
+    try {
+      const selectedAccId = (storage.get(`meta_sel_${loadPersonaId}`, "") || "").replace(/^act_/, "");
+      if (selectedAccId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: row } = await (supabase as any).from("ad_accounts")
+          .select("profit_margin_pct")
+          .eq("user_id", user.id).eq("meta_account_id", selectedAccId)
+          .maybeSingle();
+        if (loadPersonaId === personaId) {
+          const pm = (row as { profit_margin_pct: number | null } | null)?.profit_margin_pct;
+          setProfitMarginPct(typeof pm === "number" && Number.isFinite(pm) && pm > 0 && pm <= 100 ? pm : null);
+        }
+      } else {
+        if (loadPersonaId === personaId) setProfitMarginPct(null);
+      }
+    } catch { if (loadPersonaId === personaId) setProfitMarginPct(null); }
+
     setLoading(false);
   }, [user?.id, personaId]);
 
@@ -682,6 +720,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
             <DiaryRow key={entry.id} entry={entry} t={t} lang={language}
               expanded={expanded === entry.id}
               onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
+              profitMarginPct={profitMarginPct}
             />
           ))}
           {hasMoreToShow && (

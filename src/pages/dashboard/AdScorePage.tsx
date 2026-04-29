@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { RefreshCw, Trophy, TrendingUp, Zap, AlertTriangle, Flame, Target } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
+import { storage } from "@/lib/storage";
+import { RoasDisplay } from "@/components/RoasDisplay";
 
 // ── Design tokens — from unified design system ──
 const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
@@ -156,7 +158,7 @@ function ScoreRing({ score, tier, size = 56 }: { score: number; tier: Tier; size
 }
 
 // ── Score Detail Panel ──
-function ScoreDetail({ ad, pt, onClose }: { ad: AdScoreRow; pt: boolean; onClose: () => void }) {
+function ScoreDetail({ ad, pt, profitMarginPct, onClose }: { ad: AdScoreRow; pt: boolean; profitMarginPct: number | null; onClose: () => void }) {
   const { score, tier, badges } = calcAdScore(ad);
   const cfg = TIER_CONFIG[tier];
   const ctr = ((ad.ctr || 0) * 100).toFixed(2);
@@ -240,18 +242,32 @@ function ScoreDetail({ ad, pt, onClose }: { ad: AdScoreRow; pt: boolean; onClose
               ))}
             </div>
           )}
-          {/* Quick metrics row */}
+          {/* Quick metrics row — ROAS is rendered via RoasDisplay so the
+              user sees red/green against their break-even line, not just
+              an absolute number. Spend + CTR keep the simple text. */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            {[
-              { label: spend >= 1000 ? `R$${(spend/1000).toFixed(1)}k` : `R$${spend.toFixed(0)}`, sub: pt ? "Gasto" : "Spend" },
-              { label: `${ctr}%`, sub: "CTR" },
-              { label: roas ? `${roas.toFixed(1)}×` : "—", sub: "ROAS" },
-            ].map(m => (
-              <div key={m.sub} style={{ textAlign: "center" }}>
-                <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: TX, fontFamily: HERO, fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"] }}>{m.label}</p>
-                <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>{m.sub}</p>
-              </div>
-            ))}
+            <div style={{ textAlign: "center" }}>
+              <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: TX, fontFamily: HERO, fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"] }}>
+                {spend >= 1000 ? `R$${(spend/1000).toFixed(1)}k` : `R$${spend.toFixed(0)}`}
+              </p>
+              <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>{pt ? "Gasto" : "Spend"}</p>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: TX, fontFamily: HERO, fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"] }}>{ctr}%</p>
+              <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>CTR</p>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <RoasDisplay
+                roas={roas || null}
+                profitMarginPct={profitMarginPct}
+                fontSize={16}
+                fontWeight={800}
+                decimals={1}
+                showBreakEven={false}
+                placeholder="—"
+              />
+              <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>ROAS</p>
+            </div>
           </div>
         </div>
       </div>
@@ -260,7 +276,7 @@ function ScoreDetail({ ad, pt, onClose }: { ad: AdScoreRow; pt: boolean; onClose
 }
 
 // ── Ad Card (TikTok style) ──
-function AdCard({ ad, allScores, pt, onSelect }: { ad: AdScoreRow; allScores: number[]; pt: boolean; onSelect: () => void }) {
+function AdCard({ ad, allScores, pt, profitMarginPct, onSelect }: { ad: AdScoreRow; allScores: number[]; pt: boolean; profitMarginPct: number | null; onSelect: () => void }) {
   const { score, tier, badges } = useMemo(() => calcAdScore(ad), [ad]);
   const percentile = useMemo(() => calcPercentile(score, allScores), [score, allScores]);
   const cfg = TIER_CONFIG[tier];
@@ -377,22 +393,36 @@ function AdCard({ ad, allScores, pt, onSelect }: { ad: AdScoreRow; allScores: nu
         )}
       </div>
 
-      {/* Metrics footer */}
+      {/* Metrics footer — ROAS uses RoasDisplay so the user sees red/green
+          against their break-even line. Chip suppressed in this dense
+          grid; the detail panel shows the full break-even context. */}
       <div style={{
         display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
         borderTop: `1px solid ${A}10`,
         padding: "10px 14px",
       }}>
-        {[
-          { label: ad.spend >= 1000 ? `R$${(ad.spend/1000).toFixed(1)}k` : `R$${(ad.spend||0).toFixed(0)}`, sub: pt ? "Gasto" : "Spend" },
-          { label: `${ctr}%`, sub: "CTR" },
-          { label: ad.roas ? `${ad.roas.toFixed(1)}×` : "—", sub: "ROAS" },
-        ].map(m => (
-          <div key={m.sub} style={{ textAlign: "center" }}>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: TX, fontFamily: HERO, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"] }}>{m.label}</p>
-            <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>{m.sub}</p>
-          </div>
-        ))}
+        <div style={{ textAlign: "center" }}>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: TX, fontFamily: HERO, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"] }}>
+            {(ad.spend || 0) >= 1000 ? `R$${((ad.spend || 0)/1000).toFixed(1)}k` : `R$${(ad.spend||0).toFixed(0)}`}
+          </p>
+          <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>{pt ? "Gasto" : "Spend"}</p>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: TX, fontFamily: HERO, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" as React.CSSProperties["fontVariantNumeric"] }}>{ctr}%</p>
+          <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>CTR</p>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <RoasDisplay
+            roas={ad.roas ?? null}
+            profitMarginPct={profitMarginPct}
+            fontSize={15}
+            fontWeight={800}
+            decimals={1}
+            showBreakEven={false}
+            placeholder="—"
+          />
+          <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: MT, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: F }}>ROAS</p>
+        </div>
       </div>
     </div>
   );
@@ -415,6 +445,9 @@ export default function AdScorePage() {
   const [sortBy, setSortBy] = useState<SortKey>("score");
   const [filterTier, setFilterTier] = useState<Tier | "all">("all");
   const [selectedAd, setSelectedAd] = useState<AdScoreRow | null>(null);
+  // Profit margin from the active meta account, used to color ROAS against
+  // the user's break-even line. null = no margin configured = neutral display.
+  const [profitMarginPct, setProfitMarginPct] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.id || !selectedPersona?.id) { setLoading(false); return; }
@@ -424,6 +457,23 @@ export default function AdScorePage() {
       .select("*").eq("user_id", user.id).eq("persona_id", selectedPersona.id)
       .order("spend", { ascending: false }).limit(200) as { data: AdScoreRow[] | null };
     setEntries(data || []);
+    // Fetch profit_margin_pct for the active meta account so ROAS coloring
+    // is grounded in the user's break-even line. Failure is non-fatal — we
+    // just fall back to neutral display.
+    try {
+      const selectedAccId = (storage.get(`meta_sel_${selectedPersona.id}`, "") || "").replace(/^act_/, "");
+      if (selectedAccId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: row } = await (supabase as any).from("ad_accounts")
+          .select("profit_margin_pct")
+          .eq("user_id", user.id).eq("meta_account_id", selectedAccId)
+          .maybeSingle();
+        const pm = (row as { profit_margin_pct: number | null } | null)?.profit_margin_pct;
+        setProfitMarginPct(typeof pm === "number" && Number.isFinite(pm) && pm > 0 && pm <= 100 ? pm : null);
+      } else {
+        setProfitMarginPct(null);
+      }
+    } catch { setProfitMarginPct(null); }
     setLoading(false);
   }, [user?.id, selectedPersona?.id]);
 
@@ -676,14 +726,14 @@ export default function AdScorePage() {
         }}>
           {filtered.map((ad, i) => (
             <div key={ad.id || ad.ad_id || i}>
-              <AdCard ad={ad} allScores={allScores} pt={pt} onSelect={() => setSelectedAd(ad)} />
+              <AdCard ad={ad} allScores={allScores} pt={pt} profitMarginPct={profitMarginPct} onSelect={() => setSelectedAd(ad)} />
             </div>
           ))}
         </div>
       )}
 
       {/* Score detail modal */}
-      {selectedAd && <ScoreDetail ad={selectedAd} pt={pt} onClose={() => setSelectedAd(null)} />}
+      {selectedAd && <ScoreDetail ad={selectedAd} pt={pt} profitMarginPct={profitMarginPct} onClose={() => setSelectedAd(null)} />}
     </div>
   );
 }
