@@ -192,6 +192,9 @@ interface Block {
   /** Creative-check edge function payload, attached when the chat embeds
    *  a creative_check block. Shape declared as CCData below. */
   _ccData?: CCData;
+  /** Original filename of the creative analyzed in a creative_check block.
+   *  Surfaced as a caption above the verdict tile. */
+  _fileName?: string;
 
   // ── Transient client-side fields (not persisted) ──
   // These travel on the in-memory Block so the renderer can stage tool
@@ -203,6 +206,9 @@ interface Block {
   _toolParams?: Record<string, string>;
   /** Marks the message as already saved to chat_messages (idempotency). */
   _synced?: boolean;
+  /** Set on `limit_warning` blocks when the next message will trip the
+   *  daily/credits limit — the renderer surfaces an upgrade CTA. */
+  will_hit_limit?: boolean;
 }
 interface AIMessage {
   role: "user"|"assistant";
@@ -2946,6 +2952,14 @@ export default function AdBriefAI() {
   }, []);
 
   const [accountAlerts,setAccountAlerts]=useState<AccountAlert[]>(ctxAlerts||[]);
+  /** Read free-form fields off Profile (which has `[key: string]: unknown`).
+   *  Returns the value as `string | undefined` so call-sites can `||` chain
+   *  without per-call casts. Centralized so the dozen reads of these
+   *  fields don't each repeat `as { product?: string }`. */
+  const profileField = (k: "product" | "industry" | "niche" | "market"): string | undefined => {
+    const v = profile?.[k];
+    return typeof v === "string" ? v : undefined;
+  };
   // Virtual scroll: render only last N messages for performance
   // User can load older messages with "Ver mais"
   const MSG_PAGE = 30;
@@ -3819,19 +3833,26 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     if(localHasData) return; // local data takes priority — already loaded
     (async()=>{
       try {
+        type ChatMessageRow = {
+          id: string;
+          role: string;
+          content: { userText?: string; blocks?: Block[] } | null;
+          ts: number;
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const q = (supabase as any).from("chat_messages")
           .select("id,role,content,ts")
           .eq("user_id", user.id)
           .order("ts", { ascending: true })
           .limit(60);
-        const { data } = await (pid ? q.eq("persona_id", pid) : q.is("persona_id", null));
+        const { data } = await (pid ? q.eq("persona_id", pid) : q.is("persona_id", null)) as { data: ChatMessageRow[] | null };
         if(!data?.length) return;
-        const restored: AIMessage[] = (data as any[]).map((r:any) => ({
+        const restored: AIMessage[] = data.map((r) => ({
           id: r.ts,
           ts: r.ts,
           role: r.role as "user"|"assistant",
           userText: r.content?.userText,
-          blocks: ((r.content?.blocks as Block[] | undefined) || []).filter((b) => b.type !== "trend_chart"),
+          blocks: (r.content?.blocks || []).filter((b) => b.type !== "trend_chart"),
           _synced: true,
         }));
         const hasUserHistory = restored.some((m)=>m?.role==="user" && String(m?.userText || "").trim().length > 0);
@@ -4431,9 +4452,9 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
         target_name:block.target_name||null,
         value:block.value,
         source:"chat",
-        ai_reasoning:(block as any).context||null,
+        ai_reasoning:block.context||null,
         alert_id: activeMetricAlert || null,
-        hypothesis: (block as any).hypothesis || null,
+        hypothesis: block.hypothesis || null,
         force:opts?.force===true,
       }
     });
@@ -4466,14 +4487,16 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     }
     // ────────────────────────────────────────────────────────────────────────
 
-    // Parse real error from edge function response (supabase SDK hides it)
+    // Parse real error from edge function response (supabase SDK hides it).
+    // FunctionsHttpError has .context which is either a Response, a string,
+    // or an object with { error }. Narrow without `any`.
     let realError: string|null = null;
     if(error){
       try{
-        const ctx=(error as any).context;
+        const ctx=(error as { context?: Response | string | { error?: string } }).context;
         if(ctx instanceof Response){const t=await ctx.clone().text();const p=JSON.parse(t);realError=p?.error||null;}
         else if(typeof ctx==="string"){realError=JSON.parse(ctx)?.error||null;}
-        else if(ctx&&typeof ctx==="object"){realError=(ctx as any).error||null;}
+        else if(ctx&&typeof ctx==="object"){realError=ctx.error||null;}
       }catch{}
       if(!realError) realError=error?.message||"Erro desconhecido";
     }
@@ -4491,7 +4514,8 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       error_msg:data?.error||realError||null,
       executed_at:new Date().toISOString(),
     };
-    supabase.from("ai_action_log" as any).insert(actionRecord).then(()=>{});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from("ai_action_log").insert(actionRecord).then(()=>{});
 
     // ── No-op detection (must check BEFORE the error branch) ──────────
     // Backend's deterministic guard returns success:false + skipped:'<reason>'
@@ -4550,10 +4574,11 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     }
 
     if(data?.campaigns){
-      const rows=(data.campaigns as any[]).map((c:any)=>[c.name,c.effective_status||c.status,c.daily_budget?`$${(c.daily_budget/100).toFixed(0)}/dia`:"—",c.id]);
+      type CampaignReport = { name: string; effective_status?: string; status?: string; daily_budget?: number; id: string };
+      const rows=(data.campaigns as CampaignReport[]).map((c)=>[c.name,c.effective_status||c.status||"",c.daily_budget?`$${(c.daily_budget/100).toFixed(0)}/dia`:"—",c.id]);
       const campBlock={type:"insight" as const,title:lang==="pt"?"Campanhas":"Campaigns",table:{headers:[lang==="pt"?"Nome":"Name","Status",lang==="pt"?"Orçamento":"Budget","ID"],rows}};
       setMessages(prev=>{
-        const idx=[...prev].reverse().findIndex((m:any)=>m.blocks?.some((b:any)=>b.meta_action==="list_campaigns"||b.meta_action==="get_campaigns"));
+        const idx=[...prev].reverse().findIndex((m)=>m.blocks?.some((b)=>b.meta_action==="list_campaigns"||b.meta_action==="get_campaigns"));
         const realIdx=idx>=0?prev.length-1-idx:-1;
         if(realIdx>=0){return prev.map((m,i)=>i===realIdx?{...m,blocks:[campBlock]}:m);}
         const id=Date.now();
@@ -4634,7 +4659,7 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     if(pendingImage) {
       const userIntent = msg || (lang==="pt"?"Analise este criativo":lang==="es"?"Analiza este creativo":"Analyze this creative");
       const platformCtx = connections.includes("meta") ? "Meta Ads (Facebook/Instagram)" : "Meta Ads";
-      const marketCtx = (selectedPersona?.result as any)?.market || (lang==="pt"?"BR":lang==="es"?"MX":"US");
+      const marketCtx = (selectedPersona?.result as { market?: string } | null)?.market || (lang==="pt"?"BR":lang==="es"?"MX":"US");
       msg = `[CREATIVE_CHECK_REQUEST]
 File: ${pendingImage.name}
 User note: ${userIntent}
@@ -4749,9 +4774,11 @@ Return ONLY this JSON (no markdown, no other text):
       requestAnimationFrame(()=>bottomRef.current?.scrollIntoView({behavior:"instant"}));
       setLoading(true);
       try {
-        const { data: tgConn } = await (supabase.from("telegram_connections" as any) as any)
+        type TgConn = { chat_id: string | number; telegram_username: string | null; connected_at: string | null };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: tgConn } = await (supabase as any).from("telegram_connections")
           .select("chat_id, telegram_username, connected_at")
-          .eq("user_id", user.id).eq("active", true).maybeSingle();
+          .eq("user_id", user.id).eq("active", true).maybeSingle() as { data: TgConn | null };
 
         const aid = Date.now()+1;
 
@@ -4772,7 +4799,8 @@ To disconnect, click the Telegram icon at the top.`;
         } else if (/conect|ativ|quero|want|receb|alert|notif|quiero/i.test(msg)) {
           // NOT CONNECTED + wants to connect — generate pairing link
           const tok = Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,8);
-          await (supabase.from("telegram_pairing_tokens" as any) as any).insert({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any).from("telegram_pairing_tokens").insert({
             user_id:user.id, token:tok,
             expires_at: new Date(Date.now()+10*60*1000).toISOString(),
           });
@@ -4825,11 +4853,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       // Compress history: user = plain text; assistant = readable summary including table data
       const history = messages.slice(-12).map(m => {
         if (m.role === "user") return { role: "user" as const, content: m.userText || "" };
-        const text = (m.blocks || []).map((b: any) => {
+        const text = (m.blocks || []).map((b) => {
           // Table blocks: serialize rows so AI remembers campaign data
           if (b.table) {
-            const rows = (b.table.rows || []).slice(0, 5).map((r: any[]) =>
-              (b.table.headers || []).map((h: string, i: number) => `${h}:${r[i]||"—"}`).join(" ")
+            const rows = (b.table.rows || []).slice(0, 5).map((r) =>
+              (b.table.headers || []).map((h, i) => `${h}:${r[i]||"—"}`).join(" ")
             ).join(" | ");
             return `${b.title||"Dados"}: ${rows}`.slice(0, 300);
           }
@@ -4844,7 +4872,23 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       });
       // Tone: free-text from localStorage (replaces hardcoded 3 options)
       const aiTonePref = (() => { return storage.get("adbrief_ai_tone", "") })();
-      const invokeBody: any = {message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref||undefined}};
+      // Body shape mirrors what adbrief-ai-chat accepts. Optional fields
+      // are filled conditionally below.
+      type ChatInvokeBody = {
+        message: string;
+        context: string;
+        user_id: string;
+        persona_id: string | null;
+        user_language: string;
+        history: Array<{ role: "user" | "assistant"; content: string }>;
+        user_prefs: { tone?: string };
+        active_metric_alert?: unknown;
+        is_first_session?: boolean;
+        image_base64?: string;
+        image_media_type?: string;
+        account_id?: string;
+      };
+      const invokeBody: ChatInvokeBody = {message:msg,context,user_id:user.id,persona_id:selectedPersona?.id||null,user_language:lang,history,user_prefs:{tone:aiTonePref||undefined}};
       // active_metric_alert tells the backend we're in a structured
       // resolution flow for a specific Feed metric alert (CTR/CPA/ROAS).
       // Backend swaps to Resolution Mode in the system prompt: diagnose →
@@ -4883,26 +4927,35 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       // Handle non-2xx errors — supabase returns them as errors with context
       if(error) {
-        // Try multiple strategies to parse the error body from Supabase edge function errors
-        let parsedErr: any = null;
+        // The edge fn returns rich error payloads embedded in the
+        // FunctionsHttpError. Narrow without `any` so the field reads are
+        // type-checked.
+        type ChatErrorPayload = {
+          error?: string;
+          type?: string;
+          blocks?: Block[];
+          remaining?: number;
+          raw?: string;
+        };
+        let parsedErr: ChatErrorPayload | null = null;
         try {
-          const ctx = (error as any).context;
+          const ctx = (error as { context?: Response | string | object }).context;
           if (ctx instanceof Response) {
             const txt = await ctx.clone().text();
-            try { parsedErr = JSON.parse(txt); } catch { parsedErr = { raw: txt }; }
+            try { parsedErr = JSON.parse(txt) as ChatErrorPayload; } catch { parsedErr = { raw: txt }; }
           } else if (typeof ctx === "string") {
-            try { parsedErr = JSON.parse(ctx); } catch { parsedErr = { raw: ctx }; }
+            try { parsedErr = JSON.parse(ctx) as ChatErrorPayload; } catch { parsedErr = { raw: ctx }; }
           } else if (ctx && typeof ctx === "object") {
-            parsedErr = ctx;
+            parsedErr = ctx as ChatErrorPayload;
           }
         } catch {}
         // Fallback: try parsing the error message itself
         if (!parsedErr) {
-          try { parsedErr = JSON.parse(error?.message || "{}"); } catch {}
+          try { parsedErr = JSON.parse(error?.message || "{}") as ChatErrorPayload; } catch {}
         }
         // Fallback: try data field (some supabase versions return it here)
         if (!parsedErr && data) {
-          parsedErr = data;
+          parsedErr = data as ChatErrorPayload;
         }
 
         if(parsedErr?.error==="daily_limit"){
@@ -4985,7 +5038,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       // "actions":...) but loses outer braces, so JSON.parse fails. We
       // detect this pattern and reconstruct a usable decision payload via
       // permissive regex extraction. Better degraded card than no card.
-      blocks = blocks.map((b: any) => {
+      blocks = blocks.map((b) => {
         if (b.type !== "insight") return b;
         const c = String(b.content || "");
         const looksLikeDecision = /["']?headline["']?\s*:/i.test(c)
@@ -5027,24 +5080,24 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               params: {},
             }]
           : [];
-        const recovered: any = {
+        const recovered: Decision = {
           id: `ai-recovered-${Date.now().toString(36)}`,
-          type: decision_type,
+          type: decision_type as Decision['type'],
           headline,
           reason,
           score,
           priority_rank: 1,
-          impact_type,
+          impact_type: impact_type as Decision['impact_type'],
           impact_daily,
           impact_7d,
-          impact_confidence,
+          impact_confidence: impact_confidence as Decision['impact_confidence'],
           impact_basis,
           metrics: [],
           actions,
           target_id,
           target_meta_id,
           ad_id: null,
-          account_id: null,
+          account_id: "",
           status: "pending",
           source: "ai_chat",
           invalidator,
@@ -5057,7 +5110,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         console.warn("[decision-layer] salvaged malformed decision from insight block", {
           headline, decision_type, impact_type, has_invalidator: !!invalidator,
         });
-        return { type: "decision" as const, decision: recovered } as any;
+        // Block has decision?: unknown — pass the recovered Decision through
+        // without re-flattening Block.type to "decision". Renderer handles it.
+        const rebuilt: Block = { type: "decision", title: headline, decision: recovered };
+        return rebuilt;
       });
 
       // ── Normalize decision blocks: hoist target_meta_id into actions ──
@@ -5066,13 +5122,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       // `action.params.target_id` first — so before render+persist we
       // copy the decision's top-level target id into every action's params.
       // Survives the persist round-trip via the actions JSONB column.
-      blocks = blocks.map((b: any) => {
+      blocks = blocks.map((b) => {
         if (b.type !== "decision") return b;
-        const d = b.decision || b.payload;
+        const d = (b.decision || b.payload) as Decision | undefined;
         if (!d) return b;
         const tid = d.target_meta_id || d.target_id || null;
         if (!tid || !Array.isArray(d.actions)) return b;
-        const newActions = d.actions.map((a: any) => {
+        const newActions = d.actions.map((a: DecisionAction) => {
           if (!a) return a;
           const params = (a.params && typeof a.params === "object") ? { ...a.params } : {};
           if (!params.target_id && !params.target_meta_id) {
@@ -5080,7 +5136,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           }
           return { ...a, params };
         });
-        const updated = { ...d, actions: newActions };
+        const updated: Decision = { ...d, actions: newActions };
         return { ...b, decision: updated, payload: updated };
       });
 
@@ -5102,7 +5158,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       //   - Constraint violations get logged to console + supabase logs
       //     so we can see them during early rollout and tighten the
       //     system prompt accordingly.
-      const decisionBlocks = blocks.filter((b: any) => b.type === "decision");
+      const decisionBlocks = blocks.filter((b) => b.type === "decision");
       if (decisionBlocks.length > 0 && user?.id && selectedPersona?.id) {
         // Resolve ad_accounts.id (UUID) from the persona's selected
         // meta_account_id. Without a real UUID the FK would fail.
@@ -5114,13 +5170,14 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           // The previous version stripped the prefix and got 0 rows
           // every time → silent persist failure → loop dead. Now we
           // try BOTH variants to survive any legacy data inconsistency.
-          (supabase as any)
+          type AccRow = { id: string; meta_account_id: string };
+          supabase
             .from("ad_accounts")
             .select("id, meta_account_id")
             .eq("user_id", user.id)
             .in("meta_account_id", [metaAccId, metaAccId.replace(/^act_/, "")])
             .maybeSingle()
-            .then(({ data: accRow }: any) => {
+            .then(({ data: accRow }: { data: AccRow | null }) => {
               if (!accRow?.id) {
                 console.warn("[decision-layer] no ad_accounts UUID for", { metaAccId });
                 return;
@@ -5145,7 +5202,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 "rollback_plan", "explanation_chain", "pipeline_mode",
               ]);
               for (const db of decisionBlocks) {
-                const payload = (db as any).decision || (db as any).payload;
+                const payload = (db.decision || db.payload) as Decision | undefined;
                 if (!payload) continue;
                 const aiTempId = payload.id;
                 // Project the payload to only the columns the table has.
@@ -5163,12 +5220,14 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                   source: "ai_chat",
                   status: rowFields.status || "pending",
                 };
+                type InsertResult = { data: { id: string } | null; error: { message?: string; code?: string; details?: string } | null };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (supabase as any)
                   .from("decisions")
                   .insert(row)
                   .select("id")
                   .single()
-                  .then(({ data: inserted, error }: any) => {
+                  .then(({ data: inserted, error }: InsertResult) => {
                     if (error || !inserted?.id) {
                       console.warn("[decision-layer] persist failed", {
                         error: error?.message || error,
@@ -5187,13 +5246,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       decision_type: payload.type,
                       headline: payload.headline?.slice(0, 60),
                     });
-                    setMessages((prev: any[]) => prev.map(msg => {
+                    setMessages((prev) => prev.map(msg => {
                       if (msg.role !== "assistant" || !msg.blocks) return msg;
-                      const newBlocks = msg.blocks.map((b: any) => {
+                      const newBlocks = msg.blocks.map((b) => {
                         if (b.type !== "decision") return b;
-                        const p = b.decision || b.payload;
+                        const p = (b.decision || b.payload) as Decision | undefined;
                         if (!p || p.id !== aiTempId) return b;
-                        const updated = { ...p, id: inserted.id };
+                        const updated: Decision = { ...p, id: inserted.id };
                         return { ...b, decision: updated, payload: updated };
                       });
                       return { ...msg, blocks: newBlocks };
@@ -5203,17 +5262,25 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             });
         }
       }
-      // Detect creative check response — blocks[0] has verdict field directly
-      if(pendingImage && blocks.length > 0 && (blocks[0] as any).verdict) {
-        const ccData = blocks[0] as any;
-        blocks = [{ type: "creative_check" as any, title: ccData.verdict_reason || "Análise do criativo", content: "" } as any];
-        (blocks[0] as any)._ccData = ccData;
-        (blocks[0] as any)._fileName = pendingImage.name;
+      // Detect creative check response — blocks[0] has verdict field directly.
+      // The edge fn returns the raw CCData payload as the first block; we
+      // wrap it as a creative_check Block whose _ccData carries the payload.
+      const rawCC = blocks[0] as unknown as CCData;
+      if(pendingImage && blocks.length > 0 && rawCC?.verdict) {
+        blocks = [{
+          type: "creative_check",
+          title: rawCC.verdict_reason || "Análise do criativo",
+          content: "",
+          _ccData: rawCC,
+          _fileName: pendingImage.name,
+        }];
       }
       // Detect trend/evolution requests — auto-inject sparkline from snapshots
       const isTrendReq = /roas.*tempo|ctr.*tempo|evolu|tendên|trend|histórico.*performance|30.*dias|semanas?.*performance|performance.*semana|como.*está.*indo/i.test(msg);
       if (isTrendReq && user?.id) {
+        type TrendRow = { date: string; avg_ctr: number | null; avg_roas: number | null; total_spend: number | null };
         // Fire and forget — load snapshots and prepend trend block
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const _trendQ = (supabase as any).from("daily_snapshots")
           .select("date,avg_ctr,avg_roas,total_spend")
           .eq("user_id", user.id)
@@ -5221,17 +5288,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           .limit(30);
         // Strict persona isolation — only show trends for current persona
         (selectedPersona?.id ? _trendQ.eq("persona_id", selectedPersona.id) : _trendQ.is("persona_id", null))
-          .then((r: any) => {
-            const rows = (r.data || []).filter((d: any) => d.date);
+          .then((r: { data: TrendRow[] | null }) => {
+            const rows = (r.data || []).filter((d) => d.date);
             if (rows.length >= 2) {
               const trendBlock: Block = {
                 type: "trend_chart",
                 title: lang === "pt" ? "Evolução da conta" : lang === "es" ? "Evolución de cuenta" : "Account evolution",
                 trend: {
-                  dates: rows.map((d: any) => d.date.slice(5)), // MM-DD
-                  ctr: rows.map((d: any) => { const v = d.avg_ctr || 0; return v > 1 ? v / 100 : v; }),
-                  roas: rows.map((d: any) => d.avg_roas || 0),
-                  spend: rows.map((d: any) => d.total_spend || 0),
+                  dates: rows.map((d) => d.date.slice(5)), // MM-DD
+                  ctr: rows.map((d) => { const v = d.avg_ctr || 0; return v > 1 ? v / 100 : v; }),
+                  roas: rows.map((d) => d.avg_roas || 0),
+                  spend: rows.map((d) => d.total_spend || 0),
                 }
               };
               // Prepend trend block to the AI response
@@ -5340,8 +5407,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         if(c.type==="hooks" && (!c.items || c.items.length === 0)){
           const countMatch=msg.match(/(\d+)\s+hooks?/i);
           const params={
-            product:(profile as any)?.product || selectedPersona?.name || "produto",
-            niche:(profile as any)?.industry || (profile as any)?.niche || "geral",
+            product:profileField("product") || selectedPersona?.name || "produto",
+            niche:profileField("industry") || profileField("niche") || "geral",
             market:lang.toUpperCase()||"BR",
             platform:connections.includes("meta")?"Meta Feed":false /* google disabled */?"Google":"Meta Feed",
             tone:"human, direct",
@@ -5364,7 +5431,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           return{...c,type:"meta_action" as const,meta_action:p.meta_action,target_id:p.target_id,target_type:p.target_type,target_name:p.target_name,value:p.value};
         }
         // When AI emits a tool_call for content tools, open the panel with prefilled context
-        if(c.type==="tool_call"&&["hooks","script","brief","competitor","translate"].includes(c.tool||"")&&!(c as any)._pendingTool){
+        if(c.type==="tool_call"&&["hooks","script","brief","competitor","translate"].includes(c.tool||"")&&!c._pendingTool){
           // Auto-open panel with AI-populated context + prefill from tool_params
           const p=c.tool_params||{};
           const prefill: Record<string,string>={};
@@ -5468,9 +5535,11 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   };
 
   // ── Auto-send prompt from navigation state (e.g. tracking diagnosis from Feed) ──
-  const pendingNavPrompt = useRef<string | null>(
-    (location.state as any)?.prompt || null
-  );
+  // location.state is `unknown` by react-router design — narrow once at the
+  // top of this section.
+  type NavState = { prompt?: string; activeMetricAlert?: string };
+  const navState = (location.state as NavState | null) || null;
+  const pendingNavPrompt = useRef<string | null>(navState?.prompt || null);
   const navPromptSent = useRef(false);
   // ── Active metric investigation context ──
   // When the user comes from "Melhorar CTR" (or similar feed alert), Feed
@@ -5479,15 +5548,16 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   // flow for ctr_deviation". Backend uses it to swap into Resolution Mode
   // and constrain the AI to a diagnose → propose action → confirm cadence.
   const [activeMetricAlert, setActiveMetricAlert] = useState<string | null>(
-    (location.state as any)?.activeMetricAlert || null
+    navState?.activeMetricAlert || null
   );
   useEffect(() => {
+    const ns = (location.state as NavState | null) || null;
     // Also capture on location change (in case ref missed it)
-    if (!navPromptSent.current && (location.state as any)?.prompt) {
-      pendingNavPrompt.current = (location.state as any).prompt;
+    if (!navPromptSent.current && ns?.prompt) {
+      pendingNavPrompt.current = ns.prompt;
     }
-    if ((location.state as any)?.activeMetricAlert) {
-      setActiveMetricAlert((location.state as any).activeMetricAlert);
+    if (ns?.activeMetricAlert) {
+      setActiveMetricAlert(ns.activeMetricAlert);
     }
   }, [location.state]);
   useEffect(() => {
@@ -5709,9 +5779,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     overflow:"hidden",
                     animation:"bubbleIn 0.2s cubic-bezier(0.34,1.56,0.64,1)",
                   }}>
-                    {(msg as any).imagePreview && (
+                    {msg.imagePreview && (
                       <div style={{padding:"8px 8px 4px"}}>
-                        <img src={(msg as any).imagePreview} alt="criativo"
+                        <img src={msg.imagePreview} alt="criativo"
                           style={{width:"100%",maxWidth:260,height:"auto",borderRadius:10,display:"block",maxHeight:180,objectFit:"contain",background:"rgba(0,0,0,0.15)"}}/>
                       </div>
                     )}
@@ -5744,7 +5814,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
             ):(
               /* ── Bolha da IA — esquerda, card escuro ── */
               /* Se todos blocks são _pendingTool, suprimir tudo — ThinkingIndicator cobre */
-              <div key={msg.blocks?.every((b:any)=>b._pendingTool) ? "pending" : "resolved"}>
+              <div key={msg.blocks?.every((b)=>b._pendingTool) ? "pending" : "resolved"}>
                 {/* Avatar + label — só mostra se há blocks reais */}
                 {!!(msg.blocks?.length) && !(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,animation:"fadeUp 0.15s ease-out"}}>
@@ -5766,7 +5836,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     and inset highlight so it reads as a "decision" card
                     rather than a chat bubble. Keeps the tail-corner
                     radius (4px top-left) for the conversational anchor. */}
-                {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && !msg.blocks?.every((b:any)=>b._pendingTool) ? (
+                {!(msg.blocks?.length === 1 && (msg.blocks[0].type as string) === "proactive") && !msg.blocks?.every((b)=>b._pendingTool) ? (
                   <div style={{
                     background:"linear-gradient(180deg, rgba(15,23,42,0.78) 0%, rgba(10,15,28,0.92) 100%)",
                     border:"1px solid rgba(255,255,255,0.07)",
@@ -5783,7 +5853,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                       (b.type as string)==="limit_warning"?(
                         <div key={bi} style={{marginTop:8,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.05)",border:"1px solid rgba(14,165,233,0.15)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap" as const}}>
                           <p style={{...m,fontSize:13,color:"rgba(14,165,233,0.8)",lineHeight:1.5,margin:0,flex:1}}>{b.content}</p>
-                          {(b as any).will_hit_limit&&(
+                          {b.will_hit_limit&&(
                             <button onClick={()=>setShowUpgradeWall(true)}
                               style={{...j,fontSize:12,fontWeight:700,padding:"7px 14px",borderRadius:8,background:"#0ea5e9",color:"#fff",border:"none",cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" as const}}>
                               {lang==="pt"?"Ver planos →":lang==="es"?"Ver planes →":"See plans →"}
@@ -5791,15 +5861,15 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                           )}
                         </div>
                       ):
-                      (b as any)._pendingTool?null:
-                      <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} onSend={send} accountCtx={{product:(profile as any)?.product||selectedPersona?.name,niche:(profile as any)?.industry||(profile as any)?.niche,market:(profile as any)?.market||(lang==="pt"?"BR":lang==="es"?"MX":"US"),platform:connections.includes("meta")?"Meta":undefined}} stream={isLatest}/>
+                      b._pendingTool?null:
+                      <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} onSend={send} accountCtx={{product:profileField("product")||selectedPersona?.name,niche:profileField("industry")||profileField("niche"),market:profileField("market")||(lang==="pt"?"BR":lang==="es"?"MX":"US"),platform:connections.includes("meta")?"Meta":undefined}} stream={isLatest}/>
                     )}
                   </div>
                 ) : (
                   /* Proactive — sem card, renderiza direto */
                   msg.blocks?.map((b,bi)=>
                     (b.type as string)==="proactive"?<ProactiveBlock key={bi} block={b} lang={lang} onSend={send} connections={connections} personaName={selectedPersona?.name||undefined}/>:
-                    <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} onSend={send} accountCtx={{product:(profile as any)?.product||selectedPersona?.name,niche:(profile as any)?.industry||(profile as any)?.niche,market:(profile as any)?.market||(lang==="pt"?"BR":lang==="es"?"MX":"US"),platform:connections.includes("meta")?"Meta":undefined}} stream={isLatest}/>
+                    <BlockCard key={bi} block={b} lang={lang} onNavigate={handleNavigate} onSend={send} accountCtx={{product:profileField("product")||selectedPersona?.name,niche:profileField("industry")||profileField("niche"),market:profileField("market")||(lang==="pt"?"BR":lang==="es"?"MX":"US"),platform:connections.includes("meta")?"Meta":undefined}} stream={isLatest}/>
                   )
                 )}
                 {/*   Copy Retry row — hidden for proactive messages */}
@@ -5845,16 +5915,16 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         })}
 
         <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 clamp(12px,4vw,40px)",boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat" userMessage={messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||""} label={(() => {
-              const pendingFn = (messages.flatMap(m=>m.blocks||[]) as any[]).find(b=>b._pendingTool)?._pendingTool as string|undefined;
+              const pendingFn = messages.flatMap(m=>m.blocks||[]).find(b=>b._pendingTool)?._pendingTool;
               if(pendingFn==="generate-hooks")  return lang==="pt"?"Criando hooks de alta conversão...":lang==="es"?"Creando hooks de alta conversión...":"Crafting high-converting hooks...";
               if(pendingFn==="generate-script") return lang==="pt"?"Estruturando roteiro...":lang==="es"?"Estructurando guión...":"Building your script...";
               if(pendingFn==="generate-brief")  return lang==="pt"?"Montando brief criativo...":lang==="es"?"Montando brief creativo...":"Building creative brief...";
               return undefined; // let ThinkingIndicator derive from userMessage
             })()}/>}</div>
-        {!loading&&messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
+        {!loading&&messages.some(m=>m.blocks?.some(b=>b._pendingTool))&&(
           <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 32px",boxSizing:"border-box"}}>
           <ThinkingIndicator lang={lang} variant="chat" userMessage={messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||""} label={(() => {
-              const pendingFn = (messages.flatMap(m=>m.blocks||[]) as any[]).find(b=>b._pendingTool)?._pendingTool as string|undefined;
+              const pendingFn = messages.flatMap(m=>m.blocks||[]).find(b=>b._pendingTool)?._pendingTool;
               if(pendingFn==="generate-hooks")  return lang==="pt"?"Criando hooks de alta conversão...":lang==="es"?"Creando hooks de alta conversión...":"Crafting high-converting hooks...";
               if(pendingFn==="generate-script") return lang==="pt"?"Estruturando roteiro...":lang==="es"?"Estructurando guión...":"Building your script...";
               if(pendingFn==="generate-brief")  return lang==="pt"?"Montando brief criativo...":lang==="es"?"Montando brief creativo...":"Building creative brief...";
@@ -5863,7 +5933,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         )}
         {/* Inline tool panel — only show when not loading */}
-        {activeTool&&!loading&&!messages.some(m=>m.blocks?.some(b=>(b as any)._pendingTool))&&(
+        {activeTool&&!loading&&!messages.some(m=>m.blocks?.some(b=>b._pendingTool))&&(
           <div style={{maxWidth:720,margin:"0 auto 8px",padding:"0 40px",boxSizing:"border-box" as const}}>
             <InlineToolPanel
               action={activeTool}
@@ -5871,9 +5941,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               onSend={send}
               lang={lang}
               accountCtx={{
-                product: (profile as any)?.product || selectedPersona?.name || undefined,
-                niche: (profile as any)?.industry || (profile as any)?.niche || undefined,
-                market: (profile as any)?.market || lang.toUpperCase(),
+                product: profileField("product") || selectedPersona?.name || undefined,
+                niche: profileField("industry") || profileField("niche") || undefined,
+                market: profileField("market") || lang.toUpperCase(),
                 platform: connections.includes("meta") ? "Meta" : false /* google disabled */ ? "Google" : undefined,
                 angle: undefined,
               }}
