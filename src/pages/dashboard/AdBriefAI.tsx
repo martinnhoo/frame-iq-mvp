@@ -17,6 +17,7 @@ import {
   ChevronRight, Plus, CheckCircle2,
   Telescope,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 // v20: removed unused — Brain, Upload, Activity, ExternalLink,
 //      DollarSign, MousePointerClick, Eye, Target, Radio, Wifi, WifiOff
 import UpgradeWall from "@/components/UpgradeWall";
@@ -82,7 +83,7 @@ const PLATFORM_ICONS_INLINE: Record<string,React.ReactNode> = {
 // reach it by: (a) direct URL /dashboard/brief, or (b) appending ?brief=1 to
 // /dashboard/ai which re-enables the pill in the toolbar. Remove this note
 // and re-add the entries below once generate-brief is fixed end-to-end.
-const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string; desc: string}>> = {
+const TOOLBAR: Record<string, Array<{icon: LucideIcon; label: string; action: string; color: string; desc: string}>> = {
   // Replaced "Competitor / Concorrente" with "Spy" — Spy is broader and
   // covers the same "look at the market" intent without needing the user
   // to paste a specific ad. The narrow "decode this exact ad" flow lives
@@ -111,13 +112,23 @@ const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; c
 
 // Hidden re-enable: if the URL has ?brief=1 on /dashboard/ai, the owner gets
 // the pill back in the toolbar without exposing it to everyone else.
-const BRIEF_PILL_BY_LANG: Record<string, {icon: any; label: string; action: string; color: string; desc: string}> = {
+const BRIEF_PILL_BY_LANG: Record<string, {icon: LucideIcon; label: string; action: string; color: string; desc: string}> = {
   en: { icon: FileText, label: "Brief",    action: "brief", color: "#f59e0b", desc: "Brief ready to hand to your creative team" },
   pt: { icon: FileText, label: "Brief",    action: "brief", color: "#f59e0b", desc: "Briefing pronto pra passar pra equipe criativa" },
   es: { icon: FileText, label: "Brief",    action: "brief", color: "#f59e0b", desc: "Brief listo para tu equipo creativo" },
 };
 
 // ── Block types ────────────────────────────────────────────────────────────────
+/** Block hypothesis — emitted by the chat for decision blocks so the
+ *  pattern-history strip can scope the lookup to the same primary cause. */
+interface BlockHypothesis {
+  primary_cause?: string;
+  summary?: string;
+  headline?: string;
+  /** 0–1 model confidence for the hypothesis. Drives the percentage chip. */
+  confidence?: number;
+}
+
 interface Block {
   type: "action"|"pattern"|"hooks"|"warning"|"insight"|"off_topic"|"navigate"|"tool_call"|"meta_action"|"text"|"trend_chart"|"limit_warning"|"creative_check"|"credits_exhausted_free"|"credits_exhausted_paid"|"decision";
   remaining?: number;
@@ -130,6 +141,57 @@ interface Block {
   table?: { headers:string[]; rows:string[][] };
   chart?: { type:"bar"; labels:string[]; values:number[]; colors?:string[] };
   trend?: { dates:string[]; ctr:number[]; roas:number[]; spend:number[] };
+
+  // ── Decision-block fields (chat-emitted decisions) ──
+  // The chat AI emits richer payloads than the static engine. Declared
+  // here so renderers can read them without `(block as any).field` —
+  // all optional, runtime semantics unchanged.
+  /** Marks a block as auto-execute from the chat side (renderer fires it
+   *  on mount). Used for backend-driven actions that don't need the user
+   *  to click a button. */
+  _autoExec?: boolean;
+  /** Causal hypothesis the block stands on — `primary_cause` becomes the
+   *  bucket key for the historical-pattern lookup. */
+  hypothesis?: BlockHypothesis;
+  /** Plain-language money figure to surface as urgency. Optional override
+   *  for the calculated impact. */
+  urgency_loss_brl?: number;
+  /** Free-form context string — surfaced under the reason bullet list. */
+  context?: string;
+  /** Embedded decision payload for `decision`-type blocks. Carries the
+   *  same fields as the v2-database Decision interface. */
+  decision?: unknown;
+  /** Alias for decision (legacy emitter — newer ones write `decision`). */
+  payload?: unknown;
+  /** Plan-list emitted by the upgrade flow. The fields here are a superset
+   *  of what older edge-fn versions send — `key`, `price_monthly`, and
+   *  `recommended` are newer; `price`/`credits`/`highlight` are the legacy
+   *  fallback shape. Renderer reads both. */
+  plans?: Array<{
+    key?: string;
+    name?: string;
+    price?: string;
+    price_monthly?: number;
+    description?: string;
+    credits?: string;
+    highlight?: string;
+    recommended?: boolean;
+  }>;
+  plan_name?: string;
+  total_credits?: number;
+  next_plan?: {
+    key?: string;
+    name?: string;
+    price?: string;
+    price_monthly?: number;
+    /** Numeric credit count (used to render "+X% créditos" diff). */
+    credits?: number;
+    highlight?: string;
+  };
+  options?: string[];
+  /** Creative-check edge function payload, attached when the chat embeds
+   *  a creative_check block. Shape declared as CCData below. */
+  _ccData?: CCData;
 }
 interface AIMessage {
   role: "user"|"assistant";
@@ -313,7 +375,7 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
 
   // Auto-execute read-only actions without user confirmation
   useEffect(()=>{
-    if((block as any)._autoExec && state==="idle"){
+    if(block._autoExec && state==="idle"){
       setState("running");
       onConfirm(block).then(()=>{setState("done");}).catch(()=>{setState("idle");});
     }
@@ -324,7 +386,7 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
   // pattern_candidate + improved IS NOT NULL. Cause comes from the
   // structured hypothesis the chat now always emits (commit fa7eb38d).
   useEffect(() => {
-    const cause = (block as any)?.hypothesis?.primary_cause;
+    const cause = block?.hypothesis?.primary_cause;
     const meta = block.meta_action;
     const tType = block.target_type;
     if (!userId || !cause || !meta || !tType) {
@@ -346,8 +408,17 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
     let cancelled = false;
     (async () => {
       try {
+        // action_outcomes is off-schema for the supabase types generator.
+        // Cast the client and narrow row shape via OutcomeRow.
+        type OutcomeRow = {
+          improved: boolean | null;
+          recovery_pct: number | null;
+          context: { avoided_spend_brl?: number } | null;
+          metrics_before: { ctr?: number } | null;
+        };
         // Pull all matching outcomes (cap 50 per bucket — generous, real
         // user volume should stay much lower for the first months).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
           .from("action_outcomes")
           .select("improved, recovery_pct, context, metrics_before")
@@ -358,14 +429,14 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
           .not("improved", "is", null)
           .filter("hypothesis->>primary_cause", "eq", cause)
           .order("taken_at", { ascending: false })
-          .limit(50);
+          .limit(50) as { data: OutcomeRow[] | null; error: unknown };
         if (cancelled) return;
         if (error || !data || data.length === 0) {
           setPattern(null);
           setPatternLoading(false);
           return;
         }
-        const rows = data as any[];
+        const rows = data;
         const wins = rows.filter(r => r.improved === true).length;
         const n = rows.length;
         const recoveries = rows
@@ -401,13 +472,13 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
     return () => { cancelled = true; };
   }, [userId, block]);
 
-  if((block as any)._autoExec && state==="running") return(
+  if(block._autoExec && state==="running") return(
     <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",borderRadius:10,background:"rgba(14,165,233,0.06)",border:"1px solid rgba(14,165,233,0.15)",marginBottom:8}}>
       <Loader2 size={13} color="#0ea5e9" className="animate-spin"/>
       <span style={{...m,fontSize:12,color:"rgba(238,240,246,0.6)"}}>{lang==="pt"?"Buscando dados...":lang==="es"?"Buscando datos...":"Fetching data..."}</span>
     </div>
   );
-  if((block as any)._autoExec && state==="done") return null;
+  if(block._autoExec && state==="done") return null;
 
   // L holds both static strings and small string-builder functions; keep
   // the inner type loose so each entry can be either.
@@ -475,7 +546,7 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
 
   // Hypothesis surfaced from structured field (commit fa7eb38d) OR
   // backwards-compat with older blocks where it might be missing.
-  const hypothesis = (block as any).hypothesis || null;
+  const hypothesis = block.hypothesis || null;
   const cause: string | null = hypothesis?.primary_cause || null;
   const confidence: number | null =
     typeof hypothesis?.confidence === "number" ? hypothesis.confidence : null;
@@ -485,10 +556,10 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
   // tool_params.urgency_loss_brl OR ai_reasoning includes one. Without a
   // real number we'd be guessing — better to omit than fake urgency.
   const urgencyLoss: number | null = (() => {
-    const direct = Number((block as any).urgency_loss_brl);
+    const direct = Number(block.urgency_loss_brl);
     if (Number.isFinite(direct) && direct > 0) return direct;
     // Soft fallback: parse from context text "R$XXX em 24h" / "R$XXX/dia"
-    const ctx = String((block as any).context || "");
+    const ctx = String(block.context || "");
     const m24 = ctx.match(/R\$\s*([\d.,]+)\s*(?:em|in|nas?)\s*(?:últim[ao]s?\s*)?24\s*h/i);
     if (m24) {
       const n = Number(m24[1].replace(/\./g,"").replace(",","."));
@@ -633,7 +704,7 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
       )}
 
       {/* POR QUÊ — AI's reasoning text (block.context). Single short paragraph. */}
-      {(block as any).context && (
+      {block.context && (
         <div style={{ padding: "12px 16px 4px" }}>
           <p style={{
             ...j, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)",
@@ -642,7 +713,7 @@ function ConfirmActionBlock({block,onConfirm,lang,userId}:{block:Block;onConfirm
             {t.why}
           </p>
           <p style={{ ...m, fontSize: 13, color: "rgba(255,255,255,0.82)", lineHeight: 1.55, margin: 0 }}>
-            {String((block as any).context)}
+            {String(block.context)}
           </p>
         </div>
       )}
@@ -1115,7 +1186,22 @@ const CC_VERDICT = {
 };
 const CC_METRIC_COLORS: Record<string,string> = { green:"#22A3A3", amber:"#f59e0b", red:"#ef4444", blue:"#0da2e7" };
 
-function getCCMetrics(raw: any) {
+/** Subset of the creative-check edge function's payload that getCCMetrics
+ *  reads. Declared once so both getCCMetrics and CreativeCheckCard can use
+ *  the same name-space without hand-rolling another shape. */
+interface CCData {
+  verdict?: "READY" | "REVIEW" | "BLOCKED";
+  verdict_reason?: string;
+  estimated_hook_score?: number;
+  hook_analysis?: { score?: number; detail?: string };
+  cta_check?: { detail?: string };
+  language_check?: { issues?: string[] };
+  top_fixes?: string[];
+  strengths?: string[];
+  account_killer_warning?: string;
+}
+
+function getCCMetrics(raw: CCData) {
   const m: Array<{label:string;value:string;delta?:string;color:"green"|"amber"|"red"|"blue"}> = [];
   if (raw.hook_analysis?.score !== undefined) {
     const s = raw.hook_analysis.score;
@@ -1141,8 +1227,8 @@ function renderCCDiagnosis(text: string) {
   });
 }
 
-function CreativeCheckCard({ block }: { block: any }) {
-  const raw = block._ccData || {};
+function CreativeCheckCard({ block }: { block: Block }) {
+  const raw: CCData = block._ccData || {};
   const vc = CC_VERDICT[(raw.verdict as keyof typeof CC_VERDICT)] || CC_VERDICT.REVIEW;
   const metrics = getCCMetrics(raw);
   const F = "Inter,-apple-system,sans-serif";
@@ -1363,12 +1449,13 @@ function DecisionBlockRenderer({ decision }: { decision: Decision }) {
       // use meta_campaign_id, adset actions use meta_adset_id. Old code
       // always used meta_ad_id which sent the wrong ID to Meta and
       // either flipped the wrong entity or 400'd.
-      const fromParams = (action.params as any)?.target_id ?? (action.params as any)?.target_meta_id;
+      const params = (action.params || {}) as { target_id?: string; target_meta_id?: string };
+      const fromParams = params.target_id ?? params.target_meta_id;
       const fromHierarchy =
-        targetType === "campaign" ? (decision as any)?.ad?.ad_set?.campaign?.meta_campaign_id
-        : targetType === "adset" ? (decision as any)?.ad?.ad_set?.meta_adset_id
+        targetType === "campaign" ? decision?.ad?.ad_set?.campaign?.meta_campaign_id
+        : targetType === "adset" ? decision?.ad?.ad_set?.meta_adset_id
         : decision.ad?.meta_ad_id;
-      const fromDecision = (decision as any).target_meta_id ?? (decision as any).target_id;
+      const fromDecision = decision.target_meta_id ?? decision.target_id;
       const candidates: unknown[] = [fromParams, fromHierarchy, fromDecision];
       let metaId = (candidates.find(valid) as string | undefined) || "";
 
@@ -1379,7 +1466,7 @@ function DecisionBlockRenderer({ decision }: { decision: Decision }) {
       // ID from our cached ads/adsets/campaigns tables. This unblocks the
       // click without requiring an edge function redeploy of the prompt.
       if (!metaId) {
-        const headline = String(decision.headline || (decision as any).target_name || "");
+        const headline = String(decision.headline || decision.target_name || "");
         // Match name in single or double quotes — first capture wins.
         const nameMatch = headline.match(/['"]([^'"]{2,120})['"]/);
         const name = nameMatch ? nameMatch[1].trim() : null;
@@ -1392,11 +1479,11 @@ function DecisionBlockRenderer({ decision }: { decision: Decision }) {
               // account_id FK, so we can scope the search by .in() to
               // avoid leaking across users while keeping the query simple
               // (no nested PostgREST joins).
-              const { data: accs } = await (supabase as any)
+              const { data: accs } = await supabase
                 .from("ad_accounts")
                 .select("id")
                 .eq("user_id", authUser.id);
-              const accIds = (accs || []).map((a: any) => a.id).filter(Boolean);
+              const accIds = (accs || []).map((a) => a.id).filter(Boolean);
               if (accIds.length > 0) {
                 const needle = name.slice(0, 60);
                 const table = targetType === "ad" ? "ads"
@@ -1405,15 +1492,18 @@ function DecisionBlockRenderer({ decision }: { decision: Decision }) {
                 const idCol = targetType === "ad" ? "meta_ad_id"
                   : targetType === "adset" ? "meta_adset_id"
                   : "meta_campaign_id";
-                const { data: row } = await (supabase as any)
+                // Dynamic table name forces unknown — schema-typed select()
+                // can't help here. Narrow the row to the keys we actually read.
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { data: row } = await ((supabase as any)
                   .from(table)
                   .select(`${idCol}, name`)
                   .in("account_id", accIds)
                   .ilike("name", `%${needle}%`)
                   .limit(1)
-                  .maybeSingle();
+                  .maybeSingle()) as { data: Record<string, string | null> | null };
                 if (row?.[idCol] && valid(row[idCol])) {
-                  metaId = row[idCol];
+                  metaId = row[idCol] as string;
                   console.log("[decision-layer] resolved meta_id via name lookup", {
                     name, matched_name: row.name, targetType, metaId,
                   });
@@ -1421,7 +1511,7 @@ function DecisionBlockRenderer({ decision }: { decision: Decision }) {
               }
             }
           } catch (e) {
-            console.warn("[decision-layer] name lookup threw", (e as any)?.message || e);
+            console.warn("[decision-layer] name lookup threw", e instanceof Error ? e.message : e);
           }
         }
       }
@@ -1477,10 +1567,14 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
         body: { price_id: priceId, billing: "monthly" },
       });
       if (error) {
-        const errMsg = (error as any)?.message || "";
-        const errData = (error as any)?.context?.body;
-        let parsed: any = null;
-        try { parsed = typeof errData === "string" ? JSON.parse(errData) : errData; } catch {}
+        // FunctionsHttpError carries .message and .context.body (where body
+        // is the edge function's serialized error payload). Neither is
+        // declared in the Supabase types, so narrow with a local shape.
+        const err = error as { message?: string; context?: { body?: unknown } };
+        const errMsg = err.message || "";
+        const errData = err.context?.body;
+        let parsed: { error_code?: string; error?: string } | null = null;
+        try { parsed = typeof errData === "string" ? JSON.parse(errData) : (errData as typeof parsed); } catch {}
         if (parsed?.error_code === "disposable_email") {
           toast.error(l==="pt"?"Email temporário não é aceito. Use um email permanente.":l==="es"?"Email temporal no aceptado. Usa un email permanente.":"Disposable email not accepted. Use a permanent email.");
         } else if (parsed?.error_code === "ip_rate_limit") {
@@ -1543,7 +1637,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
 
   // ── CREDITS EXHAUSTED (FREE) — plan cards ──
   if(block.type==="credits_exhausted_free") {
-    const plans = (block as any).plans || [];
+    const plans = block.plans || [];
     const l: "pt"|"en"|"es" = (lang === "pt" || lang === "es") ? lang : "en";
     return(
       <div style={{margin:"4px 0 12px"}}>
@@ -1551,7 +1645,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
           {l==="pt"?"Seus créditos gratuitos acabaram. Escolha um plano para continuar:":l==="es"?"Tus créditos gratuitos se agotaron. Elige un plan para continuar:":"Your free credits have run out. Choose a plan to continue:"}
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
-          {plans.map((p:any,i:number)=>{
+          {plans.map((p, i)=>{
             // Fallback for old edge-fn responses that don't yet send a `key`.
             const key: string = p.key || (typeof p.name === "string" ? p.name.toLowerCase() : "");
             const label = PLAN_LABELS[key]?.[l] || PLAN_LABELS[key]?.en;
@@ -1596,10 +1690,10 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
 
   // ── CREDITS EXHAUSTED (PAID) — buy credits and/or upgrade ──
   if(block.type==="credits_exhausted_paid") {
-    const planName = (block as any).plan_name || "";
-    const totalCredits = (block as any).total_credits || 0;
-    const nextPlan = (block as any).next_plan;
-    const options: string[] = (block as any).options || [];
+    const planName = block.plan_name || "";
+    const totalCredits = block.total_credits || 0;
+    const nextPlan = block.next_plan;
+    const options: string[] = block.options || [];
     const showUpgrade = options.includes("upgrade") && nextPlan;
     const showCredits = options.includes("buy_credits");
     const l: "pt"|"en"|"es" = (lang === "pt" || lang === "es") ? lang : "en";
@@ -1649,11 +1743,11 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
               onMouseLeave={e=>{ if (!checkoutLoading) (e.currentTarget as HTMLElement).style.background="rgba(14,165,233,0.08)"; }}>
               <div>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
-                  <span style={{fontSize:13.5,fontWeight:700,color:"#0ea5e9",fontFamily:F}}>{l==="pt"?`Subir para ${nextPlan.name}`:l==="es"?`Subir a ${nextPlan.name}`:`Upgrade to ${nextPlan.name}`}</span>
-                  <span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>+{((nextPlan.credits/totalCredits-1)*100).toFixed(0)}% {l==="en"?"credits":"créditos"}</span>
+                  <span style={{fontSize:13.5,fontWeight:700,color:"#0ea5e9",fontFamily:F}}>{l==="pt"?`Subir para ${nextPlan!.name}`:l==="es"?`Subir a ${nextPlan!.name}`:`Upgrade to ${nextPlan!.name}`}</span>
+                  <span style={{fontSize:9,fontWeight:700,color:"#0ea5e9",background:"rgba(14,165,233,0.12)",padding:"2px 7px",borderRadius:4,letterSpacing:"0.03em"}}>+{(((nextPlan!.credits || 0)/(totalCredits || 1)-1)*100).toFixed(0)}% {l==="en"?"credits":"créditos"}</span>
                 </div>
                 <div style={{fontSize:11,color:"rgba(255,255,255,0.45)",fontFamily:F}}>
-                  {nextPlan.credits.toLocaleString(l==="pt"?"pt-BR":l==="es"?"es":"en-US")} {l==="en"?"credits":"créditos"} · {nextPriceText}
+                  {(nextPlan!.credits || 0).toLocaleString(l==="pt"?"pt-BR":l==="es"?"es":"en-US")} {l==="en"?"credits":"créditos"} · {nextPriceText}
                 </div>
               </div>
               {isLoadingUpgrade
@@ -1721,7 +1815,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
   // mirrors the `decisions` table row — what the AI emits is what gets
   // persisted is what gets rendered.
   if (block.type === "decision") {
-    const decision = (block as any).decision || (block as any).payload;
+    const decision = block.decision || block.payload;
     if (!decision) return null;
     return <DecisionBlockRenderer decision={decision as Decision} />;
   }
@@ -1767,10 +1861,11 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
   const hasMeta = connections?.includes("meta");
 
   // Parse briefing cards from block.content (structured by triggerProactiveGreeting)
-  const briefingCards: { tag: string; tagColor: string; headline: string; detail: string; action?: string; actionPrompt?: string }[] = [];
+  type BriefingCard = { tag: string; tagColor: string; headline: string; detail: string; action?: string; actionPrompt?: string };
+  const briefingCards: BriefingCard[] = [];
   try {
-    const parsed = JSON.parse(block.content || "[]");
-    if (Array.isArray(parsed)) parsed.forEach((c: any) => briefingCards.push(c));
+    const parsed: unknown = JSON.parse(block.content || "[]");
+    if (Array.isArray(parsed)) parsed.forEach((c) => briefingCards.push(c as BriefingCard));
   } catch {
     // Legacy plain-text greeting — wrap it as a single insight card
     if (block.content) {
@@ -2061,11 +2156,21 @@ function Kpi({ label, value, sub, trend, spark, color = "#0ea5e9", warn = false 
 }
 
 // ── Ad row ────────────────────────────────────────────────────────────────────
-const AdRow = React.memo(function AdRow({ a, kind, ask }: { a: any; kind: "winner" | "risk" | "normal"; ask: (q: string) => void }) {
+/** Subset of live-metrics top_ads row that AdRow renders. */
+type LiveAdRow = {
+  name?: string;
+  campaign?: string;
+  ctr?: number | string;
+  freq?: number | string | null;
+  spend?: number | string;
+  isWinner?: boolean;
+  isRisk?: boolean;
+};
+const AdRow = React.memo(function AdRow({ a, kind, ask }: { a: LiveAdRow; kind: "winner" | "risk" | "normal"; ask: (q: string) => void }) {
   const isW = kind === "winner", isR = kind === "risk";
-  const ctr = parseFloat(a.ctr || 0).toFixed(2);
-  const fr = a.freq != null ? parseFloat(a.freq).toFixed(1) : null;
-  const sp = parseFloat(a.spend || 0).toFixed(0);
+  const ctr = parseFloat(String(a.ctr || 0)).toFixed(2);
+  const fr = a.freq != null ? parseFloat(String(a.freq)).toFixed(1) : null;
+  const sp = parseFloat(String(a.spend || 0)).toFixed(0);
   const accentColor = isW ? "#22d3ee" : isR ? "#fb7185" : "rgba(255,255,255,0.15)";
   return (
     <div className="lp-row" onClick={() => ask(`Analisa o criativo "${a.name}" — por que está ${isW ? "performando bem" : isR ? "em risco" : "assim"}?`)} style={{
@@ -2096,14 +2201,20 @@ const AdRow = React.memo(function AdRow({ a, kind, ask }: { a: any; kind: "winne
 });
 
 // ── Campaign row ──────────────────────────────────────────────────────────────
-function CampRow({ c }: { c: any }) {
+type LiveCampRow = {
+  name?: string;
+  status?: string;
+  budget?: string;
+  ctr?: string | number;
+};
+function CampRow({ c }: { c: LiveCampRow }) {
   const on = c.status === "ACTIVE" || c.status === "ENABLED";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
       <span style={{ width: 3, height: 20, borderRadius: 2, background: on ? "#22d3ee" : "rgba(255,255,255,0.1)", flexShrink: 0 }} />
       <span style={{ ...I, fontSize: 12.5, fontWeight: 400, color: on ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.25)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
       {c.budget && <span style={{ ...MONO, fontSize: 11, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{c.budget}</span>}
-      {c.ctr && <span style={{ ...MONO, fontSize: 12, fontWeight: 600, color: parseFloat(c.ctr) > 1.5 ? "#22d3ee" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>{parseFloat(c.ctr).toFixed(2)}%</span>}
+      {c.ctr != null && <span style={{ ...MONO, fontSize: 12, fontWeight: 600, color: parseFloat(String(c.ctr)) > 1.5 ? "#22d3ee" : "rgba(255,255,255,0.25)", flexShrink: 0 }}>{parseFloat(String(c.ctr)).toFixed(2)}%</span>}
     </div>
   );
 }
@@ -2133,10 +2244,21 @@ function Alert({ a, ask }: { a: { t: "warn" | "ok" | "info"; title: string; deta
 }
 
 // ── Smart alerts ──────────────────────────────────────────────────────────────
-function mkAlerts(d: any, lang: string) {
+/** Minimum shape mkAlerts reads off the live-panel data object. */
+type LivePanelData = {
+  error?: unknown;
+  kpis?: { frequency?: number | string; ctr?: number | string; spend?: number | string };
+  winners?: unknown[];
+  at_risk?: unknown[];
+} | null | undefined;
+function mkAlerts(d: LivePanelData, lang: string) {
   if (!d || d.error) return [];
-  const k = d.kpis || {}, W = d.winners || [], R = d.at_risk || [];
-  const fr = parseFloat(k.frequency || 0), ctr = parseFloat(k.ctr || 0), sp = parseFloat(k.spend || 0);
+  const k = d.kpis || {};
+  const W = d.winners || [];
+  const R = d.at_risk || [];
+  const fr = parseFloat(String(k.frequency || 0));
+  const ctr = parseFloat(String(k.ctr || 0));
+  const sp = parseFloat(String(k.spend || 0));
   const out: Array<{ t: "warn" | "ok" | "info"; title: string; detail: string; q: string }> = [];
   const L = {
     highFreq:   { pt:"Frequência crítica",       es:"Frecuencia crítica",       en:"Critical frequency"    },
@@ -2155,7 +2277,10 @@ function mkAlerts(d: any, lang: string) {
     healthyD:   { pt:`CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x — tudo bem`, es:`CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x — todo bien`, en:`CTR ${ctr.toFixed(2)}% · freq ${fr.toFixed(1)}x — looking good` },
     healthyQ:   { pt:"Minha conta está performando bem. Como aproveitar este momento?", es:"Mi cuenta está bien. ¿Cómo aprovechar este momento?", en:"My account is performing well. How can I capitalize on this?" },
   };
-  const t = (k: keyof typeof L) => (L[k] as any)[lang] || (L[k] as any).en;
+  const t = (key: keyof typeof L) => {
+    const entry = L[key] as Record<string, string>;
+    return entry[lang] || entry.en;
+  };
   if (fr > 3.5) out.push({ t: "warn", title: t("highFreq"), detail: t("highFreqD"), q: t("highFreqQ") });
   if (ctr < 0.5 && sp > 50) out.push({ t: "warn", title: t("lowCtr"), detail: t("lowCtrD"), q: t("lowCtrQ") });
   if (R.length > 0) out.push({ t: "warn", title: t("atRisk"), detail: t("atRiskD"), q: t("atRiskQ") });
@@ -2176,10 +2301,42 @@ const Sec = ({ c, children }: { c: string; children: React.ReactNode }) => (
 );
 
 // ── Main LivePanel ────────────────────────────────────────────────────────────
+/** Adapted shape consumed by the panel — produced from the live-metrics
+ *  edge function response. Each top-level key is a platform tab. */
+type LivePanelKpis = {
+  spend: string; ctr: string; cpm: string; cpc: string;
+  frequency: string; reach: number; roas: string | null;
+  cpa: string | null; conversions: string; active_ads: number;
+};
+type LivePanelPlatformData = {
+  account_name?: string;
+  currency_symbol: string;
+  period: string;
+  kpis: LivePanelKpis;
+  top_ads: Array<LiveAdRow & { isWinner: boolean; isRisk: boolean; cpm?: number; conv?: number }>;
+  winners: LiveAdRow[];
+  at_risk: LiveAdRow[];
+  campaigns: LiveCampRow[];
+  time_series: Array<{ date: string; spend: number; ctr: number; cpm: number }>;
+  error?: unknown;
+};
+type LivePanelAdapted = { meta?: LivePanelPlatformData; google?: LivePanelPlatformData };
+/** Raw meta payload from the live-metrics edge function. Narrowed to the
+ *  fields the adapter reads. */
+type LiveMetricsPlatform = {
+  account_name?: string;
+  spend?: number; ctr?: number; cpm?: number; cpc?: number;
+  frequency?: number; reach?: number; roas?: number | null;
+  cpa?: number | null; conversions?: number; impressions?: number;
+  top_ads?: Array<{ ad_name?: string; name?: string; campaign_name?: string; spend?: number; ctr?: number; cpm?: number; conversions?: number }>;
+  daily?: Array<{ date: string; spend?: number; ctr?: number }>;
+  error?: unknown;
+};
+
 function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
-  user: any; selectedPersona: any; connections: string[]; lang: string; onSend: (m: string) => void;
+  user: { id: string } | null; selectedPersona: { id: string; name?: string } | null; connections: string[]; lang: string; onSend: (m: string) => void;
 }) {
-  const [pd,   setPd]   = React.useState<any>(null);
+  const [pd,   setPd]   = React.useState<LivePanelAdapted | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [fail, setFail] = React.useState<string | null>(null);
   const [tab,  setTab]  = React.useState<"meta" | "google">("meta"); // google disabled
@@ -2228,17 +2385,29 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
       const days = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / 86400000) + 1;
       const period = days <= 7 ? "7d" : days <= 14 ? "14d" : days <= 30 ? "30d" : days <= 60 ? "60d" : "90d";
       const selectedAccId = storage.get(`meta_sel_${selectedPersona.id}`, "") || undefined;
-      const { data: r, error: e } = await (supabase.functions.invoke as any)("live-metrics", {
+      type LiveMetricsResponse = {
+        ok?: boolean; error?: string;
+        meta?: LiveMetricsPlatform;
+        google?: LiveMetricsPlatform;
+      };
+      const { data: r, error: e } = await supabase.functions.invoke("live-metrics", {
         body: { user_id: user.id, persona_id: selectedPersona.id, period,
           date_from: fmtAI(dateRange.from), date_to: fmtAI(dateRange.to),
           account_id: selectedAccId }
-      });
+      }) as { data: LiveMetricsResponse | null; error: { message?: string } | null };
       if (e) throw new Error(e.message || "Erro");
       if (r?.ok) {
         // Adaptar formato do live-metrics para o formato esperado pelo LivePanel
-        const adapted: any = {};
+        const adapted: LivePanelAdapted = {};
         if (r.meta && !r.meta.error) {
           const m = r.meta;
+          const topAds = (m.top_ads || []).map((a) => ({
+            name: a.ad_name || a.name, campaign: a.campaign_name,
+            spend: a.spend, ctr: (a.ctr || 0) * 100,
+            cpm: a.cpm || 0, freq: 0, conv: a.conversions || 0,
+            isWinner: (a.ctr || 0) * 100 > 1.5 && (a.spend || 0) > 5,
+            isRisk: (a.ctr || 0) * 100 < 0.5 && (a.spend || 0) > 20,
+          }));
           adapted.meta = {
             account_name: m.account_name,
             currency_symbol: "R$",
@@ -2246,7 +2415,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
             kpis: {
               spend: m.spend?.toFixed(2) || "0.00",
               ctr: ((m.ctr || 0) * 100).toFixed(2),
-              cpm: m.cpm ? m.cpm.toFixed(2) : (m.impressions > 0 ? ((m.spend / m.impressions) * 1000).toFixed(2) : "0.00"),
+              cpm: m.cpm ? m.cpm.toFixed(2) : ((m.impressions || 0) > 0 ? (((m.spend || 0) / (m.impressions || 1)) * 1000).toFixed(2) : "0.00"),
               cpc: m.cpc ? m.cpc.toFixed(2) : "0.00",
               frequency: m.frequency ? m.frequency.toFixed(2) : "0.00",
               reach: m.reach || 0,
@@ -2255,22 +2424,14 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               conversions: (m.conversions || 0).toFixed(0),
               active_ads: m.top_ads?.length || 0,
             },
-            top_ads: (m.top_ads || []).map((a: any) => ({
-              name: a.ad_name || a.name, campaign: a.campaign_name,
-              spend: a.spend, ctr: (a.ctr || 0) * 100,
-              cpm: a.cpm || 0, freq: 0, conv: a.conversions || 0,
-              isWinner: (a.ctr || 0) * 100 > 1.5 && a.spend > 5,
-              isRisk: (a.ctr || 0) * 100 < 0.5 && a.spend > 20,
-            })),
-            winners: [],
-            at_risk: [],
+            top_ads: topAds,
+            winners: topAds.filter((a) => a.isWinner).slice(0, 5),
+            at_risk: topAds.filter((a) => a.isRisk).slice(0, 5),
             campaigns: [],
-            time_series: (m.daily || []).map((d: any) => ({
-              date: d.date, spend: d.spend, ctr: (d.ctr || 0) * 100, cpm: 0
+            time_series: (m.daily || []).map((d) => ({
+              date: d.date, spend: d.spend || 0, ctr: (d.ctr || 0) * 100, cpm: 0,
             })),
           };
-          adapted.meta.winners = adapted.meta.top_ads.filter((a: any) => a.isWinner).slice(0, 5);
-          adapted.meta.at_risk = adapted.meta.top_ads.filter((a: any) => a.isRisk).slice(0, 5);
         }
         // google result handling — disabled (see GOOGLE_ADS_BACKUP.md)
         // Context lock: only apply if still on the same persona+account
@@ -2278,8 +2439,8 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           setPd(adapted); setTs(new Date());
         }
       } else throw new Error(r?.error || "Resposta inválida");
-    } catch (e: any) {
-      if (loadCtx === contextRef.current) setFail(e.message || "Falha");
+    } catch (e) {
+      if (loadCtx === contextRef.current) setFail(e instanceof Error ? e.message : "Falha");
     }
     finally {
       if (loadCtx === contextRef.current) setBusy(false);
@@ -2295,15 +2456,19 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
     return () => window.removeEventListener("meta-account-changed", onAccChanged);
   }, [load]);
 
-  const data = pd?.[tab];
-  const k = data?.kpis || {};
-  const spS = (data?.time_series || []).map((d: any) => d.spend);
-  const cS  = (data?.time_series || []).map((d: any) => d.ctr);
+  const data: LivePanelPlatformData | undefined = pd?.[tab];
+  // KPIs read very loosely (parseFloat/parseInt fall-throughs, mixed
+  // number/string fields, plus legacy keys like active_campaigns that
+  // aren't on the strict adapted type). Keep `k` permissive at the
+  // access boundary instead of widening LivePanelKpis everywhere.
+  const k = (data?.kpis || {}) as Partial<Record<string, string | number>>;
+  const spS = (data?.time_series || []).map((d) => d.spend);
+  const cS  = (data?.time_series || []).map((d) => d.ctr);
   const sTr = spS.length >= 2 ? (spS[spS.length - 1] > spS[0] ? "up" : "down") as "up" | "down" : "flat";
   const cTr = cS.length   >= 2 ? (cS[cS.length - 1]   > cS[0]   ? "up" : "down") as "up" | "down" : "flat";
   const alerts = tab === "meta" ? mkAlerts(data, lang) : [];
   const accName = data?.account_name || "";
-  const isEmpty = data && !data.error && !parseInt(k.active_ads || k.active_campaigns || "0") && !(data.top_ads?.length) && !(data.campaigns?.length);
+  const isEmpty = data && !data.error && !parseInt(String(k.active_ads || k.active_campaigns || "0")) && !(data.top_ads?.length) && !(data.campaigns?.length);
 
   const tcfg: Record<string, { label: string; c: string }> = {
     meta:   { label: "Meta Ads",   c: "#3b82f6" },
@@ -2315,15 +2480,16 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
   // ══════════════════════════════════════════════════════════════════════════
   {
     const cur = data?.currency_symbol || "R$";
-    const metrics = data && !data.error && !busy ? [
-      k.spend       && { lbl: lang==="pt"?"Gasto":lang==="es"?"Gasto":"Spend", val: `${cur}${parseFloat(k.spend||0).toLocaleString(undefined,{maximumFractionDigits:0})}`, warn: false, tr: sTr, color: "#F1F5F9", icon: "spend" },
-      k.ctr         && { lbl: "CTR", val: `${parseFloat(k.ctr||0).toFixed(2)}%`, warn: parseFloat(k.ctr) < 0.5, tr: cTr, color: parseFloat(k.ctr) > 1.5 ? "#10B981" : parseFloat(k.ctr) < 0.5 ? "#EF4444" : "#F1F5F9", icon: "ctr" },
-      k.cpm && parseFloat(k.cpm) > 0 && { lbl: "CPM", val: `${cur}${parseFloat(k.cpm||0).toFixed(1)}`, warn: false, tr: "flat" as const, color: "#F1F5F9", icon: "cpm" },
-      k.cpc && parseFloat(k.cpc) > 0 && { lbl: "CPC", val: `${cur}${parseFloat(k.cpc).toFixed(2)}`, warn: false, tr: "flat" as const, color: "#F1F5F9", icon: "cpc" },
-      k.frequency && parseFloat(k.frequency) > 0 && { lbl: "Freq", val: `${parseFloat(k.frequency).toFixed(1)}x`, warn: parseFloat(k.frequency) > 3.5, tr: "flat" as const, color: parseFloat(k.frequency) > 3.5 ? "#EF4444" : "#F1F5F9", icon: "freq" },
-      k.conversions && k.conversions !== "0" && { lbl: "Conv", val: k.conversions, warn: false, tr: "flat" as const, color: "#10B981", icon: "conv" },
-      k.roas && parseFloat(k.roas) > 0 && { lbl: "ROAS", val: `${parseFloat(k.roas).toFixed(2)}x`, warn: parseFloat(k.roas) < 1, tr: "flat" as const, color: parseFloat(k.roas) >= 2 ? "#10B981" : parseFloat(k.roas) < 1 ? "#EF4444" : "#F1F5F9", icon: "roas" },
-    ].filter(Boolean) : [];
+    type MetricCard = { lbl: string; val: string | number; warn: boolean; tr: "up" | "down" | "flat"; color: string; icon: string };
+    const metrics: MetricCard[] = data && !data.error && !busy ? ([
+      k.spend       && { lbl: lang==="pt"?"Gasto":lang==="es"?"Gasto":"Spend", val: `${cur}${parseFloat(String(k.spend||0)).toLocaleString(undefined,{maximumFractionDigits:0})}`, warn: false, tr: sTr, color: "#F1F5F9", icon: "spend" },
+      k.ctr         && { lbl: "CTR", val: `${parseFloat(String(k.ctr||0)).toFixed(2)}%`, warn: parseFloat(String(k.ctr)) < 0.5, tr: cTr, color: parseFloat(String(k.ctr)) > 1.5 ? "#10B981" : parseFloat(String(k.ctr)) < 0.5 ? "#EF4444" : "#F1F5F9", icon: "ctr" },
+      k.cpm && parseFloat(String(k.cpm)) > 0 && { lbl: "CPM", val: `${cur}${parseFloat(String(k.cpm||0)).toFixed(1)}`, warn: false, tr: "flat" as const, color: "#F1F5F9", icon: "cpm" },
+      k.cpc && parseFloat(String(k.cpc)) > 0 && { lbl: "CPC", val: `${cur}${parseFloat(String(k.cpc)).toFixed(2)}`, warn: false, tr: "flat" as const, color: "#F1F5F9", icon: "cpc" },
+      k.frequency && parseFloat(String(k.frequency)) > 0 && { lbl: "Freq", val: `${parseFloat(String(k.frequency)).toFixed(1)}x`, warn: parseFloat(String(k.frequency)) > 3.5, tr: "flat" as const, color: parseFloat(String(k.frequency)) > 3.5 ? "#EF4444" : "#F1F5F9", icon: "freq" },
+      k.conversions && k.conversions !== "0" && { lbl: "Conv", val: String(k.conversions), warn: false, tr: "flat" as const, color: "#10B981", icon: "conv" },
+      k.roas && parseFloat(String(k.roas)) > 0 && { lbl: "ROAS", val: `${parseFloat(String(k.roas)).toFixed(2)}x`, warn: parseFloat(String(k.roas)) < 1, tr: "flat" as const, color: parseFloat(String(k.roas)) >= 2 ? "#10B981" : parseFloat(String(k.roas)) < 1 ? "#EF4444" : "#F1F5F9", icon: "roas" },
+    ].filter(Boolean) as MetricCard[]) : [];
     const isLive = !busy && !fail;
 
     return (
@@ -2440,7 +2606,7 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
               display: "flex", alignItems: "center", flex: 1, overflow: "hidden",
               marginLeft: 14, gap: 3,
             }}>
-              {(metrics as any[]).map((item: any) => (
+              {metrics.map((item) => (
                 <div key={item.lbl} style={{
                   display: "flex", flexDirection: "column" as const,
                   flexShrink: 0, padding: "6px 14px", borderRadius: 10,
