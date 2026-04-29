@@ -16,7 +16,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Settings, CreditCard, Globe, Gift, LogOut, ChevronDown } from "lucide-react";
+import { Settings, CreditCard, Globe, Gift, LogOut, ChevronDown, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/App";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -206,7 +206,14 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
           <div style={{ height: 4 }} />
 
           {/* Menu items */}
-          <MenuItem icon={<Settings size={14} />} label="Configurações da conta" onClick={() => { setOpen(false); onOpenProfile(); }} />
+          {/* "Configurações" routes to the full /dashboard/settings page
+              (autopilot, integrações, plano, etc) — that's what users
+              expect from a "Settings" label. The compact slide-out
+              UserProfilePanel is reachable via "Perfil rápido" below
+              for users who want to edit name/avatar/instructions
+              without leaving the current page. */}
+          <MenuItem icon={<Settings size={14} />} label="Configurações" onClick={() => { setOpen(false); navigate("/dashboard/settings"); }} />
+          <MenuItem icon={<UserCircle size={14} />} label="Perfil rápido" onClick={() => { setOpen(false); onOpenProfile(); }} />
           <MenuItem icon={<CreditCard size={14} />} label="Faturamento" onClick={() => { setOpen(false); navigate("/dashboard/settings?tab=billing"); }} />
           <MenuItem
             icon={<Globe size={14} />}
