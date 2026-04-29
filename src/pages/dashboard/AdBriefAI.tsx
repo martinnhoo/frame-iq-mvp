@@ -83,28 +83,27 @@ const PLATFORM_ICONS_INLINE: Record<string,React.ReactNode> = {
 // /dashboard/ai which re-enables the pill in the toolbar. Remove this note
 // and re-add the entries below once generate-brief is fixed end-to-end.
 const TOOLBAR: Record<string, Array<{icon: any; label: string; action: string; color: string; desc: string}>> = {
+  // Replaced "Competitor / Concorrente" with "Spy" — Spy is broader and
+  // covers the same "look at the market" intent without needing the user
+  // to paste a specific ad. The narrow "decode this exact ad" flow lives
+  // on as the `/concorrentes` slash + the `competitor` config in
+  // InlineToolPanel (still reachable via slash + AI tool_call), but it
+  // no longer needs its own pill in the quick-action menu.
   en: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "New hook variations based on your winners" },
     { icon: Clapperboard,   label: "Script",           action: "script",       color: "#34d399", desc: "Full script for your next video creative" },
-    { icon: ScanEye,        label: "Competitor",       action: "competitor",   color: "#a78bfa", desc: "Decode a competitor ad and their strategy" },
-    // SPY — broader, exploratory mode. The "Competitor" tile decodes ONE
-    // specific ad you already have. Spy answers "what's running RIGHT
-    // NOW in my niche?" with no ad in hand. Different prompt routing,
-    // same backend (decode-competitor). Cyan accent picks up the brand.
     { icon: Telescope,      label: "Spy",              action: "spy",          color: "#0DA2E7", desc: "What's running in your niche right now — top hooks + offers" },
     { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Update who you're selling to" },
   ],
   pt: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "Variações de abertura com base nos seus vencedores" },
     { icon: Clapperboard,   label: "Roteiro",          action: "script",       color: "#34d399", desc: "Script completo pro seu próximo vídeo" },
-    { icon: ScanEye,        label: "Concorrente",      action: "competitor",   color: "#a78bfa", desc: "Decodifica um anúncio concorrente e a estratégia dele" },
     { icon: Telescope,      label: "Spy",              action: "spy",          color: "#0DA2E7", desc: "O que tá rodando no seu nicho agora — hooks + ofertas vencedores" },
     { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Atualiza o perfil de quem você tá vendendo" },
   ],
   es: [
     { icon: Zap,            label: "Hooks",            action: "hooks",        color: "#06b6d4", desc: "Variaciones de gancho basadas en tus ganadores" },
     { icon: Clapperboard,   label: "Guión",            action: "script",       color: "#34d399", desc: "Guión completo para tu próximo video" },
-    { icon: ScanEye,        label: "Competidor",       action: "competitor",   color: "#a78bfa", desc: "Decodifica un anuncio competidor y su estrategia" },
     { icon: Telescope,      label: "Spy",              action: "spy",          color: "#0DA2E7", desc: "Qué se está corriendo en tu nicho ahora — top hooks + ofertas" },
     { icon: Target,         label: "Persona",          action: "persona",      color: "#c084fc", desc: "Actualiza a quién le vendes" },
   ],
@@ -174,6 +173,23 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
       placeholder: { en: "Paste competitor URL, describe their ad, or enter brand name…", pt: "Cole URL do concorrente, descreva o criativo, ou escreva a marca…", es: "Pega URL del competidor, describe su anuncio, o escribe la marca…" },
       cta: { en: "Analyze →", pt: "Analisar →", es: "Analizar →" },
       buildMsg: (v: string) => `Analyze this competitor: "${v}". Give: 1) Hook type & formula, 2) Emotional trigger, 3) Creative model, 4) What makes it work, 5) How to beat it.`,
+    },
+    // SPY — discovery mode. Different from `competitor` (which decodes
+    // ONE specific ad you provide). Spy answers "what's running in my
+    // niche right now?" with no specific ad — it pulls patterns,
+    // hook types and offers from the niche, then suggests gaps to
+    // explore. Same backend route (Claude with web context), broader
+    // prompt frame.
+    spy: {
+      icon: "", color: "#0DA2E7",
+      title: { en: "Spy on niche", pt: "Spy no nicho", es: "Spy en el nicho" },
+      placeholder: {
+        en: "Niche / sector / industry to spy on (e.g. \"home fitness BR\", \"SaaS B2B US\")…",
+        pt: "Nicho / setor / categoria pra spyar (ex: \"emagrecimento BR\", \"SaaS B2B US\")…",
+        es: "Nicho / sector / categoría a spyar (ej: \"fitness en casa\", \"SaaS B2B US\")…",
+      },
+      cta: { en: "Spy →", pt: "Spy →", es: "Spy →" },
+      buildMsg: (v: string, p: string) => `[SPY] Tô querendo entender o que tá rodando AGORA no nicho "${v}" no ${p === "tiktok" ? "TikTok" : "Meta Ads (Facebook/Instagram)"}. Me dá um briefing prático em 4 partes:\n\n1) **Top 3 hooks dominantes** — formato exato (texto + tipo + por que funciona).\n2) **Ofertas / promessas mais usadas** — preço, garantia, urgência, gatilho.\n3) **Padrão de criativo** — UGC vs editado, duração média, formato (vídeo/carrossel/imagem), estética.\n4) **Gap explorável** — o que NINGUÉM tá fazendo nesse nicho que daria pra atacar.\n\nSe não tiver dados ao vivo, traz padrões que você vê em campanhas reais desse setor. Sê direto, sem floreio.`,
     },
     brief: {
       icon: "", color: "#f59e0b",
