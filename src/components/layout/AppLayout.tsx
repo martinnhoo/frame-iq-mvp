@@ -14,6 +14,11 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useActiveAccount } from '@/hooks/useActiveAccount';
 import type { DashboardContext, Profile, Usage, UsageDetails, ActivePersona } from '@/components/dashboard/DashboardLayout';
 import type { User } from '@supabase/supabase-js';
+import { AppTopbarBreadcrumb } from '@/components/dashboard/AppTopbarBreadcrumb';
+import { AppTopbarBell } from '@/components/dashboard/AppTopbarBell';
+import { AppTopbarUserMenu } from '@/components/dashboard/AppTopbarUserMenu';
+import { CommandPalette } from '@/components/dashboard/CommandPalette';
+import { UserProfilePanel } from '@/components/dashboard/UserProfilePanel';
 import {
   Command,
   Clock,
@@ -113,6 +118,21 @@ export function AppLayout() {
   const [isMobile, setIsMobile] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(false);
   const [savedPersonas, setSavedPersonas] = useState<any[]>([]);
+  // Topbar overlays — UserProfilePanel slide-out + Cmd+K palette.
+  // Both live at the layout level so they sit above page content and
+  // can be triggered from anywhere (avatar menu, palette, keyboard).
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const isPaletteShortcut = (e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K");
+      if (!isPaletteShortcut) return;
+      e.preventDefault();
+      setPaletteOpen(s => !s);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   // Detect mobile
   useEffect(() => {
@@ -648,8 +668,36 @@ export function AppLayout() {
       {/* Main content */}
       <main style={{
         flex: 1, overflow: 'auto', background: 'var(--bg-main)',
+        display: 'flex', flexDirection: 'column', minWidth: 0,
         ...(isMobile ? { paddingTop: 52 } : {}),
       }}>
+        {/* ── Desktop topbar — breadcrumb + spacer + bell + avatar menu.
+              Hidden on mobile (the mobile top bar above is its replacement).
+              Sticky so it stays during long-page scrolls (Feed, History). */}
+        {!isMobile && (
+          <header style={{
+            height: 52, minHeight: 52, flexShrink: 0,
+            display: 'flex', alignItems: 'center',
+            padding: '0 20px', gap: 12,
+            position: 'sticky', top: 0, zIndex: 50,
+            background: 'rgba(10,15,28,0.85)',
+            backdropFilter: 'blur(14px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(14px) saturate(140%)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            fontFamily: F,
+          }}>
+            <AppTopbarBreadcrumb />
+            <div style={{ flex: 1 }} />
+            <AppTopbarBell alerts={accountAlerts as any} />
+            <AppTopbarUserMenu
+              user={user}
+              profile={profile as any}
+              plan={(profile as any)?.plan ?? null}
+              onOpenProfile={() => setProfileOpen(true)}
+            />
+          </header>
+        )}
+
         {profile ? (
           <ErrorBoundary>
           <Outlet context={{
@@ -683,6 +731,26 @@ export function AppLayout() {
           trigger="sidebar"
         />
       )}
+
+      {/* ── Profile slide-out — opened by topbar avatar OR Cmd+K palette ── */}
+      {user && (
+        <UserProfilePanel
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          user={user}
+          profile={profile as any}
+          onProfileUpdate={(p) => setProfile(p as Profile)}
+          selectedPersona={selectedPersona}
+        />
+      )}
+
+      {/* ── Global Cmd+K palette — Decisões pendentes / Navegar / Conta ── */}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        accountId={(selectedPersona as any)?.account_id ?? null}
+        onOpenProfile={() => { setPaletteOpen(false); setProfileOpen(true); }}
+      />
     </div>
   );
 }
