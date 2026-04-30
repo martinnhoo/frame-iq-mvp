@@ -5661,12 +5661,20 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
       {/* Skills panel removed */}
 
+      {/* ── Chat container — single source of width truth ──
+          Messages + composer are siblings inside this wrapper. The
+          wrapper handles maxWidth + horizontal centering + horizontal
+          padding for everything below it, so children don't repeat
+          the math. minHeight:0 is required for the nested
+          overflow:auto on .messages to work inside flex column. */}
+      <div className="chat-container" style={{flex:1,display:"flex",flexDirection:"column" as const,width:"100%",maxWidth:860,margin:"0 auto",padding:"0 16px",minHeight:0,boxSizing:"border-box" as const,position:"relative" as const,zIndex:1}}>
+
       {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8}}>
+      <div style={{flex:1,overflowY:"auto",scrollbarGutter:"stable",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8}}>
         
         {/* ── Urgent Alert Banner — aggressive PriorityStack style ── */}
         {accountAlerts.length > 0 && (
-          <div style={{maxWidth:720,margin:"0 auto 16px",padding:"0 16px"}}>
+          <div style={{width:"100%",margin:"0 0 16px"}}>
             {/* Section header */}
             <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
               <span style={{width:7,height:7,borderRadius:"50%",background:"#F87171",boxShadow:"0 0 10px rgba(248,113,113,0.5)",animation:"chatAlertPulse 2s ease-in-out infinite"}} />
@@ -5769,7 +5777,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
 
         {messages.length===0&&!proactiveLoading&&contextReady&&!hasData&&!connectionsLoading&&(
-          <div style={{maxWidth:720,margin:"16px auto 0",padding:"0 16px"}}>
+          <div style={{width:"100%",margin:"16px 0 0"}}>
             {/* ── No account connected — force connect ── */}
             <div style={{textAlign:"center",padding:"48px 24px"}}>
               <div style={{width:52,height:52,borderRadius:14,background:"linear-gradient(135deg, rgba(37,99,235,0.12), rgba(6,182,212,0.08))",border:"1px solid rgba(148,163,184,0.08)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px"}}>
@@ -5802,7 +5810,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
         {/* Load more — shown when there are older messages not rendered */}
         {hasOlderMessages && (
-          <div style={{maxWidth:720,width:"100%",margin:"0 auto 8px",padding:"0 clamp(12px,4vw,28px)",boxSizing:"border-box" as const}}>
+          <div style={{width:"100%",margin:"0 0 8px",boxSizing:"border-box" as const}}>
             <button onClick={()=>setVisibleCount(c=>c+MSG_PAGE)}
               style={{width:"100%",padding:"8px 0",background:"var(--bg-surface)",border:"1px solid var(--border-subtle)",borderRadius:10,color:"var(--text-muted)",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans', sans-serif",transition:"all 0.15s"}}
               onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor="var(--border-default)"}}
@@ -5815,7 +5823,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         {visibleMessages.map((msg, mi)=>{
           const isLatest = msg.role === "assistant" && msg.id === streamingMsgId;
           return (
-          <div key={msg.id} className="msg-wrap-inner" style={{maxWidth:720,width:"100%",margin:"0 auto 14px",padding:"0 clamp(12px,4vw,28px)",boxSizing:"border-box" as const}}>
+          <div key={msg.id} className="msg-wrap-inner" style={{width:"100%",margin:"0 0 14px",boxSizing:"border-box" as const}}>
             {msg.role==="user"?(
               /* ── Bolha do usuário — direita, azul sólido ── */
               <div style={{display:"flex",justifyContent:"flex-end"}} className="user-msg-row">
@@ -5963,7 +5971,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           );
         })}
 
-        <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 clamp(12px,4vw,40px)",boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat" userMessage={messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||""} label={(() => {
+        <div style={{width:"100%",margin:0,boxSizing:"border-box" as const}}>{loading&&<ThinkingIndicator lang={lang} variant="chat" userMessage={messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||""} label={(() => {
               const pendingFn = messages.flatMap(m=>m.blocks||[]).find(b=>b._pendingTool)?._pendingTool;
               if(pendingFn==="generate-hooks")  return lang==="pt"?"Criando hooks de alta conversão...":lang==="es"?"Creando hooks de alta conversión...":"Crafting high-converting hooks...";
               if(pendingFn==="generate-script") return lang==="pt"?"Estruturando roteiro...":lang==="es"?"Estructurando guión...":"Building your script...";
@@ -5971,7 +5979,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               return undefined; // let ThinkingIndicator derive from userMessage
             })()}/>}</div>
         {!loading&&messages.some(m=>m.blocks?.some(b=>b._pendingTool))&&(
-          <div style={{maxWidth:720,width:"100%",margin:"0 auto",padding:"0 32px",boxSizing:"border-box"}}>
+          <div style={{width:"100%",margin:0,boxSizing:"border-box"}}>
           <ThinkingIndicator lang={lang} variant="chat" userMessage={messages.filter(m=>m.role==="user").slice(-1)[0]?.userText||""} label={(() => {
               const pendingFn = messages.flatMap(m=>m.blocks||[]).find(b=>b._pendingTool)?._pendingTool;
               if(pendingFn==="generate-hooks")  return lang==="pt"?"Criando hooks de alta conversão...":lang==="es"?"Creando hooks de alta conversión...":"Crafting high-converting hooks...";
@@ -5983,7 +5991,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         )}
         {/* Inline tool panel — only show when not loading */}
         {activeTool&&!loading&&!messages.some(m=>m.blocks?.some(b=>b._pendingTool))&&(
-          <div style={{maxWidth:720,margin:"0 auto 8px",padding:"0 40px",boxSizing:"border-box" as const}}>
+          <div style={{width:"100%",margin:"0 0 8px",boxSizing:"border-box" as const}}>
             <InlineToolPanel
               action={activeTool}
               onClose={()=>setActiveTool(null)}
@@ -6009,7 +6017,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           com [+], anexo, limpar e send em baixo. Tudo dentro de UM card
           sólido #141924. Sem fade, sem station, sem banner externo. */}
       <div style={{flexShrink:0,position:"relative" as const,zIndex:2,padding:"16px 0 max(env(safe-area-inset-bottom, 0px), 20px)"}}>
-        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 clamp(12px,4vw,28px)",boxSizing:"border-box" as const,position:"relative" as const}}>
+        <div className="chat-input-wrap" style={{width:"100%",margin:0,boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
             {showToolMenu && (
@@ -6434,6 +6442,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
 
           </div>
       </div>
+
+      </div>{/* /chat-container */}
 
       <style>{`
         @keyframes pulse{0%,100%{transform:scale(1);opacity:0.4}50%{transform:scale(1.4);opacity:1}}
