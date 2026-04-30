@@ -6015,8 +6015,17 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       {/* ── Composer (rebuild do zero) ──
           Layout Claude/ChatGPT: textarea full-width em cima, action bar
           com [+], anexo, limpar e send em baixo. Tudo dentro de UM card
-          sólido #141924. Sem fade, sem station, sem banner externo. */}
-      <div style={{flexShrink:0,position:"relative" as const,zIndex:2,padding:"16px 0 max(env(safe-area-inset-bottom, 0px), 20px)"}}>
+          sólido #141924.
+
+          Phase 2: composer is now `position: sticky; bottom: 0` so it
+          remains visually anchored at the bottom of the chat-container,
+          even though scroll lives inside .messages above it. The
+          ::before pseudo (defined in CSS below) paints a linear-gradient
+          fade extending 40px above the composer, so messages appear to
+          fade into the composer instead of cutting off harshly. The
+          gradient is on ::before — NEVER on the input itself — so the
+          input's own background/border stay clean. */}
+      <div className="chat-composer-wrapper" style={{flexShrink:0,position:"sticky" as const,bottom:0,zIndex:2,padding:"16px 0 max(env(safe-area-inset-bottom, 0px), 20px)"}}>
         <div className="chat-input-wrap" style={{width:"100%",margin:0,boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
@@ -6478,6 +6487,16 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .lp-bar:hover{background:rgba(255,255,255,0.025)!important;}
         .tool-pill:not(.tool-pill-on):hover{background:rgba(255,255,255,0.10)!important;border-color:rgba(255,255,255,0.18)!important;color:rgba(255,255,255,0.85)!important;}
         .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.4)!important;}
+        /* Phase 2: composer fade — gradient on ::before so the input
+           keeps its own clean background. The pseudo extends 40px
+           above the composer; messages scroll under that gradient,
+           appearing to fade into the composer instead of cutting off. */
+        .chat-composer-wrapper{position:sticky;bottom:0;}
+        .chat-composer-wrapper::before{
+          content:"";position:absolute;inset:-40px 0 0 0;
+          background:linear-gradient(to top, var(--bg-main), transparent);
+          pointer-events:none;
+        }
         .chat-textarea{caret-color:#0ea5e9;}
         .chat-textarea::placeholder{color:rgba(255,255,255,0.32)!important}
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
