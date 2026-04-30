@@ -2156,75 +2156,90 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
           legacy data-layer colors to refined render-time tokens — no
           schema changes needed. */}
       {briefingCards.map((card, i) => {
-        const palette = (() => {
-          // Refined-but-alive palette: more saturation than the muted v1
-          // (which read as "no color") but still nowhere near Tailwind
-          // defaults. Each card now has a left-fading tinted bg so the
-          // accent color "owns" the card visually instead of just dotting
-          // the eyebrow. Eyebrows are at full color (no opacity dampening)
-          // so the type signal lands at first glance.
+        // Redesign: ditch the saturated tinted backgrounds — each card
+        // now uses the same neutral dark surface as the AI message
+        // bubbles, with the accent color living ONLY on the left
+        // stripe + a small colored dot in the tag eyebrow + the
+        // button border. Reads as a signal-first decision card
+        // instead of a "tutorial app" colored box.
+        const accent = (() => {
           switch (card.tagColor) {
-            case "#F87171": // critical / urgente → coral, present
-              return { eyebrow: "#F08770", border: "rgba(240,135,112,0.42)", accent: "#F08770", glow: "rgba(240,135,112,0.16)", tintBg: "rgba(240,135,112,0.14)", btnBg: "rgba(240,135,112,0.22)", btnText: "#F5A695" };
-            case "#4ADE80": // success / oportunidade → sage, more vivid
-              return { eyebrow: "#7DC79E", border: "rgba(125,199,158,0.40)", accent: "#7DC79E", glow: "rgba(125,199,158,0.14)", tintBg: "rgba(125,199,158,0.11)", btnBg: "rgba(125,199,158,0.20)", btnText: "#9AD4B5" };
-            case "#FBBF24": // warning → warm tan with more body
-              return { eyebrow: "#D9B26B", border: "rgba(217,178,107,0.40)", accent: "#D9B26B", glow: "rgba(217,178,107,0.14)", tintBg: "rgba(217,178,107,0.11)", btnBg: "rgba(217,178,107,0.20)", btnText: "#E5C485" };
-            case "#0ea5e9": // info / briefing → sky-blue, refined
-            default:
-              return { eyebrow: "#7BB6E5", border: "rgba(123,182,229,0.38)", accent: "#7BB6E5", glow: "rgba(123,182,229,0.13)", tintBg: "rgba(123,182,229,0.10)", btnBg: "rgba(123,182,229,0.18)", btnText: "#9CC8EC" };
+            case "#F87171": return "#F08770";  // urgente → coral
+            case "#4ADE80": return "#22A3A3";  // oportunidade → sage-cyan (matches break-even green)
+            case "#FBBF24": return "#D9B26B";  // pattern → warm tan
+            case "#0ea5e9":
+            default:        return "#38BDF8";  // briefing → brand cyan
           }
         })();
         return (
           <div key={i} style={{
-            // Tinted bg now extends across the whole card (not just left
-            // fade) at low opacity, layered over the dark base. This is
-            // what kills the "tudo cinza" feel — every card now visibly
-            // owns its hue across its full surface, not just a thin stripe.
-            background: `linear-gradient(135deg, ${palette.tintBg} 0%, rgba(18,22,30,0.92) 60%, rgba(10,13,20,0.95) 100%)`,
-            border: `1px solid ${palette.border}`,
-            borderLeft: `3px solid ${palette.accent}`,
-            borderRadius: 12, padding: "clamp(14px,2vw,18px) clamp(16px,2.5vw,20px)",
+            background: "linear-gradient(180deg, rgba(15,23,42,0.78) 0%, rgba(10,15,28,0.92) 100%)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderLeft: `3px solid ${accent}`,
+            borderRadius: 12,
+            padding: "clamp(14px,2vw,18px) clamp(16px,2.5vw,20px)",
             marginBottom: 10,
-            boxShadow: `0 6px 22px rgba(0,0,0,0.42), 0 0 0 1px ${palette.glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
-            backdropFilter: "blur(8px) saturate(140%)",
-            WebkitBackdropFilter: "blur(8px) saturate(140%)",
+            boxShadow: "0 6px 22px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.06)",
+            backdropFilter: "blur(10px) saturate(140%)",
+            WebkitBackdropFilter: "blur(10px) saturate(140%)",
             animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + i * 0.06}s both` : "none",
             opacity: 0,
           }}>
-            {/* Tag eyebrow — full color, signal-first */}
+            {/* Tag eyebrow — neutral uppercase + small colored dot.
+                Replaces the saturated all-color label that read as
+                "early-2010s SaaS callout". Now the dot carries the
+                signal, the text is structural. */}
             <span style={{
+              display: "inline-flex", alignItems: "center", gap: 7,
               fontSize: 9.5, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const,
-              color: palette.eyebrow, fontFamily: F, marginBottom: 6, display: "block",
+              color: "rgba(240,246,252,0.55)", fontFamily: F, marginBottom: 7,
             }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: accent,
+                boxShadow: `0 0 6px ${accent}`,
+                flexShrink: 0,
+              }} />
               {card.tag}
             </span>
             {/* Headline */}
             <p style={{
-              fontSize: 14, fontWeight: 700, color: "#F0F6FC", margin: "4px 0 4px",
+              fontSize: 14, fontWeight: 700, color: "#F0F6FC", margin: "2px 0 4px",
               lineHeight: 1.4, fontFamily: F, letterSpacing: "-0.005em",
             }}>
               {card.headline}
             </p>
             {/* Detail */}
             <p style={{
-              fontSize: 12.5, color: "rgba(240,246,252,0.68)", margin: "0 0 8px",
+              fontSize: 12.5, color: "rgba(240,246,252,0.68)", margin: "0 0 10px",
               lineHeight: 1.55, fontFamily: F,
             }}>
               {card.detail}
             </p>
-            {/* Action button — subtle ghost style across all variants */}
+            {/* Action button — quiet ghost. Accent only on the border
+                (so each card type still differentiates) and on the
+                text color. No more green-on-green. */}
             {card.action && (
               <button onClick={() => onSend(card.actionPrompt || card.action!)}
                 style={{
-                  background: palette.btnBg,
-                  color: palette.btnText,
-                  border: `1px solid ${palette.accent}`,
-                  borderRadius: 6, padding: "5px 12px", fontSize: 11, fontWeight: 700,
-                  fontFamily: F, cursor: "pointer", transition: "all 0.15s",
+                  background: "rgba(255,255,255,0.03)",
+                  color: accent,
+                  border: `1px solid ${accent}55`,
+                  borderRadius: 6, padding: "6px 12px", fontSize: 11, fontWeight: 700,
+                  fontFamily: F, cursor: "pointer",
+                  transition: "all 0.15s",
+                  letterSpacing: "0.01em",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.borderColor = palette.eyebrow; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = palette.accent; }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.borderColor = accent;
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                  e.currentTarget.style.borderColor = `${accent}55`;
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
               >
                 {card.action}
               </button>
