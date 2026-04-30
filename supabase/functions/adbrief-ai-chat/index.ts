@@ -1,5 +1,5 @@
-// adbrief-ai-chat v21.1 — break-even ROAS context + margin awareness
-// Force redeploy marker: 2026-04-30 (break-even must reach the model)
+// adbrief-ai-chat v21.2 — margin-only path + stronger break-even prompt
+// Force redeploy marker: 2026-04-30T08 (margin gate fix must land)
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";
@@ -1329,11 +1329,18 @@ Deno.serve(async (req) => {
     const businessGoal = (aiProfile as any)?.ai_recommendations?.business_goal || null;
 
     // ── Load user-defined account goal (Conversion Intelligence) ──
+    // Margin is gated SEPARATELY from goal_objective — a user can have
+    // configured margin without picking an objective yet, and we still
+    // want the AI to see "Break-even ROAS: X.XXx" in its context. The
+    // old code lumped everything behind `if (goalRow?.goal_objective)`
+    // which silently dropped margin for users who only filled the
+    // simpler field. That bug was caught by the founder testing the
+    // chat after configuring margin alone.
     let accountGoal:
       | {
-          objective: string;
-          primary_metric: string;
-          conversion_event: string;
+          objective: string | null;
+          primary_metric: string | null;
+          conversion_event: string | null;
           target_value: number | null;
           profit_margin_pct: number | null;
         }
@@ -1352,12 +1359,14 @@ Deno.serve(async (req) => {
             .eq("user_id", user_id)
             .eq("meta_account_id", String(selId).replace("act_", ""))
             .maybeSingle();
-          if (goalRow?.goal_objective) {
+          // Surface the row whenever EITHER goal_objective OR margin is
+          // present. Each field is independently nullable downstream.
+          if (goalRow?.goal_objective || goalRow?.profit_margin_pct != null) {
             accountGoal = {
-              objective: goalRow.goal_objective,
-              primary_metric: goalRow.goal_primary_metric,
-              conversion_event: goalRow.goal_conversion_event,
-              target_value: goalRow.goal_target_value,
+              objective: goalRow.goal_objective ?? null,
+              primary_metric: goalRow.goal_primary_metric ?? null,
+              conversion_event: goalRow.goal_conversion_event ?? null,
+              target_value: goalRow.goal_target_value ?? null,
               profit_margin_pct: goalRow.profit_margin_pct ?? null,
             };
           }
@@ -1395,7 +1404,11 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
       if (personaBusinessName) lines.push(`Negócio: ${personaBusinessName}`);
       if (personaSite) lines.push(`Site/Landing Page configurada: ${personaSite.startsWith("http") ? personaSite : `https://${personaSite}`}`);
       if (personaDescription) lines.push(`Descrição: ${personaDescription.slice(0, 200)}`);
-      if (accountGoal) {
+      // Each goal field is independently nullable now that margin can
+      // be configured without the rest. Guard each push individually so
+      // a margin-only user doesn't see "Métrica principal: NULL" or
+      // crash on `null.toUpperCase()`.
+      if (accountGoal?.objective) {
         const objLabel =
           accountGoal.objective === "leads"
             ? "Gerar leads/cadastros"
@@ -1405,15 +1418,19 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
             ? "Tráfego/Visitas"
             : accountGoal.objective;
         lines.push(`Objetivo: ${objLabel}`);
+      }
+      if (accountGoal?.primary_metric) {
         lines.push(`Métrica principal: ${accountGoal.primary_metric.toUpperCase()}`);
+      }
+      if (accountGoal?.conversion_event) {
         lines.push(`Evento de conversão: ${accountGoal.conversion_event}`);
-        if (accountGoal.target_value != null) {
-          const target =
-            accountGoal.primary_metric === "roas"
-              ? `${(accountGoal.target_value / 10000).toFixed(2)}x ROAS`
-              : `R$${(accountGoal.target_value / 100).toFixed(2)} ${accountGoal.primary_metric.toUpperCase()}`;
-          lines.push(`Meta definida: ${target}`);
-        }
+      }
+      if (accountGoal?.target_value != null && accountGoal.primary_metric) {
+        const target =
+          accountGoal.primary_metric === "roas"
+            ? `${(accountGoal.target_value / 10000).toFixed(2)}x ROAS`
+            : `R$${(accountGoal.target_value / 100).toFixed(2)} ${accountGoal.primary_metric.toUpperCase()}`;
+        lines.push(`Meta definida: ${target}`);
       }
       if (accountGoal?.profit_margin_pct != null) {
         const margin = accountGoal.profit_margin_pct;
@@ -1421,16 +1438,25 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
         lines.push(`Margem de lucro: ${margin}%`);
         if (breakEven != null) {
           // Pre-compute break-even so the AI doesn't need to do the math
-          // itself (and quotes the same number we color the UI with). This
-          // enables specific framing like "ROAS 2.8x está abaixo do
-          // break-even (3.3x) — perdendo R$X/dia" instead of vague "ROAS
-          // baixo" advice.
+          // itself (and quotes the same number we color the UI with).
+          // The instruction is intentionally aggressive: any ROAS-adjacent
+          // discussion MUST cite the break-even line, even when ROAS isn't
+          // currently trackable (no purchase event firing). In those cases
+          // the AI should still tell the user what the target IS, so they
+          // know what to aim for once tracking lands.
           lines.push(
             `Break-even ROAS: ${breakEven.toFixed(2)}x ` +
-            `(qualquer ROAS abaixo disso significa que o anúncio está destruindo margem; ` +
-            `qualquer ROAS acima é lucro real). USE ESTE NÚMERO ao falar de ROAS — ` +
-            `compare sempre com 'abaixo/acima do break-even', nunca diga só "ROAS baixo" ou "ROAS bom" ` +
-            `sem ancorar no break-even.`
+            `(qualquer ROAS abaixo disso = anúncio destruindo margem; ` +
+            `qualquer ROAS acima = lucro real).\n\n` +
+            `INSTRUÇÃO OBRIGATÓRIA: SEMPRE que falar de ROAS, CPA, ` +
+            `escala, retorno, lucro, ou qualquer pergunta financeira, ` +
+            `MENCIONE explicitamente o break-even (${breakEven.toFixed(2)}x). Mesmo ` +
+            `quando o ROAS não está rastreável (sem evento de valor disparando), ` +
+            `diga ao usuário "sua linha é ${breakEven.toFixed(2)}x — quando o tracking ` +
+            `ligar, é esse o número que você precisa cobrir". NUNCA diga "ROAS baixo", ` +
+            `"ROAS bom", "retorno saudável", "performance ok", etc., sem ancorar no ` +
+            `break-even (${breakEven.toFixed(2)}x). Esse número é a verdade que define ` +
+            `lucro vs prejuízo dessa conta — não pode ficar implícito.`
           );
         }
       }
@@ -2507,7 +2533,11 @@ REGRA: NUNCA sugira upgrade de plano a não ser que o usuário pergunte sobre pl
           // Account goal — reinforces the defaultsBlock with an operational rule.
           // The full config already lives in defaultsBlock above; here we only
           // state how to USE it during analysis.
-          accountGoal
+          // The "rule of judgment" branch needs primary_metric to actually
+          // work — without it we fall back to the generic guidance branch.
+          // Margin-only users (objective + metric still unset) hit the
+          // fallback, which is the right pedagogical path.
+          accountGoal?.primary_metric
             ? `REGRA DE JULGAMENTO: Use ${accountGoal.primary_metric.toUpperCase()} como métrica principal de performance (CTR é só complemento). Se conversões = 0 sobre spend relevante, investigue o motivo — MAS antes de cravar "tracking quebrado" verifique idade da campanha: com menos de 3 dias rodando, atribuição ainda está em janela de estabilização (24–72h) e zero conversões é normal. Nessa janela, diga pro usuário esperar, não diagnostique. Só chame de problema de tracking quando: 3+ dias de entrega, spend > R$300 e > 100 cliques sem 1 conversão sequer.`
             : `=== OBJETIVO AINDA NÃO CONFIGURADO ===
 Este usuário ainda não definiu objetivo de negócio. Se ele pedir análise de performance sem contexto, sugira definir o objetivo nas configurações da conta ANTES de cravar um veredito, mas ainda assim entregue o que der pra dizer com os dados disponíveis (CTR, frequência, tendências). Não faça do objetivo uma barreira pra ajudar.`,
