@@ -6429,19 +6429,21 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                 Sólido #141924, borda 9%, shadow suave. O card é o
                 único elemento visual — nada em volta. */}
             <div className="input-box-wrap" style={{
-              // Composer is the action zone — pulled forward visually with
-              // a subtle blue accent border + soft glow so the eye lands
-              // here, not on passive cards. Background slightly lighter
-              // than surrounding chat to "lift" it off the surface.
-              background: chatDragOver ? "#0E1C2E" : "#161C28",
+              // Redesign — option B: more solid surface, drop the cyan
+              // accent border (was reading as "tinted form field"), use
+              // hairline neutral border + heavier elevation shadow so
+              // the composer reads as a lifted action zone. Cyan now
+              // lives only on the send button + caret + focus state,
+              // making the action affordance unambiguous.
+              background: chatDragOver ? "#0E1C2E" : "#10172A",
               border: chatDragOver
                 ? "1px solid rgba(56,189,248,0.55)"
-                : "1px solid rgba(56,189,248,0.22)",
-              borderRadius: 16,
+                : "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 18,
               overflow: "hidden" as const,
               boxShadow: chatDragOver
-                ? "0 0 0 3px rgba(56,189,248,0.16), 0 12px 36px rgba(0,0,0,0.50), 0 0 24px rgba(56,189,248,0.10)"
-                : "0 10px 32px rgba(0,0,0,0.45), 0 0 16px rgba(56,189,248,0.06), inset 0 1px 0 rgba(255,255,255,0.04)",
+                ? "0 0 0 3px rgba(56,189,248,0.16), 0 14px 42px rgba(0,0,0,0.55), 0 0 24px rgba(56,189,248,0.10)"
+                : "0 14px 42px rgba(0,0,0,0.52), 0 2px 6px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.05)",
               transition: "border-color 0.2s, box-shadow 0.2s, background 0.2s",
             }}
             onDragOver={e => { e.preventDefault(); setChatDragOver(true); }}
@@ -6614,16 +6616,37 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
                     disabled={!input.trim()||loading||!contextReady}
                     title={lang==="pt"?"Enviar":lang==="es"?"Enviar":"Send"}
                     style={{
-                      width:36,height:32,borderRadius:9,border:"none",
-                      background: input.trim()&&!loading&&contextReady ? "#0ea5e9" : "rgba(255,255,255,0.06)",
+                      // Bumped from 36×32 to 40×40 + gradient fill + soft
+                      // glow so the send action reads as the dominant
+                      // affordance in the composer. Disabled state stays
+                      // muted neutral — no false-positive "this is clickable".
+                      width:40, height:40, borderRadius:11, border:"none",
+                      background: input.trim()&&!loading&&contextReady
+                        ? "linear-gradient(180deg, #38BDF8 0%, #0EA5E9 100%)"
+                        : "rgba(255,255,255,0.05)",
+                      boxShadow: input.trim()&&!loading&&contextReady
+                        ? "0 4px 14px rgba(14,165,233,0.42), inset 0 1px 0 rgba(255,255,255,0.22)"
+                        : "none",
                       cursor: input.trim()&&contextReady ? "pointer" : "not-allowed",
                       display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
-                      transition:"all 0.2s",
+                      transition:"all 0.18s ease",
+                    }}
+                    onMouseEnter={e=>{
+                      if(input.trim()&&!loading&&contextReady){
+                        (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
+                        (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 18px rgba(14,165,233,0.55), inset 0 1px 0 rgba(255,255,255,0.28)";
+                      }
+                    }}
+                    onMouseLeave={e=>{
+                      (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                      if(input.trim()&&!loading&&contextReady){
+                        (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 14px rgba(14,165,233,0.42), inset 0 1px 0 rgba(255,255,255,0.22)";
+                      }
                     }}
                   >
                     {loading
-                      ? <Loader2 size={14} color="rgba(255,255,255,0.85)" className="animate-spin"/>
-                      : <Send size={14} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.25)"}/>
+                      ? <Loader2 size={16} color="rgba(255,255,255,0.92)" className="animate-spin"/>
+                      : <Send size={16} color={input.trim()&&contextReady?"#fff":"rgba(255,255,255,0.28)"} strokeWidth={2.2}/>
                     }
                   </button>
                 </div>
