@@ -6486,16 +6486,39 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .lp-tab:hover{color:rgba(255,255,255,0.6)!important;}
         .lp-bar:hover{background:rgba(255,255,255,0.025)!important;}
         .tool-pill:not(.tool-pill-on):hover{background:rgba(255,255,255,0.10)!important;border-color:rgba(255,255,255,0.18)!important;color:rgba(255,255,255,0.85)!important;}
-        .input-box-wrap:focus-within{border-color:rgba(14,165,233,0.4)!important;}
+        /* Phase 3: focus glow — when textarea is focused, the whole
+           composer card lights up with a soft cyan ring. Stronger and
+           softer than the old border-only treatment. */
+        .input-box-wrap:focus-within{
+          border-color:rgba(56,189,248,0.55)!important;
+          box-shadow:0 0 0 2px rgba(56,189,248,0.15), 0 10px 32px rgba(0,0,0,0.45), 0 0 24px rgba(56,189,248,0.10), inset 0 1px 0 rgba(255,255,255,0.04)!important;
+        }
         /* Phase 2: composer fade — gradient on ::before so the input
            keeps its own clean background. The pseudo extends 40px
            above the composer; messages scroll under that gradient,
-           appearing to fade into the composer instead of cutting off. */
-        .chat-composer-wrapper{position:sticky;bottom:0;}
+           appearing to fade into the composer instead of cutting off.
+           Phase 3: composer slides up on mount. */
+        .chat-composer-wrapper{
+          position:sticky;bottom:0;
+          animation:composerSlideIn 0.36s cubic-bezier(0.22,1,0.36,1) 0.05s backwards;
+        }
         .chat-composer-wrapper::before{
           content:"";position:absolute;inset:-40px 0 0 0;
           background:linear-gradient(to top, var(--bg-main), transparent);
           pointer-events:none;
+        }
+        @keyframes composerSlideIn{
+          from{opacity:0;transform:translateY(12px);}
+          to{opacity:1;transform:translateY(0);}
+        }
+        /* Phase 3: ChatGPT-style message entry — slight upward motion
+           + fade. Snappier than the old bubbleIn slide-from-side. */
+        @keyframes msgRise{
+          from{opacity:0;transform:translateY(8px);filter:blur(2px);}
+          to{opacity:1;transform:translateY(0);filter:blur(0);}
+        }
+        .msg-wrap-inner{
+          animation:msgRise 0.28s cubic-bezier(0.22,1,0.36,1) backwards;
         }
         .chat-textarea{caret-color:#0ea5e9;}
         .chat-textarea::placeholder{color:rgba(255,255,255,0.32)!important}
