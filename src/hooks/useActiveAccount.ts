@@ -202,8 +202,12 @@ export function useActiveAccount(
 /**
  * Ensures a v2 `ad_accounts` row exists for this Meta account.
  * Returns the v2 UUID.
+ *
+ * Exported so the OAuth callback can prepare the v2 row immediately
+ * after OAuth success — sync-meta-data needs this UUID and we can't
+ * wait for the dashboard hook to mount before kicking off sync.
  */
-async function ensureV2Account(
+export async function ensureV2Account(
   userId: string,
   metaAccount: MetaAdAccount,
 ): Promise<string | null> {
