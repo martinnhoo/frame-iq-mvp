@@ -5824,7 +5824,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
   const L=LABEL[lang]||LABEL.en;
 
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden",...j,background:"var(--bg-main)",position:"relative" as const}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"clip" as const,...j,background:"var(--bg-main)",position:"relative" as const}}>
       {/* Background — ultra minimal */}
       <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
         {/* Grid — edges only, invisible in center */}
