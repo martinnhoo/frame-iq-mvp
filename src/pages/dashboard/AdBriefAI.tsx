@@ -25,7 +25,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ReferralNudge } from "@/components/dashboard/ReferralNudge";
-import { DataSourceFooter } from "@/components/DataSourceFooter";
 import { RoasDisplay } from "@/components/RoasDisplay";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 // FirstWinBanner removed — ProactiveBlock handles welcome flow
@@ -2901,25 +2900,12 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
           </div>
         </div>
 
-        {/* ── DATA SOURCE footer ── transparency over precision claims.
-              Tells the user this is Meta-API data with the default
-              attribution window, plus the conversion-lag notice when the
-              visible period ends in the last 3 days. Suppressed during
-              load/error so the bar doesn't flicker disclaimers at empty
-              data. Lang follows the user's UI language. */}
-        {metrics.length > 0 && !fail && (
-          <div style={{
-            padding: "0 20px 8px",
-            borderTop: "1px solid rgba(148,163,184,0.04)",
-            paddingTop: 6,
-          }}>
-            <DataSourceFooter
-              periodTo={fmtAI(dateRange.to)}
-              lang={(["pt", "en", "es"] as const).includes(lang as "pt") ? (lang as "pt" | "en" | "es") : "pt"}
-              compact
-            />
-          </div>
-        )}
+        {/* DATA SOURCE footer removed from AdBriefAI per founder request:
+            the dashboard chat already conveys context through the AI's
+            answers, so the static "Fonte: Meta Ads API · atribuição 7d
+            click + 1d view" rodapé was visual noise. Transparency lives
+            on the customer-facing surfaces (Feed, AdScore, AdDiary) and
+            the /metodologia page. */}
 
         {/* ── Keyframes ── */}
         <style>{`
