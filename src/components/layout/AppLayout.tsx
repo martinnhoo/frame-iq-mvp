@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { Logo, MetaLogo } from '@/components/Logo';
+import { Logo } from '@/components/Logo';
 import { CreditBar } from '@/components/dashboard/CreditBar';
 import { ReferralPopup } from '@/components/dashboard/ReferralPopup';
 import UpgradeWall from '@/components/UpgradeWall';
@@ -480,23 +480,10 @@ export function AppLayout() {
             }}>
               {selectedPersona?.name || 'Selecionar conta'}
             </p>
-            {metaConnected && !accountResolving && (
-              // Minimal: just the Meta mark with a soft Meta-blue glow
-              // behind it. No label, no pill, no border. The glow is
-              // all the "context" needed — user hovers for the tooltip.
-              <span
-                title="Conta conectada ao Meta Ads"
-                style={{
-                  flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 18, height: 18,
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(24,119,242,0.28) 0%, transparent 70%)',
-                }}
-              >
-                <MetaLogo size={14} />
-              </span>
-            )}
+            {/* Meta connection badge removed per founder request — the
+                sidebar account selector is cleaner without the platform
+                mark. Connection state still surfaces elsewhere (Feed
+                hero, Accounts page). */}
           </div>
 
           <ChevronDown size={12} color="#475569"
