@@ -6009,7 +6009,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           com [+], anexo, limpar e send em baixo. Tudo dentro de UM card
           sólido #141924. Sem fade, sem station, sem banner externo. */}
       <div style={{flexShrink:0,position:"relative" as const,zIndex:2,padding:"16px 0 max(env(safe-area-inset-bottom, 0px), 20px)"}}>
-        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 20px",boxSizing:"border-box" as const,position:"relative" as const}}>
+        <div className="chat-input-wrap" style={{maxWidth:720,margin:"0 auto",padding:"0 clamp(12px,4vw,28px)",boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
             {showToolMenu && (
