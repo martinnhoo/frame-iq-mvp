@@ -986,8 +986,22 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
 
   // Mutable accumulator shared by wrapWords + inlineFormat (code blocks)
   // + the line iterator below (paragraph pauses).
-  const acc = { cumDelay: 0, wordCount: 0 };
+  // Sentence state (sentenceWordCount + sentenceHasActionVerb) drives
+  // "sentence landing" — short or action-verb-ending sentences earn an
+  // extra 80ms breath after their period.
+  const acc = {
+    cumDelay: 0,
+    wordCount: 0,
+    sentenceWordCount: 0,
+    sentenceHasActionVerb: false,
+  };
   const WORD_DUR = stream ? 0.12 : 0;
+
+  // Action verbs — heuristic for "this sentence is asking the user to
+  // do something." Used by the sentence-landing detector below.
+  // Imperative-mood verbs in PT/EN that we frequently emit.
+  const ACTION_VERB_RE = /^(faça|pause|pausar|escala|escalar|corte|cortar|teste|testar|configure|configura|ajuste|ajusta|crie|criar|verifique|investiga|investigue|analise|substitua|troque|trocar|ative|ativar|desative|desativar|aumenta|aumente|diminui|diminua|reduza|reduzir|aplica|aplique|do|stop|fix|pause|scale|test|check|run|launch|kill|swap|adjust)$/i;
+  const ASSERTIVE_RE = /^(claramente|exatamente|definitivamente|imediatamente|direto|agora|sim|com certeza|clearly|exactly|definitely|absolutely|now|directly)/i;
 
   // Inline formatting — bold, code, italic — now with per-word animation
   const inlineFormat = (str: string): React.ReactNode => {
@@ -1049,19 +1063,17 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
         {words.map((w, wi) => {
           if (/^\s+$/.test(w)) return w; // preserve whitespace as-is
 
-          // Compute this word's reveal delay from the running cumulative
-          // total. After rendering, the accumulator advances by:
-          //   ((base + jitter) × complexity × confidence + punct) × tone
-          // — tone applied ONCE at the end so the section's intent
-          // reinforces the whole gap between this word and the next.
+          // Per-word delay math, refined order:
+          //   wordTime = (base + jitter) × complexity × confidence
+          //   advance  = wordTime × tone + punct + sentenceLanding
           //
-          // Complexity: long words (>10 chars) and technical-looking
-          // tokens (R$X, percentages, big numbers, ALL-CAPS abbrevs)
-          // get a slight slowdown — dense content reads heavier.
-          //
-          // Confidence: hedge words ("talvez", "possivelmente",
-          // "maybe") get a slight slowdown to imply less certainty.
-          // Pure timing — text is unchanged.
+          // tone modifies the WORD'S own reveal time (so alerts read
+          // heavier across the board), but punctuation is "fixed
+          // breathing" — the same .180 after a period regardless of
+          // tone, so dense+alert content doesn't compound into
+          // unnaturally long pauses. Sentence landing piggybacks on
+          // the period when the closing sentence was short or ended
+          // in an imperative.
           const isHook = acc.wordCount < 8;
           const base = isHook ? BASE_HOOK_S : BASE_REGULAR_S;
           const jitter = Math.random() * 0.010;
@@ -1069,15 +1081,40 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
           const lastChar = trimmed.charAt(trimmed.length - 1);
           const punctPause = PUNCT_PAUSE_S[lastChar] ?? 0;
 
-          const lengthMult = trimmed.length > 10 ? 1.2 : 1.0;
-          const technicalMult = /^[A-Z]{2,}$|^R\$|^\$|^[\d.,]+%$|^\d+(?:[.,]\d+)?x$|^\d{3,}$/.test(trimmed) ? 1.1 : 1.0;
-          const complexityMult = Math.max(lengthMult, technicalMult);
-          const isHedge = /^(talvez|possivelmente|provavelmente|maybe|perhaps|talvez,|possivelmente,|maybe,)$/i.test(trimmed);
-          const confidenceMult = isHedge ? 1.10 : 1.0;
+          // ── Complexity (multiplicative, intentionally compounding) ──
+          // Long words, technical tokens, parens, mid-word colons,
+          // ALL-CAPS abbrevs each add a small slowdown. Caps at ~1.5x
+          // in extreme cases (long technical word with parens + caps).
+          let complexity = 1.0;
+          if (trimmed.length > 10) complexity *= 1.2;
+          if (/^[A-Z]{2,}$|^R\$|^\$|^[\d.,]+%$|^\d+(?:[.,]\d+)?x$|^\d{3,}$/.test(trimmed)) complexity *= 1.1;
+          if (trimmed.includes("(") || trimmed.includes(")")) complexity *= 1.1;
+          if (/[:]/.test(trimmed) && lastChar !== ":") complexity *= 1.05;
+          if (/[A-Z]{3,}/.test(trimmed)) complexity *= 1.1;
 
-          const wordTime = (base + jitter) * complexityMult * confidenceMult;
+          // ── Confidence (bidirectional) ──
+          const isHedge = /^(talvez|possivelmente|provavelmente|maybe|perhaps)/i.test(trimmed);
+          const isAssertive = ASSERTIVE_RE.test(trimmed);
+          const confidence = isHedge ? 1.10 : isAssertive ? 0.9 : 1.0;
+
+          // ── Sentence state tracking (for landing) ──
+          if (ACTION_VERB_RE.test(trimmed)) acc.sentenceHasActionVerb = true;
+          acc.sentenceWordCount += 1;
+
+          // ── Sentence landing: extra breath after strong sentences ──
+          let sentenceLanding = 0;
+          const isSentenceEnd = lastChar === "." || lastChar === "!" || lastChar === "?";
+          if (isSentenceEnd) {
+            const isStrong = acc.sentenceWordCount < 8 || acc.sentenceHasActionVerb;
+            if (isStrong) sentenceLanding = 0.080;
+            // Reset for next sentence
+            acc.sentenceWordCount = 0;
+            acc.sentenceHasActionVerb = false;
+          }
+
+          const wordTime = (base + jitter) * complexity * confidence;
           const delay = acc.cumDelay;
-          acc.cumDelay += (wordTime + punctPause) * toneMult;
+          acc.cumDelay += wordTime * toneMult + punctPause + sentenceLanding;
           acc.wordCount++;
 
           // `both` fill-mode keeps final state pinned after animation finishes,
@@ -1098,10 +1135,10 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
 
   const flushList = (key: string) => {
     if (listBuffer.length === 0) return;
-    // Pre-list breath — small pause (120ms × toneMult) before the
-    // bullets/numbers start streaming. Reads as "the AI organized its
-    // thoughts before listing them" instead of dumping items.
-    if (stream) acc.cumDelay += 0.120 * toneMult;
+    // Pre-list breath — fixed 120ms (NOT scaled by toneMult). Same
+    // breath regardless of section intent, so dense+alert content
+    // doesn't compound into unnaturally long structural pauses.
+    if (stream) acc.cumDelay += 0.120;
     const items = [...listBuffer];
     const isOrdered = items[0]?.ordered;
     const listIdx = nodes.length;
@@ -1171,7 +1208,7 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       if (stream) {
         const sectionTone = detectLineTone(title);
         if (sectionTone) toneMult = TONE_MOD[sectionTone];
-        acc.cumDelay += 0.180 * toneMult;
+        acc.cumDelay += 0.180;
       }
       nodes.push(
         <p key={i} style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.03em", margin: "20px 0 6px", lineHeight: 1.2, ...blockAnim(nodes.length) }}>
@@ -1191,7 +1228,7 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       if (stream) {
         const sectionTone = detectLineTone(title);
         if (sectionTone) toneMult = TONE_MOD[sectionTone];
-        acc.cumDelay += 0.180 * toneMult;
+        acc.cumDelay += 0.180;
       }
       nodes.push(
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 0 6px", ...blockAnim(nodes.length) }}>
@@ -1213,7 +1250,7 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       if (stream) {
         const sectionTone = detectLineTone(title);
         if (sectionTone) toneMult = TONE_MOD[sectionTone];
-        acc.cumDelay += 0.180 * toneMult;
+        acc.cumDelay += 0.180;
       }
       nodes.push(
         <p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.7)", letterSpacing: "0.09em", textTransform: "uppercase", margin: "14px 0 4px", ...blockAnim(nodes.length) }}>
@@ -1244,12 +1281,11 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       return;
     }
 
-    // Empty line — paragraph break. While streaming, push the next
-    // word's start out by 250ms × toneMult so the next paragraph
-    // arrives with a perceptible breath, not on top of the previous.
+    // Empty line — paragraph break. Fixed 250ms breath, same as the
+    // list pre-breath: structural pauses are NOT scaled by toneMult.
     if (!trimmed) {
       flushList(`fl-${i}`);
-      if (stream) acc.cumDelay += PARA_PAUSE_S * toneMult;
+      if (stream) acc.cumDelay += PARA_PAUSE_S;
       return;
     }
 
