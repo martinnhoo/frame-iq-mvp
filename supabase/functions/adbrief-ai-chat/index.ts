@@ -1,4 +1,5 @@
-// adbrief-ai-chat v21.0 — stability + context size fix
+// adbrief-ai-chat v21.1 — break-even ROAS context + margin awareness
+// Force redeploy marker: 2026-04-30 (break-even must reach the model)
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/credits.ts";
 import { requireCredits } from "../_shared/deductCredits.ts";

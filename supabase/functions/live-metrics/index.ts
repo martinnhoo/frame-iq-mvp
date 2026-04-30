@@ -1,6 +1,9 @@
-// live-metrics v1 — fetches real-time data from Meta + Google Ads APIs
+// live-metrics v2 — fetches real-time data from Meta + Google Ads APIs
 // Called by PerformanceDashboard on load and on manual refresh
-// Returns: spend, ctr, clicks, impressions, conversions, roas, top_ads, daily_breakdown
+// Returns: spend, ctr, clicks, impressions, conversions, roas, top_ads,
+//          daily_breakdown, profit_margin_pct (used by Feed for break-even
+//          ROAS coloring without a second DB round-trip)
+// Force redeploy marker: 2026-04-30 (margin payload must reach the panel)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
