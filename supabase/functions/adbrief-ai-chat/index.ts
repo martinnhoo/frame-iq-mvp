@@ -648,6 +648,7 @@ Deno.serve(async (req) => {
                 target_value_cents: number | null;
                 conversion_event: string | null;
                 profit_margin_pct: number | null;
+                break_even_roas?: number | null;
               } | null = null;
               try {
                 const { data: goalRow } = await sbPanel
@@ -657,13 +658,20 @@ Deno.serve(async (req) => {
                   .eq("meta_account_id", acc.id)
                   .maybeSingle();
                 if (goalRow) {
+                  const pm = (goalRow as any).profit_margin_pct ?? null;
+                  // Pre-compute break-even ROAS so the AI sees it in
+                  // panel_data without doing the math itself. Stored as a
+                  // sibling field next to profit_margin_pct.
+                  const validPm = typeof pm === "number" && Number.isFinite(pm) && pm > 0 && pm <= 100 ? pm : null;
+                  const breakEvenRoas = validPm != null ? Number((100 / validPm).toFixed(2)) : null;
                   accountGoal = {
                     objective: (goalRow as any).goal_objective ?? null,
                     primary_metric: (goalRow as any).goal_primary_metric ?? null,
                     target_value_cents: (goalRow as any).goal_target_value ?? null,
                     conversion_event: (goalRow as any).goal_conversion_event ?? null,
-                    profit_margin_pct: (goalRow as any).profit_margin_pct ?? null,
-                  };
+                    profit_margin_pct: validPm,
+                    break_even_roas: breakEvenRoas,
+                  } as typeof accountGoal & { break_even_roas: number | null };
                 }
               } catch { /* goal data is optional enrichment */ }
 
@@ -1407,7 +1415,23 @@ Language style: ${(persona.result as any)?.language_style || "—"}`
         }
       }
       if (accountGoal?.profit_margin_pct != null) {
-        lines.push(`Margem de lucro: ${accountGoal.profit_margin_pct}% (usa isso pra calcular ROAS mínimo e custo máximo aceitável por conversão)`);
+        const margin = accountGoal.profit_margin_pct;
+        const breakEven = margin > 0 && margin <= 100 ? 100 / margin : null;
+        lines.push(`Margem de lucro: ${margin}%`);
+        if (breakEven != null) {
+          // Pre-compute break-even so the AI doesn't need to do the math
+          // itself (and quotes the same number we color the UI with). This
+          // enables specific framing like "ROAS 2.8x está abaixo do
+          // break-even (3.3x) — perdendo R$X/dia" instead of vague "ROAS
+          // baixo" advice.
+          lines.push(
+            `Break-even ROAS: ${breakEven.toFixed(2)}x ` +
+            `(qualquer ROAS abaixo disso significa que o anúncio está destruindo margem; ` +
+            `qualquer ROAS acima é lucro real). USE ESTE NÚMERO ao falar de ROAS — ` +
+            `compare sempre com 'abaixo/acima do break-even', nunca diga só "ROAS baixo" ou "ROAS bom" ` +
+            `sem ancorar no break-even.`
+          );
+        }
       }
       lines.push(
         "REGRA: Esses campos JÁ ESTÃO CONFIGURADOS. NUNCA pergunte 'qual é o objetivo?', 'qual o CPA alvo?', 'qual sua margem?', 'qual a landing?'. Use os valores acima como verdade. Se o usuário quiser analisar outra LP, ele vai colar o link — até lá, assuma a configurada.",

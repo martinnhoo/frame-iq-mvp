@@ -8,6 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
 import { storage } from "@/lib/storage";
 import { RoasDisplay } from "@/components/RoasDisplay";
+import { DataSourceFooter } from "@/components/DataSourceFooter";
 
 const F = DT.font;
 const M = DT.mono;
@@ -755,6 +756,19 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
 
       {!loading && filteredEntries.length === 0 && entries.length > 0 && (
         <p style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 14, padding: "40px 0" }}>{t.no_category}</p>
+      )}
+
+      {/* DataSourceFooter — anchored at the bottom of the diary so users
+          see "fonte: Meta Ads API · atribuição 7d click + 1d view" right
+          below the table. Lag warning surfaces automatically when the
+          period includes today (sync runs daily). */}
+      {!loading && entries.length > 0 && (
+        <div style={{ marginTop: 20, maxWidth: 720 }}>
+          <DataSourceFooter
+            lang={(language === "en" ? "en" : language === "es" ? "es" : "pt")}
+            periodTo={new Date().toISOString().slice(0, 10)}
+          />
+        </div>
       )}
     </div>
   );

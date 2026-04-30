@@ -158,7 +158,7 @@ export function SeoLayout({ title, description, canonical, ogImage, children, no
                 © {new Date().getFullYear()} AdBrief. All rights reserved.
               </p>
               <div style={{ display: "flex", gap: 20 }}>
-                {[["Privacy", "/privacy"], ["Terms", "/terms"]].map(([l, h]) => (
+                {[["Privacy", "/privacy"], ["Terms", "/terms"], ["Methodology", "/metodologia"]].map(([l, h]) => (
                   <Link key={h} to={h} style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", textDecoration: "none" }}>{l}</Link>
                 ))}
               </div>

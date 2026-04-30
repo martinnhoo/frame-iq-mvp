@@ -117,6 +117,7 @@ type TranslationKeys = {
   footer_legal: string;
   footer_privacy: string;
   footer_terms: string;
+  footer_methodology: string;
   footer_rights: string;
   footer_soc2: string;
   footer_uptime: string;
@@ -357,6 +358,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "Legal",
     footer_privacy: "Privacy Policy",
     footer_terms: "Terms of Service",
+    footer_methodology: "Methodology",
     footer_rights: "© 2026 AdBrief. All rights reserved.",
     footer_soc2: "SOC 2 Compliant",
     footer_uptime: "99.9% Uptime",
@@ -607,6 +609,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "Legal",
     footer_privacy: "Política de Privacidad",
     footer_terms: "Términos de Servicio",
+    footer_methodology: "Metodología",
     footer_rights: "© 2026 AdBrief. Todos los derechos reservados.",
     footer_soc2: "Cumple SOC 2",
     footer_uptime: "99.9% Uptime",
@@ -852,6 +855,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "Mentions légales",
     footer_privacy: "Politique de Confidentialité",
     footer_terms: "Conditions d'Utilisation",
+    footer_methodology: "Méthodologie",
     footer_rights: "© 2026 AdBrief. Tous droits réservés.",
     footer_soc2: "Conforme SOC 2",
     footer_uptime: "99.9% Uptime",
@@ -1095,6 +1099,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "Rechtliches",
     footer_privacy: "Datenschutz",
     footer_terms: "Nutzungsbedingungen",
+    footer_methodology: "Methodik",
     footer_rights: "© 2026 AdBrief. Alle Rechte vorbehalten.",
     footer_soc2: "SOC 2 Konform",
     footer_uptime: "99.9% Uptime",
@@ -1338,6 +1343,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "قانوني",
     footer_privacy: "سياسة الخصوصية",
     footer_terms: "شروط الخدمة",
+    footer_methodology: "المنهجية",
     footer_rights: "© 2026 AdBrief. جميع الحقوق محفوظة.",
     footer_soc2: "متوافق مع SOC 2",
     footer_uptime: "99.9% وقت التشغيل",
@@ -1581,6 +1587,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "法律",
     footer_privacy: "隐私政策",
     footer_terms: "服务条款",
+    footer_methodology: "计算方法",
     footer_rights: "© 2026 AdBrief. 保留所有权利。",
     footer_soc2: "SOC 2合规",
     footer_uptime: "99.9%正常运行时间",
@@ -1824,6 +1831,7 @@ export const translations: Record<Language, TranslationKeys> = {
     footer_legal: "Legal",
     footer_privacy: "Política de Privacidade",
     footer_terms: "Termos de Serviço",
+    footer_methodology: "Metodologia",
     footer_rights: "© 2026 AdBrief. Todos os direitos reservados.",
     footer_soc2: "Conforme SOC 2",
     footer_uptime: "99.9% Uptime",

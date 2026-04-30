@@ -8,6 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as T } from "@/hooks/useDesignTokens";
 import { storage } from "@/lib/storage";
 import { RoasDisplay } from "@/components/RoasDisplay";
+import { DataSourceFooter } from "@/components/DataSourceFooter";
 
 // ── Design tokens — from unified design system ──
 const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
@@ -734,6 +735,15 @@ export default function AdScorePage() {
 
       {/* Score detail modal */}
       {selectedAd && <ScoreDetail ad={selectedAd} pt={pt} profitMarginPct={profitMarginPct} onClose={() => setSelectedAd(null)} />}
+
+      {/* DataSourceFooter — same transparency rodapé that appears below money
+          KPIs everywhere else. Anchored at the bottom of the score grid so
+          users know which API/window the scores are computed against. */}
+      {!loading && entries.length > 0 && (
+        <div style={{ marginTop: 24, maxWidth: 720 }}>
+          <DataSourceFooter lang={pt ? "pt" : language === "es" ? "es" : "en"} />
+        </div>
+      )}
     </div>
   );
 }

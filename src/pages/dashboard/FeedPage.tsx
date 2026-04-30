@@ -22,6 +22,7 @@ import { AccountHealthGauge, type AccountStatusSummary } from '../../components/
 import { FeedSidebar, type FeedActivityEvent } from '../../components/feed/FeedSidebar';
 import { Pause, Play } from 'lucide-react';
 import { DataSourceFooter } from '../../components/DataSourceFooter';
+import { breakEvenRoas } from '@/lib/money';
 
 const F = "'Inter', 'Plus Jakarta Sans', system-ui, sans-serif";
 
@@ -301,6 +302,10 @@ function detectMetricAlerts(
   m: AdMetricsSummary,
   _accountId: string, // kept for call-site compat, unused inside
   goalMetric?: string | null,
+  /** Profit margin from ad_accounts (1-100). When set, the ROAS alert
+   *  reframes from "abaixo do padrão" (baseline-relative) to "abaixo
+   *  do break-even" (profitability-relative) — much more actionable. */
+  profitMarginPct?: number | null,
 ): MetricAlert[] {
   const alerts: MetricAlert[] = [];
 
@@ -432,7 +437,51 @@ function detectMetricAlerts(
   }
 
   // ── ROAS: deviation ──
-  if (m.baselineRoas !== null && m.baselineRoas > 0.1 && m.avgRoas > 0 && m.totalRevenue > 0 && m.totalSpend > 5000) {
+  // When profit_margin_pct is set, we anchor the alert to BREAK-EVEN
+  // (profitability) instead of the rolling baseline (history). Break-even
+  // is more actionable: "abaixo do break-even = perdendo dinheiro" beats
+  // "abaixo do padrão = pior que antes (mas talvez ainda lucrativo)".
+  // Falls back to baseline-relative when margin is unset.
+  const breakEvenRoas = (typeof profitMarginPct === 'number' && profitMarginPct > 0 && profitMarginPct <= 100)
+    ? 100 / profitMarginPct
+    : null;
+
+  if (breakEvenRoas != null && m.avgRoas > 0 && m.totalRevenue > 0 && m.totalSpend > 5000) {
+    // Break-even path. Fire the alert when ROAS sits below break-even,
+    // since that is — by definition — money being destroyed.
+    const roasRatio = m.avgRoas / breakEvenRoas;
+    if (roasRatio >= 0.95) { /* at or above break-even — profitable, no alert */ }
+    else {
+      const gapPct = Math.round((1 - roasRatio) * 100);
+      const conf = computeConfidence(m.daysOfData, m.totalSpend, m.totalConversions, 0, m.freshnessFactor);
+      // Money destroyed = spend × (1 - margin × ROAS). Equivalent to:
+      // spend × (1 - ROAS / breakEven). Keep the same spendAtRisk shape
+      // as the baseline branch so downstream impact ranking still works.
+      const lostRev = Math.round(m.totalSpend * (1 - roasRatio) * 0.7);
+      const spendAtRisk = Math.max(lostRev, 0) / 100;
+      const impactScore = spendAtRisk * (1 - roasRatio) * METRIC_CLASS_WEIGHT.roas_deviation;
+      if (conf >= MIN_CONFIDENCE_THRESHOLD && impactScore >= IMPACT_THRESHOLD) alerts.push({
+        id: 'roas_deviation', label: 'ROAS',
+        fact: `ROAS abaixo da sua linha de break-even (${breakEvenRoas.toFixed(1).replace('.', ',')}x)`,
+        context: `Atual: ${m.avgRoas.toFixed(2).replace('.', ',')}x · Break-even: ${breakEvenRoas.toFixed(2).replace('.', ',')}x · ${gapPct}% abaixo`,
+        ambiguity: m.freshnessFactor > 0.5
+          ? 'Dados recentes podem estar incompletos — ROAS costuma ser recalculado com atraso.'
+          : 'Significa: cada R$1 investido está retornando menos que o necessário pra cobrir a margem. Pode ser por atribuição incompleta, ciclo de compra longo, ou desalinhamento criativo-público.',
+        impact: lostRev > 0
+          ? `Estimativa: ~${fmtReais(lostRev)} de receita potencial não capturada`
+          : 'Operando abaixo do break-even — destruindo margem',
+        trustLine,
+        confidenceLabel: confidenceLabel(conf),
+        dismissLabel: 'ROAS está correto',
+        investigateLabel: 'Investigar ROAS →',
+        chatMsg: `ROAS abaixo do break-even\n\nAtual: ${m.avgRoas.toFixed(2)}x · Break-even: ${breakEvenRoas.toFixed(2)}x (${gapPct}% abaixo)\n${fmtReais(m.totalRevenue)} receita · ${fmtReais(m.totalSpend)} investidos${lostRev > 0 ? `\n~${fmtReais(lostRev)} de margem perdida` : ''}\n${confidenceLabel(conf)}\n\nVamos descobrir por que o retorno não está cobrindo o custo.`,
+        priority: Math.round(80 * conf * goalBoost('roas')),
+        impactScore,
+        impactTier: impactTierOf(impactScore),
+        spendAtRisk,
+      });
+    }
+  } else if (m.baselineRoas !== null && m.baselineRoas > 0.1 && m.avgRoas > 0 && m.totalRevenue > 0 && m.totalSpend > 5000) {
     const roasRatio = m.avgRoas / m.baselineRoas;
     // RULE 4: improving metric NEVER fires — ROAS at or above baseline = good
     if (roasRatio >= 1.0) { /* metric improving — no alert, ever */ }
@@ -900,6 +949,58 @@ const SyncBanner: React.FC = () => {
       <style>{`
         @keyframes sync-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
       `}</style>
+    </div>
+  );
+};
+
+// ================================================================
+// MARGIN NUDGE — discreet banner that appears when the user has a
+// connected Meta account but no profit_margin_pct configured. Without
+// margin, all the break-even ROAS coloring + AI break-even framing
+// fall back to neutral display, so the user is missing the key part
+// of "is this number profitable?". The nudge invites a 30s setup.
+// ================================================================
+const MarginNudge: React.FC<{ onConfigure: () => void }> = ({ onConfigure }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <div style={{
+      background: 'rgba(56,189,248,0.04)',
+      border: '1px solid rgba(56,189,248,0.18)',
+      borderRadius: 8, padding: '10px 14px', marginBottom: 12,
+      fontFamily: F,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      gap: 12, flexWrap: 'wrap',
+      animation: 'feed-fadeIn 0.25s ease both',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+        <span style={{
+          fontSize: 14, lineHeight: 1, color: 'rgba(56,189,248,0.85)',
+          flexShrink: 0,
+        }}>◉</span>
+        <span style={{ fontSize: 12, color: T.text2, lineHeight: 1.5, minWidth: 0 }}>
+          Configure sua <strong style={{ color: T.text1 }}>margem de lucro</strong> em 30s
+          {' '}— a partir daí o ROAS aparece colorido (vermelho abaixo do break-even,
+          verde acima) e a IA fala em "abaixo/acima do break-even", não só "ROAS baixo".
+        </span>
+      </div>
+      <button
+        onClick={onConfigure}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        style={{
+          background: hov ? 'rgba(56,189,248,0.20)' : 'rgba(56,189,248,0.12)',
+          color: '#7DD3FC',
+          border: '1px solid rgba(56,189,248,0.30)',
+          borderRadius: 6, padding: '6px 12px',
+          fontSize: 11, fontWeight: 700, fontFamily: F, cursor: 'pointer',
+          flexShrink: 0,
+          letterSpacing: '0.01em',
+          transition: 'all 0.15s ease',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Configurar margem
+      </button>
     </div>
   );
 };
@@ -3032,6 +3133,7 @@ function kpiContext(
   key: 'spend' | 'wasted' | 'roas' | 'conv',
   m: AdMetricsSummary | null,
   killsCount: number,
+  profitMarginPct: number | null = null,
 ): string | null {
   const hasData = !!m && m.daysOfData > 0;
 
@@ -3050,6 +3152,17 @@ function kpiContext(
     case 'roas': {
       if (!hasData) return null;
       if (m!.avgRoas === 0 && m!.totalSpend > 0) return 'Sem receita rastreada';
+      // Break-even is the strongest signal when margin is configured —
+      // tells the user whether the ROAS is *profitable*, not just better
+      // or worse than history. Wins over the baseline comparison.
+      if (typeof profitMarginPct === 'number' && profitMarginPct > 0 && profitMarginPct <= 100) {
+        const breakEven = 100 / profitMarginPct;
+        const ratio = m!.avgRoas / breakEven;
+        if (ratio >= 1.2) return `acima do break-even (${breakEven.toFixed(1).replace('.', ',')}x)`;
+        if (ratio >= 1.0) return `pouco acima do break-even (${breakEven.toFixed(1).replace('.', ',')}x)`;
+        if (ratio >= 0.95) return `no break-even (${breakEven.toFixed(1).replace('.', ',')}x)`;
+        return `abaixo do break-even (${breakEven.toFixed(1).replace('.', ',')}x)`;
+      }
       if (m!.volatilityCpa > 0.5) return 'Alta volatilidade';
       if (m!.hasAnchorBaseline && m!.baselineRoas && m!.baselineRoas > 0) {
         const diff = m!.avgRoas - m!.baselineRoas;
@@ -3168,7 +3281,10 @@ const CommandKPIRow: React.FC<{
   /** User's goal metric (from ad_accounts.goal_primary_metric). Drives which
    *  tile wears the primary accent — "this is the one I care about most". */
   goalMetric?: string | null;
-}> = ({ m, periodLabel, decisions = [], goalMetric }) => {
+  /** ad_accounts.profit_margin_pct (1-100). Used to color the ROAS tile
+   *  red below break-even / green above. null = neutral display. */
+  profitMarginPct?: number | null;
+}> = ({ m, periodLabel, decisions = [], goalMetric, profitMarginPct = null }) => {
   const hasData = !!m && m.daysOfData > 0 && m.totalSpend > 0;
 
   // ── Gasto perdido ──
@@ -3252,7 +3368,9 @@ const CommandKPIRow: React.FC<{
       numericValue: hasData && m!.avgRoas > 0 ? m!.avgRoas : undefined,
       valueFormatter: fmtROAS,
       deltaPct: hasData ? (m!.deltaRoasPct ?? null) : null,
-      context: kpiContext('roas', m, killsCount),
+      // Pass margin so the context line says "abaixo do break-even (3,3x)"
+      // when configured, instead of the less-actionable baseline diff.
+      context: kpiContext('roas', m, killsCount, profitMarginPct),
     },
     {
       key: 'conv',
@@ -3363,16 +3481,26 @@ const CommandKPIRow: React.FC<{
               const showTooltip = fullPrecise !== (!isEmpty && t.numericValue !== undefined && t.valueFormatter
                 ? t.valueFormatter(t.numericValue)
                 : t.value);
+              // ROAS gets break-even-aware coloring when the user has
+              // configured profit_margin_pct: red below the line, green
+              // above. 5% tolerance to avoid jitter near the threshold.
+              // Falls back to the standard (cyan-primary / white-other)
+              // palette when margin isn't set — same treatment as before.
+              const breakEvenLine = t.key === 'roas' ? breakEvenRoas(profitMarginPct) : null;
+              const roasNum = t.key === 'roas' && t.numericValue && t.numericValue > 0 ? t.numericValue : null;
+              let numColor: string = isEmpty ? T.text3 : (isPrimary ? '#7DD3FC' : T.text1);
+              if (roasNum != null && breakEvenLine != null) {
+                numColor = roasNum >= breakEvenLine * 0.95 ? '#22A3A3' : '#EF4444';
+              }
               return (
                 <div
                   title={showTooltip ? fullPrecise : undefined}
                   style={{
                     fontSize: adjustedSize,
                     fontWeight: 800,
-                    // Primary number now wears cyan — the tile's number
-                    // is the star, not just the label. Empty state
-                    // stays muted; non-primary stays bright white.
-                    color: isEmpty ? T.text3 : (isPrimary ? '#7DD3FC' : T.text1),
+                    // Primary number normally wears cyan — but ROAS overrides
+                    // to red/green when margin is configured (break-even).
+                    color: numColor,
                     letterSpacing: '-0.035em', lineHeight: 1.0,
                     marginTop: 3,
                     minWidth: 0,
@@ -3382,7 +3510,7 @@ const CommandKPIRow: React.FC<{
                     whiteSpace: 'nowrap',
                     fontVariantNumeric: 'tabular-nums' as const,
                     fontFeatureSettings: '"tnum" 1, "cv11" 1',
-                    textShadow: isPrimary ? '0 0 24px rgba(14,165,233,0.25)' : 'none',
+                    textShadow: isPrimary && roasNum == null ? '0 0 24px rgba(14,165,233,0.25)' : 'none',
                     transition: 'font-size 0.22s ease, text-shadow 0.3s ease, color 0.22s ease',
                   }}
                 >
@@ -3601,6 +3729,12 @@ type KpiItem = {
   empty?: boolean;
   emptyMsg?: string;
   primary?: boolean;
+  /** Override KPI number color (e.g. break-even-aware ROAS). When set,
+   *  takes precedence over the default white/cyan palette below. */
+  colorOverride?: string;
+  /** Optional sub-line under the number — used by ROAS tile to show
+   *  "break-even Xx" hint when margin is configured. */
+  subline?: string;
 };
 
 const PerformancePulse: React.FC<{
@@ -3613,7 +3747,10 @@ const PerformancePulse: React.FC<{
   adMetrics?: AdMetricsSummary | null;
   trackingBroken?: boolean;
   periodLabel?: string;
-}> = ({ data, savings, goalMetric, adMetrics, trackingBroken, periodLabel }) => {
+  /** Profit margin from ad_accounts (1-100). Drives break-even ROAS
+   *  coloring on the goal-metric tile when goalMetric === 'roas'. */
+  profitMarginPct?: number | null;
+}> = ({ data, savings, goalMetric, adMetrics, trackingBroken, periodLabel, profitMarginPct = null }) => {
   const pausedAds = (data.totalAds || 0) - data.activeAds;
   const [hovIdx, setHovIdx] = useState<number | null>(null);
 
@@ -3662,12 +3799,24 @@ const PerformancePulse: React.FC<{
     });
   } else if (goalMetric === 'roas') {
     const hasData = hasMetrics && adMetrics.avgRoas > 0;
+    // When margin is configured, override the primary color to red/green
+    // against break-even (5% tolerance). Falls back to default color
+    // (cyan-primary) when no margin is set.
+    const breakEven = breakEvenRoas(profitMarginPct);
+    let roasColor: string | undefined;
+    let roasSubline: string | undefined;
+    if (hasData && breakEven != null) {
+      roasColor = adMetrics!.avgRoas >= breakEven * 0.95 ? '#22A3A3' : '#EF4444';
+      roasSubline = `break-even ${breakEven.toFixed(1).replace('.', ',')}x`;
+    }
     kpis.push({
       label: 'ROAS',
       value: hasData ? `${adMetrics!.avgRoas.toFixed(1)}x` : '',
       primary: true,
       empty: !hasData,
       emptyMsg: trackingBroken ? 'Sem conversões rastreadas' : 'Dados insuficientes',
+      colorOverride: roasColor,
+      subline: roasSubline,
     });
   } else if (goalMetric === 'cpc') {
     const hasData = hasMetrics && adMetrics.avgCpc > 0;
@@ -3799,22 +3948,37 @@ const PerformancePulse: React.FC<{
                   {k.emptyMsg || '—'}
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
-                  <span style={{
-                    fontSize: 16,
-                    fontWeight: 800,
-                    color: T.text1,
-                    fontVariantNumeric: 'tabular-nums',
-                    letterSpacing: '-0.02em',
-                    lineHeight: 1.1,
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {k.value}
-                  </span>
-                  {k.trend && (
-                    <span style={{ flexShrink: 0 }}>{k.trend}</span>
+                <>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+                    <span style={{
+                      fontSize: 16,
+                      fontWeight: 800,
+                      // colorOverride lets ROAS render red/green vs break-even
+                      // when margin is set, while other tiles keep T.text1.
+                      color: k.colorOverride || T.text1,
+                      fontVariantNumeric: 'tabular-nums',
+                      letterSpacing: '-0.02em',
+                      lineHeight: 1.1,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {k.value}
+                    </span>
+                    {k.trend && (
+                      <span style={{ flexShrink: 0 }}>{k.trend}</span>
+                    )}
+                  </div>
+                  {k.subline && (
+                    <div style={{
+                      fontSize: 9.5, fontWeight: 600,
+                      color: 'rgba(240,246,252,0.42)',
+                      letterSpacing: '0.02em',
+                      marginTop: 1,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {k.subline}
+                    </div>
                   )}
-                </div>
+                </>
               )}
             </div>
           );
@@ -5555,39 +5719,50 @@ const FeedPage: React.FC = () => {
 
   // ── Account goal (Conversion Intelligence) ──
   const [goalConfigured, setGoalConfigured] = useState<boolean | null>(null); // null = loading
-  const [goalData, setGoalData] = useState<{ objective: string; metric: string; target: number | null } | null>(null);
+  const [goalData, setGoalData] = useState<{ objective: string; metric: string; target: number | null; profitMarginPct: number | null } | null>(null);
+  // Margin alone (independent of goal_objective being set). Drives RoasDisplay
+  // coloring across the Feed even when the user hasn't completed full goal
+  // configuration — margin is a smaller commitment than picking a metric.
+  const [profitMarginPct, setProfitMarginPct] = useState<number | null>(null);
   useEffect(() => {
-    if (!accountId) { setGoalConfigured(null); setGoalData(null); return; }
+    if (!accountId) { setGoalConfigured(null); setGoalData(null); setProfitMarginPct(null); return; }
     // Reset immediately on account switch to prevent stale state from previous account
     setGoalConfigured(null);
     setGoalData(null);
+    setProfitMarginPct(null);
     let cancelled = false;
     (async () => {
       try {
-        // goal_* columns may not yet be in the generated schema — narrow on read.
+        // goal_* + profit_margin_pct columns may not yet be in the generated
+        // schema — narrow on read.
         type GoalRow = {
           goal_objective: string | null;
           goal_primary_metric: string | null;
           goal_target_value: number | null;
+          profit_margin_pct: number | null;
         };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data } = await ((supabase as any)
           .from('ad_accounts')
-          .select('goal_objective, goal_primary_metric, goal_target_value')
+          .select('goal_objective, goal_primary_metric, goal_target_value, profit_margin_pct')
           .eq('id', accountId)
           .maybeSingle() as Promise<{ data: GoalRow | null }>);
         if (cancelled) return;
+        const pm = data?.profit_margin_pct;
+        const validMargin = typeof pm === 'number' && Number.isFinite(pm) && pm > 0 && pm <= 100 ? pm : null;
+        setProfitMarginPct(validMargin);
         setGoalConfigured(!!data?.goal_objective);
         if (data?.goal_objective) {
           setGoalData({
             objective: data.goal_objective,
             metric: data.goal_primary_metric || '',
             target: data.goal_target_value,
+            profitMarginPct: validMargin,
           });
         } else {
           setGoalData(null);
         }
-      } catch { if (!cancelled) { setGoalConfigured(null); setGoalData(null); } }
+      } catch { if (!cancelled) { setGoalConfigured(null); setGoalData(null); setProfitMarginPct(null); } }
     })();
     return () => { cancelled = true; };
   }, [accountId]);
@@ -6153,7 +6328,7 @@ const FeedPage: React.FC = () => {
   // INVARIANT RULES 1-4 enforced here as hard gates
   const metricAlerts = useMemo(() => {
     if (!adMetrics || !accountId || beginnerMode) return [];
-    const raw = detectMetricAlerts(adMetrics, accountId, goalData?.metric);
+    const raw = detectMetricAlerts(adMetrics, accountId, goalData?.metric, profitMarginPct);
     return raw.filter(a => {
       const entry = metricEntries[a.id] || { action: 'unknown' };
 
@@ -6175,7 +6350,7 @@ const FeedPage: React.FC = () => {
       const d = daysSinceLastDismiss(accountId, a.id);
       return { ...a, historyNote: d !== null ? `Você ignorou isso há ${d} dia${d !== 1 ? 's' : ''}` : undefined };
     });
-  }, [adMetrics, accountId, metricEntries, beginnerMode, goalData]);
+  }, [adMetrics, accountId, metricEntries, beginnerMode, goalData, profitMarginPct]);
 
   // AUTO-RESET metric states — ratio-based (adaptive to account baselines)
   useEffect(() => {
@@ -7568,6 +7743,7 @@ const FeedPage: React.FC = () => {
                       periodLabel={PERIODS.find(p => p.key === period)!.label}
                       decisions={pendingDecisions}
                       goalMetric={goalData?.metric || null}
+                      profitMarginPct={profitMarginPct}
                     />
                     {(!adMetrics || adMetrics.daysOfData === 0 || adMetrics.totalSpend === 0) && (
                       <div style={{
@@ -7629,6 +7805,15 @@ const FeedPage: React.FC = () => {
 
         {/* Inline sync progress */}
         {syncing && <SyncBanner />}
+
+        {/* Margin nudge — appears once when the user has connected Meta but
+            never set profit_margin_pct. Without margin, ROAS coloring stays
+            neutral and the AI can't ground "is this profitable?" in
+            anything concrete, so all the Week 2 transparency work stays
+            invisible to them. The nudge points to /dashboard/accounts. */}
+        {metaConnected && !isDemo && profitMarginPct == null && (
+          <MarginNudge onConfigure={() => navigate('/dashboard/accounts')} />
+        )}
 
         {/* Painel do gestor (KPI row) now lives inside the Command Deck above.
             Saúde da conta lives exclusively in the right sidebar (FeedSidebar). */}

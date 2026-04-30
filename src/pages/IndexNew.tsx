@@ -2878,7 +2878,7 @@ function Footer({ t }: { t: Record<string, string> }) {
   const cols = [
     { title: t.footer_product, links: [{ label: t.footer_how, href: "/#flow" }, { label: t.footer_pricing, href: "/pricing" }, { label: t.footer_faq, href: "/#faq" }] },
     { title: t.footer_company, links: [{ label: t.footer_about, href: "/about" }, { label: t.footer_contact, href: "mailto:hello@adbrief.pro" }] },
-    { title: t.footer_legal, links: [{ label: t.footer_terms, href: "/terms" }, { label: t.footer_privacy, href: "/privacy" }] },
+    { title: t.footer_legal, links: [{ label: t.footer_terms, href: "/terms" }, { label: t.footer_privacy, href: "/privacy" }, { label: t.footer_methodology, href: "/metodologia" }] },
   ];
 
   return (
