@@ -102,7 +102,7 @@ function getNavItems(lang: string) {
   };
   const t = (key: string) => l[key]?.[lang] || l[key]?.en || key;
   return [
-    { url: '/dashboard/feed',     label: 'Comando',      icon: Command },
+    { url: '/dashboard/feed',     label: 'Feed',         icon: Command },
     { url: '/dashboard/ai',       label: t('ai'),        icon: MessageSquare },
     { url: '/dashboard/history',   label: t('history'),   icon: Clock },
     { url: '/dashboard/accounts',  label: t('accounts'),  icon: Building2 },

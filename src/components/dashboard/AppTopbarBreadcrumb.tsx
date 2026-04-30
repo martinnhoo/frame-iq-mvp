@@ -38,7 +38,7 @@ const LABELS: Record<string, string> = {
   preflight: "Preflight",
 };
 
-const ROOT_LABEL = "Comando";
+const ROOT_LABEL = "Feed";
 const ROOT_PATH = "/dashboard/feed";
 
 function pretty(seg: string): string {
@@ -51,7 +51,7 @@ function pretty(seg: string): string {
 export function AppTopbarBreadcrumb() {
   const { pathname } = useLocation();
   // Strip the leading /dashboard/. If path is /dashboard or /dashboard/
-  // (root), show only "Comando".
+  // (root), show only "Feed".
   const segments = pathname
     .replace(/^\/dashboard\/?/, "")
     .split("/")

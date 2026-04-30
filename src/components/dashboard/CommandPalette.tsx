@@ -137,7 +137,7 @@ export function CommandPalette({ open, onClose, decisions: passedDecisions, acco
 
     // Group 2 — nav
     const navItems: Array<[string, string, string, React.ReactNode]> = [
-      ["nav-comando",      "Comando",       "/dashboard/feed",     <Compass size={14} />],
+      ["nav-feed",         "Feed",          "/dashboard/feed",     <Compass size={14} />],
       ["nav-estrategista", "Estrategista (Chat IA)",  "/dashboard/ai",       <MessageSquare size={14} />],
       ["nav-historico",    "Histórico",     "/dashboard/history",  <Library size={14} />],
       ["nav-contas",       "Contas",        "/dashboard/accounts", <Building2 size={14} />],
