@@ -314,8 +314,19 @@ async function executeAction(
     params = {},
   } = req;
 
-  // action_type may be corrected later (e.g., budget direction fix)
-  let action_type = originalActionType;
+  // ── Normalize enable_* → reactivate_* up front ──────────────────────
+  // The Meta API + AI both emit `enable_*` (Meta's standard verb), but
+  // legacy schema constraints — action_log CHECK and the switch below
+  // — still expect `reactivate_*`. Normalize at the top so every
+  // downstream branch sees the same value, instead of every call site
+  // remembering to map. Supersedes the frontend ACTION_TYPE_MAP
+  // workaround in useActions.ts.
+  const ENABLE_TO_REACTIVATE: Record<string, string> = {
+    enable_ad: "reactivate_ad",
+    enable_adset: "reactivate_adset",
+    enable_campaign: "reactivate_campaign",
+  };
+  let action_type = ENABLE_TO_REACTIVATE[originalActionType] ?? originalActionType;
 
   const userId = (user as { id: string }).id;
 
@@ -372,22 +383,10 @@ async function executeAction(
     metaAccessToken
   );
 
-  // action_log CHECK constraint accepts:
-  //   pause_ad/adset/campaign | reactivate_ad/adset | increase_budget |
-  //   decrease_budget | duplicate_ad | generate_hook | generate_variation
-  //
-  // The Meta-side / AI naming is `enable_*` (Meta API standard), so we
-  // map enable_ad → reactivate_ad and enable_adset → reactivate_adset
-  // before insert. enable_campaign isn't in the constraint at all (the
-  // current schema only supports adset-level reactivate); fall through
-  // to the same mapping and let the constraint reject if invalid.
-  const ACTION_LOG_MAP: Record<string, string> = {
-    enable_ad: "reactivate_ad",
-    enable_adset: "reactivate_adset",
-    enable_campaign: "reactivate_campaign", // requires the CHECK constraint
-                                            // expansion shipped 2026-04-27
-  };
-  const loggedActionType = ACTION_LOG_MAP[action_type] ?? action_type;
+  // action_type was already normalized to reactivate_* (the value the
+  // action_log CHECK constraint accepts) at the top of this function,
+  // so we can use it directly here.
+  const loggedActionType = action_type;
 
   // ── Log-first pattern: create pending log BEFORE calling Meta API ────
   // This prevents the "action executed but never logged" scenario
@@ -635,6 +634,12 @@ async function executeAction(
   const ACTION_TYPE_MAP: Record<string, string> = {
     pause_ad: "pause_ad", pause_adset: "pause_adset", pause_campaign: "pause_campaign",
     enable_ad: "enable_ad", enable_adset: "enable_adset", enable_campaign: "enable_campaign",
+    // Legacy reactivate_* names (post-normalize action_type lands here)
+    // map back to canonical enable_* in the action_outcomes_enum so the
+    // 24h/72h cron measures these reliably regardless of which name the
+    // caller used. Supersedes the frontend action_outcomes backfill in
+    // useActions.ts.
+    reactivate_ad: "enable_ad", reactivate_adset: "enable_adset", reactivate_campaign: "enable_campaign",
     increase_budget: "budget_increase", decrease_budget: "budget_decrease",
     duplicate_ad: "duplicate_ad",
   };
