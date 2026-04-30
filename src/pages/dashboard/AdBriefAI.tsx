@@ -2710,6 +2710,9 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
         borderBottom: "1px solid rgba(148,163,184,0.06)",
         position: "relative" as const, zIndex: 10,
+        // Without flexShrink:0 the chat-container's flex:1 (combined
+        // with messages min-height) pressures this bar to zero. Pin it.
+        flexShrink: 0,
       }}>
         {/* ── Top accent gradient line ── */}
         <div style={{
