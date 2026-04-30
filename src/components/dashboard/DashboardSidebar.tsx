@@ -200,7 +200,7 @@ export function DashboardSidebar({
   // ── Navigation structure — simplified: result-focused, no fluff ──
   // All creative/analysis tools now live inside the AI Chat as invokable skills.
   const NAV_ITEMS = [
-    { url: "/dashboard/feed",     label: "Feed",                                      icon: Command },
+    { url: "/dashboard/feed",     label: "Comando",                                   icon: Command },
     { url: "/dashboard/ai",      label: pt ? "Estrategista" : es ? "Estratega" : "Strategist",    icon: MessageSquare },
     { url: "/dashboard/history",  label: pt ? "Histórico" : es ? "Historial" : "History", icon: Clock },
     { url: "/dashboard/accounts", label: pt ? "Contas" : es ? "Cuentas" : "Accounts", icon: Building2 },
