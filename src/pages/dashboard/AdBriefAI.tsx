@@ -927,9 +927,66 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
   const F = "'Plus Jakarta Sans', sans-serif";
   const MONO = "'DM Mono',monospace";
 
-  // Word-level stagger for streaming effect — Claude-like smooth token reveal
-  let globalWordIdx = 0;
-  const WORD_DELAY = stream ? 0.022 : 0; // 22ms per word
+  // ── Sentence-aware + tone-aware streaming ──
+  // Replaces the previous linear `globalWordIdx * WORD_DELAY` math with a
+  // cumulative delay accumulator. Each word's delay is computed from the
+  // running total, accounting for:
+  //   - hook boost: first 8 words at 14ms (vs base 22ms) to grab attention
+  //   - jitter: 0-10ms random per word so it doesn't feel mechanical
+  //   - punctuation pause: extra ms after . ! ? , : (heavier than commas)
+  //   - paragraph pause: 250ms when an empty line splits content
+  //   - tone multiplier: explanation 1.0, recommendation 0.85 (faster +
+  //     more confident), alert 1.15 (slower + more weight)
+  // The animation itself is still pure CSS keyframes — main thread never
+  // blocks, mobile stays smooth, scroll/auto-scroll untouched.
+  type Tone = "explanation" | "recommendation" | "alert";
+  const tone: Tone = (() => {
+    if (!stream) return "explanation";
+    const head = (text || "").slice(0, 400).toLowerCase();
+    // Alert: warnings, urgency, weighty topics — slow it down
+    if (/\b(alerta|atenção|atencao|cuidado|perigo|warning|crítico|critico|critic|urgent|fadiga|gasto perdido|destruindo|prejuízo|prejuiz|colapso|colapsou|abaixo do break-even)\b/.test(head)) return "alert";
+    // Recommendation: action verbs, decisive — speed it up
+    if (/\b(recomendo|sugiro|escalar|pausar|vamos\s+(pausar|escalar)|vou\s+(pausar|escalar)|recommend|suggest|scale|pause|kill|próximo passo|action)\b/.test(head)) return "recommendation";
+    return "explanation";
+  })();
+  const TONE_MOD: Record<Tone, number> = {
+    explanation: 1.0,
+    recommendation: 0.85,  // 15% faster — confident
+    alert: 1.2,            // 20% slower — more weight (per founder spec)
+  };
+  // toneMult is MUTABLE so per-section reclassification works:
+  // each H2/H3 heading is scanned for alert/recommendation triggers
+  // and updates toneMult for the following content. The same response
+  // can shift between cadences — explanation paragraphs flow normally,
+  // an "Atenção" section slows down, a "Próximo passo" section
+  // accelerates. Driven entirely by the headings the AI already emits.
+  let toneMult = TONE_MOD[tone];
+
+  // Per-line tone detector — used by H1/H2/H3 handlers below to swap
+  // toneMult when a heading signals a new intent. Returns null for
+  // ambiguous text so the previous tone persists.
+  const detectLineTone = (line: string): Tone | null => {
+    const t = (line || "").toLowerCase();
+    if (/\b(atenção|atencao|cuidado|risco|alerta|crítico|critico|warning|urgent|fadiga|destruindo|prejuízo|prejuiz|colapso|colapsou|abaixo do break-even|gasto perdido)\b/.test(t)) return "alert";
+    if (/\b(recomendo|sugiro|pause|pausar|escala|escalar|vamos|próximo passo|proximo passo|action|faça|execute|recomenda)\b/.test(t)) return "recommendation";
+    return null;
+  };
+
+  // Per-word base delay (seconds; CSS animation-delay uses seconds)
+  const BASE_HOOK_S = 0.014;     // first 8 words
+  const BASE_REGULAR_S = 0.022;  // after
+  const PARA_PAUSE_S = 0.250;    // empty-line paragraph break
+  const PUNCT_PAUSE_S: Record<string, number> = {
+    ".": 0.180,
+    "!": 0.160,
+    "?": 0.200,
+    ",": 0.060,
+    ":": 0.120,
+  };
+
+  // Mutable accumulator shared by wrapWords + inlineFormat (code blocks)
+  // + the line iterator below (paragraph pauses).
+  const acc = { cumDelay: 0, wordCount: 0 };
   const WORD_DUR = stream ? 0.12 : 0;
 
   // Inline formatting — bold, code, italic — now with per-word animation
@@ -957,7 +1014,15 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
         remaining = italicMatch[3];
       } else if (minIdx === 2 && codeMatch) {
         if (codeMatch[1]) parts.push(wrapWords(codeMatch[1], idx++, {}));
-        parts.push(<code key={idx++} style={{ fontFamily: MONO, fontSize: "0.85em", background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.18)", borderRadius: 4, padding: "1px 6px", color: "#67e8f9", animation: stream ? `wordReveal ${WORD_DUR}s ease-out ${(globalWordIdx++) * WORD_DELAY}s both` : undefined }}>{codeMatch[2]}</code>);
+        // Inline code rendered as one "word" in the streaming sequence —
+        // capture current cumDelay, then advance by base regular delay so
+        // the next word lands after the code chip.
+        const codeDelay = stream ? acc.cumDelay : 0;
+        if (stream) {
+          acc.cumDelay += BASE_REGULAR_S * toneMult;
+          acc.wordCount++;
+        }
+        parts.push(<code key={idx++} style={{ fontFamily: MONO, fontSize: "0.85em", background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.18)", borderRadius: 4, padding: "1px 6px", color: "#67e8f9", animation: stream ? `wordReveal ${WORD_DUR}s ease-out ${codeDelay}s both` : undefined }}>{codeMatch[2]}</code>);
         remaining = codeMatch[3];
       } else {
         parts.push(wrapWords(remaining, idx++, {}));
@@ -983,7 +1048,38 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       <Tag key={key} style={style}>
         {words.map((w, wi) => {
           if (/^\s+$/.test(w)) return w; // preserve whitespace as-is
-          const delay = (globalWordIdx++) * WORD_DELAY;
+
+          // Compute this word's reveal delay from the running cumulative
+          // total. After rendering, the accumulator advances by:
+          //   ((base + jitter) × complexity × confidence + punct) × tone
+          // — tone applied ONCE at the end so the section's intent
+          // reinforces the whole gap between this word and the next.
+          //
+          // Complexity: long words (>10 chars) and technical-looking
+          // tokens (R$X, percentages, big numbers, ALL-CAPS abbrevs)
+          // get a slight slowdown — dense content reads heavier.
+          //
+          // Confidence: hedge words ("talvez", "possivelmente",
+          // "maybe") get a slight slowdown to imply less certainty.
+          // Pure timing — text is unchanged.
+          const isHook = acc.wordCount < 8;
+          const base = isHook ? BASE_HOOK_S : BASE_REGULAR_S;
+          const jitter = Math.random() * 0.010;
+          const trimmed = w.trim();
+          const lastChar = trimmed.charAt(trimmed.length - 1);
+          const punctPause = PUNCT_PAUSE_S[lastChar] ?? 0;
+
+          const lengthMult = trimmed.length > 10 ? 1.2 : 1.0;
+          const technicalMult = /^[A-Z]{2,}$|^R\$|^\$|^[\d.,]+%$|^\d+(?:[.,]\d+)?x$|^\d{3,}$/.test(trimmed) ? 1.1 : 1.0;
+          const complexityMult = Math.max(lengthMult, technicalMult);
+          const isHedge = /^(talvez|possivelmente|provavelmente|maybe|perhaps|talvez,|possivelmente,|maybe,)$/i.test(trimmed);
+          const confidenceMult = isHedge ? 1.10 : 1.0;
+
+          const wordTime = (base + jitter) * complexityMult * confidenceMult;
+          const delay = acc.cumDelay;
+          acc.cumDelay += (wordTime + punctPause) * toneMult;
+          acc.wordCount++;
+
           // `both` fill-mode keeps final state pinned after animation finishes,
           // so words stay visible even if stream prop is cleared later.
           return <span key={wi} style={{ display: "inline", animation: `wordReveal ${WORD_DUR}s ease-out ${delay}s both` }}>{w}</span>;
@@ -1002,6 +1098,10 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
 
   const flushList = (key: string) => {
     if (listBuffer.length === 0) return;
+    // Pre-list breath — small pause (120ms × toneMult) before the
+    // bullets/numbers start streaming. Reads as "the AI organized its
+    // thoughts before listing them" instead of dumping items.
+    if (stream) acc.cumDelay += 0.120 * toneMult;
     const items = [...listBuffer];
     const isOrdered = items[0]?.ordered;
     const listIdx = nodes.length;
@@ -1063,9 +1163,19 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
     // H1
     if (/^#\s/.test(trimmed)) {
       flushList(`fl-${i}`);
+      const title = trimmed.replace(/^#\s/, "");
+      // Hierarchy + intent reinforcement: re-detect tone from this
+      // heading; if it signals alert/recommendation, the toneMult
+      // updates for everything below until the next heading. Then a
+      // 180ms pre-breath so the title lands as a structural beat.
+      if (stream) {
+        const sectionTone = detectLineTone(title);
+        if (sectionTone) toneMult = TONE_MOD[sectionTone];
+        acc.cumDelay += 0.180 * toneMult;
+      }
       nodes.push(
         <p key={i} style={{ fontFamily: F, fontSize: 20, fontWeight: 800, color: "#ffffff", letterSpacing: "-0.03em", margin: "20px 0 6px", lineHeight: 1.2, ...blockAnim(nodes.length) }}>
-          {inlineFormat(trimmed.replace(/^#\s/, ""))}
+          {inlineFormat(title)}
         </p>
       );
       return;
@@ -1077,6 +1187,12 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       const title = trimmed.replace(/^##\s/, "");
       const kind = classifyLabel(title);
       const color = labelColor[kind];
+      // Same pattern as H1: reclassify section tone + 180ms pre-breath.
+      if (stream) {
+        const sectionTone = detectLineTone(title);
+        if (sectionTone) toneMult = TONE_MOD[sectionTone];
+        acc.cumDelay += 0.180 * toneMult;
+      }
       nodes.push(
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 0 6px", ...blockAnim(nodes.length) }}>
           <span style={{ width: 3, height: 14, borderRadius: 2, background: color, flexShrink: 0, opacity: 0.85 }} />
@@ -1091,9 +1207,17 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
     // H3
     if (/^###\s/.test(trimmed)) {
       flushList(`fl-${i}`);
+      const title = trimmed.replace(/^###\s/, "");
+      // H3 is the most common section divider in our responses — same
+      // pre-breath + tone reclassification pattern.
+      if (stream) {
+        const sectionTone = detectLineTone(title);
+        if (sectionTone) toneMult = TONE_MOD[sectionTone];
+        acc.cumDelay += 0.180 * toneMult;
+      }
       nodes.push(
         <p key={i} style={{ fontFamily: F, fontSize: 11, fontWeight: 700, color: "rgba(14,165,233,0.7)", letterSpacing: "0.09em", textTransform: "uppercase", margin: "14px 0 4px", ...blockAnim(nodes.length) }}>
-          {trimmed.replace(/^###\s/, "")}
+          {title}
         </p>
       );
       return;
@@ -1120,9 +1244,12 @@ function renderMarkdown(text: string, stream = false): React.ReactNode[] {
       return;
     }
 
-    // Empty line
+    // Empty line — paragraph break. While streaming, push the next
+    // word's start out by 250ms × toneMult so the next paragraph
+    // arrives with a perceptible breath, not on top of the previous.
     if (!trimmed) {
       flushList(`fl-${i}`);
+      if (stream) acc.cumDelay += PARA_PAUSE_S * toneMult;
       return;
     }
 
