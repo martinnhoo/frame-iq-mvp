@@ -5669,8 +5669,13 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           overflow:auto on .messages to work inside flex column. */}
       <div className="chat-container" style={{flex:1,display:"flex",flexDirection:"column" as const,width:"100%",maxWidth:860,margin:"0 auto",padding:"0 16px",minHeight:0,boxSizing:"border-box" as const,position:"relative" as const,zIndex:1}}>
 
-      {/* ── Messages ── */}
-      <div style={{flex:1,overflowY:"auto",scrollbarGutter:"stable",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8}}>
+      {/* ── Messages ──
+          Phase 4: minHeight ensures the area is always at least
+          ~viewport - chrome tall, so the composer doesn't visually
+          "float" in the middle when there's little content. The 220
+          px reserve ≈ topbar (≈50) + LivePanel (≈56) + composer
+          (≈110) — adjust if those heights drift. */}
+      <div className="chat-messages" style={{flex:1,overflowY:"auto",scrollbarGutter:"stable",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8,minHeight:"calc(100vh - 220px)"}}>
         
         {/* ── Urgent Alert Banner — aggressive PriorityStack style ── */}
         {accountAlerts.length > 0 && (
@@ -6025,7 +6030,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           fade into the composer instead of cutting off harshly. The
           gradient is on ::before — NEVER on the input itself — so the
           input's own background/border stay clean. */}
-      <div className="chat-composer-wrapper" style={{flexShrink:0,position:"sticky" as const,bottom:0,zIndex:2,padding:"16px 0 max(env(safe-area-inset-bottom, 0px), 20px)"}}>
+      <div className="chat-composer-wrapper" style={{flexShrink:0,position:"sticky" as const,bottom:0,zIndex:2,paddingTop:16,paddingBottom:"max(env(safe-area-inset-bottom), 16px)"}}>
         <div className="chat-input-wrap" style={{width:"100%",margin:0,boxSizing:"border-box" as const,position:"relative" as const}}>
 
             {/* Floating tool-menu — "thought bubbles" opened from [+] trigger inside composer */}
