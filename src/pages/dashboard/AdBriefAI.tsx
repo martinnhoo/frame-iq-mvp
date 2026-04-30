@@ -2724,9 +2724,12 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
         borderBottom: "1px solid rgba(148,163,184,0.06)",
-        position: "relative" as const, zIndex: 10,
-        // Without flexShrink:0 the chat-container's flex:1 (combined
-        // with messages min-height) pressures this bar to zero. Pin it.
+        // Sticky to the FIRST scrollable ancestor (the AppLayout's
+        // <main>, which has overflow-y:auto). Even if scrollIntoView
+        // from a new chat message bubbles up and scrolls <main>, the
+        // LIVE bar stays pinned to the top of the visible chat area.
+        // zIndex 10 keeps it above any decision card / message bubble.
+        position: "sticky" as const, top: 0, zIndex: 10,
         flexShrink: 0,
       }}>
         {/* ── Top accent gradient line ── */}
@@ -5851,12 +5854,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
       <div className="chat-container" style={{flex:1,display:"flex",flexDirection:"column" as const,width:"100%",maxWidth:860,margin:"0 auto",padding:"0 16px",minHeight:0,boxSizing:"border-box" as const,position:"relative" as const,zIndex:1}}>
 
       {/* ── Messages ──
-          Phase 4: minHeight ensures the area is always at least
-          ~viewport - chrome tall, so the composer doesn't visually
-          "float" in the middle when there's little content. The 220
-          px reserve ≈ topbar (≈50) + LivePanel (≈56) + composer
-          (≈110) — adjust if those heights drift. */}
-      <div className="chat-messages" style={{flex:1,overflowY:"auto",scrollbarGutter:"stable",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8,minHeight:"calc(100vh - 220px)"}}>
+          minHeight removed: it was forcing the chat-container taller
+          than the AppLayout's <main> could accommodate, making <main>
+          scroll on every new message and pushing the (now-sticky)
+          LivePanel out of view. Composer still anchors to bottom via
+          flex column — no floating. */}
+      <div className="chat-messages" style={{flex:1,overflowY:"auto",scrollbarGutter:"stable",padding:"0",background:"transparent",position:"relative" as const,zIndex:1,display:"flex",flexDirection:"column" as const,paddingTop:8}}>
         
         {/* ── Urgent Alert Banner — aggressive PriorityStack style ── */}
         {accountAlerts.length > 0 && (
