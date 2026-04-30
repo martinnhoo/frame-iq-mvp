@@ -220,3 +220,73 @@ If the commit mixes frontend + backend, separate them in the summary so Martinho
 
 ## About the User
 **Martinho** (martinhovff@gmail.com) — Founder. Portuguese speaker. Thinks visually. Strong design opinions. When he says "faz do zero" = rebuild from scratch. When he shares screenshots = analyze carefully, that's what needs to change. He wants premium, cinematic quality — never generic templates.
+
+---
+
+## ⛔ DEPLOY & INFRASTRUCTURE — HARD RULES
+
+The founder has been burned multiple times by Claude blaming
+infrastructure when the real cause was code. These rules are
+non-negotiable. Read them before saying anything about deploys or
+edge functions.
+
+### Rule 1: Lovable auto-deploys EVERY push to `main`
+Lovable rebuilds and ships almost instantly on every push. **It only
+fails when there is an actual error in the code** (tsc/build/lint
+failure). If the user reports something is "not changing" or "still
+broken" after a push:
+
+- ❌ DO NOT say "it's deploy lag, wait a few minutes"
+- ❌ DO NOT say "Lovable hasn't picked it up yet"
+- ❌ DO NOT suggest hard-refresh as the first answer
+- ✅ ASSUME the bug is in your code
+- ✅ Investigate the running app via Chrome MCP (DOM, computed
+  styles, scrollTop chain, console errors, network tab) before
+  pointing at infra
+- ✅ If you genuinely need to verify deploy state, fetch the live
+  JS bundle and grep for your specific changes — that's proof.
+  Anything short of that is guessing.
+
+### Rule 2: Edge functions auto-deploy when modified
+Existing Supabase edge functions ship automatically when their files
+change in a push to `main`. **Manual `supabase functions deploy`
+is only required the FIRST time a NEW function is created.**
+
+- ❌ DO NOT tell the user to run `supabase functions deploy <name>`
+  for an existing function unless you have positive evidence the
+  auto-deploy failed
+- ✅ Modifying an existing function ships with the next git push
+
+### Rule 3: When the user says "it's your code", believe them
+The founder has live access to the running app. When he reports a
+visible regression after a push, treat it as a real code bug until
+proven otherwise. Asking him to "clear cache" or "wait longer" as
+the first response erodes trust fast.
+
+### Rule 4: Diagnose before defending
+Fast path when something looks broken:
+
+1. Connect via chrome MCP to the live site
+2. Inspect the actual rendered DOM (`getBoundingClientRect`,
+   computed styles, scrollTop chain, console errors, network tab)
+3. Compare what you wrote vs what is running
+4. Identify the root cause IN CODE
+5. Fix and ship
+
+### Real example (2026-04-30): the LivePanel bug
+After a chat layout migration, the founder reported the LivePanel
+disappeared. Claude blamed Lovable deploy lag for an hour. The user
+forced Claude into chrome MCP, where one query revealed:
+
+- LivePanel WAS in the DOM, with correct height (58px)
+- It was at `y: -12` (above the viewport)
+- The page wrap had `scrollTop: 64` — `scrollIntoView()` from a new
+  message had bubbled up past `messages` (overflow:auto) into the
+  page wrap (which had `overflow: hidden`, still programmatically
+  scrollable)
+
+Fix was a one-line change: `overflow: hidden` → `overflow: clip`
+on the page wrap. Lost an hour of trust because Claude defended
+infra instead of inspecting.
+
+**This rule exists because of that hour.**
