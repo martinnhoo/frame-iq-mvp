@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
 import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
@@ -7,6 +7,8 @@ import { Plus, Trash2, Globe, Upload, Loader2, X, CheckCircle2, Link2, AlertCirc
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { DESIGN_TOKENS as DT } from "@/hooks/useDesignTokens";
+import { getAdAccountLimit } from "@/lib/planLimits";
+import UpgradeWall from "@/components/UpgradeWall";
 
 // ── Design tokens — "Alive Interface" premium system ─────────────────────────
 const F = DT.font;
@@ -1534,10 +1536,14 @@ function AccountForm({ account, userId, t, onSave, onCancel }: {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AccountsPage() {
-  const { user, selectedPersona, setSelectedPersona } = useOutletContext<DashboardContext>();
+  const { user, profile, selectedPersona, setSelectedPersona } = useOutletContext<DashboardContext>();
   const { language } = useLanguage();
   const t = T[(language as Lang)] || T.pt;
   const [searchParams] = useSearchParams();
+  // Plan-based gate for creating new businesses (personas).
+  // Free=1, Maker=1, Pro=3, Studio=∞ (-1). When the user is at the
+  // limit, "+ Novo negócio" opens an UpgradeWall instead of the form.
+  const [showUpgradeWall, setShowUpgradeWall] = React.useState(false);
 
   /** Persona row shape used by the accounts list (subset of the personas
    *  table). Mirrors the columns this page reads. */
@@ -1666,21 +1672,61 @@ export default function AccountsPage() {
       `}</style>
 
       {/* ── Header ── */}
-      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:28, gap:16, flexWrap:"wrap" }}>
-        <div>
-          <h1 style={{ margin:0, fontSize:26, fontWeight:800, color:T1, letterSpacing:"-0.04em", lineHeight:1.2 }}>{t.title}</h1>
-          <p style={{ margin:"6px 0 0", fontSize:14, color:T3, lineHeight:1.5 }}>{t.sub}</p>
-        </div>
-        {!creating && (
-          <button className="acc-btn" onClick={() => { setCreating(true); setEditingId(null); setOpenId(null); }}
-            style={{ ...BTN_PRIMARY, display:"flex", alignItems:"center", gap:8, padding:"11px 22px",
-              borderRadius:10, fontSize:13, whiteSpace:"nowrap" }}
-            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.boxShadow="0 8px 32px rgba(37,99,235,0.50), 0 0 0 1px rgba(37,99,235,0.30)";(e.currentTarget as HTMLElement).style.transform="translateY(-2px)"}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.boxShadow=BTN_PRIMARY.boxShadow;(e.currentTarget as HTMLElement).style.transform="translateY(0)"}}>
-            <Plus size={15} strokeWidth={2.5}/>{t.new}
-          </button>
-        )}
-      </div>
+      {/* Plan-based gate: when the user is at their persona limit, the
+          "+ Novo negócio" button opens an UpgradeWall instead of the
+          create form. Limit per plan (Free=1, Maker=1, Pro=3, Studio=∞)
+          comes from getAdAccountLimit(profile.plan). */}
+      {(() => {
+        const accountLimit = getAdAccountLimit(profile?.plan);
+        const atLimit = accountLimit !== -1 && accounts.length >= accountLimit;
+        const handleCreateClick = () => {
+          if (atLimit) {
+            setShowUpgradeWall(true);
+          } else {
+            setCreating(true); setEditingId(null); setOpenId(null);
+          }
+        };
+        return (
+          <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:28, gap:16, flexWrap:"wrap" }}>
+            <div>
+              <h1 style={{ margin:0, fontSize:26, fontWeight:800, color:T1, letterSpacing:"-0.04em", lineHeight:1.2 }}>{t.title}</h1>
+              <p style={{ margin:"6px 0 0", fontSize:14, color:T3, lineHeight:1.5 }}>{t.sub}</p>
+              {/* Counter pill — "1/1", "2/3", "Ilimitado" — gives the
+                  user a clear sense of where they stand vs the plan. */}
+              {accounts.length > 0 && (
+                <p style={{ margin:"8px 0 0", fontSize:11.5, fontWeight:600, color:T3, letterSpacing:"0.02em" }}>
+                  {accountLimit === -1
+                    ? `${accounts.length} negócio${accounts.length === 1 ? '' : 's'} · plano ${profile?.plan ? profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1) : 'Studio'} ilimitado`
+                    : `${accounts.length}/${accountLimit} negócio${accountLimit === 1 ? '' : 's'} · plano ${profile?.plan ? profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1) : 'Free'}`}
+                </p>
+              )}
+            </div>
+            {!creating && (
+              <button className="acc-btn" onClick={handleCreateClick}
+                style={{
+                  ...BTN_PRIMARY,
+                  display:"flex", alignItems:"center", gap:8, padding:"11px 22px",
+                  borderRadius:10, fontSize:13, whiteSpace:"nowrap",
+                  // At-limit visual: still cyan-blue but slightly muted +
+                  // changed copy hints at upgrade. Click still works (opens
+                  // wall instead of form), so we don't disable it.
+                  opacity: atLimit ? 0.85 : 1,
+                }}
+                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.boxShadow="0 8px 32px rgba(37,99,235,0.50), 0 0 0 1px rgba(37,99,235,0.30)";(e.currentTarget as HTMLElement).style.transform="translateY(-2px)"}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.boxShadow=BTN_PRIMARY.boxShadow;(e.currentTarget as HTMLElement).style.transform="translateY(0)"}}>
+                <Plus size={15} strokeWidth={2.5}/>
+                {atLimit ? "Faça upgrade" : t.new}
+              </button>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Upgrade wall modal — opens when user clicks "+ Novo negócio"
+          but is already at their plan's persona limit. */}
+      {showUpgradeWall && (
+        <UpgradeWall trigger="account" onClose={() => setShowUpgradeWall(false)} />
+      )}
 
       {/* ── Create new form ── */}
       {creating && (
