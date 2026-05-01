@@ -448,21 +448,25 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
       <div
         data-decision-type={decision.type}
         style={{
-          // Width discipline. Without these, AI-generated long sentences
-          // (especially with URLs / numbers / arrows like "spend r$137
-          // → projeção +300% = r$548/dia") were pushing the card wider
-          // than its parent, leaking past the chat container's right
-          // edge. min-width:0 is the critical bit — flex items default
-          // to min-width:auto which refuses to shrink below content
-          // size, defeating any max-width on a parent. Combined with
-          // overflowWrap + wordBreak this guarantees the card stays
-          // within its column at any text length.
+          // Width discipline only — NO global wordBreak/break-word here.
+          // The previous attempt cascaded `wordBreak: break-word` down
+          // to short labels ("INSIGHT", "78") and broke them into
+          // single-letter columns. Disastrous.
+          //
+          // What actually fixes overflow:
+          //   • width:100% + maxWidth:100% — claim only your column.
+          //   • minWidth:0 — overrides flex default of min-width:auto
+          //     so the card can shrink below content. This is the
+          //     critical line; the others don't help without it.
+          //   • boxSizing:border-box — padding inside the budget.
+          //
+          // Long text wrapping (overflowWrap) is applied at the
+          // SPECIFIC text containers below (reasonLines, contextLine),
+          // never globally on the root.
           width: '100%',
           maxWidth: '100%',
           minWidth: 0,
           boxSizing: 'border-box' as const,
-          overflowWrap: 'break-word' as const,
-          wordBreak: 'break-word' as const,
           background: hovered ? '#0D1117' : 'transparent',
           borderLeft: `2px solid ${cfg.accentColor}`,
           padding: compact ? '12px 14px' : isHero ? '16px 18px' : '14px 16px',
@@ -609,16 +613,13 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
 
         {/* Context breadcrumb — let it wrap. Previously had
             whiteSpace:nowrap + textOverflow:ellipsis which truncated
-            substantive content (spend projections, math) with "...".
-            For a card pretending to "show its math", silently hiding
-            half the math contradicted the affordance. Wraps now;
-            line-height kept tight so two lines stay readable. */}
+            substantive content with "...". Now wraps cleanly. Only
+            overflowWrap (not wordBreak) so PT words stay intact. */}
         {contextLine && (
           <div style={{
             fontSize: 10.5, color: L3,
             lineHeight: 1.45,
             marginBottom: 8,
-            wordBreak: 'break-word' as const,
             overflowWrap: 'break-word' as const,
           }}>
             {contextLine}
@@ -895,10 +896,18 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         )}
 
-        {/* First reason line — always visible as summary */}
+        {/* First reason line — always visible as summary.
+            overflowWrap:break-word lets long unbreakable runs (URLs,
+            big numbers, math arrows) wrap; wordBreak intentionally
+            unset so PT words don't break mid-syllable on common
+            paragraph text. min-width:0 isn't needed here because the
+            parent already has it — but keeping the textual element's
+            wrap discipline local is the safe pattern. */}
         {reasonLines.length > 0 && (
           <div style={{
-            fontSize: 12, color: L2, lineHeight: 1.55, marginBottom: hasDeepContent && !expanded ? 4 : 8,
+            fontSize: 12, color: L2, lineHeight: 1.55,
+            marginBottom: hasDeepContent && !expanded ? 4 : 8,
+            overflowWrap: 'break-word' as const,
           }}>
             {reasonLines[0]}
           </div>

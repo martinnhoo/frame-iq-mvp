@@ -6967,8 +6967,9 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         .user-msg-row:hover .user-msg-actions{opacity:1!important;pointer-events:auto!important;}
         .user-msg-row>div{box-shadow:none!important;}
         .msg-wrap-inner:hover .msg-actions-row{opacity:1!important;}
-        .msg-body{font-size:14px;line-height:1.75;color:rgba(235,240,248,0.90);}
+        .msg-body{font-size:14px;line-height:1.75;color:rgba(235,240,248,0.90);min-width:0;max-width:100%;overflow-wrap:break-word;}
         .msg-body p{margin:0 0 10px;}
+        .msg-body>*{min-width:0;max-width:100%;}
         .msg-body p:last-child{margin-bottom:0;}
         .msg-body strong{font-weight:600;color:rgba(255,255,255,0.95);letter-spacing:-0.01em;}
         .msg-body code{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:2px 6px;font-family:'DM Mono',monospace;font-size:12.5px;}
