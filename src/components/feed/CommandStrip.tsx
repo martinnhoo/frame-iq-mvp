@@ -281,14 +281,16 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
       className="cmd-strip"
     >
       <div
+        className="cmd-strip-row"
         style={{
           display: 'flex',
           alignItems: 'center',
           // Tighter rhythm — was clamp(12, 2.4vw, 28). Strip now reads
           // as a single dense ops bar instead of a row with breathing
-          // room. Still wraps cleanly on small screens via flexWrap.
+          // room. On mobile (≤640px) the CSS rule below switches this
+          // to flex-direction: column so the indicator stacks above
+          // the cells row instead of wrapping mid-line.
           gap: 'clamp(10px, 1.8vw, 20px)',
-          flexWrap: 'wrap',
           maxWidth: 1200,
           margin: '0 auto',
         }}
@@ -391,35 +393,50 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
           )}
         </div>
 
-        {/* Divider between PILL and the metric cells — gives the pill
-            (its own visual unit) a clean handoff into the metrics row
-            instead of letting them crowd. */}
+        {/* Divider between INDICATOR and the metric cells — gives the
+            indicator (its own visual unit) a clean handoff into the
+            metrics row instead of letting them crowd. Hidden on mobile
+            via .cmd-strip-divider in the <style> block since on phones
+            the indicator stacks above the cells in a separate row. */}
         <Divider />
 
-        {/* CELL 2 — FRESHNESS */}
-        <Cell label="Última análise" value={freshness} valueColor="#F0F6FC" />
+        {/* Metric cells subgroup — on desktop these flow inline with
+            their dividers; on mobile (≤640px) the .cmd-strip-cells
+            rule turns this into a 3-column grid so the cells line up
+            cleanly under the stacked indicator. */}
+        <div
+          className="cmd-strip-cells"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'clamp(10px, 1.8vw, 20px)',
+          }}
+        >
+          {/* CELL 2 — FRESHNESS */}
+          <Cell label="Última análise" value={freshness} valueColor="#F0F6FC" />
 
-        <Divider />
+          <Divider />
 
-        {/* CELL 3 — MONEY SAVED */}
-        <Cell
-          label="Economizado · 30d"
-          value={moneyLabel}
-          valueColor={stats && stats.totalSavedBrl > 0 ? '#34D399' : 'rgba(240,246,252,0.55)'}
-        />
+          {/* CELL 3 — MONEY SAVED */}
+          <Cell
+            label="Economizado · 30d"
+            value={moneyLabel}
+            valueColor={stats && stats.totalSavedBrl > 0 ? '#34D399' : 'rgba(240,246,252,0.55)'}
+          />
 
-        <Divider />
+          <Divider />
 
-        {/* CELL 4 — ACCURACY */}
-        <Cell
-          label="Decisões certas"
-          value={accuracyLabel}
-          valueColor={
-            stats && stats.wins + stats.losses > 0
-              ? (stats.wins / (stats.wins + stats.losses) >= 0.7 ? '#34D399' : '#F0F6FC')
-              : 'rgba(240,246,252,0.55)'
-          }
-        />
+          {/* CELL 4 — ACCURACY */}
+          <Cell
+            label="Decisões certas"
+            value={accuracyLabel}
+            valueColor={
+              stats && stats.wins + stats.losses > 0
+                ? (stats.wins / (stats.wins + stats.losses) >= 0.7 ? '#34D399' : '#F0F6FC')
+                : 'rgba(240,246,252,0.55)'
+            }
+          />
+        </div>
 
         {/* Tail — only show when something genuinely positive happened
             in flight (≥1 prelim improving). The generic "N medindo"
@@ -457,10 +474,26 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
         @media (prefers-reduced-motion: reduce) {
           .cmd-sonar-calm, .cmd-sonar-alert { animation: none; opacity: 0.25; }
         }
-        @media (max-width: 720px) {
-          .cmd-strip > div {
+        /* Mobile (≤640): the strip switches from horizontal row to a
+           two-row layout. Indicator stays on top, the 3 metric cells
+           drop to a row below as a 3-column grid. The dividers between
+           cells are hidden because the grid columns provide their own
+           rhythm via the gap. Without this rule, on a 375px iPhone the
+           cells wrapped chaotically with dividers ending up on wrong
+           lines, looking broken. */
+        @media (max-width: 640px) {
+          .cmd-strip-row {
+            flex-direction: column !important;
+            align-items: stretch !important;
             gap: 10px !important;
           }
+          .cmd-strip-cells {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+            width: 100%;
+          }
+          .cmd-strip-divider { display: none !important; }
         }
       `}</style>
     </div>
@@ -510,6 +543,7 @@ function Divider() {
   return (
     <span
       aria-hidden
+      className="cmd-strip-divider"
       style={{
         width: 1,
         height: 20,

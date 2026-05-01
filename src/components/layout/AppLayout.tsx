@@ -661,26 +661,40 @@ export function AppLayout() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-main)' }}>
-      {/* ── Mobile top bar ── */}
+      {/* ── Mobile top bar ──
+            iOS notch / Dynamic Island handling: the bar sits at top:0
+            but pads its content down by env(safe-area-inset-top) so
+            the menu button + logo never collide with the notch. The
+            bar's total height grows accordingly. The main content
+            below uses the same calc to reserve space. */}
       {isMobile && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-          height: 52, background: 'var(--bg-main)',
+          height: 'calc(52px + env(safe-area-inset-top, 0px))',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+          background: 'var(--bg-main)',
           borderBottom: '1px solid rgba(148,163,184,0.06)',
-          display: 'flex', alignItems: 'center', padding: '0 12px',
+          display: 'flex', alignItems: 'stretch',
           fontFamily: F,
         }}>
-          <button onClick={() => setMobileOpen(true)}
-            style={{
-              background: 'none', border: 'none', padding: 8, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-            <Menu size={20} color="#94A3B8" />
-          </button>
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'baseline' }}>
-            <Logo size="lg" />
+          <div style={{
+            display: 'flex', alignItems: 'center', flex: 1, padding: '0 12px',
+          }}>
+            <button onClick={() => setMobileOpen(true)}
+              style={{
+                background: 'none', border: 'none', padding: 8, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                minWidth: 44, minHeight: 44,
+              }}>
+              <Menu size={20} color="#94A3B8" />
+            </button>
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'baseline' }}>
+              <Logo size="lg" />
+            </div>
+            <div style={{ width: 44 }} />
           </div>
-          <div style={{ width: 36 }} />
         </div>
       )}
 
@@ -696,7 +710,12 @@ export function AppLayout() {
         />
       )}
 
-      {/* ── Sidebar ── */}
+      {/* ── Sidebar ──
+            On mobile the drawer is fixed from edge to edge of the
+            viewport, so it must reserve space for the notch (top) and
+            the home indicator (bottom). Padding instead of margin so
+            the side bg still extends behind the unsafe regions —
+            looks like one continuous panel rather than a clipped one. */}
       <aside style={{
         width: 220,
         height: '100%',
@@ -706,6 +725,9 @@ export function AppLayout() {
         fontFamily: F, overflow: 'hidden',
         ...(isMobile ? {
           position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 99,
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
           transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
           boxShadow: mobileOpen ? '12px 0 40px rgba(0,0,0,0.6)' : 'none',
@@ -714,11 +736,21 @@ export function AppLayout() {
         {sidebarContent}
       </aside>
 
-      {/* Main content */}
+      {/* Main content
+            Mobile: reserve room for the topbar (52) + the iOS notch.
+            We DON'T pad bottom here — pages render their own bottom
+            sticky elements (chat composer, decision cards) and each
+            handles its own home-indicator clearance via the chat-input
+            CSS in index.css. Padding bottom here would push everything
+            up and create a dead band on phones with no bottom inset. */}
       <main style={{
         flex: 1, overflow: 'auto', background: 'var(--bg-main)',
         display: 'flex', flexDirection: 'column', minWidth: 0,
-        ...(isMobile ? { paddingTop: 52 } : {}),
+        ...(isMobile ? {
+          paddingTop: 'calc(52px + env(safe-area-inset-top, 0px))',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+        } : {}),
       }}>
         {/* ── Desktop topbar — breadcrumb + spacer + bell + avatar menu.
               Hidden on mobile (the mobile top bar above is its replacement).

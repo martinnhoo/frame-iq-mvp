@@ -2,7 +2,13 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover is required for env(safe-area-inset-*) to
+         return non-zero values on iOS notch / Dynamic Island devices.
+         Without it, the page renders inside the safe rect and the
+         insets are all 0 — which means our notch/home-indicator
+         padding has nothing to subtract. With it, the page renders
+         edge-to-edge and we explicitly pad around the unsafe areas. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=3" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3" />
