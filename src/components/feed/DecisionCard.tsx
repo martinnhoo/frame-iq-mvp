@@ -488,38 +488,83 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
           }}>
-            {/* Pipeline confidence % — muted palette. The bright
-                amber/orange (#FBBF24, #F97316) jumped out as classic
-                "tutorial app" yellow next to the rest of the card.
-                Replaced with the same warm-tan / cool-cyan / neutral
-                set used by the CONFIANÇA badge below so the two
-                indicators read as one consistent design language. */}
+            {/* Pipeline confidence % — muted palette + sonar pulse.
+                The bright amber/orange (#FBBF24, #F97316) jumped out
+                as classic "tutorial app" yellow next to the rest of
+                the card. Replaced with the same warm-tan / cool-cyan /
+                neutral set used by the CONFIANÇA badge below so the
+                two indicators read as one consistent design language.
+                The dot also gets a sonar pulse (functional, not
+                decorative): communicates "the system is measuring this
+                signal right now, continuously" — kills the contradiction
+                of static cards that claim live measurement. */}
             {hasPipeline && pipelineConfidence != null ? (
               <div style={{
                 fontSize: 10, color: L3,
-                display: 'flex', alignItems: 'center', gap: 4,
+                display: 'flex', alignItems: 'center', gap: 5,
               }}>
                 <span style={{
-                  width: 5, height: 5, borderRadius: '50%',
-                  background: pipelineConfidence >= 0.70 ? '#7BC4D8'
-                    : pipelineConfidence >= 0.50 ? '#D9B26B'
-                    : pipelineConfidence >= 0.30 ? '#C9805A'
-                    : '#94A3B8',
-                  boxShadow: pipelineConfidence >= 0.70 ? '0 0 4px rgba(123,196,216,0.35)' : 'none',
-                }} />
+                  position: 'relative',
+                  width: 5, height: 5,
+                  flexShrink: 0,
+                  display: 'inline-block',
+                }}>
+                  <span
+                    aria-hidden
+                    className="dc-conf-sonar"
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: '50%',
+                      background: pipelineConfidence >= 0.70 ? '#7BC4D8'
+                        : pipelineConfidence >= 0.50 ? '#D9B26B'
+                        : pipelineConfidence >= 0.30 ? '#C9805A'
+                        : '#94A3B8',
+                    }}
+                  />
+                  <span
+                    aria-hidden
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: '50%',
+                      background: pipelineConfidence >= 0.70 ? '#7BC4D8'
+                        : pipelineConfidence >= 0.50 ? '#D9B26B'
+                        : pipelineConfidence >= 0.30 ? '#C9805A'
+                        : '#94A3B8',
+                      boxShadow: pipelineConfidence >= 0.70 ? '0 0 4px rgba(123,196,216,0.40)' : 'none',
+                    }}
+                  />
+                </span>
                 <span style={{ fontWeight: 600 }}>{Math.round(pipelineConfidence * 100)}%</span>
               </div>
             ) : (
               <div style={{
                 fontSize: 10, color: L3,
-                display: 'flex', alignItems: 'center', gap: 4,
+                display: 'flex', alignItems: 'center', gap: 5,
               }}>
                 <span style={{
-                  width: 5, height: 5, borderRadius: '50%',
-                  background: confidence === 'high' ? '#7BC4D8'
-                    : confidence === 'medium' ? '#D9B26B'
-                    : '#94A3B8',
-                }} />
+                  position: 'relative',
+                  width: 5, height: 5,
+                  flexShrink: 0,
+                  display: 'inline-block',
+                }}>
+                  <span
+                    aria-hidden
+                    className="dc-conf-sonar"
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: '50%',
+                      background: confidence === 'high' ? '#7BC4D8'
+                        : confidence === 'medium' ? '#D9B26B'
+                        : '#94A3B8',
+                    }}
+                  />
+                  <span
+                    aria-hidden
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: '50%',
+                      background: confidence === 'high' ? '#7BC4D8'
+                        : confidence === 'medium' ? '#D9B26B'
+                        : '#94A3B8',
+                    }}
+                  />
+                </span>
                 {basisText.toLowerCase()}
               </div>
             )}
@@ -601,10 +646,14 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
             The dot+percent in the top row was too subtle for users to
             anchor a clicking decision on. This is a verbal commitment:
             the system tells you how sure it is, in plain words, before
-            you act. Derived from impact_confidence (high/medium/low). */}
+            you act. Derived from impact_confidence (high/medium/low).
+            Dot also pulses (sonar) for high/medium — same signal as the
+            top-row %: "this confidence reading is live, the system is
+            re-measuring continuously". Low confidence: still dot — no
+            point pulsing what we're not sure about. */}
         {decision.impact_confidence && (
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
             marginBottom: 6,
             fontSize: 9.5, fontWeight: 700,
             letterSpacing: '0.10em',
@@ -613,11 +662,31 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
               : 'rgba(240,246,252,0.50)',
           }}>
             <span style={{
-              width: 5, height: 5, borderRadius: '50%',
-              background: confidence === 'high' ? '#7BC4D8'
-                : confidence === 'medium' ? '#D9B26B'
-                : 'rgba(240,246,252,0.42)',
-            }} />
+              position: 'relative',
+              width: 5, height: 5,
+              flexShrink: 0,
+              display: 'inline-block',
+            }}>
+              {confidence !== 'low' && (
+                <span
+                  aria-hidden
+                  className="dc-conf-sonar"
+                  style={{
+                    position: 'absolute', inset: 0, borderRadius: '50%',
+                    background: confidence === 'high' ? '#7BC4D8' : '#D9B26B',
+                  }}
+                />
+              )}
+              <span
+                aria-hidden
+                style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%',
+                  background: confidence === 'high' ? '#7BC4D8'
+                    : confidence === 'medium' ? '#D9B26B'
+                    : 'rgba(240,246,252,0.42)',
+                }}
+              />
+            </span>
             CONFIANÇA: {confidence === 'high' ? 'ALTA' : confidence === 'medium' ? 'MÉDIA' : 'BAIXA'}
           </div>
         )}
@@ -1183,6 +1252,18 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
       <style>{`
         @keyframes dc-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
         @keyframes dc-fadeIn{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}
+        /* Sonar pulse on confidence dots — communicates "this signal
+           is being re-measured continuously" instead of letting a
+           still dot contradict the card's own claim of live tracking. */
+        @keyframes dc-conf-sonar {
+          0%   { transform: scale(1);   opacity: 0.55; }
+          70%  { transform: scale(2.6); opacity: 0.04; }
+          100% { transform: scale(2.6); opacity: 0; }
+        }
+        .dc-conf-sonar { animation: dc-conf-sonar 2.8s ease-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .dc-conf-sonar { animation: none; opacity: 0.25; }
+        }
       `}</style>
     </>
   );

@@ -2246,12 +2246,15 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
               opacity: 0,
             }}
           >
-            {/* Glow — radial behind the hero text. Functional (compresses
-                attention to the headline area), not decorative. Tint
-                shifts with state via accent so the eye reads urgency or
-                calm pre-cognitively. */}
+            {/* Glow — radial behind the hero text. Functional: compresses
+                attention to the headline AND breathes (3.6s cycle) to
+                signal "system is alive and processing", killing the
+                contradiction of copy that promises liveness on top of
+                a still frame. Tint shifts with state via accent so the
+                eye reads urgency or calm pre-cognitively. */}
             <div
               aria-hidden
+              className="pb-hero-glow"
               style={{
                 position: "absolute",
                 top: -60, left: "50%",
@@ -2307,7 +2310,11 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
 
             {/* Process line — only shown for actionable hero (state A).
                 Honest about the system's measurement cadence; no fake
-                "4 de 4 validated" until learned_patterns is wired in. */}
+                "4 de 4 validated" until learned_patterns is wired in.
+                The dot uses the sonar-pulse pattern (same vocabulary
+                as the MONITORANDO indicator on the strip) to communicate
+                "the measurement is happening right now, continuously"
+                — turning a passive copy claim into a visible signal. */}
             {processLine && (
               <p
                 style={{
@@ -2320,18 +2327,41 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
                   margin: "10px 0 0",
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: 9,
                 }}
               >
                 <span
                   aria-hidden
                   style={{
-                    width: 5, height: 5, borderRadius: "50%",
-                    background: accent,
-                    boxShadow: `0 0 5px ${accent}`,
+                    position: "relative",
+                    width: 6, height: 6,
                     flexShrink: 0,
+                    display: "inline-block",
                   }}
-                />
+                >
+                  {/* Expanding sonar ring */}
+                  <span
+                    aria-hidden
+                    className="pb-process-sonar"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "50%",
+                      background: accent,
+                    }}
+                  />
+                  {/* Solid inner dot */}
+                  <span
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "50%",
+                      background: accent,
+                      boxShadow: `0 0 6px ${accent}aa`,
+                    }}
+                  />
+                </span>
                 {processLine}
               </p>
             )}
@@ -2424,8 +2454,15 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
               )}
             </div>
 
-            {/* Idle pulse on the CTA after 4s — calls back attention
-                without nagging. Pure CSS, respects prefers-reduced-motion. */}
+            {/* Functional motion — pulse, breathing, sonar.
+                Three independent, low-amplitude animations that prove
+                the card is a live signal surface, not a still frame:
+                  • CTA pulse (4s idle) — calls attention to action.
+                  • Hero glow breathing (3.6s) — signals system active.
+                  • Process-line sonar (2.8s) — signals measurement is
+                    happening NOW, in step with the copy that promises
+                    "Sigo medindo cada decisão".
+                All respect prefers-reduced-motion. */}
             <style>{`
               @keyframes hero-cta-pulse {
                 0%, 100% { box-shadow: 0 0 0 0 ${accent}00; }
@@ -2434,8 +2471,23 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
               .hero-cta {
                 animation: hero-cta-pulse 2.4s ease-in-out 4s infinite;
               }
+              @keyframes pb-glow-breathe {
+                0%, 100% { opacity: 0.85; transform: translateX(-50%) scale(1); }
+                50%      { opacity: 1.05; transform: translateX(-50%) scale(1.04); }
+              }
+              .pb-hero-glow {
+                animation: pb-glow-breathe 3.6s ease-in-out infinite;
+              }
+              @keyframes pb-sonar {
+                0%   { transform: scale(1);   opacity: 0.55; }
+                70%  { transform: scale(2.6); opacity: 0.04; }
+                100% { transform: scale(2.6); opacity: 0; }
+              }
+              .pb-process-sonar {
+                animation: pb-sonar 2.8s ease-out infinite;
+              }
               @media (prefers-reduced-motion: reduce) {
-                .hero-cta { animation: none; }
+                .hero-cta, .pb-hero-glow, .pb-process-sonar { animation: none; }
               }
             `}</style>
           </div>
