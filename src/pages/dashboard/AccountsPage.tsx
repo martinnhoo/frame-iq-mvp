@@ -1624,7 +1624,13 @@ export default function AccountsPage() {
     // the identity fields, the rest defaults to empty per ActivePersona's
     // shape. Cast through unknown to skip the strict required-field check.
     setSelectedPersona({ ...acc } as unknown as Parameters<typeof setSelectedPersona>[0]);
-    window.dispatchEvent(new CustomEvent('persona-updated'));
+    // DO NOT dispatch 'persona-updated' here. That event triggers
+    // reloadPersonas in AppLayout, which captures a stale closure of
+    // selectedPersona and would overwrite our just-set value ~1.5s
+    // later (verified live via DOM inspection — same bug we fixed in
+    // the sidebar persona switcher). 'persona-updated' is reserved for
+    // flows where the persona LIST changed (create/delete), not for
+    // selection changes.
     toast.success("IA ativada para " + acc.name);
   };
 
