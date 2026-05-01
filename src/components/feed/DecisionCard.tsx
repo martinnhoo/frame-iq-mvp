@@ -448,6 +448,21 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
       <div
         data-decision-type={decision.type}
         style={{
+          // Width discipline. Without these, AI-generated long sentences
+          // (especially with URLs / numbers / arrows like "spend r$137
+          // → projeção +300% = r$548/dia") were pushing the card wider
+          // than its parent, leaking past the chat container's right
+          // edge. min-width:0 is the critical bit — flex items default
+          // to min-width:auto which refuses to shrink below content
+          // size, defeating any max-width on a parent. Combined with
+          // overflowWrap + wordBreak this guarantees the card stays
+          // within its column at any text length.
+          width: '100%',
+          maxWidth: '100%',
+          minWidth: 0,
+          boxSizing: 'border-box' as const,
+          overflowWrap: 'break-word' as const,
+          wordBreak: 'break-word' as const,
           background: hovered ? '#0D1117' : 'transparent',
           borderLeft: `2px solid ${cfg.accentColor}`,
           padding: compact ? '12px 14px' : isHero ? '16px 18px' : '14px 16px',
