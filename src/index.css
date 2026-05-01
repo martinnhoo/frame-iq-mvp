@@ -1309,14 +1309,15 @@ input, textarea, select {
   box-shadow: 0 0 0 1px rgba(14,165,233,0.2), inset 0 1px 0 rgba(14,165,233,0.1) !important;
 }
 
-/* ── Chat input area — elevated panel ────────────────────────────────────── */
-.chat-input-wrap {
-  background: rgba(8,12,20,0.95) !important;
-  border-top: 1px solid rgba(255,255,255,0.06) !important;
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-}
+/* ── Chat input area ──────────────────────────────────────────────────────
+   Old global panel styling on .chat-input-wrap removed — was an
+   "elevated panel" treatment back when .chat-input-wrap WAS the
+   visible composer card. After the chat-container restructure the
+   visible card moved to .input-box-wrap (with its own border + bg
+   + shadow), and .chat-input-wrap became a transparent positioning
+   helper. Leaving the old rule active produced a double-border
+   "outer rectangle around inner card" effect ("dois retângulos
+   empilhados" per founder feedback). Removed entirely. */
 
 /* ── Buttons — elevação e profundidade ───────────────────────────────────── */
 button[style*="linear-gradient"] {
