@@ -46,10 +46,13 @@ Deno.serve(async (req) => {
     switch (event_type) {
 
       case 'hooks_generated': {
-        const { hooks, product, niche, market, platform, tone, context: ctx } = data;
+        // persona_id added 20260501 — scopes generated hooks to active persona
+        // so the AI chat read path doesn't leak across personas.
+        const { hooks, product, niche, market, platform, tone, context: ctx, persona_id: hooksPersonaId } = data;
         if (!hooks?.length) break;
         const rows = hooks.slice(0, 10).map((h: any) => ({
           user_id,
+          persona_id: hooksPersonaId || null,
           hook_type: h.hook_type || 'generated',
           hook_score: h.predicted_score || null,
           platform: platform || 'Meta Feed',

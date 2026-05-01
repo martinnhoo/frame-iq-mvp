@@ -4128,10 +4128,12 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
             }else if(fn==="generate-hooks"&&data?.hooks?.length){
               nb[bi]={type:"hooks",title:lang==="pt"?"Hooks gerados":lang==="es"?"Hooks generados":"Generated hooks",content:"",items:(data.hooks as Array<string | { hook?: string; text?: string }>).map((h)=>typeof h==="string"?h:h.hook||h.text||JSON.stringify(h))};
               // Capture learning — fire and forget
+              // persona_id added 20260501 — scopes captured hooks to the
+              // active persona so chat read path stays cleanly partitioned.
               if(user?.id){
                 supabase.functions.invoke("capture-learning",{body:{
                   user_id:user.id,event_type:"hooks_generated",
-                  data:{ hooks:data.hooks, product:params.product, niche:params.niche, market:params.market, platform:params.platform, tone:params.tone, context:params.context }
+                  data:{ hooks:data.hooks, product:params.product, niche:params.niche, market:params.market, platform:params.platform, tone:params.tone, context:params.context, persona_id:selectedPersona?.id||null }
                 }}).catch(()=>{});
               }
             }else if(fn==="generate-script"&&(data?.scripts?.length||data?.script||data?.content)){

@@ -280,6 +280,10 @@ const NewAnalysis = () => {
       if (videoUrl) formData.append("video_url", videoUrl);
       formData.append("market", market);
       formData.append("user_id", user.id);
+      // persona_id ensures the resulting creative_memory row is scoped
+      // to this persona (added 2026-05-01) instead of leaking into the
+      // user's other personas' AI context.
+      if (selectedPersona?.id) formData.append("persona_id", selectedPersona.id);
       formData.append("analysis_id", record.id);
       formData.append("title", title || file?.name || "Untitled");
       // Inject Meta performance data if available

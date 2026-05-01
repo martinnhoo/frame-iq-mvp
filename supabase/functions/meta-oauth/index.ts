@@ -209,6 +209,11 @@ Deno.serve(async (req) => {
         if (winners.length) {
           const memRows = winners.slice(0, 5).map((a: any) => ({
             user_id: storedUserId,
+            // persona_id is now a top-level column (added 2026-05-01) —
+            // ensures these onboarding-seed winners are scoped to the
+            // persona that just connected, instead of leaking across
+            // all of the user's personas.
+            persona_id: storedPersonaId,
             hook_type: "meta_historical_winner",
             hook_score: Math.min(10, parseFloat(a.ctr) * 200),
             platform: "Meta Feed",

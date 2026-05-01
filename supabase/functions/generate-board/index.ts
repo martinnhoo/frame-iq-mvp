@@ -303,9 +303,12 @@ IMPORTANT: If talent is involved, every scene's visual_description MUST referenc
     if (insertError) throw insertError;
 
     // Capture prompt to creative_memory for AI learning
+    // persona_id added 20260501 — scopes board prompts to active persona so the
+    // AI chat read path doesn't surface them in unrelated personas.
     const hookPrediction = (board.hook as Record<string, unknown>)?.type as string || null;
     supabaseClient.from('creative_memory').insert({
       user_id,
+      persona_id: bodyPersonaId || null,
       analysis_id: null,
       hook_type: hookPrediction,
       creative_model: null,

@@ -1048,12 +1048,28 @@ Deno.serve(async (req) => {
       // 2. AI profile
       (supabase as any).from("user_ai_profile").select("*").eq("user_id", user_id).maybeSingle(),
       // 3. Creative memory (limit 10)
-      (supabase as any)
-        .from("creative_memory")
-        .select("hook_type, hook_score, platform, notes, created_at")
-        .eq("user_id", user_id)
-        .order("created_at", { ascending: false })
-        .limit(10),
+      // STRICT persona scope when persona_id is set — pulls this
+      // persona's creative memory + legacy rows with null persona_id
+      // (treated as "global" for backward compat with pre-2026-05-01
+      // data). When no persona_id is passed, only legacy/global rows.
+      // Closes the cross-persona leak previously called out in the
+      // line ~1259 comment ("creative_memory doesn't have persona_id
+      // yet — use all").
+      persona_id
+        ? (supabase as any)
+            .from("creative_memory")
+            .select("hook_type, hook_score, platform, notes, created_at, persona_id")
+            .eq("user_id", user_id)
+            .or(`persona_id.eq.${persona_id},persona_id.is.null`)
+            .order("created_at", { ascending: false })
+            .limit(10)
+        : (supabase as any)
+            .from("creative_memory")
+            .select("hook_type, hook_score, platform, notes, created_at, persona_id")
+            .eq("user_id", user_id)
+            .is("persona_id", null)
+            .order("created_at", { ascending: false })
+            .limit(10),
       // 4. Platform connections — STRICT persona scope
       supabase
         .from("platform_connections" as any)
@@ -1254,9 +1270,9 @@ Deno.serve(async (req) => {
 
     // ── 4. Build context ──────────────────────────────────────────────────────
     const analyses = (recentAnalyses || []) as any[];
-    // creative_memory: scope to persona if available
-    const allMemory = (creativeMemory || []) as any[];
-    const memory = allMemory; // creative_memory doesn't have persona_id yet — use all, AI persona context prevents cross-contamination
+    // creative_memory is now strict-scoped by the query above
+    // (persona's rows + legacy null rows). No further filtering needed.
+    const memory = (creativeMemory || []) as any[];
     const connections = (platformConns || []) as any[];
     const imports = (adsImports || []) as any[];
 

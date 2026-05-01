@@ -225,10 +225,12 @@ export default function HookGenerator() {
       setHooks(generatedHooks);
       setMockMode(data.mock_mode);
       // Capture learning — fire and forget
+      // persona_id added 20260501 — scopes captured hooks to active persona so
+      // the AI chat read path keeps creative_memory cleanly partitioned.
       if (user?.id && generatedHooks.length) {
         supabase.functions.invoke("capture-learning", { body: {
           user_id: user.id, event_type: "hooks_generated",
-          data: { hooks: generatedHooks, product, niche, market, platform, tone }
+          data: { hooks: generatedHooks, product, niche, market, platform, tone, persona_id: selectedPersona?.id || null }
         }}).catch(() => {});
       }
       if (data.mock_mode) toast.info("Configure ANTHROPIC_API_KEY para hooks reais");
@@ -255,8 +257,11 @@ export default function HookGenerator() {
       try {
         // creative_memory has columns the supabase generated insert type
         // doesn't formally declare (notes, etc.). Cast through never.
+        // persona_id added 20260501 to scope feedback to active persona —
+        // prevents cross-persona context leak in the AI chat read path.
         await supabase.from("creative_memory").insert({
           user_id: user.id,
+          persona_id: selectedPersona?.id || null,
           hook_type: hook.hook_type,
           platform: platform.toLowerCase().replace(" ", "_"),
           hook_score: vote === "up" ? hook.predicted_score : Math.max(1, hook.predicted_score - 3),

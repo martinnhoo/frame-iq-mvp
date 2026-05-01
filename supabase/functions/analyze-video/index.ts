@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';
     const market = (formData.get('market') as string) || '';
+    const persona_id = (formData.get('persona_id') as string | null) || null;
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
@@ -346,9 +347,10 @@ ${meta_performance_data ? `\nREAL PERFORMANCE DATA FROM META ADS (use this to cr
       throw new Error(`Failed to save analysis: ${saveError.message}`);
     }
 
-    // Save to creative_memory
+    // Save to creative_memory (persona-scoped — see 20260501100000 migration)
     await supabase.from('creative_memory').insert({
       user_id,
+      persona_id,
       analysis_id: analysisId,
       hook_type: analysis.hook_type as string,
       creative_model: analysis.creative_model as string,

@@ -66,6 +66,9 @@ serve(async (req) => {
 
       const body = {
         user_id,
+        // persona_id added 20260501 — scopes stored analysis to active persona
+        // so the AI chat read path keeps creative_memory cleanly partitioned.
+        persona_id: persona_id || analysis_data.persona_id || null,
         analysis_id: analysis_data.analysis_id || null,
         hook_type: analysis_data.hook_type || null,
         hook_score: analysis_data.hook_score || null,
