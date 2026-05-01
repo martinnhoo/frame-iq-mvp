@@ -162,7 +162,15 @@ export function AppLayout() {
   const setSelectedPersona = (p: ActivePersona | null, uid?: string) => {
     setSelectedPersonaState(p);
     try {
-      if (p && uid) storage.setJSON('frameiq_active_persona', { ...p, _uid: uid });
+      // Fall back to the current authenticated user's id when caller
+      // doesn't pass uid explicitly. Without _uid in the persisted
+      // payload, the boot path at line ~292 fails the
+      // `parsed._uid === session.user.id` check on next reload and
+      // resets to personas[0] (always Adbrief, the first-created).
+      // That was the silent bug behind "I switched persona, reloaded,
+      // now I'm back on the original" — it persisted across sessions.
+      const effectiveUid = uid ?? user?.id;
+      if (p && effectiveUid) storage.setJSON('frameiq_active_persona', { ...p, _uid: effectiveUid });
       else if (p) storage.setJSON('frameiq_active_persona', p);
       else storage.remove('frameiq_active_persona');
     } catch {}
