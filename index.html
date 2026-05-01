@@ -10,6 +10,13 @@
     <link rel="manifest" href="/site.webmanifest?v=3" />
     <meta name="theme-color" content="#0a0c10" />
 
+    <!-- Preload AdBrief AI avatar — used in 8+ places across the
+         dashboard (chat bubbles, proactive cards, feed sidebar, goal
+         setup, etc). Browser fetches it during HTML parse, so by the
+         time React mounts the AB icon is already in cache and renders
+         instantly instead of flashing in late. -->
+    <link rel="preload" as="image" href="/ab-avatar.png" fetchpriority="high" />
+
     <title>AdBrief — IA para Meta Ads que diz onde está vazando R$ na sua conta</title>
     <meta name="description" content="Conecte sua conta do Meta Ads e descubra em segundos onde está perdendo dinheiro. AdBrief é a IA que analisa criativos, audience, ROAS e CPA — diagnóstico causal em PT direto, com plano de ação. Teste grátis por 3 dias." />
 
