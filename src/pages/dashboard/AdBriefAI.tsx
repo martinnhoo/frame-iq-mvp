@@ -2725,11 +2725,13 @@ function LivePanel({ user, selectedPersona, connections, lang, onSend }: {
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
         borderBottom: "1px solid rgba(148,163,184,0.06)",
         // Sticky to the FIRST scrollable ancestor (the AppLayout's
-        // <main>, which has overflow-y:auto). Even if scrollIntoView
-        // from a new chat message bubbles up and scrolls <main>, the
-        // LIVE bar stays pinned to the top of the visible chat area.
-        // zIndex 10 keeps it above any decision card / message bubble.
-        position: "sticky" as const, top: 0, zIndex: 10,
+        // <main>, which has overflow-y:auto). The AppLayout's
+        // <header> breadcrumb is ALSO sticky at top:0 of the same
+        // scrolling main — so we offset by 52 (header height) to
+        // sit just below it instead of overlapping. Without this
+        // offset both sticky elements pile on top of each other and
+        // the breadcrumb covers the LIVE bar.
+        position: "sticky" as const, top: 52, zIndex: 10,
         flexShrink: 0,
       }}>
         {/* ── Top accent gradient line ── */}
