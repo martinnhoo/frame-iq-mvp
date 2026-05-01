@@ -488,7 +488,12 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
           }}>
-            {/* Pipeline confidence % — more precise than legacy dot */}
+            {/* Pipeline confidence % — muted palette. The bright
+                amber/orange (#FBBF24, #F97316) jumped out as classic
+                "tutorial app" yellow next to the rest of the card.
+                Replaced with the same warm-tan / cool-cyan / neutral
+                set used by the CONFIANÇA badge below so the two
+                indicators read as one consistent design language. */}
             {hasPipeline && pipelineConfidence != null ? (
               <div style={{
                 fontSize: 10, color: L3,
@@ -496,8 +501,11 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
               }}>
                 <span style={{
                   width: 5, height: 5, borderRadius: '50%',
-                  background: pipelineConfidence >= 0.70 ? '#38BDF8' : pipelineConfidence >= 0.50 ? '#FBBF24' : pipelineConfidence >= 0.30 ? '#F97316' : '#94A3B8',
-                  boxShadow: pipelineConfidence >= 0.70 ? '0 0 4px rgba(56,189,248,0.40)' : 'none',
+                  background: pipelineConfidence >= 0.70 ? '#7BC4D8'
+                    : pipelineConfidence >= 0.50 ? '#D9B26B'
+                    : pipelineConfidence >= 0.30 ? '#C9805A'
+                    : '#94A3B8',
+                  boxShadow: pipelineConfidence >= 0.70 ? '0 0 4px rgba(123,196,216,0.35)' : 'none',
                 }} />
                 <span style={{ fontWeight: 600 }}>{Math.round(pipelineConfidence * 100)}%</span>
               </div>
@@ -508,7 +516,9 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
               }}>
                 <span style={{
                   width: 5, height: 5, borderRadius: '50%',
-                  background: confidence === 'high' ? '#38BDF8' : confidence === 'medium' ? '#FBBF24' : '#94A3B8',
+                  background: confidence === 'high' ? '#7BC4D8'
+                    : confidence === 'medium' ? '#D9B26B'
+                    : '#94A3B8',
                 }} />
                 {basisText.toLowerCase()}
               </div>
@@ -537,12 +547,19 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({ decision, onAction, 
           </div>
         </div>
 
-        {/* Context breadcrumb */}
+        {/* Context breadcrumb — let it wrap. Previously had
+            whiteSpace:nowrap + textOverflow:ellipsis which truncated
+            substantive content (spend projections, math) with "...".
+            For a card pretending to "show its math", silently hiding
+            half the math contradicted the affordance. Wraps now;
+            line-height kept tight so two lines stay readable. */}
         {contextLine && (
           <div style={{
             fontSize: 10.5, color: L3,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            lineHeight: 1.45,
             marginBottom: 8,
+            wordBreak: 'break-word' as const,
+            overflowWrap: 'break-word' as const,
           }}>
             {contextLine}
           </div>

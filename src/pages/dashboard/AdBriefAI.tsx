@@ -2235,9 +2235,12 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
               position: "relative",
               background: "linear-gradient(180deg, #0E1218 0%, #0A0F1C 100%)",
               border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: 16,
-              padding: "clamp(28px, 5vw, 44px) clamp(24px, 4vw, 36px)",
-              boxShadow: "0 12px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
+              borderRadius: 14,
+              // Tighter padding — was clamp(28-44 / 24-36). Card no
+              // longer dominates the chat region; sits as a focused
+              // panel proportional to the messages around it.
+              padding: "clamp(20px, 3vw, 26px) clamp(18px, 2.5vw, 24px)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04)",
               overflow: "hidden",
               animation: mounted ? "pb-cardIn 0.34s cubic-bezier(0.2,0.8,0.2,1) 0.10s both" : "none",
               opacity: 0,
@@ -2260,19 +2263,22 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
               }}
             />
 
-            {/* Hero headline — the single message the eye lands on.
-                clamp lets it scale from mobile (36px) to desktop (52px)
-                without breaking line-height. Tabular-nums kept for any
-                R$ figures that might appear inline. */}
+            {/* Hero headline — single message the eye lands on.
+                Sized to read as "important statement" not "billboard
+                ad" — clamp(20-30px) was too aggressive at full
+                width on chat-container (~620px max), the asset name
+                wrapped to 3 lines and dominated the viewport. Reduced
+                to clamp(20-30) so it stays prominent without consuming
+                the page. */}
             <h2
               style={{
                 position: "relative",
                 fontFamily: F,
-                fontSize: "clamp(28px, 5.4vw, 44px)",
+                fontSize: "clamp(20px, 3.4vw, 30px)",
                 fontWeight: 800,
                 color: "#F0F6FC",
-                letterSpacing: "-0.03em",
-                lineHeight: 1.08,
+                letterSpacing: "-0.025em",
+                lineHeight: 1.18,
                 margin: 0,
                 fontVariantNumeric: "tabular-nums" as const,
               }}
@@ -2280,17 +2286,18 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
               {headline}
             </h2>
 
-            {/* Detail — supporting paragraph, 60% opacity so it whispers
-                under the headline. max-width keeps line length readable. */}
+            {/* Detail — supporting paragraph, 65% opacity. Sized
+                slightly down to keep the hero/detail proportion
+                hierarchy after we reduced the headline size. */}
             <p
               style={{
                 position: "relative",
                 fontFamily: F,
-                fontSize: "clamp(13px, 1.7vw, 15px)",
+                fontSize: "clamp(12.5px, 1.4vw, 14px)",
                 fontWeight: 500,
                 color: "rgba(240,246,252,0.65)",
                 lineHeight: 1.55,
-                margin: "14px 0 0",
+                margin: "10px 0 0",
                 maxWidth: 520,
                 letterSpacing: "-0.005em",
               }}
@@ -2337,10 +2344,10 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
             <div
               style={{
                 position: "relative",
-                marginTop: 24,
+                marginTop: 18,
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
+                gap: 14,
                 flexWrap: "wrap" as const,
               }}
             >
