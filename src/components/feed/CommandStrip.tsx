@@ -293,59 +293,90 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
           margin: '0 auto',
         }}
       >
-        {/* CELL 1 — STATUS PILL.
+        {/* CELL 1 — STATUS INDICATOR.
+            No pill, no colored bg/border. The previous version was a
+            green-on-green pill that the user explicitly rejected as
+            generic-AI / Shadcn aesthetic. Replaced with an ops-tool
+            style indicator: a colored dot with a continuous sonar-pulse
+            ring expanding outward (real "alive" signal, like a hospital
+            monitor or radar sweep) + neutral white uppercase label.
+            Color now lives ONLY in the dot — text reads as ambient
+            information, the dot does the semantic work.
+
             When the account is critical AND a refresh handler is wired,
-            the entire pill becomes a button — clicking the pill itself
-            forces a re-check (bypasses the 3min cache). No icon, no
-            separate target: discoverable via cursor change + subtle
-            scale on hover. Saves one click and avoids the "I clicked
-            the icon and nothing happened" failure mode. */}
+            the whole indicator becomes a button — same affordance
+            (cursor + scale on hover), no icon, discoverable. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start', flexShrink: 0 }}>
           {(() => {
             const isClickable = accountSeverity === 'critical' && !!onRefreshAccountStatus;
-            const PillTag: any = isClickable ? 'button' : 'div';
+            const Tag: any = isClickable ? 'button' : 'div';
+            const isCalm = status.label === 'MONITORANDO';
             return (
-              <PillTag
+              <Tag
                 type={isClickable ? 'button' : undefined}
                 onClick={isClickable ? onRefreshAccountStatus : undefined}
                 title={isClickable ? 'Clique para forçar re-checagem com a Meta' : undefined}
-                className={isClickable ? 'cmd-pill-clickable' : undefined}
+                className={isClickable ? 'cmd-indicator-clickable' : undefined}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 8,
-                  padding: '6px 12px',
-                  borderRadius: 99,
-                  background: status.bg,
-                  border: `1px solid ${status.border}`,
+                  gap: 9,
+                  padding: 0,
+                  background: 'transparent',
+                  border: 'none',
                   cursor: isClickable ? 'pointer' : 'default',
-                  transition: 'transform 0.12s ease, background 0.15s ease',
+                  transition: 'opacity 0.15s ease',
                   font: 'inherit',
                   color: 'inherit',
                 }}
               >
+                {/* Sonar dot — solid inner dot + expanding ring that
+                    pulses outward and fades. The ring is the "alive"
+                    signal: a real-monitoring tool feel rather than a
+                    static styled pill. Calm states (MONITORANDO) get a
+                    slow 3s sweep; alerting states pulse faster. */}
                 <span
                   style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: status.dot,
-                    boxShadow: `0 0 6px ${status.dot}80`,
+                    position: 'relative',
+                    width: 7, height: 7,
+                    flexShrink: 0,
+                    display: 'inline-block',
                   }}
-                  // Always animated. MONITORANDO gets a calm "heartbeat"
-                  // pulse (cmd-pulse-soft) so the status feels alive
-                  // without nagging; critical states get the stronger
-                  // attention pulse (cmd-pulse).
-                  className={status.label === 'MONITORANDO' ? 'cmd-pulse-soft' : 'cmd-pulse'}
-                />
+                >
+                  {/* Expanding ring */}
+                  <span
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: '50%',
+                      background: status.dot,
+                    }}
+                    className={isCalm ? 'cmd-sonar-calm' : 'cmd-sonar-alert'}
+                  />
+                  {/* Solid inner dot */}
+                  <span
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: '50%',
+                      background: status.dot,
+                      boxShadow: `0 0 8px ${status.dot}aa`,
+                    }}
+                  />
+                </span>
                 <span
                   style={{
-                    fontSize: 10.5, fontWeight: 800,
-                    color: status.color,
-                    letterSpacing: '0.10em',
+                    fontSize: 10.5, fontWeight: 700,
+                    color: '#F0F6FC',
+                    letterSpacing: '0.14em',
+                    fontVariantNumeric: 'tabular-nums' as const,
                   }}
                 >
                   {status.label}
                 </span>
-              </PillTag>
+              </Tag>
             );
           })()}
           {accountSeverity === 'critical' && accountCheckedLabel && (
@@ -353,7 +384,7 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
               fontSize: 9, fontWeight: 600,
               color: 'rgba(240,246,252,0.40)',
               letterSpacing: '0.04em',
-              paddingLeft: 4,
+              paddingLeft: 16,
             }}>
               checado {accountCheckedLabel} · clique para atualizar
             </span>
@@ -410,18 +441,21 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
       </div>
 
       <style>{`
-        @keyframes cmd-pulse-anim {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(0.85); }
+        /* Sonar wave — the ring expands outward from the dot and fades.
+           Calm cadence (3s) for MONITORANDO; faster (1.6s) for alerts.
+           Two-stage opacity (1 → 0.4 → 0) keeps the ring visible
+           through most of its travel before fully dissolving, so the
+           eye reads it as a real pulse and not a flicker. */
+        @keyframes cmd-sonar {
+          0%   { transform: scale(1);   opacity: 0.55; }
+          70%  { transform: scale(2.6); opacity: 0.04; }
+          100% { transform: scale(2.6); opacity: 0; }
         }
-        .cmd-pulse { animation: cmd-pulse-anim 1.6s ease-in-out infinite; }
-        @keyframes cmd-pulse-soft-anim {
-          0%, 100% { opacity: 1;   transform: scale(1);    box-shadow: 0 0 6px currentColor; }
-          50%      { opacity: 0.78; transform: scale(0.92); box-shadow: 0 0 10px currentColor; }
-        }
-        .cmd-pulse-soft { animation: cmd-pulse-soft-anim 3s ease-in-out infinite; }
+        .cmd-sonar-calm  { animation: cmd-sonar 3s   ease-out infinite; }
+        .cmd-sonar-alert { animation: cmd-sonar 1.6s ease-out infinite; }
+        .cmd-indicator-clickable:hover { opacity: 0.85; }
         @media (prefers-reduced-motion: reduce) {
-          .cmd-pulse, .cmd-pulse-soft { animation: none; }
+          .cmd-sonar-calm, .cmd-sonar-alert { animation: none; opacity: 0.25; }
         }
         @media (max-width: 720px) {
           .cmd-strip > div {
