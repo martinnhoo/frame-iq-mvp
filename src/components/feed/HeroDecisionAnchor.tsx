@@ -126,6 +126,13 @@ interface HeroDecisionAnchorProps {
    *  rendered immediately below. Set this from the parent based on
    *  whether LiveSystemState will actually render. */
   fuseBottom?: boolean;
+  /** When true, the Hero renders WITHOUT top corner radius and WITHOUT
+   *  top border — designed for visual fusion with whatever sits directly
+   *  above (CommandStrip in the Feed). Without this, the hero's rounded
+   *  top corners + 1px top border create a visible seam between the
+   *  strip and the hero, reading as two stacked cards instead of one
+   *  continuous hero unit. */
+  fuseTop?: boolean;
   /** Optional userId — when provided, Hero's stable variant pulls the
    *  most recent validated win from action_outcomes and surfaces it
    *  as concrete proof ("Última perda evitada: R$87 em UGC 03 · há 4d")
@@ -150,6 +157,7 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
   accountStatusMessage = null,
   primaryCtaLabel,
   fuseBottom = false,
+  fuseTop = false,
   userId,
   onRetryAccountStatus,
 }) => {
@@ -256,17 +264,35 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
     return t.kicker; // fallback: original "CONTA BLOQUEADA POR META"
   })();
 
+  // ── Fusion-aware radius / border ──────────────────────────────────────
+  // Each fuse* flag drops the corresponding corners + border on that edge
+  // so the hero "merges" with whatever is rendered there. Two flags can
+  // combine (e.g. CommandStrip above + LiveSystemState below = no radius
+  // at all, hero becomes a flat middle slab). The math is enumerated to
+  // keep CSS shorthand readable.
+  const radiusTop = fuseTop ? 0 : 14;
+  const radiusBottom = fuseBottom ? 0 : 14;
+  const borderRadius = `${radiusTop}px ${radiusTop}px ${radiusBottom}px ${radiusBottom}px`;
+
   return (
     <div
       style={{
         position: 'relative',
-        // Fusion mode: kill bottom radius + bottom margin so LiveSystemState
-        // can sit flush below as a continuation of the same card.
+        // Fusion mode: kill bottom margin when an element is meant to
+        // continue from below (LiveSystemState fuseBottom) OR when the
+        // hero is pinned to a sticky strip above and we want zero gap
+        // with whatever follows in the regular flow.
         marginBottom: fuseBottom ? 0 : 18,
         padding: 'clamp(22px, 4vw, 32px) clamp(20px, 3vw, 28px)',
-        borderRadius: fuseBottom ? '14px 14px 0 0' : 14,
-        background: 'linear-gradient(180deg, #0E1218 0%, #0A0F1C 100%)',
+        borderRadius,
+        // Match CommandStrip's bottom gradient stop (rgba(6,10,20,0.94))
+        // at the top so the seam is invisible when fused. The original
+        // gradient still ends at #0A0F1C for continuity downward.
+        background: fuseTop
+          ? 'linear-gradient(180deg, #060A14 0%, #0A0F1C 100%)'
+          : 'linear-gradient(180deg, #0E1218 0%, #0A0F1C 100%)',
         border: '1px solid rgba(255,255,255,0.06)',
+        borderTop: fuseTop ? 'none' : '1px solid rgba(255,255,255,0.06)',
         borderBottom: fuseBottom ? 'none' : '1px solid rgba(255,255,255,0.06)',
         overflow: 'hidden',
         fontFamily: F,
@@ -287,9 +313,16 @@ export const HeroDecisionAnchor: React.FC<HeroDecisionAnchorProps> = ({
 
       {/* Kicker — suppressed in URGENT (billboard layout uses the
           single-sentence eyebrow as its "above" element so the eye
-          isn't competing with a label + sentence stack). All other
-          variants keep the kicker for context. */}
-      {variant !== 'urgent' && (
+          isn't competing with a label + sentence stack) AND in STABLE
+          (the CommandStrip above already shows a green "MONITORANDO"
+          pill — repeating it as "CONTA ESTÁVEL" right below it reads
+          as two duplicate green badges saying the same thing). The
+          headline alone carries enough weight in stable mode. The
+          remaining variants (critical_account / opportunity / loading)
+          keep the kicker because each uses a distinct accent color
+          (red / amber / cyan) that adds genuine state info beyond
+          what the strip's MONITORANDO communicates. */}
+      {variant !== 'urgent' && variant !== 'stable' && (
         <div
           style={{
             display: 'inline-flex',

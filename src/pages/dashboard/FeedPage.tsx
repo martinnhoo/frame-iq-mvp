@@ -8163,6 +8163,13 @@ const FeedPage: React.FC = () => {
           // bottom radius + bottom border + bottom margin so the seam
           // disappears and the two read as a single composite card.
           fuseBottom={!isDemo && metaConnected && adsLoaded}
+          // Always fuse with the CommandStrip directly above — strip is
+          // sticky at top:0 and Hero sits flush below it. Without this,
+          // the hero's rounded top + 1px top border draws a visible
+          // seam that reads as two stacked panels saying the same thing
+          // (strip "MONITORANDO" + hero "CONTA ESTÁVEL"). Fused, they
+          // compose into one continuous hero block.
+          fuseTop
           userId={ctx.user?.id}
           onRetryAccountStatus={retryAccountStatus}
           onPrimaryClick={() => {
