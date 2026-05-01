@@ -262,15 +262,19 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
         position: 'sticky',
         top: 0,
         zIndex: 40,
-        background: 'linear-gradient(180deg, rgba(10,15,28,0.96) 0%, rgba(6,10,20,0.94) 100%)',
-        backdropFilter: 'blur(14px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(14px) saturate(140%)',
-        // No bottom border + zero marginBottom → the strip docks
-        // visually onto whatever card follows (HeroDecisionAnchor),
-        // reading as a single composite hero unit instead of two
-        // floating elements. The hero already has a top border that
-        // closes the seam.
-        padding: '10px clamp(14px, 3vw, 24px)',
+        // Card-style treatment so the strip + hero read as ONE unified
+        // block instead of two floating elements. Before: edge-to-edge
+        // band with no border, no radius — the MONITORANDO pill looked
+        // like it was floating on a separate strip while the hero
+        // below sat as a bordered card. Now: 1px side borders + rounded
+        // top corners, opaque background that exactly matches the
+        // hero's top color (#060A14), so the borders and bg flow
+        // continuously from the strip down through the hero.
+        background: '#060A14',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: 'none',
+        borderRadius: '14px 14px 0 0',
+        padding: '12px clamp(16px, 3vw, 24px)',
         marginBottom: 0,
         fontFamily: F,
       }}
