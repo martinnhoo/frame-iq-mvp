@@ -508,8 +508,15 @@ export function AppLayout() {
                     <button key={p.id}
                       onClick={() => {
                         if (!isActive) {
-                          setSelectedPersona(p);
-                          window.dispatchEvent(new CustomEvent('persona-updated'));
+                          // Switch persona via React state + localStorage.
+                          // DO NOT dispatch 'persona-updated' here — that
+                          // event re-runs reloadPersonas, which captured a
+                          // stale closure of selectedPersona and would
+                          // overwrite our just-set value 1.5s later. The
+                          // persona-updated event is reserved for
+                          // AccountsPage create/edit/delete flows where the
+                          // persona LIST itself changed.
+                          setSelectedPersona(p, user?.id);
                         }
                         setAccountsOpen(false);
                         setMobileOpen(false);

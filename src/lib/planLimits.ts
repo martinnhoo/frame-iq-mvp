@@ -34,9 +34,12 @@ export const IMPROVEMENT_COSTS: Record<string, number> = {
   studio: 0,      // unlimited
 };
 
-// Ad accounts per plan (-1 = unlimited)
+// Personas (negócios) per plan (-1 = unlimited)
+// Free gets 1 so they can test the product end-to-end. Pro gets 3
+// (e.g. an agency starting with a few clients). Studio is unlimited
+// for agencies/operators who manage many businesses.
 export const PLAN_AD_ACCOUNTS: Record<string, number> = {
-  free:   0,
+  free:   1,
   maker:  1,
   pro:    3,
   studio: -1,
@@ -44,7 +47,7 @@ export const PLAN_AD_ACCOUNTS: Record<string, number> = {
 
 // Plan metadata
 export const PLAN_LIMITS = {
-  free:   { credits: 15,    ad_accounts: 0,  label: "Free",   improvement_cost: 0  },
+  free:   { credits: 15,    ad_accounts: 1,  label: "Free",   improvement_cost: 0  },
   maker:  { credits: 1000,  ad_accounts: 1,  label: "Maker",  improvement_cost: 30 },
   pro:    { credits: 2500,  ad_accounts: 3,  label: "Pro",    improvement_cost: 15 },
   studio: { credits: 99999, ad_accounts: -1, label: "Studio", improvement_cost: 0  },
