@@ -6658,10 +6658,22 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               </div>
             </div>{/* close input-box-wrap */}
 
-            {/* Footer hint */}
-            <p className="chat-footer-hint" style={{margin:"6px 0 0",fontSize:10,color:"rgba(255,255,255,0.12)",textAlign:"center",fontFamily:"'Plus Jakarta Sans', sans-serif",letterSpacing:"0.02em"}}>
-              {L.footer}
-            </p>
+            {/* Footer hint — guardrail signal: small lock icon + the
+                "scope" microcopy below the composer. Reads as "you're
+                in the right place for this kind of question" without
+                being intrusive. Matches the mockup. */}
+            <div className="chat-footer-hint" style={{
+              display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+              margin:"10px 0 0",
+              fontSize:10.5,color:"rgba(255,255,255,0.22)",
+              fontFamily:"'Plus Jakarta Sans', sans-serif",letterSpacing:"0.02em",
+            }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,opacity:0.85}}>
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>{L.footer}</span>
+            </div>
 
           </div>
       </div>
@@ -6716,11 +6728,12 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           position:sticky;bottom:0;
           animation:composerSlideIn 0.36s cubic-bezier(0.22,1,0.36,1) 0.05s backwards;
         }
-        .chat-composer-wrapper::before{
-          content:"";position:absolute;inset:-40px 0 0 0;
-          background:linear-gradient(to top, var(--bg-main), transparent);
-          pointer-events:none;
-        }
+        /* The previous ::before fade gradient ran with inset: -40px 0 0 0,
+           which made the box span from 40px above the wrapper down to the
+           wrapper's bottom — covering the actual composer card with a
+           translucent rectangle and reading as "two stacked boxes" in the
+           UI. Removed entirely; the composer card is the only visual
+           element below the messages, no fade needed. */
         @keyframes composerSlideIn{
           from{opacity:0;transform:translateY(12px);}
           to{opacity:1;transform:translateY(0);}
