@@ -2064,19 +2064,11 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
     }
   }
 
-  // Quick actions at bottom
-  const quickActions: Record<string, string[]> = {
-    pt: hasMeta
-      ? ["O que pausar agora?", "Gerar hooks vencedores", "O que escalar?", "Escrever roteiro"]
-      : ["Gerar hooks para minha conta", "Escrever roteiro de anúncio", "Analisar concorrente"],
-    es: hasMeta
-      ? ["¿Qué pausar ahora?", "Generar hooks ganadores", "¿Qué escalar?", "Escribir guión"]
-      : ["Generar hooks para mi cuenta", "Escribir guión de anuncio", "Analizar competidor"],
-    en: hasMeta
-      ? ["What to pause now?", "Generate winning hooks", "What to scale?", "Write a script"]
-      : ["Generate hooks for my account", "Write an ad script", "Analyze a competitor"],
-  };
-  const actions = quickActions[lang] || quickActions.pt;
+  // (Removed: the 4 quick-action chips that used to live below the
+  // briefing cards. The hero card replaces them — single primary CTA
+  // beats 4 chips for time-to-action and removes the "tutorial app"
+  // aesthetic the user explicitly rejected. Free-form input still
+  // available via the chat composer below this block.)
 
   return (
     <div style={{
@@ -2147,139 +2139,301 @@ const ProactiveBlock = React.memo(function ProactiveBlock({ block, lang, onSend,
         </div>
       </div>
 
-      {/* ── Briefing Cards — refined muted palette ──
-          The original cards used Tailwind-default saturated hues
-          (#F87171 hot red, #4ADE80 kelly green, #FBBF24 amber, #0ea5e9
-          sky) which read as "tutorial app" rather than "professional
-          tool". Replaced with a desaturated palette that keeps signal
-          differentiation but lands premium. Translation table maps
-          legacy data-layer colors to refined render-time tokens — no
-          schema changes needed. */}
-      {briefingCards.map((card, i) => {
-        // Redesign: ditch the saturated tinted backgrounds — each card
-        // now uses the same neutral dark surface as the AI message
-        // bubbles, with the accent color living ONLY on the left
-        // stripe + a small colored dot in the tag eyebrow + the
-        // button border. Reads as a signal-first decision card
-        // instead of a "tutorial app" colored box.
+      {/* ── Hero card — single focused decision moment ──
+          Replaced the previous stack of 4 muted briefing cards + 4
+          quick-action chips with ONE hero card. Two reasons:
+            (1) The user explicitly rejected color-on-color pills and
+                the "tutorial app" chips aesthetic.
+            (2) Multiple cards split user intent across competing
+                actions — none get clicked. ONE hero card with ONE
+                primary CTA increases time-to-action and reduces
+                cognitive overhead.
+          Three states resolve here:
+            • OPPORTUNITY/URGENT — pick the highest-priority briefing
+              card and render its action statement in hero typography.
+            • NO META CONNECTED — value-prop hero with Connect-Meta CTA.
+            • META CONNECTED + STABLE — calm confirmation, no fake
+              urgency. CTA pivots to history. */}
+      {(() => {
+        // Priority sort: urgent > opportunity > attention > briefing.
+        // Picks the FIRST card the user should care about.
+        const PRIORITY_ORDER = ["#F87171", "#4ADE80", "#FBBF24", "#0ea5e9"];
+        const sorted = briefingCards.slice().sort(
+          (a, b) => PRIORITY_ORDER.indexOf(a.tagColor) - PRIORITY_ORDER.indexOf(b.tagColor)
+        );
+        // Filter out pure briefing/insight cards from "actionable" — a
+        // briefing summary doesn't justify a hero CTA, falls into the
+        // stable state instead.
+        const actionableCards = sorted.filter(c => c.tagColor !== "#0ea5e9");
+        const heroCard = actionableCards[0] || null;
+        const otherCount = Math.max(0, actionableCards.length - 1);
+
+        // Accent token — color only on the rule line under the
+        // headline, the CTA bg, and the secondary text. No color-on-
+        // color pills, no tinted card backgrounds.
         const accent = (() => {
-          switch (card.tagColor) {
-            case "#F87171": return "#F08770";  // urgente → coral
-            case "#4ADE80": return "#22A3A3";  // oportunidade → sage-cyan (matches break-even green)
-            case "#FBBF24": return "#D9B26B";  // pattern → warm tan
-            case "#0ea5e9":
-            default:        return "#38BDF8";  // briefing → brand cyan
+          if (!heroCard) return "#34D399"; // stable green default
+          switch (heroCard.tagColor) {
+            case "#F87171": return "#F08770"; // urgent → coral
+            case "#4ADE80": return "#34D399"; // opportunity → emerald (matches MONITORANDO)
+            case "#FBBF24": return "#D9B26B"; // attention → tan
+            default:        return "#34D399";
           }
         })();
+
+        // Resolve copy by state.
+        let headline: string;
+        let detail: string;
+        let ctaLabel: string;
+        let ctaPrompt: string;
+        let processLine: string | null = null;
+        if (heroCard) {
+          // STATE A — actionable opportunity from real account data.
+          headline = heroCard.headline;
+          detail = heroCard.detail;
+          ctaLabel = heroCard.action || (lang === "pt" ? "Resolver agora" : "Fix now");
+          ctaPrompt = heroCard.actionPrompt || ctaLabel;
+          // Process line — honest about HOW the system measures, no
+          // invented validation count. v2 will plug real
+          // learned_patterns confidence here ("4 de 4 escalas similares
+          // validaram"); for v1 we keep it factual: the system measures
+          // every decision and reports back in 24–72h, full stop.
+          processLine = lang === "pt"
+            ? "Sigo medindo cada decisão · resultado em 24–72h"
+            : lang === "es"
+              ? "Sigo midiendo cada decisión · resultado en 24–72h"
+              : "I track every decision · result in 24–72h";
+        } else if (!hasMeta) {
+          // STATE B — Day 0 / Meta not connected.
+          headline = lang === "pt"
+            ? "Conecte sua Meta."
+            : lang === "es" ? "Conecta tu Meta." : "Connect your Meta.";
+          detail = lang === "pt"
+            ? "Em 60s eu leio 30 dias da sua conta. Identifico criativos cansados, hits prontos pra escalar e onde está vazando R$ — nas suas próprias campanhas, com seus próprios números."
+            : lang === "es"
+              ? "En 60s leo 30 días de tu cuenta. Identifico creativos agotados, hits listos para escalar y dónde se está perdiendo dinero — en tus propias campañas, con tus propios números."
+              : "In 60s I read 30 days of your account. I identify creative fatigue, hits ready to scale, and where money is leaking — in your own campaigns, with your own numbers.";
+          ctaLabel = lang === "pt" ? "Conectar Meta →" : lang === "es" ? "Conectar Meta →" : "Connect Meta →";
+          ctaPrompt = "/connect-meta"; // sentinel — handled by onSend path
+        } else {
+          // STATE C — Meta connected, no actionable card right now.
+          headline = lang === "pt"
+            ? "Sua conta está estável."
+            : lang === "es" ? "Tu cuenta está estable." : "Your account is stable.";
+          detail = lang === "pt"
+            ? "Releitura a cada 15 minutos sobre CTR, CPA e frequência. Te aviso aqui assim que algo merecer ação — antes da perda crescer."
+            : lang === "es"
+              ? "Revisión cada 15 minutos sobre CTR, CPA y frecuencia. Te aviso aquí en cuanto algo merezca acción — antes de que la pérdida crezca."
+              : "Re-reading every 15 minutes for CTR, CPA, and frequency. I'll alert you here the moment something needs action — before the loss grows.";
+          ctaLabel = lang === "pt" ? "Ver histórico →" : lang === "es" ? "Ver historial →" : "View history →";
+          ctaPrompt = lang === "pt" ? "Mostre o histórico das últimas decisões" : "Show the history of recent decisions";
+        }
+
         return (
-          <div key={i} style={{
-            background: "linear-gradient(180deg, rgba(15,23,42,0.78) 0%, rgba(10,15,28,0.92) 100%)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderLeft: `3px solid ${accent}`,
-            borderRadius: 12,
-            padding: "clamp(14px,2vw,18px) clamp(16px,2.5vw,20px)",
-            marginBottom: 10,
-            boxShadow: "0 6px 22px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.06)",
-            backdropFilter: "blur(10px) saturate(140%)",
-            WebkitBackdropFilter: "blur(10px) saturate(140%)",
-            animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + i * 0.06}s both` : "none",
-            opacity: 0,
-          }}>
-            {/* Tag eyebrow — neutral uppercase + small colored dot.
-                Replaces the saturated all-color label that read as
-                "early-2010s SaaS callout". Now the dot carries the
-                signal, the text is structural. */}
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: 7,
-              fontSize: 9.5, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const,
-              color: "rgba(240,246,252,0.55)", fontFamily: F, marginBottom: 7,
-            }}>
-              <span style={{
-                width: 6, height: 6, borderRadius: "50%",
-                background: accent,
-                boxShadow: `0 0 6px ${accent}`,
-                flexShrink: 0,
-              }} />
-              {card.tag}
-            </span>
-            {/* Headline */}
-            <p style={{
-              fontSize: 14, fontWeight: 700, color: "#F0F6FC", margin: "2px 0 4px",
-              lineHeight: 1.4, fontFamily: F, letterSpacing: "-0.005em",
-            }}>
-              {card.headline}
+          <div
+            style={{
+              position: "relative",
+              background: "linear-gradient(180deg, #0E1218 0%, #0A0F1C 100%)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 16,
+              padding: "clamp(28px, 5vw, 44px) clamp(24px, 4vw, 36px)",
+              boxShadow: "0 12px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
+              overflow: "hidden",
+              animation: mounted ? "pb-cardIn 0.34s cubic-bezier(0.2,0.8,0.2,1) 0.10s both" : "none",
+              opacity: 0,
+            }}
+          >
+            {/* Glow — radial behind the hero text. Functional (compresses
+                attention to the headline area), not decorative. Tint
+                shifts with state via accent so the eye reads urgency or
+                calm pre-cognitively. */}
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                top: -60, left: "50%",
+                transform: "translateX(-50%)",
+                width: 600, height: 280,
+                background: `radial-gradient(ellipse at center, ${accent}1f 0%, transparent 70%)`,
+                pointerEvents: "none" as const,
+                filter: "blur(8px)",
+              }}
+            />
+
+            {/* Hero headline — the single message the eye lands on.
+                clamp lets it scale from mobile (36px) to desktop (52px)
+                without breaking line-height. Tabular-nums kept for any
+                R$ figures that might appear inline. */}
+            <h2
+              style={{
+                position: "relative",
+                fontFamily: F,
+                fontSize: "clamp(28px, 5.4vw, 44px)",
+                fontWeight: 800,
+                color: "#F0F6FC",
+                letterSpacing: "-0.03em",
+                lineHeight: 1.08,
+                margin: 0,
+                fontVariantNumeric: "tabular-nums" as const,
+              }}
+            >
+              {headline}
+            </h2>
+
+            {/* Detail — supporting paragraph, 60% opacity so it whispers
+                under the headline. max-width keeps line length readable. */}
+            <p
+              style={{
+                position: "relative",
+                fontFamily: F,
+                fontSize: "clamp(13px, 1.7vw, 15px)",
+                fontWeight: 500,
+                color: "rgba(240,246,252,0.65)",
+                lineHeight: 1.55,
+                margin: "14px 0 0",
+                maxWidth: 520,
+                letterSpacing: "-0.005em",
+              }}
+            >
+              {detail}
             </p>
-            {/* Detail */}
-            <p style={{
-              fontSize: 12.5, color: "rgba(240,246,252,0.68)", margin: "0 0 10px",
-              lineHeight: 1.55, fontFamily: F,
-            }}>
-              {card.detail}
-            </p>
-            {/* Action button — quiet ghost. Accent only on the border
-                (so each card type still differentiates) and on the
-                text color. No more green-on-green. */}
-            {card.action && (
-              <button onClick={() => onSend(card.actionPrompt || card.action!)}
+
+            {/* Process line — only shown for actionable hero (state A).
+                Honest about the system's measurement cadence; no fake
+                "4 de 4 validated" until learned_patterns is wired in. */}
+            {processLine && (
+              <p
                 style={{
-                  background: "rgba(255,255,255,0.03)",
+                  position: "relative",
+                  fontFamily: F,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "rgba(240,246,252,0.42)",
+                  lineHeight: 1.5,
+                  margin: "10px 0 0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <span
+                  aria-hidden
+                  style={{
+                    width: 5, height: 5, borderRadius: "50%",
+                    background: accent,
+                    boxShadow: `0 0 5px ${accent}`,
+                    flexShrink: 0,
+                  }}
+                />
+                {processLine}
+              </p>
+            )}
+
+            {/* Action row — single primary CTA. Accent fills the button
+                bg with a 12% tint + matching border. No solid color
+                fill (would be color-on-color). For Meta-connect state
+                the CTA navigates to /onboarding/meta instead of sending
+                a chat prompt — wired via the ctaPrompt sentinel. */}
+            <div
+              style={{
+                position: "relative",
+                marginTop: 24,
+                display: "flex",
+                alignItems: "center",
+                gap: 18,
+                flexWrap: "wrap" as const,
+              }}
+            >
+              <button
+                onClick={() => {
+                  if (ctaPrompt === "/connect-meta") {
+                    // Day 0 path — route to Meta connect flow instead of
+                    // pushing a chat message. The chat composer below
+                    // remains as the universal entry for free-form input.
+                    window.location.href = "/onboarding/meta";
+                    return;
+                  }
+                  onSend(ctaPrompt);
+                }}
+                className="hero-cta"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "11px 22px",
+                  borderRadius: 10,
+                  background: `${accent}1f`,
                   color: accent,
-                  border: `1px solid ${accent}55`,
-                  borderRadius: 6, padding: "6px 12px", fontSize: 11, fontWeight: 700,
-                  fontFamily: F, cursor: "pointer",
-                  transition: "all 0.15s",
-                  letterSpacing: "0.01em",
+                  border: `1px solid ${accent}66`,
+                  fontFamily: F,
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  letterSpacing: "-0.005em",
+                  cursor: "pointer",
+                  transition: "background 0.15s ease, transform 0.12s ease, border-color 0.15s ease",
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.background = `${accent}33`;
                   e.currentTarget.style.borderColor = accent;
                   e.currentTarget.style.transform = "translateY(-1px)";
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                  e.currentTarget.style.borderColor = `${accent}55`;
+                  e.currentTarget.style.background = `${accent}1f`;
+                  e.currentTarget.style.borderColor = `${accent}66`;
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                {card.action}
+                {ctaLabel}
               </button>
-            )}
+
+              {/* Secondary affordance — only shown when there are more
+                  actionable cards beyond the hero. Quiet text link. */}
+              {otherCount > 0 && (
+                <button
+                  onClick={() => onSend(
+                    lang === "pt"
+                      ? `Mostre as outras ${otherCount} ${otherCount === 1 ? "decisão" : "decisões"} pendentes`
+                      : `Show the other ${otherCount} pending ${otherCount === 1 ? "decision" : "decisions"}`
+                  )}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    color: "rgba(240,246,252,0.45)",
+                    fontFamily: F,
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    letterSpacing: "0.005em",
+                    transition: "color 0.15s ease",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = "rgba(240,246,252,0.75)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "rgba(240,246,252,0.45)"; }}
+                >
+                  {lang === "pt"
+                    ? `+${otherCount} ${otherCount === 1 ? "outra" : "outras"} ›`
+                    : `+${otherCount} more ›`}
+                </button>
+              )}
+            </div>
+
+            {/* Idle pulse on the CTA after 4s — calls back attention
+                without nagging. Pure CSS, respects prefers-reduced-motion. */}
+            <style>{`
+              @keyframes hero-cta-pulse {
+                0%, 100% { box-shadow: 0 0 0 0 ${accent}00; }
+                50%      { box-shadow: 0 0 0 8px ${accent}10; }
+              }
+              .hero-cta {
+                animation: hero-cta-pulse 2.4s ease-in-out 4s infinite;
+              }
+              @media (prefers-reduced-motion: reduce) {
+                .hero-cta { animation: none; }
+              }
+            `}</style>
           </div>
         );
-      })}
-
-      {/* ── Quick Actions — horizontal pills ── */}
-      <div style={{
-        display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12,
-        animation: mounted ? `pb-fadeUp 0.3s ease-out ${0.12 + briefingCards.length * 0.06 + 0.06}s both` : "none",
-        opacity: 0,
-      }}>
-        {actions.map((label, i) => (
-          <button key={i} onClick={() => onSend(label)}
-            style={{
-              padding: "7px 14px", borderRadius: 8,
-              background: "rgba(148,163,184,0.05)",
-              border: "1px solid rgba(148,163,184,0.10)",
-              cursor: "pointer", fontFamily: F, fontSize: 12, fontWeight: 600,
-              color: "rgba(148,163,184,0.85)", transition: "all 0.15s", outline: "none",
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = "rgba(148,163,184,0.10)";
-              e.currentTarget.style.borderColor = "rgba(148,163,184,0.18)";
-              e.currentTarget.style.color = "#F1F5F9";
-              e.currentTarget.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = "rgba(148,163,184,0.05)";
-              e.currentTarget.style.borderColor = "rgba(148,163,184,0.10)";
-              e.currentTarget.style.color = "rgba(148,163,184,0.85)";
-              e.currentTarget.style.transform = "translateY(0)";
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      })()}
     </div>
   );
 });
