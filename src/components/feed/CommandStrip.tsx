@@ -280,7 +280,10 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 'clamp(12px, 2.4vw, 28px)',
+          // Tighter rhythm — was clamp(12, 2.4vw, 28). Strip now reads
+          // as a single dense ops bar instead of a row with breathing
+          // room. Still wraps cleanly on small screens via flexWrap.
+          gap: 'clamp(10px, 1.8vw, 20px)',
           flexWrap: 'wrap',
           maxWidth: 1200,
           margin: '0 auto',
@@ -353,11 +356,15 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
           )}
         </div>
 
+        {/* Divider between PILL and the metric cells — gives the pill
+            (its own visual unit) a clean handoff into the metrics row
+            instead of letting them crowd. */}
+        <Divider />
+
         {/* CELL 2 — FRESHNESS */}
         <Cell label="Última análise" value={freshness} valueColor="#F0F6FC" />
 
-        {/* Divider */}
-        <span style={{ width: 1, height: 22, background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} aria-hidden />
+        <Divider />
 
         {/* CELL 3 — MONEY SAVED */}
         <Cell
@@ -365,6 +372,8 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
           value={moneyLabel}
           valueColor={stats && stats.totalSavedBrl > 0 ? '#34D399' : 'rgba(240,246,252,0.55)'}
         />
+
+        <Divider />
 
         {/* CELL 4 — ACCURACY */}
         <Cell
@@ -421,14 +430,19 @@ export const CommandStrip: React.FC<CommandStripProps> = ({
 };
 
 // ── Cell — small label + value pair, vertical stack ────────────────────
+// The em-dash placeholder ("—") used to print at the same color/weight
+// as a real value, which made every empty cell read like a broken metric.
+// We detect it here and render at a softer opacity + lighter weight so
+// the eye treats it as "no data yet" instead of "this number is 0".
 function Cell({ label, value, valueColor }: { label: string; value: string; valueColor: string }) {
+  const isEmpty = value === '—';
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 1, lineHeight: 1.1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, lineHeight: 1.1, flexShrink: 0 }}>
       <span
         style={{
           fontSize: 9, fontWeight: 700,
-          color: 'rgba(240,246,252,0.40)',
-          letterSpacing: '0.10em',
+          color: 'rgba(240,246,252,0.42)',
+          letterSpacing: '0.12em',
           textTransform: 'uppercase' as const,
         }}
       >
@@ -436,8 +450,9 @@ function Cell({ label, value, valueColor }: { label: string; value: string; valu
       </span>
       <span
         style={{
-          fontSize: 13, fontWeight: 700,
-          color: valueColor,
+          fontSize: 13,
+          fontWeight: isEmpty ? 500 : 700,
+          color: isEmpty ? 'rgba(240,246,252,0.32)' : valueColor,
           fontVariantNumeric: 'tabular-nums' as const,
           letterSpacing: '-0.005em',
         }}
@@ -445,5 +460,24 @@ function Cell({ label, value, valueColor }: { label: string; value: string; valu
         {value}
       </span>
     </div>
+  );
+}
+
+// ── Divider — thin vertical hairline used to separate strip cells ─────
+// Centralized so every cell-to-cell handoff uses the same height + tone.
+// Subtler than the previous one-off (rgba 0.08, height 22) — sits at
+// rgba 0.06 so the eye still feels rhythm without the dividers calling
+// attention to themselves.
+function Divider() {
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: 1,
+        height: 20,
+        background: 'rgba(255,255,255,0.06)',
+        flexShrink: 0,
+      }}
+    />
   );
 }

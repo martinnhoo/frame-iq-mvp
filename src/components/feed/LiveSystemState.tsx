@@ -219,7 +219,11 @@ export const LiveSystemState: React.FC<LiveSystemStateProps> = ({ userId }) => {
     headlineColor = '#34D399';
   } else if (snap.measuringCount > 0) {
     headline = `Validando o que funciona pra sua conta`;
-    headlineColor = '#38BDF8';
+    // Emerald (#34D399) instead of sky (#38BDF8) so this headline
+    // continues the MONITORANDO pill's color story upstream — the user
+    // sees one green system from the strip down through the hero into
+    // this validation block, not a competing cyan accent.
+    headlineColor = '#34D399';
   } else if (snap.finalizedCount > 0) {
     headline = `Aprendizado em andamento`;
     headlineColor = '#F0F6FC';
@@ -326,13 +330,16 @@ export const LiveSystemState: React.FC<LiveSystemStateProps> = ({ userId }) => {
           background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)',
         }}
       />
-      {/* Header */}
+      {/* Header — eyebrow color matches the strip's MONITORANDO emerald
+          so the green flows visually from the top pill down into this
+          block. The Activity icon picks up the same emerald instead of
+          the previous sky-cyan, which read as a competing accent. */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <Activity size={13} strokeWidth={2.2} color="#38BDF8" />
+        <Activity size={13} strokeWidth={2.2} color="#34D399" />
         <span
           style={{
             fontSize: 9.5, fontWeight: 800,
-            color: 'rgba(240,246,252,0.45)',
+            color: 'rgba(52,211,153,0.62)',
             letterSpacing: '0.10em',
             textTransform: 'uppercase' as const,
           }}
