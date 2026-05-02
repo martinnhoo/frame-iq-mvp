@@ -165,6 +165,10 @@ export function buildEmailHtml(input: EmailLayoutInput): string {
     <table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
 
       <!-- ── HEADER ───────────────────────────────────────────────── -->
+      <!-- Brand wordmark splits "ad" (white) + "brief" (#0ea5e9 brand cyan)
+           to match the canonical lockup used in the product header and the
+           ab-avatar gradient. Emerald is reserved for system-state signals
+           inside the app — not for brand identity. -->
       <tr><td style="padding-bottom:24px;">
         <table cellpadding="0" cellspacing="0" border="0">
           <tr>
@@ -172,7 +176,7 @@ export function buildEmailHtml(input: EmailLayoutInput): string {
               <img src="${appUrl}/ab-avatar.png" alt="AdBrief" width="36" height="36" style="display:block;width:36px;height:36px;border-radius:8px;border:0;outline:none;text-decoration:none;"/>
             </td>
             <td style="vertical-align:middle;">
-              <span style="font-family:${F};font-size:18px;font-weight:700;color:#F0F6FC;letter-spacing:-0.02em;">AdBrief</span>
+              <span style="font-family:${F};font-size:18px;font-weight:800;color:#F0F6FC;letter-spacing:-0.025em;">ad</span><span style="font-family:${F};font-size:18px;font-weight:800;color:#0ea5e9;letter-spacing:-0.025em;">brief</span>
             </td>
           </tr>
         </table>
@@ -216,9 +220,12 @@ export function buildEmailHtml(input: EmailLayoutInput): string {
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr><td align="left" style="padding:26px 36px 32px;">
 
-            <!-- Primary CTA — dark teal bg, white text, no gradient -->
+            <!-- Primary CTA — uses AdBrief brand cyan (#0ea5e9). Dark navy
+                 fill (#082237) so the button reads weighty without a saturated
+                 cyan-on-cyan box. Border at 60% brand cyan + tab-spaced text
+                 in white. No gradient (rejected by design rules). -->
             <table cellpadding="0" cellspacing="0" border="0">
-              <tr><td style="background:#0E342E;border:1px solid rgba(52,211,153,0.45);border-radius:10px;">
+              <tr><td style="background:#082237;border:1px solid rgba(14,165,233,0.60);border-radius:10px;">
                 <a href="${ctaUrl}" style="display:inline-block;padding:13px 26px;font-family:${F};font-size:14px;font-weight:700;color:#F0F6FC;text-decoration:none;letter-spacing:-0.005em;">${ctaLabel}</a>
               </td></tr>
             </table>
