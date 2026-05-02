@@ -1249,6 +1249,130 @@ export type Database = {
           },
         ]
       }
+      autopilot_action_log: {
+        Row: {
+          action_type: string
+          amount_at_risk_brl: number | null
+          confidence: number
+          decision_id: string | null
+          executed_at: string
+          expires_undo_at: string
+          id: string
+          meta_api_response: Json | null
+          payload: Json
+          reason: string
+          status: string
+          target_id: string
+          target_kind: string
+          target_name: string | null
+          undone_at: string | null
+          undone_by: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          amount_at_risk_brl?: number | null
+          confidence: number
+          decision_id?: string | null
+          executed_at?: string
+          expires_undo_at?: string
+          id?: string
+          meta_api_response?: Json | null
+          payload?: Json
+          reason: string
+          status?: string
+          target_id: string
+          target_kind: string
+          target_name?: string | null
+          undone_at?: string | null
+          undone_by?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          amount_at_risk_brl?: number | null
+          confidence?: number
+          decision_id?: string | null
+          executed_at?: string
+          expires_undo_at?: string
+          id?: string
+          meta_api_response?: Json | null
+          payload?: Json
+          reason?: string
+          status?: string
+          target_id?: string
+          target_kind?: string
+          target_name?: string | null
+          undone_at?: string | null
+          undone_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_action_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      autopilot_settings: {
+        Row: {
+          accepted_terms_at: string | null
+          allowed_action_types: string[]
+          created_at: string
+          daily_action_cap: number
+          enabled: boolean
+          min_amount_at_risk_brl: number
+          min_confidence: number
+          notify_email: boolean
+          notify_telegram: boolean
+          paused_until: string | null
+          undo_window_hours: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_terms_at?: string | null
+          allowed_action_types?: string[]
+          created_at?: string
+          daily_action_cap?: number
+          enabled?: boolean
+          min_amount_at_risk_brl?: number
+          min_confidence?: number
+          notify_email?: boolean
+          notify_telegram?: boolean
+          paused_until?: string | null
+          undo_window_hours?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_terms_at?: string | null
+          allowed_action_types?: string[]
+          created_at?: string
+          daily_action_cap?: number
+          enabled?: boolean
+          min_amount_at_risk_brl?: number
+          min_confidence?: number
+          notify_email?: boolean
+          notify_telegram?: boolean
+          paused_until?: string | null
+          undo_window_hours?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boards: {
         Row: {
           content: Json | null
@@ -1682,6 +1806,7 @@ export type Database = {
           id: string
           market: string | null
           notes: string | null
+          persona_id: string | null
           platform: string | null
           roas: number | null
           user_id: string
@@ -1697,6 +1822,7 @@ export type Database = {
           id?: string
           market?: string | null
           notes?: string | null
+          persona_id?: string | null
           platform?: string | null
           roas?: number | null
           user_id: string
@@ -1712,6 +1838,7 @@ export type Database = {
           id?: string
           market?: string | null
           notes?: string | null
+          persona_id?: string | null
           platform?: string | null
           roas?: number | null
           user_id?: string
@@ -1722,6 +1849,13 @@ export type Database = {
             columns: ["analysis_id"]
             isOneToOne: false
             referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creative_memory_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
             referencedColumns: ["id"]
           },
         ]
@@ -3588,6 +3722,11 @@ export type Database = {
       }
       cleanup_old_error_logs: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      cockpit_dl_by_user: { Args: { days?: number }; Returns: Json }
+      cockpit_dl_hit_rate_by_source: { Args: { days?: number }; Returns: Json }
+      cockpit_dl_hit_rate_by_type: { Args: { days?: number }; Returns: Json }
+      cockpit_dl_recent: { Args: { limit_rows?: number }; Returns: Json }
+      cockpit_dl_totals: { Args: { days?: number }; Returns: Json }
       deduct_credits: {
         Args: {
           p_action: string
