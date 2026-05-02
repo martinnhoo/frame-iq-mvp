@@ -72,10 +72,19 @@ Deno.serve(async (req) => {
     const TARGET = body.target_email || user.email;
     const NAME = body.name || (user.user_metadata?.name as string) || "Martinho";
     const LANG = body.language || "pt";
+    // Optional: restrict to a specific template (e.g. "send-activation-email").
+    // When set, only that sender fires (instead of all 5). Useful for batch
+    // sends where you want to push ONE email to a list of users.
+    const TEMPLATE: string | null = body.template || null;
+    // Optional: list of recipient emails. When set, the chosen template
+    // fires once per email instead of once. Caller is still admin-only.
+    const TARGETS: string[] = Array.isArray(body.targets) && body.targets.length
+      ? body.targets.filter((t: unknown) => typeof t === "string" && t.includes("@"))
+      : [TARGET];
 
-    // List of test invocations. Each one matches the production payload its
-    // sender expects (verified by reading each fn's `await req.json()`).
-    const tests = [
+    // Default test set (when no template specified) — fires all 5 to the
+    // single TARGET as a QA sweep.
+    const allTests = [
       { fn: "send-welcome-email",         body: { email: TARGET, name: NAME, language: LANG } },
       { fn: "send-activation-email",      body: { email: TARGET, name: NAME, language: LANG } },
       { fn: "send-trial-expiring-email",  body: { email: TARGET, name: NAME, language: LANG, days_left: 2 } },
@@ -83,7 +92,28 @@ Deno.serve(async (req) => {
       { fn: "send-demo-followup-email",   body: { email: TARGET, name: NAME, language: LANG, score: 65 } },
     ];
 
-    const results: Array<{ fn: string; status: number | string; ok: boolean; response?: unknown }> = [];
+    // Build the actual test list. Two modes:
+    //   • {template, targets} → fire that template once per target
+    //   • default → fire all 5 templates to single TARGET (QA sweep)
+    const tests = TEMPLATE
+      ? TARGETS.map((email) => {
+          const proto = allTests.find((t) => t.fn === TEMPLATE);
+          if (!proto) return null;
+          // Re-key the body's email field per target while keeping any
+          // template-specific extras (days_left, score, etc).
+          return { fn: proto.fn, body: { ...proto.body, email } };
+        }).filter(Boolean) as { fn: string; body: Record<string, unknown> }[]
+      : allTests;
+
+    if (TEMPLATE && tests.length === 0) {
+      return new Response(JSON.stringify({
+        ok: false,
+        error: "unknown_template",
+        hint: `template must be one of: ${allTests.map((t) => t.fn).join(", ")}`,
+      }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+
+    const results: Array<{ fn: string; email?: string; status: number | string; ok: boolean; response?: unknown }> = [];
 
     for (const t of tests) {
       try {
@@ -102,6 +132,7 @@ Deno.serve(async (req) => {
         try { parsed = JSON.parse(text); } catch { parsed = text.slice(0, 300); }
         results.push({
           fn: t.fn,
+          email: (t.body as any).email as string,
           status: res.status,
           ok: res.ok,
           response: parsed,
@@ -111,6 +142,7 @@ Deno.serve(async (req) => {
       } catch (e) {
         results.push({
           fn: t.fn,
+          email: (t.body as any).email as string,
           status: "fetch_error",
           ok: false,
           response: String(e),
