@@ -1,5 +1,6 @@
-// send-reengagement-email v4 — indigo palette, urgência vermelha — fires when user inactive for 3+ days
+// send-reengagement-email v5 — usa _shared/email-layout.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { buildEmailHtml } from "../_shared/email-layout.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -53,65 +54,23 @@ function detectLang(raw?: string | null): Lang {
 }
 
 function buildHtml(t: typeof T["pt"], firstName: string, appUrl: string): string {
-  const F = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="dark"/><title>${t.subject}</title></head>
-<body style="margin:0;padding:0;background:#050508;-webkit-font-smoothing:antialiased;">
-<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${t.preheader}&nbsp;&#8203;&nbsp;&#8203;&nbsp;</span>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050508;">
-<tr><td align="center" style="padding:40px 16px 56px;">
-<table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
-
-  <!-- LOGO -->
-  <tr><td style="padding-bottom:32px;">
-    <span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:20px;font-weight:800;color:#6366f1;letter-spacing:-0.05em;font-family:${F};">brief</span>
-  </td></tr>
-
-  <!-- MAIN CARD -->
-  <tr><td style="border-radius:24px;overflow:hidden;background:linear-gradient(160deg,#0e1628 0%,#0a1020 100%);border:1px solid rgba(99,102,241,0.2);">
-
-    <!-- top bar — red urgency -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:3px;background:linear-gradient(90deg,#ef4444,#f59e0b);"></td></tr>
-    </table>
-
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(99,102,241,0.08) 0%,transparent 50%);">
-    <tr><td style="padding:36px 40px 0;">
-      <p style="margin:0 0 8px;font-size:14px;color:rgba(150,180,220,0.6);font-family:${F};">${firstName},</p>
-      <h1 style="margin:0 0 10px;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.04em;line-height:1.15;font-family:${F};">${t.headline}</h1>
-      <p style="margin:0 0 28px;font-size:15px;color:rgba(200,215,240,0.7);line-height:1.75;font-family:${F};">${t.body1}</p>
-
-      <!-- Stat — big number, red -->
-      <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);border-left:3px solid #6366f1;border-radius:12px;padding:24px;margin-bottom:28px;text-align:center;">
-        <p style="margin:0 0 6px;font-size:48px;font-weight:900;color:#ef4444;letter-spacing:-0.05em;font-family:${F};line-height:1;">${t.stat}</p>
-        <p style="margin:0;font-size:14px;color:rgba(200,215,240,0.65);line-height:1.6;font-family:${F};">${t.body2}</p>
-      </div>
-    </td></tr>
-    </table>
-
-    <!-- CTA -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:1px;background:rgba(99,102,241,0.1);"></td></tr>
-    </table>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(99,102,241,0.06) 0%,transparent 100%);">
-    <tr><td style="padding:28px 40px 36px;" align="center">
-      <a href="${appUrl}/dashboard/ai" style="display:inline-block;padding:15px 44px;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:14px;font-family:${F};box-shadow:0 8px 32px rgba(99,102,241,0.4);">${t.cta}</a>
-      <p style="margin:18px 0 0;font-size:12px;color:rgba(150,180,220,0.35);font-family:${F};">${t.ps}</p>
-    </td></tr>
-    </table>
-  </td></tr>
-
-  <!-- FOOTER -->
-  <tr><td style="padding:24px 8px 0;" align="center">
-    <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);font-family:${F};">${t.footer} · <a href="https://adbrief.pro" style="color:rgba(99,102,241,0.5);text-decoration:none;">adbrief.pro</a></p>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  // The original template had a custom red-number-in-box treatment for the
+  // stat — that's exactly the "color-on-color box" the user banned. Inline
+  // the stat into the body with bold weight; the visceral hit comes from
+  // tabular-nums + bold inside readable prose, not from a styled callout box.
+  return buildEmailHtml({
+    subject: t.subject,
+    preheader: t.preheader,
+    appUrl,
+    greeting: `${firstName},`,
+    headline: t.headline,
+    subhead: t.body1,
+    body: `<strong style="color:#F0F6FC;font-variant-numeric:tabular-nums;">${t.stat}</strong> ${t.body2}`,
+    ctaLabel: t.cta,
+    ctaUrl: `${appUrl}/dashboard/ai`,
+    ps: t.ps,
+    footerLine: t.footer,
+  });
 }
 
 Deno.serve(async (req) => {

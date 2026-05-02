@@ -1,5 +1,6 @@
-// send-trial-expiring-email v1 — indigo palette, urgency — fires 2 days before trial ends
+// send-trial-expiring-email v2 — usa _shared/email-layout.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { buildEmailHtml } from "../_shared/email-layout.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -65,81 +66,29 @@ function detectLang(raw?: string | null): Lang {
 }
 
 function buildHtml(t: typeof T["pt"], firstName: string, appUrl: string, daysLeft: number): string {
-  const F = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
-
-  const benefits = t.benefits.map(b => `
-    <tr><td style="padding:0 0 12px;">
-      <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-        <td width="28" valign="top" style="padding-top:2px;">
-          <div style="width:20px;height:20px;border-radius:6px;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.35);text-align:center;line-height:20px;font-size:11px;color:#6366f1;">✓</div>
-        </td>
-        <td style="font-size:14px;color:rgba(200,215,240,0.8);line-height:1.55;font-family:${F};padding-left:12px;">${b}</td>
-      </tr></table>
-    </td></tr>`).join("");
-
   const subject = t.subject.replace("{days_left}", String(daysLeft));
   const headline = t.headline.replace("{days_left}", String(daysLeft));
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="dark"/><title>${subject}</title></head>
-<body style="margin:0;padding:0;background:#050508;-webkit-font-smoothing:antialiased;">
-<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${t.preheader}&nbsp;&#8203;&nbsp;&#8203;&nbsp;</span>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050508;">
-<tr><td align="center" style="padding:40px 16px 56px;">
-<table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
-
-  <!-- LOGO -->
-  <tr><td style="padding-bottom:32px;">
-    <span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:20px;font-weight:800;color:#6366f1;letter-spacing:-0.05em;font-family:${F};">brief</span>
-  </td></tr>
-
-  <!-- MAIN CARD -->
-  <tr><td style="border-radius:24px;overflow:hidden;background:linear-gradient(160deg,#0e1628 0%,#0a1020 100%);border:1px solid rgba(99,102,241,0.2);">
-
-    <!-- top bar — urgency gradient -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:3px;background:linear-gradient(90deg,#f59e0b,#ef4444,#ec4899);"></td></tr>
-    </table>
-
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(99,102,241,0.08) 0%,transparent 50%);">
-    <tr><td style="padding:36px 40px 0;">
-      <p style="margin:0 0 8px;font-size:14px;color:rgba(150,180,220,0.6);font-family:${F};">${firstName},</p>
-      <h1 style="margin:0 0 10px;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.04em;line-height:1.15;font-family:${F};">${headline}</h1>
-      <p style="margin:0 0 28px;font-size:15px;color:rgba(200,215,240,0.7);line-height:1.75;font-family:${F};">${t.body1}</p>
-
-      <!-- Benefits block -->
-      <div style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-left:3px solid #6366f1;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="100%">
-          ${benefits}
-        </table>
-      </div>
-
-      <p style="margin:0 0 32px;font-size:15px;color:rgba(200,215,240,0.7);line-height:1.75;font-family:${F};">${t.body2}</p>
-    </td></tr>
-    </table>
-
-    <!-- CTA -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:1px;background:rgba(99,102,241,0.1);"></td></tr>
-    </table>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(99,102,241,0.06) 0%,transparent 100%);">
-    <tr><td style="padding:28px 40px 36px;" align="center">
-      <a href="${appUrl}/settings/billing" style="display:inline-block;padding:15px 44px;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:14px;font-family:${F};box-shadow:0 8px 32px rgba(99,102,241,0.4);">${t.cta}</a>
-      <p style="margin:18px 0 0;font-size:12px;color:rgba(150,180,220,0.35);font-family:${F};">${t.ps}</p>
-    </td></tr>
-    </table>
-  </td></tr>
-
-  <!-- FOOTER -->
-  <tr><td style="padding:24px 8px 0;" align="center">
-    <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);font-family:${F};">${t.footer} · <a href="https://adbrief.pro" style="color:rgba(99,102,241,0.5);text-decoration:none;">adbrief.pro</a></p>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  // Each benefit becomes a bullet without index number — just a checkbox-feel
+  // numbered "01/02/03" treatment from the shared layout. Keeps the list look
+  // consistent with welcome's "3 passos" rendering.
+  const bullets = t.benefits.map((b, i) => ({
+    index: String(i + 1).padStart(2, "0"),
+    title: b,
+    desc: "",
+  }));
+  return buildEmailHtml({
+    subject,
+    preheader: t.preheader,
+    appUrl,
+    greeting: `${firstName},`,
+    headline,
+    body: `${t.body1}<br/><br/>${t.body2}`,
+    bullets,
+    ctaLabel: t.cta,
+    ctaUrl: `${appUrl}/settings/billing`,
+    ps: t.ps,
+    footerLine: t.footer,
+  });
 }
 
 Deno.serve(async (req) => {

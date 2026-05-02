@@ -1,5 +1,7 @@
-// send-welcome-email v5 — design renovado, sem, mais cor
+// send-welcome-email v6 — refatorado pra usar _shared/email-layout.ts
+// (logo certo + paleta dark navy + sem emoji + sem ciano-bebê em subtítulos).
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { buildEmailHtml } from "../_shared/email-layout.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -120,120 +122,25 @@ function detectLang(raw?: string | null): Lang {
 }
 
 function buildHtml(t: typeof T["pt"], firstName: string, appUrl: string): string {
-  const F = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
-
-  const steps = [
-    { n: "01", emoji: "🏠", title: t.s1t, desc: t.s1d },
-    { n: "02", emoji: "⚡", title: t.s2t, desc: t.s2d },
-    { n: "03", emoji: "💬", title: t.s3t, desc: t.s3d },
-  ].map(s => `
-    <tr>
-      <td style="padding:0 0 20px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr>
-          <td width="44" valign="top">
-            <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,rgba(14,165,233,0.25),rgba(6,182,212,0.15));border:1px solid rgba(14,165,233,0.3);display:flex;align-items:center;justify-content:center;text-align:center;line-height:32px;font-size:15px;">${s.emoji}</div>
-          </td>
-          <td valign="top" style="padding-left:4px;">
-            <p style="margin:0 0 3px;font-size:14px;font-weight:700;color:#ffffff;font-family:${F};line-height:1.3;">${s.title}</p>
-            <p style="margin:0;font-size:13px;color:rgba(200,210,230,0.6);line-height:1.6;font-family:${F};">${s.desc}</p>
-          </td>
-        </tr>
-        </table>
-      </td>
-    </tr>`).join("");
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<meta name="color-scheme" content="dark"/>
-<title>${t.subject}</title>
-</head>
-<body style="margin:0;padding:0;background:#050811;-webkit-font-smoothing:antialiased;">
-<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${t.preheader}&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;</span>
-
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050811;">
-<tr><td align="center" style="padding:40px 16px 56px;">
-<table width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;width:100%;">
-
-  <!-- LOGO row -->
-  <tr><td style="padding-bottom:32px;">
-    <table cellpadding="0" cellspacing="0" border="0"><tr>
-      <td>
-        <span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:20px;font-weight:800;color:#0ea5e9;letter-spacing:-0.05em;font-family:${F};">brief</span>
-      </td>
-    </tr></table>
-  </td></tr>
-
-  <!-- HERO CARD -->
-  <tr><td style="border-radius:24px;overflow:hidden;background:linear-gradient(160deg,#0e1628 0%,#0a1020 100%);border:1px solid rgba(14,165,233,0.2);">
-
-    <!-- Top accent gradient bar -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:3px;background:linear-gradient(90deg,#0ea5e9 0%,#06b6d4 50%,#6366f1 100%);"></td></tr>
-    </table>
-
-    <!-- Glow header area -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(14,165,233,0.08) 0%,transparent 60%);">
-    <tr><td style="padding:40px 40px 32px;">
-
-      <!-- Greeting -->
-      <p style="margin:0 0 8px;font-size:14px;color:rgba(150,180,220,0.6);font-family:${F};">${t.greeting} ${firstName} —</p>
-
-      <!-- Main headline -->
-      <h1 style="margin:0 0 10px;font-size:32px;font-weight:800;color:#ffffff;letter-spacing:-0.04em;line-height:1.1;font-family:${F};">${t.headline}</h1>
-
-      <!-- Subline with cyan accent -->
-      <p style="margin:0 0 28px;font-size:16px;font-weight:600;color:#22d3ee;font-family:${F};letter-spacing:-0.01em;">${t.sub}</p>
-
-      <!-- Body -->
-      <p style="margin:0;font-size:15px;color:rgba(200,210,230,0.75);line-height:1.75;font-family:${F};">${t.body}</p>
-
-    </td></tr>
-    </table>
-
-    <!-- Divider -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:1px;background:linear-gradient(90deg,transparent,rgba(14,165,233,0.2),transparent);"></td></tr>
-    </table>
-
-    <!-- Steps block -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="padding:32px 40px 28px;">
-      <p style="margin:0 0 24px;font-size:10px;font-weight:800;color:#0ea5e9;letter-spacing:0.14em;text-transform:uppercase;font-family:${F};">${t.steps_label}</p>
-      <table cellpadding="0" cellspacing="0" border="0" width="100%">
-        ${steps}
-      </table>
-    </td></tr>
-    </table>
-
-    <!-- Divider -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:1px;background:rgba(14,165,233,0.1);"></td></tr>
-    </table>
-
-    <!-- CTA area with subtle glow -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(14,165,233,0.06) 0%,transparent 100%);">
-    <tr><td style="padding:32px 40px 40px;" align="center">
-      <a href="${appUrl}/dashboard/ai" style="display:inline-block;padding:16px 48px;background:linear-gradient(135deg,#0ea5e9 0%,#0284c7 100%);color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;border-radius:14px;font-family:${F};letter-spacing:-0.01em;box-shadow:0 8px 32px rgba(14,165,233,0.4),0 2px 8px rgba(14,165,233,0.2);">${t.cta}</a>
-      <p style="margin:20px 0 0;font-size:12px;color:rgba(150,180,220,0.4);font-family:${F};line-height:1.6;">${t.ps}</p>
-    </td></tr>
-    </table>
-
-  </td></tr>
-
-  <!-- FOOTER -->
-  <tr><td style="padding:28px 8px 0;" align="center">
-    <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);font-family:${F};">${t.footer} · <a href="https://adbrief.pro" style="color:rgba(14,165,233,0.5);text-decoration:none;">adbrief.pro</a></p>
-  </td></tr>
-
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  return buildEmailHtml({
+    subject: t.subject,
+    preheader: t.preheader,
+    appUrl,
+    greeting: `${t.greeting} ${firstName} —`,
+    headline: t.headline,
+    subhead: t.sub,
+    body: t.body,
+    bulletsTitle: t.steps_label,
+    bullets: [
+      { title: t.s1t, desc: t.s1d },
+      { title: t.s2t, desc: t.s2d },
+      { title: t.s3t, desc: t.s3d },
+    ],
+    ctaLabel: t.cta,
+    ctaUrl: `${appUrl}/dashboard/ai`,
+    ps: t.ps,
+    footerLine: t.footer,
+  });
 }
 
 function detectLang2(raw?: string | null): Lang {

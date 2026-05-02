@@ -8,6 +8,7 @@
 //
 // Or via curl with SERVICE_ROLE bearer token.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { buildEmailHtml } from "../_shared/email-layout.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -71,74 +72,28 @@ function detectLang(raw?: string | null): Lang {
 }
 
 function buildHtml(t: typeof T["pt"], firstName: string, appUrl: string): string {
-  const F = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif";
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="dark"/><title>${t.subject}</title></head>
-<body style="margin:0;padding:0;background:#050508;-webkit-font-smoothing:antialiased;">
-<span style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${t.preheader}&nbsp;&#8203;&nbsp;&#8203;&nbsp;</span>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050508;">
-<tr><td align="center" style="padding:40px 16px 56px;">
-<table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
-
-  <!-- LOGO -->
-  <tr><td style="padding-bottom:32px;">
-    <span style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.05em;font-family:${F};">ad</span><span style="font-size:20px;font-weight:800;color:#6366f1;letter-spacing:-0.05em;font-family:${F};">brief</span>
-  </td></tr>
-
-  <!-- MAIN CARD -->
-  <tr><td style="border-radius:24px;overflow:hidden;background:linear-gradient(160deg,#0e1628 0%,#0a1020 100%);border:1px solid rgba(99,102,241,0.2);">
-
-    <!-- top accent -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:3px;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></td></tr>
-    </table>
-
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(99,102,241,0.08) 0%,transparent 50%);">
-    <tr><td style="padding:36px 40px 0;">
-      <p style="margin:0 0 8px;font-size:14px;color:rgba(150,180,220,0.6);font-family:${F};">${t.salut} ${firstName},</p>
-      <h1 style="margin:0 0 20px;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.04em;line-height:1.2;font-family:${F};">${t.headline}</h1>
-      <p style="margin:0 0 18px;font-size:15px;color:rgba(200,215,240,0.78);line-height:1.7;font-family:${F};">${t.body1}</p>
-      <p style="margin:0 0 18px;font-size:15px;color:rgba(200,215,240,0.78);line-height:1.7;font-family:${F};">${t.body2}</p>
-      <p style="margin:0 0 12px;font-size:15px;color:rgba(200,215,240,0.78);line-height:1.7;font-family:${F};">${t.body3}</p>
-    </td></tr>
-    </table>
-
-    <!-- CTA -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:1px;background:rgba(99,102,241,0.1);"></td></tr>
-    </table>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(180deg,rgba(99,102,241,0.06) 0%,transparent 100%);">
-    <tr><td style="padding:28px 40px 24px;" align="center">
-      <a href="${appUrl}/dashboard/accounts" style="display:inline-block;padding:15px 44px;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:14px;font-family:${F};box-shadow:0 8px 32px rgba(99,102,241,0.4);">${t.cta}</a>
-    </td></tr>
-    <tr><td style="padding:0 40px 32px;" align="center">
-      <p style="margin:0;font-size:12px;color:rgba(150,180,220,0.45);font-family:${F};">${t.ps}</p>
-    </td></tr>
-    </table>
-
-    <!-- Signature -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:1px;background:rgba(99,102,241,0.08);"></td></tr>
-    </table>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="padding:24px 40px 32px;">
-      <p style="margin:0;font-size:14px;color:rgba(200,215,240,0.6);font-family:${F};font-style:italic;">— ${t.sig}, founder</p>
-    </td></tr>
-    </table>
-
-  </td></tr>
-
-  <!-- FOOTER -->
-  <tr><td style="padding:24px 8px 0;" align="center">
-    <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);font-family:${F};">${t.footer} · <a href="https://adbrief.pro" style="color:rgba(99,102,241,0.5);text-decoration:none;">adbrief.pro</a></p>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>`;
+  // Body has 3 paragraphs in the i18n strings; concatenate with line breaks
+  // and append a signature line — the recovery email has a personal voice
+  // ("— Martinho, founder") that the layout shows under body via simple
+  // double-line-break followed by italic-styled inline HTML.
+  const body = [
+    t.body1,
+    t.body2,
+    t.body3,
+    `<br/><span style="color:rgba(240,246,252,0.55);font-style:italic;">— ${t.sig}, founder</span>`,
+  ].join("<br/><br/>");
+  return buildEmailHtml({
+    subject: t.subject,
+    preheader: t.preheader,
+    appUrl,
+    greeting: `${t.salut} ${firstName},`,
+    headline: t.headline,
+    body,
+    ctaLabel: t.cta,
+    ctaUrl: `${appUrl}/dashboard/accounts`,
+    ps: t.ps,
+    footerLine: t.footer,
+  });
 }
 
 Deno.serve(async (req) => {
