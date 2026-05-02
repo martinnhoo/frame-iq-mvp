@@ -40,6 +40,11 @@ Deno.serve(async (req) => {
     { name: 'adbrief-trend-watch',         cron: '0 */2 * * *',  fn: 'trend-watcher',           body: '{"mode":"auto","geo":"BR"}' },
     { name: 'adbrief-critical-alerts',     cron: '0 */6 * * *',  fn: 'check-critical-alerts',   body: '{}' },
     { name: 'adbrief-email-lifecycle',     cron: '0 10 * * *',   fn: 'email-lifecycle',         body: '{}' },
+    // Hourly fast-activation: pega usuário que cadastrou >= 1h atrás e ainda
+    // não conectou Meta. O daily lifecycle cobre quem passou da janela das
+    // primeiras 24h; esse cobre a janela quente (1-24h) onde o intent
+    // ainda está alto.
+    { name: 'adbrief-fast-activation',     cron: '0 * * * *',    fn: 'email-fast-activation',   body: '{}' },
   ];
 
   const results: any[] = [];

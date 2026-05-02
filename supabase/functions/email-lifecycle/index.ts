@@ -320,8 +320,16 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          // Day 1 activation — delegate to existing function
+          // Day 1 activation — delegate to existing function.
+          // Skip if email-fast-activation (hourly cron) already fired the
+          // same activation copy in the early window. Without this guard
+          // a user signing up at 14h would get the activation email at
+          // ~15h (fast cron) AND again at 10h next day (this daily cron).
           if (step.key === "day1-activation") {
+            if (alreadySent.includes("fast-activation")) {
+              alreadySent.push(step.key);
+              continue;
+            }
             try {
               await supabase.functions.invoke("send-activation-email", {
                 body: { user_id: profile.id },
