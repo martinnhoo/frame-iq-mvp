@@ -181,12 +181,49 @@ export interface StructuralSignals {
   /** "high" when the source can answer the question reliably; "low" when a
    *  negative result might just mean "we couldn't see the right tag". Logic:
    *    - Positive detection on either source → "high" (we found it for real)
-   *    - Negative detection on raw_html      → "high" (scripts were inspected)
+   *    - Negative detection on raw_html that's NOT a SPA shell → "high"
+   *    - Negative detection on raw_html that IS a SPA shell  → "low"
+   *      (scripts were "seen" but most code lives in JS bundles the regex
+   *      never inspected — claiming absence is a hallucination)
    *    - Negative detection on extracted_text → "low" (scripts were stripped)
    *  This lets the LLM downgrade phrasing from "no pixel detected" to
    *  "couldn't verify" when the source can't actually see scripts. */
   pixelConfidence: "high" | "low";
   conversionConfidence: "high" | "low";
+  /** Whether the inspected page is a Single-Page App shell (React, Vue,
+   *  Svelte, Next, Nuxt, etc.). These shells render almost everything from
+   *  bundled JS — the raw HTML is just a mount-point div + module script.
+   *  Pattern-matching for fbq('track', 'Lead') in such a shell will ALWAYS
+   *  miss the call, even when it actually fires from the bundle. The LLM
+   *  should never assert absence of conversion events on an SPA from the
+   *  raw HTML alone. */
+  isSpaShell: boolean;
+}
+
+/**
+ * Heuristic SPA-shell detection. We accept a few false positives (rare
+ * static pages that happen to use `<div id="root">`) in exchange for
+ * eliminating the false-negative class where the AI confidently claims
+ * "fbq('track', 'Lead') is missing" on a real React app where the call
+ * lives in the bundled chunk. The signals are:
+ *   • Mount-point div with a known SPA root id (root, app, __next, __nuxt, svelte).
+ *   • Module-style script tag (Vite/ESM bundlers always emit this).
+ *   • Sub-2KB visible body text after stripping (real content lives in JS).
+ * Any TWO of the three trip the flag — keeps it robust to template variation.
+ */
+export function isSpaShell(html: string): boolean {
+  if (!html) return false;
+  const hasRootMount =
+    /<div\s+id=["'](root|app|__next|__nuxt|svelte|app-root|q-app|main-app)["']/i.test(html);
+  const hasModuleScript = /<script\s+type=["']module["']/i.test(html);
+  const visibleText = stripHtmlToText(html).text;
+  const tinyVisibleBody = visibleText.length < 2000;
+
+  let signals = 0;
+  if (hasRootMount) signals++;
+  if (hasModuleScript) signals++;
+  if (tinyVisibleBody) signals++;
+  return signals >= 2;
 }
 
 export function detectStructuralSignals(
@@ -195,10 +232,34 @@ export function detectStructuralSignals(
 ): StructuralSignals {
   const hasFbPixel = PIXEL_PATTERNS.some((p) => p.test(content));
   const hasConvEvent = CONV_EVENT_PATTERNS.some((p) => p.test(content));
+
+  // SPA detection only meaningful when we actually have HTML to inspect.
+  // For Jina-extracted text the source is already script-stripped — we don't
+  // run isSpaShell there because the input doesn't have the structural tags
+  // we're looking for. The downstream confidence rule for extracted_text
+  // already handles that case (always "low" on negatives).
+  const spa = source === "raw_html" ? isSpaShell(content) : false;
+
+  // Pixel confidence: hasFbPixel positive → high. Negative on raw_html → high
+  // EXCEPT when the page is an SPA shell, because the pixel init IS usually
+  // inline in the index.html for SPAs (so a negative there really means
+  // missing), but to be safe we keep it at high for SPAs too — the meta-
+  // pixel snippet is a static <script> in <head>, exactly where regex sees it.
   const pixelConfidence: "high" | "low" =
     hasFbPixel || source === "raw_html" ? "high" : "low";
+
+  // Conversion confidence: positive → high. Negative on raw_html → high ONLY
+  // if NOT an SPA. SPA shells render fbq('track', ...) calls from the bundle,
+  // not the HTML — claiming absence is a hallucination. This is the bug that
+  // was telling AdBrief.pro users "your Lead event is missing" while the call
+  // was actually firing in production from the bundled JS.
   const conversionConfidence: "high" | "low" =
-    hasConvEvent || source === "raw_html" ? "high" : "low";
+    hasConvEvent
+      ? "high"
+      : source === "raw_html" && !spa
+        ? "high"
+        : "low";
+
   // Exclude `<` `>` so we don't capture trailing markup like `</button>` when
   // running CTA detection on raw HTML.
   const ctaMatch = content.match(
@@ -212,5 +273,6 @@ export function detectStructuralSignals(
     detectionSource: source,
     pixelConfidence,
     conversionConfidence,
+    isSpaShell: spa,
   };
 }

@@ -11,6 +11,7 @@ import {
   extractLandingUrls,
   stripHtmlToText,
   detectStructuralSignals,
+  isSpaShell,
 } from "./detect-signals.ts";
 
 // ── Timing helper ──
@@ -208,6 +209,7 @@ async function fetchLandingContent(url: string): Promise<{
     pixelConfidence: signals.pixelConfidence,
     conversionConfidence: signals.conversionConfidence,
     detectionSource: signals.detectionSource,
+    isSpaShell: signals.isSpaShell,
   };
 }
 
@@ -234,6 +236,7 @@ async function getOrFetchLanding(
   pixelConfidence: "high" | "low";
   conversionConfidence: "high" | "low";
   detectionSource: "raw_html" | "extracted_text";
+  isSpaShell: boolean;
   fetchedAt: string;
 } | null> {
   if (!userId || !url) return null;
@@ -261,6 +264,22 @@ async function getOrFetchLanding(
             : "extracted_text";
         const cachedPixel = !!cached.has_fb_pixel;
         const cachedConv = !!cached.has_conversion_event;
+        // Recompute isSpaShell on the fly. Legacy snapshot rows don't store
+        // the flag, so we reuse the same heuristic against the cached content.
+        // Cheap (regex on already-loaded text), and avoids the 24h TTL window
+        // shipping with the old false-negative behavior on SPAs.
+        const cachedSpa = cachedSource === "raw_html"
+          ? isSpaShell(cached.content || "")
+          : false;
+        // For SPAs, force conv confidence to "low" regardless of cached value
+        // — the AI must NEVER assert "fbq('track', 'Lead') is missing" from
+        // an SPA shell, even on a cache hit that pre-dates this fix.
+        const conversionConfidence: "high" | "low" =
+          cachedConv
+            ? "high"
+            : cachedSource === "raw_html" && !cachedSpa
+              ? "high"
+              : "low";
         return {
           url: cached.url,
           title: cached.title || "",
@@ -270,8 +289,9 @@ async function getOrFetchLanding(
           hasConvEvent: cachedConv,
           primaryCta: cached.primary_cta || null,
           pixelConfidence: cachedPixel || cachedSource === "raw_html" ? "high" : "low",
-          conversionConfidence: cachedConv || cachedSource === "raw_html" ? "high" : "low",
+          conversionConfidence,
           detectionSource: cachedSource,
+          isSpaShell: cachedSpa,
           fetchedAt: cached.fetched_at,
         };
       }
@@ -327,6 +347,7 @@ async function getOrFetchLanding(
     pixelConfidence: fetched.pixelConfidence,
     conversionConfidence: fetched.conversionConfidence,
     detectionSource: fetched.detectionSource,
+    isSpaShell: fetched.isSpaShell,
     fetchedAt: new Date().toISOString(),
   };
 }
@@ -2759,12 +2780,20 @@ INSTRUÇÃO: Se o usuário perguntar sobre conectar o Telegram, responda de form
           // confident "NO PIXEL". This kills the class of false positives
           // that had the AI confidently asserting installed pixels were
           // missing — the bug that broke trust on the LP-audit feature.
+          // SPA-aware pixel/conv reporting. For SPA shells (React, Vue, Next,
+          // etc.) the conversion calls live in the bundled JS that the regex
+          // can't see — claiming absence from raw HTML is a hallucination.
+          // The AI must redirect users to verification methods (Pixel Helper,
+          // DevTools Network) instead of asserting "fbq('track', 'Lead') is
+          // missing" on what is actually a working SPA install.
           const pixelLine = lp.hasFbPixel
             ? (lp.hasConvEvent
                 ? "Pixel do Meta detectado E evento de conversão presente (Purchase/Lead/etc.)."
-                : (lp.conversionConfidence === "high"
-                    ? "Pixel do Meta detectado, MAS nenhum evento de conversão (fbq('track',...)) foi encontrado no HTML."
-                    : "Pixel do Meta detectado. Eventos de conversão: NÃO CONSEGUI VERIFICAR (fonte sem acesso a scripts) — recomende ao usuário checar manualmente em vez de afirmar ausência."))
+                : (lp.isSpaShell
+                    ? "Pixel do Meta detectado. Esta página é uma Single-Page App (React/Vue/Next/etc.) — eventos de conversão (fbq('track', 'Lead'/'CompleteRegistration'/etc.)) vivem no JS empacotado, NÃO no HTML cru. NÃO AFIRME que estão faltando. Diga ao usuário: \"vejo que é uma SPA — não consigo inspecionar o JS empacotado pelo regex de HTML. Pra confirmar se Lead/CompleteRegistration estão disparando, o jeito mais rápido é (a) rodar Meta Pixel Helper e fazer um signup teste, ou (b) abrir DevTools → Network → filtrar por 'facebook.com/tr' e ver os requests com ev=Lead/ev=CompleteRegistration. Posso te guiar passo-a-passo se quiser.\""
+                    : (lp.conversionConfidence === "high"
+                        ? "Pixel do Meta detectado, MAS nenhum evento de conversão (fbq('track',...)) foi encontrado no HTML."
+                        : "Pixel do Meta detectado. Eventos de conversão: NÃO CONSEGUI VERIFICAR (fonte sem acesso a scripts) — recomende ao usuário checar manualmente em vez de afirmar ausência.")))
             : (lp.pixelConfidence === "high"
                 ? "NENHUM código de pixel do Meta detectado no HTML desta página."
                 : "Pixel do Meta: NÃO CONSEGUI VERIFICAR (fonte sem acesso a scripts — Jina extrai apenas texto visível, scripts são removidos). NÃO afirme ausência de pixel — diga que não conseguiu verificar e ofereça caminhos: rodar Meta Pixel Helper, abrir DevTools > Network > filtrar por 'fbevents.js', ou colar o snippet do <head>.");
