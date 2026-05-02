@@ -79,7 +79,6 @@ Deno.serve(async (req) => {
       { fn: "send-welcome-email",         body: { email: TARGET, name: NAME, language: LANG } },
       { fn: "send-activation-email",      body: { email: TARGET, name: NAME, language: LANG } },
       { fn: "send-trial-expiring-email",  body: { email: TARGET, name: NAME, language: LANG, days_left: 2 } },
-      { fn: "send-recovery-email",        body: { email: TARGET, name: NAME, language: LANG } },
       { fn: "send-reengagement-email",    body: { email: TARGET, name: NAME, language: LANG } },
       { fn: "send-demo-followup-email",   body: { email: TARGET, name: NAME, language: LANG, score: 65 } },
     ];
