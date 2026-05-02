@@ -45,6 +45,16 @@ Deno.serve(async (req) => {
     // primeiras 24h; esse cobre a janela quente (1-24h) onde o intent
     // ainda está alto.
     { name: 'adbrief-fast-activation',     cron: '0 * * * *',    fn: 'email-fast-activation',   body: '{}' },
+    // Daily scan dos profiles com trial_end entre 1.5 e 2.5 dias do agora
+    // → dispara send-trial-expiring-email pra capturar conversão antes
+    // do trial cortar. Roda às 13h UTC (10h BRT) — horário onde o user
+    // brasileiro tá começando a trabalhar e provavelmente abre email.
+    { name: 'adbrief-trial-expiring',      cron: '0 13 * * *',   fn: 'email-trial-expiring-cron', body: '{}' },
+    // Daily scan dos demo_leads (analyze-demo /demo) com email opt-in,
+    // criados 22-26h atrás, sem followup ainda. Dispara send-demo-followup-
+    // email com o score do lead. Roda 1h depois do trial-expiring pra
+    // espalhar carga de email no Resend.
+    { name: 'adbrief-demo-followup',       cron: '0 14 * * *',   fn: 'email-demo-followup-cron',  body: '{}' },
   ];
 
   const results: any[] = [];

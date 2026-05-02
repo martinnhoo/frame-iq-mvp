@@ -228,7 +228,19 @@ const STEPS: LifecycleStep[] = [
       skip: false,
     }),
   },
-  // Day 7: re-engagement — handled by send-reengagement-email, skip here
+  // Day 7 re-engagement — delegado pra send-reengagement-email (template
+  // dedicado fora desse arquivo, tem visceralidade do "R$1.700 desperdiçado"
+  // que não cabia inline). O templateFn devolve um marker vazio porque o
+  // dispatch é tratado pelo branch especial "day7-reengagement" logo abaixo,
+  // igual fizemos com day1-activation.
+  {
+    day: 7,
+    key: "day7-reengagement",
+    templateFn: () => ({
+      template: "", // delegates to send-reengagement-email
+      skip: false,
+    }),
+  },
   {
     day: 14,
     key: "day14-last-chance",
@@ -341,6 +353,34 @@ Deno.serve(async (req) => {
               errors.push(`day1-activation ${profile.id}: ${e}`);
             }
             break; // only send one email per user per day
+          }
+
+          // Day 7 reengagement — delegate to send-reengagement-email.
+          // Pulls user email from auth.users since send-reengagement-email
+          // expects {email, name, language} body shape (consistent with
+          // the other senders that take service-role POST).
+          if (step.key === "day7-reengagement") {
+            try {
+              const { data: authData } = await supabase.auth.admin.getUserById(profile.id);
+              const reengEmail = authData?.user?.email;
+              if (!reengEmail) {
+                errors.push(`day7-reengagement ${profile.id}: no email in auth.users`);
+                break;
+              }
+              await supabase.functions.invoke("send-reengagement-email", {
+                body: {
+                  email: reengEmail,
+                  name: profile.name || "",
+                  language: lang,
+                },
+              });
+              alreadySent.push(step.key);
+              sent++;
+              log(`Sent day7-reengagement to ${profile.id}`);
+            } catch (e) {
+              errors.push(`day7-reengagement ${profile.id}: ${e}`);
+            }
+            break;
           }
 
           // Custom templates
