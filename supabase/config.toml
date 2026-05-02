@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.check-signup-rate]
 verify_jwt = false
 
+[functions.meta-capi-track]
+verify_jwt = false
+
 [functions.analyze-video]
 verify_jwt = false
 

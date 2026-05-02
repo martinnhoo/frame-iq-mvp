@@ -12,20 +12,108 @@ import { Logo } from "@/components/Logo";
 import { trackEvent } from "@/lib/posthog";
 import { validateEmailForSignup, guardMessage } from "@/lib/emailGuard";
 
-// ── Meta Pixel — fire conversion events on signup.
-// Without these the Meta Ads campaign can't optimize (zero reported conversions).
-// Both Lead and CompleteRegistration are fired so campaigns optimizing for either
-// work out of the box. Meta dedupes by fbp/fbc cookie across events.
-const fireMetaPixelSignup = (plan: string | null) => {
-  if (typeof window === "undefined") return;
-  const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-  if (typeof fbq !== "function") return;
-  try {
-    fbq("track", "Lead", { content_name: "signup", content_category: plan || "free" });
-    fbq("track", "CompleteRegistration", { content_name: "signup", status: "submitted", content_category: plan || "free" });
-  } catch {
-    // Silent — Pixel fires are best-effort, never block signup UX.
+// ── Meta tracking — Pixel (client) + Conversions API (server) in tandem.
+//
+// Why both:
+//   Browser-only pixel loses 30–50% of events to ad blockers, iOS 14+
+//   ATT, and tracking-prevention browsers. Result was Meta seeing "0
+//   conversões" while the database shows real signups every day —
+//   campaign can't optimize, ad delivery degrades. The fix is sending
+//   the SAME event server-to-server via Meta's Conversions API
+//   (graph.facebook.com/.../events). When pixel reaches Meta the CAPI
+//   event is deduped (same event_id + event_name within 48h), when
+//   pixel is blocked the CAPI event fills the gap.
+//
+// Dedup contract:
+//   • Pixel fires with `eventID: <uuid>` (NOT 'event_id' — Pixel uses
+//     camelCase).
+//   • CAPI sends `event_id: <same uuid>`.
+//   • Meta matches the two within a 48h window. We pay no double-count.
+//
+// PII: email/name go to CAPI server — server hashes (SHA-256) before
+// sending to Meta per their spec. Pixel handles its own PII.
+//
+// Resiliency: CAPI invocation is fire-and-forget. Network failure,
+// edge function downtime, missing access token — none of it blocks
+// the signup flow. Pixel still fires regardless.
+
+// Read fbp / fbc cookies — Meta uses these for cross-event attribution.
+// fbp = first-party pixel cookie set on first PageView.
+// fbc = Facebook click ID cookie set when user arrives via ad with fbclid.
+const readMetaCookie = (name: string): string | null => {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]+)"));
+  return m ? decodeURIComponent(m[2]) : null;
+};
+
+// Generate a UUID for event dedup. crypto.randomUUID is widely supported;
+// fallback ensures it works in any browser context (older Safari, edge).
+const makeEventId = (): string => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
   }
+  // RFC 4122 v4-ish fallback
+  return "evt-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+};
+
+// Fire ONE event on both surfaces (pixel + CAPI) with a shared event_id.
+const fireMetaEvent = async (
+  eventName: "Lead" | "CompleteRegistration",
+  plan: string | null,
+  userInfo: { email?: string; name?: string; userId?: string }
+) => {
+  if (typeof window === "undefined") return;
+
+  const eventId = makeEventId();
+  const customData = {
+    content_name: "signup",
+    content_category: plan || "free",
+    ...(eventName === "CompleteRegistration" ? { status: "submitted" } : {}),
+  };
+
+  // 1) Pixel — client-side. Third arg is the eventData object; fourth
+  //    arg is options where eventID lives (Meta SDK convention).
+  try {
+    const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+    if (typeof fbq === "function") {
+      fbq("track", eventName, customData, { eventID: eventId });
+    }
+  } catch { /* silent — pixel never blocks signup */ }
+
+  // 2) CAPI — server-side. Fire-and-forget; we don't await to avoid
+  //    delaying the signup UX. The edge function soft-fails if the
+  //    access token isn't configured yet (returns ok:false skipped).
+  try {
+    const firstName = userInfo.name?.trim().split(/\s+/)[0];
+    const lastName  = userInfo.name?.trim().split(/\s+/).slice(1).join(" ") || undefined;
+    supabase.functions.invoke("meta-capi-track", {
+      body: {
+        event_name: eventName,
+        event_id: eventId,
+        event_source_url: window.location.href,
+        action_source: "website",
+        user_id: userInfo.userId,
+        user_data: {
+          email: userInfo.email,
+          firstName,
+          lastName,
+          external_id: userInfo.userId,
+          fbp: readMetaCookie("_fbp"),
+          fbc: readMetaCookie("_fbc"),
+        },
+        custom_data: customData,
+      },
+    }).catch(() => { /* silent */ });
+  } catch { /* silent — CAPI never blocks signup */ }
+};
+
+// Fire BOTH conversion events that Meta campaigns commonly optimize for.
+// Keeping the two-event-fire contract from the previous implementation
+// so existing campaigns optimizing for either Lead or CompleteRegistration
+// keep working without ads-manager changes.
+const fireMetaPixelSignup = (plan: string | null, userInfo: { email?: string; name?: string; userId?: string } = {}) => {
+  fireMetaEvent("Lead", plan, userInfo);
+  fireMetaEvent("CompleteRegistration", plan, userInfo);
 };
 
 const Signup = () => {
@@ -59,9 +147,14 @@ const Signup = () => {
     const oauthRedirect = redirectParam
       ? window.location.origin + redirectParam
       : window.location.origin + "/dashboard";
-    // Fire Pixel BEFORE the redirect — user leaves the page and we can't fire post-auth
-    // without extra plumbing. Most users complete the Google consent screen, so the
-    // false positive rate is low. Meta dedupes by fbp/fbc cookie when the user returns.
+    // Fire Pixel + CAPI BEFORE the redirect — user leaves the page and we can't fire
+    // post-auth without extra plumbing. Most users complete the Google consent screen,
+    // so the false positive rate is low. Meta dedupes by event_id (matches pixel +
+    // CAPI) AND by fbp/fbc cookie when the user returns.
+    // We don't have email yet (Google OAuth provides it after consent) — pass nothing
+    // so the CAPI event still fires with whatever match keys we have (fbp, fbc, ip,
+    // user_agent). When the user returns and we have their email, we could fire a
+    // delayed CAPI event, but Meta's match quality is already strong with cookies + IP.
     fireMetaPixelSignup(planParam);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -118,10 +211,17 @@ const Signup = () => {
 
       trackEvent("signup_completed", { plan: planParam || "free", verified: !!data.session });
 
-      // Meta Pixel — fire Lead + CompleteRegistration so the ad campaign can optimize.
-      // Fires for BOTH paths (session null → /confirm-email, session present → /onboarding)
-      // since the Supabase account was created successfully in either case.
-      fireMetaPixelSignup(planParam);
+      // Meta Pixel + CAPI — fire Lead + CompleteRegistration on both surfaces with
+      // shared event_id so Meta dedupes. Pass user info so CAPI can hash email/name
+      // and add external_id (Supabase user uid). This dramatically improves Meta's
+      // event-match-quality score, which makes the campaign optimizer more confident.
+      // Fires for BOTH paths (session null → /confirm-email, session present →
+      // /onboarding) — the Supabase account was created successfully in either case.
+      fireMetaPixelSignup(planParam, {
+        email: email.trim(),
+        name: name.trim(),
+        userId: data.user?.id,
+      });
 
       // If Supabase email confirmation is required, `data.session` will be null.
       // In that case, park the user on /confirm-email until they click the link.
