@@ -2192,6 +2192,7 @@ export type Database = {
           converted: boolean | null
           created_at: string | null
           email: string | null
+          followup_sent_at: string | null
           id: string
           ip_address: string | null
           lang: string | null
@@ -2203,6 +2204,7 @@ export type Database = {
           converted?: boolean | null
           created_at?: string | null
           email?: string | null
+          followup_sent_at?: string | null
           id?: string
           ip_address?: string | null
           lang?: string | null
@@ -2214,6 +2216,7 @@ export type Database = {
           converted?: boolean | null
           created_at?: string | null
           email?: string | null
+          followup_sent_at?: string | null
           id?: string
           ip_address?: string | null
           lang?: string | null
