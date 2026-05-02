@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.meta-capi-track]
 verify_jwt = false
 
+[functions.admin-test-emails]
+verify_jwt = false
+
 [functions.analyze-video]
 verify_jwt = false
 
