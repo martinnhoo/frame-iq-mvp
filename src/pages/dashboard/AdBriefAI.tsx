@@ -4558,17 +4558,46 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
       // Show data cards if we have live-metrics OR snapshot with spend
       const hasSpendData = (liveMetrics && liveMetrics.spend > 0) || (snapshot && snapshot.total_spend > 0);
       if (hasSpendData) {
-        type SnapTopAd = { name?: string; ctr?: number; spend?: number; frequency?: number; isScalable?: boolean; needsPause?: boolean; isFatigued?: boolean };
+        type SnapTopAd = {
+          name?: string; ctr?: number; spend?: number; frequency?: number;
+          conversions?: number;
+          isScalable?: boolean; needsPause?: boolean; isFatigued?: boolean;
+        };
         const topAds: SnapTopAd[] = (snapshot?.top_ads || []) as SnapTopAd[];
-        const toScale = topAds.filter((a) => a.isScalable).slice(0, 2);
+
+        // ── VOLUME-SUFFICIENCY GATE ──────────────────────────────────────
+        // Critical product-integrity guard. The upstream `isScalable` flag
+        // (computed in daily-intelligence) checks CTR + min spend ONLY —
+        // it does NOT check whether the funnel has converted. Result: ads
+        // with high CTR and ZERO conversions were promoted as "Escale
+        // agora" in this hero card while the Feed correctly flagged the
+        // SAME account as "volume insuficiente — evitar escalar". Two
+        // surfaces, opposite recommendations on the same data. Broken.
+        //
+        // Split the scalable bucket into two cohorts:
+        //   • PROVEN — has at least 1 conversion. Funnel works. Scale-up
+        //     recommendation is honest. Promote to OPPORTUNITY card.
+        //   • UNPROVEN — high CTR but zero conversions. Could be tracking
+        //     issue, wrong landing intent, or audience that clicks-but-
+        //     doesn't-buy. NEVER recommend scale-up here. Pivot to a
+        //     "validate first" framing that mirrors what the AI actually
+        //     says when asked ("antes de escalar agressivamente,
+        //     precisamos validar se o problema é tracking, landing ou
+        //     intencionalidade do público"). Same vocabulary as the
+        //     Feed's "Sinais iniciais detectados — volume insuficiente"
+        //     surface so the two never contradict each other again.
+        const scalableCandidates = topAds.filter((a) => a.isScalable);
+        const provenScalable = scalableCandidates.filter((a) => (a.conversions || 0) > 0).slice(0, 2);
+        const unprovenHighCtr = scalableCandidates.filter((a) => (a.conversions || 0) === 0 && (a.spend || 0) > 50).slice(0, 1);
+
         const toPause = topAds.filter((a) => a.needsPause).slice(0, 1);
         const fatigued = topAds.filter((a) => a.isFatigued).slice(0, 1);
         const ctrDelta = snapshot?.yesterday_ctr > 0 && snapshot?.avg_ctr > 0
           ? ((snapshot.avg_ctr - snapshot.yesterday_ctr) / snapshot.yesterday_ctr * 100) : null;
 
-        // Opportunity: scalable ad
-        if (toScale.length && cards.length < 4) {
-          const ad = toScale[0];
+        // Opportunity: PROVEN scalable ad (has conversions).
+        if (provenScalable.length && cards.length < 4) {
+          const ad = provenScalable[0];
           cards.push({
             tag: lang === "pt" ? "OPORTUNIDADE" : lang === "es" ? "OPORTUNIDAD" : "OPPORTUNITY",
             tagColor: "#4ADE80",
@@ -4576,10 +4605,29 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
               ? `Escale '${ad.name?.slice(0, 35)}'`
               : `Scale '${ad.name?.slice(0, 35)}'`,
             detail: lang === "pt"
-              ? `CTR ${(ad.ctr*100)?.toFixed(2)}% — performance acima da média. Aumente o orçamento antes que sature.`
-              : `CTR ${(ad.ctr*100)?.toFixed(2)}% — above average performance. Increase budget before it saturates.`,
+              ? `CTR ${(ad.ctr*100)?.toFixed(2)}% com ${ad.conversions} ${ad.conversions === 1 ? "conversão" : "conversões"} — funil validado. Aumente o orçamento antes que sature.`
+              : `CTR ${(ad.ctr*100)?.toFixed(2)}% with ${ad.conversions} ${ad.conversions === 1 ? "conversion" : "conversions"} — funnel validated. Increase budget before it saturates.`,
             action: lang === "pt" ? "Como escalar?" : "How to scale?",
-            actionPrompt: lang === "pt" ? `Como escalar "${ad.name}" com CTR ${(ad.ctr*100)?.toFixed(2)}%?` : `How to scale "${ad.name}" with ${(ad.ctr*100)?.toFixed(2)}% CTR?`,
+            actionPrompt: lang === "pt" ? `Como escalar "${ad.name}" com CTR ${(ad.ctr*100)?.toFixed(2)}% e ${ad.conversions} conversões?` : `How to scale "${ad.name}" with ${(ad.ctr*100)?.toFixed(2)}% CTR and ${ad.conversions} conversions?`,
+          });
+        }
+        // Validate-first: UNPROVEN ad (high CTR but 0 conversions, spend > 50).
+        // Never push scale here. Same posture as Feed's "volume insuficiente" card.
+        else if (unprovenHighCtr.length && cards.length < 4) {
+          const ad = unprovenHighCtr[0];
+          cards.push({
+            tag: lang === "pt" ? "VALIDAR" : lang === "es" ? "VALIDAR" : "VALIDATE",
+            tagColor: "#FBBF24",
+            headline: lang === "pt"
+              ? `'${ad.name?.slice(0, 35)}' clica, mas não converte`
+              : `'${ad.name?.slice(0, 35)}' clicks but doesn't convert`,
+            detail: lang === "pt"
+              ? `CTR ${(ad.ctr*100)?.toFixed(2)}% com ${currSymbol}${ad.spend?.toFixed(0)} gastos e 0 conversões. Antes de escalar, validar: tracking, landing ou intenção do público?`
+              : `CTR ${(ad.ctr*100)?.toFixed(2)}% with ${currSymbol}${ad.spend?.toFixed(0)} spent and 0 conversions. Before scaling, validate: tracking, landing, or audience intent?`,
+            action: lang === "pt" ? "Investigar" : "Investigate",
+            actionPrompt: lang === "pt"
+              ? `'${ad.name}' tem CTR ${(ad.ctr*100)?.toFixed(2)}% com ${currSymbol}${ad.spend?.toFixed(0)} gastos mas 0 conversões. Por quê? Como validar se é tracking, landing ou audiência?`
+              : `'${ad.name}' has CTR ${(ad.ctr*100)?.toFixed(2)}% with ${currSymbol}${ad.spend?.toFixed(0)} spent but 0 conversions. Why? How to validate if it's tracking, landing, or audience?`,
           });
         }
 
