@@ -142,13 +142,21 @@ Deno.serve(async (req) => {
       ...(TEST_CODE ? { test_event_code: TEST_CODE } : {}),
     };
 
-    // POST to Graph API.
+    // POST to Graph API with one transient-failure retry. Meta returns
+    // 5xx occasionally during their internal deploys; one quick retry
+    // covers ~99% of these. Anything 4xx (auth, invalid payload) we
+    // surface immediately — retrying won't help.
     const url = `https://graph.facebook.com/v21.0/${PIXEL_ID}/events?access_token=${encodeURIComponent(ACCESS_TOKEN)}`;
-    const fbRes = await fetch(url, {
+    const postOnce = () => fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    let fbRes = await postOnce();
+    if (fbRes.status >= 500) {
+      await new Promise((r) => setTimeout(r, 800));
+      fbRes = await postOnce();
+    }
     const fbBody = await fbRes.text();
     let fbJson: unknown = null;
     try { fbJson = JSON.parse(fbBody); } catch { /* keep raw body */ }

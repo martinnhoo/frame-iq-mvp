@@ -80,30 +80,54 @@ const fireMetaEvent = async (
     }
   } catch { /* silent — pixel never blocks signup */ }
 
-  // 2) CAPI — server-side. Fire-and-forget; we don't await to avoid
-  //    delaying the signup UX. The edge function soft-fails if the
-  //    access token isn't configured yet (returns ok:false skipped).
+  // 2) CAPI — server-side. Fire-and-forget with one retry; we don't
+  //    await to avoid delaying the signup UX. The edge function
+  //    soft-fails if the access token isn't configured yet (returns
+  //    ok:false skipped). One retry covers transient network blips
+  //    (mobile 5G handoffs, brief Supabase edge restarts) without
+  //    risking double-fire — Meta dedupes by event_id within 48h, so
+  //    even if both calls land we count once.
   try {
     const firstName = userInfo.name?.trim().split(/\s+/)[0];
     const lastName  = userInfo.name?.trim().split(/\s+/).slice(1).join(" ") || undefined;
-    supabase.functions.invoke("meta-capi-track", {
-      body: {
-        event_name: eventName,
-        event_id: eventId,
-        event_source_url: window.location.href,
-        action_source: "website",
-        user_id: userInfo.userId,
-        user_data: {
-          email: userInfo.email,
-          firstName,
-          lastName,
-          external_id: userInfo.userId,
-          fbp: readMetaCookie("_fbp"),
-          fbc: readMetaCookie("_fbc"),
-        },
-        custom_data: customData,
+    const capiBody = {
+      event_name: eventName,
+      event_id: eventId,
+      event_source_url: window.location.href,
+      action_source: "website" as const,
+      user_id: userInfo.userId,
+      user_data: {
+        email: userInfo.email,
+        firstName,
+        lastName,
+        external_id: userInfo.userId,
+        fbp: readMetaCookie("_fbp"),
+        fbc: readMetaCookie("_fbc"),
       },
-    }).catch(() => { /* silent */ });
+      custom_data: customData,
+    };
+    const sendCapi = async (attempt: number): Promise<void> => {
+      try {
+        const { data, error } = await supabase.functions.invoke("meta-capi-track", { body: capiBody });
+        if (error) throw error;
+        const result = data as { ok?: boolean; skipped?: boolean; reason?: string } | null;
+        if (result?.skipped) {
+          // Token not configured yet — log once, no retry. This is the
+          // expected state until META_CAPI_ACCESS_TOKEN is set in
+          // Supabase secrets. Pixel still fires regardless.
+          console.info("[meta-capi] skipped:", result.reason);
+        } else if (!result?.ok && attempt < 1) {
+          // Transient failure (4xx/5xx from Meta). Retry once.
+          setTimeout(() => sendCapi(attempt + 1), 1500);
+        } else if (!result?.ok) {
+          console.warn("[meta-capi] failed after retry:", result);
+        }
+      } catch (e) {
+        if (attempt < 1) setTimeout(() => sendCapi(attempt + 1), 1500);
+        else console.warn("[meta-capi] error after retry:", e);
+      }
+    };
+    void sendCapi(0);
   } catch { /* silent — CAPI never blocks signup */ }
 };
 
