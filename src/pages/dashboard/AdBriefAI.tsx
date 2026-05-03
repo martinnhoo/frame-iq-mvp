@@ -228,9 +228,193 @@ interface AIMessage {
 
 
 
+// ── SpyForm ─────────────────────────────────────────────────────────────
+// Form dedicado pro Spy: aceita 3-5 anúncios (URL ou texto colado, 1 por
+// linha) + screenshots opcionais + nicho opcional + plataforma. Diferente
+// dos outros tools porque NÃO manda mensagem pro chat — invoca spy-niche
+// diretamente e injeta o resultado estruturado no histórico via callback.
+//
+// Por que dedicado: spy precisa de input estruturado (N ads) e devolve
+// output estruturado (padrões + gap + hooks). Forma genérica não cobria.
+function SpyForm({ onClose, onSpyExecute, lang, accountCtx, color }: {
+  onClose: () => void;
+  onSpyExecute: (body: { ads: Array<{ kind: 'url' | 'text' | 'image'; value: string; media_type?: string }>; niche: string; platform: 'meta' | 'tiktok' }) => void;
+  lang: string;
+  accountCtx?: { product?: string; niche?: string; market?: string; platform?: string };
+  color: string;
+}) {
+  const [adsText, setAdsText] = React.useState('');
+  const [niche, setNiche] = React.useState(accountCtx?.niche || '');
+  const [platform, setPlatform] = React.useState<'meta' | 'tiktok'>('meta');
+  const [images, setImages] = React.useState<Array<{ b64: string; media_type: string; name: string }>>([]);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const l = (['en', 'pt', 'es'] as const).includes(lang as 'pt' | 'en' | 'es') ? (lang as 'pt' | 'en' | 'es') : 'en';
+
+  const T = {
+    pt: {
+      title: 'Spy no nicho',
+      sub: 'Cole 3-5 anúncios concorrentes — 1 por linha. URL do Meta Ad Library, link TikTok, ou cole o copy direto. Você também pode subir screenshots.',
+      adsLabel: 'Anúncios concorrentes (3-5, 1 por linha)',
+      adsPh: 'https://www.facebook.com/ads/library/?id=...\nhttps://www.tiktok.com/@...\n"Perdi 12kg em 90 dias sem dieta..."  ← cole o copy assim também\n...',
+      nicheLabel: 'Nicho ou setor (opcional, ajuda a IA)',
+      nichePh: 'ex: "emagrecimento BR", "SaaS B2B US"',
+      addImage: '+ Screenshot',
+      submit: 'Analisar nicho →',
+      tip: 'Mín 3, máx 5 anúncios. Quanto mais variados, melhor o gap detectado.',
+    },
+    en: {
+      title: 'Spy on niche',
+      sub: 'Paste 3-5 competitor ads — 1 per line. Meta Ad Library URL, TikTok link, or just paste the copy. You can also upload screenshots.',
+      adsLabel: 'Competitor ads (3-5, 1 per line)',
+      adsPh: 'https://www.facebook.com/ads/library/?id=...\nhttps://www.tiktok.com/@...\n"I lost 12kg in 90 days without dieting..."  ← paste the copy like this\n...',
+      nicheLabel: 'Niche or industry (optional, helps the AI)',
+      nichePh: 'e.g. "home fitness BR", "SaaS B2B US"',
+      addImage: '+ Screenshot',
+      submit: 'Analyze niche →',
+      tip: 'Min 3, max 5 ads. More variety = better gap detection.',
+    },
+    es: {
+      title: 'Spy en el nicho',
+      sub: 'Pega 3-5 anuncios de la competencia — 1 por línea. URL de Meta Ad Library, link TikTok, o pega el copy. También puedes subir screenshots.',
+      adsLabel: 'Anuncios competidores (3-5, 1 por línea)',
+      adsPh: 'https://www.facebook.com/ads/library/?id=...\nhttps://www.tiktok.com/@...\n"Perdí 12kg en 90 días sin dieta..."  ← pega el copy así también\n...',
+      nicheLabel: 'Nicho o sector (opcional, ayuda a la IA)',
+      nichePh: 'ej: "fitness en casa", "SaaS B2B US"',
+      addImage: '+ Screenshot',
+      submit: 'Analizar nicho →',
+      tip: 'Mín 3, máx 5 anuncios. Más variedad = mejor detección de gap.',
+    },
+  }[l];
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      alert(l === 'pt' ? 'Imagem muito grande (max 4MB)' : l === 'es' ? 'Imagen muy grande (max 4MB)' : 'Image too large (max 4MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const b64 = result.split(',')[1];
+      const media_type = result.split(';')[0].split(':')[1] || 'image/jpeg';
+      setImages(prev => [...prev, { b64, media_type, name: file.name }].slice(0, 5));
+    };
+    reader.readAsDataURL(file);
+    if (e.target) e.target.value = ''; // reset input
+  };
+
+  const lines = adsText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+  const totalAds = lines.length + images.length;
+  const tooFew = totalAds < 3;
+  const tooMany = totalAds > 5;
+  const canSubmit = !tooFew && !tooMany;
+
+  const submit = () => {
+    if (!canSubmit) return;
+    const ads: Array<{ kind: 'url' | 'text' | 'image'; value: string; media_type?: string }> = [];
+    for (const line of lines) {
+      const isUrl = /^https?:\/\//i.test(line);
+      ads.push({ kind: isUrl ? 'url' : 'text', value: line });
+    }
+    for (const img of images) {
+      ads.push({ kind: 'image', value: img.b64, media_type: img.media_type });
+    }
+    onSpyExecute({ ads, niche: niche.trim(), platform });
+    onClose();
+  };
+
+  return (
+    <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(148,163,184,0.10)', background: 'linear-gradient(160deg,rgba(15,23,42,0.90) 0%,rgba(15,23,42,0.70) 100%)', boxShadow: `0 0 0 1px rgba(148,163,184,0.04) inset, 0 8px 32px rgba(0,0,0,0.40), 0 0 40px ${color}08`, backdropFilter: 'blur(16px) saturate(180%)', margin: '0 0 12px', animation: 'toolSlideIn 0.22s ease' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 10px', borderBottom: '1px solid rgba(148,163,184,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 24, height: 24, borderRadius: 7, background: `${color}20`, border: `1px solid ${color}35`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 12 }}>🔭</span>
+          </div>
+          <span style={{ ...j, fontSize: 13, fontWeight: 700, color: '#F1F5F9', letterSpacing: '-0.01em' }}>{T.title}</span>
+        </div>
+        <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, color: 'rgba(255,255,255,0.45)', cursor: 'pointer', display: 'flex', padding: '4px 6px' }}>
+          <X size={13} />
+        </button>
+      </div>
+
+      <div style={{ padding: '12px 16px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {/* Sub-explanation */}
+        <p style={{ ...m, fontSize: 12, color: 'rgba(255,255,255,0.55)', margin: 0, lineHeight: 1.5 }}>{T.sub}</p>
+
+        {/* Platform tabs */}
+        <div style={{ display: 'flex', gap: 4 }}>
+          {(['meta', 'tiktok'] as const).map(p => (
+            <button key={p} onClick={() => setPlatform(p)}
+              style={{ padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', ...j, background: platform === p ? color : 'rgba(255,255,255,0.06)', color: platform === p ? '#000' : 'rgba(255,255,255,0.55)', transition: 'all 0.1s' }}>
+              {p === 'meta' ? 'Meta' : 'TikTok'}
+            </button>
+          ))}
+        </div>
+
+        {/* Niche */}
+        <div>
+          <label style={{ ...m, fontSize: 11, color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: 4, fontWeight: 500 }}>{T.nicheLabel}</label>
+          <input value={niche} onChange={e => setNiche(e.target.value)} placeholder={T.nichePh}
+            style={{ width: '100%', background: 'rgba(148,163,184,0.06)', border: '1px solid rgba(148,163,184,0.12)', borderRadius: 8, padding: '8px 12px', color: '#F1F5F9', fontSize: 12, outline: 'none', ...m, boxSizing: 'border-box', transition: 'border-color 0.2s, background 0.2s' }}
+            onFocus={e => { e.currentTarget.style.borderColor = `${color}55`; e.currentTarget.style.background = 'rgba(148,163,184,0.08)'; }}
+            onBlur={e => { e.currentTarget.style.borderColor = 'rgba(148,163,184,0.12)'; e.currentTarget.style.background = 'rgba(148,163,184,0.06)'; }}
+          />
+        </div>
+
+        {/* Ads textarea */}
+        <div>
+          <label style={{ ...m, fontSize: 11, color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: 4, fontWeight: 500, display: 'flex', justifyContent: 'space-between' }}>
+            <span>{T.adsLabel}</span>
+            <span style={{ color: tooFew ? 'rgba(248,113,113,0.85)' : tooMany ? 'rgba(248,113,113,0.85)' : `${color}cc`, fontWeight: 700 }}>{totalAds}/5</span>
+          </label>
+          <textarea value={adsText} onChange={e => setAdsText(e.target.value)} placeholder={T.adsPh} rows={6} autoFocus
+            style={{ width: '100%', background: 'rgba(148,163,184,0.06)', border: '1px solid rgba(148,163,184,0.12)', borderRadius: 12, padding: '10px 14px', color: '#F1F5F9', fontSize: 12.5, lineHeight: 1.55, resize: 'none', outline: 'none', ...m, caretColor: color, boxSizing: 'border-box', transition: 'border-color 0.2s, background 0.2s, box-shadow 0.2s' }}
+            onFocus={e => { e.currentTarget.style.borderColor = `${color}55`; e.currentTarget.style.background = 'rgba(148,163,184,0.08)'; e.currentTarget.style.boxShadow = `0 0 0 1px ${color}20`; }}
+            onBlur={e => { e.currentTarget.style.borderColor = 'rgba(148,163,184,0.12)'; e.currentTarget.style.background = 'rgba(148,163,184,0.06)'; e.currentTarget.style.boxShadow = 'none'; }}
+          />
+          {/* Image chips */}
+          {images.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+              {images.map((img, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, background: `${color}18`, border: `1px solid ${color}35` }}>
+                  <span style={{ ...m, fontSize: 11, color: '#F1F5F9' }}>📷 {img.name.slice(0, 24)}</span>
+                  <button onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.55)', cursor: 'pointer', padding: 0, display: 'flex' }}>
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+            <button onClick={() => fileInputRef.current?.click()}
+              style={{ background: 'rgba(148,163,184,0.08)', border: '1px dashed rgba(148,163,184,0.20)', borderRadius: 6, color: 'rgba(255,255,255,0.65)', cursor: 'pointer', padding: '4px 10px', fontSize: 11, fontWeight: 600, ...m }}>
+              {T.addImage}
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+            <span style={{ ...m, fontSize: 10.5, color: 'rgba(255,255,255,0.30)' }}>{T.tip}</span>
+          </div>
+        </div>
+
+        {/* Submit */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+          <span style={{ ...m, fontSize: 12, color: '#475569' }}>⌘↵</span>
+          <button onClick={submit} disabled={!canSubmit}
+            style={{ padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, background: canSubmit ? color : 'rgba(148,163,184,0.06)', color: canSubmit ? '#000' : '#475569', border: 'none', cursor: canSubmit ? 'pointer' : 'not-allowed', ...j, transition: 'all 0.15s', boxShadow: canSubmit ? `0 4px 16px ${color}55` : 'none' }}>
+            {T.submit}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── InlineToolPanel ──────────────────────────────────────────────────────────────
-function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
-  action: string; onClose: () => void; onSend: (msg: string, displayText?: string) => void; lang: string;
+function InlineToolPanel({ action, onClose, onSend, onSpyExecute, lang, accountCtx }: {
+  action: string; onClose: () => void; onSend: (msg: string, displayText?: string) => void;
+  onSpyExecute?: (body: { ads: Array<{ kind: 'url' | 'text' | 'image'; value: string; media_type?: string }>; niche: string; platform: 'meta' | 'tiktok' }) => void;
+  lang: string;
   accountCtx?: { product?: string; niche?: string; market?: string; platform?: string; angle?: string };
 }) {
   const [val, setVal] = useState(accountCtx?.angle || "");
@@ -293,6 +477,13 @@ function InlineToolPanel({ action, onClose, onSend, lang, accountCtx }: {
   };
   const cfg = config[action];
   if (!cfg) return null;
+
+  // Spy é caso especial: tem form próprio (3-5 ads + screenshots) e
+  // chama edge function dedicada (spy-niche), não vai pelo chat genérico.
+  if (action === "spy" && onSpyExecute) {
+    return <SpyForm onClose={onClose} onSpyExecute={onSpyExecute} lang={lang} accountCtx={accountCtx} color={cfg.color} />;
+  }
+
   const l = ["en","pt","es"].includes(lang) ? lang : "en";
   const tones = ["direct","conversational","urgent","educational"];
   const toneLabels: Record<string,Record<string,string>> = {
@@ -5122,6 +5313,112 @@ HOOKS BLOCK TYPE — ONLY use the structured hooks output format when:
     }
   };
 
+  // ── onSpyExecute ─────────────────────────────────────────────────────
+  // Caminho dedicado pro Spy: invoca spy-niche edge function (que aceita
+  // 3-5 ads URL/text/image), formata o JSON estruturado de volta como uma
+  // sequência de blocks no chat. Não vai pelo adbrief-ai-chat — direto.
+  const onSpyExecute = async (body: { ads: Array<{ kind: 'url' | 'text' | 'image'; value: string; media_type?: string }>; niche: string; platform: 'meta' | 'tiktok' }) => {
+    setActiveTool(null);
+    // 1. Inject user-side message pra contextualizar histórico
+    const userText = lang === 'pt'
+      ? `Spy em ${body.platform === 'tiktok' ? 'TikTok' : 'Meta'}${body.niche ? ` — nicho "${body.niche}"` : ''} — ${body.ads.length} anúncios`
+      : lang === 'es'
+      ? `Spy en ${body.platform === 'tiktok' ? 'TikTok' : 'Meta'}${body.niche ? ` — nicho "${body.niche}"` : ''} — ${body.ads.length} anuncios`
+      : `Spy on ${body.platform === 'tiktok' ? 'TikTok' : 'Meta'}${body.niche ? ` — niche "${body.niche}"` : ''} — ${body.ads.length} ads`;
+    const uIdMs = Date.now();
+    setMessages(prev => [...prev, { role: 'user', userText, id: uIdMs, ts: uIdMs, blocks: [{ type: 'text' as const, title: '', content: userText }] }]);
+
+    setLoading(true);
+    try {
+      const accountCtxStr = [
+        profileField('product') || selectedPersona?.name || '',
+        profileField('niche') || profileField('industry') || '',
+        profileField('market') || lang.toUpperCase(),
+      ].filter(Boolean).join(' | ');
+
+      const { data, error } = await supabase.functions.invoke('spy-niche', {
+        body: {
+          ads: body.ads,
+          niche: body.niche,
+          platform: body.platform,
+          ui_language: lang,
+          user_account_context: accountCtxStr,
+        },
+      });
+
+      if (error || !(data as any)?.ok) {
+        const errMsg = (data as any)?.message || error?.message || (lang === 'pt' ? 'Spy falhou — tenta de novo.' : lang === 'es' ? 'Spy falló — intenta de nuevo.' : 'Spy failed — try again.');
+        const failures = (data as any)?.failures || [];
+        const failuresList = failures.length
+          ? '\n\n' + failures.map((f: any) => `• Anúncio #${f.index}: ${f.reason}`).join('\n')
+          : '';
+        const aIdMs = Date.now() + 1;
+        setMessages(prev => [...prev, {
+          role: 'assistant', id: aIdMs, ts: aIdMs,
+          blocks: [{ type: 'warning', title: lang === 'pt' ? 'Spy não rodou' : lang === 'es' ? 'Spy no funcionó' : 'Spy failed', content: errMsg + failuresList }],
+        }]);
+        return;
+      }
+
+      // 3. Format the analysis as a sequence of blocks
+      const a = (data as any).analysis;
+      const meta = (data as any).meta;
+      const blocks: Block[] = [];
+
+      // Block 1 — Insight: summary + GAP highlighted
+      const gapText = a.gap?.headline ? `\n\n**🎯 GAP EXPLORÁVEL:** ${a.gap.headline}\n${a.gap.evidence ? `_${a.gap.evidence}_\n` : ''}${a.gap.why_no_one_does ? `\nPor que ninguém faz: ${a.gap.why_no_one_does}` : ''}` : '';
+      blocks.push({
+        type: 'insight',
+        title: lang === 'pt' ? `Spy ${body.platform === 'tiktok' ? 'TikTok' : 'Meta'}: ${a.summary || 'análise pronta'}` : `Spy ${body.platform}: ${a.summary || 'analysis ready'}`,
+        content: `${a.summary || ''}${gapText}`,
+      });
+
+      // Block 2 — Pattern: top hooks + format + tone
+      const hookList = (a.top_hooks || []).map((h: any, i: number) =>
+        `**${i + 1}. ${h.pattern}** ${h.ad_ref ? `(${h.ad_ref})` : ''}\n_"${h.example_quote || ''}"_${h.why_it_works ? `\n${h.why_it_works}` : ''}`
+      ).join('\n\n');
+      const formatLine = a.format_dominant
+        ? `**Formato dominante:** ${a.format_dominant.format}${a.format_dominant.duration_avg_seconds ? ` · ${a.format_dominant.duration_avg_seconds}s` : ''}${a.format_dominant.evidence ? ` — ${a.format_dominant.evidence}` : ''}`
+        : '';
+      const toneLine = a.tone_pattern ? `**Tom dominante:** ${a.tone_pattern}` : '';
+      const offersList = (a.offers_pattern || []).map((o: any) => `• ${o.type}: ${o.example}`).join('\n');
+      const offersBlock = offersList ? `**Ofertas comuns:**\n${offersList}` : '';
+      blocks.push({
+        type: 'pattern',
+        title: lang === 'pt' ? 'Padrão detectado' : 'Detected pattern',
+        content: [hookList, formatLine, toneLine, offersBlock].filter(Boolean).join('\n\n'),
+      } as Block);
+
+      // Block 3 — Hooks: recommended hooks attacking the gap
+      if (a.recommended_hooks?.length) {
+        blocks.push({
+          type: 'hooks',
+          title: lang === 'pt' ? `${a.recommended_hooks.length} hooks pra atacar o gap` : `${a.recommended_hooks.length} hooks to attack the gap`,
+          items: a.recommended_hooks.map((h: any) => `${h.hook}${h.type ? ` _(${h.type})_` : ''}${h.why_for_this_user ? ` — ${h.why_for_this_user}` : ''}`),
+        });
+      }
+
+      // Block 4 — Confidence/meta footer
+      const confLabel = a.confidence === 'high' ? '🟢 Alta' : a.confidence === 'medium' ? '🟡 Média' : '🔴 Baixa';
+      blocks.push({
+        type: 'text',
+        title: '',
+        content: `${lang === 'pt' ? 'Confiança' : 'Confidence'}: ${confLabel}${a.confidence_reason ? ` — ${a.confidence_reason}` : ''}\n${meta?.ads_processed ? `${meta.ads_processed}/${meta.ads_processed + (meta.ads_failed || 0)} anúncios analisados` : ''}`,
+      });
+
+      const aIdMs = Date.now() + 1;
+      setMessages(prev => [...prev, { role: 'assistant', id: aIdMs, ts: aIdMs, blocks }]);
+    } catch (e) {
+      const aIdMs = Date.now() + 1;
+      setMessages(prev => [...prev, {
+        role: 'assistant', id: aIdMs, ts: aIdMs,
+        blocks: [{ type: 'warning', title: lang === 'pt' ? 'Erro inesperado' : 'Unexpected error', content: String(e).slice(0, 200) }],
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const send=async(text?:string, displayText?:string)=>{
     let msg=(text??input).trim();
     // If image attached in chat, prepend context note
@@ -6452,6 +6749,7 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
               action={activeTool}
               onClose={()=>setActiveTool(null)}
               onSend={send}
+              onSpyExecute={onSpyExecute}
               lang={lang}
               accountCtx={{
                 product: profileField("product") || selectedPersona?.name || undefined,

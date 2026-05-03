@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.bootstrap-key]
 verify_jwt = false
 
+[functions.spy-niche]
+verify_jwt = false
+
 [functions.analyze-video]
 verify_jwt = false
 
