@@ -38,10 +38,34 @@ Deno.serve(async (req) => {
     const ANTHROPIC = Deno.env.get('ANTHROPIC_API_KEY');
     const body = await req.json().catch(() => ({}));
     const { user_id, persona_id } = body;
+    // mode: 'full' (cron, 4 calls Claude) | 'quick' (on-demand chat trigger,
+    // só call 2/4 — insight principal). Default 'full' pra cron, 'quick' do
+    // frontend reduz custo de ~$0.05/abertura → ~$0.012/abertura.
+    const mode: 'full' | 'quick' = body.mode === 'quick' ? 'quick' : 'full';
 
     // Auth: allow service role (cron) OR authenticated user (chat trigger)
     const authed = isCronAuthorized(req) || await isUserAuthorized(req, sb, user_id);
     if (!authed) return unauthorizedResponse(cors);
+
+    // ── On-demand cooldown ─────────────────────────────────────────────
+    // Frontend dispara essa function quando user abre /dashboard/ai e não
+    // tem snapshot pra hoje. Se Meta API falhar (ou Claude tomar erro),
+    // próxima abertura redispara — e cobra de novo. Cooldown de 4h impede
+    // que múltiplas tentativas em curto espaço gerem múltiplas calls.
+    if (user_id && mode === 'quick') {
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+      const { data: recentSnap } = await sb.from('daily_snapshots' as any)
+        .select('updated_at')
+        .eq('user_id', user_id)
+        .eq('persona_id', persona_id || null)
+        .gte('updated_at', fourHoursAgo)
+        .maybeSingle();
+      if (recentSnap) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: 'cooldown_active', mode }), {
+          headers: { ...cors, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     // Build targets — detect connected platforms per persona, support Meta+Google simultaneously
     const targets: { user_id: string; persona_id: string | null; platform: 'meta' | 'google' | 'both' }[] = [];
@@ -102,8 +126,8 @@ Deno.serve(async (req) => {
         if (target.platform === 'both') {
           // Run both analyzers concurrently, then merge into a single snapshot
           const [metaResult, googleResult] = await Promise.allSettled([
-            analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id),
-            analyzeGoogleAccount(sb, ANTHROPIC, target.user_id, target.persona_id),
+            analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id, mode),
+            analyzeGoogleAccount(sb, ANTHROPIC, target.user_id, target.persona_id, mode),
           ]);
           // Merge: Meta is primary (richer data), Google enriches via raw_period
           // The Meta analyzeAccount already upserted its snapshot. We update it with Google data.
@@ -137,9 +161,9 @@ Deno.serve(async (req) => {
             r = metaResult.status === 'fulfilled' ? metaResult.value : googleResult.status === 'fulfilled' ? googleResult.value : { skipped: 'both failed' };
           }
         } else if (target.platform === 'google') {
-          r = await analyzeGoogleAccount(sb, ANTHROPIC, target.user_id, target.persona_id);
+          r = await analyzeGoogleAccount(sb, ANTHROPIC, target.user_id, target.persona_id, mode);
         } else {
-          r = await analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id);
+          r = await analyzeAccount(sb, ANTHROPIC, target.user_id, target.persona_id, mode);
         }
         results.push({ ...target, result: r });
       } catch (e) { results.push({ ...target, error: String(e) }); }
@@ -207,7 +231,11 @@ Deno.serve(async (req) => {
     }
 
     // ── Google Ads learning — fire after Meta loop, non-blocking ─────────────
-    processGoogleLearning(sb, ANTHROPIC).catch(() => {});
+    // Quick mode (on-demand do chat) NÃO roda esse — é loop de aprendizado,
+    // não precisa pra resposta imediata. Cron diário (full) faz todo dia.
+    if (mode === 'full') {
+      processGoogleLearning(sb, ANTHROPIC).catch(() => {});
+    }
 
     return new Response(JSON.stringify({ ok: true, processed: targets.length, results }), {
       headers: { ...cors, 'Content-Type': 'application/json' }
@@ -342,7 +370,7 @@ async function processGoogleLearning(sb: any, anthropicKey: string | undefined) 
   return { processed };
 }
 
-async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id: string, persona_id: string | null) {
+async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id: string, persona_id: string | null, mode: 'full' | 'quick' = 'full') {
   // ── Get Meta token ───────────────────────────────────────────────────────
   let conn: any = null;
   if (persona_id) {
@@ -860,9 +888,12 @@ JSON:
     .slice(0, 20);
 
   // Use Haiku to classify hook types — now uses REAL ad copy when available (from creativeMap)
-  // Falls back to ad name when creative wasn't fetchable
+  // Falls back to ad name when creative wasn't fetchable.
+  // Quick mode (on-demand chat trigger) PULA — é loop de aprendizado pra
+  // padrões futuros, não muda a resposta imediata pro user. Cron full faz
+  // todo dia. Economia: ~$0.01/abertura de chat.
   let hookClassifications: Record<string, string> = {};
-  if (anthropicKey && adsToClassify.length > 0) {
+  if (mode === 'full' && anthropicKey && adsToClassify.length > 0) {
     try {
       const adList = adsToClassify.map((ad: any, i: number) => {
         const creative = creativeMap[ad.id];
@@ -1117,7 +1148,7 @@ JSON:
 // ── analyzeGoogleAccount — Google Ads snapshot + learned_patterns ─────────────
 // Mirrors analyzeAccount() but for Google Ads connections.
 // Saves to daily_snapshots so the proactive greeting works for Google-only accounts.
-async function analyzeGoogleAccount(sb: any, anthropicKey: string | undefined, user_id: string, persona_id: string | null) {
+async function analyzeGoogleAccount(sb: any, anthropicKey: string | undefined, user_id: string, persona_id: string | null, mode: 'full' | 'quick' = 'full') {
   const GOOGLE_DEV_TOKEN = Deno.env.get('GOOGLE_ADS_DEVELOPER_TOKEN') ?? '';
   const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') ?? '';
   const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') ?? '';

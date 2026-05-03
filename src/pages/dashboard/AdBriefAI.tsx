@@ -3820,9 +3820,11 @@ export default function AdBriefAI() {
         fetchLive(),
       ]).then(async ([snap, live]) => {
         if (!snap && hasAnyConn) {
-          // No snapshot yet — trigger daily-intelligence then retry snapshot
+          // No snapshot yet — trigger daily-intelligence then retry snapshot.
+          // mode='quick' = só call principal (insight). Skipa hook classification
+          // (loop de aprendizado, cron diário cobre). ~5x mais barato que full.
           try {
-            await supabase.functions.invoke("daily-intelligence", { body: { user_id: user.id, persona_id: pid } });
+            await supabase.functions.invoke("daily-intelligence", { body: { user_id: user.id, persona_id: pid, mode: 'quick' } });
             const r2 = await buildSnapQuery() as { data: SnapRow[] | null };
             const snap2 = normSnap((r2.data || [])[0] || null);
             if (!proactiveFired.current) triggerProactiveGreeting(snap2, hasMetaConn, hasGoogleConn, live);
