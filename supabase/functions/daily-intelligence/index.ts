@@ -3,6 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
 import { recordCost } from "../_shared/cost-cap.ts";
+import { getActiveUserIds, logGate } from "../_shared/activity-gate.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -78,8 +79,24 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Activity gate — só processa users que logaram nos últimos 7 dias.
+    // User-triggered (chat opening) sempre passa. Cron-mode filtra todos.
+    // Elimina queima de Claude pra contas zumbi (zero atividade do user).
+    const activeIds = !user_id ? await getActiveUserIds(sb, 7) : null;
+    const filteredTargets = activeIds && activeIds.size > 0
+      ? targets.filter(t => activeIds.has(t.user_id))
+      : targets;
+    if (activeIds && activeIds.size > 0) {
+      logGate('daily-intelligence', targets.length, filteredTargets.length);
+    }
+    if (!user_id && filteredTargets.length === 0) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: 'no_active_users_in_window' }), {
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
     const results = [];
-    for (const target of targets) {
+    for (const target of filteredTargets) {
       try {
         let r: any;
         if (target.platform === 'both') {

@@ -1,6 +1,7 @@
 // weekly-report — sends weekly performance summary every Sunday
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { getActiveUserIds, logGate } from "../_shared/activity-gate.ts";
 
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
@@ -23,8 +24,20 @@ Deno.serve(async (req) => {
       if (c.persona_id) byUser[c.user_id].push(c.persona_id);
     });
 
+    // Activity gate — só envia weekly report pra users que abriram app nos
+    // últimos 14d (janela maior pra weekly — domingo tarde, gestor pode ter
+    // pulado uma semana mas ainda quer o report). Sem login em 14d → dormente.
+    const activeIds = await getActiveUserIds(sb, 14);
+    const allUserIds = Object.keys(byUser);
+    const activeOnly = activeIds.size > 0
+      ? Object.fromEntries(Object.entries(byUser).filter(([uid]) => activeIds.has(uid)))
+      : byUser;
+    if (activeIds.size > 0) {
+      logGate('weekly-report', allUserIds.length, Object.keys(activeOnly).length);
+    }
+
     let sent = 0;
-    for (const [userId, personaIds] of Object.entries(byUser)) {
+    for (const [userId, personaIds] of Object.entries(activeOnly)) {
       try {
         const { data: profile } = await sb.from("profiles").select("email").eq("id", userId).maybeSingle() as any;
         if (!profile?.email) continue;

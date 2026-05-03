@@ -362,6 +362,22 @@ Deno.serve(async (req) => {
       if (!authed) return unauthorizedResponse(cors);
     }
 
+    // Activity gate (cron path apenas) — pula se nenhum user logou nos
+    // últimos 7d. Trend watcher gasta Brave Search + Anthropic mesmo sem
+    // user nenhum online. Quando ninguém tá usando = $0 de gasto.
+    if (mode === "auto" && isCronAuthorized(req)) {
+      try {
+        const { hasAnyActiveUser } = await import("../_shared/activity-gate.ts");
+        const anyActive = await hasAnyActiveUser(sb, 7);
+        if (!anyActive) {
+          console.log("[trend-watcher] no active users in last 7d — skipping run, $0 spend");
+          return new Response(JSON.stringify({ ok: true, skipped: true, reason: "no_active_users_in_window" }), {
+            headers: { ...cors, "Content-Type": "application/json" },
+          });
+        }
+      } catch (_) { /* gate falhou — segue rodando */ }
+    }
+
     // STATUS
     if (mode === "status") {
       const { data: trends } = await sb.from("trend_intelligence")

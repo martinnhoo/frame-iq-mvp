@@ -3,6 +3,7 @@
 // com decisão de IA no meio: o que testar, pausar, escalar esta semana
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { getActiveUserIds, logGate } from "../_shared/activity-gate.ts";
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 
@@ -26,8 +27,23 @@ Deno.serve(async (req) => {
       (conns || []).forEach((c: any) => targets.push({ user_id: c.user_id, persona_id: c.persona_id }));
     }
 
+    // Activity gate — pula contas dormentes (user sem login nos últimos 7d).
+    // User-triggered passa direto; cron-mode filtra zumbi.
+    const activeIds = !user_id ? await getActiveUserIds(sb, 7) : null;
+    const filteredTargets = activeIds && activeIds.size > 0
+      ? targets.filter(t => activeIds.has(t.user_id))
+      : targets;
+    if (activeIds && activeIds.size > 0) {
+      logGate('creative-director', targets.length, filteredTargets.length);
+    }
+    if (!user_id && filteredTargets.length === 0) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: 'no_active_users_in_window' }), {
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
     const results = [];
-    for (const target of targets.slice(0, 20)) {
+    for (const target of filteredTargets.slice(0, 20)) {
       try {
         const r = await runCreativeDirector(sb, ANTHROPIC, target.user_id, target.persona_id);
         results.push({ ...target, ...r });

@@ -5,6 +5,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { getActiveUserIds, logGate } from "../_shared/activity-gate.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -34,8 +35,23 @@ Deno.serve(async (req) => {
       (personas || []).forEach((p: any) => targets.push({ user_id: p.user_id, persona_id: p.id }));
     }
 
+    // Activity gate — só processa users ativos nos últimos 7 dias.
+    // User-triggered passa direto. Cron-mode filtra dormentes.
+    const activeIds = !user_id ? await getActiveUserIds(sb, 7) : null;
+    const filteredTargets = activeIds && activeIds.size > 0
+      ? targets.filter(t => activeIds.has(t.user_id))
+      : targets;
+    if (activeIds && activeIds.size > 0) {
+      logGate('market-intelligence', targets.length, filteredTargets.length);
+    }
+    if (!user_id && filteredTargets.length === 0) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: 'no_active_users_in_window' }), {
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
     const results = [];
-    for (const target of targets.slice(0, 20)) {
+    for (const target of filteredTargets.slice(0, 20)) {
       try {
         const r = await runMarketIntelligence(sb, target.user_id, target.persona_id);
         results.push({ ...target, ...r });
