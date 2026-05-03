@@ -33,28 +33,31 @@ import { trackEvent } from "@/lib/posthog";
 
 const COPY = {
   pt: {
-    headline: "A nova era da gestão de tráfego.",
-    sub: "AI sênior embutida na sua conta Meta Ads. Diagnostica, decide e age — sem dashboard, sem ruído.",
+    headline: "Em 2026, escalar virou aposta.",
+    sub: "Pausa antes do dinheiro queimar.",
+    micro: "Sem cartão · Conecte Meta em 1 clique · Veja em 60 segundos",
     cta: "Começar agora",
     secondary: "Já tem conta? Entrar",
-    metaTitle: "AdBrief — A nova era da gestão de tráfego",
-    metaDesc: "Inteligência artificial sênior para gestores de tráfego em Meta Ads. Diagnóstico de conta em tempo real, decisões executáveis, criativo gerado a partir do que funciona na sua conta.",
+    metaTitle: "AdBrief — Pausa antes do dinheiro queimar",
+    metaDesc: "Em 2026, escalar com a Meta virou aposta. AdBrief lê sua conta 24/7 e pausa o que está perdendo dinheiro — antes do CPA disparar. Sem cartão, conecte em 1 clique.",
   },
   en: {
-    headline: "The new era of media buying.",
-    sub: "Senior AI embedded in your Meta Ads account. Diagnoses, decides and acts — no dashboard, no noise.",
+    headline: "In 2026, scaling became a gamble.",
+    sub: "Pauses before the money burns.",
+    micro: "No card · Connect Meta in 1 click · See in 60 seconds",
     cta: "Start now",
     secondary: "Already have an account? Log in",
-    metaTitle: "AdBrief — The new era of media buying",
-    metaDesc: "Senior AI for Meta Ads media buyers. Real-time account diagnostic, actionable decisions, creatives generated from what works in your account.",
+    metaTitle: "AdBrief — Pauses before the money burns",
+    metaDesc: "In 2026, scaling on Meta became a gamble. AdBrief reads your account 24/7 and pauses what's losing money — before CPA spikes. No card, connect in one click.",
   },
   es: {
-    headline: "La nueva era de la gestión de tráfico.",
-    sub: "IA senior integrada en tu cuenta Meta Ads. Diagnostica, decide y actúa — sin dashboard, sin ruido.",
+    headline: "En 2026, escalar se volvió apuesta.",
+    sub: "Pausa antes que el dinero se queme.",
+    micro: "Sin tarjeta · Conecta Meta en 1 clic · Mira en 60 segundos",
     cta: "Empezar ahora",
     secondary: "¿Ya tienes cuenta? Entrar",
-    metaTitle: "AdBrief — La nueva era de la gestión de tráfico",
-    metaDesc: "IA senior para media buyers de Meta Ads. Diagnóstico de cuenta en tiempo real, decisiones accionables, creativos generados a partir de lo que funciona.",
+    metaTitle: "AdBrief — Pausa antes que el dinero se queme",
+    metaDesc: "En 2026, escalar en Meta se volvió apuesta. AdBrief lee tu cuenta 24/7 y pausa lo que está perdiendo dinero — antes que el CPA dispare. Sin tarjeta, conecta en 1 clic.",
   },
 };
 
@@ -156,18 +159,36 @@ export default function IndexMinimal() {
             {t.headline}
           </h1>
 
-          {/* Subheadline — small and faded so headline + CTA dominate */}
+          {/* Subheadline — comando direto, sem brand. Espaço menor pro micro
+              entrar logo abaixo sem disputar com a headline. */}
           <p
             style={{
-              fontSize: "clamp(15px, 2vw, 18px)",
-              color: "rgba(255,255,255,0.55)",
-              margin: "0 0 48px",
+              fontSize: "clamp(16px, 2vw, 20px)",
+              color: "rgba(255,255,255,0.78)",
+              margin: "0 0 18px",
               maxWidth: 540,
-              lineHeight: 1.55,
-              fontWeight: 400,
+              lineHeight: 1.4,
+              fontWeight: 500,
             }}
           >
             {t.sub}
+          </p>
+
+          {/* Micro — risk-reversal em 1 linha, separadores · de baixo
+              contraste. Cabe em 1 linha em 375px. Mata 3 objeções: custo,
+              complexidade, tempo. */}
+          <p
+            style={{
+              fontSize: "clamp(12px, 1.4vw, 13px)",
+              color: "rgba(255,255,255,0.40)",
+              margin: "0 0 36px",
+              maxWidth: 580,
+              lineHeight: 1.5,
+              fontWeight: 500,
+              letterSpacing: "0.01em",
+            }}
+          >
+            {t.micro}
           </p>
 
           {/* CTA — single big button */}
