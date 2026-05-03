@@ -1,6 +1,6 @@
-// LP atual: minimalista (filtro de qualidade vem do Meta Ads targeting,
-// não da LP). Para reverter pra LP antiga (3248 linhas com features,
-// pricing, testimonials), trocar este import por `./IndexNew`.
-import IndexMinimal from "./IndexMinimal";
+// Nota: este arquivo NÃO é o ponto de entrada da rota /. App.tsx importa
+// IndexNew direto. Mantido só pra compatibilidade caso algum lugar
+// ainda referencie ./pages/Index.
+import IndexNew from "./IndexNew";
 
-export default IndexMinimal;
+export default IndexNew;

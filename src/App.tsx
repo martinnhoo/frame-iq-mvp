@@ -9,6 +9,9 @@ import { lazy, Suspense } from "react";
 
 // ── Eagerly loaded — needed on first paint for public routes ─────────────────
 import Index from "./pages/IndexNew";
+// LP minimalista — variante experimental servida em /start. Atrito zero,
+// só headline + 1 CTA. Filtro de qualidade vem do Meta Ads targeting.
+import IndexMinimal from "./pages/IndexMinimal";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -142,6 +145,9 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
+              {/* LP minimalista — experimental. Quando converter melhor que /,
+                  trocar import de Index pra IndexMinimal e remover esta rota. */}
+              <Route path="/start" element={<IndexMinimal />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/blog" element={<Blog />} />
