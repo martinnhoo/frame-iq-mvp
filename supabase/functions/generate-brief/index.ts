@@ -197,7 +197,10 @@ Return ONLY a JSON object — no markdown, no explanation:
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 2000,
-      system: systemPrompt,
+      // System prompt cacheado — esse mesmo bloco repete em toda chamada de
+      // generate-brief. cache_control ephemeral = 90% off em input tokens
+      // pra hits subsequentes (5min TTL).
+      system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userPrompt }],
     });
 

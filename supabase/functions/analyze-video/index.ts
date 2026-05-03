@@ -134,6 +134,13 @@ Deno.serve(async (req) => {
       }
     } else if (videoFile && OPENAI_API_KEY) {
       // Fallback to Whisper if no ANTHROPIC_API_KEY
+      // ⚠️ COST WARNING: Whisper = $0.006/min de áudio (≈12× mais caro que
+      // Gemini gateway). Se este branch fica firing com frequência, é sinal
+      // de gateway down ou key faltando — investigar antes de acumular custo.
+      console.warn('[analyze-video] WHISPER_FALLBACK_FIRED', {
+        reason: ANTHROPIC_API_KEY ? 'gateway_unavailable' : 'no_anthropic_key',
+        file_size_mb: Math.round((videoFile.size || 0) / 1024 / 1024),
+      });
       try {
         const whisperForm = new FormData();
         whisperForm.append('file', videoFile, videoFile.name || 'video.mp4');

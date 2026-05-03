@@ -758,7 +758,13 @@ async function analyzeAccount(sb: any, anthropicKey: string | undefined, user_id
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 600,
-          system: `AdBrief AI — gestor sênior de tráfego. Responda em PT-BR.
+          // System prompt cacheado — idêntico em todas as N contas do cron diário.
+          // Cron loopa 50+ accounts por dia e essa string é a mesma → cache_control
+          // ephemeral salva ~90% nos input tokens das chamadas 2..N (5min TTL é
+          // suficiente, todas as N contas processam em sequência rápida).
+          system: [{
+            type: 'text',
+            text: `AdBrief AI — gestor sênior de tráfego. Responda em PT-BR.
 
 Diagnostique causa-raiz antes de recomendar. Cite o dado específico.
 
@@ -780,6 +786,8 @@ JSON:
   "alerta": "<1 frase ou null>",
   "monitorar_24h": "<o que observar para confirmar>"
 }`,
+            cache_control: { type: 'ephemeral' },
+          }],
           messages: [{ role: 'user', content: JSON.stringify(ctx, null, 2) }],
         }),
       });

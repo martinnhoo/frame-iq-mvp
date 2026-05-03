@@ -32,15 +32,10 @@ Deno.serve(async (req) => {
       }), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 3000,
-        messages: [{
-          role: 'user',
-          content: `════════════════════════════════════════════════════════════
+    // Static system prompt (Constitution + estrutura) cacheado.
+    // Dynamic user message só com script + product + platform + market.
+    // Economia: ~90% nos input tokens depois do primeiro hit (5min TTL).
+    const STATIC_SYSTEM = `════════════════════════════════════════════════════════════
 ADBRIEF AI CONSTITUTION — APLICA A TODO OUTPUT DESTA IA
 ════════════════════════════════════════════════════════════
 
@@ -84,14 +79,9 @@ Antes de finalizar qualquer output, verifique:
 3. Isso poderia estar num artigo genérico sem contexto da conta? → Se sim, REESCREVA
 4. Respeita as regras do nicho identificado? → Se não, AJUSTE
 
-════════════════════════════════════════════════════════════\n\nYou are a world-class performance marketing creative director. Take this ad script and rewrite it 3 times — each with a completely different psychological angle/hook strategy.
+════════════════════════════════════════════════════════════
 
-ORIGINAL SCRIPT:
-${script}
-
-Product: ${product || 'the product'}
-Platform: ${platform || 'TikTok/Reels'}
-Market: ${market || 'global'}
+You are a world-class performance marketing creative director. Take an ad script and rewrite it 3 times — each with a completely different psychological angle/hook strategy.
 
 Create 3 distinct A/B test variants. Each must:
 - Keep the core offer/message identical
@@ -111,8 +101,23 @@ Return ONLY valid JSON:
       "key_change": "One sentence explaining the core psychological shift from original"
     }
   ]
-}`
-        }]
+}`;
+
+    const DYNAMIC_USER = `ORIGINAL SCRIPT:
+${script}
+
+Product: ${product || 'the product'}
+Platform: ${platform || 'TikTok/Reels'}
+Market: ${market || 'global'}`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 3000,
+        system: [{ type: 'text', text: STATIC_SYSTEM, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: DYNAMIC_USER }]
       })
     });
 

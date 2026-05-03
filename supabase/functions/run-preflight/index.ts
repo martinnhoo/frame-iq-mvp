@@ -362,7 +362,9 @@ Return ONLY valid JSON (no markdown, no backticks):
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
+        // Era 4096 — preflight result fica fácil em <2500 (testado em prod).
+        // Output a $5/Mtok = economia de ~$0.008/call em max ceiling.
+        max_tokens: 2500,
         messages: [{ role: "user", content: prompt }],
       }),
     });

@@ -283,7 +283,15 @@ Each script needs 8–15 lines alternating VO/on-screen/visual. Vary the angle d
     const callScript = async () => fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 3000, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }),
+      // System prompt cacheado — bloco grande (constituição AdBrief + regras
+      // de script) repete em toda chamada. cache_control ephemeral = ~90% off
+      // em input tokens pra hits subsequentes (5min TTL).
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 3000,
+        system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+        messages: [{ role: "user", content: userPrompt }],
+      }),
     });
     let response = await callScript();
     if (!response.ok && (response.status === 500 || response.status === 529)) {

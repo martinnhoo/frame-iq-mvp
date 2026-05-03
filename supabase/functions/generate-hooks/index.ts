@@ -252,17 +252,13 @@ Each hook's "why" field must cite which pattern it follows.
       return new Response(JSON.stringify({ hooks: mockHooks, mock_mode: true }), { headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // Auto-retry on 500/timeout — Haiku occasionally times out on long prompts
-    const callAnthropic = async (_retrying?: boolean) => {
-      return fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 3000,
-        messages: [{
-          role: 'user',
-          content: `You are a senior creative strategist. You write hooks that earn trust and convert — not hooks that shock, scare or lie.
+    // ── PROMPT SPLITTING PRA CACHING ─────────────────────────────────────
+    // Static block: persona + Constitution + "what works" + scoring rules + JSON schema.
+    // Idêntico em toda chamada → cache_control ephemeral = ~90% off em input
+    // tokens depois do primeiro hit (5min TTL).
+    // Dynamic block: userContext, persona, count, niche, winning_pattern.
+    // Muda a cada user/call → não cacheia.
+    const STATIC_SYSTEM = `You are a senior creative strategist. You write hooks that earn trust and convert — not hooks that shock, scare or lie.
 
 ════════════════════════════════════════════════════════════
 ADBRIEF AI CONSTITUTION — APLICA A TODO OUTPUT DESTA IA
@@ -310,31 +306,6 @@ Antes de finalizar qualquer output, verifique:
 
 ════════════════════════════════════════════════════════════
 
-${userContext}
-${persona_context ? `\nAUDIENCE:\n- ${persona_context.name} (${persona_context.age}) | pains: ${persona_context.pains?.join(', ')} | desires: ${persona_context.desires?.join(', ')}\n- Language style: ${persona_context.language_style}\n` : ''}
-FUNNEL STAGE: ${FUNNEL_CONTEXT[funnel_stage] || FUNNEL_CONTEXT.tofu}
-
-Generate ${effectiveCount} hooks for:
-- Product/Service: ${effectiveProduct}
-- Niche: ${niche || 'general'}
-- Market: ${market || 'global'}
-- Platform: ${platform || 'Meta/TikTok'}
-- Tone: ${tone && tone !== 'aggressive, urgent, direct' ? tone : 'human, credible, specific'}
-${angle ? `- Angle: ${angle}` : ''}
-${context ? `- Context/account patterns: ${context}` : ''}
-${winning_pattern ? `
-═══ WINNING PATTERN — REPLICATE THIS ═══
-This user clicked "generate variations" on a PROVEN pattern from their account.
-Your hooks MUST be inspired by and build upon this winning signal:
-- What works: ${winning_pattern.feature_type} = ${winning_pattern.feature_value}
-- Performance: CTR ${winning_pattern.avg_ctr || 'N/A'}${winning_pattern.avg_roas ? `, ROAS ${winning_pattern.avg_roas}x` : ''}${winning_pattern.impact_ctr_pct ? `, Impact: +${winning_pattern.impact_ctr_pct} vs account avg` : ''}
-${winning_pattern.insight_text ? `- Insight: ${winning_pattern.insight_text}` : ''}
-${winning_pattern.top_ads?.length ? `- Top ads using this pattern: ${winning_pattern.top_ads.join(' | ')}` : ''}
-CRITICAL: Generate ${count} variations that USE this winning ${winning_pattern.feature_type} approach.
-Every hook must apply the "${winning_pattern.feature_value}" technique in a different way.
-Do NOT generate generic hooks — every hook must clearly be a variation of what already works.
-═══════════════════════════════════════════
-` : ''}
 WHAT ACTUALLY WORKS (use these angles):
 - Specificity of experience: "Ferida que não cicatriza há meses?" (they recognize themselves)
 - Earned credibility: "60 anos tratando esse tipo de caso na Zona Sul"
@@ -343,7 +314,7 @@ WHAT ACTUALLY WORKS (use these angles):
 - Question that interrupts: "Você ainda usa curativo comum em ferida diabética?"
 - Story opener: "Chegou aqui sem esperança. Saiu caminhando."
 
-VARY THE APPROACH — ${effectiveCount} genuinely different mechanisms:
+VARY THE APPROACH — generate genuinely different mechanisms:
 curiosity | social_proof | authority | contrast | story_opener | outcome | question | relief
 
 SCORING RULES (predicted_score 0-10):
@@ -374,11 +345,47 @@ Return ONLY valid JSON:
       "cta_suggestion": "Best CTA to pair with this hook"
     }
   ]
-}`
-        }]
-      }),
-      signal: AbortSignal.timeout(25000),
-    });
+}`;
+
+    const DYNAMIC_USER = `${userContext}
+${persona_context ? `\nAUDIENCE:\n- ${persona_context.name} (${persona_context.age}) | pains: ${persona_context.pains?.join(', ')} | desires: ${persona_context.desires?.join(', ')}\n- Language style: ${persona_context.language_style}\n` : ''}
+FUNNEL STAGE: ${FUNNEL_CONTEXT[funnel_stage] || FUNNEL_CONTEXT.tofu}
+
+Generate ${effectiveCount} hooks for:
+- Product/Service: ${effectiveProduct}
+- Niche: ${niche || 'general'}
+- Market: ${market || 'global'}
+- Platform: ${platform || 'Meta/TikTok'}
+- Tone: ${tone && tone !== 'aggressive, urgent, direct' ? tone : 'human, credible, specific'}
+${angle ? `- Angle: ${angle}` : ''}
+${context ? `- Context/account patterns: ${context}` : ''}
+${winning_pattern ? `
+═══ WINNING PATTERN — REPLICATE THIS ═══
+This user clicked "generate variations" on a PROVEN pattern from their account.
+Your hooks MUST be inspired by and build upon this winning signal:
+- What works: ${winning_pattern.feature_type} = ${winning_pattern.feature_value}
+- Performance: CTR ${winning_pattern.avg_ctr || 'N/A'}${winning_pattern.avg_roas ? `, ROAS ${winning_pattern.avg_roas}x` : ''}${winning_pattern.impact_ctr_pct ? `, Impact: +${winning_pattern.impact_ctr_pct} vs account avg` : ''}
+${winning_pattern.insight_text ? `- Insight: ${winning_pattern.insight_text}` : ''}
+${winning_pattern.top_ads?.length ? `- Top ads using this pattern: ${winning_pattern.top_ads.join(' | ')}` : ''}
+CRITICAL: Generate ${count} variations that USE this winning ${winning_pattern.feature_type} approach.
+Every hook must apply the "${winning_pattern.feature_value}" technique in a different way.
+Do NOT generate generic hooks — every hook must clearly be a variation of what already works.
+═══════════════════════════════════════════
+` : ''}`;
+
+    // Auto-retry on 500/timeout — Haiku occasionally times out on long prompts
+    const callAnthropic = async (_retrying?: boolean) => {
+      return fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 3000,
+          system: [{ type: 'text', text: STATIC_SYSTEM, cache_control: { type: 'ephemeral' } }],
+          messages: [{ role: 'user', content: DYNAMIC_USER }]
+        }),
+        signal: AbortSignal.timeout(25000),
+      });
     };
     let res = await callAnthropic();
     // Retry once on 500/529 with reduced max_tokens

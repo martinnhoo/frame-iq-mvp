@@ -94,7 +94,10 @@ Return ONLY valid JSON.`;
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 1200,
-          system: systemPrompt,
+          // System prompt cacheado — repete em batches de tradução do mesmo
+          // template/idioma. cache_control ephemeral = 90% off em input
+          // tokens pra hits subsequentes (5min TTL).
+          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
           messages: [
             { role: 'user', content: userMsg },
           ],

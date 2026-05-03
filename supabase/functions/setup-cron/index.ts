@@ -37,7 +37,10 @@ Deno.serve(async (req) => {
     { name: 'adbrief-market-intelligence', cron: '30 11 * * *',  fn: 'market-intelligence',     body: '{}' },
     { name: 'adbrief-creative-director',   cron: '0 11 * * 1',   fn: 'creative-director',       body: '{}' },
     { name: 'adbrief-weekly-report',       cron: '0 12 * * 0',   fn: 'weekly-report',           body: '{}' },
-    { name: 'adbrief-trend-watch',         cron: '0 */2 * * *',  fn: 'trend-watcher',           body: '{"mode":"auto","geo":"BR"}' },
+    // Trend-watcher: 3×/dia em horário comercial (era a cada 2h = 12×/dia).
+    // Economia: ~75% das calls Brave + Anthropic. Trends mudam em horas,
+    // não em minutos — não perdemos freshness perceptível.
+    { name: 'adbrief-trend-watch',         cron: '0 11,14,18 * * *',  fn: 'trend-watcher',      body: '{"mode":"auto","geo":"BR"}' },
     { name: 'adbrief-critical-alerts',     cron: '0 */6 * * *',  fn: 'check-critical-alerts',   body: '{}' },
     { name: 'adbrief-email-lifecycle',     cron: '0 10 * * *',   fn: 'email-lifecycle',         body: '{}' },
     // Hourly fast-activation: pega usuário que cadastrou >= 1h atrás e ainda

@@ -171,7 +171,10 @@ IMPORTANT: If talent is involved, every scene's visual_description MUST referenc
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 3000,
-          system: sysPrompt,
+          // System prompt cacheado — bloco grande (constituição + schema JSON)
+          // repete em toda chamada. cache_control ephemeral = 90% off em
+          // input tokens pra hits subsequentes (5min TTL).
+          system: [{ type: 'text', text: sysPrompt, cache_control: { type: 'ephemeral' } }],
           messages: [{ role: 'user', content: `Create the board for this brief: ${prompt}` }],
         }),
       });
