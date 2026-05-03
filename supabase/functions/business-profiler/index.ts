@@ -5,6 +5,7 @@
 // Acionado: automaticamente quando persona é criada + sob demanda no chat
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isCronAuthorized, isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { checkCostCap, recordCost, capExceededResponse } from "../_shared/cost-cap.ts";
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -156,6 +157,17 @@ Nota: sem presença digital encontrada — perfil baseado apenas nas informaçõ
     // ── AI synthesizes into structured profile ───────────────────────────────
     if (!ANTHROPIC) throw new Error('ANTHROPIC_API_KEY not set');
 
+    // Cost cap antes do Claude — protege contra signup spam attacks (script
+    // que cria N contas e dispara N pesquisas Brave + N calls Claude). Pega
+    // plano do user pra cap correto. Free=$0.10/dia, Maker=$0.75, etc.
+    const { data: planRow } = await sb.from('profiles')
+      .select('plan').eq('id', user_id).maybeSingle();
+    const plan = (planRow as any)?.plan || 'free';
+    const cap = await checkCostCap(sb, user_id, plan);
+    if (!cap.allowed) {
+      return capExceededResponse(cap, cors);
+    }
+
     const contextText = researchChunks.join('\n\n---\n\n').slice(0, 7000);
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -164,9 +176,15 @@ Nota: sem presença digital encontrada — perfil baseado apenas nas informaçõ
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 2000,
-        system: `Você é um especialista em análise de negócios e compliance de marketing digital no Brasil e LATAM.
+        // System prompt cacheado (mesmo em todas chamadas) — 90% off em
+        // hits subsequentes dentro do TTL de 5min.
+        system: [{
+          type: 'text',
+          text: `Você é um especialista em análise de negócios e compliance de marketing digital no Brasil e LATAM.
 Analise as informações e construa um perfil honesto. Se incerto, diga explicitamente.
 Responda APENAS JSON válido, sem markdown.`,
+          cache_control: { type: 'ephemeral' },
+        }],
         messages: [{
           role: 'user',
           content: `Empresa: ${personaName || 'desconhecida'}
@@ -209,6 +227,19 @@ Nunca retorne erro. Empresa pequena sem site: infira indústria, público e comp
     });
 
     const aiData = await res.json();
+
+    // Record cost — pra que o checkCostCap em chamadas subsequentes saiba
+    // quanto já gastou hoje. Sem isso o cap nunca dispara mesmo se o user
+    // bater 100 calls.
+    try {
+      const u = aiData?.usage || {};
+      const inTok = Number(u.input_tokens || 0);
+      const outTok = Number(u.output_tokens || 0);
+      if (inTok || outTok) {
+        recordCost(sb, user_id, aiData?.model || 'claude-haiku-4-5-20251001', inTok, outTok).catch(() => {});
+      }
+    } catch (_) { /* non-fatal */ }
+
     const aiText = (aiData.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim();
     let profile: any;
     try { profile = JSON.parse(aiText); }

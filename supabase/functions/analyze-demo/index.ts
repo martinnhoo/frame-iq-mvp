@@ -77,22 +77,51 @@ Deno.serve(async (req) => {
       || "unknown";
 
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { count: ipCount, error: countError } = await supabase
-      .from("demo_leads")
-      .select("id", { count: "exact", head: true })
-      .eq("ip_address", ip)
-      .gte("created_at", oneDayAgo);
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-    if (countError) {
-      log("Rate limit count error", countError);
+    // ── 3 GATES contra IP-rotation abuse ─────────────────────────────────
+    // 1) Per-IP: 3 demos/dia (já existia)
+    // 2) Per-IP fast: 1 demo/hora (anti-burst, mesmo IP rodando script)
+    // 3) GLOBAL daily cap: 200 demos/dia projeto-wide (ultimate ceiling
+    //    contra IP rotation — atacante com 1000 proxies bate aqui em ~1h
+    //    e demo desliga até reset)
+    const [perIpDay, perIpHour, globalDay] = await Promise.all([
+      supabase.from("demo_leads").select("id", { count: "exact", head: true })
+        .eq("ip_address", ip).gte("created_at", oneDayAgo),
+      supabase.from("demo_leads").select("id", { count: "exact", head: true })
+        .eq("ip_address", ip).gte("created_at", oneHourAgo),
+      supabase.from("demo_leads").select("id", { count: "exact", head: true })
+        .gte("created_at", oneDayAgo),
+    ]);
+
+    if (perIpDay.error || perIpHour.error || globalDay.error) {
+      log("Rate limit count error", perIpDay.error || perIpHour.error || globalDay.error);
       return json({ ok: false, error: "rate_limit_check_failed" });
     }
 
-    if ((ipCount ?? 0) >= 3) {
+    if ((perIpDay.count ?? 0) >= 3) {
       return json({
         ok: false,
         error: "rate_limited",
         message: "You've reached the daily demo limit. Sign up for the 1-day free trial to continue!",
+      });
+    }
+
+    if ((perIpHour.count ?? 0) >= 1) {
+      return json({
+        ok: false,
+        error: "rate_limited_hour",
+        message: "Wait an hour between demos, or sign up for unlimited analyses.",
+      });
+    }
+
+    const GLOBAL_DAILY_DEMO_CAP = 200; // ~$1/dia worst-case Claude
+    if ((globalDay.count ?? 0) >= GLOBAL_DAILY_DEMO_CAP) {
+      log("GLOBAL_DEMO_CAP_HIT", { count: globalDay.count });
+      return json({
+        ok: false,
+        error: "service_at_capacity",
+        message: "Demo at capacity for today. Sign up — paid users always have access.",
       });
     }
 
@@ -174,8 +203,13 @@ Format: pure JSON with fields {score, verdict, hook, message, cta, actions}
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 800,
-        system: systemPrompt,
+        // 800 → 500: demo result (score+verdict+hook+message+cta+actions[3])
+        // cabe folgado em 500 tokens. Output a $5/Mtok = -$0.0015/call ceiling.
+        max_tokens: 500,
+        // System cacheado: ~3 versões idênticas (pt/es/en), cada uma com
+        // ~800 chars. Cache_control ephemeral salva 90% nos hits subsequentes
+        // dentro do TTL de 5min (público hit em rajadas é o caso comum).
+        system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
         messages: [{
           role: "user",
           content: [

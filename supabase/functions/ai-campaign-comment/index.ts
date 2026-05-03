@@ -31,6 +31,7 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isUserAuthorized, unauthorizedResponse } from "../_shared/cron-auth.ts";
+import { checkCostCap, recordCost, capExceededResponse } from "../_shared/cost-cap.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -309,33 +310,57 @@ REGRAS ABSOLUTAS:
 
 Responda APENAS com o comentário, sem aspas, sem prefixo.`;
 
-      try {
-        const haikuRes = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": ANTHROPIC,
-            "anthropic-version": "2023-06-01",
-          },
-          body: JSON.stringify({
-            model: "claude-haiku-4-5-20251001",
-            max_tokens: 250,
-            system: systemPrompt,
-            messages: [
-              {
-                role: "user",
-                content: `Dados reais da ${label} (Meta Ads):\n${JSON.stringify(ctx, null, 2)}\n\nEscreva o comentário.`,
-              },
-            ],
-          }),
-        });
+      // Cost cap antes do Claude — protege user free de queimar quota dele
+      // só clicando pause/activate em vários ads. Se já bateu o cap diário,
+      // pula direto pro fallback deterministic.
+      const { data: planRow } = await sbAuth.from("profiles")
+        .select("plan").eq("id", user_id).maybeSingle();
+      const plan = (planRow as any)?.plan || "free";
+      const cap = await checkCostCap(sbAuth, user_id, plan);
+      if (!cap.allowed) {
+        // Não bloqueia o fluxo — só pula o Claude e deixa o fallback
+        // deterministic (linhas abaixo) gerar comentário sem custo.
+        console.log(`[ai-campaign-comment] cost cap hit for ${user_id}, using deterministic fallback`);
+      } else {
+        try {
+          const haikuRes = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": ANTHROPIC,
+              "anthropic-version": "2023-06-01",
+            },
+            body: JSON.stringify({
+              model: "claude-haiku-4-5-20251001",
+              max_tokens: 250,
+              // System cacheado — é o mesmo em todas chamadas dessa function
+              // (depende só de label = 'campanha'/'conjunto'/'anúncio'). 90%
+              // off em hits subsequentes dentro do TTL de 5min.
+              system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+              messages: [
+                {
+                  role: "user",
+                  content: `Dados reais da ${label} (Meta Ads):\n${JSON.stringify(ctx, null, 2)}\n\nEscreva o comentário.`,
+                },
+              ],
+            }),
+          });
 
-        if (haikuRes.ok) {
-          const haikuData = await haikuRes.json();
-          comment = (haikuData.content?.[0]?.text || "").trim();
+          if (haikuRes.ok) {
+            const haikuData = await haikuRes.json();
+            comment = (haikuData.content?.[0]?.text || "").trim();
+            // Track cost
+            try {
+              const u = haikuData?.usage || {};
+              if (u.input_tokens || u.output_tokens) {
+                recordCost(sbAuth, user_id, haikuData?.model || "claude-haiku-4-5-20251001",
+                  Number(u.input_tokens || 0), Number(u.output_tokens || 0)).catch(() => {});
+              }
+            } catch (_) { /* non-fatal */ }
+          }
+        } catch {
+          /* fall through to deterministic */
         }
-      } catch {
-        /* fall through to deterministic */
       }
 
       if (!comment) {
