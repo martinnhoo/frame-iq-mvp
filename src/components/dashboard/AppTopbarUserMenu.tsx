@@ -197,7 +197,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
               width: "100%",
               padding: "10px 14px",
               margin: "0 0 4px",
-              background: "rgba(168,85,247,0.10)",
+              background: "rgba(59,130,246,0.10)",
               border: "none",
               borderTop: "1px solid rgba(255,255,255,0.05)",
               borderBottom: "1px solid rgba(255,255,255,0.05)",
@@ -205,12 +205,12 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
               fontFamily: F,
               transition: "background 0.12s",
             }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(168,85,247,0.18)"}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(168,85,247,0.10)"}>
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.18)"}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.10)"}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: 0.06 }}>
               <Globe size={13} /> Idioma
             </span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#a855f7" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#3B82F6" }}>
               {langLabel(language)}
             </span>
           </button>
