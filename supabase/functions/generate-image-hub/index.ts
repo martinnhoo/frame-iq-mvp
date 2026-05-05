@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v13-b64-no-storage-2026-05-05";
+const FN_VERSION = "v14-debug-db-error-2026-05-05";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -225,43 +225,59 @@ Deno.serve(async (req) => {
 
     // ── Persiste na biblioteca como data URL (sem Storage) ──────────
     let memoryId: string | null = null;
+    let dbDebug: { stage: string; message?: string; details?: unknown; code?: string; hint?: string } | null = null;
     try {
+      const insertPayload = {
+        user_id: authUser.id,
+        type: "hub_image",
+        content: {
+          prompt: userPrompt,
+          revised_prompt: revisedPrompt,
+          final_prompt: finalPrompt,
+          image_url: finalImageUrl,
+          aspect_ratio, size, quality,
+          model: "gpt-image-2",
+          brand_id: brand_id || null,
+          market: market || null,
+          license_included: include_license,
+          license_text: include_license ? license_text : null,
+        },
+        created_at: new Date().toISOString(),
+      };
+      console.log(`[hub-image] inserting — content size: ${JSON.stringify(insertPayload.content).length} bytes`);
+
       const { data: inserted, error: dbErr } = await sb.from("creative_memory")
-        .insert({
-          user_id: authUser.id,
-          type: "hub_image",
-          content: {
-            prompt: userPrompt,
-            revised_prompt: revisedPrompt,
-            final_prompt: finalPrompt,
-            image_url: finalImageUrl,
-            aspect_ratio, size, quality,
-            model: "gpt-image-2",
-            brand_id: brand_id || null,
-            market: market || null,
-            license_included: include_license,
-            license_text: include_license ? license_text : null,
-          },
-          created_at: new Date().toISOString(),
-        })
+        .insert(insertPayload)
         .select("id")
         .single();
       if (dbErr) {
-        console.warn("[hub-image] DB insert failed (non-fatal):", dbErr.message);
+        console.error("[hub-image] DB insert error:", JSON.stringify(dbErr));
+        dbDebug = {
+          stage: "insert_error",
+          message: dbErr.message,
+          details: dbErr.details,
+          code: (dbErr as { code?: string }).code,
+          hint: dbErr.hint,
+        };
       } else {
         memoryId = inserted?.id || null;
+        if (!memoryId) {
+          dbDebug = { stage: "no_id_returned", details: inserted };
+        }
       }
     } catch (dbErr) {
-      console.warn("[hub-image] DB insert exception (non-fatal):", dbErr);
+      console.error("[hub-image] DB insert exception:", dbErr);
+      dbDebug = { stage: "exception", message: String(dbErr) };
     }
 
-    console.log(`[hub-image] success — model=gpt-image-2 memory_id=${memoryId}`);
+    console.log(`[hub-image] success — model=gpt-image-2 memory_id=${memoryId} dbDebug=${JSON.stringify(dbDebug)}`);
 
     return jsonResponse({
       _v: FN_VERSION,
       ok: true,
       image_url: finalImageUrl,
       memory_id: memoryId,
+      db_debug: dbDebug,
       prompt: userPrompt,
       revised_prompt: revisedPrompt,
       final_prompt: finalPrompt,
