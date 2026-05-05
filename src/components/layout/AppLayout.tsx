@@ -156,7 +156,7 @@ function getNavSections(lang: string): NavSection[] {
       items: [
         { url: '/dashboard/hub/voice',      label: L('Gerador de Voz','Voice Generator','Generador de Voz','语音生成器'), icon: Mic },
         { url: '/dashboard/hub/transcribe', label: L('Transcrição',  'Transcription', 'Transcripción', '转录'),     icon: Captions },
-        { url: '/dashboard/hub/ab',         label: L('Variações AB', 'A/B Variants',  'Variantes A/B', 'A/B 变体'),  icon: GitBranch,  soon: true },
+        { url: '/dashboard/hub/ab',         label: L('Variações AB', 'A/B Variants',  'Variantes A/B', 'A/B 变体'),  icon: GitBranch },
         { url: '/dashboard/hub/analytics',  label: L('Analytics',    'Analytics',     'Analítica',     '数据分析'), icon: BarChart3 },
       ],
     },
