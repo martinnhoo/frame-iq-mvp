@@ -23,6 +23,8 @@ type GenResult = {
   prompt: string;
   revised_prompt: string;
   aspect_ratio: string;
+  model_used?: string;
+  fallback_reason?: string | null;
 };
 
 type GalleryItem = {
@@ -356,10 +358,31 @@ export default function HubImageGenerator() {
                 <RefreshCw size={14} /> Gerar variação
               </button>
             </div>
+            {result.model_used && (
+              <div style={{
+                marginTop: 12, padding: "8px 12px",
+                display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+                background: result.model_used === "gpt-image-1" ? "rgba(34,211,153,0.06)" : "rgba(168,85,247,0.06)",
+                border: `1px solid ${result.model_used === "gpt-image-1" ? "rgba(34,211,153,0.20)" : "rgba(168,85,247,0.20)"}`,
+                borderRadius: 8,
+              }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase",
+                  color: result.model_used === "gpt-image-1" ? "#22d399" : "#c084fc",
+                }}>
+                  Modelo: {result.model_used}
+                </span>
+                {result.fallback_reason && (
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.4 }}>
+                    · gpt-image-1 indisponível ({result.fallback_reason.slice(0, 90)}). Pra usar o modelo novo, verifica sua org OpenAI em platform.openai.com/settings/organization/general.
+                  </span>
+                )}
+              </div>
+            )}
             {result.revised_prompt && result.revised_prompt !== result.prompt && (
               <p style={{
                 fontSize: 11, color: "rgba(255,255,255,0.40)",
-                marginTop: 12, padding: "8px 12px",
+                marginTop: 8, padding: "8px 12px",
                 background: "rgba(255,255,255,0.03)", borderRadius: 8,
                 fontStyle: "italic", lineHeight: 1.55,
               }}>
