@@ -21,7 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Image as ImageIcon, Layers, Clapperboard, Mic, GitBranch, BarChart3,
-  FolderOpen, ArrowRight, Sparkles,
+  FolderOpen, ArrowRight, Sparkles, GalleryHorizontal,
 } from "lucide-react";
 
 type Lang = "pt" | "en" | "es" | "zh";
@@ -135,12 +135,16 @@ export default function BrilliantHub() {
     { id: "img", title: t("imgGen"), desc: t("imgGenDesc"), btn: t("imgGenBtn"),
       icon: ImageIcon, route: "/dashboard/hub/image", featured: true },
     { id: "png", title: t("pngGen"), desc: t("pngGenDesc"), btn: t("pngGenBtn"),
-      icon: Layers, soon: true },
+      icon: Layers, route: "/dashboard/hub/png" },
     { id: "storyboard", title: t("storyboard"), desc: t("storyboardDesc"), btn: t("storyboardBtn"),
       icon: Clapperboard, route: "/dashboard/hub/storyboard" },
   ];
 
   const supportTools = [
+    { id: "carousel", title: lang === "pt" ? "Carrossel" : lang === "es" ? "Carrusel" : lang === "zh" ? "轮播" : "Carousel",
+      desc: lang === "pt" ? "Roteiro vira carrossel — slides quadrados pra Insta, LinkedIn." : lang === "es" ? "El guión se convierte en un carrusel — slides cuadrados para Instagram, LinkedIn." : lang === "zh" ? "剧本转化为轮播 — 适用于 Instagram 的方形幻灯片。" : "Script becomes a carousel — square slides for Instagram, LinkedIn.",
+      btn: lang === "pt" ? "Criar carrossel" : lang === "es" ? "Crear carrusel" : lang === "zh" ? "创建轮播" : "Create carousel",
+      icon: GalleryHorizontal, route: "/dashboard/hub/carousel" },
     { id: "transcribe", title: t("transcribe"), desc: t("transcribeDesc"), btn: t("transcribeBtn"),
       icon: Mic, soon: true },
     { id: "ab", title: t("abVar"), desc: t("abVarDesc"), btn: t("abVarBtn"),

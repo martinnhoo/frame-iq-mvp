@@ -74,6 +74,8 @@ const BrilliantHub     = lazy(() => import("./pages/dashboard/BrilliantHub"));
 const HubImageGenerator = lazy(() => import("./pages/dashboard/HubImageGenerator"));
 const HubLibrary = lazy(() => import("./pages/dashboard/HubLibrary"));
 const HubStoryboard = lazy(() => import("./pages/dashboard/HubStoryboard"));
+const HubPngGenerator = lazy(() => import("./pages/dashboard/HubPngGenerator"));
+const HubCarousel = lazy(() => import("./pages/dashboard/HubCarousel"));
 const CampaignsManager = lazy(() => import("./pages/dashboard/CampaignsManager"));
 
 import ToolGate from "./components/ToolGate";
@@ -119,7 +121,9 @@ const App = () => (
                 <Route index element={<Navigate to="/dashboard/hub" replace />} />
                 <Route path="hub" element={<BrilliantHub />} />
                 <Route path="hub/image" element={<HubImageGenerator />} />
+                <Route path="hub/png" element={<HubPngGenerator />} />
                 <Route path="hub/storyboard" element={<HubStoryboard />} />
+                <Route path="hub/carousel" element={<HubCarousel />} />
                 <Route path="hub/library" element={<HubLibrary />} />
                 <Route path="library" element={<Navigate to="/dashboard/hub/library" replace />} />
                 <Route path="feed" element={<FeedPage />} />

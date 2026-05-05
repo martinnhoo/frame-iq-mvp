@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v14-debug-db-error-2026-05-05";
+const FN_VERSION = "v15-transparent-2026-05-05";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
       market = null,
       include_license = false,
       license_text = "",
+      transparent = false,
     } = body as {
       prompt?: string;
       aspect_ratio?: string;
@@ -79,6 +80,7 @@ Deno.serve(async (req) => {
       market?: string | null;
       include_license?: boolean;
       license_text?: string;
+      transparent?: boolean;
     };
 
     if (!prompt || prompt.trim().length < 5) {
@@ -120,6 +122,7 @@ Deno.serve(async (req) => {
         quality,
         n: 1,
         moderation: "low",
+        ...(transparent ? { background: "transparent", output_format: "png" } : {}),
       }),
     });
 
