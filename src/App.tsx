@@ -94,6 +94,9 @@ const PatternsPage     = lazy(() => import("./pages/dashboard/PatternsPage"));
 const HistoryPage      = lazy(() => import("./pages/dashboard/HistoryPage"));
 const OnboardingPage   = lazy(() => import("./pages/dashboard/OnboardingPage"));
 const CriarHub         = lazy(() => import("./pages/dashboard/CriarHub"));
+// Brilliant Hub — pivô interno multi-marca (substitui Feed como home).
+// Outras rotas continuam acessíveis via URL direta mas escondidas do menu.
+const BrilliantHub     = lazy(() => import("./pages/dashboard/BrilliantHub"));
 const CampaignsManager = lazy(() => import("./pages/dashboard/CampaignsManager"));
 
 // SEO pages — lazily loaded, rarely visited from landing
@@ -177,8 +180,10 @@ const App = () => (
 
               {/* Dashboard — simplified v2 AppLayout with Copilot sidebar */}
               <Route path="/dashboard" element={<AppLayout />}>
-                {/* V2: Copilot Feed is the new default */}
-                <Route index element={<Navigate to="/dashboard/feed" replace />} />
+                {/* Brilliant Hub é o novo home — Feed e demais rotas continuam
+                    funcionando via URL direta pra preservar opcionalidade. */}
+                <Route index element={<Navigate to="/dashboard/hub" replace />} />
+                <Route path="hub" element={<BrilliantHub />} />
                 <Route path="feed" element={<FeedPage />} />
                 <Route path="feed/campanhas" element={<CampaignsManager />} />
                 <Route path="history" element={<HistoryPage />} />
@@ -216,7 +221,7 @@ const App = () => (
                 <Route path="loop/guide" element={<LoopGuidePage />} />
                 <Route path="referral" element={<ReferralPage />} />
                 <Route path="autopilot-log" element={<AutopilotLogPage />} />
-                <Route path="*" element={<Navigate to="/dashboard/feed" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard/hub" replace />} />
               </Route>
 
               {/* ── Cockpit: admin-only backoffice (obscure path; guarded by edge fn) ── */}

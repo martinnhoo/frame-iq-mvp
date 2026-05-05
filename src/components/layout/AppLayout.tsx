@@ -101,11 +101,12 @@ function getNavItems(lang: string) {
     accounts: { pt: 'Contas', es: 'Cuentas', fr: 'Comptes', de: 'Konten', zh: '账户', ar: 'الحسابات', en: 'Accounts' },
   };
   const t = (key: string) => l[key]?.[lang] || l[key]?.en || key;
+  // Brilliant Hub é o único item visível no menu durante o pivô interno.
+  // Demais rotas (/feed, /ai, /history, /accounts) continuam acessíveis via
+  // URL direta — só foram removidas do menu pra simplificar o foco da
+  // operação interna na Brilliant Gaming.
   return [
-    { url: '/dashboard/feed',     label: 'Feed',         icon: Command },
-    { url: '/dashboard/ai',       label: t('ai'),        icon: MessageSquare },
-    { url: '/dashboard/history',   label: t('history'),   icon: Clock },
-    { url: '/dashboard/accounts',  label: t('accounts'),  icon: Building2 },
+    { url: '/dashboard/hub', label: 'Hub', icon: Command },
   ];
 }
 
