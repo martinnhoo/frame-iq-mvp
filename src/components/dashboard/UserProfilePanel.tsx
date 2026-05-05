@@ -121,7 +121,7 @@ const LANGUAGES = [
   { code: "pt", label: "Português" },
   { code: "en", label: "English" },
   { code: "es", label: "Español" },
-  { code: "hi", label: "Hindi" },
+  { code: "zh", label: "中文" },
 ];
 
 const PLAN_INFO: Record<string, { label: string; color: string; desc: string; price: string }> = {
@@ -591,12 +591,13 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
                 <input value={user.email || ""} disabled style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(238,240,246,0.30)", fontFamily: M, fontSize: 13, boxSizing: "border-box" as const, cursor: "not-allowed" }} />
               </div>
               <div>
-                <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Idioma" : language === "es" ? "Idioma" : "Language"}</label>
+                <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Idioma" : language === "es" ? "Idioma" : language === "zh" ? "语言" : "Language"}</label>
                 <select value={lang} onChange={e => setLang(e.target.value)}
                   style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "#1a2032", border: "1px solid rgba(255,255,255,0.10)", color: "#eef0f6", fontFamily: M, fontSize: 13, outline: "none", boxSizing: "border-box" as const, cursor: "pointer" }}>
                   <option value="pt">Português</option>
                   <option value="en">English</option>
                   <option value="es">Español</option>
+                  <option value="zh">中文</option>
                 </select>
               </div>
               <button onClick={handleSave} disabled={saving}
