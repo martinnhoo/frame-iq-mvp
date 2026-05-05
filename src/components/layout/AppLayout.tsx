@@ -648,7 +648,9 @@ export function AppLayout() {
       <div style={{ flexShrink: 0 }}>
         <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '0 0 4px' }} />
         <CreditBar userId={user?.id} plan={plan} />
-        <ReferralPopup userId={user?.id} />
+        {/* ReferralPopup escondido no pivô interno — operação Brilliant
+            Gaming, sem programa de indicação. Mantém o componente
+            importado caso queira reativar no futuro. */}
         <button
           onClick={handleLogout}
           style={{

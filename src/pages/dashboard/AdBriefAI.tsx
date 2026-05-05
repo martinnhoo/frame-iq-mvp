@@ -7470,7 +7470,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           </div>
         );
       })()}
-      <ReferralNudge messageCount={messages.filter(m=>m.role==="user").length}/>
+      {/* ReferralNudge escondido no pivô interno (Brilliant Gaming).
+          Removido do render — import mantido por compatibilidade. */}
     </div>
   );
 }

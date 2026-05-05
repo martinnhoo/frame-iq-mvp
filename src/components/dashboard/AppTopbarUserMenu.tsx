@@ -16,7 +16,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Settings, CreditCard, Globe, Gift, LogOut, ChevronDown, UserCircle } from "lucide-react";
+import { Settings, Globe, LogOut, ChevronDown, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/App";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -76,14 +76,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
   const displayName = profile?.name || user?.email?.split("@")[0] || "Você";
   const email = user?.email || profile?.email || "";
   const initials = getInitials(displayName, email);
-  const planLabel =
-    plan === "studio" ? "Studio · Sem limites"
-    : plan === "pro" ? "Pro"
-    : plan === "maker" ? "Maker"
-    : plan === "creator" ? "Maker"
-    : plan === "starter" ? "Pro"
-    : plan === "scale" ? "Studio"
-    : "Free";
+  // planLabel removido — operação interna não exibe plano no header.
 
   const cycleLanguage = () => {
     const order = ["pt", "en", "es"] as const;
@@ -158,7 +151,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
             }
           `}</style>
 
-          {/* Header — name + email + plan badge */}
+          {/* Header — name + email */}
           <div style={{ padding: "12px 14px 10px", display: "flex", alignItems: "center", gap: 10 }}>
             <Avatar style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0 }}>
               <AvatarImage src={profile?.avatar_url || undefined} />
@@ -180,15 +173,17 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
             </div>
           </div>
 
-          {/* Plan badge — full row, cyan accent */}
+          {/* Idioma — destacado no topo (era item discreto no meio).
+              É a opção mais usada no contexto interno multi-marca (time
+              alterna entre PT/EN/ES dependendo do mercado da campanha). */}
           <button
-            onClick={() => { setOpen(false); navigate("/dashboard/settings?tab=billing"); }}
+            onClick={cycleLanguage}
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               width: "100%",
-              padding: "8px 14px",
+              padding: "10px 14px",
               margin: "0 0 4px",
-              background: "rgba(13,162,231,0.08)",
+              background: "rgba(168,85,247,0.10)",
               border: "none",
               borderTop: "1px solid rgba(255,255,255,0.05)",
               borderBottom: "1px solid rgba(255,255,255,0.05)",
@@ -196,32 +191,23 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
               fontFamily: F,
               transition: "background 0.12s",
             }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(13,162,231,0.14)"}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(13,162,231,0.08)"}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: 0.06 }}>Plano</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#0DA2E7" }}>{planLabel}</span>
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(168,85,247,0.18)"}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(168,85,247,0.10)"}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: 0.06 }}>
+              <Globe size={13} /> Idioma
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#a855f7" }}>
+              {language === "pt" ? "Português" : language === "es" ? "Español" : "English"}
+            </span>
           </button>
 
           {/* Divider gap */}
           <div style={{ height: 4 }} />
 
-          {/* Menu items */}
-          {/* "Configurações" routes to the full /dashboard/settings page
-              (autopilot, integrações, plano, etc) — that's what users
-              expect from a "Settings" label. The compact slide-out
-              UserProfilePanel is reachable via "Perfil rápido" below
-              for users who want to edit name/avatar/instructions
-              without leaving the current page. */}
+          {/* Menu items — operação interna, sem Plano/Faturamento/Convidar.
+              Settings ainda dá acesso a integrações, autopilot, etc. */}
           <MenuItem icon={<Settings size={14} />} label="Configurações" onClick={() => { setOpen(false); navigate("/dashboard/settings"); }} />
           <MenuItem icon={<UserCircle size={14} />} label="Perfil rápido" onClick={() => { setOpen(false); onOpenProfile(); }} />
-          <MenuItem icon={<CreditCard size={14} />} label="Faturamento" onClick={() => { setOpen(false); navigate("/dashboard/settings?tab=billing"); }} />
-          <MenuItem
-            icon={<Globe size={14} />}
-            label={`Idioma · ${language === "pt" ? "Português" : language === "es" ? "Español" : "English"}`}
-            onClick={cycleLanguage}
-            keepOpen
-          />
-          <MenuItem icon={<Gift size={14} />} label="Convidar amigos" onClick={() => { setOpen(false); navigate("/dashboard/settings?tab=referral"); }} />
 
           {/* Divider */}
           <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
