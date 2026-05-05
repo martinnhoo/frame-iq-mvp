@@ -1,24 +1,35 @@
-// generate-image-hub — Image Generator interno.
+// generate-image-hub — Image Generator interno (Brilliant Hub).
 //
-// Subproduto isolado. Não lê personas, não lê brand_kit, não lê
-// nenhuma tabela do produto AdBrief. Recebe prompt + size + quality,
-// chama gpt-image-2, devolve URL. Salva em creative_memory só pra
-// alimentar a Biblioteca interna (mesma tabela do projeto, type
-// distinto pra isolar — sem cross-contamination).
+// Modelo: dall-e-3 (estável em qualquer conta OpenAI paga, não exige
+// Verified Organization). Antes tentamos gpt-image-1 mas exigia
+// verificação organizacional que a conta não tem.
+//
+// Saída salva em creative_memory com type='hub_image' pra alimentar
+// a Biblioteca interna do Hub.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// DALL-E 3 só suporta 3 tamanhos. 4:5 não tem nativo — mapeia pra
+// portrait mais próximo (1024x1792) e a IA enquadra.
 const SIZE_MAP: Record<string, string> = {
   "1:1":  "1024x1024",
-  "16:9": "1536x1024",
-  "9:16": "1024x1536",
-  "4:5":  "1024x1280",
+  "16:9": "1792x1024",
+  "9:16": "1024x1792",
+  "4:5":  "1024x1792",
 };
+
+function jsonResponse(payload: unknown, status: number): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...cors, "Content-Type": "application/json" },
+  });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -26,24 +37,27 @@ Deno.serve(async (req) => {
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
-      return new Response(JSON.stringify({
+      console.error("[hub-image] OPENAI_API_KEY not configured");
+      return jsonResponse({
+        ok: false,
         error: "openai_not_configured",
-        message: "OPENAI_API_KEY não configurado.",
-      }), { status: 503, headers: { ...cors, "Content-Type": "application/json" } });
+        message: "OPENAI_API_KEY não configurado no Supabase. Adiciona o secret nas Edge Function settings.",
+      }, 503);
     }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), {
-        status: 401, headers: { ...cors, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ ok: false, error: "unauthorized", message: "Sem token de auth." }, 401);
     }
-    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: { user: authUser } } = await sb.auth.getUser(authHeader.slice(7));
+
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: userData } = await sb.auth.getUser(authHeader.slice(7));
+    const authUser = userData?.user;
     if (!authUser) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), {
-        status: 401, headers: { ...cors, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ ok: false, error: "unauthorized", message: "Sessão inválida." }, 401);
     }
 
     const body = await req.json().catch(() => ({}));
@@ -51,22 +65,36 @@ Deno.serve(async (req) => {
       prompt,
       aspect_ratio = "1:1",
       quality = "medium",
-      transparent = false,
     } = body as {
       prompt?: string;
       aspect_ratio?: string;
       quality?: "low" | "medium" | "high";
-      transparent?: boolean;
     };
 
     if (!prompt || prompt.trim().length < 5) {
-      return new Response(JSON.stringify({
+      return jsonResponse({
+        ok: false,
         error: "invalid_prompt",
         message: "Descreva a imagem com pelo menos 5 caracteres.",
-      }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+      }, 400);
     }
 
     const size = SIZE_MAP[aspect_ratio] || SIZE_MAP["1:1"];
+    // DALL-E 3: standard | hd. low/medium → standard; high → hd.
+    const dalleQuality = quality === "high" ? "hd" : "standard";
+
+    const reqBody = {
+      model: "dall-e-3",
+      prompt: prompt.trim().slice(0, 4000),
+      size,
+      quality: dalleQuality,
+      n: 1,
+      response_format: "url" as const,
+    };
+
+    console.log("[hub-image] calling OpenAI:", JSON.stringify({
+      user_id: authUser.id, size, quality: dalleQuality, prompt_len: reqBody.prompt.length,
+    }));
 
     const openaiRes = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
@@ -74,43 +102,46 @@ Deno.serve(async (req) => {
         "Authorization": `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "gpt-image-1",
-        prompt: prompt.trim().slice(0, 4000),
-        size,
-        quality,
-        n: 1,
-        moderation: "low",
-        ...(transparent ? { background: "transparent", output_format: "png" } : {}),
-      }),
+      body: JSON.stringify(reqBody),
     });
 
     if (!openaiRes.ok) {
       const errText = await openaiRes.text();
+      console.error("[hub-image] OpenAI error", openaiRes.status, errText);
+
       let errorCode = "image_gen_failed";
-      let errorMessage = "Geração de imagem falhou.";
+      let errorMessage = `OpenAI retornou ${openaiRes.status}.`;
+      let openaiMsg = "";
       try {
         const errJson = JSON.parse(errText);
-        if (errJson?.error?.code === "content_policy_violation") {
+        openaiMsg = errJson?.error?.message || "";
+        const code = errJson?.error?.code;
+        if (code === "content_policy_violation") {
           errorCode = "content_policy";
-          errorMessage = "Prompt rejeitado por política de conteúdo.";
+          errorMessage = "Prompt rejeitado por política de conteúdo da OpenAI.";
         } else if (openaiRes.status === 429) {
           errorCode = "rate_limited";
-          errorMessage = "Rate limit atingido. Tenta de novo em ~1min.";
+          errorMessage = "Rate limit OpenAI atingido. Tenta de novo em ~1min.";
         } else if (openaiRes.status === 401) {
           errorCode = "openai_auth";
           errorMessage = "Chave OpenAI inválida ou expirada.";
         } else if (openaiRes.status === 403) {
           errorCode = "openai_access";
-          errorMessage = "Conta OpenAI sem acesso a gpt-image-2 (precisa Verified Organization).";
+          errorMessage = "Conta OpenAI sem acesso a dall-e-3 ou faltando billing.";
+        } else if (openaiRes.status === 400) {
+          errorCode = "bad_request";
+          errorMessage = openaiMsg || "Requisição inválida pra OpenAI.";
         }
       } catch {}
-      return new Response(JSON.stringify({
+
+      return jsonResponse({
+        ok: false,
         error: errorCode,
         message: errorMessage,
-        status: openaiRes.status,
-        detail: errText.slice(0, 300),
-      }), { status: 502, headers: { ...cors, "Content-Type": "application/json" } });
+        openai_status: openaiRes.status,
+        openai_message: openaiMsg,
+        detail: errText.slice(0, 500),
+      }, 502);
     }
 
     const data = await openaiRes.json();
@@ -120,16 +151,18 @@ Deno.serve(async (req) => {
     const revisedPrompt = imgData?.revised_prompt || prompt.trim();
 
     if (!imageUrl) {
-      return new Response(JSON.stringify({
+      console.error("[hub-image] no image in response", JSON.stringify(data).slice(0, 500));
+      return jsonResponse({
+        ok: false,
         error: "no_image_returned",
-        message: "Nenhuma imagem retornada.",
-      }), { status: 502, headers: { ...cors, "Content-Type": "application/json" } });
+        message: "OpenAI não retornou URL de imagem.",
+      }, 502);
     }
 
-    // Save to creative_memory pra Biblioteca interna do Hub. type='hub_image'
-    // isola dos assets do produto principal. Não usa persona_id.
+    // Salva na biblioteca interna. Erro de DB não bloqueia retorno —
+    // user já tem a imagem em mãos.
     try {
-      await sb.from("creative_memory" as any).insert({
+      await sb.from("creative_memory").insert({
         user_id: authUser.id,
         type: "hub_image",
         content: {
@@ -139,14 +172,15 @@ Deno.serve(async (req) => {
           aspect_ratio,
           size,
           quality,
-          model: "gpt-image-2",
-          transparent,
+          model: "dall-e-3",
         },
         created_at: new Date().toISOString(),
       });
-    } catch { /* non-fatal */ }
+    } catch (dbErr) {
+      console.warn("[hub-image] DB insert failed (non-fatal):", dbErr);
+    }
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       ok: true,
       image_url: imageUrl,
       prompt: prompt.trim(),
@@ -154,11 +188,14 @@ Deno.serve(async (req) => {
       aspect_ratio,
       size,
       quality,
-    }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
+    }, 200);
 
   } catch (e) {
-    return new Response(JSON.stringify({ error: "internal_error", message: String(e).slice(0, 200) }), {
-      status: 500, headers: { ...cors, "Content-Type": "application/json" },
-    });
+    console.error("[hub-image] unexpected error:", e);
+    return jsonResponse({
+      ok: false,
+      error: "internal_error",
+      message: String(e).slice(0, 300),
+    }, 500);
   }
 });

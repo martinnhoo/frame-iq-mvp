@@ -39,7 +39,6 @@ export default function HubImageGenerator() {
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
-  const [transparent, setTransparent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenResult | null>(null);
@@ -78,28 +77,49 @@ export default function HubImageGenerator() {
     setLoading(true);
     setResult(null);
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke("generate-image-hub", {
-        body: {
+      // fetch direto — supabase.functions.invoke esconde response body em
+      // status non-2xx, então erros reais da OpenAI nunca chegavam à UI.
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+      const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) { setError("Sessão expirada — recarrega a página."); return; }
+
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "apikey": ANON_KEY,
+        },
+        body: JSON.stringify({
           prompt: prompt.trim(),
           aspect_ratio: aspectRatio,
           quality,
-          transparent,
-        },
+        }),
       });
-      if (fnErr || !(data as any)?.ok) {
-        setError((data as any)?.message || fnErr?.message || "Falha desconhecida");
+
+      const text = await r.text();
+      let payload: any = null;
+      try { payload = JSON.parse(text); } catch { /* not json */ }
+
+      if (!r.ok || !payload?.ok) {
+        // Mensagem hierárquica: detail OpenAI > message > raw text > status
+        const detail = payload?.openai_message || payload?.message || payload?.error || text || `HTTP ${r.status}`;
+        setError(detail.slice(0, 400));
         return;
       }
-      setResult(data as GenResult);
+
+      setResult(payload as GenResult);
       setGallery(prev => [{
         id: `tmp-${Date.now()}`,
-        image_url: (data as GenResult).image_url,
-        prompt: (data as GenResult).prompt,
-        aspect_ratio: (data as GenResult).aspect_ratio,
+        image_url: (payload as GenResult).image_url,
+        prompt: (payload as GenResult).prompt,
+        aspect_ratio: (payload as GenResult).aspect_ratio,
         created_at: new Date().toISOString(),
       }, ...prev].slice(0, 12));
     } catch (e) {
-      setError(String(e).slice(0, 200));
+      setError(String(e).slice(0, 300));
     } finally {
       setLoading(false);
     }
@@ -252,18 +272,6 @@ export default function HubImageGenerator() {
               ))}
             </div>
 
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}>
-              <input
-                type="checkbox"
-                checked={transparent}
-                onChange={e => setTransparent(e.target.checked)}
-                disabled={loading}
-                style={{ accentColor: "#a855f7" }}
-              />
-              <span style={{ color: "rgba(255,255,255,0.85)" }}>
-                Fundo transparente (PNG)
-              </span>
-            </label>
           </div>
 
           <button
