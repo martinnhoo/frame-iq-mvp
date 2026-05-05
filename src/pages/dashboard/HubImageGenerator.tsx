@@ -108,6 +108,12 @@ const STR: Record<string, Record<Lang, string>> = {
   elementsRename:      { pt: "Renomear",                en: "Rename",                es: "Renombrar",              zh: "重命名" },
   elementsDelete:      { pt: "Excluir",                 en: "Delete",                es: "Eliminar",               zh: "删除" },
   elementsSelected:    { pt: "selecionados",            en: "selected",              es: "seleccionados",          zh: "已选择" },
+  // Nome do arquivo
+  fileName:            { pt: "Nome do arquivo (opcional)", en: "File name (optional)",  es: "Nombre del archivo (opcional)", zh: "文件名（可选）" },
+  fileNameHint:        { pt: "Dê um nome para identificar este criativo na biblioteca.",
+                         en: "Give it a name to identify this creative in the library.",
+                         es: "Dale un nombre para identificar este creativo en la biblioteca.",
+                         zh: "为这个创意命名以便在资源库中识别。" },
   // Section 3: Prompt
   describe:            { pt: "Descreva o criativo",    en: "Describe the creative", es: "Describe el creativo",   zh: "描述创意" },
   describeHint:        { pt: "Digite o que você deseja criar.",
@@ -240,8 +246,56 @@ type GalleryItem = {
 };
 
 const PROMPT_MAX = 600;
+const FILE_NAME_MAX = 60;
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;
 const CUSTOM_LOGO_KEY = "hub_custom_logo_v1";
+
+// Stopwords pt/en/es pra filtrar do auto-nome do arquivo. Mantém só
+// palavras-chave significativas (ex: "Banner de aposta esportiva" →
+// "banner_aposta").
+const FILE_NAME_STOPWORDS = new Set([
+  "de", "da", "do", "das", "dos", "com", "para", "por", "sem", "sobre",
+  "the", "a", "an", "and", "or", "of", "to", "in", "on", "at", "for",
+  "el", "la", "los", "las", "un", "una", "y", "o", "con", "por", "para",
+  "em", "no", "na", "nos", "nas", "ao", "à", "às", "aos",
+]);
+
+const MONTH_ABBREV: Record<Lang, string[]> = {
+  pt: ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
+  en: ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],
+  es: ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+  zh: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"],
+};
+
+function slugWord(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "") // remove accents
+    .replace(/[^a-z0-9]+/g, "")
+    .slice(0, 16);
+}
+
+function buildAutoFileName(opts: {
+  brandId: string; market: MarketCode | null; prompt: string; lang: Lang;
+}): string {
+  const { brandId, market, prompt, lang } = opts;
+  const parts: string[] = [];
+  if (brandId && brandId !== "none") parts.push(brandId);
+  // Pega 2 primeiras palavras significativas do prompt
+  const words = prompt.toLowerCase().split(/\s+/)
+    .map(slugWord)
+    .filter(w => w.length >= 3 && !FILE_NAME_STOPWORDS.has(w))
+    .slice(0, 2);
+  parts.push(...words);
+  if (market) parts.push(market.toLowerCase());
+  // Date: DDMMM (lang-aware) — ex: 05mai pra pt
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, "0");
+  const monthIdx = d.getMonth();
+  const monthLabel = MONTH_ABBREV[lang][monthIdx] || MONTH_ABBREV.en[monthIdx];
+  parts.push(`${day}${monthLabel}`);
+  return parts.filter(Boolean).join("_").slice(0, FILE_NAME_MAX);
+}
 
 // Elementos: lightweight asset library, persistido em localStorage.
 // Cap menor pq guardamos data URL — múltiplos PNGs grandes estouram quota.
@@ -285,6 +339,10 @@ export default function HubImageGenerator() {
   const [elements, setElements] = useState<HubElement[]>([]);
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [elementsModalOpen, setElementsModalOpen] = useState(false);
+
+  // ── File name (auto-fill, mas user pode editar) ─────────────
+  const [fileName, setFileName] = useState<string>("");
+  const [fileNameTouched, setFileNameTouched] = useState(false);
 
   // ── Async state ───────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
@@ -360,6 +418,13 @@ export default function HubImageGenerator() {
       localStorage.setItem(ELEMENTS_SELECTED_KEY, JSON.stringify(selectedElementIds));
     } catch { /* silent */ }
   }, [selectedElementIds]);
+
+  // Auto-fill file name baseado em brand + prompt + market + data.
+  // Só sobrescreve se user ainda não editou manualmente (fileNameTouched=false).
+  useEffect(() => {
+    if (fileNameTouched) return;
+    setFileName(buildAutoFileName({ brandId, market: marketCode, prompt, lang }));
+  }, [brandId, marketCode, prompt, lang, fileNameTouched]);
 
   // Brand changes: auto-pick first market + reset logo toggle
   useEffect(() => {
@@ -602,6 +667,8 @@ export default function HubImageGenerator() {
               license_included: hasLicense && includeLicense,
               license_text: hasLicense && includeLicense ? licenseText.trim() : null,
               logo_overlaid: !!(effectiveLogoUrl && includeLogo),
+              file_name: fileName.trim() || null,
+              elements_used: selectedElements.map(e => ({ id: e.id, name: e.name })),
             },
           });
         }
@@ -885,61 +952,40 @@ export default function HubImageGenerator() {
             </Section>
 
             {/* Elementos (opcional) — biblioteca leve de PNGs reutilizáveis */}
-            <Section title={t("elementsTitle")} subtitle={t("elementsSubtitle")} style={{ marginTop: 22 }}>
-              {/* Trigger row */}
-              <button
-                onClick={() => setElementsModalOpen(true)}
-                disabled={loading}
-                style={{
-                  width: "100%", padding: "12px 16px", borderRadius: 11,
-                  background: "rgba(59,130,246,0.06)",
-                  border: "1px dashed rgba(59,130,246,0.40)",
-                  color: "#3B82F6",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  fontSize: 13, fontWeight: 700, fontFamily: "inherit",
-                  letterSpacing: "0.01em",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.10)"; }}
-                onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.06)"; }}
-              >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
-                  <Plus size={14} /> {t("elementsAdd")}
-                </span>
-                <ChevronRight size={14} style={{ flexShrink: 0 }} />
-              </button>
-
-              {/* Selected element chips */}
+            <Section
+              title={t("elementsTitle")}
+              subtitle={t("elementsSubtitle")}
+              style={{ marginTop: 22 }}
+              headerRight={
+                <button
+                  onClick={() => setElementsModalOpen(true)}
+                  disabled={loading}
+                  className="hub-elements-link"
+                  style={{
+                    background: "transparent", border: "none",
+                    color: "#3B82F6", cursor: loading ? "not-allowed" : "pointer",
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                    fontSize: 12.5, fontWeight: 700, fontFamily: "inherit",
+                    padding: "2px 4px", letterSpacing: "0.01em",
+                  }}
+                >
+                  <Plus size={13} /> {t("elementsAdd")}
+                </button>
+              }
+            >
+              {/* Selected element chips — só aparecem quando há seleção */}
               {selectedElements.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+                <div className="hub-elements-chips" style={{
+                  display: "flex", gap: 8, overflowX: "auto",
+                  paddingBottom: 4, scrollbarWidth: "thin",
+                }}>
                   {selectedElements.map(el => (
                     <SelectedElementChip
                       key={el.id} element={el}
                       onRemove={() => toggleElementSelection(el.id)}
-                      onRename={(newName) => renameElement(el.id, newName)}
                       disabled={loading}
                     />
                   ))}
-                  {/* Add-more shortcut card */}
-                  <button
-                    onClick={() => setElementsModalOpen(true)}
-                    disabled={loading}
-                    title={t("elementsAdd")}
-                    style={{
-                      width: 40, height: 40, borderRadius: 9,
-                      background: "rgba(255,255,255,0.025)",
-                      border: "1px dashed rgba(255,255,255,0.15)",
-                      color: "#9CA3AF", cursor: loading ? "not-allowed" : "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                      transition: "all 0.15s",
-                    }}
-                    onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.borderColor = "rgba(59,130,246,0.40)"; }}
-                    onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.15)"; }}
-                  >
-                    <Plus size={14} />
-                  </button>
                 </div>
               )}
             </Section>
@@ -973,6 +1019,46 @@ export default function HubImageGenerator() {
                   fontSize: 10.5, color: "#6B7280", pointerEvents: "none", fontWeight: 600,
                 }}>
                   {prompt.length} / {PROMPT_MAX}
+                </div>
+              </div>
+            </Section>
+
+            {/* Nome do arquivo (opcional) — auto-fill que user pode editar */}
+            <Section title={t("fileName")} subtitle={t("fileNameHint")} style={{ marginTop: 22 }}>
+              <div style={{ position: "relative" }}>
+                <input
+                  type="text"
+                  value={fileName}
+                  onChange={e => {
+                    setFileNameTouched(true);
+                    setFileName(e.target.value.slice(0, FILE_NAME_MAX));
+                  }}
+                  disabled={loading}
+                  spellCheck={false}
+                  style={{
+                    width: "100%", boxSizing: "border-box",
+                    padding: "11px 60px 11px 14px",
+                    background: "rgba(0,0,0,0.25)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 11,
+                    color: "#F1F5F9", fontSize: 13.5,
+                    outline: "none", fontFamily: "inherit",
+                    transition: "border-color 0.18s, box-shadow 0.18s",
+                  }}
+                  onFocus={e => {
+                    e.currentTarget.style.borderColor = "rgba(59,130,246,0.55)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(59,130,246,0.10)";
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+                <div style={{
+                  position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                  fontSize: 10.5, color: "#6B7280", pointerEvents: "none", fontWeight: 600,
+                }}>
+                  {fileName.length} / {FILE_NAME_MAX}
                 </div>
               </div>
             </Section>
@@ -1138,7 +1224,7 @@ export default function HubImageGenerator() {
                       style={{ maxWidth: "100%", maxHeight: "62vh", borderRadius: 11, display: "block" }} />
                   </div>
                   <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-                    <button onClick={() => downloadImage(result.image_url, `hub-${Date.now()}.png`)} style={ACTION_BTN}>
+                    <button onClick={() => downloadImage(result.image_url, `${(fileName.trim() || `hub-${Date.now()}`).replace(/[^a-z0-9_-]/gi, "_")}.png`)} style={ACTION_BTN}>
                       <Download size={13} /> {t("download")}
                     </button>
                     <button onClick={generate} disabled={loading} style={ACTION_BTN}>
@@ -1334,6 +1420,10 @@ export default function HubImageGenerator() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .hub-cta:hover:not(:disabled) { background: #2563EB !important; }
         .hub-cta:active:not(:disabled) { background: #1D4ED8 !important; transform: scale(0.97); }
+        .hub-elements-link:hover:not(:disabled) { color: #60A5FA !important; }
+        .hub-elements-chips::-webkit-scrollbar { height: 6px; }
+        .hub-elements-chips::-webkit-scrollbar-track { background: transparent; }
+        .hub-elements-chips::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 3px; }
         @media (max-width: 1100px) {
           .hub-image-workspace { grid-template-columns: 1fr !important; }
         }
@@ -1347,22 +1437,29 @@ export default function HubImageGenerator() {
 
 // ── Sub-components ────────────────────────────────────────────────
 
-function Section({ title, subtitle, children, style }: {
+function Section({ title, subtitle, children, headerRight, style }: {
   title: string; subtitle?: string;
+  headerRight?: React.ReactNode;
   children: React.ReactNode; style?: React.CSSProperties;
 }) {
   return (
     <div style={style}>
-      <div style={{ marginBottom: 10 }}>
-        <h3 style={{
-          fontSize: 14, fontWeight: 800, color: "#fff", margin: 0,
-          letterSpacing: "-0.01em",
-        }}>
-          {title}
-        </h3>
-        {subtitle && (
-          <p style={{ fontSize: 11.5, color: "#9CA3AF", margin: "3px 0 0" }}>{subtitle}</p>
-        )}
+      <div style={{
+        display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+        gap: 12, marginBottom: 10,
+      }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{
+            fontSize: 14, fontWeight: 800, color: "#fff", margin: 0,
+            letterSpacing: "-0.01em",
+          }}>
+            {title}
+          </h3>
+          {subtitle && (
+            <p style={{ fontSize: 11.5, color: "#9CA3AF", margin: "3px 0 0" }}>{subtitle}</p>
+          )}
+        </div>
+        {headerRight && <div style={{ flexShrink: 0 }}>{headerRight}</div>}
       </div>
       {children}
     </div>
@@ -1580,36 +1677,23 @@ function BrandModal({ brands, selected, search, onSearch, onSelect, onClose, onU
 }
 
 // ── SelectedElementChip ─────────────────────────────────────────
-// Chip inline mostrando elemento selecionado, com pencil pra renomear
-// inline + X pra remover (deselect, NÃO deleta da biblioteca).
-function SelectedElementChip({ element, onRemove, onRename, disabled }: {
+// Chip neutro mostrando elemento selecionado: thumbnail + nome + X.
+// X remove a seleção (NÃO deleta da biblioteca). Rename só no modal.
+function SelectedElementChip({ element, onRemove, disabled }: {
   element: HubElement;
   onRemove: () => void;
-  onRename: (newName: string) => void;
   disabled?: boolean;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(element.name);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
-
-  const commit = () => {
-    setEditing(false);
-    if (draft.trim() && draft.trim() !== element.name) onRename(draft.trim());
-    else setDraft(element.name);
-  };
-
   return (
     <div style={{
-      display: "inline-flex", alignItems: "center", gap: 8,
-      padding: "6px 8px 6px 6px", borderRadius: 9,
-      background: "rgba(59,130,246,0.08)",
-      border: "1px solid rgba(59,130,246,0.30)",
-      maxWidth: 240,
+      display: "inline-flex", alignItems: "center", gap: 10,
+      padding: "8px 12px 8px 8px", borderRadius: 10,
+      background: "rgba(17,24,39,0.70)",
+      border: "1px solid rgba(255,255,255,0.06)",
+      flexShrink: 0,
     }}>
       <div style={{
-        width: 30, height: 30, borderRadius: 6,
+        width: 28, height: 28, borderRadius: 6,
         background: "rgba(0,0,0,0.30)",
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden", flexShrink: 0,
@@ -1617,39 +1701,20 @@ function SelectedElementChip({ element, onRemove, onRename, disabled }: {
         <img src={element.url} alt={element.name}
           style={{ width: "100%", height: "100%", objectFit: "contain" }} />
       </div>
-      {editing ? (
-        <input
-          ref={inputRef}
-          value={draft}
-          onChange={e => setDraft(e.target.value.slice(0, 60))}
-          onBlur={commit}
-          onKeyDown={e => {
-            if (e.key === "Enter") { e.preventDefault(); commit(); }
-            else if (e.key === "Escape") { setDraft(element.name); setEditing(false); }
-          }}
-          disabled={disabled}
-          style={{
-            flex: 1, minWidth: 60, maxWidth: 130,
-            padding: "3px 6px", borderRadius: 5,
-            background: "rgba(0,0,0,0.40)",
-            border: "1px solid rgba(59,130,246,0.50)",
-            color: "#fff", fontSize: 12, fontWeight: 600, fontFamily: "inherit",
-            outline: "none",
-          }} />
-      ) : (
-        <span style={{
-          fontSize: 12, fontWeight: 700, color: "#fff",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          maxWidth: 130,
-        }}>{element.name}</span>
-      )}
-      {!editing && (
-        <button onClick={() => { setDraft(element.name); setEditing(true); }} disabled={disabled}
-          style={iconBtnStyle()} title="Rename">
-          <Pencil size={11} />
-        </button>
-      )}
-      <button onClick={onRemove} disabled={disabled} style={iconBtnStyle()} title="Remove">
+      <span style={{
+        fontSize: 12.5, fontWeight: 600, color: "#fff",
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        maxWidth: 140,
+      }}>{element.name}</span>
+      <button onClick={onRemove} disabled={disabled}
+        style={{
+          width: 20, height: 20, borderRadius: 5,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          color: "#9CA3AF", cursor: disabled ? "not-allowed" : "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0, fontFamily: "inherit",
+        }} title="Remove">
         <X size={11} />
       </button>
     </div>
