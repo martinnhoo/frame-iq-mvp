@@ -20,7 +20,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  Image as ImageIcon, Layers, Film, Mic, GitBranch, BarChart3,
+  Image as ImageIcon, Layers, Clapperboard, Mic, GitBranch, BarChart3,
   FolderOpen, ArrowRight, Sparkles,
 } from "lucide-react";
 
@@ -48,11 +48,12 @@ const STR: Record<string, Record<Lang, string>> = {
                   es: "Elimina fondos, genera imágenes PNG y exporta con transparencia.",
                   zh: "去除背景、生成 PNG 图像并导出透明。" },
   pngGenBtn:    { pt: "Gerar PNG",                    en: "Generate PNG",                es: "Generar PNG",                  zh: "生成 PNG" },
-  vidEdit:      { pt: "Editor de Vídeo",              en: "Video Editor",                es: "Editor de Video",              zh: "视频编辑器" },
-  vidEditDesc:  { pt: "Edite seus vídeos com ferramentas profissionais e IA integrada.",
-                  en: "Edit your videos with professional tools and integrated AI.",
-                  es: "Edita tus videos con herramientas profesionales e IA integrada.",
-                  zh: "使用专业工具和集成 AI 编辑您的视频。" },
+  storyboard:   { pt: "Storyboard",                   en: "Storyboard",                   es: "Storyboard",                   zh: "故事板" },
+  storyboardDesc: { pt: "Roteiro vira sequência de imagens contínuas — pra usar no editor de vídeo.",
+                  en: "Script becomes a continuous image sequence — to use in your video editor.",
+                  es: "El guión se convierte en una secuencia continua de imágenes para tu editor de video.",
+                  zh: "剧本转化为连续图像序列 — 可在视频编辑器中使用。" },
+  storyboardBtn: { pt: "Criar storyboard",            en: "Create storyboard",            es: "Crear storyboard",             zh: "创建故事板" },
   transcribe:   { pt: "Transcrição",                  en: "Transcription",               es: "Transcripción",                zh: "转录" },
   transcribeDesc: { pt: "Transcreva áudios dos seus vídeos para texto.",
                   en: "Transcribe audio from your videos to text.",
@@ -135,8 +136,8 @@ export default function BrilliantHub() {
       icon: ImageIcon, route: "/dashboard/hub/image", featured: true },
     { id: "png", title: t("pngGen"), desc: t("pngGenDesc"), btn: t("pngGenBtn"),
       icon: Layers, soon: true },
-    { id: "video", title: t("vidEdit"), desc: t("vidEditDesc"), btn: t("comingSoon"),
-      icon: Film, soon: true },
+    { id: "storyboard", title: t("storyboard"), desc: t("storyboardDesc"), btn: t("storyboardBtn"),
+      icon: Clapperboard, route: "/dashboard/hub/storyboard" },
   ];
 
   const supportTools = [
