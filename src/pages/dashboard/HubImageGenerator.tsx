@@ -106,7 +106,8 @@ export default function HubImageGenerator() {
       if (!r.ok || !payload?.ok) {
         // Mensagem hierárquica: detail OpenAI > message > raw text > status
         const detail = payload?.openai_message || payload?.message || payload?.error || text || `HTTP ${r.status}`;
-        setError(detail.slice(0, 400));
+        const versionTag = payload?._v ? ` [fn=${payload._v}]` : " [fn=desconhecida — função antiga ainda no Supabase]";
+        setError((detail + versionTag).slice(0, 500));
         return;
       }
 

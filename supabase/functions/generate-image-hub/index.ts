@@ -7,6 +7,10 @@
 // Saída salva em creative_memory com type='hub_image' pra alimentar
 // a Biblioteca interna do Hub.
 
+// Version stamp — bump quando mudar comportamento. Inclui na resposta
+// pro frontend conseguir confirmar que a versão certa tá rodando.
+const FN_VERSION = "v3-dalle3-2026-05-05";
+
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -30,6 +34,8 @@ function jsonResponse(payload: unknown, status: number): Response {
     headers: { ...cors, "Content-Type": "application/json" },
   });
 }
+
+console.log(`[hub-image] boot ${FN_VERSION}`);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -181,6 +187,7 @@ Deno.serve(async (req) => {
     }
 
     return jsonResponse({
+      _v: FN_VERSION,
       ok: true,
       image_url: imageUrl,
       prompt: prompt.trim(),
@@ -193,6 +200,7 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error("[hub-image] unexpected error:", e);
     return jsonResponse({
+      _v: FN_VERSION,
       ok: false,
       error: "internal_error",
       message: String(e).slice(0, 300),
