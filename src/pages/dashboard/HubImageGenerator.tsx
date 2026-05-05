@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Image as ImageIcon, Download, RefreshCw, ArrowLeft, Sparkles, AlertTriangle,
   Copy, RotateCcw, Check, ChevronDown, Search, Plus, Upload, X,
+  Pencil, ChevronRight, Layers, Trash2,
 } from "lucide-react";
 import {
   HUB_BRANDS, HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
@@ -74,6 +75,39 @@ const STR: Record<string, Record<Lang, string>> = {
   logoInvalidType:     { pt: "Use PNG ou JPG.",        en: "Use PNG or JPG.",       es: "Usa PNG o JPG.",         zh: "请使用 PNG 或 JPG。" },
   logoIncluded:        { pt: "Logo incluído",          en: "Logo included",         es: "Logo incluido",          zh: "已包含 logo" },
   logoRemove:          { pt: "Remover",                en: "Remove",                es: "Eliminar",               zh: "移除" },
+  // Elementos (opcional)
+  elementsTitle:       { pt: "Elementos (opcional)",   en: "Elements (optional)",   es: "Elementos (opcional)",   zh: "元素（可选）" },
+  elementsSubtitle:    { pt: "Adicione elementos como personagens, ícones ou objetos para incluir no criativo.",
+                         en: "Add elements like characters, icons or objects to include in the creative.",
+                         es: "Añade elementos como personajes, íconos u objetos para incluir en el creativo.",
+                         zh: "添加角色、图标或物体等元素以包含在创意中。" },
+  elementsAdd:         { pt: "Adicionar elementos",     en: "Add elements",          es: "Añadir elementos",       zh: "添加元素" },
+  elementsModalTitle:  { pt: "Adicionar elementos",     en: "Add elements",          es: "Añadir elementos",       zh: "添加元素" },
+  elementsUploadCta:   { pt: "Clique para enviar ou arraste arquivos",
+                         en: "Click to upload or drag files",
+                         es: "Haz clic para subir o arrastra archivos",
+                         zh: "点击上传或拖动文件" },
+  elementsAcceptHint:  { pt: "Apenas PNG com fundo transparente",
+                         en: "PNG with transparent background only",
+                         es: "Solo PNG con fondo transparente",
+                         zh: "仅限透明背景的 PNG" },
+  elementsInvalidErr:  { pt: "Use PNG com fundo transparente. Utilize o Gerador de PNG para converter.",
+                         en: "Use PNG with transparent background. Use the PNG Generator to convert.",
+                         es: "Usa PNG con fondo transparente. Usa el Generador de PNG para convertir.",
+                         zh: "请使用透明背景的 PNG。使用 PNG 生成器转换。" },
+  elementsTooBig:      { pt: "Arquivo muito grande (max 2MB).",
+                         en: "File too large (max 2MB).",
+                         es: "Archivo demasiado grande (máx 2MB).",
+                         zh: "文件过大（最大 2MB）。" },
+  elementsOpenPng:     { pt: "Abrir Gerador de PNG",    en: "Open PNG Generator",    es: "Abrir Generador de PNG", zh: "打开 PNG 生成器" },
+  elementsEmpty:       { pt: "Adicione elementos como personagens, logos ou ícones para reutilizar nos criativos.",
+                         en: "Add elements like characters, logos or icons to reuse across creatives.",
+                         es: "Añade elementos como personajes, logos o íconos para reutilizar en los creativos.",
+                         zh: "添加角色、logo 或图标等元素以在创意中重复使用。" },
+  elementsLibrary:     { pt: "Sua biblioteca",          en: "Your library",          es: "Tu biblioteca",          zh: "您的库" },
+  elementsRename:      { pt: "Renomear",                en: "Rename",                es: "Renombrar",              zh: "重命名" },
+  elementsDelete:      { pt: "Excluir",                 en: "Delete",                es: "Eliminar",               zh: "删除" },
+  elementsSelected:    { pt: "selecionados",            en: "selected",              es: "seleccionados",          zh: "已选择" },
   // Section 3: Prompt
   describe:            { pt: "Descreva o criativo",    en: "Describe the creative", es: "Describe el creativo",   zh: "描述创意" },
   describeHint:        { pt: "Digite o que você deseja criar.",
@@ -209,6 +243,19 @@ const PROMPT_MAX = 600;
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;
 const CUSTOM_LOGO_KEY = "hub_custom_logo_v1";
 
+// Elementos: lightweight asset library, persistido em localStorage.
+// Cap menor pq guardamos data URL — múltiplos PNGs grandes estouram quota.
+const ELEMENT_MAX_BYTES = 2 * 1024 * 1024;
+const ELEMENTS_KEY = "hub_elements_v1";
+const ELEMENTS_SELECTED_KEY = "hub_elements_selected_v1";
+
+interface HubElement {
+  id: string;
+  name: string;
+  url: string; // data URL PNG
+  createdAt: string;
+}
+
 export default function HubImageGenerator() {
   const navigate = useNavigate();
   const { language } = useLanguage();
@@ -233,6 +280,11 @@ export default function HubImageGenerator() {
   const [logoError, setLogoError] = useState<string | null>(null);
   const [licenseCopied, setLicenseCopied] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Elementos (asset library leve) ───────────────────────────
+  const [elements, setElements] = useState<HubElement[]>([]);
+  const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
+  const [elementsModalOpen, setElementsModalOpen] = useState(false);
 
   // ── Async state ───────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
@@ -272,6 +324,42 @@ export default function HubImageGenerator() {
       } catch { /* silent */ }
     }
   }, [customLogo]);
+
+  // Load elements + selection from localStorage (mount once)
+  useEffect(() => {
+    try {
+      const rawEls = localStorage.getItem(ELEMENTS_KEY);
+      if (rawEls) {
+        const parsed = JSON.parse(rawEls) as HubElement[];
+        if (Array.isArray(parsed)) setElements(parsed);
+      }
+    } catch { /* silent */ }
+    try {
+      const rawSel = localStorage.getItem(ELEMENTS_SELECTED_KEY);
+      if (rawSel) {
+        const parsed = JSON.parse(rawSel) as string[];
+        if (Array.isArray(parsed)) setSelectedElementIds(parsed);
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  // Persist elements list — só roda quando elements muda (não no load inicial vazio
+  // pq o useEffect acima ainda não populou). Salva mesmo array vazio pra suportar
+  // delete-all consistente.
+  useEffect(() => {
+    try {
+      localStorage.setItem(ELEMENTS_KEY, JSON.stringify(elements));
+    } catch (e) {
+      console.warn("[hub-elements] persist failed (quota?):", e);
+    }
+  }, [elements]);
+
+  // Persist selection
+  useEffect(() => {
+    try {
+      localStorage.setItem(ELEMENTS_SELECTED_KEY, JSON.stringify(selectedElementIds));
+    } catch { /* silent */ }
+  }, [selectedElementIds]);
 
   // Brand changes: auto-pick first market + reset logo toggle
   useEffect(() => {
@@ -360,6 +448,60 @@ export default function HubImageGenerator() {
     if (logoInputRef.current) logoInputRef.current.value = "";
   };
 
+  // ── Element handlers ──────────────────────────────────────
+  const addElement = (file: File): Promise<{ ok: boolean; error?: string }> => {
+    return new Promise((resolve) => {
+      // PNG-only — outras extensões caem no fluxo de erro com botão pro Gerador de PNG
+      if (file.type !== "image/png") {
+        resolve({ ok: false, error: t("elementsInvalidErr") });
+        return;
+      }
+      if (file.size > ELEMENT_MAX_BYTES) {
+        resolve({ ok: false, error: t("elementsTooBig") });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const url = reader.result as string;
+        const baseName = file.name.replace(/\.[^.]+$/, "").slice(0, 60) || "elemento";
+        const newEl: HubElement = {
+          id: `el_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          name: baseName,
+          url,
+          createdAt: new Date().toISOString(),
+        };
+        setElements(prev => [newEl, ...prev]);
+        // Auto-select recém-adicionado
+        setSelectedElementIds(prev => [...prev, newEl.id]);
+        resolve({ ok: true });
+      };
+      reader.onerror = () => resolve({ ok: false, error: t("elementsInvalidErr") });
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const renameElement = (id: string, newName: string) => {
+    const trimmed = newName.trim().slice(0, 60);
+    if (!trimmed) return;
+    setElements(prev => prev.map(el => el.id === id ? { ...el, name: trimmed } : el));
+  };
+
+  const deleteElement = (id: string) => {
+    setElements(prev => prev.filter(el => el.id !== id));
+    setSelectedElementIds(prev => prev.filter(x => x !== id));
+  };
+
+  const toggleElementSelection = (id: string) => {
+    setSelectedElementIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id],
+    );
+  };
+
+  const selectedElements = useMemo(
+    () => selectedElementIds.map(id => elements.find(e => e.id === id)).filter(Boolean) as HubElement[],
+    [selectedElementIds, elements],
+  );
+
   const generate = async () => {
     if (loading || !prompt.trim() || prompt.trim().length < 5) return;
     setError(null);
@@ -380,6 +522,12 @@ export default function HubImageGenerator() {
       if (effectiveLogoUrl && includeLogo) {
         const brandLabel = brand && brand.id !== "none" ? brand.name : "any logo";
         brandHint = `${brandHint}\n\nIMPORTANT: Do NOT render ${brandLabel} or any logo as text or visual element inside the image. The official logo will be added as overlay in post-production. Keep the upper-right corner of the image visually clean (about 20% area) so the overlay logo will be legible against any background.`;
+      }
+      // Elementos selecionados — pass as descriptive hint pra AI integrar.
+      // (Os PNGs ficam locais; AI usa nomes como referência semântica.)
+      if (selectedElements.length > 0) {
+        const elementNames = selectedElements.map(e => e.name).join(", ");
+        brandHint = `${brandHint}\n\nADDITIONAL VISUAL ELEMENTS to depict in the image: ${elementNames}. These are key brand assets/characters that must visually appear in the creative — integrate them naturally into the scene composition.`;
       }
 
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
@@ -536,25 +684,34 @@ export default function HubImageGenerator() {
         padding: "20px 28px 40px",
         maxWidth: 1480, margin: "0 auto", color: "#fff",
       }}>
-        {/* Breadcrumb / back */}
-        <button onClick={() => navigate("/dashboard/hub")} style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          background: "transparent", border: "none", color: "#9CA3AF",
-          cursor: "pointer", fontSize: 12.5, padding: "4px 6px", marginBottom: 12,
-          fontFamily: "inherit",
+        {/* Header — title left, back button right */}
+        <div style={{
+          display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+          gap: 16, marginBottom: 22, flexWrap: "wrap",
         }}>
-          <ArrowLeft size={13} /> {t("back")}
-        </button>
-
-        {/* Header */}
-        <div style={{ marginBottom: 22 }}>
-          <h1 style={{
-            fontSize: 26, fontWeight: 800, color: "#fff", margin: 0,
-            letterSpacing: "-0.02em", lineHeight: 1.1,
-          }}>{t("title")}</h1>
-          <p style={{ fontSize: 13, color: "#D1D5DB", margin: "6px 0 0", lineHeight: 1.5 }}>
-            {t("subtitle")}
-          </p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{
+              fontSize: 26, fontWeight: 800, color: "#fff", margin: 0,
+              letterSpacing: "-0.02em", lineHeight: 1.1,
+            }}>{t("title")}</h1>
+            <p style={{ fontSize: 13, color: "#D1D5DB", margin: "6px 0 0", lineHeight: 1.5 }}>
+              {t("subtitle")}
+            </p>
+          </div>
+          <button onClick={() => navigate("/dashboard/hub")} style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "9px 14px", borderRadius: 10,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            color: "#D1D5DB", cursor: "pointer", fontSize: 12.5, fontWeight: 600,
+            fontFamily: "inherit", flexShrink: 0,
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(59,130,246,0.40)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"; }}
+          >
+            <ArrowLeft size={13} /> {t("back")}
+          </button>
         </div>
 
         {/* ── 2-col workspace ──────────────────────────────────── */}
@@ -566,7 +723,7 @@ export default function HubImageGenerator() {
           {/* ╔════════ LEFT: Form ════════╗ */}
           <div style={CARD_STYLE}>
             {/* Section 1 — Brand */}
-            <Section index={1} title={t("brand")} subtitle={t("brandSubtitle")}>
+            <Section title={t("brand")} subtitle={t("brandSubtitle")}>
               <BrandTrigger
                 brand={brand} marketCode={marketCode} lang={lang}
                 customLogo={customLogo}
@@ -650,7 +807,7 @@ export default function HubImageGenerator() {
             </Section>
 
             {/* Section 2 — Logo upload */}
-            <Section index={2} title={t("logoOptional")} subtitle={t("logoSubtitle")} style={{ marginTop: 22 }}>
+            <Section title={t("logoOptional")} subtitle={t("logoSubtitle")} style={{ marginTop: 22 }}>
               {!customLogo ? (
                 <div
                   onClick={() => logoInputRef.current?.click()}
@@ -727,8 +884,68 @@ export default function HubImageGenerator() {
               )}
             </Section>
 
+            {/* Elementos (opcional) — biblioteca leve de PNGs reutilizáveis */}
+            <Section title={t("elementsTitle")} subtitle={t("elementsSubtitle")} style={{ marginTop: 22 }}>
+              {/* Trigger row */}
+              <button
+                onClick={() => setElementsModalOpen(true)}
+                disabled={loading}
+                style={{
+                  width: "100%", padding: "12px 16px", borderRadius: 11,
+                  background: "rgba(59,130,246,0.06)",
+                  border: "1px dashed rgba(59,130,246,0.40)",
+                  color: "#3B82F6",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  fontSize: 13, fontWeight: 700, fontFamily: "inherit",
+                  letterSpacing: "0.01em",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.10)"; }}
+                onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.06)"; }}
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
+                  <Plus size={14} /> {t("elementsAdd")}
+                </span>
+                <ChevronRight size={14} style={{ flexShrink: 0 }} />
+              </button>
+
+              {/* Selected element chips */}
+              {selectedElements.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+                  {selectedElements.map(el => (
+                    <SelectedElementChip
+                      key={el.id} element={el}
+                      onRemove={() => toggleElementSelection(el.id)}
+                      onRename={(newName) => renameElement(el.id, newName)}
+                      disabled={loading}
+                    />
+                  ))}
+                  {/* Add-more shortcut card */}
+                  <button
+                    onClick={() => setElementsModalOpen(true)}
+                    disabled={loading}
+                    title={t("elementsAdd")}
+                    style={{
+                      width: 40, height: 40, borderRadius: 9,
+                      background: "rgba(255,255,255,0.025)",
+                      border: "1px dashed rgba(255,255,255,0.15)",
+                      color: "#9CA3AF", cursor: loading ? "not-allowed" : "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.borderColor = "rgba(59,130,246,0.40)"; }}
+                    onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.15)"; }}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              )}
+            </Section>
+
             {/* Section 3 — Prompt */}
-            <Section index={3} title={t("describe")} subtitle={t("describeHint")} style={{ marginTop: 22 }}>
+            <Section title={t("describe")} subtitle={t("describeHint")} style={{ marginTop: 22 }}>
               <div style={{ position: "relative" }}>
                 <textarea value={prompt}
                   onChange={e => setPrompt(e.target.value.slice(0, PROMPT_MAX))}
@@ -762,7 +979,7 @@ export default function HubImageGenerator() {
 
             {/* Section 4/5 — Format + Quality (side-by-side) */}
             <div style={{ marginTop: 22, display: "grid", gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)", gap: 18 }}>
-              <Section index={4} title={t("format")} subtitle={t("formatHint")}>
+              <Section title={t("format")} subtitle={t("formatHint")}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
                   {FORMATS.map(f => {
                     const active = aspectRatio === f.id;
@@ -792,7 +1009,7 @@ export default function HubImageGenerator() {
                   })}
                 </div>
               </Section>
-              <Section index={5} title={t("quality")} subtitle={t("qualityHint")}>
+              <Section title={t("quality")} subtitle={t("qualityHint")}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
                   {([
                     { v: "low",    titleKey: "qDraft",  descKey: "qDraftDesc"  },
@@ -1098,6 +1315,21 @@ export default function HubImageGenerator() {
         />
       )}
 
+      {/* ── Elements modal ───────────────────────────────────── */}
+      {elementsModalOpen && (
+        <ElementsModal
+          elements={elements}
+          selectedIds={selectedElementIds}
+          onClose={() => setElementsModalOpen(false)}
+          onAdd={addElement}
+          onRename={renameElement}
+          onDelete={deleteElement}
+          onToggle={toggleElementSelection}
+          onOpenPngGenerator={() => navigate("/dashboard/hub/png")}
+          t={t}
+        />
+      )}
+
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .hub-cta:hover:not(:disabled) { background: #2563EB !important; }
@@ -1115,8 +1347,8 @@ export default function HubImageGenerator() {
 
 // ── Sub-components ────────────────────────────────────────────────
 
-function Section({ index, title, subtitle, children, style }: {
-  index: number; title: string; subtitle?: string;
+function Section({ title, subtitle, children, style }: {
+  title: string; subtitle?: string;
   children: React.ReactNode; style?: React.CSSProperties;
 }) {
   return (
@@ -1125,10 +1357,8 @@ function Section({ index, title, subtitle, children, style }: {
         <h3 style={{
           fontSize: 14, fontWeight: 800, color: "#fff", margin: 0,
           letterSpacing: "-0.01em",
-          display: "flex", alignItems: "baseline", gap: 8,
         }}>
-          <span style={{ color: "#3B82F6", fontWeight: 700 }}>{index}.</span>
-          <span>{title}</span>
+          {title}
         </h3>
         {subtitle && (
           <p style={{ fontSize: 11.5, color: "#9CA3AF", margin: "3px 0 0" }}>{subtitle}</p>
@@ -1343,6 +1573,340 @@ function BrandModal({ brands, selected, search, onSearch, onSelect, onClose, onU
             }}>
             <Plus size={14} /> {t("addBrand")}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── SelectedElementChip ─────────────────────────────────────────
+// Chip inline mostrando elemento selecionado, com pencil pra renomear
+// inline + X pra remover (deselect, NÃO deleta da biblioteca).
+function SelectedElementChip({ element, onRemove, onRename, disabled }: {
+  element: HubElement;
+  onRemove: () => void;
+  onRename: (newName: string) => void;
+  disabled?: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(element.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+
+  const commit = () => {
+    setEditing(false);
+    if (draft.trim() && draft.trim() !== element.name) onRename(draft.trim());
+    else setDraft(element.name);
+  };
+
+  return (
+    <div style={{
+      display: "inline-flex", alignItems: "center", gap: 8,
+      padding: "6px 8px 6px 6px", borderRadius: 9,
+      background: "rgba(59,130,246,0.08)",
+      border: "1px solid rgba(59,130,246,0.30)",
+      maxWidth: 240,
+    }}>
+      <div style={{
+        width: 30, height: 30, borderRadius: 6,
+        background: "rgba(0,0,0,0.30)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        overflow: "hidden", flexShrink: 0,
+      }}>
+        <img src={element.url} alt={element.name}
+          style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+      </div>
+      {editing ? (
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={e => setDraft(e.target.value.slice(0, 60))}
+          onBlur={commit}
+          onKeyDown={e => {
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+            else if (e.key === "Escape") { setDraft(element.name); setEditing(false); }
+          }}
+          disabled={disabled}
+          style={{
+            flex: 1, minWidth: 60, maxWidth: 130,
+            padding: "3px 6px", borderRadius: 5,
+            background: "rgba(0,0,0,0.40)",
+            border: "1px solid rgba(59,130,246,0.50)",
+            color: "#fff", fontSize: 12, fontWeight: 600, fontFamily: "inherit",
+            outline: "none",
+          }} />
+      ) : (
+        <span style={{
+          fontSize: 12, fontWeight: 700, color: "#fff",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          maxWidth: 130,
+        }}>{element.name}</span>
+      )}
+      {!editing && (
+        <button onClick={() => { setDraft(element.name); setEditing(true); }} disabled={disabled}
+          style={iconBtnStyle()} title="Rename">
+          <Pencil size={11} />
+        </button>
+      )}
+      <button onClick={onRemove} disabled={disabled} style={iconBtnStyle()} title="Remove">
+        <X size={11} />
+      </button>
+    </div>
+  );
+}
+
+function iconBtnStyle(): React.CSSProperties {
+  return {
+    width: 22, height: 22, borderRadius: 5,
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    color: "#9CA3AF", cursor: "pointer", flexShrink: 0,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontFamily: "inherit",
+  };
+}
+
+// ── ElementsModal ──────────────────────────────────────────────
+// Modal floating com upload area + lista de elementos. PNG-only,
+// max 2MB. Click pra toggle select. Pencil renomeia inline. Trash
+// deleta da biblioteca.
+function ElementsModal({
+  elements, selectedIds, onClose, onAdd, onRename, onDelete, onToggle,
+  onOpenPngGenerator, t,
+}: {
+  elements: HubElement[];
+  selectedIds: string[];
+  onClose: () => void;
+  onAdd: (file: File) => Promise<{ ok: boolean; error?: string }>;
+  onRename: (id: string, newName: string) => void;
+  onDelete: (id: string) => void;
+  onToggle: (id: string) => void;
+  onOpenPngGenerator: () => void;
+  t: (key: keyof typeof STR) => string;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingDraft, setEditingDraft] = useState("");
+
+  const onFiles = async (files: FileList | File[]) => {
+    setError(null);
+    const list = Array.from(files);
+    for (const f of list) {
+      const res = await onAdd(f);
+      if (!res.ok) { setError(res.error || t("elementsInvalidErr")); return; }
+    }
+  };
+
+  return (
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "rgba(0,0,0,0.70)", backdropFilter: "blur(4px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: 20,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: "#0a0a0f",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 16,
+        maxWidth: 580, width: "100%",
+        maxHeight: "85vh", overflow: "hidden",
+        display: "flex", flexDirection: "column",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "14px 18px",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+        }}>
+          <h3 style={{ fontSize: 14, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
+            {t("elementsModalTitle")}
+          </h3>
+          <button onClick={onClose} style={{
+            width: 28, height: 28, borderRadius: 7,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "#9CA3AF", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: 18, overflowY: "auto", flex: 1 }}>
+          {/* Upload area */}
+          <div
+            onClick={() => fileRef.current?.click()}
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => { e.preventDefault(); setDragOver(false); onFiles(e.dataTransfer.files); }}
+            style={{
+              border: `1.5px dashed ${dragOver ? "rgba(59,130,246,0.55)" : "rgba(255,255,255,0.12)"}`,
+              background: dragOver ? "rgba(59,130,246,0.06)" : "rgba(0,0,0,0.20)",
+              borderRadius: 11, padding: "26px 16px",
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              textAlign: "center", gap: 10,
+              cursor: "pointer", transition: "all 0.15s",
+            }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 10,
+              background: "rgba(59,130,246,0.10)",
+              border: "1px solid rgba(59,130,246,0.22)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Upload size={18} style={{ color: "#3B82F6" }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: 0 }}>{t("elementsUploadCta")}</p>
+              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "3px 0 0" }}>{t("elementsAcceptHint")}</p>
+            </div>
+          </div>
+          <input ref={fileRef} type="file" accept="image/png" multiple
+            onChange={e => { if (e.target.files) onFiles(e.target.files); }}
+            style={{ display: "none" }} />
+
+          {/* PNG-only error with shortcut to PNG generator */}
+          {error && (
+            <div style={{
+              marginTop: 12, padding: "10px 12px", borderRadius: 10,
+              background: "rgba(248,113,113,0.08)",
+              border: "1px solid rgba(248,113,113,0.25)",
+              display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap",
+            }}>
+              <AlertTriangle size={14} style={{ color: "#f87171", flexShrink: 0, marginTop: 2 }} />
+              <p style={{ fontSize: 12, color: "#fee2e2", margin: 0, lineHeight: 1.5, flex: 1, minWidth: 200 }}>
+                {error}
+              </p>
+              <button
+                onClick={onOpenPngGenerator}
+                style={{
+                  padding: "7px 12px", borderRadius: 8,
+                  background: "#3B82F6", color: "#fff", border: "none",
+                  fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit",
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                }}>
+                <Layers size={11} /> {t("elementsOpenPng")}
+              </button>
+            </div>
+          )}
+
+          {/* Library list */}
+          {elements.length === 0 ? (
+            <div style={{
+              marginTop: 18, padding: "20px 16px",
+              borderRadius: 11,
+              background: "rgba(255,255,255,0.02)",
+              border: "1px dashed rgba(255,255,255,0.08)",
+              textAlign: "center",
+            }}>
+              <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0, lineHeight: 1.5 }}>
+                {t("elementsEmpty")}
+              </p>
+            </div>
+          ) : (
+            <div style={{ marginTop: 18 }}>
+              <p style={{
+                fontSize: 10.5, fontWeight: 800, letterSpacing: "0.10em",
+                color: "#9CA3AF", margin: "0 0 8px",
+                textTransform: "uppercase",
+              }}>
+                {t("elementsLibrary")} · {elements.length}
+                {selectedIds.length > 0 && (
+                  <span style={{ marginLeft: 8, color: "#3B82F6" }}>· {selectedIds.length} {t("elementsSelected")}</span>
+                )}
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {elements.map(el => {
+                  const selected = selectedIds.includes(el.id);
+                  const isEditing = editingId === el.id;
+                  return (
+                    <div key={el.id}
+                      onClick={() => { if (!isEditing) onToggle(el.id); }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "8px 10px", borderRadius: 10,
+                        background: selected ? "rgba(59,130,246,0.10)" : "rgba(255,255,255,0.025)",
+                        border: `1px solid ${selected ? "rgba(59,130,246,0.45)" : "rgba(255,255,255,0.06)"}`,
+                        cursor: isEditing ? "default" : "pointer",
+                        transition: "all 0.15s",
+                      }}
+                      onMouseEnter={e => { if (!selected && !isEditing) (e.currentTarget as HTMLElement).style.borderColor = "rgba(59,130,246,0.25)"; }}
+                      onMouseLeave={e => { if (!selected && !isEditing) (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
+                    >
+                      <div style={{
+                        width: 44, height: 44, borderRadius: 8,
+                        background: "rgba(0,0,0,0.30)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        overflow: "hidden", flexShrink: 0,
+                      }}>
+                        <img src={el.url} alt={el.name}
+                          style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {isEditing ? (
+                          <input
+                            autoFocus
+                            value={editingDraft}
+                            onClick={e => e.stopPropagation()}
+                            onChange={e => setEditingDraft(e.target.value.slice(0, 60))}
+                            onBlur={() => {
+                              const trimmed = editingDraft.trim();
+                              if (trimmed && trimmed !== el.name) onRename(el.id, trimmed);
+                              setEditingId(null);
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
+                              else if (e.key === "Escape") { setEditingId(null); }
+                            }}
+                            style={{
+                              width: "100%", padding: "4px 8px", borderRadius: 6,
+                              background: "rgba(0,0,0,0.40)",
+                              border: "1px solid rgba(59,130,246,0.50)",
+                              color: "#fff", fontSize: 13, fontWeight: 700,
+                              fontFamily: "inherit", outline: "none",
+                            }} />
+                        ) : (
+                          <p style={{
+                            fontSize: 13, fontWeight: 700, color: "#fff", margin: 0,
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}>{el.name}</p>
+                        )}
+                      </div>
+                      {!isEditing && (
+                        <>
+                          {selected && (
+                            <span style={{
+                              fontSize: 10, fontWeight: 800, letterSpacing: "0.06em",
+                              color: "#3B82F6",
+                              padding: "2px 6px", borderRadius: 5,
+                              background: "rgba(59,130,246,0.10)",
+                              border: "1px solid rgba(59,130,246,0.25)",
+                              flexShrink: 0,
+                            }}>✓</span>
+                          )}
+                          <button
+                            onClick={e => { e.stopPropagation(); setEditingDraft(el.name); setEditingId(el.id); }}
+                            style={iconBtnStyle()} title={t("elementsRename")}>
+                            <Pencil size={11} />
+                          </button>
+                          <button
+                            onClick={e => { e.stopPropagation(); onDelete(el.id); }}
+                            style={iconBtnStyle()} title={t("elementsDelete")}>
+                            <Trash2 size={11} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
