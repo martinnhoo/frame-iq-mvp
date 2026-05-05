@@ -64,6 +64,7 @@ export default function HubImageGenerator() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsVerify, setNeedsVerify] = useState(false);
   const [result, setResult] = useState<GenResult | null>(null);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [licenseCopied, setLicenseCopied] = useState(false);
@@ -119,6 +120,7 @@ export default function HubImageGenerator() {
   const generate = async () => {
     if (loading || !prompt.trim() || prompt.trim().length < 5) return;
     setError(null);
+    setNeedsVerify(false);
     setLoading(true);
     setResult(null);
     try {
@@ -155,6 +157,11 @@ export default function HubImageGenerator() {
       try { payload = JSON.parse(text); } catch { /* not json */ }
 
       if (!r.ok || !payload?.ok) {
+        // Erro especial: org não verificada — UI dedicada com link
+        if (payload?.error === "needs_org_verification") {
+          setNeedsVerify(true);
+          return;
+        }
         const detail = payload?.openai_message || payload?.message || payload?.error || text || `HTTP ${r.status}`;
         const versionTag = payload?._v ? ` [fn=${payload._v}]` : " [fn=desconhecida]";
         setError((detail + versionTag).slice(0, 500));
@@ -536,8 +543,72 @@ export default function HubImageGenerator() {
           </button>
         </div>
 
+        {/* ── Verify org (caso especial) ────────────────────────── */}
+        {needsVerify && (
+          <div style={{
+            padding: "20px 22px", borderRadius: 14,
+            background: "linear-gradient(135deg, rgba(251,191,36,0.06), rgba(168,85,247,0.06))",
+            border: "1px solid rgba(251,191,36,0.30)",
+            marginBottom: 22,
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+                background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <AlertTriangle size={20} style={{ color: "#1a1a2e" }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 800, color: "#fff", margin: "0 0 6px", letterSpacing: "-0.01em" }}>
+                  Verifique sua organização OpenAI
+                </h3>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", margin: "0 0 14px", lineHeight: 1.55 }}>
+                  Pra usar o gpt-image-2 (qualidade fotorrealista pra ad creatives), a OpenAI exige
+                  verification organizacional. <strong style={{ color: "#fbbf24" }}>Aprovado em ~5min</strong>
+                  {" "}via verification individual (KYC com doc + selfie).
+                </p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <a
+                    href="https://platform.openai.com/settings/organization/general"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "9px 16px", borderRadius: 10,
+                      background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+                      color: "#1a1a2e", fontSize: 13, fontWeight: 800,
+                      textDecoration: "none",
+                      boxShadow: "0 4px 14px rgba(251,191,36,0.30)",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    <Sparkles size={13} /> Verificar agora →
+                  </a>
+                  <button
+                    onClick={() => setNeedsVerify(false)}
+                    style={{
+                      padding: "9px 14px", borderRadius: 10,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.65)",
+                      fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Fechar
+                  </button>
+                </div>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", margin: "12px 0 0", lineHeight: 1.5 }}>
+                  Após aprovar a verification, volta aqui e tenta gerar de novo. Funciona automaticamente, sem precisar mexer no código.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Error ─────────────────────────────────────────────── */}
-        {error && (
+        {error && !needsVerify && (
           <div style={{
             display: "flex", alignItems: "flex-start", gap: 10,
             padding: "12px 16px", borderRadius: 11,
@@ -579,34 +650,24 @@ export default function HubImageGenerator() {
                 <RefreshCw size={14} /> Gerar variação
               </button>
             </div>
-            {result.model_used && (() => {
-              const isPremium = result.model_used === "gpt-image-2";
-              const accent = isPremium ? "#22d399" : "#a855f7";
-              const accentBg = isPremium ? "rgba(34,211,153,0.06)" : "rgba(168,85,247,0.06)";
-              const accentBorder = isPremium ? "rgba(34,211,153,0.20)" : "rgba(168,85,247,0.20)";
-              return (
-                <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-                  <div style={{
-                    padding: "6px 12px",
-                    display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-                    background: accentBg, border: `1px solid ${accentBorder}`, borderRadius: 8,
-                    maxWidth: "100%",
+            {result.model_used && (
+              <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+                <div style={{
+                  padding: "6px 12px",
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  background: "rgba(34,211,153,0.06)",
+                  border: "1px solid rgba(34,211,153,0.20)",
+                  borderRadius: 8,
+                }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 800, letterSpacing: "0.10em", textTransform: "uppercase",
+                    color: "#22d399",
                   }}>
-                    <span style={{
-                      fontSize: 10, fontWeight: 800, letterSpacing: "0.10em", textTransform: "uppercase",
-                      color: accent,
-                    }}>
-                      Modelo: {result.model_used}{isPremium && " ★"}
-                    </span>
-                    {result.fallback_reason && (
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.4 }}>
-                        · gpt-image-2 ainda em review na OpenAI — quando aprovar, ativa sozinho
-                      </span>
-                    )}
-                  </div>
+                    Modelo: {result.model_used} ★
+                  </span>
                 </div>
-              );
-            })()}
+              </div>
+            )}
             {result.revised_prompt && result.revised_prompt !== result.prompt && (
               <p style={{
                 fontSize: 11, color: "rgba(255,255,255,0.45)",

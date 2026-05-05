@@ -1,15 +1,15 @@
 // generate-image-hub — Image Generator interno (Brilliant Hub).
 //
-// Modelo: tenta gpt-image-2 primeiro. Se OpenAI rejeitar com erro de
-// acesso/disponibilidade (account em review, modelo bloqueado, etc.),
-// cai automaticamente pra dall-e-3. Quando a aprovação business
-// liberar gpt-image-2, vai começar a funcionar sozinho sem redeploy.
+// Modelo único: gpt-image-2. Sem fallback. dall-e-3 é inútil pra
+// criativos de ad — só polui a galeria com imagens de qualidade
+// inferior. Se gpt-image-2 não tá disponível, retorna erro acionável
+// (verify org) e a UI mostra a tela de "destravar".
 //
 // Brand context: front manda { brand_id, brand_hint, include_license,
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v8-gptimage2-or-dalle3-brand-2026-05-05";
+const FN_VERSION = "v9-gptimage2-only-actionable-2026-05-05";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -19,19 +19,11 @@ const cors = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Sizes diferem entre os 2 modelos. gpt-image-2 usa grid 1024/1536;
-// dall-e-3 usa 1024/1792. 4:5 não tem nativo em nenhum dos 2.
-const SIZE_GPTIMAGE: Record<string, string> = {
+const SIZE_MAP: Record<string, string> = {
   "1:1":  "1024x1024",
   "16:9": "1536x1024",
   "9:16": "1024x1536",
   "4:5":  "1024x1536",
-};
-const SIZE_DALLE: Record<string, string> = {
-  "1:1":  "1024x1024",
-  "16:9": "1792x1024",
-  "9:16": "1024x1792",
-  "4:5":  "1024x1792",
 };
 
 function jsonResponse(payload: unknown, status: number): Response {
@@ -39,95 +31,6 @@ function jsonResponse(payload: unknown, status: number): Response {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
-}
-
-interface ModelAttempt {
-  ok: boolean;
-  imageUrl?: string | null;
-  revisedPrompt?: string;
-  status?: number;
-  errText?: string;
-  errMsg?: string;
-  errCode?: string;
-}
-
-async function tryGptImage2(prompt: string, aspect: string, quality: string, apiKey: string): Promise<ModelAttempt> {
-  const size = SIZE_GPTIMAGE[aspect] || SIZE_GPTIMAGE["1:1"];
-  const r = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "gpt-image-2",
-      prompt: prompt.slice(0, 4000),
-      size,
-      quality, // low | medium | high
-      n: 1,
-      moderation: "low",
-    }),
-  });
-  if (!r.ok) {
-    const t = await r.text();
-    let msg = "", code = "";
-    try {
-      const p = JSON.parse(t);
-      msg = p?.error?.message || "";
-      code = p?.error?.code || "";
-    } catch {}
-    return { ok: false, status: r.status, errText: t, errMsg: msg, errCode: code };
-  }
-  const data = await r.json();
-  const imgData = data?.data?.[0];
-  const imageUrl = imgData?.url
-    || (imgData?.b64_json ? `data:image/png;base64,${imgData.b64_json}` : null);
-  return { ok: true, imageUrl, revisedPrompt: imgData?.revised_prompt };
-}
-
-async function tryDalle3(prompt: string, aspect: string, quality: string, apiKey: string): Promise<ModelAttempt> {
-  const size = SIZE_DALLE[aspect] || SIZE_DALLE["1:1"];
-  const dalleQuality = quality === "high" ? "hd" : "standard";
-  const r = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "dall-e-3",
-      prompt: prompt.slice(0, 4000),
-      size,
-      quality: dalleQuality, // standard | hd
-      n: 1,
-      response_format: "url",
-    }),
-  });
-  if (!r.ok) {
-    const t = await r.text();
-    let msg = "", code = "";
-    try {
-      const p = JSON.parse(t);
-      msg = p?.error?.message || "";
-      code = p?.error?.code || "";
-    } catch {}
-    return { ok: false, status: r.status, errText: t, errMsg: msg, errCode: code };
-  }
-  const data = await r.json();
-  const imgData = data?.data?.[0];
-  const imageUrl = imgData?.url
-    || (imgData?.b64_json ? `data:image/png;base64,${imgData.b64_json}` : null);
-  return { ok: true, imageUrl, revisedPrompt: imgData?.revised_prompt };
-}
-
-function isAvailabilityError(a: ModelAttempt): boolean {
-  if (!a.status) return false;
-  if (a.status === 403 || a.status === 404) return true;
-  const m = (a.errMsg || "").toLowerCase();
-  return m.includes("verified") || m.includes("does not have access")
-      || m.includes("model not found") || m.includes("invalid model")
-      || m.includes("must be verified") || m.includes("review")
-      || m.includes("not available");
-}
-
-function isContentBlock(a: ModelAttempt): boolean {
-  const m = (a.errMsg || "").toLowerCase();
-  return a.errCode === "content_policy_violation"
-      || m.includes("content_policy") || m.includes("safety system");
 }
 
 console.log(`[hub-image] boot ${FN_VERSION}`);
@@ -196,73 +99,91 @@ Deno.serve(async (req) => {
       );
     }
     const finalPrompt = parts.join("\n\n").slice(0, 4000);
+    const size = SIZE_MAP[aspect_ratio] || SIZE_MAP["1:1"];
 
     console.log("[hub-image] start", JSON.stringify({
       user_id: authUser.id, aspect_ratio, quality, brand_id: brand_id || null,
       include_license, prompt_len: finalPrompt.length,
     }));
 
-    // ── 1. Tenta gpt-image-2 ─────────────────────────────────────────
-    let modelUsed: "gpt-image-2" | "dall-e-3" = "gpt-image-2";
-    let fallbackReason: string | null = null;
-    let attempt = await tryGptImage2(finalPrompt, aspect_ratio, quality, OPENAI_API_KEY);
+    const r = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-image-2",
+        prompt: finalPrompt,
+        size,
+        quality,
+        n: 1,
+        moderation: "low",
+      }),
+    });
 
-    // ── 2. Se falhar com erro de acesso/disponibilidade → dall-e-3 ──
-    if (!attempt.ok) {
-      // Content policy: mesmo critério em qualquer modelo, retorna direto
-      if (isContentBlock(attempt)) {
-        console.warn("[hub-image] gpt-image-2 content block:", attempt.errMsg);
+    if (!r.ok) {
+      const errText = await r.text();
+      let errMsg = "", errCode = "";
+      try {
+        const parsed = JSON.parse(errText);
+        errMsg = parsed?.error?.message || "";
+        errCode = parsed?.error?.code || "";
+      } catch {}
+
+      console.error(`[hub-image] gpt-image-2 ${r.status}:`, errText);
+
+      // Detecta erro de "verify org" — vira código especial pra UI
+      // mostrar tela de destravar org, com link direto.
+      const m = errMsg.toLowerCase();
+      const needsVerify = r.status === 403
+        || m.includes("must be verified")
+        || m.includes("verify organization")
+        || m.includes("organization must be verified")
+        || m.includes("does not have access");
+
+      if (needsVerify) {
         return jsonResponse({
-          _v: FN_VERSION, ok: false, error: "content_policy",
-          message: "Prompt rejeitado por política de conteúdo da OpenAI.",
-          openai_status: attempt.status, openai_message: attempt.errMsg,
-          detail: (attempt.errText || "").slice(0, 500),
+          _v: FN_VERSION, ok: false, error: "needs_org_verification",
+          message: "Sua organização OpenAI precisa ser verificada pra usar gpt-image-2.",
+          openai_status: r.status, openai_message: errMsg,
+          verify_url: "https://platform.openai.com/settings/organization/general",
         }, 502);
       }
 
-      if (isAvailabilityError(attempt)) {
-        console.warn(`[hub-image] gpt-image-2 unavailable (${attempt.status}): ${attempt.errMsg} — falling back to dall-e-3`);
-        fallbackReason = attempt.errMsg || `gpt-image-2 indisponível (${attempt.status})`;
-        modelUsed = "dall-e-3";
-        attempt = await tryDalle3(finalPrompt, aspect_ratio, quality, OPENAI_API_KEY);
-      } else {
-        // Outro erro hard (rate limit, 500, auth) — retorna direto
-        console.error("[hub-image] gpt-image-2 hard error:", attempt.status, attempt.errText);
-        return jsonResponse({
-          _v: FN_VERSION, ok: false, error: "image_gen_failed",
-          message: attempt.errMsg || `OpenAI retornou ${attempt.status}.`,
-          openai_status: attempt.status, openai_message: attempt.errMsg,
-          detail: (attempt.errText || "").slice(0, 500),
-        }, 502);
+      let userError = "image_gen_failed";
+      let userMessage = errMsg || `OpenAI retornou ${r.status}.`;
+      if (errCode === "content_policy_violation" || m.includes("safety")) {
+        userError = "content_policy";
+        userMessage = "Prompt rejeitado por política de conteúdo da OpenAI.";
+      } else if (r.status === 429) {
+        userError = "rate_limited";
+        userMessage = "Rate limit OpenAI atingido. Tenta de novo em ~1min.";
+      } else if (r.status === 401) {
+        userError = "openai_auth";
+        userMessage = "Chave OpenAI inválida ou expirada.";
+      } else if (r.status === 404) {
+        userError = "model_not_found";
+        userMessage = "Modelo gpt-image-2 não encontrado na conta OpenAI.";
       }
-    }
 
-    // Se o fallback também falhou
-    if (!attempt.ok) {
-      console.error("[hub-image] dall-e-3 also failed:", attempt.status, attempt.errText);
       return jsonResponse({
-        _v: FN_VERSION, ok: false, error: "image_gen_failed",
-        message: attempt.errMsg || `dall-e-3 retornou ${attempt.status}.`,
-        openai_status: attempt.status, openai_message: attempt.errMsg,
-        detail: (attempt.errText || "").slice(0, 500),
-        fallback_reason: fallbackReason,
+        _v: FN_VERSION, ok: false, error: userError, message: userMessage,
+        openai_status: r.status, openai_message: errMsg, openai_code: errCode,
+        detail: errText.slice(0, 500),
       }, 502);
     }
 
-    const imageUrl = attempt.imageUrl;
-    const revisedPrompt = attempt.revisedPrompt || userPrompt;
+    const data = await r.json();
+    const imgData = data?.data?.[0];
+    const imageUrl: string | null = imgData?.url
+      || (imgData?.b64_json ? `data:image/png;base64,${imgData.b64_json}` : null);
+    const revisedPrompt = imgData?.revised_prompt || userPrompt;
 
     if (!imageUrl) {
-      console.error(`[hub-image] no image in response from ${modelUsed}`);
+      console.error("[hub-image] no image in response");
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: "no_image_returned",
-        message: `${modelUsed} não retornou imagem.`,
+        message: "gpt-image-2 não retornou imagem.",
       }, 502);
     }
-
-    const sizeUsed = modelUsed === "dall-e-3"
-      ? (SIZE_DALLE[aspect_ratio] || SIZE_DALLE["1:1"])
-      : (SIZE_GPTIMAGE[aspect_ratio] || SIZE_GPTIMAGE["1:1"]);
 
     // Persiste na biblioteca
     try {
@@ -274,10 +195,8 @@ Deno.serve(async (req) => {
           revised_prompt: revisedPrompt,
           final_prompt: finalPrompt,
           image_url: imageUrl,
-          aspect_ratio,
-          size: sizeUsed,
-          quality,
-          model: modelUsed,
+          aspect_ratio, size, quality,
+          model: "gpt-image-2",
           brand_id: brand_id || null,
           license_included: include_license,
           license_text: include_license ? license_text : null,
@@ -288,7 +207,7 @@ Deno.serve(async (req) => {
       console.warn("[hub-image] DB insert failed (non-fatal):", dbErr);
     }
 
-    console.log(`[hub-image] success — model=${modelUsed} fallback=${!!fallbackReason}`);
+    console.log("[hub-image] success — gpt-image-2");
 
     return jsonResponse({
       _v: FN_VERSION,
@@ -297,11 +216,8 @@ Deno.serve(async (req) => {
       prompt: userPrompt,
       revised_prompt: revisedPrompt,
       final_prompt: finalPrompt,
-      aspect_ratio,
-      size: sizeUsed,
-      quality,
-      model_used: modelUsed,
-      fallback_reason: fallbackReason,
+      aspect_ratio, size, quality,
+      model_used: "gpt-image-2",
       brand_id: brand_id || null,
       license_included: include_license,
     }, 200);
