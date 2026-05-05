@@ -264,14 +264,7 @@ export default function Onboarding() {
     
     if (!insertError && inserted?.length) {
       const newPersonaId = (inserted[0] as { id: string }).id;
-
-      // Fire welcome email
-      supabase.functions.invoke("send-welcome-email", {
-        body: { user_id: session.user.id, email: session.user.email, first_name: name.trim().split(" ")[0] || personaName, language: lang }
-      }).catch(() => {});
-
-      // business-profiler removed — no more auto-generated compliance rules
-
+      // Welcome email removido — portal interno não dispara emails.
       return newPersonaId;
     }
 
