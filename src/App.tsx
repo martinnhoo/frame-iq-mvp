@@ -98,6 +98,7 @@ const CriarHub         = lazy(() => import("./pages/dashboard/CriarHub"));
 // Outras rotas continuam acessíveis via URL direta mas escondidas do menu.
 const BrilliantHub     = lazy(() => import("./pages/dashboard/BrilliantHub"));
 const HubImageGenerator = lazy(() => import("./pages/dashboard/HubImageGenerator"));
+const HubLibrary = lazy(() => import("./pages/dashboard/HubLibrary"));
 const CampaignsManager = lazy(() => import("./pages/dashboard/CampaignsManager"));
 
 // SEO pages — lazily loaded, rarely visited from landing
@@ -186,6 +187,7 @@ const App = () => (
                 <Route index element={<Navigate to="/dashboard/hub" replace />} />
                 <Route path="hub" element={<BrilliantHub />} />
                 <Route path="hub/image" element={<HubImageGenerator />} />
+                <Route path="library" element={<HubLibrary />} />
                 <Route path="feed" element={<FeedPage />} />
                 <Route path="feed/campanhas" element={<CampaignsManager />} />
                 <Route path="history" element={<HistoryPage />} />

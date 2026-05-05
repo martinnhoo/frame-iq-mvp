@@ -85,7 +85,7 @@ const MAIN_TOOLS: Tool[] = [
     desc: "Sua central de criativos. Organize, filtre e encontre qualquer peça rapidamente.",
     icon: FolderOpen,
     color: "#14b8a6",
-    route: "/dashboard/intelligence",
+    route: "/dashboard/library",
     status: "live",
     cta: "Acessar biblioteca",
   },

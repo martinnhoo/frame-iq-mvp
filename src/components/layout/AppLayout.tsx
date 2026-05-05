@@ -114,7 +114,7 @@ function getNavItems(_lang: string) {
     { url: '/dashboard/boards',       label: 'Boards',      icon: Clapperboard },
     { url: '/dashboard/translate',    label: 'Transcript',  icon: Video },
     { url: '/dashboard/templates',    label: 'Templates',   icon: Tag },
-    { url: '/dashboard/intelligence', label: 'Biblioteca',  icon: FolderOpen },
+    { url: '/dashboard/library',      label: 'Biblioteca',  icon: FolderOpen },
     { url: '/dashboard/performance',  label: 'Analytics',   icon: BarChart3 },
   ];
 }
