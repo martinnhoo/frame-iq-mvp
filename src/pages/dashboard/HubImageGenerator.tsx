@@ -386,9 +386,9 @@ export default function HubImageGenerator() {
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
           <div style={{
             width: 38, height: 38, borderRadius: 11,
-            background: "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+            background: "#3B82F6",
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 24px rgba(168,85,247,0.30), inset 0 0 0 1px rgba(255,255,255,0.08)",
+            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.08)",
             flexShrink: 0,
           }}>
             <ImageIcon size={20} style={{ color: "#fff" }} />
@@ -427,14 +427,14 @@ export default function HubImageGenerator() {
                     position: "relative",
                     padding: "10px 12px",
                     borderRadius: 11,
-                    background: active ? "rgba(168,85,247,0.10)" : "rgba(255,255,255,0.025)",
-                    border: `1px solid ${active ? "rgba(168,85,247,0.50)" : "rgba(255,255,255,0.06)"}`,
+                    background: active ? "rgba(59,130,246,0.10)" : "rgba(255,255,255,0.025)",
+                    border: `1px solid ${active ? "rgba(59,130,246,0.50)" : "rgba(255,255,255,0.06)"}`,
                     cursor: loading ? "not-allowed" : "pointer",
                     textAlign: "left",
                     transition: "all 0.18s",
                     overflow: "hidden",
                     boxShadow: active
-                      ? "0 0 18px rgba(168,85,247,0.20), inset 0 0 0 1px rgba(168,85,247,0.18)"
+                      ? "0 0 18px rgba(59,130,246,0.20), inset 0 0 0 1px rgba(59,130,246,0.18)"
                       : "none",
                     fontFamily: "inherit",
                   }}
@@ -501,14 +501,14 @@ export default function HubImageGenerator() {
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 8,
                       padding: "8px 13px", borderRadius: 10,
-                      background: active ? "rgba(168,85,247,0.14)" : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${active ? "rgba(168,85,247,0.55)" : "rgba(255,255,255,0.08)"}`,
+                      background: active ? "rgba(59,130,246,0.14)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${active ? "rgba(59,130,246,0.55)" : "rgba(255,255,255,0.08)"}`,
                       color: active ? "#fff" : "rgba(255,255,255,0.65)",
                       cursor: loading ? "not-allowed" : "pointer",
                       fontSize: 13, fontWeight: 600,
                       fontFamily: "inherit",
                       transition: "all 0.15s",
-                      boxShadow: active ? "0 0 20px rgba(168,85,247,0.18)" : "none",
+                      boxShadow: "none",
                     }}
                   >
                     <span style={{ fontSize: 16, lineHeight: 1 }}>{m.flag}</span>
@@ -628,8 +628,8 @@ export default function HubImageGenerator() {
               transition: "border-color 0.18s, box-shadow 0.18s",
             }}
             onFocus={e => {
-              e.currentTarget.style.borderColor = "rgba(168,85,247,0.55)";
-              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(168,85,247,0.10)";
+              e.currentTarget.style.borderColor = "rgba(59,130,246,0.55)";
+              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(59,130,246,0.10)";
             }}
             onBlur={e => {
               e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
@@ -650,13 +650,13 @@ export default function HubImageGenerator() {
                     disabled={loading}
                     style={{
                       padding: "10px 12px", borderRadius: 11,
-                      background: active ? "rgba(168,85,247,0.14)" : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${active ? "rgba(168,85,247,0.55)" : "rgba(255,255,255,0.08)"}`,
+                      background: active ? "rgba(59,130,246,0.14)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${active ? "rgba(59,130,246,0.55)" : "rgba(255,255,255,0.08)"}`,
                       color: active ? "#fff" : "rgba(255,255,255,0.65)",
                       cursor: loading ? "not-allowed" : "pointer",
                       textAlign: "left", fontFamily: "inherit",
                       transition: "all 0.15s",
-                      boxShadow: active ? "0 0 20px rgba(168,85,247,0.18)" : "none",
+                      boxShadow: "none",
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -684,12 +684,12 @@ export default function HubImageGenerator() {
                   title={q === "low" ? t("qDraftDesc") : q === "medium" ? t("qMediumDesc") : t("qHighDesc")}
                   style={{
                     padding: "6px 14px", borderRadius: 7, fontSize: 11, fontWeight: 800,
-                    background: quality === q ? "linear-gradient(135deg, #a855f7, #7c3aed)" : "transparent",
+                    background: quality === q ? "#3B82F6" : "transparent",
                     color: quality === q ? "#fff" : "rgba(255,255,255,0.55)",
                     border: "none", cursor: loading ? "not-allowed" : "pointer",
                     textTransform: "uppercase", letterSpacing: "0.06em",
                     fontFamily: "inherit",
-                    boxShadow: quality === q ? "0 4px 12px rgba(168,85,247,0.30)" : "none",
+                    boxShadow: "none",
                     transition: "all 0.15s",
                   }}
                 >
@@ -707,12 +707,12 @@ export default function HubImageGenerator() {
               marginTop: 18, width: "100%", padding: "15px 20px",
               borderRadius: 13, fontSize: 14, fontWeight: 800,
               background: loading || !promptValid
-                ? "rgba(168,85,247,0.20)"
-                : "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+                ? "rgba(59,130,246,0.20)"
+                : "#3B82F6",
               color: loading || !promptValid ? "rgba(255,255,255,0.40)" : "#fff",
               border: "none", cursor: loading || !promptValid ? "not-allowed" : "pointer",
               display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-              boxShadow: loading || !promptValid ? "none" : "0 8px 28px rgba(168,85,247,0.45)",
+              boxShadow: "none",
               transition: "all 0.18s",
               letterSpacing: "0.02em",
               fontFamily: "inherit",
@@ -742,7 +742,7 @@ export default function HubImageGenerator() {
         {needsVerify && (
           <div style={{
             padding: "20px 22px", borderRadius: 14,
-            background: "linear-gradient(135deg, rgba(251,191,36,0.06), rgba(168,85,247,0.06))",
+            background: "linear-gradient(135deg, rgba(251,191,36,0.06), rgba(59,130,246,0.06))",
             border: "1px solid rgba(251,191,36,0.30)",
           }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
@@ -818,9 +818,9 @@ export default function HubImageGenerator() {
         {result && (
           <div style={{
             background: "rgba(255,255,255,0.025)",
-            border: "1px solid rgba(168,85,247,0.30)",
+            border: "1px solid rgba(59,130,246,0.30)",
             borderRadius: 14, padding: 16,
-            boxShadow: "0 0 50px rgba(168,85,247,0.10)",
+            boxShadow: "none",
           }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
               <img
@@ -881,11 +881,11 @@ export default function HubImageGenerator() {
           }}>
             <div style={{
               width: 56, height: 56, borderRadius: 14,
-              background: "linear-gradient(135deg, rgba(168,85,247,0.18), rgba(236,72,153,0.10))",
-              border: "1px solid rgba(168,85,247,0.20)",
+              background: "linear-gradient(135deg, rgba(59,130,246,0.18), rgba(59,130,246,0.10))",
+              border: "1px solid rgba(59,130,246,0.20)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <Sparkles size={24} style={{ color: "rgba(168,85,247,0.85)" }} />
+              <Sparkles size={24} style={{ color: "rgba(59,130,246,0.85)" }} />
             </div>
             <div>
               <p style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.80)", margin: 0 }}>
@@ -908,15 +908,15 @@ export default function HubImageGenerator() {
         {loading && (
           <div style={{
             background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(168,85,247,0.20)",
+            border: "1px solid rgba(59,130,246,0.20)",
             borderRadius: 14,
             minHeight: 360,
             display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center",
             padding: 32, gap: 12,
-            boxShadow: "0 0 40px rgba(168,85,247,0.08)",
+            boxShadow: "none",
           }}>
-            <RefreshCw size={28} style={{ color: "#a855f7", animation: "spin 1.2s linear infinite" }} />
+            <RefreshCw size={28} style={{ color: "#3B82F6", animation: "spin 1.2s linear infinite" }} />
             <p style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.70)", margin: 0 }}>
               {t("generating")}
             </p>
@@ -950,7 +950,7 @@ export default function HubImageGenerator() {
                     onClick={() => downloadImage(item.image_url, `hub-${item.id}.png`)}
                     onMouseEnter={e => {
                       e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.borderColor = "rgba(168,85,247,0.40)";
+                      e.currentTarget.style.borderColor = "rgba(59,130,246,0.40)";
                     }}
                     onMouseLeave={e => {
                       e.currentTarget.style.transform = "translateY(0)";
