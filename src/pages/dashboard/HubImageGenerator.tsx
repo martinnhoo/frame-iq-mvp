@@ -30,7 +30,7 @@ import {
   type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { composeImageWithLicense } from "@/lib/composeImageWithLicense";
+import { composeImage } from "@/lib/composeImageWithLicense";
 import { addHubNotification } from "@/lib/hubNotifications";
 
 // ── Strings i18n ─────────────────────────────────────────────────────
@@ -77,6 +77,8 @@ const STR: Record<string, Record<Lang, string>> = {
   licCopy:             { pt: "Copiar texto",           en: "Copy text",             es: "Copiar texto",           zh: "复制文本" },
   licCopied:           { pt: "Copiado",                en: "Copied",                es: "Copiado",                zh: "已复制" },
   licReset:            { pt: "Resetar",                en: "Reset",                 es: "Restablecer",            zh: "重置" },
+  // Logo overlay
+  includeLogo:         { pt: "Incluir logo da marca",  en: "Include brand logo",    es: "Incluir logo de la marca",zh: "包含品牌 logo" },
   // Verify org card
   verifyTitle:         { pt: "Verifique sua organização OpenAI",
                          en: "Verify your OpenAI organization",
@@ -145,6 +147,7 @@ export default function HubImageGenerator() {
 
   const [includeLicense, setIncludeLicense] = useState(true);
   const [licenseText, setLicenseText] = useState<string>("");
+  const [includeLogo, setIncludeLogo] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -161,13 +164,14 @@ export default function HubImageGenerator() {
   const hasLicense = !!defaultLicense;
 
   // Quando troca brand, auto-seleciona o primeiro mercado dela.
+  // Reseta toggle do logo: ON quando a brand tem logoImage, OFF caso não tenha.
   useEffect(() => {
     if (!brand || brand.markets.length === 0) {
       setMarketCode(null);
     } else {
-      // Se mercado atual não tá na lista da nova brand, troca pro primeiro
       setMarketCode(prev => (prev && brand.markets.includes(prev) ? prev : brand.markets[0]));
     }
+    setIncludeLogo(!!brand?.logoImage);
   }, [brandId]);
 
   // Quando muda brand+mercado, repõe license padrão e re-ativa toggle
@@ -273,15 +277,25 @@ export default function HubImageGenerator() {
         return;
       }
 
-      // Se tem license ativa, compõe disclaimer no rodapé via Canvas.
-      // Depois de compor, atualiza o registro do creative_memory com
-      // a data URL composta (sem Storage — DB-only). Biblioteca mostra
-      // a versão com disclaimer.
+      // Composição pós-produção (canvas client-side):
+      //   - Logo da marca (top-right) se brand tem logoImage E user
+      //     marcou "Incluir logo"
+      //   - License (rodapé) se brand tem license ATIVA E user marcou
+      //     "Incluir disclaimer"
+      // Resultado salvo de volta em creative_memory pra Biblioteca
+      // mostrar a versão final.
       let finalImageUrl = payload.image_url!;
       const memoryId = (payload as { memory_id?: string | null })?.memory_id;
-      if (hasLicense && includeLicense && licenseText.trim()) {
+      const willCompose =
+        (hasLicense && includeLicense && licenseText.trim()) ||
+        (brand?.logoImage && includeLogo);
+      if (willCompose) {
         try {
-          const composedDataUrl = await composeImageWithLicense(payload.image_url!, licenseText.trim());
+          const composedDataUrl = await composeImage(payload.image_url!, {
+            licenseText: hasLicense && includeLicense ? licenseText.trim() : null,
+            logoUrl: brand?.logoImage && includeLogo ? brand.logoImage : null,
+            logoPosition: "top-right",
+          });
           finalImageUrl = composedDataUrl;
 
           // Persiste a versão composta em creative_memory.content.image_url.
@@ -468,19 +482,24 @@ export default function HubImageGenerator() {
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                     <div style={{
                       width: 32, height: 32, borderRadius: 9,
-                      background: b.gradient,
+                      background: b.logoImage ? "rgba(0,0,0,0.85)" : b.gradient,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
+                      flexShrink: 0, overflow: "hidden",
                       boxShadow: active ? "0 3px 10px rgba(0,0,0,0.25)" : "0 2px 6px rgba(0,0,0,0.18)",
                     }}>
-                      <span style={{
-                        fontSize: isNone ? 12 : 11.5, fontWeight: 800,
-                        color: "rgba(255,255,255,0.95)",
-                        letterSpacing: "0.04em",
-                        textShadow: "0 1px 2px rgba(0,0,0,0.25)",
-                      }}>
-                        {b.logoInitials}
-                      </span>
+                      {b.logoImage ? (
+                        <img src={b.logoImage} alt={b.name}
+                          style={{ width: "82%", height: "82%", objectFit: "contain" }} />
+                      ) : (
+                        <span style={{
+                          fontSize: isNone ? 12 : 11.5, fontWeight: 800,
+                          color: "rgba(255,255,255,0.95)",
+                          letterSpacing: "0.04em",
+                          textShadow: "0 1px 2px rgba(0,0,0,0.25)",
+                        }}>
+                          {b.logoInitials}
+                        </span>
+                      )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
@@ -553,6 +572,39 @@ export default function HubImageGenerator() {
               })}
             </div>
           </div>
+        )}
+
+        {/* ── Logo overlay toggle — só quando brand tem logoImage ── */}
+        {brand?.logoImage && (
+          <label style={{
+            display: "inline-flex", alignItems: "center", gap: 10,
+            padding: "10px 14px", marginBottom: 14,
+            borderRadius: 11,
+            background: includeLogo ? "rgba(59,130,246,0.08)" : "rgba(17,24,39,0.70)",
+            border: `1px solid ${includeLogo ? "rgba(59,130,246,0.30)" : "rgba(255,255,255,0.06)"}`,
+            cursor: "pointer", fontFamily: "inherit",
+            transition: "all 0.15s",
+          }}>
+            <input
+              type="checkbox"
+              checked={includeLogo}
+              onChange={e => setIncludeLogo(e.target.checked)}
+              disabled={loading}
+              style={{ accentColor: "#3B82F6", width: 14, height: 14, cursor: "pointer" }}
+            />
+            <div style={{
+              width: 24, height: 24, borderRadius: 6,
+              background: "rgba(0,0,0,0.85)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              overflow: "hidden", flexShrink: 0,
+            }}>
+              <img src={brand.logoImage} alt={brand.name}
+                style={{ width: "82%", height: "82%", objectFit: "contain" }} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#FFFFFF" }}>
+              {t("includeLogo")}
+            </span>
+          </label>
         )}
 
         {/* ── License panel ─────────────────────────────────────── */}

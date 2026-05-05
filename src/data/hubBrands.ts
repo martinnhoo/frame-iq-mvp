@@ -70,6 +70,11 @@ export interface HubBrand {
   markets: MarketCode[];
   gradient: string;
   logoInitials: string;
+  /** Path opcional pro PNG do logo (em /public). Quando presente, o
+   *  brand card mostra a imagem ao invés das iniciais, e o user pode
+   *  ativar a opção "Incluir logo" pra compositar no canto superior
+   *  direito do criativo gerado. FUNILIVE não tem (mascote integrado). */
+  logoImage?: string;
   promptHint: string;
   license?: Partial<Record<MarketCode, string>>;
 }
@@ -90,6 +95,7 @@ export const HUB_BRANDS: HubBrand[] = [
     markets: ["MX"],
     gradient: "linear-gradient(135deg, #DC2626, #F59E0B)",
     logoInitials: "BB",
+    logoImage: "/brand-logos/bet-bus-logo.png",
     promptHint:
       "BETBUS branding context: Mexican online casino & sports betting brand. " +
       "Visual style: bold red and gold accents, vibrant Latin American casino aesthetic, " +
@@ -111,6 +117,7 @@ export const HUB_BRANDS: HubBrand[] = [
     markets: ["BR", "MX", "CO", "PE"],
     gradient: "linear-gradient(135deg, #10B981, #FCD34D)",
     logoInitials: "EL",
+    logoImage: "/brand-logos/eluck-logo.png",
     promptHint:
       "ELUCK branding context: Latin American online casino brand operating across multiple markets. " +
       "Visual style: vibrant green and gold accents, modern energetic aesthetic, " +
@@ -122,6 +129,7 @@ export const HUB_BRANDS: HubBrand[] = [
     markets: ["BR", "MX", "US"],
     gradient: "linear-gradient(135deg, #8B5CF6, #EC4899)",
     logoInitials: "FL",
+    logoImage: "/brand-logos/funilive-logo.jpg",
     promptHint:
       "FUNILIVE branding context: Live casino & betting brand with international presence. " +
       "Visual style: modern vibrant aesthetic with purple and magenta tones, " +
