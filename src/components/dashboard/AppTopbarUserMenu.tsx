@@ -79,10 +79,21 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
   // planLabel removido — operação interna não exibe plano no header.
 
   const cycleLanguage = () => {
-    const order = ["pt", "en", "es"] as const;
+    // 4 idiomas no cycler: PT → EN → ES → ZH → PT…
+    const order = ["pt", "en", "es", "zh"] as const;
     const i = order.indexOf(language as (typeof order)[number]);
     const next = order[(i + 1) % order.length];
     setLanguage(next);
+  };
+
+  const langLabel = (l: string): string => {
+    switch (l) {
+      case "pt": return "Português";
+      case "en": return "English";
+      case "es": return "Español";
+      case "zh": return "中文";
+      default:   return "English";
+    }
   };
 
   const handleSignOut = async () => {
@@ -197,7 +208,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
               <Globe size={13} /> Idioma
             </span>
             <span style={{ fontSize: 12, fontWeight: 700, color: "#a855f7" }}>
-              {language === "pt" ? "Português" : language === "es" ? "Español" : "English"}
+              {langLabel(language)}
             </span>
           </button>
 
