@@ -483,6 +483,15 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  // Se tab atual sumiu da lista visível em Hub mode (Inteligência/Plano
+  // ficam escondidos), volta pra Perfil. Tem que vir ANTES do early
+  // return abaixo pra não quebrar Rules of Hooks.
+  useEffect(() => {
+    if (isHubMode && (tab === "intelligence" || tab === "plan")) {
+      setTab("profile");
+    }
+  }, [isHubMode, tab]);
+
   if (!open) return null;
 
   const F = "'Plus Jakarta Sans', sans-serif";
@@ -499,14 +508,6 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const TABS_NEW = isHubMode
     ? ALL_TABS.filter(t => t.id === "profile" || t.id === "security")
     : ALL_TABS;
-
-  // Se tab atual sumiu da lista visível (ex: usuário trocou de rota),
-  // volta pra Perfil — evita conteúdo de tab oculta renderizar.
-  useEffect(() => {
-    if (isHubMode && (tab === "intelligence" || tab === "plan")) {
-      setTab("profile");
-    }
-  }, [isHubMode, tab]);
 
   return (
     <>
