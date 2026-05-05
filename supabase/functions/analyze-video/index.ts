@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
     analysisId = (formData.get('analysis_id') as string | null) ?? null;
     const title = formData.get('title') as string;
     const transcribe_only = formData.get('transcribe_only') === 'true';
+    const target_language = ((formData.get('target_language') as string) || '').trim();
     const market = (formData.get('market') as string) || '';
     const persona_id = (formData.get('persona_id') as string | null) || null;
 
@@ -58,11 +59,46 @@ Deno.serve(async (req) => {
     // ── Step 1: Transcribe audio via Lovable AI (Gemini) ─────────────────
     let transcript = '';
     let duration = 30;
+    let detected_language = '';
     // Store base64 + mimeType for reuse in visual analysis (Step 2)
     let videoBase64 = '';
     let videoMime = '';
 
-    if (videoFile && ANTHROPIC_API_KEY) {
+    // ── Whisper-first quando transcribe_only ─────────────────────────────
+    // O branch Gemini-via-api.anthropic.com sempre falha (formato OpenAI
+    // num endpoint Anthropic). Pra transcribe_only, queremos resultado
+    // garantido — força Whisper se OPENAI_API_KEY existe.
+    const useWhisperOnly = transcribe_only && !!OPENAI_API_KEY;
+
+    if (useWhisperOnly && videoFile) {
+      try {
+        const whisperForm = new FormData();
+        whisperForm.append('file', videoFile, videoFile.name || 'audio.mp3');
+        whisperForm.append('model', 'whisper-1');
+        whisperForm.append('response_format', 'verbose_json');
+        const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+          body: whisperForm,
+        });
+        if (whisperRes.ok) {
+          const whisperData = await whisperRes.json();
+          transcript = whisperData.text || '';
+          duration = Math.round(whisperData.duration || 30);
+          detected_language = whisperData.language || '';
+        } else {
+          const errText = await whisperRes.text();
+          console.error('[analyze-video transcribe_only] Whisper error', whisperRes.status, errText.slice(0, 300));
+          if (whisperRes.status === 401) transcript = '[Audio transcription failed — invalid OpenAI key]';
+          else if (whisperRes.status === 413) transcript = '[Audio transcription failed — file too large]';
+          else if (whisperRes.status === 429) transcript = '[Rate limited — please try again in a moment]';
+          else transcript = '[Audio transcription failed — Whisper error]';
+        }
+      } catch (e) {
+        console.error('[analyze-video transcribe_only] Whisper exception:', e);
+        transcript = '[Audio transcription failed — network error]';
+      }
+    } else if (videoFile && ANTHROPIC_API_KEY) {
       try {
 
         // Convert file to base64 for Gemini
@@ -172,7 +208,6 @@ Deno.serve(async (req) => {
 
     // ── Transcribe-only mode ──────────────────────────────────────────────
     if (transcribe_only) {
-      // Fail only if truly no transcript at all or no AI key available
       const hasKey = ANTHROPIC_API_KEY || OPENAI_API_KEY;
       const transcriptFailed = !transcript || (transcript.startsWith('[') && (
         transcript.includes('failed') || transcript.includes('exhausted') || transcript.includes('Rate limited') || transcript.includes('error')
@@ -180,18 +215,80 @@ Deno.serve(async (req) => {
       if (!hasKey || !videoFile) {
         const reason = !videoFile ? 'No video file received' : 'No AI API key configured (ANTHROPIC_API_KEY or OPENAI_API_KEY)';
         console.error('transcribe_only failed:', reason);
-        return new Response(JSON.stringify({ 
+        return new Response(JSON.stringify({
           error: 'transcription_failed', transcript: '', message: reason
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       if (transcriptFailed) {
         console.error('transcribe_only failed: transcript error:', transcript);
-        return new Response(JSON.stringify({ 
+        return new Response(JSON.stringify({
           error: 'transcription_failed', transcript: '', message: transcript || 'Transcription failed — try again or paste text manually'
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-      return new Response(JSON.stringify({ 
+
+      // ── Tradução opcional via OpenAI gpt-4o-mini (sem dependência Anthropic) ─
+      let translated_text: string | null = null;
+      let translation_target: string | null = null;
+      if (target_language && target_language !== 'auto' && OPENAI_API_KEY) {
+        const LANG_NAMES: Record<string, string> = {
+          pt: 'Brazilian Portuguese',
+          en: 'English',
+          es: 'Spanish (Latin American)',
+          zh: 'Mandarin Chinese (Simplified)',
+          hi: 'Hinglish (Hindi mixed with English in Latin/Roman script — NEVER Devanagari)',
+          fr: 'French', de: 'German', it: 'Italian', ja: 'Japanese',
+          ko: 'Korean', ar: 'Arabic', ru: 'Russian',
+        };
+        const targetName = LANG_NAMES[target_language] || target_language;
+        const sourceName = detected_language ? (LANG_NAMES[detected_language] || detected_language) : 'the source language';
+
+        const systemPrompt =
+          'You are an expert transcription translator. Translate a transcript from one language to another, ' +
+          'preserving nuance, speaker intent, and natural flow. Do NOT add commentary, do NOT summarize. ' +
+          'Return the full transcript in the target language as continuous text. Preserve paragraph breaks. ' +
+          'Respond ONLY with valid JSON: {"translated": "<full translated transcript>"}.';
+        const userMsg = `Translate this transcript FROM ${sourceName} TO ${targetName}:\n\n---\n${transcript}\n---\n\nReturn ONLY valid JSON.`;
+        try {
+          const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              temperature: 0.2,
+              response_format: { type: 'json_object' },
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userMsg },
+              ],
+            }),
+          });
+          if (openaiRes.ok) {
+            const openaiData = await openaiRes.json();
+            const raw = (openaiData.choices?.[0]?.message?.content || '').trim();
+            try {
+              const parsed = JSON.parse(raw);
+              translated_text = (parsed.translated || raw).trim();
+            } catch {
+              translated_text = raw;
+            }
+            translation_target = target_language;
+          } else {
+            const errText = await openaiRes.text();
+            console.error('[analyze-video translate] gpt-4o-mini failed', openaiRes.status, errText.slice(0, 300));
+          }
+        } catch (e) {
+          console.error('[analyze-video translate] exception:', e);
+        }
+      }
+
+      return new Response(JSON.stringify({
         success: true, transcript, duration,
+        language: detected_language,
+        translated_text,
+        translation_target,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 

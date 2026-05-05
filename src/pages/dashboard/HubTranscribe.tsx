@@ -184,17 +184,21 @@ export default function HubTranscribe() {
         }
       }
 
-      // 2. POST pra hub-transcribe (Whisper + opcional Claude pra tradução)
+      // 2. POST pra analyze-video em modo transcribe_only (Whisper forçado +
+      // tradução opcional via gpt-4o-mini). A função auto-deploya no
+      // Lovable, então não exige deploy manual de função nova.
       setStep("uploading");
       setProgress(0);
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const fd = new FormData();
-      fd.append("audio_file", toSend);
+      fd.append("video_file", toSend);
+      fd.append("user_id", user.id);
+      fd.append("transcribe_only", "true");
       if (targetLang) fd.append("target_language", targetLang);
 
       setStep("transcribing");
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/hub-transcribe`, {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/analyze-video`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
