@@ -13,12 +13,13 @@
  *   - CO: Colômbia
  *   - PE: Peru
  *   - US: EUA
+ *   - IN: Índia (Hinglish — mistura Hindi + English em script latino)
  *
  * Para adicionar marca nova: append em HUB_BRANDS. Para adicionar
  * mercado novo: append em HUB_MARKETS + label nos 4 idiomas.
  */
 
-export type MarketCode = "BR" | "MX" | "CO" | "PE" | "US";
+export type MarketCode = "BR" | "MX" | "CO" | "PE" | "US" | "IN";
 export type Lang = "pt" | "en" | "es" | "zh";
 
 export interface HubMarket {
@@ -59,6 +60,20 @@ export const HUB_MARKETS: Record<MarketCode, HubMarket> = {
     flag: "🇺🇸",
     labels: { pt: "EUA", en: "USA", es: "EE.UU.", zh: "美国" },
     promptContext: "Target audience: US users. Visual style appealing to American English-speaking audience (high-contrast modern look, Vegas-style casino aesthetic when relevant, premium feel).",
+  },
+  IN: {
+    code: "IN",
+    flag: "🇮🇳",
+    labels: { pt: "Índia", en: "India", es: "India", zh: "印度" },
+    promptContext:
+      "Target audience: Indian users. ALL on-image text MUST be in HINGLISH " +
+      "(a mix of Hindi and English written in Latin/Roman script — never in Devanagari). " +
+      "Examples of Hinglish copy: 'Aaj hi khelo aur jeeto big!', 'Apna luck try karo', " +
+      "'Bonus milega 100% guaranteed', 'Khel jeet ka maza lo'. " +
+      "Visual style: vibrant saturated colors (deep saffron, royal blue, hot pink, gold), " +
+      "Bollywood-influenced energy, festive Indian aesthetic with subtle desi cultural cues " +
+      "(diya/lamp glow, mandala-inspired patterns when fitting), high-contrast premium look. " +
+      "Avoid generic Western imagery — embrace South Asian visual codes.",
   },
 };
 
@@ -126,14 +141,19 @@ export const HUB_BRANDS: HubBrand[] = [
   {
     id: "come",
     name: "COME.COM",
-    markets: ["BR", "MX", "CO", "PE"],
-    gradient: "linear-gradient(135deg, #06B6D4, #3B82F6)",
+    // COME.COM opera na Índia — todo texto on-image deve ser HINGLISH
+    // (Hindi + English em script latino, nunca em Devanagari).
+    // Logo desativado por enquanto (asset estava dando 404).
+    markets: ["IN"],
+    gradient: "linear-gradient(135deg, #F59E0B, #DC2626)",
     logoInitials: "CC",
-    logoImage: "/brand-logos/come.com-logo.png",
     promptHint:
-      "COME.COM branding context: Latin American online casino brand with modern digital aesthetic. " +
-      "Visual style: cyan and electric blue accents, contemporary tech-forward look, " +
-      "clean and confident gaming atmosphere.",
+      "COME.COM branding context: Indian online casino & gaming brand. " +
+      "Visual style: vibrant Bollywood-influenced energy, deep saffron and royal blue accents, " +
+      "festive South Asian aesthetic with high contrast, premium feel. " +
+      "ALL on-image copy in HINGLISH (Hindi + English mixed, written in Latin/Roman script — " +
+      "NEVER in Devanagari script). Embrace desi cultural cues (golden glow, celebratory mood) " +
+      "while keeping the brand modern and tech-forward.",
   },
   {
     id: "funilive",
