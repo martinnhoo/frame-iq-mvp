@@ -49,7 +49,8 @@ export default function HubImageGenerator() {
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [applyBrand, setApplyBrand] = useState(true);
-  const [quality, setQuality] = useState<"standard" | "hd">("standard");
+  const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
+  const [transparent, setTransparent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenResult | null>(null);
@@ -98,6 +99,7 @@ export default function HubImageGenerator() {
           persona_id: applyBrand && persona?.id ? persona.id : null,
           aspect_ratio: aspectRatio,
           quality,
+          transparent,
         },
       });
       if (fnErr || !(data as any)?.ok) {
@@ -269,12 +271,15 @@ export default function HubImageGenerator() {
               </label>
             )}
 
+            {/* Quality tier — gpt-image-2 tem 3 níveis vs DALL-E 2.
+                Low = $0.011, medium = $0.042, high = $0.167 por imagem. */}
             <div style={{ display: "flex", gap: 4, padding: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)" }}>
-              {(["standard", "hd"] as const).map(q => (
+              {(["low", "medium", "high"] as const).map(q => (
                 <button
                   key={q}
                   onClick={() => setQuality(q)}
                   disabled={loading}
+                  title={q === "low" ? "≈$0.011/img — rascunho rápido" : q === "medium" ? "≈$0.042/img — produção" : "≈$0.167/img — entrega final"}
                   style={{
                     padding: "5px 12px", borderRadius: 7, fontSize: 11, fontWeight: 700,
                     background: quality === q ? "#a855f7" : "transparent",
@@ -284,10 +289,23 @@ export default function HubImageGenerator() {
                     font: "inherit",
                   }}
                 >
-                  {q === "standard" ? "Standard" : "HD"}
+                  {q === "low" ? "Rascunho" : q === "medium" ? "Médio" : "Alta"}
                 </button>
               ))}
             </div>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}>
+              <input
+                type="checkbox"
+                checked={transparent}
+                onChange={e => setTransparent(e.target.checked)}
+                disabled={loading}
+                style={{ accentColor: "#a855f7" }}
+              />
+              <span style={{ color: "rgba(255,255,255,0.85)" }}>
+                Fundo transparente (PNG)
+              </span>
+            </label>
           </div>
 
           {/* Generate button */}

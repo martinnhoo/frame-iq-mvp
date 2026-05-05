@@ -1,27 +1,33 @@
 // generate-image-hub — Image Generator do Brilliant Hub.
 //
-// Usa DALL-E 3 pra geração + brand context da persona selecionada (logo,
-// paleta, tom visual) pra outputs consistentes com a marca. Pra uso interno
-// na Brilliant Gaming — multi-marca via persona_id.
+// Usa gpt-image-2 (lançado 21/04/2026 pela OpenAI, sucessor do DALL-E 3)
+// pra geração + brand context da persona selecionada (logo, paleta, tom
+// visual) pra outputs consistentes com a marca. Pra uso interno na
+// Brilliant Gaming — multi-marca via persona_id.
+//
+// Por que gpt-image-2 vs DALL-E 3:
+//   • Melhor adesão a prompts de marca (especialmente paletas + tipografia)
+//   • Suporte nativo a transparência (PNG com alpha) — útil pra layering
+//   • Quality tiers low/medium/high mais previsíveis que standard/hd
+//   • Sizes flexíveis (não limita a 3 formatos como DALL-E 3)
+//   • Moderation built-in com tier 'low' (mais permissivo pra iGaming)
 //
 // Fluxo:
-//   1. Recebe { prompt, persona_id?, aspect_ratio }
+//   1. Recebe { prompt, persona_id?, aspect_ratio, quality }
 //   2. Carrega brand_kit da persona se persona_id fornecido
-//   3. Augmenta o prompt com contexto de marca (ex: "in the style of {brand},
-//      using {paleta} color palette, with {tom_visual} aesthetic")
-//   4. Chama DALL-E 3 com prompt augmentado
+//   3. Augmenta o prompt com contexto de marca
+//   4. Chama gpt-image-2 com prompt augmentado
 //   5. Salva em creative_memory pra biblioteca + atividades recentes
 //   6. Devolve URL + prompt usado + metadata
 //
 // Auth: JWT obrigatório.
 // Cost cap: protege user free de queimar quota.
-// Cost: DALL-E 3 standard = $0.04/image (1024×1024). HD = $0.08.
+// Cost: gpt-image-2 low ~$0.011, medium ~$0.042, high ~$0.167 (1024×1024).
 //
 // Roadmap futuro:
 //   • Overlay automático do logo via canvas (Deno tem npm:canvas)
-//   • Substituir DALL-E por Replicate Flux Schnell (10× mais barato, $0.003)
-//   • Refs[] — upload de imagens de referência pra image-to-image
-//   • Variações automáticas (gerar 3 ao invés de 1)
+//   • Refs[] — upload de imagens de referência pra image-to-image (gpt-image-2 suporta)
+//   • Multi-variação no mesmo call (n=3) com 1 cap só
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { checkCostCap, recordCost, capExceededResponse } from "../_shared/cost-cap.ts";
@@ -31,12 +37,14 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// DALL-E 3 size constraints — só aceita esses 3 tamanhos
+// gpt-image-2 aceita resoluções flexíveis. Mapeamento por aspect ratio:
+// dimensões dentro do sweet spot (até 1536px largura/altura) pra
+// previsibilidade de qualidade. Acima de 2560×1440 vira experimental.
 const SIZE_MAP: Record<string, string> = {
   "1:1":  "1024x1024",
-  "16:9": "1792x1024",
-  "9:16": "1024x1792",
-  "4:5":  "1024x1024", // DALL-E não tem 4:5 nativo — usa quadrado e crop opcional no client
+  "16:9": "1536x1024",
+  "9:16": "1024x1536",
+  "4:5":  "1024x1280",
 };
 
 const log = (step: string, d?: unknown) =>
@@ -100,12 +108,14 @@ Deno.serve(async (req) => {
       prompt,
       persona_id = null,
       aspect_ratio = "1:1",
-      quality = "standard", // 'standard' = $0.04, 'hd' = $0.08
+      quality = "medium", // 'low' ~$0.011 | 'medium' ~$0.042 | 'high' ~$0.167
+      transparent = false, // PNG com alpha, útil pra logos/composição
     } = body as {
       prompt?: string;
       persona_id?: string | null;
       aspect_ratio?: string;
-      quality?: "standard" | "hd";
+      quality?: "low" | "medium" | "high";
+      transparent?: boolean;
     };
 
     if (!prompt || prompt.trim().length < 5) {
@@ -135,9 +145,12 @@ Deno.serve(async (req) => {
     const brandContext = buildBrandContext(brandKit, personaName);
     const augmentedPrompt = `${prompt.trim()}${brandContext}`.slice(0, 4000);
 
-    log("calling DALL-E 3", { size, quality, aspect_ratio, has_brand: !!brandKit });
+    log("calling gpt-image-2", { size, quality, aspect_ratio, has_brand: !!brandKit, transparent });
 
-    // ── Call DALL-E 3 ───────────────────────────────────────────────────
+    // ── Call gpt-image-2 ────────────────────────────────────────────────
+    // Endpoint compartilhado com DALL-E (/v1/images/generations) — só
+    // muda model name + parameters. Resposta vem com b64_json ou url
+    // dependendo de response_format.
     const dalleRes = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
@@ -145,17 +158,22 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "dall-e-3",
+        model: "gpt-image-2",
         prompt: augmentedPrompt,
         size,
         quality,
         n: 1,
+        // moderation 'low' = mais permissivo (ainda filtra ilegal/explícito)
+        // necessário pra iGaming, casino e linguagem de marketing direto
+        moderation: "low",
+        // background 'transparent' só funciona em PNG output_format
+        ...(transparent ? { background: "transparent", output_format: "png" } : {}),
       }),
     });
 
     if (!dalleRes.ok) {
       const errText = await dalleRes.text();
-      log("DALL-E error", { status: dalleRes.status, body: errText.slice(0, 300) });
+      log("gpt-image-2 error", { status: dalleRes.status, body: errText.slice(0, 300) });
       let errorCode = "image_gen_failed";
       let errorMessage = "Geração de imagem falhou. Tenta de novo em instantes.";
       try {
@@ -177,21 +195,33 @@ Deno.serve(async (req) => {
     }
 
     const dalleData = await dalleRes.json();
-    const imageUrl = dalleData?.data?.[0]?.url;
-    const revisedPrompt = dalleData?.data?.[0]?.revised_prompt || augmentedPrompt;
+    const imageData = dalleData?.data?.[0];
+    // gpt-image-2 retorna b64_json por padrão. URL só vem se passamos
+    // response_format: 'url' (não passamos pra evitar URL temporária da
+    // OpenAI que expira em 60min). Aceitamos ambos pra robustez.
+    const imageUrl: string | null = imageData?.url
+      || (imageData?.b64_json ? `data:image/png;base64,${imageData.b64_json}` : null);
+    const revisedPrompt = imageData?.revised_prompt || augmentedPrompt;
 
     if (!imageUrl) {
       return new Response(JSON.stringify({
         error: "no_image_returned",
-        message: "DALL-E não retornou imagem. Tenta de novo.",
+        message: "gpt-image-2 não retornou imagem. Tenta de novo.",
       }), { status: 502, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
-    // ── Record cost (DALL-E não vem em tokens, é fixo por imagem) ───────
-    // Standard: $0.04/image. HD: $0.08. Convertendo pra "tokens" do nosso
-    // cost-cap (que pensa em $/Mtok): tratamos como ~40k input tokens
-    // pra encaixar no esquema. Aproximação suficiente pra cap diário.
-    const fakeCostTokens = quality === "hd" ? 80_000 : 40_000;
+    // ── Record cost ──────────────────────────────────────────────────────
+    // gpt-image-2 pricing por imagem (1024×1024):
+    //   low    ≈ $0.011  (≈11k 'tokens' no cap diário)
+    //   medium ≈ $0.042  (≈42k tokens)
+    //   high   ≈ $0.167  (≈167k tokens)
+    // Sizes maiores escalam linearmente — aproximação dentro de ±10%.
+    const COST_TOKENS: Record<string, number> = {
+      low:    11_000,
+      medium: 42_000,
+      high:   167_000,
+    };
+    const fakeCostTokens = COST_TOKENS[quality] || COST_TOKENS.medium;
     recordCost(sb, authUser.id, "claude-haiku-4-5-20251001", fakeCostTokens, 0).catch(() => {});
 
     // ── Save to creative_memory pra biblioteca + recent activities ──────
@@ -208,7 +238,8 @@ Deno.serve(async (req) => {
           aspect_ratio,
           size,
           quality,
-          model: "dall-e-3",
+          model: "gpt-image-2",
+          transparent,
         },
         created_at: new Date().toISOString(),
       });
