@@ -31,6 +31,7 @@ import {
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { composeImageWithLicense } from "@/lib/composeImageWithLicense";
+import { addHubNotification } from "@/lib/hubNotifications";
 
 // ── Strings i18n ─────────────────────────────────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -325,6 +326,29 @@ export default function HubImageGenerator() {
         market: marketCode || undefined,
         created_at: new Date().toISOString(),
       }, ...prev].slice(0, 12));
+
+      // Notificação pro sino — escrita curta, foco em ação concluída.
+      // Inclui marca + mercado quando relevante. Click leva pra galeria.
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const brandLabel = brand && brand.id !== "none" && marketCode
+          ? `${brand.name} · ${HUB_MARKETS[marketCode].flag} ${getMarketLabel(marketCode, lang)}`
+          : null;
+        const titleByLang: Record<Lang, string> = {
+          pt: "Nova imagem pronta",
+          en: "New image ready",
+          es: "Nueva imagen lista",
+          zh: "新图像已生成",
+        };
+        const promptPreview = prompt.trim().slice(0, 80) + (prompt.trim().length > 80 ? "…" : "");
+        const desc = brandLabel ? `${brandLabel} · ${promptPreview}` : promptPreview;
+        addHubNotification(user?.id, {
+          kind: "image_generated",
+          title: titleByLang[lang],
+          description: desc,
+          href: "/dashboard/hub/library",
+        });
+      } catch { /* silent */ }
     } catch (e) {
       setError(String(e).slice(0, 300));
     } finally {
