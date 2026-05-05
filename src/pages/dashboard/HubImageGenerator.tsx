@@ -39,6 +39,7 @@ type GenResult = {
   revised_prompt: string;
   aspect_ratio: string;
   model_used?: string;
+  fallback_reason?: string | null;
 };
 
 type GalleryItem = {
@@ -166,6 +167,7 @@ export default function HubImageGenerator() {
         revised_prompt: payload.revised_prompt || prompt.trim(),
         aspect_ratio: aspectRatio,
         model_used: payload.model_used,
+        fallback_reason: (payload as { fallback_reason?: string | null })?.fallback_reason,
       });
       setGallery(prev => [{
         id: `tmp-${Date.now()}`,
@@ -577,24 +579,34 @@ export default function HubImageGenerator() {
                 <RefreshCw size={14} /> Gerar variação
               </button>
             </div>
-            {result.model_used && (
-              <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-                <div style={{
-                  padding: "6px 12px",
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  background: "rgba(34,211,153,0.06)",
-                  border: "1px solid rgba(34,211,153,0.20)",
-                  borderRadius: 8,
-                }}>
-                  <span style={{
-                    fontSize: 10, fontWeight: 800, letterSpacing: "0.10em", textTransform: "uppercase",
-                    color: "#22d399",
+            {result.model_used && (() => {
+              const isPremium = result.model_used === "gpt-image-2";
+              const accent = isPremium ? "#22d399" : "#a855f7";
+              const accentBg = isPremium ? "rgba(34,211,153,0.06)" : "rgba(168,85,247,0.06)";
+              const accentBorder = isPremium ? "rgba(34,211,153,0.20)" : "rgba(168,85,247,0.20)";
+              return (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+                  <div style={{
+                    padding: "6px 12px",
+                    display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+                    background: accentBg, border: `1px solid ${accentBorder}`, borderRadius: 8,
+                    maxWidth: "100%",
                   }}>
-                    Modelo: {result.model_used} ★
-                  </span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 800, letterSpacing: "0.10em", textTransform: "uppercase",
+                      color: accent,
+                    }}>
+                      Modelo: {result.model_used}{isPremium && " ★"}
+                    </span>
+                    {result.fallback_reason && (
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.4 }}>
+                        · gpt-image-2 ainda em review na OpenAI — quando aprovar, ativa sozinho
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
             {result.revised_prompt && result.revised_prompt !== result.prompt && (
               <p style={{
                 fontSize: 11, color: "rgba(255,255,255,0.45)",
