@@ -439,6 +439,12 @@ export function AppLayout() {
     if (url === '/dashboard/feed') {
       return location.pathname === '/dashboard' || location.pathname === '/dashboard/feed';
     }
+    // Painel (/dashboard/hub) — só ativa em exact match. Sem isso ele
+    // ficava aceso em qualquer rota /dashboard/hub/* (Imagens, Biblioteca,
+    // etc.) porque o startsWith pegava o prefixo.
+    if (url === '/dashboard/hub') {
+      return location.pathname === '/dashboard/hub' || location.pathname === '/dashboard/hub/';
+    }
     return location.pathname === url || location.pathname.startsWith(url + '/');
   };
 
