@@ -46,7 +46,7 @@ const MAIN_TOOLS: Tool[] = [
     icon: ImageIcon,
     color: "#a855f7",
     route: "/dashboard/hub/image",
-    status: "soon",
+    status: "live",
     cta: "Gerar imagem",
   },
   {

@@ -97,6 +97,7 @@ const CriarHub         = lazy(() => import("./pages/dashboard/CriarHub"));
 // Brilliant Hub — pivô interno multi-marca (substitui Feed como home).
 // Outras rotas continuam acessíveis via URL direta mas escondidas do menu.
 const BrilliantHub     = lazy(() => import("./pages/dashboard/BrilliantHub"));
+const HubImageGenerator = lazy(() => import("./pages/dashboard/HubImageGenerator"));
 const CampaignsManager = lazy(() => import("./pages/dashboard/CampaignsManager"));
 
 // SEO pages — lazily loaded, rarely visited from landing
@@ -184,6 +185,7 @@ const App = () => (
                     funcionando via URL direta pra preservar opcionalidade. */}
                 <Route index element={<Navigate to="/dashboard/hub" replace />} />
                 <Route path="hub" element={<BrilliantHub />} />
+                <Route path="hub/image" element={<HubImageGenerator />} />
                 <Route path="feed" element={<FeedPage />} />
                 <Route path="feed/campanhas" element={<CampaignsManager />} />
                 <Route path="history" element={<HistoryPage />} />

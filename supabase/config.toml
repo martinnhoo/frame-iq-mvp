@@ -18,6 +18,9 @@ verify_jwt = false
 [functions.spy-niche]
 verify_jwt = false
 
+[functions.generate-image-hub]
+verify_jwt = false
+
 [functions.analyze-video]
 verify_jwt = false
 
