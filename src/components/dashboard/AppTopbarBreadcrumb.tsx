@@ -39,7 +39,12 @@ const LABELS: Record<string, string> = {
 };
 
 const ROOT_LABEL = "Comando";
-const ROOT_PATH = "/dashboard/feed";
+// Root do breadcrumb varia pelo namespace: rotas /dashboard/hub/* voltam
+// pra Hub (subproduto interno). Resto do dashboard volta pro Feed.
+function rootPathFor(pathname: string): string {
+  if (pathname.startsWith("/dashboard/hub")) return "/dashboard/hub";
+  return "/dashboard/feed";
+}
 
 function pretty(seg: string): string {
   if (LABELS[seg]) return LABELS[seg];
@@ -82,7 +87,7 @@ export function AppTopbarBreadcrumb() {
       }}
     >
       <Link
-        to={ROOT_PATH}
+        to={rootPathFor(pathname)}
         style={{
           color: "rgba(255,255,255,0.55)",
           textDecoration: "none",
