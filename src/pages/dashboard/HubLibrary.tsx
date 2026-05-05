@@ -1,40 +1,122 @@
-// HubLibrary — Biblioteca interna do Hub.
-//
-// Subproduto isolado. Lista APENAS assets gerados dentro do Hub
-// (creative_memory com type='hub_image' e similares 'hub_*' no futuro).
-// Sem persona, sem brand_kit, sem cruzamento com produto principal.
+/**
+ * HubLibrary — Biblioteca interna do Hub.
+ *
+ * Lista TODOS os assets gerados no Hub (creative_memory com type
+ * começando com 'hub_'):
+ *   - hub_image     → Imagem
+ *   - hub_png       → PNG
+ *   - hub_storyboard → Storyboard (agrupado por storyboard_id)
+ *   - hub_carousel  → Carrossel (agrupado por carousel_id)
+ *
+ * Storyboards e carrosséis vêm com várias rows (1 por cena/slide) —
+ * a Biblioteca agrupa elas em UM card só, mostrando capa + count.
+ *
+ * Filtros: período (Hoje / 7d / 30d / Tudo) + tipo (Tudo / Imagem /
+ * PNG / Storyboard / Carrossel) + busca por prompt.
+ */
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Image as ImageIcon, ArrowLeft, Search, Download, X, Sparkles, FolderOpen,
+  Image as ImageIcon, Layers, Clapperboard, GalleryHorizontal,
+  ArrowLeft, Search, Download, X, Sparkles, FolderOpen,
 } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+
+type Lang = "pt" | "en" | "es" | "zh";
+type AssetKind = "image" | "png" | "storyboard" | "carousel";
 
 interface HubAsset {
-  id: string;
-  type: "image";
+  id: string;            // group id (memory id pra single, group_id pra storyboard/carousel)
+  kind: AssetKind;
   title: string;
-  image_url: string;
   prompt: string;
+  cover_url: string;     // capa (primeira imagem do grupo)
+  scene_count?: number;  // pra storyboard/carousel
+  scene_thumbs?: string[]; // pra mostrar miniaturas no preview
   aspect_ratio: string;
   created_at: string;
+  brand_id?: string;
 }
 
+const STR: Record<string, Record<Lang, string>> = {
+  back:        { pt: "Voltar ao Hub",   en: "Back to Hub",   es: "Volver al Hub",   zh: "返回中心" },
+  title:       { pt: "Biblioteca",      en: "Library",       es: "Biblioteca",      zh: "资源库" },
+  subtitle:    { pt: "Tudo que foi gerado no Hub", en: "Everything generated in the Hub", es: "Todo lo generado en el Hub", zh: "中心生成的全部内容" },
+  searchPh:    { pt: "Buscar por prompt…", en: "Search by prompt…", es: "Buscar por prompt…", zh: "按提示词搜索…" },
+  loading:     { pt: "Carregando…",     en: "Loading…",      es: "Cargando…",       zh: "加载中…" },
+  emptyTitle:  { pt: "Biblioteca vazia",en: "Library empty", es: "Biblioteca vacía",zh: "资源库为空" },
+  emptyDesc:   { pt: "Gere imagens no Hub — elas aparecem aqui automaticamente.",
+                 en: "Generate images in the Hub — they appear here automatically.",
+                 es: "Genera imágenes en el Hub — aparecen aquí automáticamente.",
+                 zh: "在中心生成图像 — 它们会自动出现在这里。" },
+  noResult:    { pt: "Nenhum resultado pra essa busca",
+                 en: "No results for this search",
+                 es: "Sin resultados para esta búsqueda",
+                 zh: "此搜索没有结果" },
+  noResultDesc:{ pt: "Tenta limpar a busca ou trocar o período.",
+                 en: "Try clearing the search or changing the period.",
+                 es: "Intenta limpiar la búsqueda o cambiar el período.",
+                 zh: "尝试清除搜索或更改时间段。" },
+  filterAll:   { pt: "Tudo",       en: "All",       es: "Todo",       zh: "全部" },
+  filterImage: { pt: "Imagens",    en: "Images",    es: "Imágenes",   zh: "图像" },
+  filterPng:   { pt: "PNGs",       en: "PNGs",      es: "PNGs",       zh: "PNG" },
+  filterSb:    { pt: "Storyboards",en: "Storyboards",es: "Storyboards",zh: "故事板" },
+  filterCar:   { pt: "Carrosséis", en: "Carousels", es: "Carruseles", zh: "轮播" },
+  scenes:      { pt: "cenas",      en: "scenes",    es: "escenas",    zh: "场景" },
+  slides:      { pt: "slides",     en: "slides",    es: "slides",     zh: "幻灯片" },
+  download:    { pt: "Baixar",     en: "Download",  es: "Descargar",  zh: "下载" },
+  downloadAll: { pt: "Baixar todos",en: "Download all", es: "Descargar todos", zh: "下载全部" },
+  imageFor:    { pt: "Imagem",     en: "Image",     es: "Imagen",     zh: "图像" },
+  pngFor:      { pt: "PNG",        en: "PNG",       es: "PNG",        zh: "PNG" },
+  sbFor:       { pt: "Storyboard", en: "Storyboard",es: "Storyboard", zh: "故事板" },
+  carFor:      { pt: "Carrossel",  en: "Carousel",  es: "Carrusel",   zh: "轮播" },
+};
+
 const PERIOD_OPTIONS = [
-  { id: "today", label: "Hoje", days: 1 },
-  { id: "7d",    label: "7 dias", days: 7 },
-  { id: "30d",   label: "30 dias", days: 30 },
-  { id: "all",   label: "Tudo", days: 365 * 5 },
+  { id: "today", labelKey: "today" as const, days: 1 },
+  { id: "7d",    labelKey: "7d"    as const, days: 7 },
+  { id: "30d",   labelKey: "30d"   as const, days: 30 },
+  { id: "all",   labelKey: "all"   as const, days: 365 * 5 },
 ] as const;
+
+const PERIOD_LABELS: Record<string, Record<Lang, string>> = {
+  today: { pt: "Hoje",   en: "Today",  es: "Hoy",     zh: "今天" },
+  "7d":  { pt: "7 dias", en: "7 days", es: "7 días",  zh: "7 天" },
+  "30d": { pt: "30 dias",en: "30 days",es: "30 días", zh: "30 天" },
+  all:   { pt: "Tudo",   en: "All",    es: "Todo",    zh: "全部" },
+};
+
+type RawRow = {
+  id: string;
+  type: string;
+  content?: {
+    image_url?: string;
+    prompt?: string;
+    aspect_ratio?: string;
+    brand_id?: string;
+    storyboard_id?: string;
+    carousel_id?: string;
+    scene_n?: number;
+    slide_n?: number;
+    scene_count?: number;
+    slide_count?: number;
+  };
+  created_at: string;
+};
 
 export default function HubLibrary() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
+  const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || String(key);
 
   const [assets, setAssets] = useState<HubAsset[]>([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<typeof PERIOD_OPTIONS[number]["id"]>("30d");
+  const [period, setPeriod] = useState<string>("30d");
+  const [kindFilter, setKindFilter] = useState<"all" | AssetKind>("all");
   const [search, setSearch] = useState("");
   const [previewAsset, setPreviewAsset] = useState<HubAsset | null>(null);
 
@@ -44,37 +126,78 @@ export default function HubLibrary() {
       setLoading(true);
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          if (mounted) { setAssets([]); setLoading(false); }
-          return;
-        }
+        if (!user) { if (mounted) { setAssets([]); setLoading(false); } return; }
 
-        const since = new Date(Date.now() - PERIOD_OPTIONS.find(p => p.id === period)!.days * 86_400_000).toISOString();
+        const days = PERIOD_OPTIONS.find(p => p.id === period)!.days;
+        const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
-        // Só assets do Hub — type começa com 'hub_'.
-        // Por enquanto só hub_image; futuras: hub_board, hub_script, etc.
-        const { data } = await supabase.from("creative_memory" as any)
+        const { data } = await supabase.from("creative_memory" as never)
           .select("id, type, content, created_at")
           .eq("user_id", user.id)
           .like("type", "hub_%")
           .gte("created_at", since)
           .order("created_at", { ascending: false })
-          .limit(200);
+          .limit(500);
+        if (!mounted) return;
 
-        const list: HubAsset[] = (data || []).map((r: any) => {
+        const rows = (data || []) as RawRow[];
+        // Agrupa storyboards/carousels por storyboard_id/carousel_id;
+        // assets singulares (image/png) ficam soltos.
+        const groupedMap = new Map<string, HubAsset>();
+
+        for (const r of rows) {
           const c = r.content || {};
-          return {
-            id: r.id,
-            type: "image",
-            title: (c.prompt || "Imagem gerada").slice(0, 80),
-            image_url: c.image_url || "",
-            prompt: c.prompt || "",
-            aspect_ratio: c.aspect_ratio || "1:1",
-            created_at: r.created_at,
-          };
-        }).filter((a: HubAsset) => a.image_url);
+          const url = c.image_url;
+          if (!url) continue;
 
-        if (mounted) setAssets(list);
+          let kind: AssetKind = "image";
+          if (r.type === "hub_png") kind = "png";
+          else if (r.type === "hub_storyboard") kind = "storyboard";
+          else if (r.type === "hub_carousel") kind = "carousel";
+
+          if (kind === "storyboard" || kind === "carousel") {
+            const groupKey = (kind === "storyboard" ? c.storyboard_id : c.carousel_id) || r.id;
+            const sceneN = (kind === "storyboard" ? c.scene_n : c.slide_n) || 1;
+            const expected = (kind === "storyboard" ? c.scene_count : c.slide_count) || 1;
+            const existing = groupedMap.get(groupKey);
+            if (existing) {
+              existing.scene_count = Math.max(existing.scene_count || 1, expected);
+              existing.scene_thumbs = [...(existing.scene_thumbs || []), url].slice(0, 4);
+              if (sceneN === 1) existing.cover_url = url; // prioriza scene 1 como capa
+            } else {
+              groupedMap.set(groupKey, {
+                id: groupKey,
+                kind,
+                title: (c.prompt || "").slice(0, 80),
+                prompt: c.prompt || "",
+                cover_url: url,
+                scene_count: expected,
+                scene_thumbs: [url],
+                aspect_ratio: c.aspect_ratio || "1:1",
+                created_at: r.created_at,
+                brand_id: c.brand_id,
+              });
+            }
+          } else {
+            // image/png — row solta
+            groupedMap.set(r.id, {
+              id: r.id,
+              kind,
+              title: (c.prompt || "").slice(0, 80),
+              prompt: c.prompt || "",
+              cover_url: url,
+              aspect_ratio: c.aspect_ratio || "1:1",
+              created_at: r.created_at,
+              brand_id: c.brand_id,
+            });
+          }
+        }
+
+        // Ordena por mais recente
+        const list = Array.from(groupedMap.values()).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+        setAssets(list);
       } catch (e) {
         console.error("[hub-library] load error:", e);
         if (mounted) setAssets([]);
@@ -86,93 +209,123 @@ export default function HubLibrary() {
   }, [period]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return assets;
-    const q = search.trim().toLowerCase();
-    return assets.filter(a =>
-      a.title.toLowerCase().includes(q)
-      || a.prompt.toLowerCase().includes(q)
-    );
-  }, [assets, search]);
+    let out = assets;
+    if (kindFilter !== "all") out = out.filter(a => a.kind === kindFilter);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      out = out.filter(a => a.title.toLowerCase().includes(q) || a.prompt.toLowerCase().includes(q));
+    }
+    return out;
+  }, [assets, kindFilter, search]);
+
+  const counts = useMemo(() => {
+    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0 };
+    for (const a of assets) c[a.kind]++;
+    return c;
+  }, [assets]);
 
   return (
     <>
-      <Helmet>
-        <title>Biblioteca — Hub</title>
-      </Helmet>
-
-      <div style={{ minHeight: "calc(100vh - 64px)", padding: "24px 24px 80px", maxWidth: 1440, margin: "0 auto", color: "#fff" }}>
+      <Helmet><title>{t("title")} — Hub</title></Helmet>
+      <div style={{ minHeight: "calc(100vh - 64px)", padding: "24px 24px 80px", maxWidth: 1480, margin: "0 auto", color: "#fff" }}>
         <button
           onClick={() => navigate("/dashboard/hub")}
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
-            background: "transparent", border: "none", color: "rgba(255,255,255,0.55)",
+            background: "transparent", border: "none", color: "#9CA3AF",
             cursor: "pointer", fontSize: 13, padding: "6px 8px", marginBottom: 16,
-          }}
-        >
-          <ArrowLeft size={14} /> Voltar ao Hub
+            fontFamily: "inherit",
+          }}>
+          <ArrowLeft size={14} /> {t("back")}
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
           <div style={{
-            width: 48, height: 48, borderRadius: 12,
-            background: "linear-gradient(135deg, #14b8a640 0%, #14b8a620 100%)",
-            border: "1px solid #14b8a655",
+            width: 42, height: 42, borderRadius: 12,
+            background: "rgba(59,130,246,0.14)",
+            border: "1px solid rgba(59,130,246,0.30)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 24px #14b8a630",
           }}>
-            <FolderOpen size={24} style={{ color: "#14b8a6" }} />
+            <FolderOpen size={20} style={{ color: "#3B82F6" }} />
           </div>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>Biblioteca</h1>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", margin: "2px 0 0" }}>
-              Tudo que foi gerado no Hub · {filtered.length} de {assets.length}
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>{t("title")}</h1>
+            <p style={{ fontSize: 13, color: "#D1D5DB", margin: "2px 0 0" }}>
+              {t("subtitle")} · {filtered.length} de {assets.length}
             </p>
           </div>
         </div>
 
-        <div style={{ position: "relative", marginBottom: 12 }}>
-          <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.40)" }} />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar por prompt…"
-            style={{
-              width: "100%", padding: "10px 14px 10px 36px",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 10, color: "#fff", fontSize: 13, outline: "none",
-              boxSizing: "border-box", fontFamily: "inherit",
-              transition: "border-color 0.18s",
-            }}
-            onFocus={e => { e.currentTarget.style.borderColor = "#14b8a655"; }}
-            onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
-          />
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
-          <div style={{ display: "flex", gap: 4, padding: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)" }}>
+        {/* Search + period + kind filter */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+          <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
+            <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#9CA3AF" }} />
+            <input
+              type="text" value={search} onChange={e => setSearch(e.target.value)}
+              placeholder={t("searchPh")}
+              style={{
+                width: "100%", padding: "10px 14px 10px 36px",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 10, color: "#fff", fontSize: 13, outline: "none",
+                boxSizing: "border-box", fontFamily: "inherit",
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: 4, padding: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)" }}>
             {PERIOD_OPTIONS.map(p => (
               <button
-                key={p.id}
-                onClick={() => setPeriod(p.id)}
+                key={p.id} onClick={() => setPeriod(p.id)}
                 style={{
-                  padding: "4px 10px", borderRadius: 7, fontSize: 11, fontWeight: 600,
-                  background: period === p.id ? "rgba(255,255,255,0.10)" : "transparent",
-                  color: period === p.id ? "#fff" : "rgba(255,255,255,0.50)",
-                  border: "none", cursor: "pointer", font: "inherit",
-                }}
-              >{p.label}</button>
+                  padding: "5px 11px", borderRadius: 7, fontSize: 11.5, fontWeight: 700,
+                  background: period === p.id ? "#3B82F6" : "transparent",
+                  color: period === p.id ? "#fff" : "#9CA3AF",
+                  border: "none", cursor: "pointer", fontFamily: "inherit",
+                }}>
+                {PERIOD_LABELS[p.id]?.[lang] || p.id}
+              </button>
             ))}
           </div>
         </div>
 
+        {/* Kind filter */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 22, flexWrap: "wrap" }}>
+          <KindChip
+            active={kindFilter === "all"} count={counts.all}
+            label={t("filterAll")}
+            onClick={() => setKindFilter("all")}
+          />
+          <KindChip
+            active={kindFilter === "image"} count={counts.image}
+            label={t("filterImage")} icon={ImageIcon}
+            onClick={() => setKindFilter("image")}
+          />
+          <KindChip
+            active={kindFilter === "png"} count={counts.png}
+            label={t("filterPng")} icon={Layers}
+            onClick={() => setKindFilter("png")}
+          />
+          <KindChip
+            active={kindFilter === "storyboard"} count={counts.storyboard}
+            label={t("filterSb")} icon={Clapperboard}
+            onClick={() => setKindFilter("storyboard")}
+          />
+          <KindChip
+            active={kindFilter === "carousel"} count={counts.carousel}
+            label={t("filterCar")} icon={GalleryHorizontal}
+            onClick={() => setKindFilter("carousel")}
+          />
+        </div>
+
         {loading ? (
-          <div style={{ textAlign: "center", padding: 60, color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
-            Carregando…
+          <div style={{ textAlign: "center", padding: 60, color: "#9CA3AF", fontSize: 13 }}>
+            {t("loading")}
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState hasAny={assets.length > 0} />
+          <EmptyState
+            title={assets.length === 0 ? t("emptyTitle") : t("noResult")}
+            desc={assets.length === 0 ? t("emptyDesc") : t("noResultDesc")}
+          />
         ) : (
           <div style={{
             display: "grid",
@@ -180,66 +333,151 @@ export default function HubLibrary() {
             gap: 14,
           }}>
             {filtered.map(asset => (
-              <AssetCard key={asset.id} asset={asset} onClick={() => setPreviewAsset(asset)} />
+              <AssetCard
+                key={asset.id} asset={asset} lang={lang} t={t}
+                onClick={() => setPreviewAsset(asset)}
+              />
             ))}
           </div>
         )}
 
         {previewAsset && (
-          <PreviewModal asset={previewAsset} onClose={() => setPreviewAsset(null)} />
+          <PreviewModal asset={previewAsset} onClose={() => setPreviewAsset(null)} lang={lang} t={t} />
         )}
       </div>
     </>
   );
 }
 
-function AssetCard({ asset, onClick }: { asset: HubAsset; onClick: () => void }) {
+// ── KindChip ────────────────────────────────────────────────────────────────
+function KindChip({ active, count, label, icon: Icon, onClick }: {
+  active: boolean; count: number; label: string;
+  icon?: typeof ImageIcon; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 6,
+        padding: "7px 12px", borderRadius: 9,
+        background: active ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.03)",
+        border: `1px solid ${active ? "rgba(59,130,246,0.40)" : "rgba(255,255,255,0.06)"}`,
+        color: active ? "#fff" : "#D1D5DB",
+        fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+        fontFamily: "inherit",
+      }}>
+      {Icon && <Icon size={13} style={{ color: active ? "#3B82F6" : "#9CA3AF" }} />}
+      <span>{label}</span>
+      <span style={{ fontSize: 11, color: active ? "#3B82F6" : "#6B7280", fontWeight: 700 }}>{count}</span>
+    </button>
+  );
+}
+
+// ── AssetCard ──────────────────────────────────────────────────────────────
+function AssetCard({ asset, lang, t, onClick }: {
+  asset: HubAsset; lang: Lang;
+  t: (key: keyof typeof STR) => string;
+  onClick: () => void;
+}) {
+  const KindIcon = asset.kind === "png" ? Layers
+    : asset.kind === "storyboard" ? Clapperboard
+    : asset.kind === "carousel" ? GalleryHorizontal
+    : ImageIcon;
+  const kindLabel = asset.kind === "png" ? t("pngFor")
+    : asset.kind === "storyboard" ? t("sbFor")
+    : asset.kind === "carousel" ? t("carFor")
+    : t("imageFor");
+  const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
+  const countLabel = asset.kind === "storyboard" ? t("scenes") : t("slides");
+
   return (
     <button
       onClick={onClick}
       style={{
         textAlign: "left",
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(17,24,39,0.50)",
+        border: "1px solid rgba(255,255,255,0.06)",
         borderRadius: 12, overflow: "hidden",
-        cursor: "pointer", color: "inherit", font: "inherit",
+        cursor: "pointer", color: "inherit", fontFamily: "inherit",
         display: "flex", flexDirection: "column",
-        transition: "transform 0.15s, border-color 0.15s, box-shadow 0.15s",
+        transition: "transform 0.15s, border-color 0.15s",
         padding: 0,
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.borderColor = "#a855f755";
-        e.currentTarget.style.boxShadow = "0 8px 20px rgba(168,85,247,0.25)";
+        e.currentTarget.style.borderColor = "rgba(59,130,246,0.40)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
       }}
     >
-      <img
-        src={asset.image_url}
-        alt={asset.title}
-        style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block" }}
-      />
-      <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+      <div style={{ position: "relative" }}>
+        <img
+          src={asset.cover_url} alt={asset.title}
+          style={{
+            width: "100%",
+            aspectRatio: asset.aspect_ratio === "9:16" || asset.aspect_ratio === "1024x1536" ? "9/16"
+              : asset.aspect_ratio === "16:9" || asset.aspect_ratio === "1536x1024" ? "16/9"
+              : "1/1",
+            objectFit: "cover", display: "block",
+          }}
+        />
+        {/* Type badge top-left */}
+        <div style={{
+          position: "absolute", top: 8, left: 8,
+          padding: "3px 8px", borderRadius: 6,
+          background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)",
+          fontSize: 10, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase",
+          color: "#fff",
+          display: "inline-flex", alignItems: "center", gap: 5,
+        }}>
+          <KindIcon size={10} style={{ color: "#3B82F6" }} />
+          {kindLabel}
+          {isGroup && asset.scene_count && asset.scene_count > 1 && (
+            <span style={{ color: "#3B82F6", marginLeft: 2 }}>· {asset.scene_count}</span>
+          )}
+        </div>
+        {/* Group thumbnails preview (storyboard/carousel) */}
+        {isGroup && asset.scene_thumbs && asset.scene_thumbs.length > 1 && (
+          <div style={{
+            position: "absolute", bottom: 8, left: 8, right: 8,
+            display: "flex", gap: 4,
+          }}>
+            {asset.scene_thumbs.slice(0, 4).map((src, i) => (
+              <div key={i} style={{
+                flex: 1, aspectRatio: "1/1",
+                borderRadius: 4, overflow: "hidden",
+                background: "rgba(0,0,0,0.5)",
+                border: "1px solid rgba(255,255,255,0.20)",
+              }}>
+                <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div style={{ padding: "10px 12px" }}>
         <p style={{
           fontSize: 12, fontWeight: 600, color: "#fff", margin: 0,
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        }}>{asset.title}</p>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, color: "rgba(255,255,255,0.45)" }}>
-          <ImageIcon size={10} style={{ color: "#a855f7" }} />
-          <span>Imagem</span>
-          <span>·</span>
-          <span>{relativeDate(asset.created_at)}</span>
+        }}>{asset.title || "—"}</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, color: "#9CA3AF", marginTop: 4 }}>
+          <span>{relativeDate(asset.created_at, lang)}</span>
+          {isGroup && asset.scene_count && (
+            <>
+              <span>·</span>
+              <span>{asset.scene_count} {countLabel}</span>
+            </>
+          )}
         </div>
       </div>
     </button>
   );
 }
 
-function EmptyState({ hasAny }: { hasAny: boolean }) {
+// ── EmptyState ──────────────────────────────────────────────────────────────
+function EmptyState({ title, desc }: { title: string; desc: string }) {
   return (
     <div style={{
       textAlign: "center", padding: "60px 20px",
@@ -248,121 +486,204 @@ function EmptyState({ hasAny }: { hasAny: boolean }) {
       borderRadius: 16,
     }}>
       <Sparkles size={32} style={{ color: "rgba(255,255,255,0.30)", marginBottom: 12 }} />
-      <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.75)", margin: "0 0 6px" }}>
-        {hasAny ? "Nenhum resultado pra essa busca" : "Biblioteca vazia"}
-      </p>
-      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", margin: 0 }}>
-        {hasAny
-          ? "Tenta limpar a busca ou trocar o período."
-          : "Gere imagens no Image Generator — elas aparecem aqui automaticamente."}
-      </p>
+      <p style={{ fontSize: 14, fontWeight: 600, color: "#FFFFFF", margin: "0 0 6px" }}>{title}</p>
+      <p style={{ fontSize: 12, color: "#D1D5DB", margin: 0 }}>{desc}</p>
     </div>
   );
 }
 
-function PreviewModal({ asset, onClose }: { asset: HubAsset; onClose: () => void }) {
-  const downloadImage = async (url: string) => {
+// ── PreviewModal ────────────────────────────────────────────────────────────
+function PreviewModal({ asset, onClose, lang, t }: {
+  asset: HubAsset; onClose: () => void; lang: Lang;
+  t: (key: keyof typeof STR) => string;
+}) {
+  const [groupItems, setGroupItems] = useState<{ url: string; n: number }[]>([]);
+  const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
+
+  useEffect(() => {
+    if (!isGroup) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const groupField = asset.kind === "storyboard" ? "storyboard_id" : "carousel_id";
+        const sceneField = asset.kind === "storyboard" ? "scene_n" : "slide_n";
+        const { data } = await supabase.from("creative_memory" as never)
+          .select("content")
+          .eq("user_id", user.id)
+          .eq("type", asset.kind === "storyboard" ? "hub_storyboard" : "hub_carousel")
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (!mounted || !data) return;
+        const items = (data as Array<{ content?: Record<string, unknown> }>)
+          .filter(r => (r.content?.[groupField] as string) === asset.id)
+          .map(r => ({
+            url: (r.content?.image_url as string) || "",
+            n: (r.content?.[sceneField] as number) || 1,
+          }))
+          .filter(x => x.url)
+          .sort((a, b) => a.n - b.n);
+        setGroupItems(items);
+      } catch { /* silent */ }
+    })();
+    return () => { mounted = false; };
+  }, [asset.id, asset.kind, isGroup]);
+
+  const downloadOne = async (url: string, name: string) => {
     try {
       const r = await fetch(url);
       const blob = await r.blob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = objectUrl;
-      a.download = `hub-${asset.id}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.href = objectUrl; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(objectUrl);
-    } catch { /* silent */ }
+    } catch {}
+  };
+
+  const downloadAll = async () => {
+    if (groupItems.length === 0) return;
+    const prefix = asset.kind === "storyboard" ? "storyboard" : "carousel";
+    for (const it of groupItems) {
+      await downloadOne(it.url, `${prefix}-${asset.id.slice(0, 8)}-${String(it.n).padStart(2, "0")}.png`);
+      await new Promise(res => setTimeout(res, 250));
+    }
   };
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, background: "rgba(0,0,0,0.80)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        zIndex: 9999, padding: 20, backdropFilter: "blur(4px)",
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#0a0a0f",
-          border: "1px solid #a855f755",
-          borderRadius: 16,
-          maxWidth: 900, width: "100%",
-          maxHeight: "90vh", overflow: "auto",
-          boxShadow: "0 0 60px rgba(168,85,247,0.30)",
-        }}
-      >
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.80)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 9999, padding: 20, backdropFilter: "blur(4px)",
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        background: "#0a0a0f",
+        border: "1px solid rgba(59,130,246,0.30)",
+        borderRadius: 16,
+        maxWidth: 1100, width: "100%",
+        maxHeight: "90vh", overflow: "auto",
+      }}>
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "14px 18px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <ImageIcon size={18} style={{ color: "#a855f7" }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>Imagem</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>·</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{relativeDate(asset.created_at)}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
+              {asset.kind === "png" ? t("pngFor")
+                : asset.kind === "storyboard" ? t("sbFor")
+                : asset.kind === "carousel" ? t("carFor")
+                : t("imageFor")}
+            </span>
+            <span style={{ fontSize: 11, color: "#9CA3AF" }}>· {relativeDate(asset.created_at, lang)}</span>
+            {isGroup && groupItems.length > 0 && (
+              <button onClick={downloadAll} style={{
+                marginLeft: 8, display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "5px 10px", borderRadius: 7,
+                background: "#3B82F6", color: "#fff",
+                border: "none", fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                fontFamily: "inherit",
+              }}>
+                <Download size={11} /> {t("downloadAll")}
+              </button>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "rgba(255,255,255,0.06)", border: "none",
-              borderRadius: 7, padding: 6, cursor: "pointer",
-              color: "rgba(255,255,255,0.65)", display: "flex",
-            }}
-          >
+          <button onClick={onClose} style={{
+            background: "rgba(255,255,255,0.06)", border: "none",
+            borderRadius: 7, padding: 6, cursor: "pointer",
+            color: "#9CA3AF", display: "flex",
+          }}>
             <X size={16} />
           </button>
         </div>
 
         <div style={{ padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-            <img
-              src={asset.image_url}
-              alt={asset.title}
-              style={{ maxWidth: "100%", maxHeight: "70vh", borderRadius: 10 }}
-            />
-          </div>
-          <p style={{
-            fontSize: 12, color: "rgba(255,255,255,0.55)", margin: 0,
-            padding: "10px 12px", background: "rgba(255,255,255,0.03)",
-            borderRadius: 8, lineHeight: 1.55, fontStyle: "italic",
-          }}>
-            "{asset.prompt}"
-          </p>
-          <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-            <button
-              onClick={() => downloadImage(asset.image_url)}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "9px 14px", borderRadius: 9, fontSize: 13, fontWeight: 600,
-                background: "#a855f720", color: "#a855f7",
-                border: "1px solid #a855f755", cursor: "pointer", font: "inherit",
-              }}
-            >
-              <Download size={14} /> Baixar
-            </button>
-          </div>
+          {!isGroup ? (
+            <>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                <img src={asset.cover_url} alt={asset.title}
+                  style={{ maxWidth: "100%", maxHeight: "70vh", borderRadius: 10 }} />
+              </div>
+              <p style={{
+                fontSize: 12, color: "#D1D5DB", margin: "0 0 14px",
+                padding: "10px 12px", background: "rgba(255,255,255,0.03)",
+                borderRadius: 8, lineHeight: 1.55, fontStyle: "italic",
+              }}>"{asset.prompt}"</p>
+              <button onClick={() => downloadOne(asset.cover_url, `${asset.kind}-${asset.id.slice(0, 8)}.png`)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "9px 14px", borderRadius: 9,
+                  background: "#3B82F6", color: "#fff",
+                  border: "none", fontSize: 13, fontWeight: 700,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}>
+                <Download size={14} /> {t("download")}
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{
+                fontSize: 12, color: "#D1D5DB", margin: "0 0 14px",
+                padding: "10px 12px", background: "rgba(255,255,255,0.03)",
+                borderRadius: 8, lineHeight: 1.55, fontStyle: "italic",
+              }}>"{asset.prompt}"</p>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 10,
+              }}>
+                {groupItems.map(it => (
+                  <div key={it.n} style={{
+                    background: "rgba(17,24,39,0.50)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 10, overflow: "hidden",
+                  }}>
+                    <div style={{ position: "relative" }}>
+                      <img src={it.url} alt={`${asset.id}-${it.n}`}
+                        style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block" }} />
+                      <div style={{
+                        position: "absolute", top: 6, left: 6,
+                        padding: "2px 7px", borderRadius: 5,
+                        background: "rgba(0,0,0,0.65)", color: "#fff",
+                        fontSize: 10, fontWeight: 800,
+                      }}>
+                        {it.n}
+                      </div>
+                      <button
+                        onClick={() => downloadOne(it.url, `${asset.kind}-${asset.id.slice(0, 8)}-${String(it.n).padStart(2, "0")}.png`)}
+                        style={{
+                          position: "absolute", top: 6, right: 6,
+                          width: 24, height: 24, borderRadius: 6,
+                          background: "rgba(0,0,0,0.65)", border: "none",
+                          color: "#fff", cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                        <Download size={11} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function relativeDate(iso: string): string {
+function relativeDate(iso: string, lang: Lang): string {
   try {
     const ms = Date.now() - new Date(iso).getTime();
     const min = Math.round(ms / 60_000);
-    if (min < 1) return "agora";
-    if (min < 60) return `${min}min atrás`;
+    const ago = lang === "en" ? " ago" : lang === "es" ? " atrás" : lang === "zh" ? "前" : " atrás";
+    if (min < 1) return lang === "en" ? "now" : lang === "es" ? "ahora" : lang === "zh" ? "刚刚" : "agora";
+    if (min < 60) return `${min}min${ago}`;
     const h = Math.round(min / 60);
-    if (h < 24) return `${h}h atrás`;
+    if (h < 24) return `${h}h${ago}`;
     const d = Math.round(h / 24);
-    if (d < 7) return `${d}d atrás`;
-    return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+    if (d < 7) return `${d}d${ago}`;
+    return new Date(iso).toLocaleDateString(lang === "pt" ? "pt-BR" : lang === "es" ? "es-MX" : lang === "zh" ? "zh-CN" : "en-US", { day: "2-digit", month: "short" });
   } catch { return ""; }
 }
