@@ -102,14 +102,14 @@ function NavItem({ url, label, icon: Icon, onClick, isActive }: {
   );
 }
 
-function getNavItems(_lang: string) {
-  // Sidebar mostra SÓ o que é Hub-native e funcional. Quando uma nova
-  // ferramenta for construída nativa do Hub (Production Board hub-only,
-  // Roteiros hub-only, etc), adicionar a entry aqui.
+// Labels Hub-native — traduzidas no momento de render.
+function getNavItems(lang: string) {
+  const L = (pt: string, en: string, es: string, zh: string) =>
+    lang === "en" ? en : lang === "es" ? es : lang === "zh" ? zh : pt;
   return [
-    { url: '/dashboard/hub',         label: 'Hub',        icon: Command },
-    { url: '/dashboard/hub/image',   label: 'Imagens',    icon: ImageIcon },
-    { url: '/dashboard/hub/library', label: 'Biblioteca', icon: FolderOpen },
+    { url: '/dashboard/hub',         label: L('Hub',        'Hub',     'Hub',        '中心'),     icon: Command },
+    { url: '/dashboard/hub/image',   label: L('Imagens',    'Images',  'Imágenes',   '图像'),     icon: ImageIcon },
+    { url: '/dashboard/hub/library', label: L('Biblioteca', 'Library', 'Biblioteca', '资料库'),    icon: FolderOpen },
   ];
 }
 
