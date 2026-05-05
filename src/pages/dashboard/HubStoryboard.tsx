@@ -25,6 +25,7 @@ import {
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
+import { composeImage } from "@/lib/composeImageWithLicense";
 
 const STR: Record<string, Record<Lang, string>> = {
   back:           { pt: "Voltar ao Hub",    en: "Back to Hub",    es: "Volver al Hub",    zh: "返回中心" },
@@ -70,6 +71,10 @@ const STR: Record<string, Record<Lang, string>> = {
   notifTitle:     { pt: "Storyboard pronto", en: "Storyboard ready", es: "Storyboard listo", zh: "故事板已就绪" },
   scriptTooShort: { pt: "Roteiro precisa ter pelo menos 10 caracteres.", en: "Script must be at least 10 characters.", es: "El guión debe tener al menos 10 caracteres.", zh: "剧本至少需要 10 个字符。" },
   sessionExpired: { pt: "Sessão expirada — recarrega.", en: "Session expired — reload.", es: "Sesión expirada — recarga.", zh: "会话已过期 — 请刷新。" },
+  includeLogo:    { pt: "Incluir logo da marca em todas as cenas",
+                    en: "Include brand logo in every scene",
+                    es: "Incluir logo de la marca en todas las escenas",
+                    zh: "在每个场景中包含品牌 logo" },
 };
 
 const ASPECT_RATIOS = [
@@ -97,6 +102,7 @@ export default function HubStoryboard() {
   const [aspectRatio, setAspectRatio] = useState("9:16");
   const [sceneCount, setSceneCount] = useState(4);
   const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
+  const [includeLogo, setIncludeLogo] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +117,7 @@ export default function HubStoryboard() {
     } else {
       setMarketCode(prev => (prev && brand.markets.includes(prev) ? prev : brand.markets[0]));
     }
+    setIncludeLogo(!!brand?.logoImage);
   }, [brandId]);
 
   const generate = async () => {
@@ -131,6 +138,12 @@ export default function HubStoryboard() {
       let marketContext = "";
       if (marketCode && HUB_MARKETS[marketCode]?.promptContext) {
         marketContext = HUB_MARKETS[marketCode].promptContext;
+      }
+      // Quando user vai sobrepor o logo via canvas, instrui o modelo a
+      // NÃO renderizar a marca como elemento — evita logo duplicado em
+      // todas as cenas. Reservar canto superior direito limpo.
+      if (brand?.logoImage && includeLogo && brand.id !== "none") {
+        brandHint = `${brandHint}\n\nIMPORTANT: Do NOT render the brand name "${brand.name}" or any logo as text or visual element inside any scene. The official brand logo will be added as overlay in post-production. Keep the upper-right corner of every scene visually clean (about 20% area) so the overlay logo will be legible against any background.`;
       }
 
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-storyboard-hub`, {
@@ -168,12 +181,33 @@ export default function HubStoryboard() {
         return;
       }
 
-      setScenes(payload.scenes || []);
+      const rawScenes = payload.scenes || [];
+
+      // Composição pós-produção (canvas client-side): aplica logo da
+      // marca em CADA cena que tem imagem. Roda em paralelo. Se uma
+      // cena falha de compor, mantém a raw (não bloqueia o resto).
+      let finalScenes = rawScenes;
+      if (brand?.logoImage && includeLogo && brand.id !== "none") {
+        finalScenes = await Promise.all(rawScenes.map(async s => {
+          if (!s.image_url) return s;
+          try {
+            const composed = await composeImage(s.image_url, {
+              logoUrl: brand.logoImage,
+              logoPosition: "top-right",
+            });
+            return { ...s, image_url: composed };
+          } catch (e) {
+            console.warn(`[storyboard] compose failed scene ${s.n}:`, e);
+            return s;
+          }
+        }));
+      }
+      setScenes(finalScenes);
 
       // Notif pro sino
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        const ok = (payload.scenes || []).filter(s => s.image_url).length;
+        const ok = finalScenes.filter(s => s.image_url).length;
         addHubNotification(user?.id, {
           kind: "image_generated",
           title: t("notifTitle"),
@@ -275,13 +309,18 @@ export default function HubStoryboard() {
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                     <div style={{
                       width: 32, height: 32, borderRadius: 9,
-                      background: b.gradient,
+                      background: b.logoImage ? "rgba(0,0,0,0.85)" : b.gradient,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
+                      flexShrink: 0, overflow: "hidden",
                     }}>
-                      <span style={{ fontSize: isNone ? 12 : 11.5, fontWeight: 800, color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.25)" }}>
-                        {b.logoInitials}
-                      </span>
+                      {b.logoImage ? (
+                        <img src={b.logoImage} alt={b.name}
+                          style={{ width: "82%", height: "82%", objectFit: "contain" }} />
+                      ) : (
+                        <span style={{ fontSize: isNone ? 12 : 11.5, fontWeight: 800, color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.25)" }}>
+                          {b.logoInitials}
+                        </span>
+                      )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: 0 }}>{getBrandName(b, lang)}</p>
@@ -323,6 +362,39 @@ export default function HubStoryboard() {
               })}
             </div>
           </div>
+        )}
+
+        {/* Logo overlay toggle — só quando brand tem logoImage */}
+        {brand?.logoImage && (
+          <label style={{
+            display: "inline-flex", alignItems: "center", gap: 10,
+            padding: "10px 14px", marginBottom: 14,
+            borderRadius: 11,
+            background: includeLogo ? "rgba(59,130,246,0.08)" : "rgba(17,24,39,0.70)",
+            border: `1px solid ${includeLogo ? "rgba(59,130,246,0.30)" : "rgba(255,255,255,0.06)"}`,
+            cursor: "pointer", fontFamily: "inherit",
+            transition: "all 0.15s",
+          }}>
+            <input
+              type="checkbox"
+              checked={includeLogo}
+              onChange={e => setIncludeLogo(e.target.checked)}
+              disabled={loading}
+              style={{ accentColor: "#3B82F6", width: 14, height: 14, cursor: "pointer" }}
+            />
+            <div style={{
+              width: 24, height: 24, borderRadius: 6,
+              background: "rgba(0,0,0,0.85)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              overflow: "hidden", flexShrink: 0,
+            }}>
+              <img src={brand.logoImage} alt={brand.name}
+                style={{ width: "82%", height: "82%", objectFit: "contain" }} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#FFFFFF" }}>
+              {t("includeLogo")}
+            </span>
+          </label>
         )}
 
         {/* Workspace 2-coluna */}
