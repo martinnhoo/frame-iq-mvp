@@ -21,7 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Image as ImageIcon, Layers, Film, Mic, GitBranch, BarChart3,
-  FolderOpen, ArrowRight,
+  FolderOpen, ArrowRight, Sparkles,
 } from "lucide-react";
 
 type Lang = "pt" | "en" | "es" | "zh";
@@ -76,6 +76,15 @@ const STR: Record<string, Record<Lang, string>> = {
                   es: "Tu central de creativos. Organiza, filtra y encuentra tus archivos.",
                   zh: "您的创意中心。组织、筛选和查找您的文件。" },
   libraryBtn:   { pt: "Acessar biblioteca",           en: "Open library",                es: "Abrir biblioteca",             zh: "打开资源库" },
+  emptyTitle:   { pt: "Comece criando seu primeiro ativo",
+                  en: "Start by creating your first asset",
+                  es: "Comienza creando tu primer activo",
+                  zh: "开始创建您的第一个资产" },
+  emptyDesc:    { pt: "Use o Gerador de Imagem pra criar criativos com IA em segundos.",
+                  en: "Use the Image Generator to create AI creatives in seconds.",
+                  es: "Usa el Generador de Imágenes para crear creativos con IA en segundos.",
+                  zh: "使用图像生成器在几秒内创建 AI 创意。" },
+  emptyBtn:     { pt: "Gerar imagem",                 en: "Generate image",              es: "Generar imagen",               zh: "生成图像" },
 };
 
 export default function BrilliantHub() {
@@ -85,6 +94,7 @@ export default function BrilliantHub() {
   const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || String(key);
 
   const [userName, setUserName] = useState<string>("");
+  const [hasAnyActivity, setHasAnyActivity] = useState<boolean | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -95,6 +105,15 @@ export default function BrilliantHub() {
         const meta = (user.user_metadata || {}) as { full_name?: string; name?: string };
         const name = meta.full_name || meta.name || (user.email?.split("@")[0]) || "";
         setUserName(capitalize(name.split(" ")[0]));
+
+        // Empty state: mostra "Comece criando" se user não tem nenhum
+        // hub_image gerado ainda
+        const { count } = await supabase
+          .from("creative_memory" as never)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .like("type", "hub_%");
+        if (mounted) setHasAnyActivity((count || 0) > 0);
       } catch { /* silent */ }
     })();
     return () => { mounted = false; };
@@ -142,6 +161,16 @@ export default function BrilliantHub() {
             {t("subtitle")}
           </p>
         </div>
+
+        {/* ── Empty state — quando user nunca gerou nada ─────────── */}
+        {hasAnyActivity === false && (
+          <EmptyState
+            title={t("emptyTitle")}
+            desc={t("emptyDesc")}
+            btnLabel={t("emptyBtn")}
+            onClick={() => navigate("/dashboard/hub/image")}
+          />
+        )}
 
         {/* ── Designer ─────────────────────────────────────────── */}
         <p style={SECTION_LABEL}>{t("designer")}</p>
@@ -206,6 +235,8 @@ interface ToolCardProps {
 
 function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, comingSoonLabel, onClick }: ToolCardProps) {
   const [hover, setHover] = useState(false);
+  const [btnHover, setBtnHover] = useState(false);
+  const [btnActive, setBtnActive] = useState(false);
   const interactive = !!onClick && !soon;
 
   return (
@@ -222,61 +253,67 @@ function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, comingSoonLab
         padding: "22px 22px 20px",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
-        transition: "border-color 0.18s, transform 0.18s, box-shadow 0.18s",
+        transition: "border-color 0.18s, transform 0.18s",
         transform: hover && interactive ? "translateY(-2px)" : "translateY(0)",
-        boxShadow: hover && interactive ? "0 8px 28px rgba(59,130,246,0.18)" : "0 1px 0 rgba(255,255,255,0.02)",
         cursor: interactive ? "pointer" : "default",
-        opacity: soon ? 0.72 : 1,
+        opacity: soon ? 0.55 : 1,
         overflow: "hidden",
       }}
     >
       {soon && (
         <div style={{
-          position: "absolute", top: 12, right: 12,
+          position: "absolute", top: 14, right: 14,
           fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
           padding: "3px 8px", borderRadius: 6,
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.10)",
-          color: "#9CA3AF",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          color: "#6B7280",
         }}>
           {comingSoonLabel}
         </div>
       )}
 
+      {/* Ícone — peso forte, presença visual */}
       <div style={{
-        width: 44, height: 44, borderRadius: 11,
-        background: soon ? "rgba(59,130,246,0.10)" : "rgba(59,130,246,0.14)",
-        border: `1px solid rgba(59,130,246,${soon ? 0.20 : 0.30})`,
+        width: 52, height: 52, borderRadius: 12,
+        background: soon ? "rgba(59,130,246,0.06)" : "rgba(59,130,246,0.10)",
+        border: `1px solid rgba(59,130,246,${soon ? 0.15 : 0.22})`,
         display: "flex", alignItems: "center", justifyContent: "center",
-        marginBottom: 14,
+        marginBottom: 16,
       }}>
-        <Icon size={20} style={{ color: "#3B82F6" }} />
+        <Icon size={24} strokeWidth={2} style={{ color: "#3B82F6" }} />
       </div>
 
       <h3 style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", margin: 0, letterSpacing: "-0.01em" }}>
         {title}
       </h3>
-      <p style={{ fontSize: 13, color: "#9CA3AF", margin: "6px 0 16px", lineHeight: 1.55, maxWidth: fullWidth ? 580 : "100%" }}>
+      <p style={{ fontSize: 13, color: "#9CA3AF", margin: "6px 0 18px", lineHeight: 1.55, maxWidth: fullWidth ? 580 : "100%" }}>
         {desc}
       </p>
 
       <button
         onClick={interactive ? (e) => { e.stopPropagation(); onClick?.(); } : (e) => e.preventDefault()}
+        onMouseEnter={() => setBtnHover(true)}
+        onMouseLeave={() => { setBtnHover(false); setBtnActive(false); }}
+        onMouseDown={() => setBtnActive(true)}
+        onMouseUp={() => setBtnActive(false)}
         disabled={soon}
         style={{
           display: "inline-flex", alignItems: "center", gap: 6,
           padding: "9px 16px",
           borderRadius: 10,
           background: soon
-            ? "rgba(75,85,99,0.45)"
-            : "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-          color: soon ? "#9CA3AF" : "#fff",
+            ? "rgba(75,85,99,0.40)"
+            : btnActive ? "#1D4ED8"
+            : btnHover ? "#2563EB"
+            : "#3B82F6",
+          color: soon ? "#6B7280" : "#fff",
           border: "none",
           fontSize: 13, fontWeight: 600,
           cursor: soon ? "not-allowed" : "pointer",
           fontFamily: "inherit",
-          boxShadow: soon ? "none" : "0 4px 14px rgba(59,130,246,0.30)",
-          transition: "all 0.15s",
+          transform: btnActive && !soon ? "scale(0.97)" : "scale(1)",
+          transition: "background 0.12s, transform 0.10s",
         }}
       >
         {btn} <ArrowRight size={13} />
@@ -299,4 +336,67 @@ const GRID_3: React.CSSProperties = {
 function capitalize(s: string): string {
   if (!s) return "";
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// ── Empty state ─────────────────────────────────────────────────────────────
+function EmptyState({ title, desc, btnLabel, onClick }: {
+  title: string; desc: string; btnLabel: string; onClick: () => void;
+}) {
+  const [btnHover, setBtnHover] = useState(false);
+  const [btnActive, setBtnActive] = useState(false);
+
+  return (
+    <div style={{
+      background: "rgba(17, 24, 39, 0.50)",
+      border: "1px solid rgba(255,255,255,0.06)",
+      borderRadius: 16,
+      padding: "44px 28px",
+      marginBottom: 28,
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      textAlign: "center", gap: 14,
+      backdropFilter: "blur(8px)",
+      WebkitBackdropFilter: "blur(8px)",
+    }}>
+      <div style={{
+        width: 56, height: 56, borderRadius: 14,
+        background: "rgba(59,130,246,0.10)",
+        border: "1px solid rgba(59,130,246,0.22)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <Sparkles size={26} strokeWidth={2} style={{ color: "#3B82F6" }} />
+      </div>
+      <div>
+        <h2 style={{ fontSize: 17, fontWeight: 700, color: "#FFFFFF", margin: 0, letterSpacing: "-0.01em" }}>
+          {title}
+        </h2>
+        <p style={{ fontSize: 13, color: "#9CA3AF", margin: "6px 0 0", maxWidth: 380, lineHeight: 1.5 }}>
+          {desc}
+        </p>
+      </div>
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setBtnHover(true)}
+        onMouseLeave={() => { setBtnHover(false); setBtnActive(false); }}
+        onMouseDown={() => setBtnActive(true)}
+        onMouseUp={() => setBtnActive(false)}
+        style={{
+          marginTop: 4,
+          display: "inline-flex", alignItems: "center", gap: 6,
+          padding: "10px 20px",
+          borderRadius: 10,
+          background: btnActive ? "#1D4ED8" : btnHover ? "#2563EB" : "#3B82F6",
+          color: "#fff",
+          border: "none",
+          fontSize: 13, fontWeight: 600,
+          cursor: "pointer",
+          fontFamily: "inherit",
+          transform: btnActive ? "scale(0.97)" : "scale(1)",
+          transition: "background 0.12s, transform 0.10s",
+        }}
+      >
+        {btnLabel} <ArrowRight size={13} />
+      </button>
+    </div>
+  );
 }
