@@ -202,48 +202,45 @@ export default function BrilliantHub() {
   return (
     <>
       <Helmet>
-        <title>Brilliant Hub — Central Criativa</title>
-        <meta name="description" content="Central criativa da Brilliant Gaming. Tudo que você precisa para criar, organizar e otimizar criativos de alta performance." />
+        <title>Hub — Central Criativa</title>
+        <meta name="description" content="Central criativa interna. Geração, produção e análise de criativos por marca." />
       </Helmet>
 
       <div style={{ minHeight: "calc(100vh - 64px)", padding: "32px 24px 80px", maxWidth: 1440, margin: "0 auto", color: "#fff" }}>
         {/* ── Header ─────────────────────────────────────────────────── */}
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
-            <Gem size={36} style={{ color: "#a855f7", filter: "drop-shadow(0 0 12px rgba(168,85,247,0.5))" }} />
-            <h1 style={{
-              fontSize: "clamp(28px, 4.5vw, 44px)",
-              fontWeight: 900,
-              letterSpacing: "0.06em",
+        {/* Sem brand wordmark gigante — o Hub é interno, não vitrine.
+            Apenas título funcional + nome da persona ativa como contexto. */}
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <Gem size={18} style={{ color: "#a855f7", opacity: 0.85 }} />
+            <p style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.24em",
+              color: "rgba(255,255,255,0.50)",
               margin: 0,
-              background: "linear-gradient(90deg, #ffffff 0%, #a855f7 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              textTransform: "uppercase",
             }}>
-              BRILLIANT <span style={{ color: "#a855f7" }}>HUB</span>
-            </h1>
+              Central Criativa{personaName ? ` · ${personaName}` : ""}
+            </p>
           </div>
-          <p style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: "0.32em",
-            color: "rgba(255,255,255,0.55)",
-            margin: "0 0 12px",
-            textTransform: "uppercase",
+          <h1 style={{
+            fontSize: "clamp(24px, 3vw, 32px)",
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            margin: "0 0 6px",
+            color: "#fff",
           }}>
-            Central Criativa{personaName ? ` · ${personaName}` : ""}
-          </p>
+            O que você quer criar hoje?
+          </h1>
           <p style={{
-            fontSize: "clamp(14px, 1.5vw, 16px)",
-            color: "rgba(255,255,255,0.65)",
+            fontSize: "clamp(13px, 1.3vw, 15px)",
+            color: "rgba(255,255,255,0.55)",
             margin: 0,
-            maxWidth: 680,
-            marginLeft: "auto",
-            marginRight: "auto",
+            maxWidth: 640,
             lineHeight: 1.55,
           }}>
-            Tudo que você precisa para criar, organizar e otimizar criativos de alta performance.
+            Geração, produção, biblioteca e performance — tudo conectado pelo contexto da marca selecionada.
           </p>
         </div>
 

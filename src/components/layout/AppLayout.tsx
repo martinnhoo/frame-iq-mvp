@@ -30,6 +30,14 @@ import {
   Building2,
   ChevronDown,
   Plus,
+  Image as ImageIcon,
+  Clapperboard,
+  Video,
+  FolderOpen,
+  Tag,
+  BarChart3,
+  Lightbulb,
+  Sparkles,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -94,19 +102,20 @@ function NavItem({ url, label, icon: Icon, onClick, isActive }: {
   );
 }
 
-function getNavItems(lang: string) {
-  const l: Record<string, Record<string, string>> = {
-    ai:       { pt: 'Estrategista', es: 'Estratega', fr: 'Stratège', de: 'Stratege', zh: '策略师', ar: 'الاستراتيجي', en: 'Strategist' },
-    history:  { pt: 'Histórico', es: 'Historial', fr: 'Historique', de: 'Verlauf', zh: '历史记录', ar: 'السجل', en: 'History' },
-    accounts: { pt: 'Contas', es: 'Cuentas', fr: 'Comptes', de: 'Konten', zh: '账户', ar: 'الحسابات', en: 'Accounts' },
-  };
-  const t = (key: string) => l[key]?.[lang] || l[key]?.en || key;
-  // Brilliant Hub é o único item visível no menu durante o pivô interno.
-  // Demais rotas (/feed, /ai, /history, /accounts) continuam acessíveis via
-  // URL direta — só foram removidas do menu pra simplificar o foco da
-  // operação interna na Brilliant Gaming.
+function getNavItems(_lang: string) {
+  // Sidebar repopulada com atalhos diretos pras ferramentas do Hub —
+  // mantém o foco interno (sem Feed/Estrategista/Histórico/Contas, que
+  // continuam vivos só via URL) e evita o menu vazio. 8 itens em fluxo
+  // natural: do overview pra criação, depois produção, depois análise.
   return [
-    { url: '/dashboard/hub', label: 'Hub', icon: Command },
+    { url: '/dashboard/hub',          label: 'Hub',         icon: Command },
+    { url: '/dashboard/hub/image',    label: 'Imagens',     icon: ImageIcon },
+    { url: '/dashboard/hooks',        label: 'Roteiros',    icon: Lightbulb },
+    { url: '/dashboard/boards',       label: 'Boards',      icon: Clapperboard },
+    { url: '/dashboard/translate',    label: 'Transcript',  icon: Video },
+    { url: '/dashboard/templates',    label: 'Templates',   icon: Tag },
+    { url: '/dashboard/intelligence', label: 'Biblioteca',  icon: FolderOpen },
+    { url: '/dashboard/performance',  label: 'Analytics',   icon: BarChart3 },
   ];
 }
 
