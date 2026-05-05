@@ -2,8 +2,12 @@
 //
 // Modelo único: gpt-image-2 (decisão do produto). Sem fallback —
 // se a OpenAI rejeitar, retorna o erro real pra UI lidar.
+//
+// Brand context: front manda { brand_id, brand_hint, include_license,
+// license_text }. A função injeta brand_hint no início e disclaimer
+// no fim do prompt antes de chamar a OpenAI.
 
-const FN_VERSION = "v6-gptimage2-only-2026-05-05";
+const FN_VERSION = "v7-gptimage2-brand-2026-05-05";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -57,8 +61,22 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { prompt, aspect_ratio = "1:1", quality = "medium" } = body as {
-      prompt?: string; aspect_ratio?: string; quality?: "low" | "medium" | "high";
+    const {
+      prompt,
+      aspect_ratio = "1:1",
+      quality = "medium",
+      brand_id = null,
+      brand_hint = "",
+      include_license = false,
+      license_text = "",
+    } = body as {
+      prompt?: string;
+      aspect_ratio?: string;
+      quality?: "low" | "medium" | "high";
+      brand_id?: string | null;
+      brand_hint?: string;
+      include_license?: boolean;
+      license_text?: string;
     };
 
     if (!prompt || prompt.trim().length < 5) {
@@ -68,12 +86,29 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    const cleanPrompt = prompt.trim().slice(0, 4000);
+    // Constrói prompt final: [brand context] + [user prompt] + [disclaimer]
+    const userPrompt = prompt.trim();
+    const parts: string[] = [];
+    if (brand_hint && brand_hint.trim()) {
+      parts.push(brand_hint.trim());
+    }
+    parts.push(userPrompt);
+    if (include_license && license_text && license_text.trim()) {
+      // Modelo de imagem não consegue renderizar 100+ palavras legíveis,
+      // mas pedimos pra deixar espaço no rodapé pro disclaimer ser
+      // sobreposto em pós-produção. Nota curta no prompt evita poluir.
+      parts.push(
+        "Reserve a horizontal strip at the bottom of the image (about 12% of total height) " +
+        "as a clean dark area suitable for overlay regulatory disclaimer text in post-production. " +
+        "Do not render the actual disclaimer text inside the image."
+      );
+    }
+    const finalPrompt = parts.join("\n\n").slice(0, 4000);
     const size = SIZE_MAP[aspect_ratio] || SIZE_MAP["1:1"];
 
     const reqBody = {
       model: "gpt-image-2",
-      prompt: cleanPrompt,
+      prompt: finalPrompt,
       size,
       quality, // low | medium | high
       n: 1,
@@ -81,7 +116,10 @@ Deno.serve(async (req) => {
     };
 
     console.log("[hub-image] calling OpenAI gpt-image-2:", JSON.stringify({
-      user_id: authUser.id, size, quality, prompt_len: cleanPrompt.length,
+      user_id: authUser.id, size, quality,
+      brand_id: brand_id || null,
+      include_license,
+      prompt_len: finalPrompt.length,
     }));
 
     const r = await fetch("https://api.openai.com/v1/images/generations", {
@@ -148,11 +186,15 @@ Deno.serve(async (req) => {
         user_id: authUser.id,
         type: "hub_image",
         content: {
-          prompt: cleanPrompt,
+          prompt: userPrompt,
           revised_prompt: revisedPrompt,
+          final_prompt: finalPrompt,
           image_url: imageUrl,
           aspect_ratio, size, quality,
           model: "gpt-image-2",
+          brand_id: brand_id || null,
+          license_included: include_license,
+          license_text: include_license ? license_text : null,
         },
         created_at: new Date().toISOString(),
       });
@@ -166,10 +208,13 @@ Deno.serve(async (req) => {
       _v: FN_VERSION,
       ok: true,
       image_url: imageUrl,
-      prompt: cleanPrompt,
+      prompt: userPrompt,
       revised_prompt: revisedPrompt,
+      final_prompt: finalPrompt,
       aspect_ratio, size, quality,
       model_used: "gpt-image-2",
+      brand_id: brand_id || null,
+      license_included: include_license,
     }, 200);
 
   } catch (e) {
