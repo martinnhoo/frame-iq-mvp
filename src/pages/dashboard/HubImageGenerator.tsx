@@ -1064,30 +1064,38 @@ export default function HubImageGenerator() {
             </Section>
 
             {/* Section 4/5 — Format + Quality (side-by-side) */}
-            <div style={{ marginTop: 22, display: "grid", gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)", gap: 18 }}>
+            <div className="hub-fmt-row" style={{ marginTop: 22, display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 18 }}>
               <Section title={t("format")} subtitle={t("formatHint")}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
                   {FORMATS.map(f => {
                     const active = aspectRatio === f.id;
                     return (
                       <button key={f.id} onClick={() => setAspectRatio(f.id)} disabled={loading}
                         style={{
-                          padding: "11px 10px", borderRadius: 10,
+                          padding: "10px 8px", borderRadius: 10,
+                          minWidth: 0,
                           background: active ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.03)",
                           border: `1px solid ${active ? "rgba(59,130,246,0.55)" : "rgba(255,255,255,0.08)"}`,
                           color: active ? "#fff" : "#D1D5DB",
                           cursor: loading ? "not-allowed" : "pointer",
                           textAlign: "left", fontFamily: "inherit",
+                          overflow: "hidden",
                           transition: "all 0.15s",
                         }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2, minWidth: 0 }}>
                           <FormatIcon id={f.id} active={active} />
-                          <span style={{ fontSize: 12.5, fontWeight: 700 }}>{t(f.titleKey as keyof typeof STR)}</span>
+                          <span style={{
+                            fontSize: 12, fontWeight: 700,
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0,
+                          }}>{t(f.titleKey as keyof typeof STR)}</span>
+                          <span style={{ fontSize: 10, color: "#9CA3AF", letterSpacing: "0.02em", flexShrink: 0 }}>
+                            ({f.id})
+                          </span>
                         </div>
-                        <div style={{ fontSize: 10.5, color: "#9CA3AF", letterSpacing: "0.02em" }}>
-                          ({f.id})
-                        </div>
-                        <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 1 }}>
+                        <div style={{
+                          fontSize: 10.5, color: "#9CA3AF",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>
                           {t(f.descKey as keyof typeof STR)}
                         </div>
                       </button>
@@ -1096,7 +1104,7 @@ export default function HubImageGenerator() {
                 </div>
               </Section>
               <Section title={t("quality")} subtitle={t("qualityHint")}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 6 }}>
                   {([
                     { v: "low",    titleKey: "qDraft",  descKey: "qDraftDesc"  },
                     { v: "medium", titleKey: "qMedium", descKey: "qMediumDesc" },
@@ -1106,7 +1114,8 @@ export default function HubImageGenerator() {
                     return (
                       <button key={q.v} onClick={() => setQuality(q.v)} disabled={loading}
                         style={{
-                          padding: "10px 8px", borderRadius: 10,
+                          padding: "9px 6px", borderRadius: 10,
+                          minWidth: 0, overflow: "hidden",
                           background: active ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.03)",
                           border: `1px solid ${active ? "rgba(59,130,246,0.55)" : "rgba(255,255,255,0.08)"}`,
                           color: active ? "#fff" : "#D1D5DB",
@@ -1114,8 +1123,14 @@ export default function HubImageGenerator() {
                           textAlign: "center", fontFamily: "inherit",
                           transition: "all 0.15s",
                         }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 1 }}>{t(q.titleKey as keyof typeof STR)}</div>
-                        <div style={{ fontSize: 10, color: "#9CA3AF", letterSpacing: "0.02em" }}>{t(q.descKey as keyof typeof STR)}</div>
+                        <div style={{
+                          fontSize: 12, fontWeight: 700, marginBottom: 1,
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>{t(q.titleKey as keyof typeof STR)}</div>
+                        <div style={{
+                          fontSize: 10, color: "#9CA3AF", letterSpacing: "0.02em",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>{t(q.descKey as keyof typeof STR)}</div>
                       </button>
                     );
                   })}
@@ -1424,8 +1439,20 @@ export default function HubImageGenerator() {
         .hub-elements-chips::-webkit-scrollbar { height: 6px; }
         .hub-elements-chips::-webkit-scrollbar-track { background: transparent; }
         .hub-elements-chips::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 3px; }
+        /* Workspace: 2-col → 1-col abaixo de 1100px (preview vai pra baixo) */
         @media (max-width: 1100px) {
           .hub-image-workspace { grid-template-columns: 1fr !important; }
+        }
+        /* Format+Quality lado-a-lado quebra abaixo de 1380px porque a form
+           column do workspace fica muito estreita pros 6 botões. Stack
+           vertical resolve sem quebrar conteúdo. Acima desse breakpoint
+           continua side-by-side como no mockup. */
+        @media (max-width: 1380px) and (min-width: 1101px) {
+          .hub-fmt-row { grid-template-columns: 1fr !important; }
+        }
+        /* Em mobile (< 1100px workspace já é 1-col) também stack format/quality */
+        @media (max-width: 640px) {
+          .hub-fmt-row { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 700px) {
           .hub-image-benefits { grid-template-columns: repeat(2, 1fr) !important; }
