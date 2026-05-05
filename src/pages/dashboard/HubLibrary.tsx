@@ -21,19 +21,20 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Image as ImageIcon, Layers, Clapperboard, GalleryHorizontal,
-  ArrowLeft, Search, Download, X, Sparkles, FolderOpen, Mic, FileText, Copy, Check,
+  ArrowLeft, Search, Download, X, Sparkles, FolderOpen, Mic, Captions,
+  FileText, Copy, Check, Volume2,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 type Lang = "pt" | "en" | "es" | "zh";
-type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe";
+type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe" | "voice";
 
 interface HubAsset {
   id: string;            // group id (memory id pra single, group_id pra storyboard/carousel)
   kind: AssetKind;
   title: string;
   prompt: string;
-  cover_url: string;     // capa (primeira imagem do grupo) — vazio pra transcribe
+  cover_url: string;     // capa (primeira imagem do grupo) — vazio pra transcribe/voice
   scene_count?: number;  // pra storyboard/carousel
   scene_thumbs?: string[]; // pra mostrar miniaturas no preview
   aspect_ratio: string;
@@ -44,6 +45,12 @@ interface HubAsset {
   transcript_language?: string;
   source_filename?: string;
   duration_seconds?: number;
+  // Voice-specific
+  audio_url?: string;
+  voice_name?: string;
+  voice_id?: string;
+  characters?: number;
+  text?: string;
 }
 
 const STR: Record<string, Record<Lang, string>> = {
@@ -71,6 +78,7 @@ const STR: Record<string, Record<Lang, string>> = {
   filterSb:    { pt: "Storyboards",en: "Storyboards",es: "Storyboards",zh: "故事板" },
   filterCar:   { pt: "Carrosséis", en: "Carousels", es: "Carruseles", zh: "轮播" },
   filterTr:    { pt: "Transcrições",en: "Transcripts",es: "Transcripciones",zh: "转录" },
+  filterVo:    { pt: "Vozes",      en: "Voices",     es: "Voces",      zh: "语音" },
   scenes:      { pt: "cenas",      en: "scenes",    es: "escenas",    zh: "场景" },
   slides:      { pt: "slides",     en: "slides",    es: "slides",     zh: "幻灯片" },
   download:    { pt: "Baixar",     en: "Download",  es: "Descargar",  zh: "下载" },
@@ -80,6 +88,7 @@ const STR: Record<string, Record<Lang, string>> = {
   sbFor:       { pt: "Storyboard", en: "Storyboard",es: "Storyboard", zh: "故事板" },
   carFor:      { pt: "Carrossel",  en: "Carousel",  es: "Carrusel",   zh: "轮播" },
   trFor:       { pt: "Transcrição",en: "Transcript",es: "Transcripción",zh: "转录" },
+  voFor:       { pt: "Voz",        en: "Voice",     es: "Voz",        zh: "语音" },
   copy:        { pt: "Copiar",     en: "Copy",      es: "Copiar",     zh: "复制" },
   copied:      { pt: "Copiado",    en: "Copied",    es: "Copiado",    zh: "已复制" },
   downloadTxt: { pt: "Baixar .txt",en: "Download .txt",es: "Descargar .txt",zh: "下载 .txt" },
@@ -121,6 +130,12 @@ type RawRow = {
     language?: string;
     source_filename?: string;
     duration?: number;
+    // Voice-specific
+    audio_url?: string;
+    text?: string;
+    voice_id?: string;
+    voice_name?: string;
+    characters?: number;
   };
   created_at: string;
 };
@@ -164,6 +179,27 @@ export default function HubLibrary() {
 
         for (const r of rows) {
           const c = r.content || {};
+
+          // Voice — sem image_url, mas tem audio_url
+          if (r.kind === "hub_voice") {
+            const audio = (c.audio_url || "").trim();
+            if (!audio) continue;
+            groupedMap.set(r.id, {
+              id: r.id,
+              kind: "voice",
+              title: c.voice_name ? `${c.voice_name}` : (c.text || "").slice(0, 60),
+              prompt: (c.text || "").slice(0, 300),
+              cover_url: "",
+              aspect_ratio: "1:1",
+              created_at: r.created_at,
+              audio_url: audio,
+              voice_name: c.voice_name,
+              voice_id: c.voice_id,
+              characters: c.characters,
+              text: c.text,
+            });
+            continue;
+          }
 
           // Transcribe — sem image_url, mas tem transcript text
           if (r.kind === "hub_transcribe") {
@@ -260,7 +296,7 @@ export default function HubLibrary() {
   }, [assets, kindFilter, search]);
 
   const counts = useMemo(() => {
-    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0, transcribe: 0 };
+    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0, transcribe: 0, voice: 0 };
     for (const a of assets) c[a.kind]++;
     return c;
   }, [assets]);
@@ -358,8 +394,13 @@ export default function HubLibrary() {
           />
           <KindChip
             active={kindFilter === "transcribe"} count={counts.transcribe}
-            label={t("filterTr")} icon={Mic}
+            label={t("filterTr")} icon={Captions}
             onClick={() => setKindFilter("transcribe")}
+          />
+          <KindChip
+            active={kindFilter === "voice"} count={counts.voice}
+            label={t("filterVo")} icon={Mic}
+            onClick={() => setKindFilter("voice")}
           />
         </div>
 
@@ -428,15 +469,18 @@ function AssetCard({ asset, lang, t, onClick }: {
   const KindIcon = asset.kind === "png" ? Layers
     : asset.kind === "storyboard" ? Clapperboard
     : asset.kind === "carousel" ? GalleryHorizontal
-    : asset.kind === "transcribe" ? Mic
+    : asset.kind === "transcribe" ? Captions
+    : asset.kind === "voice" ? Mic
     : ImageIcon;
   const kindLabel = asset.kind === "png" ? t("pngFor")
     : asset.kind === "storyboard" ? t("sbFor")
     : asset.kind === "carousel" ? t("carFor")
     : asset.kind === "transcribe" ? t("trFor")
+    : asset.kind === "voice" ? t("voFor")
     : t("imageFor");
   const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
   const isTranscribe = asset.kind === "transcribe";
+  const isVoice = asset.kind === "voice";
   const countLabel = asset.kind === "storyboard" ? t("scenes") : t("slides");
   const wordCount = isTranscribe ? (asset.transcript || "").trim().split(/\s+/).filter(Boolean).length : 0;
 
@@ -482,6 +526,45 @@ function AssetCard({ asset, lang, t, onClick }: {
               fontStyle: "italic",
             }}>
               "{(asset.transcript || "").slice(0, 240)}{(asset.transcript || "").length > 240 ? "…" : ""}"
+            </p>
+          </div>
+        ) : isVoice ? (
+          // Voice — mostra ícone de áudio + preview do texto + voz usada
+          <div style={{
+            width: "100%", aspectRatio: "1/1",
+            background: "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.02))",
+            display: "flex", flexDirection: "column",
+            padding: "20px 16px 18px",
+            position: "relative",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: "rgba(59,130,246,0.15)",
+                border: "1px solid rgba(59,130,246,0.30)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Volume2 size={16} style={{ color: "#3B82F6" }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "#fff", margin: 0,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {asset.voice_name || "—"}
+                </p>
+                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "1px 0 0", fontWeight: 600 }}>
+                  {asset.characters || 0} {lang === "pt" ? "chars" : lang === "en" ? "chars" : lang === "es" ? "chars" : "字"}
+                </p>
+              </div>
+            </div>
+            <p style={{
+              fontSize: 11, color: "#D1D5DB", lineHeight: 1.5, margin: 0,
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 6,
+              WebkitBoxOrient: "vertical",
+              fontStyle: "italic",
+            }}>
+              "{(asset.text || "").slice(0, 200)}{(asset.text || "").length > 200 ? "…" : ""}"
             </p>
           </div>
         ) : (
@@ -549,6 +632,12 @@ function AssetCard({ asset, lang, t, onClick }: {
               <span>{wordCount} {t("words")}</span>
             </>
           )}
+          {isVoice && asset.characters && asset.characters > 0 && (
+            <>
+              <span>·</span>
+              <span>{asset.characters} chars</span>
+            </>
+          )}
         </div>
       </div>
     </button>
@@ -580,6 +669,7 @@ function PreviewModal({ asset, onClose, lang, t }: {
   const [copied, setCopied] = useState(false);
   const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
   const isTranscribe = asset.kind === "transcribe";
+  const isVoice = asset.kind === "voice";
 
   useEffect(() => {
     if (!isGroup) return;
@@ -656,6 +746,7 @@ function PreviewModal({ asset, onClose, lang, t }: {
                 : asset.kind === "storyboard" ? t("sbFor")
                 : asset.kind === "carousel" ? t("carFor")
                 : asset.kind === "transcribe" ? t("trFor")
+                : asset.kind === "voice" ? t("voFor")
                 : t("imageFor")}
             </span>
             <span style={{ fontSize: 11, color: "#9CA3AF" }}>· {relativeDate(asset.created_at, lang)}</span>
@@ -681,7 +772,80 @@ function PreviewModal({ asset, onClose, lang, t }: {
         </div>
 
         <div style={{ padding: 20 }}>
-          {isTranscribe ? (
+          {isVoice ? (
+            <>
+              <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap", fontSize: 11.5, color: "#9CA3AF" }}>
+                {asset.voice_name && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#3B82F6", fontWeight: 700 }}>
+                    <Volume2 size={12} /> {asset.voice_name}
+                  </span>
+                )}
+                {asset.characters !== undefined && (
+                  <span>{asset.characters} chars</span>
+                )}
+              </div>
+              {asset.audio_url && (
+                <audio
+                  src={asset.audio_url}
+                  controls
+                  style={{
+                    width: "100%", marginBottom: 14, height: 40,
+                    colorScheme: "dark",
+                  }}
+                />
+              )}
+              {asset.text && (
+                <div style={{
+                  fontSize: 13, color: "#E5E7EB", lineHeight: 1.6,
+                  padding: "14px 16px", background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 10, maxHeight: "40vh", overflow: "auto",
+                  whiteSpace: "pre-wrap", marginBottom: 14,
+                  fontStyle: "italic",
+                }}>
+                  "{asset.text}"
+                </div>
+              )}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  onClick={() => {
+                    if (!asset.audio_url) return;
+                    const a = document.createElement("a");
+                    a.href = asset.audio_url;
+                    a.download = `voice-${(asset.voice_name || "voice").toLowerCase()}-${asset.id.slice(0, 8)}.mp3`;
+                    document.body.appendChild(a); a.click(); a.remove();
+                  }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "9px 14px", borderRadius: 9,
+                    background: "#3B82F6", color: "#fff",
+                    border: "none", fontSize: 13, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}>
+                  <Download size={14} /> {t("download")}
+                </button>
+                {asset.text && (
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(asset.text || "").then(() => {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 1500);
+                      }).catch(() => {});
+                    }}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "9px 14px", borderRadius: 9,
+                      background: copied ? "rgba(34,197,94,0.20)" : "rgba(255,255,255,0.06)",
+                      color: "#fff",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                    }}>
+                    {copied ? <><Check size={14} /> {t("copied")}</> : <><Copy size={14} /> {t("copy")}</>}
+                  </button>
+                )}
+              </div>
+            </>
+          ) : isTranscribe ? (
             <>
               <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap", fontSize: 11.5, color: "#9CA3AF" }}>
                 {asset.source_filename && (

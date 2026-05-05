@@ -20,7 +20,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  Image as ImageIcon, Layers, Clapperboard, Mic, GitBranch, BarChart3,
+  Image as ImageIcon, Layers, Clapperboard, Mic, Captions, GitBranch, BarChart3,
   FolderOpen, ArrowRight, Sparkles, GalleryHorizontal,
 } from "lucide-react";
 
@@ -60,6 +60,12 @@ const STR: Record<string, Record<Lang, string>> = {
                   es: "Transcribe audio de tus videos a texto.",
                   zh: "将视频音频转录为文本。" },
   transcribeBtn: { pt: "Transcrever",                 en: "Transcribe",                  es: "Transcribir",                  zh: "转录" },
+  voice:        { pt: "Gerador de Voz",               en: "Voice Generator",             es: "Generador de Voz",             zh: "语音生成器" },
+  voiceDesc:    { pt: "Texto vira áudio profissional via ElevenLabs.",
+                  en: "Turn text into professional audio with ElevenLabs.",
+                  es: "Convierte texto en audio profesional con ElevenLabs.",
+                  zh: "通过 ElevenLabs 将文本转换为专业音频。" },
+  voiceBtn:     { pt: "Gerar voz",                    en: "Generate voice",              es: "Generar voz",                  zh: "生成语音" },
   abVar:        { pt: "Variações AB",                 en: "A/B Variants",                es: "Variantes A/B",                zh: "A/B 变体" },
   abVarDesc:    { pt: "Gere variações para testar e encontrar a melhor.",
                   en: "Generate variants to test and find the best.",
@@ -144,8 +150,10 @@ export default function BrilliantHub() {
       desc: lang === "pt" ? "Roteiro vira carrossel — slides quadrados pra Insta, LinkedIn." : lang === "es" ? "El guión se convierte en un carrusel — slides cuadrados para Instagram, LinkedIn." : lang === "zh" ? "剧本转化为轮播 — 适用于 Instagram 的方形幻灯片。" : "Script becomes a carousel — square slides for Instagram, LinkedIn.",
       btn: lang === "pt" ? "Criar carrossel" : lang === "es" ? "Crear carrusel" : lang === "zh" ? "创建轮播" : "Create carousel",
       icon: GalleryHorizontal, route: "/dashboard/hub/carousel" },
+    { id: "voice", title: t("voice"), desc: t("voiceDesc"), btn: t("voiceBtn"),
+      icon: Mic, route: "/dashboard/hub/voice" },
     { id: "transcribe", title: t("transcribe"), desc: t("transcribeDesc"), btn: t("transcribeBtn"),
-      icon: Mic, route: "/dashboard/hub/transcribe" },
+      icon: Captions, route: "/dashboard/hub/transcribe" },
     { id: "ab", title: t("abVar"), desc: t("abVarDesc"), btn: t("abVarBtn"),
       icon: GitBranch, soon: true },
     { id: "analytics", title: t("analytics"), desc: t("analyticsDesc"), btn: t("analyticsBtn"),

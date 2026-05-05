@@ -41,6 +41,7 @@ import {
   Layers,
   Film,
   Mic,
+  Captions,
   GitBranch,
   GalleryHorizontal,
 } from 'lucide-react';
@@ -153,8 +154,9 @@ function getNavSections(lang: string): NavSection[] {
     {
       title: L('Ferramentas', 'Tools', 'Herramientas', '工具'),
       items: [
-        { url: '/dashboard/hub/transcribe', label: L('Transcrição',  'Transcription', 'Transcripción', '转录'),    icon: Mic },
-        { url: '/dashboard/hub/ab',         label: L('Variações AB', 'A/B Variants',  'Variantes A/B', 'A/B 变体'), icon: GitBranch,  soon: true },
+        { url: '/dashboard/hub/voice',      label: L('Gerador de Voz','Voice Generator','Generador de Voz','语音生成器'), icon: Mic },
+        { url: '/dashboard/hub/transcribe', label: L('Transcrição',  'Transcription', 'Transcripción', '转录'),     icon: Captions },
+        { url: '/dashboard/hub/ab',         label: L('Variações AB', 'A/B Variants',  'Variantes A/B', 'A/B 变体'),  icon: GitBranch,  soon: true },
         { url: '/dashboard/hub/analytics',  label: L('Analytics',    'Analytics',     'Analítica',     '数据分析'), icon: BarChart3,  soon: true },
       ],
     },
