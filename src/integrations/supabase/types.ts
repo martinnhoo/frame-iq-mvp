@@ -2331,6 +2331,27 @@ export type Database = {
           },
         ]
       }
+      invite_codes: {
+        Row: {
+          code: string
+          created_at: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       landing_page_snapshots: {
         Row: {
           content: string | null
@@ -3705,6 +3726,7 @@ export type Database = {
         Args: { fn_name: string; payload?: string }
         Returns: undefined
       }
+      adbrief_schedule_all_canonical: { Args: never; Returns: Json }
       adbrief_schedule_edge: {
         Args: { p_body?: string; p_cron: string; p_fn: string; p_name: string }
         Returns: undefined
