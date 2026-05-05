@@ -2331,6 +2331,30 @@ export type Database = {
           },
         ]
       }
+      hub_assets: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          kind: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invite_codes: {
         Row: {
           code: string
