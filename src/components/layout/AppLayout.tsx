@@ -103,19 +103,13 @@ function NavItem({ url, label, icon: Icon, onClick, isActive }: {
 }
 
 function getNavItems(_lang: string) {
-  // Sidebar repopulada com atalhos diretos pras ferramentas do Hub —
-  // mantém o foco interno (sem Feed/Estrategista/Histórico/Contas, que
-  // continuam vivos só via URL) e evita o menu vazio. 8 itens em fluxo
-  // natural: do overview pra criação, depois produção, depois análise.
+  // Sidebar mostra SÓ o que é Hub-native e funcional. Quando uma nova
+  // ferramenta for construída nativa do Hub (Production Board hub-only,
+  // Roteiros hub-only, etc), adicionar a entry aqui.
   return [
-    { url: '/dashboard/hub',          label: 'Hub',         icon: Command },
-    { url: '/dashboard/hub/image',    label: 'Imagens',     icon: ImageIcon },
-    { url: '/dashboard/hooks',        label: 'Roteiros',    icon: Lightbulb },
-    { url: '/dashboard/boards',       label: 'Boards',      icon: Clapperboard },
-    { url: '/dashboard/translate',    label: 'Transcript',  icon: Video },
-    { url: '/dashboard/templates',    label: 'Templates',   icon: Tag },
-    { url: '/dashboard/library',      label: 'Biblioteca',  icon: FolderOpen },
-    { url: '/dashboard/performance',  label: 'Analytics',   icon: BarChart3 },
+    { url: '/dashboard/hub',         label: 'Hub',        icon: Command },
+    { url: '/dashboard/hub/image',   label: 'Imagens',    icon: ImageIcon },
+    { url: '/dashboard/hub/library', label: 'Biblioteca', icon: FolderOpen },
   ];
 }
 

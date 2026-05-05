@@ -187,7 +187,9 @@ const App = () => (
                 <Route index element={<Navigate to="/dashboard/hub" replace />} />
                 <Route path="hub" element={<BrilliantHub />} />
                 <Route path="hub/image" element={<HubImageGenerator />} />
-                <Route path="library" element={<HubLibrary />} />
+                <Route path="hub/library" element={<HubLibrary />} />
+                {/* Compat: rota antiga /dashboard/library redireciona pra /hub/library */}
+                <Route path="library" element={<Navigate to="/dashboard/hub/library" replace />} />
                 <Route path="feed" element={<FeedPage />} />
                 <Route path="feed/campanhas" element={<CampaignsManager />} />
                 <Route path="history" element={<HistoryPage />} />
