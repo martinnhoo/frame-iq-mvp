@@ -218,19 +218,29 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
           {/* Divider gap */}
           <div style={{ height: 4 }} />
 
-          {/* Menu items — operação interna, sem Plano/Faturamento/Convidar.
-              Settings ainda dá acesso a integrações, autopilot, etc. */}
-          {/* Configurações = página /dashboard/settings (autopilot, integrações, plano).
-              Esconde em Hub mode — Hub interno não usa essa página. */}
+          {/* Menu items — operação interna, sem Plano/Faturamento/Convidar. */}
           {!isHubMode && (
-            <MenuItem icon={<Settings size={14} />} label="Configurações" onClick={() => { setOpen(false); navigate("/dashboard/settings"); }} />
+            <MenuItem
+              icon={<Settings size={14} />}
+              label={language === "en" ? "Settings" : language === "es" ? "Configuración" : language === "zh" ? "设置" : "Configurações"}
+              onClick={() => { setOpen(false); navigate("/dashboard/settings"); }}
+            />
           )}
-          <MenuItem icon={<UserCircle size={14} />} label="Perfil rápido" onClick={() => { setOpen(false); onOpenProfile(); }} />
+          <MenuItem
+            icon={<UserCircle size={14} />}
+            label={language === "en" ? "Quick profile" : language === "es" ? "Perfil rápido" : language === "zh" ? "快速档案" : "Perfil rápido"}
+            onClick={() => { setOpen(false); onOpenProfile(); }}
+          />
 
           {/* Divider */}
           <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "6px 0" }} />
 
-          <MenuItem icon={<LogOut size={14} />} label="Sair" onClick={handleSignOut} danger />
+          <MenuItem
+            icon={<LogOut size={14} />}
+            label={language === "en" ? "Sign out" : language === "es" ? "Cerrar sesión" : language === "zh" ? "退出登录" : "Sair"}
+            onClick={handleSignOut}
+            danger
+          />
 
           <div style={{ height: 6 }} />
         </div>

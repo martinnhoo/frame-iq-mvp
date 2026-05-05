@@ -662,7 +662,7 @@ export function AppLayout() {
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
           <LogOut size={14} strokeWidth={1.5} color="#475569" />
           <span style={{ fontSize: 13, fontWeight: 400, color: '#64748B' }}>
-            Sair
+            {language === "en" ? "Sign out" : language === "es" ? "Cerrar sesión" : language === "zh" ? "退出登录" : "Sair"}
           </span>
         </button>
       </div>
