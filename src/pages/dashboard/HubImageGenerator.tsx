@@ -380,46 +380,47 @@ export default function HubImageGenerator() {
         <title>{t("title")}</title>
       </Helmet>
 
-      <div style={{ minHeight: "calc(100vh - 64px)", padding: "24px 24px 80px", maxWidth: 1280, margin: "0 auto", color: "#fff" }}>
+      <div style={{ minHeight: "calc(100vh - 64px)", padding: "20px 28px 64px", maxWidth: 1480, margin: "0 auto", color: "#fff" }}>
         <button
           onClick={() => navigate("/dashboard/hub")}
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             background: "transparent", border: "none", color: "rgba(255,255,255,0.55)",
-            cursor: "pointer", fontSize: 13, padding: "6px 8px", marginBottom: 16,
+            cursor: "pointer", fontSize: 12.5, padding: "4px 6px", marginBottom: 12,
             fontFamily: "inherit",
           }}
         >
-          <ArrowLeft size={14} /> {t("back")}
+          <ArrowLeft size={13} /> {t("back")}
         </button>
 
-        {/* Hero */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+        {/* Hero — mais slim, integra com a brand strip abaixo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
           <div style={{
-            width: 52, height: 52, borderRadius: 14,
+            width: 38, height: 38, borderRadius: 11,
             background: "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 36px rgba(168,85,247,0.40), inset 0 0 0 1px rgba(255,255,255,0.10)",
+            boxShadow: "0 0 24px rgba(168,85,247,0.30), inset 0 0 0 1px rgba(255,255,255,0.08)",
+            flexShrink: 0,
           }}>
-            <ImageIcon size={26} style={{ color: "#fff" }} />
+            <ImageIcon size={20} style={{ color: "#fff" }} />
           </div>
-          <div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ fontSize: 19, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
               {t("title")}
             </h1>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.50)", margin: "3px 0 0", letterSpacing: "0.02em" }}>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", margin: "2px 0 0", letterSpacing: "0.01em" }}>
               {t("subtitle")}
             </p>
           </div>
         </div>
 
-        {/* ── Brand selector ──────────────────────────────────────── */}
-        <div style={{ marginBottom: 18 }}>
+        {/* ── Brand selector — strip horizontal full-width ──────────── */}
+        <div style={{ marginBottom: 14 }}>
           <p style={SECTION_LABEL}>{t("brand")}</p>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))",
-            gap: 10,
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 8,
           }}>
             {HUB_BRANDS.map(b => {
               const active = brandId === b.id;
@@ -435,32 +436,32 @@ export default function HubImageGenerator() {
                   disabled={loading}
                   style={{
                     position: "relative",
-                    padding: 14,
-                    borderRadius: 14,
+                    padding: "10px 12px",
+                    borderRadius: 11,
                     background: active ? "rgba(168,85,247,0.10)" : "rgba(255,255,255,0.025)",
-                    border: `1px solid ${active ? "rgba(168,85,247,0.55)" : "rgba(255,255,255,0.06)"}`,
+                    border: `1px solid ${active ? "rgba(168,85,247,0.50)" : "rgba(255,255,255,0.06)"}`,
                     cursor: loading ? "not-allowed" : "pointer",
                     textAlign: "left",
                     transition: "all 0.18s",
                     overflow: "hidden",
                     boxShadow: active
-                      ? "0 0 24px rgba(168,85,247,0.25), inset 0 0 0 1px rgba(168,85,247,0.20)"
+                      ? "0 0 18px rgba(168,85,247,0.20), inset 0 0 0 1px rgba(168,85,247,0.18)"
                       : "none",
                     fontFamily: "inherit",
                   }}
                   onMouseEnter={e => { if (!active && !loading) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.045)"; }}
                   onMouseLeave={e => { if (!active && !loading) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.025)"; }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                     <div style={{
-                      width: 40, height: 40, borderRadius: 11,
+                      width: 32, height: 32, borderRadius: 9,
                       background: b.gradient,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
-                      boxShadow: active ? "0 4px 14px rgba(0,0,0,0.30)" : "0 2px 8px rgba(0,0,0,0.20)",
+                      boxShadow: active ? "0 3px 10px rgba(0,0,0,0.25)" : "0 2px 6px rgba(0,0,0,0.18)",
                     }}>
                       <span style={{
-                        fontSize: isNone ? 14 : 13, fontWeight: 800,
+                        fontSize: isNone ? 12 : 11.5, fontWeight: 800,
                         color: "rgba(255,255,255,0.95)",
                         letterSpacing: "0.04em",
                         textShadow: "0 1px 2px rgba(0,0,0,0.25)",
@@ -607,11 +608,19 @@ export default function HubImageGenerator() {
           </div>
         )}
 
-        {/* ── Prompt + controls ─────────────────────────────────── */}
+        {/* ── Two-column workspace: controles à esquerda, preview à direita ── */}
+        <div className="hub-image-workspace" style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 420px) minmax(0, 1fr)",
+          gap: 18,
+          marginBottom: 22,
+          alignItems: "start",
+        }}>
+        {/* ── Prompt + controls (LEFT) ──────────────────────────── */}
         <div style={{
           background: "rgba(255,255,255,0.025)",
           border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: 16, padding: 18, marginBottom: 22,
+          borderRadius: 14, padding: 16,
         }}>
           <p style={SECTION_LABEL}>{t("describe")}</p>
           <textarea
@@ -737,6 +746,8 @@ export default function HubImageGenerator() {
             )}
           </button>
         </div>
+        {/* ── Preview / Verify / Error / Empty (RIGHT) ──────────── */}
+        <div style={{ position: "sticky", top: 84 }}>
 
         {/* ── Verify org card ───────────────────────────────────── */}
         {needsVerify && (
@@ -744,7 +755,6 @@ export default function HubImageGenerator() {
             padding: "20px 22px", borderRadius: 14,
             background: "linear-gradient(135deg, rgba(251,191,36,0.06), rgba(168,85,247,0.06))",
             border: "1px solid rgba(251,191,36,0.30)",
-            marginBottom: 22,
           }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
               <div style={{
@@ -809,7 +819,6 @@ export default function HubImageGenerator() {
             display: "flex", alignItems: "flex-start", gap: 10,
             padding: "12px 16px", borderRadius: 11,
             background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)",
-            marginBottom: 22,
           }}>
             <AlertTriangle size={16} style={{ color: "#f87171", flexShrink: 0, marginTop: 2 }} />
             <p style={{ fontSize: 12.5, color: "rgba(254,226,226,0.95)", margin: 0, lineHeight: 1.6, wordBreak: "break-word" }}>{error}</p>
@@ -821,8 +830,8 @@ export default function HubImageGenerator() {
           <div style={{
             background: "rgba(255,255,255,0.025)",
             border: "1px solid rgba(168,85,247,0.30)",
-            borderRadius: 16, padding: 20, marginBottom: 24,
-            boxShadow: "0 0 60px rgba(168,85,247,0.10)",
+            borderRadius: 14, padding: 16,
+            boxShadow: "0 0 50px rgba(168,85,247,0.10)",
           }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
               <img
@@ -869,6 +878,64 @@ export default function HubImageGenerator() {
             )}
           </div>
         )}
+
+        {/* ── Empty preview placeholder ─────────────────────────── */}
+        {!result && !needsVerify && !error && !loading && (
+          <div style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px dashed rgba(255,255,255,0.10)",
+            borderRadius: 14,
+            minHeight: 360,
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            padding: 32, textAlign: "center", gap: 14,
+          }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: 14,
+              background: "linear-gradient(135deg, rgba(168,85,247,0.18), rgba(236,72,153,0.10))",
+              border: "1px solid rgba(168,85,247,0.20)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Sparkles size={24} style={{ color: "rgba(168,85,247,0.85)" }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.80)", margin: 0 }}>
+                {lang === "pt" ? "Sua criação aparecerá aqui"
+                  : lang === "en" ? "Your creation will appear here"
+                  : lang === "es" ? "Tu creación aparecerá aquí"
+                  : "您的作品将在此处显示"}
+              </p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", margin: "4px 0 0", lineHeight: 1.5, maxWidth: 320 }}>
+                {lang === "pt" ? "Configure os controles à esquerda e clique em Gerar imagem."
+                  : lang === "en" ? "Configure the controls on the left and click Generate image."
+                  : lang === "es" ? "Configura los controles a la izquierda y haz clic en Generar imagen."
+                  : "在左侧配置控件并点击「生成图像」。"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── Loading skeleton enquanto gera ────────────────────── */}
+        {loading && (
+          <div style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(168,85,247,0.20)",
+            borderRadius: 14,
+            minHeight: 360,
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            padding: 32, gap: 12,
+            boxShadow: "0 0 40px rgba(168,85,247,0.08)",
+          }}>
+            <RefreshCw size={28} style={{ color: "#a855f7", animation: "spin 1.2s linear infinite" }} />
+            <p style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.70)", margin: 0 }}>
+              {t("generating")}
+            </p>
+          </div>
+        )}
+
+        </div>{/* /right column */}
+        </div>{/* /workspace grid */}
 
         {/* ── Gallery ───────────────────────────────────────────── */}
         {gallery.length > 0 && (
@@ -939,6 +1006,14 @@ export default function HubImageGenerator() {
           @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+          }
+          @media (max-width: 900px) {
+            .hub-image-workspace {
+              grid-template-columns: 1fr !important;
+            }
+            .hub-image-workspace > div:last-child {
+              position: static !important;
+            }
           }
         `}</style>
       </div>
