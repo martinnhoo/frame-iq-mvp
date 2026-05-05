@@ -30,6 +30,7 @@ import {
   type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { composeImageWithLicense } from "@/lib/composeImageWithLicense";
 
 // ── Strings i18n ─────────────────────────────────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -271,8 +272,20 @@ export default function HubImageGenerator() {
         return;
       }
 
+      // Se tem license ativa, compõe disclaimer no rodapé via Canvas
+      // (modelo de imagem não consegue renderizar 100+ palavras legíveis,
+      // então a única forma confiável é pós-produção). Resultado: data URL.
+      let finalImageUrl = payload.image_url!;
+      if (hasLicense && includeLicense && licenseText.trim()) {
+        try {
+          finalImageUrl = await composeImageWithLicense(payload.image_url!, licenseText.trim());
+        } catch (composeErr) {
+          console.warn("[hub-image] license compose failed, using raw:", composeErr);
+        }
+      }
+
       setResult({
-        image_url: payload.image_url!,
+        image_url: finalImageUrl,
         prompt: prompt.trim(),
         revised_prompt: payload.revised_prompt || prompt.trim(),
         aspect_ratio: aspectRatio,
@@ -280,7 +293,7 @@ export default function HubImageGenerator() {
       });
       setGallery(prev => [{
         id: `tmp-${Date.now()}`,
-        image_url: payload!.image_url!,
+        image_url: finalImageUrl,
         prompt: prompt.trim(),
         aspect_ratio: aspectRatio,
         brand_id: brandId === "none" ? undefined : brandId,

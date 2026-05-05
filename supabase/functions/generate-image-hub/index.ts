@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v10-multimarket-2026-05-05";
+const FN_VERSION = "v11-multimarket-disclaimer-aware-2026-05-05";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -95,9 +95,10 @@ Deno.serve(async (req) => {
     parts.push(userPrompt);
     if (include_license && license_text && license_text.trim()) {
       parts.push(
-        "Reserve a horizontal strip at the bottom of the image (about 12% of total height) " +
-        "as a clean dark area suitable for overlay regulatory disclaimer text in post-production. " +
-        "Do not render the actual disclaimer text inside the image."
+        "IMPORTANT FOR COMPOSITION: Keep the bottom 12% of the image visually clean — " +
+        "no important characters, text, faces or focal elements in this strip. " +
+        "It will be covered by a regulatory disclaimer overlay in post-production. " +
+        "Position main subjects in the upper 88% of the canvas."
       );
     }
     const finalPrompt = parts.join("\n\n").slice(0, 4000);
