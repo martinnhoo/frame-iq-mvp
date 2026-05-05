@@ -24,6 +24,9 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
+import { CustomLogoUpload } from "@/components/dashboard/CustomLogoUpload";
+import { composeImage } from "@/lib/composeImageWithLicense";
+import { saveHubAsset } from "@/lib/saveHubAsset";
 import type { Lang } from "@/data/hubBrands";
 
 const STR: Record<string, Record<Lang, string>> = {
@@ -82,6 +85,8 @@ export default function HubPngGenerator() {
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [quality, setQuality] = useState<"low" | "medium" | "high">("high");
+  const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [includeLogo, setIncludeLogo] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsVerify, setNeedsVerify] = useState(false);
@@ -127,17 +132,41 @@ export default function HubPngGenerator() {
         setError((payload?.message || payload?.error || `HTTP ${r.status}`).slice(0, 400));
         return;
       }
-      setImageUrl(payload.image_url || null);
 
+      let final = payload.image_url || null;
+      // Se tem custom logo, sobrepõe (PNG transparente + logo no canto)
+      if (final && customLogo && includeLogo) {
+        try {
+          final = await composeImage(final, { logoUrl: customLogo, logoPosition: "top-right" });
+        } catch (e) { console.warn("[png] compose failed:", e); }
+      }
+      setImageUrl(final);
+
+      // Persist no DB direto do frontend (RLS-safe)
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        addHubNotification(user?.id, {
-          kind: "image_generated",
-          title: t("notif"),
-          description: prompt.trim().slice(0, 80),
-          href: "/dashboard/hub/library",
-        });
-      } catch {}
+        if (user && final) {
+          await saveHubAsset({
+            userId: user.id,
+            type: "hub_png",
+            content: {
+              prompt: prompt.trim(),
+              image_url: final,
+              aspect_ratio: aspectRatio,
+              quality,
+              model: "gpt-image-2",
+              transparent: true,
+              logo_overlaid: !!(customLogo && includeLogo),
+            },
+          });
+          addHubNotification(user.id, {
+            kind: "image_generated",
+            title: t("notif"),
+            description: prompt.trim().slice(0, 80),
+            href: "/dashboard/hub/library",
+          });
+        }
+      } catch (e) { console.warn("[png] save failed:", e); }
     } catch (e) {
       setError(String(e).slice(0, 300));
     } finally {
@@ -267,6 +296,38 @@ export default function HubPngGenerator() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Logo overlay (custom upload) */}
+            <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+              {customLogo && (
+                <label style={{
+                  display: "inline-flex", alignItems: "center", gap: 10,
+                  padding: "8px 12px", borderRadius: 10,
+                  background: includeLogo ? "rgba(59,130,246,0.08)" : "rgba(17,24,39,0.70)",
+                  border: `1px solid ${includeLogo ? "rgba(59,130,246,0.30)" : "rgba(255,255,255,0.06)"}`,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={includeLogo}
+                    onChange={e => setIncludeLogo(e.target.checked)}
+                    disabled={loading}
+                    style={{ accentColor: "#3B82F6", width: 14, height: 14 }}
+                  />
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 6,
+                    background: "rgba(0,0,0,0.85)", overflow: "hidden",
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  }}>
+                    <img src={customLogo} alt="logo" style={{ width: "82%", height: "82%", objectFit: "contain" }} />
+                  </div>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: "#fff" }}>
+                    {lang === "pt" ? "Logo no canto" : lang === "es" ? "Logo en la esquina" : lang === "zh" ? "角落 logo" : "Corner logo"}
+                  </span>
+                </label>
+              )}
+              <CustomLogoUpload value={customLogo} onChange={setCustomLogo} language={lang} disabled={loading} />
             </div>
 
             <button

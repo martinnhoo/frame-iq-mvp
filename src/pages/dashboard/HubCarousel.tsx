@@ -27,6 +27,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { CustomLogoUpload } from "@/components/dashboard/CustomLogoUpload";
+import { saveHubAssets } from "@/lib/saveHubAsset";
 
 const STR: Record<string, Record<Lang, string>> = {
   back:           { pt: "Voltar ao Hub",    en: "Back to Hub",    es: "Volver al Hub",    zh: "返回中心" },
@@ -109,6 +110,8 @@ export default function HubCarousel() {
   const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
   const [includeLogo, setIncludeLogo] = useState(true);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [includeLicense, setIncludeLicense] = useState(true);
+  const [licenseText, setLicenseText] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +120,11 @@ export default function HubCarousel() {
 
   const brand: HubBrand | null = useMemo(() => getBrand(brandId), [brandId]);
   const effectiveLogoUrl = customLogo || (brand?.logoImage && brand.id !== "none" ? brand.logoImage : null);
+  const defaultLicense = useMemo(() => {
+    if (!brand?.license || !marketCode) return "";
+    return brand.license[marketCode] || "";
+  }, [brand, marketCode]);
+  const hasLicense = !!defaultLicense;
 
   useEffect(() => {
     if (!brand || brand.markets.length === 0) {
@@ -130,6 +138,16 @@ export default function HubCarousel() {
   useEffect(() => {
     if (customLogo) setIncludeLogo(true);
   }, [customLogo]);
+
+  useEffect(() => {
+    if (defaultLicense) {
+      setLicenseText(defaultLicense);
+      setIncludeLicense(true);
+    } else {
+      setLicenseText("");
+      setIncludeLicense(false);
+    }
+  }, [defaultLicense]);
 
   const generate = async () => {
     if (loading) return;
@@ -186,13 +204,15 @@ export default function HubCarousel() {
       }
 
       const raw = payload.scenes || [];
+      const willCompose = (effectiveLogoUrl && includeLogo) || (hasLicense && includeLicense && licenseText.trim());
       let final = raw;
-      if (effectiveLogoUrl && includeLogo) {
+      if (willCompose) {
         final = await Promise.all(raw.map(async s => {
           if (!s.image_url) return s;
           try {
             const composed = await composeImage(s.image_url, {
-              logoUrl: effectiveLogoUrl,
+              logoUrl: effectiveLogoUrl && includeLogo ? effectiveLogoUrl : null,
+              licenseText: hasLicense && includeLicense ? licenseText.trim() : null,
               logoPosition: "top-right",
             });
             return { ...s, image_url: composed };
@@ -203,8 +223,33 @@ export default function HubCarousel() {
 
       try {
         const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const carouselId = `cr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+          await saveHubAssets(final
+            .filter(s => s.image_url)
+            .map(s => ({
+              userId: user.id,
+              type: "hub_carousel",
+              content: {
+                carousel_id: carouselId,
+                slide_n: s.n,
+                slide_count: final.length,
+                prompt: s.prompt,
+                image_url: s.image_url,
+                aspect_ratio: aspectRatio,
+                quality,
+                model: "gpt-image-2",
+                brand_id: brandId === "none" ? null : brandId,
+                market: marketCode || null,
+                script: script.trim(),
+                logo_overlaid: !!(effectiveLogoUrl && includeLogo),
+              },
+            })));
+        }
+
+        const { data: { user: u2 } } = await supabase.auth.getUser();
         const ok = final.filter(s => s.image_url).length;
-        addHubNotification(user?.id, {
+        addHubNotification(u2?.id, {
           kind: "image_generated",
           title: t("notif"),
           description: `${ok} ${t("slide").toLowerCase()}${ok > 1 ? "s" : ""} · ${script.trim().slice(0, 60)}${script.length > 60 ? "…" : ""}`,
@@ -372,6 +417,47 @@ export default function HubCarousel() {
           )}
           <CustomLogoUpload value={customLogo} onChange={setCustomLogo} language={lang} disabled={loading} />
         </div>
+
+        {/* License panel — quando brand+market tem disclaimer regulatório */}
+        {hasLicense && marketCode && (
+          <div style={{
+            marginBottom: 14, padding: 14,
+            borderRadius: 12, background: "rgba(34,197,94,0.04)",
+            border: "1px solid rgba(34,197,94,0.20)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: "#22d399" }}>
+                {lang === "pt" ? "Disclaimer regulatório" : lang === "es" ? "Disclaimer regulatorio" : lang === "zh" ? "监管免责声明" : "Regulatory disclaimer"} · {getMarketLabel(marketCode, lang)}
+              </span>
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12 }}>
+                <input
+                  type="checkbox" checked={includeLicense}
+                  onChange={e => setIncludeLicense(e.target.checked)}
+                  disabled={loading}
+                  style={{ accentColor: "#22d399", width: 14, height: 14 }}
+                />
+                <span style={{ color: "#fff", fontWeight: 600 }}>
+                  {lang === "pt" ? "Incluir em todos os slides" : lang === "es" ? "Incluir en todos los slides" : lang === "zh" ? "在所有幻灯片中包含" : "Include in every slide"}
+                </span>
+              </label>
+            </div>
+            <textarea
+              value={licenseText}
+              onChange={e => setLicenseText(e.target.value)}
+              disabled={loading || !includeLicense}
+              rows={3}
+              style={{
+                width: "100%", boxSizing: "border-box",
+                padding: "10px 12px", borderRadius: 10,
+                background: "rgba(0,0,0,0.30)",
+                border: "1px solid rgba(34,197,94,0.18)",
+                color: includeLicense ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.30)",
+                fontSize: 11.5, lineHeight: 1.55,
+                fontFamily: "inherit", resize: "vertical", outline: "none",
+              }}
+            />
+          </div>
+        )}
 
         {/* Workspace 2-coluna */}
         <div className="hub-carousel-workspace" style={{

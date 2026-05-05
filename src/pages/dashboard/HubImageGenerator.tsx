@@ -33,6 +33,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { addHubNotification } from "@/lib/hubNotifications";
 import { CustomLogoUpload } from "@/components/dashboard/CustomLogoUpload";
+import { saveHubAsset } from "@/lib/saveHubAsset";
 
 // ── Strings i18n ─────────────────────────────────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -302,7 +303,6 @@ export default function HubImageGenerator() {
       // Resultado salvo de volta em creative_memory pra Biblioteca
       // mostrar a versão final.
       let finalImageUrl = payload.image_url!;
-      const memoryId = (payload as { memory_id?: string | null })?.memory_id;
       const willCompose =
         (hasLicense && includeLicense && licenseText.trim()) ||
         (effectiveLogoUrl && includeLogo);
@@ -314,32 +314,36 @@ export default function HubImageGenerator() {
             logoPosition: "top-right",
           });
           finalImageUrl = composedDataUrl;
-
-          // Persiste a versão composta em creative_memory.content.image_url.
-          // Fire-and-forget — se falhar, UI ainda mostra a composta (data URL),
-          // só a Biblioteca futura mostraria a raw.
-          if (memoryId) {
-            (async () => {
-              try {
-                const { data: existing } = await supabase
-                  .from("creative_memory" as never)
-                  .select("content")
-                  .eq("id", memoryId)
-                  .single();
-                const oldContent = ((existing as unknown) as { content?: Record<string, unknown> })?.content || {};
-                await supabase
-                  .from("creative_memory" as never)
-                  .update({ content: { ...oldContent, image_url: composedDataUrl } })
-                  .eq("id", memoryId);
-              } catch (saveErr) {
-                console.warn("[hub-image] composed update failed (non-fatal):", saveErr);
-              }
-            })();
-          }
         } catch (composeErr) {
           console.warn("[hub-image] license compose failed, using raw:", composeErr);
         }
       }
+
+      // Persiste a versão FINAL no creative_memory direto do frontend.
+      // RLS permite (user grava próprias rows). Vai funcionar mesmo se
+      // o INSERT do edge function tiver falhado silenciosamente.
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await saveHubAsset({
+            userId: user.id,
+            type: "hub_image",
+            content: {
+              prompt: prompt.trim(),
+              revised_prompt: payload.revised_prompt || prompt.trim(),
+              image_url: finalImageUrl,
+              aspect_ratio: aspectRatio,
+              quality,
+              model: "gpt-image-2",
+              brand_id: brandId === "none" ? null : brandId,
+              market: marketCode || null,
+              license_included: hasLicense && includeLicense,
+              license_text: hasLicense && includeLicense ? licenseText.trim() : null,
+              logo_overlaid: !!(effectiveLogoUrl && includeLogo),
+            },
+          });
+        }
+      } catch (e) { console.warn("[hub-image] FE save failed:", e); }
 
       setResult({
         image_url: finalImageUrl,
