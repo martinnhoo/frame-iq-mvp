@@ -1,16 +1,19 @@
 /**
- * HubTranscribe — transcreve áudio/vídeo pra texto.
+ * HubTranscribe — transcreve áudio/vídeo pra texto + tradução opcional.
  *
  * Layout 2-coluna estilo novo Hub (azul Adbrief, sem roxo):
- *   LEFT: drag-drop / file picker, status do processamento, botões
- *   RIGHT: textarea com transcrição + copiar/baixar/limpar
+ *   LEFT: drag-drop / file picker, target language selector, status, botão
+ *   RIGHT: textarea com transcrição (+ aba traduzido se aplicável)
  *
  * Pipeline:
- *   1. User sobe arquivo (mp4/mp3/wav/webm/m4a)
+ *   1. User sobe arquivo (mp4/mp3/wav/webm/m4a) e opcionalmente escolhe
+ *      idioma alvo de tradução
  *   2. Se vídeo > MAX_WHISPER_SIZE, extrai áudio no browser via
  *      audioExtractor.ts (lib já existe, usado pelo TranslatePage)
- *   3. POST FormData pra analyze-video com transcribe_only=true
- *   4. Recebe transcript, mostra na coluna direita
+ *   3. POST FormData pra hub-transcribe edge function (Whisper direto +
+ *      Claude Haiku pra tradução opcional)
+ *   4. Recebe { transcript, language, duration, translated_text? } e
+ *      mostra ambos quando há tradução
  *   5. Salva em hub_assets (kind='hub_transcribe') pra Biblioteca
  *
  * i18n total nas 4 línguas (pt/en/es/zh).
@@ -22,7 +25,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Mic, Upload, Copy, Check, Download, ArrowLeft, Sparkles, AlertTriangle,
-  RefreshCw, FileAudio, X,
+  RefreshCw, FileAudio, X, Languages,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
@@ -80,12 +83,37 @@ const STR: Record<string, Record<Lang, string>> = {
                    en: "Session expired — reload.",
                    es: "Sesión expirada — recarga.",
                    zh: "会话已过期 — 请刷新。" },
+  // Tradução
+  translateTo:    { pt: "Traduzir para",       en: "Translate to",         es: "Traducir a",            zh: "翻译为" },
+  translateOff:   { pt: "Sem tradução",        en: "No translation",       es: "Sin traducción",        zh: "不翻译" },
+  translateHint:  { pt: "Whisper detecta o idioma; Claude traduz se você escolher um destino.",
+                   en: "Whisper detects the language; Claude translates if you pick a target.",
+                   es: "Whisper detecta el idioma; Claude traduce si eliges un destino.",
+                   zh: "Whisper 检测语言；如果选择目标语言，Claude 会翻译。" },
+  tabOriginal:    { pt: "Original",            en: "Original",             es: "Original",              zh: "原文" },
+  tabTranslated:  { pt: "Tradução",            en: "Translation",          es: "Traducción",            zh: "翻译" },
+  detectedLang:   { pt: "Idioma detectado",    en: "Detected language",    es: "Idioma detectado",      zh: "检测到的语言" },
+  translating:    { pt: "Traduzindo…",         en: "Translating…",         es: "Traduciendo…",          zh: "翻译中…" },
 };
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const ACCEPT = "audio/*,video/*";
 
-type Step = "idle" | "extracting" | "uploading" | "transcribing" | "done" | "error";
+// Idiomas oferecidos pra tradução. Códigos ISO + label visual nas 4 línguas
+// da UI. Hinglish (hi) é caso especial: usa Latin script (não Devanagari).
+const TARGET_LANGS: Array<{ code: string; flag: string; label: Record<Lang, string> }> = [
+  { code: "pt", flag: "🇧🇷", label: { pt: "Português (BR)", en: "Portuguese (BR)", es: "Portugués (BR)", zh: "葡萄牙语 (巴西)" } },
+  { code: "en", flag: "🇺🇸", label: { pt: "Inglês",         en: "English",        es: "Inglés",         zh: "英语" } },
+  { code: "es", flag: "🇲🇽", label: { pt: "Espanhol",       en: "Spanish",        es: "Español",        zh: "西班牙语" } },
+  { code: "zh", flag: "🇨🇳", label: { pt: "Mandarim",       en: "Mandarin",       es: "Mandarín",       zh: "中文" } },
+  { code: "hi", flag: "🇮🇳", label: { pt: "Hinglish",       en: "Hinglish",       es: "Hinglish",       zh: "印地英语" } },
+  { code: "fr", flag: "🇫🇷", label: { pt: "Francês",        en: "French",         es: "Francés",        zh: "法语" } },
+  { code: "de", flag: "🇩🇪", label: { pt: "Alemão",         en: "German",         es: "Alemán",         zh: "德语" } },
+  { code: "ar", flag: "🇸🇦", label: { pt: "Árabe",          en: "Arabic",         es: "Árabe",          zh: "阿拉伯语" } },
+];
+
+type Step = "idle" | "extracting" | "uploading" | "transcribing" | "translating" | "done" | "error";
+type ResultTab = "original" | "translated";
 
 export default function HubTranscribe() {
   const navigate = useNavigate();
@@ -99,10 +127,15 @@ export default function HubTranscribe() {
   const [step, setStep] = useState<Step>("idle");
   const [progress, setProgress] = useState(0);
   const [transcript, setTranscript] = useState<string>("");
+  const [translated, setTranslated] = useState<string>("");
+  const [detectedLang, setDetectedLang] = useState<string>("");
+  const [targetLang, setTargetLang] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<ResultTab>("original");
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const loading = step === "extracting" || step === "uploading" || step === "transcribing";
+  const loading =
+    step === "extracting" || step === "uploading" || step === "transcribing" || step === "translating";
 
   const handleFile = (f: File) => {
     setError(null);
@@ -110,6 +143,9 @@ export default function HubTranscribe() {
     if (!/(audio|video)/i.test(f.type)) { setError(t("invalidType")); return; }
     setFile(f);
     setTranscript("");
+    setTranslated("");
+    setDetectedLang("");
+    setActiveTab("original");
     setStep("idle");
   };
 
@@ -124,6 +160,8 @@ export default function HubTranscribe() {
     if (!file || loading) return;
     setError(null);
     setTranscript("");
+    setTranslated("");
+    setDetectedLang("");
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -131,7 +169,7 @@ export default function HubTranscribe() {
       const token = sessionData?.session?.access_token;
       if (!token || !user) { setError(t("sessionExpired")); return; }
 
-      // 1. Extrair áudio se vídeo grande
+      // 1. Extrair áudio se vídeo grande (Whisper aceita até ~25MB pós-extração)
       let toSend: File = file;
       if (needsExtraction(file)) {
         setStep("extracting");
@@ -146,18 +184,17 @@ export default function HubTranscribe() {
         }
       }
 
-      // 2. Upload via FormData pra analyze-video
+      // 2. POST pra hub-transcribe (Whisper + opcional Claude pra tradução)
       setStep("uploading");
       setProgress(0);
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const fd = new FormData();
-      fd.append("video_file", toSend);
-      fd.append("user_id", user.id);
-      fd.append("transcribe_only", "true");
+      fd.append("audio_file", toSend);
+      if (targetLang) fd.append("target_language", targetLang);
 
       setStep("transcribing");
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/analyze-video`, {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/hub-transcribe`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -166,7 +203,15 @@ export default function HubTranscribe() {
         body: fd,
       });
       const text = await r.text();
-      let payload: { transcript?: string; error?: string; message?: string; duration?: number } | null = null;
+      let payload: {
+        transcript?: string;
+        language?: string;
+        duration?: number;
+        translated_text?: string | null;
+        translation_target?: string | null;
+        error?: string;
+        message?: string;
+      } | null = null;
       try { payload = JSON.parse(text); } catch {}
 
       if (!r.ok || payload?.error) {
@@ -179,6 +224,14 @@ export default function HubTranscribe() {
       if (!result) { setError("Nenhuma transcrição retornada."); setStep("error"); return; }
 
       setTranscript(result);
+      setDetectedLang(payload?.language || "");
+      const translatedResult = payload?.translated_text || "";
+      if (translatedResult) {
+        setTranslated(translatedResult);
+        setActiveTab("translated");
+      } else {
+        setActiveTab("original");
+      }
       setStep("done");
 
       // 3. Salva em hub_assets
@@ -188,6 +241,9 @@ export default function HubTranscribe() {
           type: "hub_transcribe",
           content: {
             transcript: result,
+            translated_text: translatedResult || null,
+            translation_target: payload?.translation_target || null,
+            language: payload?.language || null,
             source_filename: file.name,
             file_size: file.size,
             file_type: file.type,
@@ -212,26 +268,31 @@ export default function HubTranscribe() {
     }
   };
 
+  const activeText = activeTab === "translated" && translated ? translated : transcript;
+
   const copyTranscript = async () => {
     try {
-      await navigator.clipboard.writeText(transcript);
+      await navigator.clipboard.writeText(activeText);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {}
   };
 
   const downloadTranscript = () => {
-    const blob = new Blob([transcript], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([activeText], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = (file?.name || "transcript").replace(/\.[^.]+$/, "") + ".txt";
+    const base = (file?.name || "transcript").replace(/\.[^.]+$/, "");
+    const suffix = activeTab === "translated" && translated ? `.${targetLang}` : "";
+    a.download = `${base}${suffix}.txt`;
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
   };
 
   const clearAll = () => {
-    setFile(null); setTranscript(""); setStep("idle"); setError(null);
+    setFile(null); setTranscript(""); setTranslated(""); setDetectedLang("");
+    setActiveTab("original"); setStep("idle"); setError(null);
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -349,6 +410,37 @@ export default function HubTranscribe() {
               onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
               style={{ display: "none" }} />
 
+            {/* Target language selector */}
+            <div style={{ marginTop: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                <Languages size={13} style={{ color: "#3B82F6" }} />
+                <p style={{ fontSize: 11.5, color: "#9CA3AF", margin: 0, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  {t("translateTo")}
+                </p>
+              </div>
+              <select
+                value={targetLang}
+                onChange={e => setTargetLang(e.target.value)}
+                disabled={loading}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 9,
+                  background: "rgba(0,0,0,0.30)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  color: "#fff", fontSize: 13, fontFamily: "inherit",
+                  outline: "none", cursor: loading ? "not-allowed" : "pointer",
+                }}>
+                <option value="">— {t("translateOff")} —</option>
+                {TARGET_LANGS.map(l => (
+                  <option key={l.code} value={l.code}>
+                    {l.flag} {l.label[lang]}
+                  </option>
+                ))}
+              </select>
+              <p style={{ fontSize: 10.5, color: "#6B7280", margin: "6px 0 0", lineHeight: 1.4 }}>
+                {t("translateHint")}
+              </p>
+            </div>
+
             {error && (
               <div style={{
                 marginTop: 12,
@@ -377,6 +469,7 @@ export default function HubTranscribe() {
                 <><RefreshCw size={16} style={{ animation: "spin 1s linear infinite" }} />
                   {step === "extracting" ? t("extracting")
                     : step === "uploading" ? t("uploading")
+                    : step === "translating" ? t("translating")
                     : t("transcribing")}
                   {progress > 0 && progress < 100 && step === "extracting" && (
                     <span style={{ fontSize: 11, opacity: 0.85 }}>· {progress}%</span>
@@ -428,6 +521,7 @@ export default function HubTranscribe() {
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#D1D5DB", margin: "12px 0 0" }}>
                   {step === "extracting" ? t("extracting")
                     : step === "uploading" ? t("uploading")
+                    : step === "translating" ? t("translating")
                     : t("transcribing")}
                 </p>
               </div>
@@ -439,9 +533,40 @@ export default function HubTranscribe() {
                 border: "1px solid rgba(59,130,246,0.30)",
                 borderRadius: 14, padding: 16,
               }}>
+                {/* Tabs Original / Translated */}
+                {translated && (
+                  <div style={{
+                    display: "inline-flex", gap: 4, padding: 3,
+                    background: "rgba(0,0,0,0.30)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 9, marginBottom: 12,
+                  }}>
+                    <button onClick={() => setActiveTab("original")} style={tabBtnStyle(activeTab === "original")}>
+                      {t("tabOriginal")}
+                      {detectedLang && (
+                        <span style={{ fontSize: 9.5, opacity: 0.7, marginLeft: 4, textTransform: "uppercase" }}>
+                          · {detectedLang}
+                        </span>
+                      )}
+                    </button>
+                    <button onClick={() => setActiveTab("translated")} style={tabBtnStyle(activeTab === "translated")}>
+                      {t("tabTranslated")}
+                      {targetLang && (
+                        <span style={{ fontSize: 9.5, opacity: 0.7, marginLeft: 4, textTransform: "uppercase" }}>
+                          · {targetLang}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                )}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
                   <p style={{ fontSize: 11.5, color: "#9CA3AF", margin: 0, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                    {transcript.length.toLocaleString()} {t("charCount")}
+                    {activeText.length.toLocaleString()} {t("charCount")}
+                    {!translated && detectedLang && (
+                      <span style={{ marginLeft: 8, color: "#3B82F6", textTransform: "uppercase" }}>
+                        · {detectedLang}
+                      </span>
+                    )}
                   </p>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={copyTranscript} style={ACTION_BTN}>
@@ -457,8 +582,11 @@ export default function HubTranscribe() {
                   </div>
                 </div>
                 <textarea
-                  value={transcript}
-                  onChange={e => setTranscript(e.target.value)}
+                  value={activeText}
+                  onChange={e => {
+                    if (activeTab === "translated") setTranslated(e.target.value);
+                    else setTranscript(e.target.value);
+                  }}
                   rows={18}
                   style={{
                     width: "100%", boxSizing: "border-box",
@@ -493,6 +621,17 @@ const ACTION_BTN: React.CSSProperties = {
   color: "#fff", fontSize: 12, fontWeight: 600,
   cursor: "pointer", fontFamily: "inherit",
 };
+
+function tabBtnStyle(active: boolean): React.CSSProperties {
+  return {
+    padding: "6px 12px", borderRadius: 7,
+    background: active ? "#3B82F6" : "transparent",
+    color: active ? "#fff" : "#9CA3AF",
+    border: "none", fontSize: 11.5, fontWeight: 700,
+    cursor: "pointer", fontFamily: "inherit",
+    letterSpacing: "0.02em",
+  };
+}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return bytes + " B";

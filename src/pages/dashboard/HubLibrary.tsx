@@ -116,6 +116,8 @@ type RawRow = {
     slide_count?: number;
     // Transcribe-specific
     transcript?: string;
+    translated_text?: string;
+    translation_target?: string;
     language?: string;
     source_filename?: string;
     duration?: number;
