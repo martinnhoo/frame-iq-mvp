@@ -31,9 +31,12 @@ export interface HubMarket {
 }
 
 // Filosofia dos promptContext:
-//   - SUBTIL, não nacionalista. NÃO pedir bandeiras, símbolos pátrios,
-//     traje típico, ícones turísticos, "energia carnavalesca", Bollywood,
-//     mariachi, etc. Esses clichês deixam o criativo tosco.
+//   - SUBTIL por DEFAULT, não nacionalista. NÃO empurrar bandeiras,
+//     símbolos pátrios, traje típico, etc por padrão. Esses clichês
+//     deixam o criativo tosco quando aparecem sem pedido.
+//   - MAS: o user prompt SEMPRE vence. Se o user explicitamente pedir
+//     "com bandeira do México", o AI deve atender. Por isso usamos
+//     "Avoid by default... unless the user prompt explicitly requests".
 //   - O QUE importa pra cada market: (a) idioma do texto on-image,
 //     (b) aparência das pessoas se houver pessoas no criativo.
 //   - O resto da estética vem do brand promptHint (cores, vibe), NÃO do
@@ -47,8 +50,10 @@ export const HUB_MARKETS: Record<MarketCode, HubMarket> = {
       "Target market: Brazil. If people appear, they should reflect the diverse Brazilian " +
       "population (mix of skin tones — afro-Brazilian, multiracial, white, indigenous heritage — " +
       "authentic and modern, not stereotyped). Any on-image text in Brazilian Portuguese. " +
-      "Do NOT use national flags, carnival imagery, tropical clichés, or any nationalistic " +
-      "symbols. Keep the creative modern and brand-driven.",
+      "By default avoid national flags, carnival imagery, tropical/jungle clichés, and " +
+      "nationalistic symbols UNLESS the user prompt explicitly requests them — the user's " +
+      "instruction always overrides this default. Otherwise keep the creative modern and " +
+      "brand-driven.",
   },
   MX: {
     code: "MX",
@@ -57,8 +62,10 @@ export const HUB_MARKETS: Record<MarketCode, HubMarket> = {
     promptContext:
       "Target market: Mexico. If people appear, they should reflect the Mexican population " +
       "(mestizo, indigenous and afro-mestizo features, varied skin tones — authentic, modern). " +
-      "Any on-image text in Mexican Spanish. Do NOT use flags, mariachi, sombreros, lucha libre, " +
-      "or other national/cultural clichés. Keep it modern and brand-driven.",
+      "Any on-image text in Mexican Spanish. By default avoid flags, mariachi, sombreros, " +
+      "lucha libre, and other national/cultural clichés UNLESS the user prompt explicitly " +
+      "requests them — the user's instruction always overrides this default. Otherwise keep " +
+      "it modern and brand-driven.",
   },
   CO: {
     code: "CO",
@@ -67,8 +74,9 @@ export const HUB_MARKETS: Record<MarketCode, HubMarket> = {
     promptContext:
       "Target market: Colombia. If people appear, they should reflect the Colombian population " +
       "(mestizo, afro-Colombian, varied features — authentic, modern). Any on-image text in " +
-      "Colombian Spanish. Do NOT use flags, national symbols, or cultural clichés. Keep it " +
-      "modern and brand-driven.",
+      "Colombian Spanish. By default avoid flags, national symbols, and cultural clichés UNLESS " +
+      "the user prompt explicitly requests them — the user's instruction always overrides this " +
+      "default. Otherwise keep it modern and brand-driven.",
   },
   PE: {
     code: "PE",
@@ -77,8 +85,10 @@ export const HUB_MARKETS: Record<MarketCode, HubMarket> = {
     promptContext:
       "Target market: Peru. If people appear, they should reflect the Peruvian population " +
       "(predominantly mestizo, Andean indigenous features common — authentic, not exotic or " +
-      "touristy). Any on-image text in Peruvian Spanish. Do NOT use flags, Andean costumes, " +
-      "llamas, Machu Picchu, or cultural clichés. Keep it modern and brand-driven.",
+      "touristy). Any on-image text in Peruvian Spanish. By default avoid flags, Andean " +
+      "costumes, llamas, Machu Picchu, and cultural clichés UNLESS the user prompt explicitly " +
+      "requests them — the user's instruction always overrides this default. Otherwise keep " +
+      "it modern and brand-driven.",
   },
   US: {
     code: "US",
@@ -87,8 +97,9 @@ export const HUB_MARKETS: Record<MarketCode, HubMarket> = {
     promptContext:
       "Target market: United States. If people appear, they should reflect the diverse US " +
       "population (varied ethnicities, ages — natural and authentic representation). Any " +
-      "on-image text in American English. Do NOT use flags, eagles, or heavy-handed patriotic " +
-      "imagery. Keep it modern and brand-driven.",
+      "on-image text in American English. By default avoid flags, eagles, and heavy-handed " +
+      "patriotic imagery UNLESS the user prompt explicitly requests them — the user's " +
+      "instruction always overrides this default. Otherwise keep it modern and brand-driven.",
   },
   IN: {
     code: "IN",
@@ -99,9 +110,10 @@ export const HUB_MARKETS: Record<MarketCode, HubMarket> = {
       "(South Asian features, varied skin tones from light to dark, modern attire — not " +
       "always traditional). Any on-image text MUST be in HINGLISH (Hindi mixed with English " +
       "written in Latin/Roman script — NEVER Devanagari). Examples: 'Aaj hi khelo aur jeeto " +
-      "big!', 'Apna luck try karo', 'Bonus milega 100% guaranteed'. Do NOT use flags, saris, " +
-      "turbans, Taj Mahal, Bollywood dance, mandalas, henna, or cultural clichés. Keep it " +
-      "modern and brand-driven.",
+      "big!', 'Apna luck try karo', 'Bonus milega 100% guaranteed'. By default avoid flags, " +
+      "saris, turbans, Taj Mahal, Bollywood dance, mandalas, henna, and cultural clichés " +
+      "UNLESS the user prompt explicitly requests them — the user's instruction always " +
+      "overrides this default. Otherwise keep it modern and brand-driven.",
   },
 };
 
