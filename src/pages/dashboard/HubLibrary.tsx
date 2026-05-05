@@ -21,24 +21,29 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Image as ImageIcon, Layers, Clapperboard, GalleryHorizontal,
-  ArrowLeft, Search, Download, X, Sparkles, FolderOpen,
+  ArrowLeft, Search, Download, X, Sparkles, FolderOpen, Mic, FileText, Copy, Check,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 type Lang = "pt" | "en" | "es" | "zh";
-type AssetKind = "image" | "png" | "storyboard" | "carousel";
+type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe";
 
 interface HubAsset {
   id: string;            // group id (memory id pra single, group_id pra storyboard/carousel)
   kind: AssetKind;
   title: string;
   prompt: string;
-  cover_url: string;     // capa (primeira imagem do grupo)
+  cover_url: string;     // capa (primeira imagem do grupo) — vazio pra transcribe
   scene_count?: number;  // pra storyboard/carousel
   scene_thumbs?: string[]; // pra mostrar miniaturas no preview
   aspect_ratio: string;
   created_at: string;
   brand_id?: string;
+  // Transcribe-specific
+  transcript?: string;
+  transcript_language?: string;
+  source_filename?: string;
+  duration_seconds?: number;
 }
 
 const STR: Record<string, Record<Lang, string>> = {
@@ -65,6 +70,7 @@ const STR: Record<string, Record<Lang, string>> = {
   filterPng:   { pt: "PNGs",       en: "PNGs",      es: "PNGs",       zh: "PNG" },
   filterSb:    { pt: "Storyboards",en: "Storyboards",es: "Storyboards",zh: "故事板" },
   filterCar:   { pt: "Carrosséis", en: "Carousels", es: "Carruseles", zh: "轮播" },
+  filterTr:    { pt: "Transcrições",en: "Transcripts",es: "Transcripciones",zh: "转录" },
   scenes:      { pt: "cenas",      en: "scenes",    es: "escenas",    zh: "场景" },
   slides:      { pt: "slides",     en: "slides",    es: "slides",     zh: "幻灯片" },
   download:    { pt: "Baixar",     en: "Download",  es: "Descargar",  zh: "下载" },
@@ -73,6 +79,11 @@ const STR: Record<string, Record<Lang, string>> = {
   pngFor:      { pt: "PNG",        en: "PNG",       es: "PNG",        zh: "PNG" },
   sbFor:       { pt: "Storyboard", en: "Storyboard",es: "Storyboard", zh: "故事板" },
   carFor:      { pt: "Carrossel",  en: "Carousel",  es: "Carrusel",   zh: "轮播" },
+  trFor:       { pt: "Transcrição",en: "Transcript",es: "Transcripción",zh: "转录" },
+  copy:        { pt: "Copiar",     en: "Copy",      es: "Copiar",     zh: "复制" },
+  copied:      { pt: "Copiado",    en: "Copied",    es: "Copiado",    zh: "已复制" },
+  downloadTxt: { pt: "Baixar .txt",en: "Download .txt",es: "Descargar .txt",zh: "下载 .txt" },
+  words:       { pt: "palavras",   en: "words",     es: "palabras",   zh: "字" },
 };
 
 const PERIOD_OPTIONS = [
@@ -103,6 +114,11 @@ type RawRow = {
     slide_n?: number;
     scene_count?: number;
     slide_count?: number;
+    // Transcribe-specific
+    transcript?: string;
+    language?: string;
+    source_filename?: string;
+    duration?: number;
   };
   created_at: string;
 };
@@ -146,6 +162,30 @@ export default function HubLibrary() {
 
         for (const r of rows) {
           const c = r.content || {};
+
+          // Transcribe — sem image_url, mas tem transcript text
+          if (r.kind === "hub_transcribe") {
+            const transcript = (c.transcript || "").trim();
+            if (!transcript) continue;
+            const previewTitle = c.source_filename
+              ? c.source_filename.replace(/\.[^/.]+$/, "").slice(0, 80)
+              : transcript.slice(0, 80);
+            groupedMap.set(r.id, {
+              id: r.id,
+              kind: "transcribe",
+              title: previewTitle,
+              prompt: transcript.slice(0, 300),
+              cover_url: "", // sem cover
+              aspect_ratio: "1:1",
+              created_at: r.created_at,
+              transcript,
+              transcript_language: c.language,
+              source_filename: c.source_filename,
+              duration_seconds: c.duration,
+            });
+            continue;
+          }
+
           const url = c.image_url;
           if (!url) continue;
 
@@ -218,7 +258,7 @@ export default function HubLibrary() {
   }, [assets, kindFilter, search]);
 
   const counts = useMemo(() => {
-    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0 };
+    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0, transcribe: 0 };
     for (const a of assets) c[a.kind]++;
     return c;
   }, [assets]);
@@ -314,6 +354,11 @@ export default function HubLibrary() {
             label={t("filterCar")} icon={GalleryHorizontal}
             onClick={() => setKindFilter("carousel")}
           />
+          <KindChip
+            active={kindFilter === "transcribe"} count={counts.transcribe}
+            label={t("filterTr")} icon={Mic}
+            onClick={() => setKindFilter("transcribe")}
+          />
         </div>
 
         {loading ? (
@@ -381,13 +426,17 @@ function AssetCard({ asset, lang, t, onClick }: {
   const KindIcon = asset.kind === "png" ? Layers
     : asset.kind === "storyboard" ? Clapperboard
     : asset.kind === "carousel" ? GalleryHorizontal
+    : asset.kind === "transcribe" ? Mic
     : ImageIcon;
   const kindLabel = asset.kind === "png" ? t("pngFor")
     : asset.kind === "storyboard" ? t("sbFor")
     : asset.kind === "carousel" ? t("carFor")
+    : asset.kind === "transcribe" ? t("trFor")
     : t("imageFor");
   const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
+  const isTranscribe = asset.kind === "transcribe";
   const countLabel = asset.kind === "storyboard" ? t("scenes") : t("slides");
+  const wordCount = isTranscribe ? (asset.transcript || "").trim().split(/\s+/).filter(Boolean).length : 0;
 
   return (
     <button
@@ -412,16 +461,39 @@ function AssetCard({ asset, lang, t, onClick }: {
       }}
     >
       <div style={{ position: "relative" }}>
-        <img
-          src={asset.cover_url} alt={asset.title}
-          style={{
-            width: "100%",
-            aspectRatio: asset.aspect_ratio === "9:16" || asset.aspect_ratio === "1024x1536" ? "9/16"
-              : asset.aspect_ratio === "16:9" || asset.aspect_ratio === "1536x1024" ? "16/9"
-              : "1/1",
-            objectFit: "cover", display: "block",
-          }}
-        />
+        {isTranscribe ? (
+          // Transcribe — sem imagem, mostra área cinza com ícone + preview de texto
+          <div style={{
+            width: "100%", aspectRatio: "1/1",
+            background: "linear-gradient(180deg, rgba(59,130,246,0.10), rgba(59,130,246,0.02))",
+            display: "flex", flexDirection: "column",
+            padding: "32px 16px 18px",
+            position: "relative",
+          }}>
+            <FileText size={28} style={{ color: "rgba(59,130,246,0.50)", marginBottom: 12 }} />
+            <p style={{
+              fontSize: 11.5, color: "#D1D5DB", lineHeight: 1.5, margin: 0,
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 7,
+              WebkitBoxOrient: "vertical",
+              fontStyle: "italic",
+            }}>
+              "{(asset.transcript || "").slice(0, 240)}{(asset.transcript || "").length > 240 ? "…" : ""}"
+            </p>
+          </div>
+        ) : (
+          <img
+            src={asset.cover_url} alt={asset.title}
+            style={{
+              width: "100%",
+              aspectRatio: asset.aspect_ratio === "9:16" || asset.aspect_ratio === "1024x1536" ? "9/16"
+                : asset.aspect_ratio === "16:9" || asset.aspect_ratio === "1536x1024" ? "16/9"
+                : "1/1",
+              objectFit: "cover", display: "block",
+            }}
+          />
+        )}
         {/* Type badge top-left */}
         <div style={{
           position: "absolute", top: 8, left: 8,
@@ -469,6 +541,12 @@ function AssetCard({ asset, lang, t, onClick }: {
               <span>{asset.scene_count} {countLabel}</span>
             </>
           )}
+          {isTranscribe && wordCount > 0 && (
+            <>
+              <span>·</span>
+              <span>{wordCount} {t("words")}</span>
+            </>
+          )}
         </div>
       </div>
     </button>
@@ -497,7 +575,9 @@ function PreviewModal({ asset, onClose, lang, t }: {
   t: (key: keyof typeof STR) => string;
 }) {
   const [groupItems, setGroupItems] = useState<{ url: string; n: number }[]>([]);
+  const [copied, setCopied] = useState(false);
   const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
+  const isTranscribe = asset.kind === "transcribe";
 
   useEffect(() => {
     if (!isGroup) return;
@@ -573,6 +653,7 @@ function PreviewModal({ asset, onClose, lang, t }: {
               {asset.kind === "png" ? t("pngFor")
                 : asset.kind === "storyboard" ? t("sbFor")
                 : asset.kind === "carousel" ? t("carFor")
+                : asset.kind === "transcribe" ? t("trFor")
                 : t("imageFor")}
             </span>
             <span style={{ fontSize: 11, color: "#9CA3AF" }}>· {relativeDate(asset.created_at, lang)}</span>
@@ -598,7 +679,76 @@ function PreviewModal({ asset, onClose, lang, t }: {
         </div>
 
         <div style={{ padding: 20 }}>
-          {!isGroup ? (
+          {isTranscribe ? (
+            <>
+              <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap", fontSize: 11.5, color: "#9CA3AF" }}>
+                {asset.source_filename && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <FileText size={12} /> {asset.source_filename}
+                  </span>
+                )}
+                {asset.transcript_language && (
+                  <span style={{ textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700, color: "#3B82F6" }}>
+                    {asset.transcript_language}
+                  </span>
+                )}
+                {typeof asset.duration_seconds === "number" && asset.duration_seconds > 0 && (
+                  <span>{formatDuration(asset.duration_seconds)}</span>
+                )}
+                <span>{(asset.transcript || "").trim().split(/\s+/).filter(Boolean).length} {t("words")}</span>
+              </div>
+              <div style={{
+                fontSize: 13.5, color: "#E5E7EB", lineHeight: 1.7,
+                padding: "16px 18px", background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 10, maxHeight: "55vh", overflow: "auto",
+                whiteSpace: "pre-wrap", marginBottom: 16,
+                fontFamily: "inherit",
+              }}>
+                {asset.transcript || "—"}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(asset.transcript || "").then(() => {
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 1500);
+                    }).catch(() => {});
+                  }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "9px 14px", borderRadius: 9,
+                    background: copied ? "rgba(34,197,94,0.20)" : "#3B82F6",
+                    color: "#fff", border: "none", fontSize: 13, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}>
+                  {copied ? <><Check size={14} /> {t("copied")}</> : <><Copy size={14} /> {t("copy")}</>}
+                </button>
+                <button
+                  onClick={() => {
+                    const blob = new Blob([asset.transcript || ""], { type: "text/plain;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    const base = asset.source_filename
+                      ? asset.source_filename.replace(/\.[^/.]+$/, "")
+                      : `transcript-${asset.id.slice(0, 8)}`;
+                    a.download = `${base}.txt`;
+                    document.body.appendChild(a); a.click(); a.remove();
+                    URL.revokeObjectURL(url);
+                  }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "9px 14px", borderRadius: 9,
+                    background: "rgba(255,255,255,0.06)", color: "#fff",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                  }}>
+                  <Download size={14} /> {t("downloadTxt")}
+                </button>
+              </div>
+            </>
+          ) : !isGroup ? (
             <>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
                 <img src={asset.cover_url} alt={asset.title}
@@ -670,6 +820,13 @@ function PreviewModal({ asset, onClose, lang, t }: {
       </div>
     </div>
   );
+}
+
+function formatDuration(secs: number): string {
+  const total = Math.max(0, Math.round(secs));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 function relativeDate(iso: string, lang: Lang): string {

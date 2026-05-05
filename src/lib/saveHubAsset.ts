@@ -19,7 +19,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export type HubAssetType = "hub_image" | "hub_png" | "hub_storyboard" | "hub_carousel";
+export type HubAssetType = "hub_image" | "hub_png" | "hub_storyboard" | "hub_carousel" | "hub_transcribe";
 
 export interface SaveHubAssetInput {
   userId: string;

@@ -145,7 +145,7 @@ export default function BrilliantHub() {
       btn: lang === "pt" ? "Criar carrossel" : lang === "es" ? "Crear carrusel" : lang === "zh" ? "创建轮播" : "Create carousel",
       icon: GalleryHorizontal, route: "/dashboard/hub/carousel" },
     { id: "transcribe", title: t("transcribe"), desc: t("transcribeDesc"), btn: t("transcribeBtn"),
-      icon: Mic, soon: true },
+      icon: Mic, route: "/dashboard/hub/transcribe" },
     { id: "ab", title: t("abVar"), desc: t("abVarDesc"), btn: t("abVarBtn"),
       icon: GitBranch, soon: true },
     { id: "analytics", title: t("analytics"), desc: t("analyticsDesc"), btn: t("analyticsBtn"),
