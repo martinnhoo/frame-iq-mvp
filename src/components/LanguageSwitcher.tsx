@@ -7,6 +7,7 @@ const languages: { code: Language; label: string }[] = [
   { code: "en", label: "EN" },
   { code: "pt", label: "PT" },
   { code: "es", label: "ES" },
+  { code: "zh", label: "中文" },
 ];
 
 const LanguageSwitcher = ({ direction = "auto" }: { direction?: "up" | "down" | "auto" }) => {

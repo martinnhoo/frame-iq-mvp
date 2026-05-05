@@ -95,7 +95,7 @@ const Login = () => {
         />
       ))}
 
-      <div className="absolute top-4 right-4 z-10">
+      <div className="fixed top-4 right-4 z-50" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
         <LanguageSwitcher />
       </div>
       

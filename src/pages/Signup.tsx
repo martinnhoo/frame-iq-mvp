@@ -117,7 +117,10 @@ const Signup = () => {
       {/* Animated grid */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
-      <div className="absolute top-4 right-4 z-10">
+      {/* fixed em vez de absolute — no mobile o form é maior que o
+          viewport e o ancestral 'absolute' deixava o switcher fora
+          da tela. fixed mantém top-right do viewport sempre. */}
+      <div className="fixed top-4 right-4 z-50" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
         <LanguageSwitcher />
       </div>
 
