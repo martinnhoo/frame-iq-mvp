@@ -124,6 +124,18 @@ export const HUB_BRANDS: HubBrand[] = [
       "premium gaming atmosphere with celebratory mood.",
   },
   {
+    id: "come",
+    name: "COME.COM",
+    markets: ["BR", "MX", "CO", "PE"],
+    gradient: "linear-gradient(135deg, #06B6D4, #3B82F6)",
+    logoInitials: "CC",
+    logoImage: "/brand-logos/come.com-logo.png",
+    promptHint:
+      "COME.COM branding context: Latin American online casino brand with modern digital aesthetic. " +
+      "Visual style: cyan and electric blue accents, contemporary tech-forward look, " +
+      "clean and confident gaming atmosphere.",
+  },
+  {
     id: "funilive",
     name: "FUNILIVE",
     markets: ["BR", "MX", "US"],

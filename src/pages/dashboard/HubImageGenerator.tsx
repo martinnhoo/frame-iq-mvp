@@ -203,10 +203,10 @@ export default function HubImageGenerator() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        const { data } = await supabase.from("creative_memory" as never)
+        const { data } = await supabase.from("hub_assets" as never)
           .select("id, content, created_at")
           .eq("user_id", user.id)
-          .eq("type", "hub_image")
+          .eq("kind", "hub_image")
           .order("created_at", { ascending: false })
           .limit(12);
         if (!mounted || !data) return;

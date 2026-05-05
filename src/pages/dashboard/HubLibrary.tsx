@@ -91,7 +91,7 @@ const PERIOD_LABELS: Record<string, Record<Lang, string>> = {
 
 type RawRow = {
   id: string;
-  type: string;
+  kind: string;
   content?: {
     image_url?: string;
     prompt?: string;
@@ -131,10 +131,9 @@ export default function HubLibrary() {
         const days = PERIOD_OPTIONS.find(p => p.id === period)!.days;
         const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
-        const { data } = await supabase.from("creative_memory" as never)
-          .select("id, type, content, created_at")
+        const { data } = await supabase.from("hub_assets" as never)
+          .select("id, kind, content, created_at")
           .eq("user_id", user.id)
-          .like("type", "hub_%")
           .gte("created_at", since)
           .order("created_at", { ascending: false })
           .limit(500);
@@ -151,9 +150,9 @@ export default function HubLibrary() {
           if (!url) continue;
 
           let kind: AssetKind = "image";
-          if (r.type === "hub_png") kind = "png";
-          else if (r.type === "hub_storyboard") kind = "storyboard";
-          else if (r.type === "hub_carousel") kind = "carousel";
+          if (r.kind === "hub_png") kind = "png";
+          else if (r.kind === "hub_storyboard") kind = "storyboard";
+          else if (r.kind === "hub_carousel") kind = "carousel";
 
           if (kind === "storyboard" || kind === "carousel") {
             const groupKey = (kind === "storyboard" ? c.storyboard_id : c.carousel_id) || r.id;
@@ -509,10 +508,10 @@ function PreviewModal({ asset, onClose, lang, t }: {
         if (!user) return;
         const groupField = asset.kind === "storyboard" ? "storyboard_id" : "carousel_id";
         const sceneField = asset.kind === "storyboard" ? "scene_n" : "slide_n";
-        const { data } = await supabase.from("creative_memory" as never)
+        const { data } = await supabase.from("hub_assets" as never)
           .select("content")
           .eq("user_id", user.id)
-          .eq("type", asset.kind === "storyboard" ? "hub_storyboard" : "hub_carousel")
+          .eq("kind", asset.kind === "storyboard" ? "hub_storyboard" : "hub_carousel")
           .order("created_at", { ascending: false })
           .limit(50);
         if (!mounted || !data) return;

@@ -1,18 +1,20 @@
 /**
- * saveHubAsset — persiste asset gerado em creative_memory direto do
+ * saveHubAsset — persiste asset gerado em hub_assets direto do
  * frontend (RLS permite usuário gravar próprias linhas).
  *
- * Por que daqui: o edge function tava falhando silenciosamente no
- * INSERT (provável tamanho de payload ou algum trigger). Saving from
- * the FE garante a row, sem depender de service-role do server.
+ * IMPORTANTE: usa tabela DEDICADA `hub_assets` (não creative_memory).
+ * creative_memory é da feature de Meta Ads analytics — tem schema
+ * rígido (hook_type, platform, market, ctr, roas, etc.) sem coluna
+ * `type` nem `content`. Tentar escrever lá falhava silenciosamente
+ * com "column type does not exist".
  *
- * Tipos de asset suportados:
+ * Tipos de asset suportados (campo `kind`):
  *   - hub_image     → Image Studio
  *   - hub_png       → PNG generator
  *   - hub_storyboard → Storyboard (uma row por cena, agrupadas por
- *                      storyboard_id)
+ *                      content.storyboard_id)
  *   - hub_carousel  → Carousel (uma row por slide, agrupadas por
- *                      carousel_id)
+ *                      content.carousel_id)
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -22,19 +24,18 @@ export type HubAssetType = "hub_image" | "hub_png" | "hub_storyboard" | "hub_car
 export interface SaveHubAssetInput {
   userId: string;
   type: HubAssetType;
-  /** Payload completo (vai dentro de creative_memory.content as jsonb). */
+  /** Payload completo (vai dentro de hub_assets.content as jsonb). */
   content: Record<string, unknown>;
 }
 
 export async function saveHubAsset(input: SaveHubAssetInput): Promise<{ ok: boolean; id?: string; error?: string }> {
   try {
     const { data, error } = await supabase
-      .from("creative_memory" as never)
+      .from("hub_assets" as never)
       .insert({
         user_id: input.userId,
-        type: input.type,
+        kind: input.type,
         content: input.content,
-        created_at: new Date().toISOString(),
       } as never)
       .select("id")
       .single();
@@ -55,12 +56,11 @@ export async function saveHubAssets(rows: SaveHubAssetInput[]): Promise<{ ok: bo
   try {
     const payload = rows.map(r => ({
       user_id: r.userId,
-      type: r.type,
+      kind: r.type,
       content: r.content,
-      created_at: new Date().toISOString(),
     }));
     const { error } = await supabase
-      .from("creative_memory" as never)
+      .from("hub_assets" as never)
       .insert(payload as never);
     if (error) {
       console.warn("[saveHubAssets] error:", error.message, error);

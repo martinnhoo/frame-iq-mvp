@@ -113,10 +113,9 @@ export default function BrilliantHub() {
 
         // Conta assets do Hub — usado pro empty state + counter na Biblioteca.
         const { count } = await supabase
-          .from("creative_memory" as never)
+          .from("hub_assets" as never)
           .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .like("type", "hub_%");
+          .eq("user_id", user.id);
         if (mounted) setAssetCount(count || 0);
       } catch { /* silent */ }
     })();
