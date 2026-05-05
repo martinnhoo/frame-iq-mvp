@@ -257,7 +257,7 @@ export default function HubImageGenerator() {
       let payload: {
         ok?: boolean; _v?: string; openai_message?: string; message?: string;
         error?: string; image_url?: string; revised_prompt?: string;
-        model_used?: string;
+        model_used?: string; memory_id?: string | null; storage_path?: string | null;
       } | null = null;
       try { payload = JSON.parse(text); } catch { /* not json */ }
 
@@ -272,13 +272,49 @@ export default function HubImageGenerator() {
         return;
       }
 
-      // Se tem license ativa, compõe disclaimer no rodapé via Canvas
-      // (modelo de imagem não consegue renderizar 100+ palavras legíveis,
-      // então a única forma confiável é pós-produção). Resultado: data URL.
+      // Se tem license ativa, compõe disclaimer no rodapé via Canvas.
+      // Depois de compor, sobe a versão final pro Storage e atualiza
+      // o registro do creative_memory pra Biblioteca mostrar a versão
+      // com disclaimer (não a raw).
       let finalImageUrl = payload.image_url!;
+      const memoryId = (payload as { memory_id?: string | null })?.memory_id;
       if (hasLicense && includeLicense && licenseText.trim()) {
         try {
-          finalImageUrl = await composeImageWithLicense(payload.image_url!, licenseText.trim());
+          const composedDataUrl = await composeImageWithLicense(payload.image_url!, licenseText.trim());
+          finalImageUrl = composedDataUrl;
+
+          // Sobe a composta pro Storage (URL permanente) e atualiza
+          // creative_memory.image_url. Fire-and-forget — se falhar,
+          // a UI ainda mostra a versão composta (data URL), só a
+          // Biblioteca futura mostraria a raw.
+          (async () => {
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (!user || !memoryId) return;
+              const blob = await (await fetch(composedDataUrl)).blob();
+              const path = `${user.id}/${Date.now()}-composed.png`;
+              const { error: upErr } = await supabase.storage
+                .from("hub-images")
+                .upload(path, blob, { contentType: "image/png" });
+              if (upErr) { console.warn("[hub-image] composed upload failed:", upErr.message); return; }
+              const { data: pub } = supabase.storage.from("hub-images").getPublicUrl(path);
+              const composedPublicUrl = pub?.publicUrl;
+              if (!composedPublicUrl) return;
+              // Update memory record's content.image_url
+              const { data: existing } = await supabase
+                .from("creative_memory" as never)
+                .select("content")
+                .eq("id", memoryId)
+                .single();
+              const oldContent = ((existing as unknown) as { content?: Record<string, unknown> })?.content || {};
+              await supabase
+                .from("creative_memory" as never)
+                .update({ content: { ...oldContent, image_url: composedPublicUrl, composed_storage_path: path } })
+                .eq("id", memoryId);
+            } catch (saveErr) {
+              console.warn("[hub-image] composed save failed (non-fatal):", saveErr);
+            }
+          })();
         } catch (composeErr) {
           console.warn("[hub-image] license compose failed, using raw:", composeErr);
         }

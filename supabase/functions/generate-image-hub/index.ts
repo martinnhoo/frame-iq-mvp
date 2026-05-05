@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v11-multimarket-disclaimer-aware-2026-05-05";
+const FN_VERSION = "v12-storage-permanent-2026-05-05";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -177,11 +177,11 @@ Deno.serve(async (req) => {
 
     const data = await r.json();
     const imgData = data?.data?.[0];
-    const imageUrl: string | null = imgData?.url
-      || (imgData?.b64_json ? `data:image/png;base64,${imgData.b64_json}` : null);
+    const tempImageUrl: string | null = imgData?.url || null;
+    const b64: string | null = imgData?.b64_json || null;
     const revisedPrompt = imgData?.revised_prompt || userPrompt;
 
-    if (!imageUrl) {
+    if (!tempImageUrl && !b64) {
       console.error("[hub-image] no image in response");
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: "no_image_returned",
@@ -189,35 +189,103 @@ Deno.serve(async (req) => {
       }, 502);
     }
 
-    // Persiste na biblioteca
+    // ── Upload pro Storage (URL permanente) ─────────────────────────
+    // OpenAI retorna URL temporária (~1h). Pra Biblioteca conseguir
+    // mostrar depois disso, baixa os bytes e sobe pro bucket.
+    let permanentUrl: string | null = null;
+    let storagePath: string | null = null;
     try {
-      await sb.from("creative_memory").insert({
-        user_id: authUser.id,
-        type: "hub_image",
-        content: {
-          prompt: userPrompt,
-          revised_prompt: revisedPrompt,
-          final_prompt: finalPrompt,
-          image_url: imageUrl,
-          aspect_ratio, size, quality,
-          model: "gpt-image-2",
-          brand_id: brand_id || null,
-          market: market || null,
-          license_included: include_license,
-          license_text: include_license ? license_text : null,
-        },
-        created_at: new Date().toISOString(),
-      });
-    } catch (dbErr) {
-      console.warn("[hub-image] DB insert failed (non-fatal):", dbErr);
+      let imageBytes: Uint8Array | null = null;
+      if (b64) {
+        // Decode base64 inline
+        const binary = atob(b64);
+        imageBytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) imageBytes[i] = binary.charCodeAt(i);
+      } else if (tempImageUrl) {
+        const imgRes = await fetch(tempImageUrl);
+        if (imgRes.ok) {
+          const buf = await imgRes.arrayBuffer();
+          imageBytes = new Uint8Array(buf);
+        } else {
+          console.error("[hub-image] failed to fetch from openai url:", imgRes.status);
+        }
+      }
+
+      if (imageBytes) {
+        const ts = Date.now();
+        const rand = Math.random().toString(36).slice(2, 8);
+        storagePath = `${authUser.id}/${ts}-${rand}-raw.png`;
+        const { error: uploadErr } = await sb.storage
+          .from("hub-images")
+          .upload(storagePath, imageBytes, {
+            contentType: "image/png",
+            upsert: false,
+          });
+        if (uploadErr) {
+          console.error("[hub-image] storage upload error:", uploadErr.message);
+          storagePath = null;
+        } else {
+          const { data: pub } = sb.storage.from("hub-images").getPublicUrl(storagePath);
+          permanentUrl = pub?.publicUrl || null;
+        }
+      }
+    } catch (storageErr) {
+      console.error("[hub-image] storage error:", storageErr);
     }
 
-    console.log("[hub-image] success — gpt-image-2");
+    // Fallback: se upload falhou, ainda retorna a URL/b64 da OpenAI
+    // (UI mostra agora; só não vai sobreviver na biblioteca depois de 1h)
+    const finalImageUrl = permanentUrl
+      || tempImageUrl
+      || (b64 ? `data:image/png;base64,${b64}` : null);
+    if (!finalImageUrl) {
+      return jsonResponse({
+        _v: FN_VERSION, ok: false, error: "no_image_returned",
+        message: "Nenhuma URL de imagem disponível.",
+      }, 502);
+    }
+
+    // ── Persiste na biblioteca com URL permanente ───────────────────
+    let memoryId: string | null = null;
+    try {
+      const { data: inserted, error: dbErr } = await sb.from("creative_memory")
+        .insert({
+          user_id: authUser.id,
+          type: "hub_image",
+          content: {
+            prompt: userPrompt,
+            revised_prompt: revisedPrompt,
+            final_prompt: finalPrompt,
+            image_url: finalImageUrl,
+            storage_path: storagePath,
+            aspect_ratio, size, quality,
+            model: "gpt-image-2",
+            brand_id: brand_id || null,
+            market: market || null,
+            license_included: include_license,
+            license_text: include_license ? license_text : null,
+          },
+          created_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+      if (dbErr) {
+        console.warn("[hub-image] DB insert failed (non-fatal):", dbErr.message);
+      } else {
+        memoryId = inserted?.id || null;
+      }
+    } catch (dbErr) {
+      console.warn("[hub-image] DB insert exception (non-fatal):", dbErr);
+    }
+
+    console.log(`[hub-image] success — model=gpt-image-2 storage=${!!permanentUrl} memory_id=${memoryId}`);
 
     return jsonResponse({
       _v: FN_VERSION,
       ok: true,
-      image_url: imageUrl,
+      image_url: finalImageUrl,
+      storage_path: storagePath,
+      memory_id: memoryId,
       prompt: userPrompt,
       revised_prompt: revisedPrompt,
       final_prompt: finalPrompt,
