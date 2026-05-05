@@ -403,9 +403,9 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
       setGlobalLanguage(lang as Lang, true);
       setSaved(true);
       setTimeout(() => setSaved(false), 2200);
-      toast.success(language === "pt" ? "Salvo!" : "Saved!");
+      toast.success(language === "pt" ? "Salvo!" : language === "es" ? "¡Guardado!" : language === "zh" ? "已保存！" : "Saved!");
     } else {
-      toast.error(language === "pt" ? "Erro ao salvar" : "Failed to save");
+      toast.error(language === "pt" ? "Erro ao salvar" : language === "es" ? "Error al guardar" : language === "zh" ? "保存失败" : "Failed to save");
     }
     setSaving(false);
   };
@@ -498,10 +498,10 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
   const ALL_TABS = [
-    { id: "profile",      label: language === "pt" ? "Perfil"        : language === "es" ? "Perfil"        : "Profile",      icon: User },
-    { id: "intelligence", label: language === "pt" ? "Inteligência"  : language === "es" ? "Inteligencia"  : "Intelligence", icon: Zap },
-    { id: "plan",         label: language === "pt" ? "Plano"         : language === "es" ? "Plan"           : "Plan",         icon: CreditCard },
-    { id: "security",     label: language === "pt" ? "Segurança"     : language === "es" ? "Seguridad"      : "Security",     icon: Shield },
+    { id: "profile",      label: language === "pt" ? "Perfil"        : language === "es" ? "Perfil"        : language === "zh" ? "档案"     : "Profile",      icon: User },
+    { id: "intelligence", label: language === "pt" ? "Inteligência"  : language === "es" ? "Inteligencia"  : language === "zh" ? "情报"     : "Intelligence", icon: Zap },
+    { id: "plan",         label: language === "pt" ? "Plano"         : language === "es" ? "Plan"          : language === "zh" ? "套餐"     : "Plan",         icon: CreditCard },
+    { id: "security",     label: language === "pt" ? "Segurança"     : language === "es" ? "Seguridad"     : language === "zh" ? "安全"     : "Security",     icon: Shield },
   ];
   // Em Hub mode, esconde Inteligência (feature do AdBrief) e Plano (não
   // tem plano em ferramenta interna). Sobra só Perfil + Segurança.
@@ -581,8 +581,8 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
           {tab === "profile" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
-                <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Nome" : language === "es" ? "Nombre" : "Name"}</label>
-                <input value={name} onChange={e => setName(e.target.value)} placeholder={language === "pt" ? "Seu nome" : language === "es" ? "Tu nombre" : "Your name"}
+                <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(238,240,246,0.35)", letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 6 }}>{language === "pt" ? "Nome" : language === "es" ? "Nombre" : language === "zh" ? "姓名" : "Name"}</label>
+                <input value={name} onChange={e => setName(e.target.value)} placeholder={language === "pt" ? "Seu nome" : language === "es" ? "Tu nombre" : language === "zh" ? "您的姓名" : "Your name"}
                   style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "#1a2032", border: "1px solid rgba(255,255,255,0.10)", color: "#eef0f6", fontFamily: M, fontSize: 13, outline: "none", boxSizing: "border-box" as const }}
                   onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; }} onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)"; }} />
               </div>
@@ -603,11 +603,15 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               <button onClick={handleSave} disabled={saving}
                 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px 20px", borderRadius: 10, background: saved ? "#34d399" : "#0ea5e9", border: "none", cursor: saving ? "not-allowed" : "pointer", fontFamily: F, fontSize: 13, fontWeight: 700, color: "#fff", opacity: saving ? 0.7 : 1 }}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-                {saving ? (language === "pt" ? "Salvando..." : "Saving...") : saved ? (language === "pt" ? "Salvo!" : "Saved!") : (language === "pt" ? "Salvar alterações" : language === "es" ? "Guardar cambios" : "Save changes")}
+                {saving
+                  ? (language === "pt" ? "Salvando..." : language === "es" ? "Guardando..." : language === "zh" ? "保存中..." : "Saving...")
+                  : saved
+                    ? (language === "pt" ? "Salvo!" : language === "es" ? "¡Guardado!" : language === "zh" ? "已保存！" : "Saved!")
+                    : (language === "pt" ? "Salvar alterações" : language === "es" ? "Guardar cambios" : language === "zh" ? "保存更改" : "Save changes")}
               </button>
               <button onClick={async () => { queryClient.clear(); await supabase.auth.signOut(); window.location.href = "/"; }}
                 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 20px", borderRadius: 10, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.20)", cursor: "pointer", fontFamily: M, fontSize: 13, fontWeight: 600, color: "#f87171" }}>
-                <LogOut className="h-4 w-4" />{language === "pt" ? "Sair da conta" : language === "es" ? "Cerrar sesión" : "Sign out"}
+                <LogOut className="h-4 w-4" />{language === "pt" ? "Sair da conta" : language === "es" ? "Cerrar sesión" : language === "zh" ? "退出登录" : "Sign out"}
               </button>
             </div>
           )}
@@ -996,15 +1000,19 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ padding: "18px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
                 <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#eef0f6", marginBottom: 6 }}>
-                  {language==="pt"?"Redefinir senha":language==="es"?"Restablecer contraseña":"Reset password"}
+                  {language==="pt"?"Redefinir senha":language==="es"?"Restablecer contraseña":language==="zh"?"重置密码":"Reset password"}
                 </p>
                 <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.42)", lineHeight: 1.6, marginBottom: 14 }}>
-                  {language==="pt"?"Enviaremos um link para o seu email para redefinir a senha.":language==="es"?"Enviaremos un enlace a tu correo para restablecer la contraseña.":"We'll send a link to your email to reset your password."}
+                  {language==="pt"?"Enviaremos um link para o seu email para redefinir a senha.":language==="es"?"Enviaremos un enlace a tu correo para restablecer la contraseña.":language==="zh"?"我们将向您的邮箱发送重置密码的链接。":"We'll send a link to your email to reset your password."}
                 </p>
-                <button onClick={async () => { await supabase.auth.resetPasswordForEmail(user.email || ""); toast.success(language==="pt"?"Link enviado para "+user.email:"Link sent to "+user.email); }}
+                <button onClick={async () => {
+                  await supabase.auth.resetPasswordForEmail(user.email || "");
+                  const sent = language==="pt"?"Link enviado para ":language==="es"?"Enlace enviado a ":language==="zh"?"链接已发送至 ":"Link sent to ";
+                  toast.success(sent + user.email);
+                }}
                   style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "11px", borderRadius: 10, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", fontFamily: F, fontSize: 13, fontWeight: 600, color: "#eef0f6" }}>
                   <Shield className="h-4 w-4" />
-                  {language==="pt"?"Enviar link de redefinição":language==="es"?"Enviar enlace de restablecimiento":"Send reset link"}
+                  {language==="pt"?"Enviar link de redefinição":language==="es"?"Enviar enlace de restablecimiento":language==="zh"?"发送重置链接":"Send reset link"}
                 </button>
               </div>
             </div>
