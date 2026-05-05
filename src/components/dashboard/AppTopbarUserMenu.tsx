@@ -14,7 +14,7 @@
  * don't find it. Topbar is the canonical place.
  */
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Settings, Globe, LogOut, ChevronDown, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +55,9 @@ interface Props {
 export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  // Hub mode: rotas /dashboard/hub* escondem itens AdBrief do menu.
+  const isHubMode = location.pathname.startsWith("/dashboard/hub");
   const { setLanguage, language } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -217,7 +220,11 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
 
           {/* Menu items — operação interna, sem Plano/Faturamento/Convidar.
               Settings ainda dá acesso a integrações, autopilot, etc. */}
-          <MenuItem icon={<Settings size={14} />} label="Configurações" onClick={() => { setOpen(false); navigate("/dashboard/settings"); }} />
+          {/* Configurações = página /dashboard/settings (autopilot, integrações, plano).
+              Esconde em Hub mode — Hub interno não usa essa página. */}
+          {!isHubMode && (
+            <MenuItem icon={<Settings size={14} />} label="Configurações" onClick={() => { setOpen(false); navigate("/dashboard/settings"); }} />
+          )}
           <MenuItem icon={<UserCircle size={14} />} label="Perfil rápido" onClick={() => { setOpen(false); onOpenProfile(); }} />
 
           {/* Divider */}

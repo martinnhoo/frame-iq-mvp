@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/App";
 import { toast } from "sonner";
@@ -285,6 +286,11 @@ function PersonaDetailView({
 // ── Main Panel ─────────────────────────────────────────────────────────────────
 
 export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate, selectedPersona }: Props) {
+  // Hub mode: rotas /dashboard/hub* mostram só Perfil + Segurança, sem
+  // Inteligência (de AdBrief) e sem Plano (subproduto interno).
+  const location = useLocation();
+  const isHubMode = location.pathname.startsWith("/dashboard/hub");
+
   // Close on ESC key
   useEffect(() => {
     const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -482,12 +488,25 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
   const F = "'Plus Jakarta Sans', sans-serif";
   const M = "'Plus Jakarta Sans', system-ui, sans-serif";
 
-  const TABS_NEW = [
+  const ALL_TABS = [
     { id: "profile",      label: language === "pt" ? "Perfil"        : language === "es" ? "Perfil"        : "Profile",      icon: User },
     { id: "intelligence", label: language === "pt" ? "Inteligência"  : language === "es" ? "Inteligencia"  : "Intelligence", icon: Zap },
     { id: "plan",         label: language === "pt" ? "Plano"         : language === "es" ? "Plan"           : "Plan",         icon: CreditCard },
     { id: "security",     label: language === "pt" ? "Segurança"     : language === "es" ? "Seguridad"      : "Security",     icon: Shield },
   ];
+  // Em Hub mode, esconde Inteligência (feature do AdBrief) e Plano (não
+  // tem plano em ferramenta interna). Sobra só Perfil + Segurança.
+  const TABS_NEW = isHubMode
+    ? ALL_TABS.filter(t => t.id === "profile" || t.id === "security")
+    : ALL_TABS;
+
+  // Se tab atual sumiu da lista visível (ex: usuário trocou de rota),
+  // volta pra Perfil — evita conteúdo de tab oculta renderizar.
+  useEffect(() => {
+    if (isHubMode && (tab === "intelligence" || tab === "plan")) {
+      setTab("profile");
+    }
+  }, [isHubMode, tab]);
 
   return (
     <>
@@ -533,7 +552,11 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
               <p style={{ fontFamily: F, fontSize: 14, fontWeight: 700, color: "#eef0f6", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile?.name || user.email?.split("@")[0]}</p>
               <p style={{ fontFamily: M, fontSize: 12, color: "rgba(238,240,246,0.42)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</p>
             </div>
-            <div style={{ flexShrink: 0, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}40`, fontFamily: M, fontSize: 12, fontWeight: 700, color: plan.color }}>{plan.label}</div>
+            {/* Plan badge — escondido em Hub mode (subproduto interno
+                não tem plano comercial). */}
+            {!isHubMode && (
+              <div style={{ flexShrink: 0, padding: "3px 10px", borderRadius: 20, background: `${plan.color}18`, border: `1px solid ${plan.color}40`, fontFamily: M, fontSize: 12, fontWeight: 700, color: plan.color }}>{plan.label}</div>
+            )}
           </div>
 
           {/* Tabs */}
