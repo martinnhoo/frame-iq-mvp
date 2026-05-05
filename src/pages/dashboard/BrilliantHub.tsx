@@ -157,7 +157,7 @@ export default function BrilliantHub() {
     { id: "ab", title: t("abVar"), desc: t("abVarDesc"), btn: t("abVarBtn"),
       icon: GitBranch, soon: true },
     { id: "analytics", title: t("analytics"), desc: t("analyticsDesc"), btn: t("analyticsBtn"),
-      icon: BarChart3, soon: true },
+      icon: BarChart3, route: "/dashboard/hub/analytics" },
   ];
 
   return (
