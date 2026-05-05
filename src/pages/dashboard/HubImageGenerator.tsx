@@ -1,36 +1,28 @@
-// HubImageGenerator — Geração de imagem com IA dentro do Brilliant Hub.
+// HubImageGenerator — Image Generator interno.
 //
-// UX: prompt grande no centro + 4 aspect ratios pré-definidos +
-// toggle de "aplicar marca" (se persona selecionada) + Generate.
-// Resultado aparece em preview grande com download e regenerate.
-// Galeria abaixo lista as últimas 12 gerações dessa persona.
-//
-// Backend: invoca generate-image-hub edge function (DALL-E 3 + brand
-// context). Cada geração salva em creative_memory com type =
-// 'generated_image' pra alimentar a biblioteca + atividades recentes.
+// Subproduto isolado. Não importa contexto de persona/brand_kit/conta.
+// Form simples: prompt + formato + qualidade + transparência. Resultado
+// salva em creative_memory com type='hub_image' pra alimentar a
+// Biblioteca interna.
 
 import { useEffect, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
-import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import { Image as ImageIcon, Download, RefreshCw, ArrowLeft, Sparkles, AlertTriangle } from "lucide-react";
 
 const ASPECT_RATIOS = [
-  { id: "1:1", label: "Quadrado · 1:1", desc: "Feed, Insta post" },
-  { id: "9:16", label: "Vertical · 9:16", desc: "Reels, Stories, TikTok" },
+  { id: "1:1",  label: "Quadrado · 1:1",   desc: "Feed, Insta post" },
+  { id: "9:16", label: "Vertical · 9:16",  desc: "Reels, Stories, TikTok" },
   { id: "16:9", label: "Horizontal · 16:9", desc: "YouTube, banner site" },
-  { id: "4:5", label: "Retrato · 4:5", desc: "Feed Insta otimizado" },
+  { id: "4:5",  label: "Retrato · 4:5",    desc: "Feed Insta otimizado" },
 ];
 
 type GenResult = {
   image_url: string;
   prompt: string;
-  augmented_prompt: string;
   revised_prompt: string;
   aspect_ratio: string;
-  brand_applied: boolean;
-  persona_name?: string;
 };
 
 type GalleryItem = {
@@ -43,12 +35,9 @@ type GalleryItem = {
 
 export default function HubImageGenerator() {
   const navigate = useNavigate();
-  const ctx = useOutletContext<DashboardContext>();
-  const persona = ctx?.selectedPersona || null;
 
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
-  const [applyBrand, setApplyBrand] = useState(true);
   const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
   const [transparent, setTransparent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -56,23 +45,20 @@ export default function HubImageGenerator() {
   const [result, setResult] = useState<GenResult | null>(null);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
 
-  // ── Load gallery ──────────────────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        let q = supabase.from("creative_memory" as any)
+        const { data } = await supabase.from("creative_memory" as any)
           .select("id, content, created_at")
           .eq("user_id", user.id)
-          .eq("type", "generated_image")
+          .eq("type", "hub_image")
           .order("created_at", { ascending: false })
           .limit(12);
-        if (persona?.id) q = q.eq("persona_id", persona.id);
-        const { data } = await q;
         if (!mounted || !data) return;
-        const items: GalleryItem[] = (data as any[])
+        setGallery((data as any[])
           .filter(r => r?.content?.image_url)
           .map(r => ({
             id: r.id,
@@ -80,12 +66,11 @@ export default function HubImageGenerator() {
             prompt: r.content.prompt || "",
             aspect_ratio: r.content.aspect_ratio || "1:1",
             created_at: r.created_at,
-          }));
-        setGallery(items);
+          })));
       } catch { /* silent */ }
     })();
     return () => { mounted = false; };
-  }, [persona?.id]);
+  }, []);
 
   const generate = async () => {
     if (loading || !prompt.trim() || prompt.trim().length < 5) return;
@@ -96,7 +81,6 @@ export default function HubImageGenerator() {
       const { data, error: fnErr } = await supabase.functions.invoke("generate-image-hub", {
         body: {
           prompt: prompt.trim(),
-          persona_id: applyBrand && persona?.id ? persona.id : null,
           aspect_ratio: aspectRatio,
           quality,
           transparent,
@@ -107,7 +91,6 @@ export default function HubImageGenerator() {
         return;
       }
       setResult(data as GenResult);
-      // Refresh gallery — just prepend the new one
       setGallery(prev => [{
         id: `tmp-${Date.now()}`,
         image_url: (data as GenResult).image_url,
@@ -142,11 +125,10 @@ export default function HubImageGenerator() {
   return (
     <>
       <Helmet>
-        <title>Image Generator — Brilliant Hub</title>
+        <title>Image Generator — Hub</title>
       </Helmet>
 
       <div style={{ minHeight: "calc(100vh - 64px)", padding: "24px 24px 80px", maxWidth: 1280, margin: "0 auto", color: "#fff" }}>
-        {/* Back to Hub */}
         <button
           onClick={() => navigate("/dashboard/hub")}
           style={{
@@ -158,7 +140,6 @@ export default function HubImageGenerator() {
           <ArrowLeft size={14} /> Voltar ao Hub
         </button>
 
-        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 12,
@@ -170,17 +151,13 @@ export default function HubImageGenerator() {
             <ImageIcon size={24} style={{ color: "#a855f7" }} />
           </div>
           <div>
-            <h1 style={{
-              fontSize: 22, fontWeight: 800, color: "#fff",
-              margin: 0, letterSpacing: "-0.01em",
-            }}>Image Generator</h1>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>Image Generator</h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", margin: "2px 0 0" }}>
-              Gere imagens com IA{persona?.name ? ` · contexto da marca ${persona.name}` : ""}
+              Gere imagens com IA
             </p>
           </div>
         </div>
 
-        {/* Prompt + controls */}
         <div style={{
           background: "rgba(255,255,255,0.03)",
           border: "1px solid rgba(255,255,255,0.08)",
@@ -195,7 +172,7 @@ export default function HubImageGenerator() {
           <textarea
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
-            placeholder='Ex: "Cassino moderno em estilo cinematográfico, jovem casal feliz contando ganhos, neon verde e dourado, ambiente luxuoso com mesas de blackjack ao fundo"'
+            placeholder='Ex: "Cena cinematográfica de um relógio de pulso premium em mármore preto, iluminação dramática, fotografia profissional"'
             rows={4}
             disabled={loading}
             style={{
@@ -217,7 +194,6 @@ export default function HubImageGenerator() {
             }}
           />
 
-          {/* Aspect ratio */}
           <div style={{ marginTop: 16 }}>
             <label style={{
               display: "block", fontSize: 11, fontWeight: 700, letterSpacing: "0.10em",
@@ -254,32 +230,14 @@ export default function HubImageGenerator() {
             </div>
           </div>
 
-          {/* Toggles row */}
           <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-            {persona?.id && (
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}>
-                <input
-                  type="checkbox"
-                  checked={applyBrand}
-                  onChange={e => setApplyBrand(e.target.checked)}
-                  disabled={loading}
-                  style={{ accentColor: "#a855f7" }}
-                />
-                <span style={{ color: "rgba(255,255,255,0.85)" }}>
-                  Aplicar contexto de <strong>{persona.name}</strong>
-                </span>
-              </label>
-            )}
-
-            {/* Quality tier — gpt-image-2 tem 3 níveis vs DALL-E 2.
-                Low = $0.011, medium = $0.042, high = $0.167 por imagem. */}
             <div style={{ display: "flex", gap: 4, padding: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)" }}>
               {(["low", "medium", "high"] as const).map(q => (
                 <button
                   key={q}
                   onClick={() => setQuality(q)}
                   disabled={loading}
-                  title={q === "low" ? "≈$0.011/img — rascunho rápido" : q === "medium" ? "≈$0.042/img — produção" : "≈$0.167/img — entrega final"}
+                  title={q === "low" ? "Rascunho rápido" : q === "medium" ? "Produção" : "Entrega final"}
                   style={{
                     padding: "5px 12px", borderRadius: 7, fontSize: 11, fontWeight: 700,
                     background: quality === q ? "#a855f7" : "transparent",
@@ -308,7 +266,6 @@ export default function HubImageGenerator() {
             </label>
           </div>
 
-          {/* Generate button */}
           <button
             onClick={generate}
             disabled={loading || !prompt.trim() || prompt.trim().length < 5}
@@ -337,7 +294,6 @@ export default function HubImageGenerator() {
           </button>
         </div>
 
-        {/* Error */}
         {error && (
           <div style={{
             display: "flex", alignItems: "flex-start", gap: 10,
@@ -350,7 +306,6 @@ export default function HubImageGenerator() {
           </div>
         )}
 
-        {/* Result */}
         {result && (
           <div style={{
             background: "rgba(255,255,255,0.03)",
@@ -367,7 +322,7 @@ export default function HubImageGenerator() {
             </div>
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
               <button
-                onClick={() => downloadImage(result.image_url, `brilliant-hub-${Date.now()}.png`)}
+                onClick={() => downloadImage(result.image_url, `hub-${Date.now()}.png`)}
                 style={{
                   padding: "10px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
                   background: "rgba(255,255,255,0.06)", color: "#fff",
@@ -392,7 +347,7 @@ export default function HubImageGenerator() {
                 <RefreshCw size={14} /> Gerar variação
               </button>
             </div>
-            {result.revised_prompt && result.revised_prompt !== result.augmented_prompt && (
+            {result.revised_prompt && result.revised_prompt !== result.prompt && (
               <p style={{
                 fontSize: 11, color: "rgba(255,255,255,0.40)",
                 marginTop: 12, padding: "8px 12px",
@@ -405,7 +360,6 @@ export default function HubImageGenerator() {
           </div>
         )}
 
-        {/* Gallery */}
         {gallery.length > 0 && (
           <div>
             <p style={{
@@ -413,7 +367,7 @@ export default function HubImageGenerator() {
               color: "rgba(255,255,255,0.55)", margin: "0 0 12px",
               textTransform: "uppercase",
             }}>
-              Últimas geraçōes{persona?.name ? ` · ${persona.name}` : ""}
+              Últimas geraçōes
             </p>
             <div style={{
               display: "grid",
@@ -428,7 +382,7 @@ export default function HubImageGenerator() {
                   cursor: "pointer",
                   transition: "transform 0.15s, border-color 0.15s",
                 }}
-                  onClick={() => downloadImage(item.image_url, `brilliant-hub-${item.id}.png`)}
+                  onClick={() => downloadImage(item.image_url, `hub-${item.id}.png`)}
                   onMouseEnter={e => {
                     e.currentTarget.style.transform = "translateY(-2px)";
                     e.currentTarget.style.borderColor = "rgba(168,85,247,0.40)";

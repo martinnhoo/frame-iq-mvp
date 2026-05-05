@@ -13,8 +13,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { useOutletContext } from "react-router-dom";
-import type { DashboardContext } from "@/components/dashboard/DashboardLayout";
 import {
   Image as ImageIcon, Clapperboard, Video, SplitSquareVertical,
   FolderOpen, Tag, BarChart3, Lightbulb,
@@ -178,8 +176,6 @@ const SUPPORT_TOOLS: Tool[] = [
 
 export default function BrilliantHub() {
   const navigate = useNavigate();
-  const ctx = useOutletContext<DashboardContext>();
-  const personaName = ctx?.selectedPersona?.name || null;
 
   const [recent, setRecent] = useState<Array<{ icon: typeof ImageIcon; color: string; title: string; subtitle: string; ts: string }>>([]);
 
@@ -221,7 +217,7 @@ export default function BrilliantHub() {
               margin: 0,
               textTransform: "uppercase",
             }}>
-              Central Criativa{personaName ? ` · ${personaName}` : ""}
+              Central Criativa
             </p>
           </div>
           <h1 style={{
@@ -240,7 +236,7 @@ export default function BrilliantHub() {
             maxWidth: 640,
             lineHeight: 1.55,
           }}>
-            Geração, produção, biblioteca e performance — tudo conectado pelo contexto da marca selecionada.
+            Geração de imagens, biblioteca e ferramentas de produção criativa.
           </p>
         </div>
 

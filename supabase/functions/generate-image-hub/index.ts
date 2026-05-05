@@ -1,14 +1,10 @@
-// generate-image-hub — Image Generator standalone do Brilliant Hub.
+// generate-image-hub — Image Generator interno.
 //
-// Zero dependência de _shared/* — função totalmente independente,
-// sem cost-cap, sem cron-auth, sem nenhuma referência a outros produtos.
-// Auth simples via JWT (admin allowlist), valida e roda gpt-image-2.
-//
-// Input:
-//   { prompt, persona_id?, aspect_ratio?, quality?, transparent? }
-//
-// Output:
-//   { ok, image_url, prompt, augmented_prompt, revised_prompt, ... }
+// Subproduto isolado. Não lê personas, não lê brand_kit, não lê
+// nenhuma tabela do produto AdBrief. Recebe prompt + size + quality,
+// chama gpt-image-2, devolve URL. Salva em creative_memory só pra
+// alimentar a Biblioteca interna (mesma tabela do projeto, type
+// distinto pra isolar — sem cross-contamination).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -23,23 +19,6 @@ const SIZE_MAP: Record<string, string> = {
   "9:16": "1024x1536",
   "4:5":  "1024x1280",
 };
-
-interface BrandKit {
-  primary_color?: string;
-  secondary_color?: string;
-  visual_style?: string;
-}
-
-function buildBrandContext(brandKit: BrandKit | null, personaName?: string): string {
-  if (!brandKit) return "";
-  const parts: string[] = [];
-  if (personaName) parts.push(`brand: ${personaName}`);
-  if (brandKit.primary_color) parts.push(`primary color: ${brandKit.primary_color}`);
-  if (brandKit.secondary_color) parts.push(`accent color: ${brandKit.secondary_color}`);
-  if (brandKit.visual_style) parts.push(`visual style: ${brandKit.visual_style}`);
-  if (parts.length === 0) return "";
-  return ` (Brand context: ${parts.join(", ")})`;
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -70,13 +49,11 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const {
       prompt,
-      persona_id = null,
       aspect_ratio = "1:1",
       quality = "medium",
       transparent = false,
     } = body as {
       prompt?: string;
-      persona_id?: string | null;
       aspect_ratio?: string;
       quality?: "low" | "medium" | "high";
       transparent?: boolean;
@@ -91,23 +68,6 @@ Deno.serve(async (req) => {
 
     const size = SIZE_MAP[aspect_ratio] || SIZE_MAP["1:1"];
 
-    let brandKit: BrandKit | null = null;
-    let personaName: string | undefined;
-    if (persona_id) {
-      const { data: persona } = await sb.from("personas")
-        .select("name, brand_kit")
-        .eq("id", persona_id)
-        .eq("user_id", authUser.id)
-        .maybeSingle();
-      if (persona) {
-        personaName = (persona as any).name || undefined;
-        brandKit = (persona as any).brand_kit || null;
-      }
-    }
-
-    const brandContext = buildBrandContext(brandKit, personaName);
-    const augmentedPrompt = `${prompt.trim()}${brandContext}`.slice(0, 4000);
-
     const openaiRes = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
@@ -116,7 +76,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "gpt-image-2",
-        prompt: augmentedPrompt,
+        prompt: prompt.trim().slice(0, 4000),
         size,
         quality,
         n: 1,
@@ -157,7 +117,7 @@ Deno.serve(async (req) => {
     const imgData = data?.data?.[0];
     const imageUrl: string | null = imgData?.url
       || (imgData?.b64_json ? `data:image/png;base64,${imgData.b64_json}` : null);
-    const revisedPrompt = imgData?.revised_prompt || augmentedPrompt;
+    const revisedPrompt = imgData?.revised_prompt || prompt.trim();
 
     if (!imageUrl) {
       return new Response(JSON.stringify({
@@ -166,15 +126,14 @@ Deno.serve(async (req) => {
       }), { status: 502, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
-    // Save to creative_memory (shared table — type='generated_image' isolates Hub assets)
+    // Save to creative_memory pra Biblioteca interna do Hub. type='hub_image'
+    // isola dos assets do produto principal. Não usa persona_id.
     try {
       await sb.from("creative_memory" as any).insert({
         user_id: authUser.id,
-        persona_id: persona_id || null,
-        type: "generated_image",
+        type: "hub_image",
         content: {
           prompt: prompt.trim(),
-          augmented_prompt: augmentedPrompt,
           revised_prompt: revisedPrompt,
           image_url: imageUrl,
           aspect_ratio,
@@ -191,13 +150,10 @@ Deno.serve(async (req) => {
       ok: true,
       image_url: imageUrl,
       prompt: prompt.trim(),
-      augmented_prompt: augmentedPrompt,
       revised_prompt: revisedPrompt,
       aspect_ratio,
       size,
       quality,
-      brand_applied: !!brandKit,
-      persona_name: personaName,
     }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
 
   } catch (e) {

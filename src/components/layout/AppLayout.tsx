@@ -439,8 +439,9 @@ export function AppLayout() {
         )}
       </div>
 
-      {/* ── Account selector — always visible ── */}
-      <div style={{ flexShrink: 0 }}>
+      {/* ── Account selector — escondido nas rotas /dashboard/hub*.
+          Hub é produto interno isolado: não mostra conta/persona/plano. */}
+      <div style={{ flexShrink: 0, display: location.pathname.startsWith('/dashboard/hub') ? 'none' : 'block' }}>
         <button
           onClick={() => setAccountsOpen(o => !o)}
           style={{
@@ -638,10 +639,13 @@ export function AppLayout() {
         </nav>
       </div>
 
-      {/* Footer — CreditBar + Referral + Logout */}
+      {/* Footer — CreditBar + Logout. CreditBar (que mostra plano/Studio/etc)
+          escondido em rotas /dashboard/hub* — Hub é produto interno isolado. */}
       <div style={{ flexShrink: 0 }}>
         <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '0 0 4px' }} />
-        <CreditBar userId={user?.id} plan={plan} />
+        {!location.pathname.startsWith('/dashboard/hub') && (
+          <CreditBar userId={user?.id} plan={plan} />
+        )}
         {/* ReferralPopup escondido no pivô interno — operação Brilliant
             Gaming, sem programa de indicação. Mantém o componente
             importado caso queira reativar no futuro. */}
