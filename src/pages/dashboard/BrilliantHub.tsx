@@ -177,16 +177,6 @@ export default function BrilliantHub() {
           </p>
         </div>
 
-        {/* ── Empty state — quando user nunca gerou nada (confirmado) ─ */}
-        {assetCount === 0 && (
-          <EmptyState
-            title={t("emptyTitle")}
-            desc={t("emptyDesc")}
-            btnLabel={t("emptyBtn")}
-            onClick={() => navigate("/dashboard/hub/image")}
-          />
-        )}
-
         {/* ── Designer ─────────────────────────────────────────── */}
         <p style={SECTION_LABEL}>{t("designer")}</p>
         <div style={GRID_3}>
