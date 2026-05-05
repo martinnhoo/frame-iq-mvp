@@ -11,12 +11,24 @@
 -- critical-alerts) seguem rodando porque alimentam o dashboard, mas
 -- as chamadas internas pra send-*-email viram no-op.
 
--- Unschedule o cron explicitamente.
+-- Unschedule todos os crons que disparam email — eles foram criados em
+-- migrations diversas (email_lifecycle, email_drips, demo_leads_followup,
+-- etc.) e ficaram órfãos quando neutralizamos as edge functions.
 do $$
+declare
+  v_email_jobs text[] := array[
+    'adbrief-email-lifecycle',
+    'adbrief-demo-followup',
+    'adbrief-fast-activation',
+    'adbrief-trial-expiring'
+  ];
+  v_job text;
 begin
-  if exists (select 1 from cron.job where jobname = 'adbrief-email-lifecycle') then
-    perform cron.unschedule('adbrief-email-lifecycle');
-  end if;
+  foreach v_job in array v_email_jobs loop
+    if exists (select 1 from cron.job where jobname = v_job) then
+      perform cron.unschedule(v_job);
+    end if;
+  end loop;
 end $$;
 
 -- Reescreve o orquestrador de schedules pra NÃO recriar o cron de
