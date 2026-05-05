@@ -85,6 +85,10 @@ const STR: Record<string, Record<Lang, string>> = {
                   es: "Usa el Generador de Imágenes para crear creativos con IA en segundos.",
                   zh: "使用图像生成器在几秒内创建 AI 创意。" },
   emptyBtn:     { pt: "Gerar imagem",                 en: "Generate image",              es: "Generar imagen",               zh: "生成图像" },
+  // Counter na Biblioteca — sensação de valor acumulado
+  libCount0:    { pt: "Sem criativos ainda",          en: "No creatives yet",            es: "Sin creativos aún",            zh: "尚无创意" },
+  libCount1:    { pt: "1 criativo armazenado",        en: "1 asset stored",              es: "1 creativo almacenado",        zh: "已存储 1 个资产" },
+  libCountN:    { pt: "{n} criativos armazenados",    en: "{n} assets stored",           es: "{n} creativos almacenados",    zh: "已存储 {n} 个资产" },
 };
 
 export default function BrilliantHub() {
@@ -94,7 +98,7 @@ export default function BrilliantHub() {
   const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || String(key);
 
   const [userName, setUserName] = useState<string>("");
-  const [hasAnyActivity, setHasAnyActivity] = useState<boolean | null>(null);
+  const [assetCount, setAssetCount] = useState<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -106,22 +110,29 @@ export default function BrilliantHub() {
         const name = meta.full_name || meta.name || (user.email?.split("@")[0]) || "";
         setUserName(capitalize(name.split(" ")[0]));
 
-        // Empty state: mostra "Comece criando" se user não tem nenhum
-        // hub_image gerado ainda
+        // Conta assets do Hub — usado pro empty state + counter na Biblioteca.
         const { count } = await supabase
           .from("creative_memory" as never)
           .select("id", { count: "exact", head: true })
           .eq("user_id", user.id)
           .like("type", "hub_%");
-        if (mounted) setHasAnyActivity((count || 0) > 0);
+        if (mounted) setAssetCount(count || 0);
       } catch { /* silent */ }
     })();
     return () => { mounted = false; };
   }, []);
 
+  // Mensagem de contador da Biblioteca (com pluralização e i18n)
+  const libraryMeta: string | null = (() => {
+    if (assetCount === null) return null;
+    if (assetCount === 0) return t("libCount0");
+    if (assetCount === 1) return t("libCount1");
+    return t("libCountN").replace("{n}", String(assetCount));
+  })();
+
   const designerTools = [
     { id: "img", title: t("imgGen"), desc: t("imgGenDesc"), btn: t("imgGenBtn"),
-      icon: ImageIcon, route: "/dashboard/hub/image" },
+      icon: ImageIcon, route: "/dashboard/hub/image", featured: true },
     { id: "png", title: t("pngGen"), desc: t("pngGenDesc"), btn: t("pngGenBtn"),
       icon: Layers, soon: true },
     { id: "video", title: t("vidEdit"), desc: t("vidEditDesc"), btn: t("comingSoon"),
@@ -152,18 +163,18 @@ export default function BrilliantHub() {
         {/* ── Header ────────────────────────────────────────────── */}
         <div style={{ marginBottom: 28 }}>
           <h1 style={{
-            fontSize: 26, fontWeight: 700, color: "#fff", margin: 0,
+            fontSize: 26, fontWeight: 700, color: "#FFFFFF", margin: 0,
             letterSpacing: "-0.02em", lineHeight: 1.2,
           }}>
             {t("hello")}{userName ? `, ${userName}` : ""} <span>👋</span>
           </h1>
-          <p style={{ fontSize: 14, color: "#9CA3AF", margin: "6px 0 0", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: "#D1D5DB", margin: "8px 0 0", lineHeight: 1.5 }}>
             {t("subtitle")}
           </p>
         </div>
 
-        {/* ── Empty state — quando user nunca gerou nada ─────────── */}
-        {hasAnyActivity === false && (
+        {/* ── Empty state — quando user nunca gerou nada (confirmado) ─ */}
+        {assetCount === 0 && (
           <EmptyState
             title={t("emptyTitle")}
             desc={t("emptyDesc")}
@@ -183,6 +194,7 @@ export default function BrilliantHub() {
               desc={tool.desc}
               btn={tool.btn}
               soon={tool.soon}
+              featured={(tool as { featured?: boolean }).featured}
               comingSoonLabel={t("comingSoon")}
               onClick={tool.route ? () => navigate(tool.route) : undefined}
             />
@@ -213,6 +225,7 @@ export default function BrilliantHub() {
           desc={t("libraryDesc")}
           btn={t("libraryBtn")}
           fullWidth
+          meta={libraryMeta}
           comingSoonLabel={t("comingSoon")}
           onClick={() => navigate("/dashboard/hub/library")}
         />
@@ -229,15 +242,22 @@ interface ToolCardProps {
   btn: string;
   soon?: boolean;
   fullWidth?: boolean;
+  featured?: boolean;
+  meta?: string | null;
   comingSoonLabel: string;
   onClick?: () => void;
 }
 
-function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, comingSoonLabel, onClick }: ToolCardProps) {
+function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, featured, meta, comingSoonLabel, onClick }: ToolCardProps) {
   const [hover, setHover] = useState(false);
   const [btnHover, setBtnHover] = useState(false);
   const [btnActive, setBtnActive] = useState(false);
   const interactive = !!onClick && !soon;
+
+  // Featured: tint azul sutil pra direcionar atenção (Image Generator é
+  // a ação dominante). Não exagera — só um empurrão visual.
+  const baseBg = featured && !soon ? "rgba(59,130,246,0.08)" : "rgba(17,24,39,0.70)";
+  const baseBorder = featured && !soon ? "rgba(59,130,246,0.25)" : "rgba(255,255,255,0.06)";
 
   return (
     <div
@@ -247,13 +267,13 @@ function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, comingSoonLab
       style={{
         position: "relative",
         gridColumn: fullWidth ? "1 / -1" : "auto",
-        background: "rgba(17, 24, 39, 0.70)",
-        border: `1px solid ${hover && interactive ? "rgba(59,130,246,0.40)" : "rgba(255,255,255,0.06)"}`,
+        background: baseBg,
+        border: `1px solid ${hover && interactive ? "rgba(59,130,246,0.40)" : baseBorder}`,
         borderRadius: 16,
         padding: "22px 22px 20px",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
-        transition: "border-color 0.18s, transform 0.18s",
+        transition: "border-color 0.18s, transform 0.18s, background 0.18s",
         transform: hover && interactive ? "translateY(-2px)" : "translateY(0)",
         cursor: interactive ? "pointer" : "default",
         opacity: soon ? 0.55 : 1,
@@ -267,7 +287,7 @@ function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, comingSoonLab
           padding: "3px 8px", borderRadius: 6,
           background: "rgba(255,255,255,0.04)",
           border: "1px solid rgba(255,255,255,0.08)",
-          color: "#6B7280",
+          color: "#9CA3AF",
         }}>
           {comingSoonLabel}
         </div>
@@ -276,8 +296,8 @@ function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, comingSoonLab
       {/* Ícone — peso forte, presença visual */}
       <div style={{
         width: 52, height: 52, borderRadius: 12,
-        background: soon ? "rgba(59,130,246,0.06)" : "rgba(59,130,246,0.10)",
-        border: `1px solid rgba(59,130,246,${soon ? 0.15 : 0.22})`,
+        background: soon ? "rgba(59,130,246,0.06)" : "rgba(59,130,246,0.12)",
+        border: `1px solid rgba(59,130,246,${soon ? 0.15 : 0.25})`,
         display: "flex", alignItems: "center", justifyContent: "center",
         marginBottom: 16,
       }}>
@@ -287,9 +307,19 @@ function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, comingSoonLab
       <h3 style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", margin: 0, letterSpacing: "-0.01em" }}>
         {title}
       </h3>
-      <p style={{ fontSize: 13, color: "#9CA3AF", margin: "6px 0 18px", lineHeight: 1.55, maxWidth: fullWidth ? 580 : "100%" }}>
+      <p style={{ fontSize: 13, color: "#D1D5DB", margin: "6px 0 18px", lineHeight: 1.55, maxWidth: fullWidth ? 580 : "100%" }}>
         {desc}
       </p>
+
+      {/* Meta — counter da Biblioteca etc */}
+      {meta && (
+        <p style={{
+          fontSize: 11, fontWeight: 600, color: "#3B82F6",
+          margin: "-12px 0 16px", letterSpacing: "0.02em",
+        }}>
+          {meta}
+        </p>
+      )}
 
       <button
         onClick={interactive ? (e) => { e.stopPropagation(); onClick?.(); } : (e) => e.preventDefault()}
@@ -300,14 +330,14 @@ function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, comingSoonLab
         disabled={soon}
         style={{
           display: "inline-flex", alignItems: "center", gap: 6,
-          padding: "9px 16px",
+          padding: "10px 18px",
           borderRadius: 10,
           background: soon
             ? "rgba(75,85,99,0.40)"
             : btnActive ? "#1D4ED8"
             : btnHover ? "#2563EB"
             : "#3B82F6",
-          color: soon ? "#6B7280" : "#fff",
+          color: soon ? "#9CA3AF" : "#fff",
           border: "none",
           fontSize: 13, fontWeight: 600,
           cursor: soon ? "not-allowed" : "pointer",
@@ -347,30 +377,30 @@ function EmptyState({ title, desc, btnLabel, onClick }: {
 
   return (
     <div style={{
-      background: "rgba(17, 24, 39, 0.50)",
+      background: "rgba(17, 24, 39, 0.55)",
       border: "1px solid rgba(255,255,255,0.06)",
       borderRadius: 16,
-      padding: "44px 28px",
-      marginBottom: 28,
+      padding: "64px 28px",
+      marginBottom: 32,
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
-      textAlign: "center", gap: 14,
+      textAlign: "center", gap: 18,
       backdropFilter: "blur(8px)",
       WebkitBackdropFilter: "blur(8px)",
     }}>
       <div style={{
-        width: 56, height: 56, borderRadius: 14,
-        background: "rgba(59,130,246,0.10)",
-        border: "1px solid rgba(59,130,246,0.22)",
+        width: 64, height: 64, borderRadius: 16,
+        background: "rgba(59,130,246,0.12)",
+        border: "1px solid rgba(59,130,246,0.25)",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <Sparkles size={26} strokeWidth={2} style={{ color: "#3B82F6" }} />
+        <Sparkles size={30} strokeWidth={2} style={{ color: "#3B82F6" }} />
       </div>
       <div>
-        <h2 style={{ fontSize: 17, fontWeight: 700, color: "#FFFFFF", margin: 0, letterSpacing: "-0.01em" }}>
+        <h2 style={{ fontSize: 19, fontWeight: 700, color: "#FFFFFF", margin: 0, letterSpacing: "-0.01em" }}>
           {title}
         </h2>
-        <p style={{ fontSize: 13, color: "#9CA3AF", margin: "6px 0 0", maxWidth: 380, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 14, color: "#D1D5DB", margin: "8px 0 0", maxWidth: 420, lineHeight: 1.5 }}>
           {desc}
         </p>
       </div>
@@ -381,21 +411,21 @@ function EmptyState({ title, desc, btnLabel, onClick }: {
         onMouseDown={() => setBtnActive(true)}
         onMouseUp={() => setBtnActive(false)}
         style={{
-          marginTop: 4,
+          marginTop: 6,
           display: "inline-flex", alignItems: "center", gap: 6,
-          padding: "10px 20px",
-          borderRadius: 10,
+          padding: "12px 24px",
+          borderRadius: 11,
           background: btnActive ? "#1D4ED8" : btnHover ? "#2563EB" : "#3B82F6",
           color: "#fff",
           border: "none",
-          fontSize: 13, fontWeight: 600,
+          fontSize: 14, fontWeight: 600,
           cursor: "pointer",
           fontFamily: "inherit",
           transform: btnActive ? "scale(0.97)" : "scale(1)",
           transition: "background 0.12s, transform 0.10s",
         }}
       >
-        {btnLabel} <ArrowRight size={13} />
+        {btnLabel} <ArrowRight size={14} />
       </button>
     </div>
   );

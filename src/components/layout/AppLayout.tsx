@@ -63,14 +63,17 @@ function avatarGradient(name: string) {
   return AVATAR_GRADIENTS[Math.abs(h) % AVATAR_GRADIENTS.length];
 }
 
-// ── Nav item — paleta azul Adbrief, suporta "soon" pra ferramentas em breve.
+// ── Nav item — paleta azul Adbrief, refinamento premium.
+//   - Mais respiro (gap 12, padding vertical 9)
+//   - Ícones com peso visual (16px strokeWidth 2 quando ativo)
+//   - Active state com inner glow sutil (box-shadow inset)
+//   - Hover suave + scale microscópico no press
 function NavItem({ url, label, icon: Icon, onClick, isActive, soon, soonLabel }: {
   url: string; label: string; icon: React.ElementType;
   onClick?: () => void; isActive: boolean;
   soon?: boolean; soonLabel?: string;
 }) {
   const [hov, setHov] = useState(false);
-  // Item "soon" não navega — tag "Em breve" + click no-op
   const handleClick = (e: React.MouseEvent) => {
     if (soon) { e.preventDefault(); return; }
     onClick?.();
@@ -80,23 +83,24 @@ function NavItem({ url, label, icon: Icon, onClick, isActive, soon, soonLabel }:
       to={soon ? "#" : url}
       onClick={handleClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 10, position: 'relative',
-        padding: '8px 12px 8px 14px', margin: '1px 8px', borderRadius: 8,
-        color: isActive ? '#3B82F6' : hov && !soon ? '#E5E7EB' : soon ? '#6B7280' : '#9CA3AF',
+        display: 'flex', alignItems: 'center', gap: 12, position: 'relative',
+        padding: '9px 12px 9px 14px', margin: '2px 10px', borderRadius: 9,
+        color: isActive ? '#FFFFFF' : hov && !soon ? '#FFFFFF' : soon ? '#9CA3AF' : '#D1D5DB',
         background: isActive
           ? 'rgba(59,130,246,0.15)'
           : hov && !soon ? 'rgba(255,255,255,0.04)' : 'transparent',
         border: isActive ? '1px solid rgba(59,130,246,0.40)' : '1px solid transparent',
-        fontSize: 13, fontWeight: isActive ? 600 : 500,
+        fontSize: 13.5, fontWeight: isActive ? 600 : 500,
         textDecoration: 'none',
         transition: 'all 0.15s ease',
         fontFamily: F, letterSpacing: '-0.005em',
         cursor: soon ? 'not-allowed' : 'pointer',
         opacity: soon ? 0.55 : 1,
+        boxShadow: isActive ? 'inset 0 0 0 1px rgba(59,130,246,0.20)' : 'none',
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      <Icon size={15} strokeWidth={isActive ? 2 : 1.5} style={{
-        color: isActive ? '#3B82F6' : soon ? '#6B7280' : hov ? '#9CA3AF' : '#6B7280',
+      <Icon size={16} strokeWidth={isActive ? 2.2 : 1.7} style={{
+        color: isActive ? '#3B82F6' : soon ? '#6B7280' : hov ? '#D1D5DB' : '#9CA3AF',
         flexShrink: 0, transition: 'color 0.15s',
       }} />
       <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -108,7 +112,7 @@ function NavItem({ url, label, icon: Icon, onClick, isActive, soon, soonLabel }:
           padding: '2px 5px', borderRadius: 4,
           background: 'rgba(255,255,255,0.04)',
           border: '1px solid rgba(255,255,255,0.06)',
-          color: '#6B7280',
+          color: '#9CA3AF',
           flexShrink: 0,
         }}>
           {soonLabel}
@@ -679,12 +683,12 @@ export function AppLayout() {
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 8 }}>
         <nav style={{ paddingTop: 8 }}>
           {getNavSections(language).map((section, sIdx) => (
-            <div key={section.title || `top-${sIdx}`} style={{ marginBottom: section.title ? 4 : 12 }}>
+            <div key={section.title || `top-${sIdx}`} style={{ marginBottom: section.title ? 6 : 16 }}>
               {section.title && (
                 <p style={{
-                  margin: '14px 16px 6px',
-                  fontSize: 10.5, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase',
-                  color: '#6B7280',
+                  margin: '20px 18px 8px',
+                  fontSize: 10.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: '#9CA3AF',
                 }}>
                   {section.title}
                 </p>
