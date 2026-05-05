@@ -38,6 +38,10 @@ import {
   BarChart3,
   Lightbulb,
   Sparkles,
+  Layers,
+  Film,
+  Mic,
+  GitBranch,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -59,58 +63,106 @@ function avatarGradient(name: string) {
   return AVATAR_GRADIENTS[Math.abs(h) % AVATAR_GRADIENTS.length];
 }
 
-// ── Nav item — alive, with indicator bar + glow ─────────────────────────────
-function NavItem({ url, label, icon: Icon, onClick, isActive }: {
+// ── Nav item — paleta azul Adbrief, suporta "soon" pra ferramentas em breve.
+function NavItem({ url, label, icon: Icon, onClick, isActive, soon, soonLabel }: {
   url: string; label: string; icon: React.ElementType;
   onClick?: () => void; isActive: boolean;
+  soon?: boolean; soonLabel?: string;
 }) {
   const [hov, setHov] = useState(false);
+  // Item "soon" não navega — tag "Em breve" + click no-op
+  const handleClick = (e: React.MouseEvent) => {
+    if (soon) { e.preventDefault(); return; }
+    onClick?.();
+  };
   return (
-    <NavLink to={url} onClick={onClick}
+    <NavLink
+      to={soon ? "#" : url}
+      onClick={handleClick}
       style={{
         display: 'flex', alignItems: 'center', gap: 10, position: 'relative',
-        padding: '9px 12px 9px 16px', margin: '1px 8px', borderRadius: 9,
-        color: isActive ? '#F1F5F9' : hov ? '#CBD5E1' : '#94A3B8',
+        padding: '8px 12px 8px 14px', margin: '1px 8px', borderRadius: 8,
+        color: isActive ? '#3B82F6' : hov && !soon ? '#E5E7EB' : soon ? '#6B7280' : '#9CA3AF',
         background: isActive
-          ? 'linear-gradient(135deg, rgba(37,99,235,0.14), rgba(6,182,212,0.07))'
-          : hov ? 'rgba(148,163,184,0.06)' : 'transparent',
-        border: 'none',
-        fontSize: 13.5, fontWeight: isActive ? 600 : 450,
-        textDecoration: 'none', transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-        fontFamily: F, letterSpacing: '-0.01em',
-        boxShadow: isActive
-          ? 'inset 4px 0 12px rgba(37,99,235,0.18), 0 0 20px rgba(37,99,235,0.10)'
-          : 'none',
+          ? 'rgba(59,130,246,0.15)'
+          : hov && !soon ? 'rgba(255,255,255,0.04)' : 'transparent',
+        border: isActive ? '1px solid rgba(59,130,246,0.40)' : '1px solid transparent',
+        fontSize: 13, fontWeight: isActive ? 600 : 500,
+        textDecoration: 'none',
+        transition: 'all 0.15s ease',
+        fontFamily: F, letterSpacing: '-0.005em',
+        cursor: soon ? 'not-allowed' : 'pointer',
+        opacity: soon ? 0.55 : 1,
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      {/* Active indicator bar */}
-      {isActive && (
-        <div style={{
-          position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-          width: 3, height: 22, borderRadius: 2,
-          background: 'linear-gradient(180deg, #3B82F6, #06B6D4)',
-          boxShadow: '0 0 12px rgba(59,130,246,0.50), 0 0 4px rgba(59,130,246,0.30)',
-        }}/>
-      )}
-      <Icon size={16} strokeWidth={isActive ? 2 : 1.5} style={{
-        color: isActive ? '#60A5FA' : hov ? '#94A3B8' : '#64748B',
-        flexShrink: 0, transition: 'all 0.2s',
-        filter: isActive ? 'drop-shadow(0 0 4px rgba(96,165,250,0.30))' : 'none',
+      <Icon size={15} strokeWidth={isActive ? 2 : 1.5} style={{
+        color: isActive ? '#3B82F6' : soon ? '#6B7280' : hov ? '#9CA3AF' : '#6B7280',
+        flexShrink: 0, transition: 'color 0.15s',
       }} />
-      <span style={{ flex: 1 }}>{label}</span>
+      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+      {soon && soonLabel && (
+        <span style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+          padding: '2px 5px', borderRadius: 4,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          color: '#6B7280',
+          flexShrink: 0,
+        }}>
+          {soonLabel}
+        </span>
+      )}
     </NavLink>
   );
 }
 
-// Labels Hub-native — traduzidas no momento de render.
-function getNavItems(lang: string) {
+// Sidebar Hub: Painel + 3 seções (Designer / Ferramentas / Biblioteca).
+// Cada seção tem subitens. "Em breve" = navega pra mesma rota mas
+// fica visualmente desabilitado (opacity + tag).
+type NavSection = {
+  title?: string; // null = top-level (sem header de seção)
+  items: Array<{ url: string; label: string; icon: React.ElementType; soon?: boolean }>;
+};
+
+function getNavSections(lang: string): NavSection[] {
   const L = (pt: string, en: string, es: string, zh: string) =>
     lang === "en" ? en : lang === "es" ? es : lang === "zh" ? zh : pt;
   return [
-    { url: '/dashboard/hub',         label: L('Hub',        'Hub',     'Hub',        '中心'),     icon: Command },
-    { url: '/dashboard/hub/image',   label: L('Imagens',    'Images',  'Imágenes',   '图像'),     icon: ImageIcon },
-    { url: '/dashboard/hub/library', label: L('Biblioteca', 'Library', 'Biblioteca', '资料库'),    icon: FolderOpen },
+    {
+      // Top — Painel
+      items: [
+        { url: '/dashboard/hub', label: L('Painel', 'Dashboard', 'Panel', '仪表板'), icon: Command },
+      ],
+    },
+    {
+      title: L('Designer', 'Designer', 'Designer', '设计'),
+      items: [
+        { url: '/dashboard/hub/image',   label: L('Gerador de Imagem', 'Image Generator', 'Generador de Imágenes', '图像生成器'), icon: ImageIcon },
+        { url: '/dashboard/hub/png',     label: L('Gerador de PNG',    'PNG Generator',   'Generador de PNG',      'PNG 生成器'),  icon: Layers, soon: true },
+        { url: '/dashboard/hub/video',   label: L('Editor de Vídeo',   'Video Editor',    'Editor de Video',       '视频编辑器'),   icon: Film,   soon: true },
+      ],
+    },
+    {
+      title: L('Ferramentas', 'Tools', 'Herramientas', '工具'),
+      items: [
+        { url: '/dashboard/hub/transcribe', label: L('Transcrição',  'Transcription', 'Transcripción', '转录'),    icon: Mic,        soon: true },
+        { url: '/dashboard/hub/ab',         label: L('Variações AB', 'A/B Variants',  'Variantes A/B', 'A/B 变体'), icon: GitBranch,  soon: true },
+        { url: '/dashboard/hub/analytics',  label: L('Analytics',    'Analytics',     'Analítica',     '数据分析'), icon: BarChart3,  soon: true },
+      ],
+    },
+    {
+      title: L('Biblioteca', 'Library', 'Biblioteca', '资源库'),
+      items: [
+        { url: '/dashboard/hub/library', label: L('Biblioteca', 'Library', 'Biblioteca', '资源库'), icon: FolderOpen },
+      ],
+    },
   ];
+}
+
+function comingSoonLabel(lang: string): string {
+  return lang === "en" ? "Coming soon" : lang === "es" ? "Próximamente" : lang === "zh" ? "即将推出" : "Em breve";
 }
 
 export function AppLayout() {
@@ -623,18 +675,33 @@ export function AppLayout() {
         <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '4px 0 0' }} />
       </div>
 
-      {/* Nav */}
+      {/* Nav — Painel + seções DESIGNER / FERRAMENTAS / BIBLIOTECA */}
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 8 }}>
         <nav style={{ paddingTop: 8 }}>
-          {getNavItems(language).map(item => (
-            <NavItem
-              key={item.url}
-              url={item.url}
-              label={item.label}
-              icon={item.icon}
-              isActive={isAt(item.url)}
-              onClick={() => setMobileOpen(false)}
-            />
+          {getNavSections(language).map((section, sIdx) => (
+            <div key={section.title || `top-${sIdx}`} style={{ marginBottom: section.title ? 4 : 12 }}>
+              {section.title && (
+                <p style={{
+                  margin: '14px 16px 6px',
+                  fontSize: 10.5, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase',
+                  color: '#6B7280',
+                }}>
+                  {section.title}
+                </p>
+              )}
+              {section.items.map(item => (
+                <NavItem
+                  key={item.url}
+                  url={item.url}
+                  label={item.label}
+                  icon={item.icon}
+                  isActive={isAt(item.url)}
+                  soon={item.soon}
+                  soonLabel={item.soon ? comingSoonLabel(language) : undefined}
+                  onClick={() => setMobileOpen(false)}
+                />
+              ))}
+            </div>
           ))}
         </nav>
       </div>
