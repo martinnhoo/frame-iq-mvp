@@ -238,6 +238,14 @@ export default function HubImageGenerator() {
       if (marketCode && HUB_MARKETS[marketCode]?.promptContext) {
         brandHint = `${brandHint}\n\n${HUB_MARKETS[marketCode].promptContext}`.trim();
       }
+      // Quando user vai sobrepor o logo via canvas, instrui o modelo a
+      // NÃO renderizar a marca como texto/elemento dentro da imagem —
+      // senão fica logo duplicado (um AI-generated grande no meio +
+      // overlay real no canto). Reservar área top-right limpa pro
+      // overlay real ficar legível.
+      if (brand?.logoImage && includeLogo && brand.id !== "none") {
+        brandHint = `${brandHint}\n\nIMPORTANT: Do NOT render the brand name "${brand.name}" or any logo as text or visual element inside the image. The official brand logo will be added as overlay in post-production. Keep the upper-right corner of the image visually clean (about 20% area) so the overlay logo will be legible against any background.`;
+      }
 
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
         method: "POST",
@@ -913,24 +921,8 @@ export default function HubImageGenerator() {
                 <RefreshCw size={14} /> {t("variation")}
               </button>
             </div>
-            {result.model_used && (
-              <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-                <div style={{
-                  padding: "6px 12px",
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  background: "rgba(34,211,153,0.06)",
-                  border: "1px solid rgba(34,211,153,0.20)",
-                  borderRadius: 8,
-                }}>
-                  <span style={{
-                    fontSize: 10, fontWeight: 800, letterSpacing: "0.10em", textTransform: "uppercase",
-                    color: "#22d399",
-                  }}>
-                    {t("modelLabel")}: {result.model_used} ★
-                  </span>
-                </div>
-              </div>
-            )}
+            {/* Model badge removido — informação não acrescenta valor visual.
+                A escolha do modelo é decisão de produto, não detalhe pro user. */}
             {result.revised_prompt && result.revised_prompt !== result.prompt && (
               <p style={{
                 fontSize: 11, color: "rgba(255,255,255,0.45)",
