@@ -358,37 +358,22 @@ export default function HubImageGenerator() {
                 <RefreshCw size={14} /> Gerar variação
               </button>
             </div>
-            {result.model_used && (() => {
-              const isPremium = result.model_used === "gpt-image-2" || result.model_used === "gpt-image-1";
-              const accentColor = result.model_used === "gpt-image-2" ? "#22d399"
-                : result.model_used === "gpt-image-1" ? "#38bdf8"
-                : "#c084fc";
-              const accentBg = result.model_used === "gpt-image-2" ? "rgba(34,211,153,0.06)"
-                : result.model_used === "gpt-image-1" ? "rgba(56,189,248,0.06)"
-                : "rgba(168,85,247,0.06)";
-              const accentBorder = result.model_used === "gpt-image-2" ? "rgba(34,211,153,0.20)"
-                : result.model_used === "gpt-image-1" ? "rgba(56,189,248,0.20)"
-                : "rgba(168,85,247,0.20)";
-              return (
-                <div style={{
-                  marginTop: 12, padding: "8px 12px",
-                  display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-                  background: accentBg, border: `1px solid ${accentBorder}`, borderRadius: 8,
+            {result.model_used && (
+              <div style={{
+                marginTop: 12, padding: "8px 12px",
+                display: "inline-flex", alignItems: "center", gap: 6,
+                background: "rgba(34,211,153,0.06)",
+                border: "1px solid rgba(34,211,153,0.20)",
+                borderRadius: 8,
+              }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase",
+                  color: "#22d399",
                 }}>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase",
-                    color: accentColor,
-                  }}>
-                    Modelo: {result.model_used}{isPremium && " ★"}
-                  </span>
-                  {result.fallback_reason && (
-                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.4 }}>
-                      · modelos premium indisponíveis ({result.fallback_reason.slice(0, 120)}). Pra liberar gpt-image-2/1, verifica a org em platform.openai.com/settings/organization/general.
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
+                  Modelo: {result.model_used} ★
+                </span>
+              </div>
+            )}
             {result.revised_prompt && result.revised_prompt !== result.prompt && (
               <p style={{
                 fontSize: 11, color: "rgba(255,255,255,0.40)",

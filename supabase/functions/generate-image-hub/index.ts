@@ -1,17 +1,9 @@
 // generate-image-hub — Image Generator interno (Brilliant Hub).
 //
-// Estratégia: chain de modelos em ordem de qualidade decrescente.
-//   1. gpt-image-2 (modelo novo da OpenAI, fotorrealista premium)
-//   2. gpt-image-1 (geração anterior, ainda alta qualidade)
-//   3. dall-e-3 (estável em qualquer conta paga, qualidade ilustrativa)
-//
-// Se um modelo falhar com erro de acesso/disponibilidade (404/403),
-// passa pro próximo. Erros de content_policy ou rate_limit retornam
-// direto (mesmo problema em qualquer modelo).
-//
-// Resposta inclui `model_used` pra UI mostrar qual rodou.
+// Modelo único: gpt-image-2 (decisão do produto). Sem fallback —
+// se a OpenAI rejeitar, retorna o erro real pra UI lidar.
 
-const FN_VERSION = "v5-chain-2026-05-05";
+const FN_VERSION = "v6-gptimage2-only-2026-05-05";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -21,19 +13,13 @@ const cors = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Sizes por modelo. gpt-image-1/2 usam grid de 1024x{1024,1536} ou
-// 1536x1024. dall-e-3 usa 1024x1024 / 1024x1792 / 1792x1024.
-const SIZE_GPTIMAGE: Record<string, string> = {
+// gpt-image-2 — sizes nativos. 4:5 não tem nativo, cai no portrait
+// mais próximo (1024x1536) e a IA enquadra.
+const SIZE_MAP: Record<string, string> = {
   "1:1":  "1024x1024",
   "16:9": "1536x1024",
   "9:16": "1024x1536",
   "4:5":  "1024x1536",
-};
-const SIZE_DALLE: Record<string, string> = {
-  "1:1":  "1024x1024",
-  "16:9": "1792x1024",
-  "9:16": "1024x1792",
-  "4:5":  "1024x1792",
 };
 
 function jsonResponse(payload: unknown, status: number): Response {
@@ -41,79 +27,6 @@ function jsonResponse(payload: unknown, status: number): Response {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
-}
-
-interface ModelAttempt {
-  ok: boolean;
-  imageUrl?: string | null;
-  revisedPrompt?: string;
-  status?: number;
-  errText?: string;
-  errMsg?: string;
-}
-
-async function callOpenAI(reqBody: Record<string, unknown>, apiKey: string): Promise<ModelAttempt> {
-  const r = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify(reqBody),
-  });
-  if (!r.ok) {
-    const t = await r.text();
-    let msg = "";
-    try { msg = JSON.parse(t)?.error?.message || ""; } catch {}
-    return { ok: false, status: r.status, errText: t, errMsg: msg };
-  }
-  const data = await r.json();
-  const imgData = data?.data?.[0];
-  // Handle both url and b64_json responses (different models return different formats)
-  const imageUrl: string | null = imgData?.url
-    || (imgData?.b64_json ? `data:image/png;base64,${imgData.b64_json}` : null);
-  return {
-    ok: true,
-    imageUrl,
-    revisedPrompt: imgData?.revised_prompt,
-  };
-}
-
-async function tryGptImage(model: "gpt-image-2" | "gpt-image-1", prompt: string, aspect: string, quality: string, apiKey: string): Promise<ModelAttempt> {
-  const size = SIZE_GPTIMAGE[aspect] || SIZE_GPTIMAGE["1:1"];
-  return callOpenAI({
-    model,
-    prompt: prompt.slice(0, 4000),
-    size,
-    quality, // low|medium|high
-    n: 1,
-    moderation: "low",
-  }, apiKey);
-}
-
-async function tryDalle3(prompt: string, aspect: string, quality: string, apiKey: string): Promise<ModelAttempt> {
-  const size = SIZE_DALLE[aspect] || SIZE_DALLE["1:1"];
-  const dalleQuality = quality === "high" ? "hd" : "standard";
-  return callOpenAI({
-    model: "dall-e-3",
-    prompt: prompt.slice(0, 4000),
-    size,
-    quality: dalleQuality,
-    n: 1,
-    response_format: "url",
-  }, apiKey);
-}
-
-// True se o erro indica que vale tentar próximo modelo do chain
-function isAvailabilityError(a: ModelAttempt): boolean {
-  if (!a.status) return false;
-  if (a.status === 403 || a.status === 404) return true;
-  const m = (a.errMsg || "").toLowerCase();
-  return m.includes("verified") || m.includes("does not have access")
-      || m.includes("model not found") || m.includes("invalid model")
-      || m.includes("must be verified");
-}
-
-function isContentBlock(a: ModelAttempt): boolean {
-  const m = (a.errMsg || "").toLowerCase();
-  return m.includes("content_policy") || m.includes("safety system");
 }
 
 console.log(`[hub-image] boot ${FN_VERSION}`);
@@ -155,93 +68,79 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    const cleanPrompt = prompt.trim();
-    console.log("[hub-image] start", JSON.stringify({
-      user_id: authUser.id, aspect_ratio, quality, prompt_len: cleanPrompt.length,
+    const cleanPrompt = prompt.trim().slice(0, 4000);
+    const size = SIZE_MAP[aspect_ratio] || SIZE_MAP["1:1"];
+
+    const reqBody = {
+      model: "gpt-image-2",
+      prompt: cleanPrompt,
+      size,
+      quality, // low | medium | high
+      n: 1,
+      moderation: "low",
+    };
+
+    console.log("[hub-image] calling OpenAI gpt-image-2:", JSON.stringify({
+      user_id: authUser.id, size, quality, prompt_len: cleanPrompt.length,
     }));
 
-    // ── Chain de modelos ─────────────────────────────────────────────
-    type ModelKey = "gpt-image-2" | "gpt-image-1" | "dall-e-3";
-    const chain: ModelKey[] = ["gpt-image-2", "gpt-image-1", "dall-e-3"];
-    let attempt: ModelAttempt | null = null;
-    let modelUsed: ModelKey | null = null;
-    const skipped: { model: ModelKey; reason: string; status?: number }[] = [];
+    const r = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(reqBody),
+    });
 
-    for (const model of chain) {
-      console.log(`[hub-image] trying ${model}…`);
-      const a: ModelAttempt = model === "dall-e-3"
-        ? await tryDalle3(cleanPrompt, aspect_ratio, quality, OPENAI_API_KEY)
-        : await tryGptImage(model, cleanPrompt, aspect_ratio, quality, OPENAI_API_KEY);
+    if (!r.ok) {
+      const errText = await r.text();
+      let errMsg = "";
+      let errCode = "";
+      try {
+        const parsed = JSON.parse(errText);
+        errMsg = parsed?.error?.message || "";
+        errCode = parsed?.error?.code || "";
+      } catch {}
 
-      if (a.ok) {
-        attempt = a;
-        modelUsed = model;
-        break;
+      console.error(`[hub-image] gpt-image-2 ${r.status}:`, errText);
+
+      let userError = "image_gen_failed";
+      let userMessage = errMsg || `OpenAI retornou ${r.status}.`;
+      if (errCode === "content_policy_violation" || errMsg.toLowerCase().includes("safety")) {
+        userError = "content_policy";
+        userMessage = "Prompt rejeitado por política de conteúdo da OpenAI.";
+      } else if (r.status === 429) {
+        userError = "rate_limited";
+        userMessage = "Rate limit OpenAI atingido. Tenta de novo em ~1min.";
+      } else if (r.status === 401) {
+        userError = "openai_auth";
+        userMessage = "Chave OpenAI inválida ou expirada.";
+      } else if (r.status === 403) {
+        userError = "openai_access";
+        userMessage = errMsg || "Conta sem acesso a gpt-image-2 (verifica org/billing).";
+      } else if (r.status === 404) {
+        userError = "model_not_found";
+        userMessage = errMsg || "Modelo gpt-image-2 não encontrado na sua conta OpenAI.";
       }
 
-      // Content policy ou rate limit — não adianta tentar outro modelo
-      if (isContentBlock(a)) {
-        console.warn(`[hub-image] ${model} content block:`, a.errMsg);
-        return jsonResponse({
-          _v: FN_VERSION, ok: false, error: "content_policy",
-          message: "Prompt rejeitado por política de conteúdo da OpenAI.",
-          openai_status: a.status, openai_message: a.errMsg,
-          detail: (a.errText || "").slice(0, 500),
-        }, 502);
-      }
-      if (a.status === 429) {
-        console.warn(`[hub-image] ${model} rate limit`);
-        return jsonResponse({
-          _v: FN_VERSION, ok: false, error: "rate_limited",
-          message: "Rate limit OpenAI atingido. Tenta de novo em ~1min.",
-          openai_status: a.status, openai_message: a.errMsg,
-        }, 502);
-      }
-
-      // Erro de acesso/disponibilidade — passa pro próximo modelo
-      if (isAvailabilityError(a)) {
-        console.warn(`[hub-image] ${model} unavailable (${a.status}): ${a.errMsg}`);
-        skipped.push({ model, reason: a.errMsg || `${a.status}`, status: a.status });
-        continue;
-      }
-
-      // Erro hard que não merece retry — retorna direto
-      console.error(`[hub-image] ${model} hard error:`, a.status, a.errText);
       return jsonResponse({
-        _v: FN_VERSION, ok: false, error: "image_gen_failed",
-        message: a.errMsg || `OpenAI retornou ${a.status} pra ${model}.`,
-        model_attempted: model,
-        openai_status: a.status, openai_message: a.errMsg,
-        detail: (a.errText || "").slice(0, 500),
-        skipped,
+        _v: FN_VERSION, ok: false, error: userError, message: userMessage,
+        openai_status: r.status, openai_message: errMsg, openai_code: errCode,
+        detail: errText.slice(0, 500),
       }, 502);
     }
 
-    // Se chegou aqui sem sucesso, todos do chain caíram em "availability"
-    if (!attempt || !modelUsed) {
-      console.error("[hub-image] all models unavailable:", JSON.stringify(skipped));
-      return jsonResponse({
-        _v: FN_VERSION, ok: false, error: "no_model_available",
-        message: "Nenhum modelo de imagem disponível na conta OpenAI. Verifica acesso aos modelos no painel da OpenAI.",
-        skipped,
-      }, 502);
-    }
+    const data = await r.json();
+    const imgData = data?.data?.[0];
+    const imageUrl: string | null = imgData?.url
+      || (imgData?.b64_json ? `data:image/png;base64,${imgData.b64_json}` : null);
+    const revisedPrompt = imgData?.revised_prompt || cleanPrompt;
 
-    if (!attempt.imageUrl) {
-      console.error("[hub-image] no image in response from", modelUsed);
+    if (!imageUrl) {
+      console.error("[hub-image] no image in response:", JSON.stringify(data).slice(0, 500));
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: "no_image_returned",
-        message: `${modelUsed} não retornou imagem.`,
-        model_attempted: modelUsed,
+        message: "gpt-image-2 não retornou imagem.",
       }, 502);
     }
-
-    const sizeUsed = modelUsed === "dall-e-3"
-      ? (SIZE_DALLE[aspect_ratio] || SIZE_DALLE["1:1"])
-      : (SIZE_GPTIMAGE[aspect_ratio] || SIZE_GPTIMAGE["1:1"]);
-    const fallbackReason = skipped.length > 0
-      ? skipped.map(s => `${s.model}: ${s.reason}`).join(" | ")
-      : null;
 
     // Persiste na biblioteca
     try {
@@ -250,12 +149,10 @@ Deno.serve(async (req) => {
         type: "hub_image",
         content: {
           prompt: cleanPrompt,
-          revised_prompt: attempt.revisedPrompt || cleanPrompt,
-          image_url: attempt.imageUrl,
-          aspect_ratio,
-          size: sizeUsed,
-          quality,
-          model: modelUsed,
+          revised_prompt: revisedPrompt,
+          image_url: imageUrl,
+          aspect_ratio, size, quality,
+          model: "gpt-image-2",
         },
         created_at: new Date().toISOString(),
       });
@@ -263,20 +160,16 @@ Deno.serve(async (req) => {
       console.warn("[hub-image] DB insert failed (non-fatal):", dbErr);
     }
 
-    console.log(`[hub-image] success — model=${modelUsed} skipped=${skipped.length}`);
+    console.log("[hub-image] success — gpt-image-2");
 
     return jsonResponse({
       _v: FN_VERSION,
       ok: true,
-      image_url: attempt.imageUrl,
+      image_url: imageUrl,
       prompt: cleanPrompt,
-      revised_prompt: attempt.revisedPrompt || cleanPrompt,
-      aspect_ratio,
-      size: sizeUsed,
-      quality,
-      model_used: modelUsed,
-      fallback_reason: fallbackReason,
-      skipped,
+      revised_prompt: revisedPrompt,
+      aspect_ratio, size, quality,
+      model_used: "gpt-image-2",
     }, 200);
 
   } catch (e) {
