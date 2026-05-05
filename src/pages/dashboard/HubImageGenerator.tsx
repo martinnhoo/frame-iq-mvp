@@ -1,19 +1,20 @@
 /**
- * HubImageGenerator — gerador de imagens com brand context.
+ * HubImageGenerator — gerador de imagens com brand context multi-mercado.
  *
  * Layout Higgsfield-inspired:
  *   1. Brand selector — cards visuais clicáveis com logo (gradient +
- *      iniciais por enquanto). Hover/select com glow.
- *   2. License panel — auto-aparece quando a brand selecionada tem
- *      license (BETBUS hoje). Toggle pra incluir/excluir + textarea
- *      editável + botão pra resetar pro texto original.
- *   3. Prompt textarea — descrição da imagem.
- *   4. Aspect ratio + quality em chips visuais.
- *   5. Preview grande no centro com badge do modelo usado.
+ *      iniciais), bandeira do(s) mercado(s).
+ *   2. Market selector — chips com bandeira aparecem quando a marca
+ *      opera em mais de 1 mercado. Auto-seleciona o primeiro ao
+ *      trocar de marca.
+ *   3. License panel — auto-aparece quando a combinação marca+mercado
+ *      tem license (hoje só BETBUS-MX). Toggle + textarea editável.
+ *   4. Prompt + aspect ratio + quality.
+ *   5. Verify org card — quando OpenAI exige verification, em vez do
+ *      erro vermelho genérico.
+ *   6. Preview com badge "Modelo: gpt-image-2 ★".
  *
- * Edge function recebe brand_id, include_license, license_text e
- * compõe o prompt final (brand_hint + user prompt + disclaimer
- * instruction).
+ * Tudo i18n (pt/en/es/zh) — mudou idioma no menu, muda aqui também.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -24,13 +25,90 @@ import {
   Image as ImageIcon, Download, RefreshCw, ArrowLeft, Sparkles, AlertTriangle,
   Copy, RotateCcw, Check,
 } from "lucide-react";
-import { HUB_BRANDS, getBrand, type HubBrand } from "@/data/hubBrands";
+import {
+  HUB_BRANDS, HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
+  type HubBrand, type MarketCode, type Lang,
+} from "@/data/hubBrands";
+import { useLanguage } from "@/i18n/LanguageContext";
 
-const ASPECT_RATIOS = [
-  { id: "1:1",  label: "Quadrado",   sub: "1:1",   desc: "Feed, Insta post" },
-  { id: "9:16", label: "Vertical",   sub: "9:16",  desc: "Reels, Stories" },
-  { id: "16:9", label: "Horizontal", sub: "16:9",  desc: "YouTube, banner" },
-  { id: "4:5",  label: "Retrato",    sub: "4:5",   desc: "Insta otimizado" },
+// ── Strings i18n ─────────────────────────────────────────────────────
+const STR: Record<string, Record<Lang, string>> = {
+  back:                { pt: "Voltar ao Hub",        en: "Back to Hub",          es: "Volver al Hub",          zh: "返回中心" },
+  title:               { pt: "Image Studio",          en: "Image Studio",          es: "Image Studio",            zh: "图像工作室" },
+  subtitle:            { pt: "IA generativa por marca · disclaimer auto · multi-mercado",
+                         en: "Generative AI by brand · auto disclaimer · multi-market",
+                         es: "IA generativa por marca · disclaimer automático · multi-mercado",
+                         zh: "按品牌生成 · 自动免责声明 · 多市场" },
+  brand:               { pt: "Marca",                  en: "Brand",                 es: "Marca",                  zh: "品牌" },
+  market:              { pt: "Mercado",                en: "Market",                es: "Mercado",                zh: "市场" },
+  describe:            { pt: "Descreva a imagem",      en: "Describe the image",    es: "Describe la imagen",     zh: "描述图像" },
+  describePlaceholder: { pt: 'Ex: "Cena cinematográfica de jogador celebrando uma vitória, neon vibrante, atmosfera premium de cassino"',
+                         en: 'Ex: "Cinematic scene of a player celebrating a win, vibrant neon, premium casino atmosphere"',
+                         es: 'Ej: "Escena cinematográfica de jugador celebrando una victoria, neón vibrante, atmósfera premium de casino"',
+                         zh: '例: "玩家庆祝胜利的电影场景，霓虹灯，高端赌场氛围"' },
+  format:              { pt: "Formato",                en: "Format",                es: "Formato",                zh: "格式" },
+  quality:             { pt: "Qualidade",              en: "Quality",               es: "Calidad",                zh: "质量" },
+  qDraft:              { pt: "Rascunho",               en: "Draft",                 es: "Borrador",               zh: "草稿" },
+  qMedium:             { pt: "Médio",                  en: "Medium",                es: "Medio",                  zh: "中等" },
+  qHigh:               { pt: "Alta",                   en: "High",                  es: "Alta",                   zh: "高" },
+  qDraftDesc:          { pt: "Rascunho rápido",        en: "Quick draft",           es: "Borrador rápido",        zh: "快速草稿" },
+  qMediumDesc:         { pt: "Produção",               en: "Production",            es: "Producción",             zh: "生产" },
+  qHighDesc:           { pt: "Entrega final",          en: "Final delivery",        es: "Entrega final",          zh: "最终交付" },
+  arSquareLabel:       { pt: "Quadrado",               en: "Square",                es: "Cuadrado",               zh: "方形" },
+  arSquareDesc:        { pt: "Feed, Insta post",       en: "Feed, Insta post",      es: "Feed, post Insta",       zh: "信息流，Insta 帖子" },
+  arVerticalLabel:     { pt: "Vertical",               en: "Vertical",              es: "Vertical",               zh: "垂直" },
+  arVerticalDesc:      { pt: "Reels, Stories",         en: "Reels, Stories",        es: "Reels, Stories",         zh: "Reels，Stories" },
+  arHorizontalLabel:   { pt: "Horizontal",             en: "Horizontal",            es: "Horizontal",             zh: "横向" },
+  arHorizontalDesc:    { pt: "YouTube, banner",        en: "YouTube, banner",       es: "YouTube, banner",        zh: "YouTube，横幅" },
+  arPortraitLabel:     { pt: "Retrato",                en: "Portrait",              es: "Retrato",                zh: "人像" },
+  arPortraitDesc:      { pt: "Insta otimizado",        en: "Insta optimized",       es: "Insta optimizado",       zh: "Insta 优化" },
+  generate:            { pt: "Gerar imagem",           en: "Generate image",        es: "Generar imagen",         zh: "生成图像" },
+  generating:          { pt: "Gerando…",               en: "Generating…",           es: "Generando…",             zh: "生成中…" },
+  download:            { pt: "Baixar",                 en: "Download",              es: "Descargar",              zh: "下载" },
+  variation:           { pt: "Gerar variação",         en: "Generate variation",    es: "Generar variación",      zh: "生成变体" },
+  recent:              { pt: "Últimas geraçōes",       en: "Latest generations",    es: "Últimas generaciones",   zh: "最近生成" },
+  promptRefined:       { pt: "Prompt refinado pela IA",en: "Prompt refined by AI",  es: "Prompt refinado por IA", zh: "AI 优化后的提示词" },
+  modelLabel:          { pt: "Modelo",                 en: "Model",                 es: "Modelo",                 zh: "模型" },
+  // License panel
+  licTitle:            { pt: "Disclaimer regulatório", en: "Regulatory disclaimer", es: "Disclaimer regulatorio", zh: "监管免责声明" },
+  licInclude:          { pt: "Incluir no criativo",    en: "Include in creative",   es: "Incluir en el creativo", zh: "包含在创意中" },
+  licCopy:             { pt: "Copiar texto",           en: "Copy text",             es: "Copiar texto",           zh: "复制文本" },
+  licCopied:           { pt: "Copiado",                en: "Copied",                es: "Copiado",                zh: "已复制" },
+  licReset:            { pt: "Resetar",                en: "Reset",                 es: "Restablecer",            zh: "重置" },
+  // Verify org card
+  verifyTitle:         { pt: "Verifique sua organização OpenAI",
+                         en: "Verify your OpenAI organization",
+                         es: "Verifica tu organización OpenAI",
+                         zh: "验证您的 OpenAI 组织" },
+  verifyDesc:          { pt: "Pra usar o gpt-image-2 (qualidade fotorrealista pra ad creatives), a OpenAI exige verification organizacional.",
+                         en: "To use gpt-image-2 (photorealistic quality for ad creatives), OpenAI requires organization verification.",
+                         es: "Para usar gpt-image-2 (calidad fotorrealista para anuncios), OpenAI requiere verificación organizacional.",
+                         zh: "要使用 gpt-image-2（广告创意的照片级质量），OpenAI 需要组织验证。" },
+  verifyTime:          { pt: "Aprovado em ~5min via verification individual (KYC com doc + selfie).",
+                         en: "Approved in ~5min via Individual verification (KYC with ID + selfie).",
+                         es: "Aprobado en ~5min vía verificación Individual (KYC con DNI + selfie).",
+                         zh: "通过个人验证 (KYC 与身份证 + 自拍) 约 5 分钟内批准。" },
+  verifyBtn:           { pt: "Verificar agora →",      en: "Verify now →",          es: "Verificar ahora →",      zh: "立即验证 →" },
+  verifyClose:         { pt: "Fechar",                 en: "Close",                 es: "Cerrar",                 zh: "关闭" },
+  verifyAfter:         { pt: "Após aprovar a verification, volta aqui e tenta gerar de novo. Funciona automaticamente, sem precisar mexer no código.",
+                         en: "Once verification is approved, come back and try generating again. Works automatically — no code changes needed.",
+                         es: "Tras aprobar la verificación, vuelve y prueba generar de nuevo. Funciona automáticamente, sin cambios de código.",
+                         zh: "验证批准后，返回此处再次尝试生成。自动运行，无需代码更改。" },
+  sessionExpired:      { pt: "Sessão expirada — recarrega a página.",
+                         en: "Session expired — reload the page.",
+                         es: "Sesión expirada — recarga la página.",
+                         zh: "会话已过期 — 请刷新页面。" },
+  promptTooShort:      { pt: "Descreva a imagem com pelo menos 5 caracteres.",
+                         en: "Describe the image with at least 5 characters.",
+                         es: "Describe la imagen con al menos 5 caracteres.",
+                         zh: "请用至少 5 个字符描述图像。" },
+};
+
+const ASPECT_RATIOS_KEYS = [
+  { id: "1:1",  labelKey: "arSquareLabel",     descKey: "arSquareDesc"     },
+  { id: "9:16", labelKey: "arVerticalLabel",   descKey: "arVerticalDesc"   },
+  { id: "16:9", labelKey: "arHorizontalLabel", descKey: "arHorizontalDesc" },
+  { id: "4:5",  labelKey: "arPortraitLabel",   descKey: "arPortraitDesc"   },
 ];
 
 type GenResult = {
@@ -39,7 +117,6 @@ type GenResult = {
   revised_prompt: string;
   aspect_ratio: string;
   model_used?: string;
-  fallback_reason?: string | null;
 };
 
 type GalleryItem = {
@@ -48,14 +125,19 @@ type GalleryItem = {
   prompt: string;
   aspect_ratio: string;
   brand_id?: string;
+  market?: MarketCode;
   created_at: string;
 };
 
 export default function HubImageGenerator() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
+  const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || key;
 
   const [prompt, setPrompt] = useState("");
   const [brandId, setBrandId] = useState<string>("none");
+  const [marketCode, setMarketCode] = useState<MarketCode | null>(null);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
 
@@ -70,20 +152,34 @@ export default function HubImageGenerator() {
   const [licenseCopied, setLicenseCopied] = useState(false);
 
   const brand: HubBrand | null = useMemo(() => getBrand(brandId), [brandId]);
-  const hasLicense = !!brand?.license;
+  const defaultLicense = useMemo(() => {
+    if (!brand?.license || !marketCode) return "";
+    return brand.license[marketCode] || "";
+  }, [brand, marketCode]);
+  const hasLicense = !!defaultLicense;
 
-  // Quando troca de brand, repõe a license padrão e re-ativa o toggle
+  // Quando troca brand, auto-seleciona o primeiro mercado dela.
   useEffect(() => {
-    if (brand?.license) {
-      setLicenseText(brand.license);
+    if (!brand || brand.markets.length === 0) {
+      setMarketCode(null);
+    } else {
+      // Se mercado atual não tá na lista da nova brand, troca pro primeiro
+      setMarketCode(prev => (prev && brand.markets.includes(prev) ? prev : brand.markets[0]));
+    }
+  }, [brandId]);
+
+  // Quando muda brand+mercado, repõe license padrão e re-ativa toggle
+  useEffect(() => {
+    if (defaultLicense) {
+      setLicenseText(defaultLicense);
       setIncludeLicense(true);
     } else {
       setLicenseText("");
       setIncludeLicense(false);
     }
-  }, [brandId]);
+  }, [defaultLicense]);
 
-  // Carrega galeria das últimas 12 imagens do user
+  // Carrega galeria das últimas 12
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -99,7 +195,7 @@ export default function HubImageGenerator() {
         if (!mounted || !data) return;
         const items: GalleryItem[] = (data as Array<{
           id: string;
-          content?: { image_url?: string; prompt?: string; aspect_ratio?: string; brand_id?: string };
+          content?: { image_url?: string; prompt?: string; aspect_ratio?: string; brand_id?: string; market?: MarketCode };
           created_at: string;
         }>)
           .filter(r => r?.content?.image_url)
@@ -109,6 +205,7 @@ export default function HubImageGenerator() {
             prompt: r.content!.prompt || "",
             aspect_ratio: r.content!.aspect_ratio || "1:1",
             brand_id: r.content!.brand_id,
+            market: r.content!.market,
             created_at: r.created_at,
           }));
         setGallery(items);
@@ -128,7 +225,13 @@ export default function HubImageGenerator() {
       const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
-      if (!token) { setError("Sessão expirada — recarrega a página."); return; }
+      if (!token) { setError(t("sessionExpired")); return; }
+
+      // Constrói brand_hint = base hint + market context
+      let brandHint = brand?.promptHint || "";
+      if (marketCode && HUB_MARKETS[marketCode]?.promptContext) {
+        brandHint = `${brandHint}\n\n${HUB_MARKETS[marketCode].promptContext}`.trim();
+      }
 
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
         method: "POST",
@@ -142,7 +245,8 @@ export default function HubImageGenerator() {
           aspect_ratio: aspectRatio,
           quality,
           brand_id: brandId === "none" ? null : brandId,
-          brand_hint: brand?.promptHint || "",
+          brand_hint: brandHint,
+          market: marketCode,
           include_license: hasLicense && includeLicense,
           license_text: hasLicense && includeLicense ? licenseText.trim() : "",
         }),
@@ -157,7 +261,6 @@ export default function HubImageGenerator() {
       try { payload = JSON.parse(text); } catch { /* not json */ }
 
       if (!r.ok || !payload?.ok) {
-        // Erro especial: org não verificada — UI dedicada com link
         if (payload?.error === "needs_org_verification") {
           setNeedsVerify(true);
           return;
@@ -174,7 +277,6 @@ export default function HubImageGenerator() {
         revised_prompt: payload.revised_prompt || prompt.trim(),
         aspect_ratio: aspectRatio,
         model_used: payload.model_used,
-        fallback_reason: (payload as { fallback_reason?: string | null })?.fallback_reason,
       });
       setGallery(prev => [{
         id: `tmp-${Date.now()}`,
@@ -182,6 +284,7 @@ export default function HubImageGenerator() {
         prompt: prompt.trim(),
         aspect_ratio: aspectRatio,
         brand_id: brandId === "none" ? undefined : brandId,
+        market: marketCode || undefined,
         created_at: new Date().toISOString(),
       }, ...prev].slice(0, 12));
     } catch (e) {
@@ -217,7 +320,7 @@ export default function HubImageGenerator() {
   };
 
   const resetLicense = () => {
-    if (brand?.license) setLicenseText(brand.license);
+    if (defaultLicense) setLicenseText(defaultLicense);
   };
 
   const promptValid = prompt.trim().length >= 5;
@@ -225,7 +328,7 @@ export default function HubImageGenerator() {
   return (
     <>
       <Helmet>
-        <title>Image Generator — Hub</title>
+        <title>{t("title")}</title>
       </Helmet>
 
       <div style={{ minHeight: "calc(100vh - 64px)", padding: "24px 24px 80px", maxWidth: 1280, margin: "0 auto", color: "#fff" }}>
@@ -235,9 +338,10 @@ export default function HubImageGenerator() {
             display: "inline-flex", alignItems: "center", gap: 6,
             background: "transparent", border: "none", color: "rgba(255,255,255,0.55)",
             cursor: "pointer", fontSize: 13, padding: "6px 8px", marginBottom: 16,
+            fontFamily: "inherit",
           }}
         >
-          <ArrowLeft size={14} /> Voltar ao Hub
+          <ArrowLeft size={14} /> {t("back")}
         </button>
 
         {/* Hero */}
@@ -252,17 +356,17 @@ export default function HubImageGenerator() {
           </div>
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.02em" }}>
-              Image Studio
+              {t("title")}
             </h1>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.50)", margin: "3px 0 0", letterSpacing: "0.02em" }}>
-              IA generativa por marca · disclaimer auto · multi-mercado
+              {t("subtitle")}
             </p>
           </div>
         </div>
 
         {/* ── Brand selector ──────────────────────────────────────── */}
-        <div style={{ marginBottom: 22 }}>
-          <p style={SECTION_LABEL}>Marca</p>
+        <div style={{ marginBottom: 18 }}>
+          <p style={SECTION_LABEL}>{t("brand")}</p>
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))",
@@ -271,6 +375,10 @@ export default function HubImageGenerator() {
             {HUB_BRANDS.map(b => {
               const active = brandId === b.id;
               const isNone = b.id === "none";
+              const brandLicensed = b.license && Object.keys(b.license).length > 0;
+              const brandLabelMarkets = b.markets.length > 0
+                ? b.markets.map(m => HUB_MARKETS[m]?.flag).join(" ")
+                : "✦";
               return (
                 <button
                   key={b.id}
@@ -280,9 +388,7 @@ export default function HubImageGenerator() {
                     position: "relative",
                     padding: 14,
                     borderRadius: 14,
-                    background: active
-                      ? "rgba(168,85,247,0.10)"
-                      : "rgba(255,255,255,0.025)",
+                    background: active ? "rgba(168,85,247,0.10)" : "rgba(255,255,255,0.025)",
                     border: `1px solid ${active ? "rgba(168,85,247,0.55)" : "rgba(255,255,255,0.06)"}`,
                     cursor: loading ? "not-allowed" : "pointer",
                     textAlign: "left",
@@ -291,12 +397,12 @@ export default function HubImageGenerator() {
                     boxShadow: active
                       ? "0 0 24px rgba(168,85,247,0.25), inset 0 0 0 1px rgba(168,85,247,0.20)"
                       : "none",
+                    fontFamily: "inherit",
                   }}
                   onMouseEnter={e => { if (!active && !loading) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.045)"; }}
                   onMouseLeave={e => { if (!active && !loading) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.025)"; }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                    {/* Logo */}
                     <div style={{
                       width: 40, height: 40, borderRadius: 11,
                       background: b.gradient,
@@ -315,15 +421,14 @@ export default function HubImageGenerator() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
-                        {b.name}
+                        {getBrandName(b, lang)}
                       </p>
-                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", margin: "2px 0 0", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                        <span>{b.flag}</span>
-                        <span>{b.marketLabel}</span>
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", margin: "2px 0 0" }}>
+                        {brandLabelMarkets}
                       </p>
                     </div>
                   </div>
-                  {b.license && (
+                  {brandLicensed && (
                     <div style={{
                       position: "absolute", top: 8, right: 8,
                       fontSize: 9, fontWeight: 800, letterSpacing: "0.10em",
@@ -340,8 +445,55 @@ export default function HubImageGenerator() {
           </div>
         </div>
 
-        {/* ── License panel (só pra marca com license) ──────────── */}
-        {hasLicense && brand && (
+        {/* ── Market sub-selector (só quando brand tem 1+ mercado) ── */}
+        {brand && brand.markets.length > 0 && (
+          <div style={{ marginBottom: 22 }}>
+            <p style={SECTION_LABEL}>{t("market")}</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {brand.markets.map(code => {
+                const m = HUB_MARKETS[code];
+                const active = marketCode === code;
+                const hasLicForThis = !!brand.license?.[code];
+                return (
+                  <button
+                    key={code}
+                    onClick={() => setMarketCode(code)}
+                    disabled={loading}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 8,
+                      padding: "8px 13px", borderRadius: 10,
+                      background: active ? "rgba(168,85,247,0.14)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${active ? "rgba(168,85,247,0.55)" : "rgba(255,255,255,0.08)"}`,
+                      color: active ? "#fff" : "rgba(255,255,255,0.65)",
+                      cursor: loading ? "not-allowed" : "pointer",
+                      fontSize: 13, fontWeight: 600,
+                      fontFamily: "inherit",
+                      transition: "all 0.15s",
+                      boxShadow: active ? "0 0 20px rgba(168,85,247,0.18)" : "none",
+                    }}
+                  >
+                    <span style={{ fontSize: 16, lineHeight: 1 }}>{m.flag}</span>
+                    <span>{getMarketLabel(code, lang)}</span>
+                    {hasLicForThis && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, letterSpacing: "0.10em",
+                        color: "#22d399",
+                        padding: "1px 5px", borderRadius: 4,
+                        background: "rgba(34,211,153,0.10)",
+                        border: "1px solid rgba(34,211,153,0.25)",
+                      }}>
+                        LIC
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── License panel ─────────────────────────────────────── */}
+        {hasLicense && marketCode && (
           <div style={{
             marginBottom: 22,
             padding: 16,
@@ -350,14 +502,12 @@ export default function HubImageGenerator() {
             border: "1px solid rgba(34,211,153,0.20)",
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{
-                  fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase",
-                  color: "#22d399",
-                }}>
-                  Disclaimer regulatório · {brand.marketLabel}
-                </span>
-              </div>
+              <span style={{
+                fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase",
+                color: "#22d399",
+              }}>
+                {t("licTitle")} · {getMarketLabel(marketCode, lang)}
+              </span>
               <label style={{ display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12 }}>
                 <input
                   type="checkbox"
@@ -367,7 +517,7 @@ export default function HubImageGenerator() {
                   style={{ accentColor: "#22d399", width: 14, height: 14, cursor: "pointer" }}
                 />
                 <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
-                  Incluir no criativo
+                  {t("licInclude")}
                 </span>
               </label>
             </div>
@@ -393,20 +543,16 @@ export default function HubImageGenerator() {
               onBlur={e => { e.currentTarget.style.borderColor = "rgba(34,211,153,0.18)"; }}
             />
             <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-              <button
-                onClick={copyLicense}
-                disabled={loading}
-                style={SUBTLE_BTN}
-              >
+              <button onClick={copyLicense} disabled={loading} style={SUBTLE_BTN}>
                 {licenseCopied ? <Check size={12} /> : <Copy size={12} />}
-                {licenseCopied ? "Copiado" : "Copiar texto"}
+                {licenseCopied ? t("licCopied") : t("licCopy")}
               </button>
               <button
                 onClick={resetLicense}
-                disabled={loading || licenseText === brand.license}
-                style={{ ...SUBTLE_BTN, opacity: licenseText === brand.license ? 0.4 : 1 }}
+                disabled={loading || licenseText === defaultLicense}
+                style={{ ...SUBTLE_BTN, opacity: licenseText === defaultLicense ? 0.4 : 1 }}
               >
-                <RotateCcw size={12} /> Resetar
+                <RotateCcw size={12} /> {t("licReset")}
               </button>
             </div>
           </div>
@@ -418,11 +564,11 @@ export default function HubImageGenerator() {
           border: "1px solid rgba(255,255,255,0.06)",
           borderRadius: 16, padding: 18, marginBottom: 22,
         }}>
-          <p style={SECTION_LABEL}>Descreva a imagem</p>
+          <p style={SECTION_LABEL}>{t("describe")}</p>
           <textarea
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
-            placeholder='Ex: "Cena cinematográfica de um jogador celebrando uma vitória, neon vibrante, atmosfera premium de cassino"'
+            placeholder={t("describePlaceholder")}
             rows={3}
             disabled={loading}
             style={{
@@ -446,9 +592,9 @@ export default function HubImageGenerator() {
 
           {/* Aspect ratio */}
           <div style={{ marginTop: 16 }}>
-            <p style={SECTION_LABEL}>Formato</p>
+            <p style={SECTION_LABEL}>{t("format")}</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8 }}>
-              {ASPECT_RATIOS.map(ar => {
+              {ASPECT_RATIOS_KEYS.map(ar => {
                 const active = aspectRatio === ar.id;
                 return (
                   <button
@@ -467,11 +613,11 @@ export default function HubImageGenerator() {
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700 }}>{ar.label}</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.40)", letterSpacing: "0.04em" }}>{ar.sub}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>{t(ar.labelKey as keyof typeof STR)}</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.40)", letterSpacing: "0.04em" }}>{ar.id}</span>
                     </div>
                     <div style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 2 }}>
-                      {ar.desc}
+                      {t(ar.descKey as keyof typeof STR)}
                     </div>
                   </button>
                 );
@@ -481,14 +627,14 @@ export default function HubImageGenerator() {
 
           {/* Quality */}
           <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-            <p style={{ ...SECTION_LABEL, margin: 0 }}>Qualidade</p>
+            <p style={{ ...SECTION_LABEL, margin: 0 }}>{t("quality")}</p>
             <div style={{ display: "flex", gap: 4, padding: 4, background: "rgba(0,0,0,0.30)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)" }}>
               {(["low", "medium", "high"] as const).map(q => (
                 <button
                   key={q}
                   onClick={() => setQuality(q)}
                   disabled={loading}
-                  title={q === "low" ? "Rascunho rápido" : q === "medium" ? "Produção" : "Entrega final"}
+                  title={q === "low" ? t("qDraftDesc") : q === "medium" ? t("qMediumDesc") : t("qHighDesc")}
                   style={{
                     padding: "6px 14px", borderRadius: 7, fontSize: 11, fontWeight: 800,
                     background: quality === q ? "linear-gradient(135deg, #a855f7, #7c3aed)" : "transparent",
@@ -500,13 +646,13 @@ export default function HubImageGenerator() {
                     transition: "all 0.15s",
                   }}
                 >
-                  {q === "low" ? "Rascunho" : q === "medium" ? "Médio" : "Alta"}
+                  {q === "low" ? t("qDraft") : q === "medium" ? t("qMedium") : t("qHigh")}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Generate button */}
+          {/* Generate */}
           <button
             onClick={generate}
             disabled={loading || !promptValid}
@@ -528,14 +674,14 @@ export default function HubImageGenerator() {
             {loading ? (
               <>
                 <RefreshCw size={16} style={{ animation: "spin 1s linear infinite" }} />
-                Gerando…
+                {t("generating")}
               </>
             ) : (
               <>
-                <Sparkles size={16} /> Gerar imagem
-                {brand && brand.id !== "none" && (
+                <Sparkles size={16} /> {t("generate")}
+                {brand && brand.id !== "none" && marketCode && (
                   <span style={{ marginLeft: 4, fontSize: 11, opacity: 0.85, fontWeight: 600 }}>
-                    · {brand.name}
+                    · {brand.name} · {HUB_MARKETS[marketCode].flag}
                   </span>
                 )}
               </>
@@ -543,7 +689,7 @@ export default function HubImageGenerator() {
           </button>
         </div>
 
-        {/* ── Verify org (caso especial) ────────────────────────── */}
+        {/* ── Verify org card ───────────────────────────────────── */}
         {needsVerify && (
           <div style={{
             padding: "20px 22px", borderRadius: 14,
@@ -561,12 +707,13 @@ export default function HubImageGenerator() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ fontSize: 15, fontWeight: 800, color: "#fff", margin: "0 0 6px", letterSpacing: "-0.01em" }}>
-                  Verifique sua organização OpenAI
+                  {t("verifyTitle")}
                 </h3>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", margin: "0 0 14px", lineHeight: 1.55 }}>
-                  Pra usar o gpt-image-2 (qualidade fotorrealista pra ad creatives), a OpenAI exige
-                  verification organizacional. <strong style={{ color: "#fbbf24" }}>Aprovado em ~5min</strong>
-                  {" "}via verification individual (KYC com doc + selfie).
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", margin: "0 0 6px", lineHeight: 1.55 }}>
+                  {t("verifyDesc")}
+                </p>
+                <p style={{ fontSize: 13, color: "#fbbf24", margin: "0 0 14px", fontWeight: 600 }}>
+                  {t("verifyTime")}
                 </p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <a
@@ -583,7 +730,7 @@ export default function HubImageGenerator() {
                       letterSpacing: "0.02em",
                     }}
                   >
-                    <Sparkles size={13} /> Verificar agora →
+                    <Sparkles size={13} /> {t("verifyBtn")}
                   </a>
                   <button
                     onClick={() => setNeedsVerify(false)}
@@ -596,11 +743,11 @@ export default function HubImageGenerator() {
                       fontFamily: "inherit",
                     }}
                   >
-                    Fechar
+                    {t("verifyClose")}
                   </button>
                 </div>
                 <p style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", margin: "12px 0 0", lineHeight: 1.5 }}>
-                  Após aprovar a verification, volta aqui e tenta gerar de novo. Funciona automaticamente, sem precisar mexer no código.
+                  {t("verifyAfter")}
                 </p>
               </div>
             </div>
@@ -636,18 +783,11 @@ export default function HubImageGenerator() {
               />
             </div>
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-              <button
-                onClick={() => downloadImage(result.image_url, `hub-${Date.now()}.png`)}
-                style={ACTION_BTN}
-              >
-                <Download size={14} /> Baixar
+              <button onClick={() => downloadImage(result.image_url, `hub-${Date.now()}.png`)} style={ACTION_BTN}>
+                <Download size={14} /> {t("download")}
               </button>
-              <button
-                onClick={generate}
-                disabled={loading}
-                style={ACTION_BTN}
-              >
-                <RefreshCw size={14} /> Gerar variação
+              <button onClick={generate} disabled={loading} style={ACTION_BTN}>
+                <RefreshCw size={14} /> {t("variation")}
               </button>
             </div>
             {result.model_used && (
@@ -663,7 +803,7 @@ export default function HubImageGenerator() {
                     fontSize: 10, fontWeight: 800, letterSpacing: "0.10em", textTransform: "uppercase",
                     color: "#22d399",
                   }}>
-                    Modelo: {result.model_used} ★
+                    {t("modelLabel")}: {result.model_used} ★
                   </span>
                 </div>
               </div>
@@ -675,7 +815,7 @@ export default function HubImageGenerator() {
                 background: "rgba(255,255,255,0.025)", borderRadius: 8,
                 fontStyle: "italic", lineHeight: 1.55,
               }}>
-                Prompt refinado pela IA: "{result.revised_prompt}"
+                {t("promptRefined")}: "{result.revised_prompt}"
               </p>
             )}
           </div>
@@ -684,7 +824,7 @@ export default function HubImageGenerator() {
         {/* ── Gallery ───────────────────────────────────────────── */}
         {gallery.length > 0 && (
           <div>
-            <p style={SECTION_LABEL}>Últimas geraçōes</p>
+            <p style={SECTION_LABEL}>{t("recent")}</p>
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
@@ -692,6 +832,7 @@ export default function HubImageGenerator() {
             }}>
               {gallery.map(item => {
                 const itemBrand = item.brand_id ? getBrand(item.brand_id) : null;
+                const itemMarket = item.market ? HUB_MARKETS[item.market] : null;
                 return (
                   <div key={item.id} style={{
                     position: "relative",
@@ -716,7 +857,7 @@ export default function HubImageGenerator() {
                       alt={item.prompt}
                       style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block" }}
                     />
-                    {itemBrand && (
+                    {(itemBrand || itemMarket) && (
                       <div style={{
                         position: "absolute", top: 6, left: 6,
                         padding: "2px 7px", borderRadius: 6,
@@ -726,8 +867,8 @@ export default function HubImageGenerator() {
                         color: "rgba(255,255,255,0.85)",
                         display: "inline-flex", alignItems: "center", gap: 4,
                       }}>
-                        <span>{itemBrand.flag}</span>
-                        <span>{itemBrand.name}</span>
+                        {itemMarket && <span>{itemMarket.flag}</span>}
+                        {itemBrand && <span>{itemBrand.name}</span>}
                       </div>
                     )}
                     <div style={{ padding: 8 }}>
@@ -756,7 +897,6 @@ export default function HubImageGenerator() {
   );
 }
 
-// ── Estilos compartilhados ──────────────────────────────────────────
 const SECTION_LABEL: React.CSSProperties = {
   display: "block",
   fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em",

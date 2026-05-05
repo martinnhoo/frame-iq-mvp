@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v9-gptimage2-only-actionable-2026-05-05";
+const FN_VERSION = "v10-multimarket-2026-05-05";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
       quality = "medium",
       brand_id = null,
       brand_hint = "",
+      market = null,
       include_license = false,
       license_text = "",
     } = body as {
@@ -75,6 +76,7 @@ Deno.serve(async (req) => {
       quality?: "low" | "medium" | "high";
       brand_id?: string | null;
       brand_hint?: string;
+      market?: string | null;
       include_license?: boolean;
       license_text?: string;
     };
@@ -102,7 +104,8 @@ Deno.serve(async (req) => {
     const size = SIZE_MAP[aspect_ratio] || SIZE_MAP["1:1"];
 
     console.log("[hub-image] start", JSON.stringify({
-      user_id: authUser.id, aspect_ratio, quality, brand_id: brand_id || null,
+      user_id: authUser.id, aspect_ratio, quality,
+      brand_id: brand_id || null, market: market || null,
       include_license, prompt_len: finalPrompt.length,
     }));
 
@@ -198,6 +201,7 @@ Deno.serve(async (req) => {
           aspect_ratio, size, quality,
           model: "gpt-image-2",
           brand_id: brand_id || null,
+          market: market || null,
           license_included: include_license,
           license_text: include_license ? license_text : null,
         },
@@ -219,6 +223,7 @@ Deno.serve(async (req) => {
       aspect_ratio, size, quality,
       model_used: "gpt-image-2",
       brand_id: brand_id || null,
+      market: market || null,
       license_included: include_license,
     }, 200);
 
