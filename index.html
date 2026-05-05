@@ -2,12 +2,8 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <!-- viewport-fit=cover is required for env(safe-area-inset-*) to
-         return non-zero values on iOS notch / Dynamic Island devices.
-         Without it, the page renders inside the safe rect and the
-         insets are all 0 — which means our notch/home-indicator
-         padding has nothing to subtract. With it, the page renders
-         edge-to-edge and we explicitly pad around the unsafe areas. -->
+    <!-- viewport-fit=cover é necessário pra env(safe-area-inset-*)
+         retornar valores não-zero em iOS com notch / Dynamic Island. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=3" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3" />
@@ -16,155 +12,16 @@
     <link rel="manifest" href="/site.webmanifest?v=3" />
     <meta name="theme-color" content="#0a0c10" />
 
-    <!-- Preload AdBrief AI avatar — used in 8+ places across the
-         dashboard (chat bubbles, proactive cards, feed sidebar, goal
-         setup, etc). Browser fetches it during HTML parse, so by the
-         time React mounts the AB icon is already in cache and renders
-         instantly instead of flashing in late. -->
-    <link rel="preload" as="image" href="/ab-avatar.png" fetchpriority="high" />
-
-    <title>AdBrief — IA para Meta Ads que diz onde está vazando R$ na sua conta</title>
-    <meta name="description" content="Conecte sua conta do Meta Ads e descubra em segundos onde está perdendo dinheiro. AdBrief é a IA que analisa criativos, audience, ROAS e CPA — diagnóstico causal em PT direto, com plano de ação. Teste grátis por 3 dias." />
-
-    <link rel="canonical" href="https://adbrief.pro/" />
-    <meta name="robots" content="index, follow" />
-    <meta name="author" content="AdBrief" />
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://adbrief.pro/" />
-    <meta property="og:title" content="AdBrief — IA para Meta Ads que diz onde está vazando R$" />
-    <meta property="og:description" content="Conecte sua conta Meta e descubra em segundos onde está perdendo dinheiro. Diagnóstico causal em PT, com plano de ação. Teste grátis 3 dias." />
-    <meta property="og:image" content="https://adbrief.pro/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:locale" content="pt_BR" />
-    <meta property="og:site_name" content="AdBrief" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@AdBrief" />
-    <meta name="twitter:title" content="AdBrief — IA para Meta Ads que diz onde está vazando R$" />
-    <meta name="twitter:description" content="Conecte Meta. Descubra em segundos onde está perdendo dinheiro. Plano de ação em PT. Teste grátis 3 dias." />
-    <meta name="twitter:image" content="https://adbrief.pro/og-image.png" />
-
-    <!-- JSON-LD: Organization + SoftwareApplication (default — overridden per-page by prerender) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Organization",
-          "@id": "https://adbrief.pro/#org",
-          "name": "AdBrief",
-          "url": "https://adbrief.pro",
-          "logo": "https://adbrief.pro/logo.png",
-          "description": "IA que analisa contas Meta Ads e gera diagnóstico causal em PT direto: o que está vazando R$ e qual o plano de ação.",
-          "sameAs": ["https://www.instagram.com/adbrief.pro/"]
-        },
-        {
-          "@type": "SoftwareApplication",
-          "@id": "https://adbrief.pro/#software",
-          "name": "AdBrief",
-          "applicationCategory": "BusinessApplication",
-          "operatingSystem": "Web",
-          "url": "https://adbrief.pro",
-          "description": "Conecte sua conta Meta Ads e receba diagnóstico automático: criativo cansado, audience errada, fadiga, CPA alto — com plano de ação em português.",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "BRL",
-            "description": "Teste grátis 3 dias"
-          },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "reviewCount": "47"
-          }
-        }
-      ]
-    }
-    </script>
-
-    <!-- Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-X0P1QLGZLG"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-X0P1QLGZLG');
-    </script>
+    <title>AdBrief</title>
+    <meta name="robots" content="noindex, nofollow" />
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Meta Pixel Code -->
-    <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '478948487618567');
-    fbq('set', 'autoConfig', false, '478948487618567');
-    fbq('track', 'PageView');
-    </script>
-    <!-- End Meta Pixel Code -->
-
   </head>
   <body>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=478948487618567&ev=PageView&noscript=1"
-    /></noscript>
-    <!-- Fallback content for crawlers when JS is disabled or hasn't loaded.
-         Hydration replaces this completely. SEO crawlers (with or without JS)
-         see real H1 + paragraph even if React fails. Per-page prerender script
-         overrides this with page-specific copy.
-         Visually hidden for real users — the inline script below makes it
-         visible only if React hasn't replaced this div within 2.5s (real
-         hydration normally lands in 200-500ms). This kills the flash that
-         was visible on first load before the LP rendered. -->
-    <div id="root">
-      <main id="adbrief-ssr-fallback" style="opacity:0;visibility:hidden;font-family:system-ui,sans-serif;max-width:780px;margin:80px auto;padding:0 24px;color:#0a0c10;line-height:1.6">
-        <h1 style="font-size:36px;font-weight:800;letter-spacing:-0.02em;margin:0 0 16px">AdBrief — IA para Meta Ads</h1>
-        <p style="font-size:18px;color:#444;margin:0 0 24px">
-          A inteligência artificial que conecta na sua conta do Meta Ads e mostra
-          em segundos onde está vazando dinheiro: criativo cansado, audience errada,
-          CPA alto, fadiga, oportunidades de escala. Diagnóstico causal em português,
-          com plano de ação concreto.
-        </p>
-        <h2 style="font-size:22px;margin:32px 0 12px">Para quem é</h2>
-        <p style="margin:0 0 16px">Gestores de tráfego, agências de marketing performance, e-commerces que rodam Meta Ads e querem parar de adivinhar o que pausar e o que escalar.</p>
-        <h2 style="font-size:22px;margin:32px 0 12px">O que faz</h2>
-        <ul style="margin:0 0 24px;padding-left:24px">
-          <li>Lê todos os anúncios, adsets e campanhas da sua conta</li>
-          <li>Detecta padrões de waste com IA causal (não é só dashboard)</li>
-          <li>Explica em PT direto a causa raiz e o que fazer</li>
-          <li>Executa pause/scale com um clique (com confirmação)</li>
-          <li>Aprende com cada decisão e melhora as próximas recomendações</li>
-        </ul>
-        <p style="margin:24px 0"><a href="/signup" style="background:#2563eb;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:600">Começar teste grátis de 3 dias</a></p>
-      </main>
-    </div>
-    <noscript>
-      <style>#adbrief-ssr-fallback{opacity:1!important;visibility:visible!important}</style>
-    </noscript>
-    <script>
-      // If React hasn't replaced #root within 2.5s, reveal the fallback so
-      // the user sees something instead of a blank page. Normal hydration is
-      // 200-500ms — the timer effectively never fires for healthy loads.
-      (function(){
-        setTimeout(function(){
-          var f = document.getElementById('adbrief-ssr-fallback');
-          if (f) { f.style.opacity = '1'; f.style.visibility = 'visible'; }
-        }, 2500);
-      })();
-    </script>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

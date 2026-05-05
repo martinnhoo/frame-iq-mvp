@@ -7,11 +7,12 @@ import { HelmetProvider } from "react-helmet-async";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { lazy, Suspense } from "react";
 
-// ── Eagerly loaded — needed on first paint for public routes ─────────────────
-import Index from "./pages/IndexNew";
-// LP minimalista — variante experimental servida em /start. Atrito zero,
-// só headline + 1 CTA. Filtro de qualidade vem do Meta Ads targeting.
-import IndexMinimal from "./pages/IndexMinimal";
+// AdBrief.pro hoje é só portal de cadastro/login (invite-only) +
+// dashboard interno (Brilliant Hub). Sem marketing, sem blog, sem
+// LP, sem SEO. Toda rota pública não-auth caiu — `/` redireciona
+// pra `/signup`.
+
+// ── Auth: eagerly loaded (primeira tela) ─────────────────────────────────────
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -21,34 +22,11 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 
-// BOFU SEO pages: 13 hand-tuned PT-BR landing pages prerendered as static HTML
-// for crawlers (via scripts/prerender.mjs). React renders them client-side
-// using the same data so navigation feels instant after hydration.
-import { BOFU_PAGES } from "@/data/bofuPages";
-const BofuPage = lazy(() => import("./pages/BofuPage"));
-
-// ── Lazily loaded — only fetched when user navigates there ───────────────────
-const Blog         = lazy(() => import("./pages/Blog"));
-const BlogPost     = lazy(() => import("./pages/BlogPost"));
-const Contact      = lazy(() => import("./pages/Contact"));
-const BookDemo     = lazy(() => import("./pages/BookDemo"));
-const FAQ          = lazy(() => import("./pages/FAQ"));
-const Levels       = lazy(() => import("./pages/Levels"));
-const FeatureDetail = lazy(() => import("./pages/FeatureDetail"));
-const Features     = lazy(() => import("./pages/Features"));
+// ── Legais (compliance Meta) ─────────────────────────────────────────────────
 const Terms        = lazy(() => import("./pages/Terms"));
 const Privacy      = lazy(() => import("./pages/Privacy"));
-const Metodologia  = lazy(() => import("./pages/Metodologia"));
-const Refund       = lazy(() => import("./pages/Refund"));
-const Careers      = lazy(() => import("./pages/Careers"));
-const About        = lazy(() => import("./pages/About"));
-const Pricing      = lazy(() => import("./pages/Pricing"));
-const Demo         = lazy(() => import("./pages/Demo"));
-const DemoShare    = lazy(() => import("./pages/DemoShare"));
-const Gestao       = lazy(() => import("./pages/Gestao"));
-const Criativo     = lazy(() => import("./pages/Criativo"));
 
-// Dashboard — simplified v2 AppLayout with Copilot sidebar
+// ── Dashboard (Brilliant Hub interno) ────────────────────────────────────────
 const AppLayout        = lazy(() => import("./components/layout/AppLayout"));
 const AdBriefAI        = lazy(() => import("./pages/dashboard/AdBriefAI"));
 const IntelligencePage = lazy(() => import("./pages/dashboard/IntelligencePage"));
@@ -76,11 +54,9 @@ const LoopSettingsPage = lazy(() => import("./pages/dashboard/LoopSettingsPage")
 const LoopGuidePage    = lazy(() => import("./pages/dashboard/LoopGuidePage"));
 const ReferralPage     = lazy(() => import("./pages/dashboard/ReferralPage"));
 const AutopilotLogPage = lazy(() => import("./pages/dashboard/AutopilotLogPage"));
-
-// Internal diagnostics (owner only)
 const DebugPage        = lazy(() => import("./pages/dashboard/DebugPage"));
 
-// Cockpit — privileged backoffice (admin-only, obscure path, noindex)
+// Cockpit — backoffice admin
 const CockpitLayout      = lazy(() => import("./pages/cockpit/CockpitLayout"));
 const CockpitOverview    = lazy(() => import("./pages/cockpit/CockpitOverview"));
 const CockpitUsers       = lazy(() => import("./pages/cockpit/CockpitUsers"));
@@ -94,39 +70,12 @@ const PatternsPage     = lazy(() => import("./pages/dashboard/PatternsPage"));
 const HistoryPage      = lazy(() => import("./pages/dashboard/HistoryPage"));
 const OnboardingPage   = lazy(() => import("./pages/dashboard/OnboardingPage"));
 const CriarHub         = lazy(() => import("./pages/dashboard/CriarHub"));
-// Brilliant Hub — pivô interno multi-marca (substitui Feed como home).
-// Outras rotas continuam acessíveis via URL direta mas escondidas do menu.
 const BrilliantHub     = lazy(() => import("./pages/dashboard/BrilliantHub"));
 const HubImageGenerator = lazy(() => import("./pages/dashboard/HubImageGenerator"));
 const HubLibrary = lazy(() => import("./pages/dashboard/HubLibrary"));
 const CampaignsManager = lazy(() => import("./pages/dashboard/CampaignsManager"));
 
-// SEO pages — lazily loaded, rarely visited from landing
-const ToolsIndex    = lazy(() => import("@/pages/seo/ToolsIndex"));
-const ToolPage      = lazy(() => import("@/pages/seo/ToolPage"));
-const GuidesIndex   = lazy(() => import("@/pages/seo/GuidesIndex"));
-const GuidePage     = lazy(() => import("@/pages/seo/GuidePage"));
-const PlatformPage  = lazy(() => import("@/pages/seo/PlatformPage"));
-const IndustryPage  = lazy(() => import("@/pages/seo/IndustryPage"));
-const UseCasePage   = lazy(() => import("@/pages/seo/UseCasePage"));
-const RolePage      = lazy(() => import("@/pages/seo/RolePage"));
-const LearnPage     = lazy(() => import("@/pages/seo/LearnPage"));
-const HookTypePage  = lazy(() => import("@/pages/seo/HookTypePage"));
-const AdExamplesPage = lazy(() => import("@/pages/seo/AdExamplesPage"));
-const AdHooksPage   = lazy(() => import("@/pages/seo/AdHooksPage"));
-const GlossaryPage  = lazy(() => import("@/pages/seo/GlossaryPage"));
-const LocationPage  = lazy(() => import("@/pages/seo/LocationPage"));
-
-const CompareIndex  = lazy(() => import("@/pages/seo/ComparePages").then(m => ({ default: m.CompareIndex })));
-const CompareDetail = lazy(() => import("@/pages/seo/ComparePages").then(m => ({ default: m.CompareDetail })));
-const AdsLibraryIndex   = lazy(() => import("@/pages/seo/AdsLibrary").then(m => ({ default: m.AdsLibraryIndex })));
-const AdsLibraryLanding = lazy(() => import("@/pages/seo/AdsLibrary").then(m => ({ default: m.AdsLibraryLanding })));
-// Wrapper layout that injects <meta name="robots" content="noindex, follow">
-// for all the EN legacy SEO routes — see file header for context.
-const EnSeoNoIndexLayout = lazy(() => import("@/pages/seo/_EnSeoNoIndexLayout"));
-
 import ToolGate from "./components/ToolGate";
-import SupportChat from "./components/SupportChat";
 
 // Minimal spinner shown while lazy chunks load
 const PageLoader = () => (
@@ -146,56 +95,35 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <SupportChat />
             <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<Index />} />
-              {/* LP minimalista — experimental. Quando converter melhor que /,
-                  trocar import de Index pra IndexMinimal e remover esta rota. */}
-              <Route path="/start" element={<IndexMinimal />} />
+              {/* Raiz vai pro signup — LP eliminada, acesso é por convite. */}
+              <Route path="/" element={<Navigate to="/signup" replace />} />
+
+              {/* ── Auth ────────────────────────────────────────────── */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/book-demo" element={<BookDemo />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/levels" element={<Levels />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/demo" element={<Demo />} />
-              <Route path="/s/:shareId" element={<DemoShare />} />
-              <Route path="/gestao" element={<Gestao />} />
-              <Route path="/criativo" element={<Criativo />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/metodologia" element={<Metodologia />} />
-              <Route path="/refund" element={<Refund />} />
-              <Route path="/careers" element={<Careers />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/features/:slug" element={<FeatureDetail />} />
-              <Route path="/features" element={<Features />} />
               <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/email-confirmed" element={<EmailConfirmed />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
 
-              {/* Dashboard — simplified v2 AppLayout with Copilot sidebar */}
+              {/* ── Legais (Meta exige links) ──────────────────────── */}
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+
+              {/* ── Dashboard (Brilliant Hub interno) ──────────────── */}
               <Route path="/dashboard" element={<AppLayout />}>
-                {/* Brilliant Hub é o novo home — Feed e demais rotas continuam
-                    funcionando via URL direta pra preservar opcionalidade. */}
                 <Route index element={<Navigate to="/dashboard/hub" replace />} />
                 <Route path="hub" element={<BrilliantHub />} />
                 <Route path="hub/image" element={<HubImageGenerator />} />
                 <Route path="hub/library" element={<HubLibrary />} />
-                {/* Compat: rota antiga /dashboard/library redireciona pra /hub/library */}
                 <Route path="library" element={<Navigate to="/dashboard/hub/library" replace />} />
                 <Route path="feed" element={<FeedPage />} />
                 <Route path="feed/campanhas" element={<CampaignsManager />} />
                 <Route path="history" element={<HistoryPage />} />
                 <Route path="welcome" element={<OnboardingPage />} />
-
-                {/* Criar hub + AI chat */}
                 <Route path="criar" element={<CriarHub />} />
                 <Route path="ai" element={<AdBriefAI />} />
                 <Route path="intelligence" element={<IntelligencePage />} />
@@ -230,7 +158,7 @@ const App = () => (
                 <Route path="*" element={<Navigate to="/dashboard/hub" replace />} />
               </Route>
 
-              {/* ── Cockpit: admin-only backoffice (obscure path; guarded by edge fn) ── */}
+              {/* ── Cockpit: admin-only backoffice ────────────────── */}
               <Route path="/cockpit" element={<CockpitLayout />}>
                 <Route index element={<CockpitOverview />} />
                 <Route path="users" element={<CockpitUsers />} />
@@ -240,55 +168,7 @@ const App = () => (
                 <Route path="*" element={<Navigate to="/cockpit" replace />} />
               </Route>
 
-              {/* ── EN PROGRAMMATIC SEO (LEGACY, NOINDEX) ───────────────
-                   These 160+ routes are leftover English programmatic
-                   SEO pages from before AdBrief was repositioned for
-                   BR market. They still render (so bookmarks don't 404)
-                   but every one gets `<meta robots="noindex, follow">`
-                   via EnSeoNoIndexLayout — Google drops them from index
-                   over 1-2 weeks while preserving link-equity flow.
-                   See src/pages/seo/_EnSeoNoIndexLayout.tsx for context. */}
-              <Route element={<EnSeoNoIndexLayout />}>
-                {/* SEO: Tools */}
-                <Route path="/tools"         element={<ToolsIndex />} />
-                <Route path="/tools/:slug"   element={<ToolPage />} />
-
-                {/* SEO: Guides */}
-                <Route path="/guides"        element={<GuidesIndex />} />
-                <Route path="/guides/:slug"  element={<GuidePage />} />
-
-                {/* SEO: Compare */}
-                <Route path="/compare"       element={<CompareIndex />} />
-                <Route path="/compare/:slug" element={<CompareDetail />} />
-                <Route path="/platform/:slug"    element={<PlatformPage />} />
-                <Route path="/solutions/:slug"   element={<IndustryPage />} />
-                <Route path="/use-case/:slug"    element={<UseCasePage />} />
-                <Route path="/for/:slug"         element={<RolePage />} />
-                <Route path="/learn/:slug"       element={<LearnPage />} />
-                <Route path="/hooks/:slug"       element={<HookTypePage />} />
-                <Route path="/markets/:slug"     element={<LocationPage />} />
-                <Route path="/examples/:slug"    element={<AdExamplesPage />} />
-
-                {/* SEO: Ads Library */}
-                <Route path="/ads-library"           element={<AdsLibraryIndex />} />
-                <Route path="/tiktok-ad-examples"    element={<AdsLibraryLanding />} />
-                <Route path="/facebook-ad-examples"  element={<AdsLibraryLanding />} />
-                <Route path="/ugc-ad-examples"       element={<AdsLibraryLanding />} />
-                <Route path="/igaming-ad-examples"   element={<AdsLibraryLanding />} />
-                <Route path="/ecommerce-ad-examples" element={<AdsLibraryLanding />} />
-                <Route path="/best-ad-hooks"         element={<AdHooksPage />} />
-                <Route path="/glossary/:slug"        element={<GlossaryPage />} />
-              </Route>
-
-              {/* ── BOFU SEO landing pages — same URLs prerendered as static HTML
-                   for crawlers via scripts/prerender.mjs. React renders the same
-                   content client-side using shared data in src/data/bofuPages.ts.
-                   Keep this list in sync with BOFU_PAGES (in that file) and the
-                   ROUTES array in scripts/prerender.mjs. ── */}
-              {BOFU_PAGES.map((p) => (
-                <Route key={p.slug} path={`/${p.slug}`} element={<BofuPage />} />
-              ))}
-
+              {/* Catchall — qualquer URL legada cai em 404. */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>

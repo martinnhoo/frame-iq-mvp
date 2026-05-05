@@ -1,32 +1,3 @@
+# Portal interno (invite-only). Nada de marketing exposto.
 User-agent: *
-Allow: /
-
-# Block private/app routes from indexing
-Disallow: /dashboard/
-Disallow: /cockpit
-Disallow: /cockpit/
-Disallow: /login
-Disallow: /signup
-Disallow: /onboarding
-Disallow: /settings
-Disallow: /callback
-Disallow: /confirm-email
-Disallow: /forgot-password
-Disallow: /reset-password
-
-# Allow all public SEO pages
-Allow: /tools/
-Allow: /guides/
-Allow: /compare/
-Allow: /platform/
-Allow: /solutions/
-Allow: /use-case/
-Allow: /for/
-Allow: /learn/
-Allow: /hooks/
-Allow: /markets/
-Allow: /examples/
-Allow: /blog/
-Allow: /glossary/
-
-Sitemap: https://adbrief.pro/sitemap.xml
+Disallow: /

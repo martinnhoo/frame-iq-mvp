@@ -1,273 +1,89 @@
+/**
+ * Signup — invite-only.
+ *
+ * AdBrief virou portal interno: cadastro só com código de convite
+ * pré-distribuído. Edge function `claim-invite-code` valida e cria a
+ * conta atomicamente. Sem código válido = sem conta.
+ *
+ * Removido: Google OAuth (não tem como exigir código no fluxo OAuth
+ * sem caixinha de surpresas), Pixel/CAPI tracking (não há campanha
+ * Meta rodando pra conversão), email-guard (códigos já filtram bots),
+ * planParam/billing/redirect/ref (não tem mais funil pago).
+ */
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Mail, User } from "lucide-react";
+import { Loader2, Eye, EyeOff, Mail, User, Key } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Logo } from "@/components/Logo";
-import { trackEvent } from "@/lib/posthog";
-import { validateEmailForSignup, guardMessage } from "@/lib/emailGuard";
-
-// ── Meta tracking — Pixel (client) + Conversions API (server) in tandem.
-//
-// Why both:
-//   Browser-only pixel loses 30–50% of events to ad blockers, iOS 14+
-//   ATT, and tracking-prevention browsers. Result was Meta seeing "0
-//   conversões" while the database shows real signups every day —
-//   campaign can't optimize, ad delivery degrades. The fix is sending
-//   the SAME event server-to-server via Meta's Conversions API
-//   (graph.facebook.com/.../events). When pixel reaches Meta the CAPI
-//   event is deduped (same event_id + event_name within 48h), when
-//   pixel is blocked the CAPI event fills the gap.
-//
-// Dedup contract:
-//   • Pixel fires with `eventID: <uuid>` (NOT 'event_id' — Pixel uses
-//     camelCase).
-//   • CAPI sends `event_id: <same uuid>`.
-//   • Meta matches the two within a 48h window. We pay no double-count.
-//
-// PII: email/name go to CAPI server — server hashes (SHA-256) before
-// sending to Meta per their spec. Pixel handles its own PII.
-//
-// Resiliency: CAPI invocation is fire-and-forget. Network failure,
-// edge function downtime, missing access token — none of it blocks
-// the signup flow. Pixel still fires regardless.
-
-// Read fbp / fbc cookies — Meta uses these for cross-event attribution.
-// fbp = first-party pixel cookie set on first PageView.
-// fbc = Facebook click ID cookie set when user arrives via ad with fbclid.
-const readMetaCookie = (name: string): string | null => {
-  if (typeof document === "undefined") return null;
-  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]+)"));
-  return m ? decodeURIComponent(m[2]) : null;
-};
-
-// Generate a UUID for event dedup. crypto.randomUUID is widely supported;
-// fallback ensures it works in any browser context (older Safari, edge).
-const makeEventId = (): string => {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  // RFC 4122 v4-ish fallback
-  return "evt-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
-};
-
-// Fire ONE event on both surfaces (pixel + CAPI) with a shared event_id.
-const fireMetaEvent = async (
-  eventName: "Lead" | "CompleteRegistration",
-  plan: string | null,
-  userInfo: { email?: string; name?: string; userId?: string }
-) => {
-  if (typeof window === "undefined") return;
-
-  const eventId = makeEventId();
-  const customData = {
-    content_name: "signup",
-    content_category: plan || "free",
-    ...(eventName === "CompleteRegistration" ? { status: "submitted" } : {}),
-  };
-
-  // 1) Pixel — client-side. Third arg is the eventData object; fourth
-  //    arg is options where eventID lives (Meta SDK convention).
-  try {
-    const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
-    if (typeof fbq === "function") {
-      fbq("track", eventName, customData, { eventID: eventId });
-    }
-  } catch { /* silent — pixel never blocks signup */ }
-
-  // 2) CAPI — server-side. Fire-and-forget with one retry; we don't
-  //    await to avoid delaying the signup UX. The edge function
-  //    soft-fails if the access token isn't configured yet (returns
-  //    ok:false skipped). One retry covers transient network blips
-  //    (mobile 5G handoffs, brief Supabase edge restarts) without
-  //    risking double-fire — Meta dedupes by event_id within 48h, so
-  //    even if both calls land we count once.
-  try {
-    const firstName = userInfo.name?.trim().split(/\s+/)[0];
-    const lastName  = userInfo.name?.trim().split(/\s+/).slice(1).join(" ") || undefined;
-    const capiBody = {
-      event_name: eventName,
-      event_id: eventId,
-      event_source_url: window.location.href,
-      action_source: "website" as const,
-      user_id: userInfo.userId,
-      user_data: {
-        email: userInfo.email,
-        firstName,
-        lastName,
-        external_id: userInfo.userId,
-        fbp: readMetaCookie("_fbp"),
-        fbc: readMetaCookie("_fbc"),
-      },
-      custom_data: customData,
-    };
-    const sendCapi = async (attempt: number): Promise<void> => {
-      try {
-        const { data, error } = await supabase.functions.invoke("meta-capi-track", { body: capiBody });
-        if (error) throw error;
-        const result = data as { ok?: boolean; skipped?: boolean; reason?: string } | null;
-        if (result?.skipped) {
-          // Token not configured yet — log once, no retry. This is the
-          // expected state until META_CAPI_ACCESS_TOKEN is set in
-          // Supabase secrets. Pixel still fires regardless.
-          console.info("[meta-capi] skipped:", result.reason);
-        } else if (!result?.ok && attempt < 1) {
-          // Transient failure (4xx/5xx from Meta). Retry once.
-          setTimeout(() => sendCapi(attempt + 1), 1500);
-        } else if (!result?.ok) {
-          console.warn("[meta-capi] failed after retry:", result);
-        }
-      } catch (e) {
-        if (attempt < 1) setTimeout(() => sendCapi(attempt + 1), 1500);
-        else console.warn("[meta-capi] error after retry:", e);
-      }
-    };
-    void sendCapi(0);
-  } catch { /* silent — CAPI never blocks signup */ }
-};
-
-// Fire BOTH conversion events that Meta campaigns commonly optimize for.
-// Keeping the two-event-fire contract from the previous implementation
-// so existing campaigns optimizing for either Lead or CompleteRegistration
-// keep working without ads-manager changes.
-const fireMetaPixelSignup = (plan: string | null, userInfo: { email?: string; name?: string; userId?: string } = {}) => {
-  fireMetaEvent("Lead", plan, userInfo);
-  fireMetaEvent("CompleteRegistration", plan, userInfo);
-};
 
 const Signup = () => {
   const [loading, setLoading] = useState(false);
-  const [emailLoading, setEmailLoading] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const planParam = searchParams.get("plan"); // e.g. "maker", "pro", "studio"
-  const billingParam = searchParams.get("billing"); // "annual" | null
-  const redirectParam = searchParams.get("redirect"); // e.g. "/demo?unlocked=1"
-  const refParam = searchParams.get("ref"); // referral code from landing URL
   const { t, language } = useLanguage();
 
-  // Persist referral code so it survives email-confirmation round trip
-  // (user clicks email link → lands without query params → Onboarding reads from storage).
-  if (refParam && typeof window !== "undefined") {
-    try { window.localStorage.setItem("adbrief_ref_code", refParam.toUpperCase()); } catch {}
-  }
-
-  const handleGoogleSignup = async () => {
-    setLoading(true);
-    // Persist ref before bouncing to Google OAuth — returned URL is set by provider.
-    if (refParam && typeof window !== "undefined") {
-      try { window.localStorage.setItem("adbrief_ref_code", refParam.toUpperCase()); } catch {}
-    }
-    // If coming from demo flow, redirect to /dashboard/ai?from_demo=1 after OAuth
-    const oauthRedirect = redirectParam
-      ? window.location.origin + redirectParam
-      : window.location.origin + "/dashboard";
-    // Fire Pixel + CAPI BEFORE the redirect — user leaves the page and we can't fire
-    // post-auth without extra plumbing. Most users complete the Google consent screen,
-    // so the false positive rate is low. Meta dedupes by event_id (matches pixel +
-    // CAPI) AND by fbp/fbc cookie when the user returns.
-    // We don't have email yet (Google OAuth provides it after consent) — pass nothing
-    // so the CAPI event still fires with whatever match keys we have (fbp, fbc, ip,
-    // user_agent). When the user returns and we have their email, we could fire a
-    // delayed CAPI event, but Meta's match quality is already strong with cookies + IP.
-    fireMetaPixelSignup(planParam);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: oauthRedirect,
-      },
-    });
-    if (error) {
-      toast.error(error.message);
-      setLoading(false);
-    }
-  };
+  const tr = (pt: string, en: string, es?: string, zh?: string) =>
+    language === "pt" ? pt : language === "es" ? (es || en) : language === "zh" ? (zh || en) : en;
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password || !name.trim()) return;
+    if (!email.trim() || !password || !name.trim() || !code.trim()) return;
 
     if (password.length < 8) {
-      toast.error(language === "pt" ? "A senha deve ter pelo menos 8 caracteres." : language === "es" ? "La contraseña debe tener al menos 8 caracteres." : "Password must be at least 8 characters.");
+      toast.error(tr("Senha deve ter ao menos 8 caracteres.", "Password must be at least 8 characters.", "La contraseña debe tener al menos 8 caracteres.", "密码至少需要8个字符。"));
       return;
     }
 
-    // Guard: block disposable domains and probe/bot local-part patterns
-    // before we ever hit Supabase. Edge function re-validates server-side.
-    const guard = validateEmailForSignup(email.trim());
-    if (guard.ok === false) {
-      toast.error(guardMessage(guard.reason, language as "pt" | "en" | "es"));
-      trackEvent("signup_blocked", { reason: guard.reason });
-      return;
-    }
+    setLoading(true);
 
-    setEmailLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: { full_name: name.trim() },
-        emailRedirectTo: window.location.origin + "/dashboard",
+    // Edge function valida código + cria conta atomicamente.
+    const { data, error } = await supabase.functions.invoke("claim-invite-code", {
+      body: {
+        email: email.trim(),
+        password,
+        name: name.trim(),
+        code: code.trim().toUpperCase(),
       },
     });
 
-    if (error) {
-      if (error.message.includes("already registered")) {
-        toast.error(language === "pt" ? "Este email já está cadastrado. Tente entrar." : language === "es" ? "Este email ya está registrado. Intenta iniciar sesión." : "This email is already registered. Try signing in instead.");
+    if (error || !data?.ok) {
+      const result = data as { error?: string; message?: string } | null;
+      const errCode = result?.error || "unknown";
+      let msg: string;
+      if (errCode === "invalid_code") {
+        msg = tr("Código de convite inválido ou já utilizado.", "Invalid or already-used invite code.", "Código de invitación inválido o ya utilizado.", "邀请码无效或已被使用。");
+      } else if (errCode === "email_taken") {
+        msg = tr("Este email já está cadastrado.", "This email is already registered.", "Este email ya está registrado.", "此邮箱已注册。");
+      } else if (errCode === "weak_password") {
+        msg = tr("Senha deve ter ao menos 8 caracteres.", "Password must be at least 8 characters.", "La contraseña debe tener al menos 8 caracteres.", "密码至少需要8个字符。");
       } else {
-        toast.error(error.message);
+        msg = result?.message || tr("Falha ao criar conta. Tenta de novo.", "Failed to create account. Try again.", "Error al crear cuenta. Intenta de nuevo.", "创建账号失败，请重试。");
       }
-      setEmailLoading(false);
-    } else {
-      // Send branded confirmation email (non-blocking)
-      supabase.functions.invoke("send-confirmation-email", {
-        body: { email: email.trim(), name: name.trim(), language },
-      }).catch(() => {}); // fire-and-forget
-
-      trackEvent("signup_completed", { plan: planParam || "free", verified: !!data.session });
-
-      // Meta Pixel + CAPI — fire Lead + CompleteRegistration on both surfaces with
-      // shared event_id so Meta dedupes. Pass user info so CAPI can hash email/name
-      // and add external_id (Supabase user uid). This dramatically improves Meta's
-      // event-match-quality score, which makes the campaign optimizer more confident.
-      // Fires for BOTH paths (session null → /confirm-email, session present →
-      // /onboarding) — the Supabase account was created successfully in either case.
-      fireMetaPixelSignup(planParam, {
-        email: email.trim(),
-        name: name.trim(),
-        userId: data.user?.id,
-      });
-
-      // If Supabase email confirmation is required, `data.session` will be null.
-      // In that case, park the user on /confirm-email until they click the link.
-      // Google OAuth users skip this entirely (verified email at provider).
-      if (!data.session) {
-        const planQuery = planParam ? `&plan=${planParam}` : '';
-        const refQuery = refParam ? `&ref=${encodeURIComponent(refParam)}` : '';
-        navigate(`/confirm-email?email=${encodeURIComponent(email.trim())}${planQuery}${refQuery}`);
-        setEmailLoading(false);
-        return;
-      }
-
-      // (Fallback — only reached if email confirmation is disabled on Supabase side)
-      const billingQuery = billingParam ? `&billing=${billingParam}` : '';
-      const redirectQuery = redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : '';
-      const refQuery = refParam ? `&ref=${encodeURIComponent(refParam)}` : '';
-      const redirectUrl = planParam
-        ? `/onboarding?checkout=${planParam}${billingQuery}${redirectQuery}${refQuery}`
-        : `/onboarding?${(redirectQuery + refQuery).replace(/^&/, '')}`;
-      navigate(redirectUrl);
-      setEmailLoading(false);
+      toast.error(msg);
+      setLoading(false);
+      return;
     }
+
+    // Conta criada. Faz login imediato com as credenciais.
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (signInErr) {
+      toast.success(tr("Conta criada. Faça login pra continuar.", "Account created. Sign in to continue.", "Cuenta creada. Inicia sesión para continuar.", "账号已创建，请登录继续。"));
+      navigate("/login");
+      return;
+    }
+
+    toast.success(tr("Bem-vindo!", "Welcome!", "¡Bienvenido!", "欢迎！"));
+    navigate("/dashboard/hub");
   };
 
   const passwordStrength = () => {
@@ -287,7 +103,7 @@ const Signup = () => {
   };
 
   const strength = passwordStrength();
-  const isFormDisabled = loading || emailLoading;
+  const isFormDisabled = loading;
 
   return (
     <div
@@ -301,24 +117,16 @@ const Signup = () => {
       {/* Animated grid */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
-      {/* Floating particles */}
-      {[...Array(6)].map((_, i) => (
-        <div key={i} className="absolute w-1 h-1 rounded-full pointer-events-none" style={{ background: i % 2 === 0 ? 'rgba(139, 92, 246, 0.4)' : 'rgba(236, 72, 153, 0.4)', left: `${20 + i * 12}%`, top: `${15 + (i % 3) * 30}%`, opacity: 0.4 }} />
-      ))}
-
       <div className="absolute top-4 right-4 z-10">
         <LanguageSwitcher />
       </div>
-      
+
       <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="text-center">
-          <Link to="/" className="inline-block">
-            <Logo size="lg" />
-          </Link>
+          <Logo size="lg" />
         </div>
 
         <div>
-          {/* Card — glass with bright border and light inner background */}
           <div style={{
             width: '100%',
             borderRadius: 20,
@@ -330,58 +138,59 @@ const Signup = () => {
           }}>
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              {planParam && (
-                <div style={{ marginBottom: 16, padding: '8px 16px', borderRadius: 10, background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)', color: '#38bdf8', fontSize: 13, fontWeight: 600, display: 'inline-block' }}>
-                   Starting with <span style={{ textTransform: 'capitalize' }}>{planParam}</span> plan
-                </div>
-              )}
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', margin: '0 0 8px' }}>{t("auth_signup_title")}</h1>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.5 }}>{t("auth_signup_subtitle")}</p>
-            </div>
-
-            {/* Google button */}
-            <div style={{ marginBottom: 20 }}>
-              <button
-                onClick={handleGoogleSignup}
-                disabled={isFormDisabled}
-                style={{
-                  width: '100%', height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#ffffff', fontSize: 15, fontWeight: 600, cursor: isFormDisabled ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s', backdropFilter: 'blur(8px)',
-                }}
-                onMouseEnter={e => { if (!isFormDisabled) { e.currentTarget.style.background = 'rgba(255,255,255,0.13)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; } }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
-              >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                  <svg className="h-5 w-5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
-                )}
-                {t("auth_google")}
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{t("auth_or_email")}</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+              <h1 style={{ fontSize: 24, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', margin: '0 0 8px' }}>
+                {tr("Criar conta", "Create account", "Crear cuenta", "创建账号")}
+              </h1>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.5 }}>
+                {tr("Acesso por convite. Use o código que recebeu.", "Invite-only. Use the code you received.", "Acceso por invitación. Usa el código que recibiste.", "仅限邀请。请使用您收到的邀请码。")}
+              </p>
             </div>
 
             {/* Email form */}
             <form onSubmit={handleEmailSignup} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Invite code — destacado, primeiro campo */}
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(56,189,248,0.85)', marginBottom: 8, letterSpacing: '0.02em' }}>
+                  {tr("Código de convite", "Invite code", "Código de invitación", "邀请码")}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Key style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(56,189,248,0.6)' }} />
+                  <input
+                    type="text"
+                    placeholder="BRILL-XXXX-XXXX"
+                    value={code}
+                    onChange={e => setCode(e.target.value.toUpperCase())}
+                    required
+                    disabled={isFormDisabled}
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    style={{
+                      width: '100%', height: 48, borderRadius: 12, paddingLeft: 42, paddingRight: 16, boxSizing: 'border-box',
+                      background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.30)',
+                      color: '#ffffff', fontSize: 14, outline: 'none', transition: 'border-color 0.2s',
+                      fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '0.04em',
+                    }}
+                    onFocus={e => { e.currentTarget.style.borderColor = 'rgba(14,165,233,0.7)'; e.currentTarget.style.background = 'rgba(14,165,233,0.10)'; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = 'rgba(14,165,233,0.30)'; e.currentTarget.style.background = 'rgba(14,165,233,0.06)'; }}
+                  />
+                </div>
+              </div>
+
               {/* Name */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>{t("auth_name")}</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>
+                  {tr("Nome", "Name", "Nombre", "姓名")}
+                </label>
                 <div style={{ position: 'relative' }}>
                   <User style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(255,255,255,0.35)' }} />
                   <input
-                    type="text" placeholder={t("auth_name_placeholder")} autoComplete="name"
-                    value={name} onChange={e => setName(e.target.value)} required disabled={isFormDisabled}
+                    type="text"
+                    placeholder={tr("Seu nome", "Your name", "Tu nombre", "您的姓名")}
+                    autoComplete="name"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    required
+                    disabled={isFormDisabled}
                     style={{
                       width: '100%', height: 48, borderRadius: 12, paddingLeft: 42, paddingRight: 16, boxSizing: 'border-box',
                       background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
@@ -395,7 +204,7 @@ const Signup = () => {
 
               {/* Email */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>{t("auth_email")}</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Email</label>
                 <div style={{ position: 'relative' }}>
                   <Mail style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(255,255,255,0.35)' }} />
                   <input
@@ -414,10 +223,14 @@ const Signup = () => {
 
               {/* Password */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>{t("auth_password")}</label>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>
+                  {tr("Senha", "Password", "Contraseña", "密码")}
+                </label>
                 <div style={{ position: 'relative' }}>
                   <input
-                    type={showPassword ? "text" : "password"} placeholder="Min. 8 characters" autoComplete="new-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder={tr("Mín. 8 caracteres", "Min. 8 characters", "Mín. 8 caracteres", "至少8个字符")}
+                    autoComplete="new-password"
                     value={password} onChange={e => setPassword(e.target.value)} required minLength={8} disabled={isFormDisabled}
                     style={{
                       width: '100%', height: 48, borderRadius: 12, paddingLeft: 16, paddingRight: 48, boxSizing: 'border-box',
@@ -432,7 +245,6 @@ const Signup = () => {
                     {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
                   </button>
                 </div>
-                {/* Strength indicator */}
                 {password && (
                   <div style={{ marginTop: 8 }}>
                     <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
@@ -457,41 +269,39 @@ const Signup = () => {
               <div>
                 <button
                   type="submit"
-                  disabled={isFormDisabled || password.length < 8}
+                  disabled={isFormDisabled || password.length < 8 || !code.trim()}
                   style={{
-                    width: '100%', height: 50, borderRadius: 12, border: 'none', cursor: isFormDisabled || password.length < 8 ? 'not-allowed' : 'pointer',
-                    background: isFormDisabled || password.length < 8
+                    width: '100%', height: 50, borderRadius: 12, border: 'none',
+                    cursor: isFormDisabled || password.length < 8 || !code.trim() ? 'not-allowed' : 'pointer',
+                    background: isFormDisabled || password.length < 8 || !code.trim()
                       ? 'rgba(14,165,233,0.3)'
                       : 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
                     color: '#ffffff', fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em',
-                    boxShadow: isFormDisabled || password.length < 8 ? 'none' : '0 4px 24px rgba(14,165,233,0.4)',
+                    boxShadow: isFormDisabled || password.length < 8 || !code.trim() ? 'none' : '0 4px 24px rgba(14,165,233,0.4)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     transition: 'all 0.2s',
                   }}
                 >
-                  {emailLoading && <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />}
-                  {t("auth_create")}
+                  {loading && <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />}
+                  {tr("Criar conta", "Create account", "Crear cuenta", "创建账号")}
                 </button>
               </div>
-
-              {/* Trust bar */}
-              <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: 0, lineHeight: 1.6 }}>
-                {t("auth_trust")}
-              </p>
             </form>
 
             {/* Legal */}
-            <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 16, lineHeight: 1.6 }}>
-              {t("auth_legal")}{" "}
-              <Link to="/terms" style={{ color: '#38bdf8', textDecoration: 'none' }} onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{t("auth_legal_terms")}</Link>
-              {" "}{t("auth_legal_and")}{" "}
-              <Link to="/privacy" style={{ color: '#38bdf8', textDecoration: 'none' }} onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'} onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>{t("auth_legal_privacy")}</Link>.
+            <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 20, lineHeight: 1.6 }}>
+              {tr("Ao criar conta você concorda com nossos", "By creating an account you agree to our", "Al crear cuenta aceptas nuestros", "创建账号即表示您同意我们的")}{" "}
+              <Link to="/terms" style={{ color: '#38bdf8', textDecoration: 'none' }}>{tr("Termos", "Terms", "Términos", "条款")}</Link>
+              {" "}{tr("e", "and", "y", "和")}{" "}
+              <Link to="/privacy" style={{ color: '#38bdf8', textDecoration: 'none' }}>{tr("Privacidade", "Privacy", "Privacidad", "隐私政策")}</Link>.
             </p>
 
             {/* Sign in link */}
             <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.35)', marginTop: 12 }}>
-              {t("auth_has_account")}{" "}
-              <Link to="/login" style={{ color: '#38bdf8', fontWeight: 600, textDecoration: 'none' }}>{t("auth_signin")}</Link>
+              {tr("Já tem conta?", "Already have an account?", "¿Ya tienes cuenta?", "已有账号？")}{" "}
+              <Link to="/login" style={{ color: '#38bdf8', fontWeight: 600, textDecoration: 'none' }}>
+                {tr("Entrar", "Sign in", "Iniciar sesión", "登录")}
+              </Link>
             </p>
           </div>
         </div>
