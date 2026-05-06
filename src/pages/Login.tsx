@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Mail } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -22,50 +23,29 @@ const Login = () => {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    // Timeout de segurança: se em 10s nada aconteceu (redirect não rolou,
-    // navegador bloqueou, etc), reseta o loading e mostra erro pro user
-    // poder tentar de novo. Antes ficava loading infinito.
-    const timeoutId = setTimeout(() => {
-      console.warn("[google-login] timeout — reset loading");
-      toast.error(
-        language === "pt" ? "Login Google travou. Tente de novo ou use email." :
-        language === "es" ? "El login con Google se quedó atascado. Intenta de nuevo o usa email." :
-        "Google login stuck. Try again or use email."
-      );
-      setLoading(false);
-    }, 10_000);
-
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: window.location.origin + "/dashboard/hub",
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin + "/dashboard/hub",
+        extraParams: { prompt: "select_account" },
       });
-      if (error) {
-        console.error("[google-login] error:", error);
-        toast.error(error.message);
+
+      if (result.error) {
+        console.error("[google-login] error:", result.error);
+        toast.error(result.error.message);
         setLoading(false);
-        clearTimeout(timeoutId);
         return;
       }
-      // Fallback: se o Supabase retornou a URL mas não redirecionou
-      // automaticamente (raro, mas acontece com extensões/popup blockers),
-      // forçamos a navegação manual.
-      if (data?.url) {
-        console.log("[google-login] redirecting to:", data.url);
-        window.location.href = data.url;
-      } else {
-        console.warn("[google-login] no error and no url returned — investigar config Supabase");
+
+      if (result.redirected) {
+        return;
       }
-      // Não limpa timeoutId aqui — se a navegação acontecer, página vai
-      // descartar o timer naturalmente. Se NÃO acontecer (bug raro), o
-      // timeout ainda dispara e libera o user.
+
+      trackEvent("login_completed");
+      navigate("/dashboard/hub");
     } catch (e) {
       console.error("[google-login] exception:", e);
       toast.error(String(e).slice(0, 100));
       setLoading(false);
-      clearTimeout(timeoutId);
     }
   };
 
