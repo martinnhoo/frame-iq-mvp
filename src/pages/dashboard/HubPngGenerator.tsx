@@ -176,7 +176,7 @@ export default function HubPngGenerator() {
   const [mode, setMode] = useState<Mode>("scratch");
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
-  // Default 'medium' — quality 'high' demora 60-120s no gpt-image-1 e
+  // Default 'medium' — quality 'high' demora 60-120s no gpt-image-2 e
   // estoura o timeout de 150s da Supabase Edge Function pra users em
   // regiões distantes do servidor (Ásia/EU). User pode aumentar manualmente.
   const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
@@ -263,45 +263,75 @@ export default function HubPngGenerator() {
       const token = sessionData?.session?.access_token;
       if (!token) { setError(t("sessionExpired")); setLoading(false); return; }
 
-      // 2 modos com endpoints diferentes:
-      //   - 'convert': BRIA bg removal (modelo dedicado, preserva sujeito fielmente)
-      //   - 'scratch': gpt-image-1 generations (cria PNG transparente do zero)
-      // Antes os dois usavam gpt-image-1 mas o modo convert dava resultado
-      // criativo (regenerava o sujeito) — BRIA é a ferramenta certa pra bg removal real.
+      // 2 modos:
+      //   - 'convert': BRIA bg-remove direto na imagem do user (1 call)
+      //   - 'scratch': gpt-image-2 gera o asset → BRIA tira o fundo (2 calls)
+      //
+      // gpt-image-2 NÃO suporta `background: transparent` (só gpt-image-1
+      // suporta, mas qualidade muito inferior). Solução: gera com fundo
+      // normal no gpt-image-2, depois passa pela BRIA pra extrair só o
+      // sujeito. Resultado final = PNG com fundo realmente transparente.
       const isConvert = mode === "convert" && !!sourceImage;
-      const r = isConvert
-        ? await fetch(`${SUPABASE_URL}/functions/v1/hub-bria-bg-remove`, {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json",
-              "apikey": ANON_KEY,
-            },
-            body: JSON.stringify({
-              input_image_base64: sourceImage,
-            }),
-          })
-        : await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json",
-              "apikey": ANON_KEY,
-            },
-            body: JSON.stringify({
-              prompt: `${prompt.trim()}\n\nIMPORTANT: The image must have a fully transparent background. The subject must be isolated, with no environment or scenery. Soft anti-aliased edges. Output as a transparent PNG asset.`,
-              aspect_ratio: aspectRatio,
-              quality,
-              transparent: true,
-            }),
-          });
+
+      let imageWithBg: string;
+
+      if (isConvert) {
+        // Modo convert: pula gpt-image-2, vai direto pra BRIA bg-remove
+        imageWithBg = sourceImage!;
+      } else {
+        // Modo scratch: gpt-image-2 gera o asset com fundo normal
+        const augmentedPrompt = `${prompt.trim()}\n\nIMPORTANT: Subject must be isolated and centered with clean background, no environment, no scenery, simple solid background color (preferably plain white or light gray). Studio shot style — clean and well-lit.`;
+        const genRes = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "apikey": ANON_KEY,
+          },
+          body: JSON.stringify({
+            prompt: augmentedPrompt,
+            aspect_ratio: aspectRatio,
+            quality,
+            // SEM transparent: true — gpt-image-2 não suporta. BRIA cuida disso.
+          }),
+        });
+        const genText = await genRes.text();
+        let genPayload: { ok?: boolean; error?: string; message?: string; openai_message?: string; image_url?: string } | null = null;
+        try { genPayload = JSON.parse(genText); } catch { /* not json */ }
+
+        if (!genRes.ok || !genPayload?.ok) {
+          if (genPayload?.error === "needs_org_verification") { setNeedsVerify(true); setLoading(false); return; }
+          const detail = genPayload?.openai_message || genPayload?.message || genPayload?.error || `HTTP ${genRes.status}`;
+          setError(String(detail).slice(0, 400));
+          setLoading(false);
+          return;
+        }
+        if (!genPayload.image_url) {
+          setError("Geração não retornou imagem.");
+          setLoading(false);
+          return;
+        }
+        imageWithBg = genPayload.image_url;
+      }
+
+      // Step final em ambos os modos: BRIA bg-remove sobre a imagem.
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/hub-bria-bg-remove`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "apikey": ANON_KEY,
+        },
+        body: JSON.stringify({
+          input_image_base64: imageWithBg,
+        }),
+      });
       const text = await r.text();
-      let payload: { ok?: boolean; error?: string; message?: string; openai_message?: string; image_url?: string } | null = null;
+      let payload: { ok?: boolean; error?: string; message?: string; image_url?: string } | null = null;
       try { payload = JSON.parse(text); } catch { /* not json */ }
 
       if (!r.ok || !payload?.ok) {
-        if (payload?.error === "needs_org_verification") { setNeedsVerify(true); setLoading(false); return; }
-        const detail = payload?.openai_message || payload?.message || payload?.error || `HTTP ${r.status}`;
+        const detail = payload?.message || payload?.error || `HTTP ${r.status}`;
         setError(String(detail).slice(0, 400));
         setLoading(false);
         return;
@@ -322,7 +352,7 @@ export default function HubPngGenerator() {
               image_url: final,
               aspect_ratio: aspectRatio,
               quality,
-              model: "gpt-image-1",
+              model: "gpt-image-2",
               transparent: true,
               mode,
               source_filename: mode === "convert" ? sourceFilename : null,

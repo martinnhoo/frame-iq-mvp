@@ -238,7 +238,7 @@ export default function HubCarousel() {
                 image_url: s.image_url,
                 aspect_ratio: aspectRatio,
                 quality,
-                model: "gpt-image-1",
+                model: "gpt-image-2",
                 brand_id: brandId === "none" ? null : brandId,
                 market: marketCode || null,
                 script: script.trim(),

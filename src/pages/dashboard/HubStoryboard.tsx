@@ -9,7 +9,7 @@
  *
  * O backend (generate-storyboard-hub) divide o roteiro em N cenas
  * com "bible" de continuidade visual (mesmo personagem/cenário em
- * cada cena), depois gera N imagens em paralelo via gpt-image-1.
+ * cada cena), depois gera N imagens em paralelo via gpt-image-2.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -250,7 +250,7 @@ export default function HubStoryboard() {
                 image_url: s.image_url,
                 aspect_ratio: aspectRatio,
                 quality,
-                model: "gpt-image-1",
+                model: "gpt-image-2",
                 brand_id: brandId === "none" ? null : brandId,
                 market: marketCode || null,
                 script: script.trim(),

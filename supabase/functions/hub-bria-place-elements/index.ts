@@ -2,7 +2,7 @@
  * hub-bria-place-elements — coloca um elemento (mascote/personagem)
  * fielmente em uma cena gerada via BRIA Lifestyle Shot by Text.
  *
- * Diferente do gpt-image-1 que regenera tudo, BRIA Lifestyle Shot:
+ * Diferente do gpt-image-2 que regenera tudo, BRIA Lifestyle Shot:
  *   - Mantém o elemento PIXEL-FIEL (rosto, cores, pose, identidade)
  *   - Gera uma cena ao redor dele baseada na descrição
  *   - Otimizado pra product placement / character placement
@@ -32,7 +32,7 @@ const cors = {
 const BRIA_LIFESTYLE_URL =
   "https://engine.prod.bria-api.com/v1/product/lifestyle_shot_by_text";
 
-// Aspect ratio → output resolution (matches gpt-image-1 sizes pra
+// Aspect ratio → output resolution (matches gpt-image-2 sizes pra
 // consistência visual com o resto do Hub).
 const SIZE_MAP: Record<string, { width: number; height: number }> = {
   "1:1":  { width: 1024, height: 1024 },

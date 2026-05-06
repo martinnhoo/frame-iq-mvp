@@ -1,15 +1,15 @@
 // generate-image-hub — Image Generator interno (Brilliant Hub).
 //
-// Modelo único: gpt-image-1. Sem fallback. dall-e-3 é inútil pra
+// Modelo único: gpt-image-2. Sem fallback. dall-e-3 é inútil pra
 // criativos de ad — só polui a galeria com imagens de qualidade
-// inferior. Se gpt-image-1 não tá disponível, retorna erro acionável
+// inferior. Se gpt-image-2 não tá disponível, retorna erro acionável
 // (verify org) e a UI mostra a tela de "destravar".
 //
 // Brand context: front manda { brand_id, brand_hint, include_license,
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v19-correct-model-name-2026-05-06";
+const FN_VERSION = "v18-elements-2026-05-06";
 
 // Timeout explícito na chamada OpenAI. Supabase Edge Functions matam
 // requests > 150s com a mensagem 'Request idle timeout limit (150s)
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
         if (typeof img === "string" && img.length > 0) allInputImages.push(img);
       }
     }
-    // gpt-image-1 edits: max 16 imagens.
+    // gpt-image-2 edits: max 16 imagens.
     if (allInputImages.length > 16) allInputImages.length = 16;
 
     if (!prompt || prompt.trim().length < 5) {
@@ -147,9 +147,9 @@ Deno.serve(async (req) => {
     try {
       if (allInputImages.length > 0) {
         const fd = new FormData();
-        fd.append("model", "gpt-image-1");
+        fd.append("model", "gpt-image-2");
 
-        // Adiciona TODAS as imagens como inputs visuais. gpt-image-1 edits
+        // Adiciona TODAS as imagens como inputs visuais. gpt-image-2 edits
         // aceita até 16 e usa todas como contexto — ideal pra elementos
         // (mascote + ícones + objetos) servirem como referência visual fiel.
         let totalBytes = 0;
@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gpt-image-1",
+            model: "gpt-image-2",
             prompt: finalPrompt,
             size,
             quality,
@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
         errCode = parsed?.error?.code || "";
       } catch {}
 
-      console.error(`[hub-image] gpt-image-1 ${r.status}:`, errText);
+      console.error(`[hub-image] gpt-image-2 ${r.status}:`, errText);
 
       // Detecta erro de "verify org" — vira código especial pra UI
       // mostrar tela de destravar org, com link direto.
@@ -244,7 +244,7 @@ Deno.serve(async (req) => {
       if (needsVerify) {
         return jsonResponse({
           _v: FN_VERSION, ok: false, error: "needs_org_verification",
-          message: "Sua organização OpenAI precisa ser verificada pra usar gpt-image-1.",
+          message: "Sua organização OpenAI precisa ser verificada pra usar gpt-image-2.",
           openai_status: r.status, openai_message: errMsg,
           verify_url: "https://platform.openai.com/settings/organization/general",
         }, 502);
@@ -263,7 +263,7 @@ Deno.serve(async (req) => {
         userMessage = "Chave OpenAI inválida ou expirada.";
       } else if (r.status === 404) {
         userError = "model_not_found";
-        userMessage = "Modelo gpt-image-1 não encontrado na conta OpenAI.";
+        userMessage = "Modelo gpt-image-2 não encontrado na conta OpenAI.";
       }
 
       return jsonResponse({
@@ -283,7 +283,7 @@ Deno.serve(async (req) => {
       console.error("[hub-image] no image in response");
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: "no_image_returned",
-        message: "gpt-image-1 não retornou imagem.",
+        message: "gpt-image-2 não retornou imagem.",
       }, 502);
     }
 
@@ -334,7 +334,7 @@ Deno.serve(async (req) => {
           final_prompt: finalPrompt,
           image_url: finalImageUrl,
           aspect_ratio, size, quality,
-          model: "gpt-image-1",
+          model: "gpt-image-2",
           brand_id: brand_id || null,
           market: market || null,
           license_included: include_license,
@@ -368,7 +368,7 @@ Deno.serve(async (req) => {
       dbDebug = { stage: "exception", message: String(dbErr) };
     }
 
-    console.log(`[hub-image] success — model=gpt-image-1 memory_id=${memoryId} dbDebug=${JSON.stringify(dbDebug)}`);
+    console.log(`[hub-image] success — model=gpt-image-2 memory_id=${memoryId} dbDebug=${JSON.stringify(dbDebug)}`);
 
     return jsonResponse({
       _v: FN_VERSION,
@@ -380,7 +380,7 @@ Deno.serve(async (req) => {
       revised_prompt: revisedPrompt,
       final_prompt: finalPrompt,
       aspect_ratio, size, quality,
-      model_used: "gpt-image-1",
+      model_used: "gpt-image-2",
       brand_id: brand_id || null,
       market: market || null,
       license_included: include_license,

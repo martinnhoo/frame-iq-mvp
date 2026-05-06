@@ -1,8 +1,8 @@
 /**
  * hub-bria-bg-remove — Background removal via BRIA AI.
  *
- * Substitui o uso de gpt-image-1 edits no modo "Converter imagem" do
- * PNG generator. gpt-image-1 é fundamentalmente uma ferramenta de
+ * Substitui o uso de gpt-image-2 edits no modo "Converter imagem" do
+ * PNG generator. gpt-image-2 é fundamentalmente uma ferramenta de
  * GERAÇÃO criativa — não preserva o sujeito da imagem original.
  * BRIA é um modelo dedicado a bg removal: extrai o sujeito real
  * pixel-fielmente em ~2-3s.
