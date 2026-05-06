@@ -49,6 +49,11 @@ export interface Workflow {
   updated_at: string;
 }
 
+// Versão leve sem `graph` — retornada pelas listagens. O grafo (que pode
+// ter 50-100 KB por workflow em JSONB) é carregado on-demand via
+// getWorkflow() quando o user abre um workflow específico.
+export type WorkflowSummary = Omit<Workflow, "graph">;
+
 export interface WorkflowRun {
   id: string;
   workflow_id: string;
@@ -62,26 +67,30 @@ export interface WorkflowRun {
 }
 
 // ── List ────────────────────────────────────────────────────────────
-export async function listMyWorkflows(): Promise<Workflow[]> {
+// Listagens NÃO baixam `graph` (JSONB pesado). Quando user abre um
+// workflow, getWorkflow() faz a query completa.
+const SUMMARY_FIELDS = "id, user_id, name, description, brand_id, is_template, thumbnail_url, created_at, updated_at";
+
+export async function listMyWorkflows(): Promise<WorkflowSummary[]> {
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData?.session?.user?.id;
   if (!userId) return [];
   const { data, error } = await sb
     .from("hub_workflows")
-    .select("*")
+    .select(SUMMARY_FIELDS)
     .eq("user_id", userId)
     .order("updated_at", { ascending: false });
   if (error) {
     console.error("[hubWorkflows] list mine error:", error.message);
     return [];
   }
-  return (data || []) as Workflow[];
+  return (data || []) as WorkflowSummary[];
 }
 
-export async function listTemplates(): Promise<Workflow[]> {
+export async function listTemplates(): Promise<WorkflowSummary[]> {
   const { data, error } = await sb
     .from("hub_workflows")
-    .select("*")
+    .select(SUMMARY_FIELDS)
     .eq("is_template", true)
     .is("user_id", null)
     .order("created_at", { ascending: true });
@@ -89,7 +98,7 @@ export async function listTemplates(): Promise<Workflow[]> {
     console.error("[hubWorkflows] list templates error:", error.message);
     return [];
   }
-  return (data || []) as Workflow[];
+  return (data || []) as WorkflowSummary[];
 }
 
 export async function getWorkflow(id: string): Promise<Workflow | null> {

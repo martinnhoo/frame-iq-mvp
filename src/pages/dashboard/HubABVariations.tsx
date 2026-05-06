@@ -1006,6 +1006,7 @@ function VariantCard({ variant, aspectRatio, onDownload, onToggleWinner, t }: {
         )}
         {variant.status === "done" && variant.imageUrl && (
           <img src={variant.imageUrl} alt={variant.label}
+            loading="lazy" decoding="async"
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         )}
       </div>

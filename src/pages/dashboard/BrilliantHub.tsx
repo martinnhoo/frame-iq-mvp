@@ -152,11 +152,32 @@ export default function BrilliantHub() {
         setUserName(capitalize(name.split(" ")[0]));
 
         // Conta assets do Hub — usado pro empty state + counter na Biblioteca.
+        // Cache em sessionStorage por 60s. Antes rodava count exact com RLS
+        // em toda navegação pro Hub (= scan completo da tabela do user).
+        const CACHE_KEY = `hub_asset_count_${user.id}`;
+        const TTL_MS = 60_000;
+        try {
+          const cached = sessionStorage.getItem(CACHE_KEY);
+          if (cached) {
+            const parsed = JSON.parse(cached) as { count: number; ts: number };
+            if (typeof parsed.count === "number" && Date.now() - parsed.ts < TTL_MS) {
+              if (mounted) setAssetCount(parsed.count);
+              return;
+            }
+          }
+        } catch { /* sessionStorage indisponível ou JSON corrompido */ }
+
         const { count } = await supabase
           .from("hub_assets" as never)
           .select("id", { count: "exact", head: true })
           .eq("user_id", user.id);
-        if (mounted) setAssetCount(count || 0);
+        if (mounted) {
+          const finalCount = count || 0;
+          setAssetCount(finalCount);
+          try {
+            sessionStorage.setItem(CACHE_KEY, JSON.stringify({ count: finalCount, ts: Date.now() }));
+          } catch { /* quota / disabled */ }
+        }
       } catch { /* silent */ }
     })();
     return () => { mounted = false; };

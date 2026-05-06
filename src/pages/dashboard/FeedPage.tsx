@@ -1078,13 +1078,15 @@ const TelegramCard: React.FC<{ userId: string }> = ({ userId }) => {
 
   useEffect(() => {
     if (!pairingLink || conn) return;
+    // Antes era 3s = 1200 queries/h por user em pareamento ativo. Pareamento
+    // via Telegram tipicamente leva 10-30s, então 8s ainda detecta rápido.
     const interval = setInterval(async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any).from('telegram_connections')
         .select('chat_id, telegram_username, connected_at')
         .eq('user_id', userId).eq('active', true).maybeSingle() as { data: TelegramConn | null };
       if (data) { setConn(data); setPairingLink(null); }
-    }, 3000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [pairingLink, conn, userId]);
 

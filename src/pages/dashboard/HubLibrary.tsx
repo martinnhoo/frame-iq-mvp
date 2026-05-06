@@ -1155,6 +1155,7 @@ function PreviewModal({ asset, onClose, lang, t }: {
             <>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
                 <img src={asset.cover_url} alt={asset.title}
+                  loading="lazy" decoding="async"
                   style={{ maxWidth: "100%", maxHeight: "70vh", borderRadius: 10 }} />
               </div>
               <p style={{
@@ -1193,6 +1194,7 @@ function PreviewModal({ asset, onClose, lang, t }: {
                   }}>
                     <div style={{ position: "relative" }}>
                       <img src={it.url} alt={`${asset.id}-${it.n}`}
+                        loading="lazy" decoding="async"
                         style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block" }} />
                       <div style={{
                         position: "absolute", top: 6, left: 6,

@@ -31,7 +31,7 @@ import {
 import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode, type Lang } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  type Workflow, type WfGraph, type WfNode, type WfEdge,
+  type Workflow, type WorkflowSummary, type WfGraph, type WfNode, type WfEdge,
   listMyWorkflows, listTemplates, getWorkflow, cloneWorkflow,
   updateWorkflowGraph, deleteWorkflow, createWorkflow, runWorkflow,
   pollWorkflowRun,
@@ -498,9 +498,10 @@ function HubWorkflowsInner() {
   const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
   const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || String(key);
 
-  // Sidebar state
-  const [templates, setTemplates] = useState<Workflow[]>([]);
-  const [myWorkflows, setMyWorkflows] = useState<Workflow[]>([]);
+  // Sidebar state — listagens não têm graph (otimização: só carrega quando
+  // user abre um workflow específico via getWorkflow).
+  const [templates, setTemplates] = useState<WorkflowSummary[]>([]);
+  const [myWorkflows, setMyWorkflows] = useState<WorkflowSummary[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   // Anti-duplicação: enquanto está abrindo um workflow, ignora outros
   // clicks. Antes, durante DB timeout, cada click criava cópia parcial
@@ -590,20 +591,23 @@ function HubWorkflowsInner() {
     }, eds));
   }, []);
 
-  const openWorkflow = async (wf: Workflow) => {
+  const openWorkflow = async (wf: WorkflowSummary) => {
     // Anti-duplicação: se já tá abrindo (qualquer item), ignora. Evita
     // que clicks repetidos durante DB lento criem múltiplas cópias.
     if (openingId) return;
     setOpeningId(wf.id);
     try {
-      let toLoad = wf;
+      // Listagens trazem só metadados (sem graph). Sempre busca o full
+      // aqui — pra template clona e pra próprio busca direto.
+      let toLoad: Workflow;
       if (wf.is_template) {
         toLoad = await cloneWorkflow(wf.id, wf.name);
         const mine = await listMyWorkflows();
         setMyWorkflows(mine);
       } else {
         const fresh = await getWorkflow(wf.id);
-        if (fresh) toLoad = fresh;
+        if (!fresh) throw new Error("workflow não encontrado");
+        toLoad = fresh;
       }
       const { nodes: rfNodes, edges: rfEdges } = graphToRf(toLoad.graph);
       setActiveWf(toLoad);
@@ -1543,10 +1547,12 @@ function RunResultPanel({
                 />
               )}
               {a.image_url && !a.video_url && (
-                <img src={a.image_url} alt={a.name || "image"} style={{
-                  width: "100%", borderRadius: 8,
-                  border: "1px solid rgba(255,255,255,0.10)",
-                }} />
+                <img src={a.image_url} alt={a.name || "image"}
+                  loading="lazy" decoding="async"
+                  style={{
+                    width: "100%", borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.10)",
+                  }} />
               )}
               {a.audio_url && !a.video_url && !a.image_url && (
                 <audio src={a.audio_url} controls style={{ width: "100%", marginTop: 4 }} />

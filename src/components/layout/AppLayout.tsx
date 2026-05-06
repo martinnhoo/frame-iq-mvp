@@ -216,12 +216,21 @@ export function AppLayout() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // Detect mobile
+  // Detect mobile — throttled pra não disparar setState a cada pixel
+  // de resize (drag de window estourava 60+ renders/s).
   useEffect(() => {
+    let timer: number | undefined;
     const check = () => setIsMobile(window.innerWidth < MOBILE_BP);
+    const onResize = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(check, 150);
+    };
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    window.addEventListener('resize', onResize);
+    return () => {
+      if (timer) window.clearTimeout(timer);
+      window.removeEventListener('resize', onResize);
+    };
   }, []);
 
   // Close sidebar on route change (mobile)
@@ -300,22 +309,25 @@ export function AppLayout() {
         top_performing_models: unknown;
         best_platforms: unknown;
       };
+      // PersonaRow usa projeção JSONB em vez de carregar `result` e
+      // `brand_kit` inteiros (5-50 KB cada). Antes eram colunas JSONB
+      // baixadas mesmo só lendo 6 fields. Agora ->>field traz só o que
+      // precisamos como string. Trade-off: campos numéricos viriam como
+      // string, mas todos os usados aqui são string.
       type PersonaRow = {
         id: string;
         name: string | null;
         logo_url: string | null;
-        result: {
-          name?: string;
-          website?: string;
-          biz_description?: string;
-          preferred_market?: string;
-          industry?: string;
-          niche?: string;
-        } | null;
-        brand_kit: { logo_data_url?: string } | null;
         description: string | null;
         website: string | null;
         created_at: string;
+        result_name: string | null;
+        result_website: string | null;
+        result_biz: string | null;
+        result_market: string | null;
+        result_industry: string | null;
+        result_niche: string | null;
+        brand_logo: string | null;
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sb = supabase as any;
@@ -353,22 +365,34 @@ export function AppLayout() {
           if (mounted && !res.error) setAccountAlerts(res.data || []);
         });
 
-      // Load saved personas
+      // Load saved personas — limit(50) pra cortar histórico antigo
+      // (sidebar mostra ~5, 50 é folga). Projeção JSONB pra não baixar
+      // result/brand_kit inteiros.
       const { data: rawPersonas } = await sb
         .from('personas')
-        .select('id, name, logo_url, result, brand_kit, description, website, created_at')
+        .select(`
+          id, name, logo_url, description, website, created_at,
+          result_name:result->>name,
+          result_website:result->>website,
+          result_biz:result->>biz_description,
+          result_market:result->>preferred_market,
+          result_industry:result->>industry,
+          result_niche:result->>niche,
+          brand_logo:brand_kit->>logo_data_url
+        `)
         .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false }) as { data: PersonaRow[] | null };
+        .order('created_at', { ascending: false })
+        .limit(50) as { data: PersonaRow[] | null };
 
-      // Flatten result jsonb into top-level fields for compatibility
+      // Flatten projected fields into compat shape esperado pelo resto do app
       const personas = (rawPersonas || []).map((p) => ({
         id: p.id,
-        name: p.name || p.result?.name || 'Conta',
-        logo_url: p.logo_url || p.brand_kit?.logo_data_url || null,
-        website: p.website || p.result?.website || null,
-        description: p.description || p.result?.biz_description || null,
-        preferred_market: p.result?.preferred_market || null,
-        industry: p.result?.industry || p.result?.niche || null,
+        name: p.name || p.result_name || 'Conta',
+        logo_url: p.logo_url || p.brand_logo || null,
+        website: p.website || p.result_website || null,
+        description: p.description || p.result_biz || null,
+        preferred_market: p.result_market || null,
+        industry: p.result_industry || p.result_niche || null,
       }));
 
       if (mounted && personas.length) {
@@ -405,34 +429,42 @@ export function AppLayout() {
       id: string;
       name: string | null;
       logo_url: string | null;
-      result: {
-        name?: string;
-        website?: string;
-        biz_description?: string;
-        preferred_market?: string;
-        industry?: string;
-        niche?: string;
-      } | null;
-      brand_kit: { logo_data_url?: string } | null;
       description: string | null;
       website: string | null;
       created_at: string;
+      result_name: string | null;
+      result_website: string | null;
+      result_biz: string | null;
+      result_market: string | null;
+      result_industry: string | null;
+      result_niche: string | null;
+      brand_logo: string | null;
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: rawPersonas } = await (supabase as any)
       .from('personas')
-      .select('id, name, logo_url, result, brand_kit, description, website, created_at')
+      .select(`
+        id, name, logo_url, description, website, created_at,
+        result_name:result->>name,
+        result_website:result->>website,
+        result_biz:result->>biz_description,
+        result_market:result->>preferred_market,
+        result_industry:result->>industry,
+        result_niche:result->>niche,
+        brand_logo:brand_kit->>logo_data_url
+      `)
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false }) as { data: PersonaRow[] | null };
+      .order('created_at', { ascending: false })
+      .limit(50) as { data: PersonaRow[] | null };
 
     const personas = (rawPersonas || []).map((p) => ({
       id: p.id,
-      name: p.name || p.result?.name || 'Conta',
-      logo_url: p.logo_url || p.brand_kit?.logo_data_url || null,
-      website: p.website || p.result?.website || null,
-      description: p.description || p.result?.biz_description || null,
-      preferred_market: p.result?.preferred_market || null,
-      industry: p.result?.industry || p.result?.niche || null,
+      name: p.name || p.result_name || 'Conta',
+      logo_url: p.logo_url || p.brand_logo || null,
+      website: p.website || p.result_website || null,
+      description: p.description || p.result_biz || null,
+      preferred_market: p.result_market || null,
+      industry: p.result_industry || p.result_niche || null,
     }));
 
     setSavedPersonas(personas);
@@ -635,7 +667,7 @@ export function AppLayout() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         {p.logo_url
-                          ? <img src={p.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ? <img src={p.logo_url} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : <span style={{ fontSize: 9, fontWeight: 700, color: '#94A3B8' }}>
                               {(p.name || '?').charAt(0).toUpperCase()}
                             </span>

@@ -1396,6 +1396,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
                           marginBottom: 6,
                         }}>
                           <img src={item.image_url} alt={item.prompt}
+                            loading="lazy" decoding="async"
                             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                         </div>
                         <div style={{

@@ -618,6 +618,7 @@ export default function HubCarousel() {
                       <div style={{ position: "relative", background: "rgba(0,0,0,0.40)" }}>
                         {s.image_url ? (
                           <img src={s.image_url} alt={`Slide ${s.n}`}
+                            loading="lazy" decoding="async"
                             style={{ width: "100%", aspectRatio: aspectRatio === "1:1" ? "1/1" : "4/5", objectFit: "cover", display: "block" }} />
                         ) : (
                           <div style={{

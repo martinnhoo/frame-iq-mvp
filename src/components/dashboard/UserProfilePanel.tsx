@@ -538,7 +538,7 @@ export function UserProfilePanel({ open, onClose, user, profile, onProfileUpdate
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 20 }}>
             <div style={{ position: "relative", flexShrink: 0 }}>
               {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" style={{ width: 44, height: 44, borderRadius: 12, objectFit: "cover", border: "1px solid rgba(255,255,255,0.10)" }} />
+                <img src={avatarUrl} alt="Avatar" loading="lazy" decoding="async" style={{ width: 44, height: 44, borderRadius: 12, objectFit: "cover", border: "1px solid rgba(255,255,255,0.10)" }} />
               ) : (
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "#fff" }}>
                   {initials}

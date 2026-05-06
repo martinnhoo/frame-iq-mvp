@@ -846,6 +846,7 @@ export default function HubPngGenerator() {
                         marginBottom: 6,
                       }}>
                         <img src={item.image_url} alt={item.prompt}
+                          loading="lazy" decoding="async"
                           style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
                       </div>
                       <p style={{

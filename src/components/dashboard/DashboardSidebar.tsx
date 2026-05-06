@@ -339,7 +339,7 @@ export function DashboardSidebar({
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       {p.logo_url
-                        ? <img src={p.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ? <img src={p.logo_url} alt="" loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         : <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>
                             {(p.name || "?").charAt(0).toUpperCase()}
                           </span>

@@ -78,18 +78,22 @@ const AnalysisDetail = () => {
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Mudou de setInterval pra setTimeout encadeado pra suportar backoff
+  // exponencial. Antes era 3s fixo (até 100 tentativas = 5 min de polling
+  // em pior caso). Agora começa em 2s e cresce até 15s — cobre casos
+  // longos sem martelar o DB.
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollAttemptsRef = useRef(0);
-  // Cap the poll at 100 attempts (~5 minutes). Prevents an infinite loop if
-  // Supabase is unreachable or a consistent error keeps the record stuck.
-  const MAX_POLL_ATTEMPTS = 100;
+  const MAX_POLL_ATTEMPTS = 60; // ~5 min com backoff
+  const stopPoll = () => {
+    if (pollRef.current) { clearTimeout(pollRef.current); pollRef.current = null; }
+  };
 
-  const fetchAnalysis = async () => {
+  const fetchAnalysis = async (): Promise<"running" | "stop"> => {
     pollAttemptsRef.current += 1;
     if (pollAttemptsRef.current > MAX_POLL_ATTEMPTS) {
-      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       setLoading(false);
-      return;
+      return "stop";
     }
     try {
       const { data, error } = await supabase
@@ -98,26 +102,32 @@ const AnalysisDetail = () => {
       if (data) {
         setAnalysis(data as AnalysisData);
         if (data.status === "completed" || data.status === "failed") {
-          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+          return "stop";
         }
       } else if (error) {
-        // ID not found or unauthorized — stop polling and show not found
-        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+        // ID not found ou unauthorized — para o poll
+        return "stop";
       }
-    } catch (e: any) {
-      // Network / RLS error — keep polling but count the attempt (bounded above).
-      console.warn("[AnalysisDetail] fetch failed", e?.message || e);
+    } catch (e) {
+      // Network / RLS — keep polling com a próxima janela de backoff
+      console.warn("[AnalysisDetail] fetch failed", (e as Error)?.message || e);
     } finally {
       setLoading(false);
     }
+    return "running";
   };
 
   useEffect(() => {
     pollAttemptsRef.current = 0;
-    fetchAnalysis();
-    // Poll every 3s if analysis is pending/processing
-    pollRef.current = setInterval(fetchAnalysis, 3000);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    let nextDelay = 2000; // 2s, 3s, 4.5s, 6.7s, 10s, 15s (cap)
+    const tick = async () => {
+      const status = await fetchAnalysis();
+      if (status === "stop") { stopPoll(); return; }
+      nextDelay = Math.min(Math.round(nextDelay * 1.5), 15_000);
+      pollRef.current = setTimeout(tick, nextDelay);
+    };
+    tick(); // primeira chamada imediata
+    return () => { stopPoll(); };
   }, [id, user.id]);
 
   if (!user) return (

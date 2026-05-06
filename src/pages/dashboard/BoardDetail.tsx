@@ -370,6 +370,7 @@ const BoardDetail = () => {
                   {sceneImages[i] ? (
                     <div className="relative" style={{ aspectRatio: getAspectRatio().replace(":", "/") }}>
                       <img src={sceneImages[i]} alt={`Scene ${i + 1}`}
+                        loading="lazy" decoding="async"
                         className="w-full h-full object-cover" />
                       <button onClick={() => setSceneImages(prev => { const n = {...prev}; delete n[i]; return n; })}
                         className="absolute top-2 right-2 h-6 w-6 rounded-full flex items-center justify-center"
