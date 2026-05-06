@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v15-transparent-2026-05-05";
+const FN_VERSION = "v16-edits-2026-05-05";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -71,6 +71,7 @@ Deno.serve(async (req) => {
       include_license = false,
       license_text = "",
       transparent = false,
+      input_image_base64 = null,
     } = body as {
       prompt?: string;
       aspect_ratio?: string;
@@ -81,6 +82,7 @@ Deno.serve(async (req) => {
       include_license?: boolean;
       license_text?: string;
       transparent?: boolean;
+      input_image_base64?: string | null;
     };
 
     if (!prompt || prompt.trim().length < 5) {
@@ -112,19 +114,52 @@ Deno.serve(async (req) => {
       include_license, prompt_len: finalPrompt.length,
     }));
 
-    const r = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-image-2",
-        prompt: finalPrompt,
-        size,
-        quality,
-        n: 1,
-        moderation: "low",
-        ...(transparent ? { background: "transparent", output_format: "png" } : {}),
-      }),
-    });
+    // ── Routing: edits (image-to-image) vs generations (text-to-image) ──
+    // Quando input_image_base64 vem, user quer "isolar/transformar" uma
+    // imagem existente — usa /v1/images/edits. Útil pro PNG generator
+    // converter foto real em PNG transparente do sujeito.
+    let r: Response;
+    if (input_image_base64) {
+      // Decode base64 (aceita data URL ou raw base64)
+      const cleanBase64 = input_image_base64.replace(/^data:[^;]+;base64,/, "");
+      const binary = atob(cleanBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const inputBlob = new Blob([bytes], { type: "image/png" });
+
+      const fd = new FormData();
+      fd.append("model", "gpt-image-2");
+      fd.append("image", inputBlob, "input.png");
+      fd.append("prompt", finalPrompt);
+      fd.append("size", size);
+      fd.append("quality", quality);
+      fd.append("n", "1");
+      if (transparent) {
+        fd.append("background", "transparent");
+        fd.append("output_format", "png");
+      }
+
+      console.log("[hub-image] using EDITS endpoint, input bytes:", bytes.length);
+      r = await fetch("https://api.openai.com/v1/images/edits", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${OPENAI_API_KEY}` },
+        body: fd,
+      });
+    } else {
+      r = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "gpt-image-2",
+          prompt: finalPrompt,
+          size,
+          quality,
+          n: 1,
+          moderation: "low",
+          ...(transparent ? { background: "transparent", output_format: "png" } : {}),
+        }),
+      });
+    }
 
     if (!r.ok) {
       const errText = await r.text();
