@@ -24,7 +24,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import {
   ArrowLeft, Play, Save, Plus, Loader, Copy, Trash2, Sparkles,
-  Image as ImageIcon, Type, Tag, Download,
+  Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch,
 } from "lucide-react";
 import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode } from "@/data/hubBrands";
 import {
@@ -164,10 +164,71 @@ function OutputNode({ data, selected }: { data: { name_template?: string }; sele
   );
 }
 
+function BgRemoveNode({ selected }: { selected: boolean }) {
+  return (
+    <NodeShell
+      icon={<Scissors size={13} />}
+      title="Remover fundo"
+      color="#A855F7"
+      selected={selected}
+      handles={[
+        { id: "image", type: "target", position: Position.Left },
+        { id: "out", type: "source", position: Position.Right },
+      ]}
+    >
+      <div>BRIA AI</div>
+      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>PNG transparente {"<"} 2MB</div>
+    </NodeShell>
+  );
+}
+
+function StoryboardNode({ data, selected }: { data: { scene_count?: number; aspect_ratio?: string; quality?: string }; selected: boolean }) {
+  return (
+    <NodeShell
+      icon={<Clapperboard size={13} />}
+      title="Storyboard"
+      color="#F97316"
+      selected={selected}
+      handles={[
+        { id: "prompt", type: "target", position: Position.Left },
+        { id: "brand", type: "target", position: Position.Top },
+        { id: "out", type: "source", position: Position.Right },
+      ]}
+    >
+      <div>{data.scene_count || 4} cenas · {data.aspect_ratio || "9:16"}</div>
+      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>{data.quality || "medium"}</div>
+    </NodeShell>
+  );
+}
+
+function VariationNode({ data, selected }: { data: { axis?: string; values?: string[] }; selected: boolean }) {
+  const values = data.values || [];
+  return (
+    <NodeShell
+      icon={<GitBranch size={13} />}
+      title="Variação"
+      color="#EC4899"
+      selected={selected}
+      handles={[
+        { id: "in", type: "target", position: Position.Left },
+        { id: "out", type: "source", position: Position.Right },
+      ]}
+    >
+      <div>Eixo: {data.axis || "aspect_ratio"}</div>
+      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.50)" }}>
+        {values.length === 0 ? "Sem valores" : `${values.length} variantes: ${values.join(", ")}`}
+      </div>
+    </NodeShell>
+  );
+}
+
 const nodeTypes = {
   brand: BrandNode,
   prompt: PromptNode,
   "image-gen": ImageGenNode,
+  "bg-remove": BgRemoveNode,
+  storyboard: StoryboardNode,
+  variation: VariationNode,
   output: OutputNode,
 };
 
@@ -369,6 +430,9 @@ function HubWorkflowsInner() {
       brand: { brand_id: "betbus", market: "MX", include_disclaimer: true },
       prompt: { text: "" },
       "image-gen": { aspect_ratio: "1:1", quality: "medium" },
+      "bg-remove": {},
+      storyboard: { scene_count: 4, aspect_ratio: "9:16", quality: "medium" },
+      variation: { axis: "aspect_ratio", values: ["1:1", "9:16", "16:9"] },
       output: { name_template: "{date}_{slug}", save_to_library: true },
     };
     const newNode: Node = {
@@ -490,6 +554,15 @@ function HubWorkflowsInner() {
               </button>
               <button onClick={() => addNodeOfType("image-gen")} style={paletteBtn("#3B82F6")}>
                 <ImageIcon size={11} /> Gerar imagem
+              </button>
+              <button onClick={() => addNodeOfType("bg-remove")} style={paletteBtn("#A855F7")}>
+                <Scissors size={11} /> Remover fundo
+              </button>
+              <button onClick={() => addNodeOfType("storyboard")} style={paletteBtn("#F97316")}>
+                <Clapperboard size={11} /> Storyboard
+              </button>
+              <button onClick={() => addNodeOfType("variation")} style={paletteBtn("#EC4899")}>
+                <GitBranch size={11} /> Variação
               </button>
               <button onClick={() => addNodeOfType("output")} style={paletteBtn("#10B981")}>
                 <Download size={11} /> Salvar
@@ -706,6 +779,79 @@ function NodeConfigPanel({
           </div>
         </>
       )}
+
+      {node.type === "bg-remove" && (
+        <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
+          Sem configuração — recebe imagem upstream e devolve PNG transparente {"<"} 2MB via BRIA AI.
+        </div>
+      )}
+
+      {node.type === "storyboard" && (
+        <>
+          <FieldLabel>Número de cenas</FieldLabel>
+          <input
+            type="number"
+            min={2}
+            max={8}
+            value={Number(data.scene_count || 4)}
+            onChange={e => onUpdate({ scene_count: Math.max(2, Math.min(8, Number(e.target.value) || 4)) })}
+            style={selectStyle}
+          />
+          <FieldLabel>Aspect ratio</FieldLabel>
+          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            {["1:1", "9:16", "16:9"].map(ar => (
+              <button
+                key={ar}
+                onClick={() => onUpdate({ aspect_ratio: ar })}
+                style={pillStyle(data.aspect_ratio === ar)}
+              >
+                {ar}
+              </button>
+            ))}
+          </div>
+          <FieldLabel>Qualidade</FieldLabel>
+          <div style={{ display: "flex", gap: 6 }}>
+            {[
+              { v: "low", l: "Rascunho" },
+              { v: "medium", l: "Médio" },
+              { v: "high", l: "Alta" },
+            ].map(q => (
+              <button
+                key={q.v}
+                onClick={() => onUpdate({ quality: q.v })}
+                style={pillStyle(data.quality === q.v)}
+              >
+                {q.l}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {node.type === "variation" && (
+        <>
+          <FieldLabel>Eixo de variação</FieldLabel>
+          <select
+            value={(data.axis as string) || "aspect_ratio"}
+            onChange={e => onUpdate({ axis: e.target.value })}
+            style={selectStyle}
+          >
+            <option value="aspect_ratio" style={{ background: "#0d0d14" }}>Aspect ratio</option>
+            {/* market: requer re-resolução de brand context — Fase 3 */}
+          </select>
+          <FieldLabel>Valores (1 por linha)</FieldLabel>
+          <textarea
+            value={(data.values as string[] || []).join("\n")}
+            onChange={e => onUpdate({ values: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
+            rows={4}
+            placeholder="1:1&#10;9:16&#10;16:9"
+            style={{ ...selectStyle, fontFamily: "inherit", resize: "vertical", minHeight: 80 }}
+          />
+          <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
+            Pra cada valor, o subgrafo downstream é clonado e executado em paralelo.
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -788,7 +934,15 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 function nodeLabel(t: string): string {
-  return ({ brand: "Marca", prompt: "Prompt", "image-gen": "Gerar imagem", output: "Salvar" } as Record<string, string>)[t] || t;
+  return ({
+    brand: "Marca",
+    prompt: "Prompt",
+    "image-gen": "Gerar imagem",
+    "bg-remove": "Remover fundo",
+    storyboard: "Storyboard",
+    variation: "Variação",
+    output: "Salvar",
+  } as Record<string, string>)[t] || t;
 }
 
 const iconBtn: React.CSSProperties = {

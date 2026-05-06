@@ -59,17 +59,34 @@ Deno.serve(async (req) => {
 
     if (contentType.includes("application/json")) {
       const body = await req.json().catch(() => ({}));
+      // Aceita 2 formatos: input_image_base64 (data URL ou base64 cru) OU
+      // image_url (URL pública pra fazer fetch — usado pelos Workflows).
+      let bytes: Uint8Array;
       const b64: string = body.input_image_base64 || "";
-      if (!b64) {
+      const url: string = body.image_url || "";
+      if (!b64 && !url) {
         return new Response(
-          JSON.stringify({ error: "missing_image", message: "input_image_base64 obrigatório." }),
+          JSON.stringify({ error: "missing_image", message: "input_image_base64 ou image_url obrigatório." }),
           { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
         );
       }
-      const cleanBase64 = b64.replace(/^data:[^;]+;base64,/, "");
-      const binary = atob(cleanBase64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      if (b64) {
+        const cleanBase64 = b64.replace(/^data:[^;]+;base64,/, "");
+        const binary = atob(cleanBase64);
+        bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      } else {
+        // Fetch URL → bytes
+        const fetchRes = await fetch(url);
+        if (!fetchRes.ok) {
+          return new Response(
+            JSON.stringify({ error: "input_image_fetch_failed", message: `Falha ao baixar imagem de ${url.slice(0, 80)}` }),
+            { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
+          );
+        }
+        const buf = await fetchRes.arrayBuffer();
+        bytes = new Uint8Array(buf);
+      }
       // Detecta MIME por magic bytes
       if (bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
         originalMime = "image/jpeg";

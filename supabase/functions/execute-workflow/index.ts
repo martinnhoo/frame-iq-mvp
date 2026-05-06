@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v1-workflows-fase1-2026-05-06";
+const FN_VERSION = "v2-workflows-fase2-2026-05-06";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -61,6 +61,147 @@ function applyInputOverrides(graph: Graph, inputs: Record<string, Record<string,
     return { ...n, data: { ...n.data, ...override } };
   });
   return { ...graph, nodes };
+}
+
+/**
+ * Expande nós `variation` em sub-grafos paralelos.
+ *
+ * Para cada variation node V com data.values = [v1, v2, v3]:
+ *   - Encontra TODOS os nós downstream (alcançáveis via edges saindo de V)
+ *   - Pra cada valor vi, clona TODOS os nós downstream com novos IDs
+ *   - Aplica override do axis (data.axis) em cada clone — ex: aspect_ratio = vi
+ *   - Reconecta upstream-of-V → clones (substitui V no grafo)
+ *
+ * Suporta apenas 1 nível de variation no MVP (sem nested variations).
+ * Eixos suportados: aspect_ratio (override em image-gen).
+ *
+ * Resultado: grafo livre de variation nodes, com N branches paralelos.
+ */
+function expandVariations(graph: Graph): Graph {
+  const variationNodes = graph.nodes.filter(n => n.type === "variation");
+  if (variationNodes.length === 0) return graph;
+
+  let workGraph = { ...graph, nodes: [...graph.nodes], edges: [...graph.edges] };
+
+  for (const vNode of variationNodes) {
+    const axis = String(vNode.data.axis || "aspect_ratio");
+    const values = Array.isArray(vNode.data.values) ? (vNode.data.values as string[]) : [];
+    if (values.length === 0) {
+      // Sem valores — remove o nó da execução e conecta upstream direto ao downstream
+      workGraph = bypassNode(workGraph, vNode.id);
+      continue;
+    }
+
+    // Coleta downstream IDs (BFS a partir de vNode)
+    const downstreamIds = new Set<string>();
+    const queue = [vNode.id];
+    while (queue.length) {
+      const cur = queue.shift()!;
+      for (const e of workGraph.edges) {
+        if (e.source === cur && !downstreamIds.has(e.target) && e.target !== vNode.id) {
+          downstreamIds.add(e.target);
+          queue.push(e.target);
+        }
+      }
+    }
+
+    const directDownstreamEdges = workGraph.edges.filter(e => e.source === vNode.id);
+    const upstreamEdges = workGraph.edges.filter(e => e.target === vNode.id);
+
+    // Remove vNode + downstream originais + edges relacionadas
+    let newNodes = workGraph.nodes.filter(n => n.id !== vNode.id && !downstreamIds.has(n.id));
+    let newEdges = workGraph.edges.filter(e =>
+      e.source !== vNode.id && e.target !== vNode.id &&
+      !downstreamIds.has(e.source) && !downstreamIds.has(e.target)
+    );
+
+    // Pra cada valor, clona o subgrafo downstream
+    for (let i = 0; i < values.length; i++) {
+      const val = values[i];
+      const idMap = new Map<string, string>();
+
+      for (const id of downstreamIds) {
+        const orig = workGraph.nodes.find(n => n.id === id);
+        if (!orig) continue;
+        const newId = `${orig.id}_v${i}`;
+        idMap.set(id, newId);
+        const newData = { ...orig.data };
+        // Aplica override do axis. Suportado: aspect_ratio.
+        // Outros axes (market, etc) precisam de re-resolução de brand context
+        // — fica pra Fase 3.
+        if (axis === "aspect_ratio") newData.aspect_ratio = val;
+        const offsetY = (orig.position?.y || 0) + i * 220;
+        newNodes.push({
+          ...orig,
+          id: newId,
+          data: newData,
+          position: { x: (orig.position?.x || 0) + 80, y: offsetY },
+        });
+      }
+
+      // Edges entre downstream nodes (interno ao subgrafo)
+      for (const e of workGraph.edges) {
+        if (downstreamIds.has(e.source) && downstreamIds.has(e.target)) {
+          newEdges.push({
+            id: `${e.id}_v${i}`,
+            source: idMap.get(e.source)!,
+            target: idMap.get(e.target)!,
+            sourceHandle: e.sourceHandle,
+            targetHandle: e.targetHandle,
+          });
+        }
+      }
+
+      // Reconecta upstream → clone do direct downstream
+      for (const dde of directDownstreamEdges) {
+        const cloneTarget = idMap.get(dde.target);
+        if (!cloneTarget) continue;
+        for (const ue of upstreamEdges) {
+          newEdges.push({
+            id: `${ue.id}_${dde.id}_v${i}`,
+            source: ue.source,
+            sourceHandle: ue.sourceHandle,
+            target: cloneTarget,
+            targetHandle: dde.targetHandle,
+          });
+        }
+        // Se variation não tinha upstream (nó-fonte), conecta nada — clone vira nó-fonte
+        if (upstreamEdges.length === 0 && downstreamIds.has(dde.target)) {
+          // Nó clone fica orfão, ainda pode ser executado (se for tipo brand/prompt)
+        }
+      }
+    }
+
+    workGraph = { ...workGraph, nodes: newNodes, edges: newEdges };
+  }
+
+  return workGraph;
+}
+
+/**
+ * Remove um nó conectando direto seus upstreams aos downstreams.
+ * Usado quando variation tem values=[].
+ */
+function bypassNode(graph: Graph, nodeId: string): Graph {
+  const upstream = graph.edges.filter(e => e.target === nodeId);
+  const downstream = graph.edges.filter(e => e.source === nodeId);
+  const newEdges = graph.edges.filter(e => e.source !== nodeId && e.target !== nodeId);
+  for (const ue of upstream) {
+    for (const de of downstream) {
+      newEdges.push({
+        id: `${ue.id}_${de.id}_bypass`,
+        source: ue.source,
+        sourceHandle: ue.sourceHandle,
+        target: de.target,
+        targetHandle: de.targetHandle,
+      });
+    }
+  }
+  return {
+    ...graph,
+    nodes: graph.nodes.filter(n => n.id !== nodeId),
+    edges: newEdges,
+  };
 }
 
 /**
@@ -246,6 +387,88 @@ function formatDate(d = new Date()): { date: string; time: string } {
   return { date: `${yyyy}${mm}${dd}`, time: `${hh}${min}` };
 }
 
+async function execBgRemove(
+  _node: GraphNode,
+  inputs: Record<string, unknown>,
+  ctx: ExecCtx,
+): Promise<{ asset_id: string | null; image_url: string }> {
+  // Recebe { image_url } do nó upstream (image-gen ou direto URL)
+  const imgInput = inputs.image as { image_url?: string } | string | undefined;
+  const image_url = typeof imgInput === "string" ? imgInput : imgInput?.image_url;
+  if (!image_url) throw new Error("missing_image_input");
+
+  const r = await fetch(`${ctx.supabaseUrl}/functions/v1/hub-bria-bg-remove`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${ctx.authToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ image_url }),
+  });
+  const text = await r.text();
+  let payload: { ok?: boolean; image_url?: string; memory_id?: string; message?: string; error?: string };
+  try { payload = JSON.parse(text); } catch { throw new Error(`bg-remove non-json: ${text.slice(0, 200)}`); }
+  if (!payload.ok || !payload.image_url) {
+    throw new Error(payload.message || payload.error || "bg-remove failed");
+  }
+  return { asset_id: payload.memory_id || null, image_url: payload.image_url };
+}
+
+async function execStoryboard(
+  node: GraphNode,
+  inputs: Record<string, unknown>,
+  ctx: ExecCtx,
+): Promise<{ storyboard_id: string; scenes: Array<{ n: number; image_url: string | null; asset_id: string | null }> }> {
+  // Recebe { text } do prompt + { brand } opcional
+  const promptInput = inputs.prompt as { text?: string } | string | undefined;
+  const script = typeof promptInput === "string" ? promptInput : (promptInput?.text || "");
+  if (!script || script.length < 10) throw new Error("missing_script");
+
+  const brandInput = inputs.brand as Record<string, unknown> | undefined;
+  const scene_count = Math.max(2, Math.min(8, Number(node.data.scene_count) || 4));
+  const aspect_ratio = (node.data.aspect_ratio as string) || "9:16";
+  const quality = (node.data.quality as string) || "medium";
+
+  const r = await fetch(`${ctx.supabaseUrl}/functions/v1/generate-storyboard-hub`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${ctx.authToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      script,
+      scene_count,
+      aspect_ratio,
+      quality,
+      brand_id: brandInput?.brand_id || null,
+      brand_hint: brandInput?.brand_hint || "",
+      market: brandInput?.market || null,
+      market_context: "",
+    }),
+  });
+  const text = await r.text();
+  let payload: { ok?: boolean; storyboard_id?: string; scenes?: Array<{ n: number; image_url: string | null }>; message?: string; error?: string };
+  try { payload = JSON.parse(text); } catch { throw new Error(`storyboard non-json: ${text.slice(0, 200)}`); }
+  if (!payload.ok) throw new Error(payload.message || payload.error || "storyboard failed");
+  const scenes = (payload.scenes || []).map(s => ({
+    n: s.n,
+    image_url: s.image_url,
+    asset_id: null,
+  }));
+  return { storyboard_id: payload.storyboard_id || `sb-${Date.now()}`, scenes };
+}
+
+async function execVariation(
+  _node: GraphNode,
+  inputs: Record<string, unknown>,
+): Promise<{ value: string; passthrough: unknown }> {
+  // Variation é EXPANDIDO antes da execução (graph rewrite). No runtime
+  // o nó já não existe — esse handler só roda se alguém deixar variation
+  // sem expansão. Retorna passthrough do default input.
+  const passthrough = inputs.in || inputs.default || null;
+  return { value: "", passthrough };
+}
+
 async function execOutput(
   node: GraphNode,
   inputs: Record<string, unknown>,
@@ -288,10 +511,13 @@ async function executeNode(
 ): Promise<unknown> {
   const inputs = collectNodeInputs(node, graph, outputs);
   switch (node.type) {
-    case "brand":     return await execBrand(node);
-    case "prompt":    return await execPrompt(node);
-    case "image-gen": return await execImageGen(node, inputs, ctx);
-    case "output":    return await execOutput(node, inputs, ctx);
+    case "brand":      return await execBrand(node);
+    case "prompt":     return await execPrompt(node);
+    case "image-gen":  return await execImageGen(node, inputs, ctx);
+    case "bg-remove":  return await execBgRemove(node, inputs, ctx);
+    case "storyboard": return await execStoryboard(node, inputs, ctx);
+    case "variation":  return await execVariation(node, inputs);
+    case "output":     return await execOutput(node, inputs, ctx);
     default: throw new Error(`unknown_node_type:${node.type}`);
   }
 }
@@ -338,7 +564,9 @@ Deno.serve(async (req) => {
     if (!rawGraph?.nodes?.length) {
       return jsonResponse({ _v: FN_VERSION, ok: false, error: "empty_graph" }, 400);
     }
-    const graph = applyInputOverrides(rawGraph, inputs);
+    const overridden = applyInputOverrides(rawGraph, inputs);
+    // Expande variation nodes em sub-grafos paralelos antes do topo-sort
+    const graph = expandVariations(overridden);
 
     // Validação: topo-sort (detecta ciclo)
     const { levels, hasCycle } = topoSort(graph);
