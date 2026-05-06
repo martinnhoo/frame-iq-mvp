@@ -136,6 +136,7 @@ export default function BrilliantHub() {
     return t("libCountN").replace("{n}", String(assetCount));
   })();
 
+  // Designer: ferramentas que criam novos criativos visuais
   const designerTools = [
     { id: "img", title: t("imgGen"), desc: t("imgGenDesc"), btn: t("imgGenBtn"),
       icon: ImageIcon, route: "/dashboard/hub/image", featured: true },
@@ -143,19 +144,21 @@ export default function BrilliantHub() {
       icon: Layers, route: "/dashboard/hub/png" },
     { id: "storyboard", title: t("storyboard"), desc: t("storyboardDesc"), btn: t("storyboardBtn"),
       icon: Clapperboard, route: "/dashboard/hub/storyboard" },
-  ];
-
-  const supportTools = [
-    { id: "carousel", title: lang === "pt" ? "Carrossel" : lang === "es" ? "Carrusel" : lang === "zh" ? "轮播" : "Carousel",
+    { id: "carousel",
+      title: lang === "pt" ? "Carrossel" : lang === "es" ? "Carrusel" : lang === "zh" ? "轮播" : "Carousel",
       desc: lang === "pt" ? "Roteiro vira carrossel — slides quadrados pra Insta, LinkedIn." : lang === "es" ? "El guión se convierte en un carrusel — slides cuadrados para Instagram, LinkedIn." : lang === "zh" ? "剧本转化为轮播 — 适用于 Instagram 的方形幻灯片。" : "Script becomes a carousel — square slides for Instagram, LinkedIn.",
       btn: lang === "pt" ? "Criar carrossel" : lang === "es" ? "Crear carrusel" : lang === "zh" ? "创建轮播" : "Create carousel",
       icon: GalleryHorizontal, route: "/dashboard/hub/carousel" },
+    { id: "ab", title: t("abVar"), desc: t("abVarDesc"), btn: t("abVarBtn"),
+      icon: GitBranch, route: "/dashboard/hub/ab" },
+  ];
+
+  // Ferramentas: utilitários de áudio, análise, etc — não criam imagem
+  const supportTools = [
     { id: "voice", title: t("voice"), desc: t("voiceDesc"), btn: t("voiceBtn"),
       icon: Mic, route: "/dashboard/hub/voice" },
     { id: "transcribe", title: t("transcribe"), desc: t("transcribeDesc"), btn: t("transcribeBtn"),
       icon: Captions, route: "/dashboard/hub/transcribe" },
-    { id: "ab", title: t("abVar"), desc: t("abVarDesc"), btn: t("abVarBtn"),
-      icon: GitBranch, route: "/dashboard/hub/ab" },
     { id: "analytics", title: t("analytics"), desc: t("analyticsDesc"), btn: t("analyticsBtn"),
       icon: BarChart3, route: "/dashboard/hub/analytics" },
   ];
@@ -213,8 +216,9 @@ export default function BrilliantHub() {
               title={tool.title}
               desc={tool.desc}
               btn={tool.btn}
-              soon={tool.soon}
+              soon={(tool as { soon?: boolean }).soon}
               comingSoonLabel={t("comingSoon")}
+              onClick={(tool as { route?: string }).route ? () => navigate((tool as { route: string }).route) : undefined}
             />
           ))}
         </div>
