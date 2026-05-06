@@ -21,7 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Image as ImageIcon, Layers, Clapperboard, Mic, Captions, GitBranch, BarChart3,
-  FolderOpen, ArrowRight, Sparkles, GalleryHorizontal,
+  FolderOpen, ArrowRight, Sparkles, GalleryHorizontal, Video as VideoIcon,
 } from "lucide-react";
 
 type Lang = "pt" | "en" | "es" | "zh";
@@ -142,6 +142,14 @@ export default function BrilliantHub() {
       icon: ImageIcon, route: "/dashboard/hub/image", featured: true },
     { id: "png", title: t("pngGen"), desc: t("pngGenDesc"), btn: t("pngGenBtn"),
       icon: Layers, route: "/dashboard/hub/png" },
+    { id: "video",
+      title: lang === "pt" ? "Gerador de Vídeo" : lang === "es" ? "Generador de Video" : lang === "zh" ? "视频生成器" : "Video Generator",
+      desc: lang === "pt" ? "Texto ou imagem viram vídeo via Kling 3.0. 5-15s, 720p ou 1080p."
+        : lang === "es" ? "Texto o imagen se convierten en video vía Kling 3.0. 5-15s, 720p o 1080p."
+        : lang === "zh" ? "文本或图像通过 Kling 3.0 转化为视频。"
+        : "Text or image becomes video via Kling 3.0. 5-15s, 720p or 1080p.",
+      btn: lang === "pt" ? "Gerar vídeo" : lang === "es" ? "Generar video" : lang === "zh" ? "生成视频" : "Generate video",
+      icon: VideoIcon, route: "/dashboard/hub/video", featured: true },
     { id: "storyboard", title: t("storyboard"), desc: t("storyboardDesc"), btn: t("storyboardBtn"),
       icon: Clapperboard, route: "/dashboard/hub/storyboard" },
     { id: "carousel",
