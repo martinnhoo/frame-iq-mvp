@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v18b-image-array-2026-05-06";
+const FN_VERSION = "v19-multi-element-2026-05-06";
 
 // Timeout explícito na chamada OpenAI. Supabase Edge Functions matam
 // requests > 150s com a mensagem 'Request idle timeout limit (150s)
@@ -114,11 +114,31 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    // Constrói prompt final: [brand context] + [user prompt] + [disclaimer]
+    // Constrói prompt final: [brand context] + [user prompt] + [elements rule] + [disclaimer]
     const userPrompt = prompt.trim();
     const parts: string[] = [];
     if (brand_hint && brand_hint.trim()) parts.push(brand_hint.trim());
     parts.push(userPrompt);
+
+    // Regra crítica pra elementos: gpt-image-2 em edits mode tende a
+    // mesclar/priorizar 1 imagem só quando recebe múltiplas referências.
+    // Instrução explícita força usar TODAS as imagens como elementos
+    // distintos (mesmo comportamento do ChatGPT consumer com várias imgs).
+    if (allInputImages.length >= 2) {
+      parts.push(
+        `CRITICAL — MULTIPLE REFERENCE IMAGES PROVIDED (${allInputImages.length} total): ` +
+        `You MUST incorporate ALL ${allInputImages.length} reference images as DISTINCT, SEPARATE visual elements in the final composition. ` +
+        `Each reference image is a different element (character, object, icon, etc.) that must be visibly placed in the scene. ` +
+        `Do NOT merge them into one. Do NOT replace one with another. Do NOT omit any. ` +
+        `Compose them naturally together — every reference image must appear, recognizable and identifiable, in the output.`
+      );
+    } else if (allInputImages.length === 1) {
+      parts.push(
+        `REFERENCE IMAGE PROVIDED: You MUST incorporate the reference image as a key visual element in the final composition. ` +
+        `Use it faithfully — preserve its identity, style, and key visual features. Do not replace it with a similar but different element.`
+      );
+    }
+
     if (include_license && license_text && license_text.trim()) {
       parts.push(
         "IMPORTANT FOR COMPOSITION: Keep the bottom 12% of the image visually clean — " +
