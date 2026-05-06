@@ -55,76 +55,84 @@ export async function compositeElements(
   // vertical pra elementos múltiplos; landscape/square usa horizontal.
   const isPortrait = height > width;
 
+  // Padding interno: mantém 12% de margem em todos os lados pra que o
+  // BRIA tenha "espaço de respiração" pra gerar a cena sem encostar em
+  // edges. Sem isso, ele tende a expandir o cenário e cortar headlines/
+  // detalhes nas bordas.
+  const PADDING = 0.12;
+  const safeWidth = width * (1 - 2 * PADDING);
+  const safeHeight = height * (1 - 2 * PADDING);
+  const safeX = width * PADDING;
+  const safeY = height * PADDING;
+
   if (N === 1) {
-    // Centralizado, escala adaptativa: ocupa ~70% do menor lado
+    // Centralizado dentro da safe area, escala adaptativa
     const img = imgs[0];
-    const targetSize = Math.min(width, height) * 0.70;
+    const targetSize = Math.min(safeWidth, safeHeight) * 0.85;
     const scale = Math.min(targetSize / img.width, targetSize / img.height);
     const w = img.width * scale;
     const h = img.height * scale;
     ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
   } else if (N === 2) {
-    // Portrait → empilha vertical; landscape/square → lado a lado
     if (isPortrait) {
-      const sectionHeight = height / 2;
+      const sectionHeight = safeHeight / 2;
       for (let i = 0; i < 2; i++) {
         const img = imgs[i];
-        const targetSize = Math.min(width, sectionHeight) * 0.80;
+        const targetSize = Math.min(safeWidth, sectionHeight) * 0.85;
         const scale = Math.min(targetSize / img.width, targetSize / img.height);
         const w = img.width * scale;
         const h = img.height * scale;
-        ctx.drawImage(img, (width - w) / 2, i * sectionHeight + (sectionHeight - h) / 2, w, h);
+        ctx.drawImage(img, (width - w) / 2, safeY + i * sectionHeight + (sectionHeight - h) / 2, w, h);
       }
     } else {
-      const sectionWidth = width / 2;
+      const sectionWidth = safeWidth / 2;
       for (let i = 0; i < 2; i++) {
         const img = imgs[i];
-        const targetSize = Math.min(sectionWidth, height) * 0.80;
+        const targetSize = Math.min(sectionWidth, safeHeight) * 0.85;
         const scale = Math.min(targetSize / img.width, targetSize / img.height);
         const w = img.width * scale;
         const h = img.height * scale;
-        ctx.drawImage(img, i * sectionWidth + (sectionWidth - w) / 2, (height - h) / 2, w, h);
+        ctx.drawImage(img, safeX + i * sectionWidth + (sectionWidth - w) / 2, (height - h) / 2, w, h);
       }
     }
   } else if (N === 3) {
-    // Portrait → coluna; landscape → linha
     if (isPortrait) {
-      const sectionHeight = height / 3;
+      const sectionHeight = safeHeight / 3;
       for (let i = 0; i < 3; i++) {
         const img = imgs[i];
-        const targetSize = Math.min(width, sectionHeight) * 0.80;
+        const targetSize = Math.min(safeWidth, sectionHeight) * 0.85;
         const scale = Math.min(targetSize / img.width, targetSize / img.height);
         const w = img.width * scale;
         const h = img.height * scale;
-        ctx.drawImage(img, (width - w) / 2, i * sectionHeight + (sectionHeight - h) / 2, w, h);
+        ctx.drawImage(img, (width - w) / 2, safeY + i * sectionHeight + (sectionHeight - h) / 2, w, h);
       }
     } else {
-      const sectionWidth = width / 3;
+      const sectionWidth = safeWidth / 3;
       for (let i = 0; i < 3; i++) {
         const img = imgs[i];
-        const targetSize = Math.min(sectionWidth, height) * 0.80;
+        const targetSize = Math.min(sectionWidth, safeHeight) * 0.85;
         const scale = Math.min(targetSize / img.width, targetSize / img.height);
         const w = img.width * scale;
         const h = img.height * scale;
-        ctx.drawImage(img, i * sectionWidth + (sectionWidth - w) / 2, (height - h) / 2, w, h);
+        ctx.drawImage(img, safeX + i * sectionWidth + (sectionWidth - w) / 2, (height - h) / 2, w, h);
       }
     }
   } else {
-    // 4+ elementos: grid 2x2 sempre (independente de orientation)
-    const cellW = width / 2;
-    const cellH = height / 2;
+    // 4+ elementos: grid 2x2 dentro da safe area
+    const cellW = safeWidth / 2;
+    const cellH = safeHeight / 2;
     for (let i = 0; i < Math.min(N, 4); i++) {
       const img = imgs[i];
       const col = i % 2;
       const row = Math.floor(i / 2);
-      const targetSize = Math.min(cellW, cellH) * 0.80;
+      const targetSize = Math.min(cellW, cellH) * 0.85;
       const scale = Math.min(targetSize / img.width, targetSize / img.height);
       const w = img.width * scale;
       const h = img.height * scale;
       ctx.drawImage(
         img,
-        col * cellW + (cellW - w) / 2,
-        row * cellH + (cellH - h) / 2,
+        safeX + col * cellW + (cellW - w) / 2,
+        safeY + row * cellH + (cellH - h) / 2,
         w, h,
       );
     }

@@ -601,7 +601,15 @@ Do NOT generate, render, or invent ANY of the following inside the image:
 - Promotional headlines or copy text that the user did NOT explicitly request in their prompt (no auto-added "BIG WINS", "SPECIAL OFFER", etc).
 - Random text, random characters, fake URLs, fake handles, or any written content not in the user's prompt.
 
-If text or branding is needed, the user will request it explicitly in their prompt. Otherwise: pure visual composition only — clean, no fabricated marks.`;
+If text or branding is needed, the user will request it explicitly in their prompt. Otherwise: pure visual composition only — clean, no fabricated marks.
+
+ABSOLUTE RULE — NO CROPPING / NO CLIPPING:
+Every visual element in the final image MUST be FULLY visible within the canvas.
+- Nothing can be cut off at the top, bottom, left, or right edges.
+- Maintain at least 8% safe padding from all 4 edges for any character, text, headline, logo, or important detail.
+- Characters must show their full body (or at minimum head + shoulders + torso clearly visible, not chopped at the chin/forehead).
+- If text/headline is part of the composition, it MUST be entirely within the frame — never extending past the canvas borders.
+- Compose the scene so the camera framing fits everything comfortably with breathing room.`;
       // ── Roteamento de engine: BRIA Lifestyle Shot (elementos) ou gpt-image-2 (default) ──
       // gpt-image-2 com reference images regenera o sujeito (não preserva).
       // BRIA Lifestyle Shot é dedicada a placar produtos/personagens fielmente
@@ -623,9 +631,12 @@ If text or branding is needed, the user will request it explicitly in their prom
             "Keep the bottom 12% of the image visually clean — no important elements there (will be covered by regulatory disclaimer overlay).",
           );
         }
-        // Regra anti-invenção também na scene_description do BRIA.
+        // Regras críticas: anti-invenção + anti-cropping.
         sceneDescriptionParts.push(
-          "STRICT RULE: Do NOT invent or render any fake brand logos, brand marks, sponsor logos, or promotional text inside the image. Do NOT add headlines, slogans, fake brand names, or made-up text anywhere (no AI-fabricated logos on jerseys, caps, banners, or backgrounds). Pure clean composition only — keep the elements as-is, generate only the scene around them.",
+          "STRICT RULE — NO FAKE BRAND ELEMENTS: Do NOT invent or render any fake brand logos, brand marks, sponsor logos, or promotional text inside the image. Do NOT add headlines, slogans, fake brand names, or made-up text anywhere (no AI-fabricated logos on jerseys, caps, banners, or backgrounds). Keep the provided element as-is, generate only the scene around it.",
+        );
+        sceneDescriptionParts.push(
+          "STRICT RULE — NO CROPPING: Every visual element must be FULLY VISIBLE within the canvas. Nothing can be cut off at any edge (top, bottom, left, right). Keep at least 8% safe padding from all 4 borders. The provided element character must show their full visible silhouette. Compose the scene with breathing room so nothing is clipped.",
         );
         const sceneDescription = sceneDescriptionParts.filter(Boolean).join("\n\n");
 
