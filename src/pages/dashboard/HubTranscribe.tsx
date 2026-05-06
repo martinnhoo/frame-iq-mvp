@@ -175,7 +175,7 @@ export default function HubTranscribe() {
         setStep("extracting");
         setProgress(0);
         try {
-          toSend = await extractAudioFromFile(file, p => setProgress(Math.round(p * 100)));
+          toSend = await extractAudioFromFile(file, p => setProgress(Math.round(p.percent)));
         } catch (e) {
           console.error("extract failed:", e);
           setError(String(e).slice(0, 200));

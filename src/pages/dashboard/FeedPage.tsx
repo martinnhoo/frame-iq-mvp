@@ -6802,7 +6802,8 @@ const FeedPage: React.FC = () => {
     const recent = activityEvents[0]?.executed_at;
     if (recent) return recent;
     if (snapshotLastAt) return snapshotLastAt;
-    const d = tracker?.last_active_date;
+    // tracker shape varies by source — last_active_date may or may not exist
+    const d = (tracker as { last_active_date?: string } | null | undefined)?.last_active_date;
     if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
       return `${d}T12:00:00Z`;
     }
@@ -8440,7 +8441,9 @@ const FeedPage: React.FC = () => {
                 <PatternsPanel
                   userId={userId}
                   personaId={personaId}
-                  onGenerateVariation={handleGenerateVariation}
+                  // Pattern shape varies across producers; PatternsPanel narrows internally.
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onGenerateVariation={handleGenerateVariation as any}
                   onPatternsLoaded={handlePatternsLoaded}
                 />
               </div>

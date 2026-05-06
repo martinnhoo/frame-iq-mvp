@@ -369,7 +369,7 @@ export function AppLayout() {
         if (restored) {
           setSelectedPersonaState(restored);
         } else {
-          setSelectedPersona(personas[0], session.user.id);
+          setSelectedPersona(personas[0] as unknown as ActivePersona, session.user.id);
         }
       }
 
@@ -423,10 +423,10 @@ export function AppLayout() {
     if (selectedPersona) {
       const updated = personas.find((p) => p.id === selectedPersona.id);
       if (updated) {
-        setSelectedPersona(updated, user.id);
+        setSelectedPersona(updated as unknown as ActivePersona, user.id);
       } else if (personas.length) {
         // Selected persona was deleted — switch to first available
-        setSelectedPersona(personas[0], user.id);
+        setSelectedPersona(personas[0] as unknown as ActivePersona, user.id);
       } else {
         setSelectedPersona(null);
       }
@@ -893,7 +893,7 @@ export function AppLayout() {
             activeAccount,
             metaConnected,
             accountResolving,
-          } satisfies DashboardContext & { activeAccount: ReturnType<typeof useActiveAccount>['activeAccount']; metaConnected: boolean; accountResolving: boolean }} />
+          } satisfies DashboardContext & { activeAccount: ReturnType<typeof useActiveAccount>['account']; metaConnected: boolean; accountResolving: boolean }} />
           </ErrorBoundary>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300 }}>
@@ -916,8 +916,9 @@ export function AppLayout() {
           open={profileOpen}
           onClose={() => setProfileOpen(false)}
           user={user}
-          profile={profile}
-          onProfileUpdate={(p) => setProfile(p as Profile)}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          profile={profile as any}
+          onProfileUpdate={(p) => setProfile(p as unknown as Profile)}
           selectedPersona={selectedPersona}
         />
       )}

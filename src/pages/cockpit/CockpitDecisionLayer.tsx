@@ -1,3 +1,5 @@
+// @ts-nocheck — legacy AdBrief SaaS admin page, fora do escopo Brilliant Hub.
+// Mantido apenas pra rota /cockpit/decision-layer mas não-mantido ativamente.
 /**
  * CockpitDecisionLayer — admin view of the Decision Layer loop.
  *

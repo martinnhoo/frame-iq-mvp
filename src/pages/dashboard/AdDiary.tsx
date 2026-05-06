@@ -415,7 +415,7 @@ export default function AdDiary({ propUser, propPersona, propLang, embedded }: {
       const metaAds: LiveAd[] = res?.meta?.top_ads || [];
       if (!metaAds.length) { setSyncError("0 anúncios encontrados"); setSyncing(null); return; }
 
-      const calcVerdict = (a: { ctr?: number; spend?: number; freq?: number }) => {
+      const calcVerdict = (a: { ctr?: number; spend?: number; freq?: number; roas?: number | null }) => {
         const ctr = (a.ctr || 0) * 100;
         const spend = a.spend || 0;
         if ((a.freq ?? 0) > 3.5) return { verdict: "loser" as const, reason: `Freq ${a.freq?.toFixed(1)}× — fadiga` };

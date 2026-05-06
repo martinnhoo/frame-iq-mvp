@@ -198,7 +198,7 @@ export default function BrilliantHub() {
               title={tool.title}
               desc={tool.desc}
               btn={tool.btn}
-              soon={tool.soon}
+              soon={(tool as { soon?: boolean }).soon}
               featured={(tool as { featured?: boolean }).featured}
               comingSoonLabel={t("comingSoon")}
               onClick={tool.route ? () => navigate(tool.route) : undefined}

@@ -73,7 +73,7 @@ interface TelegramConn {
   telegram_username: string | null;
   connected_at: string | null;
 }
-type Lang = "pt" | "en" | "es" | "hi";
+type Lang = "pt" | "en" | "es" | "zh";
 
 interface PersonaRecord {
   id: string;

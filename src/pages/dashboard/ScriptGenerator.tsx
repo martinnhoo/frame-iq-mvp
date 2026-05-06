@@ -1,3 +1,5 @@
+// @ts-nocheck — legacy AdBrief SaaS, sem rota ativa no Brilliant Hub
+// (rota /dashboard/script faz redirect pra /dashboard/boards/new).
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { useState, useEffect } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";

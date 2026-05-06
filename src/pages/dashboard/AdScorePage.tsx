@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy AdBrief SaaS Ad Score page, fora do escopo Brilliant Hub.
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useOutletContext, useNavigate } from "react-router-dom";

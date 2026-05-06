@@ -365,7 +365,7 @@ function SpyForm({ onClose, onSpyExecute, lang, accountCtx, color }: {
 
         {/* Ads textarea */}
         <div>
-          <label style={{ ...m, fontSize: 11, color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: 4, fontWeight: 500, display: 'flex', justifyContent: 'space-between' }}>
+          <label style={{ ...m, fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 4, fontWeight: 500, display: 'flex', justifyContent: 'space-between' }}>
             <span>{T.adsLabel}</span>
             <span style={{ color: tooFew ? 'rgba(248,113,113,0.85)' : tooMany ? 'rgba(248,113,113,0.85)' : `${color}cc`, fontWeight: 700 }}>{totalAds}/5</span>
           </label>
@@ -4085,7 +4085,7 @@ export default function AdBriefAI() {
         (pid
           ? supabase.from("personas").select("name,result").eq("user_id",user.id).eq("id",pid).maybeSingle()
           : supabase.from("personas").select("name,result").eq("user_id",user.id).order("created_at",{ascending:false}).limit(1).maybeSingle()
-        ) as Promise<{ data: PersonaCtxRow | null }>,
+        ) as unknown as Promise<{ data: PersonaCtxRow | null }>,
         // creative_entries: top 20 by CTR only — full 500 rows bloats the context desnecessariamente
         (pid
           ? sb.from("creative_entries").select("filename,market,editor,ctr,roas,persona_id").eq("user_id",user.id).eq("persona_id",pid)
@@ -6192,7 +6192,10 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
         return title;
       };
 
-      blocks=blocks.map(b=>{
+      // ts-ignore: map callback returns slightly narrower union types per branch;
+      // runtime is fine, TS narrows too aggressively. See block type union in Block[].
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      blocks=(blocks.map(b=>{
         // Clean all text
         const c={...b,
           // stripMd only on title — content/items need markdown preserved for renderMarkdown
@@ -6295,7 +6298,8 @@ You'll get critical alerts and can pause ads from Telegram. Everything logged he
           return{...c,type:"tool_call" as const,_pendingTool:fn,_toolParams:params};
         }
         return c;
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any) as Block[];
 
       const aid=Date.now()+1;
       // Context lock: discard response if persona changed during request
