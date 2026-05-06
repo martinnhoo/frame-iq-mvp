@@ -25,7 +25,6 @@ import {
   FileText, Copy, Check, Volume2, Trash2, Video as VideoIcon,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import HubStorageBackfill from "@/components/dashboard/HubStorageBackfill";
 
 type Lang = "pt" | "en" | "es" | "zh";
 type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe" | "voice" | "video";
@@ -177,8 +176,6 @@ export default function HubLibrary() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const PAGE_SIZE = 60;
-  // Bumpa pra forçar reload (ex: após backfill de storage migrar URLs).
-  const [reloadKey, setReloadKey] = useState(0);
 
   // Deleta asset(s) e atualiza lista localmente.
   // Storyboard/carousel: deleta TODAS as rows com mesmo group_id.
@@ -381,7 +378,7 @@ export default function HubLibrary() {
       }
     })();
     return () => { mounted = false; };
-  }, [period, reloadKey]);
+  }, [period]);
 
   // Load more — busca o próximo PAGE_SIZE com offset pelo created_at do
   // último asset já carregado. Usa created_at do raw row (não do agrupado)
@@ -500,8 +497,6 @@ export default function HubLibrary() {
               </button>
             ))}
           </div>
-          {/* Storage backfill — migra assets antigos do banco pro Storage */}
-          <HubStorageBackfill onComplete={() => setReloadKey(k => k + 1)} />
         </div>
 
         {/* Kind filter */}
