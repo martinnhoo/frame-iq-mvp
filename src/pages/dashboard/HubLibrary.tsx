@@ -22,12 +22,12 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Image as ImageIcon, Layers, Clapperboard, GalleryHorizontal,
   ArrowLeft, Search, Download, X, Sparkles, FolderOpen, Mic, Captions,
-  FileText, Copy, Check, Volume2, Trash2,
+  FileText, Copy, Check, Volume2, Trash2, Video as VideoIcon,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 type Lang = "pt" | "en" | "es" | "zh";
-type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe" | "voice";
+type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe" | "voice" | "video";
 
 interface HubAsset {
   id: string;            // group id (memory id pra single, group_id pra storyboard/carousel)
@@ -51,6 +51,10 @@ interface HubAsset {
   voice_id?: string;
   characters?: number;
   text?: string;
+  // Video-specific
+  video_url?: string;
+  duration_s?: number;
+  resolution?: string;
 }
 
 const STR: Record<string, Record<Lang, string>> = {
@@ -79,6 +83,8 @@ const STR: Record<string, Record<Lang, string>> = {
   filterCar:   { pt: "Carrosséis", en: "Carousels", es: "Carruseles", zh: "轮播" },
   filterTr:    { pt: "Transcrições",en: "Transcripts",es: "Transcripciones",zh: "转录" },
   filterVo:    { pt: "Vozes",      en: "Voices",     es: "Voces",      zh: "语音" },
+  filterVid:   { pt: "Vídeos",     en: "Videos",     es: "Videos",     zh: "视频" },
+  vidFor:      { pt: "Vídeo",      en: "Video",      es: "Video",      zh: "视频" },
   scenes:      { pt: "cenas",      en: "scenes",    es: "escenas",    zh: "场景" },
   slides:      { pt: "slides",     en: "slides",    es: "slides",     zh: "幻灯片" },
   download:    { pt: "Baixar",     en: "Download",  es: "Descargar",  zh: "下载" },
@@ -143,6 +149,10 @@ type RawRow = {
     voice_id?: string;
     voice_name?: string;
     characters?: number;
+    // Video-specific
+    video_url?: string;
+    duration_s?: number;
+    resolution?: string;
   };
   created_at: string;
 };
@@ -155,7 +165,9 @@ export default function HubLibrary() {
 
   const [assets, setAssets] = useState<HubAsset[]>([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<string>("30d");
+  // Default 'all' pra mostrar TODO histórico — user pode filtrar depois.
+  // Antes era '30d' que escondia assets antigos e dava sensação de vazio.
+  const [period, setPeriod] = useState<string>("all");
   const [kindFilter, setKindFilter] = useState<"all" | AssetKind>("all");
   const [search, setSearch] = useState("");
   const [previewAsset, setPreviewAsset] = useState<HubAsset | null>(null);
@@ -251,6 +263,26 @@ export default function HubLibrary() {
               transcript_language: c.language,
               source_filename: c.source_filename,
               duration_seconds: c.duration,
+            });
+            continue;
+          }
+
+          // Video — sem image_url, mas tem video_url. Cover é placeholder.
+          if (r.kind === "hub_video") {
+            const videoUrl = (c.video_url || "").trim();
+            if (!videoUrl) continue;
+            groupedMap.set(r.id, {
+              id: r.id,
+              kind: "video",
+              title: (c.prompt || "").slice(0, 80),
+              prompt: c.prompt || "",
+              cover_url: c.image_url || "", // image source se for image-to-video, senão vazio
+              aspect_ratio: c.aspect_ratio || "16:9",
+              created_at: r.created_at,
+              brand_id: c.brand_id,
+              video_url: videoUrl,
+              duration_s: c.duration_s,
+              resolution: c.resolution,
             });
             continue;
           }
@@ -398,7 +430,7 @@ export default function HubLibrary() {
   }, [assets, kindFilter, search]);
 
   const counts = useMemo(() => {
-    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0, transcribe: 0, voice: 0 };
+    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0, transcribe: 0, voice: 0, video: 0 };
     for (const a of assets) c[a.kind]++;
     return c;
   }, [assets]);
@@ -503,6 +535,11 @@ export default function HubLibrary() {
             active={kindFilter === "voice"} count={counts.voice}
             label={t("filterVo")} icon={Mic}
             onClick={() => setKindFilter("voice")}
+          />
+          <KindChip
+            active={kindFilter === "video"} count={counts.video}
+            label={t("filterVid")} icon={VideoIcon}
+            onClick={() => setKindFilter("video")}
           />
         </div>
 
@@ -616,16 +653,19 @@ function AssetCard({ asset, lang, t, onClick, onDelete }: {
     : asset.kind === "carousel" ? GalleryHorizontal
     : asset.kind === "transcribe" ? Captions
     : asset.kind === "voice" ? Mic
+    : asset.kind === "video" ? VideoIcon
     : ImageIcon;
   const kindLabel = asset.kind === "png" ? t("pngFor")
     : asset.kind === "storyboard" ? t("sbFor")
     : asset.kind === "carousel" ? t("carFor")
     : asset.kind === "transcribe" ? t("trFor")
     : asset.kind === "voice" ? t("voFor")
+    : asset.kind === "video" ? t("vidFor")
     : t("imageFor");
   const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
   const isTranscribe = asset.kind === "transcribe";
   const isVoice = asset.kind === "voice";
+  const isVideo = asset.kind === "video";
   const countLabel = asset.kind === "storyboard" ? t("scenes") : t("slides");
   const wordCount = isTranscribe ? (asset.transcript || "").trim().split(/\s+/).filter(Boolean).length : 0;
 
@@ -715,6 +755,24 @@ function AssetCard({ asset, lang, t, onClick, onDelete }: {
               "{(asset.text || "").slice(0, 200)}{(asset.text || "").length > 200 ? "…" : ""}"
             </p>
           </div>
+        ) : isVideo ? (
+          // Video — mostra <video> direto, hover preview
+          <video
+            src={asset.video_url}
+            muted
+            playsInline
+            preload="metadata"
+            style={{
+              width: "100%",
+              aspectRatio: asset.aspect_ratio === "9:16" ? "9/16"
+                : asset.aspect_ratio === "1:1" ? "1/1"
+                : "16/9",
+              objectFit: "cover", display: "block",
+              background: "#000",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLVideoElement).play().catch(() => {}); }}
+            onMouseLeave={e => { const v = e.currentTarget as HTMLVideoElement; v.pause(); v.currentTime = 0; }}
+          />
         ) : (
           <img
             src={asset.cover_url} alt={asset.title}

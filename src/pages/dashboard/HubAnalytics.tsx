@@ -143,15 +143,49 @@ export default function HubAnalytics() {
         const days = PERIODS.find(p => p.id === period)!.days;
         const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
+        // PERFORMANCE: antes pegava 'content' completo (jsonb com data
+        // URLs embebidos = ~2MB/row, 2000 rows = 4GB payload). Agora
+        // projeta SÓ os campos que aggregate() usa de fato:
+        //   brand_id, market, storyboard_id, carousel_id, elements_used.
+        // Cada row vira ~200 bytes. 2000 rows = 400KB. ~10000x mais leve.
         const { data } = await supabase.from("hub_assets" as never)
-          .select("id, kind, content, created_at")
+          .select(`
+            id, kind, created_at,
+            brand_id:content->>brand_id,
+            market:content->>market,
+            storyboard_id:content->>storyboard_id,
+            carousel_id:content->>carousel_id,
+            elements_used:content->elements_used
+          `)
           .eq("user_id", user.id)
           .gte("created_at", since)
           .order("created_at", { ascending: false })
           .limit(2000);
         if (!mounted) return;
 
-        const rows = (data || []) as RawRow[];
+        // Rows vêm com campos achatados — adapta pro shape esperado
+        // pelo aggregate() (que espera content como sub-objeto).
+        const rows = ((data as Array<{
+          id: string;
+          kind: string;
+          created_at: string;
+          brand_id: string | null;
+          market: string | null;
+          storyboard_id: string | null;
+          carousel_id: string | null;
+          elements_used: Array<{ id: string; name: string }> | null;
+        }>) || []).map(r => ({
+          id: r.id,
+          kind: r.kind,
+          created_at: r.created_at,
+          content: {
+            brand_id: r.brand_id || undefined,
+            market: r.market || undefined,
+            storyboard_id: r.storyboard_id || undefined,
+            carousel_id: r.carousel_id || undefined,
+            elements_used: r.elements_used || undefined,
+          },
+        })) as RawRow[];
         const aggregated = aggregate(rows);
         setStats(aggregated);
       } catch (e) {
