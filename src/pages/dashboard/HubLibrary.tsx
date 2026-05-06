@@ -103,6 +103,16 @@ const STR: Record<string, Record<Lang, string>> = {
   delete:      { pt: "Excluir",    en: "Delete",    es: "Eliminar",   zh: "删除" },
   deleteConfirm: { pt: "Confirmar exclusão", en: "Confirm delete", es: "Confirmar eliminación", zh: "确认删除" },
   deleteHint:  { pt: "Clique de novo pra confirmar", en: "Click again to confirm", es: "Haz click otra vez para confirmar", zh: "再次点击确认" },
+  // Multi-select
+  select:      { pt: "Selecionar",     en: "Select",       es: "Seleccionar",  zh: "选择" },
+  cancel:      { pt: "Cancelar",       en: "Cancel",       es: "Cancelar",     zh: "取消" },
+  selectAll:   { pt: "Selecionar todos", en: "Select all", es: "Seleccionar todos", zh: "全选" },
+  clearSel:    { pt: "Limpar",         en: "Clear",        es: "Limpiar",      zh: "清除" },
+  selectedN:   { pt: "{n} selecionados", en: "{n} selected", es: "{n} seleccionados", zh: "已选 {n}" },
+  selectedOne: { pt: "1 selecionado",   en: "1 selected",  es: "1 seleccionado", zh: "已选 1" },
+  deleteSel:   { pt: "Excluir selecionados", en: "Delete selected", es: "Eliminar seleccionados", zh: "删除所选" },
+  confirmDelN: { pt: "Confirmar excluir {n}?", en: "Confirm delete {n}?", es: "¿Confirmar eliminar {n}?", zh: "确认删除 {n} 项？" },
+  deleting:    { pt: "Excluindo…",     en: "Deleting…",    es: "Eliminando…",  zh: "删除中…" },
   // Load more
   loadMore:    { pt: "Carregar mais", en: "Load more", es: "Cargar más", zh: "加载更多" },
   loadingMore: { pt: "Carregando…",   en: "Loading…",  es: "Cargando…",  zh: "加载中..." },
@@ -177,6 +187,29 @@ export default function HubLibrary() {
   const [loadingMore, setLoadingMore] = useState(false);
   const PAGE_SIZE = 60;
 
+  // ── Multi-seleção ─────────────────────────────────────────────────
+  // Modo de seleção: quando ON, click no card alterna seleção em vez
+  // de abrir preview. Action bar no topo mostra count + ações batch.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkConfirming, setBulkConfirming] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+    setBulkConfirming(false);
+  };
+
   // Deleta asset(s) e atualiza lista localmente.
   // Storyboard/carousel: deleta TODAS as rows com mesmo group_id.
   // Outros: deleta a row única.
@@ -212,6 +245,58 @@ export default function HubLibrary() {
       if (previewAsset?.id === asset.id) setPreviewAsset(null);
     } catch (e) {
       console.error("[hub-library] delete exception:", e);
+    }
+  };
+
+  // Bulk delete — itera pelos selecionados e usa a mesma lógica do
+  // deleteAsset (single ou group). Atualiza UI uma vez no fim pra
+  // evitar N re-renders. Falhas individuais são logadas mas não param.
+  const deleteSelected = async () => {
+    if (bulkDeleting || selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const idsToDelete = Array.from(selectedIds);
+      const successIds: string[] = [];
+
+      for (const id of idsToDelete) {
+        const asset = assets.find(a => a.id === id);
+        if (!asset) continue;
+
+        try {
+          if (asset.kind === "storyboard" || asset.kind === "carousel") {
+            const fieldName = asset.kind === "storyboard" ? "storyboard_id" : "carousel_id";
+            const { error } = await supabase
+              .from("hub_assets")
+              .delete()
+              .eq("user_id", user.id)
+              .eq(`content->>${fieldName}` as never, asset.id as never);
+            if (error) throw new Error(error.message);
+          } else {
+            const { error } = await supabase
+              .from("hub_assets")
+              .delete()
+              .eq("id", asset.id)
+              .eq("user_id", user.id);
+            if (error) throw new Error(error.message);
+          }
+          successIds.push(id);
+        } catch (e) {
+          console.error(`[hub-library] bulk delete failed for ${id}:`, e);
+        }
+      }
+
+      // Update UI: remove os deletados de uma vez
+      const successSet = new Set(successIds);
+      setAssets(prev => prev.filter(a => !successSet.has(a.id)));
+      if (previewAsset && successSet.has(previewAsset.id)) setPreviewAsset(null);
+      exitSelectionMode();
+    } catch (e) {
+      console.error("[hub-library] bulk delete exception:", e);
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -497,7 +582,111 @@ export default function HubLibrary() {
               </button>
             ))}
           </div>
+          {/* Selecionar — toggle do modo de seleção múltipla */}
+          {!selectionMode && (
+            <button
+              onClick={() => setSelectionMode(true)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "8px 12px", borderRadius: 9,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "#D1D5DB",
+                fontSize: 12, fontWeight: 600, cursor: "pointer",
+                fontFamily: "inherit",
+              }}>
+              <Check size={13} style={{ color: "#3B82F6" }} />
+              {t("select")}
+            </button>
+          )}
         </div>
+
+        {/* Action bar — só aparece em modo seleção. Mostra count, botão de
+            selecionar todos visíveis, excluir (com confirm 2-step) e cancelar. */}
+        {selectionMode && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 12,
+            marginBottom: 14, padding: "10px 14px",
+            background: "rgba(59,130,246,0.08)",
+            border: "1px solid rgba(59,130,246,0.30)",
+            borderRadius: 10,
+            flexWrap: "wrap",
+          }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
+              {selectedIds.size === 0
+                ? t("select")
+                : selectedIds.size === 1
+                  ? t("selectedOne")
+                  : t("selectedN").replace("{n}", String(selectedIds.size))}
+            </span>
+            <div style={{ flex: 1 }} />
+            {/* Selecionar todos visíveis (respeita filtro atual) */}
+            <button
+              onClick={() => {
+                const allVisible = filtered.map(a => a.id);
+                const allSelected = allVisible.every(id => selectedIds.has(id));
+                if (allSelected) clearSelection();
+                else setSelectedIds(new Set(allVisible));
+              }}
+              disabled={bulkDeleting}
+              style={{
+                padding: "6px 12px", borderRadius: 8,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.10)",
+                color: "#fff", fontSize: 12, fontWeight: 600,
+                cursor: bulkDeleting ? "wait" : "pointer", fontFamily: "inherit",
+              }}>
+              {filtered.length > 0 && filtered.every(a => selectedIds.has(a.id))
+                ? t("clearSel")
+                : t("selectAll")}
+            </button>
+            {/* Excluir — 2-step: 1º click vira vermelho com texto de confirm */}
+            <button
+              onClick={() => {
+                if (selectedIds.size === 0) return;
+                if (!bulkConfirming) {
+                  setBulkConfirming(true);
+                  setTimeout(() => setBulkConfirming(false), 4000);
+                  return;
+                }
+                deleteSelected();
+              }}
+              disabled={selectedIds.size === 0 || bulkDeleting}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "6px 14px", borderRadius: 8,
+                background: selectedIds.size === 0
+                  ? "rgba(239,68,68,0.15)"
+                  : bulkConfirming ? "#DC2626" : "rgba(239,68,68,0.20)",
+                border: `1px solid ${selectedIds.size === 0 ? "rgba(239,68,68,0.20)" : bulkConfirming ? "#EF4444" : "rgba(239,68,68,0.40)"}`,
+                color: selectedIds.size === 0 ? "rgba(252,165,165,0.40)" : "#FCA5A5",
+                fontSize: 12, fontWeight: 700,
+                cursor: selectedIds.size === 0 || bulkDeleting ? "not-allowed" : "pointer",
+                fontFamily: "inherit",
+                opacity: selectedIds.size === 0 ? 0.5 : 1,
+              }}>
+              {bulkDeleting ? <Trash2 size={12} /> : bulkConfirming ? <Check size={12} color="#fff" /> : <Trash2 size={12} />}
+              {bulkDeleting
+                ? t("deleting")
+                : bulkConfirming && selectedIds.size > 0
+                  ? <span style={{ color: "#fff" }}>{t("confirmDelN").replace("{n}", String(selectedIds.size))}</span>
+                  : t("deleteSel")}
+            </button>
+            {/* Cancelar — sai do modo seleção */}
+            <button
+              onClick={exitSelectionMode}
+              disabled={bulkDeleting}
+              style={{
+                padding: "6px 12px", borderRadius: 8,
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.10)",
+                color: "#9CA3AF", fontSize: 12, fontWeight: 600,
+                cursor: bulkDeleting ? "wait" : "pointer", fontFamily: "inherit",
+              }}>
+              {t("cancel")}
+            </button>
+          </div>
+        )}
 
         {/* Kind filter */}
         <div style={{ display: "flex", gap: 6, marginBottom: 22, flexWrap: "wrap" }}>
@@ -562,8 +751,13 @@ export default function HubLibrary() {
               {filtered.map(asset => (
                 <AssetCard
                   key={asset.id} asset={asset} lang={lang} t={t}
-                  onClick={() => setPreviewAsset(asset)}
+                  onClick={() => {
+                    if (selectionMode) toggleSelection(asset.id);
+                    else setPreviewAsset(asset);
+                  }}
                   onDelete={() => deleteAsset(asset)}
+                  selectionMode={selectionMode}
+                  selected={selectedIds.has(asset.id)}
                 />
               ))}
             </div>
@@ -626,11 +820,13 @@ function KindChip({ active, count, label, icon: Icon, onClick }: {
 }
 
 // ── AssetCard ──────────────────────────────────────────────────────────────
-function AssetCard({ asset, lang, t, onClick, onDelete }: {
+function AssetCard({ asset, lang, t, onClick, onDelete, selectionMode, selected }: {
   asset: HubAsset; lang: Lang;
   t: (key: keyof typeof STR) => string;
   onClick: () => void;
   onDelete: () => void;
+  selectionMode?: boolean;
+  selected?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -669,29 +865,37 @@ function AssetCard({ asset, lang, t, onClick, onDelete }: {
   const countLabel = asset.kind === "storyboard" ? t("scenes") : t("slides");
   const wordCount = isTranscribe ? (asset.transcript || "").trim().split(/\s+/).filter(Boolean).length : 0;
 
+  // Em modo seleção, card mostra borda azul forte quando selecionado
+  // (efeito visual destaca seleção mesmo após mouse leave).
+  const baseBorder = selected ? "rgba(59,130,246,0.70)" : "rgba(255,255,255,0.06)";
+  const baseBg = selected ? "rgba(59,130,246,0.10)" : "rgba(17,24,39,0.50)";
+
   return (
     <button
       onClick={onClick}
       style={{
         textAlign: "left",
-        background: "rgba(17,24,39,0.50)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: baseBg,
+        border: `1px solid ${baseBorder}`,
         borderRadius: 12, overflow: "hidden",
         cursor: "pointer", color: "inherit", fontFamily: "inherit",
         display: "flex", flexDirection: "column",
-        transition: "transform 0.15s, border-color 0.15s",
+        transition: "transform 0.15s, border-color 0.15s, background 0.15s",
         padding: 0,
+        boxShadow: selected ? "0 0 0 2px rgba(59,130,246,0.25)" : "none",
       }}
       onMouseEnter={(e) => {
         setHovered(true);
         e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.borderColor = "rgba(59,130,246,0.40)";
+        e.currentTarget.style.borderColor = selected
+          ? "rgba(59,130,246,0.85)"
+          : "rgba(59,130,246,0.40)";
       }}
       onMouseLeave={(e) => {
         setHovered(false);
         setConfirming(false);
         e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+        e.currentTarget.style.borderColor = baseBorder;
       }}
     >
       <div style={{ position: "relative" }}>
@@ -802,30 +1006,51 @@ function AssetCard({ asset, lang, t, onClick, onDelete }: {
             <span style={{ color: "#3B82F6", marginLeft: 2 }}>· {asset.scene_count}</span>
           )}
         </div>
-        {/* Delete button top-right (aparece no hover, 2-step confirm) */}
-        <div
-          onClick={handleDelete}
-          role="button"
-          tabIndex={-1}
-          aria-label={confirming ? t("deleteConfirm") : t("delete")}
-          title={confirming ? t("deleteHint") : t("delete")}
-          style={{
-            position: "absolute", top: 8, right: 8,
-            width: 28, height: 28, borderRadius: 7,
-            background: confirming ? "#DC2626" : "rgba(0,0,0,0.65)",
-            backdropFilter: "blur(6px)",
-            border: confirming ? "1px solid #EF4444" : "1px solid rgba(255,255,255,0.10)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer",
-            opacity: hovered || confirming ? 1 : 0,
-            transition: "opacity 0.15s, background 0.15s, border-color 0.15s",
-            zIndex: 2,
-          }}
-        >
-          {confirming
-            ? <Check size={14} color="#fff" strokeWidth={2.5} />
-            : <Trash2 size={13} color="#FCA5A5" />}
-        </div>
+        {/* Top-right corner: checkbox em modo seleção, delete button caso contrário */}
+        {selectionMode ? (
+          <div
+            aria-label={selected ? t("clearSel") : t("select")}
+            style={{
+              position: "absolute", top: 8, right: 8,
+              width: 24, height: 24, borderRadius: 7,
+              background: selected ? "#3B82F6" : "rgba(0,0,0,0.55)",
+              backdropFilter: "blur(6px)",
+              border: selected
+                ? "1px solid #60A5FA"
+                : "1px solid rgba(255,255,255,0.30)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "background 0.15s, border-color 0.15s",
+              zIndex: 2,
+              pointerEvents: "none",
+            }}
+          >
+            {selected && <Check size={14} color="#fff" strokeWidth={3} />}
+          </div>
+        ) : (
+          <div
+            onClick={handleDelete}
+            role="button"
+            tabIndex={-1}
+            aria-label={confirming ? t("deleteConfirm") : t("delete")}
+            title={confirming ? t("deleteHint") : t("delete")}
+            style={{
+              position: "absolute", top: 8, right: 8,
+              width: 28, height: 28, borderRadius: 7,
+              background: confirming ? "#DC2626" : "rgba(0,0,0,0.65)",
+              backdropFilter: "blur(6px)",
+              border: confirming ? "1px solid #EF4444" : "1px solid rgba(255,255,255,0.10)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+              opacity: hovered || confirming ? 1 : 0,
+              transition: "opacity 0.15s, background 0.15s, border-color 0.15s",
+              zIndex: 2,
+            }}
+          >
+            {confirming
+              ? <Check size={14} color="#fff" strokeWidth={2.5} />
+              : <Trash2 size={13} color="#FCA5A5" />}
+          </div>
+        )}
         {/* Group thumbnails preview (storyboard/carousel) */}
         {isGroup && asset.scene_thumbs && asset.scene_thumbs.length > 1 && (
           <div style={{
