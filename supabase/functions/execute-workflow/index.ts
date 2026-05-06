@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v3-workflows-fase3-2026-05-06";
+const FN_VERSION = "v4-video-node-2026-05-06";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -458,6 +458,63 @@ async function execStoryboard(
   return { storyboard_id: payload.storyboard_id || `sb-${Date.now()}`, scenes };
 }
 
+async function execVideo(
+  node: GraphNode,
+  inputs: Record<string, unknown>,
+  ctx: ExecCtx,
+): Promise<{ asset_id: string | null; video_url: string; duration_s: number }> {
+  // Inputs:
+  //   prompt (string) — required, do nó prompt upstream
+  //   brand (object)  — optional
+  //   image (object)  — optional, output do image-gen → vira image-to-video
+  const promptInput = inputs.prompt as { text?: string } | string | undefined;
+  const promptText = typeof promptInput === "string" ? promptInput : (promptInput?.text || "");
+  if (!promptText || promptText.length < 5) throw new Error("missing_prompt");
+
+  const brandInput = inputs.brand as Record<string, unknown> | undefined;
+  const imageInput = inputs.image as { image_url?: string } | string | undefined;
+  const image_url = typeof imageInput === "string" ? imageInput : imageInput?.image_url;
+
+  const duration = Math.max(3, Math.min(15, Number(node.data.duration) || 5));
+  const aspect_ratio = (node.data.aspect_ratio as string) || "16:9";
+  const enable_audio = !!node.data.enable_audio;
+  const mode = ((node.data.mode as string) === "pro") ? "pro" : "std";
+  const resolution = ((node.data.resolution as string) === "1080p") ? "1080p" : "720p";
+  const provider = (node.data.provider as string) || "piapi";
+
+  const r = await fetch(`${ctx.supabaseUrl}/functions/v1/hub-video-gen`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${ctx.authToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      prompt: promptText,
+      image_url: image_url || null,
+      duration,
+      aspect_ratio,
+      enable_audio,
+      mode,
+      resolution,
+      provider,
+      brand_id: brandInput?.brand_id || null,
+      market: brandInput?.market || null,
+      brand_hint: brandInput?.brand_hint || "",
+    }),
+  });
+  const text = await r.text();
+  let payload: { ok?: boolean; video_url?: string; memory_id?: string; duration_s?: number; message?: string; error?: string };
+  try { payload = JSON.parse(text); } catch { throw new Error(`video non-json: ${text.slice(0, 200)}`); }
+  if (!payload.ok || !payload.video_url) {
+    throw new Error(payload.message || payload.error || "video failed");
+  }
+  return {
+    asset_id: payload.memory_id || null,
+    video_url: payload.video_url,
+    duration_s: payload.duration_s || duration,
+  };
+}
+
 async function execVoice(
   node: GraphNode,
   inputs: Record<string, unknown>,
@@ -508,6 +565,7 @@ interface FullOutputResult {
   asset_id: string | null;
   image_url?: string;
   audio_url?: string;
+  video_url?: string;
   name: string;
 }
 
@@ -516,10 +574,12 @@ async function execOutput(
   inputs: Record<string, unknown>,
   _ctx: ExecCtx,
 ): Promise<FullOutputResult> {
-  // asset upstream pode ser image-gen ({ image_url }) OU voice ({ audio_url })
-  // OU bg-remove ({ image_url }). Detecta qual é.
-  const asset = inputs.asset as { asset_id?: string; image_url?: string; audio_url?: string; prompt_used?: string } | undefined;
-  if (!asset?.image_url && !asset?.audio_url) throw new Error("missing_asset_input");
+  // asset upstream pode ser:
+  //   image-gen / bg-remove → { image_url }
+  //   voice → { audio_url }
+  //   video → { video_url }
+  const asset = inputs.asset as { asset_id?: string; image_url?: string; audio_url?: string; video_url?: string; prompt_used?: string } | undefined;
+  if (!asset?.image_url && !asset?.audio_url && !asset?.video_url) throw new Error("missing_asset_input");
 
   const tpl = (node.data.name_template as string) || "{date}_{slug}";
   const { date, time } = formatDate();
@@ -537,6 +597,7 @@ async function execOutput(
     asset_id: asset.asset_id || null,
     image_url: asset.image_url,
     audio_url: asset.audio_url,
+    video_url: asset.video_url,
     name: name || "asset",
   };
 }
@@ -555,6 +616,7 @@ async function executeNode(
     case "image-gen":  return await execImageGen(node, inputs, ctx);
     case "bg-remove":  return await execBgRemove(node, inputs, ctx);
     case "storyboard": return await execStoryboard(node, inputs, ctx);
+    case "video":      return await execVideo(node, inputs, ctx);
     case "voice":      return await execVoice(node, inputs, ctx);
     case "variation":  return await execVariation(node, inputs);
     case "output":     return await execOutput(node, inputs, ctx);

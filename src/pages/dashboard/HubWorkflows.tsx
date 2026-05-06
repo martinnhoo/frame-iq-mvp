@@ -24,7 +24,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import {
   ArrowLeft, Play, Save, Plus, Loader, Copy, Trash2, Sparkles,
-  Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch, Mic,
+  Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch, Mic, Video as VideoIcon,
 } from "lucide-react";
 import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode } from "@/data/hubBrands";
 import {
@@ -201,6 +201,35 @@ function StoryboardNode({ data, selected }: { data: { scene_count?: number; aspe
   );
 }
 
+function VideoNode({ data, selected }: {
+  data: { duration?: number; aspect_ratio?: string; mode?: string; resolution?: string; enable_audio?: boolean; provider?: string };
+  selected: boolean;
+}) {
+  const dur = data.duration || 5;
+  const aspect = data.aspect_ratio || "16:9";
+  const res = data.resolution || "720p";
+  const mode = data.mode || "std";
+  const audio = data.enable_audio ? "+áudio" : "";
+  return (
+    <NodeShell
+      icon={<VideoIcon size={13} />}
+      title="Vídeo"
+      color="#8B5CF6"
+      selected={selected}
+      handles={[
+        { id: "prompt", type: "target", position: Position.Left },
+        { id: "image", type: "target", position: Position.Top },
+        { id: "out", type: "source", position: Position.Right },
+      ]}
+    >
+      <div>{dur}s · {aspect} · {res} {audio}</div>
+      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>
+        Kling 3.0 {mode} · {data.provider || "piapi"}
+      </div>
+    </NodeShell>
+  );
+}
+
 function VoiceNode({ data, selected }: { data: { voice_id?: string; voice_name?: string }; selected: boolean }) {
   return (
     <NodeShell
@@ -246,6 +275,7 @@ const nodeTypes = {
   "image-gen": ImageGenNode,
   "bg-remove": BgRemoveNode,
   storyboard: StoryboardNode,
+  video: VideoNode,
   voice: VoiceNode,
   variation: VariationNode,
   output: OutputNode,
@@ -451,6 +481,7 @@ function HubWorkflowsInner() {
       "image-gen": { aspect_ratio: "1:1", quality: "medium" },
       "bg-remove": {},
       storyboard: { scene_count: 4, aspect_ratio: "9:16", quality: "medium" },
+      video: { duration: 5, aspect_ratio: "16:9", mode: "std", resolution: "720p", enable_audio: false, provider: "piapi" },
       voice: { voice_id: "21m00Tcm4TlvDq8ikWAM", voice_name: "Rachel" },
       variation: { axis: "aspect_ratio", values: ["1:1", "9:16", "16:9"] },
       output: { name_template: "{date}_{slug}", save_to_library: true },
@@ -580,6 +611,9 @@ function HubWorkflowsInner() {
               </button>
               <button onClick={() => addNodeOfType("storyboard")} style={paletteBtn("#F97316")}>
                 <Clapperboard size={11} /> Storyboard
+              </button>
+              <button onClick={() => addNodeOfType("video")} style={paletteBtn("#8B5CF6")}>
+                <VideoIcon size={11} /> Vídeo (Kling)
               </button>
               <button onClick={() => addNodeOfType("voice")} style={paletteBtn("#06B6D4")}>
                 <Mic size={11} /> Voz
@@ -851,6 +885,87 @@ function NodeConfigPanel({
         </>
       )}
 
+      {node.type === "video" && (
+        <>
+          <FieldLabel>Provider</FieldLabel>
+          <select
+            value={(data.provider as string) || "piapi"}
+            onChange={e => onUpdate({ provider: e.target.value })}
+            style={selectStyle}
+          >
+            <option value="piapi" style={{ background: "#0d0d14" }}>PiAPI (default)</option>
+            <option value="falai" style={{ background: "#0d0d14" }}>fal.ai (em breve)</option>
+          </select>
+          <FieldLabel>Duração (segundos)</FieldLabel>
+          <input
+            type="number"
+            min={3}
+            max={15}
+            value={Number(data.duration || 5)}
+            onChange={e => onUpdate({ duration: Math.max(3, Math.min(15, Number(e.target.value) || 5)) })}
+            style={selectStyle}
+          />
+          <div style={{ marginTop: 2, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>
+            3-15s. Quanto maior, mais cara a gen e maior risco de timeout (~120s budget).
+          </div>
+          <FieldLabel>Aspect ratio</FieldLabel>
+          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            {["16:9", "9:16", "1:1"].map(ar => (
+              <button
+                key={ar}
+                onClick={() => onUpdate({ aspect_ratio: ar })}
+                style={pillStyle(data.aspect_ratio === ar)}
+              >
+                {ar}
+              </button>
+            ))}
+          </div>
+          <FieldLabel>Resolução</FieldLabel>
+          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            {[
+              { v: "720p", l: "720p" },
+              { v: "1080p", l: "1080p" },
+            ].map(r => (
+              <button
+                key={r.v}
+                onClick={() => onUpdate({ resolution: r.v })}
+                style={pillStyle(data.resolution === r.v)}
+              >
+                {r.l}
+              </button>
+            ))}
+          </div>
+          <FieldLabel>Modo</FieldLabel>
+          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            {[
+              { v: "std", l: "Standard" },
+              { v: "pro", l: "Pro" },
+            ].map(m => (
+              <button
+                key={m.v}
+                onClick={() => onUpdate({ mode: m.v })}
+                style={pillStyle(data.mode === m.v)}
+              >
+                {m.l}
+              </button>
+            ))}
+          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 11.5, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={!!data.enable_audio}
+              onChange={e => onUpdate({ enable_audio: e.target.checked })}
+            />
+            Gerar áudio nativo (custo +50%)
+          </label>
+          <div style={{ marginTop: 10, padding: 8, background: "rgba(139,92,246,0.10)", borderRadius: 6, fontSize: 10.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
+            <strong style={{ color: "#A78BFA" }}>Custo (PiAPI Kling 3.0):</strong><br/>
+            720p sem áudio: $0.10/s · 720p com áudio: $0.15/s<br/>
+            1080p sem áudio: $0.15/s · 1080p com áudio: $0.20/s
+          </div>
+        </>
+      )}
+
       {node.type === "voice" && (
         <>
           <FieldLabel>Voice ID (ElevenLabs)</FieldLabel>
@@ -905,19 +1020,19 @@ function NodeConfigPanel({
 function RunResultPanel({
   result, onClose,
 }: {
-  result: { outputs?: Record<string, { image_url?: string; audio_url?: string; name?: string }>; errors?: Record<string, string>; status?: string };
+  result: { outputs?: Record<string, { image_url?: string; audio_url?: string; video_url?: string; name?: string }>; errors?: Record<string, string>; status?: string };
   onClose: () => void;
 }) {
   const outputs = result.outputs || {};
   const errors = result.errors || {};
-  // Coleta assets visíveis: imagens E áudios (qualquer nó que retornou um deles)
+  // Coleta assets visíveis: imagens, áudios, vídeos (qualquer nó que retornou um deles)
   const finalAssets = Object.entries(outputs)
     .filter(([_, v]) => {
       if (!v || typeof v !== "object") return false;
-      const obj = v as { image_url?: string; audio_url?: string };
-      return !!(obj.image_url || obj.audio_url);
+      const obj = v as { image_url?: string; audio_url?: string; video_url?: string };
+      return !!(obj.image_url || obj.audio_url || obj.video_url);
     })
-    .map(([id, v]) => ({ id, ...(v as { image_url?: string; audio_url?: string; name?: string }) }));
+    .map(([id, v]) => ({ id, ...(v as { image_url?: string; audio_url?: string; video_url?: string; name?: string }) }));
 
   const statusColor = result.status === "succeeded" ? "#10B981"
     : result.status === "partial" ? "#F59E0B"
@@ -934,32 +1049,47 @@ function RunResultPanel({
       </div>
 
       {finalAssets.length > 0 ? (
-        finalAssets.map(a => (
-          <div key={a.id} style={{ marginBottom: 12 }}>
-            {a.image_url && (
-              <img src={a.image_url} alt={a.name || "image"} style={{
-                width: "100%", borderRadius: 8,
-                border: "1px solid rgba(255,255,255,0.10)",
-              }} />
-            )}
-            {a.audio_url && (
-              <audio src={a.audio_url} controls style={{ width: "100%", marginTop: 4 }} />
-            )}
-            <div style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.65)" }}>{a.name || a.id}</div>
-            {(a.image_url || a.audio_url) && (
-              <a
-                href={(a.image_url || a.audio_url)!}
-                download={`${a.name || a.id}.${a.image_url ? "png" : "mp3"}`}
-                style={{
-                  ...btnSecondary,
-                  marginTop: 6, justifyContent: "center", textDecoration: "none",
-                }}
-              >
-                <Download size={11} /> Baixar
-              </a>
-            )}
-          </div>
-        ))
+        finalAssets.map(a => {
+          const url = a.video_url || a.image_url || a.audio_url;
+          const ext = a.video_url ? "mp4" : a.image_url ? "png" : "mp3";
+          return (
+            <div key={a.id} style={{ marginBottom: 12 }}>
+              {a.video_url && (
+                <video
+                  src={a.video_url}
+                  controls
+                  style={{
+                    width: "100%", borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    background: "#000",
+                  }}
+                />
+              )}
+              {a.image_url && !a.video_url && (
+                <img src={a.image_url} alt={a.name || "image"} style={{
+                  width: "100%", borderRadius: 8,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                }} />
+              )}
+              {a.audio_url && !a.video_url && !a.image_url && (
+                <audio src={a.audio_url} controls style={{ width: "100%", marginTop: 4 }} />
+              )}
+              <div style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.65)" }}>{a.name || a.id}</div>
+              {url && (
+                <a
+                  href={url}
+                  download={`${a.name || a.id}.${ext}`}
+                  style={{
+                    ...btnSecondary,
+                    marginTop: 6, justifyContent: "center", textDecoration: "none",
+                  }}
+                >
+                  <Download size={11} /> Baixar
+                </a>
+              )}
+            </div>
+          );
+        })
       ) : (
         <div style={{ color: "rgba(255,255,255,0.50)" }}>Nenhum output produzido.</div>
       )}
@@ -996,6 +1126,7 @@ function nodeLabel(t: string): string {
     "image-gen": "Gerar imagem",
     "bg-remove": "Remover fundo",
     storyboard: "Storyboard",
+    video: "Vídeo",
     voice: "Voz",
     variation: "Variação",
     output: "Salvar",
