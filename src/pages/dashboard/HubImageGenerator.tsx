@@ -38,7 +38,7 @@ import {
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { composeImage } from "@/lib/composeImageWithLicense";
-import { compositeElements } from "@/lib/compositeElements";
+import { compositeElements, ASPECT_DIMS } from "@/lib/compositeElements";
 import { addHubNotification } from "@/lib/hubNotifications";
 import { saveHubAsset } from "@/lib/saveHubAsset";
 
@@ -629,13 +629,15 @@ If text or branding is needed, the user will request it explicitly in their prom
         );
         const sceneDescription = sceneDescriptionParts.filter(Boolean).join("\n\n");
 
-        // Compositing: se user tem 2+ elementos selecionados, junta todos
-        // numa imagem só (PNG transparente) antes de mandar pra BRIA.
-        // BRIA Lifestyle Shot aceita 1 product image — compositar é a forma
-        // de respeitar todos os elementos selecionados.
+        // Compositing: junta TODOS elementos selecionados numa imagem só,
+        // no aspect ratio do output desejado. BRIA Lifestyle Shot herda
+        // o shape do input — compositar no shape correto garante que o
+        // output sai em 1:1 / 9:16 / 16:9 conforme o user pediu.
+        // (Mesmo com 1 elemento só, recompositamos pra forçar dimensões.)
+        const dims = ASPECT_DIMS[aspectRatio] || ASPECT_DIMS["1:1"];
         let elementImageDataUrl: string;
         try {
-          elementImageDataUrl = await compositeElements(selectedElements);
+          elementImageDataUrl = await compositeElements(selectedElements, dims);
         } catch (composeErr) {
           console.warn("[hub-image] composite failed, using first element:", composeErr);
           elementImageDataUrl = selectedElements[0].url;
