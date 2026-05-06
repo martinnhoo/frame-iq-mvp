@@ -38,6 +38,7 @@ import {
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { composeImage } from "@/lib/composeImageWithLicense";
+import { compositeElements } from "@/lib/compositeElements";
 import { addHubNotification } from "@/lib/hubNotifications";
 import { saveHubAsset } from "@/lib/saveHubAsset";
 
@@ -588,6 +589,19 @@ export default function HubImageGenerator() {
         const brandLabel = brand && brand.id !== "none" ? brand.name : "any logo";
         brandHint = `${brandHint}\n\nIMPORTANT: Do NOT render ${brandLabel} or any logo as text or visual element inside the image. The official logo will be added as overlay in post-production. Keep the upper-right corner of the image visually clean (about 20% area) so the overlay logo will be legible against any background.`;
       }
+      // Regra anti-invenção (vale pra todos os paths). Modelos generativos
+      // tendem a inventar marcas/textos quando a cena envolve "promo" /
+      // "esportes" / "campanha". Bloquear explicitamente mantém o criativo
+      // limpo pra brand officialmente compositar tudo no pós.
+      brandHint = `${brandHint}
+
+ABSOLUTE RULE — NO INVENTED BRAND ELEMENTS:
+Do NOT generate, render, or invent ANY of the following inside the image:
+- Fake brand logos, brand marks, or made-up brand text (no fake team logos on jerseys, no invented sponsor logos on caps/banners, no AI-fabricated brand stamps anywhere).
+- Promotional headlines or copy text that the user did NOT explicitly request in their prompt (no auto-added "BIG WINS", "SPECIAL OFFER", etc).
+- Random text, random characters, fake URLs, fake handles, or any written content not in the user's prompt.
+
+If text or branding is needed, the user will request it explicitly in their prompt. Otherwise: pure visual composition only — clean, no fabricated marks.`;
       // ── Roteamento de engine: BRIA Lifestyle Shot (elementos) ou gpt-image-2 (default) ──
       // gpt-image-2 com reference images regenera o sujeito (não preserva).
       // BRIA Lifestyle Shot é dedicada a placar produtos/personagens fielmente
@@ -597,8 +611,7 @@ export default function HubImageGenerator() {
 
       let r: Response;
       if (useBria) {
-        // Monta scene_description com brand + market context + user prompt.
-        // Logo overlay continua sendo aplicada via canvas no pós-processamento.
+        // Monta scene_description com brand + market + user prompt + anti-fake rules.
         const sceneDescriptionParts: string[] = [];
         if (brand?.promptHint) sceneDescriptionParts.push(brand.promptHint);
         if (marketCode && HUB_MARKETS[marketCode]?.promptContext) {
@@ -610,11 +623,23 @@ export default function HubImageGenerator() {
             "Keep the bottom 12% of the image visually clean — no important elements there (will be covered by regulatory disclaimer overlay).",
           );
         }
+        // Regra anti-invenção também na scene_description do BRIA.
+        sceneDescriptionParts.push(
+          "STRICT RULE: Do NOT invent or render any fake brand logos, brand marks, sponsor logos, or promotional text inside the image. Do NOT add headlines, slogans, fake brand names, or made-up text anywhere (no AI-fabricated logos on jerseys, caps, banners, or backgrounds). Pure clean composition only — keep the elements as-is, generate only the scene around them.",
+        );
         const sceneDescription = sceneDescriptionParts.filter(Boolean).join("\n\n");
 
-        // BRIA Lifestyle Shot v1: 1 elemento por chamada. Se user tem 2+
-        // selecionados, usa o primeiro. Future: composite via canvas antes.
-        const primaryElement = selectedElements[0];
+        // Compositing: se user tem 2+ elementos selecionados, junta todos
+        // numa imagem só (PNG transparente) antes de mandar pra BRIA.
+        // BRIA Lifestyle Shot aceita 1 product image — compositar é a forma
+        // de respeitar todos os elementos selecionados.
+        let elementImageDataUrl: string;
+        try {
+          elementImageDataUrl = await compositeElements(selectedElements);
+        } catch (composeErr) {
+          console.warn("[hub-image] composite failed, using first element:", composeErr);
+          elementImageDataUrl = selectedElements[0].url;
+        }
 
         r = await fetch(`${SUPABASE_URL}/functions/v1/hub-bria-place-elements`, {
           method: "POST",
@@ -624,7 +649,7 @@ export default function HubImageGenerator() {
             "apikey": ANON_KEY,
           },
           body: JSON.stringify({
-            element_image_base64: primaryElement.url,
+            element_image_base64: elementImageDataUrl,
             scene_description: sceneDescription.slice(0, 2000),
             aspect_ratio: aspectRatio,
             num_results: 1,
