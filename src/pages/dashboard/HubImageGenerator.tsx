@@ -588,55 +588,68 @@ export default function HubImageGenerator() {
         const brandLabel = brand && brand.id !== "none" ? brand.name : "any logo";
         brandHint = `${brandHint}\n\nIMPORTANT: Do NOT render ${brandLabel} or any logo as text or visual element inside the image. The official logo will be added as overlay in post-production. Keep the upper-right corner of the image visually clean (about 20% area) so the overlay logo will be legible against any background.`;
       }
-      // Elementos selecionados — agora enviamos os PNGs DE VERDADE pra
-      // OpenAI como reference images via /v1/images/edits. O modelo usa
-      // os pixels como anchor visual e preserva identidade do mascote/asset
-      // em vez de imaginar do zero. Antes mandava só os nomes como texto,
-      // o que fazia o AI gerar versão genérica.
-      if (selectedElements.length > 0) {
-        const elementList = selectedElements
-          .map((e, i) => `  Image ${i + 1}: "${e.name}"`)
-          .join("\n");
-        brandHint = `${brandHint}
+      // ── Roteamento de engine: BRIA Lifestyle Shot (elementos) ou gpt-image-2 (default) ──
+      // gpt-image-2 com reference images regenera o sujeito (não preserva).
+      // BRIA Lifestyle Shot é dedicada a placar produtos/personagens fielmente
+      // numa cena gerada. É o equivalente API do "manda esse personagem +
+      // adiciona nessa cena" do ChatGPT.
+      const useBria = selectedElements.length > 0;
 
-REFERENCE IMAGES PROVIDED — USE EXACTLY:
-The user attached ${selectedElements.length} reference image(s) of brand assets/characters that MUST appear in the final creative:
-${elementList}
+      let r: Response;
+      if (useBria) {
+        // Monta scene_description com brand + market context + user prompt.
+        // Logo overlay continua sendo aplicada via canvas no pós-processamento.
+        const sceneDescriptionParts: string[] = [];
+        if (brand?.promptHint) sceneDescriptionParts.push(brand.promptHint);
+        if (marketCode && HUB_MARKETS[marketCode]?.promptContext) {
+          sceneDescriptionParts.push(HUB_MARKETS[marketCode].promptContext);
+        }
+        sceneDescriptionParts.push(prompt.trim());
+        if (hasLicense && includeLicense && licenseText.trim()) {
+          sceneDescriptionParts.push(
+            "Keep the bottom 12% of the image visually clean — no important elements there (will be covered by regulatory disclaimer overlay).",
+          );
+        }
+        const sceneDescription = sceneDescriptionParts.filter(Boolean).join("\n\n");
 
-CRITICAL RULES for these reference images:
-1. Use them as the PRIMARY VISUAL ANCHORS of the composition — they are the heroes of the scene.
-2. Preserve their EXACT visual identity: face, design, colors, proportions, style. Do NOT redraw, restyle, or reimagine them.
-3. The reference images must look pixel-faithful to the inputs — same character, same look, same expression.
-4. Build the scene/background AROUND them, integrating them naturally into the composition described in the user's prompt.
-5. If the prompt asks for the element to be "main", "principal", "hero", etc — make it the dominant focal point at center/foreground.
+        // BRIA Lifestyle Shot v1: 1 elemento por chamada. Se user tem 2+
+        // selecionados, usa o primeiro. Future: composite via canvas antes.
+        const primaryElement = selectedElements[0];
 
-DO NOT replace the reference images with generic versions. The user uploaded them precisely so they appear faithful in the output.`;
+        r = await fetch(`${SUPABASE_URL}/functions/v1/hub-bria-place-elements`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "apikey": ANON_KEY,
+          },
+          body: JSON.stringify({
+            element_image_base64: primaryElement.url,
+            scene_description: sceneDescription.slice(0, 2000),
+            aspect_ratio: aspectRatio,
+            num_results: 1,
+          }),
+        });
+      } else {
+        r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "apikey": ANON_KEY,
+          },
+          body: JSON.stringify({
+            prompt: prompt.trim(),
+            aspect_ratio: aspectRatio,
+            quality,
+            brand_id: brandId === "none" ? null : brandId,
+            brand_hint: brandHint,
+            market: marketCode,
+            include_license: hasLicense && includeLicense,
+            license_text: hasLicense && includeLicense ? licenseText.trim() : "",
+          }),
+        });
       }
-
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-          "apikey": ANON_KEY,
-        },
-        body: JSON.stringify({
-          prompt: prompt.trim(),
-          aspect_ratio: aspectRatio,
-          quality,
-          brand_id: brandId === "none" ? null : brandId,
-          brand_hint: brandHint,
-          market: marketCode,
-          include_license: hasLicense && includeLicense,
-          license_text: hasLicense && includeLicense ? licenseText.trim() : "",
-          // Manda os PNGs dos elementos como reference images. gpt-image-2
-          // aceita até 16 — o backend roteia pra /v1/images/edits quando
-          // tem qualquer imagem.
-          ...(selectedElements.length > 0
-            ? { input_images_base64: selectedElements.map(e => e.url) }
-            : {}),
-        }),
-      });
 
       const text = await r.text();
       let payload: {
