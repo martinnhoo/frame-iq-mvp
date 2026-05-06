@@ -2355,6 +2355,125 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_elements: {
+        Row: {
+          byte_size: number | null
+          created_at: string
+          id: string
+          mime_type: string | null
+          name: string
+          public_url: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          byte_size?: number | null
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          name: string
+          public_url: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          byte_size?: number | null
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          name?: string
+          public_url?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hub_workflow_runs: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          error: string | null
+          id: string
+          inputs: Json | null
+          outputs: Json | null
+          started_at: string | null
+          status: string
+          user_id: string
+          workflow_id: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          error?: string | null
+          id?: string
+          inputs?: Json | null
+          outputs?: Json | null
+          started_at?: string | null
+          status?: string
+          user_id: string
+          workflow_id: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          error?: string | null
+          id?: string
+          inputs?: Json | null
+          outputs?: Json | null
+          started_at?: string | null
+          status?: string
+          user_id?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_workflow_runs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "hub_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_workflows: {
+        Row: {
+          brand_id: string | null
+          created_at: string
+          description: string | null
+          graph: Json
+          id: string
+          is_template: boolean
+          name: string
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string
+          description?: string | null
+          graph: Json
+          id?: string
+          is_template?: boolean
+          name: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string
+          description?: string | null
+          graph?: Json
+          id?: string
+          is_template?: boolean
+          name?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       invite_codes: {
         Row: {
           code: string
