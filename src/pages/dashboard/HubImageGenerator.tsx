@@ -50,6 +50,7 @@ import {
   migrateLocalElementsIfNeeded,
   loadSelectedIds,
   saveSelectedIds,
+  urlToBase64,
 } from "@/lib/hubElements";
 
 // ── Strings i18n ──────────────────────────────────────────────────
@@ -617,11 +618,24 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
 - If text/headline is part of the composition, it MUST be entirely within the frame — never extending past the canvas borders.
 - Compose the scene so the camera framing fits everything comfortably with breathing room.`;
       // ── Engine única: gpt-image-2 via generate-image-hub ──
-      // Quando selectedElements > 0, manda os PNGs como input_images_base64.
-      // O edge function já roteia pra /v1/images/edits (image-to-image)
-      // que aceita até 16 reference images. Mesmo path do ChatGPT consumer.
-      // BRIA foi removido daqui — ficava complicação extra sem ganho real,
-      // só pra placement que gpt-image-2 já faz nativo com prompt direito.
+      // Quando selectedElements > 0, manda os PNGs como base64 (data URL).
+      // PRECISA ser base64 — a versão v18b deployada do edge function
+      // não suporta URLs do Storage ainda (v20 sim, mas Lovable não
+      // redeployou). Converter URL → base64 client-side é compat shim que
+      // funciona em ambas as versões do backend.
+      let inputImagesBase64: string[] = [];
+      if (selectedElements.length > 0) {
+        try {
+          inputImagesBase64 = await Promise.all(
+            selectedElements.map(e => urlToBase64(e.url))
+          );
+        } catch (convErr) {
+          console.error("[image-gen] failed converting elements to base64:", convErr);
+          setError(`Falha ao processar elementos: ${(convErr as Error).message}`);
+          setLoading(false);
+          return;
+        }
+      }
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
         method: "POST",
         headers: {
@@ -638,11 +652,8 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
           market: marketCode,
           include_license: hasLicense && includeLicense,
           license_text: hasLicense && includeLicense ? licenseText.trim() : "",
-          // Elementos: manda os PNGs como reference images. generate-image-hub
-          // roteia pra /v1/images/edits quando há imagens — mesmo path que
-          // o ChatGPT consumer usa pra "incluir esse personagem na cena".
-          ...(selectedElements.length > 0
-            ? { input_images_base64: selectedElements.map(e => e.url) }
+          ...(inputImagesBase64.length > 0
+            ? { input_images_base64: inputImagesBase64 }
             : {}),
         }),
       });
@@ -1815,13 +1826,30 @@ function ElementsModal({
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDraft, setEditingDraft] = useState("");
+  // Estado de upload em andamento — mostra "Subindo X de Y..." durante batch.
+  const [uploading, setUploading] = useState<{ done: number; total: number } | null>(null);
 
   const onFiles = async (files: FileList | File[]) => {
     setError(null);
     const list = Array.from(files);
-    for (const f of list) {
+    if (list.length === 0) return;
+    setUploading({ done: 0, total: list.length });
+    let doneCount = 0;
+    // Paraleliza uploads — antes era sequencial (cada upload esperava o
+    // anterior). Pra 5 PNGs de 2MB isso saiu de ~10-15s pra ~3-5s.
+    // Promise.allSettled pra um erro não parar o resto.
+    const results = await Promise.allSettled(list.map(async f => {
       const res = await onAdd(f);
-      if (!res.ok) { setError(res.error || t("elementsInvalidErr")); return; }
+      doneCount++;
+      setUploading({ done: doneCount, total: list.length });
+      if (!res.ok) throw new Error(res.error || t("elementsInvalidErr"));
+      return res;
+    }));
+    setUploading(null);
+    // Reporta o primeiro erro (se houver)
+    const failed = results.find(r => r.status === "rejected") as PromiseRejectedResult | undefined;
+    if (failed) {
+      setError((failed.reason as Error)?.message || t("elementsInvalidErr"));
     }
   };
 

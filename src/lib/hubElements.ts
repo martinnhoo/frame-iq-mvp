@@ -41,6 +41,35 @@ const MIGRATION_DONE_KEY = "hub_elements_migrated_v2";
 export const SELECTED_KEY = "hub_elements_selected_v1";
 
 /**
+ * Baixa uma URL pública (do Storage ou outra) e converte pra data URL
+ * base64. Usado pra mandar elementos como base64 pro edge function
+ * generate-image-hub (compat com versão v18b deployada hoje, que ainda
+ * espera data URL e não URL do Storage).
+ *
+ * Cache leve em memória pra evitar baixar a mesma URL múltiplas vezes
+ * dentro da mesma sessão (ex: gerando 3 variações com mesmo elemento).
+ */
+const urlToBase64Cache = new Map<string, string>();
+export async function urlToBase64(url: string): Promise<string> {
+  // Se já é data URL, retorna como tá
+  if (url.startsWith("data:")) return url;
+  const cached = urlToBase64Cache.get(url);
+  if (cached) return cached;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`fetch_failed: ${res.status} ${url.slice(0, 100)}`);
+  const blob = await res.blob();
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("FileReader failed"));
+    reader.readAsDataURL(blob);
+  });
+  urlToBase64Cache.set(url, dataUrl);
+  return dataUrl;
+}
+
+/**
  * Lista todos os elementos do user atual (mais recentes primeiro).
  * Retorna [] se não autenticado ou se a tabela ainda não existe (migration pendente).
  */
