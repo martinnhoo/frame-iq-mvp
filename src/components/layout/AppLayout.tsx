@@ -143,23 +143,38 @@ function getNavSections(lang: string): NavSection[] {
       ],
     },
     {
-      title: L('Designer', 'Designer', 'Designer', '设计'),
+      // Workflows isolado — é o FEATURE principal (pipelines reutilizáveis).
+      // Conceptualmente diferente dos geradores únicos.
+      title: L('Automação', 'Automation', 'Automatización', '自动化'),
       items: [
-        { url: '/dashboard/hub/workflows',  label: L('Workflows',         'Workflows',       'Workflows',             '工作流'),       icon: Sparkles },
-        { url: '/dashboard/hub/image',      label: L('Gerador de Imagem', 'Image Generator', 'Generador de Imágenes', '图像生成器'), icon: ImageIcon },
-        { url: '/dashboard/hub/png',        label: L('Gerador de PNG',    'PNG Generator',   'Generador de PNG',      'PNG 生成器'),  icon: Layers },
-        { url: '/dashboard/hub/video',      label: L('Gerador de Vídeo',  'Video Generator', 'Generador de Video',    '视频生成器'), icon: Video },
-        { url: '/dashboard/hub/storyboard', label: L('Storyboard',        'Storyboard',      'Storyboard',            '故事板'),       icon: Clapperboard },
-        { url: '/dashboard/hub/carousel',   label: L('Carrossel',         'Carousel',        'Carrusel',              '轮播'),         icon: GalleryHorizontal },
+        { url: '/dashboard/hub/workflows',  label: L('Workflows', 'Workflows', 'Workflows', '工作流'), icon: Sparkles },
       ],
     },
     {
-      title: L('Ferramentas', 'Tools', 'Herramientas', '工具'),
+      // Criar — geradores de UM asset único (imagem, PNG transparente, vídeo, áudio)
+      title: L('Criar', 'Create', 'Crear', '创建'),
       items: [
-        { url: '/dashboard/hub/voice',      label: L('Gerador de Voz','Voice Generator','Generador de Voz','语音生成器'), icon: Mic },
-        { url: '/dashboard/hub/transcribe', label: L('Transcrição',  'Transcription', 'Transcripción', '转录'),     icon: Captions },
-        { url: '/dashboard/hub/ab',         label: L('Variações AB', 'A/B Variants',  'Variantes A/B', 'A/B 变体'),  icon: GitBranch },
-        { url: '/dashboard/hub/analytics',  label: L('Analytics',    'Analytics',     'Analítica',     '数据分析'), icon: BarChart3 },
+        { url: '/dashboard/hub/image', label: L('Imagem',        'Image',           'Imagen',           '图像'),     icon: ImageIcon },
+        { url: '/dashboard/hub/png',   label: L('PNG',           'PNG',             'PNG',              'PNG'),       icon: Layers },
+        { url: '/dashboard/hub/video', label: L('Vídeo',         'Video',           'Video',            '视频'),     icon: Video },
+        { url: '/dashboard/hub/voice', label: L('Voz',           'Voice',           'Voz',              '语音'),     icon: Mic },
+      ],
+    },
+    {
+      // Sequências — quando o output é MÚLTIPLO (storyboard, carrossel, AB)
+      title: L('Sequências', 'Sequences', 'Secuencias', '序列'),
+      items: [
+        { url: '/dashboard/hub/storyboard', label: L('Storyboard',    'Storyboard',    'Storyboard',    '故事板'),    icon: Clapperboard },
+        { url: '/dashboard/hub/carousel',   label: L('Carrossel',     'Carousel',      'Carrusel',      '轮播'),       icon: GalleryHorizontal },
+        { url: '/dashboard/hub/ab',         label: L('Variações AB',  'A/B Variants',  'Variantes A/B', 'A/B 变体'),  icon: GitBranch },
+      ],
+    },
+    {
+      // Inteligência — análise + utilitários de dados
+      title: L('Inteligência', 'Intelligence', 'Inteligencia', '智能'),
+      items: [
+        { url: '/dashboard/hub/transcribe', label: L('Transcrição', 'Transcription', 'Transcripción', '转录'),       icon: Captions },
+        { url: '/dashboard/hub/analytics',  label: L('Analytics',   'Analytics',     'Analítica',     '数据分析'), icon: BarChart3 },
       ],
     },
     {

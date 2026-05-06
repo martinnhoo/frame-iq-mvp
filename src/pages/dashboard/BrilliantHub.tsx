@@ -32,10 +32,20 @@ const STR: Record<string, Record<Lang, string>> = {
                   en: "Centralize, create and organize your assets with AI.",
                   es: "Centraliza, crea y organiza tus activos con IA.",
                   zh: "使用 AI 集中、创建和组织您的资产。" },
-  designer:     { pt: "Designer",                     en: "Designer",                    es: "Designer",                     zh: "设计" },
-  tools:        { pt: "Ferramentas",                  en: "Tools",                       es: "Herramientas",                 zh: "工具" },
-  library:      { pt: "Biblioteca",                   en: "Library",                     es: "Biblioteca",                   zh: "资源库" },
-  comingSoon:   { pt: "Em breve",                     en: "Coming soon",                 es: "Próximamente",                 zh: "即将推出" },
+  // Section labels (nova organização)
+  automation:   { pt: "Automação",                    en: "Automation",                  es: "Automatización",                zh: "自动化" },
+  create:       { pt: "Criar",                        en: "Create",                      es: "Crear",                         zh: "创建" },
+  sequences:    { pt: "Sequências",                   en: "Sequences",                   es: "Secuencias",                    zh: "序列" },
+  intelligence: { pt: "Inteligência",                 en: "Intelligence",                es: "Inteligencia",                  zh: "智能" },
+  library:      { pt: "Biblioteca",                   en: "Library",                     es: "Biblioteca",                    zh: "资源库" },
+  comingSoon:   { pt: "Em breve",                     en: "Coming soon",                 es: "Próximamente",                  zh: "即将推出" },
+  // Workflow card hero
+  wfTitle:      { pt: "Workflows",                    en: "Workflows",                   es: "Workflows",                     zh: "工作流" },
+  wfDesc:       { pt: "Pipelines reutilizáveis: marca + prompt → criativo pronto em 1 clique. Estilo Higgsfield Canvas.",
+                  en: "Reusable pipelines: brand + prompt → ready creative in 1 click. Higgsfield Canvas style.",
+                  es: "Pipelines reutilizables: marca + prompt → creativo listo en 1 clic. Estilo Higgsfield Canvas.",
+                  zh: "可重复使用的管道：品牌 + 提示词 → 一键生成创意。" },
+  wfBtn:        { pt: "Abrir Workflows",              en: "Open Workflows",              es: "Abrir Workflows",               zh: "打开工作流" },
   imgGen:       { pt: "Gerador de Imagem",            en: "Image Generator",             es: "Generador de Imágenes",        zh: "图像生成器" },
   imgGenDesc:   { pt: "Crie imagens com IA em segundos com base no seu prompt.",
                   en: "Create AI images in seconds based on your prompt.",
@@ -136,8 +146,8 @@ export default function BrilliantHub() {
     return t("libCountN").replace("{n}", String(assetCount));
   })();
 
-  // Designer: ferramentas que criam novos criativos visuais
-  const designerTools = [
+  // ── Criar: geradores de UM asset único ─────────────────────────
+  const createTools = [
     { id: "img", title: t("imgGen"), desc: t("imgGenDesc"), btn: t("imgGenBtn"),
       icon: ImageIcon, route: "/dashboard/hub/image", featured: true },
     { id: "png", title: t("pngGen"), desc: t("pngGenDesc"), btn: t("pngGenBtn"),
@@ -150,6 +160,12 @@ export default function BrilliantHub() {
         : "Text or image becomes video via Kling 3.0. 5-15s, 720p or 1080p.",
       btn: lang === "pt" ? "Gerar vídeo" : lang === "es" ? "Generar video" : lang === "zh" ? "生成视频" : "Generate video",
       icon: VideoIcon, route: "/dashboard/hub/video", featured: true },
+    { id: "voice", title: t("voice"), desc: t("voiceDesc"), btn: t("voiceBtn"),
+      icon: Mic, route: "/dashboard/hub/voice" },
+  ];
+
+  // ── Sequências: outputs múltiplos (storyboard, carrossel, AB) ─────
+  const sequenceTools = [
     { id: "storyboard", title: t("storyboard"), desc: t("storyboardDesc"), btn: t("storyboardBtn"),
       icon: Clapperboard, route: "/dashboard/hub/storyboard" },
     { id: "carousel",
@@ -159,20 +175,10 @@ export default function BrilliantHub() {
       icon: GalleryHorizontal, route: "/dashboard/hub/carousel" },
     { id: "ab", title: t("abVar"), desc: t("abVarDesc"), btn: t("abVarBtn"),
       icon: GitBranch, route: "/dashboard/hub/ab" },
-    { id: "workflows",
-      title: lang === "pt" ? "Workflows" : lang === "es" ? "Workflows" : lang === "zh" ? "工作流" : "Workflows",
-      desc: lang === "pt" ? "Pipelines reutilizáveis: marca + prompt → imagem em 1 clique. Estilo Higgsfield Canvas."
-        : lang === "es" ? "Pipelines reutilizables: marca + prompt → imagen en 1 clic. Estilo Higgsfield Canvas."
-        : lang === "zh" ? "可重复使用的管道：品牌 + 提示词 → 一键生成图像。"
-        : "Reusable pipelines: brand + prompt → image in 1 click. Higgsfield Canvas style.",
-      btn: lang === "pt" ? "Abrir Workflows" : lang === "es" ? "Abrir Workflows" : lang === "zh" ? "打开" : "Open Workflows",
-      icon: Sparkles, route: "/dashboard/hub/workflows", featured: true },
   ];
 
-  // Ferramentas: utilitários de áudio, análise, etc — não criam imagem
-  const supportTools = [
-    { id: "voice", title: t("voice"), desc: t("voiceDesc"), btn: t("voiceBtn"),
-      icon: Mic, route: "/dashboard/hub/voice" },
+  // ── Inteligência: análise + transcrição ────────────────────────
+  const intelligenceTools = [
     { id: "transcribe", title: t("transcribe"), desc: t("transcribeDesc"), btn: t("transcribeBtn"),
       icon: Captions, route: "/dashboard/hub/transcribe" },
     { id: "analytics", title: t("analytics"), desc: t("analyticsDesc"), btn: t("analyticsBtn"),
@@ -204,10 +210,23 @@ export default function BrilliantHub() {
           </p>
         </div>
 
-        {/* ── Designer ─────────────────────────────────────────── */}
-        <p style={SECTION_LABEL}>{t("designer")}</p>
+        {/* ── AUTOMAÇÃO: Workflows como hero (full width, destaque máximo) ── */}
+        <p style={SECTION_LABEL}>{t("automation")}</p>
+        <ToolCard
+          icon={Sparkles}
+          title={t("wfTitle")}
+          desc={t("wfDesc")}
+          btn={t("wfBtn")}
+          fullWidth
+          featured
+          comingSoonLabel={t("comingSoon")}
+          onClick={() => navigate("/dashboard/hub/workflows")}
+        />
+
+        {/* ── CRIAR: geradores de asset único ──────────────────── */}
+        <p style={{ ...SECTION_LABEL, marginTop: 28 }}>{t("create")}</p>
         <div style={GRID_3}>
-          {designerTools.map(tool => (
+          {createTools.map(tool => (
             <ToolCard
               key={tool.id}
               icon={tool.icon}
@@ -222,10 +241,10 @@ export default function BrilliantHub() {
           ))}
         </div>
 
-        {/* ── Ferramentas ──────────────────────────────────────── */}
-        <p style={{ ...SECTION_LABEL, marginTop: 28 }}>{t("tools")}</p>
+        {/* ── SEQUÊNCIAS: outputs múltiplos ────────────────────── */}
+        <p style={{ ...SECTION_LABEL, marginTop: 28 }}>{t("sequences")}</p>
         <div style={GRID_3}>
-          {supportTools.map(tool => (
+          {sequenceTools.map(tool => (
             <ToolCard
               key={tool.id}
               icon={tool.icon}
@@ -234,12 +253,29 @@ export default function BrilliantHub() {
               btn={tool.btn}
               soon={(tool as { soon?: boolean }).soon}
               comingSoonLabel={t("comingSoon")}
-              onClick={(tool as { route?: string }).route ? () => navigate((tool as { route: string }).route) : undefined}
+              onClick={tool.route ? () => navigate(tool.route) : undefined}
             />
           ))}
         </div>
 
-        {/* ── Biblioteca (full width) ──────────────────────────── */}
+        {/* ── INTELIGÊNCIA: análise + utilitários de dados ─────── */}
+        <p style={{ ...SECTION_LABEL, marginTop: 28 }}>{t("intelligence")}</p>
+        <div style={GRID_3}>
+          {intelligenceTools.map(tool => (
+            <ToolCard
+              key={tool.id}
+              icon={tool.icon}
+              title={tool.title}
+              desc={tool.desc}
+              btn={tool.btn}
+              soon={(tool as { soon?: boolean }).soon}
+              comingSoonLabel={t("comingSoon")}
+              onClick={tool.route ? () => navigate(tool.route) : undefined}
+            />
+          ))}
+        </div>
+
+        {/* ── BIBLIOTECA (full width, no rodapé) ─────────────────── */}
         <p style={{ ...SECTION_LABEL, marginTop: 28 }}>{t("library")}</p>
         <ToolCard
           icon={FolderOpen}
