@@ -1,16 +1,20 @@
 // claim-invite-code — signup gate por código de convite.
 //
-// Fluxo atômico:
+// Fluxo (ordem invertida vs versão original):
 //   1. Recebe { email, password, name, code }
-//   2. Tenta marcar o código como reclamado (UPDATE ... WHERE used_by IS NULL)
-//      — se 0 linhas atualizadas, código inválido ou já usado, retorna 400
-//   3. Cria usuário via admin.createUser (email_confirm = true; convite
-//      implica trust, não precisa de double opt-in)
-//   4. Se criação falhar, rollback do código (libera de novo)
-//   5. Atualiza invite_codes.used_by com o user_id real
+//   2. Verifica se o código existe e está livre (SELECT) — fail-fast
+//   3. Cria usuário via admin.createUser (email_confirm = true)
+//   4. Reclama o código com o user_id REAL (UPDATE ... WHERE code AND used_by IS NULL)
+//   5. Se UPDATE atualizou 0 linhas (race: outro user pegou primeiro),
+//      deleta o user recém-criado e retorna invalid_code
 //
-// Frontend (Signup.tsx) chama esta function ao invés de auth.signUp
-// direto. Sem código válido, conta não é criada.
+// Por que invertemos a ordem? A versão anterior tentava "lockar" o código
+// com um LOCK_UUID placeholder (00000000-...-001) antes de criar o user.
+// Mas a coluna invite_codes.used_by tem FK pra auth.users(id) — o UUID
+// fake não existia → FK violation → todos os signups falhavam com
+// claim_failed. Agora usamos o user_id real direto, que sempre satisfaz
+// a FK. A janela de race é mínima (entre createUser e UPDATE) e
+// aceitável pra invite-only com 10 códigos.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -19,11 +23,6 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-// Placeholder usado pra "lock" o código atomicamente antes de criar o
-// user. Se a criação falhar, revertemos. Se der certo, atualizamos com
-// o uuid real do user.
-const LOCK_UUID = "00000000-0000-0000-0000-000000000001";
 
 interface Body {
   email?: string;
@@ -59,21 +58,21 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // 1) Reivindica o código atomicamente. Se 0 linhas atualizadas,
-    //    código inválido ou já consumido — abortar antes de criar user.
-    const { data: claimed, error: claimErr } = await admin
+    // 1) Pre-check: código existe e está livre? Falha rápida sem criar user.
+    const { data: codeRow, error: lookupErr } = await admin
       .from("invite_codes")
-      .update({ used_by: LOCK_UUID, used_at: new Date().toISOString() })
+      .select("code, used_by")
       .eq("code", code)
-      .is("used_by", null)
-      .select("code")
       .maybeSingle();
 
-    if (claimErr) {
-      console.error("[claim-invite] update error:", claimErr);
-      return json({ error: "claim_failed", message: "Erro ao validar código." }, 500);
+    if (lookupErr) {
+      console.error("[claim-invite] lookup error:", lookupErr);
+      return json({ error: "lookup_failed", message: "Erro ao validar código." }, 500);
     }
-    if (!claimed) {
+    if (!codeRow) {
+      return json({ error: "invalid_code", message: "Código de convite inválido ou já utilizado." }, 400);
+    }
+    if (codeRow.used_by) {
       return json({ error: "invalid_code", message: "Código de convite inválido ou já utilizado." }, 400);
     }
 
@@ -87,12 +86,6 @@ Deno.serve(async (req) => {
     });
 
     if (createErr || !created?.user) {
-      // Rollback: libera o código de novo.
-      await admin
-        .from("invite_codes")
-        .update({ used_by: null, used_at: null })
-        .eq("code", code);
-
       const msg = createErr?.message || "Falha ao criar conta.";
       const isDup = /already (registered|exists)/i.test(msg);
       return json(
@@ -101,11 +94,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 3) Atualiza o claim com o user_id real.
-    await admin
+    // 3) Reclama o código com user_id REAL. UPDATE ... WHERE used_by IS NULL
+    //    é atômico — se outro request ganhou a corrida, retorna 0 linhas.
+    const { data: claimed, error: claimErr } = await admin
       .from("invite_codes")
-      .update({ used_by: created.user.id })
-      .eq("code", code);
+      .update({ used_by: created.user.id, used_at: new Date().toISOString() })
+      .eq("code", code)
+      .is("used_by", null)
+      .select("code")
+      .maybeSingle();
+
+    if (claimErr || !claimed) {
+      // Race lost ou erro inesperado — desfaz o user pra não deixar órfão.
+      console.error("[claim-invite] claim race lost or error:", claimErr);
+      try {
+        await admin.auth.admin.deleteUser(created.user.id);
+      } catch (delErr) {
+        console.error("[claim-invite] failed to rollback user:", delErr);
+      }
+      return json(
+        { error: "invalid_code", message: "Código de convite inválido ou já utilizado." },
+        400,
+      );
+    }
 
     return json({ ok: true, user_id: created.user.id }, 200);
   } catch (e) {
