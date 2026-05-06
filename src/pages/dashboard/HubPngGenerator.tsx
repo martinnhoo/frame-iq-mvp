@@ -264,7 +264,25 @@ export default function HubPngGenerator() {
       if (!token) { setError(t("sessionExpired")); setLoading(false); return; }
 
       const augmentedPrompt = mode === "convert"
-        ? `Isolate the following subject from the original image and remove the background completely: ${prompt.trim()}.\n\nIMPORTANT: The output must have a fully transparent background. Keep ONLY the described subject visible — remove EVERYTHING else (people, environment, text, objects not described). Soft anti-aliased edges. Output as transparent PNG asset.`
+        ? [
+            // Diretiva no formato 'task description' que gpt-image-2 respeita melhor
+            // que prompts criativos. Repete a regra crítica em 3 ângulos diferentes
+            // pra forçar o modelo a tratar como remoção, não como geração.
+            "TASK: BACKGROUND REMOVAL ONLY. This is NOT an image generation task.",
+            "",
+            "Your sole job: take the input image and replace ONLY the background pixels with full transparency. Every pixel that belongs to the main subject must remain PIXEL-IDENTICAL to the input image.",
+            "",
+            "ABSOLUTE RULES — violation makes the output unusable:",
+            "1. DO NOT regenerate the subject. Do not redraw, restyle, or reimagine.",
+            "2. DO NOT change the subject's face, identity, clothing, pose, body proportions, hair, or any visual feature.",
+            "3. DO NOT replace the subject with a different person or object.",
+            "4. DO NOT add creative reinterpretation of any kind.",
+            "5. The subject's pixels must be IDENTICAL to the input — same face, same expression, same outfit, same pose, same lighting on the subject.",
+            "",
+            `Subject to preserve (everything matching this stays, everything else becomes transparent): ${prompt.trim()}`,
+            "",
+            "Output: the input image with background pixels replaced by transparency. Preserve subject pixel-by-pixel. Soft anti-aliased edges only at the subject's silhouette boundary.",
+          ].join("\n")
         : `${prompt.trim()}\n\nIMPORTANT: The image must have a fully transparent background. The subject must be isolated, with no environment or scenery. Soft anti-aliased edges. Output as a transparent PNG asset.`;
 
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
