@@ -151,6 +151,14 @@ export default function BrilliantHub() {
       icon: GalleryHorizontal, route: "/dashboard/hub/carousel" },
     { id: "ab", title: t("abVar"), desc: t("abVarDesc"), btn: t("abVarBtn"),
       icon: GitBranch, route: "/dashboard/hub/ab" },
+    { id: "workflows",
+      title: lang === "pt" ? "Workflows" : lang === "es" ? "Workflows" : lang === "zh" ? "工作流" : "Workflows",
+      desc: lang === "pt" ? "Pipelines reutilizáveis: marca + prompt → imagem em 1 clique. Estilo Higgsfield Canvas."
+        : lang === "es" ? "Pipelines reutilizables: marca + prompt → imagen en 1 clic. Estilo Higgsfield Canvas."
+        : lang === "zh" ? "可重复使用的管道：品牌 + 提示词 → 一键生成图像。"
+        : "Reusable pipelines: brand + prompt → image in 1 click. Higgsfield Canvas style.",
+      btn: lang === "pt" ? "Abrir Workflows" : lang === "es" ? "Abrir Workflows" : lang === "zh" ? "打开" : "Open Workflows",
+      icon: Sparkles, route: "/dashboard/hub/workflows", featured: true },
   ];
 
   // Ferramentas: utilitários de áudio, análise, etc — não criam imagem
