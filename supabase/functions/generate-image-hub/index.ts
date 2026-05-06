@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v19-multi-element-2026-05-06";
+const FN_VERSION = "v20-storage-url-input-2026-05-06";
 
 // Timeout explícito na chamada OpenAI. Supabase Edge Functions matam
 // requests > 150s com a mensagem 'Request idle timeout limit (150s)
@@ -172,12 +172,36 @@ Deno.serve(async (req) => {
         // Adiciona TODAS as imagens como inputs visuais. gpt-image-2 edits
         // aceita até 16 e usa todas como contexto — ideal pra elementos
         // (mascote + ícones + objetos) servirem como referência visual fiel.
+        //
+        // Aceita 2 formatos no input:
+        //   - data:image/png;base64,XYZ...  (legacy do PNG converter, etc)
+        //   - https://....supabase.co/storage/...  (Storage URL — novos elementos)
+        //
+        // Detecta automático: se começa com "data:" decodifica base64; senão
+        // faz fetch e pega arrayBuffer. Ambos viram Uint8Array do mesmo jeito.
         let totalBytes = 0;
         for (let i = 0; i < allInputImages.length; i++) {
-          const cleanBase64 = allInputImages[i].replace(/^data:[^;]+;base64,/, "");
-          const binary = atob(cleanBase64);
-          const bytes = new Uint8Array(binary.length);
-          for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+          const input = allInputImages[i];
+          let bytes: Uint8Array;
+          if (input.startsWith("data:") || !/^https?:\/\//i.test(input)) {
+            // Data URL ou base64 cru
+            const cleanBase64 = input.replace(/^data:[^;]+;base64,/, "");
+            const binary = atob(cleanBase64);
+            bytes = new Uint8Array(binary.length);
+            for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+          } else {
+            // URL — fetch e converte pra bytes
+            const fetchRes = await fetch(input);
+            if (!fetchRes.ok) {
+              return jsonResponse({
+                _v: FN_VERSION, ok: false, error: "input_image_fetch_failed",
+                message: `Falha ao baixar imagem de input #${i+1}: ${fetchRes.status}`,
+                detail: input.slice(0, 200),
+              }, 502);
+            }
+            const buf = await fetchRes.arrayBuffer();
+            bytes = new Uint8Array(buf);
+          }
           totalBytes += bytes.length;
           // Detecta MIME por magic bytes (PNG: 89 50 4E 47, JPEG: FF D8 FF, WEBP: RIFF...WEBP)
           let mime = "image/png";

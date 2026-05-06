@@ -41,6 +41,16 @@ import { composeImage } from "@/lib/composeImageWithLicense";
 import { compositeElements, ASPECT_DIMS } from "@/lib/compositeElements";
 import { addHubNotification } from "@/lib/hubNotifications";
 import { saveHubAsset } from "@/lib/saveHubAsset";
+import {
+  type HubElement,
+  listElements,
+  uploadElement,
+  renameElement as renameElementDb,
+  deleteElement as deleteElementDb,
+  migrateLocalElementsIfNeeded,
+  loadSelectedIds,
+  saveSelectedIds,
+} from "@/lib/hubElements";
 
 // ── Strings i18n ──────────────────────────────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -298,18 +308,11 @@ function buildAutoFileName(opts: {
   return parts.filter(Boolean).join("_").slice(0, FILE_NAME_MAX);
 }
 
-// Elementos: lightweight asset library, persistido em localStorage.
-// Cap menor pq guardamos data URL — múltiplos PNGs grandes estouram quota.
-const ELEMENT_MAX_BYTES = 2 * 1024 * 1024;
-const ELEMENTS_KEY = "hub_elements_v1";
-const ELEMENTS_SELECTED_KEY = "hub_elements_selected_v1";
-
-interface HubElement {
-  id: string;
-  name: string;
-  url: string; // data URL PNG
-  createdAt: string;
-}
+// Elementos: biblioteca de PNGs reutilizáveis. Agora persistido no
+// Supabase Storage + tabela hub_elements (antes era localStorage,
+// estourava quota com poucos arquivos). Lib em @/lib/hubElements.
+// HubElement type vem de lá.
+const ELEMENT_MAX_BYTES = 5 * 1024 * 1024; // 5MB — Storage suporta, sem mais limite de quota
 
 export default function HubImageGenerator() {
   const navigate = useNavigate();
@@ -384,40 +387,35 @@ export default function HubImageGenerator() {
     }
   }, [customLogo]);
 
-  // Load elements + selection from localStorage (mount once)
+  // Load elements do DB (Storage-backed) + selection do localStorage (só IDs).
+  // Roda one-shot migration de localStorage → Storage se necessário (uma vez por user).
   useEffect(() => {
-    try {
-      const rawEls = localStorage.getItem(ELEMENTS_KEY);
-      if (rawEls) {
-        const parsed = JSON.parse(rawEls) as HubElement[];
-        if (Array.isArray(parsed)) setElements(parsed);
+    let cancelled = false;
+    (async () => {
+      // Migra elementos legados do localStorage pro Storage (idempotente).
+      // A migração também limpa SELECTED_KEY se rodar com sucesso (IDs antigos
+      // viram UUIDs novos), por isso loadSelectedIds() vem DEPOIS.
+      try {
+        const m = await migrateLocalElementsIfNeeded();
+        if (m.migrated > 0) {
+          console.log(`[hub-elements] migrated ${m.migrated} legacy elements to Storage (${m.failed} failed)`);
+        }
+      } catch (e) {
+        console.warn("[hub-elements] migration failed:", e);
       }
-    } catch { /* silent */ }
-    try {
-      const rawSel = localStorage.getItem(ELEMENTS_SELECTED_KEY);
-      if (rawSel) {
-        const parsed = JSON.parse(rawSel) as string[];
-        if (Array.isArray(parsed)) setSelectedElementIds(parsed);
-      }
-    } catch { /* silent */ }
+      if (cancelled) return;
+      // Carrega lista atualizada do DB + seleção persistida (após eventual limpeza pela migração)
+      const list = await listElements();
+      if (cancelled) return;
+      setElements(list);
+      setSelectedElementIds(loadSelectedIds());
+    })();
+    return () => { cancelled = true; };
   }, []);
 
-  // Persist elements list — só roda quando elements muda (não no load inicial vazio
-  // pq o useEffect acima ainda não populou). Salva mesmo array vazio pra suportar
-  // delete-all consistente.
+  // Persist selection — só strings de ID, nunca estoura quota
   useEffect(() => {
-    try {
-      localStorage.setItem(ELEMENTS_KEY, JSON.stringify(elements));
-    } catch (e) {
-      console.warn("[hub-elements] persist failed (quota?):", e);
-    }
-  }, [elements]);
-
-  // Persist selection
-  useEffect(() => {
-    try {
-      localStorage.setItem(ELEMENTS_SELECTED_KEY, JSON.stringify(selectedElementIds));
-    } catch { /* silent */ }
+    saveSelectedIds(selectedElementIds);
   }, [selectedElementIds]);
 
   // Auto-fill file name baseado em brand + prompt + market + data.
@@ -515,46 +513,54 @@ export default function HubImageGenerator() {
   };
 
   // ── Element handlers ──────────────────────────────────────
-  const addElement = (file: File): Promise<{ ok: boolean; error?: string }> => {
-    return new Promise((resolve) => {
-      // PNG-only — outras extensões caem no fluxo de erro com botão pro Gerador de PNG
-      if (file.type !== "image/png") {
-        resolve({ ok: false, error: t("elementsInvalidErr") });
-        return;
-      }
-      if (file.size > ELEMENT_MAX_BYTES) {
-        resolve({ ok: false, error: t("elementsTooBig") });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const url = reader.result as string;
-        const baseName = file.name.replace(/\.[^.]+$/, "").slice(0, 60) || "elemento";
-        const newEl: HubElement = {
-          id: `el_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          name: baseName,
-          url,
-          createdAt: new Date().toISOString(),
-        };
-        setElements(prev => [newEl, ...prev]);
-        // Auto-select recém-adicionado
-        setSelectedElementIds(prev => [...prev, newEl.id]);
-        resolve({ ok: true });
-      };
-      reader.onerror = () => resolve({ ok: false, error: t("elementsInvalidErr") });
-      reader.readAsDataURL(file);
-    });
+  // Upload vai pro Supabase Storage + tabela hub_elements. Retorna { ok, error }
+  // pra UI poder mostrar mensagem clara se falhar.
+  const addElement = async (file: File): Promise<{ ok: boolean; error?: string }> => {
+    if (file.type !== "image/png") {
+      return { ok: false, error: t("elementsInvalidErr") };
+    }
+    if (file.size > ELEMENT_MAX_BYTES) {
+      return { ok: false, error: t("elementsTooBig") };
+    }
+    try {
+      const baseName = file.name.replace(/\.[^.]+$/, "").slice(0, 60) || "elemento";
+      const newEl = await uploadElement({ blob: file, name: baseName });
+      setElements(prev => [newEl, ...prev]);
+      // Auto-select recém-adicionado
+      setSelectedElementIds(prev => [...prev, newEl.id]);
+      return { ok: true };
+    } catch (e) {
+      console.error("[hub-elements] upload failed:", e);
+      return { ok: false, error: (e as Error).message || t("elementsInvalidErr") };
+    }
   };
 
-  const renameElement = (id: string, newName: string) => {
+  // Rename: atualiza local + DB. Se DB falhar, reverte local.
+  const renameElement = async (id: string, newName: string) => {
     const trimmed = newName.trim().slice(0, 60);
     if (!trimmed) return;
-    setElements(prev => prev.map(el => el.id === id ? { ...el, name: trimmed } : el));
+    const prev = elements;
+    setElements(curr => curr.map(el => el.id === id ? { ...el, name: trimmed } : el));
+    try {
+      await renameElementDb(id, trimmed);
+    } catch (e) {
+      console.error("[hub-elements] rename failed:", e);
+      setElements(prev); // rollback
+    }
   };
 
-  const deleteElement = (id: string) => {
+  // Delete: remove local + DB + Storage. Otimista — se falhar, recarrega lista.
+  const deleteElement = async (id: string) => {
+    const target = elements.find(el => el.id === id);
     setElements(prev => prev.filter(el => el.id !== id));
     setSelectedElementIds(prev => prev.filter(x => x !== id));
+    try {
+      await deleteElementDb(id, target?.storagePath);
+    } catch (e) {
+      console.error("[hub-elements] delete failed, reloading list:", e);
+      const fresh = await listElements();
+      setElements(fresh);
+    }
   };
 
   const toggleElementSelection = (id: string) => {
@@ -1798,8 +1804,8 @@ function ElementsModal({
   selectedIds: string[];
   onClose: () => void;
   onAdd: (file: File) => Promise<{ ok: boolean; error?: string }>;
-  onRename: (id: string, newName: string) => void;
-  onDelete: (id: string) => void;
+  onRename: (id: string, newName: string) => Promise<void> | void;
+  onDelete: (id: string) => Promise<void> | void;
   onToggle: (id: string) => void;
   onOpenPngGenerator: () => void;
   t: (key: keyof typeof STR) => string;
