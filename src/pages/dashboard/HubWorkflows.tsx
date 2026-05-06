@@ -24,7 +24,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import {
   ArrowLeft, Play, Save, Plus, Loader, Copy, Trash2, Sparkles,
-  Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch,
+  Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch, Mic,
 } from "lucide-react";
 import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode } from "@/data/hubBrands";
 import {
@@ -201,6 +201,24 @@ function StoryboardNode({ data, selected }: { data: { scene_count?: number; aspe
   );
 }
 
+function VoiceNode({ data, selected }: { data: { voice_id?: string; voice_name?: string }; selected: boolean }) {
+  return (
+    <NodeShell
+      icon={<Mic size={13} />}
+      title="Voz"
+      color="#06B6D4"
+      selected={selected}
+      handles={[
+        { id: "text", type: "target", position: Position.Left },
+        { id: "out", type: "source", position: Position.Right },
+      ]}
+    >
+      <div>{data.voice_name || "Rachel (default)"}</div>
+      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>ElevenLabs</div>
+    </NodeShell>
+  );
+}
+
 function VariationNode({ data, selected }: { data: { axis?: string; values?: string[] }; selected: boolean }) {
   const values = data.values || [];
   return (
@@ -228,6 +246,7 @@ const nodeTypes = {
   "image-gen": ImageGenNode,
   "bg-remove": BgRemoveNode,
   storyboard: StoryboardNode,
+  voice: VoiceNode,
   variation: VariationNode,
   output: OutputNode,
 };
@@ -432,6 +451,7 @@ function HubWorkflowsInner() {
       "image-gen": { aspect_ratio: "1:1", quality: "medium" },
       "bg-remove": {},
       storyboard: { scene_count: 4, aspect_ratio: "9:16", quality: "medium" },
+      voice: { voice_id: "21m00Tcm4TlvDq8ikWAM", voice_name: "Rachel" },
       variation: { axis: "aspect_ratio", values: ["1:1", "9:16", "16:9"] },
       output: { name_template: "{date}_{slug}", save_to_library: true },
     };
@@ -560,6 +580,9 @@ function HubWorkflowsInner() {
               </button>
               <button onClick={() => addNodeOfType("storyboard")} style={paletteBtn("#F97316")}>
                 <Clapperboard size={11} /> Storyboard
+              </button>
+              <button onClick={() => addNodeOfType("voice")} style={paletteBtn("#06B6D4")}>
+                <Mic size={11} /> Voz
               </button>
               <button onClick={() => addNodeOfType("variation")} style={paletteBtn("#EC4899")}>
                 <GitBranch size={11} /> Variação
@@ -828,6 +851,28 @@ function NodeConfigPanel({
         </>
       )}
 
+      {node.type === "voice" && (
+        <>
+          <FieldLabel>Voice ID (ElevenLabs)</FieldLabel>
+          <input
+            value={(data.voice_id as string) || ""}
+            onChange={e => onUpdate({ voice_id: e.target.value })}
+            placeholder="21m00Tcm4TlvDq8ikWAM (Rachel)"
+            style={selectStyle}
+          />
+          <FieldLabel>Nome (display)</FieldLabel>
+          <input
+            value={(data.voice_name as string) || ""}
+            onChange={e => onUpdate({ voice_name: e.target.value })}
+            placeholder="Rachel"
+            style={selectStyle}
+          />
+          <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
+            Recebe o texto upstream e gera áudio MP3 via ElevenLabs.
+          </div>
+        </>
+      )}
+
       {node.type === "variation" && (
         <>
           <FieldLabel>Eixo de variação</FieldLabel>
@@ -860,15 +905,19 @@ function NodeConfigPanel({
 function RunResultPanel({
   result, onClose,
 }: {
-  result: { outputs?: Record<string, { image_url?: string; name?: string }>; errors?: Record<string, string>; status?: string };
+  result: { outputs?: Record<string, { image_url?: string; audio_url?: string; name?: string }>; errors?: Record<string, string>; status?: string };
   onClose: () => void;
 }) {
   const outputs = result.outputs || {};
   const errors = result.errors || {};
-  // Output node provides the final asset
+  // Coleta assets visíveis: imagens E áudios (qualquer nó que retornou um deles)
   const finalAssets = Object.entries(outputs)
-    .filter(([_, v]) => v && typeof v === "object" && (v as { image_url?: string }).image_url)
-    .map(([id, v]) => ({ id, ...(v as { image_url?: string; name?: string }) }));
+    .filter(([_, v]) => {
+      if (!v || typeof v !== "object") return false;
+      const obj = v as { image_url?: string; audio_url?: string };
+      return !!(obj.image_url || obj.audio_url);
+    })
+    .map(([id, v]) => ({ id, ...(v as { image_url?: string; audio_url?: string; name?: string }) }));
 
   const statusColor = result.status === "succeeded" ? "#10B981"
     : result.status === "partial" ? "#F59E0B"
@@ -888,17 +937,24 @@ function RunResultPanel({
         finalAssets.map(a => (
           <div key={a.id} style={{ marginBottom: 12 }}>
             {a.image_url && (
-              <img src={a.image_url} alt={a.name} style={{
+              <img src={a.image_url} alt={a.name || "image"} style={{
                 width: "100%", borderRadius: 8,
                 border: "1px solid rgba(255,255,255,0.10)",
               }} />
             )}
-            <div style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.65)" }}>{a.name}</div>
-            {a.image_url && (
-              <a href={a.image_url} download={`${a.name || "asset"}.png`} style={{
-                ...btnSecondary,
-                marginTop: 6, justifyContent: "center", textDecoration: "none",
-              }}>
+            {a.audio_url && (
+              <audio src={a.audio_url} controls style={{ width: "100%", marginTop: 4 }} />
+            )}
+            <div style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.65)" }}>{a.name || a.id}</div>
+            {(a.image_url || a.audio_url) && (
+              <a
+                href={(a.image_url || a.audio_url)!}
+                download={`${a.name || a.id}.${a.image_url ? "png" : "mp3"}`}
+                style={{
+                  ...btnSecondary,
+                  marginTop: 6, justifyContent: "center", textDecoration: "none",
+                }}
+              >
                 <Download size={11} /> Baixar
               </a>
             )}
@@ -940,6 +996,7 @@ function nodeLabel(t: string): string {
     "image-gen": "Gerar imagem",
     "bg-remove": "Remover fundo",
     storyboard: "Storyboard",
+    voice: "Voz",
     variation: "Variação",
     output: "Salvar",
   } as Record<string, string>)[t] || t;

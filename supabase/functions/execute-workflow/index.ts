@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v2-workflows-fase2-2026-05-06";
+const FN_VERSION = "v3-workflows-fase3-2026-05-06";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -458,6 +458,41 @@ async function execStoryboard(
   return { storyboard_id: payload.storyboard_id || `sb-${Date.now()}`, scenes };
 }
 
+async function execVoice(
+  node: GraphNode,
+  inputs: Record<string, unknown>,
+  ctx: ExecCtx,
+): Promise<{ asset_id: string | null; audio_url: string; characters: number }> {
+  const textInput = inputs.text as { text?: string } | string | undefined;
+  const text = typeof textInput === "string" ? textInput : (textInput?.text || "");
+  if (!text || text.length < 3) throw new Error("missing_text");
+
+  const voice_id = (node.data.voice_id as string) || "21m00Tcm4TlvDq8ikWAM"; // Rachel default
+  const model_id = (node.data.model_id as string) || "eleven_multilingual_v2";
+  const stability = Number(node.data.stability) || 0.5;
+  const similarity_boost = Number(node.data.similarity_boost) || 0.75;
+
+  const r = await fetch(`${ctx.supabaseUrl}/functions/v1/hub-voice-gen`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${ctx.authToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text, voice_id, model_id, stability, similarity_boost }),
+  });
+  const respText = await r.text();
+  let payload: { ok?: boolean; audio_url?: string; memory_id?: string; characters?: number; error?: string; message?: string };
+  try { payload = JSON.parse(respText); } catch { throw new Error(`voice non-json: ${respText.slice(0, 200)}`); }
+  if (!payload.ok || !payload.audio_url) {
+    throw new Error(payload.message || payload.error || "voice failed");
+  }
+  return {
+    asset_id: payload.memory_id || null,
+    audio_url: payload.audio_url,
+    characters: payload.characters || 0,
+  };
+}
+
 async function execVariation(
   _node: GraphNode,
   inputs: Record<string, unknown>,
@@ -469,35 +504,39 @@ async function execVariation(
   return { value: "", passthrough };
 }
 
+interface FullOutputResult {
+  asset_id: string | null;
+  image_url?: string;
+  audio_url?: string;
+  name: string;
+}
+
 async function execOutput(
   node: GraphNode,
   inputs: Record<string, unknown>,
-  ctx: ExecCtx,
-): Promise<OutputResult> {
-  const asset = inputs.asset as { asset_id?: string; image_url?: string; prompt_used?: string } | undefined;
-  if (!asset?.image_url) throw new Error("missing_asset_input");
+  _ctx: ExecCtx,
+): Promise<FullOutputResult> {
+  // asset upstream pode ser image-gen ({ image_url }) OU voice ({ audio_url })
+  // OU bg-remove ({ image_url }). Detecta qual é.
+  const asset = inputs.asset as { asset_id?: string; image_url?: string; audio_url?: string; prompt_used?: string } | undefined;
+  if (!asset?.image_url && !asset?.audio_url) throw new Error("missing_asset_input");
 
-  // Naming: usa template do node.data.name_template
   const tpl = (node.data.name_template as string) || "{date}_{slug}";
-  // Procura brand context vindo upstream (via image-gen → coletado de seus inputs)
-  // Pra simplificar, lê do graph via overrides — ou extrai do prompt_used.
-  // Aqui não temos acesso direto à brand do nó upstream, então usa template básico.
   const { date, time } = formatDate();
   const slug = slugify(asset.prompt_used || "ad");
   const name = tpl
     .replace(/\{date\}/g, date)
     .replace(/\{time\}/g, time)
     .replace(/\{slug\}/g, slug)
-    .replace(/\{brand\}/g, "")     // placeholder — Fase 1 não tem essa info aqui
+    .replace(/\{brand\}/g, "")
     .replace(/\{market\}/g, "")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
 
-  // Asset já foi salvo em hub_assets pelo generate-image-hub. Aqui só
-  // anexa nome/run_id como metadata extra. Pra MVP, retorna referência.
   return {
     asset_id: asset.asset_id || null,
     image_url: asset.image_url,
+    audio_url: asset.audio_url,
     name: name || "asset",
   };
 }
@@ -516,6 +555,7 @@ async function executeNode(
     case "image-gen":  return await execImageGen(node, inputs, ctx);
     case "bg-remove":  return await execBgRemove(node, inputs, ctx);
     case "storyboard": return await execStoryboard(node, inputs, ctx);
+    case "voice":      return await execVoice(node, inputs, ctx);
     case "variation":  return await execVariation(node, inputs);
     case "output":     return await execOutput(node, inputs, ctx);
     default: throw new Error(`unknown_node_type:${node.type}`);
