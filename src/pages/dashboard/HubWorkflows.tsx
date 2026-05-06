@@ -725,7 +725,12 @@ function HubWorkflowsInner() {
       });
     });
     if (!finalSnap) {
-      setRunError("Polling falhou — verifique logs");
+      // Run sumiu do servidor (foi limpa, expirou, ou nunca existiu —
+      // stale localStorage). Limpa pra não tentar de novo no próximo
+      // mount, libera a UI, e mostra erro claro.
+      if (activeWf?.id) clearActiveRun(activeWf.id);
+      setRunError("Run não encontrado — possivelmente foi limpo do servidor. Tenta rodar de novo.");
+      setRunProgress(null);
       return;
     }
     setRunResult({
@@ -733,7 +738,6 @@ function HubWorkflowsInner() {
       errors: finalSnap.errors || undefined,
       status: finalSnap.status,
     });
-    // Run terminou (succeeded/partial/failed) — limpa do localStorage
     if (activeWf?.id && ["succeeded", "partial", "failed"].includes(finalSnap.status)) {
       clearActiveRun(activeWf.id);
     }

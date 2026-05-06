@@ -303,14 +303,28 @@ export async function pollWorkflowRun(
   const maxWallMs = opts?.maxWallMs ?? 8 * 60 * 1000;
   const startedAt = Date.now();
   let snap: RunSnapshot | null = null;
+  // Bug fix: se getWorkflowRun retorna null (404 — run sumiu do servidor),
+  // antes ficava polando 8min sem nunca terminar — UI presa em "running".
+  // Agora aborta após 3 nulls consecutivos. Run só "some" se foi limpa
+  // ou nunca existiu (stale localStorage).
+  let consecutiveNulls = 0;
+  const MAX_CONSECUTIVE_NULLS = 3;
 
   while (Date.now() - startedAt < maxWallMs) {
     if (opts?.stopSignal?.aborted) return snap;
-    snap = await getWorkflowRun(runId);
-    if (snap) {
-      onProgress(snap);
-      if (["succeeded", "partial", "failed"].includes(snap.status)) {
-        return snap;
+    const fresh = await getWorkflowRun(runId);
+    if (fresh) {
+      consecutiveNulls = 0;
+      snap = fresh;
+      onProgress(fresh);
+      if (["succeeded", "partial", "failed"].includes(fresh.status)) {
+        return fresh;
+      }
+    } else {
+      consecutiveNulls++;
+      if (consecutiveNulls >= MAX_CONSECUTIVE_NULLS) {
+        console.warn(`[pollWorkflowRun] run ${runId} not found after ${MAX_CONSECUTIVE_NULLS} polls — aborting`);
+        return null;
       }
     }
     await new Promise(r => setTimeout(r, intervalMs));

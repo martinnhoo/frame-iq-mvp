@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { toast } from "sonner";
 import {
   Image as ImageIcon, Layers, Clapperboard, Mic, Captions, GitBranch, BarChart3,
   FolderOpen, ArrowRight, Sparkles, GalleryHorizontal, Video as VideoIcon,
@@ -116,6 +117,29 @@ export default function BrilliantHub() {
 
   const [userName, setUserName] = useState<string>("");
   const [assetCount, setAssetCount] = useState<number | null>(null);
+
+  // Detecta callback OAuth com erro (ex: failed to sign in with vendor).
+  // Quando Supabase Auth backend tá com instabilidade, Lovable broker
+  // redireciona pra cá com hash #error=server_error&error_description=...
+  // Antes ficava silenciosamente quebrado — agora mostra erro claro e
+  // manda user de volta pro login pra tentar de novo.
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes("error=")) return;
+    const params = new URLSearchParams(hash.slice(1));
+    const errorCode = params.get("error");
+    const errorDesc = params.get("error_description") || "";
+    if (errorCode) {
+      const friendly = errorDesc.includes("vendor") || errorDesc.includes("server_error")
+        ? "Servidor de autenticação instável. Tenta de novo em 30s."
+        : `Erro de login: ${errorDesc}`;
+      toast.error(friendly);
+      // Limpa o hash pra não disparar de novo se user navegar
+      window.history.replaceState(null, "", window.location.pathname);
+      // Volta pro login depois de 1.5s pra dar tempo de ler o toast
+      setTimeout(() => navigate("/login"), 1500);
+    }
+  }, [navigate]);
 
   useEffect(() => {
     let mounted = true;
