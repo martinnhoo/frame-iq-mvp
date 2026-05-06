@@ -658,6 +658,22 @@ input, textarea, select {
   font-size: max(16px, 1em);
 }
 
+/* No mobile, força 16px com !important pra vencer inline styles
+   das páginas do Hub (HubImageGenerator, HubVoiceGen, HubPngGenerator,
+   HubABVariations, HubTranscribe, HubAnalytics — todas usam fontSize 13-14
+   em inputs/textareas pra compactness no desktop). Sem esse override,
+   iOS Safari/Chrome fazem zoom automático ao focar qualquer caixa, o
+   que reposiciona o layout inteiro e dá zoom feio.
+   Em desktop (>= 768px) deixa cada componente decidir o tamanho — mantem
+   o visual compacto da UI. */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 /* Smooth momentum scroll on iOS */
 .dashboard-content-area,
 .chat-messages-area {
