@@ -610,84 +610,36 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
 - Characters must show their full body (or at minimum head + shoulders + torso clearly visible, not chopped at the chin/forehead).
 - If text/headline is part of the composition, it MUST be entirely within the frame — never extending past the canvas borders.
 - Compose the scene so the camera framing fits everything comfortably with breathing room.`;
-      // ── Roteamento de engine: BRIA Lifestyle Shot (elementos) ou gpt-image-2 (default) ──
-      // gpt-image-2 com reference images regenera o sujeito (não preserva).
-      // BRIA Lifestyle Shot é dedicada a placar produtos/personagens fielmente
-      // numa cena gerada. É o equivalente API do "manda esse personagem +
-      // adiciona nessa cena" do ChatGPT.
-      const useBria = selectedElements.length > 0;
-
-      let r: Response;
-      if (useBria) {
-        // Monta scene_description com brand + market + user prompt + anti-fake rules.
-        const sceneDescriptionParts: string[] = [];
-        if (brand?.promptHint) sceneDescriptionParts.push(brand.promptHint);
-        if (marketCode && HUB_MARKETS[marketCode]?.promptContext) {
-          sceneDescriptionParts.push(HUB_MARKETS[marketCode].promptContext);
-        }
-        sceneDescriptionParts.push(prompt.trim());
-        if (hasLicense && includeLicense && licenseText.trim()) {
-          sceneDescriptionParts.push(
-            "Keep the bottom 12% of the image visually clean — no important elements there (will be covered by regulatory disclaimer overlay).",
-          );
-        }
-        // Regras críticas: anti-invenção + anti-cropping.
-        sceneDescriptionParts.push(
-          "STRICT RULE — NO FAKE BRAND ELEMENTS: Do NOT invent or render any fake brand logos, brand marks, sponsor logos, or promotional text inside the image. Do NOT add headlines, slogans, fake brand names, or made-up text anywhere (no AI-fabricated logos on jerseys, caps, banners, or backgrounds). Keep the provided element as-is, generate only the scene around it.",
-        );
-        sceneDescriptionParts.push(
-          "STRICT RULE — NO CROPPING: Every visual element must be FULLY VISIBLE within the canvas. Nothing can be cut off at any edge (top, bottom, left, right). Keep at least 8% safe padding from all 4 borders. The provided element character must show their full visible silhouette. Compose the scene with breathing room so nothing is clipped.",
-        );
-        const sceneDescription = sceneDescriptionParts.filter(Boolean).join("\n\n");
-
-        // Compositing: junta TODOS elementos selecionados numa imagem só,
-        // no aspect ratio do output desejado. BRIA Lifestyle Shot herda
-        // o shape do input — compositar no shape correto garante que o
-        // output sai em 1:1 / 9:16 / 16:9 conforme o user pediu.
-        // (Mesmo com 1 elemento só, recompositamos pra forçar dimensões.)
-        const dims = ASPECT_DIMS[aspectRatio] || ASPECT_DIMS["1:1"];
-        let elementImageDataUrl: string;
-        try {
-          elementImageDataUrl = await compositeElements(selectedElements, dims);
-        } catch (composeErr) {
-          console.warn("[hub-image] composite failed, using first element:", composeErr);
-          elementImageDataUrl = selectedElements[0].url;
-        }
-
-        r = await fetch(`${SUPABASE_URL}/functions/v1/hub-bria-place-elements`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "apikey": ANON_KEY,
-          },
-          body: JSON.stringify({
-            element_image_base64: elementImageDataUrl,
-            scene_description: sceneDescription.slice(0, 2000),
-            aspect_ratio: aspectRatio,
-            num_results: 1,
-          }),
-        });
-      } else {
-        r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "apikey": ANON_KEY,
-          },
-          body: JSON.stringify({
-            prompt: prompt.trim(),
-            aspect_ratio: aspectRatio,
-            quality,
-            brand_id: brandId === "none" ? null : brandId,
-            brand_hint: brandHint,
-            market: marketCode,
-            include_license: hasLicense && includeLicense,
-            license_text: hasLicense && includeLicense ? licenseText.trim() : "",
-          }),
-        });
-      }
+      // ── Engine única: gpt-image-2 via generate-image-hub ──
+      // Quando selectedElements > 0, manda os PNGs como input_images_base64.
+      // O edge function já roteia pra /v1/images/edits (image-to-image)
+      // que aceita até 16 reference images. Mesmo path do ChatGPT consumer.
+      // BRIA foi removido daqui — ficava complicação extra sem ganho real,
+      // só pra placement que gpt-image-2 já faz nativo com prompt direito.
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "apikey": ANON_KEY,
+        },
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          aspect_ratio: aspectRatio,
+          quality,
+          brand_id: brandId === "none" ? null : brandId,
+          brand_hint: brandHint,
+          market: marketCode,
+          include_license: hasLicense && includeLicense,
+          license_text: hasLicense && includeLicense ? licenseText.trim() : "",
+          // Elementos: manda os PNGs como reference images. generate-image-hub
+          // roteia pra /v1/images/edits quando há imagens — mesmo path que
+          // o ChatGPT consumer usa pra "incluir esse personagem na cena".
+          ...(selectedElements.length > 0
+            ? { input_images_base64: selectedElements.map(e => e.url) }
+            : {}),
+        }),
+      });
 
       const text = await r.text();
       let payload: {
