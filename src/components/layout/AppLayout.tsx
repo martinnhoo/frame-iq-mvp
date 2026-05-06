@@ -145,6 +145,7 @@ function getNavSections(lang: string): NavSection[] {
     {
       title: L('Designer', 'Designer', 'Designer', '设计'),
       items: [
+        { url: '/dashboard/hub/workflows',  label: L('Workflows',         'Workflows',       'Workflows',             '工作流'),       icon: Sparkles },
         { url: '/dashboard/hub/image',      label: L('Gerador de Imagem', 'Image Generator', 'Generador de Imágenes', '图像生成器'), icon: ImageIcon },
         { url: '/dashboard/hub/png',        label: L('Gerador de PNG',    'PNG Generator',   'Generador de PNG',      'PNG 生成器'),  icon: Layers },
         { url: '/dashboard/hub/storyboard', label: L('Storyboard',        'Storyboard',      'Storyboard',            '故事板'),       icon: Clapperboard },
