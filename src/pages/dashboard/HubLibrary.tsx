@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Image as ImageIcon, Layers, Clapperboard, GalleryHorizontal,
   ArrowLeft, Search, Download, X, Sparkles, FolderOpen, Mic, Captions,
-  FileText, Copy, Check, Volume2,
+  FileText, Copy, Check, Volume2, Trash2,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -93,6 +93,10 @@ const STR: Record<string, Record<Lang, string>> = {
   copied:      { pt: "Copiado",    en: "Copied",    es: "Copiado",    zh: "已复制" },
   downloadTxt: { pt: "Baixar .txt",en: "Download .txt",es: "Descargar .txt",zh: "下载 .txt" },
   words:       { pt: "palavras",   en: "words",     es: "palabras",   zh: "字" },
+  // Delete UX
+  delete:      { pt: "Excluir",    en: "Delete",    es: "Eliminar",   zh: "删除" },
+  deleteConfirm: { pt: "Confirmar exclusão", en: "Confirm delete", es: "Confirmar eliminación", zh: "确认删除" },
+  deleteHint:  { pt: "Clique de novo pra confirmar", en: "Click again to confirm", es: "Haz click otra vez para confirmar", zh: "再次点击确认" },
 };
 
 const PERIOD_OPTIONS = [
@@ -152,6 +156,44 @@ export default function HubLibrary() {
   const [kindFilter, setKindFilter] = useState<"all" | AssetKind>("all");
   const [search, setSearch] = useState("");
   const [previewAsset, setPreviewAsset] = useState<HubAsset | null>(null);
+
+  // Deleta asset(s) e atualiza lista localmente.
+  // Storyboard/carousel: deleta TODAS as rows com mesmo group_id.
+  // Outros: deleta a row única.
+  const deleteAsset = async (asset: HubAsset) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (asset.kind === "storyboard" || asset.kind === "carousel") {
+        const fieldName = asset.kind === "storyboard" ? "storyboard_id" : "carousel_id";
+        const { error } = await supabase
+          .from("hub_assets")
+          .delete()
+          .eq("user_id", user.id)
+          .eq(`content->>${fieldName}` as never, asset.id as never);
+        if (error) {
+          console.error("[hub-library] delete group error:", error.message);
+          return;
+        }
+      } else {
+        const { error } = await supabase
+          .from("hub_assets")
+          .delete()
+          .eq("id", asset.id)
+          .eq("user_id", user.id);
+        if (error) {
+          console.error("[hub-library] delete error:", error.message);
+          return;
+        }
+      }
+      // Remove da UI
+      setAssets(prev => prev.filter(a => a.id !== asset.id));
+      if (previewAsset?.id === asset.id) setPreviewAsset(null);
+    } catch (e) {
+      console.error("[hub-library] delete exception:", e);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -423,6 +465,7 @@ export default function HubLibrary() {
               <AssetCard
                 key={asset.id} asset={asset} lang={lang} t={t}
                 onClick={() => setPreviewAsset(asset)}
+                onDelete={() => deleteAsset(asset)}
               />
             ))}
           </div>
@@ -461,11 +504,28 @@ function KindChip({ active, count, label, icon: Icon, onClick }: {
 }
 
 // ── AssetCard ──────────────────────────────────────────────────────────────
-function AssetCard({ asset, lang, t, onClick }: {
+function AssetCard({ asset, lang, t, onClick, onDelete }: {
   asset: HubAsset; lang: Lang;
   t: (key: keyof typeof STR) => string;
   onClick: () => void;
+  onDelete: () => void;
 }) {
+  const [hovered, setHovered] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  // Delete handler: 2-step confirm. 1º click muda pro estado vermelho com
+  // ✓; 2º click executa. Auto-reset após 3s sem clicar.
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!confirming) {
+      setConfirming(true);
+      setTimeout(() => setConfirming(false), 3000);
+      return;
+    }
+    setConfirming(false);
+    onDelete();
+  };
   const KindIcon = asset.kind === "png" ? Layers
     : asset.kind === "storyboard" ? Clapperboard
     : asset.kind === "carousel" ? GalleryHorizontal
@@ -498,10 +558,13 @@ function AssetCard({ asset, lang, t, onClick }: {
         padding: 0,
       }}
       onMouseEnter={(e) => {
+        setHovered(true);
         e.currentTarget.style.transform = "translateY(-2px)";
         e.currentTarget.style.borderColor = "rgba(59,130,246,0.40)";
       }}
       onMouseLeave={(e) => {
+        setHovered(false);
+        setConfirming(false);
         e.currentTarget.style.transform = "translateY(0)";
         e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
       }}
@@ -593,6 +656,30 @@ function AssetCard({ asset, lang, t, onClick }: {
           {isGroup && asset.scene_count && asset.scene_count > 1 && (
             <span style={{ color: "#3B82F6", marginLeft: 2 }}>· {asset.scene_count}</span>
           )}
+        </div>
+        {/* Delete button top-right (aparece no hover, 2-step confirm) */}
+        <div
+          onClick={handleDelete}
+          role="button"
+          tabIndex={-1}
+          aria-label={confirming ? t("deleteConfirm") : t("delete")}
+          title={confirming ? t("deleteHint") : t("delete")}
+          style={{
+            position: "absolute", top: 8, right: 8,
+            width: 28, height: 28, borderRadius: 7,
+            background: confirming ? "#DC2626" : "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(6px)",
+            border: confirming ? "1px solid #EF4444" : "1px solid rgba(255,255,255,0.10)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+            opacity: hovered || confirming ? 1 : 0,
+            transition: "opacity 0.15s, background 0.15s, border-color 0.15s",
+            zIndex: 2,
+          }}
+        >
+          {confirming
+            ? <Check size={14} color="#fff" strokeWidth={2.5} />
+            : <Trash2 size={13} color="#FCA5A5" />}
         </div>
         {/* Group thumbnails preview (storyboard/carousel) */}
         {isGroup && asset.scene_thumbs && asset.scene_thumbs.length > 1 && (
