@@ -128,9 +128,15 @@ export async function createWorkflow(args: {
   return data as Workflow;
 }
 
-export async function updateWorkflowGraph(id: string, graph: WfGraph, name?: string): Promise<void> {
+export async function updateWorkflowGraph(
+  id: string,
+  graph: WfGraph,
+  name?: string,
+  brand_id?: string | null,
+): Promise<void> {
   const update: Record<string, unknown> = { graph };
   if (name !== undefined) update.name = name.trim() || "Workflow sem nome";
+  if (brand_id !== undefined) update.brand_id = brand_id;
   const { error } = await sb.from("hub_workflows").update(update).eq("id", id);
   if (error) throw new Error(`update failed: ${error.message}`);
 }

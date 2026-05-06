@@ -208,7 +208,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.18)"}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.10)"}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: 0.06 }}>
-              <Globe size={13} /> Idioma
+              <Globe size={13} /> {language === "en" ? "Language" : language === "es" ? "Idioma" : language === "zh" ? "语言" : "Idioma"}
             </span>
             <span style={{ fontSize: 12, fontWeight: 700, color: "#3B82F6" }}>
               {langLabel(language)}

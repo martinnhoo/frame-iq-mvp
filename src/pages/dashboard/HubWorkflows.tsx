@@ -25,16 +25,115 @@ import "@xyflow/react/dist/style.css";
 import {
   ArrowLeft, Play, Save, Plus, Loader, Copy, Trash2, Sparkles,
   Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch, Mic, Video as VideoIcon,
+  ChevronDown, X, Search,
 } from "lucide-react";
-import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode } from "@/data/hubBrands";
+import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode, type Lang } from "@/data/hubBrands";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   type Workflow, type WfGraph, type WfNode, type WfEdge,
   listMyWorkflows, listTemplates, getWorkflow, cloneWorkflow,
   updateWorkflowGraph, deleteWorkflow, createWorkflow, runWorkflow,
 } from "@/lib/hubWorkflows";
 
-// ── i18n minimal pt/en/es/zh ───────────────────────────────────────
-const t = (pt: string) => pt; // MVP: só pt. i18n full vem depois.
+// ── i18n strings ──────────────────────────────────────────────────
+const STR: Record<string, Record<Lang, string>> = {
+  workflows:        { pt: "Workflows",          en: "Workflows",          es: "Workflows",          zh: "工作流" },
+  templates:        { pt: "Templates",          en: "Templates",          es: "Plantillas",         zh: "模板" },
+  myWorkflows:      { pt: "Meus workflows",     en: "My workflows",       es: "Mis workflows",      zh: "我的工作流" },
+  newWorkflow:      { pt: "Novo workflow",      en: "New workflow",       es: "Nuevo workflow",     zh: "新建工作流" },
+  addNode:          { pt: "Adicionar nó",       en: "Add node",           es: "Agregar nodo",       zh: "添加节点" },
+  brand:            { pt: "Marca",              en: "Brand",              es: "Marca",              zh: "品牌" },
+  prompt:           { pt: "Prompt",             en: "Prompt",             es: "Prompt",             zh: "提示词" },
+  imageGen:         { pt: "Gerar imagem",       en: "Generate image",     es: "Generar imagen",     zh: "生成图像" },
+  bgRemove:         { pt: "Remover fundo",      en: "Remove background",  es: "Quitar fondo",       zh: "移除背景" },
+  storyboard:       { pt: "Storyboard",         en: "Storyboard",         es: "Storyboard",         zh: "故事板" },
+  videoNode:        { pt: "Vídeo (Kling)",      en: "Video (Kling)",      es: "Video (Kling)",      zh: "视频 (Kling)" },
+  voice:            { pt: "Voz",                en: "Voice",              es: "Voz",                zh: "语音" },
+  variation:        { pt: "Variação",           en: "Variation",          es: "Variación",          zh: "变体" },
+  saveNode:         { pt: "Salvar",             en: "Save",               es: "Guardar",            zh: "保存" },
+  save:             { pt: "Salvar",             en: "Save",               es: "Guardar",            zh: "保存" },
+  run:              { pt: "Rodar",              en: "Run",                es: "Ejecutar",           zh: "运行" },
+  running:          { pt: "Rodando…",           en: "Running…",           es: "Ejecutando…",        zh: "运行中..." },
+  delete:           { pt: "Deletar",            en: "Delete",             es: "Eliminar",           zh: "删除" },
+  workflowName:     { pt: "Nome do workflow",   en: "Workflow name",      es: "Nombre del workflow",zh: "工作流名称" },
+  noTemplate:       { pt: "Sem templates ainda.", en: "No templates yet.", es: "Sin plantillas aún.", zh: "还没有模板。" },
+  noMyWf:           { pt: "Sem workflows. Abre um template ou cria do zero.",
+                      en: "No workflows. Open a template or create from scratch.",
+                      es: "Sin workflows. Abre una plantilla o crea desde cero.",
+                      zh: "暂无工作流。打开模板或从头创建。" },
+  loading:          { pt: "Carregando…",        en: "Loading…",           es: "Cargando…",          zh: "加载中..." },
+  emptyTitle:       { pt: "Abra um template ou crie um workflow novo",
+                      en: "Open a template or create a new workflow",
+                      es: "Abre una plantilla o crea un workflow nuevo",
+                      zh: "打开模板或创建新工作流" },
+  emptyHint:        { pt: "Workflows automatizam pipelines de geração de criativos.",
+                      en: "Workflows automate creative generation pipelines.",
+                      es: "Los workflows automatizan pipelines de generación de creativos.",
+                      zh: "工作流自动化创意生成流程。" },
+  selectNodeHint:   { pt: "Selecione um nó pra editar, ou conecte os outputs (direita) aos inputs (esquerda).",
+                      en: "Select a node to edit, or connect outputs (right) to inputs (left).",
+                      es: "Selecciona un nodo para editar, o conecta los outputs (derecha) a los inputs (izquierda).",
+                      zh: "选择节点编辑，或将输出（右）连接到输入（左）。" },
+  whenRun:          { pt: "Quando rodar:",       en: "When you run:",      es: "Cuando ejecutas:",   zh: "运行时：" },
+  hint1:            { pt: "Cada nó executa em ordem topológica", en: "Each node runs in topological order", es: "Cada nodo se ejecuta en orden topológico", zh: "每个节点按拓扑顺序执行" },
+  hint2:            { pt: "Outputs viram inputs do próximo",     en: "Outputs become inputs of the next",  es: "Los outputs se convierten en inputs del siguiente", zh: "输出成为下一个的输入" },
+  hint3:            { pt: "Resultado aparece aqui",              en: "Result appears here",                es: "El resultado aparece aquí",                          zh: "结果显示在这里" },
+  runError:         { pt: "Erro ao rodar",        en: "Run error",         es: "Error al ejecutar",  zh: "运行错误" },
+  close:            { pt: "Fechar",               en: "Close",             es: "Cerrar",             zh: "关闭" },
+  errors:           { pt: "Erros",                en: "Errors",            es: "Errores",            zh: "错误" },
+  noOutput:         { pt: "Nenhum output produzido.", en: "No output produced.", es: "Sin output producido.", zh: "未产生输出。" },
+  download:         { pt: "Baixar",               en: "Download",          es: "Descargar",          zh: "下载" },
+  // Field labels
+  fieldBrand:       { pt: "Marca",                en: "Brand",             es: "Marca",              zh: "品牌" },
+  fieldMarket:      { pt: "Mercado",              en: "Market",            es: "Mercado",            zh: "市场" },
+  noMarket:         { pt: "(sem mercado)",        en: "(no market)",       es: "(sin mercado)",      zh: "（无市场）" },
+  includeDisclaimer:{ pt: "Incluir disclaimer regulatório", en: "Include regulatory disclaimer", es: "Incluir disclaimer regulatorio", zh: "包含监管免责声明" },
+  fieldPromptText:  { pt: "Texto do prompt",      en: "Prompt text",       es: "Texto del prompt",   zh: "提示词文本" },
+  promptPh:         { pt: "Descreva o criativo…", en: "Describe the creative…", es: "Describe el creativo…", zh: "描述创意..." },
+  fieldAspect:      { pt: "Aspect ratio",         en: "Aspect ratio",      es: "Aspect ratio",       zh: "宽高比" },
+  fieldQuality:     { pt: "Qualidade",            en: "Quality",           es: "Calidad",            zh: "质量" },
+  qDraft:           { pt: "Rascunho",             en: "Draft",             es: "Borrador",           zh: "草稿" },
+  qMedium:          { pt: "Médio",                en: "Medium",            es: "Medio",              zh: "中等" },
+  qHigh:            { pt: "Alta",                 en: "High",              es: "Alta",               zh: "高" },
+  fieldNameTpl:     { pt: "Template do nome",     en: "Name template",     es: "Plantilla de nombre",zh: "名称模板" },
+  varsHint:         { pt: "Vars: {brand} {market} {date} {time} {slug}", en: "Vars: {brand} {market} {date} {time} {slug}", es: "Vars: {brand} {market} {date} {time} {slug}", zh: "变量：{brand} {market} {date} {time} {slug}" },
+  bgRemoveDesc:     { pt: "Sem configuração — recebe imagem upstream e devolve PNG transparente < 2MB via BRIA AI.",
+                      en: "No config — receives upstream image and returns transparent PNG < 2MB via BRIA AI.",
+                      es: "Sin configuración — recibe imagen upstream y devuelve PNG transparente < 2MB vía BRIA AI.",
+                      zh: "无配置 — 接收上游图像并通过 BRIA AI 返回 < 2MB 的透明 PNG。" },
+  fieldScenes:      { pt: "Número de cenas",      en: "Number of scenes",  es: "Número de escenas",  zh: "场景数" },
+  fieldVoiceId:     { pt: "Voice ID (ElevenLabs)",en: "Voice ID (ElevenLabs)", es: "Voice ID (ElevenLabs)", zh: "Voice ID (ElevenLabs)" },
+  fieldVoiceName:   { pt: "Nome (display)",       en: "Name (display)",    es: "Nombre (display)",   zh: "名称（显示）" },
+  voiceDesc:        { pt: "Recebe o texto upstream e gera áudio MP3 via ElevenLabs.", en: "Receives upstream text and generates MP3 audio via ElevenLabs.", es: "Recibe el texto upstream y genera audio MP3 vía ElevenLabs.", zh: "接收上游文本并通过 ElevenLabs 生成 MP3 音频。" },
+  fieldVarAxis:     { pt: "Eixo de variação",     en: "Variation axis",    es: "Eje de variación",   zh: "变体轴" },
+  fieldVarValues:   { pt: "Valores (1 por linha)",en: "Values (1 per line)", es: "Valores (1 por línea)", zh: "值（每行一个）" },
+  variationDesc:    { pt: "Pra cada valor, o subgrafo downstream é clonado e executado em paralelo.",
+                      en: "For each value, the downstream subgraph is cloned and run in parallel.",
+                      es: "Por cada valor, el subgrafo downstream se clona y ejecuta en paralelo.",
+                      zh: "对于每个值，下游子图被克隆并并行运行。" },
+  // Video node
+  fieldProvider:    { pt: "Provider",             en: "Provider",          es: "Provider",           zh: "提供商" },
+  fieldDuration:    { pt: "Duração (segundos)",   en: "Duration (seconds)",es: "Duración (segundos)",zh: "时长（秒）" },
+  durationHint:     { pt: "3-15s. Quanto maior, mais cara a gen e maior risco de timeout (~120s budget).",
+                      en: "3-15s. Longer = more expensive and higher timeout risk (~120s budget).",
+                      es: "3-15s. Más largo = más caro y mayor riesgo de timeout (~120s).",
+                      zh: "3-15 秒。越长越贵，超时风险越高（~120 秒预算）。" },
+  fieldResolution:  { pt: "Resolução",            en: "Resolution",        es: "Resolución",         zh: "分辨率" },
+  fieldMode:        { pt: "Modo",                 en: "Mode",              es: "Modo",               zh: "模式" },
+  modeStandard:     { pt: "Standard",             en: "Standard",          es: "Standard",           zh: "标准" },
+  modePro:          { pt: "Pro",                  en: "Pro",               es: "Pro",                zh: "专业" },
+  audioToggle:      { pt: "Gerar áudio nativo (custo +50%)", en: "Generate native audio (+50% cost)", es: "Generar audio nativo (+50% costo)", zh: "生成原生音频（+50% 费用）" },
+  videoCostTitle:   { pt: "Custo (PiAPI Kling 3.0):", en: "Cost (PiAPI Kling 3.0):", es: "Costo (PiAPI Kling 3.0):", zh: "费用 (PiAPI Kling 3.0):" },
+  // Workflow brand
+  workflowBrand:    { pt: "Marca padrão",         en: "Default brand",     es: "Marca por defecto",  zh: "默认品牌" },
+  workflowBrandHint:{ pt: "Define a marca default. Aplicada como contexto base; nodes brand individuais ainda overridem.",
+                      en: "Sets the default brand. Applied as base context; individual brand nodes still override.",
+                      es: "Define la marca por defecto. Aplicada como contexto base; nodos brand individuales aún sobreescriben.",
+                      zh: "设置默认品牌。作为基础上下文应用；单个品牌节点仍可覆盖。" },
+  noBrand:          { pt: "Sem marca",            en: "No brand",          es: "Sin marca",          zh: "无品牌" },
+  searchBrand:      { pt: "Buscar marca…",        en: "Search brand…",     es: "Buscar marca…",      zh: "搜索品牌..." },
+  selectBrand:      { pt: "Selecionar marca",     en: "Select brand",      es: "Seleccionar marca",  zh: "选择品牌" },
+};
 
 // ── Custom node components ─────────────────────────────────────────
 // Cada nó é um component React Flow. Visual segue o dark theme do Hub.
@@ -331,6 +430,9 @@ export default function HubWorkflows() {
 
 function HubWorkflowsInner() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
+  const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || String(key);
 
   // Sidebar state
   const [templates, setTemplates] = useState<Workflow[]>([]);
@@ -343,6 +445,13 @@ function HubWorkflowsInner() {
   const [edges, setEdges] = useState<Edge[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [name, setName] = useState("");
+  // Brand level workflow — persiste em hub_workflows.brand_id, aplica como
+  // contexto default pra TODOS os nós que aceitam brand (image-gen,
+  // storyboard, video). Nodes brand individuais ainda overridem.
+  const [workflowBrandId, setWorkflowBrandId] = useState<string>("none");
+  const [brandModalOpen, setBrandModalOpen] = useState(false);
+  const [brandSearch, setBrandSearch] = useState("");
+  const workflowBrand = useMemo(() => getBrand(workflowBrandId), [workflowBrandId]);
 
   // Run state
   const [running, setRunning] = useState(false);
@@ -399,6 +508,7 @@ function HubWorkflowsInner() {
     setNodes(rfNodes);
     setEdges(rfEdges);
     setName(toLoad.name);
+    setWorkflowBrandId(toLoad.brand_id || "none");
     setSelectedNodeId(null);
     setRunResult(null);
     setRunError(null);
@@ -407,14 +517,14 @@ function HubWorkflowsInner() {
   const newBlankWorkflow = async () => {
     try {
       const wf = await createWorkflow({
-        name: "Novo workflow",
+        name: t("newWorkflow"),
         graph: { version: 1, nodes: [], edges: [] },
       });
       const mine = await listMyWorkflows();
       setMyWorkflows(mine);
       await openWorkflow(wf);
     } catch (e) {
-      alert(`Erro: ${(e as Error).message}`);
+      alert(`${t("runError")}: ${(e as Error).message}`);
     }
   };
 
@@ -422,11 +532,11 @@ function HubWorkflowsInner() {
     if (!activeWf) return;
     try {
       const graph = rfToGraph(nodes, edges);
-      await updateWorkflowGraph(activeWf.id, graph, name);
+      await updateWorkflowGraph(activeWf.id, graph, name, workflowBrandId === "none" ? null : workflowBrandId);
       const mine = await listMyWorkflows();
       setMyWorkflows(mine);
     } catch (e) {
-      alert(`Erro ao salvar: ${(e as Error).message}`);
+      alert(`${t("runError")}: ${(e as Error).message}`);
     }
   };
 
@@ -453,7 +563,7 @@ function HubWorkflowsInner() {
     try {
       // Salva antes de rodar — graph atual no estado pode ter mudanças
       const graph = rfToGraph(nodes, edges);
-      await updateWorkflowGraph(activeWf.id, graph, name);
+      await updateWorkflowGraph(activeWf.id, graph, name, workflowBrandId === "none" ? null : workflowBrandId);
 
       const r = await runWorkflow({ workflow_id: activeWf.id, graph });
       if (!r.ok) {
@@ -518,30 +628,50 @@ function HubWorkflowsInner() {
         <button onClick={() => navigate("/dashboard/hub")} style={iconBtn}>
           <ArrowLeft size={14} />
         </button>
-        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em" }}>Workflows</div>
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em" }}>{t("workflows")}</div>
         <div style={{ flex: 1 }} />
         {activeWf && (
           <>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="Nome do workflow"
+              placeholder={t("workflowName")}
               style={{
                 background: "rgba(255,255,255,0.04)",
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 6, padding: "6px 10px",
-                color: "#fff", fontSize: 12, width: 220,
+                color: "#fff", fontSize: 12, width: 200,
                 fontFamily: "inherit",
               }}
             />
+            {/* Brand selector — fica salvo em hub_workflows.brand_id.
+                Aparece como chip clicável; abre modal pra trocar. */}
+            <button
+              onClick={() => setBrandModalOpen(true)}
+              title={t("workflowBrandHint")}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "6px 10px",
+                background: workflowBrand && workflowBrand.id !== "none" ? "rgba(234,179,8,0.10)" : "rgba(255,255,255,0.04)",
+                border: `1px solid ${workflowBrand && workflowBrand.id !== "none" ? "rgba(234,179,8,0.30)" : "rgba(255,255,255,0.08)"}`,
+                borderRadius: 6,
+                color: workflowBrand && workflowBrand.id !== "none" ? "#FACC15" : "rgba(255,255,255,0.55)",
+                fontSize: 11.5, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              <Tag size={11} />
+              <span>{workflowBrand && workflowBrand.id !== "none" ? workflowBrand.name : t("noBrand")}</span>
+              <ChevronDown size={10} style={{ opacity: 0.6 }} />
+            </button>
             <button onClick={saveActive} style={btnSecondary}>
-              <Save size={13} /> Salvar
+              <Save size={13} /> {t("save")}
             </button>
             <button onClick={runActive} disabled={running} style={btnPrimary}>
               {running ? <Loader size={13} className="spin" /> : <Play size={13} />}
-              {running ? "Rodando..." : "Run"}
+              {running ? t("running") : t("run")}
             </button>
-            <button onClick={deleteActive} style={iconBtn} title="Deletar">
+            <button onClick={deleteActive} style={iconBtn} title={t("delete")}>
               <Trash2 size={13} />
             </button>
           </>
@@ -561,14 +691,14 @@ function HubWorkflowsInner() {
             ...btnSecondary,
             width: "100%", justifyContent: "center", marginBottom: 14,
           }}>
-            <Plus size={13} /> Novo workflow
+            <Plus size={13} /> {t("newWorkflow")}
           </button>
 
-          <div style={sidebarLabel}>Templates</div>
+          <div style={sidebarLabel}>{t("templates")}</div>
           {loadingList ? (
-            <div style={sidebarHint}>Carregando...</div>
+            <div style={sidebarHint}>{t("loading")}</div>
           ) : templates.length === 0 ? (
-            <div style={sidebarHint}>Sem templates ainda.</div>
+            <div style={sidebarHint}>{t("noTemplate")}</div>
           ) : templates.map(tpl => (
             <button
               key={tpl.id}
@@ -580,9 +710,9 @@ function HubWorkflowsInner() {
             </button>
           ))}
 
-          <div style={{ ...sidebarLabel, marginTop: 18 }}>Meus workflows</div>
+          <div style={{ ...sidebarLabel, marginTop: 18 }}>{t("myWorkflows")}</div>
           {myWorkflows.length === 0 ? (
-            <div style={sidebarHint}>Sem workflows. Abre um template ou cria do zero.</div>
+            <div style={sidebarHint}>{t("noMyWf")}</div>
           ) : myWorkflows.map(wf => (
             <button
               key={wf.id}
@@ -596,33 +726,33 @@ function HubWorkflowsInner() {
 
           {activeWf && (
             <>
-              <div style={{ ...sidebarLabel, marginTop: 18 }}>Adicionar nó</div>
+              <div style={{ ...sidebarLabel, marginTop: 18 }}>{t("addNode")}</div>
               <button onClick={() => addNodeOfType("brand")} style={paletteBtn("#EAB308")}>
-                <Tag size={11} /> Marca
+                <Tag size={11} /> {t("brand")}
               </button>
               <button onClick={() => addNodeOfType("prompt")} style={paletteBtn("#60A5FA")}>
-                <Type size={11} /> Prompt
+                <Type size={11} /> {t("prompt")}
               </button>
               <button onClick={() => addNodeOfType("image-gen")} style={paletteBtn("#3B82F6")}>
-                <ImageIcon size={11} /> Gerar imagem
+                <ImageIcon size={11} /> {t("imageGen")}
               </button>
               <button onClick={() => addNodeOfType("bg-remove")} style={paletteBtn("#A855F7")}>
-                <Scissors size={11} /> Remover fundo
+                <Scissors size={11} /> {t("bgRemove")}
               </button>
               <button onClick={() => addNodeOfType("storyboard")} style={paletteBtn("#F97316")}>
-                <Clapperboard size={11} /> Storyboard
+                <Clapperboard size={11} /> {t("storyboard")}
               </button>
               <button onClick={() => addNodeOfType("video")} style={paletteBtn("#8B5CF6")}>
-                <VideoIcon size={11} /> Vídeo (Kling)
+                <VideoIcon size={11} /> {t("videoNode")}
               </button>
               <button onClick={() => addNodeOfType("voice")} style={paletteBtn("#06B6D4")}>
-                <Mic size={11} /> Voz
+                <Mic size={11} /> {t("voice")}
               </button>
               <button onClick={() => addNodeOfType("variation")} style={paletteBtn("#EC4899")}>
-                <GitBranch size={11} /> Variação
+                <GitBranch size={11} /> {t("variation")}
               </button>
               <button onClick={() => addNodeOfType("output")} style={paletteBtn("#10B981")}>
-                <Download size={11} /> Salvar
+                <Download size={11} /> {t("saveNode")}
               </button>
             </>
           )}
@@ -639,10 +769,10 @@ function HubWorkflowsInner() {
             }}>
               <Sparkles size={28} style={{ opacity: 0.5 }} />
               <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>
-                Abra um template ou crie um workflow novo
+                {t("emptyTitle")}
               </div>
               <div style={{ fontSize: 11.5 }}>
-                Workflows automatizam pipelines de geração de criativos.
+                {t("emptyHint")}
               </div>
             </div>
           ) : (
@@ -674,12 +804,12 @@ function HubWorkflowsInner() {
           overflowY: "auto",
         }}>
           {runResult ? (
-            <RunResultPanel result={runResult} onClose={() => setRunResult(null)} />
+            <RunResultPanel result={runResult} onClose={() => setRunResult(null)} t={t} />
           ) : runError ? (
             <div style={{ fontSize: 12, color: "#F87171" }}>
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>Erro ao rodar</div>
+              <div style={{ fontWeight: 700, marginBottom: 6 }}>{t("runError")}</div>
               <div style={{ background: "rgba(248,113,113,0.10)", padding: 10, borderRadius: 8 }}>{runError}</div>
-              <button onClick={() => setRunError(null)} style={{ ...btnSecondary, marginTop: 10 }}>Fechar</button>
+              <button onClick={() => setRunError(null)} style={{ ...btnSecondary, marginTop: 10 }}>{t("close")}</button>
             </div>
           ) : selectedNode ? (
             <NodeConfigPanel
@@ -690,23 +820,105 @@ function HubWorkflowsInner() {
                 setEdges(eds => eds.filter(e => e.source !== selectedNode.id && e.target !== selectedNode.id));
                 setSelectedNodeId(null);
               }}
+              t={t}
+              lang={lang}
             />
           ) : activeWf ? (
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.50)" }}>
               <div style={{ fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 6 }}>{activeWf.name}</div>
-              <div>Selecione um nó pra editar, ou conecte os outputs (direita) aos inputs (esquerda).</div>
+              <div>{t("selectNodeHint")}</div>
               <div style={{ marginTop: 14, fontSize: 11, lineHeight: 1.5 }}>
-                <div style={{ color: "rgba(255,255,255,0.40)", marginBottom: 4 }}>Quando rodar:</div>
+                <div style={{ color: "rgba(255,255,255,0.40)", marginBottom: 4 }}>{t("whenRun")}</div>
                 <ul style={{ margin: 0, paddingLeft: 16 }}>
-                  <li>Cada nó executa em ordem topológica</li>
-                  <li>Outputs viram inputs do próximo</li>
-                  <li>Resultado aparece aqui</li>
+                  <li>{t("hint1")}</li>
+                  <li>{t("hint2")}</li>
+                  <li>{t("hint3")}</li>
                 </ul>
               </div>
             </div>
           ) : null}
         </div>
       </div>
+
+      {/* Brand modal — usado pra setar workflow.brand_id (default level) */}
+      {brandModalOpen && (
+        <div onClick={() => setBrandModalOpen(false)} style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.70)", backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 20,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14,
+            maxWidth: 480, width: "100%", maxHeight: "80vh",
+            display: "flex", flexDirection: "column", overflow: "hidden",
+          }}>
+            <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 10 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 800, margin: 0, flex: 1 }}>{t("workflowBrand")}</h3>
+              <button onClick={() => setBrandModalOpen(false)} style={iconBtn}>
+                <X size={12} />
+              </button>
+            </div>
+            <div style={{ padding: "10px 16px 4px", fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.5 }}>
+              {t("workflowBrandHint")}
+            </div>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ position: "relative" }}>
+                <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.40)" }} />
+                <input
+                  value={brandSearch}
+                  onChange={e => setBrandSearch(e.target.value)}
+                  placeholder={t("searchBrand")}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px 8px 32px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    borderRadius: 8,
+                    color: "#fff", fontSize: 12.5, fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+                  }}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+              <button
+                onClick={() => { setWorkflowBrandId("none"); setBrandModalOpen(false); }}
+                style={{
+                  padding: 12,
+                  background: workflowBrandId === "none" ? "rgba(234,179,8,0.15)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${workflowBrandId === "none" ? "#EAB308" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 10, color: "#fff", cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 700 }}>{t("noBrand")}</div>
+              </button>
+              {Object.values(HUB_BRANDS)
+                .filter(b => b.id !== "none")
+                .filter(b => !brandSearch.trim() || b.name.toLowerCase().includes(brandSearch.toLowerCase()))
+                .map(b => (
+                  <button
+                    key={b.id}
+                    onClick={() => { setWorkflowBrandId(b.id); setBrandModalOpen(false); }}
+                    style={{
+                      padding: 12,
+                      background: workflowBrandId === b.id ? "rgba(234,179,8,0.15)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${workflowBrandId === b.id ? "#EAB308" : "rgba(255,255,255,0.08)"}`,
+                      borderRadius: 10, color: "#fff", cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 700 }}>{b.name}</div>
+                    {b.markets && b.markets.length > 0 && (
+                      <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", marginTop: 3 }}>
+                        {b.markets.map(m => HUB_MARKETS[m]?.flag).join(" ")}
+                      </div>
+                    )}
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
@@ -719,27 +931,29 @@ function HubWorkflowsInner() {
 
 // ── Node config panel ──────────────────────────────────────────────
 function NodeConfigPanel({
-  node, onUpdate, onDelete,
+  node, onUpdate, onDelete, t, lang,
 }: {
   node: Node;
   onUpdate: (patch: Record<string, unknown>) => void;
   onDelete: () => void;
+  t: (key: keyof typeof STR) => string;
+  lang: Lang;
 }) {
   const data = node.data as Record<string, unknown>;
   return (
     <div style={{ fontSize: 12 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <div style={{ flex: 1, fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "rgba(255,255,255,0.50)" }}>
-          {nodeLabel(node.type || "")}
+          {nodeLabel(node.type || "", t)}
         </div>
-        <button onClick={onDelete} style={iconBtn} title="Deletar nó">
+        <button onClick={onDelete} style={iconBtn} title={t("delete")}>
           <Trash2 size={11} />
         </button>
       </div>
 
       {node.type === "brand" && (
         <>
-          <FieldLabel>Marca</FieldLabel>
+          <FieldLabel>{t("fieldBrand")}</FieldLabel>
           <select
             value={(data.brand_id as string) || "none"}
             onChange={e => onUpdate({ brand_id: e.target.value })}
@@ -749,16 +963,16 @@ function NodeConfigPanel({
               <option key={b.id} value={b.id} style={{ background: "#0d0d14" }}>{b.name}</option>
             ))}
           </select>
-          <FieldLabel>Mercado</FieldLabel>
+          <FieldLabel>{t("fieldMarket")}</FieldLabel>
           <select
             value={(data.market as string) || ""}
             onChange={e => onUpdate({ market: e.target.value })}
             style={selectStyle}
           >
-            <option value="" style={{ background: "#0d0d14" }}>(sem mercado)</option>
+            <option value="" style={{ background: "#0d0d14" }}>{t("noMarket")}</option>
             {Object.values(HUB_MARKETS).map(m => (
               <option key={m.code} value={m.code} style={{ background: "#0d0d14" }}>
-                {m.flag} {m.labels.pt}
+                {m.flag} {m.labels[lang] || m.labels.pt}
               </option>
             ))}
           </select>
@@ -768,19 +982,19 @@ function NodeConfigPanel({
               checked={!!data.include_disclaimer}
               onChange={e => onUpdate({ include_disclaimer: e.target.checked })}
             />
-            Incluir disclaimer regulatório
+            {t("includeDisclaimer")}
           </label>
         </>
       )}
 
       {node.type === "prompt" && (
         <>
-          <FieldLabel>Texto do prompt</FieldLabel>
+          <FieldLabel>{t("fieldPromptText")}</FieldLabel>
           <textarea
             value={(data.text as string) || ""}
             onChange={e => onUpdate({ text: e.target.value })}
             rows={6}
-            placeholder="Descreva o criativo..."
+            placeholder={t("promptPh")}
             style={{
               ...selectStyle,
               fontFamily: "inherit", resize: "vertical",
@@ -792,7 +1006,7 @@ function NodeConfigPanel({
 
       {node.type === "image-gen" && (
         <>
-          <FieldLabel>Aspect ratio</FieldLabel>
+          <FieldLabel>{t("fieldAspect")}</FieldLabel>
           <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
             {["1:1", "9:16", "16:9", "4:5"].map(ar => (
               <button
@@ -804,12 +1018,12 @@ function NodeConfigPanel({
               </button>
             ))}
           </div>
-          <FieldLabel>Qualidade</FieldLabel>
+          <FieldLabel>{t("fieldQuality")}</FieldLabel>
           <div style={{ display: "flex", gap: 6 }}>
             {[
-              { v: "low", l: "Rascunho" },
-              { v: "medium", l: "Médio" },
-              { v: "high", l: "Alta" },
+              { v: "low", l: t("qDraft") },
+              { v: "medium", l: t("qMedium") },
+              { v: "high", l: t("qHigh") },
             ].map(q => (
               <button
                 key={q.v}
@@ -825,27 +1039,27 @@ function NodeConfigPanel({
 
       {node.type === "output" && (
         <>
-          <FieldLabel>Template do nome</FieldLabel>
+          <FieldLabel>{t("fieldNameTpl")}</FieldLabel>
           <input
             value={(data.name_template as string) || "{date}_{slug}"}
             onChange={e => onUpdate({ name_template: e.target.value })}
             style={selectStyle}
           />
           <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
-            Vars: {"{brand}"} {"{market}"} {"{date}"} {"{time}"} {"{slug}"}
+            {t("varsHint")}
           </div>
         </>
       )}
 
       {node.type === "bg-remove" && (
         <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
-          Sem configuração — recebe imagem upstream e devolve PNG transparente {"<"} 2MB via BRIA AI.
+          {t("bgRemoveDesc")}
         </div>
       )}
 
       {node.type === "storyboard" && (
         <>
-          <FieldLabel>Número de cenas</FieldLabel>
+          <FieldLabel>{t("fieldScenes")}</FieldLabel>
           <input
             type="number"
             min={2}
@@ -854,7 +1068,7 @@ function NodeConfigPanel({
             onChange={e => onUpdate({ scene_count: Math.max(2, Math.min(8, Number(e.target.value) || 4)) })}
             style={selectStyle}
           />
-          <FieldLabel>Aspect ratio</FieldLabel>
+          <FieldLabel>{t("fieldAspect")}</FieldLabel>
           <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
             {["1:1", "9:16", "16:9"].map(ar => (
               <button
@@ -866,12 +1080,12 @@ function NodeConfigPanel({
               </button>
             ))}
           </div>
-          <FieldLabel>Qualidade</FieldLabel>
+          <FieldLabel>{t("fieldQuality")}</FieldLabel>
           <div style={{ display: "flex", gap: 6 }}>
             {[
-              { v: "low", l: "Rascunho" },
-              { v: "medium", l: "Médio" },
-              { v: "high", l: "Alta" },
+              { v: "low", l: t("qDraft") },
+              { v: "medium", l: t("qMedium") },
+              { v: "high", l: t("qHigh") },
             ].map(q => (
               <button
                 key={q.v}
@@ -887,7 +1101,7 @@ function NodeConfigPanel({
 
       {node.type === "video" && (
         <>
-          <FieldLabel>Provider</FieldLabel>
+          <FieldLabel>{t("fieldProvider")}</FieldLabel>
           <select
             value={(data.provider as string) || "piapi"}
             onChange={e => onUpdate({ provider: e.target.value })}
@@ -896,7 +1110,7 @@ function NodeConfigPanel({
             <option value="piapi" style={{ background: "#0d0d14" }}>PiAPI (default)</option>
             <option value="falai" style={{ background: "#0d0d14" }}>fal.ai (em breve)</option>
           </select>
-          <FieldLabel>Duração (segundos)</FieldLabel>
+          <FieldLabel>{t("fieldDuration")}</FieldLabel>
           <input
             type="number"
             min={3}
@@ -906,9 +1120,9 @@ function NodeConfigPanel({
             style={selectStyle}
           />
           <div style={{ marginTop: 2, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>
-            3-15s. Quanto maior, mais cara a gen e maior risco de timeout (~120s budget).
+            {t("durationHint")}
           </div>
-          <FieldLabel>Aspect ratio</FieldLabel>
+          <FieldLabel>{t("fieldAspect")}</FieldLabel>
           <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
             {["16:9", "9:16", "1:1"].map(ar => (
               <button
@@ -920,7 +1134,7 @@ function NodeConfigPanel({
               </button>
             ))}
           </div>
-          <FieldLabel>Resolução</FieldLabel>
+          <FieldLabel>{t("fieldResolution")}</FieldLabel>
           <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
             {[
               { v: "720p", l: "720p" },
@@ -935,11 +1149,11 @@ function NodeConfigPanel({
               </button>
             ))}
           </div>
-          <FieldLabel>Modo</FieldLabel>
+          <FieldLabel>{t("fieldMode")}</FieldLabel>
           <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
             {[
-              { v: "std", l: "Standard" },
-              { v: "pro", l: "Pro" },
+              { v: "std", l: t("modeStandard") },
+              { v: "pro", l: t("modePro") },
             ].map(m => (
               <button
                 key={m.v}
@@ -956,10 +1170,10 @@ function NodeConfigPanel({
               checked={!!data.enable_audio}
               onChange={e => onUpdate({ enable_audio: e.target.checked })}
             />
-            Gerar áudio nativo (custo +50%)
+            {t("audioToggle")}
           </label>
           <div style={{ marginTop: 10, padding: 8, background: "rgba(139,92,246,0.10)", borderRadius: 6, fontSize: 10.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
-            <strong style={{ color: "#A78BFA" }}>Custo (PiAPI Kling 3.0):</strong><br/>
+            <strong style={{ color: "#A78BFA" }}>{t("videoCostTitle")}</strong><br/>
             720p sem áudio: $0.10/s · 720p com áudio: $0.15/s<br/>
             1080p sem áudio: $0.15/s · 1080p com áudio: $0.20/s
           </div>
@@ -968,14 +1182,14 @@ function NodeConfigPanel({
 
       {node.type === "voice" && (
         <>
-          <FieldLabel>Voice ID (ElevenLabs)</FieldLabel>
+          <FieldLabel>{t("fieldVoiceId")}</FieldLabel>
           <input
             value={(data.voice_id as string) || ""}
             onChange={e => onUpdate({ voice_id: e.target.value })}
             placeholder="21m00Tcm4TlvDq8ikWAM (Rachel)"
             style={selectStyle}
           />
-          <FieldLabel>Nome (display)</FieldLabel>
+          <FieldLabel>{t("fieldVoiceName")}</FieldLabel>
           <input
             value={(data.voice_name as string) || ""}
             onChange={e => onUpdate({ voice_name: e.target.value })}
@@ -983,23 +1197,22 @@ function NodeConfigPanel({
             style={selectStyle}
           />
           <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
-            Recebe o texto upstream e gera áudio MP3 via ElevenLabs.
+            {t("voiceDesc")}
           </div>
         </>
       )}
 
       {node.type === "variation" && (
         <>
-          <FieldLabel>Eixo de variação</FieldLabel>
+          <FieldLabel>{t("fieldVarAxis")}</FieldLabel>
           <select
             value={(data.axis as string) || "aspect_ratio"}
             onChange={e => onUpdate({ axis: e.target.value })}
             style={selectStyle}
           >
             <option value="aspect_ratio" style={{ background: "#0d0d14" }}>Aspect ratio</option>
-            {/* market: requer re-resolução de brand context — Fase 3 */}
           </select>
-          <FieldLabel>Valores (1 por linha)</FieldLabel>
+          <FieldLabel>{t("fieldVarValues")}</FieldLabel>
           <textarea
             value={(data.values as string[] || []).join("\n")}
             onChange={e => onUpdate({ values: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
@@ -1008,7 +1221,7 @@ function NodeConfigPanel({
             style={{ ...selectStyle, fontFamily: "inherit", resize: "vertical", minHeight: 80 }}
           />
           <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
-            Pra cada valor, o subgrafo downstream é clonado e executado em paralelo.
+            {t("variationDesc")}
           </div>
         </>
       )}
@@ -1018,10 +1231,11 @@ function NodeConfigPanel({
 
 // ── Run result panel ───────────────────────────────────────────────
 function RunResultPanel({
-  result, onClose,
+  result, onClose, t,
 }: {
   result: { outputs?: Record<string, { image_url?: string; audio_url?: string; video_url?: string; name?: string }>; errors?: Record<string, string>; status?: string };
   onClose: () => void;
+  t: (key: keyof typeof STR) => string;
 }) {
   const outputs = result.outputs || {};
   const errors = result.errors || {};
@@ -1091,12 +1305,12 @@ function RunResultPanel({
           );
         })
       ) : (
-        <div style={{ color: "rgba(255,255,255,0.50)" }}>Nenhum output produzido.</div>
+        <div style={{ color: "rgba(255,255,255,0.50)" }}>{t("noOutput")}</div>
       )}
 
       {Object.keys(errors).length > 0 && (
         <div style={{ marginTop: 12, padding: 10, background: "rgba(248,113,113,0.10)", borderRadius: 8 }}>
-          <div style={{ fontWeight: 700, color: "#F87171", marginBottom: 4 }}>Erros</div>
+          <div style={{ fontWeight: 700, color: "#F87171", marginBottom: 4 }}>{t("errors")}</div>
           {Object.entries(errors).map(([id, msg]) => (
             <div key={id} style={{ fontSize: 11, color: "#FCA5A5", marginBottom: 4 }}>
               <span style={{ opacity: 0.7 }}>{id}:</span> {msg}
@@ -1119,18 +1333,19 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function nodeLabel(t: string): string {
-  return ({
-    brand: "Marca",
-    prompt: "Prompt",
-    "image-gen": "Gerar imagem",
-    "bg-remove": "Remover fundo",
-    storyboard: "Storyboard",
-    video: "Vídeo",
-    voice: "Voz",
-    variation: "Variação",
-    output: "Salvar",
-  } as Record<string, string>)[t] || t;
+function nodeLabel(type: string, t: (k: keyof typeof STR) => string): string {
+  switch (type) {
+    case "brand":     return t("brand");
+    case "prompt":    return t("prompt");
+    case "image-gen": return t("imageGen");
+    case "bg-remove": return t("bgRemove");
+    case "storyboard":return t("storyboard");
+    case "video":     return t("videoNode");
+    case "voice":     return t("voice");
+    case "variation": return t("variation");
+    case "output":    return t("saveNode");
+    default: return type;
+  }
 }
 
 const iconBtn: React.CSSProperties = {
