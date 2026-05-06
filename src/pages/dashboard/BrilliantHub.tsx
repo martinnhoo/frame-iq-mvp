@@ -205,13 +205,13 @@ export default function BrilliantHub() {
           }}>
             {t("hello")}{userName ? `, ${userName}` : ""} <span>👋</span>
           </h1>
-          <p style={{ fontSize: 14, color: "#D1D5DB", margin: "8px 0 0", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.78)", margin: "8px 0 0", lineHeight: 1.5 }}>
             {t("subtitle")}
           </p>
         </div>
 
         {/* ── AUTOMAÇÃO: Workflows como hero (full width, destaque máximo) ── */}
-        <p style={SECTION_LABEL}>{t("automation")}</p>
+        <p style={SECTION_LABEL}><span style={SECTION_BAR} />{t("automation")}</p>
         <ToolCard
           icon={Sparkles}
           title={t("wfTitle")}
@@ -224,7 +224,7 @@ export default function BrilliantHub() {
         />
 
         {/* ── CRIAR: geradores de asset único ──────────────────── */}
-        <p style={{ ...SECTION_LABEL, marginTop: 28 }}>{t("create")}</p>
+        <p style={{ ...SECTION_LABEL, marginTop: 32 }}><span style={SECTION_BAR} />{t("create")}</p>
         <div style={GRID_3}>
           {createTools.map(tool => (
             <ToolCard
@@ -242,7 +242,7 @@ export default function BrilliantHub() {
         </div>
 
         {/* ── SEQUÊNCIAS: outputs múltiplos ────────────────────── */}
-        <p style={{ ...SECTION_LABEL, marginTop: 28 }}>{t("sequences")}</p>
+        <p style={{ ...SECTION_LABEL, marginTop: 32 }}><span style={SECTION_BAR} />{t("sequences")}</p>
         <div style={GRID_3}>
           {sequenceTools.map(tool => (
             <ToolCard
@@ -259,7 +259,7 @@ export default function BrilliantHub() {
         </div>
 
         {/* ── INTELIGÊNCIA: análise + utilitários de dados ─────── */}
-        <p style={{ ...SECTION_LABEL, marginTop: 28 }}>{t("intelligence")}</p>
+        <p style={{ ...SECTION_LABEL, marginTop: 32 }}><span style={SECTION_BAR} />{t("intelligence")}</p>
         <div style={GRID_3}>
           {intelligenceTools.map(tool => (
             <ToolCard
@@ -276,7 +276,7 @@ export default function BrilliantHub() {
         </div>
 
         {/* ── BIBLIOTECA (full width, no rodapé) ─────────────────── */}
-        <p style={{ ...SECTION_LABEL, marginTop: 28 }}>{t("library")}</p>
+        <p style={{ ...SECTION_LABEL, marginTop: 32 }}><span style={SECTION_BAR} />{t("library")}</p>
         <ToolCard
           icon={FolderOpen}
           title={t("library")}
@@ -365,7 +365,7 @@ function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, featured, met
       <h3 style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", margin: 0, letterSpacing: "-0.01em" }}>
         {title}
       </h3>
-      <p style={{ fontSize: 13, color: "#D1D5DB", margin: "6px 0 18px", lineHeight: 1.55, maxWidth: fullWidth ? 580 : "100%" }}>
+      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.78)", margin: "6px 0 18px", lineHeight: 1.55, maxWidth: fullWidth ? 580 : "100%" }}>
         {desc}
       </p>
 
@@ -411,8 +411,21 @@ function ToolCard({ icon: Icon, title, desc, btn, soon, fullWidth, featured, met
 }
 
 const SECTION_LABEL: React.CSSProperties = {
-  fontSize: 13, fontWeight: 600, color: "#FFFFFF",
-  margin: "0 0 14px", letterSpacing: "-0.01em",
+  // Header forte — uppercase + letter-spacing + barrinha azul antes
+  // pra ficar claramente "section divider" mesmo no fundo escuro.
+  fontSize: 12, fontWeight: 800, color: "#FFFFFF",
+  textTransform: "uppercase",
+  letterSpacing: "0.10em",
+  margin: "0 0 14px",
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+};
+const SECTION_BAR: React.CSSProperties = {
+  display: "inline-block",
+  width: 3, height: 14,
+  background: "#3B82F6",
+  borderRadius: 2,
 };
 
 const GRID_3: React.CSSProperties = {

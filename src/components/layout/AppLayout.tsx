@@ -87,18 +87,19 @@ function NavItem({ url, label, icon: Icon, onClick, isActive, soon, soonLabel }:
       style={{
         display: 'flex', alignItems: 'center', gap: 12, position: 'relative',
         padding: '9px 12px 9px 14px', margin: '2px 10px', borderRadius: 9,
-        color: isActive ? '#FFFFFF' : hov && !soon ? '#FFFFFF' : soon ? '#9CA3AF' : '#D1D5DB',
+        // Idle mais claro (#E5E7EB > #D1D5DB) pra contraste melhor
+        color: isActive ? '#FFFFFF' : hov && !soon ? '#FFFFFF' : soon ? '#9CA3AF' : '#E5E7EB',
         background: isActive
-          ? 'rgba(59,130,246,0.15)'
-          : hov && !soon ? 'rgba(255,255,255,0.04)' : 'transparent',
-        border: isActive ? '1px solid rgba(59,130,246,0.40)' : '1px solid transparent',
-        fontSize: 13.5, fontWeight: isActive ? 600 : 500,
+          ? 'rgba(59,130,246,0.18)'
+          : hov && !soon ? 'rgba(255,255,255,0.05)' : 'transparent',
+        border: isActive ? '1px solid rgba(59,130,246,0.45)' : '1px solid transparent',
+        fontSize: 13.5, fontWeight: isActive ? 700 : 500,
         textDecoration: 'none',
         transition: 'all 0.15s ease',
         fontFamily: F, letterSpacing: '-0.005em',
         cursor: soon ? 'not-allowed' : 'pointer',
         opacity: soon ? 0.55 : 1,
-        boxShadow: isActive ? 'inset 0 0 0 1px rgba(59,130,246,0.20)' : 'none',
+        boxShadow: isActive ? 'inset 0 0 0 1px rgba(59,130,246,0.25)' : 'none',
       }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <Icon size={16} strokeWidth={isActive ? 2.2 : 1.7} style={{
@@ -714,8 +715,9 @@ export function AppLayout() {
               {section.title && (
                 <p style={{
                   margin: '20px 18px 8px',
-                  fontSize: 10.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-                  color: '#9CA3AF',
+                  // Mais claro que #9CA3AF — contraste melhor no fundo dark
+                  fontSize: 10.5, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: '#D1D5DB',
                 }}>
                   {section.title}
                 </p>
