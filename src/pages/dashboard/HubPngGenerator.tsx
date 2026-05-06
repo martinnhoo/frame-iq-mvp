@@ -176,7 +176,7 @@ export default function HubPngGenerator() {
   const [mode, setMode] = useState<Mode>("scratch");
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
-  // Default 'medium' — quality 'high' demora 60-120s no gpt-image-2 e
+  // Default 'medium' — quality 'high' demora 60-120s no gpt-image-1 e
   // estoura o timeout de 150s da Supabase Edge Function pra users em
   // regiões distantes do servidor (Ásia/EU). User pode aumentar manualmente.
   const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
@@ -265,8 +265,8 @@ export default function HubPngGenerator() {
 
       // 2 modos com endpoints diferentes:
       //   - 'convert': BRIA bg removal (modelo dedicado, preserva sujeito fielmente)
-      //   - 'scratch': gpt-image-2 generations (cria PNG transparente do zero)
-      // Antes os dois usavam gpt-image-2 mas o modo convert dava resultado
+      //   - 'scratch': gpt-image-1 generations (cria PNG transparente do zero)
+      // Antes os dois usavam gpt-image-1 mas o modo convert dava resultado
       // criativo (regenerava o sujeito) — BRIA é a ferramenta certa pra bg removal real.
       const isConvert = mode === "convert" && !!sourceImage;
       const r = isConvert
@@ -322,7 +322,7 @@ export default function HubPngGenerator() {
               image_url: final,
               aspect_ratio: aspectRatio,
               quality,
-              model: "gpt-image-2",
+              model: "gpt-image-1",
               transparent: true,
               mode,
               source_filename: mode === "convert" ? sourceFilename : null,

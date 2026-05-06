@@ -20,7 +20,7 @@
  *   - "Últimas gerações" com últimos 4 thumbnails
  *
  * Tudo i18n nas 4 línguas (pt/en/es/zh) + verify-org card pra
- * gpt-image-2 quando OpenAI exige verification organizacional.
+ * gpt-image-1 quando OpenAI exige verification organizacional.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -190,10 +190,10 @@ const STR: Record<string, Record<Lang, string>> = {
                          en: "Verify your OpenAI organization",
                          es: "Verifica tu organización OpenAI",
                          zh: "验证您的 OpenAI 组织" },
-  verifyDesc:          { pt: "Pra usar o gpt-image-2 (qualidade fotorrealista pra ad creatives), a OpenAI exige verification organizacional.",
-                         en: "To use gpt-image-2 (photorealistic quality for ad creatives), OpenAI requires organization verification.",
-                         es: "Para usar gpt-image-2 (calidad fotorrealista para anuncios), OpenAI requiere verificación organizacional.",
-                         zh: "要使用 gpt-image-2（广告创意的照片级质量），OpenAI 需要组织验证。" },
+  verifyDesc:          { pt: "Pra usar o gpt-image-1 (qualidade fotorrealista pra ad creatives), a OpenAI exige verification organizacional.",
+                         en: "To use gpt-image-1 (photorealistic quality for ad creatives), OpenAI requires organization verification.",
+                         es: "Para usar gpt-image-1 (calidad fotorrealista para anuncios), OpenAI requiere verificación organizacional.",
+                         zh: "要使用 gpt-image-1（广告创意的照片级质量），OpenAI 需要组织验证。" },
   verifyTime:          { pt: "Aprovado em ~5min via verification individual.",
                          en: "Approved in ~5min via Individual verification.",
                          es: "Aprobado en ~5min vía verificación Individual.",
@@ -610,8 +610,8 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
 - Characters must show their full body (or at minimum head + shoulders + torso clearly visible, not chopped at the chin/forehead).
 - If text/headline is part of the composition, it MUST be entirely within the frame — never extending past the canvas borders.
 - Compose the scene so the camera framing fits everything comfortably with breathing room.`;
-      // ── Roteamento de engine: BRIA Lifestyle Shot (elementos) ou gpt-image-2 (default) ──
-      // gpt-image-2 com reference images regenera o sujeito (não preserva).
+      // ── Roteamento de engine: BRIA Lifestyle Shot (elementos) ou gpt-image-1 (default) ──
+      // gpt-image-1 com reference images regenera o sujeito (não preserva).
       // BRIA Lifestyle Shot é dedicada a placar produtos/personagens fielmente
       // numa cena gerada. É o equivalente API do "manda esse personagem +
       // adiciona nessa cena" do ChatGPT.
@@ -736,7 +736,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
               image_url: finalImageUrl,
               aspect_ratio: aspectRatio,
               quality,
-              model: "gpt-image-2",
+              model: "gpt-image-1",
               brand_id: brandId === "none" ? null : brandId,
               market: marketCode || null,
               license_included: hasLicense && includeLicense,

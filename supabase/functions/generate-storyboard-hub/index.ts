@@ -6,7 +6,7 @@
 //   2. Chama gpt-4o-mini pra dividir o roteiro em N cenas com "bible"
 //      de continuidade visual — descrição exata do personagem +
 //      cenário que vai em TODA cena pra garantir consistência
-//   3. Em paralelo, chama gpt-image-2 N vezes (uma por cena)
+//   3. Em paralelo, chama gpt-image-1 N vezes (uma por cena)
 //   4. Salva cada cena em creative_memory com type='hub_storyboard' +
 //      storyboard_id agrupando todas. Imagens armazenadas como base64
 //      data URLs (sem Storage — economia)
@@ -112,7 +112,7 @@ async function generateScene(args: {
     method: "POST",
     headers: { "Authorization": `Bearer ${args.apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-image-2",
+      model: "gpt-image-1",
       prompt: args.prompt.slice(0, 4000),
       size: args.size,
       quality: args.quality,
@@ -247,14 +247,14 @@ Deno.serve(async (req) => {
 
     const okCount = results.filter(r => r.image_url).length;
     if (okCount === 0) {
-      // Detecta se foi acesso (gpt-image-2 não verificada na conta)
+      // Detecta se foi acesso (gpt-image-1 não verificada na conta)
       const firstErr = results[0]?.error || "unknown";
       const needsVerify = /must be verified|organization|verify/i.test(firstErr);
       return jsonResponse({
         _v: FN_VERSION, ok: false,
         error: needsVerify ? "needs_org_verification" : "all_scenes_failed",
         message: needsVerify
-          ? "Sua organização OpenAI precisa ser verificada pra usar gpt-image-2."
+          ? "Sua organização OpenAI precisa ser verificada pra usar gpt-image-1."
           : "Todas as cenas falharam.",
         first_error: firstErr,
         verify_url: needsVerify ? "https://platform.openai.com/settings/organization/general" : undefined,
@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
             aspect_ratio,
             size,
             quality,
-            model: "gpt-image-2",
+            model: "gpt-image-1",
             brand_id: brand_id || null,
             market: market || null,
             script: script.trim(),
