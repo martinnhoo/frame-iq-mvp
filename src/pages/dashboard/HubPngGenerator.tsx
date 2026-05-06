@@ -263,43 +263,38 @@ export default function HubPngGenerator() {
       const token = sessionData?.session?.access_token;
       if (!token) { setError(t("sessionExpired")); setLoading(false); return; }
 
-      const augmentedPrompt = mode === "convert"
-        ? [
-            // Diretiva no formato 'task description' que gpt-image-2 respeita melhor
-            // que prompts criativos. Repete a regra crítica em 3 ângulos diferentes
-            // pra forçar o modelo a tratar como remoção, não como geração.
-            "TASK: BACKGROUND REMOVAL ONLY. This is NOT an image generation task.",
-            "",
-            "Your sole job: take the input image and replace ONLY the background pixels with full transparency. Every pixel that belongs to the main subject must remain PIXEL-IDENTICAL to the input image.",
-            "",
-            "ABSOLUTE RULES — violation makes the output unusable:",
-            "1. DO NOT regenerate the subject. Do not redraw, restyle, or reimagine.",
-            "2. DO NOT change the subject's face, identity, clothing, pose, body proportions, hair, or any visual feature.",
-            "3. DO NOT replace the subject with a different person or object.",
-            "4. DO NOT add creative reinterpretation of any kind.",
-            "5. The subject's pixels must be IDENTICAL to the input — same face, same expression, same outfit, same pose, same lighting on the subject.",
-            "",
-            `Subject to preserve (everything matching this stays, everything else becomes transparent): ${prompt.trim()}`,
-            "",
-            "Output: the input image with background pixels replaced by transparency. Preserve subject pixel-by-pixel. Soft anti-aliased edges only at the subject's silhouette boundary.",
-          ].join("\n")
-        : `${prompt.trim()}\n\nIMPORTANT: The image must have a fully transparent background. The subject must be isolated, with no environment or scenery. Soft anti-aliased edges. Output as a transparent PNG asset.`;
-
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-          "apikey": ANON_KEY,
-        },
-        body: JSON.stringify({
-          prompt: augmentedPrompt,
-          aspect_ratio: aspectRatio,
-          quality,
-          transparent: true,
-          ...(mode === "convert" && sourceImage ? { input_image_base64: sourceImage } : {}),
-        }),
-      });
+      // 2 modos com endpoints diferentes:
+      //   - 'convert': BRIA bg removal (modelo dedicado, preserva sujeito fielmente)
+      //   - 'scratch': gpt-image-2 generations (cria PNG transparente do zero)
+      // Antes os dois usavam gpt-image-2 mas o modo convert dava resultado
+      // criativo (regenerava o sujeito) — BRIA é a ferramenta certa pra bg removal real.
+      const isConvert = mode === "convert" && !!sourceImage;
+      const r = isConvert
+        ? await fetch(`${SUPABASE_URL}/functions/v1/hub-bria-bg-remove`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "apikey": ANON_KEY,
+            },
+            body: JSON.stringify({
+              input_image_base64: sourceImage,
+            }),
+          })
+        : await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+              "apikey": ANON_KEY,
+            },
+            body: JSON.stringify({
+              prompt: `${prompt.trim()}\n\nIMPORTANT: The image must have a fully transparent background. The subject must be isolated, with no environment or scenery. Soft anti-aliased edges. Output as a transparent PNG asset.`,
+              aspect_ratio: aspectRatio,
+              quality,
+              transparent: true,
+            }),
+          });
       const text = await r.text();
       let payload: { ok?: boolean; error?: string; message?: string; openai_message?: string; image_url?: string } | null = null;
       try { payload = JSON.parse(text); } catch { /* not json */ }
