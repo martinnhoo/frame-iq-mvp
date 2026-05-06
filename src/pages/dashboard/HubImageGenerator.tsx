@@ -588,11 +588,29 @@ export default function HubImageGenerator() {
         const brandLabel = brand && brand.id !== "none" ? brand.name : "any logo";
         brandHint = `${brandHint}\n\nIMPORTANT: Do NOT render ${brandLabel} or any logo as text or visual element inside the image. The official logo will be added as overlay in post-production. Keep the upper-right corner of the image visually clean (about 20% area) so the overlay logo will be legible against any background.`;
       }
-      // Elementos selecionados — pass as descriptive hint pra AI integrar.
-      // (Os PNGs ficam locais; AI usa nomes como referência semântica.)
+      // Elementos selecionados — agora enviamos os PNGs DE VERDADE pra
+      // OpenAI como reference images via /v1/images/edits. O modelo usa
+      // os pixels como anchor visual e preserva identidade do mascote/asset
+      // em vez de imaginar do zero. Antes mandava só os nomes como texto,
+      // o que fazia o AI gerar versão genérica.
       if (selectedElements.length > 0) {
-        const elementNames = selectedElements.map(e => e.name).join(", ");
-        brandHint = `${brandHint}\n\nADDITIONAL VISUAL ELEMENTS to depict in the image: ${elementNames}. These are key brand assets/characters that must visually appear in the creative — integrate them naturally into the scene composition.`;
+        const elementList = selectedElements
+          .map((e, i) => `  Image ${i + 1}: "${e.name}"`)
+          .join("\n");
+        brandHint = `${brandHint}
+
+REFERENCE IMAGES PROVIDED — USE EXACTLY:
+The user attached ${selectedElements.length} reference image(s) of brand assets/characters that MUST appear in the final creative:
+${elementList}
+
+CRITICAL RULES for these reference images:
+1. Use them as the PRIMARY VISUAL ANCHORS of the composition — they are the heroes of the scene.
+2. Preserve their EXACT visual identity: face, design, colors, proportions, style. Do NOT redraw, restyle, or reimagine them.
+3. The reference images must look pixel-faithful to the inputs — same character, same look, same expression.
+4. Build the scene/background AROUND them, integrating them naturally into the composition described in the user's prompt.
+5. If the prompt asks for the element to be "main", "principal", "hero", etc — make it the dominant focal point at center/foreground.
+
+DO NOT replace the reference images with generic versions. The user uploaded them precisely so they appear faithful in the output.`;
       }
 
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
@@ -611,6 +629,12 @@ export default function HubImageGenerator() {
           market: marketCode,
           include_license: hasLicense && includeLicense,
           license_text: hasLicense && includeLicense ? licenseText.trim() : "",
+          // Manda os PNGs dos elementos como reference images. gpt-image-2
+          // aceita até 16 — o backend roteia pra /v1/images/edits quando
+          // tem qualquer imagem.
+          ...(selectedElements.length > 0
+            ? { input_images_base64: selectedElements.map(e => e.url) }
+            : {}),
         }),
       });
 

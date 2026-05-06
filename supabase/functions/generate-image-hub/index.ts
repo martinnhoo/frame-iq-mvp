@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v17-timeout-2026-05-05";
+const FN_VERSION = "v18-elements-2026-05-06";
 
 // Timeout explícito na chamada OpenAI. Supabase Edge Functions matam
 // requests > 150s com a mensagem 'Request idle timeout limit (150s)
@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
       license_text = "",
       transparent = false,
       input_image_base64 = null,
+      input_images_base64 = null,
     } = body as {
       prompt?: string;
       aspect_ratio?: string;
@@ -90,7 +91,21 @@ Deno.serve(async (req) => {
       license_text?: string;
       transparent?: boolean;
       input_image_base64?: string | null;
+      input_images_base64?: string[] | null;
     };
+
+    // Consolida ambos os campos de input image numa única array.
+    // - input_image_base64 (singular, legacy): PNG converter, 1 imagem
+    // - input_images_base64 (array, novo): elementos do Image Studio, N imagens
+    const allInputImages: string[] = [];
+    if (input_image_base64) allInputImages.push(input_image_base64);
+    if (Array.isArray(input_images_base64)) {
+      for (const img of input_images_base64) {
+        if (typeof img === "string" && img.length > 0) allInputImages.push(img);
+      }
+    }
+    // gpt-image-2 edits: max 16 imagens.
+    if (allInputImages.length > 16) allInputImages.length = 16;
 
     if (!prompt || prompt.trim().length < 5) {
       return jsonResponse({
@@ -122,24 +137,44 @@ Deno.serve(async (req) => {
     }));
 
     // ── Routing: edits (image-to-image) vs generations (text-to-image) ──
-    // Quando input_image_base64 vem, user quer "isolar/transformar" uma
-    // imagem existente — usa /v1/images/edits. Útil pro PNG generator
-    // converter foto real em PNG transparente do sujeito.
+    // Quando há QUALQUER input image, usa /v1/images/edits. Casos:
+    //   - PNG converter: 1 imagem (background removal)
+    //   - Image Studio com elementos: N imagens (referências visuais)
+    //   - Múltiplos elementos + bg removal: combinado
     let r: Response;
     const abortController = new AbortController();
     const timeoutId = setTimeout(() => abortController.abort(), OPENAI_TIMEOUT_MS);
     try {
-      if (input_image_base64) {
-        // Decode base64 (aceita data URL ou raw base64)
-        const cleanBase64 = input_image_base64.replace(/^data:[^;]+;base64,/, "");
-        const binary = atob(cleanBase64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        const inputBlob = new Blob([bytes], { type: "image/png" });
-
+      if (allInputImages.length > 0) {
         const fd = new FormData();
         fd.append("model", "gpt-image-2");
-        fd.append("image", inputBlob, "input.png");
+
+        // Adiciona TODAS as imagens como inputs visuais. gpt-image-2 edits
+        // aceita até 16 e usa todas como contexto — ideal pra elementos
+        // (mascote + ícones + objetos) servirem como referência visual fiel.
+        let totalBytes = 0;
+        for (let i = 0; i < allInputImages.length; i++) {
+          const cleanBase64 = allInputImages[i].replace(/^data:[^;]+;base64,/, "");
+          const binary = atob(cleanBase64);
+          const bytes = new Uint8Array(binary.length);
+          for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+          totalBytes += bytes.length;
+          // Detecta MIME por magic bytes (PNG: 89 50 4E 47, JPEG: FF D8 FF, WEBP: RIFF...WEBP)
+          let mime = "image/png";
+          let ext = "png";
+          if (bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
+            mime = "image/jpeg"; ext = "jpg";
+          } else if (
+            bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+            bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+          ) {
+            mime = "image/webp"; ext = "webp";
+          }
+          const inputBlob = new Blob([bytes], { type: mime });
+          // OpenAI aceita 'image' repetido pra múltiplas. Append mesmo nome N vezes.
+          fd.append("image", inputBlob, `input-${i}.${ext}`);
+        }
+
         fd.append("prompt", finalPrompt);
         fd.append("size", size);
         fd.append("quality", quality);
@@ -149,7 +184,7 @@ Deno.serve(async (req) => {
           fd.append("output_format", "png");
         }
 
-        console.log("[hub-image] using EDITS endpoint, input bytes:", bytes.length);
+        console.log("[hub-image] using EDITS endpoint, images:", allInputImages.length, "totalBytes:", totalBytes);
         r = await fetch("https://api.openai.com/v1/images/edits", {
           method: "POST",
           headers: { "Authorization": `Bearer ${OPENAI_API_KEY}` },
