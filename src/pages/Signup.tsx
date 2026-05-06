@@ -44,18 +44,40 @@ const Signup = () => {
     setLoading(true);
 
     // Edge function valida código + cria conta atomicamente.
-    const { data, error } = await supabase.functions.invoke("claim-invite-code", {
-      body: {
-        email: email.trim(),
-        password,
-        name: name.trim(),
-        code: code.trim().toUpperCase(),
-      },
-    });
+    // Usa fetch direto em vez de supabase.functions.invoke porque o invoke
+    // do supabase-js, quando a função retorna 4xx/5xx, joga o body em
+    // error.context (Response object) e zera o data — o que fazia o frontend
+    // perder o errCode específico ('invalid_code', 'email_taken' etc) e cair
+    // no fallback genérico. Com fetch direto, parseamos o body manualmente
+    // pra todos os status.
+    let result: { ok?: boolean; error?: string; message?: string } | null = null;
+    let httpStatus = 0;
+    try {
+      const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
+      const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      const r = await fetch(`${SUPA_URL}/functions/v1/claim-invite-code`, {
+        method: "POST",
+        headers: {
+          "apikey": ANON_KEY,
+          "Authorization": `Bearer ${ANON_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          name: name.trim(),
+          code: code.trim().toUpperCase(),
+        }),
+      });
+      httpStatus = r.status;
+      const text = await r.text();
+      try { result = JSON.parse(text); } catch { /* not json — server crashed */ }
+    } catch (netErr) {
+      console.error("[signup] network error:", netErr);
+    }
 
-    if (error || !data?.ok) {
-      const result = data as { error?: string; message?: string } | null;
-      const errCode = result?.error || "unknown";
+    if (!result?.ok) {
+      const errCode = result?.error || (httpStatus === 0 ? "network" : "unknown");
       let msg: string;
       if (errCode === "invalid_code") {
         msg = tr("Código de convite inválido ou já utilizado.", "Invalid or already-used invite code.", "Código de invitación inválido o ya utilizado.", "邀请码无效或已被使用。");
@@ -63,6 +85,8 @@ const Signup = () => {
         msg = tr("Este email já está cadastrado.", "This email is already registered.", "Este email ya está registrado.", "此邮箱已注册。");
       } else if (errCode === "weak_password") {
         msg = tr("Senha deve ter ao menos 8 caracteres.", "Password must be at least 8 characters.", "La contraseña debe tener al menos 8 caracteres.", "密码至少需要8个字符。");
+      } else if (errCode === "network") {
+        msg = tr("Falha de conexão. Verifica sua internet e tenta de novo.", "Connection failed. Check your internet and try again.", "Error de conexión. Verifica tu internet e intenta de nuevo.", "连接失败。请检查您的网络后重试。");
       } else {
         msg = result?.message || tr("Falha ao criar conta. Tenta de novo.", "Failed to create account. Try again.", "Error al crear cuenta. Intenta de nuevo.", "创建账号失败，请重试。");
       }
