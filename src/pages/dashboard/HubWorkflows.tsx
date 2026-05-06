@@ -15,6 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   ReactFlow, ReactFlowProvider, Background, Controls,
   type Node, type Edge, type Connection, type NodeChange, type EdgeChange,
@@ -501,6 +502,11 @@ function HubWorkflowsInner() {
   const [templates, setTemplates] = useState<Workflow[]>([]);
   const [myWorkflows, setMyWorkflows] = useState<Workflow[]>([]);
   const [loadingList, setLoadingList] = useState(true);
+  // Anti-duplicação: enquanto está abrindo um workflow, ignora outros
+  // clicks. Antes, durante DB timeout, cada click criava cópia parcial
+  // — daí "5 Promo de jogo" duplicados na sidebar.
+  const [openingId, setOpeningId] = useState<string | null>(null);
+  const [creatingNew, setCreatingNew] = useState(false);
 
   // Active workflow
   const [activeWf, setActiveWf] = useState<Workflow | null>(null);
@@ -543,6 +549,32 @@ function HubWorkflowsInner() {
     return () => { cancelled = true; };
   }, []);
 
+  // Quando um workflow é aberto (activeWf muda), checa se tem run em
+  // andamento persistido em localStorage. Se sim, retoma polling sem
+  // criar nova run. Servidor processa em background mesmo se a aba
+  // foi fechada — esse hook só re-conecta a UI ao status do server.
+  useEffect(() => {
+    if (!activeWf || running) return;
+    const saved = readActiveRun(activeWf.id);
+    if (!saved) return;
+    // Restora UI: mostra "running" e poll continua de onde parou
+    setRunning(true);
+    setRunError(null);
+    setRunResult(null);
+    setRunProgress({ done: 0, failed: 0, total: saved.total, status: "running" });
+    (async () => {
+      try {
+        await pollAndApplyResult(saved.runId, saved.total);
+      } catch (e) {
+        console.error("[hub-workflows] restore run failed:", e);
+        clearActiveRun(activeWf.id);
+      } finally {
+        setRunning(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWf?.id]);
+
   // React Flow handlers
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     setNodes(nds => applyNodeChanges(changes, nds));
@@ -559,34 +591,47 @@ function HubWorkflowsInner() {
   }, []);
 
   const openWorkflow = async (wf: Workflow) => {
-    let toLoad = wf;
-    // Se for template, clona pra o user antes de abrir (templates são read-only)
-    if (wf.is_template) {
-      try {
+    // Anti-duplicação: se já tá abrindo (qualquer item), ignora. Evita
+    // que clicks repetidos durante DB lento criem múltiplas cópias.
+    if (openingId) return;
+    setOpeningId(wf.id);
+    try {
+      let toLoad = wf;
+      if (wf.is_template) {
         toLoad = await cloneWorkflow(wf.id, wf.name);
-        // Refresh sidebar
         const mine = await listMyWorkflows();
         setMyWorkflows(mine);
-      } catch (e) {
-        alert(`Erro ao abrir template: ${(e as Error).message}`);
-        return;
+      } else {
+        const fresh = await getWorkflow(wf.id);
+        if (fresh) toLoad = fresh;
       }
-    } else {
-      const fresh = await getWorkflow(wf.id);
-      if (fresh) toLoad = fresh;
+      const { nodes: rfNodes, edges: rfEdges } = graphToRf(toLoad.graph);
+      setActiveWf(toLoad);
+      setNodes(rfNodes);
+      setEdges(rfEdges);
+      setName(toLoad.name);
+      setWorkflowBrandId(toLoad.brand_id || "none");
+      setSelectedNodeId(null);
+      setRunResult(null);
+      setRunError(null);
+    } catch (e) {
+      const msg = (e as Error).message || "erro desconhecido";
+      // Mensagem amigável pra timeout do DB (caso comum quando Supabase
+      // tá sob pressão). Outros erros mostra mensagem raw.
+      const friendly = msg.includes("statement timeout")
+        ? "Banco de dados lento agora. Tenta de novo em 10s."
+        : msg.includes("upstream")
+        ? "Servidor demorou pra responder. Tenta de novo."
+        : `Erro ao abrir: ${msg}`;
+      toast.error(friendly);
+    } finally {
+      setOpeningId(null);
     }
-    const { nodes: rfNodes, edges: rfEdges } = graphToRf(toLoad.graph);
-    setActiveWf(toLoad);
-    setNodes(rfNodes);
-    setEdges(rfEdges);
-    setName(toLoad.name);
-    setWorkflowBrandId(toLoad.brand_id || "none");
-    setSelectedNodeId(null);
-    setRunResult(null);
-    setRunError(null);
   };
 
   const newBlankWorkflow = async () => {
+    if (creatingNew || openingId) return;
+    setCreatingNew(true);
     try {
       const wf = await createWorkflow({
         name: t("newWorkflow"),
@@ -596,7 +641,12 @@ function HubWorkflowsInner() {
       setMyWorkflows(mine);
       await openWorkflow(wf);
     } catch (e) {
-      alert(`${t("runError")}: ${(e as Error).message}`);
+      const msg = (e as Error).message || "erro";
+      toast.error(msg.includes("timeout")
+        ? "Banco lento. Tenta de novo em 10s."
+        : `Erro: ${msg}`);
+    } finally {
+      setCreatingNew(false);
     }
   };
 
@@ -607,8 +657,12 @@ function HubWorkflowsInner() {
       await updateWorkflowGraph(activeWf.id, graph, name, workflowBrandId === "none" ? null : workflowBrandId);
       const mine = await listMyWorkflows();
       setMyWorkflows(mine);
+      toast.success("Salvo");
     } catch (e) {
-      alert(`${t("runError")}: ${(e as Error).message}`);
+      const msg = (e as Error).message || "erro";
+      toast.error(msg.includes("timeout")
+        ? "Banco lento, tenta de novo em 10s."
+        : `Erro ao salvar: ${msg}`);
     }
   };
 
@@ -622,8 +676,66 @@ function HubWorkflowsInner() {
       setEdges([]);
       const mine = await listMyWorkflows();
       setMyWorkflows(mine);
+      toast.success("Deletado");
     } catch (e) {
-      alert(`Erro ao deletar: ${(e as Error).message}`);
+      toast.error(`Erro ao deletar: ${(e as Error).message}`);
+    }
+  };
+
+  // Persistência da run: salva run_id+total em localStorage por workflow.
+  // Server processa em background (EdgeRuntime.waitUntil) — sai/volta na
+  // aba, run continua. Ao abrir o workflow de novo, retomamos o polling.
+  const runStorageKey = (workflowId: string) => `hub_active_run_${workflowId}`;
+  const saveActiveRun = (workflowId: string, runId: string, total: number) => {
+    try {
+      localStorage.setItem(runStorageKey(workflowId), JSON.stringify({ runId, total, ts: Date.now() }));
+    } catch { /* quota? ignore */ }
+  };
+  const clearActiveRun = (workflowId: string) => {
+    try { localStorage.removeItem(runStorageKey(workflowId)); } catch { /* ignore */ }
+  };
+  const readActiveRun = (workflowId: string): { runId: string; total: number; ts: number } | null => {
+    try {
+      const raw = localStorage.getItem(runStorageKey(workflowId));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      // Expiração de segurança: se foi salvo há mais de 30min, descarta
+      // (run que estourou wall-clock do edge function nunca completa).
+      if (Date.now() - (parsed.ts || 0) > 30 * 60 * 1000) {
+        localStorage.removeItem(runStorageKey(workflowId));
+        return null;
+      }
+      return parsed;
+    } catch { return null; }
+  };
+
+  /**
+   * Pola um run existente até completar. Atualiza UI conforme progresso.
+   * Usado tanto por runActive (após criar) quanto por restoreRun (ao
+   * voltar pra aba e detectar run pendente).
+   */
+  const pollAndApplyResult = async (runId: string, total: number) => {
+    setRunProgress({ done: 0, failed: 0, total, status: "pending" });
+    const finalSnap = await pollWorkflowRun(runId, (snap) => {
+      setRunProgress({
+        done: snap.nodes_done,
+        failed: snap.nodes_failed,
+        total,
+        status: snap.status,
+      });
+    });
+    if (!finalSnap) {
+      setRunError("Polling falhou — verifique logs");
+      return;
+    }
+    setRunResult({
+      outputs: finalSnap.outputs as Record<string, { image_url?: string; audio_url?: string; video_url?: string; name?: string }>,
+      errors: finalSnap.errors || undefined,
+      status: finalSnap.status,
+    });
+    // Run terminou (succeeded/partial/failed) — limpa do localStorage
+    if (activeWf?.id && ["succeeded", "partial", "failed"].includes(finalSnap.status)) {
+      clearActiveRun(activeWf.id);
     }
   };
 
@@ -634,13 +746,9 @@ function HubWorkflowsInner() {
     setRunResult(null);
     setRunProgress(null);
     try {
-      // Salva antes de rodar — graph atual no estado pode ter mudanças
       const graph = rfToGraph(nodes, edges);
       await updateWorkflowGraph(activeWf.id, graph, name, workflowBrandId === "none" ? null : workflowBrandId);
 
-      // Estima total client-side incluindo count expansion. Server faz a
-      // expansão real (vai contar mais se houver variation), mas o
-      // estimate inicial dá uma barra de progresso aproximada.
       const totalEstimate = estimateNodeCountAfterExpansion(graph);
       setRunProgress({ done: 0, failed: 0, total: totalEstimate, status: "pending" });
 
@@ -651,31 +759,14 @@ function HubWorkflowsInner() {
         setRunProgress(null);
         return;
       }
-      // Pola o status do run em background. Server total (mais preciso
-      // que o client estimate) chega via snap se quiser usar.
-      const finalSnap = await pollWorkflowRun(r.run_id, (snap) => {
-        const total = (r.total ?? totalEstimate) || 1;
-        setRunProgress({
-          done: snap.nodes_done,
-          failed: snap.nodes_failed,
-          total,
-          status: snap.status,
-        });
-      });
-      if (!finalSnap) {
-        setRunError("Polling falhou — verifique logs");
-        return;
-      }
-      setRunResult({
-        outputs: finalSnap.outputs as Record<string, { image_url?: string; audio_url?: string; video_url?: string; name?: string }>,
-        errors: finalSnap.errors || undefined,
-        status: finalSnap.status,
-      });
+      const total = (r.total ?? totalEstimate) || 1;
+      // Persiste run_id pra retomar caso user feche aba/saia da página
+      saveActiveRun(activeWf.id, r.run_id, total);
+      await pollAndApplyResult(r.run_id, total);
     } catch (e) {
       setRunError(String(e).slice(0, 200));
     } finally {
       setRunning(false);
-      // Mantém runProgress visível até user fechar o painel
     }
   };
 
