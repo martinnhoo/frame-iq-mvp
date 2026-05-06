@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v20-storage-url-input-2026-05-06";
+const FN_VERSION = "v21-storage-output-2026-05-06";
 
 // Timeout explícito na chamada OpenAI. Supabase Edge Functions matam
 // requests > 150s com a mensagem 'Request idle timeout limit (150s)
@@ -333,22 +333,20 @@ Deno.serve(async (req) => {
       }, 502);
     }
 
-    // ── Converte pra data URL (base64) — sem Storage ─────────────────
-    // Decisão: não usar Supabase Storage pra economizar custo. Em vez
-    // disso, salva a imagem inteira como data URL no creative_memory.
-    // A imagem fica permanente no banco, sem dependência de URL externa.
-    // Trade-off: linhas DB ficam ~2MB cada. Pra uso interno (dezenas
-    // de imagens, 5-10 users) é completamente OK.
-    if (!b64 && tempImageUrl) {
+    // ── Resolve bytes da imagem ─────────────────────────────────────
+    // Aceita tanto b64_json (gpt-image-2) quanto URL (legacy/dall-e).
+    // Converte tudo pra Uint8Array antes de subir pro Storage.
+    let imageBytes: Uint8Array | null = null;
+    if (b64) {
+      const binary = atob(b64);
+      imageBytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) imageBytes[i] = binary.charCodeAt(i);
+    } else if (tempImageUrl) {
       try {
         const imgRes = await fetch(tempImageUrl);
         if (imgRes.ok) {
           const buf = await imgRes.arrayBuffer();
-          const bytes = new Uint8Array(buf);
-          // Encode bytes → base64
-          let binary = "";
-          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-          b64 = btoa(binary);
+          imageBytes = new Uint8Array(buf);
         } else {
           console.error("[hub-image] failed to fetch from openai url:", imgRes.status);
         }
@@ -357,14 +355,47 @@ Deno.serve(async (req) => {
       }
     }
 
-    const finalImageUrl = b64
-      ? `data:image/png;base64,${b64}`
-      : tempImageUrl;
-    if (!finalImageUrl) {
+    if (!imageBytes) {
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: "no_image_returned",
-        message: "Nenhuma URL de imagem disponível.",
+        message: "Nenhuma imagem disponível.",
       }, 502);
+    }
+
+    // ── Upload pro Supabase Storage (em vez de data URL inline) ─────
+    // ANTES: image_url ficava como data URL base64 embebido no jsonb
+    // do hub_assets — cada row ~2MB, ficava brutal pra DB.
+    // AGORA: faz upload pro bucket hub-images, salva só a URL pública
+    // (~80 chars) no jsonb. ~10000x mais leve.
+    //
+    // Path: {user_id}/generated/{uuid}.png — agrupa por user, RLS já
+    // garante isolamento via storage.objects policy existente.
+    const storagePath = `${authUser.id}/generated/${crypto.randomUUID()}.png`;
+    let finalImageUrl: string;
+    let storageUploaded = false;
+    try {
+      const blob = new Blob([imageBytes], { type: "image/png" });
+      const { error: upErr } = await sb.storage.from("hub-images").upload(storagePath, blob, {
+        contentType: "image/png",
+        cacheControl: "3600",
+        upsert: false,
+      });
+      if (upErr) {
+        console.error("[hub-image] storage upload failed:", upErr.message);
+        throw new Error(upErr.message);
+      }
+      const { data: urlData } = sb.storage.from("hub-images").getPublicUrl(storagePath);
+      if (!urlData?.publicUrl) throw new Error("public_url_missing");
+      finalImageUrl = urlData.publicUrl;
+      storageUploaded = true;
+    } catch (storageErr) {
+      // Fallback: se Storage falhou, salva como data URL legacy (não
+      // quebra geração — só fica ~2MB no DB). Loga warning pra investigar.
+      console.warn("[hub-image] storage falhou, fallback pra data URL:", storageErr);
+      let binary = "";
+      for (let i = 0; i < imageBytes.length; i++) binary += String.fromCharCode(imageBytes[i]);
+      const fallbackB64 = btoa(binary);
+      finalImageUrl = `data:image/png;base64,${fallbackB64}`;
     }
 
     // ── Persiste na biblioteca como data URL (sem Storage) ──────────

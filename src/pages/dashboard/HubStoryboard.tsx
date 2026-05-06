@@ -28,6 +28,7 @@ import { addHubNotification } from "@/lib/hubNotifications";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { CustomLogoUpload } from "@/components/dashboard/CustomLogoUpload";
 import { saveHubAssets } from "@/lib/saveHubAsset";
+import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
 
 const STR: Record<string, Record<Lang, string>> = {
   back:           { pt: "Voltar ao Hub",    en: "Back to Hub",    es: "Volver al Hub",    zh: "返回中心" },
@@ -237,8 +238,15 @@ export default function HubStoryboard() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const storyboardId = `sb-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-          await saveHubAssets(finalScenes
-            .filter(s => s.image_url)
+          // Sobe cenas pro Storage em paralelo antes de salvar — cada
+          // cena pode ser data URL pesado. Promise.all pra não serializar.
+          const scenesWithStorage = await Promise.all(
+            finalScenes.filter(s => s.image_url).map(async s => ({
+              ...s,
+              image_url: await uploadAssetToStorage(s.image_url!, "storyboard"),
+            }))
+          );
+          await saveHubAssets(scenesWithStorage
             .map(s => ({
               userId: user.id,
               type: "hub_storyboard",

@@ -28,6 +28,7 @@ import { addHubNotification } from "@/lib/hubNotifications";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { CustomLogoUpload } from "@/components/dashboard/CustomLogoUpload";
 import { saveHubAssets } from "@/lib/saveHubAsset";
+import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
 
 const STR: Record<string, Record<Lang, string>> = {
   back:           { pt: "Voltar ao Hub",    en: "Back to Hub",    es: "Volver al Hub",    zh: "返回中心" },
@@ -225,8 +226,14 @@ export default function HubCarousel() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const carouselId = `cr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-          await saveHubAssets(final
-            .filter(s => s.image_url)
+          // Sobe slides pro Storage em paralelo (data URL → URL pública).
+          const slidesWithStorage = await Promise.all(
+            final.filter(s => s.image_url).map(async s => ({
+              ...s,
+              image_url: await uploadAssetToStorage(s.image_url!, "carousel"),
+            }))
+          );
+          await saveHubAssets(slidesWithStorage
             .map(s => ({
               userId: user.id,
               type: "hub_carousel",

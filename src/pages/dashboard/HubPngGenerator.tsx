@@ -26,6 +26,7 @@ import { addHubNotification } from "@/lib/hubNotifications";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { compressPngIfNeeded } from "@/lib/compressPng";
 import { saveHubAsset } from "@/lib/saveHubAsset";
+import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
 import type { Lang } from "@/data/hubBrands";
 
 const STR: Record<string, Record<Lang, string>> = {
@@ -351,16 +352,17 @@ export default function HubPngGenerator() {
       }
       setImageUrl(final);
 
-      // Persist no DB
+      // Persist no DB — sobe pro Storage primeiro pra row ficar leve
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user && final) {
+          const storedUrl = await uploadAssetToStorage(final, "png");
           const saved = await saveHubAsset({
             userId: user.id,
             type: "hub_png",
             content: {
               prompt: prompt.trim(),
-              image_url: final,
+              image_url: storedUrl,
               aspect_ratio: aspectRatio,
               quality,
               model: "gpt-image-2",
@@ -369,10 +371,10 @@ export default function HubPngGenerator() {
               source_filename: mode === "convert" ? sourceFilename : null,
             },
           });
-          // Optimistic add to history
+          // Optimistic add to history (mantém URL final pra preview imediato)
           setHistory(prev => [{
             id: saved.id || `tmp-${Date.now()}`,
-            image_url: final,
+            image_url: storedUrl,
             prompt: prompt.trim(),
             created_at: new Date().toISOString(),
           }, ...prev].slice(0, 8));

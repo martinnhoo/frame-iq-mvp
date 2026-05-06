@@ -41,6 +41,7 @@ import { composeImage } from "@/lib/composeImageWithLicense";
 import { compositeElements, ASPECT_DIMS } from "@/lib/compositeElements";
 import { addHubNotification } from "@/lib/hubNotifications";
 import { saveHubAsset } from "@/lib/saveHubAsset";
+import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
 import {
   type HubElement,
   listElements,
@@ -700,13 +701,18 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          // Sobe pro Storage se ainda for data URL (acontece quando rolou
+          // composeImage com license/logo). Se já é URL pública (Storage
+          // do edge function), passa direto. Reduz row do hub_assets de
+          // ~2MB pra ~200 bytes.
+          const storedImageUrl = await uploadAssetToStorage(finalImageUrl, "generated");
           await saveHubAsset({
             userId: user.id,
             type: "hub_image",
             content: {
               prompt: prompt.trim(),
               revised_prompt: payload.revised_prompt || prompt.trim(),
-              image_url: finalImageUrl,
+              image_url: storedImageUrl,
               aspect_ratio: aspectRatio,
               quality,
               model: "gpt-image-2",
