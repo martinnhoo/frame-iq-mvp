@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v18-elements-2026-05-06";
+const FN_VERSION = "v18b-image-array-2026-05-06";
 
 // Timeout explícito na chamada OpenAI. Supabase Edge Functions matam
 // requests > 150s com a mensagem 'Request idle timeout limit (150s)
@@ -171,8 +171,10 @@ Deno.serve(async (req) => {
             mime = "image/webp"; ext = "webp";
           }
           const inputBlob = new Blob([bytes], { type: mime });
-          // OpenAI aceita 'image' repetido pra múltiplas. Append mesmo nome N vezes.
-          fd.append("image", inputBlob, `input-${i}.${ext}`);
+          // OpenAI exige 'image[]' (com colchetes) pra múltiplas imagens.
+          // Se mandar 'image' repetido N vezes, API retorna 'Duplicate parameter'.
+          // Pra 1 imagem 'image[]' também funciona — então usa array sempre.
+          fd.append("image[]", inputBlob, `input-${i}.${ext}`);
         }
 
         fd.append("prompt", finalPrompt);
