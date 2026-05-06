@@ -20,7 +20,7 @@
 // 60-90s. Pra vídeos longos (>10s) pode estourar — caller deve usar
 // duration ≤ 10s pra segurança.
 
-const FN_VERSION = "v2-piapi-error-detail-2026-05-06";
+const FN_VERSION = "v3-piapi-video-url-2026-05-06";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -169,13 +169,18 @@ async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: num
     }
     if (status === "completed") {
       const out = pollPayload?.data?.output;
-      // PiAPI Kling 3.0 retorna em data.output.works[0].video.resource_without_watermark
-      // ou data.output.video_url (fallback formato antigo)
+      // PiAPI retorna o video URL em formatos diferentes dependendo da
+      // versão da API. Suporta TODOS os shapes que vimos:
+      //   - data.output.video                              ← Kling 3.0 atual
+      //   - data.output.video_url                          ← formato antigo
+      //   - data.output.works[0].video.resource            ← multi-shot
+      //   - data.output.works[0].video.resource_without_watermark
       const works = out?.works || [];
       const firstWork = works[0]?.video;
-      const video_url = firstWork?.resource_without_watermark
-        || firstWork?.resource
-        || out?.video_url;
+      const video_url = (typeof out?.video === "string" ? out.video : null)
+        || out?.video_url
+        || firstWork?.resource_without_watermark
+        || firstWork?.resource;
       if (!video_url) {
         return {
           ok: false,
