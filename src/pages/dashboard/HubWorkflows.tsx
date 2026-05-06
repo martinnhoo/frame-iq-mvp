@@ -26,10 +26,11 @@ import "@xyflow/react/dist/style.css";
 import {
   ArrowLeft, Play, Save, Plus, Loader, Copy, Trash2, Sparkles,
   Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch, Mic, Video as VideoIcon,
-  ChevronDown, X, Search,
+  ChevronDown, X, Search, Menu,
 } from "lucide-react";
 import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode, type Lang } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   type Workflow, type WorkflowSummary, type WfGraph, type WfNode, type WfEdge,
   listMyWorkflows, listTemplates, getWorkflow, cloneWorkflow,
@@ -497,6 +498,11 @@ function HubWorkflowsInner() {
   const { language } = useLanguage();
   const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
   const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || String(key);
+  const isMobile = useIsMobile();
+
+  // Mobile: sidebar esquerda (templates/lista) e painel direito (config nó)
+  // viram overlays — escondidos por padrão, abertos via toggle/seleção.
+  const [mobileLeftOpen, setMobileLeftOpen] = useState(false);
 
   // Sidebar state — listagens não têm graph (otimização: só carrega quando
   // user abre um workflow específico via getWorkflow).
@@ -596,6 +602,8 @@ function HubWorkflowsInner() {
     // que clicks repetidos durante DB lento criem múltiplas cópias.
     if (openingId) return;
     setOpeningId(wf.id);
+    // Fecha o drawer mobile quando user abre um workflow
+    if (isMobile) setMobileLeftOpen(false);
     try {
       // Listagens trazem só metadados (sem graph). Sempre busca o full
       // aqui — pra template clona e pra próprio busca direto.
@@ -816,18 +824,31 @@ function HubWorkflowsInner() {
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#06070a", color: "#fff", overflow: "hidden" }}>
       {/* Topbar */}
       <div style={{
-        display: "flex", alignItems: "center", gap: 10,
-        padding: "10px 16px",
+        display: "flex", alignItems: "center", gap: isMobile ? 6 : 10,
+        padding: isMobile ? "8px 10px" : "10px 16px",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         background: "#0a0b10",
+        flexWrap: isMobile ? "wrap" : "nowrap",
       }}>
         <button onClick={() => navigate("/dashboard/hub")} style={iconBtn}>
           <ArrowLeft size={14} />
         </button>
+        {isMobile && (
+          <button
+            onClick={() => setMobileLeftOpen(true)}
+            style={iconBtn}
+            aria-label={t("templates")}
+            title={t("templates")}
+          >
+            <Menu size={14} />
+          </button>
+        )}
         <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em" }}>{t("workflows")}</div>
         <div style={{ flex: 1 }} />
         {activeWf && (
           <>
+            {/* Em mobile o input de nome só aparece após estourar pra
+                segunda linha do flexWrap pra não comer espaço dos botões. */}
             <input
               value={name}
               onChange={e => setName(e.target.value)}
@@ -836,8 +857,11 @@ function HubWorkflowsInner() {
                 background: "rgba(255,255,255,0.04)",
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 6, padding: "6px 10px",
-                color: "#fff", fontSize: 12, width: 200,
+                color: "#fff", fontSize: 12,
+                width: isMobile ? "100%" : 200,
+                order: isMobile ? 10 : 0,
                 fontFamily: "inherit",
+                boxSizing: "border-box",
               }}
             />
             {/* Brand selector — fica salvo em hub_workflows.brand_id.
@@ -847,25 +871,29 @@ function HubWorkflowsInner() {
               title={t("workflowBrandHint")}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "6px 10px",
+                padding: isMobile ? "6px 8px" : "6px 10px",
                 background: workflowBrand && workflowBrand.id !== "none" ? "rgba(234,179,8,0.10)" : "rgba(255,255,255,0.04)",
                 border: `1px solid ${workflowBrand && workflowBrand.id !== "none" ? "rgba(234,179,8,0.30)" : "rgba(255,255,255,0.08)"}`,
                 borderRadius: 6,
                 color: workflowBrand && workflowBrand.id !== "none" ? "#FACC15" : "rgba(255,255,255,0.55)",
                 fontSize: 11.5, fontWeight: 600,
                 cursor: "pointer", fontFamily: "inherit",
+                maxWidth: isMobile ? 130 : "none",
+                overflow: "hidden",
               }}
             >
               <Tag size={11} />
-              <span>{workflowBrand && workflowBrand.id !== "none" ? workflowBrand.name : t("noBrand")}</span>
-              <ChevronDown size={10} style={{ opacity: 0.6 }} />
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {workflowBrand && workflowBrand.id !== "none" ? workflowBrand.name : t("noBrand")}
+              </span>
+              <ChevronDown size={10} style={{ opacity: 0.6, flexShrink: 0 }} />
             </button>
-            <button onClick={saveActive} style={btnSecondary}>
-              <Save size={13} /> {t("save")}
+            <button onClick={saveActive} style={btnSecondary} title={t("save")}>
+              <Save size={13} /> {!isMobile && t("save")}
             </button>
-            <button onClick={runActive} disabled={running} style={btnPrimary}>
+            <button onClick={runActive} disabled={running} style={btnPrimary} title={t("run")}>
               {running ? <Loader size={13} className="spin" /> : <Play size={13} />}
-              {running ? t("running") : t("run")}
+              {!isMobile && (running ? t("running") : t("run"))}
             </button>
             <button onClick={deleteActive} style={iconBtn} title={t("delete")}>
               <Trash2 size={13} />
@@ -874,14 +902,35 @@ function HubWorkflowsInner() {
         )}
       </div>
 
-      <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-        {/* Sidebar esquerda */}
+      <div style={{ display: "flex", flex: 1, minHeight: 0, position: "relative" }}>
+        {/* Backdrop pra fechar sidebar no mobile (clicando fora) */}
+        {isMobile && mobileLeftOpen && (
+          <div
+            onClick={() => setMobileLeftOpen(false)}
+            style={{
+              position: "absolute", inset: 0,
+              background: "rgba(0,0,0,0.55)",
+              backdropFilter: "blur(2px)",
+              zIndex: 20,
+            }}
+          />
+        )}
+        {/* Sidebar esquerda — desktop: coluna fixa, mobile: overlay drawer */}
         <div style={{
-          width: 220, flexShrink: 0,
+          width: isMobile ? "min(280px, 80vw)" : 220,
+          flexShrink: 0,
           borderRight: "1px solid rgba(255,255,255,0.06)",
           background: "#08090e",
           padding: "12px 10px",
           overflowY: "auto",
+          ...(isMobile ? {
+            position: "absolute",
+            top: 0, bottom: 0, left: 0,
+            zIndex: 21,
+            transform: mobileLeftOpen ? "translateX(0)" : "translateX(-100%)",
+            transition: "transform 0.2s ease-out",
+            boxShadow: mobileLeftOpen ? "0 0 24px rgba(0,0,0,0.5)" : "none",
+          } : {}),
         }}>
           <button onClick={newBlankWorkflow} style={{
             ...btnSecondary,
@@ -991,14 +1040,53 @@ function HubWorkflowsInner() {
           )}
         </div>
 
-        {/* Right panel — node config OR run result */}
+        {/* Right panel — node config OR run result.
+            Mobile: bottom sheet que só aparece quando há conteúdo
+            (node selecionado, run em progresso, resultado ou erro).
+            Desktop: coluna fixa sempre visível. */}
+        {(() => {
+          const hasContent = !!(selectedNodeId || runResult || (running && runProgress) || runError);
+          if (isMobile && !hasContent) return null;
+          return (
         <div style={{
-          width: 280, flexShrink: 0,
-          borderLeft: "1px solid rgba(255,255,255,0.06)",
+          width: isMobile ? "100%" : 280,
+          flexShrink: 0,
+          borderLeft: isMobile ? "none" : "1px solid rgba(255,255,255,0.06)",
+          borderTop: isMobile ? "1px solid rgba(255,255,255,0.10)" : "none",
           background: "#08090e",
           padding: "12px 14px",
           overflowY: "auto",
+          ...(isMobile ? {
+            position: "absolute",
+            left: 0, right: 0, bottom: 0,
+            maxHeight: "55vh",
+            zIndex: 15,
+            boxShadow: "0 -4px 16px rgba(0,0,0,0.45)",
+            borderRadius: "12px 12px 0 0",
+          } : {}),
         }}>
+          {/* Botão fechar (drag handle visual) só no mobile */}
+          {isMobile && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={{
+                width: 36, height: 4, borderRadius: 2,
+                background: "rgba(255,255,255,0.20)",
+                margin: "0 auto",
+              }} />
+              <button
+                onClick={() => {
+                  setSelectedNodeId(null);
+                  setRunResult(null);
+                  setRunProgress(null);
+                  setRunError(null);
+                }}
+                style={{ ...iconBtn, position: "absolute", top: 10, right: 10 }}
+                aria-label={t("close")}
+              >
+                <X size={13} />
+              </button>
+            </div>
+          )}
           {runResult ? (
             <RunResultPanel result={runResult} onClose={() => { setRunResult(null); setRunProgress(null); }} t={t} />
           ) : running && runProgress ? (
@@ -1036,6 +1124,8 @@ function HubWorkflowsInner() {
             </div>
           ) : null}
         </div>
+          );
+        })()}
       </div>
 
       {/* Brand modal — usado pra setar workflow.brand_id (default level) */}

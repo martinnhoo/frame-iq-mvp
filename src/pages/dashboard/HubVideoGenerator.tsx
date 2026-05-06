@@ -26,6 +26,7 @@ import {
   HUB_BRANDS, HUB_MARKETS, getBrand, type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ── i18n minimal — Hub só usa pt/en/es/zh ─────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -125,6 +126,7 @@ export default function HubVideoGenerator() {
   const { language } = useLanguage();
   const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
   const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || key;
+  const isMobile = useIsMobile();
 
   // Form state
   const [brandId, setBrandId] = useState("none");
@@ -320,7 +322,7 @@ export default function HubVideoGenerator() {
           <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", margin: "4px 0 0", maxWidth: 720 }}>{t("subtitle")}</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, maxWidth: 1280 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 16 : 24, maxWidth: 1280 }}>
           {/* LEFT — controles */}
           <div style={panelStyle}>
             {/* Brand */}
@@ -723,7 +725,7 @@ export default function HubVideoGenerator() {
                 />
               </div>
             </div>
-            <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 8 }}>
               <button
                 onClick={() => { setBrandId("none"); setBrandModalOpen(false); }}
                 style={brandCardStyle(brandId === "none")}
