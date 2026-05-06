@@ -103,6 +103,10 @@ const STR: Record<string, Record<Lang, string>> = {
                          en: "PNG with transparent background only",
                          es: "Solo PNG con fondo transparente",
                          zh: "仅限透明背景的 PNG" },
+  elementsUploadingN:  { pt: "Enviando {done} de {total}…",
+                         en: "Uploading {done} of {total}…",
+                         es: "Subiendo {done} de {total}…",
+                         zh: "上传 {done} / {total}..." },
   elementsInvalidErr:  { pt: "Use PNG com fundo transparente. Utilize o Gerador de PNG para converter.",
                          en: "Use PNG with transparent background. Use the PNG Generator to convert.",
                          es: "Usa PNG con fondo transparente. Usa el Generador de PNG para convertir.",
@@ -1921,6 +1925,42 @@ function ElementsModal({
           <input ref={fileRef} type="file" accept="image/png" multiple
             onChange={e => { if (e.target.files) onFiles(e.target.files); }}
             style={{ display: "none" }} />
+
+          {/* Upload progress — aparece durante batch de uploads */}
+          {uploading && (
+            <div style={{
+              marginTop: 12, padding: "10px 14px", borderRadius: 10,
+              background: "rgba(59,130,246,0.08)",
+              border: "1px solid rgba(59,130,246,0.25)",
+            }}>
+              <div style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                fontSize: 12, color: "rgba(255,255,255,0.85)", marginBottom: 6,
+              }}>
+                <span style={{ fontWeight: 600 }}>
+                  {t("elementsUploadingN")
+                    .replace("{done}", String(uploading.done))
+                    .replace("{total}", String(uploading.total))}
+                </span>
+                <span style={{ fontWeight: 700, color: "#3B82F6" }}>
+                  {Math.round((uploading.done / Math.max(1, uploading.total)) * 100)}%
+                </span>
+              </div>
+              <div style={{
+                height: 6, borderRadius: 3,
+                background: "rgba(255,255,255,0.06)",
+                overflow: "hidden",
+              }}>
+                <div style={{
+                  height: "100%",
+                  width: `${(uploading.done / Math.max(1, uploading.total)) * 100}%`,
+                  background: "linear-gradient(90deg, #3B82F6, #60A5FA)",
+                  borderRadius: 3,
+                  transition: "width 0.25s ease",
+                }} />
+              </div>
+            </div>
+          )}
 
           {/* PNG-only error with shortcut to PNG generator */}
           {error && (
