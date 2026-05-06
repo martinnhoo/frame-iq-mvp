@@ -176,7 +176,10 @@ export default function HubPngGenerator() {
   const [mode, setMode] = useState<Mode>("scratch");
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
-  const [quality, setQuality] = useState<"low" | "medium" | "high">("high");
+  // Default 'medium' — quality 'high' demora 60-120s no gpt-image-2 e
+  // estoura o timeout de 150s da Supabase Edge Function pra users em
+  // regiões distantes do servidor (Ásia/EU). User pode aumentar manualmente.
+  const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
   const [sourceImage, setSourceImage] = useState<string | null>(null); // data URL
   const [sourceFilename, setSourceFilename] = useState<string>("");
   const [imageError, setImageError] = useState<string | null>(null);

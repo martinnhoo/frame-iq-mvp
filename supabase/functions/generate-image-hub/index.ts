@@ -9,7 +9,14 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v16-edits-2026-05-05";
+const FN_VERSION = "v17-timeout-2026-05-05";
+
+// Timeout explícito na chamada OpenAI. Supabase Edge Functions matam
+// requests > 150s com a mensagem 'Request idle timeout limit (150s)
+// reached' que vira 'fn=desconhecida' no frontend (resposta inutilizável).
+// Cortamos antes em 130s pra retornar erro JSON limpo + mensagem útil
+// pro user em vez do timeout cru do Supabase.
+const OPENAI_TIMEOUT_MS = 130_000;
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -119,46 +126,64 @@ Deno.serve(async (req) => {
     // imagem existente — usa /v1/images/edits. Útil pro PNG generator
     // converter foto real em PNG transparente do sujeito.
     let r: Response;
-    if (input_image_base64) {
-      // Decode base64 (aceita data URL ou raw base64)
-      const cleanBase64 = input_image_base64.replace(/^data:[^;]+;base64,/, "");
-      const binary = atob(cleanBase64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const inputBlob = new Blob([bytes], { type: "image/png" });
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), OPENAI_TIMEOUT_MS);
+    try {
+      if (input_image_base64) {
+        // Decode base64 (aceita data URL ou raw base64)
+        const cleanBase64 = input_image_base64.replace(/^data:[^;]+;base64,/, "");
+        const binary = atob(cleanBase64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const inputBlob = new Blob([bytes], { type: "image/png" });
 
-      const fd = new FormData();
-      fd.append("model", "gpt-image-2");
-      fd.append("image", inputBlob, "input.png");
-      fd.append("prompt", finalPrompt);
-      fd.append("size", size);
-      fd.append("quality", quality);
-      fd.append("n", "1");
-      if (transparent) {
-        fd.append("background", "transparent");
-        fd.append("output_format", "png");
+        const fd = new FormData();
+        fd.append("model", "gpt-image-2");
+        fd.append("image", inputBlob, "input.png");
+        fd.append("prompt", finalPrompt);
+        fd.append("size", size);
+        fd.append("quality", quality);
+        fd.append("n", "1");
+        if (transparent) {
+          fd.append("background", "transparent");
+          fd.append("output_format", "png");
+        }
+
+        console.log("[hub-image] using EDITS endpoint, input bytes:", bytes.length);
+        r = await fetch("https://api.openai.com/v1/images/edits", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${OPENAI_API_KEY}` },
+          body: fd,
+          signal: abortController.signal,
+        });
+      } else {
+        r = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-image-2",
+            prompt: finalPrompt,
+            size,
+            quality,
+            n: 1,
+            moderation: "low",
+            ...(transparent ? { background: "transparent", output_format: "png" } : {}),
+          }),
+          signal: abortController.signal,
+        });
       }
-
-      console.log("[hub-image] using EDITS endpoint, input bytes:", bytes.length);
-      r = await fetch("https://api.openai.com/v1/images/edits", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${OPENAI_API_KEY}` },
-        body: fd,
-      });
-    } else {
-      r = await fetch("https://api.openai.com/v1/images/generations", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "gpt-image-2",
-          prompt: finalPrompt,
-          size,
-          quality,
-          n: 1,
-          moderation: "low",
-          ...(transparent ? { background: "transparent", output_format: "png" } : {}),
-        }),
-      });
+    } catch (e) {
+      // AbortError quando estourou o nosso timeout interno (130s)
+      if ((e as Error).name === "AbortError") {
+        console.error("[hub-image] OpenAI timeout after", OPENAI_TIMEOUT_MS, "ms");
+        return jsonResponse({
+          _v: FN_VERSION, ok: false, error: "openai_timeout",
+          message: "OpenAI demorou demais pra responder. Tenta com qualidade 'Médio' ou 'Rascunho' — geração fica mais rápida.",
+        }, 504);
+      }
+      throw e;
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     if (!r.ok) {
