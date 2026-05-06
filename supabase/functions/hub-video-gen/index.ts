@@ -20,7 +20,7 @@
 // 60-90s. Pra vídeos longos (>10s) pode estourar — caller deve usar
 // duration ≤ 10s pra segurança.
 
-const FN_VERSION = "v1-piapi-kling3-2026-05-06";
+const FN_VERSION = "v2-piapi-error-detail-2026-05-06";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -143,21 +143,27 @@ async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: num
     }
 
     const pollText = await pollRes.text();
-    let pollPayload: {
-      data?: {
-        task_id?: string;
-        status?: string;
-        output?: { video_url?: string; works?: Array<{ video?: { resource?: string; resource_without_watermark?: string; duration?: string } }> };
-        error?: { message?: string };
-      };
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let pollPayload: any;
     try { pollPayload = JSON.parse(pollText); } catch { continue; }
 
     const status = pollPayload?.data?.status;
     if (status === "failed") {
+      // PiAPI pode colocar a razão em vários lugares — tenta todos
+      const data = pollPayload?.data || {};
+      const errMsg = data.error?.message
+        || data.error?.detail
+        || data.error?.raw_message
+        || data.error?.code
+        || data.message
+        || data.fail_reason
+        || pollPayload?.message
+        || "task failed (no detail provided by PiAPI)";
+      // Loga payload completo no Supabase logs pra debugar moderation/etc
+      console.error(`[hub-video] PiAPI failed task ${task_id}:`, JSON.stringify(pollPayload).slice(0, 1500));
       return {
         ok: false,
-        error: `piapi_task_failed: ${pollPayload?.data?.error?.message || "unknown"}`,
+        error: `piapi_task_failed: ${errMsg}`,
         task_id,
       };
     }
