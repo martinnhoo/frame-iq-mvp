@@ -33,6 +33,7 @@ import {
   type Workflow, type WfGraph, type WfNode, type WfEdge,
   listMyWorkflows, listTemplates, getWorkflow, cloneWorkflow,
   updateWorkflowGraph, deleteWorkflow, createWorkflow, runWorkflow,
+  pollWorkflowRun,
 } from "@/lib/hubWorkflows";
 
 // ── i18n strings ──────────────────────────────────────────────────
@@ -133,6 +134,18 @@ const STR: Record<string, Record<Lang, string>> = {
   noBrand:          { pt: "Sem marca",            en: "No brand",          es: "Sin marca",          zh: "无品牌" },
   searchBrand:      { pt: "Buscar marca…",        en: "Search brand…",     es: "Buscar marca…",      zh: "搜索品牌..." },
   selectBrand:      { pt: "Selecionar marca",     en: "Select brand",      es: "Seleccionar marca",  zh: "选择品牌" },
+  // Count fan-out
+  fieldCount:       { pt: "Quantidade",           en: "Quantity",          es: "Cantidad",           zh: "数量" },
+  countHint:        { pt: "Gera N imagens em paralelo. Máx 50. Cada imagem é uma row separada na biblioteca.",
+                      en: "Generates N images in parallel. Max 50. Each image is a separate row in the library.",
+                      es: "Genera N imágenes en paralelo. Máx 50. Cada imagen es una fila separada en la biblioteca.",
+                      zh: "并行生成 N 张图像。最多 50 张。每张图像是库中单独的一行。" },
+  // Run progress
+  runProgress:      { pt: "Progresso",             en: "Progress",          es: "Progreso",           zh: "进度" },
+  runCompleted:     { pt: "Concluído",             en: "Completed",         es: "Completado",         zh: "已完成" },
+  runFailed:        { pt: "Falha",                 en: "Failed",            es: "Falló",              zh: "失败" },
+  runStarting:      { pt: "Iniciando…",            en: "Starting…",         es: "Iniciando…",         zh: "启动中..." },
+  nodesDone:        { pt: "nós completos",         en: "nodes done",        es: "nodos completos",    zh: "个节点完成" },
 };
 
 // ── Custom node components ─────────────────────────────────────────
@@ -230,7 +243,8 @@ function PromptNode({ data, selected }: { data: { text?: string }; selected: boo
   );
 }
 
-function ImageGenNode({ data, selected }: { data: { aspect_ratio?: string; quality?: string }; selected: boolean }) {
+function ImageGenNode({ data, selected }: { data: { aspect_ratio?: string; quality?: string; count?: number }; selected: boolean }) {
+  const count = Number(data.count || 1);
   return (
     <NodeShell
       icon={<ImageIcon size={13} />}
@@ -244,7 +258,9 @@ function ImageGenNode({ data, selected }: { data: { aspect_ratio?: string; quali
       ]}
     >
       <div>{data.aspect_ratio || "1:1"} · {data.quality || "medium"}</div>
-      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>gpt-image-2</div>
+      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>
+        gpt-image-2{count > 1 ? ` · ×${count}` : ""}
+      </div>
     </NodeShell>
   );
 }
@@ -419,6 +435,53 @@ function rfToGraph(nodes: Node[], edges: Edge[]): WfGraph {
   };
 }
 
+/**
+ * Estima total de nós que vão rodar após server expandir count + variation.
+ * Usado pra mostrar barra de progresso (server retorna `total` real depois,
+ * mas client mostra estimate enquanto espera resposta do execute-workflow).
+ *
+ * Cálculo: cada image-gen com count > 1 multiplica o subgraph downstream.
+ * Variation com N values multiplica o subgraph downstream também.
+ * Aproximação: total ≈ nodes_count + (count-1) × downstream_size por image-gen
+ *               + (values-1) × downstream_size por variation
+ */
+function estimateNodeCountAfterExpansion(graph: WfGraph): number {
+  // Contagem básica + multiplicador heurístico
+  let total = graph.nodes.length;
+  for (const n of graph.nodes) {
+    if (n.type === "image-gen") {
+      const count = Math.max(1, Math.min(50, Number(n.data.count) || 1));
+      if (count > 1) {
+        // Adiciona (count-1) × tamanho do subgraph downstream
+        const downstreamCount = countDownstream(graph, n.id);
+        total += (count - 1) * (1 + downstreamCount); // +1 pelo próprio image-gen clonado
+      }
+    } else if (n.type === "variation") {
+      const values = Array.isArray(n.data.values) ? (n.data.values as string[]).length : 0;
+      if (values > 1) {
+        const downstreamCount = countDownstream(graph, n.id);
+        total += (values - 1) * downstreamCount;
+      }
+    }
+  }
+  return total;
+}
+
+function countDownstream(graph: WfGraph, fromId: string): number {
+  const visited = new Set<string>([fromId]);
+  const queue = [fromId];
+  while (queue.length) {
+    const cur = queue.shift()!;
+    for (const e of graph.edges) {
+      if (e.source === cur && !visited.has(e.target)) {
+        visited.add(e.target);
+        queue.push(e.target);
+      }
+    }
+  }
+  return visited.size - 1; // exclui o nó-fonte
+}
+
 // ── Página ─────────────────────────────────────────────────────────
 export default function HubWorkflows() {
   return (
@@ -455,8 +518,17 @@ function HubWorkflowsInner() {
 
   // Run state
   const [running, setRunning] = useState(false);
-  const [runResult, setRunResult] = useState<{ outputs?: Record<string, { image_url?: string; name?: string }>; errors?: Record<string, string>; status?: string } | null>(null);
+  const [runResult, setRunResult] = useState<{
+    outputs?: Record<string, { image_url?: string; audio_url?: string; video_url?: string; name?: string }>;
+    errors?: Record<string, string>;
+    status?: string;
+  } | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
+  // Progress: nodes_done / total_expected. total é estimado client-side
+  // (graph atual antes da expansão do server, mas com count contado).
+  const [runProgress, setRunProgress] = useState<{
+    done: number; failed: number; total: number; status: string;
+  } | null>(null);
 
   // Initial load
   useEffect(() => {
@@ -560,25 +632,50 @@ function HubWorkflowsInner() {
     setRunning(true);
     setRunError(null);
     setRunResult(null);
+    setRunProgress(null);
     try {
       // Salva antes de rodar — graph atual no estado pode ter mudanças
       const graph = rfToGraph(nodes, edges);
       await updateWorkflowGraph(activeWf.id, graph, name, workflowBrandId === "none" ? null : workflowBrandId);
 
+      // Estima total client-side incluindo count expansion. Server faz a
+      // expansão real (vai contar mais se houver variation), mas o
+      // estimate inicial dá uma barra de progresso aproximada.
+      const totalEstimate = estimateNodeCountAfterExpansion(graph);
+      setRunProgress({ done: 0, failed: 0, total: totalEstimate, status: "pending" });
+
       const r = await runWorkflow({ workflow_id: activeWf.id, graph });
-      if (!r.ok) {
-        setRunError(r.message || "Falha ao executar workflow");
-      } else {
-        setRunResult({
-          outputs: r.outputs as Record<string, { image_url?: string; name?: string }>,
-          errors: r.errors,
-          status: r.status,
-        });
+      if (!r.ok || !r.run_id) {
+        setRunError(r.message || "Falha ao iniciar workflow");
+        setRunning(false);
+        setRunProgress(null);
+        return;
       }
+      // Pola o status do run em background. Server total (mais preciso
+      // que o client estimate) chega via snap se quiser usar.
+      const finalSnap = await pollWorkflowRun(r.run_id, (snap) => {
+        const total = (r.total ?? totalEstimate) || 1;
+        setRunProgress({
+          done: snap.nodes_done,
+          failed: snap.nodes_failed,
+          total,
+          status: snap.status,
+        });
+      });
+      if (!finalSnap) {
+        setRunError("Polling falhou — verifique logs");
+        return;
+      }
+      setRunResult({
+        outputs: finalSnap.outputs as Record<string, { image_url?: string; audio_url?: string; video_url?: string; name?: string }>,
+        errors: finalSnap.errors || undefined,
+        status: finalSnap.status,
+      });
     } catch (e) {
       setRunError(String(e).slice(0, 200));
     } finally {
       setRunning(false);
+      // Mantém runProgress visível até user fechar o painel
     }
   };
 
@@ -588,7 +685,7 @@ function HubWorkflowsInner() {
     const defaultData: Record<string, Record<string, unknown>> = {
       brand: { brand_id: "betbus", market: "MX", include_disclaimer: true },
       prompt: { text: "" },
-      "image-gen": { aspect_ratio: "1:1", quality: "medium" },
+      "image-gen": { aspect_ratio: "1:1", quality: "medium", count: 1 },
       "bg-remove": {},
       storyboard: { scene_count: 4, aspect_ratio: "9:16", quality: "medium" },
       video: { duration: 5, aspect_ratio: "16:9", mode: "std", resolution: "720p", enable_audio: false, provider: "piapi" },
@@ -804,7 +901,9 @@ function HubWorkflowsInner() {
           overflowY: "auto",
         }}>
           {runResult ? (
-            <RunResultPanel result={runResult} onClose={() => setRunResult(null)} t={t} />
+            <RunResultPanel result={runResult} onClose={() => { setRunResult(null); setRunProgress(null); }} t={t} />
+          ) : running && runProgress ? (
+            <RunProgressPanel progress={runProgress} t={t} />
           ) : runError ? (
             <div style={{ fontSize: 12, color: "#F87171" }}>
               <div style={{ fontWeight: 700, marginBottom: 6 }}>{t("runError")}</div>
@@ -1006,6 +1105,23 @@ function NodeConfigPanel({
 
       {node.type === "image-gen" && (
         <>
+          <FieldLabel>{t("fieldCount")}</FieldLabel>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+            <input
+              type="range"
+              min={1}
+              max={50}
+              value={Number(data.count || 1)}
+              onChange={e => onUpdate({ count: Math.max(1, Math.min(50, Number(e.target.value) || 1)) })}
+              style={{ flex: 1, accentColor: "#3B82F6" }}
+            />
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#3B82F6", minWidth: 32, textAlign: "right" }}>
+              {Number(data.count || 1)}
+            </span>
+          </div>
+          <div style={{ marginTop: 0, marginBottom: 10, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
+            {t("countHint")}
+          </div>
           <FieldLabel>{t("fieldAspect")}</FieldLabel>
           <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
             {["1:1", "9:16", "16:9", "4:5"].map(ar => (
@@ -1225,6 +1341,58 @@ function NodeConfigPanel({
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// ── Run progress panel ─────────────────────────────────────────────
+// Mostrado enquanto run está em pending/running. Atualiza com snapshot
+// de cada poll (a cada ~2.5s).
+function RunProgressPanel({
+  progress, t,
+}: {
+  progress: { done: number; failed: number; total: number; status: string };
+  t: (key: keyof typeof STR) => string;
+}) {
+  const { done, failed, total, status } = progress;
+  const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+  const isStarting = status === "pending";
+  return (
+    <div style={{ fontSize: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <Loader size={13} className="spin" style={{ color: "#3B82F6" }} />
+        <div style={{ flex: 1, fontSize: 11, fontWeight: 800, letterSpacing: "0.04em", textTransform: "uppercase", color: "#3B82F6" }}>
+          {isStarting ? t("runStarting") : t("runProgress")}
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{
+        height: 8, borderRadius: 4,
+        background: "rgba(255,255,255,0.06)",
+        overflow: "hidden",
+        marginBottom: 8,
+      }}>
+        <div style={{
+          height: "100%", width: `${pct}%`,
+          background: "linear-gradient(90deg, #3B82F6, #60A5FA)",
+          transition: "width 0.4s ease",
+          borderRadius: 4,
+        }} />
+      </div>
+
+      {/* Counter */}
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "rgba(255,255,255,0.75)" }}>
+        <span style={{ fontWeight: 700, color: "#fff" }}>{done} / {total}</span>
+        <span>{pct}%</span>
+      </div>
+      <div style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.50)" }}>
+        {done} {t("nodesDone")}{failed > 0 ? ` · ${failed} ${t("runFailed").toLowerCase()}` : ""}
+      </div>
+
+      <div style={{ marginTop: 14, padding: 10, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.20)", borderRadius: 8, fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>
+        Pode minimizar essa aba — execução continua em background. Resultado aparece aqui quando terminar.
+      </div>
     </div>
   );
 }

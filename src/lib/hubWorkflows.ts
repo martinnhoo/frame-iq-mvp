@@ -198,6 +198,11 @@ function resolveBrandNodes(graph: WfGraph): Record<string, Record<string, unknow
   return overrides;
 }
 
+/**
+ * Inicia um run de workflow. Retorna run_id imediatamente — execução
+ * acontece em background (EdgeRuntime.waitUntil). Caller deve usar
+ * pollWorkflowRun pra acompanhar progresso.
+ */
 export async function runWorkflow(args: {
   workflow_id: string;
   graph: WfGraph;
@@ -207,8 +212,7 @@ export async function runWorkflow(args: {
   ok: boolean;
   run_id?: string;
   status?: string;
-  outputs?: Record<string, unknown>;
-  errors?: Record<string, string>;
+  total?: number;
   message?: string;
 }> {
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -217,7 +221,6 @@ export async function runWorkflow(args: {
   const token = sessionData?.session?.access_token;
   if (!token) return { ok: false, message: "session expired" };
 
-  // Combine resolved brand overrides + extra inputs do user
   const brandOverrides = resolveBrandNodes(args.graph);
   const inputs: Record<string, Record<string, unknown>> = { ...brandOverrides };
   if (args.extraInputs) {
@@ -233,10 +236,7 @@ export async function runWorkflow(args: {
       "Content-Type": "application/json",
       "apikey": ANON_KEY,
     },
-    body: JSON.stringify({
-      workflow_id: args.workflow_id,
-      inputs,
-    }),
+    body: JSON.stringify({ workflow_id: args.workflow_id, inputs }),
   });
   const text = await r.text();
   let payload: Record<string, unknown>;
@@ -245,8 +245,75 @@ export async function runWorkflow(args: {
     ok: !!payload.ok,
     run_id: payload.run_id as string | undefined,
     status: payload.status as string | undefined,
-    outputs: payload.outputs as Record<string, unknown> | undefined,
-    errors: payload.errors as Record<string, string> | undefined,
+    total: payload.total as number | undefined,
     message: payload.message as string | undefined,
   };
+}
+
+/**
+ * Snapshot atual do run. Usado pra polling.
+ */
+export interface RunSnapshot {
+  id: string;
+  workflow_id: string;
+  status: "pending" | "running" | "succeeded" | "partial" | "failed";
+  outputs: Record<string, unknown>;
+  errors: Record<string, string> | null;
+  nodes_done: number;
+  nodes_failed: number;
+  started_at: string | null;
+  ended_at: string | null;
+  created_at: string;
+}
+
+export async function getWorkflowRun(runId: string): Promise<RunSnapshot | null> {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+  const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) return null;
+
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/get-workflow-run?run_id=${encodeURIComponent(runId)}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "apikey": ANON_KEY,
+    },
+  });
+  if (!r.ok) return null;
+  const payload = await r.json().catch(() => null);
+  if (!payload?.ok || !payload.run) return null;
+  return payload.run as RunSnapshot;
+}
+
+/**
+ * Pola o run a cada `intervalMs` até status ∈ {succeeded, partial, failed}
+ * ou até stopSignal disparar. Chama onProgress a cada snapshot pra UI
+ * atualizar barra de progresso + thumbs conforme aparecem.
+ *
+ * Timeout máximo: 8 minutos (gera 50 imgs ~5min, dá folga). Se exceder,
+ * retorna o último snapshot com status atual (pode ser 'running' ainda).
+ */
+export async function pollWorkflowRun(
+  runId: string,
+  onProgress: (snap: RunSnapshot) => void,
+  opts?: { intervalMs?: number; maxWallMs?: number; stopSignal?: AbortSignal },
+): Promise<RunSnapshot | null> {
+  const intervalMs = opts?.intervalMs ?? 2500;
+  const maxWallMs = opts?.maxWallMs ?? 8 * 60 * 1000;
+  const startedAt = Date.now();
+  let snap: RunSnapshot | null = null;
+
+  while (Date.now() - startedAt < maxWallMs) {
+    if (opts?.stopSignal?.aborted) return snap;
+    snap = await getWorkflowRun(runId);
+    if (snap) {
+      onProgress(snap);
+      if (["succeeded", "partial", "failed"].includes(snap.status)) {
+        return snap;
+      }
+    }
+    await new Promise(r => setTimeout(r, intervalMs));
+  }
+  return snap;
 }

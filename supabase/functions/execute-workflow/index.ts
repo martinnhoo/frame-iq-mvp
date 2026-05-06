@@ -12,7 +12,11 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v4-video-node-2026-05-06";
+const FN_VERSION = "v5-async-count-2026-05-06";
+
+// Limites de segurança pra fan-out (count + variation expandidos)
+const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
+const MAX_IMAGE_GEN_COUNT = 50;
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -202,6 +206,133 @@ function bypassNode(graph: Graph, nodeId: string): Graph {
     nodes: graph.nodes.filter(n => n.id !== nodeId),
     edges: newEdges,
   };
+}
+
+/**
+ * Expande nós `image-gen` com data.count > 1 em N branches paralelos.
+ *
+ * Cada branch clona o image-gen + TODO o subgrafo downstream com novos IDs,
+ * e reconecta upstream. Mesma técnica do expandVariations mas dispara só
+ * quando count > 1.
+ *
+ * Usado pra "gerar 50 estáticos com 1 click" — user marca count=50,
+ * graph rewriter cria 50 cópias paralelas.
+ *
+ * Cap em MAX_IMAGE_GEN_COUNT (50). Cap total no número de nós em
+ * MAX_TOTAL_NODES_AFTER_EXPANSION (300) pra evitar workflows hostis.
+ */
+function expandImageGenCount(graph: Graph): Graph {
+  const targets = graph.nodes.filter(n =>
+    n.type === "image-gen" && Number(n.data.count || 1) > 1
+  );
+  if (targets.length === 0) return graph;
+
+  let workGraph = { ...graph, nodes: [...graph.nodes], edges: [...graph.edges] };
+
+  for (const node of targets) {
+    const requested = Math.floor(Number(node.data.count) || 1);
+    const count = Math.min(MAX_IMAGE_GEN_COUNT, Math.max(1, requested));
+    if (count <= 1) continue;
+
+    // Coleta downstream IDs (BFS a partir desse image-gen)
+    const downstreamIds = new Set<string>();
+    const queue = [node.id];
+    while (queue.length) {
+      const cur = queue.shift()!;
+      for (const e of workGraph.edges) {
+        if (e.source === cur && !downstreamIds.has(e.target) && e.target !== node.id) {
+          downstreamIds.add(e.target);
+          queue.push(e.target);
+        }
+      }
+    }
+
+    const directDownstreamEdges = workGraph.edges.filter(e => e.source === node.id);
+    const upstreamEdges = workGraph.edges.filter(e => e.target === node.id);
+
+    // Remove o image-gen original + downstream + edges relacionadas
+    let newNodes = workGraph.nodes.filter(n => n.id !== node.id && !downstreamIds.has(n.id));
+    let newEdges = workGraph.edges.filter(e =>
+      e.source !== node.id && e.target !== node.id &&
+      !downstreamIds.has(e.source) && !downstreamIds.has(e.target)
+    );
+
+    // Pra cada cópia (1 a count), clona image-gen + subgrafo downstream
+    for (let i = 0; i < count; i++) {
+      const idMap = new Map<string, string>();
+      const newImageGenId = `${node.id}_n${i}`;
+      idMap.set(node.id, newImageGenId);
+
+      // Clone image-gen com count=1 (pra não re-expandir e travar em loop)
+      newNodes.push({
+        ...node,
+        id: newImageGenId,
+        data: { ...node.data, count: 1, _count_index: i, _count_total: count },
+        position: { x: (node.position?.x || 0), y: (node.position?.y || 0) + i * 220 },
+      });
+
+      // Clone downstream nodes
+      for (const did of downstreamIds) {
+        const orig = workGraph.nodes.find(n => n.id === did);
+        if (!orig) continue;
+        const newId = `${orig.id}_n${i}`;
+        idMap.set(did, newId);
+        newNodes.push({
+          ...orig,
+          id: newId,
+          data: { ...orig.data, _count_index: i, _count_total: count },
+          position: { x: (orig.position?.x || 0) + 80, y: (orig.position?.y || 0) + i * 220 },
+        });
+      }
+
+      // Clone edges entre downstream nodes
+      for (const e of workGraph.edges) {
+        if (downstreamIds.has(e.source) && downstreamIds.has(e.target)) {
+          newEdges.push({
+            id: `${e.id}_n${i}`,
+            source: idMap.get(e.source)!,
+            target: idMap.get(e.target)!,
+            sourceHandle: e.sourceHandle,
+            targetHandle: e.targetHandle,
+          });
+        }
+      }
+
+      // Edges saindo do image-gen original → clone do direct downstream
+      for (const dde of directDownstreamEdges) {
+        const cloneTarget = idMap.get(dde.target);
+        if (!cloneTarget) continue;
+        newEdges.push({
+          id: `${dde.id}_n${i}`,
+          source: newImageGenId,
+          sourceHandle: dde.sourceHandle,
+          target: cloneTarget,
+          targetHandle: dde.targetHandle,
+        });
+      }
+
+      // Reconecta upstream do image-gen → clone do image-gen
+      for (const ue of upstreamEdges) {
+        newEdges.push({
+          id: `${ue.id}_n${i}`,
+          source: ue.source,
+          sourceHandle: ue.sourceHandle,
+          target: newImageGenId,
+          targetHandle: ue.targetHandle,
+        });
+      }
+    }
+
+    workGraph = { ...workGraph, nodes: newNodes, edges: newEdges };
+
+    // Hard cap pra evitar combinações que escalam fora de controle
+    // (variation × count × ...). Aborta a expansão se o grafo passar do limite.
+    if (workGraph.nodes.length > MAX_TOTAL_NODES_AFTER_EXPANSION) {
+      throw new Error(`graph_too_large: ${workGraph.nodes.length} nodes exceeds ${MAX_TOTAL_NODES_AFTER_EXPANSION}`);
+    }
+  }
+
+  return workGraph;
 }
 
 /**
@@ -624,6 +755,84 @@ async function executeNode(
   }
 }
 
+// ── Background processor ────────────────────────────────────────────
+// Executa o workflow nível-a-nível, atualizando hub_workflow_runs.outputs
+// após cada nível pra UI poder polar progresso. Roda em background via
+// EdgeRuntime.waitUntil — caller já recebeu run_id e voltou pro client.
+//
+// Limite de wall-clock do Supabase Edge Function: 150s default. Pra
+// 50 image-gens em paralelo (~30-60s OpenAI side + rate limits), entra
+// no budget. Workflows mais longos vão estourar — caller recebe status
+// 'failed' com 'wall_clock_timeout' no error.
+async function processWorkflow(
+  runId: string,
+  graph: Graph,
+  ctx: ExecCtx,
+  levels: GraphNode[][],
+  sb: ReturnType<typeof createClient>,
+): Promise<void> {
+  const outputs: OutputsMap = {};
+  const errors: Record<string, string> = {};
+
+  // Marca como running (caso ainda não tenha sido)
+  await sb.from("hub_workflow_runs")
+    .update({ status: "running", started_at: new Date().toISOString() })
+    .eq("id", runId);
+
+  try {
+    for (const level of levels) {
+      const results = await Promise.allSettled(
+        level.map(node => executeNode(node, graph, outputs, ctx))
+      );
+      for (let i = 0; i < level.length; i++) {
+        const node = level[i];
+        const r = results[i];
+        if (r.status === "fulfilled") {
+          outputs[node.id] = r.value;
+        } else {
+          const msg = (r.reason as Error)?.message || String(r.reason);
+          errors[node.id] = msg.slice(0, 300);
+          console.error(`[execute-workflow] node ${node.id} (${node.type}) failed:`, msg);
+        }
+      }
+      // Persiste outputs após cada nível pra polling refletir progresso
+      await sb.from("hub_workflow_runs")
+        .update({ outputs, error: Object.keys(errors).length > 0 ? JSON.stringify(errors) : null })
+        .eq("id", runId);
+    }
+
+    // Status final
+    const totalNodes = graph.nodes.length;
+    const successCount = Object.keys(outputs).length;
+    const errorCount = Object.keys(errors).length;
+    let status: "succeeded" | "partial" | "failed";
+    if (errorCount === 0) status = "succeeded";
+    else if (successCount > errorCount) status = "partial";
+    else status = "failed";
+
+    await sb.from("hub_workflow_runs")
+      .update({
+        status,
+        outputs,
+        error: errorCount > 0 ? JSON.stringify(errors) : null,
+        ended_at: new Date().toISOString(),
+      })
+      .eq("id", runId);
+
+    console.log(`[execute-workflow] run ${runId} ${status} — ${successCount}/${totalNodes} nodes ok`);
+  } catch (e) {
+    console.error(`[execute-workflow] run ${runId} fatal:`, e);
+    await sb.from("hub_workflow_runs")
+      .update({
+        status: "failed",
+        outputs,
+        error: `processWorkflow exception: ${String(e).slice(0, 200)}`,
+        ended_at: new Date().toISOString(),
+      })
+      .eq("id", runId);
+  }
+}
+
 // ── Main handler ────────────────────────────────────────────────────
 console.log(`[execute-workflow] boot ${FN_VERSION}`);
 
@@ -667,8 +876,21 @@ Deno.serve(async (req) => {
       return jsonResponse({ _v: FN_VERSION, ok: false, error: "empty_graph" }, 400);
     }
     const overridden = applyInputOverrides(rawGraph, inputs);
-    // Expande variation nodes em sub-grafos paralelos antes do topo-sort
-    const graph = expandVariations(overridden);
+    // Pipeline de expansão: variation primeiro (cria branches por axis),
+    // depois count (multiplica image-gens por count=N). Ordem importa pra
+    // que count expanda DENTRO de cada branch da variation.
+    let graph: Graph;
+    try {
+      const afterVariation = expandVariations(overridden);
+      graph = expandImageGenCount(afterVariation);
+    } catch (expansionErr) {
+      // graph_too_large ou outro erro de expansão
+      return jsonResponse({
+        _v: FN_VERSION, ok: false,
+        error: "graph_expansion_failed",
+        message: String(expansionErr).slice(0, 300),
+      }, 400);
+    }
 
     // Validação: topo-sort (detecta ciclo)
     const { levels, hasCycle } = topoSort(graph);
@@ -676,15 +898,16 @@ Deno.serve(async (req) => {
       return jsonResponse({ _v: FN_VERSION, ok: false, error: "graph_has_cycle" }, 400);
     }
 
-    // Cria run row
+    // Cria run row já em status=pending. processWorkflow vai marcar como
+    // running quando começar, e finalizar com succeeded/partial/failed.
     const { data: runData, error: runErr } = await sb
       .from("hub_workflow_runs")
       .insert({
         user_id: authUser.id,
         workflow_id,
-        status: "running",
+        status: "pending",
         inputs: inputs || {},
-        started_at: new Date().toISOString(),
+        outputs: {},
       })
       .select("id")
       .single();
@@ -700,61 +923,32 @@ Deno.serve(async (req) => {
       runId,
     };
 
-    // Executa nível-a-nível
-    const outputs: OutputsMap = {};
-    const errors: Record<string, string> = {};
+    const totalNodes = graph.nodes.length;
 
-    for (const level of levels) {
-      const results = await Promise.allSettled(
-        level.map(node => executeNode(node, graph, outputs, ctx))
+    // Async via EdgeRuntime.waitUntil — caller recebe run_id imediatamente,
+    // processamento continua em background até completar ou estourar
+    // wall-clock (~150s).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ER = (globalThis as any).EdgeRuntime;
+    if (ER && typeof ER.waitUntil === "function") {
+      ER.waitUntil(processWorkflow(runId, graph, ctx, levels, sb));
+    } else {
+      // Fallback: roda sync se EdgeRuntime não tá disponível (dev local).
+      // Não faz await pra retornar rápido; o Deno worker pode matar a Promise
+      // mas é um fallback aceitável.
+      processWorkflow(runId, graph, ctx, levels, sb).catch(e =>
+        console.error("[execute-workflow] background fallback failed:", e)
       );
-      for (let i = 0; i < level.length; i++) {
-        const node = level[i];
-        const r = results[i];
-        if (r.status === "fulfilled") {
-          outputs[node.id] = r.value;
-        } else {
-          const msg = (r.reason as Error)?.message || String(r.reason);
-          errors[node.id] = msg.slice(0, 300);
-          console.error(`[execute-workflow] node ${node.id} (${node.type}) failed:`, msg);
-        }
-      }
-      // Atualiza outputs após cada nível pra UI poder polar progresso
-      await sb.from("hub_workflow_runs")
-        .update({ outputs, error: Object.keys(errors).length > 0 ? JSON.stringify(errors) : null })
-        .eq("id", runId);
     }
 
-    // Status final
-    const totalNodes = graph.nodes.length;
-    const successCount = Object.keys(outputs).length;
-    const errorCount = Object.keys(errors).length;
-    let status: "succeeded" | "partial" | "failed";
-    if (errorCount === 0) status = "succeeded";
-    else if (successCount > errorCount) status = "partial";
-    else status = "failed";
-
-    await sb.from("hub_workflow_runs")
-      .update({
-        status,
-        outputs,
-        error: errorCount > 0 ? JSON.stringify(errors) : null,
-        ended_at: new Date().toISOString(),
-      })
-      .eq("id", runId);
-
-    console.log(`[execute-workflow] run ${runId} ${status} — ${successCount}/${totalNodes} nodes ok`);
+    console.log(`[execute-workflow] run ${runId} kicked off — ${totalNodes} nodes after expansion`);
 
     return jsonResponse({
       _v: FN_VERSION,
-      ok: status !== "failed",
+      ok: true,
       run_id: runId,
-      status,
-      outputs,
-      errors,
+      status: "pending",
       total: totalNodes,
-      succeeded: successCount,
-      failed: errorCount,
     }, 200);
 
   } catch (e) {
