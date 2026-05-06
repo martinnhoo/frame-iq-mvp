@@ -15,7 +15,7 @@
  * PNG / Storyboard / Carrossel) + busca por prompt.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,6 +97,9 @@ const STR: Record<string, Record<Lang, string>> = {
   delete:      { pt: "Excluir",    en: "Delete",    es: "Eliminar",   zh: "删除" },
   deleteConfirm: { pt: "Confirmar exclusão", en: "Confirm delete", es: "Confirmar eliminación", zh: "确认删除" },
   deleteHint:  { pt: "Clique de novo pra confirmar", en: "Click again to confirm", es: "Haz click otra vez para confirmar", zh: "再次点击确认" },
+  // Load more
+  loadMore:    { pt: "Carregar mais", en: "Load more", es: "Cargar más", zh: "加载更多" },
+  loadingMore: { pt: "Carregando…",   en: "Loading…",  es: "Cargando…",  zh: "加载中..." },
 };
 
 const PERIOD_OPTIONS = [
@@ -156,6 +159,11 @@ export default function HubLibrary() {
   const [kindFilter, setKindFilter] = useState<"all" | AssetKind>("all");
   const [search, setSearch] = useState("");
   const [previewAsset, setPreviewAsset] = useState<HubAsset | null>(null);
+  // Paginação — antes carregava 500 rows com data URLs embebidas (~1GB).
+  // Agora carrega 60 inicial + "Carregar mais" pra adicionar 60 por vez.
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 60;
 
   // Deleta asset(s) e atualiza lista localmente.
   // Storyboard/carousel: deleta TODAS as rows com mesmo group_id.
@@ -195,31 +203,12 @@ export default function HubLibrary() {
     }
   };
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { if (mounted) { setAssets([]); setLoading(false); } return; }
-
-        const days = PERIOD_OPTIONS.find(p => p.id === period)!.days;
-        const since = new Date(Date.now() - days * 86_400_000).toISOString();
-
-        const { data } = await supabase.from("hub_assets" as never)
-          .select("id, kind, content, created_at")
-          .eq("user_id", user.id)
-          .gte("created_at", since)
-          .order("created_at", { ascending: false })
-          .limit(500);
-        if (!mounted) return;
-
-        const rows = (data || []) as RawRow[];
-        // Agrupa storyboards/carousels por storyboard_id/carousel_id;
-        // assets singulares (image/png) ficam soltos.
-        const groupedMap = new Map<string, HubAsset>();
-
-        for (const r of rows) {
+  // Transforma rows do DB → HubAsset[] (com agrupamento de storyboard/carousel).
+  // Agora aceita um Map existente pra mergear (usado pelo "Carregar mais"
+  // sem re-processar tudo).
+  const rowsToAssets = (rows: RawRow[], existing?: Map<string, HubAsset>): HubAsset[] => {
+    const groupedMap = existing || new Map<string, HubAsset>();
+    for (const r of rows) {
           const c = r.content || {};
 
           // Voice — sem image_url, mas tem audio_url
@@ -312,11 +301,43 @@ export default function HubLibrary() {
           }
         }
 
-        // Ordena por mais recente
-        const list = Array.from(groupedMap.values()).sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        );
-        setAssets(list);
+    return Array.from(groupedMap.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+  };
+
+  // Cache do Map agrupado pra suportar "Carregar mais" sem re-processar
+  // os assets já carregados.
+  const groupedRef = useRef<Map<string, HubAsset>>(new Map());
+
+  // Initial load (e reload quando period muda)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { if (mounted) { setAssets([]); setLoading(false); } return; }
+
+        const days = PERIOD_OPTIONS.find(p => p.id === period)!.days;
+        const since = new Date(Date.now() - days * 86_400_000).toISOString();
+
+        // Reset cache pra evitar misturar resultados de períodos diferentes
+        groupedRef.current = new Map();
+
+        const { data } = await supabase.from("hub_assets" as never)
+          .select("id, kind, content, created_at")
+          .eq("user_id", user.id)
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .limit(PAGE_SIZE + 1); // +1 pra detectar se há mais
+        if (!mounted) return;
+
+        const rows = (data || []) as RawRow[];
+        const moreAvailable = rows.length > PAGE_SIZE;
+        const visibleRows = moreAvailable ? rows.slice(0, PAGE_SIZE) : rows;
+        setAssets(rowsToAssets(visibleRows, groupedRef.current));
+        setHasMore(moreAvailable);
       } catch (e) {
         console.error("[hub-library] load error:", e);
         if (mounted) setAssets([]);
@@ -326,6 +347,45 @@ export default function HubLibrary() {
     })();
     return () => { mounted = false; };
   }, [period]);
+
+  // Load more — busca o próximo PAGE_SIZE com offset pelo created_at do
+  // último asset já carregado. Usa created_at do raw row (não do agrupado)
+  // pra paginar corretamente. Como agrupados podem ter created_at do PRIMEIRO
+  // row do grupo, usamos o último created_at como cutoff.
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const days = PERIOD_OPTIONS.find(p => p.id === period)!.days;
+      const since = new Date(Date.now() - days * 86_400_000).toISOString();
+
+      // Pega created_at do último asset visível como cutoff
+      const lastAsset = assets[assets.length - 1];
+      if (!lastAsset) return;
+
+      const { data } = await supabase.from("hub_assets" as never)
+        .select("id, kind, content, created_at")
+        .eq("user_id", user.id)
+        .gte("created_at", since)
+        .lt("created_at", lastAsset.created_at)
+        .order("created_at", { ascending: false })
+        .limit(PAGE_SIZE + 1);
+
+      const rows = (data || []) as RawRow[];
+      const moreAvailable = rows.length > PAGE_SIZE;
+      const visibleRows = moreAvailable ? rows.slice(0, PAGE_SIZE) : rows;
+      // Mergea no Map existente (evita duplicar storyboards já carregados)
+      setAssets(rowsToAssets(visibleRows, groupedRef.current));
+      setHasMore(moreAvailable);
+    } catch (e) {
+      console.error("[hub-library] load more error:", e);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     let out = assets;
@@ -456,19 +516,44 @@ export default function HubLibrary() {
             desc={assets.length === 0 ? t("emptyDesc") : t("noResultDesc")}
           />
         ) : (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-            gap: 14,
-          }}>
-            {filtered.map(asset => (
-              <AssetCard
-                key={asset.id} asset={asset} lang={lang} t={t}
-                onClick={() => setPreviewAsset(asset)}
-                onDelete={() => deleteAsset(asset)}
-              />
-            ))}
-          </div>
+          <>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+              gap: 14,
+            }}>
+              {filtered.map(asset => (
+                <AssetCard
+                  key={asset.id} asset={asset} lang={lang} t={t}
+                  onClick={() => setPreviewAsset(asset)}
+                  onDelete={() => deleteAsset(asset)}
+                />
+              ))}
+            </div>
+            {/* Load more — só aparece se houver mais rows e o filtro não
+                tiver cortado tudo (filtered considera kindFilter+search). */}
+            {hasMore && filtered.length > 0 && (
+              <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  style={{
+                    padding: "10px 22px",
+                    background: loadingMore ? "rgba(59,130,246,0.10)" : "rgba(59,130,246,0.15)",
+                    border: "1px solid rgba(59,130,246,0.40)",
+                    borderRadius: 9,
+                    color: "#fff",
+                    fontSize: 13, fontWeight: 600,
+                    cursor: loadingMore ? "wait" : "pointer",
+                    fontFamily: "inherit",
+                    display: "inline-flex", alignItems: "center", gap: 8,
+                  }}
+                >
+                  {loadingMore ? t("loadingMore") : t("loadMore")}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {previewAsset && (
@@ -633,6 +718,8 @@ function AssetCard({ asset, lang, t, onClick, onDelete }: {
         ) : (
           <img
             src={asset.cover_url} alt={asset.title}
+            loading="lazy"
+            decoding="async"
             style={{
               width: "100%",
               aspectRatio: asset.aspect_ratio === "9:16" || asset.aspect_ratio === "1024x1536" ? "9/16"
@@ -694,7 +781,7 @@ function AssetCard({ asset, lang, t, onClick, onDelete }: {
                 background: "rgba(0,0,0,0.5)",
                 border: "1px solid rgba(255,255,255,0.20)",
               }}>
-                <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={src} alt="" loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
             ))}
           </div>
