@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,20 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t, language } = useLanguage();
+
+  useEffect(() => {
+    const oauthError = searchParams.get("oauth_error");
+    if (!oauthError) return;
+    const message = language === "pt"
+      ? "O Google recusou a autenticação agora. Tente novamente em alguns segundos."
+      : language === "es"
+        ? "Google rechazó la autenticación por ahora. Inténtalo de nuevo en unos segundos."
+        : "Google sign-in failed for now. Try again in a few seconds.";
+    toast.error(message);
+    setSearchParams({}, { replace: true });
+  }, [language, searchParams, setSearchParams]);
 
   const handleGoogleLogin = async () => {
     setLoading(true);

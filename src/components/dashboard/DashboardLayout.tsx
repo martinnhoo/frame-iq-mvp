@@ -193,6 +193,21 @@ export default function DashboardLayout() {
   useEffect(() => {
     let mounted = true;
     const init = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const oauthError = hashParams.get("error_description") || hashParams.get("error");
+      if (oauthError) {
+        try {
+          await Promise.race([
+            supabase.auth.signOut({ scope: "local" }),
+            new Promise(resolve => setTimeout(resolve, 800)),
+          ]);
+        } catch {}
+        if (!mounted) return;
+        setLoading(false);
+        navigate(`/login?oauth_error=${encodeURIComponent(oauthError)}`, { replace: true });
+        return;
+      }
+
       // Try to get existing session — autoRefreshToken handles JWT renewal automatically
       let { data: { session } } = await supabase.auth.getSession();
 
