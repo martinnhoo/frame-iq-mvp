@@ -24,6 +24,7 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
 import { composeImage } from "@/lib/composeImageWithLicense";
+import { compressPngIfNeeded } from "@/lib/compressPng";
 import { saveHubAsset } from "@/lib/saveHubAsset";
 import type { Lang } from "@/data/hubBrands";
 
@@ -337,7 +338,17 @@ export default function HubPngGenerator() {
         return;
       }
 
-      const final = payload.image_url || null;
+      // Comprime pra ficar abaixo de 2MB — limite pra ser usado como
+      // elemento no Image Studio. Mantém PNG (preserva transparência),
+      // só escala dimensões se passar do limite.
+      let final = payload.image_url || null;
+      if (final) {
+        try {
+          final = await compressPngIfNeeded(final, 2 * 1024 * 1024);
+        } catch (e) {
+          console.warn("[png] compress skipped:", e);
+        }
+      }
       setImageUrl(final);
 
       // Persist no DB
