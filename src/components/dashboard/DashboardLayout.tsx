@@ -255,22 +255,9 @@ export default function DashboardLayout() {
           }
         }
 
-        // New user — redirect to onboarding (preserve redirect + checkout params)
-        if (!profileData.onboarding_completed) {
-          const dashParams = new URLSearchParams(window.location.search);
-          const checkoutParam = dashParams.get("checkout");
-          // Preserve full current path+search so onboarding can redirect back here after completion
-          const currentFullPath = window.location.pathname + window.location.search;
-          const onboardingParams = new URLSearchParams();
-          if (checkoutParam) onboardingParams.set("checkout", checkoutParam);
-          // If we're on a dashboard page with params (e.g. /dashboard/ai?from_demo=1), preserve as redirect
-          if (currentFullPath !== "/dashboard" && currentFullPath !== "/dashboard/") {
-            onboardingParams.set("redirect", currentFullPath);
-          }
-          const qs = onboardingParams.toString();
-          navigate(qs ? `/onboarding?${qs}` : "/onboarding");
-          return;
-        }
+        // Onboarding desligado — Hub é uso interno por convite. Antes
+        // redirecionava pra /onboarding com preservação de redirect+checkout
+        // params; com o pivot interno isso virou friction sem propósito.
       }
 
       // ── Process personas before showing UI ──

@@ -25,7 +25,7 @@ const Login = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin + "/dashboard",
+        redirectTo: window.location.origin + "/dashboard/hub",
       },
     });
     if (error) {
@@ -55,7 +55,10 @@ const Login = () => {
       }
     } else {
       trackEvent("login_completed");
-      navigate("/dashboard/ai");
+      // Pivot interno: /dashboard/hub é a home (BrilliantHub Painel).
+      // /dashboard/ai (Estrategista AdBrief) era usado quando AdBrief ainda
+      // era SaaS público — hoje não é a tela inicial.
+      navigate("/dashboard/hub");
     }
     setEmailLoading(false);
   };

@@ -317,10 +317,10 @@ export function AppLayout() {
             setLanguage(profileData.preferred_language as Parameters<typeof setLanguage>[0], false);
           }
         }
-        if (!profileData.onboarding_completed) {
-          navigate('/onboarding');
-          return;
-        }
+        // Onboarding desligado — Hub é uso interno por convite, sem
+        // questionário inicial. Quem entra cai direto no Painel.
+        // (Antes redirecionava pra /onboarding se profile.onboarding_completed
+        // = false; agora ignora a flag.)
       }
 
       fetchUsage(session.user.id);
