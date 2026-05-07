@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v10-status-fix-2026-05-07";
+const FN_VERSION = "v11-brand-edges-rescue-2026-05-07";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -126,6 +126,20 @@ function expandVariations(graph: Graph): Graph {
     const directDownstreamEdges = workGraph.edges.filter(e => e.source === vNode.id);
     const upstreamEdges = workGraph.edges.filter(e => e.target === vNode.id);
 
+    // BUG FIX: edges que vinham de FORA do subgraph variation (ex:
+    // brand → image-gen, prompt → image-gen quando variation está ao
+    // lado e não na linha do prompt) eram REMOVIDAS sem reconectar.
+    // Resultado: clones do image-gen ficavam SEM brand context, image
+    // gerada fora do estilo da marca.
+    // Solução: pra cada edge externa que apontava pra um node downstream,
+    // criar uma cópia apontando pra cada clone.
+    const externalEdgesToDownstream = workGraph.edges.filter(e =>
+      // Edge não vem de dentro do subgraph (source não é variation nem downstream)
+      e.source !== vNode.id && !downstreamIds.has(e.source) &&
+      // Edge aponta pra dentro do subgraph (target é downstream do variation)
+      downstreamIds.has(e.target)
+    );
+
     // Remove vNode + downstream originais + edges relacionadas
     let newNodes = workGraph.nodes.filter(n => n.id !== vNode.id && !downstreamIds.has(n.id));
     let newEdges = workGraph.edges.filter(e =>
@@ -180,6 +194,20 @@ function expandVariations(graph: Graph): Graph {
             targetHandle: e.targetHandle,
           });
         }
+      }
+
+      // Edges EXTERNAS que apontavam pra downstream (ex: brand → image-gen)
+      // — reconecta cada uma pra o clone correspondente.
+      for (const e of externalEdgesToDownstream) {
+        const cloneTarget = idMap.get(e.target);
+        if (!cloneTarget) continue;
+        newEdges.push({
+          id: `${e.id}_v${i}`,
+          source: e.source,           // mantém origem externa (brand, prompt etc)
+          sourceHandle: e.sourceHandle,
+          target: cloneTarget,        // aponta pro clone (n3_v0, n3_v1...)
+          targetHandle: e.targetHandle,
+        });
       }
 
       // Reconecta upstream → clone do direct downstream
@@ -1171,6 +1199,50 @@ Deno.serve(async (req) => {
         );
       }
       return jsonResponse({ _v: FN_VERSION, ok: true, resumed: true, run_id: resume_run_id }, 200);
+    }
+
+    // ── RESCUE STALE PATH ─────────────────────────────────────────────
+    // Frontend chama isso quando detecta run "running" há > 5min sem
+    // update. Faz 3 coisas:
+    //   1. Recomputa expansão pra ver quantos nodes deveria ter
+    //   2. Compara com outputs no DB
+    //   3. Se alguns ok: marca como "partial". Se nenhum: "failed".
+    //   4. Tenta self-resume (1 chance) caso seja só travamento curto.
+    const rescueRunId = (body as { rescue_stale_run_id?: string })?.rescue_stale_run_id;
+    if (rescueRunId) {
+      // Auth: precisa ser do user dono do run
+      const { data: userData } = await sb.auth.getUser(authToken);
+      if (!userData?.user) return jsonResponse({ _v: FN_VERSION, ok: false, error: "unauthorized" }, 401);
+      const { data: runRow } = await sb.from("hub_workflow_runs")
+        .select("id, workflow_id, user_id, inputs, status, outputs, started_at")
+        .eq("id", rescueRunId).maybeSingle();
+      if (!runRow) return jsonResponse({ _v: FN_VERSION, ok: false, error: "run_not_found" }, 404);
+      if (runRow.user_id !== userData.user.id) return jsonResponse({ _v: FN_VERSION, ok: false, error: "forbidden" }, 403);
+      if (runRow.status !== "running" && runRow.status !== "pending") {
+        return jsonResponse({ _v: FN_VERSION, ok: true, message: "already_terminal", status: runRow.status }, 200);
+      }
+      const ageMs = Date.now() - new Date(runRow.started_at as string || Date.now()).getTime();
+      if (ageMs < 60_000) {
+        // < 1min: provavelmente ainda processando, recusa rescue
+        return jsonResponse({ _v: FN_VERSION, ok: false, error: "too_young", ageMs }, 400);
+      }
+      const outs = (runRow.outputs as OutputsMap) || {};
+      const successCount = Object.keys(outs).length;
+      // Marca status final imediatamente
+      const finalStatus = successCount > 0 ? "partial" : "failed";
+      const finalError = successCount > 0
+        ? `Workflow ficou travado após ${Math.round(ageMs / 1000)}s. ${successCount} outputs salvos.`
+        : `Workflow não produziu outputs em ${Math.round(ageMs / 1000)}s.`;
+      await sb.from("hub_workflow_runs").update({
+        status: finalStatus,
+        ended_at: new Date().toISOString(),
+        error: JSON.stringify({ __rescue__: finalError }),
+      }).eq("id", rescueRunId);
+      console.log(`[execute-workflow] RESCUED stale run ${rescueRunId} as ${finalStatus} (${successCount} outputs, age ${ageMs}ms)`);
+      return jsonResponse({
+        _v: FN_VERSION, ok: true, rescued: true,
+        status: finalStatus, outputs_saved: successCount,
+      }, 200);
     }
 
     // ── NEW RUN PATH ──────────────────────────────────────────────────

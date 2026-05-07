@@ -343,6 +343,16 @@ export async function pollWorkflowRun(
   let consecutiveNulls = 0;
   const MAX_CONSECUTIVE_NULLS = 3;
 
+  // Stale detection: se status fica "running" por > STALE_THRESHOLD_MS
+  // sem que nodes_done aumente, dispara endpoint rescue_stale_run_id no
+  // server pra forçar finalização. Background tasks do Supabase Edge
+  // Functions às vezes morrem silenciosamente — esse rescue garante
+  // que o frontend não fica preso polando pra sempre.
+  const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 min sem progresso = stale
+  let lastProgressDone = -1;
+  let lastProgressAt = Date.now();
+  let rescueAttempted = false;
+
   while (Date.now() - startedAt < maxWallMs) {
     if (opts?.stopSignal?.aborted) return snap;
     const fresh = await getWorkflowRun(runId);
@@ -352,6 +362,23 @@ export async function pollWorkflowRun(
       onProgress(fresh);
       if (["succeeded", "partial", "failed"].includes(fresh.status)) {
         return fresh;
+      }
+      // Detecta stale: progresso não mudou nos últimos STALE_THRESHOLD_MS
+      if (fresh.nodes_done !== lastProgressDone) {
+        lastProgressDone = fresh.nodes_done;
+        lastProgressAt = Date.now();
+      } else if (
+        !rescueAttempted &&
+        Date.now() - lastProgressAt > STALE_THRESHOLD_MS &&
+        (fresh.status === "running" || fresh.status === "pending")
+      ) {
+        rescueAttempted = true;
+        console.warn(`[pollWorkflowRun] run ${runId} stale há ${Math.round((Date.now() - lastProgressAt) / 1000)}s. Disparando rescue.`);
+        try {
+          await triggerStaleRescue(runId);
+        } catch (e) {
+          console.warn(`[pollWorkflowRun] rescue failed:`, e);
+        }
       }
     } else {
       consecutiveNulls++;
@@ -373,4 +400,25 @@ export async function pollWorkflowRun(
     });
   }
   return snap;
+}
+
+// Dispara rescue endpoint pra forçar finalização de run travada.
+// Server marca status como "partial" (se houver outputs) ou "failed".
+async function triggerStaleRescue(runId: string): Promise<void> {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+  const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) throw new Error("no_session");
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/execute-workflow`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "apikey": ANON_KEY,
+    },
+    body: JSON.stringify({ rescue_stale_run_id: runId }),
+  });
+  const text = await r.text();
+  console.log(`[triggerStaleRescue] response status=${r.status} body=${text.slice(0, 200)}`);
 }
