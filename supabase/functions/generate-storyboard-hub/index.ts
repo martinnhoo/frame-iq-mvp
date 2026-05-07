@@ -15,7 +15,13 @@
 // Output esperado: 3-8 imagens visualmente coerentes que o user
 // pode baixar e juntar num editor de vídeo externo pra gerar o ad.
 
-const FN_VERSION = "v1-storyboard-2026-05-05";
+const FN_VERSION = "v2-storyboard-concurrency-2026-05-07";
+
+// Cap de concorrência pro OpenAI gpt-image-2.
+// OpenAI Tier 2 (verificado): 50 req/min. Cap em 5 paralelos ainda
+// respeita 5×60/8s = ~37 req/min com 1 imagem cada 8s. Seguro.
+// Sem cap, Promise.all dispara N=8 cenas de uma vez — 429 garantido.
+const SCENE_CONCURRENCY = 5;
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -228,22 +234,29 @@ Deno.serve(async (req) => {
 
     console.log(`[hub-storyboard] splitter ok — bible_len=${split.bible.length} scenes=${scenes.length}`);
 
-    // ── 2. Gera N cenas EM PARALELO ─────────────────────────────────
-    const results = await Promise.all(scenes.map(async s => {
-      const r = await generateScene({
-        apiKey: OPENAI_API_KEY,
-        prompt: s.prompt,
-        size,
-        quality,
-      });
-      const result: SceneResult = {
-        n: s.n,
-        prompt: s.prompt,
-        image_url: r.ok && r.b64 ? `data:image/png;base64,${r.b64}` : null,
-        error: r.error,
-      };
-      return result;
-    }));
+    // ── 2. Gera N cenas EM PARALELO (com cap de SCENE_CONCURRENCY) ──
+    // Sem cap: Promise.all dispara N=8 cenas → 429 OpenAI Tier 1.
+    // Com cap 5: 8 cenas viram 2 batches (5+3). Latência ~50s vs ~25s sem
+    // cap, mas sem rate-limit failures. Trade-off favorável.
+    const results: SceneResult[] = [];
+    for (let i = 0; i < scenes.length; i += SCENE_CONCURRENCY) {
+      const batch = scenes.slice(i, i + SCENE_CONCURRENCY);
+      const batchResults = await Promise.all(batch.map(async s => {
+        const r = await generateScene({
+          apiKey: OPENAI_API_KEY,
+          prompt: s.prompt,
+          size,
+          quality,
+        });
+        return {
+          n: s.n,
+          prompt: s.prompt,
+          image_url: r.ok && r.b64 ? `data:image/png;base64,${r.b64}` : null,
+          error: r.error,
+        } as SceneResult;
+      }));
+      results.push(...batchResults);
+    }
 
     const okCount = results.filter(r => r.image_url).length;
     if (okCount === 0) {

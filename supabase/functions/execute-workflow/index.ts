@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v8-variation-prompt-2026-05-07";
+const FN_VERSION = "v9-perf-budget145-conc5-2026-05-07";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -918,9 +918,13 @@ async function executeNode(
 //    image-gens com OpenAI rate limits.
 // 4. Idempotência: ler outputs/errors do DB no boot. Pula nodes já
 //    processados (re-invokes não duplicam trabalho).
-const HARD_BUDGET_MS = 130_000;     // sai antes do Supabase matar (150s)
-const RESERVE_FOR_REINVOKE_MS = 30_000; // bater self-call precisa tempo
-const NODE_CONCURRENCY = 3;          // OpenAI gpt-image-2 ~5 req/min
+// Supabase Edge Functions: hard limit 150s. Margem aumentada de 20s
+// pra 5s — re-invoke precisa só ~3s. Ganha 15s por iteração ⇒ workflows
+// grandes (50+ imgs) precisam menos re-invokes (cada um com overhead
+// de ~10s de boot+state load).
+const HARD_BUDGET_MS = 145_000;
+const RESERVE_FOR_REINVOKE_MS = 8_000;
+const NODE_CONCURRENCY = 5;          // OpenAI gpt-image-2 Tier 2 = 50 req/min, 5 paralelos é seguro
 const MAX_REINVOKES = 5;
 
 async function processWorkflow(

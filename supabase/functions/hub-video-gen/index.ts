@@ -39,7 +39,7 @@
 //
 // Timeout: 130s. Vídeos 5s-720p levam ~60-90s no PiAPI.
 
-const FN_VERSION = "v7-kling-3-spec-2026-05-07";
+const FN_VERSION = "v8-kling-poll-adaptive-2026-05-07";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -57,7 +57,12 @@ function jsonResponse(payload: unknown, status: number): Response {
 }
 
 const TOTAL_TIMEOUT_MS = 130_000;
-const POLL_INTERVAL_MS = 5_000;
+// Polling adaptive: 2s nos primeiros 30s (caso vídeo termine cedo —
+// raro mas reduz latência), depois 5s (normal). Vídeos 5-10s levam
+// 60-90s no Kling 3.0 std, então maioria do tempo fica no 5s.
+const POLL_INTERVAL_FAST_MS = 2_000;
+const POLL_INTERVAL_NORMAL_MS = 5_000;
+const POLL_FAST_WINDOW_MS = 30_000;
 
 // ── Provider: PiAPI Kling 3.0 ───────────────────────────────────────
 interface PiapiInput {
@@ -161,10 +166,16 @@ async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: num
   }
 
   // ── 2. Poll task status ───────────────────────────────────────────
-  // Poll a cada 5s até completed/failed ou timeout. Vídeos 5s-720p
-  // costumam levar 60-90s no PiAPI std mode.
+  // Adaptive polling: 2s nos primeiros 30s, depois 5s. Vídeos 5-10s no
+  // Kling 3.0 std levam 60-90s, então maior parte fica no 5s. O 2s
+  // inicial só pega os raros casos de vídeo curto que termina cedo.
+  const pollStart = Date.now();
   while (Date.now() < deadline) {
-    await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+    const elapsedSinceStart = Date.now() - pollStart;
+    const interval = elapsedSinceStart < POLL_FAST_WINDOW_MS
+      ? POLL_INTERVAL_FAST_MS
+      : POLL_INTERVAL_NORMAL_MS;
+    await new Promise(r => setTimeout(r, interval));
 
     let pollRes: Response;
     try {
