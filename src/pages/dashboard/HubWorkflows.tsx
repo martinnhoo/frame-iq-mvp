@@ -449,26 +449,130 @@ function rfToGraph(nodes: Node[], edges: Edge[]): WfGraph {
  * Aproximação: total ≈ nodes_count + (count-1) × downstream_size por image-gen
  *               + (values-1) × downstream_size por variation
  */
-function estimateNodeCountAfterExpansion(graph: WfGraph): number {
-  // Contagem básica + multiplicador heurístico
-  let total = graph.nodes.length;
-  for (const n of graph.nodes) {
+// Validação client antes de submeter pro server. Retorna string de erro
+// (1ª violação encontrada) ou null se OK. Antes: server retornava
+// "missing_prompt" / "missing_brand" depois de criar o run, com erros
+// genéricos que confundiam o user.
+function validateGraph(graph: WfGraph): string | null {
+  const nodes = graph.nodes;
+  if (nodes.length === 0) {
+    return "Workflow vazio. Adicione nós antes de rodar.";
+  }
+
+  // Indices úteis
+  const nodesById = new Map<string, WfNode>(nodes.map(n => [n.id, n]));
+  const incoming: Record<string, string[]> = {}; // sources que apontam pra cada node
+  for (const e of graph.edges) {
+    if (!incoming[e.target]) incoming[e.target] = [];
+    incoming[e.target].push(e.source);
+  }
+
+  // Pelo menos um sink (nó que produz output final): image-gen, video,
+  // voice, storyboard, bg-remove ou output. Se só tem brand+prompt sem
+  // gerador, não tem o que rodar.
+  const hasGenerator = nodes.some(n =>
+    ["image-gen", "video", "voice", "storyboard", "bg-remove", "output"].includes(n.type)
+  );
+  if (!hasGenerator) {
+    return "Adicione um nó gerador (Imagem, Vídeo, Voz, Storyboard) ou Salvar.";
+  }
+
+  // image-gen: precisa de prompt (próprio data.prompt OU input via edge)
+  for (const n of nodes) {
     if (n.type === "image-gen") {
-      const count = Math.max(1, Math.min(50, Number(n.data.count) || 1));
-      if (count > 1) {
-        // Adiciona (count-1) × tamanho do subgraph downstream
-        const downstreamCount = countDownstream(graph, n.id);
-        total += (count - 1) * (1 + downstreamCount); // +1 pelo próprio image-gen clonado
+      const ownPrompt = ((n.data?.prompt as string) || "").trim();
+      const hasPromptUpstream = (incoming[n.id] || []).some(srcId => {
+        const src = nodesById.get(srcId);
+        return src?.type === "prompt" || src?.type === "variation" || src?.type === "image-gen";
+      });
+      if (!ownPrompt && !hasPromptUpstream) {
+        return "Nó 'Gerar Imagem' precisa de um prompt (conecte um nó Prompt ou preencha o campo).";
       }
-    } else if (n.type === "variation") {
-      const values = Array.isArray(n.data.values) ? (n.data.values as string[]).length : 0;
-      if (values > 1) {
-        const downstreamCount = countDownstream(graph, n.id);
-        total += (values - 1) * downstreamCount;
+    }
+    if (n.type === "video") {
+      const ownPrompt = ((n.data?.prompt as string) || "").trim();
+      const hasUpstream = (incoming[n.id] || []).length > 0;
+      if (!ownPrompt && !hasUpstream) {
+        return "Nó 'Vídeo (Kling)' precisa de prompt ou imagem de origem.";
+      }
+    }
+    if (n.type === "voice") {
+      const ownText = ((n.data?.text as string) || "").trim();
+      const hasUpstream = (incoming[n.id] || []).length > 0;
+      if (!ownText && !hasUpstream) {
+        return "Nó 'Voz' precisa de texto (digite ou conecte um Prompt).";
+      }
+    }
+    if (n.type === "bg-remove" || n.type === "storyboard" || n.type === "output") {
+      // Esses nós precisam de pelo menos uma conexão upstream
+      if (!incoming[n.id] || incoming[n.id].length === 0) {
+        const labels: Record<string, string> = {
+          "bg-remove": "Remover Fundo",
+          "storyboard": "Storyboard",
+          "output": "Salvar",
+        };
+        return `Nó '${labels[n.type]}' não tá conectado a nada. Conecte uma origem.`;
       }
     }
   }
-  return total;
+
+  return null;
+}
+
+function estimateNodeCountAfterExpansion(graph: WfGraph): number {
+  // Estimativa que considera nesting: variation acima de image-gen-com-
+  // -count multiplica os clones. Antes, o estimate fazia variation E
+  // image-gen separadamente — quando havia ambos no mesmo branch, o
+  // total real do server (variation × count) ficava muito maior que o
+  // estimado (variation + count), causando barra de progresso travada.
+  //
+  // Estratégia: pra cada node com count > 1 (image-gen) ou values > 1
+  // (variation), calcula (multiplier - 1) × subgraphSize. Mas se há
+  // ANCESTRAL com multiplier, multiplica subgraphSize por todos os
+  // ancestrais multiplicadores também. Aproximação OK pra casos lineares.
+  const getMultiplier = (n: WfNode): number => {
+    if (n.type === "image-gen") {
+      return Math.max(1, Math.min(50, Number(n.data.count) || 1));
+    }
+    if (n.type === "variation") {
+      return Array.isArray(n.data.values) ? (n.data.values as string[]).length : 1;
+    }
+    return 1;
+  };
+
+  // Pra cada node, retorna o produto dos multipliers de seus ancestrais.
+  // Aplicado ao próprio multiplier do node, dá quantos clones ele vira.
+  const ancestorMultiplier = (nodeId: string): number => {
+    let mult = 1;
+    const visited = new Set<string>();
+    const stack: string[] = [];
+    for (const e of graph.edges) {
+      if (e.target === nodeId) stack.push(e.source);
+    }
+    while (stack.length) {
+      const id = stack.pop()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      const ancestor = graph.nodes.find(n => n.id === id);
+      if (ancestor) {
+        const m = getMultiplier(ancestor);
+        if (m > 1) mult *= m;
+      }
+      for (const e of graph.edges) {
+        if (e.target === id) stack.push(e.source);
+      }
+    }
+    return mult;
+  };
+
+  let total = 0;
+  for (const n of graph.nodes) {
+    const ownMult = getMultiplier(n);
+    const ancMult = ancestorMultiplier(n.id);
+    // Cada nó vira `ancMult × ownMult` clones (1 se não houver multiplier)
+    total += ancMult * Math.max(1, ownMult);
+  }
+  return Math.max(graph.nodes.length, total);
 }
 
 function countDownstream(graph: WfGraph, fromId: string): number {
@@ -518,6 +622,31 @@ function HubWorkflowsInner() {
   // Ref pra ID da notificação ativa (do run em andamento). Cada run cria
   // uma nova; updates apontam pra essa. Usar ref evita re-render quando muda.
   const currentRunNotifId = useRef<string | null>(null);
+
+  // AbortController do polling em andamento. Ao desmontar a page (user
+  // navega pra outra rota), aborta limpo evitando setState em component
+  // desmontado + setTimeout pendente.
+  const pollAbortRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    return () => {
+      pollAbortRef.current?.abort();
+    };
+  }, []);
+
+  // Detecta unsaved changes pra mostrar dot vermelho no botão Save.
+  // Snapshot do que tá no servidor (após open ou save) vs estado atual
+  // dos React Flow nodes/edges + name + brand. Diff = unsaved.
+  const savedSnapshot = useRef<string | null>(null);
+  const currentSnapshot = useMemo(() => {
+    if (!activeWf) return null;
+    return JSON.stringify({
+      name,
+      brand: workflowBrandId,
+      nodes: nodes.map(n => ({ id: n.id, type: n.type, position: n.position, data: n.data })),
+      edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target, sourceHandle: e.sourceHandle, targetHandle: e.targetHandle })),
+    });
+  }, [activeWf, name, workflowBrandId, nodes, edges]);
+  const unsaved = !!(activeWf && savedSnapshot.current && currentSnapshot && savedSnapshot.current !== currentSnapshot);
 
   // Mobile: sidebar esquerda (templates/lista) e painel direito (config nó)
   // viram overlays — escondidos por padrão, abertos via toggle/seleção.
@@ -645,6 +774,13 @@ function HubWorkflowsInner() {
       setSelectedNodeId(null);
       setRunResult(null);
       setRunError(null);
+      // Marca snapshot inicial como "salvo" pra unsaved tracker comparar
+      savedSnapshot.current = JSON.stringify({
+        name: toLoad.name,
+        brand: toLoad.brand_id || "none",
+        nodes: rfNodes.map(n => ({ id: n.id, type: n.type, position: n.position, data: n.data })),
+        edges: rfEdges.map(e => ({ id: e.id, source: e.source, target: e.target, sourceHandle: e.sourceHandle, targetHandle: e.targetHandle })),
+      });
     } catch (e) {
       const msg = (e as Error).message || "erro desconhecido";
       // Mensagem amigável pra timeout do DB (caso comum quando Supabase
@@ -688,6 +824,8 @@ function HubWorkflowsInner() {
       await updateWorkflowGraph(activeWf.id, graph, name, workflowBrandId === "none" ? null : workflowBrandId);
       const mine = await listMyWorkflows();
       setMyWorkflows(mine);
+      // Atualiza snapshot pra apagar dot de unsaved
+      savedSnapshot.current = currentSnapshot;
       toast.success("Salvo");
     } catch (e) {
       const msg = (e as Error).message || "erro";
@@ -716,16 +854,36 @@ function HubWorkflowsInner() {
   // Persistência da run: salva run_id+total em localStorage por workflow.
   // Server processa em background (EdgeRuntime.waitUntil) — sai/volta na
   // aba, run continua. Ao abrir o workflow de novo, retomamos o polling.
+  //
+  // Multi-tab safety: tabSessionId é gerado uma vez por aba (sessionStorage
+  // não é compartilhado entre abas, então cada aba tem o seu). Ao salvar
+  // um run, gravamos o tabSessionId que o criou. Ao restaurar, só restaura
+  // se a aba atual é a mesma que criou OU se passaram >2 min sem update
+  // (caso a aba criadora fechou). Antes: aba B abria o workflow e tentava
+  // polar runs criadas pela aba A, causando jitter ou polling fantasma.
+  const tabSessionId = useMemo(() => {
+    try {
+      let id = sessionStorage.getItem("hub_tab_session_id");
+      if (!id) {
+        id = `tab-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        sessionStorage.setItem("hub_tab_session_id", id);
+      }
+      return id;
+    } catch { return `tab-${Date.now()}`; }
+  }, []);
+
   const runStorageKey = (workflowId: string) => `hub_active_run_${workflowId}`;
   const saveActiveRun = (workflowId: string, runId: string, total: number) => {
     try {
-      localStorage.setItem(runStorageKey(workflowId), JSON.stringify({ runId, total, ts: Date.now() }));
+      localStorage.setItem(runStorageKey(workflowId), JSON.stringify({
+        runId, total, ts: Date.now(), tabId: tabSessionId,
+      }));
     } catch { /* quota? ignore */ }
   };
   const clearActiveRun = (workflowId: string) => {
     try { localStorage.removeItem(runStorageKey(workflowId)); } catch { /* ignore */ }
   };
-  const readActiveRun = (workflowId: string): { runId: string; total: number; ts: number } | null => {
+  const readActiveRun = (workflowId: string): { runId: string; total: number; ts: number; tabId?: string } | null => {
     try {
       const raw = localStorage.getItem(runStorageKey(workflowId));
       if (!raw) return null;
@@ -736,6 +894,12 @@ function HubWorkflowsInner() {
         localStorage.removeItem(runStorageKey(workflowId));
         return null;
       }
+      // Multi-tab: só restaura se essa aba criou OU se foi salvo há >2min
+      // (heurística: aba criadora provavelmente fechou). Evita 2 abas
+      // polando mesma run em paralelo.
+      const isOurs = parsed.tabId === tabSessionId;
+      const isStale = Date.now() - (parsed.ts || 0) > 2 * 60 * 1000;
+      if (!isOurs && !isStale) return null;
       return parsed;
     } catch { return null; }
   };
@@ -747,6 +911,10 @@ function HubWorkflowsInner() {
    */
   const pollAndApplyResult = async (runId: string, total: number) => {
     setRunProgress({ done: 0, failed: 0, total, status: "pending" });
+    // Cancela polling anterior se houver, cria novo controller pra essa run
+    pollAbortRef.current?.abort();
+    pollAbortRef.current = new AbortController();
+    const stopSignal = pollAbortRef.current.signal;
     const finalSnap = await pollWorkflowRun(runId, (snap) => {
       setRunProgress({
         done: snap.nodes_done,
@@ -760,7 +928,7 @@ function HubWorkflowsInner() {
           progress: { done: snap.nodes_done, total, failed: snap.nodes_failed },
         });
       }
-    });
+    }, { stopSignal });
     if (!finalSnap) {
       // Run sumiu do servidor (foi limpa, expirou, ou nunca existiu —
       // stale localStorage). Limpa pra não tentar de novo no próximo
@@ -821,12 +989,23 @@ function HubWorkflowsInner() {
 
   const runActive = async () => {
     if (!activeWf || running) return;
-    setRunning(true);
     setRunError(null);
     setRunResult(null);
     setRunProgress(null);
+
+    // Validação client antes de submeter — evita ir até server pra
+    // descobrir que o workflow tá quebrado. Mensagens claras e específicas.
+    const graphPre = rfToGraph(nodes, edges);
+    const validationError = validateGraph(graphPre);
+    if (validationError) {
+      setRunError(validationError);
+      toast.error(validationError);
+      return;
+    }
+
+    setRunning(true);
     try {
-      const graph = rfToGraph(nodes, edges);
+      const graph = graphPre;
       await updateWorkflowGraph(activeWf.id, graph, name, workflowBrandId === "none" ? null : workflowBrandId);
 
       const totalEstimate = estimateNodeCountAfterExpansion(graph);
@@ -975,8 +1154,24 @@ function HubWorkflowsInner() {
               </span>
               <ChevronDown size={10} style={{ opacity: 0.6, flexShrink: 0 }} />
             </button>
-            <button onClick={saveActive} style={btnSecondary} title={t("save")}>
+            <button
+              onClick={saveActive}
+              style={{
+                ...btnSecondary,
+                position: "relative",
+                ...(unsaved ? { borderColor: "rgba(234,179,8,0.40)", color: "#FACC15" } : {}),
+              }}
+              title={unsaved ? "Mudanças não salvas" : t("save")}
+            >
               <Save size={13} /> {!isMobile && t("save")}
+              {unsaved && (
+                <span style={{
+                  position: "absolute", top: 4, right: 4,
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: "#FACC15",
+                  boxShadow: "0 0 0 2px #0a0b10",
+                }} />
+              )}
             </button>
             <button onClick={runActive} disabled={running} style={btnPrimary} title={t("run")}>
               {running ? <Loader size={13} className="spin" /> : <Play size={13} />}
@@ -1185,7 +1380,10 @@ function HubWorkflowsInner() {
               <button onClick={() => setRunError(null)} style={{ ...btnSecondary, marginTop: 10 }}>{t("close")}</button>
             </div>
           ) : selectedNode ? (
+            // key={selectedNode.id} força remount ao trocar de nó —
+            // evita reuso de form state com dados do nó anterior.
             <NodeConfigPanel
+              key={selectedNode.id}
               node={selectedNode}
               onUpdate={updateSelectedData}
               onDelete={() => {
@@ -1299,6 +1497,14 @@ function HubWorkflowsInner() {
         @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
         .spin { animation: spin 0.8s linear infinite; }
         .react-flow__renderer { background: #06070a; }
+        /* Mobile: handles maiores pra touch (default ReactFlow ~6px é
+           inalcançável). Em desktop mantém o tamanho fino do design. */
+        @media (max-width: 768px) {
+          .react-flow__handle {
+            width: 16px !important;
+            height: 16px !important;
+          }
+        }
       `}</style>
     </div>
   );

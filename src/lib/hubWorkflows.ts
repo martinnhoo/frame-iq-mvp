@@ -360,7 +360,17 @@ export async function pollWorkflowRun(
         return null;
       }
     }
-    await new Promise(r => setTimeout(r, intervalMs));
+    // Sleep cancelable: se o stopSignal for abortado durante o sleep,
+    // resolve imediatamente em vez de esperar o intervalo todo. Antes
+    // ficava 2.5s segurando o loop mesmo após user sair da página.
+    await new Promise<void>(resolve => {
+      const timer = setTimeout(resolve, intervalMs);
+      const onAbort = () => { clearTimeout(timer); resolve(); };
+      if (opts?.stopSignal) {
+        if (opts.stopSignal.aborted) { clearTimeout(timer); resolve(); return; }
+        opts.stopSignal.addEventListener("abort", onAbort, { once: true });
+      }
+    });
   }
   return snap;
 }

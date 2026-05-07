@@ -403,6 +403,33 @@ function collectNodeInputs(node: GraphNode, graph: Graph, outputs: OutputsMap): 
   return flat;
 }
 
+// Retorna true se ALGUM ancestral direto/indireto de `node` falhou (está em
+// errors). Usado pra evitar cascata: se imagem upstream falhou, o save
+// downstream não tenta rodar com input undefined — vira blocked com
+// mensagem clara em vez de gerar erro genérico tipo missing_asset.
+function hasFailedAncestor(
+  nodeId: string,
+  graph: Graph,
+  errors: Record<string, string>,
+): string | null {
+  const visited = new Set<string>();
+  const stack: string[] = [];
+  // Coleta ancestrais imediatos
+  for (const e of graph.edges) {
+    if (e.target === nodeId) stack.push(e.source);
+  }
+  while (stack.length > 0) {
+    const id = stack.pop()!;
+    if (visited.has(id)) continue;
+    visited.add(id);
+    if (errors[id]) return id; // achou ancestral falho
+    for (const e of graph.edges) {
+      if (e.target === id) stack.push(e.source);
+    }
+  }
+  return null;
+}
+
 // ── Node executors ──────────────────────────────────────────────────
 // Cada executor recebe { node, inputs, ctx } e retorna o output.
 // Throw em caso de erro fatal — o caller marca o nó como failed.
@@ -781,11 +808,26 @@ async function processWorkflow(
 
   try {
     for (const level of levels) {
+      // Separa nós em executáveis vs blocked-by-upstream antes de executar.
+      // Antes da fix: nó downstream rodava com input undefined e dava erro
+      // genérico (missing_asset, undefined.image_url). Agora: marca como
+      // upstream_failed pra UI mostrar causa real.
+      const executable: GraphNode[] = [];
+      for (const node of level) {
+        const failedAncestor = hasFailedAncestor(node.id, graph, errors);
+        if (failedAncestor) {
+          errors[node.id] = `upstream_failed:${failedAncestor}`;
+          console.warn(`[execute-workflow] node ${node.id} (${node.type}) blocked: upstream ${failedAncestor} failed`);
+        } else {
+          executable.push(node);
+        }
+      }
+
       const results = await Promise.allSettled(
-        level.map(node => executeNode(node, graph, outputs, ctx))
+        executable.map(node => executeNode(node, graph, outputs, ctx))
       );
-      for (let i = 0; i < level.length; i++) {
-        const node = level[i];
+      for (let i = 0; i < executable.length; i++) {
+        const node = executable[i];
         const r = results[i];
         if (r.status === "fulfilled") {
           outputs[node.id] = r.value;
