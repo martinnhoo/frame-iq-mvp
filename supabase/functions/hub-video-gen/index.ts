@@ -389,6 +389,39 @@ Deno.serve(async (req) => {
       }, 502);
     }
 
+    // ── Download do vídeo + upload pro Supabase Storage ──────────────
+    // PiAPI NÃO garante storage permanente em storage.theapi.app — URLs
+    // podem expirar. Fazemos download e re-upload pro nosso bucket pra
+    // garantir que o asset fica acessível depois.
+    // Se falhar, fica com a URL do PiAPI como fallback.
+    let finalVideoUrl = result.video_url;
+    try {
+      const videoRes = await fetch(result.video_url);
+      if (videoRes.ok) {
+        const videoBlob = await videoRes.blob();
+        const videoSizeMB = (videoBlob.size / 1024 / 1024).toFixed(2);
+        const path = `${authUser.id}/videos/${crypto.randomUUID()}.mp4`;
+        const { error: upErr } = await sb.storage.from("hub-images").upload(path, videoBlob, {
+          contentType: videoBlob.type || "video/mp4",
+          cacheControl: "3600",
+          upsert: false,
+        });
+        if (upErr) {
+          console.warn(`[hub-video] storage upload failed (using piapi URL): ${upErr.message}`);
+        } else {
+          const { data: urlData } = sb.storage.from("hub-images").getPublicUrl(path);
+          if (urlData?.publicUrl) {
+            finalVideoUrl = urlData.publicUrl;
+            console.log(`[hub-video] uploaded to storage (${videoSizeMB} MB): ${path}`);
+          }
+        }
+      } else {
+        console.warn(`[hub-video] download from PiAPI failed status=${videoRes.status}, using piapi URL`);
+      }
+    } catch (e) {
+      console.warn(`[hub-video] storage upload exception (using piapi URL): ${String(e).slice(0, 150)}`);
+    }
+
     // ── Persiste em hub_assets ──────────────────────────────────────
     let memoryId: string | null = null;
     try {
@@ -399,8 +432,9 @@ Deno.serve(async (req) => {
           content: {
             prompt: prompt.trim(),
             final_prompt: finalPrompt,
-            video_url: result.video_url,
-            image_url: normalizedImageUrl, // input image (image-to-video) ou null (text-to-video)
+            video_url: finalVideoUrl,            // Storage URL (ou PiAPI fallback)
+            piapi_url: result.video_url,         // backup pra debug/recover
+            image_url: normalizedImageUrl,       // input image (image-to-video) ou null
             duration_s: result.duration_s,
             aspect_ratio,
             resolution,
@@ -408,7 +442,7 @@ Deno.serve(async (req) => {
             enable_audio,
             provider,
             task_id: result.task_id,
-            model: "kling-2.6",
+            model: "kling-3.0",
             brand_id: brand_id || null,
             market: market || null,
           },
@@ -425,12 +459,12 @@ Deno.serve(async (req) => {
       console.error("[hub-video] DB exception:", dbErr);
     }
 
-    console.log(`[hub-video] success — provider=${provider} memory_id=${memoryId} video=${result.video_url.slice(0, 80)}`);
+    console.log(`[hub-video] success — provider=${provider} memory_id=${memoryId} stored=${finalVideoUrl !== result.video_url} url=${finalVideoUrl.slice(0, 80)}`);
 
     return jsonResponse({
       _v: FN_VERSION,
       ok: true,
-      video_url: result.video_url,
+      video_url: finalVideoUrl,                  // URL persistente
       memory_id: memoryId,
       duration_s: result.duration_s,
       aspect_ratio,
@@ -439,7 +473,7 @@ Deno.serve(async (req) => {
       enable_audio,
       provider,
       task_id: result.task_id,
-      model: "kling-2.6",
+      model: "kling-3.0",
       brand_id: brand_id || null,
       market: market || null,
     }, 200);
