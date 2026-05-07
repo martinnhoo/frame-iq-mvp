@@ -464,16 +464,26 @@ export default function HubVideoGenerator() {
             {/* Duration */}
             <div style={section}>
               <div style={sectionLabel}>{t("duration")}</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <input
-                  type="range"
-                  min={3}
-                  max={15}
-                  value={duration}
-                  onChange={e => setDuration(Number(e.target.value))}
-                  style={{ flex: 1, accentColor: "#8B5CF6" }}
-                />
-                <span style={{ fontSize: 12, fontWeight: 700, minWidth: 30, color: "#A78BFA" }}>{duration}s</span>
+              <div style={{ display: "flex", gap: 6 }}>
+                {[5, 10].map(d => (
+                  <button
+                    key={d}
+                    onClick={() => setDuration(d)}
+                    style={{
+                      flex: 1,
+                      padding: "10px 12px",
+                      borderRadius: 8,
+                      border: duration === d ? "1px solid #A78BFA" : "1px solid rgba(255,255,255,0.08)",
+                      background: duration === d ? "rgba(139,92,246,0.18)" : "rgba(255,255,255,0.02)",
+                      color: duration === d ? "#A78BFA" : "rgba(255,255,255,0.7)",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {d}s
+                  </button>
+                ))}
               </div>
             </div>
 
