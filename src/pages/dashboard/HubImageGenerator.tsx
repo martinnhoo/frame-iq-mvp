@@ -40,6 +40,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { compositeElements, ASPECT_DIMS } from "@/lib/compositeElements";
 import { addHubNotification } from "@/lib/hubNotifications";
+import { startGenProgress, type GenProgressController } from "@/lib/genProgress";
 import { saveHubAsset } from "@/lib/saveHubAsset";
 import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
 import {
@@ -586,12 +587,39 @@ export default function HubImageGenerator() {
     setNeedsVerify(false);
     setLoading(true);
     setResult(null);
+
+    // Notificação live com barra de progresso. ~30s estimado pra gpt-image-2.
+    let progressCtrl: GenProgressController | null = null;
+    const titleByLang: Record<Lang, string> = {
+      pt: "Gerando imagem...",
+      en: "Generating image...",
+      es: "Generando imagen...",
+      zh: "正在生成图像…",
+    };
+    const stageByLang = (key: "prep" | "ai" | "compose" | "save"): string => {
+      const map: Record<typeof key, Record<Lang, string>> = {
+        prep: { pt: "Preparando", en: "Preparing", es: "Preparando", zh: "正在准备" },
+        ai: { pt: "Chamando IA (gpt-image-2)", en: "Calling AI (gpt-image-2)", es: "Llamando IA (gpt-image-2)", zh: "调用 AI (gpt-image-2)" },
+        compose: { pt: "Aplicando marca + disclaimer", en: "Applying brand + disclaimer", es: "Aplicando marca + disclaimer", zh: "应用品牌 + 免责声明" },
+        save: { pt: "Salvando na Biblioteca", en: "Saving to Library", es: "Guardando en Biblioteca", zh: "保存到资源库" },
+      };
+      return map[key][lang];
+    };
+
     try {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) { setError(t("sessionExpired")); return; }
+
+      // Inicia notif com progresso (depois do session check pra ter user_id)
+      const userId = sessionData?.session?.user?.id;
+      progressCtrl = startGenProgress(userId, {
+        title: titleByLang[lang],
+        estimateMs: 32_000, // gpt-image-2 leva 25-45s
+        stage: stageByLang("prep"),
+      });
 
       let brandHint = brand?.promptHint || "";
       if (marketCode && HUB_MARKETS[marketCode]?.promptContext) {
@@ -641,6 +669,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
           return;
         }
       }
+      progressCtrl?.setStage(stageByLang("ai"));
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
         method: "POST",
         headers: {
@@ -673,11 +702,13 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
       if (!r.ok || !payload?.ok) {
         if (payload?.error === "needs_org_verification") {
           setNeedsVerify(true);
+          progressCtrl?.fail("OpenAI org verification required");
           return;
         }
         const detail = payload?.openai_message || payload?.message || payload?.error || text || `HTTP ${r.status}`;
         const versionTag = payload?._v ? ` [fn=${payload._v}]` : " [fn=desconhecida]";
         setError((detail + versionTag).slice(0, 500));
+        progressCtrl?.fail(detail);
         return;
       }
 
@@ -686,6 +717,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
         (hasLicense && includeLicense && licenseText.trim()) ||
         (effectiveLogoUrl && includeLogo);
       if (willCompose) {
+        progressCtrl?.setStage(stageByLang("compose"));
         try {
           const composedDataUrl = await composeImage(payload.image_url!, {
             licenseText: hasLicense && includeLicense ? licenseText.trim() : null,
@@ -698,6 +730,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
         }
       }
 
+      progressCtrl?.setStage(stageByLang("save"));
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -745,27 +778,28 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
       }, ...prev].slice(0, 12));
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         const brandLabel = brand && brand.id !== "none" && marketCode
           ? `${brand.name} · ${HUB_MARKETS[marketCode].flag} ${getMarketLabel(marketCode, lang)}`
           : null;
-        const titleByLang: Record<Lang, string> = {
-          pt: "Nova imagem pronta",
-          en: "New image ready",
-          es: "Nueva imagen lista",
-          zh: "新图像已生成",
+        const doneTitleByLang: Record<Lang, string> = {
+          pt: "Imagem pronta",
+          en: "Image ready",
+          es: "Imagen lista",
+          zh: "图像已生成",
         };
         const promptPreview = prompt.trim().slice(0, 80) + (prompt.trim().length > 80 ? "…" : "");
         const desc = brandLabel ? `${brandLabel} · ${promptPreview}` : promptPreview;
-        addHubNotification(user?.id, {
-          kind: "image_generated",
-          title: titleByLang[lang],
+        progressCtrl?.complete({
+          title: doneTitleByLang[lang],
           description: desc,
           href: "/dashboard/hub/library",
+          kind: "image_generated",
         });
       } catch { /* silent */ }
     } catch (e) {
-      setError(String(e).slice(0, 300));
+      const msg = String(e).slice(0, 300);
+      setError(msg);
+      progressCtrl?.fail(msg);
     } finally {
       setLoading(false);
     }

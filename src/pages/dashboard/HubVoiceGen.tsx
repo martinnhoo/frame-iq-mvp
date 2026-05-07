@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
+import { startGenProgress, type GenProgressController } from "@/lib/genProgress";
 import { saveHubAsset } from "@/lib/saveHubAsset";
 import type { Lang } from "@/data/hubBrands";
 
@@ -231,6 +232,11 @@ export default function HubVoiceGen() {
     setResult(null);
     setPlaying(false);
 
+    let progressCtrl: GenProgressController | null = null;
+    const titleByLang: Record<Lang, string> = {
+      pt: "Gerando voz...", en: "Generating voice...", es: "Generando voz...", zh: "正在生成语音...",
+    };
+
     try {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -238,6 +244,12 @@ export default function HubVoiceGen() {
       const token = sessionData?.session?.access_token;
       const { data: { user } } = await supabase.auth.getUser();
       if (!token || !user) { setError(t("sessionExpired")); setLoading(false); return; }
+      progressCtrl = startGenProgress(user.id, {
+        title: titleByLang[lang],
+        // ElevenLabs ~1.5s por 10 chars, mín 5s
+        estimateMs: Math.max(5_000, text.length * 150),
+        stage: `${selectedVoice.name} · ${text.length} chars`,
+      });
 
       const r = await fetch(`${SUPABASE_URL}/functions/v1/hub-voice-gen`, {
         method: "POST",
@@ -261,6 +273,7 @@ export default function HubVoiceGen() {
       if (!r.ok || !payload?.ok) {
         const detail = payload?.message || payload?.error || `HTTP ${r.status}`;
         setError(detail.slice(0, 400));
+        progressCtrl?.fail(detail);
         setLoading(false);
         return;
       }
@@ -304,20 +317,22 @@ export default function HubVoiceGen() {
         created_at: new Date().toISOString(),
       }, ...prev].slice(0, 8));
 
-      // Notif
+      // Notif (com progresso completo)
       try {
-        const titleByLang: Record<Lang, string> = {
+        const doneByLang: Record<Lang, string> = {
           pt: "Voz gerada", en: "Voice generated", es: "Voz generada", zh: "语音已生成",
         };
-        addHubNotification(user.id, {
+        progressCtrl?.complete({
           kind: "image_generated",
-          title: titleByLang[lang],
+          title: doneByLang[lang],
           description: `${selectedVoice.name} · ${newResult.characters} ${t("characters")}`,
-          href: "/dashboard/hub/voice",
+          href: "/dashboard/hub/library",
         });
       } catch { /* silent */ }
     } catch (e) {
-      setError(String(e).slice(0, 300));
+      const msg = String(e).slice(0, 300);
+      setError(msg);
+      progressCtrl?.fail(msg);
     } finally {
       setLoading(false);
     }

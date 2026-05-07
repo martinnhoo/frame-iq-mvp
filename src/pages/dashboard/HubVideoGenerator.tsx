@@ -28,6 +28,7 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
+import { startGenProgress, type GenProgressController } from "@/lib/genProgress";
 
 // ── i18n minimal — Hub só usa pt/en/es/zh ─────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -239,12 +240,29 @@ export default function HubVideoGenerator() {
     setError(null);
     setLoading(true);
     setResult(null);
+
+    let progressCtrl: GenProgressController | null = null;
+    const titleByLang: Record<Lang, string> = {
+      pt: `Gerando vídeo Kling (${duration}s)...`,
+      en: `Generating Kling video (${duration}s)...`,
+      es: `Generando video Kling (${duration}s)...`,
+      zh: `正在生成 Kling 视频 (${duration}秒)...`,
+    };
+
     try {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) { setError(t("sessionExpired")); setLoading(false); return; }
+      // Estimativa: Kling 3.0 std ~10s, pro ~15s por segundo de vídeo gerado
+      // 5s de vídeo → ~50-80s de processamento
+      const estimateMs = duration * (mode === "pro" ? 15_000 : 10_000);
+      progressCtrl = startGenProgress(sessionData?.session?.user?.id, {
+        title: titleByLang[lang],
+        estimateMs,
+        stage: lang === "pt" ? "Enviando pra Kling 3.0" : lang === "es" ? "Enviando a Kling 3.0" : lang === "zh" ? "发送到 Kling 3.0" : "Sending to Kling 3.0",
+      });
 
       // Build brand hint (mesma lógica do Image Generator)
       let brandHint = brand?.promptHint || "";
@@ -283,9 +301,15 @@ export default function HubVideoGenerator() {
       });
       const text = await r.text();
       let payload: { ok?: boolean; video_url?: string; memory_id?: string; duration_s?: number; message?: string; error?: string };
-      try { payload = JSON.parse(text); } catch { setError(`Resposta inválida: ${text.slice(0, 150)}`); return; }
+      try { payload = JSON.parse(text); } catch {
+        setError(`Resposta inválida: ${text.slice(0, 150)}`);
+        progressCtrl?.fail(`Resposta inválida: ${text.slice(0, 100)}`);
+        return;
+      }
       if (!payload.ok || !payload.video_url) {
-        setError(payload.message || payload.error || "Falha na geração");
+        const msg = payload.message || payload.error || "Falha na geração";
+        setError(msg);
+        progressCtrl?.fail(msg);
         return;
       }
       const asset: VideoAsset = {
@@ -301,8 +325,22 @@ export default function HubVideoGenerator() {
       };
       setResult(asset);
       reloadGallery();
+      const doneByLang: Record<Lang, string> = {
+        pt: "Vídeo pronto",
+        en: "Video ready",
+        es: "Video listo",
+        zh: "视频已生成",
+      };
+      progressCtrl?.complete({
+        title: doneByLang[lang],
+        description: `${asset.duration_s}s · ${asset.aspect_ratio} · ${prompt.trim().slice(0, 60)}`,
+        href: "/dashboard/hub/library",
+        kind: "image_generated",
+      });
     } catch (e) {
-      setError(String(e).slice(0, 200));
+      const msg = String(e).slice(0, 200);
+      setError(msg);
+      progressCtrl?.fail(msg);
     } finally {
       setLoading(false);
     }

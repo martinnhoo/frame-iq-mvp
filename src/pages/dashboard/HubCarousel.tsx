@@ -25,6 +25,7 @@ import {
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
+import { startGenProgress, type GenProgressController } from "@/lib/genProgress";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { CustomLogoUpload } from "@/components/dashboard/CustomLogoUpload";
 import { saveHubAssets } from "@/lib/saveHubAsset";
@@ -157,12 +158,26 @@ export default function HubCarousel() {
     setNeedsVerify(false);
     setLoading(true);
     setSlides(null);
+
+    let progressCtrl: GenProgressController | null = null;
+    const titleByLang: Record<Lang, string> = {
+      pt: `Gerando carrossel (${slideCount} slides)...`,
+      en: `Generating carousel (${slideCount} slides)...`,
+      es: `Generando carrusel (${slideCount} slides)...`,
+      zh: `正在生成轮播 (${slideCount} 张)...`,
+    };
+
     try {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) { setError(t("sessionExpired")); return; }
+      progressCtrl = startGenProgress(sessionData?.session?.user?.id, {
+        title: titleByLang[lang],
+        estimateMs: slideCount * 25_000,
+        stage: lang === "pt" ? "Quebrando script em slides" : lang === "es" ? "Dividiendo script en slides" : lang === "zh" ? "将剧本拆分为幻灯片" : "Breaking script into slides",
+      });
 
       let brandHint = brand?.promptHint || "";
       if (marketCode && HUB_MARKETS[marketCode]?.promptContext) {
@@ -199,12 +214,15 @@ export default function HubCarousel() {
       try { payload = JSON.parse(text); } catch {}
 
       if (!r.ok || !payload?.ok) {
-        if (payload?.error === "needs_org_verification") { setNeedsVerify(true); return; }
-        setError((payload?.message || payload?.error || `HTTP ${r.status}`).slice(0, 400));
+        if (payload?.error === "needs_org_verification") { setNeedsVerify(true); progressCtrl?.fail("OpenAI org verification required"); return; }
+        const msg = (payload?.message || payload?.error || `HTTP ${r.status}`).slice(0, 400);
+        setError(msg);
+        progressCtrl?.fail(msg);
         return;
       }
 
       const raw = payload.scenes || [];
+      progressCtrl?.setStage(lang === "pt" ? "Aplicando logo + salvando" : lang === "es" ? "Aplicando logo + guardando" : lang === "zh" ? "应用 logo + 保存" : "Applying logo + saving");
       const willCompose = (effectiveLogoUrl && includeLogo) || (hasLicense && includeLicense && licenseText.trim());
       let final = raw;
       if (willCompose) {
@@ -254,17 +272,18 @@ export default function HubCarousel() {
             })));
         }
 
-        const { data: { user: u2 } } = await supabase.auth.getUser();
         const ok = final.filter(s => s.image_url).length;
-        addHubNotification(u2?.id, {
+        progressCtrl?.complete({
           kind: "image_generated",
           title: t("notif"),
           description: `${ok} ${t("slide").toLowerCase()}${ok > 1 ? "s" : ""} · ${script.trim().slice(0, 60)}${script.length > 60 ? "…" : ""}`,
-          href: "/dashboard/hub/carousel",
+          href: "/dashboard/hub/library",
         });
       } catch {}
     } catch (e) {
-      setError(String(e).slice(0, 300));
+      const msg = String(e).slice(0, 300);
+      setError(msg);
+      progressCtrl?.fail(msg);
     } finally {
       setLoading(false);
     }

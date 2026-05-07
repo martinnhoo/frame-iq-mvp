@@ -25,6 +25,7 @@ import {
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
+import { startGenProgress, type GenProgressController } from "@/lib/genProgress";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { CustomLogoUpload } from "@/components/dashboard/CustomLogoUpload";
 import { saveHubAssets } from "@/lib/saveHubAsset";
@@ -153,12 +154,27 @@ export default function HubStoryboard() {
     setNeedsVerify(false);
     setLoading(true);
     setScenes(null);
+
+    let progressCtrl: GenProgressController | null = null;
+    const titleByLang: Record<Lang, string> = {
+      pt: `Gerando storyboard (${sceneCount} cenas)...`,
+      en: `Generating storyboard (${sceneCount} scenes)...`,
+      es: `Generando storyboard (${sceneCount} escenas)...`,
+      zh: `正在生成故事板（${sceneCount} 个场景）...`,
+    };
+
     try {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) { setError(t("sessionExpired")); return; }
+      progressCtrl = startGenProgress(sessionData?.session?.user?.id, {
+        title: titleByLang[lang],
+        // ~25s por cena (gpt-image-2 sequencial dentro do edge fn)
+        estimateMs: sceneCount * 25_000,
+        stage: lang === "pt" ? "Quebrando script em cenas" : lang === "es" ? "Dividiendo script en escenas" : lang === "zh" ? "将剧本拆分为场景" : "Breaking script into scenes",
+      });
 
       let brandHint = brand?.promptHint || "";
       let marketContext = "";
@@ -201,13 +217,17 @@ export default function HubStoryboard() {
       if (!r.ok || !payload?.ok) {
         if (payload?.error === "needs_org_verification") {
           setNeedsVerify(true);
+          progressCtrl?.fail("OpenAI org verification required");
           return;
         }
-        setError((payload?.message || payload?.error || `HTTP ${r.status}`).slice(0, 400));
+        const msg = (payload?.message || payload?.error || `HTTP ${r.status}`).slice(0, 400);
+        setError(msg);
+        progressCtrl?.fail(msg);
         return;
       }
 
       const rawScenes = payload.scenes || [];
+      progressCtrl?.setStage(lang === "pt" ? "Aplicando logo + salvando" : lang === "es" ? "Aplicando logo + guardando" : lang === "zh" ? "应用 logo + 保存" : "Applying logo + saving");
 
       // Composição pós-produção (canvas client-side): aplica logo da
       // marca em CADA cena que tem imagem. Roda em paralelo. Se uma
@@ -268,19 +288,20 @@ export default function HubStoryboard() {
         }
       } catch (e) { console.warn("[storyboard] FE save failed:", e); }
 
-      // Notif pro sino
+      // Notif pro sino — completa progresso
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         const ok = finalScenes.filter(s => s.image_url).length;
-        addHubNotification(user?.id, {
+        progressCtrl?.complete({
           kind: "image_generated",
           title: t("notifTitle"),
           description: `${ok} ${t("scene").toLowerCase()}${ok > 1 ? "s" : ""} · ${script.trim().slice(0, 60)}${script.length > 60 ? "…" : ""}`,
-          href: "/dashboard/hub/storyboard",
+          href: "/dashboard/hub/library",
         });
       } catch {}
     } catch (e) {
-      setError(String(e).slice(0, 300));
+      const msg = String(e).slice(0, 300);
+      setError(msg);
+      progressCtrl?.fail(msg);
     } finally {
       setLoading(false);
     }

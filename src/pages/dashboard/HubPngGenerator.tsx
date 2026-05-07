@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
+import { startGenProgress, type GenProgressController } from "@/lib/genProgress";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { compressPngIfNeeded } from "@/lib/compressPng";
 import { saveHubAsset } from "@/lib/saveHubAsset";
@@ -258,12 +259,26 @@ export default function HubPngGenerator() {
     setLoading(true);
     setImageUrl(null);
 
+    let progressCtrl: GenProgressController | null = null;
+    const titleByLang: Record<Lang, string> = {
+      pt: mode === "convert" ? "Removendo fundo..." : "Gerando PNG...",
+      en: mode === "convert" ? "Removing background..." : "Generating PNG...",
+      es: mode === "convert" ? "Eliminando fondo..." : "Generando PNG...",
+      zh: mode === "convert" ? "正在移除背景..." : "正在生成 PNG...",
+    };
+
     try {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
       const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) { setError(t("sessionExpired")); setLoading(false); return; }
+      progressCtrl = startGenProgress(sessionData?.session?.user?.id, {
+        title: titleByLang[lang],
+        // convert = 1 step BRIA (~10s), scratch = 2 steps gpt + BRIA (~35s)
+        estimateMs: mode === "convert" ? 10_000 : 35_000,
+        stage: mode === "convert" ? "Iniciando" : "Gerando arte com IA",
+      });
 
       // 2 modos:
       //   - 'convert': BRIA bg-remove direto na imagem do user (1 call)
@@ -302,14 +317,16 @@ export default function HubPngGenerator() {
         try { genPayload = JSON.parse(genText); } catch { /* not json */ }
 
         if (!genRes.ok || !genPayload?.ok) {
-          if (genPayload?.error === "needs_org_verification") { setNeedsVerify(true); setLoading(false); return; }
+          if (genPayload?.error === "needs_org_verification") { setNeedsVerify(true); progressCtrl?.fail("OpenAI org verification required"); setLoading(false); return; }
           const detail = genPayload?.openai_message || genPayload?.message || genPayload?.error || `HTTP ${genRes.status}`;
           setError(String(detail).slice(0, 400));
+          progressCtrl?.fail(String(detail));
           setLoading(false);
           return;
         }
         if (!genPayload.image_url) {
           setError("Geração não retornou imagem.");
+          progressCtrl?.fail("no_image");
           setLoading(false);
           return;
         }
@@ -317,6 +334,7 @@ export default function HubPngGenerator() {
       }
 
       // Step final em ambos os modos: BRIA bg-remove sobre a imagem.
+      progressCtrl?.setStage(lang === "pt" ? "Removendo fundo (BRIA AI)" : lang === "es" ? "Eliminando fondo (BRIA AI)" : lang === "zh" ? "移除背景 (BRIA AI)" : "Removing background (BRIA AI)");
       const r = await fetch(`${SUPABASE_URL}/functions/v1/hub-bria-bg-remove`, {
         method: "POST",
         headers: {
@@ -353,6 +371,7 @@ export default function HubPngGenerator() {
       setImageUrl(final);
 
       // Persist no DB — sobe pro Storage primeiro pra row ficar leve
+      progressCtrl?.setStage(lang === "pt" ? "Salvando na Biblioteca" : lang === "es" ? "Guardando en Biblioteca" : lang === "zh" ? "保存到资源库" : "Saving to Library");
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user && final) {
@@ -379,22 +398,24 @@ export default function HubPngGenerator() {
             created_at: new Date().toISOString(),
           }, ...prev].slice(0, 8));
 
-          const titleByLang: Record<Lang, string> = {
+          const doneByLang: Record<Lang, string> = {
             pt: mode === "convert" ? "PNG convertido" : "PNG gerado",
             en: mode === "convert" ? "PNG converted" : "PNG generated",
             es: mode === "convert" ? "PNG convertido" : "PNG generado",
             zh: mode === "convert" ? "PNG 已转换" : "PNG 已生成",
           };
-          addHubNotification(user.id, {
+          progressCtrl?.complete({
             kind: "image_generated",
-            title: titleByLang[lang],
+            title: doneByLang[lang],
             description: prompt.trim().slice(0, 80),
-            href: "/dashboard/hub/png",
+            href: "/dashboard/hub/library",
           });
         }
       } catch (e) { console.warn("[png] save failed:", e); }
     } catch (e) {
-      setError(String(e).slice(0, 300));
+      const msg = String(e).slice(0, 300);
+      setError(msg);
+      progressCtrl?.fail(msg);
     } finally {
       setLoading(false);
     }
