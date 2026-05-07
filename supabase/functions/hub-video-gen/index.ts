@@ -20,7 +20,7 @@
 // 60-90s. Pra vídeos longos (>10s) pode estourar — caller deve usar
 // duration ≤ 10s pra segurança.
 
-const FN_VERSION = "v4-deep-url-search-2026-05-06";
+const FN_VERSION = "v5-kling26-fix-2026-05-07";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
