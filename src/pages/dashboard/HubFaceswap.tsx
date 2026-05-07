@@ -278,7 +278,7 @@ export default function HubFaceswap() {
       reader.onerror = () => setTargetFileError(t("errFile"));
       reader.readAsDataURL(file);
     } else {
-      // video mode — só MP4, ≤10MB
+      // video mode — só MP4, ≤10MB, ≤720p, ≤600 frames (limites PiAPI)
       if (!/^video\/mp4$/i.test(file.type)) {
         setTargetFileError(t("errVideoFile"));
         return;
@@ -287,12 +287,52 @@ export default function HubFaceswap() {
         setTargetFileError(t("errVideoFile"));
         return;
       }
-      // Pra preview, criamos objectURL. Pra upload, guardamos o File.
+      // Valida resolução E duração via <video> metadata. PiAPI rejeita
+      // silenciosamente vídeos >720p ou >600 frames, retornando
+      // "code:500, input:null, status:failed" sem mensagem clara.
       const objUrl = URL.createObjectURL(file);
-      setTargetFile(objUrl);
-      setTargetFileName(file.name);
-      setTargetIsVideo(true);
-      setTargetVideoFile(file);
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        const dur = video.duration;
+        const maxDim = Math.max(w, h);
+        // PiAPI: max 720p (significa lado maior ≤ 1280, ou ≤ 720
+        // dependendo de orientação). Pra ser conservador: ≤ 1280
+        if (maxDim > 1280) {
+          URL.revokeObjectURL(objUrl);
+          setTargetFileError(
+            lang === "pt" ? `Vídeo é ${w}x${h}. PiAPI aceita até 720p (1280x720). Reduz a resolução e tenta de novo.` :
+            lang === "es" ? `Video es ${w}x${h}. PiAPI acepta hasta 720p (1280x720). Reduce la resolución.` :
+            lang === "zh" ? `视频是 ${w}x${h}。PiAPI 接受最高 720p (1280x720)。请减小分辨率。` :
+            `Video is ${w}x${h}. PiAPI accepts up to 720p (1280x720). Reduce resolution and retry.`
+          );
+          return;
+        }
+        // ≤600 frames: assumindo 30fps, dur ≤ 20s. Usar 25s pra margem.
+        if (dur > 25) {
+          URL.revokeObjectURL(objUrl);
+          setTargetFileError(
+            lang === "pt" ? `Vídeo tem ${dur.toFixed(1)}s. PiAPI aceita até ~20s (600 frames a 30fps).` :
+            lang === "es" ? `Video tiene ${dur.toFixed(1)}s. PiAPI acepta hasta ~20s.` :
+            lang === "zh" ? `视频时长 ${dur.toFixed(1)}秒。PiAPI 最多接受 ~20 秒。` :
+            `Video is ${dur.toFixed(1)}s. PiAPI accepts up to ~20s (600 frames at 30fps).`
+          );
+          return;
+        }
+        // OK — passa
+        setTargetFile(objUrl);
+        setTargetFileName(file.name);
+        setTargetIsVideo(true);
+        setTargetVideoFile(file);
+      };
+      video.onerror = () => {
+        URL.revokeObjectURL(objUrl);
+        setTargetFileError(t("errVideoFile"));
+      };
+      video.src = objUrl;
+      return; // não cai no fallthrough — handler async
     }
   };
 

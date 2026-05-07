@@ -20,7 +20,7 @@
 // Spec: https://piapi.ai/docs/faceswap-api/create-task (image)
 //       https://piapi.ai/docs/faceswap-api/video-faceswap (video)
 
-const FN_VERSION = "v1.1-faceswap-2026-05-07-redeploy";
+const FN_VERSION = "v1.2-faceswap-2026-05-07-validate-urls";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
