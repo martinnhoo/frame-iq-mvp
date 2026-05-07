@@ -27,6 +27,7 @@ import {
 } from "@/data/hubBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
 
 // ── i18n minimal — Hub só usa pt/en/es/zh ─────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -250,6 +251,15 @@ export default function HubVideoGenerator() {
         brandHint = `${brandHint}\n\n${HUB_MARKETS[marketCode].promptContext}`.trim();
       }
 
+      let providerImageUrl = sourceImage;
+      if (providerImageUrl?.startsWith("data:")) {
+        providerImageUrl = await uploadAssetToStorage(providerImageUrl, "video-source");
+        if (providerImageUrl.startsWith("data:")) {
+          setError(lang === "pt" ? "Não consegui preparar a imagem para vídeo. Tenta reenviar a imagem." : "Could not prepare the image for video. Try uploading it again.");
+          return;
+        }
+      }
+
       const r = await fetch(`${SUPABASE_URL}/functions/v1/hub-video-gen`, {
         method: "POST",
         headers: {
@@ -259,7 +269,7 @@ export default function HubVideoGenerator() {
         },
         body: JSON.stringify({
           prompt: prompt.trim(),
-          image_url: sourceImage, // data URL ou null
+          image_url: providerImageUrl,
           duration,
           aspect_ratio: aspectRatio,
           enable_audio: enableAudio,

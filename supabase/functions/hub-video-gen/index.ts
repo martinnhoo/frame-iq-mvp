@@ -4,7 +4,7 @@
 // outros via env var VIDEO_PROVIDER ou body.provider. Pra trocar no futuro,
 // só adicionar nova função generateVia<X>() e ramo no dispatcher.
 //
-// Default: PiAPI Kling 3.0 std 720p sem áudio (mais barato — $0.10/s).
+// Default: PiAPI Kling 2.6 std 720p sem áudio.
 //
 // Modos de geração:
 //   - text-to-video: input = { prompt, duration, aspect_ratio }
@@ -20,7 +20,7 @@
 // 60-90s. Pra vídeos longos (>10s) pode estourar — caller deve usar
 // duration ≤ 10s pra segurança.
 
-const FN_VERSION = "v5-kling26-fix-2026-05-07";
+const FN_VERSION = "v6-piapi-payload-2026-05-07";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -40,15 +40,15 @@ function jsonResponse(payload: unknown, status: number): Response {
 const TOTAL_TIMEOUT_MS = 130_000;
 const POLL_INTERVAL_MS = 5_000;
 
-// ── Provider: PiAPI Kling 3.0 ───────────────────────────────────────
+// ── Provider: PiAPI Kling 2.6 ───────────────────────────────────────
 interface PiapiInput {
   prompt: string;
   image_url?: string | null;
-  duration: number;          // 3-15s
+  duration: number;          // normalized to 5 or 10
   aspect_ratio: string;      // "16:9" | "9:16" | "1:1"
   enable_audio: boolean;
   mode: "std" | "pro";
-  resolution: "720p" | "1080p"; // PiAPI usa "version":"3.0" + outros params
+  resolution: "720p" | "1080p";
   negative_prompt?: string;
 }
 
@@ -68,24 +68,27 @@ async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: num
   // Kling API: duration must be 5 or 10 (not 3). version values:
   // 1.5/1.6/2.1/2.1-master/2.5/2.6 (default 2.6). NOT "3.0".
   const klingDuration = input.duration <= 7 ? 5 : 10;
+  const safeMode: "std" | "pro" = input.enable_audio ? "pro" : input.mode;
+  const safeImageUrl = input.image_url?.startsWith("http") ? input.image_url : null;
   const body = {
     model: "kling",
     task_type: "video_generation",
     input: {
       prompt: input.prompt,
       negative_prompt: input.negative_prompt || "",
-      cfg_scale: "0.5",
+      cfg_scale: 0.5,
       duration: klingDuration,
-      aspect_ratio: input.aspect_ratio,
       enable_audio: input.enable_audio,
-      mode: input.mode,
+      mode: safeMode,
       version: "2.6",
-      ...(input.image_url ? { image_url: input.image_url } : {}),
+      ...(safeImageUrl ? { image_url: safeImageUrl } : { aspect_ratio: input.aspect_ratio }),
     },
     config: {
-      service_mode: "public",
+      service_mode: "",
+      webhook_config: { endpoint: "", secret: "" },
     },
   };
+  console.log(`[hub-video] piapi create payload=${JSON.stringify({ ...body, input: { ...body.input, image_url: safeImageUrl ? `${safeImageUrl.slice(0, 80)}...` : undefined } })}`);
 
   let createRes: Response;
   try {
@@ -279,7 +282,7 @@ Deno.serve(async (req) => {
         message: "Prompt mínimo 5 caracteres.",
       }, 400);
     }
-    const dur = Math.max(3, Math.min(15, Math.floor(duration)));
+    const dur = Math.floor(duration) <= 7 ? 5 : 10;
 
     // Provider: body > env > default
     const provider = bodyProvider || Deno.env.get("VIDEO_PROVIDER") || "piapi";
@@ -291,7 +294,10 @@ Deno.serve(async (req) => {
     }
     finalPrompt = finalPrompt.slice(0, 2500); // PiAPI limita prompt
 
-    console.log(`[hub-video] start — user=${authUser.id} provider=${provider} duration=${dur}s mode=${mode} resolution=${resolution} audio=${enable_audio} aspect=${aspect_ratio} hasImage=${!!image_url}`);
+    const normalizedMode: "std" | "pro" = enable_audio ? "pro" : mode;
+    const normalizedImageUrl = typeof image_url === "string" && image_url.startsWith("http") ? image_url : null;
+
+    console.log(`[hub-video] start — user=${authUser.id} provider=${provider} duration=${dur}s mode=${normalizedMode} resolution=${resolution} audio=${enable_audio} aspect=${aspect_ratio} hasImage=${!!normalizedImageUrl}`);
 
     // Auth provider
     let result: PiapiResult;
@@ -307,11 +313,11 @@ Deno.serve(async (req) => {
       }
       result = await generateViaPiapi({
         prompt: finalPrompt,
-        image_url,
+        image_url: normalizedImageUrl,
         duration: dur,
         aspect_ratio,
         enable_audio,
-        mode,
+        mode: normalizedMode,
         resolution,
         negative_prompt,
       }, PIAPI_KEY, deadline);
@@ -324,8 +330,8 @@ Deno.serve(async (req) => {
         }, 503);
       }
       result = await generateViaFalai({
-        prompt: finalPrompt, image_url, duration: dur, aspect_ratio,
-        enable_audio, mode, resolution, negative_prompt,
+        prompt: finalPrompt, image_url: normalizedImageUrl, duration: dur, aspect_ratio,
+        enable_audio, mode: normalizedMode, resolution, negative_prompt,
       }, FAL_KEY, deadline);
     } else {
       return jsonResponse({
@@ -354,15 +360,15 @@ Deno.serve(async (req) => {
             prompt: prompt.trim(),
             final_prompt: finalPrompt,
             video_url: result.video_url,
-            image_url, // input image (image-to-video) ou null (text-to-video)
+            image_url: normalizedImageUrl, // input image (image-to-video) ou null (text-to-video)
             duration_s: result.duration_s,
             aspect_ratio,
             resolution,
-            mode,
+            mode: normalizedMode,
             enable_audio,
             provider,
             task_id: result.task_id,
-            model: "kling-3.0",
+            model: "kling-2.6",
             brand_id: brand_id || null,
             market: market || null,
           },
@@ -389,11 +395,11 @@ Deno.serve(async (req) => {
       duration_s: result.duration_s,
       aspect_ratio,
       resolution,
-      mode,
+      mode: normalizedMode,
       enable_audio,
       provider,
       task_id: result.task_id,
-      model: "kling-3.0",
+      model: "kling-2.6",
       brand_id: brand_id || null,
       market: market || null,
     }, 200);
