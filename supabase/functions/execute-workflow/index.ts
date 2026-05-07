@@ -445,6 +445,37 @@ interface ExecCtx {
   runId: string;
 }
 
+// Persiste asset gerado em hub_assets pra Library mostrar.
+// generate-image-hub e generate-storyboard-hub escrevem em creative_memory
+// (legacy, lá só é lido por features de analytics — Library não vê).
+// Chamadas standalone do Hub salvam em hub_assets via saveHubAsset no
+// frontend; workflows precisam fazer o equivalente aqui no servidor.
+//
+// Falha silenciosamente — não derruba o workflow se o save falhar.
+async function saveWorkflowAssetToLibrary(
+  ctx: ExecCtx,
+  kind: "hub_image" | "hub_png" | "hub_storyboard" | "hub_carousel",
+  content: Record<string, unknown>,
+): Promise<string | null> {
+  try {
+    const sb = createClient(ctx.supabaseUrl, ctx.serviceRoleKey);
+    const { data, error } = await sb.from("hub_assets").insert({
+      user_id: ctx.userId,
+      kind,
+      content,
+      created_at: new Date().toISOString(),
+    }).select("id").single();
+    if (error) {
+      console.warn(`[execute-workflow] hub_assets save failed (${kind}):`, error.message);
+      return null;
+    }
+    return (data as { id?: string })?.id || null;
+  } catch (e) {
+    console.warn(`[execute-workflow] hub_assets save exception (${kind}):`, e);
+    return null;
+  }
+}
+
 async function execBrand(node: GraphNode): Promise<Record<string, unknown>> {
   // Brand é passthrough — o frontend já resolveu brand_id+market →
   // brand_hint+license_text e sobrescreveu via inputs override.
@@ -518,8 +549,26 @@ async function execImageGen(
   if (!payload.ok || !payload.image_url) {
     throw new Error(payload.message || payload.error || "image-gen failed");
   }
+
+  // Salva no hub_assets pra aparecer na Library (workflow-only — standalone
+  // já salva via frontend saveHubAsset). generate-image-hub escreve só em
+  // creative_memory legacy.
+  const hubAssetId = await saveWorkflowAssetToLibrary(ctx, "hub_image", {
+    prompt: promptText,
+    image_url: payload.image_url,
+    aspect_ratio,
+    quality,
+    model: "gpt-image-2",
+    brand_id,
+    market,
+    license_included: include_license,
+    license_text: include_license ? license_text : null,
+    source: "workflow",
+    workflow_run_id: ctx.runId,
+  });
+
   return {
-    asset_id: payload.memory_id || null,
+    asset_id: hubAssetId || payload.memory_id || null,
     image_url: payload.image_url,
     prompt_used: promptText,
   };
@@ -572,7 +621,16 @@ async function execBgRemove(
   if (!payload.ok || !payload.image_url) {
     throw new Error(payload.message || payload.error || "bg-remove failed");
   }
-  return { asset_id: payload.memory_id || null, image_url: payload.image_url };
+
+  // Salva PNG transparente em hub_assets pra Library
+  const hubAssetId = await saveWorkflowAssetToLibrary(ctx, "hub_png", {
+    image_url: payload.image_url,
+    source_image_url: image_url,
+    model: "bria-bg-remove",
+    workflow_run_id: ctx.runId,
+  });
+
+  return { asset_id: hubAssetId || payload.memory_id || null, image_url: payload.image_url };
 }
 
 async function execStoryboard(
@@ -611,12 +669,28 @@ async function execStoryboard(
   let payload: { ok?: boolean; storyboard_id?: string; scenes?: Array<{ n: number; image_url: string | null }>; message?: string; error?: string };
   try { payload = JSON.parse(text); } catch { throw new Error(`storyboard non-json: ${text.slice(0, 200)}`); }
   if (!payload.ok) throw new Error(payload.message || payload.error || "storyboard failed");
-  const scenes = (payload.scenes || []).map(s => ({
-    n: s.n,
-    image_url: s.image_url,
-    asset_id: null,
+  const storyboardId = payload.storyboard_id || `sb-${Date.now()}`;
+  const sceneList = payload.scenes || [];
+
+  // Salva uma row por cena em hub_assets pra Library (agrupa via storyboard_id)
+  const scenes = await Promise.all(sceneList.map(async (s) => {
+    if (!s.image_url) return { n: s.n, image_url: s.image_url, asset_id: null };
+    const aid = await saveWorkflowAssetToLibrary(ctx, "hub_storyboard", {
+      image_url: s.image_url,
+      storyboard_id: storyboardId,
+      scene_n: s.n,
+      scene_count: sceneList.length,
+      script,
+      aspect_ratio,
+      quality,
+      brand_id: brandInput?.brand_id || null,
+      market: brandInput?.market || null,
+      workflow_run_id: ctx.runId,
+    });
+    return { n: s.n, image_url: s.image_url, asset_id: aid };
   }));
-  return { storyboard_id: payload.storyboard_id || `sb-${Date.now()}`, scenes };
+
+  return { storyboard_id: storyboardId, scenes };
 }
 
 async function execVideo(

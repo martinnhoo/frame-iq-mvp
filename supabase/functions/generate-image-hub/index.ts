@@ -399,6 +399,10 @@ Deno.serve(async (req) => {
     }
 
     // ── Persiste na biblioteca como data URL (sem Storage) ──────────
+    // Write em creative_memory legacy — usado por features de analytics.
+    // O save em hub_assets (que a Library lê) acontece no caller:
+    //   - Standalone (HubImageGenerator.tsx): chama saveHubAsset depois
+    //   - Workflow (execute-workflow): salva em hub_assets após o node
     let memoryId: string | null = null;
     let dbDebug: { stage: string; message?: string; details?: unknown; code?: string; hint?: string } | null = null;
     try {
