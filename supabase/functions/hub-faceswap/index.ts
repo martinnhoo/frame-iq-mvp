@@ -92,6 +92,49 @@ async function generateViaPiapi(input: FaceswapInput, apiKey: string, deadline: 
     },
   })}`);
 
+  // ── 0. Pré-valida que as URLs são acessíveis publicamente.
+  // PiAPI baixa target_video e swap_image direto. Se a URL retorna 4xx,
+  // o create falha com "input:null,status:failed" — sem dica do que
+  // deu errado. Esse pré-check torna o erro acionável.
+  for (const [name, url] of [
+    ["target_url", input.target_url],
+    ["swap_image_url", input.swap_image_url],
+  ] as const) {
+    try {
+      const head = await fetch(url, { method: "HEAD" });
+      if (!head.ok) {
+        return {
+          ok: false,
+          error: `${name}_not_accessible: status=${head.status} url=${url.slice(0, 120)}`,
+        };
+      }
+      const ct = head.headers.get("content-type") || "";
+      const isVideoUrl = name === "target_url" && isVideo;
+      if (isVideoUrl && !ct.includes("video")) {
+        return {
+          ok: false,
+          error: `target_url_not_video: content-type=${ct} url=${url.slice(0, 120)}`,
+        };
+      }
+      if (!isVideoUrl && !ct.includes("image")) {
+        return {
+          ok: false,
+          error: `${name}_not_image: content-type=${ct} url=${url.slice(0, 120)}`,
+        };
+      }
+      // Pra video, valida size <= 10MB cedo (PiAPI limit)
+      const len = head.headers.get("content-length");
+      if (isVideoUrl && len && Number(len) > 10 * 1024 * 1024) {
+        return {
+          ok: false,
+          error: `target_video_too_large: ${(Number(len) / 1024 / 1024).toFixed(1)}MB (PiAPI max 10MB)`,
+        };
+      }
+    } catch (e) {
+      return { ok: false, error: `${name}_fetch_error: ${String(e).slice(0, 150)}` };
+    }
+  }
+
   // ── 1. Create task
   let createRes: Response;
   try {
@@ -108,10 +151,27 @@ async function generateViaPiapi(input: FaceswapInput, apiKey: string, deadline: 
   }
 
   const createText = await createRes.text();
+  // Logging completo do response — debug. Slice grande pq PiAPI às vezes
+  // retorna "input:null,status:failed" sem mensagem clara, e a parte que
+  // ajuda (error.detail / fail_reason) vem depois.
+  console.log(`[hub-faceswap] piapi create response status=${createRes.status} body=${createText.slice(0, 1500)}`);
   if (!createRes.ok) {
+    // Tenta extrair message/error do JSON pra mensagem amigável
+    let detail = createText.slice(0, 800);
+    try {
+      const pj = JSON.parse(createText);
+      const errMsg = pj?.message
+        || pj?.data?.error?.message
+        || pj?.data?.error?.detail
+        || pj?.data?.error?.raw_message
+        || pj?.data?.fail_reason
+        || pj?.error
+        || null;
+      if (errMsg) detail = `${errMsg} | full: ${createText.slice(0, 600)}`;
+    } catch { /* keep raw */ }
     return {
       ok: false,
-      error: `piapi_create_failed: ${createText.slice(0, 300)}`,
+      error: `piapi_create_failed: ${detail}`,
       provider_status: createRes.status,
     };
   }
