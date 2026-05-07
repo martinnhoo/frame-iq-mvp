@@ -437,6 +437,32 @@ export default function HubFaceswap() {
     }
   };
 
+  // ── Download cross-origin (fetch + blob) ────────────────────────
+  // O atributo HTML `download` é IGNORADO quando href é cross-origin
+  // (PiAPI ou storage.theapi.app). Pra forçar download em qualquer caso,
+  // baixa o blob, cria object URL e dispara click programático.
+  const downloadResult = async (asset: FaceswapAsset) => {
+    if (!asset.output_url) return;
+    try {
+      const r = await fetch(asset.output_url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const blob = await r.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `faceswap_${asset.id}.${asset.mode === "video" ? "mp4" : "png"}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // libera memória após 1s (tempo do browser registrar o download)
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (e) {
+      console.warn("[faceswap] download failed:", e);
+      // Fallback: abre em nova aba (user salva manualmente com botão direito)
+      window.open(asset.output_url, "_blank");
+    }
+  };
+
   const filteredBrands = useMemo(() => {
     const all = Object.values(HUB_BRANDS);
     if (!brandSearch.trim()) return all;
@@ -702,18 +728,16 @@ export default function HubFaceswap() {
                     />
                   )}
                   <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                    <a
-                      href={result.output_url}
-                      download={`faceswap_${result.id}.${result.mode === "video" ? "mp4" : "png"}`}
+                    <button
+                      onClick={() => downloadResult(result)}
                       style={{
                         ...btnPrimary,
                         flex: 1,
-                        textDecoration: "none",
                         justifyContent: "center",
                       }}
                     >
                       <Download size={13} /> {t("download")}
-                    </a>
+                    </button>
                     <button onClick={generate} disabled={loading} style={{ ...btnGhost, justifyContent: "center", flex: 1 }}>
                       <RefreshCw size={13} /> {t("variation")}
                     </button>

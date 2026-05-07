@@ -328,6 +328,17 @@ Deno.serve(async (req) => {
         .single();
       if (dbErr) {
         console.error("[hub-faceswap] DB insert error:", dbErr.message);
+        // Retorna erro real pra UI mostrar — antes ficava silencioso
+        // e o user via "sucesso" mas asset sumia. Comum em CHECK constraint
+        // violation (kind não permitido) ou RLS.
+        return jsonResponse({
+          _v: FN_VERSION,
+          ok: false,
+          error: "db_insert_failed",
+          message: `Geração ok mas asset não foi salvo: ${dbErr.message}`,
+          output_url: finalUrl, // Devolve URL pra UI ainda mostrar o resultado
+          task_id: result.task_id,
+        }, 200); // 200 porque a geração funcionou
       } else {
         memoryId = inserted?.id || null;
       }
