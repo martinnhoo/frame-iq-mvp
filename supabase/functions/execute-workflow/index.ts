@@ -639,8 +639,11 @@ async function execVideo(
   const duration = Math.max(3, Math.min(15, Number(node.data.duration) || 5));
   const aspect_ratio = (node.data.aspect_ratio as string) || "16:9";
   const enable_audio = !!node.data.enable_audio;
-  const mode = ((node.data.mode as string) === "pro") ? "pro" : "std";
-  const resolution = ((node.data.resolution as string) === "1080p") ? "1080p" : "720p";
+  // Kling 3.0: mode determina resolução. Aceita "pro" do node data OU
+  // infere de resolution=1080p como compatibilidade com workflows antigos.
+  const wantsPro = (node.data.mode as string) === "pro"
+    || (node.data.resolution as string) === "1080p";
+  const mode = wantsPro ? "pro" : "std";
   const provider = (node.data.provider as string) || "piapi";
 
   const r = await fetch(`${ctx.supabaseUrl}/functions/v1/hub-video-gen`, {
@@ -655,8 +658,7 @@ async function execVideo(
       duration,
       aspect_ratio,
       enable_audio,
-      mode,
-      resolution,
+      mode,                // backend deriva resolution de mode
       provider,
       brand_id: brandInput?.brand_id || null,
       market: brandInput?.market || null,

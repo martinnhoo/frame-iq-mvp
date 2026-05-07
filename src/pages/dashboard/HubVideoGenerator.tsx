@@ -226,10 +226,11 @@ export default function HubVideoGenerator() {
     if (sourceInputRef.current) sourceInputRef.current.value = "";
   };
 
-  // Cost estimate
+  // Cost estimate — Kling 3.0 pricing matrix.
+  // mode=std implica 720p · mode=pro implica 1080p (já vinculado no UI).
+  // PRICE_TABLE já tem o preço final por segundo pra cada combinação.
   const costPerSec = PRICE_TABLE[`${resolution}_${enableAudio ? "on" : "off"}`] || 0.10;
-  const proMultiplier = mode === "pro" ? 2 : 1;
-  const estCost = (costPerSec * duration * proMultiplier).toFixed(2);
+  const estCost = (costPerSec * duration).toFixed(2);
 
   // Generate
   const generate = async () => {
@@ -273,8 +274,7 @@ export default function HubVideoGenerator() {
           duration,
           aspect_ratio: aspectRatio,
           enable_audio: enableAudio,
-          mode,
-          resolution,
+          mode,                // std=720p, pro=1080p (Kling 3.0)
           provider: "piapi",
           brand_id: brandId === "none" ? null : brandId,
           market: marketCode,
@@ -497,24 +497,23 @@ export default function HubVideoGenerator() {
               </div>
             </div>
 
-            {/* Resolution + Mode */}
-            <div style={{ ...section, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <div style={sectionLabel}>{t("resolution")}</div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  {(["720p", "1080p"] as const).map(r => (
-                    <button key={r} onClick={() => setResolution(r)} style={pillStyle(resolution === r)}>
-                      {r}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div style={sectionLabel}>{t("mode")}</div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={() => setMode("std")} style={pillStyle(mode === "std")}>{t("modeStd")}</button>
-                  <button onClick={() => setMode("pro")} style={pillStyle(mode === "pro")}>{t("modePro")}</button>
-                </div>
+            {/* Quality — single control. Kling 3.0 vincula resolução
+                e modo: std=720p, pro=1080p. Não dá pra ter um sem o outro. */}
+            <div style={section}>
+              <div style={sectionLabel}>{t("resolution")}</div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  onClick={() => { setResolution("720p"); setMode("std"); }}
+                  style={pillStyle(resolution === "720p")}
+                >
+                  720p · Standard
+                </button>
+                <button
+                  onClick={() => { setResolution("1080p"); setMode("pro"); }}
+                  style={pillStyle(resolution === "1080p")}
+                >
+                  1080p · Pro
+                </button>
               </div>
             </div>
 
