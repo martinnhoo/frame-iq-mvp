@@ -633,20 +633,9 @@ function HubWorkflowsInner() {
     };
   }, []);
 
-  // Detecta unsaved changes pra mostrar dot vermelho no botão Save.
-  // Snapshot do que tá no servidor (após open ou save) vs estado atual
-  // dos React Flow nodes/edges + name + brand. Diff = unsaved.
+  // Snapshot ref pra detectar unsaved changes — calculado mais abaixo
+  // após declaração de activeWf/nodes/edges/name/workflowBrandId.
   const savedSnapshot = useRef<string | null>(null);
-  const currentSnapshot = useMemo(() => {
-    if (!activeWf) return null;
-    return JSON.stringify({
-      name,
-      brand: workflowBrandId,
-      nodes: nodes.map(n => ({ id: n.id, type: n.type, position: n.position, data: n.data })),
-      edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target, sourceHandle: e.sourceHandle, targetHandle: e.targetHandle })),
-    });
-  }, [activeWf, name, workflowBrandId, nodes, edges]);
-  const unsaved = !!(activeWf && savedSnapshot.current && currentSnapshot && savedSnapshot.current !== currentSnapshot);
 
   // Mobile: sidebar esquerda (templates/lista) e painel direito (config nó)
   // viram overlays — escondidos por padrão, abertos via toggle/seleção.
