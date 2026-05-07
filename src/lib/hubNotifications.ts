@@ -19,7 +19,16 @@ export type HubNotifKind =
   | "image_failed"
   | "license_applied"
   | "library_updated"
+  | "workflow_running"
+  | "workflow_done"
+  | "workflow_failed"
   | "info";
+
+export interface HubNotifProgress {
+  done: number;       // quantos itens já completaram
+  total: number;      // quantos no total
+  failed?: number;    // quantos falharam (mostra em vermelho na barra)
+}
 
 export interface HubNotification {
   id: string;
@@ -29,6 +38,10 @@ export interface HubNotification {
   href?: string; // rota pra navegar ao clicar
   createdAt: string; // ISO
   read: boolean;
+  // Notificação com progresso é update-able via updateHubNotification.
+  // Quando done === total e progress está presente, geralmente o caller
+  // remove progress + muda título pra "completo".
+  progress?: HubNotifProgress;
 }
 
 const MAX_NOTIFS = 50;
@@ -74,8 +87,8 @@ export function unreadHubCount(userId: string | null | undefined): number {
 export function addHubNotification(
   userId: string | null | undefined,
   notif: Omit<HubNotification, "id" | "createdAt" | "read">,
-): void {
-  if (!userId) return;
+): string | null {
+  if (!userId) return null;
   const existing = safeRead(userId);
   const fresh: HubNotification = {
     ...notif,
@@ -89,6 +102,35 @@ export function addHubNotification(
   // Dispara evento pro sino atualizar live (sem polling)
   try {
     window.dispatchEvent(new CustomEvent("hub-notification-added", { detail: fresh }));
+  } catch { /* SSR safe */ }
+  return fresh.id;
+}
+
+/**
+ * Atualiza uma notificação existente em loco (sem criar nova). Usado pra
+ * progress bar ao vivo (ex: workflow rodando 11/15 imagens). Mantém o
+ * createdAt original mas marca como unread se mudou. Dispara o mesmo
+ * event 'hub-notification-added' (UI re-renderiza com state atualizado).
+ */
+export function updateHubNotification(
+  userId: string | null | undefined,
+  notifId: string,
+  patch: Partial<Omit<HubNotification, "id" | "createdAt">>,
+): void {
+  if (!userId || !notifId) return;
+  const existing = safeRead(userId);
+  const idx = existing.findIndex(n => n.id === notifId);
+  if (idx < 0) return;
+  const updated = { ...existing[idx], ...patch };
+  // Se patch.progress === undefined explícito, remove a key
+  if (Object.prototype.hasOwnProperty.call(patch, "progress") && patch.progress === undefined) {
+    delete updated.progress;
+  }
+  const newList = [...existing];
+  newList[idx] = updated;
+  safeWrite(userId, newList);
+  try {
+    window.dispatchEvent(new CustomEvent("hub-notification-added", { detail: updated }));
   } catch { /* SSR safe */ }
 }
 

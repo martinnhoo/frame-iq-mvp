@@ -276,23 +276,47 @@ export interface RunSnapshot {
 }
 
 export async function getWorkflowRun(runId: string): Promise<RunSnapshot | null> {
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-  const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+  // Antes ia via edge function `get-workflow-run` mas essa function não tá
+  // deployada no Lovable Cloud — causava "TypeError: Failed to fetch" ao
+  // tentar polar status do run. Como é só uma query select com RLS, dá pra
+  // fazer direto via supabase-js. Mais rápido (sem cold start) e sem
+  // dependência de redeploy.
   const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData?.session?.access_token;
-  if (!token) return null;
+  const userId = sessionData?.session?.user?.id;
+  if (!userId) return null;
 
-  const r = await fetch(`${SUPABASE_URL}/functions/v1/get-workflow-run?run_id=${encodeURIComponent(runId)}`, {
-    method: "GET",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "apikey": ANON_KEY,
-    },
-  });
-  if (!r.ok) return null;
-  const payload = await r.json().catch(() => null);
-  if (!payload?.ok || !payload.run) return null;
-  return payload.run as RunSnapshot;
+  const { data, error } = await sb
+    .from("hub_workflow_runs")
+    .select("id, workflow_id, status, inputs, outputs, error, started_at, ended_at, created_at")
+    .eq("id", runId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  const outputs = (data.outputs || {}) as Record<string, unknown>;
+  const errorRaw = data.error;
+  let errors: Record<string, string> | null = null;
+  if (errorRaw) {
+    if (typeof errorRaw === "string") {
+      try { errors = JSON.parse(errorRaw); } catch { errors = null; }
+    } else if (typeof errorRaw === "object") {
+      errors = errorRaw as Record<string, string>;
+    }
+  }
+
+  return {
+    id: data.id,
+    workflow_id: data.workflow_id,
+    status: data.status,
+    outputs,
+    errors,
+    nodes_done: Object.keys(outputs).length,
+    nodes_failed: errors ? Object.keys(errors).length : 0,
+    started_at: data.started_at,
+    ended_at: data.ended_at,
+    created_at: data.created_at,
+  };
 }
 
 /**

@@ -242,10 +242,23 @@ export function AppTopbarBell({ alerts }: Props) {
                         }} />
                       )}
                       <div style={{ flex: 1, minWidth: 0, paddingLeft: n.read ? 16 : 0 }}>
-                        <p style={{
-                          margin: 0, fontSize: 12.5, fontWeight: 700,
-                          color: "#FFFFFF", lineHeight: 1.3,
-                        }}>{n.title}</p>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                          <p style={{
+                            margin: 0, fontSize: 12.5, fontWeight: 700,
+                            color: "#FFFFFF", lineHeight: 1.3, flex: 1, minWidth: 0,
+                          }}>{n.title}</p>
+                          {/* Counter N/M ao lado do título quando tem progress */}
+                          {n.progress && n.progress.total > 0 && (
+                            <span style={{
+                              fontSize: 11, fontWeight: 700,
+                              color: n.progress.done >= n.progress.total ? "#10B981" : "#3B82F6",
+                              fontFamily: F, flexShrink: 0,
+                              fontVariantNumeric: "tabular-nums",
+                            }}>
+                              {n.progress.done}/{n.progress.total}
+                            </span>
+                          )}
+                        </div>
                         {n.description && (
                           <p style={{
                             margin: "3px 0 0", fontSize: 11.5, color: "#D1D5DB",
@@ -253,6 +266,39 @@ export function AppTopbarBell({ alerts }: Props) {
                             display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
                           }}>{n.description}</p>
                         )}
+                        {/* Progress bar — só aparece quando tem progress.
+                            Verde quando completo, vermelho com slice
+                            quando há failed. Animação smooth. */}
+                        {n.progress && n.progress.total > 0 && (() => {
+                          const pct = Math.min(100, Math.round((n.progress.done / n.progress.total) * 100));
+                          const failedPct = n.progress.failed
+                            ? Math.min(100 - pct, Math.round((n.progress.failed / n.progress.total) * 100))
+                            : 0;
+                          const isDone = n.progress.done >= n.progress.total;
+                          return (
+                            <div style={{
+                              marginTop: 7,
+                              height: 4, width: "100%",
+                              borderRadius: 999,
+                              background: "rgba(255,255,255,0.08)",
+                              overflow: "hidden", display: "flex",
+                            }}>
+                              <div style={{
+                                width: `${pct}%`, height: "100%",
+                                background: isDone
+                                  ? "linear-gradient(90deg, #10B981, #34D399)"
+                                  : "linear-gradient(90deg, #3B82F6, #60A5FA)",
+                                transition: "width 0.4s ease-out",
+                              }} />
+                              {failedPct > 0 && (
+                                <div style={{
+                                  width: `${failedPct}%`, height: "100%",
+                                  background: "linear-gradient(90deg, #EF4444, #F87171)",
+                                }} />
+                              )}
+                            </div>
+                          );
+                        })()}
                         <p style={{
                           margin: "5px 0 0", fontSize: 10.5, color: "#9CA3AF",
                           letterSpacing: 0.02,

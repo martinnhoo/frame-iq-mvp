@@ -13,9 +13,11 @@
  *
  * Fase 1: 4 nós (brand, prompt, image-gen, output) + 1 template.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { addHubNotification, updateHubNotification } from "@/lib/hubNotifications";
 import {
   ReactFlow, ReactFlowProvider, Background, Controls,
   type Node, type Edge, type Connection, type NodeChange, type EdgeChange,
@@ -500,6 +502,23 @@ function HubWorkflowsInner() {
   const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || String(key);
   const isMobile = useIsMobile();
 
+  // userId pra disparar notificações no sino. Carregado uma vez.
+  const [userId, setUserId] = useState<string | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (mounted) setUserId(user?.id || null);
+      } catch { /* silent */ }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // Ref pra ID da notificação ativa (do run em andamento). Cada run cria
+  // uma nova; updates apontam pra essa. Usar ref evita re-render quando muda.
+  const currentRunNotifId = useRef<string | null>(null);
+
   // Mobile: sidebar esquerda (templates/lista) e painel direito (config nó)
   // viram overlays — escondidos por padrão, abertos via toggle/seleção.
   const [mobileLeftOpen, setMobileLeftOpen] = useState(false);
@@ -735,6 +754,12 @@ function HubWorkflowsInner() {
         total,
         status: snap.status,
       });
+      // Atualiza notificação live com progresso N/M (sino mostra a barra)
+      if (currentRunNotifId.current && userId) {
+        updateHubNotification(userId, currentRunNotifId.current, {
+          progress: { done: snap.nodes_done, total, failed: snap.nodes_failed },
+        });
+      }
     });
     if (!finalSnap) {
       // Run sumiu do servidor (foi limpa, expirou, ou nunca existiu —
@@ -743,6 +768,16 @@ function HubWorkflowsInner() {
       if (activeWf?.id) clearActiveRun(activeWf.id);
       setRunError("Run não encontrado — possivelmente foi limpo do servidor. Tenta rodar de novo.");
       setRunProgress(null);
+      // Marca notif como falha
+      if (currentRunNotifId.current && userId) {
+        updateHubNotification(userId, currentRunNotifId.current, {
+          kind: "workflow_failed",
+          title: "Workflow falhou",
+          description: "Run não encontrado no servidor.",
+          progress: undefined,
+        });
+        currentRunNotifId.current = null;
+      }
       return;
     }
     setRunResult({
@@ -752,6 +787,35 @@ function HubWorkflowsInner() {
     });
     if (activeWf?.id && ["succeeded", "partial", "failed"].includes(finalSnap.status)) {
       clearActiveRun(activeWf.id);
+    }
+    // Finaliza notificação com resumo do resultado
+    if (currentRunNotifId.current && userId) {
+      const isSuccess = finalSnap.status === "succeeded";
+      const isPartial = finalSnap.status === "partial";
+      const failedCount = finalSnap.nodes_failed;
+      const doneCount = finalSnap.nodes_done;
+      const wfName = activeWf?.name || "Workflow";
+      let title = "Workflow concluído";
+      let description = `${doneCount} de ${total} itens gerados`;
+      let kind: "workflow_done" | "workflow_failed" = "workflow_done";
+      if (!isSuccess) {
+        if (isPartial) {
+          title = "Workflow parcialmente concluído";
+          description = `${doneCount} ok, ${failedCount} falharam`;
+        } else {
+          title = "Workflow falhou";
+          description = `${failedCount} de ${total} falharam`;
+          kind = "workflow_failed";
+        }
+      } else {
+        description = `${wfName}: ${doneCount} itens prontos na biblioteca`;
+      }
+      updateHubNotification(userId, currentRunNotifId.current, {
+        kind, title, description,
+        href: "/dashboard/hub/library",
+        progress: undefined,
+      });
+      currentRunNotifId.current = null;
     }
   };
 
@@ -778,9 +842,32 @@ function HubWorkflowsInner() {
       const total = (r.total ?? totalEstimate) || 1;
       // Persiste run_id pra retomar caso user feche aba/saia da página
       saveActiveRun(activeWf.id, r.run_id, total);
+      // Cria notificação no sino com progress 0/total. updateHubNotification
+      // dentro de pollAndApplyResult vai atualizar conforme avança.
+      if (userId) {
+        const wfName = activeWf.name || "Workflow";
+        const notifId = addHubNotification(userId, {
+          kind: "workflow_running",
+          title: `Rodando ${wfName}`,
+          description: `Gerando ${total} ${total === 1 ? "item" : "itens"}…`,
+          progress: { done: 0, total, failed: 0 },
+          href: "/dashboard/hub/workflows",
+        });
+        currentRunNotifId.current = notifId;
+      }
       await pollAndApplyResult(r.run_id, total);
     } catch (e) {
       setRunError(String(e).slice(0, 200));
+      // Marca notif como falha se já tinha sido criada
+      if (currentRunNotifId.current && userId) {
+        updateHubNotification(userId, currentRunNotifId.current, {
+          kind: "workflow_failed",
+          title: "Workflow falhou",
+          description: String(e).slice(0, 100),
+          progress: undefined,
+        });
+        currentRunNotifId.current = null;
+      }
     } finally {
       setRunning(false);
     }
