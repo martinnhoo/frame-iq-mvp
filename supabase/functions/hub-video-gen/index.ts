@@ -20,7 +20,7 @@
 // 60-90s. Pra vídeos longos (>10s) pode estourar — caller deve usar
 // duration ≤ 10s pra segurança.
 
-const FN_VERSION = "v3-piapi-video-url-2026-05-06";
+const FN_VERSION = "v4-deep-url-search-2026-05-06";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -170,24 +170,32 @@ async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: num
     if (status === "completed") {
       const out = pollPayload?.data?.output;
       // PiAPI retorna o video URL em formatos diferentes dependendo da
-      // versão da API. Suporta TODOS os shapes que vimos:
+      // versão da API. Suporta TODOS os shapes conhecidos:
       //   - data.output.video                              ← Kling 3.0 atual
       //   - data.output.video_url                          ← formato antigo
       //   - data.output.works[0].video.resource            ← multi-shot
       //   - data.output.works[0].video.resource_without_watermark
+      // E faz fallback final com deepFindVideoUrl: percorre o objeto inteiro
+      // procurando QUALQUER string que pareça URL de vídeo. Isso protege
+      // contra mudanças futuras de shape do PiAPI sem quebrar o user.
       const works = out?.works || [];
       const firstWork = works[0]?.video;
-      const video_url = (typeof out?.video === "string" ? out.video : null)
-        || out?.video_url
-        || firstWork?.resource_without_watermark
-        || firstWork?.resource;
+      const explicit = (typeof out?.video === "string" ? out.video : null)
+        || (typeof out?.video_url === "string" ? out.video_url : null)
+        || (typeof firstWork?.resource_without_watermark === "string" ? firstWork.resource_without_watermark : null)
+        || (typeof firstWork?.resource === "string" ? firstWork.resource : null);
+      const video_url = explicit || deepFindVideoUrl(out);
       if (!video_url) {
+        // Loga payload completo nos logs do Supabase pra debug futuro,
+        // sem truncamento.
+        console.error(`[hub-video] no_video_url. Full output:`, JSON.stringify(out));
         return {
           ok: false,
-          error: `piapi_no_video_url_in_output: ${JSON.stringify(out).slice(0, 200)}`,
+          error: `piapi_no_video_url_in_output: ${JSON.stringify(out).slice(0, 300)}`,
           task_id,
         };
       }
+      console.log(`[hub-video] video_url found via ${explicit ? "explicit" : "deep_search"}: ${video_url.slice(0, 80)}…`);
       const duration_s = firstWork?.duration ? parseFloat(firstWork.duration) : input.duration;
       return {
         ok: true,
@@ -395,3 +403,38 @@ Deno.serve(async (req) => {
     }, 500);
   }
 });
+
+// Percorre objeto recursivamente procurando string que seja URL de vídeo.
+// Aceita qualquer extensão de vídeo comum E qualquer URL de
+// storage.theapi.app (PiAPI guarda vídeo lá independente da extensão visível).
+// Fallback de último recurso quando os campos explícitos não bateram.
+function deepFindVideoUrl(obj: unknown): string | null {
+  if (obj == null) return null;
+  if (typeof obj === "string") {
+    if (looksLikeVideoUrl(obj)) return obj;
+    return null;
+  }
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const found = deepFindVideoUrl(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (typeof obj === "object") {
+    for (const value of Object.values(obj as Record<string, unknown>)) {
+      const found = deepFindVideoUrl(value);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function looksLikeVideoUrl(s: string): boolean {
+  if (!s.startsWith("http")) return false;
+  // URL com extensão de vídeo
+  if (/\.(mp4|webm|mov|m4v)(\?|$)/i.test(s)) return true;
+  // PiAPI usa storage.theapi.app pra todos os vídeos
+  if (/storage\.theapi\.app\/videos\//i.test(s)) return true;
+  return false;
+}

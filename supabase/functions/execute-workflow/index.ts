@@ -193,7 +193,10 @@ function bypassNode(graph: Graph, nodeId: string): Graph {
   for (const ue of upstream) {
     for (const de of downstream) {
       newEdges.push({
-        id: `${ue.id}_${de.id}_bypass`,
+        // UUID pra evitar colisão quando há múltiplos bypass na sequência
+        // (ex: 2 variation nodes vazias no mesmo path gerando edges com
+        // sufixo _bypass que repetiam IDs)
+        id: `bypass_${crypto.randomUUID()}`,
         source: ue.source,
         sourceHandle: ue.sourceHandle,
         target: de.target,
@@ -787,81 +790,126 @@ async function executeNode(
 // após cada nível pra UI poder polar progresso. Roda em background via
 // EdgeRuntime.waitUntil — caller já recebeu run_id e voltou pro client.
 //
-// Limite de wall-clock do Supabase Edge Function: 150s default. Pra
-// 50 image-gens em paralelo (~30-60s OpenAI side + rate limits), entra
-// no budget. Workflows mais longos vão estourar — caller recebe status
-// 'failed' com 'wall_clock_timeout' no error.
+// Limite de wall-clock do Supabase Edge Function: 150s default.
+//
+// ESTRATÉGIA PRA WORKFLOWS GRANDES (50+ imagens):
+// 1. Concurrency limit dentro de cada nível: max 3 nodes em paralelo
+//    (rate limit OpenAI ~5/min, evita throttle e amplifica error blast)
+// 2. Time-budget guard: antes de cada batch, verifica se ainda cabe.
+//    Se restam <30s, salva checkpoint e re-invoca a function pra
+//    continuar do próximo nível. Cada self-invoke ganha +120s de budget.
+// 3. Hard cap: 5 self-invokes max (~10 min total). Suficiente pra 50
+//    image-gens com OpenAI rate limits.
+// 4. Idempotência: ler outputs/errors do DB no boot. Pula nodes já
+//    processados (re-invokes não duplicam trabalho).
+const HARD_BUDGET_MS = 130_000;     // sai antes do Supabase matar (150s)
+const RESERVE_FOR_REINVOKE_MS = 30_000; // bater self-call precisa tempo
+const NODE_CONCURRENCY = 3;          // OpenAI gpt-image-2 ~5 req/min
+const MAX_REINVOKES = 5;
+
 async function processWorkflow(
   runId: string,
   graph: Graph,
   ctx: ExecCtx,
   levels: GraphNode[][],
   sb: ReturnType<typeof createClient>,
+  reinvokeCount = 0,
 ): Promise<void> {
+  const startedAt = Date.now();
+  // Read state atual do DB pra suportar resume após self-invoke. Outputs
+  // de chunks anteriores ficam intactos.
   const outputs: OutputsMap = {};
   const errors: Record<string, string> = {};
+  try {
+    const { data: existing } = await sb.from("hub_workflow_runs")
+      .select("outputs, error")
+      .eq("id", runId)
+      .maybeSingle();
+    if (existing?.outputs) Object.assign(outputs, existing.outputs as OutputsMap);
+    if (existing?.error) {
+      try { Object.assign(errors, JSON.parse(existing.error as string)); } catch { /* ignore */ }
+    }
+  } catch (e) { console.warn("[execute-workflow] read state failed:", e); }
 
-  // Marca como running (caso ainda não tenha sido)
-  await sb.from("hub_workflow_runs")
-    .update({ status: "running", started_at: new Date().toISOString() })
-    .eq("id", runId);
+  // Marca como running. Updated_at do DB serve como heartbeat — o client
+  // pode detectar travamento se passa muito tempo sem updated_at mudar.
+  if (reinvokeCount === 0) {
+    await sb.from("hub_workflow_runs")
+      .update({ status: "running", started_at: new Date().toISOString() })
+      .eq("id", runId);
+  }
+
+  // Encontra próximo nível incompleto (resume após re-invoke)
+  let resumeIdx = 0;
+  for (let i = 0; i < levels.length; i++) {
+    const allDone = levels[i].every(n => outputs[n.id] !== undefined || errors[n.id]);
+    if (allDone) resumeIdx = i + 1;
+    else break;
+  }
+
+  const elapsed = () => Date.now() - startedAt;
+  const remainingBudget = () => HARD_BUDGET_MS - elapsed();
 
   try {
-    for (const level of levels) {
-      // Separa nós em executáveis vs blocked-by-upstream antes de executar.
-      // Antes da fix: nó downstream rodava com input undefined e dava erro
-      // genérico (missing_asset, undefined.image_url). Agora: marca como
-      // upstream_failed pra UI mostrar causa real.
+    for (let levelIdx = resumeIdx; levelIdx < levels.length; levelIdx++) {
+      const level = levels[levelIdx];
+
+      // Separa nós executáveis vs blocked-by-upstream
       const executable: GraphNode[] = [];
       for (const node of level) {
+        if (outputs[node.id] !== undefined || errors[node.id]) continue; // já processado
         const failedAncestor = hasFailedAncestor(node.id, graph, errors);
         if (failedAncestor) {
           errors[node.id] = `upstream_failed:${failedAncestor}`;
-          console.warn(`[execute-workflow] node ${node.id} (${node.type}) blocked: upstream ${failedAncestor} failed`);
+          console.warn(`[execute-workflow] node ${node.id} blocked: upstream ${failedAncestor} failed`);
         } else {
           executable.push(node);
         }
       }
 
-      const results = await Promise.allSettled(
-        executable.map(node => executeNode(node, graph, outputs, ctx))
-      );
-      for (let i = 0; i < executable.length; i++) {
-        const node = executable[i];
-        const r = results[i];
-        if (r.status === "fulfilled") {
-          outputs[node.id] = r.value;
-        } else {
-          const msg = (r.reason as Error)?.message || String(r.reason);
-          errors[node.id] = msg.slice(0, 300);
-          console.error(`[execute-workflow] node ${node.id} (${node.type}) failed:`, msg);
+      // Processa em batches limitados pra não sobrecarregar OpenAI E pra
+      // poder pausar entre batches caso budget aperte.
+      for (let batchStart = 0; batchStart < executable.length; batchStart += NODE_CONCURRENCY) {
+        // Time-budget guard: se sobra menos do que precisamos pra
+        // re-invocar, abandona o batch e marca pra resume.
+        if (remainingBudget() < RESERVE_FOR_REINVOKE_MS) {
+          console.log(`[execute-workflow] run ${runId} budget low (${remainingBudget()}ms left), persisting + reinvoke ${reinvokeCount + 1}/${MAX_REINVOKES}`);
+          await sb.from("hub_workflow_runs")
+            .update({ outputs, error: Object.keys(errors).length > 0 ? JSON.stringify(errors) : null })
+            .eq("id", runId);
+          if (reinvokeCount + 1 >= MAX_REINVOKES) {
+            errors["__system__"] = "max_reinvokes_exceeded — workflow muito grande, quebra em workflows menores";
+            await finalizeRun(sb, runId, outputs, errors, graph);
+            return;
+          }
+          await selfReinvoke(runId, reinvokeCount);
+          return;
         }
+
+        const batch = executable.slice(batchStart, batchStart + NODE_CONCURRENCY);
+        const results = await Promise.allSettled(
+          batch.map(node => executeNode(node, graph, outputs, ctx))
+        );
+        for (let i = 0; i < batch.length; i++) {
+          const node = batch[i];
+          const r = results[i];
+          if (r.status === "fulfilled") {
+            outputs[node.id] = r.value;
+          } else {
+            const msg = (r.reason as Error)?.message || String(r.reason);
+            errors[node.id] = msg.slice(0, 300);
+            console.error(`[execute-workflow] node ${node.id} (${node.type}) failed:`, msg);
+          }
+        }
+        // Persiste após cada batch pra UI ver progresso fino (ex: 11/50)
+        await sb.from("hub_workflow_runs")
+          .update({ outputs, error: Object.keys(errors).length > 0 ? JSON.stringify(errors) : null })
+          .eq("id", runId);
       }
-      // Persiste outputs após cada nível pra polling refletir progresso
-      await sb.from("hub_workflow_runs")
-        .update({ outputs, error: Object.keys(errors).length > 0 ? JSON.stringify(errors) : null })
-        .eq("id", runId);
     }
 
-    // Status final
-    const totalNodes = graph.nodes.length;
-    const successCount = Object.keys(outputs).length;
-    const errorCount = Object.keys(errors).length;
-    let status: "succeeded" | "partial" | "failed";
-    if (errorCount === 0) status = "succeeded";
-    else if (successCount > errorCount) status = "partial";
-    else status = "failed";
-
-    await sb.from("hub_workflow_runs")
-      .update({
-        status,
-        outputs,
-        error: errorCount > 0 ? JSON.stringify(errors) : null,
-        ended_at: new Date().toISOString(),
-      })
-      .eq("id", runId);
-
-    console.log(`[execute-workflow] run ${runId} ${status} — ${successCount}/${totalNodes} nodes ok`);
+    // Todos os níveis processados: finaliza
+    await finalizeRun(sb, runId, outputs, errors, graph);
   } catch (e) {
     console.error(`[execute-workflow] run ${runId} fatal:`, e);
     await sb.from("hub_workflow_runs")
@@ -872,6 +920,56 @@ async function processWorkflow(
         ended_at: new Date().toISOString(),
       })
       .eq("id", runId);
+  }
+}
+
+// Calcula status final e fecha o run no DB
+async function finalizeRun(
+  sb: ReturnType<typeof createClient>,
+  runId: string,
+  outputs: OutputsMap,
+  errors: Record<string, string>,
+  graph: Graph,
+): Promise<void> {
+  const totalNodes = graph.nodes.length;
+  const successCount = Object.keys(outputs).length;
+  const errorCount = Object.keys(errors).length;
+  let status: "succeeded" | "partial" | "failed";
+  if (errorCount === 0) status = "succeeded";
+  else if (successCount > errorCount) status = "partial";
+  else status = "failed";
+
+  await sb.from("hub_workflow_runs")
+    .update({
+      status,
+      outputs,
+      error: errorCount > 0 ? JSON.stringify(errors) : null,
+      ended_at: new Date().toISOString(),
+    })
+    .eq("id", runId);
+
+  console.log(`[execute-workflow] run ${runId} ${status} — ${successCount}/${totalNodes} nodes ok`);
+}
+
+// Re-invoca a function pra continuar onde parou. POST com flag de resume
+// + service role token (auth interna). A nova invocação lê o estado atual
+// (outputs/errors persistidos) e continua dos próximos nodes.
+async function selfReinvoke(runId: string, reinvokeCount = 0): Promise<void> {
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  try {
+    // Fire-and-forget — a nova invocação tem seu próprio budget de 150s
+    fetch(`${SUPABASE_URL}/functions/v1/execute-workflow`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${SERVICE_KEY}`,
+        "Content-Type": "application/json",
+        "x-resume-internal": "1",
+      },
+      body: JSON.stringify({ resume_run_id: runId, reinvoke_count: reinvokeCount }),
+    }).catch(e => console.warn(`[execute-workflow] selfReinvoke ${runId} fetch error:`, e));
+  } catch (e) {
+    console.error(`[execute-workflow] selfReinvoke ${runId} fatal:`, e);
   }
 }
 
@@ -891,11 +989,52 @@ Deno.serve(async (req) => {
     }
     const authToken = authHeader.slice(7);
     const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    const body = await req.json().catch(() => ({}));
+
+    // ── RESUME PATH ───────────────────────────────────────────────────
+    // Self re-invoke pra continuar workflow grande que estourou budget.
+    // Auth interna via service role token + flag header. Lê estado atual
+    // do DB e continua processWorkflow do próximo nível incompleto.
+    const isResume = req.headers.get("x-resume-internal") === "1" && authToken === SERVICE_KEY;
+    if (isResume) {
+      const { resume_run_id, reinvoke_count } = body as { resume_run_id?: string; reinvoke_count?: number };
+      if (!resume_run_id) return jsonResponse({ _v: FN_VERSION, ok: false, error: "missing_resume_run_id" }, 400);
+      const { data: runData } = await sb.from("hub_workflow_runs")
+        .select("id, workflow_id, user_id, inputs")
+        .eq("id", resume_run_id).maybeSingle();
+      if (!runData) return jsonResponse({ _v: FN_VERSION, ok: false, error: "run_not_found" }, 404);
+      const { data: wfRow } = await sb.from("hub_workflows").select("graph").eq("id", runData.workflow_id).single();
+      if (!wfRow?.graph) return jsonResponse({ _v: FN_VERSION, ok: false, error: "workflow_not_found" }, 404);
+      const rawGraphR = wfRow.graph as Graph;
+      const overriddenR = applyInputOverrides(rawGraphR, runData.inputs as Record<string, Record<string, unknown>> | undefined);
+      const expandedR = expandImageGenCount(expandVariations(overriddenR));
+      const levelsR = topoLevels(expandedR);
+      const ctxR: ExecCtx = {
+        supabaseUrl: SUPABASE_URL,
+        serviceRoleKey: SERVICE_KEY,
+        authToken: SERVICE_KEY, // resume usa service role pras edge calls
+        userId: runData.user_id as string,
+        runId: resume_run_id,
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ER1 = (globalThis as any).EdgeRuntime;
+      const nextCount = (reinvoke_count || 0) + 1;
+      if (ER1?.waitUntil) {
+        ER1.waitUntil(processWorkflow(resume_run_id, expandedR, ctxR, levelsR, sb, nextCount));
+      } else {
+        processWorkflow(resume_run_id, expandedR, ctxR, levelsR, sb, nextCount).catch(e =>
+          console.error("[execute-workflow] resume bg fallback:", e)
+        );
+      }
+      return jsonResponse({ _v: FN_VERSION, ok: true, resumed: true, run_id: resume_run_id }, 200);
+    }
+
+    // ── NEW RUN PATH ──────────────────────────────────────────────────
     const { data: userData } = await sb.auth.getUser(authToken);
     const authUser = userData?.user;
     if (!authUser) return jsonResponse({ _v: FN_VERSION, ok: false, error: "unauthorized" }, 401);
 
-    const body = await req.json().catch(() => ({}));
     const { workflow_id, inputs } = body as { workflow_id?: string; inputs?: Record<string, Record<string, unknown>> };
     if (!workflow_id) return jsonResponse({ _v: FN_VERSION, ok: false, error: "missing_workflow_id" }, 400);
 
