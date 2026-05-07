@@ -167,6 +167,13 @@ type RawRow = {
     video_url?: string;
     duration_s?: number;
     resolution?: string;
+    // Faceswap-specific
+    output_url?: string;
+    mode?: "image" | "video";
+    swap_image_url?: string;
+    target_url?: string;
+    task_id?: string;
+    model?: string;
   };
   created_at: string;
 };
