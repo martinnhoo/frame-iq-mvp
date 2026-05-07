@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v6-library-save-2026-05-07";
+const FN_VERSION = "v7-variation-debug-2026-05-07";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -90,8 +90,10 @@ function expandVariations(graph: Graph): Graph {
   for (const vNode of variationNodes) {
     const axis = String(vNode.data.axis || "aspect_ratio");
     const values = Array.isArray(vNode.data.values) ? (vNode.data.values as string[]) : [];
+    console.log(`[expandVariations] processing vNode=${vNode.id} axis=${axis} values=${JSON.stringify(values)}`);
+
     if (values.length === 0) {
-      // Sem valores — remove o nó da execução e conecta upstream direto ao downstream
+      console.warn(`[expandVariations] vNode=${vNode.id} has empty values — bypassing`);
       workGraph = bypassNode(workGraph, vNode.id);
       continue;
     }
@@ -108,6 +110,18 @@ function expandVariations(graph: Graph): Graph {
         }
       }
     }
+
+    if (downstreamIds.size === 0) {
+      // Variation sem nada downstream → não tem o que clonar.
+      // CAUSA COMUM do "duplicado": user pôs variation desconectada do
+      // image-gen, ou pôs variation DEPOIS do image-gen (prompt →
+      // image-gen → variation → output). Posição correta: prompt →
+      // variation → image-gen → output.
+      console.warn(`[expandVariations] vNode=${vNode.id} has NO downstream — variation will have NO effect. Provavelmente o user conectou na ordem errada (variation depois do image-gen).`);
+      workGraph = bypassNode(workGraph, vNode.id);
+      continue;
+    }
+    console.log(`[expandVariations] vNode=${vNode.id} downstream count=${downstreamIds.size} ids=${[...downstreamIds].join(",")}`);
 
     const directDownstreamEdges = workGraph.edges.filter(e => e.source === vNode.id);
     const upstreamEdges = workGraph.edges.filter(e => e.target === vNode.id);
@@ -129,11 +143,16 @@ function expandVariations(graph: Graph): Graph {
         if (!orig) continue;
         const newId = `${orig.id}_v${i}`;
         idMap.set(id, newId);
-        const newData = { ...orig.data };
+        const newData: Record<string, unknown> = { ...orig.data };
         // Aplica override do axis. Suportado: aspect_ratio.
-        // Outros axes (market, etc) precisam de re-resolução de brand context
-        // — fica pra Fase 3.
-        if (axis === "aspect_ratio") newData.aspect_ratio = val;
+        if (axis === "aspect_ratio") {
+          newData.aspect_ratio = val;
+          console.log(`[expandVariations] clone ${newId} (type=${orig.type}) aspect_ratio override: ${orig.data.aspect_ratio || "(none)"} → ${val}`);
+        }
+        // Tag de rastreio — útil pra debug e pra UI mostrar "qual variação"
+        newData._variation_axis = axis;
+        newData._variation_value = val;
+        newData._variation_index = i;
         const offsetY = (orig.position?.y || 0) + i * 220;
         newNodes.push({
           ...orig,
@@ -565,7 +584,12 @@ async function execImageGen(
     license_text: include_license ? license_text : null,
     source: "workflow",
     workflow_run_id: ctx.runId,
+    // Rastreio de variation pra debug e UI futura
+    variation_axis: node.data._variation_axis as string | undefined,
+    variation_value: node.data._variation_value as string | undefined,
+    variation_index: node.data._variation_index as number | undefined,
   });
+  console.log(`[execImageGen] node=${node.id} aspect_ratio=${aspect_ratio} variation_value=${node.data._variation_value || "(none)"} memory_id=${hubAssetId}`);
 
   return {
     asset_id: hubAssetId || payload.memory_id || null,
