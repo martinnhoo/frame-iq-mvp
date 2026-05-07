@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import {
   Image as ImageIcon, Layers, Clapperboard, Mic, Captions, GitBranch, BarChart3,
   FolderOpen, ArrowRight, Sparkles, GalleryHorizontal, Video as VideoIcon,
+  ScanFace,
 } from "lucide-react";
 
 type Lang = "pt" | "en" | "es" | "zh";
@@ -205,6 +206,14 @@ export default function BrilliantHub() {
         : "Text or image becomes video via Kling 3.0. 5-15s, 720p or 1080p.",
       btn: lang === "pt" ? "Gerar vídeo" : lang === "es" ? "Generar video" : lang === "zh" ? "生成视频" : "Generate video",
       icon: VideoIcon, route: "/dashboard/hub/video", featured: true },
+    { id: "faceswap",
+      title: lang === "pt" ? "Face Swap" : lang === "es" ? "Face Swap" : lang === "zh" ? "换脸" : "Face Swap",
+      desc: lang === "pt" ? "Troque o rosto em fotos ou vídeos com IA. Imagem ou MP4."
+        : lang === "es" ? "Cambia el rostro en fotos o videos con IA. Imagen o MP4."
+        : lang === "zh" ? "用 AI 换脸 — 照片或视频。图像或 MP4。"
+        : "Swap faces in photos or videos with AI. Image or MP4.",
+      btn: lang === "pt" ? "Trocar rosto" : lang === "es" ? "Cambiar rostro" : lang === "zh" ? "换脸" : "Swap face",
+      icon: ScanFace, route: "/dashboard/hub/faceswap", featured: true },
     { id: "voice", title: t("voice"), desc: t("voiceDesc"), btn: t("voiceBtn"),
       icon: Mic, route: "/dashboard/hub/voice" },
   ];

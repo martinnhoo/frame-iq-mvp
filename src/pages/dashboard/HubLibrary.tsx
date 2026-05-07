@@ -22,12 +22,12 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Image as ImageIcon, Layers, Clapperboard, GalleryHorizontal,
   ArrowLeft, Search, Download, X, Sparkles, FolderOpen, Mic, Captions,
-  FileText, Copy, Check, Volume2, Trash2, Video as VideoIcon,
+  FileText, Copy, Check, Volume2, Trash2, Video as VideoIcon, ScanFace,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 type Lang = "pt" | "en" | "es" | "zh";
-type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe" | "voice" | "video";
+type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe" | "voice" | "video" | "faceswap";
 
 interface HubAsset {
   id: string;            // group id (memory id pra single, group_id pra storyboard/carousel)
@@ -55,6 +55,8 @@ interface HubAsset {
   video_url?: string;
   duration_s?: number;
   resolution?: string;
+  // Faceswap-specific
+  faceswap_mode?: "image" | "video";
 }
 
 const STR: Record<string, Record<Lang, string>> = {
@@ -84,7 +86,9 @@ const STR: Record<string, Record<Lang, string>> = {
   filterTr:    { pt: "Transcrições",en: "Transcripts",es: "Transcripciones",zh: "转录" },
   filterVo:    { pt: "Vozes",      en: "Voices",     es: "Voces",      zh: "语音" },
   filterVid:   { pt: "Vídeos",     en: "Videos",     es: "Videos",     zh: "视频" },
+  filterFs:    { pt: "Face Swap",  en: "Face Swap",  es: "Face Swap",  zh: "换脸" },
   vidFor:      { pt: "Vídeo",      en: "Video",      es: "Video",      zh: "视频" },
+  fsFor:       { pt: "Face Swap",  en: "Face Swap",  es: "Face Swap",  zh: "换脸" },
   scenes:      { pt: "cenas",      en: "scenes",    es: "escenas",    zh: "场景" },
   slides:      { pt: "slides",     en: "slides",    es: "slides",     zh: "幻灯片" },
   download:    { pt: "Baixar",     en: "Download",  es: "Descargar",  zh: "下载" },
@@ -385,6 +389,28 @@ export default function HubLibrary() {
             continue;
           }
 
+          // Faceswap — pode ser imagem ou vídeo (depende do mode).
+          // output_url é o resultado final, swap_image_url + target_url são inputs.
+          if (r.kind === "hub_faceswap") {
+            const outUrl = (c.output_url || c.image_url || c.video_url || "").trim();
+            if (!outUrl) continue;
+            const fsMode = (c.mode === "video" ? "video" : "image") as "image" | "video";
+            groupedMap.set(r.id, {
+              id: r.id,
+              kind: "faceswap",
+              title: fsMode === "video" ? "Face swap (vídeo)" : "Face swap (imagem)",
+              prompt: "",
+              cover_url: fsMode === "image" ? outUrl : (c.swap_image_url || ""),
+              aspect_ratio: "1:1",
+              created_at: r.created_at,
+              brand_id: c.brand_id,
+              faceswap_mode: fsMode,
+              // Pra Library reaproveitar o player de vídeo:
+              ...(fsMode === "video" ? { video_url: outUrl } : {}),
+            });
+            continue;
+          }
+
           const url = c.image_url;
           if (!url) continue;
 
@@ -539,7 +565,7 @@ export default function HubLibrary() {
   }, [assets, kindFilter, search]);
 
   const counts = useMemo(() => {
-    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0, transcribe: 0, voice: 0, video: 0 };
+    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0, transcribe: 0, voice: 0, video: 0, faceswap: 0 };
     for (const a of assets) c[a.kind]++;
     return c;
   }, [assets]);
@@ -754,6 +780,11 @@ export default function HubLibrary() {
             label={t("filterVid")} icon={VideoIcon}
             onClick={() => setKindFilter("video")}
           />
+          <KindChip
+            active={kindFilter === "faceswap"} count={counts.faceswap}
+            label={t("filterFs")} icon={ScanFace}
+            onClick={() => setKindFilter("faceswap")}
+          />
         </div>
 
         {initialLoading ? (
@@ -922,6 +953,7 @@ function AssetCardImpl({ asset, lang, t, onClick, onDelete, selectionMode, selec
     : asset.kind === "transcribe" ? Captions
     : asset.kind === "voice" ? Mic
     : asset.kind === "video" ? VideoIcon
+    : asset.kind === "faceswap" ? ScanFace
     : ImageIcon;
   const kindLabel = asset.kind === "png" ? t("pngFor")
     : asset.kind === "storyboard" ? t("sbFor")
@@ -929,11 +961,13 @@ function AssetCardImpl({ asset, lang, t, onClick, onDelete, selectionMode, selec
     : asset.kind === "transcribe" ? t("trFor")
     : asset.kind === "voice" ? t("voFor")
     : asset.kind === "video" ? t("vidFor")
+    : asset.kind === "faceswap" ? t("fsFor")
     : t("imageFor");
   const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
   const isTranscribe = asset.kind === "transcribe";
   const isVoice = asset.kind === "voice";
-  const isVideo = asset.kind === "video";
+  // faceswap em modo vídeo usa o mesmo player de vídeo
+  const isVideo = asset.kind === "video" || (asset.kind === "faceswap" && asset.faceswap_mode === "video");
   const countLabel = asset.kind === "storyboard" ? t("scenes") : t("slides");
   const wordCount = isTranscribe ? (asset.transcript || "").trim().split(/\s+/).filter(Boolean).length : 0;
 

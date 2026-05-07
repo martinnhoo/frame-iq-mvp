@@ -44,6 +44,7 @@ import {
   Captions,
   GitBranch,
   GalleryHorizontal,
+  ScanFace,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -157,8 +158,9 @@ function getNavSections(lang: string): NavSection[] {
       items: [
         { url: '/dashboard/hub/image', label: L('Imagem',        'Image',           'Imagen',           '图像'),     icon: ImageIcon },
         { url: '/dashboard/hub/png',   label: L('PNG',           'PNG',             'PNG',              'PNG'),       icon: Layers },
-        { url: '/dashboard/hub/video', label: L('Vídeo',         'Video',           'Video',            '视频'),     icon: Video },
-        { url: '/dashboard/hub/voice', label: L('Voz',           'Voice',           'Voz',              '语音'),     icon: Mic },
+        { url: '/dashboard/hub/video',    label: L('Vídeo',         'Video',           'Video',            '视频'),     icon: Video },
+        { url: '/dashboard/hub/faceswap', label: L('Face Swap',     'Face Swap',       'Face Swap',        '换脸'),     icon: ScanFace },
+        { url: '/dashboard/hub/voice',    label: L('Voz',           'Voice',           'Voz',              '语音'),     icon: Mic },
       ],
     },
     {
