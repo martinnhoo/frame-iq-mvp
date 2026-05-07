@@ -369,6 +369,14 @@ function VoiceNode({ data, selected }: { data: { voice_id?: string; voice_name?:
 
 function VariationNode({ data, selected }: { data: { axis?: string; values?: string[] }; selected: boolean }) {
   const values = data.values || [];
+  const axis = data.axis || "aspect_ratio";
+  const axisLabel = axis === "prompt" ? "Prompt/copy" : "Formato";
+  // Pra prompt, valores podem ser longos — trunca cada um
+  const preview = values.length === 0
+    ? "Sem valores"
+    : axis === "prompt"
+      ? `${values.length} prompts: ${values.map(v => v.length > 24 ? v.slice(0, 22) + "…" : v).join(" · ")}`
+      : `${values.length} variantes: ${values.join(", ")}`;
   return (
     <NodeShell
       icon={<GitBranch size={13} />}
@@ -380,9 +388,9 @@ function VariationNode({ data, selected }: { data: { axis?: string; values?: str
         { id: "out", type: "source", position: Position.Right },
       ]}
     >
-      <div>Eixo: {data.axis || "aspect_ratio"}</div>
-      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.50)" }}>
-        {values.length === 0 ? "Sem valores" : `${values.length} variantes: ${values.join(", ")}`}
+      <div>Eixo: {axisLabel}</div>
+      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.50)", lineHeight: 1.35 }}>
+        {preview}
       </div>
     </NodeShell>
   );
@@ -1809,18 +1817,38 @@ function NodeConfigPanel({
             onChange={e => onUpdate({ axis: e.target.value })}
             style={selectStyle}
           >
-            <option value="aspect_ratio" style={{ background: "#0d0d14" }}>Aspect ratio</option>
+            <option value="aspect_ratio" style={{ background: "#0d0d14" }}>
+              {lang === "pt" ? "Formato (1:1, 9:16, …)" : lang === "es" ? "Formato (1:1, 9:16, …)" : lang === "zh" ? "格式 (1:1, 9:16, …)" : "Aspect ratio (1:1, 9:16, …)"}
+            </option>
+            <option value="prompt" style={{ background: "#0d0d14" }}>
+              {lang === "pt" ? "Prompt / copy" : lang === "es" ? "Prompt / copy" : lang === "zh" ? "提示词 / 文案" : "Prompt / copy"}
+            </option>
           </select>
           <FieldLabel>{t("fieldVarValues")}</FieldLabel>
           <textarea
             value={(data.values as string[] || []).join("\n")}
             onChange={e => onUpdate({ values: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
-            rows={4}
-            placeholder="1:1&#10;9:16&#10;16:9"
+            rows={(data.axis as string) === "prompt" ? 6 : 4}
+            placeholder={
+              (data.axis as string) === "prompt"
+                ? (lang === "pt"
+                    ? "Ganhe 100 rodadas grátis\nGanhe 50 rodadas grátis\nDeposite e dobre seu saldo"
+                    : "Win 100 free spins\nWin 50 free spins\nDeposit and double your balance")
+                : "1:1\n9:16\n16:9"
+            }
             style={{ ...selectStyle, fontFamily: "inherit", resize: "vertical", minHeight: 80 }}
           />
           <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
-            {t("variationDesc")}
+            {(data.axis as string) === "prompt"
+              ? (lang === "pt"
+                  ? "Cada linha vira 1 imagem com a copy escrita aí. Combina com outro nó de Variação (Formato) pra fazer matriz de copy × formato."
+                  : lang === "es"
+                  ? "Cada línea genera 1 imagen con esa copy. Combina con otro nodo de Variación (formato) para crear matriz copy × formato."
+                  : lang === "zh"
+                  ? "每行生成 1 张该文案的图像。可以与另一个变体节点（格式）组合形成矩阵。"
+                  : "Each line becomes 1 image with that copy. Combine with another Variation node (aspect_ratio) for a copy × format matrix.")
+              : t("variationDesc")
+            }
           </div>
         </>
       )}

@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v7-variation-debug-2026-05-07";
+const FN_VERSION = "v8-variation-prompt-2026-05-07";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -144,10 +144,17 @@ function expandVariations(graph: Graph): Graph {
         const newId = `${orig.id}_v${i}`;
         idMap.set(id, newId);
         const newData: Record<string, unknown> = { ...orig.data };
-        // Aplica override do axis. Suportado: aspect_ratio.
+        // Aplica override do axis. Suportados:
+        //   - aspect_ratio → muda formato (1:1, 9:16, 16:9)
+        //   - prompt → muda copy. Setamos _prompt_override que image-gen
+        //     prioriza sobre o input.prompt. Cobre cenário "variar copy"
+        //     (ganhe 100/50/20 rodadas etc)
         if (axis === "aspect_ratio") {
           newData.aspect_ratio = val;
           console.log(`[expandVariations] clone ${newId} (type=${orig.type}) aspect_ratio override: ${orig.data.aspect_ratio || "(none)"} → ${val}`);
+        } else if (axis === "prompt") {
+          newData._prompt_override = val;
+          console.log(`[expandVariations] clone ${newId} (type=${orig.type}) prompt override: "${val.slice(0, 60)}…"`);
         }
         // Tag de rastreio — útil pra debug e pra UI mostrar "qual variação"
         newData._variation_axis = axis;
@@ -519,12 +526,21 @@ async function execImageGen(
   inputs: Record<string, unknown>,
   ctx: ExecCtx,
 ): Promise<{ asset_id: string | null; image_url: string; prompt_used: string }> {
-  // Pega prompt do input (esperado: { text } do nó prompt)
+  // Pega prompt — prioridade:
+  //   1. _prompt_override (vem da expansão do variation com axis="prompt")
+  //   2. inputs.prompt (vem do nó prompt upstream)
+  // Variation com axis="prompt" injeta _prompt_override em cada clone do
+  // image-gen pra que cada variant gere uma copy diferente.
+  const overridePrompt = (node.data._prompt_override as string | undefined)?.trim();
   const promptInput = inputs.prompt as { text?: string } | string | undefined;
-  const promptText = typeof promptInput === "string"
+  const inputPromptText = typeof promptInput === "string"
     ? promptInput
     : (promptInput?.text || "");
+  const promptText = overridePrompt || inputPromptText;
   if (!promptText || promptText.length < 5) throw new Error("missing_prompt");
+  if (overridePrompt) {
+    console.log(`[execImageGen] node=${node.id} using prompt OVERRIDE from variation: "${overridePrompt.slice(0, 80)}…"`);
+  }
 
   // Pega brand context (opcional)
   const brandInput = inputs.brand as Record<string, unknown> | undefined;
