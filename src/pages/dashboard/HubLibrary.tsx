@@ -15,7 +15,7 @@
  * PNG / Storyboard / Carrossel) + busca por prompt.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -174,12 +174,25 @@ export default function HubLibrary() {
   const t = (key: keyof typeof STR) => STR[key]?.[lang] || STR[key]?.en || String(key);
 
   const [assets, setAssets] = useState<HubAsset[]>([]);
-  const [loading, setLoading] = useState(true);
-  // Default 'all' pra mostrar TODO histórico — user pode filtrar depois.
-  // Antes era '30d' que escondia assets antigos e dava sensação de vazio.
-  const [period, setPeriod] = useState<string>("all");
+  // initialLoading = primeira vez que abre. firstLoadDone fica true após
+  // a primeira query terminar — usado pra mostrar skeleton só na primeira
+  // carga (não a cada mudança de filter, que mantém grid estável).
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refetching, setRefetching] = useState(false);
+  // Default 'today' — abertura rápida, user filtra pra outros períodos
+  // se quiser histórico maior.
+  const [period, setPeriod] = useState<string>("today");
   const [kindFilter, setKindFilter] = useState<"all" | AssetKind>("all");
+  // searchInput = state imediato do <input> (UI responsiva).
+  // search = state debounced que dispara o filtering pesado.
+  // Evita refilter a cada keystroke quando há 60+ cards.
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 180);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const [previewAsset, setPreviewAsset] = useState<HubAsset | null>(null);
   // Paginação — antes carregava 500 rows com data URLs embebidas (~1GB).
   // Agora carrega 60 inicial + "Carregar mais" pra adicionar 60 por vez.
@@ -427,14 +440,21 @@ export default function HubLibrary() {
   // os assets já carregados.
   const groupedRef = useRef<Map<string, HubAsset>>(new Map());
 
-  // Initial load (e reload quando period muda)
+  // Initial load + reload quando period muda. Estratégia:
+  //   - Primeira carga: initialLoading=true → skeleton cards
+  //   - Mudança de filter: refetching=true (overlay sutil), grid antigo
+  //     fica visível até nova data chegar — sem flash branco
   useEffect(() => {
     let mounted = true;
+    const isFirst = initialLoading;
+    if (!isFirst) setRefetching(true);
     (async () => {
-      setLoading(true);
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { if (mounted) { setAssets([]); setLoading(false); } return; }
+        if (!user) {
+          if (mounted) { setAssets([]); setInitialLoading(false); setRefetching(false); }
+          return;
+        }
 
         const days = PERIOD_OPTIONS.find(p => p.id === period)!.days;
         const since = new Date(Date.now() - days * 86_400_000).toISOString();
@@ -459,10 +479,14 @@ export default function HubLibrary() {
         console.error("[hub-library] load error:", e);
         if (mounted) setAssets([]);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setInitialLoading(false);
+          setRefetching(false);
+        }
       }
     })();
     return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
   // Load more — busca o próximo PAGE_SIZE com offset pelo created_at do
@@ -557,7 +581,7 @@ export default function HubLibrary() {
           <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
             <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#9CA3AF" }} />
             <input
-              type="text" value={search} onChange={e => setSearch(e.target.value)}
+              type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)}
               placeholder={t("searchPh")}
               style={{
                 width: "100%", padding: "10px 14px 10px 36px",
@@ -732,9 +756,15 @@ export default function HubLibrary() {
           />
         </div>
 
-        {loading ? (
-          <div style={{ textAlign: "center", padding: 60, color: "#9CA3AF", fontSize: 13 }}>
-            {t("loading")}
+        {initialLoading ? (
+          // Skeleton grid: matches real grid layout pra evitar reflow
+          // quando os assets reais chegam.
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+            gap: 14,
+          }}>
+            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
@@ -747,6 +777,11 @@ export default function HubLibrary() {
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
               gap: 14,
+              // Durante refetching, leve dim no grid antigo até nova data
+              // chegar — sinaliza atividade sem destruir layout
+              opacity: refetching ? 0.55 : 1,
+              transition: "opacity 0.15s",
+              pointerEvents: refetching ? "none" : "auto",
             }}>
               {filtered.map(asset => (
                 <AssetCard
@@ -819,8 +854,45 @@ function KindChip({ active, count, label, icon: Icon, onClick }: {
   );
 }
 
+// ── SkeletonCard ──────────────────────────────────────────────────────────
+// Mesmo footprint visual do AssetCard. Usado durante initial loading pra
+// reservar layout — evita flash branco e reflow quando assets reais chegam.
+function SkeletonCard() {
+  return (
+    <div style={{
+      background: "rgba(17,24,39,0.50)",
+      border: "1px solid rgba(255,255,255,0.06)",
+      borderRadius: 12, overflow: "hidden",
+      display: "flex", flexDirection: "column",
+    }}>
+      <div style={{
+        width: "100%", aspectRatio: "1/1",
+        background: "linear-gradient(110deg, rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 70%)",
+        backgroundSize: "200% 100%",
+        animation: "skeletonShimmer 1.4s ease-in-out infinite",
+      }} />
+      <div style={{ padding: "10px 12px" }}>
+        <div style={{
+          width: "72%", height: 10, borderRadius: 4,
+          background: "rgba(255,255,255,0.08)",
+          marginBottom: 6,
+        }} />
+        <div style={{
+          width: "40%", height: 8, borderRadius: 4,
+          background: "rgba(255,255,255,0.05)",
+        }} />
+      </div>
+      <style>{`@keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
+    </div>
+  );
+}
+
 // ── AssetCard ──────────────────────────────────────────────────────────────
-function AssetCard({ asset, lang, t, onClick, onDelete, selectionMode, selected }: {
+// Wrappado em memo: re-render só se props mudarem (asset reference,
+// selectionMode, selected). Evita re-render dos 60 cards a cada keystroke
+// do search — só o `filtered` array muda, mas cada AssetCard individual
+// continua o mesmo objeto, então memo barra o re-render.
+function AssetCardImpl({ asset, lang, t, onClick, onDelete, selectionMode, selected }: {
   asset: HubAsset; lang: Lang;
   t: (key: keyof typeof STR) => string;
   onClick: () => void;
@@ -1100,6 +1172,16 @@ function AssetCard({ asset, lang, t, onClick, onDelete, selectionMode, selected 
     </button>
   );
 }
+
+// memo barra re-render quando props relevantes não mudaram. Search/filter
+// no parent não dispara re-render dos cards visíveis (apenas re-monta o
+// array filtrado).
+const AssetCard = memo(AssetCardImpl, (prev, next) => {
+  return prev.asset === next.asset
+    && prev.selectionMode === next.selectionMode
+    && prev.selected === next.selected
+    && prev.lang === next.lang;
+});
 
 // ── EmptyState ──────────────────────────────────────────────────────────────
 function EmptyState({ title, desc }: { title: string; desc: string }) {
