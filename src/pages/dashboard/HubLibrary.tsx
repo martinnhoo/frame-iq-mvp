@@ -1536,19 +1536,40 @@ function PreviewModal({ asset, onClose, lang, t }: {
                     borderRadius: 10, overflow: "hidden",
                   }}>
                     <div style={{ position: "relative" }}>
-                      <img src={it.url} alt={`${asset.id}-${it.n}`}
-                        loading="lazy" decoding="async"
-                        style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block" }} />
+                      {/* Imagem clicável — abre em nova aba pra ver tamanho real */}
+                      <a
+                        href={it.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: "block", cursor: "zoom-in" }}
+                        title={lang === "pt" ? "Abrir em tamanho real" : "Open full size"}
+                      >
+                        <img src={it.url} alt={`${asset.id}-${it.n}`}
+                          loading="lazy" decoding="async"
+                          style={{
+                            width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block",
+                            transition: "opacity 0.15s",
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.opacity = "0.85"; }}
+                          onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+                        />
+                      </a>
                       <div style={{
                         position: "absolute", top: 6, left: 6,
                         padding: "2px 7px", borderRadius: 5,
                         background: "rgba(0,0,0,0.65)", color: "#fff",
                         fontSize: 10, fontWeight: 800,
+                        pointerEvents: "none",
                       }}>
                         {it.n}
                       </div>
                       <button
-                        onClick={() => downloadOne(it.url, `${asset.kind}-${asset.id.slice(0, 8)}-${String(it.n).padStart(2, "0")}.png`)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          downloadOne(it.url, `${asset.kind}-${asset.id.slice(0, 8)}-${String(it.n).padStart(2, "0")}.png`);
+                        }}
+                        title={t("download")}
                         style={{
                           position: "absolute", top: 6, right: 6,
                           width: 24, height: 24, borderRadius: 6,

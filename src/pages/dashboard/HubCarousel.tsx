@@ -617,9 +617,25 @@ export default function HubCarousel() {
                     <div key={s.n} style={{ background: "rgba(17,24,39,0.70)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, overflow: "hidden" }}>
                       <div style={{ position: "relative", background: "rgba(0,0,0,0.40)" }}>
                         {s.image_url ? (
-                          <img src={s.image_url} alt={`Slide ${s.n}`}
-                            loading="lazy" decoding="async"
-                            style={{ width: "100%", aspectRatio: aspectRatio === "1:1" ? "1/1" : "4/5", objectFit: "cover", display: "block" }} />
+                          <a
+                            href={s.image_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: "block", cursor: "zoom-in" }}
+                            title={lang === "pt" ? "Abrir em tamanho real" : "Open full size"}
+                          >
+                            <img src={s.image_url} alt={`Slide ${s.n}`}
+                              loading="lazy" decoding="async"
+                              style={{
+                                width: "100%",
+                                aspectRatio: aspectRatio === "1:1" ? "1/1" : "4/5",
+                                objectFit: "cover", display: "block",
+                                transition: "opacity 0.15s",
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.opacity = "0.85"; }}
+                              onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+                            />
+                          </a>
                         ) : (
                           <div style={{
                             width: "100%", aspectRatio: aspectRatio === "1:1" ? "1/1" : "4/5",
@@ -640,7 +656,12 @@ export default function HubCarousel() {
                         </div>
                         {s.image_url && (
                           <button
-                            onClick={() => downloadOne(s.image_url!, `carousel-${String(s.n).padStart(2, "0")}.png`)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              downloadOne(s.image_url!, `carousel-${String(s.n).padStart(2, "0")}.png`);
+                            }}
+                            title={lang === "pt" ? "Baixar slide" : lang === "es" ? "Descargar slide" : lang === "zh" ? "下载幻灯片" : "Download slide"}
                             style={{
                               position: "absolute", top: 8, right: 8,
                               width: 28, height: 28, borderRadius: 7,
