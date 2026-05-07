@@ -4,7 +4,7 @@
 // outros via env var VIDEO_PROVIDER ou body.provider. Pra trocar no futuro,
 // só adicionar nova função generateVia<X>() e ramo no dispatcher.
 //
-// Default: PiAPI Kling 3.0 std 720p sem áudio (mais barato — $0.10/s).
+// Default: PiAPI Kling 2.6 std 720p sem áudio.
 //
 // Modos de geração:
 //   - text-to-video: input = { prompt, duration, aspect_ratio }
@@ -20,7 +20,7 @@
 // 60-90s. Pra vídeos longos (>10s) pode estourar — caller deve usar
 // duration ≤ 10s pra segurança.
 
-const FN_VERSION = "v5-kling26-fix-2026-05-07";
+const FN_VERSION = "v6-piapi-payload-2026-05-07";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -40,15 +40,15 @@ function jsonResponse(payload: unknown, status: number): Response {
 const TOTAL_TIMEOUT_MS = 130_000;
 const POLL_INTERVAL_MS = 5_000;
 
-// ── Provider: PiAPI Kling 3.0 ───────────────────────────────────────
+// ── Provider: PiAPI Kling 2.6 ───────────────────────────────────────
 interface PiapiInput {
   prompt: string;
   image_url?: string | null;
-  duration: number;          // 3-15s
+  duration: number;          // normalized to 5 or 10
   aspect_ratio: string;      // "16:9" | "9:16" | "1:1"
   enable_audio: boolean;
   mode: "std" | "pro";
-  resolution: "720p" | "1080p"; // PiAPI usa "version":"3.0" + outros params
+  resolution: "720p" | "1080p";
   negative_prompt?: string;
 }
 
@@ -68,24 +68,27 @@ async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: num
   // Kling API: duration must be 5 or 10 (not 3). version values:
   // 1.5/1.6/2.1/2.1-master/2.5/2.6 (default 2.6). NOT "3.0".
   const klingDuration = input.duration <= 7 ? 5 : 10;
+  const safeMode: "std" | "pro" = input.enable_audio ? "pro" : input.mode;
+  const safeImageUrl = input.image_url?.startsWith("http") ? input.image_url : null;
   const body = {
     model: "kling",
     task_type: "video_generation",
     input: {
       prompt: input.prompt,
       negative_prompt: input.negative_prompt || "",
-      cfg_scale: "0.5",
+      cfg_scale: 0.5,
       duration: klingDuration,
-      aspect_ratio: input.aspect_ratio,
       enable_audio: input.enable_audio,
-      mode: input.mode,
+      mode: safeMode,
       version: "2.6",
-      ...(input.image_url ? { image_url: input.image_url } : {}),
+      ...(safeImageUrl ? { image_url: safeImageUrl } : { aspect_ratio: input.aspect_ratio }),
     },
     config: {
-      service_mode: "public",
+      service_mode: "",
+      webhook_config: { endpoint: "", secret: "" },
     },
   };
+  console.log(`[hub-video] piapi create payload=${JSON.stringify({ ...body, input: { ...body.input, image_url: safeImageUrl ? `${safeImageUrl.slice(0, 80)}...` : undefined } })}`);
 
   let createRes: Response;
   try {
