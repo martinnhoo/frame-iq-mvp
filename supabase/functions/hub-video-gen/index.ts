@@ -64,23 +64,26 @@ interface PiapiResult {
 
 async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: number): Promise<PiapiResult> {
   // ── 1. Cria task ──────────────────────────────────────────────────
-  // Body shape per https://piapi.ai/docs/kling-api/kling-3-api
+  // Body shape per https://piapi.ai/docs/kling-api/create-task
+  // Kling API: duration must be 5 or 10 (not 3). version values:
+  // 1.5/1.6/2.1/2.1-master/2.5/2.6 (default 2.6). NOT "3.0".
+  const klingDuration = input.duration <= 7 ? 5 : 10;
   const body = {
     model: "kling",
     task_type: "video_generation",
     input: {
       prompt: input.prompt,
       negative_prompt: input.negative_prompt || "",
-      duration: input.duration,
+      cfg_scale: "0.5",
+      duration: klingDuration,
       aspect_ratio: input.aspect_ratio,
       enable_audio: input.enable_audio,
-      prefer_multi_shots: false,
       mode: input.mode,
-      version: "3.0",
+      version: "2.6",
       ...(input.image_url ? { image_url: input.image_url } : {}),
     },
     config: {
-      service_mode: "public", // PAYG mode
+      service_mode: "public",
     },
   };
 
