@@ -213,7 +213,7 @@ export default function BrilliantHub() {
         : lang === "zh" ? "用 AI 换脸 — 照片或视频。图像或 MP4。"
         : "Swap faces in photos or videos with AI. Image or MP4.",
       btn: lang === "pt" ? "Trocar rosto" : lang === "es" ? "Cambiar rostro" : lang === "zh" ? "换脸" : "Swap face",
-      icon: ScanFace, route: "/dashboard/hub/faceswap", featured: true },
+      icon: ScanFace, route: "/dashboard/hub/faceswap", featured: true, soon: true },
     { id: "voice", title: t("voice"), desc: t("voiceDesc"), btn: t("voiceBtn"),
       icon: Mic, route: "/dashboard/hub/voice" },
   ];

@@ -125,7 +125,17 @@ const STR: Record<string, Record<Lang, string>> = {
                     en: "~$0.10–$0.40 (depends on duration)",
                     es: "~$0,10–$0,40 (depende de la duración)",
                     zh: "约 $0.10–$0.40（取决于时长）" },
+  comingSoon:     { pt: "Em breve",                en: "Coming soon",                es: "Próximamente",                zh: "即将推出" },
+  comingSoonDesc: { pt: "Estamos atualizando o Face Swap para qualidade premium (nível Higgsfield). Disponível em breve.",
+                    en: "We're upgrading Face Swap to premium quality (Higgsfield-level). Available soon.",
+                    es: "Estamos actualizando Face Swap a calidad premium (nivel Higgsfield). Disponible pronto.",
+                    zh: "我们正在将换脸升级为高级质量（Higgsfield 级别）。即将推出。" },
 };
+
+// Flag temporária — desabilita geração até migrarmos pra Akool.
+// Manter o resto da UI funcional pro user explorar (upload, preview etc)
+// mas não chamar a edge function.
+const COMING_SOON = true;
 
 // ── Limites ───────────────────────────────────────────────────────
 const IMG_MAX_BYTES = 5 * 1024 * 1024;   // 5MB pra imagens
@@ -382,6 +392,10 @@ export default function HubFaceswap() {
   // ── Generate ────────────────────────────────────────────────────
   const generate = async () => {
     if (loading) return;
+    if (COMING_SOON) {
+      setError(t("comingSoonDesc"));
+      return;
+    }
     if (!swapImage || !targetFile) {
       setError(t("errMissing"));
       return;
@@ -565,7 +579,7 @@ export default function HubFaceswap() {
     return all.filter(b => b.name.toLowerCase().includes(s) || b.id.toLowerCase().includes(s));
   }, [brandSearch]);
 
-  const canGenerate = !!swapImage && !!targetFile && !loading;
+  const canGenerate = !COMING_SOON && !!swapImage && !!targetFile && !loading;
 
   // ── Render ──────────────────────────────────────────────────────
   return (
@@ -762,11 +776,18 @@ export default function HubFaceswap() {
                 fontSize: 13.5,
                 opacity: canGenerate ? 1 : 0.5,
                 cursor: canGenerate ? "pointer" : "not-allowed",
+                background: COMING_SOON ? "rgba(139,92,246,0.18)" : btnPrimary.background,
+                borderColor: COMING_SOON ? "rgba(139,92,246,0.40)" : btnPrimary.border,
+                color: COMING_SOON ? "#A78BFA" : "#fff",
               }}
             >
               {loading ? (
                 <>
                   <Loader size={14} className="spin" /> {t("generating")}
+                </>
+              ) : COMING_SOON ? (
+                <>
+                  <ScanFace size={14} /> {t("comingSoon")}
                 </>
               ) : (
                 <>
@@ -774,6 +795,32 @@ export default function HubFaceswap() {
                 </>
               )}
             </button>
+            {COMING_SOON && !loading && (
+              <div style={{
+                marginTop: 10,
+                padding: "10px 12px",
+                background: "rgba(139,92,246,0.06)",
+                border: "1px solid rgba(139,92,246,0.20)",
+                borderRadius: 8,
+                fontSize: 11.5,
+                color: "rgba(255,255,255,0.75)",
+                lineHeight: 1.5,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  <span style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                    color: "#A78BFA",
+                    background: "rgba(139,92,246,0.15)",
+                    padding: "2px 7px",
+                    borderRadius: 4,
+                  }}>{t("comingSoon")}</span>
+                </div>
+                {t("comingSoonDesc")}
+              </div>
+            )}
             {loading && (
               <div style={{ marginTop: 8, fontSize: 11, color: "rgba(255,255,255,0.55)", textAlign: "center" }}>
                 {t("generatingHint")}
