@@ -1005,9 +1005,23 @@ function VariantCard({ variant, aspectRatio, onDownload, onToggleWinner, t }: {
           </div>
         )}
         {variant.status === "done" && variant.imageUrl && (
-          <img src={variant.imageUrl} alt={variant.label}
-            loading="lazy" decoding="async"
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <a
+            href={variant.imageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: "block", width: "100%", height: "100%", cursor: "zoom-in" }}
+            title="Abrir em tamanho real"
+          >
+            <img src={variant.imageUrl} alt={variant.label}
+              loading="lazy" decoding="async"
+              style={{
+                width: "100%", height: "100%", objectFit: "cover", display: "block",
+                transition: "opacity 0.15s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "0.9"; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+            />
+          </a>
         )}
       </div>
       {/* Actions */}

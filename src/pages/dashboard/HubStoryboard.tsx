@@ -716,8 +716,23 @@ export default function HubStoryboard() {
                     }}>
                       <div style={{ position: "relative", background: "rgba(0,0,0,0.40)" }}>
                         {s.image_url ? (
-                          <img src={s.image_url} alt={`Scene ${s.n}`}
-                            style={{ width: "100%", aspectRatio: "9/16", objectFit: "cover", display: "block" }} />
+                          <a
+                            href={s.image_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: "block", cursor: "zoom-in" }}
+                            title={lang === "pt" ? "Abrir em tamanho real" : "Open full size"}
+                          >
+                            <img src={s.image_url} alt={`Scene ${s.n}`}
+                              loading="lazy" decoding="async"
+                              style={{
+                                width: "100%", aspectRatio: "9/16", objectFit: "cover", display: "block",
+                                transition: "opacity 0.15s",
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.opacity = "0.85"; }}
+                              onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+                            />
+                          </a>
                         ) : (
                           <div style={{
                             width: "100%", aspectRatio: "9/16",
@@ -739,8 +754,12 @@ export default function HubStoryboard() {
                         </div>
                         {s.image_url && (
                           <button
-                            onClick={() => downloadOne(s.image_url!, `storyboard-scene-${String(s.n).padStart(2, "0")}.png`)}
-                            title={t("downloadAll")}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              downloadOne(s.image_url!, `storyboard-scene-${String(s.n).padStart(2, "0")}.png`);
+                            }}
+                            title={lang === "pt" ? "Baixar cena" : lang === "es" ? "Descargar escena" : lang === "zh" ? "下载场景" : "Download scene"}
                             style={{
                               position: "absolute", top: 8, right: 8,
                               width: 28, height: 28, borderRadius: 7,

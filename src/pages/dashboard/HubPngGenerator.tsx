@@ -750,8 +750,22 @@ export default function HubPngGenerator() {
                     background: "rgba(0,0,0,0.30)",
                     border: "1px solid rgba(255,255,255,0.06)",
                   }}>
-                    <img src={imageUrl} alt={prompt}
-                      style={{ maxWidth: "100%", maxHeight: "62vh", borderRadius: 8, display: "block" }} />
+                    <a
+                      href={imageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: "block", cursor: "zoom-in" }}
+                      title={lang === "pt" ? "Abrir em tamanho real" : lang === "es" ? "Abrir tamaño real" : lang === "zh" ? "打开实际大小" : "Open full size"}
+                    >
+                      <img src={imageUrl} alt={prompt}
+                        style={{
+                          maxWidth: "100%", maxHeight: "62vh", borderRadius: 8, display: "block",
+                          transition: "opacity 0.15s",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = "0.9"; }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+                      />
+                    </a>
                   </div>
                   <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
                     <button onClick={() => downloadImage(imageUrl)} style={ACTION_BTN}>

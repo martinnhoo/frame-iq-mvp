@@ -1289,8 +1289,22 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
               {result && (
                 <div>
                   <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-                    <img src={result.image_url} alt={result.prompt}
-                      style={{ maxWidth: "100%", maxHeight: "62vh", borderRadius: 11, display: "block" }} />
+                    <a
+                      href={result.image_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: "block", cursor: "zoom-in" }}
+                      title={lang === "pt" ? "Abrir em tamanho real" : lang === "es" ? "Abrir tamaño real" : lang === "zh" ? "打开实际大小" : "Open full size"}
+                    >
+                      <img src={result.image_url} alt={result.prompt}
+                        style={{
+                          maxWidth: "100%", maxHeight: "62vh", borderRadius: 11, display: "block",
+                          transition: "opacity 0.15s",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = "0.9"; }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+                      />
+                    </a>
                   </div>
                   <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
                     <button onClick={() => downloadImage(result.image_url, `${(fileName.trim() || `hub-${Date.now()}`).replace(/[^a-z0-9_-]/gi, "_")}.png`)} style={ACTION_BTN}>
