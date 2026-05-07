@@ -693,6 +693,18 @@ function HubWorkflowsInner() {
     return () => { cancelled = true; };
   }, []);
 
+  // Detecta unsaved changes pra mostrar dot vermelho no botão Save.
+  const currentSnapshot = useMemo(() => {
+    if (!activeWf) return null;
+    return JSON.stringify({
+      name,
+      brand: workflowBrandId,
+      nodes: nodes.map(n => ({ id: n.id, type: n.type, position: n.position, data: n.data })),
+      edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target, sourceHandle: e.sourceHandle, targetHandle: e.targetHandle })),
+    });
+  }, [activeWf, name, workflowBrandId, nodes, edges]);
+  const unsaved = !!(activeWf && savedSnapshot.current && currentSnapshot && savedSnapshot.current !== currentSnapshot);
+
   // Quando um workflow é aberto (activeWf muda), checa se tem run em
   // andamento persistido em localStorage. Se sim, retoma polling sem
   // criar nova run. Servidor processa em background mesmo se a aba
