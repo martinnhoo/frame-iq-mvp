@@ -973,20 +973,34 @@ function HubWorkflowsInner() {
       const doneCount = finalSnap.nodes_done;
       const wfName = activeWf?.name || "Workflow";
       let title = "Workflow concluído";
-      let description = `${doneCount} de ${total} itens gerados`;
+      let description = `${wfName}: ${doneCount} itens prontos na biblioteca`;
       let kind: "workflow_done" | "workflow_failed" = "workflow_done";
-      if (!isSuccess) {
-        if (isPartial) {
-          title = "Workflow parcialmente concluído";
-          description = `${doneCount} ok, ${failedCount} falharam`;
-        } else {
-          title = "Workflow falhou";
-          description = `${failedCount} de ${total} falharam`;
-          kind = "workflow_failed";
-        }
+
+      if (isSuccess) {
+        // status=succeeded → tudo ok
+        // (já setado acima)
+      } else if (isPartial) {
+        // status=partial → algumas falhas, mas há outputs
+        title = "Workflow parcialmente concluído";
+        description = `${doneCount} ok, ${failedCount} falharam`;
+      } else if (doneCount > 0 && failedCount === 0) {
+        // EDGE CASE: status=failed mas tem outputs e zero erros declarados.
+        // Isso acontece quando o catch fatal do server disparou (timeout,
+        // exception inesperada) APÓS gerar tudo. O workflow rodou OK,
+        // só o finalize teve hiccup. Reportar como sucesso parcial com
+        // aviso, em vez de "falhou".
+        title = "Workflow concluído (com aviso)";
+        description = `${wfName}: ${doneCount} itens na biblioteca · houve um erro de sistema no final`;
+        kind = "workflow_done";
       } else {
-        description = `${wfName}: ${doneCount} itens prontos na biblioteca`;
+        // status=failed legítimo (nada gerado)
+        title = "Workflow falhou";
+        description = failedCount > 0
+          ? `${failedCount} de ${total} falharam`
+          : `Falha de sistema · veja logs`;
+        kind = "workflow_failed";
       }
+
       updateHubNotification(userId, currentRunNotifId.current, {
         kind, title, description,
         href: "/dashboard/hub/library",

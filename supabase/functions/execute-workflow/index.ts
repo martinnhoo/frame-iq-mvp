@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v9-perf-budget145-conc5-2026-05-07";
+const FN_VERSION = "v10-status-fix-2026-05-07";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -1032,9 +1032,29 @@ async function processWorkflow(
     await finalizeRun(sb, runId, outputs, errors, graph);
   } catch (e) {
     console.error(`[execute-workflow] run ${runId} fatal:`, e);
+    // Antes de sobrescrever status="failed", checa se a run já foi
+    // finalizada (succeeded/partial/failed). Se sim, mantém — senão
+    // corrompe runs onde tudo deu certo mas o final teve um hiccup
+    // (ex: timeout no save da última tabela).
+    try {
+      const { data: current } = await sb.from("hub_workflow_runs")
+        .select("status, outputs")
+        .eq("id", runId)
+        .single();
+      const currentStatus = (current as { status?: string } | null)?.status;
+      if (currentStatus && ["succeeded", "partial", "failed"].includes(currentStatus)) {
+        console.log(`[execute-workflow] run ${runId} already finalized as ${currentStatus} — skipping fatal overwrite`);
+        return;
+      }
+    } catch { /* falha do check, segue pro fallback */ }
+
+    // Não foi finalizado. Decide status baseado nos outputs em memória:
+    // se algo foi gerado, marca partial (preserva os assets); senão failed.
+    const successCount = Object.keys(outputs).length;
+    const fallbackStatus = successCount > 0 ? "partial" : "failed";
     await sb.from("hub_workflow_runs")
       .update({
-        status: "failed",
+        status: fallbackStatus,
         outputs,
         error: `processWorkflow exception: ${String(e).slice(0, 200)}`,
         ended_at: new Date().toISOString(),
@@ -1043,7 +1063,10 @@ async function processWorkflow(
   }
 }
 
-// Calcula status final e fecha o run no DB
+// Calcula status final e fecha o run no DB.
+// Regra: failed = NADA gerado. partial = algo gerado mas com erros.
+// Antes era "successCount > errorCount" — agressivo demais, marcava
+// 4 ok + 6 falhas como "failed" mesmo tendo 4 imagens reais geradas.
 async function finalizeRun(
   sb: ReturnType<typeof createClient>,
   runId: string,
@@ -1055,9 +1078,9 @@ async function finalizeRun(
   const successCount = Object.keys(outputs).length;
   const errorCount = Object.keys(errors).length;
   let status: "succeeded" | "partial" | "failed";
-  if (errorCount === 0) status = "succeeded";
-  else if (successCount > errorCount) status = "partial";
-  else status = "failed";
+  if (successCount === 0) status = "failed";       // nada gerado
+  else if (errorCount === 0) status = "succeeded"; // tudo ok
+  else status = "partial";                          // algo gerado, com erros
 
   await sb.from("hub_workflow_runs")
     .update({
@@ -1068,7 +1091,7 @@ async function finalizeRun(
     })
     .eq("id", runId);
 
-  console.log(`[execute-workflow] run ${runId} ${status} — ${successCount}/${totalNodes} nodes ok`);
+  console.log(`[execute-workflow] run ${runId} ${status} — ${successCount}/${totalNodes} nodes ok, ${errorCount} errors`);
 }
 
 // Re-invoca a function pra continuar onde parou. POST com flag de resume
