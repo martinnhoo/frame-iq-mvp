@@ -433,36 +433,91 @@ export default function HubFaceswap() {
         }
       }
 
-      // 3. Chama edge function
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/hub-faceswap`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-          "apikey": ANON_KEY,
-        },
-        body: JSON.stringify({
-          mode,
-          target_url: targetUrl,
-          swap_image_url: swapImageUrl,
-          brand_id: brandId === "none" ? null : brandId,
-        }),
+      // 3. Chama edge function — action=create
+      // Imagem retorna completed síncrono. Vídeo retorna pending+task_id,
+      // depois polla a cada 5s via action=poll (até 5min).
+      const callEdge = async (params: Record<string, unknown>) => {
+        const r = await fetch(`${SUPABASE_URL}/functions/v1/hub-faceswap`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "apikey": ANON_KEY,
+          },
+          body: JSON.stringify(params),
+        });
+        const text = await r.text();
+        try { return JSON.parse(text); } catch {
+          throw new Error(`Resposta inválida: ${text.slice(0, 150)}`);
+        }
+      };
+
+      type EdgePayload = {
+        ok?: boolean;
+        status?: "pending" | "completed" | "failed";
+        output_url?: string;
+        memory_id?: string;
+        task_id?: string;
+        mode?: string;
+        message?: string;
+        error?: string;
+      };
+
+      const created: EdgePayload = await callEdge({
+        action: "create",
+        mode,
+        target_url: targetUrl,
+        swap_image_url: swapImageUrl,
+        brand_id: brandId === "none" ? null : brandId,
       });
-      const text = await r.text();
-      let payload: { ok?: boolean; output_url?: string; memory_id?: string; mode?: string; message?: string; error?: string };
-      try { payload = JSON.parse(text); } catch {
-        setError(`Resposta inválida: ${text.slice(0, 150)}`);
+
+      let final: EdgePayload = created;
+
+      // Vídeo: pending + task_id → polla até completar
+      if (created.ok && created.status === "pending" && created.task_id) {
+        const taskId = created.task_id;
+        const POLL_MS = 5_000;
+        const MAX_POLLS = 60; // 5min total (60 * 5s)
+        let attempts = 0;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          attempts++;
+          if (attempts > MAX_POLLS) {
+            setError(lang === "pt"
+              ? "Vídeo demorou mais de 5min. Tenta um vídeo mais curto/menor."
+              : "Video took longer than 5min. Try a shorter/smaller video.");
+            return;
+          }
+          await new Promise(res => setTimeout(res, POLL_MS));
+          const polled: EdgePayload = await callEdge({
+            action: "poll",
+            mode,
+            task_id: taskId,
+            target_url: targetUrl,
+            swap_image_url: swapImageUrl,
+            brand_id: brandId === "none" ? null : brandId,
+          });
+          if (polled.status === "completed") { final = polled; break; }
+          if (polled.status === "failed") {
+            setError(polled.message || polled.error || "Falha no PiAPI");
+            return;
+          }
+          // status === pending → continue
+        }
+      } else if (!created.ok) {
+        setError(created.message || created.error || "Falha na criação");
         return;
       }
-      if (!payload.ok || !payload.output_url) {
-        setError(payload.message || payload.error || "Falha na geração");
+
+      if (!final.ok || !final.output_url) {
+        setError(final.message || final.error || "Falha na geração");
         return;
       }
 
       const asset: FaceswapAsset = {
-        id: payload.memory_id || `${Date.now()}`,
+        id: final.memory_id || `${Date.now()}`,
         mode,
-        output_url: payload.output_url,
+        output_url: final.output_url,
         swap_image_url: swapImageUrl,
         target_url: targetUrl,
         brand_id: brandId === "none" ? undefined : brandId,
