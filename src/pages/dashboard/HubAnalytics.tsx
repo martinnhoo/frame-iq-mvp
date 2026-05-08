@@ -204,7 +204,7 @@ export default function HubAnalytics() {
 
       <div style={{
         minHeight: "calc(100vh - 64px)",
-        padding: "20px 28px 40px",
+        padding: "20px 18px 40px",
         maxWidth: 1480, margin: "0 auto", color: "#fff",
       }}>
         {/* Header */}
@@ -563,7 +563,11 @@ function KpiCard({ icon: Icon, color, label, desc, value }: {
 function ActivityChart({ byDay, days, lang }: { byDay: Map<string, number>; days: number; lang: Lang }) {
   // Generate last N days backwards from today
   const today = new Date();
-  const dayList: { date: string; count: number; label: string }[] = [];
+  const dayList: { date: string; count: number; label: string; weekday: string }[] = [];
+  const weekdayNames = lang === "pt" ? ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"]
+    : lang === "es" ? ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"]
+    : lang === "zh" ? ["日","一","二","三","四","五","六"]
+    : ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
@@ -572,51 +576,175 @@ function ActivityChart({ byDay, days, lang }: { byDay: Map<string, number>; days
       date,
       count: byDay.get(date) || 0,
       label: `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`,
+      weekday: weekdayNames[d.getDay()],
     });
   }
   const max = Math.max(1, ...dayList.map(d => d.count));
+  const total = dayList.reduce((s, d) => s + d.count, 0);
+  const activeDays = dayList.filter(d => d.count > 0).length;
+  const avgPerActive = activeDays > 0 ? (total / activeDays).toFixed(1) : "0";
+
+  // Média móvel de 7 dias pra suavizar (linha)
+  const movingAvg = dayList.map((_, i) => {
+    const window = dayList.slice(Math.max(0, i - 6), i + 1);
+    const sum = window.reduce((s, d) => s + d.count, 0);
+    return sum / window.length;
+  });
+
+  // Eixo Y: 4 níveis (0, max/3, 2max/3, max)
+  const yLevels = [0, Math.round(max / 3), Math.round((2 * max) / 3), max];
+
+  // X-axis labels: até 5 (primeiro, 25%, 50%, 75%, último)
+  const xLabelIndices = days <= 7
+    ? dayList.map((_, i) => i)
+    : [0, Math.floor(days * 0.25), Math.floor(days * 0.5), Math.floor(days * 0.75), days - 1];
+
+  // Constantes de layout do SVG
+  const W = 100;          // viewBox width (% units)
+  const H = 100;          // viewBox height (% units)
+  const padTop = 4;
+  const padBottom = 4;
+  const chartH = H - padTop - padBottom;
+  const barGap = 1;
+  const barW = (W - barGap * (days - 1)) / days;
+
+  // Gera path da linha de média móvel
+  const linePath = movingAvg.map((v, i) => {
+    const x = i * (barW + barGap) + barW / 2;
+    const y = padTop + chartH - (v / max) * chartH;
+    return `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
+  }).join(" ");
 
   return (
     <div style={{ marginTop: 14 }}>
-      <div style={{
-        display: "flex", alignItems: "flex-end", gap: 2,
-        height: 120, padding: "0 0 4px", borderBottom: "1px solid rgba(255,255,255,0.06)",
-      }}>
-        {dayList.map(d => {
-          const pct = (d.count / max) * 100;
-          return (
-            <div key={d.date} title={`${d.label}: ${d.count}`}
-              style={{ flex: 1, display: "flex", alignItems: "flex-end", minWidth: 2 }}>
-              <div style={{
-                width: "100%",
-                height: `${Math.max(d.count > 0 ? 4 : 1, pct)}%`,
-                background: d.count > 0 ? "#3B82F6" : "rgba(255,255,255,0.06)",
-                borderRadius: "2px 2px 0 0",
-                transition: "height 0.4s",
-                minHeight: 1,
-              }} />
-            </div>
-          );
-        })}
+      {/* KPIs no topo */}
+      <div style={{ display: "flex", gap: 16, marginBottom: 10, flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontSize: 10, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>Total</div>
+          <div style={{ fontSize: 16, color: "#fff", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{total}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
+            {lang === "pt" ? "Pico" : lang === "en" ? "Peak" : lang === "es" ? "Pico" : "峰值"}
+          </div>
+          <div style={{ fontSize: 16, color: "#3B82F6", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{max}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
+            {lang === "pt" ? "Dias ativos" : lang === "en" ? "Active days" : lang === "es" ? "Días activos" : "活跃天"}
+          </div>
+          <div style={{ fontSize: 16, color: "#fff", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+            {activeDays}<span style={{ fontSize: 11, color: "#6B7280" }}>/{days}</span>
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
+            {lang === "pt" ? "Média ativa" : lang === "en" ? "Active avg" : lang === "es" ? "Media activa" : "平均"}
+          </div>
+          <div style={{ fontSize: 16, color: "#fff", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>{avgPerActive}</div>
+        </div>
       </div>
-      {/* X-axis: only first, middle, last */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "#6B7280" }}>
-        <span>{dayList[0]?.label}</span>
-        <span>{dayList[Math.floor(dayList.length / 2)]?.label}</span>
-        <span>{dayList[dayList.length - 1]?.label}</span>
+
+      {/* Chart com grid Y + barras + linha de média */}
+      <div style={{ position: "relative", display: "flex" }}>
+        {/* Eixo Y labels (esquerda, fora do SVG) */}
+        <div style={{
+          width: 28, display: "flex", flexDirection: "column", justifyContent: "space-between",
+          paddingTop: 2, paddingBottom: 18, fontSize: 9.5, color: "#4B5563",
+          textAlign: "right", paddingRight: 6, fontVariantNumeric: "tabular-nums",
+        }}>
+          {[...yLevels].reverse().map((lv, i) => (
+            <span key={i}>{lv}</span>
+          ))}
+        </div>
+
+        {/* SVG: grid + barras + linha */}
+        <div style={{ flex: 1, position: "relative" }}>
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            style={{ width: "100%", height: 160, display: "block" }}
+          >
+            <defs>
+              <linearGradient id="actBarGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#60A5FA" stopOpacity="0.95" />
+                <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.7" />
+              </linearGradient>
+            </defs>
+
+            {/* Linhas de grid horizontais (sutis) */}
+            {yLevels.map((_, i) => {
+              const y = padTop + (chartH * i) / (yLevels.length - 1);
+              return (
+                <line key={i}
+                  x1={0} y1={y} x2={W} y2={y}
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeWidth={0.15}
+                  vectorEffect="non-scaling-stroke"
+                />
+              );
+            })}
+
+            {/* Barras */}
+            {dayList.map((d, i) => {
+              const x = i * (barW + barGap);
+              const heightPct = d.count > 0 ? Math.max(1.5, (d.count / max) * chartH) : 0;
+              const y = padTop + chartH - heightPct;
+              return (
+                <g key={d.date}>
+                  <rect
+                    x={x} y={y}
+                    width={barW} height={heightPct}
+                    fill={d.count > 0 ? "url(#actBarGrad)" : "transparent"}
+                    rx={0.4} ry={0.4}
+                  >
+                    <title>{`${d.weekday} ${d.label}: ${d.count} ${d.count === 1 ? "criativo" : "criativos"}`}</title>
+                  </rect>
+                </g>
+              );
+            })}
+
+            {/* Linha de média móvel 7d (overlay) */}
+            {total > 0 && (
+              <path
+                d={linePath}
+                fill="none"
+                stroke="#A78BFA"
+                strokeWidth={0.3}
+                strokeOpacity={0.85}
+                vectorEffect="non-scaling-stroke"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+          </svg>
+
+          {/* X-axis labels */}
+          <div style={{
+            display: "flex", justifyContent: "space-between",
+            marginTop: 6, fontSize: 9.5, color: "#6B7280",
+            fontVariantNumeric: "tabular-nums",
+          }}>
+            {xLabelIndices.map(i => (
+              <span key={i}>{dayList[i]?.label}</span>
+            ))}
+          </div>
+        </div>
       </div>
-      <div style={{
-        display: "flex", justifyContent: "space-between", marginTop: 8,
-        fontSize: 11, color: "#D1D5DB",
-      }}>
-        <span style={{ fontWeight: 600 }}>
-          {lang === "pt" ? "Pico" : lang === "en" ? "Peak" : lang === "es" ? "Pico" : "高峰"}
-          : <span style={{ color: "#3B82F6", fontWeight: 700 }}>{max}</span>
-        </span>
-        <span style={{ fontWeight: 600, color: "#9CA3AF" }}>
-          {dayList.filter(d => d.count > 0).length} / {days} {lang === "pt" ? "dias ativos" : lang === "en" ? "active days" : lang === "es" ? "días activos" : "活跃天数"}
-        </span>
-      </div>
+
+      {/* Legenda da linha de média */}
+      {total > 0 && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 6,
+          marginTop: 10, fontSize: 10.5, color: "#9CA3AF",
+        }}>
+          <span style={{ width: 14, height: 2, background: "#A78BFA", borderRadius: 1 }} />
+          {lang === "pt" ? "Média móvel 7 dias"
+            : lang === "en" ? "7-day moving average"
+            : lang === "es" ? "Media móvil 7 días"
+            : "7 天移动平均"}
+        </div>
+      )}
     </div>
   );
 }
