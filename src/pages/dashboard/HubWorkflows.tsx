@@ -43,6 +43,7 @@ import {
   fetchHookLibrary, HOOK_CATEGORIES,
   type HookCategory, type HookRow,
 } from "@/lib/hookLibrary";
+import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
 
 // ── i18n strings ──────────────────────────────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -262,6 +263,7 @@ function ImageGenNode({ data, selected }: { data: { aspect_ratio?: string; quali
       handles={[
         { id: "prompt", type: "target", position: Position.Left },
         { id: "brand", type: "target", position: Position.Top },
+        { id: "reference", type: "target", position: Position.Bottom },
         { id: "out", type: "source", position: Position.Right },
       ]}
     >
@@ -301,6 +303,45 @@ function BgRemoveNode({ selected }: { selected: boolean }) {
     >
       <div>BRIA AI</div>
       <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>PNG transparente {"<"} 2MB</div>
+    </NodeShell>
+  );
+}
+
+function ReferenceImageNode({ data, selected }: { data: { image_url?: string; description?: string }; selected: boolean }) {
+  const hasImage = !!data.image_url;
+  return (
+    <NodeShell
+      icon={<ImageIcon size={13} />}
+      title="Imagem referência"
+      color="#22D3EE"
+      selected={selected}
+      handles={[
+        { id: "out", type: "source", position: Position.Right },
+      ]}
+    >
+      {hasImage ? (
+        <>
+          <img
+            src={data.image_url}
+            alt="reference"
+            style={{
+              width: "100%", maxHeight: 80, objectFit: "cover",
+              borderRadius: 4, marginBottom: 4,
+            }}
+          />
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)" }}>
+            {data.description?.slice(0, 40) || "Sem descrição"}
+            {data.description && data.description.length > 40 ? "…" : ""}
+          </div>
+        </>
+      ) : (
+        <>
+          <div>Drag → Image-gen</div>
+          <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>
+            Faça upload de um ad pra recriar o estilo
+          </div>
+        </>
+      )}
     </NodeShell>
   );
 }
@@ -405,6 +446,7 @@ const nodeTypes = {
   prompt: PromptNode,
   "image-gen": ImageGenNode,
   "bg-remove": BgRemoveNode,
+  "reference-image": ReferenceImageNode,
   storyboard: StoryboardNode,
   video: VideoNode,
   voice: VoiceNode,
@@ -1087,6 +1129,7 @@ function HubWorkflowsInner() {
       prompt: { text: "" },
       "image-gen": { aspect_ratio: "1:1", quality: "medium", count: 1 },
       "bg-remove": {},
+      "reference-image": { image_url: "", description: "" },
       storyboard: { scene_count: 4, aspect_ratio: "9:16", quality: "medium" },
       video: { duration: 5, aspect_ratio: "16:9", mode: "std", resolution: "720p", enable_audio: false, provider: "piapi" },
       voice: { voice_id: "21m00Tcm4TlvDq8ikWAM", voice_name: "Rachel" },
@@ -1292,6 +1335,9 @@ function HubWorkflowsInner() {
               </button>
               <button onClick={() => addNodeOfType("bg-remove")} style={paletteBtn("#A855F7")}>
                 <Scissors size={11} /> {t("bgRemove")}
+              </button>
+              <button onClick={() => addNodeOfType("reference-image")} style={paletteBtn("#22D3EE")}>
+                <ImageIcon size={11} /> {lang === "pt" ? "Imagem ref" : lang === "es" ? "Imagen ref" : lang === "zh" ? "参考图" : "Reference"}
               </button>
               <button onClick={() => addNodeOfType("storyboard")} style={paletteBtn("#F97316")}>
                 <Clapperboard size={11} /> {t("storyboard")}
@@ -1824,6 +1870,99 @@ function NodeConfigPanel({
           />
           <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
             {t("voiceDesc")}
+          </div>
+        </>
+      )}
+
+      {node.type === "reference-image" && (
+        <>
+          <FieldLabel>
+            {lang === "pt" ? "Imagem de referência" : lang === "es" ? "Imagen de referencia" : lang === "zh" ? "参考图像" : "Reference image"}
+          </FieldLabel>
+          {(data.image_url as string) ? (
+            <div style={{ position: "relative", marginBottom: 8 }}>
+              <img
+                src={data.image_url as string}
+                alt="ref"
+                style={{
+                  width: "100%", maxHeight: 180, objectFit: "contain",
+                  borderRadius: 6, border: "1px solid rgba(255,255,255,0.10)",
+                  background: "rgba(0,0,0,0.30)",
+                }}
+              />
+              <button
+                onClick={() => onUpdate({ image_url: "" })}
+                style={{
+                  position: "absolute", top: 4, right: 4,
+                  width: 22, height: 22, borderRadius: 5,
+                  background: "rgba(0,0,0,0.75)", border: "none",
+                  color: "#fff", cursor: "pointer", fontSize: 11,
+                }}
+                title="Remover"
+              >×</button>
+            </div>
+          ) : (
+            <label style={{
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              padding: "20px 12px", borderRadius: 8,
+              background: "rgba(34,211,238,0.04)",
+              border: "1.5px dashed rgba(34,211,238,0.30)",
+              color: "#22D3EE", cursor: "pointer", fontSize: 11.5,
+              marginBottom: 8,
+            }}>
+              <ImageIcon size={20} style={{ marginBottom: 6 }} />
+              <span style={{ fontWeight: 700 }}>
+                {lang === "pt" ? "Clique pra fazer upload" : lang === "es" ? "Click para subir" : lang === "zh" ? "点击上传" : "Click to upload"}
+              </span>
+              <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>PNG/JPG até 5MB</span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                style={{ display: "none" }}
+                onChange={async e => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  if (f.size > 5 * 1024 * 1024) {
+                    toast.error(lang === "pt" ? "Imagem muito grande (máx 5MB)" : "Image too large (max 5MB)");
+                    return;
+                  }
+                  // Lê como data URL e sobe pro Storage
+                  const reader = new FileReader();
+                  reader.onload = async () => {
+                    try {
+                      const dataUrl = reader.result as string;
+                      const stored = await uploadAssetToStorage(dataUrl, "reference");
+                      onUpdate({ image_url: stored });
+                    } catch (err) {
+                      toast.error(`Falha no upload: ${String(err).slice(0, 100)}`);
+                    }
+                  };
+                  reader.readAsDataURL(f);
+                }}
+              />
+            </label>
+          )}
+
+          <FieldLabel>
+            {lang === "pt" ? "Descrição do estilo (opcional)" : lang === "es" ? "Descripción del estilo (opcional)" : lang === "zh" ? "风格描述（可选）" : "Style description (optional)"}
+          </FieldLabel>
+          <textarea
+            value={(data.description as string) || ""}
+            onChange={e => onUpdate({ description: e.target.value.slice(0, 500) })}
+            rows={3}
+            placeholder={lang === "pt"
+              ? "Ex: cores neon vibrantes, texto grande no centro, pessoa sorrindo no canto direito"
+              : "Ex: vibrant neon colors, large text centered, person smiling on right"}
+            style={{ ...selectStyle, fontFamily: "inherit", resize: "vertical", minHeight: 60 }}
+          />
+          <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
+            {lang === "pt"
+              ? "Conecte ao image-gen pelo handle de baixo. A IA vai recriar o estilo dessa imagem com sua marca + prompt."
+              : lang === "es"
+              ? "Conecta al image-gen por el handle inferior. La IA recreará este estilo con tu marca + prompt."
+              : lang === "zh"
+              ? "通过底部 handle 连接到 image-gen。AI 将用你的品牌和提示词重现此风格。"
+              : "Connect to image-gen via the bottom handle. AI will recreate this style with your brand + prompt."}
           </div>
         </>
       )}

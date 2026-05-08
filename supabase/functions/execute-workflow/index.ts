@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v12-resolve-brand-2026-05-07";
+const FN_VERSION = "v13-reference-image-2026-05-07";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -667,8 +667,35 @@ async function execImageGen(
     elements = arr.flat().filter((x): x is string => typeof x === "string");
   }
 
+  // Pega reference images (opcional). Vem do nó reference-image ligado
+  // ao image-gen via handle "reference". Cada reference vira input_image
+  // adicional pro gpt-image-2 — modelo usa como guia de estilo/composição
+  // (modo "Recriar Anúncio" estilo Higgsfield).
+  const referenceImages: string[] = [];
+  let referenceDescription = "";
+  if (inputs.reference) {
+    const arr = Array.isArray(inputs.reference) ? inputs.reference : [inputs.reference];
+    for (const item of arr) {
+      if (item && typeof item === "object") {
+        const ref = item as { image_url?: string; description?: string };
+        if (ref.image_url) referenceImages.push(ref.image_url);
+        if (ref.description && !referenceDescription) referenceDescription = ref.description;
+      }
+    }
+  }
+
+  // Concatena reference description ao prompt se houver
+  const finalPromptText = referenceDescription
+    ? `${promptText}\n\nREFERENCE IMAGE STYLE: ${referenceDescription}. Recreate the same visual style, composition and mood as the reference image, but adapted to the brand and prompt above.`
+    : promptText;
+
   const aspect_ratio = (node.data.aspect_ratio as string) || "1:1";
   const quality = (node.data.quality as string) || "medium";
+
+  // Combina elements + reference images no input_images_base64 do
+  // gpt-image-2. Reference vem com prioridade visual (entra primeiro
+  // no array) — modelo dá mais peso pro estilo da reference.
+  const allInputImages = [...referenceImages, ...elements];
 
   const r = await fetch(`${ctx.supabaseUrl}/functions/v1/generate-image-hub`, {
     method: "POST",
@@ -677,7 +704,7 @@ async function execImageGen(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      prompt: promptText,
+      prompt: finalPromptText,
       aspect_ratio,
       quality,
       brand_id,
@@ -685,7 +712,7 @@ async function execImageGen(
       market,
       include_license,
       license_text,
-      ...(elements.length > 0 ? { input_images_base64: elements } : {}),
+      ...(allInputImages.length > 0 ? { input_images_base64: allInputImages } : {}),
     }),
   });
   const text = await r.text();
@@ -998,17 +1025,29 @@ async function executeNode(
 ): Promise<unknown> {
   const inputs = collectNodeInputs(node, graph, outputs);
   switch (node.type) {
-    case "brand":      return await execBrand(node);
-    case "prompt":     return await execPrompt(node);
-    case "image-gen":  return await execImageGen(node, inputs, ctx);
-    case "bg-remove":  return await execBgRemove(node, inputs, ctx);
-    case "storyboard": return await execStoryboard(node, inputs, ctx);
-    case "video":      return await execVideo(node, inputs, ctx);
-    case "voice":      return await execVoice(node, inputs, ctx);
-    case "variation":  return await execVariation(node, inputs);
-    case "output":     return await execOutput(node, inputs, ctx);
+    case "brand":           return await execBrand(node);
+    case "prompt":          return await execPrompt(node);
+    case "image-gen":       return await execImageGen(node, inputs, ctx);
+    case "bg-remove":       return await execBgRemove(node, inputs, ctx);
+    case "storyboard":      return await execStoryboard(node, inputs, ctx);
+    case "video":           return await execVideo(node, inputs, ctx);
+    case "voice":           return await execVoice(node, inputs, ctx);
+    case "variation":       return await execVariation(node, inputs);
+    case "output":          return await execOutput(node, inputs, ctx);
+    case "reference-image": return await execReferenceImage(node);
     default: throw new Error(`unknown_node_type:${node.type}`);
   }
+}
+
+// Reference Image — recebe upload de imagem (URL pública ou base64) e
+// passa pra image-gen via input "references". Image-gen anexa isso ao
+// input_images_base64 que vai pro gpt-image-2. Estilo "Recriar Anúncio"
+// do Higgsfield: drag um ad existente, recria com seu produto.
+async function execReferenceImage(node: GraphNode): Promise<{ image_url: string; description: string }> {
+  const url = (node.data.image_url as string)?.trim();
+  if (!url) throw new Error("missing_reference_image_url");
+  const description = (node.data.description as string)?.trim() || "";
+  return { image_url: url, description };
 }
 
 // ── Background processor ────────────────────────────────────────────
