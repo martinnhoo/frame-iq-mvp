@@ -27,7 +27,7 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 
 type Lang = "pt" | "en" | "es" | "zh";
-type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe" | "voice" | "video" | "faceswap";
+type AssetKind = "image" | "png" | "storyboard" | "carousel" | "transcribe" | "voice" | "video" | "faceswap" | "caption";
 
 interface HubAsset {
   id: string;            // group id (memory id pra single, group_id pra storyboard/carousel)
@@ -57,6 +57,10 @@ interface HubAsset {
   resolution?: string;
   // Faceswap-specific
   faceswap_mode?: "image" | "video";
+  // Caption-specific
+  fb_caption?: string;
+  tiktok_caption?: string;
+  caption_language?: string;
 }
 
 const STR: Record<string, Record<Lang, string>> = {
@@ -87,8 +91,10 @@ const STR: Record<string, Record<Lang, string>> = {
   filterVo:    { pt: "Vozes",      en: "Voices",     es: "Voces",      zh: "语音" },
   filterVid:   { pt: "Vídeos",     en: "Videos",     es: "Videos",     zh: "视频" },
   filterFs:    { pt: "Face Swap",  en: "Face Swap",  es: "Face Swap",  zh: "换脸" },
+  filterCap:   { pt: "Legendas",   en: "Captions",   es: "Captions",   zh: "字幕" },
   vidFor:      { pt: "Vídeo",      en: "Video",      es: "Video",      zh: "视频" },
   fsFor:       { pt: "Face Swap",  en: "Face Swap",  es: "Face Swap",  zh: "换脸" },
+  capFor:      { pt: "Legenda",    en: "Caption",    es: "Caption",    zh: "字幕" },
   scenes:      { pt: "cenas",      en: "scenes",    es: "escenas",    zh: "场景" },
   slides:      { pt: "slides",     en: "slides",    es: "slides",     zh: "幻灯片" },
   download:    { pt: "Baixar",     en: "Download",  es: "Descargar",  zh: "下载" },
@@ -174,6 +180,9 @@ type RawRow = {
     target_url?: string;
     task_id?: string;
     model?: string;
+    // Caption-specific
+    fb_caption?: string;
+    tiktok_caption?: string;
   };
   created_at: string;
 };
@@ -396,6 +405,29 @@ export default function HubLibrary() {
             continue;
           }
 
+          // Caption — gerador de legendas TikTok+FB. Tem image_url da imagem
+          // analisada + 2 captions no content. cover_url = image_url.
+          if (r.kind === "hub_caption") {
+            const url = (c.image_url || "").trim();
+            const fb = (c.fb_caption as string) || "";
+            const tiktok = (c.tiktok_caption as string) || "";
+            if (!url || (!fb && !tiktok)) continue;
+            groupedMap.set(r.id, {
+              id: r.id,
+              kind: "caption",
+              title: tiktok.slice(0, 80) || fb.split("\n")[0]?.slice(0, 80) || "Legenda",
+              prompt: tiktok || fb,
+              cover_url: url,
+              aspect_ratio: "1:1",
+              created_at: r.created_at,
+              brand_id: c.brand_id,
+              fb_caption: fb,
+              tiktok_caption: tiktok,
+              caption_language: c.language as string | undefined,
+            });
+            continue;
+          }
+
           // Faceswap — pode ser imagem ou vídeo (depende do mode).
           // output_url é o resultado final, swap_image_url + target_url são inputs.
           if (r.kind === "hub_faceswap") {
@@ -572,7 +604,7 @@ export default function HubLibrary() {
   }, [assets, kindFilter, search]);
 
   const counts = useMemo(() => {
-    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0, transcribe: 0, voice: 0, video: 0, faceswap: 0 };
+    const c = { all: assets.length, image: 0, png: 0, storyboard: 0, carousel: 0, transcribe: 0, voice: 0, video: 0, faceswap: 0, caption: 0 };
     for (const a of assets) c[a.kind]++;
     return c;
   }, [assets]);
@@ -792,6 +824,11 @@ export default function HubLibrary() {
             label={t("filterFs")} icon={ScanFace}
             onClick={() => setKindFilter("faceswap")}
           />
+          <KindChip
+            active={kindFilter === "caption"} count={counts.caption}
+            label={t("filterCap")} icon={Captions}
+            onClick={() => setKindFilter("caption")}
+          />
         </div>
 
         {initialLoading ? (
@@ -961,6 +998,7 @@ function AssetCardImpl({ asset, lang, t, onClick, onDelete, selectionMode, selec
     : asset.kind === "voice" ? Mic
     : asset.kind === "video" ? VideoIcon
     : asset.kind === "faceswap" ? ScanFace
+    : asset.kind === "caption" ? Captions
     : ImageIcon;
   const kindLabel = asset.kind === "png" ? t("pngFor")
     : asset.kind === "storyboard" ? t("sbFor")
@@ -969,6 +1007,7 @@ function AssetCardImpl({ asset, lang, t, onClick, onDelete, selectionMode, selec
     : asset.kind === "voice" ? t("voFor")
     : asset.kind === "video" ? t("vidFor")
     : asset.kind === "faceswap" ? t("fsFor")
+    : asset.kind === "caption" ? t("capFor")
     : t("imageFor");
   const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
   const isTranscribe = asset.kind === "transcribe";

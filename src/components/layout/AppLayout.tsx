@@ -42,6 +42,7 @@ import {
   Film,
   Mic,
   Captions,
+  FileText,
   GitBranch,
   GalleryHorizontal,
   ScanFace,
@@ -176,7 +177,8 @@ function getNavSections(lang: string): NavSection[] {
       // Inteligência — análise + utilitários de dados
       title: L('Inteligência', 'Intelligence', 'Inteligencia', '智能'),
       items: [
-        { url: '/dashboard/hub/transcribe', label: L('Transcrição', 'Transcription', 'Transcripción', '转录'),       icon: Captions },
+        { url: '/dashboard/hub/captions',   label: L('Legendas',    'Captions',      'Captions',      '字幕'),     icon: Captions },
+        { url: '/dashboard/hub/transcribe', label: L('Transcrição', 'Transcription', 'Transcripción', '转录'),     icon: FileText },
         { url: '/dashboard/hub/analytics',  label: L('Analytics',   'Analytics',     'Analítica',     '数据分析'), icon: BarChart3 },
       ],
     },

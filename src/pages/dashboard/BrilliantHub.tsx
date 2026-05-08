@@ -233,6 +233,14 @@ export default function BrilliantHub() {
 
   // ── Inteligência: análise + transcrição ────────────────────────
   const intelligenceTools = [
+    { id: "captions",
+      title: lang === "pt" ? "Gerador de Legendas" : lang === "es" ? "Generador de Captions" : lang === "zh" ? "字幕生成器" : "Caption Generator",
+      desc: lang === "pt" ? "Sobe imagens e ganha legendas Facebook + TikTok prontas. IA analisa e adapta ao mercado."
+        : lang === "es" ? "Sube imágenes y obtén captions Facebook + TikTok listos. IA analiza y se adapta al mercado."
+        : lang === "zh" ? "上传图片，获得 Facebook + TikTok 字幕。AI 分析内容并适应市场。"
+        : "Upload images and get Facebook + TikTok captions ready. AI analyzes and adapts to market.",
+      btn: lang === "pt" ? "Gerar legendas" : lang === "es" ? "Generar captions" : lang === "zh" ? "生成字幕" : "Generate captions",
+      icon: Captions, route: "/dashboard/hub/captions", featured: true },
     { id: "transcribe", title: t("transcribe"), desc: t("transcribeDesc"), btn: t("transcribeBtn"),
       icon: Captions, route: "/dashboard/hub/transcribe" },
     { id: "analytics", title: t("analytics"), desc: t("analyticsDesc"), btn: t("analyticsBtn"),
