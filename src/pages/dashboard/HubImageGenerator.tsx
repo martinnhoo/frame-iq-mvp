@@ -845,10 +845,33 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
           gap: 16, marginBottom: 22, flexWrap: "wrap",
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{
-              fontSize: 26, fontWeight: 800, color: "#fff", margin: 0,
-              letterSpacing: "-0.02em", lineHeight: 1.1,
-            }}>{t("title")}</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <h1 style={{
+                fontSize: 26, fontWeight: 800, color: "#fff", margin: 0,
+                letterSpacing: "-0.02em", lineHeight: 1.1,
+              }}>{t("title")}</h1>
+              <span
+                title={lang === "pt"
+                  ? "Powered by GPT Image 2: imagens 4K com renderização de texto quase perfeita."
+                  : lang === "es"
+                  ? "Powered by GPT Image 2: imágenes 4K con renderizado de texto casi perfecto."
+                  : lang === "zh"
+                  ? "由 GPT Image 2 提供支持：4K 图像，近乎完美的文本渲染。"
+                  : "Powered by GPT Image 2: 4K images with near-perfect text rendering."}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "3px 10px", borderRadius: 999,
+                  background: "linear-gradient(135deg, rgba(139,92,246,0.18), rgba(59,130,246,0.18))",
+                  border: "1px solid rgba(139,92,246,0.30)",
+                  color: "#A78BFA",
+                  fontSize: 10.5, fontWeight: 800,
+                  letterSpacing: "0.02em",
+                  cursor: "help",
+                }}
+              >
+                <Sparkles size={10} /> GPT Image 2
+              </span>
+            </div>
             <p style={{ fontSize: 13, color: "#D1D5DB", margin: "6px 0 0", lineHeight: 1.5 }}>
               {t("subtitle")}
             </p>
