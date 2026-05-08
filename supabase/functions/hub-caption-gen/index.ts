@@ -13,7 +13,7 @@
 //
 // Idioma das legendas: deriva de market (BR=pt-BR, MX/CO/PE=es, US=en, IN=hinglish).
 
-const FN_VERSION = "v1-caption-gen-2026-05-07";
+const FN_VERSION = "v2-caption-gen-lang-override-2026-05-07";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -43,7 +43,8 @@ interface CaptionResult {
   error?: string;
 }
 
-// Mapa market → idioma da legenda
+// Mapa market → idioma da legenda. User pode override via body.language
+// (vai pro mesmo formato { lang, instructions } via LANGUAGE_OPTIONS).
 const MARKET_LANG: Record<string, { lang: string; instructions: string }> = {
   BR: {
     lang: "pt-BR",
@@ -245,10 +246,12 @@ Deno.serve(async (req) => {
       images,
       brand_id = null,
       market = null,
+      language = null,
     } = body as {
       images?: CaptionInputImage[];
       brand_id?: string | null;
       market?: string | null;
+      language?: string | null;
     };
 
     if (!Array.isArray(images) || images.length === 0) {
@@ -262,10 +265,23 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    const marketCtx = (market && MARKET_LANG[market]) || MARKET_LANG.BR;
+    // language override → resolve diretamente. Se não, deriva do market.
+    // Mapeamento de language pra { lang, instructions } compatível com
+    // a estrutura MARKET_LANG.
+    const LANGUAGE_OVERRIDE: Record<string, { lang: string; instructions: string }> = {
+      "pt-BR":    MARKET_LANG.BR,
+      "es-MX":    MARKET_LANG.MX,
+      "es-CO":    MARKET_LANG.CO,
+      "es-PE":    MARKET_LANG.PE,
+      "en-US":    MARKET_LANG.US,
+      "hinglish": MARKET_LANG.IN,
+    };
+    const marketCtx = (language && LANGUAGE_OVERRIDE[language])
+      || (market && MARKET_LANG[market])
+      || MARKET_LANG.BR;
     const brandHint = (brand_id && BRAND_HINTS[brand_id]) || "";
 
-    console.log(`[hub-caption-gen] start user=${authUser.id} count=${images.length} market=${market} brand=${brand_id}`);
+    console.log(`[hub-caption-gen] start user=${authUser.id} count=${images.length} market=${market} brand=${brand_id} language_override=${language || "(none)"} resolved_lang=${marketCtx.lang}`);
 
     // Processa em paralelo (cap de 3 pra não estourar rate limit Claude)
     const CONC = 3;

@@ -57,7 +57,22 @@ const STR: Record<string, Record<Lang, string>> = {
   recent:         { pt: "Últimas legendas",    en: "Recent captions",   es: "Últimas captions",  zh: "最近的字幕" },
   recentEmpty:    { pt: "Sem legendas ainda. Gere a primeira acima.", en: "No captions yet. Generate the first above.", es: "Sin captions aún.", zh: "还没有字幕。" },
   langInfo:       { pt: "Idioma das legendas vai pelo mercado selecionado.", en: "Caption language follows selected market.", es: "Idioma de los captions sigue el mercado.", zh: "字幕语言跟随所选市场。" },
+  langTitle:      { pt: "Idioma das legendas", en: "Caption language", es: "Idioma de los captions", zh: "字幕语言" },
+  langAuto:       { pt: "Automático (do mercado)", en: "Auto (from market)", es: "Auto (del mercado)", zh: "自动（按市场）" },
 };
+
+// Idiomas disponíveis pra override. Default = "auto" (deriva do market).
+type CaptionLang = "auto" | "pt-BR" | "es-MX" | "es-CO" | "es-PE" | "en-US" | "hinglish";
+
+const LANG_OPTIONS: { id: CaptionLang; label: string; flag: string }[] = [
+  { id: "auto",     label: "Auto",                  flag: "✨" },
+  { id: "pt-BR",    label: "Português (BR)",        flag: "🇧🇷" },
+  { id: "es-MX",    label: "Español (MX)",          flag: "🇲🇽" },
+  { id: "es-CO",    label: "Español (CO)",          flag: "🇨🇴" },
+  { id: "es-PE",    label: "Español (PE)",          flag: "🇵🇪" },
+  { id: "en-US",    label: "English (US)",          flag: "🇺🇸" },
+  { id: "hinglish", label: "Hinglish (IN)",         flag: "🇮🇳" },
+];
 
 const MAX_FILES = 10;
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -88,6 +103,7 @@ export default function HubCaptionGen() {
 
   const [brandId, setBrandId] = useState("none");
   const [marketCode, setMarketCode] = useState<MarketCode | null>(null);
+  const [captionLang, setCaptionLang] = useState<CaptionLang>("auto");
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
   const [results, setResults] = useState<CaptionAsset[]>([]);
   const [recent, setRecent] = useState<CaptionAsset[]>([]);
@@ -212,6 +228,8 @@ export default function HubCaptionGen() {
           images: uploaded,
           brand_id: brandId === "none" ? null : brandId,
           market: marketCode,
+          // language override (auto = deriva do market server-side)
+          language: captionLang === "auto" ? undefined : captionLang,
         }),
       });
       const text = await r.text();
@@ -324,6 +342,41 @@ export default function HubCaptionGen() {
                 </div>
               )}
               <div style={{ ...hint, marginTop: 6 }}>{t("langInfo")}</div>
+            </div>
+
+            {/* Idioma das legendas (override) */}
+            <div style={section}>
+              <div style={sectionLabel}>{t("langTitle")}</div>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fill, minmax(140px, 1fr))",
+                gap: 6,
+              }}>
+                {LANG_OPTIONS.map(opt => {
+                  const active = captionLang === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => setCaptionLang(opt.id)}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 6,
+                        padding: "7px 10px", borderRadius: 6,
+                        background: active ? "rgba(167,139,250,0.18)" : "rgba(255,255,255,0.04)",
+                        border: `1px solid ${active ? "#A78BFA" : "rgba(255,255,255,0.10)"}`,
+                        color: active ? "#C4B5FD" : "rgba(255,255,255,0.70)",
+                        fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+                        fontFamily: "inherit",
+                        textAlign: "left", whiteSpace: "nowrap",
+                      }}
+                    >
+                      <span style={{ fontSize: 13 }}>{opt.flag}</span>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {opt.id === "auto" ? t("langAuto") : opt.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Upload area */}
