@@ -776,8 +776,8 @@ export default function HubFaceswap() {
                 fontSize: 13.5,
                 opacity: canGenerate ? 1 : 0.5,
                 cursor: canGenerate ? "pointer" : "not-allowed",
-                background: COMING_SOON ? "rgba(139,92,246,0.18)" : btnPrimary.background,
-                borderColor: COMING_SOON ? "rgba(139,92,246,0.40)" : btnPrimary.border,
+                background: COMING_SOON ? "rgba(139,92,246,0.18)" : "#8B5CF6",
+                borderColor: COMING_SOON ? "rgba(139,92,246,0.40)" : "#8B5CF6",
                 color: COMING_SOON ? "#A78BFA" : "#fff",
               }}
             >
