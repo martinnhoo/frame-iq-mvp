@@ -13,7 +13,7 @@
 //
 // Idioma das legendas: deriva de market (BR=pt-BR, MX/CO/PE=es, US=en, IN=hinglish).
 
-const FN_VERSION = "v2-caption-gen-lang-override-2026-05-07";
+const FN_VERSION = "v3-caption-fidelity-2026-05-07";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -118,22 +118,53 @@ Examples:
 `;
 
 // Chama OpenAI GPT-4o-mini com vision pra UMA imagem.
-// Bem mais barato que Claude Haiku: ~$0.0001/img vs $0.001/img (10x menos).
-// Retorna { fb_caption, tiktok_caption }.
+// detail="high" pra ler texto/elementos com fidelidade. Custo ~$0.001/img
+// (10x mais que detail=low, mas legenda errada custa MUITO mais — perde
+// venda e queima trust). 100 imgs = ~$0.10. Aceitável.
+//
+// Estratégia anti-invenção:
+//   1. Modelo PRIMEIRO descreve o que vê (texto visível, subjects, oferta)
+//   2. PRIMEIRO detecta lang dominante do texto na imagem
+//   3. SE language=null E market=null → usa lang detectada
+//   4. SE language ou market setado → usa esse, mas legenda DEVE
+//      descrever apenas o que está NA imagem (não inventar oferta)
+//   5. brand_hint = só estilo/tom; NÃO invento oferta da brand
 async function generateCaptionsForImage(
   imageUrl: string,
-  marketCtx: { lang: string; instructions: string },
+  marketCtx: { lang: string; instructions: string } | null,  // null = auto-detect
   brandHint: string,
   apiKey: string,
 ): Promise<{ fb_caption: string; tiktok_caption: string; error?: string }> {
-  const prompt = `You are a social media captions expert for iGaming/casino brands.
+  const langSection = marketCtx
+    ? `OUTPUT LANGUAGE — FORCED: ${marketCtx.lang}\n${marketCtx.instructions}\nDO NOT use any other language. Translate visible image text to this language if needed for the caption.`
+    : `OUTPUT LANGUAGE — AUTO-DETECT FROM IMAGE:
+- Look at the visible text inside the image (banners, copy, watermarks).
+- Generate the captions in the SAME language as that visible text.
+- If the image text is in English → write captions in English.
+- If text is in Spanish → write in Spanish.
+- If text is in Portuguese → write in pt-BR.
+- If text is in Hindi/Hinglish → write in Hinglish (Latin script, never Devanagari).
+- If NO visible text → use the brand context if present; otherwise default to English.`;
 
-Analyze the provided image and write captions FOR IT — both must reference what's IN the image (subject, mood, offer).
+  const prompt = `You are a senior social media copywriter for advertising creatives.
 
-LANGUAGE: ${marketCtx.lang}
-${marketCtx.instructions}
+CRITICAL RULES — DO NOT VIOLATE:
+1. Captions must DESCRIBE what is actually visible in the image. Do NOT invent offers, products, or details that are not in the image.
+2. If the image shows a person doing X (e.g., "talking on the phone"), the caption must reflect that — not generic casino copy.
+3. If the image has visible text/copy/CTA, REUSE that language and message — do not replace it.
+4. Brand context is for STYLE only (color, mood, tone). It does NOT give you license to invent things. If the image is about an app, talk about the app — not slot machines just because the brand is a casino.
 
-${brandHint ? `BRAND CONTEXT:\n${brandHint}\n` : ""}
+${langSection}
+
+${brandHint ? `BRAND TONE/STYLE (use only for visual mood, NOT to invent content):\n${brandHint}\n` : ""}
+
+STEP 1 — internal analysis (do NOT output, just think):
+- What text is visible in the image? (transcribe exactly, in original language)
+- What is the main subject? (person doing what? object? scene?)
+- What action/offer/CTA is being communicated?
+- What language is the visible text?
+
+STEP 2 — write captions based ONLY on what you saw in step 1.
 
 Generate TWO captions, EACH on its own labeled section:
 
@@ -149,11 +180,8 @@ Output ONLY the two sections, exactly in this order:
 ==TIKTOK==
 {1 line here, max 95 chars, no emojis}
 
-No other text. No preamble. No explanation. Just the two sections.`;
+No preamble, no explanation, no analysis output. Just the two sections.`;
 
-  // OpenAI vision aceita tanto URL quanto data URL no campo image_url.url.
-  // Pra performance, GPT-4o-mini com detail="low" é mais rápido e suficiente
-  // pra entender contexto geral de ad creative.
   if (!imageUrl.startsWith("http") && !imageUrl.startsWith("data:")) {
     return { fb_caption: "", tiktok_caption: "", error: "invalid_image_url" };
   }
@@ -168,13 +196,15 @@ No other text. No preamble. No explanation. Just the two sections.`;
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        max_tokens: 600,
-        temperature: 0.7,
+        max_tokens: 700,
+        temperature: 0.4, // mais conservador — menos invenção
         messages: [{
           role: "user",
           content: [
             { type: "text", text: prompt },
-            { type: "image_url", image_url: { url: imageUrl, detail: "low" } },
+            // detail "high" = lê texto pequeno/elementos finos. Custo
+            // ~10x detail=low mas vital pra fidelidade.
+            { type: "image_url", image_url: { url: imageUrl, detail: "high" } },
           ],
         }],
       }),
@@ -265,9 +295,13 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    // language override → resolve diretamente. Se não, deriva do market.
-    // Mapeamento de language pra { lang, instructions } compatível com
-    // a estrutura MARKET_LANG.
+    // Resolução de marketCtx:
+    //   - language explícito (override do user) → usa esse
+    //   - senão se market setado → deriva do market
+    //   - senão → null (auto-detect da imagem dentro do Claude prompt)
+    //
+    // Antes default era pt-BR — bug: quando user marcava "Auto" sem
+    // brand+market, sempre saía em PT mesmo se imagem tivesse texto EN.
     const LANGUAGE_OVERRIDE: Record<string, { lang: string; instructions: string }> = {
       "pt-BR":    MARKET_LANG.BR,
       "es-MX":    MARKET_LANG.MX,
@@ -276,12 +310,13 @@ Deno.serve(async (req) => {
       "en-US":    MARKET_LANG.US,
       "hinglish": MARKET_LANG.IN,
     };
-    const marketCtx = (language && LANGUAGE_OVERRIDE[language])
+    const marketCtx: { lang: string; instructions: string } | null =
+      (language && LANGUAGE_OVERRIDE[language])
       || (market && MARKET_LANG[market])
-      || MARKET_LANG.BR;
+      || null;
     const brandHint = (brand_id && BRAND_HINTS[brand_id]) || "";
 
-    console.log(`[hub-caption-gen] start user=${authUser.id} count=${images.length} market=${market} brand=${brand_id} language_override=${language || "(none)"} resolved_lang=${marketCtx.lang}`);
+    console.log(`[hub-caption-gen] start user=${authUser.id} count=${images.length} market=${market} brand=${brand_id} language=${language || "(auto)"} resolved=${marketCtx?.lang || "(detect-from-image)"}`);
 
     // Processa em paralelo (cap de 3 pra não estourar rate limit Claude)
     const CONC = 3;
@@ -322,7 +357,7 @@ Deno.serve(async (req) => {
               tiktok_caption: r.tiktok_caption,
               brand_id,
               market,
-              language: marketCtx.lang,
+              language: marketCtx?.lang || "auto",
               model: "gpt-4o-mini",
             },
             created_at: new Date().toISOString(),

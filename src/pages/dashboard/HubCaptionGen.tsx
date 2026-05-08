@@ -52,11 +52,11 @@ const STR: Record<string, Record<Lang, string>> = {
   remove:         { pt: "Remover",             en: "Remove",            es: "Quitar",            zh: "删除" },
   removeAll:      { pt: "Limpar tudo",         en: "Clear all",         es: "Limpiar todo",      zh: "全部清除" },
   cost:           { pt: "Custo estimado",      en: "Estimated cost",    es: "Costo estimado",    zh: "预估费用" },
-  costValue:      { pt: "~$0,0001 por imagem", en: "~$0.0001 per image", es: "~$0,0001 por imagen", zh: "约 $0.0001/图像" },
+  costValue:      { pt: "~$0,001 por imagem (alta fidelidade)", en: "~$0.001 per image (high fidelity)", es: "~$0,001 por imagen (alta fidelidad)", zh: "约 $0.001/图像（高保真）" },
   uploading:      { pt: "Enviando imagens...", en: "Uploading...",      es: "Subiendo...",       zh: "上传中..." },
   recent:         { pt: "Últimas legendas",    en: "Recent captions",   es: "Últimas captions",  zh: "最近的字幕" },
   recentEmpty:    { pt: "Sem legendas ainda. Gere a primeira acima.", en: "No captions yet. Generate the first above.", es: "Sin captions aún.", zh: "还没有字幕。" },
-  langInfo:       { pt: "Idioma das legendas vai pelo mercado selecionado.", en: "Caption language follows selected market.", es: "Idioma de los captions sigue el mercado.", zh: "字幕语言跟随所选市场。" },
+  langInfo:       { pt: "Sem mercado: IA detecta o idioma da imagem (texto visível, copy do anúncio).", en: "No market: AI detects language from image (visible text, ad copy).", es: "Sin mercado: IA detecta el idioma de la imagen.", zh: "无市场：AI 从图像检测语言。" },
   langTitle:      { pt: "Idioma das legendas", en: "Caption language", es: "Idioma de los captions", zh: "字幕语言" },
   langAuto:       { pt: "Automático (do mercado)", en: "Auto (from market)", es: "Auto (del mercado)", zh: "自动（按市场）" },
 };
