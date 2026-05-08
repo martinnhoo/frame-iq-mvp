@@ -39,6 +39,10 @@ import {
   updateWorkflowGraph, deleteWorkflow, createWorkflow, runWorkflow,
   pollWorkflowRun,
 } from "@/lib/hubWorkflows";
+import {
+  fetchHookLibrary, HOOK_CATEGORIES,
+  type HookCategory, type HookRow,
+} from "@/lib/hookLibrary";
 
 // ── i18n strings ──────────────────────────────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -1544,6 +1548,7 @@ function NodeConfigPanel({
   lang: Lang;
 }) {
   const data = node.data as Record<string, unknown>;
+  const [hookModalOpen, setHookModalOpen] = useState(false);
   return (
     <div style={{ fontSize: 12 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -1838,7 +1843,28 @@ function NodeConfigPanel({
               {lang === "pt" ? "Prompt / copy" : lang === "es" ? "Prompt / copy" : lang === "zh" ? "提示词 / 文案" : "Prompt / copy"}
             </option>
           </select>
-          <FieldLabel>{t("fieldVarValues")}</FieldLabel>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, marginBottom: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)" }}>
+              {t("fieldVarValues")}
+            </span>
+            {(data.axis as string) === "prompt" && (
+              <button
+                onClick={() => setHookModalOpen(true)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  padding: "4px 8px", borderRadius: 5,
+                  background: "rgba(236,72,153,0.12)",
+                  border: "1px solid rgba(236,72,153,0.30)",
+                  color: "#F472B6",
+                  fontSize: 10.5, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+                title={lang === "pt" ? "Abrir biblioteca de hooks prontos" : "Open hook library"}
+              >
+                🎯 {lang === "pt" ? "Hooks prontos" : lang === "es" ? "Hooks listos" : lang === "zh" ? "现成钩子" : "Ready hooks"}
+              </button>
+            )}
+          </div>
           <textarea
             value={(data.values as string[] || []).join("\n")}
             onChange={e => onUpdate({ values: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
@@ -1855,16 +1881,29 @@ function NodeConfigPanel({
           <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
             {(data.axis as string) === "prompt"
               ? (lang === "pt"
-                  ? "Cada linha vira 1 imagem com a copy escrita aí. Combina com outro nó de Variação (Formato) pra fazer matriz de copy × formato."
+                  ? "Cada linha vira 1 imagem com a copy escrita aí. Use o botão Hooks prontos pra inserir copies testados. Combina com outro nó de Variação (Formato) pra fazer matriz copy × formato."
                   : lang === "es"
-                  ? "Cada línea genera 1 imagen con esa copy. Combina con otro nodo de Variación (formato) para crear matriz copy × formato."
+                  ? "Cada línea genera 1 imagen con esa copy. Usa Hooks listos para insertar copies probados. Combina con otro nodo de Variación (formato) para crear matriz copy × formato."
                   : lang === "zh"
                   ? "每行生成 1 张该文案的图像。可以与另一个变体节点（格式）组合形成矩阵。"
-                  : "Each line becomes 1 image with that copy. Combine with another Variation node (aspect_ratio) for a copy × format matrix.")
+                  : "Each line becomes 1 image with that copy. Use Ready hooks to insert tested copies. Combine with another Variation node (aspect_ratio) for a copy × format matrix.")
               : t("variationDesc")
             }
           </div>
         </>
+      )}
+
+      {/* Modal Hook Library */}
+      {hookModalOpen && (
+        <HookLibraryModal
+          lang={lang}
+          existing={(data.values as string[]) || []}
+          onClose={() => setHookModalOpen(false)}
+          onApply={(newValues) => {
+            onUpdate({ values: newValues });
+            setHookModalOpen(false);
+          }}
+        />
       )}
     </div>
   );
@@ -2125,5 +2164,258 @@ function pillStyle(active: boolean): React.CSSProperties {
     color: active ? "#3B82F6" : "rgba(255,255,255,0.70)",
     fontSize: 11, fontFamily: "inherit",
     cursor: "pointer",
+  };
+}
+
+// ── Hook Library Modal ────────────────────────────────────────────
+// Modal pra user selecionar hooks de copy pré-fabricados pro nó
+// Variation (axis="prompt"). Filtro por categoria, multi-select,
+// botão "adicionar selecionados".
+function HookLibraryModal({
+  lang, existing, onClose, onApply,
+}: {
+  lang: Lang;
+  existing: string[];
+  onClose: () => void;
+  onApply: (newValues: string[]) => void;
+}) {
+  const [hooks, setHooks] = useState<Record<HookCategory, HookRow[]> | null>(null);
+  const [activeCategory, setActiveCategory] = useState<HookCategory | "all">("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchHookLibrary().then(data => {
+      if (!mounted) return;
+      setHooks(data);
+      setLoading(false);
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  const allHooks: HookRow[] = useMemo(() => {
+    if (!hooks) return [];
+    if (activeCategory === "all") {
+      return HOOK_CATEGORIES.flatMap(c => hooks[c.id] || []);
+    }
+    return hooks[activeCategory] || [];
+  }, [hooks, activeCategory]);
+
+  const toggle = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const apply = () => {
+    if (!hooks) return;
+    // Pega copy dos selecionados (ordem da seleção não importa, vai por categoria)
+    const picked: string[] = [];
+    for (const cat of HOOK_CATEGORIES) {
+      for (const h of hooks[cat.id] || []) {
+        if (selected.has(h.id)) picked.push(h.copy);
+      }
+    }
+    // Merge com existentes — adiciona no fim, sem duplicatas
+    const set = new Set(existing);
+    const merged = [...existing];
+    for (const p of picked) {
+      if (!set.has(p)) {
+        merged.push(p);
+        set.add(p);
+      }
+    }
+    onApply(merged);
+  };
+
+  const selectAll = () => {
+    setSelected(new Set(allHooks.map(h => h.id)));
+  };
+  const clearAll = () => setSelected(new Set());
+
+  const labels = {
+    title: { pt: "Hooks prontos", en: "Ready hooks", es: "Hooks listos", zh: "现成的钩子" },
+    subtitle: { pt: "Copies testadas pra iGaming. Selecione e adicione ao seu workflow.", en: "Tested copies for iGaming. Select and add to your workflow.", es: "Copies probados para iGaming. Selecciona y añade a tu workflow.", zh: "iGaming 测试过的文案。选择并添加到工作流。" },
+    all: { pt: "Tudo", en: "All", es: "Todo", zh: "全部" },
+    selectAll: { pt: "Selecionar todos", en: "Select all", es: "Seleccionar todos", zh: "全选" },
+    clearAll: { pt: "Limpar", en: "Clear", es: "Limpiar", zh: "清空" },
+    addToWorkflow: { pt: "Adicionar selecionados", en: "Add selected", es: "Añadir seleccionados", zh: "添加所选" },
+    cancel: { pt: "Cancelar", en: "Cancel", es: "Cancelar", zh: "取消" },
+    loading: { pt: "Carregando…", en: "Loading…", es: "Cargando…", zh: "加载中..." },
+    empty: { pt: "Nenhum hook nesta categoria", en: "No hooks in this category", es: "Sin hooks en esta categoría", zh: "此类别没有钩子" },
+  };
+  const tt = (k: keyof typeof labels) => labels[k][lang] || labels[k].en;
+
+  return (
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "rgba(0,0,0,0.70)", backdropFilter: "blur(4px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: 20,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14,
+        maxWidth: 720, width: "100%", maxHeight: "85vh",
+        display: "flex", flexDirection: "column", overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 20 }}>🎯</span>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 800, margin: 0, color: "#fff" }}>{tt("title")}</h3>
+              <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)", margin: "2px 0 0", lineHeight: 1.4 }}>
+                {tt("subtitle")}
+              </p>
+            </div>
+            <button onClick={onClose} style={{
+              padding: "4px 8px", background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.10)", borderRadius: 5,
+              color: "rgba(255,255,255,0.70)", cursor: "pointer", fontSize: 11,
+              fontFamily: "inherit",
+            }}>×</button>
+          </div>
+        </div>
+
+        {/* Category filters */}
+        <div style={{
+          padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", gap: 6, flexWrap: "wrap",
+        }}>
+          <button onClick={() => setActiveCategory("all")} style={categoryPillStyle(activeCategory === "all")}>
+            {tt("all")} <span style={{ opacity: 0.5 }}>· {hooks ? Object.values(hooks).reduce((s, arr) => s + arr.length, 0) : 0}</span>
+          </button>
+          {HOOK_CATEGORIES.map(c => {
+            const count = hooks?.[c.id]?.length || 0;
+            return (
+              <button key={c.id} onClick={() => setActiveCategory(c.id)} style={categoryPillStyle(activeCategory === c.id)}>
+                {c.emoji} {c.label[lang] || c.label.en} <span style={{ opacity: 0.5 }}>· {count}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Hook list */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "10px 16px" }}>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: "center", color: "rgba(255,255,255,0.50)", fontSize: 12 }}>
+              {tt("loading")}
+            </div>
+          ) : allHooks.length === 0 ? (
+            <div style={{ padding: 40, textAlign: "center", color: "rgba(255,255,255,0.50)", fontSize: 12 }}>
+              {tt("empty")}
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {allHooks.map(h => {
+                const cat = HOOK_CATEGORIES.find(c => c.id === h.category);
+                const isSelected = selected.has(h.id);
+                const isExisting = existing.includes(h.copy);
+                return (
+                  <button
+                    key={h.id}
+                    onClick={() => !isExisting && toggle(h.id)}
+                    disabled={isExisting}
+                    style={{
+                      display: "flex", alignItems: "flex-start", gap: 10,
+                      padding: "10px 12px", borderRadius: 8,
+                      background: isExisting ? "rgba(34,197,94,0.05)"
+                        : isSelected ? "rgba(236,72,153,0.10)"
+                        : "rgba(255,255,255,0.02)",
+                      border: `1px solid ${isExisting ? "rgba(34,197,94,0.20)"
+                        : isSelected ? "#EC4899"
+                        : "rgba(255,255,255,0.06)"}`,
+                      color: "#fff",
+                      cursor: isExisting ? "default" : "pointer",
+                      fontFamily: "inherit", textAlign: "left",
+                      opacity: isExisting ? 0.6 : 1,
+                    }}
+                  >
+                    <div style={{
+                      flexShrink: 0,
+                      width: 16, height: 16, borderRadius: 4,
+                      border: `1.5px solid ${isExisting ? "#22C55E" : isSelected ? "#EC4899" : "rgba(255,255,255,0.20)"}`,
+                      background: isExisting ? "#22C55E" : isSelected ? "#EC4899" : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, color: "#fff", fontWeight: 800, marginTop: 1,
+                    }}>{(isExisting || isSelected) ? "✓" : ""}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.50)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          {cat?.emoji} {cat?.label[lang] || cat?.label.en}
+                        </span>
+                        {isExisting && (
+                          <span style={{ fontSize: 9.5, color: "#22C55E", fontWeight: 700 }}>
+                            {lang === "pt" ? "JÁ ADICIONADO" : "ADDED"}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, lineHeight: 1.4, color: "rgba(255,255,255,0.85)" }}>
+                        {h.copy}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Footer com ações */}
+        <div style={{
+          padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", alignItems: "center", gap: 10,
+        }}>
+          <button onClick={selectAll} disabled={allHooks.length === 0} style={{
+            padding: "6px 10px", background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.10)", borderRadius: 6,
+            color: "rgba(255,255,255,0.70)", cursor: "pointer", fontSize: 11.5,
+            fontFamily: "inherit",
+          }}>{tt("selectAll")}</button>
+          <button onClick={clearAll} disabled={selected.size === 0} style={{
+            padding: "6px 10px", background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.10)", borderRadius: 6,
+            color: "rgba(255,255,255,0.70)", cursor: selected.size === 0 ? "not-allowed" : "pointer",
+            fontSize: 11.5, fontFamily: "inherit", opacity: selected.size === 0 ? 0.5 : 1,
+          }}>{tt("clearAll")}</button>
+          <span style={{ flex: 1, fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
+            {selected.size} {lang === "pt" ? "selecionados" : "selected"}
+          </span>
+          <button onClick={onClose} style={{
+            padding: "8px 14px", background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.10)", borderRadius: 6,
+            color: "#fff", cursor: "pointer", fontSize: 12, fontWeight: 600,
+            fontFamily: "inherit",
+          }}>{tt("cancel")}</button>
+          <button
+            onClick={apply}
+            disabled={selected.size === 0}
+            style={{
+              padding: "8px 16px",
+              background: selected.size === 0 ? "rgba(255,255,255,0.06)" : "#EC4899",
+              border: `1px solid ${selected.size === 0 ? "rgba(255,255,255,0.10)" : "#EC4899"}`,
+              borderRadius: 6, color: "#fff",
+              cursor: selected.size === 0 ? "not-allowed" : "pointer",
+              fontSize: 12, fontWeight: 700, fontFamily: "inherit",
+              opacity: selected.size === 0 ? 0.5 : 1,
+            }}
+          >{tt("addToWorkflow")} ({selected.size})</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function categoryPillStyle(active: boolean): React.CSSProperties {
+  return {
+    padding: "5px 10px", borderRadius: 5,
+    background: active ? "rgba(236,72,153,0.18)" : "rgba(255,255,255,0.04)",
+    border: `1px solid ${active ? "#EC4899" : "rgba(255,255,255,0.08)"}`,
+    color: active ? "#F472B6" : "rgba(255,255,255,0.70)",
+    fontSize: 11, fontFamily: "inherit", cursor: "pointer",
+    whiteSpace: "nowrap",
   };
 }
