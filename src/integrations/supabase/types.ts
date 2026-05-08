@@ -2388,6 +2388,39 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_hook_library: {
+        Row: {
+          brand_kind: string | null
+          category: string
+          copy: string
+          created_at: string
+          id: string
+          is_official: boolean | null
+          locale: string | null
+          score: number | null
+        }
+        Insert: {
+          brand_kind?: string | null
+          category: string
+          copy: string
+          created_at?: string
+          id?: string
+          is_official?: boolean | null
+          locale?: string | null
+          score?: number | null
+        }
+        Update: {
+          brand_kind?: string | null
+          category?: string
+          copy?: string
+          created_at?: string
+          id?: string
+          is_official?: boolean | null
+          locale?: string | null
+          score?: number | null
+        }
+        Relationships: []
+      }
       hub_workflow_runs: {
         Row: {
           created_at: string
