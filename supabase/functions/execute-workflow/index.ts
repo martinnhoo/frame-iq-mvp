@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v11-brand-edges-rescue-2026-05-07";
+const FN_VERSION = "v12-resolve-brand-2026-05-07";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -530,16 +530,98 @@ async function saveWorkflowAssetToLibrary(
   }
 }
 
+// ── Brand + Market context (mirror de src/data/hubBrands.ts) ──────
+// Server-side replica do registro de marcas/mercados pra que workflows
+// resolvam contexto sem depender de override do frontend. Templates
+// oficiais só guardam brand_id + market — aqui resolvemos brand_hint
+// completo + license_text + market context (incluindo lang da copy).
+//
+// IMPORTANTE: manter sincronizado com src/data/hubBrands.ts. Se uma
+// marca for adicionada/editada, atualizar AMBOS lugares.
+const SERVER_HUB_MARKETS: Record<string, { promptContext: string }> = {
+  BR: {
+    promptContext: "Target market: Brazil. If people appear, they should reflect the diverse Brazilian population (mix of skin tones — afro-Brazilian, multiracial, white, indigenous heritage — authentic and modern, not stereotyped). Any on-image text in Brazilian Portuguese. By default avoid national flags, carnival imagery, tropical/jungle clichés, and nationalistic symbols UNLESS the user prompt explicitly requests them — the user's instruction always overrides this default. Otherwise keep the creative modern and brand-driven.",
+  },
+  MX: {
+    promptContext: "Target market: Mexico. If people appear, they should reflect the Mexican population (mestizo, indigenous and afro-mestizo features, varied skin tones — authentic, modern). Any on-image text in Mexican Spanish. By default avoid flags, mariachi, sombreros, lucha libre, and other national/cultural clichés UNLESS the user prompt explicitly requests them — the user's instruction always overrides this default. Otherwise keep it modern and brand-driven.",
+  },
+  CO: {
+    promptContext: "Target market: Colombia. If people appear, they should reflect the Colombian population (mestizo, afro-Colombian, varied features — authentic, modern). Any on-image text in Colombian Spanish. By default avoid flags, national symbols, and cultural clichés UNLESS the user prompt explicitly requests them. Otherwise keep it modern and brand-driven.",
+  },
+  PE: {
+    promptContext: "Target market: Peru. If people appear, they should reflect the Peruvian population (predominantly mestizo, Andean indigenous features common — authentic, not exotic or touristy). Any on-image text in Peruvian Spanish. By default avoid flags, Andean costumes, llamas, Machu Picchu, and cultural clichés UNLESS the user prompt explicitly requests them. Otherwise keep it modern and brand-driven.",
+  },
+  US: {
+    promptContext: "Target market: United States. If people appear, they should reflect the diverse US population (varied ethnicities, ages — natural and authentic representation). Any on-image text in American English. By default avoid flags, eagles, and heavy-handed patriotic imagery UNLESS the user prompt explicitly requests them. Otherwise keep it modern and brand-driven.",
+  },
+  IN: {
+    promptContext: "Target market: India. If people appear, they should reflect the Indian population (South Asian features, varied skin tones from light to dark, modern attire — not always traditional). Any on-image text MUST be in HINGLISH (Hindi mixed with English written in Latin/Roman script — NEVER Devanagari). Examples: 'Aaj hi khelo aur jeeto big!', 'Apna luck try karo', 'Bonus milega 100% guaranteed'. By default avoid flags, saris, turbans, Taj Mahal, Bollywood dance, mandalas, henna, and cultural clichés UNLESS the user prompt explicitly requests them. Otherwise keep it modern and brand-driven.",
+  },
+};
+
+const SERVER_HUB_BRANDS: Record<string, { promptHint: string; license?: Record<string, string> }> = {
+  betbus: {
+    promptHint: "BETBUS branding context: online casino & sports betting brand. Visual style: bold red and gold accents, high-energy gaming atmosphere, modern premium look with selective use of neon and gold sparkles when appropriate.",
+    license: {
+      MX: "Betbus es un sitio web de entretenimiento online autorizado mediante oficio numero DGJS/0175/2023 de la Dirección de Juegos y Sorteos de los Estados Unidos Mexicanos y operado por Energy C2, S.A.P.I. de C.V., autorizado por The Fabulous Vegas Games S.A. de C.V., empresa registrada en México con autorización para operar en línea por la Secretaría de Gobernación – Dirección General de Juegos y Sorteos de los Estados Unidos Mexicanos No. DGJS/DGAAD/DCRCA/SSCCARb/2852/2015. Los Juegos Con Apuesta Estan Prohibidos Para Menores De Edad. 18+ Aplican T&C, Permiso: P-08/2015-Ter.",
+    },
+  },
+  eluck: {
+    promptHint: "ELUCK branding context: online casino brand operating across multiple markets. Visual style: vibrant green and gold accents, modern energetic aesthetic, premium gaming atmosphere with celebratory mood.",
+  },
+  come: {
+    promptHint: "COME.COM branding context: online casino & gaming brand. Visual style: warm saffron and red accents, modern tech-forward look, premium feel with high contrast. Energetic but clean — not over-decorated.",
+  },
+  funilive: {
+    promptHint: "FUNILIVE branding context: Live casino & betting brand with international presence. Visual style: modern vibrant aesthetic with purple and magenta tones, live entertainment vibe, dynamic and youthful.",
+  },
+};
+
+function resolveBrandContext(brandId: string | null, market: string | null, includeLicense: boolean): {
+  brand_hint: string;
+  license_text: string;
+  has_license: boolean;
+} {
+  const parts: string[] = [];
+  const brand = brandId ? SERVER_HUB_BRANDS[brandId] : null;
+  const mkt = market ? SERVER_HUB_MARKETS[market] : null;
+  if (brand?.promptHint) parts.push(brand.promptHint);
+  if (mkt?.promptContext) parts.push(mkt.promptContext);
+  const brand_hint = parts.join("\n\n");
+  const license_text = includeLicense && brand?.license && market ? (brand.license[market] || "") : "";
+  return { brand_hint, license_text, has_license: !!license_text };
+}
+
 async function execBrand(node: GraphNode): Promise<Record<string, unknown>> {
-  // Brand é passthrough — o frontend já resolveu brand_id+market →
-  // brand_hint+license_text e sobrescreveu via inputs override.
-  // Aqui só repassa os campos relevantes.
+  // Resolve brand_id + market → brand_hint completo + license_text.
+  // Antes só passthrough: templates com `{ brand_id: "betbus", market: "MX",
+  // include_disclaimer: true }` rodavam SEM brand context, SEM market
+  // context (lang da copy errada — saía PT-BR pra mercado MX), SEM
+  // disclaimer regulatório. Agora resolvemos do registro embedded.
+  const brand_id = (node.data.brand_id as string) || null;
+  const market = (node.data.market as string) || null;
+  const include_disclaimer = !!node.data.include_disclaimer;
+
+  // Se o frontend já mandou brand_hint/license_text resolvidos via override
+  // (caso futuro de UI de edit), respeita. Senão, resolve do registro.
+  const explicitHint = (node.data.brand_hint as string)?.trim();
+  const explicitLicense = (node.data.license_text as string)?.trim();
+
+  const resolved = (!explicitHint || !explicitLicense)
+    ? resolveBrandContext(brand_id, market, include_disclaimer)
+    : { brand_hint: "", license_text: "", has_license: false };
+
+  const brand_hint = explicitHint || resolved.brand_hint;
+  const license_text = explicitLicense || resolved.license_text;
+
+  console.log(`[execBrand] node=${node.id} brand=${brand_id} market=${market} include_disclaimer=${include_disclaimer} brand_hint_len=${brand_hint.length} license_text_len=${license_text.length}`);
+
   return {
-    brand_id: node.data.brand_id || null,
-    market: node.data.market || null,
-    brand_hint: (node.data.brand_hint as string) || "",
-    license_text: (node.data.license_text as string) || "",
-    include_disclaimer: !!node.data.include_disclaimer,
+    brand_id,
+    market,
+    brand_hint,
+    license_text,
+    include_disclaimer,
   };
 }
 
