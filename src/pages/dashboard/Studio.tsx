@@ -68,6 +68,8 @@ export default function Studio() {
   const [error, setError] = useState<string | null>(null);
   const [runStartedAt, setRunStartedAt] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [runId, setRunId] = useState<string | null>(null);
+  const pollAbortRef = useRef<{ abort: boolean }>({ abort: false });
 
   // Brands load
   useEffect(() => {
@@ -118,6 +120,8 @@ export default function Studio() {
     setRunStartedAt(Date.now());
     setElapsed(0);
     setResults([]);
+    setRunId(null);
+    pollAbortRef.current = { abort: false };
 
     try {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -126,16 +130,16 @@ export default function Studio() {
       const token = sessionData?.session?.access_token;
       if (!token) { setError("Sessão expirada. Faça login."); setRunning(false); return; }
 
-      // Pré-popula slots vazios pra mostrar progress
-      const angleIds = anglesMode === "manual" && manualAngles.size > 0
+      // Pré-popula slots vazios localmente pra mostrar UI imediata
+      const angleIdsLocal = anglesMode === "manual" && manualAngles.size > 0
         ? Array.from(manualAngles).slice(0, count)
         : pickAngles(count, "balanced").map(a => a.id);
-      const placeholderResults: CreativeResult[] = angleIds.map(id => {
+      setResults(angleIdsLocal.map(id => {
         const a = ANGLE_LIBRARY.find(x => x.id === id);
         return { angle_id: id, angle_label: a?.label || id };
-      });
-      setResults(placeholderResults);
+      }));
 
+      // POST kicks off background work, returns run_id imediato (HTTP 202)
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-creatives`, {
         method: "POST",
         headers: {
@@ -154,22 +158,81 @@ export default function Studio() {
         }),
       });
       const text = await r.text();
-      let payload: { ok?: boolean; results?: CreativeResult[]; error?: string; message?: string };
+      let payload: { ok?: boolean; run_id?: string; angles?: { id: string; label: string }[]; error?: string; message?: string };
       try { payload = JSON.parse(text); } catch {
         setError(`Resposta inválida: ${text.slice(0, 150)}`);
+        setRunning(false);
         return;
       }
-      if (!payload.ok || !Array.isArray(payload.results)) {
-        setError(payload.message || payload.error || "Falha ao gerar");
+      if (!payload.ok || !payload.run_id) {
+        setError(payload.message || payload.error || "Falha ao iniciar");
+        setRunning(false);
         return;
       }
-      setResults(payload.results);
+
+      // Atualiza placeholders com angles reais retornados do server
+      if (Array.isArray(payload.angles)) {
+        setResults(payload.angles.map(a => ({ angle_id: a.id, angle_label: a.label })));
+      }
+      setRunId(payload.run_id);
+
+      // Inicia polling — termina quando status='done' ou 'failed', ou abort
+      pollRun(payload.run_id);
     } catch (e) {
       setError(String(e).slice(0, 200));
-    } finally {
       setRunning(false);
     }
   };
+
+  // Polling do studio_runs.results — atualiza UI conforme cada slot termina
+  const pollRun = async (rid: string) => {
+    const POLL_INTERVAL = 2500;     // 2.5s
+    const MAX_DURATION = 5 * 60 * 1000;  // 5min hard cap
+    const start = Date.now();
+
+    while (!pollAbortRef.current.abort) {
+      if (Date.now() - start > MAX_DURATION) {
+        setError("Timeout: geração passou de 5 min. Verifique a Library.");
+        setRunning(false);
+        return;
+      }
+      try {
+        const { data, error: dbErr } = await supabase
+          .from("studio_runs")
+          .select("status, results")
+          .eq("id", rid)
+          .maybeSingle();
+        if (dbErr) {
+          // Erro transiente, tenta de novo
+          await new Promise(r => setTimeout(r, POLL_INTERVAL));
+          continue;
+        }
+        if (!data) {
+          await new Promise(r => setTimeout(r, POLL_INTERVAL));
+          continue;
+        }
+        const r = data as { status: string; results: CreativeResult[] };
+        if (Array.isArray(r.results) && r.results.length > 0) {
+          setResults(r.results);
+        }
+        if (r.status === "done" || r.status === "failed") {
+          setRunning(false);
+          if (r.status === "failed") {
+            setError("Geração falhou. Verifique os erros nos cards.");
+          }
+          return;
+        }
+      } catch (e) {
+        console.warn("[poll] error:", e);
+      }
+      await new Promise(r => setTimeout(r, POLL_INTERVAL));
+    }
+  };
+
+  // Cleanup polling no unmount
+  useEffect(() => {
+    return () => { pollAbortRef.current.abort = true; };
+  }, []);
 
   const handleRefine = async (idx: number, feedback: string) => {
     const target = results[idx];
