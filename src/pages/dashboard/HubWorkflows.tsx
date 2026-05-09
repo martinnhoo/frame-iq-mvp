@@ -28,7 +28,7 @@ import "@xyflow/react/dist/style.css";
 import {
   ArrowLeft, Play, Save, Plus, Loader, Copy, Trash2, Sparkles,
   Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch, Mic, Video as VideoIcon,
-  ChevronDown, X, Search, Menu,
+  ChevronDown, X, Search, Menu, Check,
 } from "lucide-react";
 import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode, type Lang } from "@/data/hubBrands";
 import { ANGLE_LIBRARY, anglesBySafety, pickAngles, type AngleSafety } from "@/data/angleLibrary";

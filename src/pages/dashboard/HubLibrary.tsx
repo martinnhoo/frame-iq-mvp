@@ -183,12 +183,10 @@ type RawRow = {
     target_url?: string;
     task_id?: string;
     model?: string;
-    // Caption-specific
+    // Caption-specific (reusa transcript + video_url já declarados acima)
     fb_caption?: string;
     tiktok_caption?: string;
     media_type?: "image" | "video";
-    transcript?: string | null;
-    video_url?: string;
   };
   created_at: string;
 };
