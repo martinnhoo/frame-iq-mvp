@@ -31,6 +31,7 @@ import {
   ChevronDown, X, Search, Menu,
 } from "lucide-react";
 import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode, type Lang } from "@/data/hubBrands";
+import { ANGLE_LIBRARY, anglesBySafety, pickAngles, type AngleSafety } from "@/data/angleLibrary";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -415,13 +416,23 @@ function VoiceNode({ data, selected }: { data: { voice_id?: string; voice_name?:
 function VariationNode({ data, selected }: { data: { axis?: string; values?: string[] }; selected: boolean }) {
   const values = data.values || [];
   const axis = data.axis || "aspect_ratio";
-  const axisLabel = axis === "prompt" ? "Prompt/copy" : "Formato";
+  const axisLabel = axis === "prompt" ? "Prompt/copy" : axis === "angle" ? "🎨 Angle" : "Formato";
   // Pra prompt, valores podem ser longos — trunca cada um
-  const preview = values.length === 0
-    ? "Sem valores"
-    : axis === "prompt"
-      ? `${values.length} prompts: ${values.map(v => v.length > 24 ? v.slice(0, 22) + "…" : v).join(" · ")}`
-      : `${values.length} variantes: ${values.join(", ")}`;
+  // Pra angle, resolve angle_id → label amigável
+  let preview: string;
+  if (values.length === 0) {
+    preview = "Sem valores";
+  } else if (axis === "prompt") {
+    preview = `${values.length} prompts: ${values.map(v => v.length > 24 ? v.slice(0, 22) + "…" : v).join(" · ")}`;
+  } else if (axis === "angle") {
+    const labels = values.map(id => {
+      const a = ANGLE_LIBRARY.find(x => x.id === id);
+      return a?.label || id;
+    });
+    preview = `${values.length} angles: ${labels.slice(0, 3).join(" · ")}${labels.length > 3 ? ` +${labels.length - 3}` : ""}`;
+  } else {
+    preview = `${values.length} variantes: ${values.join(", ")}`;
+  }
   return (
     <NodeShell
       icon={<GitBranch size={13} />}
@@ -1595,6 +1606,7 @@ function NodeConfigPanel({
 }) {
   const data = node.data as Record<string, unknown>;
   const [hookModalOpen, setHookModalOpen] = useState(false);
+  const [angleModalOpen, setAngleModalOpen] = useState(false);
   return (
     <div style={{ fontSize: 12 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -1981,6 +1993,9 @@ function NodeConfigPanel({
             <option value="prompt" style={{ background: "#0d0d14" }}>
               {lang === "pt" ? "Prompt / copy" : lang === "es" ? "Prompt / copy" : lang === "zh" ? "提示词 / 文案" : "Prompt / copy"}
             </option>
+            <option value="angle" style={{ background: "#0d0d14" }}>
+              {lang === "pt" ? "🎯 Angle estratégico (NOVO)" : lang === "es" ? "🎯 Ángulo estratégico (NUEVO)" : lang === "zh" ? "🎯 战略角度（新）" : "🎯 Strategic angle (NEW)"}
+            </option>
           </select>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, marginBottom: 4 }}>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)" }}>
@@ -2003,6 +2018,23 @@ function NodeConfigPanel({
                 🎯 {lang === "pt" ? "Hooks prontos" : lang === "es" ? "Hooks listos" : lang === "zh" ? "现成钩子" : "Ready hooks"}
               </button>
             )}
+            {(data.axis as string) === "angle" && (
+              <button
+                onClick={() => setAngleModalOpen(true)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  padding: "4px 8px", borderRadius: 5,
+                  background: "rgba(167,139,250,0.12)",
+                  border: "1px solid rgba(167,139,250,0.30)",
+                  color: "#C4B5FD",
+                  fontSize: 10.5, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+                title={lang === "pt" ? "Picker de angles + auto-distribuir 70/20/10" : "Angle picker + auto-distribute"}
+              >
+                🎨 {lang === "pt" ? "Distribuir angles" : lang === "es" ? "Distribuir ángulos" : lang === "zh" ? "分配角度" : "Distribute angles"}
+              </button>
+            )}
           </div>
           <textarea
             value={(data.values as string[] || []).join("\n")}
@@ -2013,6 +2045,8 @@ function NodeConfigPanel({
                 ? (lang === "pt"
                     ? "Ganhe 100 rodadas grátis\nGanhe 50 rodadas grátis\nDeposite e dobre seu saldo"
                     : "Win 100 free spins\nWin 50 free spins\nDeposit and double your balance")
+                : (data.axis as string) === "angle"
+                ? "direct_offer\nemotional_reaction\nsocial_proof\ncuriosity_gap\nmeme_native"
                 : "1:1\n9:16\n16:9"
             }
             style={{ ...selectStyle, fontFamily: "inherit", resize: "vertical", minHeight: 80 }}
@@ -2026,6 +2060,10 @@ function NodeConfigPanel({
                   : lang === "zh"
                   ? "每行生成 1 张该文案的图像。可以与另一个变体节点（格式）组合形成矩阵。"
                   : "Each line becomes 1 image with that copy. Use Ready hooks to insert tested copies. Combine with another Variation node (aspect_ratio) for a copy × format matrix.")
+              : (data.axis as string) === "angle"
+              ? (lang === "pt"
+                  ? "Cada linha = 1 angle estratégico (composição, hook, hierarquia). NÃO substitui o prompt — adiciona direção criativa em cima dele. Use Distribuir pra preencher automático 70/20/10 (safe/moderate/experimental)."
+                  : "Each line = 1 strategic angle (composition, hook, hierarchy). Does NOT replace the prompt — adds creative direction on top. Use Distribute to auto-fill 70/20/10 (safe/moderate/experimental).")
               : t("variationDesc")
             }
           </div>
@@ -2041,6 +2079,18 @@ function NodeConfigPanel({
           onApply={(newValues) => {
             onUpdate({ values: newValues });
             setHookModalOpen(false);
+          }}
+        />
+      )}
+      {/* Modal Angle Distributor */}
+      {angleModalOpen && (
+        <AngleDistributorModal
+          lang={lang}
+          existing={(data.values as string[]) || []}
+          onClose={() => setAngleModalOpen(false)}
+          onApply={(newValues) => {
+            onUpdate({ values: newValues });
+            setAngleModalOpen(false);
           }}
         />
       )}
@@ -2542,6 +2592,163 @@ function HookLibraryModal({
               opacity: selected.size === 0 ? 0.5 : 1,
             }}
           >{tt("addToWorkflow")} ({selected.size})</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Angle Distributor Modal ────────────────────────────────────────
+// Picker pra selecionar quais angles estratégicos vão pro variation
+// node (axis="angle"). Suporta:
+//   - seleção manual (categoria → angles individuais)
+//   - distribuição automática 70/20/10 (safe/moderate/experimental)
+// Cada angle selecionado vira 1 linha em data.values, no formato
+// {angle_id}. O server resolve via SERVER_ANGLE_LIBRARY.
+function AngleDistributorModal({
+  lang, existing, onClose, onApply,
+}: {
+  lang: Lang;
+  existing: string[];
+  onClose: () => void;
+  onApply: (newValues: string[]) => void;
+}) {
+  const [selected, setSelected] = useState<Set<string>>(new Set(existing));
+  const [filter, setFilter] = useState<AngleSafety | "all">("all");
+
+  const tt = (pt: string, en: string) => lang === "pt" ? pt : en;
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return ANGLE_LIBRARY;
+    return anglesBySafety(filter);
+  }, [filter]);
+
+  const toggle = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const distribute = (n: number) => {
+    const picked = pickAngles(n, "balanced");
+    setSelected(new Set(picked.map(a => a.id)));
+  };
+
+  const safetyColor = (s: AngleSafety): string =>
+    s === "safe" ? "#34D399" : s === "moderate" ? "#FBBF24" : "#F472B6";
+
+  return (
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, zIndex: 10000,
+      background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: "#0a0a0f", border: "1px solid rgba(167,139,250,0.30)", borderRadius: 14,
+        maxWidth: 720, width: "100%", maxHeight: "85vh",
+        display: "flex", flexDirection: "column", overflow: "hidden",
+      }}>
+        <div style={{
+          padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", alignItems: "center", gap: 10,
+        }}>
+          <h3 style={{ fontSize: 14, fontWeight: 800, margin: 0, flex: 1 }}>
+            🎨 {tt("Distribuir Angles", "Distribute Angles")}
+          </h3>
+          <button onClick={onClose} style={{
+            background: "rgba(255,255,255,0.06)", border: "none",
+            borderRadius: 6, padding: 6, cursor: "pointer", color: "#9CA3AF", display: "flex",
+          }}><X size={14} /></button>
+        </div>
+
+        {/* Quick distribute presets */}
+        <div style={{ padding: "10px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginBottom: 7 }}>
+            {tt("Preset rápido (70/20/10)", "Quick preset (70/20/10)")}
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {[3, 5, 8, 10, 16].map(n => (
+              <button key={n} onClick={() => distribute(n)} style={{
+                padding: "6px 12px", borderRadius: 6,
+                background: "rgba(167,139,250,0.10)",
+                border: "1px solid rgba(167,139,250,0.30)",
+                color: "#C4B5FD", fontSize: 11.5, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}>{n} angles</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Safety filter */}
+        <div style={{ padding: "10px 18px", display: "flex", gap: 6, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          {(["all", "safe", "moderate", "experimental"] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{
+              padding: "5px 10px", borderRadius: 5,
+              background: filter === f ? "rgba(167,139,250,0.18)" : "rgba(255,255,255,0.04)",
+              border: `1px solid ${filter === f ? "#A78BFA" : "rgba(255,255,255,0.10)"}`,
+              color: filter === f ? "#C4B5FD" : "rgba(255,255,255,0.65)",
+              fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+              textTransform: "capitalize",
+            }}>{f === "all" ? tt("Todos", "All") : f}</button>
+          ))}
+        </div>
+
+        {/* Lista de angles */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 12px" }}>
+          {filtered.map(a => {
+            const isSel = selected.has(a.id);
+            return (
+              <button key={a.id} onClick={() => toggle(a.id)} style={{
+                width: "100%", textAlign: "left",
+                padding: "10px 12px", marginBottom: 6,
+                background: isSel ? "rgba(167,139,250,0.10)" : "rgba(255,255,255,0.02)",
+                border: `1px solid ${isSel ? "#A78BFA" : "rgba(255,255,255,0.06)"}`,
+                borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
+                color: "#fff",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                  <span style={{ fontSize: 12, fontWeight: 800 }}>{a.label}</span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, letterSpacing: "0.05em",
+                    padding: "1px 6px", borderRadius: 3,
+                    background: `${safetyColor(a.safety)}22`,
+                    color: safetyColor(a.safety),
+                    textTransform: "uppercase",
+                  }}>{a.safety}</span>
+                  {isSel && <Check size={12} style={{ color: "#A78BFA", marginLeft: "auto" }} />}
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.45 }}>
+                  {a.intent}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer apply */}
+        <div style={{
+          padding: "12px 18px", borderTop: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        }}>
+          <span style={{ fontSize: 11.5, color: "rgba(255,255,255,0.55)" }}>
+            {selected.size} {tt("angles selecionados", "angles selected")}
+          </span>
+          <button
+            onClick={() => onApply(Array.from(selected))}
+            disabled={selected.size === 0}
+            style={{
+              padding: "9px 16px", borderRadius: 7,
+              background: selected.size === 0 ? "rgba(167,139,250,0.30)" : "#A78BFA",
+              border: "none", color: "#0a0a0f",
+              fontSize: 12, fontWeight: 800, fontFamily: "inherit",
+              cursor: selected.size === 0 ? "not-allowed" : "pointer",
+              opacity: selected.size === 0 ? 0.5 : 1,
+            }}
+          >
+            {tt("Aplicar", "Apply")} ({selected.size})
+          </button>
         </div>
       </div>
     </div>

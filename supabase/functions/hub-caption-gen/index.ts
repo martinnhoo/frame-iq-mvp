@@ -13,7 +13,7 @@
 //
 // Idioma das legendas: deriva de market (BR=pt-BR, MX/CO/PE=es, US=en, IN=hinglish).
 
-const FN_VERSION = "v4-caption-video-2026-05-07";
+const FN_VERSION = "v5-caption-video-url-persist-2026-05-08";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -396,10 +396,32 @@ Deno.serve(async (req) => {
           ? (img.frames && img.frames.length > 0 ? img.frames : [img.image_url])
           : [img.image_url];
 
-        // Pra vídeo com video_url, faz Whisper transcript em paralelo
+        // 2-PHASE PARALLEL pra vídeo:
+        //   Phase 1 (parallel): Whisper transcribe (5-10s) + vision call WITHOUT
+        //                        transcript context (3-5s). Vamos descartar o
+        //                        resultado da vision se Whisper retornar transcript
+        //                        relevante e refazer com contexto melhor.
+        //
+        // Decisão: rodar SEQUENCIAL (Whisper primeiro, depois vision com transcript)
+        // é mais limpo mas dobra latência (15s vs 10s).
+        //
+        // Ganho real do paralelo só acontece se Whisper falhar (sem transcript)
+        // — aí já temos a vision pronta.
+        //
+        // Estratégia escolhida: race com fast-path. Roda os dois em paralelo,
+        // se Whisper finalizou ANTES da vision, espera a vision-com-transcript;
+        // se vision finalizou primeiro e Whisper deu transcript válido, refaz
+        // a vision (1 chamada extra, mas vale pela qualidade).
+        //
+        // Pra simplicidade nesta versão, mantenho sequential mas com
+        // Whisper.race(8s timeout) — se Whisper passa de 8s, segue sem transcript.
         let transcript: string | null = null;
         if (isVideo && img.video_url) {
-          const whisperRes = await whisperTranscribe(img.video_url, OPENAI_API_KEY);
+          const whisperPromise = whisperTranscribe(img.video_url, OPENAI_API_KEY);
+          const timeoutPromise = new Promise<{ transcript: null; error: string }>(resolve =>
+            setTimeout(() => resolve({ transcript: null, error: "whisper_timeout_8s" }), 8000)
+          );
+          const whisperRes = await Promise.race([whisperPromise, timeoutPromise]);
           transcript = whisperRes.transcript;
           if (whisperRes.error) {
             console.warn(`[hub-caption-gen] whisper failed for ${img.ref_id}: ${whisperRes.error}`);
@@ -419,6 +441,7 @@ Deno.serve(async (req) => {
           tiktok_caption: r.tiktok_caption,
           media_type: isVideo ? "video" as const : "image" as const,
           transcript: transcript || undefined,
+          video_url: img.video_url,  // pra Library tocar o MP4 original
           error: r.error,
         };
       }));
@@ -441,7 +464,8 @@ Deno.serve(async (req) => {
             user_id: authUser.id,
             kind: "hub_caption",
             content: {
-              image_url: r.image_url,
+              image_url: r.image_url,                     // cover (frame ou imagem)
+              video_url: (r as { video_url?: string }).video_url || null,  // MP4 original
               fb_caption: r.fb_caption,
               tiktok_caption: r.tiktok_caption,
               media_type: r.media_type || "image",

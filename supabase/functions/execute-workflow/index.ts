@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v13-reference-image-2026-05-07";
+const FN_VERSION = "v14-angle-distribution-2026-05-08";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -77,10 +77,85 @@ function applyInputOverrides(graph: Graph, inputs: Record<string, Record<string,
  *   - Reconecta upstream-of-V → clones (substitui V no grafo)
  *
  * Suporta apenas 1 nível de variation no MVP (sem nested variations).
- * Eixos suportados: aspect_ratio (override em image-gen).
+ * Eixos suportados: aspect_ratio, prompt, angle.
  *
  * Resultado: grafo livre de variation nodes, com N branches paralelos.
  */
+
+// Mirror server-side de src/data/angleLibrary.ts — 16 angles iGaming-ready.
+// Mantido em sync manualmente. Quando adicionar/remover angle no client,
+// atualize este mapa também (os labels/intent não importam server-side,
+// só o prompt_prefix que vai pra OpenAI).
+const SERVER_ANGLE_LIBRARY: Record<string, { label: string; prompt_prefix: string }> = {
+  // SAFE
+  direct_offer: {
+    label: "Oferta Direta",
+    prompt_prefix: "CREATIVE ANGLE: Direct response. Center the offer + CTA as the dominant visual element. Clear hierarchy: hook on top, offer in the middle (largest typography), CTA at the bottom. Minimal distractions. High contrast. Safe scalable layout.",
+  },
+  before_after: {
+    label: "Antes/Depois",
+    prompt_prefix: "CREATIVE ANGLE: Before/After split. Vertical or horizontal split frame. Left/top = problem state (muted, gray, low-energy). Right/bottom = solution state (vibrant, confident, energized). Same subject in both halves when applicable. Minimal text overlay.",
+  },
+  social_proof: {
+    label: "Social Proof",
+    prompt_prefix: "CREATIVE ANGLE: Social proof first. Foreground = stars rating + customer count badge + quote-style testimonial. Visual must feel like screenshots of real reviews. Avoid stock-photo aesthetic.",
+  },
+  authority_premium: {
+    label: "Autoridade Premium",
+    prompt_prefix: "CREATIVE ANGLE: Premium authority. Dark background. Gold or platinum accents. Centered hierarchy. Generous whitespace. Serif or geometric sans typography. Cinematic lighting on subject. Conveys exclusivity without saying 'exclusive'.",
+  },
+  comparison_us_vs: {
+    label: "Comparação",
+    prompt_prefix: "CREATIVE ANGLE: Direct comparison layout. Two-column visual: left = competitor (muted, X marks), right = brand (highlighted, check marks). Honest framing — only compare on dimensions where the brand actually wins.",
+  },
+  feature_zoom: {
+    label: "Feature Zoom",
+    prompt_prefix: "CREATIVE ANGLE: Feature highlight. Extreme close-up or macro shot of the product/UI. Annotation labels with thin lines pointing to key elements. iPhone screenshot aesthetic when applicable. Crisp, technical, confident.",
+  },
+  // MODERATE
+  emotional_reaction: {
+    label: "Reação Emocional",
+    prompt_prefix: "CREATIVE ANGLE: Emotional reaction. Close-up of a person's face showing genuine surprise, joy, or relief. Slight imperfect framing (smartphone camera feel). Natural skin tones. Eyes engage the viewer. Minimal copy — let the face do the talking.",
+  },
+  curiosity_gap: {
+    label: "Curiosity Gap",
+    prompt_prefix: "CREATIVE ANGLE: Curiosity gap. Provocative question or incomplete statement as the hook. Visual partially obscured (cropped, blurred edges, thumbnail-style mystery). Forces the viewer to click to resolve the gap. No spoilers.",
+  },
+  urgency_scarcity: {
+    label: "Urgência/Escassez",
+    prompt_prefix: "CREATIVE ANGLE: Urgency/scarcity. Visible time pressure element (countdown, calendar, expiring badge). Aggressive typography for time markers. Red/orange accents for urgency. Subject framed as taking action NOW.",
+  },
+  beginner_friendly: {
+    label: "Beginner-Friendly",
+    prompt_prefix: "CREATIVE ANGLE: Beginner-friendly. Reassuring tone. Simple shapes, friendly colors. Subject = approachable, smiling, ordinary. Hook addresses the beginner directly: 'Pra quem nunca...', 'Sem experiência'.",
+  },
+  fomo_aspirational: {
+    label: "FOMO Aspiracional",
+    prompt_prefix: "CREATIVE ANGLE: Aspirational FOMO. Lifestyle shot of someone living the upgraded outcome. Slight envy-inducing framing. Hook implies viewer is missing out without saying it directly.",
+  },
+  // EXPERIMENTAL
+  meme_native: {
+    label: "Meme Native",
+    prompt_prefix: "CREATIVE ANGLE: Meme-native. Low-polish aesthetic. Impact font with white-and-black outline OR subtitled meme template. Slightly oversaturated. Visual hierarchy ignores rules — caption and visual fight for attention. Short shelf life.",
+  },
+  fake_screenshot: {
+    label: "Fake Screenshot",
+    prompt_prefix: "CREATIVE ANGLE: Native UI mock. Looks like an iOS/Android push notification, DM thread, or in-app screen capture. Authentic platform fonts. Slight overlay shadows. Avoid making it look like an ad — make it look like a screenshot somebody shared.",
+  },
+  chaotic_typography: {
+    label: "Tipografia Caótica",
+    prompt_prefix: "CREATIVE ANGLE: Typography chaos. Numbers/keywords sized enormously (50%+ of frame). Asymmetric placement. Mixed weights. Negative space used intentionally. Visual energy must interrupt feed scroll. Not 'pretty' — disruptive.",
+  },
+  creator_pov: {
+    label: "Creator POV",
+    prompt_prefix: "CREATIVE ANGLE: Creator POV. First-person selfie or talking-head shot. Vertical 9:16 framing. Natural ring-light or window light. Subject talks directly to camera. Caption overlay = subtitle style. Imperfect. Authentic.",
+  },
+  split_chaos: {
+    label: "Split Chaos",
+    prompt_prefix: "CREATIVE ANGLE: Multi-panel chaos. 3-6 visual elements overlapping or in irregular grid. Each panel = different angle of the offer. Eye must work to find the focal point. Color-coded panels for hierarchy.",
+  },
+};
+
 function expandVariations(graph: Graph): Graph {
   const variationNodes = graph.nodes.filter(n => n.type === "variation");
   if (variationNodes.length === 0) return graph;
@@ -163,12 +238,23 @@ function expandVariations(graph: Graph): Graph {
         //   - prompt → muda copy. Setamos _prompt_override que image-gen
         //     prioriza sobre o input.prompt. Cobre cenário "variar copy"
         //     (ganhe 100/50/20 rodadas etc)
+        //   - angle → injeta direção criativa (composição, hierarquia,
+        //     emoção). Não substitui o prompt — ANEXA como prefix. Cada
+        //     val é um angle_id, resolvido server-side via SERVER_ANGLE_LIBRARY.
         if (axis === "aspect_ratio") {
           newData.aspect_ratio = val;
           console.log(`[expandVariations] clone ${newId} (type=${orig.type}) aspect_ratio override: ${orig.data.aspect_ratio || "(none)"} → ${val}`);
         } else if (axis === "prompt") {
           newData._prompt_override = val;
           console.log(`[expandVariations] clone ${newId} (type=${orig.type}) prompt override: "${val.slice(0, 60)}…"`);
+        } else if (axis === "angle") {
+          // val pode ser um angle_id ("emotional_reaction") ou já vir como
+          // o prompt_prefix completo (back-compat). Resolve via lookup.
+          const angle = SERVER_ANGLE_LIBRARY[val];
+          newData._angle_id = angle ? val : null;
+          newData._angle_label = angle?.label || val;
+          newData._angle_prefix = angle ? angle.prompt_prefix : val;
+          console.log(`[expandVariations] clone ${newId} angle override: ${val} (label=${angle?.label || "raw"})`);
         }
         // Tag de rastreio — útil pra debug e pra UI mostrar "qual variação"
         newData._variation_axis = axis;
@@ -689,6 +775,21 @@ async function execImageGen(
     ? `${promptText}\n\nREFERENCE IMAGE STYLE: ${referenceDescription}. Recreate the same visual style, composition and mood as the reference image, but adapted to the brand and prompt above.`
     : promptText;
 
+  // Angle Distribution Engine — quando variation node tem axis="angle",
+  // o clone recebe _angle_prefix com a direção criativa. Injeta ANTES do
+  // prompt do usuário pra guiar composição/hierarquia/emoção sem
+  // sobrescrever a oferta. Resultado: 10 variations = 10 angles diferentes
+  // do MESMO produto/oferta, não 10 cópias rebuçadas.
+  const anglePrefix = (node.data._angle_prefix as string | undefined)?.trim();
+  const angleId = node.data._angle_id as string | undefined;
+  const angleLabel = node.data._angle_label as string | undefined;
+  const promptWithAngle = anglePrefix
+    ? `${anglePrefix}\n\n---\n\nUSER PROMPT (the offer/content):\n${finalPromptText}`
+    : finalPromptText;
+  if (anglePrefix) {
+    console.log(`[execImageGen] node=${node.id} angle injected: ${angleLabel || angleId || "(custom)"}`);
+  }
+
   const aspect_ratio = (node.data.aspect_ratio as string) || "1:1";
   const quality = (node.data.quality as string) || "medium";
 
@@ -704,7 +805,7 @@ async function execImageGen(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      prompt: finalPromptText,
+      prompt: promptWithAngle,
       aspect_ratio,
       quality,
       brand_id,
@@ -741,6 +842,11 @@ async function execImageGen(
     variation_axis: node.data._variation_axis as string | undefined,
     variation_value: node.data._variation_value as string | undefined,
     variation_index: node.data._variation_index as number | undefined,
+    // Creative Intent Engine — cada criativo carrega seu angle
+    // estratégico. Library pode filtrar/agrupar por angle pra ver
+    // rapidamente "quais angles foram testados".
+    angle_id: angleId || null,
+    angle_label: angleLabel || null,
   });
   console.log(`[execImageGen] node=${node.id} aspect_ratio=${aspect_ratio} variation_value=${node.data._variation_value || "(none)"} memory_id=${hubAssetId}`);
 

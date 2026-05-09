@@ -63,6 +63,7 @@ interface HubAsset {
   caption_language?: string;
   caption_media_type?: "image" | "video";   // se vídeo, cover é thumbnail
   caption_transcript?: string | null;       // só se vídeo + Whisper sucesso
+  caption_video_url?: string;               // só vídeo — MP4 original pra preview
 }
 
 const STR: Record<string, Record<Lang, string>> = {
@@ -187,6 +188,7 @@ type RawRow = {
     tiktok_caption?: string;
     media_type?: "image" | "video";
     transcript?: string | null;
+    video_url?: string;
   };
   created_at: string;
 };
@@ -431,6 +433,7 @@ export default function HubLibrary() {
               caption_language: c.language as string | undefined,
               caption_media_type: mediaType,
               caption_transcript: (c.transcript as string | null | undefined) ?? null,
+              caption_video_url: (c.video_url as string | undefined) || undefined,
             });
             continue;
           }
@@ -1313,9 +1316,19 @@ function PreviewModal({ asset, onClose, lang, t }: {
 }) {
   const [groupItems, setGroupItems] = useState<{ url: string; n: number }[]>([]);
   const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const isGroup = asset.kind === "storyboard" || asset.kind === "carousel";
   const isTranscribe = asset.kind === "transcribe";
   const isVoice = asset.kind === "voice";
+  const isCaption = asset.kind === "caption";
+  const isCaptionVideo = isCaption && asset.caption_media_type === "video";
+
+  const copyText = (text: string, key: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 1500);
+    }).catch(() => {});
+  };
 
   useEffect(() => {
     if (!isGroup) return;
@@ -1559,6 +1572,109 @@ function PreviewModal({ asset, onClose, lang, t }: {
                   <Download size={14} /> {t("downloadTxt")}
                 </button>
               </div>
+            </>
+          ) : isCaption ? (
+            <>
+              {/* Mídia: vídeo player se vídeo + url disponível, senão imagem */}
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                {isCaptionVideo && asset.caption_video_url ? (
+                  <video
+                    src={asset.caption_video_url}
+                    poster={asset.cover_url}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 10, background: "#000" }}
+                  />
+                ) : (
+                  <img src={asset.cover_url} alt={asset.title}
+                    loading="lazy" decoding="async"
+                    style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 10 }} />
+                )}
+              </div>
+              {/* FB caption */}
+              {asset.fb_caption && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "#3B82F6" }}>Facebook</span>
+                    <button onClick={() => copyText(asset.fb_caption || "", "fb")} style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      padding: "5px 9px", borderRadius: 6,
+                      background: "rgba(255,255,255,0.06)", color: "#9CA3AF",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                    }}>
+                      {copiedKey === "fb" ? <><Check size={11} /> {t("copied")}</> : <><Copy size={11} /> {t("copy")}</>}
+                    </button>
+                  </div>
+                  <pre style={{
+                    margin: 0, padding: "12px 14px",
+                    background: "rgba(59,130,246,0.06)",
+                    border: "1px solid rgba(59,130,246,0.20)",
+                    borderRadius: 8, fontSize: 13, color: "#fff",
+                    fontFamily: "inherit", whiteSpace: "pre-wrap", wordBreak: "break-word",
+                    lineHeight: 1.6,
+                  }}>{asset.fb_caption}</pre>
+                </div>
+              )}
+              {/* TikTok caption */}
+              {asset.tiktok_caption && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "#EC4899" }}>
+                      TikTok <span style={{ color: "#9CA3AF", marginLeft: 6, fontWeight: 600 }}>{asset.tiktok_caption.length}/95</span>
+                    </span>
+                    <button onClick={() => copyText(asset.tiktok_caption || "", "tt")} style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      padding: "5px 9px", borderRadius: 6,
+                      background: "rgba(255,255,255,0.06)", color: "#9CA3AF",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                    }}>
+                      {copiedKey === "tt" ? <><Check size={11} /> {t("copied")}</> : <><Copy size={11} /> {t("copy")}</>}
+                    </button>
+                  </div>
+                  <div style={{
+                    padding: "12px 14px",
+                    background: "rgba(236,72,153,0.06)",
+                    border: "1px solid rgba(236,72,153,0.20)",
+                    borderRadius: 8, fontSize: 13, color: "#fff",
+                    lineHeight: 1.55, wordBreak: "break-word",
+                  }}>{asset.tiktok_caption}</div>
+                </div>
+              )}
+              {/* Transcript (vídeo só) */}
+              {isCaptionVideo && (
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "#A78BFA" }}>
+                      {lang === "pt" ? "Transcript" : "Transcript"}
+                    </span>
+                    {asset.caption_transcript && (
+                      <button onClick={() => copyText(asset.caption_transcript || "", "tr")} style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        padding: "5px 9px", borderRadius: 6,
+                        background: "rgba(255,255,255,0.06)", color: "#9CA3AF",
+                        border: "1px solid rgba(255,255,255,0.10)",
+                        fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                      }}>
+                        {copiedKey === "tr" ? <><Check size={11} /> {t("copied")}</> : <><Copy size={11} /> {t("copy")}</>}
+                      </button>
+                    )}
+                  </div>
+                  <div style={{
+                    padding: "12px 14px",
+                    background: "rgba(167,139,250,0.06)",
+                    border: "1px solid rgba(167,139,250,0.20)",
+                    borderRadius: 8, fontSize: 12.5, color: "#E5E7EB",
+                    lineHeight: 1.6, wordBreak: "break-word",
+                    fontStyle: asset.caption_transcript ? "normal" : "italic",
+                    maxHeight: 200, overflowY: "auto",
+                  }}>
+                    {asset.caption_transcript || (lang === "pt" ? "Sem transcript (vídeo > 25MB ou sem áudio)." : "No transcript (video > 25MB or no audio).")}
+                  </div>
+                </div>
+              )}
             </>
           ) : !isGroup ? (
             <>

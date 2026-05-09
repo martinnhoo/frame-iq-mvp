@@ -55,7 +55,12 @@ const STR: Record<string, Record<Lang, string>> = {
   remove:         { pt: "Remover",             en: "Remove",            es: "Quitar",            zh: "删除" },
   removeAll:      { pt: "Limpar tudo",         en: "Clear all",         es: "Limpiar todo",      zh: "全部清除" },
   cost:           { pt: "Custo estimado",      en: "Estimated cost",    es: "Costo estimado",    zh: "预估费用" },
-  costValue:      { pt: "~$0,001 por imagem (alta fidelidade)", en: "~$0.001 per image (high fidelity)", es: "~$0,001 por imagen (alta fidelidad)", zh: "约 $0.001/图像（高保真）" },
+  costPerImage:   { pt: "$0,001 / imagem",     en: "$0.001 / image",    es: "$0,001 / imagen",   zh: "$0.001/图" },
+  costPerVideo:   { pt: "$0,004 / vídeo",      en: "$0.004 / video",    es: "$0,004 / video",    zh: "$0.004/视频" },
+  bigVideoWarn:   { pt: "Vídeo > 25MB — sem transcript de áudio (Whisper limita 25MB). Legenda usará só os frames visuais.",
+                    en: "Video > 25MB — no audio transcript (Whisper 25MB limit). Caption will use visual frames only.",
+                    es: "Video > 25MB — sin transcript (Whisper limita 25MB). Caption usará solo frames visuales.",
+                    zh: "视频 > 25MB — 无音频转录（Whisper 25MB 限制）。字幕仅使用视觉帧。" },
   uploading:      { pt: "Enviando imagens...", en: "Uploading...",      es: "Subiendo...",       zh: "上传中..." },
   recent:         { pt: "Últimas legendas",    en: "Recent captions",   es: "Últimas captions",  zh: "最近的字幕" },
   recentEmpty:    { pt: "Sem legendas ainda. Gere a primeira acima.", en: "No captions yet. Generate the first above.", es: "Sin captions aún.", zh: "还没有字幕。" },
@@ -104,6 +109,9 @@ interface PendingImage {
   duration?: number;             // só video (segundos)
   // Frames extraídos do vídeo (data URLs base64). Populado depois do load.
   frames?: string[];
+  // True quando vídeo > 25MB → Whisper API não aceita, vai gerar legenda
+  // só com frames visuais (sem transcript de áudio).
+  noWhisper?: boolean;
 }
 
 export default function HubCaptionGen() {
@@ -129,6 +137,15 @@ export default function HubCaptionGen() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const brand: HubBrand | null = useMemo(() => getBrand(brandId), [brandId]);
+
+  // Custo + warnings derivados das pendingImages
+  const pendingStats = useMemo(() => {
+    const imgCount = pendingImages.filter(p => p.mediaType === "image").length;
+    const vidCount = pendingImages.filter(p => p.mediaType === "video").length;
+    const noWhisperCount = pendingImages.filter(p => p.mediaType === "video" && p.noWhisper).length;
+    const cost = imgCount * 0.001 + vidCount * 0.004; // GPT-4o-mini + Whisper
+    return { imgCount, vidCount, noWhisperCount, cost };
+  }, [pendingImages]);
 
   // Reset market when brand changes
   useEffect(() => {
@@ -215,8 +232,10 @@ export default function HubCaptionGen() {
               : `Video is ${duration.toFixed(0)}s. Max ${MAX_VIDEO_DURATION}s.`);
             continue;
           }
+          // > 24.5MB → Whisper API rejeita (limite 25MB binário com overhead)
+          const noWhisper = file.size > 24.5 * 1024 * 1024;
           setPendingImages(prev => [...prev, {
-            id, dataUrl: thumbnail, file, mediaType: "video", duration, frames,
+            id, dataUrl: thumbnail, file, mediaType: "video", duration, frames, noWhisper,
           }]);
         } catch (e) {
           setError(`${lang === "pt" ? "Falha ao processar vídeo" : "Video processing failed"}: ${String(e).slice(0, 100)}`);
@@ -279,15 +298,15 @@ export default function HubCaptionGen() {
   };
 
   // Upload direto de File → Storage (binário, sem passar por data URL).
-  // uploadAssetToStorage só funciona pra imagem em data URL — pra vídeo
-  // precisamos do File original (até 100MB) sem encodar em base64.
+  // Usa bucket dedicado hub-captions (100MB limit, video/mp4 only) ao
+  // invés de hub-images (25MB, mistura imagens) — separação de domínios.
   async function uploadVideoFile(file: File): Promise<string | null> {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id;
       if (!userId) return null;
       const path = `${userId}/caption-source/${crypto.randomUUID()}.mp4`;
-      const { error: upErr } = await supabase.storage.from("hub-images").upload(path, file, {
+      const { error: upErr } = await supabase.storage.from("hub-captions").upload(path, file, {
         contentType: "video/mp4",
         cacheControl: "3600",
         upsert: false,
@@ -296,7 +315,7 @@ export default function HubCaptionGen() {
         console.warn("[HubCaptionGen] video upload failed:", upErr.message);
         return null;
       }
-      const { data: urlData } = supabase.storage.from("hub-images").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("hub-captions").getPublicUrl(path);
       return urlData?.publicUrl || null;
     } catch (e) {
       console.warn("[HubCaptionGen] uploadVideoFile exc:", e);
@@ -318,42 +337,35 @@ export default function HubCaptionGen() {
       const token = sessionData?.session?.access_token;
       if (!token) { setError(t("sessionExpired")); setLoading(false); return; }
 
-      // 1. Upload todos os assets pro Storage:
+      // 1. Upload todos os assets pro Storage EM PARALELO (entre items):
       //    - Imagem: data URL → uploadAssetToStorage (vira URL pública)
-      //    - Vídeo:
-      //        a) sobe o MP4 original (pra Whisper transcrever áudio)
-      //        b) sobe cada frame (data URL) como imagem (pra GPT vision)
-      setUploadingProgress(t("uploading"));
-      const uploaded: {
-        image_url: string;
-        ref_id: string;
-        frames?: string[];
-        video_url?: string;
-      }[] = [];
+      //    - Vídeo: MP4 + 3 frames sobem juntos (4 uploads/vídeo simultâneos)
+      // Tudo em paralelo entre os items reduz upload de 10 vídeos
+      // de ~60s sequenciais pra ~15s.
+      let uploadedCount = 0;
+      setUploadingProgress(`${t("uploading")} 0/${pendingImages.length}`);
 
-      for (let i = 0; i < pendingImages.length; i++) {
-        const img = pendingImages[i];
-        setUploadingProgress(`${t("uploading")} ${i + 1}/${pendingImages.length}`);
-
+      const uploaded = await Promise.all(pendingImages.map(async (img) => {
         if (img.mediaType === "image") {
           const url = await uploadAssetToStorage(img.dataUrl, "caption-source");
-          uploaded.push({ image_url: url, ref_id: img.id });
-        } else {
-          // Vídeo: upload do MP4 + dos frames em paralelo
-          const [videoUrl, ...frameUrls] = await Promise.all([
-            uploadVideoFile(img.file),
-            ...(img.frames || []).map(f => uploadAssetToStorage(f, "caption-source")),
-          ]);
-          // Se upload do vídeo falhou, ainda envia frames pra IA (sem transcript)
-          // image_url usa o primeiro frame como cover/thumbnail
-          uploaded.push({
-            image_url: frameUrls[0] || img.dataUrl,
-            ref_id: img.id,
-            frames: frameUrls,
-            video_url: videoUrl || undefined,
-          });
+          uploadedCount++;
+          setUploadingProgress(`${t("uploading")} ${uploadedCount}/${pendingImages.length}`);
+          return { image_url: url, ref_id: img.id };
         }
-      }
+        // Vídeo: MP4 + frames em paralelo
+        const [videoUrl, ...frameUrls] = await Promise.all([
+          uploadVideoFile(img.file),
+          ...(img.frames || []).map(f => uploadAssetToStorage(f, "caption-source")),
+        ]);
+        uploadedCount++;
+        setUploadingProgress(`${t("uploading")} ${uploadedCount}/${pendingImages.length}`);
+        return {
+          image_url: frameUrls[0] || img.dataUrl,
+          ref_id: img.id,
+          frames: frameUrls,
+          video_url: videoUrl || undefined,
+        };
+      }));
       setUploadingProgress("");
 
       // 2. Chama edge function
@@ -582,11 +594,12 @@ export default function HubCaptionGen() {
                           <div style={{
                             position: "absolute", bottom: 3, left: 3,
                             padding: "2px 5px", borderRadius: 3,
-                            background: "rgba(0,0,0,0.75)",
-                            color: "#fff", fontSize: 9, fontWeight: 700,
+                            background: img.noWhisper ? "rgba(245,158,11,0.85)" : "rgba(0,0,0,0.75)",
+                            color: img.noWhisper ? "#0a0a0f" : "#fff",
+                            fontSize: 9, fontWeight: 800,
                             letterSpacing: "0.04em",
-                          }}>
-                            {img.duration ? `${img.duration.toFixed(0)}s` : "MP4"}
+                          }} title={img.noWhisper ? t("bigVideoWarn") : undefined}>
+                            {img.noWhisper ? "NO AUDIO" : img.duration ? `${img.duration.toFixed(0)}s` : "MP4"}
                           </div>
                         </>
                       )}
@@ -603,12 +616,41 @@ export default function HubCaptionGen() {
               )}
             </div>
 
-            {/* Cost */}
+            {/* Warning: vídeos > 25MB (sem Whisper) */}
+            {pendingStats.noWhisperCount > 0 && (
+              <div style={{
+                marginBottom: 12, padding: "8px 10px",
+                background: "rgba(245,158,11,0.10)",
+                border: "1px solid rgba(245,158,11,0.30)",
+                borderRadius: 6, fontSize: 11, color: "#FCD34D",
+                lineHeight: 1.5,
+                display: "flex", alignItems: "flex-start", gap: 6,
+              }}>
+                <AlertTriangle size={12} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>
+                  <strong>{pendingStats.noWhisperCount}</strong> {pendingStats.noWhisperCount === 1
+                    ? (lang === "pt" ? "vídeo" : "video")
+                    : (lang === "pt" ? "vídeos" : "videos")} {">"} 25MB. {t("bigVideoWarn")}
+                </span>
+              </div>
+            )}
+            {/* Cost — dinâmico baseado no que tá pendente */}
             <div style={{ ...section, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={sectionLabel}>{t("cost")}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#A78BFA" }}>{t("costValue")}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#A78BFA" }}>
+                  {pendingImages.length === 0
+                    ? `${t("costPerImage")} · ${t("costPerVideo")}`
+                    : `~$${pendingStats.cost.toFixed(3)}`}
+                </span>
               </div>
+              {pendingImages.length > 0 && (
+                <div style={{ ...hint, marginTop: 4, fontSize: 10.5 }}>
+                  {pendingStats.imgCount > 0 && `${pendingStats.imgCount} img × $0.001`}
+                  {pendingStats.imgCount > 0 && pendingStats.vidCount > 0 && " + "}
+                  {pendingStats.vidCount > 0 && `${pendingStats.vidCount} video × $0.004`}
+                </div>
+              )}
             </div>
 
             {/* Generate */}
