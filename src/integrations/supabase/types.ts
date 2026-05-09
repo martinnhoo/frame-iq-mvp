@@ -3277,6 +3277,56 @@ export type Database = {
         }
         Relationships: []
       }
+      studio_runs: {
+        Row: {
+          angles: Json
+          aspect_ratio: string
+          brand_id: string | null
+          count: number
+          created_at: string | null
+          finished_at: string | null
+          id: string
+          prompt: string
+          results: Json
+          status: string
+          user_id: string
+        }
+        Insert: {
+          angles?: Json
+          aspect_ratio?: string
+          brand_id?: string | null
+          count: number
+          created_at?: string | null
+          finished_at?: string | null
+          id?: string
+          prompt: string
+          results?: Json
+          status?: string
+          user_id: string
+        }
+        Update: {
+          angles?: Json
+          aspect_ratio?: string
+          brand_id?: string | null
+          count?: number
+          created_at?: string | null
+          finished_at?: string | null
+          id?: string
+          prompt?: string
+          results?: Json
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_runs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "user_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       telegram_connections: {
         Row: {
           active: boolean | null
