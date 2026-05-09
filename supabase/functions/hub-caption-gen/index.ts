@@ -13,7 +13,7 @@
 //
 // Idioma das legendas: deriva de market (BR=pt-BR, MX/CO/PE=es, US=en, IN=hinglish).
 
-const FN_VERSION = "v6-caption-mp4-cleanup-2026-05-08";
+const FN_VERSION = "v7-tiktok-native-hooks-2026-05-08";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -91,38 +91,98 @@ Format pattern:
 
 Note: lines 2-4 START with single space (" ") for indentation.
 
-Emoji vocabulary (pick ONE per line, varied):
-- 🎯 (target, focus)
-- 🎰 (slot machine, casino)
-- ⚽ (sports betting)
-- 🎮 (gaming)
-- 💰 (money, rewards)
-- 🏆 (trophy, win)
-- ⚡ (speed, easy)
-- 🔥 (hot, action)
+CRITICAL — AVOID GENERIC PLATITUDES.
+BAD (intercambiable com qualquer ad do mundo):
+🎯 Juega ahora 🎯 / 💰 Gana premios 💰 / ⚡ Fácil y rápido ⚡ / 🔥 No te lo pierdas 🔥
+→ ZERO specificity. Could be any product. Skip these phrases.
 
-Each line must be SHORT (2-4 words max). No periods. No commas. ALL CAPS NOT REQUIRED.
+GOOD (specific to what's actually in the image/transcript):
+- Reference the OFFER if visible (números, %, R$, MXN, ₹, free spins)
+- Reference the EMOTION if face/scene shows it (alegria, surpresa, vibe)
+- Reference the PRODUCT TYPE if shown (slots, sports, live casino, app)
+- Use ACTION verbs específicos (deposita, retira, escolhe, juega ya, gira)
 
-Examples:
-🎯 Aaj join karo 🎯
- 💰 Real rewards 💰
- ⚡ Quick entry ⚡
- 🔥 Play now 🔥
+Emoji vocabulary (pick ONE per line, varied — never repeat in same caption):
+🎯 🎰 ⚽ 🎮 💰 🏆 ⚡ 🔥 💎 🎁 ✨ 💸 🚀 🎲 ⭐
 
-🎰 150% en slots 🎰
- 💰 Hasta 7,500 MXN 💰
- ⚡ Giros gratis ⚡
- 🔥 Gira ahora 🔥
+Each line: 2-4 words. No periods. No commas. CAPS optional but consistent within caption.
+
+GOOD EXAMPLES (note specificity):
+
+Slots offer:
+🎰 200% en tu primer depósito 🎰
+ 💰 Hasta 7,500 MXN extra 💰
+ ⚡ 100 giros gratis ⚡
+ 🔥 Solo este viernes 🔥
+
+App download:
+🎮 Tu casino en el bolsillo 🎮
+ 💎 Bono diario gratis 💎
+ ⚡ Sin descargar app ⚡
+ 🚀 Empieza en 30 seg 🚀
+
+Live casino:
+⚽ Apuestas en vivo 24/7 ⚽
+ 💰 Cashout instantáneo 💰
+ 🎲 +500 mesas activas 🎲
+ 🔥 Únete esta noche 🔥
+
+Sports specific:
+⚽ Champions League hoy ⚽
+ 💰 Cuotas mejoradas 💰
+ ⚡ Apuesta sin riesgo ⚡
+ 🏆 Cobra al instante 🏆
 `;
 
 const TIKTOK_FORMAT_INSTRUCTION = `
-TikTok caption — 1 sentence, MAX 95 CHARACTERS (count carefully), NO EMOJIS.
+TikTok caption — 1 sentence, MAX 95 CHARACTERS (count carefully), NO EMOJIS, NO HASHTAGS.
 
-Tone: direct, descriptive of the image content + clear CTA. No hashtags.
+CRITICAL — DO NOT describe what's in the image. NEVER write things like
+"Smiling girl in modern setting" or "Slot machine with golden lights".
+That's stock-photo description, not TikTok copy. Scroll-killer.
 
-Examples:
-"Slot machine cassino com luzes douradas. Cadastra grátis e ganha rodadas no primeiro depósito."
-"Bônus de 200% até R$ 500 no primeiro depósito. Cassino premium estilo Las Vegas."
+WHAT MAKES A TIKTOK CAPTION WORK:
+- HOOK STYLE — POV, controversia, curiosidade, desafio, conversa
+- CONVERSATIONAL — soa como pessoa real, não como anúncio
+- SPECIFIC DETAIL from the image (a sign, an expression, a setting)
+  → use it as a hook gancho, not a description
+- BREAK THE 4TH WALL — talk to the viewer like an amiga
+- AVOID: descriptive opener, generic CTA ("juega y gana"), corporate tone
+- AVOID: emojis, hashtags, periods at the end (TikTok native = no period)
+
+GOOD EXAMPLES (notice: hooks, not descriptions):
+
+Spanish (LATAM):
+"POV: el bono que te cambia el mes y nadie te lo cuenta"
+"amiga me dijo que aquí ganaba real, ahora no me cree"
+"creí que era estafa hasta que retiré mi primer pago"
+"esto pasa cuando juegas con bono de bienvenida"
+"el secreto que los casinos no quieren que sepas"
+"a mí también me pasó la primera vez que jugué"
+
+Portuguese (BR):
+"POV: descobrir que o bônus de boas-vindas é real"
+"minha amiga não acreditou até ver o saque caindo"
+"achei que era golpe e hoje agradeço por ter testado"
+"o erro que TODO mundo comete no primeiro depósito"
+"ninguém te conta isso sobre os cassinos online"
+
+English (US):
+"POV: when the welcome bonus actually delivers"
+"i didn't believe it until i saw the first payout"
+"the casino mistake everyone makes on day one"
+"my friend said it was real, now she's getting bag too"
+
+Hinglish (IN):
+"POV: jab welcome bonus sach mein milta hai"
+"dosti se suna tha, ab khud try kar ke maaza aaya"
+"casino ka secret jo koi nahi batata"
+
+The caption should make the viewer think:
+"wait what? let me read more / let me click / let me see"
+
+NOT:
+"oh, that's an ad, scroll past"
 `;
 
 // Apaga o MP4 do bucket hub-captions logo após Whisper terminar.
