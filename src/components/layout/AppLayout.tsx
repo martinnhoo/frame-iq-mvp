@@ -46,6 +46,7 @@ import {
   GitBranch,
   GalleryHorizontal,
   ScanFace,
+  Wand2,
 } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
@@ -150,6 +151,8 @@ function getNavSections(lang: string): NavSection[] {
       // Conceptualmente diferente dos geradores únicos.
       title: L('Automação', 'Automation', 'Automatización', '自动化'),
       items: [
+        { url: '/dashboard/hub/studio',     label: L('Studio',    'Studio',    'Studio',    '工作室'), icon: Wand2 },
+        { url: '/dashboard/hub/brands',     label: L('Marcas',    'Brands',    'Marcas',    '品牌'),    icon: Building2 },
         { url: '/dashboard/hub/workflows',  label: L('Workflows', 'Workflows', 'Workflows', '工作流'), icon: Sparkles },
       ],
     },

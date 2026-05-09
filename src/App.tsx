@@ -84,6 +84,8 @@ const HubWorkflows = lazy(() => import("./pages/dashboard/HubWorkflows"));
 const HubVideoGenerator = lazy(() => import("./pages/dashboard/HubVideoGenerator"));
 const HubFaceswap = lazy(() => import("./pages/dashboard/HubFaceswap"));
 const HubCaptionGen = lazy(() => import("./pages/dashboard/HubCaptionGen"));
+const Studio = lazy(() => import("./pages/dashboard/Studio"));
+const Brands = lazy(() => import("./pages/dashboard/Brands"));
 const CampaignsManager = lazy(() => import("./pages/dashboard/CampaignsManager"));
 
 import ToolGate from "./components/ToolGate";
@@ -134,6 +136,8 @@ const App = () => (
                 <Route path="hub/video" element={<HubVideoGenerator />} />
                 <Route path="hub/faceswap" element={<HubFaceswap />} />
                 <Route path="hub/captions" element={<HubCaptionGen />} />
+                <Route path="hub/studio" element={<Studio />} />
+                <Route path="hub/brands" element={<Brands />} />
                 <Route path="hub/carousel" element={<HubCarousel />} />
                 <Route path="hub/transcribe" element={<HubTranscribe />} />
                 <Route path="hub/voice" element={<HubVoiceGen />} />
