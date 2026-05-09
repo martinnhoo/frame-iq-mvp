@@ -803,22 +803,18 @@ function CaptionCard({
           background: "#000",
         }} />
         {isVideo && (
-          <>
-            <div style={{
-              position: "absolute", inset: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              background: "rgba(0,0,0,0.20)", pointerEvents: "none",
-            }}>
-              <Play size={compact ? 16 : 24} fill="#fff" style={{ color: "#fff", filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.5))" }} />
-            </div>
-            <div style={{
-              position: "absolute", bottom: 3, left: 3,
-              padding: "2px 5px", borderRadius: 3,
-              background: "rgba(167,139,250,0.85)",
-              color: "#0a0a0f", fontSize: 9, fontWeight: 800,
-              letterSpacing: "0.04em", textTransform: "uppercase",
-            }}>{t("videoLabel")}</div>
-          </>
+          // Badge passiva — comunica "veio de vídeo" sem prometer playback
+          // (MP4 foi apagado pós-Whisper, só temos o frame).
+          <div style={{
+            position: "absolute", bottom: 3, left: 3,
+            padding: "2px 6px", borderRadius: 3,
+            background: "rgba(167,139,250,0.90)",
+            color: "#0a0a0f", fontSize: 9, fontWeight: 800,
+            letterSpacing: "0.04em",
+            display: "inline-flex", alignItems: "center", gap: 3,
+          }} title={lang === "pt" ? "Frame extraído do vídeo enviado" : "Frame extracted from uploaded video"}>
+            🎬 {t("videoLabel")}
+          </div>
         )}
       </a>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>

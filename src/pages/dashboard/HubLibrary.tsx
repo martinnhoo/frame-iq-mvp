@@ -1167,26 +1167,19 @@ function AssetCardImpl({ asset, lang, t, onClick, onDelete, selectionMode, selec
           {isGroup && asset.scene_count && asset.scene_count > 1 && (
             <span style={{ color: "#3B82F6", marginLeft: 2 }}>· {asset.scene_count}</span>
           )}
-          {asset.kind === "caption" && asset.caption_media_type === "video" && (
-            <span style={{ color: "#A78BFA", marginLeft: 2 }}>· VIDEO</span>
-          )}
         </div>
-        {/* Play overlay quando caption é vídeo */}
+        {/* Badge "🎬 VIDEO" no canto inferior direito quando caption veio de
+            vídeo. Sem Play overlay porque o MP4 foi apagado pós-Whisper —
+            só o frame thumbnail sobrevive. */}
         {asset.kind === "caption" && asset.caption_media_type === "video" && (
           <div style={{
-            position: "absolute", inset: 0,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: "rgba(0,0,0,0.18)", pointerEvents: "none",
-          }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: "50%",
-              background: "rgba(167,139,250,0.85)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
-            }}>
-              <Play size={16} fill="#0a0a0f" style={{ color: "#0a0a0f", marginLeft: 2 }} />
-            </div>
-          </div>
+            position: "absolute", bottom: 8, right: 8,
+            padding: "3px 7px", borderRadius: 5,
+            background: "rgba(167,139,250,0.90)", backdropFilter: "blur(6px)",
+            color: "#0a0a0f", fontSize: 9.5, fontWeight: 800,
+            letterSpacing: "0.05em", textTransform: "uppercase",
+            display: "inline-flex", alignItems: "center", gap: 3,
+          }}>🎬 Video</div>
         )}
         {/* Top-right corner: checkbox em modo seleção, delete button caso contrário */}
         {selectionMode ? (

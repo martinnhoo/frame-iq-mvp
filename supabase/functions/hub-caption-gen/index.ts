@@ -13,7 +13,7 @@
 //
 // Idioma das legendas: deriva de market (BR=pt-BR, MX/CO/PE=es, US=en, IN=hinglish).
 
-const FN_VERSION = "v7-tiktok-native-hooks-2026-05-08";
+const FN_VERSION = "v8-tiktok-faithful-not-descriptive-2026-05-08";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -300,7 +300,7 @@ ${transcript ? `\nAUDIO TRANSCRIPT (Whisper):\n"""${transcript.slice(0, 1500)}""
 ${mediaIntro}
 
 CRITICAL RULES — DO NOT VIOLATE:
-1. Captions must DESCRIBE what is actually shown/said. Do NOT invent offers, products, or details that are not in the input.
+1. Captions must be FAITHFUL to what is actually shown/said. Do NOT invent offers, products, numbers, or details that are not in the input. (Faithful = grounded in input. Does NOT mean "describe the scene" — see TikTok block below for tone.)
 2. If a person does X or says X, the caption must reflect that — not generic casino copy.
 3. If there's visible text/copy/CTA${isVideo ? " or audio transcript" : ""}, REUSE that message — do not replace it.
 4. Brand context is for STYLE only (color, mood, tone). It does NOT give you license to invent things.
