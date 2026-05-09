@@ -15,7 +15,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Captions, Download, ArrowLeft, ChevronDown, Search, Upload, X,
-  Loader, AlertTriangle, Copy, Check, Sparkles,
+  Loader, AlertTriangle, Copy, Check, Sparkles, Play, Mic, ChevronUp,
 } from "lucide-react";
 import {
   HUB_BRANDS, HUB_MARKETS, getBrand, type HubBrand, type MarketCode, type Lang,
@@ -35,8 +35,11 @@ const STR: Record<string, Record<Lang, string>> = {
   market:         { pt: "Mercado",             en: "Market",            es: "Mercado",           zh: "市场" },
   brandSelect:    { pt: "Selecionar marca",    en: "Select brand",      es: "Seleccionar marca", zh: "选择品牌" },
   noBrand:        { pt: "Sem marca",           en: "No brand",          es: "Sin marca",         zh: "无品牌" },
-  uploadArea:     { pt: "Clique pra enviar imagens", en: "Click to upload images", es: "Click para subir imágenes", zh: "点击上传图像" },
-  uploadHint:     { pt: "Até 10 imagens · PNG/JPG/WEBP · 5MB cada", en: "Up to 10 images · PNG/JPG/WEBP · 5MB each", es: "Hasta 10 imágenes · PNG/JPG/WEBP · 5MB c/u", zh: "最多 10 张 · PNG/JPG/WEBP · 每张 5MB" },
+  uploadArea:     { pt: "Clique pra enviar imagens ou vídeos", en: "Click to upload images or videos", es: "Click para subir imágenes o videos", zh: "点击上传图像或视频" },
+  uploadHint:     { pt: "Até 10 arquivos · Imagens PNG/JPG/WEBP 5MB · Vídeos MP4 100MB / 90s", en: "Up to 10 files · Images PNG/JPG/WEBP 5MB · Videos MP4 100MB / 90s", es: "Hasta 10 archivos · Imágenes PNG/JPG/WEBP 5MB · Videos MP4 100MB / 90s", zh: "最多 10 个文件 · 图像 5MB · 视频 100MB / 90秒" },
+  transcript:     { pt: "Transcript (áudio)",  en: "Transcript (audio)", es: "Transcript (audio)", zh: "音频转录" },
+  noTranscript:   { pt: "Sem áudio detectado ou vídeo grande demais pra Whisper.", en: "No audio detected or video too large for Whisper.", es: "Sin audio detectado o video demasiado grande para Whisper.", zh: "未检测到音频或视频过大。" },
+  videoLabel:     { pt: "Vídeo",                en: "Video",             es: "Video",             zh: "视频" },
   generate:       { pt: "Gerar legendas",      en: "Generate captions", es: "Generar captions",  zh: "生成字幕" },
   generating:     { pt: "Gerando legendas...", en: "Generating...",     es: "Generando...",      zh: "生成中..." },
   results:        { pt: "Resultados",          en: "Results",           es: "Resultados",        zh: "结果" },
@@ -75,23 +78,32 @@ const LANG_OPTIONS: { id: CaptionLang; label: string; flag: string }[] = [
 ];
 
 const MAX_FILES = 10;
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_IMG_BYTES = 5 * 1024 * 1024;          // 5MB pra imagem
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024;      // 100MB pra vídeo (cobre Reels/TikTok ads)
+const MAX_VIDEO_DURATION = 90;                  // 90s — Meta Reels recomendado
+const VIDEO_FRAMES = 3;                         // início, meio, fim
 
 interface CaptionAsset {
   id: string;
-  image_url: string;
+  image_url: string;            // se vídeo: URL do thumbnail (frame)
   fb_caption: string;
   tiktok_caption: string;
   language?: string;
   brand_id?: string;
   created_at: string;
+  media_type?: "image" | "video";
+  transcript?: string | null;   // só vídeo
+  video_url?: string;           // só vídeo — URL do MP4 pra preview
 }
 
 interface PendingImage {
-  id: string;          // local
-  dataUrl: string;     // pra preview
+  id: string;                    // local
+  dataUrl: string;               // preview (image OU thumbnail do video)
   file: File;
-  uploaded_url?: string;
+  mediaType: "image" | "video";  // tipo
+  duration?: number;             // só video (segundos)
+  // Frames extraídos do vídeo (data URLs base64). Populado depois do load.
+  frames?: string[];
 }
 
 export default function HubCaptionGen() {
@@ -150,6 +162,9 @@ export default function HubCaptionGen() {
           language: c.language as string | undefined,
           brand_id: c.brand_id as string | undefined,
           created_at: r.created_at as string,
+          media_type: (c.media_type as "image" | "video" | undefined) || "image",
+          transcript: (c.transcript as string | null | undefined) || null,
+          video_url: (c.video_url as string | undefined) || undefined,
         };
       });
       setRecent(items);
@@ -158,40 +173,136 @@ export default function HubCaptionGen() {
 
   useEffect(() => { reloadRecent(); }, []);
 
-  const handleFiles = (filesList: FileList | File[]) => {
+  const handleFiles = async (filesList: FileList | File[]) => {
     setError(null);
     const files = Array.from(filesList);
     if (pendingImages.length + files.length > MAX_FILES) {
       setError(t("errMaxFiles"));
       return;
     }
-    const newImages: PendingImage[] = [];
     for (const file of files) {
-      if (!/^image\/(png|jpeg|jpg|webp)$/i.test(file.type)) {
+      const isImage = /^image\/(png|jpeg|jpg|webp)$/i.test(file.type);
+      const isVideo = /^video\/mp4$/i.test(file.type);
+      if (!isImage && !isVideo) {
         setError(t("errFile"));
         continue;
       }
-      if (file.size > MAX_BYTES) {
+      if (isImage && file.size > MAX_IMG_BYTES) {
         setError(t("errFile"));
         continue;
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        setPendingImages(prev => [...prev, {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          dataUrl,
-          file,
-        }]);
-      };
-      reader.readAsDataURL(file);
-      newImages.push({ id: "", dataUrl: "", file });
+      if (isVideo && file.size > MAX_VIDEO_BYTES) {
+        setError(lang === "pt" ? `Vídeo passa de 100MB (${(file.size/1024/1024).toFixed(1)}MB)` : `Video over 100MB`);
+        continue;
+      }
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      if (isImage) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setPendingImages(prev => [...prev, {
+            id, dataUrl: reader.result as string, file, mediaType: "image",
+          }]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // Vídeo: extrai N frames + thumbnail
+        try {
+          const { frames, thumbnail, duration } = await extractVideoFrames(file, VIDEO_FRAMES);
+          if (duration > MAX_VIDEO_DURATION) {
+            setError(lang === "pt"
+              ? `Vídeo tem ${duration.toFixed(0)}s. Máximo ${MAX_VIDEO_DURATION}s pra Reels/TikTok.`
+              : `Video is ${duration.toFixed(0)}s. Max ${MAX_VIDEO_DURATION}s.`);
+            continue;
+          }
+          setPendingImages(prev => [...prev, {
+            id, dataUrl: thumbnail, file, mediaType: "video", duration, frames,
+          }]);
+        } catch (e) {
+          setError(`${lang === "pt" ? "Falha ao processar vídeo" : "Video processing failed"}: ${String(e).slice(0, 100)}`);
+        }
+      }
     }
   };
+
+  // Extrai N frames de um vídeo MP4 via <video> + canvas. Retorna data URLs base64.
+  // Tira frames em t = 0%, 50%, 100% da duração. Primeiro frame = thumbnail.
+  async function extractVideoFrames(file: File, n: number): Promise<{ frames: string[]; thumbnail: string; duration: number }> {
+    const url = URL.createObjectURL(file);
+    try {
+      const video = document.createElement("video");
+      video.src = url;
+      video.crossOrigin = "anonymous";
+      video.muted = true;
+      video.playsInline = true;
+      await new Promise<void>((resolve, reject) => {
+        video.onloadedmetadata = () => resolve();
+        video.onerror = () => reject(new Error("video_metadata_failed"));
+        setTimeout(() => reject(new Error("video_metadata_timeout")), 15000);
+      });
+      const duration = video.duration;
+      const canvas = document.createElement("canvas");
+      // Limita resolução pra economizar bandwidth (max 720p mantém aspect)
+      const ar = video.videoWidth / video.videoHeight;
+      const targetH = Math.min(video.videoHeight, 720);
+      const targetW = Math.round(targetH * ar);
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("canvas_ctx_failed");
+
+      const frames: string[] = [];
+      const positions = n === 1
+        ? [duration * 0.5]
+        : Array.from({ length: n }, (_, i) => duration * (i / (n - 1)) * 0.99); // 0%, 50%, 99%
+
+      for (const t of positions) {
+        await new Promise<void>((resolve, reject) => {
+          video.onseeked = () => resolve();
+          video.onerror = () => reject(new Error("seek_failed"));
+          video.currentTime = Math.max(0, Math.min(duration - 0.1, t));
+          setTimeout(() => reject(new Error("seek_timeout")), 8000);
+        });
+        // Pequeno delay pra garantir que o frame renderizou
+        await new Promise(r => setTimeout(r, 50));
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        frames.push(canvas.toDataURL("image/jpeg", 0.85));
+      }
+      return { frames, thumbnail: frames[0], duration };
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
 
   const removeImage = (id: string) => {
     setPendingImages(prev => prev.filter(p => p.id !== id));
   };
+
+  // Upload direto de File → Storage (binário, sem passar por data URL).
+  // uploadAssetToStorage só funciona pra imagem em data URL — pra vídeo
+  // precisamos do File original (até 100MB) sem encodar em base64.
+  async function uploadVideoFile(file: File): Promise<string | null> {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (!userId) return null;
+      const path = `${userId}/caption-source/${crypto.randomUUID()}.mp4`;
+      const { error: upErr } = await supabase.storage.from("hub-images").upload(path, file, {
+        contentType: "video/mp4",
+        cacheControl: "3600",
+        upsert: false,
+      });
+      if (upErr) {
+        console.warn("[HubCaptionGen] video upload failed:", upErr.message);
+        return null;
+      }
+      const { data: urlData } = supabase.storage.from("hub-images").getPublicUrl(path);
+      return urlData?.publicUrl || null;
+    } catch (e) {
+      console.warn("[HubCaptionGen] uploadVideoFile exc:", e);
+      return null;
+    }
+  }
 
   const generate = async () => {
     if (loading) return;
@@ -207,12 +318,41 @@ export default function HubCaptionGen() {
       const token = sessionData?.session?.access_token;
       if (!token) { setError(t("sessionExpired")); setLoading(false); return; }
 
-      // 1. Upload todas as imagens pro Storage (pra ter URL pública pro Claude)
+      // 1. Upload todos os assets pro Storage:
+      //    - Imagem: data URL → uploadAssetToStorage (vira URL pública)
+      //    - Vídeo:
+      //        a) sobe o MP4 original (pra Whisper transcrever áudio)
+      //        b) sobe cada frame (data URL) como imagem (pra GPT vision)
       setUploadingProgress(t("uploading"));
-      const uploaded: { image_url: string; ref_id: string }[] = [];
-      for (const img of pendingImages) {
-        const url = await uploadAssetToStorage(img.dataUrl, "caption-source");
-        uploaded.push({ image_url: url, ref_id: img.id });
+      const uploaded: {
+        image_url: string;
+        ref_id: string;
+        frames?: string[];
+        video_url?: string;
+      }[] = [];
+
+      for (let i = 0; i < pendingImages.length; i++) {
+        const img = pendingImages[i];
+        setUploadingProgress(`${t("uploading")} ${i + 1}/${pendingImages.length}`);
+
+        if (img.mediaType === "image") {
+          const url = await uploadAssetToStorage(img.dataUrl, "caption-source");
+          uploaded.push({ image_url: url, ref_id: img.id });
+        } else {
+          // Vídeo: upload do MP4 + dos frames em paralelo
+          const [videoUrl, ...frameUrls] = await Promise.all([
+            uploadVideoFile(img.file),
+            ...(img.frames || []).map(f => uploadAssetToStorage(f, "caption-source")),
+          ]);
+          // Se upload do vídeo falhou, ainda envia frames pra IA (sem transcript)
+          // image_url usa o primeiro frame como cover/thumbnail
+          uploaded.push({
+            image_url: frameUrls[0] || img.dataUrl,
+            ref_id: img.id,
+            frames: frameUrls,
+            video_url: videoUrl || undefined,
+          });
+        }
       }
       setUploadingProgress("");
 
@@ -233,7 +373,7 @@ export default function HubCaptionGen() {
         }),
       });
       const text = await r.text();
-      let payload: { ok?: boolean; results?: Array<{ image_url: string; ref_id?: string; fb_caption: string; tiktok_caption: string; memory_id?: string; error?: string }>; message?: string; error?: string };
+      let payload: { ok?: boolean; results?: Array<{ image_url: string; ref_id?: string; fb_caption: string; tiktok_caption: string; memory_id?: string; error?: string; media_type?: "image" | "video"; transcript?: string }>; message?: string; error?: string };
       try { payload = JSON.parse(text); } catch {
         setError(`Resposta inválida: ${text.slice(0, 150)}`);
         return;
@@ -243,16 +383,25 @@ export default function HubCaptionGen() {
         return;
       }
 
+      // Mapa ref_id → uploaded item pra recuperar video_url no resultado
+      const uploadedByRef = new Map(uploaded.map(u => [u.ref_id, u]));
+
       const assets: CaptionAsset[] = payload.results
         .filter(r => r.fb_caption && r.tiktok_caption && !r.error)
-        .map(r => ({
-          id: r.memory_id || `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          image_url: r.image_url,
-          fb_caption: r.fb_caption,
-          tiktok_caption: r.tiktok_caption,
-          brand_id: brandId === "none" ? undefined : brandId,
-          created_at: new Date().toISOString(),
-        }));
+        .map(r => {
+          const upl = r.ref_id ? uploadedByRef.get(r.ref_id) : undefined;
+          return {
+            id: r.memory_id || `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            image_url: r.image_url,
+            fb_caption: r.fb_caption,
+            tiktok_caption: r.tiktok_caption,
+            brand_id: brandId === "none" ? undefined : brandId,
+            created_at: new Date().toISOString(),
+            media_type: r.media_type || "image",
+            transcript: r.transcript || null,
+            video_url: upl?.video_url,
+          };
+        });
 
       setResults(assets);
       // Limpa pending depois de sucesso
@@ -402,7 +551,7 @@ export default function HubCaptionGen() {
               </div>
               <input
                 ref={fileInputRef} type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept="image/png,image/jpeg,image/webp,video/mp4"
                 multiple style={{ display: "none" }}
                 onChange={e => { if (e.target.files) handleFiles(e.target.files); }}
               />
@@ -421,6 +570,26 @@ export default function HubCaptionGen() {
                       background: "#000",
                     }}>
                       <img src={img.dataUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                      {img.mediaType === "video" && (
+                        <>
+                          <div style={{
+                            position: "absolute", inset: 0,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            background: "rgba(0,0,0,0.20)", pointerEvents: "none",
+                          }}>
+                            <Play size={22} fill="#fff" style={{ color: "#fff", filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.5))" }} />
+                          </div>
+                          <div style={{
+                            position: "absolute", bottom: 3, left: 3,
+                            padding: "2px 5px", borderRadius: 3,
+                            background: "rgba(0,0,0,0.75)",
+                            color: "#fff", fontSize: 9, fontWeight: 700,
+                            letterSpacing: "0.04em",
+                          }}>
+                            {img.duration ? `${img.duration.toFixed(0)}s` : "MP4"}
+                          </div>
+                        </>
+                      )}
                       <button onClick={() => removeImage(img.id)} style={{
                         position: "absolute", top: 3, right: 3,
                         width: 20, height: 20, borderRadius: 4,
@@ -577,6 +746,10 @@ function CaptionCard({
   copiedId: string | null;
   compact?: boolean;
 }) {
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const isVideo = asset.media_type === "video";
+  const previewHref = isVideo && asset.video_url ? asset.video_url : asset.image_url;
+
   return (
     <div style={{
       display: "grid", gridTemplateColumns: compact ? "60px 1fr" : "120px 1fr",
@@ -585,11 +758,29 @@ function CaptionCard({
       border: "1px solid rgba(255,255,255,0.06)",
       borderRadius: 10,
     }}>
-      <a href={asset.image_url} target="_blank" rel="noopener noreferrer" style={{ display: "block", borderRadius: 6, overflow: "hidden", cursor: "zoom-in" }}>
+      <a href={previewHref} target="_blank" rel="noopener noreferrer" style={{ display: "block", borderRadius: 6, overflow: "hidden", cursor: "zoom-in", position: "relative" }}>
         <img src={asset.image_url} alt="" loading="lazy" decoding="async" style={{
           width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block",
           background: "#000",
         }} />
+        {isVideo && (
+          <>
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(0,0,0,0.20)", pointerEvents: "none",
+            }}>
+              <Play size={compact ? 16 : 24} fill="#fff" style={{ color: "#fff", filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.5))" }} />
+            </div>
+            <div style={{
+              position: "absolute", bottom: 3, left: 3,
+              padding: "2px 5px", borderRadius: 3,
+              background: "rgba(167,139,250,0.85)",
+              color: "#0a0a0f", fontSize: 9, fontWeight: 800,
+              letterSpacing: "0.04em", textTransform: "uppercase",
+            }}>{t("videoLabel")}</div>
+          </>
+        )}
       </a>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
         {/* FB */}
@@ -627,6 +818,40 @@ function CaptionCard({
             lineHeight: 1.5, wordBreak: "break-word",
           }}>{asset.tiktok_caption}</div>
         </div>
+        {/* Transcript (só pra vídeo, collapsible) */}
+        {isVideo && !compact && (
+          <div>
+            <button
+              onClick={() => setTranscriptOpen(o => !o)}
+              style={{
+                width: "100%",
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "6px 10px", borderRadius: 6,
+                background: "rgba(167,139,250,0.06)",
+                border: "1px solid rgba(167,139,250,0.15)",
+                color: "#C4B5FD", fontSize: 11, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+              }}
+            >
+              <Mic size={11} />
+              <span style={{ flex: 1 }}>{t("transcript")}</span>
+              {transcriptOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+            </button>
+            {transcriptOpen && (
+              <div style={{
+                marginTop: 4, padding: "8px 10px",
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 6, fontSize: 11, color: "rgba(255,255,255,0.75)",
+                lineHeight: 1.5, fontStyle: asset.transcript ? "normal" : "italic",
+                whiteSpace: "pre-wrap", wordBreak: "break-word",
+                maxHeight: 180, overflowY: "auto",
+              }}>
+                {asset.transcript || t("noTranscript")}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

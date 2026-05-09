@@ -13,7 +13,7 @@
 //
 // Idioma das legendas: deriva de market (BR=pt-BR, MX/CO/PE=es, US=en, IN=hinglish).
 
-const FN_VERSION = "v3-caption-fidelity-2026-05-07";
+const FN_VERSION = "v4-caption-video-2026-05-07";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -31,8 +31,14 @@ function jsonResponse(payload: unknown, status: number): Response {
 }
 
 interface CaptionInputImage {
-  image_url: string;       // URL pública (Storage) ou data URL
+  image_url: string;       // URL pública (Storage) ou data URL — frame principal/cover
   ref_id?: string;         // id pro caller correlacionar (frontend file id)
+  // Pra vídeo: array de URLs de frames-chave (início/meio/fim).
+  // Quando presente, IA analisa todos os frames como UMA sequência.
+  frames?: string[];
+  // Pra vídeo: URL pública do MP4 pra Whisper transcrever áudio.
+  // Quando presente, server faz transcript e usa como contexto.
+  video_url?: string;
 }
 
 interface CaptionResult {
@@ -40,6 +46,8 @@ interface CaptionResult {
   ref_id?: string;
   fb_caption: string;      // 4 linhas com emojis
   tiktok_caption: string;  // ≤95 chars sem emojis
+  media_type?: "image" | "video";
+  transcript?: string;     // se vídeo + áudio detectado
   error?: string;
 }
 
@@ -117,7 +125,51 @@ Examples:
 "Bônus de 200% até R$ 500 no primeiro depósito. Cassino premium estilo Las Vegas."
 `;
 
-// Chama OpenAI GPT-4o-mini com vision pra UMA imagem.
+// Whisper: transcreve o áudio do vídeo. Custo $0.006/min. Vídeo de
+// 30s = $0.003. Aceita mp3/mp4/mpeg/mpga/m4a/wav/webm. Limite 25MB
+// no upload pra Whisper API. Pra vídeos grandes, downsample não é
+// trivial — aceita até 25MB por enquanto. Vídeos maiores: skip
+// transcript (usa só visual).
+async function whisperTranscribe(
+  videoUrl: string,
+  apiKey: string,
+): Promise<{ transcript: string | null; error?: string }> {
+  try {
+    // Download do vídeo do Storage
+    const dl = await fetch(videoUrl);
+    if (!dl.ok) return { transcript: null, error: `dl_${dl.status}` };
+    const blob = await dl.blob();
+    const sizeMB = blob.size / 1024 / 1024;
+    if (sizeMB > 24.5) {
+      console.warn(`[whisper] video too large for Whisper (${sizeMB.toFixed(1)}MB > 25MB) — skipping transcript`);
+      return { transcript: null, error: "video_too_large_for_whisper" };
+    }
+
+    // Whisper API multipart
+    const fd = new FormData();
+    fd.append("file", blob, "video.mp4");
+    fd.append("model", "whisper-1");
+    fd.append("response_format", "text");
+    // Auto-detect language
+    // fd.append("language", "auto");  // não precisa, default é auto
+
+    const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}` },
+      body: fd,
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      return { transcript: null, error: `whisper_${res.status}: ${err.slice(0, 150)}` };
+    }
+    const transcript = (await res.text()).trim();
+    return { transcript: transcript || null };
+  } catch (e) {
+    return { transcript: null, error: `whisper_exc: ${String(e).slice(0, 100)}` };
+  }
+}
+
+// Chama OpenAI GPT-4o-mini com vision pra UMA imagem ou vídeo (3 frames).
 // detail="high" pra ler texto/elementos com fidelidade. Custo ~$0.001/img
 // (10x mais que detail=low, mas legenda errada custa MUITO mais — perde
 // venda e queima trust). 100 imgs = ~$0.10. Aceitável.
@@ -130,43 +182,48 @@ Examples:
 //      descrever apenas o que está NA imagem (não inventar oferta)
 //   5. brand_hint = só estilo/tom; NÃO invento oferta da brand
 async function generateCaptionsForImage(
-  imageUrl: string,
+  imageUrls: string[],            // 1+ imagens (1 = imagem, 3 = vídeo)
+  isVideo: boolean,               // true → frames de vídeo
+  transcript: string | null,      // só pra vídeo (pode ser null se Whisper falhou)
   marketCtx: { lang: string; instructions: string } | null,  // null = auto-detect
   brandHint: string,
   apiKey: string,
 ): Promise<{ fb_caption: string; tiktok_caption: string; error?: string }> {
   const langSection = marketCtx
-    ? `OUTPUT LANGUAGE — FORCED: ${marketCtx.lang}\n${marketCtx.instructions}\nDO NOT use any other language. Translate visible image text to this language if needed for the caption.`
-    : `OUTPUT LANGUAGE — AUTO-DETECT FROM IMAGE:
-- Look at the visible text inside the image (banners, copy, watermarks).
-- Generate the captions in the SAME language as that visible text.
-- If the image text is in English → write captions in English.
-- If text is in Spanish → write in Spanish.
-- If text is in Portuguese → write in pt-BR.
-- If text is in Hindi/Hinglish → write in Hinglish (Latin script, never Devanagari).
-- If NO visible text → use the brand context if present; otherwise default to English.`;
+    ? `OUTPUT LANGUAGE — FORCED: ${marketCtx.lang}\n${marketCtx.instructions}\nDO NOT use any other language. Translate visible content to this language if needed.`
+    : `OUTPUT LANGUAGE — AUTO-DETECT FROM CONTENT:
+- Look at the visible text in the ${isVideo ? "video frames" : "image"} (banners, copy, watermarks).
+${transcript ? "- Also consider the audio transcript provided below.\n" : ""}- Generate captions in the SAME language as the dominant content language.
+- English content → English captions. Spanish → Spanish. Portuguese → pt-BR. Hindi → Hinglish (Latin script).
+- If NO visible/audible language → use brand context if present; otherwise default to English.`;
+
+  const mediaIntro = isVideo
+    ? `INPUT TYPE: Video (${imageUrls.length} key frames provided in chronological order: start, middle, end).
+${transcript ? `\nAUDIO TRANSCRIPT (Whisper):\n"""${transcript.slice(0, 1500)}"""\n\nUse the transcript as the PRIMARY source of message — it contains the spoken offer/CTA. Frames give visual context.\n` : "\nNo audio transcript available (silent video, audio extraction failed, or video too large for Whisper). Rely on visual frames only.\n"}`
+    : `INPUT TYPE: Single image.\n`;
 
   const prompt = `You are a senior social media copywriter for advertising creatives.
 
+${mediaIntro}
+
 CRITICAL RULES — DO NOT VIOLATE:
-1. Captions must DESCRIBE what is actually visible in the image. Do NOT invent offers, products, or details that are not in the image.
-2. If the image shows a person doing X (e.g., "talking on the phone"), the caption must reflect that — not generic casino copy.
-3. If the image has visible text/copy/CTA, REUSE that language and message — do not replace it.
-4. Brand context is for STYLE only (color, mood, tone). It does NOT give you license to invent things. If the image is about an app, talk about the app — not slot machines just because the brand is a casino.
+1. Captions must DESCRIBE what is actually shown/said. Do NOT invent offers, products, or details that are not in the input.
+2. If a person does X or says X, the caption must reflect that — not generic casino copy.
+3. If there's visible text/copy/CTA${isVideo ? " or audio transcript" : ""}, REUSE that message — do not replace it.
+4. Brand context is for STYLE only (color, mood, tone). It does NOT give you license to invent things.
 
 ${langSection}
 
-${brandHint ? `BRAND TONE/STYLE (use only for visual mood, NOT to invent content):\n${brandHint}\n` : ""}
+${brandHint ? `BRAND TONE/STYLE (only visual mood, NOT to invent content):\n${brandHint}\n` : ""}
 
-STEP 1 — internal analysis (do NOT output, just think):
-- What text is visible in the image? (transcribe exactly, in original language)
-- What is the main subject? (person doing what? object? scene?)
-- What action/offer/CTA is being communicated?
-- What language is the visible text?
+STEP 1 — internal analysis (do NOT output):
+- ${isVideo ? "Watch the frame sequence: what action unfolds? What changes between frames?" : "What text is visible? What is the main subject?"}
+${transcript ? "- What does the audio transcript say? What's the call-to-action spoken?\n" : ""}- What language dominates the content?
+- What single message/offer is being communicated?
 
-STEP 2 — write captions based ONLY on what you saw in step 1.
+STEP 2 — write captions based ONLY on what you analyzed.
 
-Generate TWO captions, EACH on its own labeled section:
+Generate TWO captions:
 
 ==FB==
 ${FB_FORMAT_INSTRUCTION}
@@ -174,17 +231,28 @@ ${FB_FORMAT_INSTRUCTION}
 ==TIKTOK==
 ${TIKTOK_FORMAT_INSTRUCTION}
 
-Output ONLY the two sections, exactly in this order:
+Output ONLY the two sections, in this order:
 ==FB==
 {4 lines here}
 ==TIKTOK==
 {1 line here, max 95 chars, no emojis}
 
-No preamble, no explanation, no analysis output. Just the two sections.`;
+No preamble. No explanation. No analysis output. Just the two sections.`;
 
-  if (!imageUrl.startsWith("http") && !imageUrl.startsWith("data:")) {
-    return { fb_caption: "", tiktok_caption: "", error: "invalid_image_url" };
+  if (imageUrls.length === 0) {
+    return { fb_caption: "", tiktok_caption: "", error: "no_images" };
   }
+  for (const u of imageUrls) {
+    if (!u.startsWith("http") && !u.startsWith("data:")) {
+      return { fb_caption: "", tiktok_caption: "", error: "invalid_image_url" };
+    }
+  }
+
+  // Monta content: 1 text prompt + N image_url (até 4 frames pra não estourar tokens)
+  const imagesContent = imageUrls.slice(0, 4).map(url => ({
+    type: "image_url" as const,
+    image_url: { url, detail: "high" as const },
+  }));
 
   let res: Response;
   try {
@@ -197,14 +265,12 @@ No preamble, no explanation, no analysis output. Just the two sections.`;
       body: JSON.stringify({
         model: "gpt-4o-mini",
         max_tokens: 700,
-        temperature: 0.4, // mais conservador — menos invenção
+        temperature: 0.4,
         messages: [{
           role: "user",
           content: [
             { type: "text", text: prompt },
-            // detail "high" = lê texto pequeno/elementos finos. Custo
-            // ~10x detail=low mas vital pra fidelidade.
-            { type: "image_url", image_url: { url: imageUrl, detail: "high" } },
+            ...imagesContent,
           ],
         }],
       }),
@@ -318,18 +384,41 @@ Deno.serve(async (req) => {
 
     console.log(`[hub-caption-gen] start user=${authUser.id} count=${images.length} market=${market} brand=${brand_id} language=${language || "(auto)"} resolved=${marketCtx?.lang || "(detect-from-image)"}`);
 
-    // Processa em paralelo (cap de 3 pra não estourar rate limit Claude)
+    // Processa em paralelo (cap de 3 pra não estourar rate limit OpenAI)
     const CONC = 3;
     const results: CaptionResult[] = [];
     for (let i = 0; i < images.length; i += CONC) {
       const batch = images.slice(i, i + CONC);
       const batchResults = await Promise.all(batch.map(async (img) => {
-        const r = await generateCaptionsForImage(img.image_url, marketCtx, brandHint, OPENAI_API_KEY);
+        // Detecta vídeo: tem frames array OU video_url
+        const isVideo = (Array.isArray(img.frames) && img.frames.length > 0) || !!img.video_url;
+        const visualUrls = isVideo
+          ? (img.frames && img.frames.length > 0 ? img.frames : [img.image_url])
+          : [img.image_url];
+
+        // Pra vídeo com video_url, faz Whisper transcript em paralelo
+        let transcript: string | null = null;
+        if (isVideo && img.video_url) {
+          const whisperRes = await whisperTranscribe(img.video_url, OPENAI_API_KEY);
+          transcript = whisperRes.transcript;
+          if (whisperRes.error) {
+            console.warn(`[hub-caption-gen] whisper failed for ${img.ref_id}: ${whisperRes.error}`);
+          } else if (transcript) {
+            console.log(`[hub-caption-gen] transcript for ${img.ref_id}: "${transcript.slice(0, 100)}..."`);
+          }
+        }
+
+        const r = await generateCaptionsForImage(
+          visualUrls, isVideo, transcript,
+          marketCtx, brandHint, OPENAI_API_KEY,
+        );
         return {
           image_url: img.image_url,
           ref_id: img.ref_id,
           fb_caption: r.fb_caption,
           tiktok_caption: r.tiktok_caption,
+          media_type: isVideo ? "video" as const : "image" as const,
+          transcript: transcript || undefined,
           error: r.error,
         };
       }));
@@ -355,6 +444,8 @@ Deno.serve(async (req) => {
               image_url: r.image_url,
               fb_caption: r.fb_caption,
               tiktok_caption: r.tiktok_caption,
+              media_type: r.media_type || "image",
+              transcript: r.transcript || null,
               brand_id,
               market,
               language: marketCtx?.lang || "auto",

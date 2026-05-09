@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Image as ImageIcon, Layers, Clapperboard, GalleryHorizontal,
   ArrowLeft, Search, Download, X, Sparkles, FolderOpen, Mic, Captions,
-  FileText, Copy, Check, Volume2, Trash2, Video as VideoIcon, ScanFace,
+  FileText, Copy, Check, Volume2, Trash2, Video as VideoIcon, ScanFace, Play,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -61,6 +61,8 @@ interface HubAsset {
   fb_caption?: string;
   tiktok_caption?: string;
   caption_language?: string;
+  caption_media_type?: "image" | "video";   // se vídeo, cover é thumbnail
+  caption_transcript?: string | null;       // só se vídeo + Whisper sucesso
 }
 
 const STR: Record<string, Record<Lang, string>> = {
@@ -183,6 +185,8 @@ type RawRow = {
     // Caption-specific
     fb_caption?: string;
     tiktok_caption?: string;
+    media_type?: "image" | "video";
+    transcript?: string | null;
   };
   created_at: string;
 };
@@ -412,6 +416,7 @@ export default function HubLibrary() {
             const fb = (c.fb_caption as string) || "";
             const tiktok = (c.tiktok_caption as string) || "";
             if (!url || (!fb && !tiktok)) continue;
+            const mediaType = (c.media_type === "video" ? "video" : "image") as "image" | "video";
             groupedMap.set(r.id, {
               id: r.id,
               kind: "caption",
@@ -424,6 +429,8 @@ export default function HubLibrary() {
               fb_caption: fb,
               tiktok_caption: tiktok,
               caption_language: c.language as string | undefined,
+              caption_media_type: mediaType,
+              caption_transcript: (c.transcript as string | null | undefined) ?? null,
             });
             continue;
           }
@@ -1157,7 +1164,27 @@ function AssetCardImpl({ asset, lang, t, onClick, onDelete, selectionMode, selec
           {isGroup && asset.scene_count && asset.scene_count > 1 && (
             <span style={{ color: "#3B82F6", marginLeft: 2 }}>· {asset.scene_count}</span>
           )}
+          {asset.kind === "caption" && asset.caption_media_type === "video" && (
+            <span style={{ color: "#A78BFA", marginLeft: 2 }}>· VIDEO</span>
+          )}
         </div>
+        {/* Play overlay quando caption é vídeo */}
+        {asset.kind === "caption" && asset.caption_media_type === "video" && (
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.18)", pointerEvents: "none",
+          }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: "50%",
+              background: "rgba(167,139,250,0.85)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+            }}>
+              <Play size={16} fill="#0a0a0f" style={{ color: "#0a0a0f", marginLeft: 2 }} />
+            </div>
+          </div>
+        )}
         {/* Top-right corner: checkbox em modo seleção, delete button caso contrário */}
         {selectionMode ? (
           <div
