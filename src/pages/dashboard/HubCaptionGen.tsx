@@ -395,25 +395,22 @@ export default function HubCaptionGen() {
         return;
       }
 
-      // Mapa ref_id → uploaded item pra recuperar video_url no resultado
-      const uploadedByRef = new Map(uploaded.map(u => [u.ref_id, u]));
-
+      // video_url propositalmente NÃO incluído — server apaga o MP4 do
+      // Storage logo após Whisper rodar (cleanup pra não acumular GBs).
+      // UI mostra só o frame thumbnail + transcript em texto.
       const assets: CaptionAsset[] = payload.results
         .filter(r => r.fb_caption && r.tiktok_caption && !r.error)
-        .map(r => {
-          const upl = r.ref_id ? uploadedByRef.get(r.ref_id) : undefined;
-          return {
-            id: r.memory_id || `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            image_url: r.image_url,
-            fb_caption: r.fb_caption,
-            tiktok_caption: r.tiktok_caption,
-            brand_id: brandId === "none" ? undefined : brandId,
-            created_at: new Date().toISOString(),
-            media_type: r.media_type || "image",
-            transcript: r.transcript || null,
-            video_url: upl?.video_url,
-          };
-        });
+        .map(r => ({
+          id: r.memory_id || `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          image_url: r.image_url,
+          fb_caption: r.fb_caption,
+          tiktok_caption: r.tiktok_caption,
+          brand_id: brandId === "none" ? undefined : brandId,
+          created_at: new Date().toISOString(),
+          media_type: r.media_type || "image",
+          transcript: r.transcript || null,
+          // video_url omitido — vídeo apagado, fallback é image_url (frame)
+        }));
 
       setResults(assets);
       // Limpa pending depois de sucesso

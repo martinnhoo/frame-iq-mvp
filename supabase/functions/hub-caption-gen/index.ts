@@ -13,7 +13,7 @@
 //
 // Idioma das legendas: deriva de market (BR=pt-BR, MX/CO/PE=es, US=en, IN=hinglish).
 
-const FN_VERSION = "v5-caption-video-url-persist-2026-05-08";
+const FN_VERSION = "v6-caption-mp4-cleanup-2026-05-08";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -124,6 +124,39 @@ Examples:
 "Slot machine cassino com luzes douradas. Cadastra grátis e ganha rodadas no primeiro depósito."
 "Bônus de 200% até R$ 500 no primeiro depósito. Cassino premium estilo Las Vegas."
 `;
+
+// Apaga o MP4 do bucket hub-captions logo após Whisper terminar.
+// Vídeo só serve pro transcript — depois disso é peso morto no Storage.
+// Library mostra só o frame thumbnail (que vai pra hub-images, ~500KB).
+//
+// Recebe: URL pública do Storage (formato:
+// https://{ref}.supabase.co/storage/v1/object/public/hub-captions/{userId}/caption-source/{uuid}.mp4)
+// Extrai o path (depois de /hub-captions/) e chama storage.remove().
+//
+// Falha silenciosa — se delete não der certo, log e segue. Vídeo
+// vai morrer com TTL ou cleanup manual depois.
+async function deleteVideoFromStorage(
+  videoUrl: string,
+  sb: ReturnType<typeof createClient>,
+): Promise<void> {
+  try {
+    const marker = "/hub-captions/";
+    const idx = videoUrl.indexOf(marker);
+    if (idx === -1) {
+      console.warn(`[cleanup] video URL doesn't match hub-captions pattern: ${videoUrl.slice(0, 80)}`);
+      return;
+    }
+    const path = videoUrl.slice(idx + marker.length).split("?")[0]; // remove query string se tiver
+    const { error } = await sb.storage.from("hub-captions").remove([path]);
+    if (error) {
+      console.warn(`[cleanup] delete failed for ${path}: ${error.message}`);
+    } else {
+      console.log(`[cleanup] deleted MP4 from storage: ${path}`);
+    }
+  } catch (e) {
+    console.warn(`[cleanup] exception:`, e);
+  }
+}
 
 // Whisper: transcreve o áudio do vídeo. Custo $0.006/min. Vídeo de
 // 30s = $0.003. Aceita mp3/mp4/mpeg/mpga/m4a/wav/webm. Limite 25MB
@@ -428,6 +461,19 @@ Deno.serve(async (req) => {
           } else if (transcript) {
             console.log(`[hub-caption-gen] transcript for ${img.ref_id}: "${transcript.slice(0, 100)}..."`);
           }
+
+          // Cleanup: MP4 já cumpriu sua função (Whisper rodou). Apaga do
+          // Storage pra não acumular GBs por user. Library/UI mostra só
+          // o frame thumbnail + transcript — vídeo nunca mais é tocado.
+          // EdgeRuntime.waitUntil → não bloqueia a resposta do request.
+          // @ts-expect-error EdgeRuntime is Deno-specific
+          if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+            // @ts-expect-error EdgeRuntime is Deno-specific
+            EdgeRuntime.waitUntil(deleteVideoFromStorage(img.video_url, sb));
+          } else {
+            // Fallback: fire-and-forget Promise (não await)
+            deleteVideoFromStorage(img.video_url, sb);
+          }
         }
 
         const r = await generateCaptionsForImage(
@@ -441,7 +487,8 @@ Deno.serve(async (req) => {
           tiktok_caption: r.tiktok_caption,
           media_type: isVideo ? "video" as const : "image" as const,
           transcript: transcript || undefined,
-          video_url: img.video_url,  // pra Library tocar o MP4 original
+          // video_url DELIBERADAMENTE OMITIDO — o MP4 foi apagado do Storage
+          // logo após o transcript. Library mostra só o frame thumbnail.
           error: r.error,
         };
       }));
@@ -465,7 +512,7 @@ Deno.serve(async (req) => {
             kind: "hub_caption",
             content: {
               image_url: r.image_url,                     // cover (frame ou imagem)
-              video_url: (r as { video_url?: string }).video_url || null,  // MP4 original
+              video_url: null,                            // MP4 sempre apagado após Whisper — só frame fica
               fb_caption: r.fb_caption,
               tiktok_caption: r.tiktok_caption,
               media_type: r.media_type || "image",
