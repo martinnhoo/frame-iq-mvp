@@ -1424,6 +1424,44 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_assets: {
+        Row: {
+          asset_url: string
+          brand_id: string
+          created_at: string | null
+          id: string
+          kind: string | null
+          position: number | null
+          user_id: string
+        }
+        Insert: {
+          asset_url: string
+          brand_id: string
+          created_at?: string | null
+          id?: string
+          kind?: string | null
+          position?: number | null
+          user_id: string
+        }
+        Update: {
+          asset_url?: string
+          brand_id?: string
+          created_at?: string | null
+          id?: string
+          kind?: string | null
+          position?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_assets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "user_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           account_id: string
@@ -3605,6 +3643,33 @@ export type Database = {
           top_performing_hooks?: Json | null
           top_performing_models?: Json | null
           total_analyses?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_brands: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
