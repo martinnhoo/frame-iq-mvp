@@ -284,10 +284,12 @@ export default function HubVideoGenerator() {
     if (sourceInputRef.current) sourceInputRef.current.value = "";
   };
 
-  // Cost estimate — Kling 3.0 pricing matrix.
-  // mode=std implica 720p · mode=pro implica 1080p (já vinculado no UI).
-  // PRICE_TABLE já tem o preço final por segundo pra cada combinação.
-  const costPerSec = PRICE_TABLE[`${resolution}_${enableAudio ? "on" : "off"}`] || 0.10;
+  // Cost estimate — derivado do modelo selecionado.
+  // selectedModel.cost5s é o custo de referência pra 5s. Pra outras
+  // durations, escalona linearmente. Áudio (quando suportado) adiciona ~50%.
+  const baseCostPerSec = selectedModel.cost5s / 5;
+  const audioMultiplier = (selectedModel.supports.audio && enableAudio) ? 1.5 : 1;
+  const costPerSec = baseCostPerSec * audioMultiplier;
   const estCost = (costPerSec * duration).toFixed(2);
 
   // Generate
