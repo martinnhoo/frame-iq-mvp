@@ -39,9 +39,10 @@
 //
 // Timeout: 130s. Vídeos 5s-720p levam ~60-90s no PiAPI.
 
-const FN_VERSION = "v8-kling-poll-adaptive-2026-05-07";
+const FN_VERSION = "v9-multimodel-2026-05-12";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getModel, type NormalizedInput, type PiapiCreateBody } from "./models.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -64,18 +65,9 @@ const POLL_INTERVAL_FAST_MS = 2_000;
 const POLL_INTERVAL_NORMAL_MS = 5_000;
 const POLL_FAST_WINDOW_MS = 30_000;
 
-// ── Provider: PiAPI Kling 3.0 ───────────────────────────────────────
-interface PiapiInput {
-  prompt: string;
-  image_url?: string | null;       // primeira frame (image-to-video)
-  image_tail_url?: string | null;  // última frame (Kling 3.0 only)
-  duration: number;                // 3-15s
-  aspect_ratio: string;            // "16:9" | "9:16" | "1:1"
-  enable_audio: boolean;
-  mode: "std" | "pro";             // std = 720p, pro = 1080p
-  resolution: "720p" | "1080p";    // derived from mode (kept for UI)
-}
-
+// ── Provider: PiAPI (multi-model via MODEL_REGISTRY) ────────────────
+// Body shape vem do adapter do modelo selecionado (kling-std/pro, hailuo, luma).
+// Polling é genérico (mesmo envelope PiAPI pra todos os modelos).
 interface PiapiResult {
   ok: boolean;
   video_url?: string;
@@ -86,48 +78,12 @@ interface PiapiResult {
   provider_status?: number;
 }
 
-async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: number): Promise<PiapiResult> {
+async function generateViaPiapi(body: PiapiCreateBody, resolution: string, apiKey: string, deadline: number): Promise<PiapiResult> {
   // ── 1. Cria task ──────────────────────────────────────────────────
-  // Body shape exato da doc Kling 3.0:
-  // https://piapi.ai/docs/kling-api/kling-3-api
-  //
-  // Diferenças vs Kling 2.6:
-  //   - version: "3.0" obrigatório
-  //   - mode std=720p / pro=1080p (resolution não é param separado)
-  //   - image_tail_url novo (último frame opcional)
-  //   - negative_prompt e cfg_scale removidos da spec 3.0
-  //   - enable_audio é boolean (Kling 3.0 gera áudio nativo se true)
-  //
-  // Validação leve mantida do v6: só aceita image_url http(s) (não data URL),
-  // pra evitar payload gigante e falha silenciosa do PiAPI.
-  const safeImageUrl = input.image_url?.startsWith("http") ? input.image_url : null;
-  const safeImageTailUrl = input.image_tail_url?.startsWith("http") ? input.image_tail_url : null;
-  const body = {
-    model: "kling",
-    task_type: "video_generation",
-    input: {
-      prompt: input.prompt,
-      version: "3.0",
-      mode: input.mode,
-      duration: input.duration,
-      aspect_ratio: input.aspect_ratio,
-      enable_audio: input.enable_audio,
-      prefer_multi_shots: false,
-      ...(safeImageUrl ? { image_url: safeImageUrl } : {}),
-      ...(safeImageTailUrl ? { image_tail_url: safeImageTailUrl } : {}),
-    },
-    config: {
-      service_mode: "public",
-    },
-  };
-  console.log(`[hub-video] piapi create v3.0 payload=${JSON.stringify({
-    ...body,
-    input: {
-      ...body.input,
-      image_url: safeImageUrl ? `${safeImageUrl.slice(0, 60)}...` : undefined,
-      image_tail_url: safeImageTailUrl ? `${safeImageTailUrl.slice(0, 60)}...` : undefined,
-    },
-  })}`);
+  // Body já vem montado pelo MODEL_REGISTRY (Kling, Hailuo, Luma têm
+  // shapes diferentes). Esta função é model-agnostic — só faz a chamada
+  // e o polling do PiAPI envelope padrão.
+  console.log(`[hub-video] piapi create model=${body.model} task_type=${body.task_type} keys=${Object.keys(body.input).join(",")}`);
 
   let createRes: Response;
   try {
@@ -247,12 +203,15 @@ async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: num
         };
       }
       console.log(`[hub-video] video_url found via ${explicit ? "explicit" : "deep_search"}: ${video_url.slice(0, 80)}…`);
-      const duration_s = firstWork?.duration ? parseFloat(firstWork.duration) : input.duration;
+      // duration_s: priorizamos o que o PiAPI retorna (mais fiel), caímos no
+      // que pedimos no body (body.input.duration) só se PiAPI não devolver.
+      const requestedDuration = typeof body.input.duration === "number" ? body.input.duration : 5;
+      const duration_s = firstWork?.duration ? parseFloat(firstWork.duration) : requestedDuration;
       return {
         ok: true,
         video_url,
         duration_s,
-        resolution: input.resolution,
+        resolution,
         task_id,
       };
     }
@@ -267,7 +226,7 @@ async function generateViaPiapi(input: PiapiInput, apiKey: string, deadline: num
 }
 
 // ── Stub: fal.ai (Fase futura) ──────────────────────────────────────
-async function generateViaFalai(_input: PiapiInput, _apiKey: string, _deadline: number): Promise<PiapiResult> {
+async function generateViaFalai(_apiKey: string, _deadline: number): Promise<PiapiResult> {
   return {
     ok: false,
     error: "falai_not_implemented: troca VIDEO_PROVIDER pra 'piapi' enquanto fal.ai não tá codado.",
@@ -300,6 +259,7 @@ Deno.serve(async (req) => {
       aspect_ratio = "16:9",
       enable_audio = false,
       mode = "std",
+      model: bodyModel,         // NEW: kling-std | kling-pro | hailuo | luma
       provider: bodyProvider,
       brand_id = null,
       market = null,
@@ -312,15 +272,23 @@ Deno.serve(async (req) => {
       aspect_ratio?: string;
       enable_audio?: boolean;
       mode?: "std" | "pro";
+      model?: string;
       provider?: "piapi" | "falai";
       brand_id?: string | null;
       market?: string | null;
       brand_hint?: string;
     };
 
-    // Resolution é DERIVADA do mode (Kling 3.0 spec):
-    //   mode=std → 720p · mode=pro → 1080p
-    const resolution: "720p" | "1080p" = mode === "pro" ? "1080p" : "720p";
+    // Resolve model: body.model > derivado do mode legacy (back-compat)
+    // Body antigo manda { mode: "std"|"pro" } → mapeia pra kling-std/kling-pro.
+    const modelId = bodyModel || (mode === "pro" ? "kling-pro" : "kling-std");
+    const modelMeta = getModel(modelId);
+    if (!modelMeta) {
+      return jsonResponse({
+        _v: FN_VERSION, ok: false, error: "invalid_model",
+        message: `Modelo desconhecido: ${modelId}`,
+      }, 400);
+    }
 
     // Validação básica
     if (!prompt || prompt.trim().length < 5) {
@@ -329,7 +297,6 @@ Deno.serve(async (req) => {
         message: "Prompt mínimo 5 caracteres.",
       }, 400);
     }
-    const dur = Math.floor(duration) <= 7 ? 5 : 10;
 
     // Provider: body > env > default
     const provider = bodyProvider || Deno.env.get("VIDEO_PROVIDER") || "piapi";
@@ -339,15 +306,28 @@ Deno.serve(async (req) => {
     if (brand_hint && brand_hint.trim()) {
       finalPrompt = `${brand_hint.trim()}\n\n${finalPrompt}`;
     }
-    finalPrompt = finalPrompt.slice(0, 2500); // PiAPI limita prompt
+    finalPrompt = finalPrompt.slice(0, 2500);
 
-    // Kling 3.0 aceita std OU pro com ou sem audio (4 combinações de preço).
-    // Mantém só validação: std/pro (default std).
-    const normalizedMode: "std" | "pro" = mode === "pro" ? "pro" : "std";
-    // Validação de imagem: só HTTP(S) URLs (PiAPI não aceita data URL).
+    // Validação de duração baseada no model.supports.durations
+    const desiredDur = Math.floor(duration) || 5;
+    const allowedDurations = modelMeta.supports.durations;
+    const finalDuration = allowedDurations.includes(desiredDur)
+      ? desiredDur
+      : (allowedDurations.find(d => d >= desiredDur) || allowedDurations[allowedDurations.length - 1]);
+
+    // Validação de aspect ratio baseada no model.supports.aspectRatios
+    const finalAspect = modelMeta.supports.aspectRatios.includes(aspect_ratio)
+      ? aspect_ratio
+      : modelMeta.supports.aspectRatios[0];
+
+    // Audio só se o modelo suporta
+    const finalAudio = modelMeta.supports.audio && enable_audio;
+
+    // Validação de imagem: só HTTP(S) URLs
     const normalizedImageUrl = typeof image_url === "string" && image_url.startsWith("http") ? image_url : null;
+    const normalizedTailUrl = typeof image_tail_url === "string" && image_tail_url.startsWith("http") ? image_tail_url : null;
 
-    console.log(`[hub-video] start — user=${authUser.id} provider=${provider} duration=${dur}s mode=${normalizedMode} resolution=${resolution} audio=${enable_audio} aspect=${aspect_ratio} hasImage=${!!normalizedImageUrl}`);
+    console.log(`[hub-video] start — user=${authUser.id} model=${modelId} (${modelMeta.badge}) duration=${finalDuration}s audio=${finalAudio} aspect=${finalAspect} hasImage=${!!normalizedImageUrl}`);
 
     // Auth provider
     let result: PiapiResult;
@@ -361,16 +341,16 @@ Deno.serve(async (req) => {
           message: "Adicione PIAPI_API_KEY nos secrets do Supabase Edge Functions.",
         }, 503);
       }
-      result = await generateViaPiapi({
+      const input: NormalizedInput = {
         prompt: finalPrompt,
-        image_url: normalizedImageUrl,
-        image_tail_url,
-        duration: dur,
-        aspect_ratio,
-        enable_audio,
-        mode: normalizedMode,
-        resolution,
-      }, PIAPI_KEY, deadline);
+        imageUrl: normalizedImageUrl,
+        imageTailUrl: normalizedTailUrl,
+        duration: finalDuration,
+        aspectRatio: finalAspect,
+        audio: finalAudio,
+      };
+      const piapiBody = modelMeta.buildPiapiInput(input);
+      result = await generateViaPiapi(piapiBody, modelMeta.resolution, PIAPI_KEY, deadline);
     } else if (provider === "falai") {
       const FAL_KEY = Deno.env.get("FAL_API_KEY");
       if (!FAL_KEY) {
@@ -379,11 +359,7 @@ Deno.serve(async (req) => {
           message: "fal.ai ainda não foi codado. Use provider='piapi'.",
         }, 503);
       }
-      result = await generateViaFalai({
-        prompt: finalPrompt, image_url: normalizedImageUrl, image_tail_url,
-        duration: dur, aspect_ratio,
-        enable_audio, mode: normalizedMode, resolution,
-      }, FAL_KEY, deadline);
+      result = await generateViaFalai(FAL_KEY, deadline);
     } else {
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: "unknown_provider",
@@ -443,17 +419,17 @@ Deno.serve(async (req) => {
           content: {
             prompt: prompt.trim(),
             final_prompt: finalPrompt,
-            video_url: finalVideoUrl,            // Storage URL (ou PiAPI fallback)
-            piapi_url: result.video_url,         // backup pra debug/recover
-            image_url: normalizedImageUrl,       // input image (image-to-video) ou null
+            video_url: finalVideoUrl,
+            piapi_url: result.video_url,
+            image_url: normalizedImageUrl,
             duration_s: result.duration_s,
-            aspect_ratio,
-            resolution,
-            mode: normalizedMode,
-            enable_audio,
+            aspect_ratio: finalAspect,
+            resolution: modelMeta.resolution,
+            enable_audio: finalAudio,
             provider,
             task_id: result.task_id,
-            model: "kling-3.0",
+            model: modelMeta.id,                  // kling-std | kling-pro | hailuo | luma
+            model_label: modelMeta.label,         // pra Library mostrar amigável
             brand_id: brand_id || null,
             market: market || null,
           },
@@ -475,16 +451,16 @@ Deno.serve(async (req) => {
     return jsonResponse({
       _v: FN_VERSION,
       ok: true,
-      video_url: finalVideoUrl,                  // URL persistente
+      video_url: finalVideoUrl,
       memory_id: memoryId,
       duration_s: result.duration_s,
-      aspect_ratio,
-      resolution,
-      mode: normalizedMode,
-      enable_audio,
+      aspect_ratio: finalAspect,
+      resolution: modelMeta.resolution,
+      enable_audio: finalAudio,
       provider,
       task_id: result.task_id,
-      model: "kling-3.0",
+      model: modelMeta.id,
+      model_label: modelMeta.label,
       brand_id: brand_id || null,
       market: market || null,
     }, 200);

@@ -101,12 +101,52 @@ const STR: Record<string, Record<Lang, string>> = {
   cost:           { pt: "Custo estimado",        en: "Estimated cost",       es: "Costo estimado",        zh: "预估费用" },
 };
 
-// ── PiAPI Kling 3.0 pricing (per second) ────────────────────────────
-const PRICE_TABLE: Record<string, number> = {
-  "720p_off":  0.10,
-  "720p_on":   0.15,
-  "1080p_off": 0.15,
-  "1080p_on":  0.20,
+// ── Video models registry (mirror de supabase/functions/hub-video-gen/models.ts) ──
+// Cada modelo tem badge (verified/beta), best-for, cost de referência e
+// supports (durations, aspectRatios, audio, imageToVideo).
+type VideoModelId = "kling-std" | "kling-pro" | "hailuo" | "luma";
+
+interface VideoModelMeta {
+  id: VideoModelId;
+  label: string;
+  emoji: string;
+  bestFor: string;
+  badge: "verified" | "beta";
+  resolution: "720p" | "1080p";
+  cost5s: number;       // USD aproximado pra 5s
+  supports: {
+    imageToVideo: boolean;
+    audio: boolean;
+    durations: number[];
+    aspectRatios: ("16:9" | "9:16" | "1:1")[];
+  };
+}
+
+const VIDEO_MODELS: Record<VideoModelId, VideoModelMeta> = {
+  "kling-std": {
+    id: "kling-std", label: "Kling 3.0", emoji: "⚡",
+    bestFor: "Movimento natural, uso geral",
+    badge: "verified", resolution: "720p", cost5s: 0.10,
+    supports: { imageToVideo: true, audio: true, durations: [5, 10], aspectRatios: ["16:9", "9:16", "1:1"] },
+  },
+  "kling-pro": {
+    id: "kling-pro", label: "Kling 3.0 Pro", emoji: "🎬",
+    bestFor: "Cinematic 1080p, qualidade máxima",
+    badge: "verified", resolution: "1080p", cost5s: 0.30,
+    supports: { imageToVideo: true, audio: true, durations: [5, 10], aspectRatios: ["16:9", "9:16", "1:1"] },
+  },
+  "hailuo": {
+    id: "hailuo", label: "Hailuo 02", emoji: "🎭",
+    bestFor: "Personagens consistentes, expressões",
+    badge: "beta", resolution: "720p", cost5s: 0.20,
+    supports: { imageToVideo: true, audio: false, durations: [5, 6], aspectRatios: ["16:9", "9:16"] },
+  },
+  "luma": {
+    id: "luma", label: "Luma Dream", emoji: "🌊",
+    bestFor: "Orgânico, humanos, lifestyle",
+    badge: "beta", resolution: "720p", cost5s: 0.25,
+    supports: { imageToVideo: true, audio: false, durations: [5], aspectRatios: ["16:9", "9:16"] },
+  },
 };
 
 interface VideoAsset {
@@ -135,9 +175,26 @@ export default function HubVideoGenerator() {
   const [marketCode, setMarketCode] = useState<MarketCode | null>(null);
   const [aspectRatio, setAspectRatio] = useState<"16:9" | "9:16" | "1:1">("16:9");
   const [duration, setDuration] = useState(5);
-  const [resolution, setResolution] = useState<"720p" | "1080p">("720p");
-  const [mode, setMode] = useState<"std" | "pro">("std");
+  const [videoModel, setVideoModel] = useState<VideoModelId>("kling-std");
   const [enableAudio, setEnableAudio] = useState(false);
+  const selectedModel = VIDEO_MODELS[videoModel];
+  // back-compat com código velho que usa resolution/mode (vai sair)
+  const resolution = selectedModel.resolution;
+  const mode: "std" | "pro" = videoModel === "kling-pro" ? "pro" : "std";
+
+  // Quando troca de modelo, ajusta aspectRatio e duration pro que ele suporta
+  useEffect(() => {
+    if (!selectedModel.supports.aspectRatios.includes(aspectRatio)) {
+      setAspectRatio(selectedModel.supports.aspectRatios[0]);
+    }
+    if (!selectedModel.supports.durations.includes(duration)) {
+      setDuration(selectedModel.supports.durations[0]);
+    }
+    if (!selectedModel.supports.audio && enableAudio) {
+      setEnableAudio(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoModel]);
   const [prompt, setPrompt] = useState("");
   const [sourceImage, setSourceImage] = useState<string | null>(null); // data URL
   const [sourceFileName, setSourceFileName] = useState<string>("");
@@ -292,7 +349,8 @@ export default function HubVideoGenerator() {
           duration,
           aspect_ratio: aspectRatio,
           enable_audio: enableAudio,
-          mode,                // std=720p, pro=1080p (Kling 3.0)
+          mode,                // back-compat (server prefere model)
+          model: videoModel,   // kling-std | kling-pro | hailuo | luma
           provider: "piapi",
           brand_id: brandId === "none" ? null : brandId,
           market: marketCode,
@@ -535,38 +593,70 @@ export default function HubVideoGenerator() {
               </div>
             </div>
 
-            {/* Quality — single control. Kling 3.0 vincula resolução
-                e modo: std=720p, pro=1080p. Não dá pra ter um sem o outro. */}
+            {/* Modelo de vídeo — picker com cards mostrando best-for + custo */}
             <div style={section}>
-              <div style={sectionLabel}>{t("resolution")}</div>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button
-                  onClick={() => { setResolution("720p"); setMode("std"); }}
-                  style={pillStyle(resolution === "720p")}
-                >
-                  720p · Standard
-                </button>
-                <button
-                  onClick={() => { setResolution("1080p"); setMode("pro"); }}
-                  style={pillStyle(resolution === "1080p")}
-                >
-                  1080p · Pro
-                </button>
+              <div style={sectionLabel}>{lang === "pt" ? "Modelo de vídeo" : lang === "es" ? "Modelo de video" : lang === "zh" ? "视频模型" : "Video model"}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {(Object.values(VIDEO_MODELS) as VideoModelMeta[]).map(m => {
+                  const active = videoModel === m.id;
+                  const isBeta = m.badge === "beta";
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setVideoModel(m.id)}
+                      style={{
+                        textAlign: "left", padding: "9px 12px",
+                        background: active ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${active ? "#A78BFA" : "rgba(255,255,255,0.08)"}`,
+                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
+                        color: "#fff", display: "flex", alignItems: "center", gap: 10,
+                      }}
+                    >
+                      <span style={{ fontSize: 18 }}>{m.emoji}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                          <span style={{ fontSize: 12.5, fontWeight: 800 }}>{m.label}</span>
+                          {isBeta && (
+                            <span style={{
+                              fontSize: 8.5, fontWeight: 800, letterSpacing: "0.06em",
+                              padding: "1px 5px", borderRadius: 3,
+                              background: "rgba(251,191,36,0.20)", color: "#FBBF24",
+                              textTransform: "uppercase",
+                            }}>BETA</span>
+                          )}
+                          <span style={{ fontSize: 10, fontWeight: 700, color: "#A78BFA", marginLeft: "auto" }}>
+                            ~${m.cost5s.toFixed(2)}/5s
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>
+                          {m.bestFor} · {m.resolution}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
+              {selectedModel.badge === "beta" && (
+                <div style={{ ...hint, marginTop: 8, color: "#FCD34D", fontSize: 10.5 }}>
+                  ⚠️ Modelo em beta — shape de request pode precisar ajuste. Se falhar, troca pra Kling.
+                </div>
+              )}
             </div>
 
-            {/* Audio toggle */}
-            <div style={section}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12 }}>
-                <input
-                  type="checkbox"
-                  checked={enableAudio}
-                  onChange={e => setEnableAudio(e.target.checked)}
-                />
-                <span>{t("audio")}</span>
-              </label>
-              <div style={{ ...hint, marginTop: 4 }}>{t("audioDesc")}</div>
-            </div>
+            {/* Audio toggle — só se modelo suporta */}
+            {selectedModel.supports.audio && (
+              <div style={section}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 12 }}>
+                  <input
+                    type="checkbox"
+                    checked={enableAudio}
+                    onChange={e => setEnableAudio(e.target.checked)}
+                  />
+                  <span>{t("audio")}</span>
+                </label>
+                <div style={{ ...hint, marginTop: 4 }}>{t("audioDesc")}</div>
+              </div>
+            )}
 
             {/* Cost preview */}
             <div style={{
