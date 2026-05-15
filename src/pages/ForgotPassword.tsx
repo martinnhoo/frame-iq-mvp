@@ -60,7 +60,7 @@ const ForgotPassword = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="text-center space-y-2">
-          <CardTitle asChild><h1 className="text-2xl font-bold tracking-tight">{t("forgot_title")}</h1></CardTitle>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("forgot_title")}</h1>
           <CardDescription className="text-muted-foreground">{t("forgot_subtitle")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
