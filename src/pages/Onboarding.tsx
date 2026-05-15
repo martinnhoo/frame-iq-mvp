@@ -396,10 +396,10 @@ export default function Onboarding() {
 
                 {/* Nome */}
                 <div style={{ marginBottom: 24 }}>
-                  <label style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 10, letterSpacing: "0.02em" }}>
+                  <label htmlFor="onb-name" style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 10, letterSpacing: "0.02em" }}>
                     {t.s1_name_label}
                   </label>
-                  <input ref={nameRef} value={name} onChange={e => setName(e.target.value)}
+                  <input id="onb-name" ref={nameRef} value={name} onChange={e => setName(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && canStep1 && setStep(2)}
                     placeholder={t.s1_name_ph} style={inputStyle}
                     onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.6)"; e.currentTarget.style.background = "rgba(14,165,233,0.06)"; }}
@@ -476,11 +476,12 @@ export default function Onboarding() {
 
                 {/* Referral code */}
                 <div style={{ marginBottom: 28 }}>
-                  <label style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.02em" }}>
+                  <label htmlFor="onb-referral" style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.02em" }}>
                     {t.s1_referral_label}
                   </label>
                   <div style={{ position: "relative" }}>
                     <input
+                      id="onb-referral"
                       value={referralCode}
                       onChange={e => setReferralCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12))}
                       placeholder={t.s1_referral_ph}
@@ -532,8 +533,8 @@ export default function Onboarding() {
 
                 {/* Nome da conta */}
                 <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 10, letterSpacing: "0.02em" }}>{t.s3_name_label}</label>
-                  <input ref={accountNameRef} value={accountName} onChange={e => setAccountName(e.target.value)}
+                  <label htmlFor="onb-account-name" style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 10, letterSpacing: "0.02em" }}>{t.s3_name_label}</label>
+                  <input id="onb-account-name" ref={accountNameRef} value={accountName} onChange={e => setAccountName(e.target.value)}
                     placeholder={t.s3_name_ph} style={inputStyle}
                     onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.6)"; e.currentTarget.style.background = "rgba(14,165,233,0.06)"; }}
                     onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }} />
@@ -541,8 +542,8 @@ export default function Onboarding() {
 
                 {/* Descrição */}
                 <div style={{ marginBottom: 28 }}>
-                  <label style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 10, letterSpacing: "0.02em" }}>{t.s3_desc_label}</label>
-                  <input value={accountDesc} onChange={e => setAccountDesc(e.target.value)}
+                  <label htmlFor="onb-account-desc" style={{ display: "block", fontFamily: M, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: 10, letterSpacing: "0.02em" }}>{t.s3_desc_label}</label>
+                  <input id="onb-account-desc" value={accountDesc} onChange={e => setAccountDesc(e.target.value)}
                     placeholder={t.s3_desc_ph} style={inputStyle}
                     onFocus={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.6)"; e.currentTarget.style.background = "rgba(14,165,233,0.06)"; }}
                     onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"; e.currentTarget.style.background = "rgba(255,255,255,0.07)"; }} />

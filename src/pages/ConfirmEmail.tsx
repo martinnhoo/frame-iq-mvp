@@ -70,7 +70,7 @@ const ConfirmEmail = () => {
             <div className="h-16 w-16 rounded-full bg-green-500/20 flex items-center justify-center">
               <CheckCircle className="h-8 w-8 text-green-400" />
             </div>
-            <h2 className="text-xl font-bold text-foreground">{t("confirm_confirmed_title")}</h2>
+            <h1 className="text-xl font-bold text-foreground">{t("confirm_confirmed_title")}</h1>
             <p className="text-muted-foreground text-sm">
               {t("confirm_confirmed_text")}
             </p>
@@ -99,7 +99,7 @@ const ConfirmEmail = () => {
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-foreground">{t("confirm_title")}</h2>
+              <h1 className="text-xl font-bold text-foreground">{t("confirm_title")}</h1>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 {t("confirm_text")}{" "}
                 {email ? (

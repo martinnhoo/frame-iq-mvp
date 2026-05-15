@@ -186,11 +186,12 @@ export default function ResetPassword() {
 
         {/* New password */}
         <div>
-          <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 6, letterSpacing: "0.04em" }}>
+          <label htmlFor="reset-new-pw" style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 6, letterSpacing: "0.04em" }}>
             {t("reset_new_pw")}
           </label>
           <div style={{ position: "relative" }}>
             <input
+              id="reset-new-pw"
               type={showPw ? "text" : "password"}
               value={password}
               onChange={e => { setPassword(e.target.value); setErrorMsg(""); }}
@@ -202,7 +203,7 @@ export default function ResetPassword() {
               onFocus={e => { e.target.style.borderColor = "rgba(14,165,233,0.4)"; }}
               onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.10)"; }}
             />
-            <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", display: "flex", padding: 0 }}>
+            <button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? "Hide password" : "Show password"} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", display: "flex", padding: 0 }}>
               {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
@@ -234,11 +235,12 @@ export default function ResetPassword() {
 
         {/* Confirm password */}
         <div>
-          <label style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 6, letterSpacing: "0.04em" }}>
+          <label htmlFor="reset-confirm-pw" style={{ display: "block", fontFamily: M, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 6, letterSpacing: "0.04em" }}>
             {t("reset_confirm_pw")}
           </label>
           <div style={{ position: "relative" }}>
             <input
+              id="reset-confirm-pw"
               type={showConfirm ? "text" : "password"}
               value={confirm}
               onChange={e => { setConfirm(e.target.value); setErrorMsg(""); }}
@@ -248,7 +250,7 @@ export default function ResetPassword() {
               onFocus={e => { if (!mismatch) e.target.style.borderColor = "rgba(14,165,233,0.4)"; }}
               onBlur={e => { if (!mismatch) e.target.style.borderColor = "rgba(255,255,255,0.10)"; }}
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", display: "flex", padding: 0 }}>
+            <button type="button" onClick={() => setShowConfirm(v => !v)} aria-label={showConfirm ? "Hide password" : "Show password"} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", display: "flex", padding: 0 }}>
               {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>

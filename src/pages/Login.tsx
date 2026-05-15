@@ -190,10 +190,11 @@ const Login = () => {
             <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Email */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>{t("auth_email")}</label>
+                <label htmlFor="login-email" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>{t("auth_email")}</label>
                 <div style={{ position: 'relative' }}>
                   <Mail style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(255,255,255,0.35)' }} />
                   <input
+                    id="login-email"
                     type="email" placeholder="name@example.com"
                     value={email} onChange={e => setEmail(e.target.value)} required disabled={isFormDisabled}
                     style={{
@@ -210,7 +211,7 @@ const Login = () => {
               {/* Password */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>{t("auth_password")}</label>
+                  <label htmlFor="login-password" style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>{t("auth_password")}</label>
                   <Link to="/forgot-password" style={{ fontSize: 12, color: '#38bdf8', textDecoration: 'none' }}
                     onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
                     onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
@@ -219,6 +220,7 @@ const Login = () => {
                 </div>
                 <div style={{ position: 'relative' }}>
                   <input
+                    id="login-password"
                     type={showPassword ? "text" : "password"} placeholder="••••••••"
                     value={password} onChange={e => setPassword(e.target.value)} required disabled={isFormDisabled}
                     style={{
@@ -230,6 +232,7 @@ const Login = () => {
                     onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                     style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: 0 }}>
                     {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
                   </button>

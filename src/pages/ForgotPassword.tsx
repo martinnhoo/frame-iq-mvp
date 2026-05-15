@@ -34,7 +34,7 @@ const ForgotPassword = () => {
             <div className="h-16 w-16 rounded-full bg-accent/20 flex items-center justify-center">
               <Mail className="h-8 w-8 text-accent-foreground" />
             </div>
-            <h2 className="text-xl font-bold text-foreground">{t("forgot_check_title")}</h2>
+            <h1 className="text-xl font-bold text-foreground">{t("forgot_check_title")}</h1>
             <p className="text-muted-foreground text-sm max-w-sm">
               {t("forgot_check_text")} <span className="font-medium text-foreground">{email}</span>.
             </p>
@@ -60,7 +60,7 @@ const ForgotPassword = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-bold tracking-tight">{t("forgot_title")}</CardTitle>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("forgot_title")}</h1>
           <CardDescription className="text-muted-foreground">{t("forgot_subtitle")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

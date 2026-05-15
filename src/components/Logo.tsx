@@ -23,7 +23,7 @@ export const LogoLight = Logo;
 export const LogoMark = ({ size = 28 }: { size?: number }) => (
   <img
     src="/favicon-192.png"
-    alt="adbrief"
+    alt="AdBrief logo"
     width={size}
     height={size}
     style={{ borderRadius: size * 0.22, display: "block", objectFit: "cover" }}

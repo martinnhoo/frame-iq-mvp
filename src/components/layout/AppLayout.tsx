@@ -916,6 +916,7 @@ export function AppLayout() {
 
         {profile ? (
           <ErrorBoundary>
+          <main>
           <Outlet context={{
             user,
             profile,
@@ -932,6 +933,7 @@ export function AppLayout() {
             metaConnected,
             accountResolving,
           } satisfies DashboardContext & { activeAccount: ReturnType<typeof useActiveAccount>['account']; metaConnected: boolean; accountResolving: boolean }} />
+          </main>
           </ErrorBoundary>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300 }}>
