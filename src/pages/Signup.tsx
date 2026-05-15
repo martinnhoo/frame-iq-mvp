@@ -177,12 +177,13 @@ const Signup = () => {
             <form onSubmit={handleEmailSignup} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Invite code — destacado, primeiro campo */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(56,189,248,0.85)', marginBottom: 8, letterSpacing: '0.02em' }}>
+                <label htmlFor="signup-code" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(56,189,248,0.85)', marginBottom: 8, letterSpacing: '0.02em' }}>
                   {tr("Código de convite", "Invite code", "Código de invitación", "邀请码")}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <Key style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(56,189,248,0.6)' }} />
                   <input
+                    id="signup-code"
                     type="text"
                     placeholder="BRILL-XXXX-XXXX"
                     value={code}
@@ -205,12 +206,13 @@ const Signup = () => {
 
               {/* Name */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>
+                <label htmlFor="signup-name" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>
                   {tr("Nome", "Name", "Nombre", "姓名")}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <User style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(255,255,255,0.35)' }} />
                   <input
+                    id="signup-name"
                     type="text"
                     placeholder={tr("Seu nome", "Your name", "Tu nombre", "您的姓名")}
                     autoComplete="name"
@@ -231,10 +233,11 @@ const Signup = () => {
 
               {/* Email */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Email</label>
+                <label htmlFor="signup-email" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Email</label>
                 <div style={{ position: 'relative' }}>
                   <Mail style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(255,255,255,0.35)' }} />
                   <input
+                    id="signup-email"
                     type="email" placeholder="name@example.com" autoComplete="email"
                     value={email} onChange={e => setEmail(e.target.value)} required disabled={isFormDisabled}
                     style={{
@@ -250,11 +253,12 @@ const Signup = () => {
 
               {/* Password */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>
+                <label htmlFor="signup-password" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>
                   {tr("Senha", "Password", "Contraseña", "密码")}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
+                    id="signup-password"
                     type={showPassword ? "text" : "password"}
                     placeholder={tr("Mín. 8 caracteres", "Min. 8 characters", "Mín. 8 caracteres", "至少8个字符")}
                     autoComplete="new-password"
