@@ -1,5 +1,5 @@
 // DashboardSidebar v13 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
-import { MessageSquare, Building2, ChevronDown, Plus, ArrowUpRight, Command, Clock, X } from "lucide-react";
+import { MessageSquare, Building2, ChevronDown, Plus, ArrowUpRight, Command, Clock, X, UserCircle2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
