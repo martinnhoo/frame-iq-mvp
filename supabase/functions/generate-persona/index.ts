@@ -135,12 +135,15 @@ Return ONLY a valid JSON object with these exact keys:
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
+        max_tokens: 2048,
         messages: [{ role: "user", content: prompt }],
       }),
     });
 
     if (!aiRes.ok) {
       const status = aiRes.status;
+      const errBody = await aiRes.text().catch(() => "");
+      console.error(`[generate-persona] Anthropic ${status}:`, errBody);
       if (status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded — try again in a moment" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -151,11 +154,14 @@ Return ONLY a valid JSON object with these exact keys:
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`AI error: ${status}`);
+      throw new Error(`AI error: ${status} — ${errBody.slice(0, 200)}`);
     }
 
     const aiData = await aiRes.json();
-    const rawText = aiData.choices?.[0]?.message?.content || "{}";
+    // Anthropic returns { content: [{ type: "text", text: "..." }] }
+    const rawText = aiData?.content?.[0]?.text
+      ?? aiData?.choices?.[0]?.message?.content
+      ?? "{}";
     const clean = rawText.replace(/```json|```/g, "").trim();
     const persona = JSON.parse(clean);
 
