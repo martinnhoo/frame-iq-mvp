@@ -1,5 +1,5 @@
 // DashboardSidebar v13 — Linear/Notion-inspired: neutral tones, always-visible icons, no color-on-color
-import { MessageSquare, Building2, ChevronDown, Plus, ArrowUpRight, Command, Clock, X } from "lucide-react";
+import { MessageSquare, Building2, ChevronDown, Plus, ArrowUpRight, Command, Clock, X, UserCircle2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -202,6 +202,7 @@ export function DashboardSidebar({
   const NAV_ITEMS = [
     { url: "/dashboard/feed",     label: "Comando",                                   icon: Command },
     { url: "/dashboard/ai",      label: pt ? "Estrategista" : es ? "Estratega" : "Strategist",    icon: MessageSquare },
+    { url: "/dashboard/persona", label: pt ? "Persona" : es ? "Persona" : "Persona", icon: UserCircle2 },
     { url: "/dashboard/history",  label: pt ? "Histórico" : es ? "Historial" : "History", icon: Clock },
     { url: "/dashboard/accounts", label: pt ? "Contas" : es ? "Cuentas" : "Accounts", icon: Building2 },
   ];
