@@ -211,7 +211,7 @@ export default function Studio() {
           await new Promise(r => setTimeout(r, POLL_INTERVAL));
           continue;
         }
-        const r = data as { status: string; results: CreativeResult[] };
+        const r = data as unknown as { status: string; results: CreativeResult[] };
         if (Array.isArray(r.results) && r.results.length > 0) {
           setResults(r.results);
         }
