@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import {
   Image as ImageIcon, Layers, Clapperboard, Mic, Captions, GitBranch, BarChart3,
   FolderOpen, ArrowRight, Sparkles, GalleryHorizontal, Video as VideoIcon,
-  ScanFace,
+  ScanFace, UserCircle2,
 } from "lucide-react";
 
 type Lang = "pt" | "en" | "es" | "zh";
