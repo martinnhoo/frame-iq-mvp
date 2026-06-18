@@ -233,6 +233,14 @@ export default function BrilliantHub() {
 
   // ── Inteligência: análise + transcrição ────────────────────────
   const intelligenceTools = [
+    { id: "persona",
+      title: lang === "pt" ? "Persona Builder" : lang === "es" ? "Constructor de Persona" : lang === "zh" ? "用户画像构建器" : "Persona Builder",
+      desc: lang === "pt" ? "Crie e gerencie personas de marca — base pra todos os criativos do Hub."
+        : lang === "es" ? "Crea y gestiona personas de marca — base para todos los creativos del Hub."
+        : lang === "zh" ? "创建和管理品牌画像 — Hub 所有创意的基础。"
+        : "Build and manage brand personas — the foundation for every Hub creative.",
+      btn: lang === "pt" ? "Abrir Persona Builder" : lang === "es" ? "Abrir Persona Builder" : lang === "zh" ? "打开画像构建器" : "Open Persona Builder",
+      icon: UserCircle2, route: "/dashboard/persona", featured: true },
     { id: "captions",
       title: lang === "pt" ? "Gerador de Legendas" : lang === "es" ? "Generador de Captions" : lang === "zh" ? "字幕生成器" : "Caption Generator",
       desc: lang === "pt" ? "Sobe imagens e ganha legendas Facebook + TikTok prontas. IA analisa e adapta ao mercado."
