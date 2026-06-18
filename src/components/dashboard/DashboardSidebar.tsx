@@ -202,6 +202,7 @@ export function DashboardSidebar({
   const NAV_ITEMS = [
     { url: "/dashboard/feed",     label: "Comando",                                   icon: Command },
     { url: "/dashboard/ai",      label: pt ? "Estrategista" : es ? "Estratega" : "Strategist",    icon: MessageSquare },
+    { url: "/dashboard/persona", label: pt ? "Persona" : es ? "Persona" : "Persona", icon: UserCircle2 },
     { url: "/dashboard/history",  label: pt ? "Histórico" : es ? "Historial" : "History", icon: Clock },
     { url: "/dashboard/accounts", label: pt ? "Contas" : es ? "Cuentas" : "Accounts", icon: Building2 },
   ];
