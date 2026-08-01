@@ -281,15 +281,15 @@ const Signup = () => {
               <div>
                 <button
                   type="submit"
-                  disabled={isFormDisabled || password.length < 8 || !code.trim()}
+                  disabled={isFormDisabled || password.length < 8}
                   style={{
                     width: '100%', height: 50, borderRadius: 12, border: 'none',
-                    cursor: isFormDisabled || password.length < 8 || !code.trim() ? 'not-allowed' : 'pointer',
-                    background: isFormDisabled || password.length < 8 || !code.trim()
+                    cursor: isFormDisabled || password.length < 8 ? 'not-allowed' : 'pointer',
+                    background: isFormDisabled || password.length < 8
                       ? 'rgba(14,165,233,0.3)'
                       : 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
                     color: '#ffffff', fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em',
-                    boxShadow: isFormDisabled || password.length < 8 || !code.trim() ? 'none' : '0 4px 24px rgba(14,165,233,0.4)',
+                    boxShadow: isFormDisabled || password.length < 8 ? 'none' : '0 4px 24px rgba(14,165,233,0.4)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     transition: 'all 0.2s',
                   }}
