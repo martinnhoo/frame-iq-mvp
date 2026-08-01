@@ -149,40 +149,40 @@ const Signup = () => {
                 {tr("Criar conta", "Create account", "Crear cuenta", "创建账号")}
               </h1>
               <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.5 }}>
-                {tr("Acesso por convite. Use o código que recebeu.", "Invite-only. Use the code you received.", "Acceso por invitación. Usa el código que recibiste.", "仅限邀请。请使用您收到的邀请码。")}
+                {tr("Crie sua conta e comece a gerar criativos.", "Create your account and start generating creatives.", "Crea tu cuenta y empieza a generar creativos.", "创建账号，开始生成创意。")}
               </p>
+            </div>
+
+            {/* Google */}
+            <button
+              type="button"
+              onClick={handleGoogleSignup}
+              disabled={loading}
+              style={{
+                width: '100%', height: 48, borderRadius: 12, marginBottom: 20,
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)',
+                color: '#ffffff', fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 0 1 0-4.22V7.05H2.18a11 11 0 0 0 0 9.9l3.66-2.84z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+              </svg>
+              {tr("Continuar com Google", "Continue with Google", "Continuar con Google", "使用 Google 继续")}
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{tr("ou", "or", "o", "或")}</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
             </div>
 
             {/* Email form */}
             <form onSubmit={handleEmailSignup} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Invite code — destacado, primeiro campo */}
-              <div>
-                <label htmlFor="signup-code" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(56,189,248,0.85)', marginBottom: 8, letterSpacing: '0.02em' }}>
-                  {tr("Código de convite", "Invite code", "Código de invitación", "邀请码")}
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Key style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: 'rgba(56,189,248,0.6)' }} />
-                  <input
-                    id="signup-code"
-                    type="text"
-                    placeholder="BRILL-XXXX-XXXX"
-                    value={code}
-                    onChange={e => setCode(e.target.value.toUpperCase())}
-                    required
-                    disabled={isFormDisabled}
-                    autoCapitalize="characters"
-                    spellCheck={false}
-                    style={{
-                      width: '100%', height: 48, borderRadius: 12, paddingLeft: 42, paddingRight: 16, boxSizing: 'border-box',
-                      background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.30)',
-                      color: '#ffffff', fontSize: 14, outline: 'none', transition: 'border-color 0.2s',
-                      fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '0.04em',
-                    }}
-                    onFocus={e => { e.currentTarget.style.borderColor = 'rgba(14,165,233,0.7)'; e.currentTarget.style.background = 'rgba(14,165,233,0.10)'; }}
-                    onBlur={e => { e.currentTarget.style.borderColor = 'rgba(14,165,233,0.30)'; e.currentTarget.style.background = 'rgba(14,165,233,0.06)'; }}
-                  />
-                </div>
-              </div>
+
 
               {/* Name */}
               <div>
