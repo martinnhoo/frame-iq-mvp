@@ -39,7 +39,19 @@
 //
 // Timeout: 130s. Vídeos 5s-720p levam ~60-90s no PiAPI.
 
-const FN_VERSION = "v12-kling30-audio-2026-08-01";
+const FN_VERSION = "v13-quota-msg-2026-08-01";
+
+// Traduz erros crus do PiAPI em mensagens acionáveis pro usuário.
+function friendlyPiapiError(raw: string): string {
+  const s = (raw || "").toLowerCase();
+  if (s.includes("credit not enough") || s.includes("quota not enough") || s.includes("freeze credit")) {
+    return "provider_no_credits: A conta do provedor de vídeo (PiAPI) está sem créditos. Recarregue o saldo em piapi.ai para voltar a gerar vídeos.";
+  }
+  if (s.includes("rate limit") || s.includes("too many requests")) {
+    return "provider_rate_limited: O provedor de vídeo está limitando as requisições. Tente novamente em alguns minutos.";
+  }
+  return raw;
+}
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getModel, type NormalizedInput, type PiapiCreateBody } from "./models.ts";
@@ -103,7 +115,7 @@ async function generateViaPiapi(body: PiapiCreateBody, resolution: string, apiKe
   if (!createRes.ok) {
     return {
       ok: false,
-      error: `piapi_create_failed: ${createText.slice(0, 800)}`,
+      error: friendlyPiapiError(`piapi_create_failed: ${createText.slice(0, 800)}`),
       provider_status: createRes.status,
     };
   }
@@ -170,7 +182,7 @@ async function generateViaPiapi(body: PiapiCreateBody, resolution: string, apiKe
       console.error(`[hub-video] PiAPI failed task ${task_id}:`, JSON.stringify(pollPayload).slice(0, 1500));
       return {
         ok: false,
-        error: `piapi_task_failed: ${errMsg}`,
+        error: friendlyPiapiError(`piapi_task_failed: ${errMsg}`),
         task_id,
       };
     }
@@ -239,7 +251,7 @@ async function createPiapiTask(body: PiapiCreateBody, apiKey: string): Promise<{
     return { ok: false, error: `network_error: ${String(e).slice(0, 200)}` };
   }
   const text = await res.text();
-  if (!res.ok) return { ok: false, error: `piapi_create_failed: ${text.slice(0, 800)}` };
+  if (!res.ok) return { ok: false, error: friendlyPiapiError(`piapi_create_failed: ${text.slice(0, 800)}`) };
   let payload: { data?: { task_id?: string }; message?: string };
   try { payload = JSON.parse(text); } catch { return { ok: false, error: `piapi_create_non_json: ${text.slice(0, 200)}` }; }
   const task_id = payload?.data?.task_id;
@@ -271,7 +283,7 @@ async function pollPiapiOnce(taskId: string, apiKey: string, resolution: string)
       || data.error?.code || data.message || data.fail_reason || payload?.message
       || "task failed (no detail provided by PiAPI)";
     console.error(`[hub-video] PiAPI failed task ${taskId}:`, JSON.stringify(payload).slice(0, 1500));
-    return { status: "failed", error: `piapi_task_failed: ${errMsg}` };
+    return { status: "failed", error: friendlyPiapiError(`piapi_task_failed: ${errMsg}`) };
   }
   if (status !== "completed") return { status: "pending" };
 
