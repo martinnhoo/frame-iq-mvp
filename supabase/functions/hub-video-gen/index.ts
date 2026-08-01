@@ -39,7 +39,7 @@
 //
 // Timeout: 130s. Vídeos 5s-720p levam ~60-90s no PiAPI.
 
-const FN_VERSION = "v11-kling26-2026-08-01";
+const FN_VERSION = "v12-kling30-audio-2026-08-01";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getModel, type NormalizedInput, type PiapiCreateBody } from "./models.ts";
