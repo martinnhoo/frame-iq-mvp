@@ -135,7 +135,7 @@ export const VIDEO_MODELS: Record<VideoModelId, VideoModelMeta> = {
     cost5s: 0.10,
     supports: {
       imageToVideo: true,
-      audio: true,
+      audio: false,
       durations: [5, 10],
       aspectRatios: ["16:9", "9:16", "1:1"],
     },
@@ -150,7 +150,7 @@ export const VIDEO_MODELS: Record<VideoModelId, VideoModelMeta> = {
     cost5s: 0.30,
     supports: {
       imageToVideo: true,
-      audio: true,
+      audio: false,
       durations: [5, 10],
       aspectRatios: ["16:9", "9:16", "1:1"],
     },
