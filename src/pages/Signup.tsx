@@ -1,20 +1,15 @@
 /**
- * Signup — invite-only.
+ * Signup — aberto ao público (Creative Hub).
  *
- * AdBrief virou portal interno: cadastro só com código de convite
- * pré-distribuído. Edge function `claim-invite-code` valida e cria a
- * conta atomicamente. Sem código válido = sem conta.
- *
- * Removido: Google OAuth (não tem como exigir código no fluxo OAuth
- * sem caixinha de surpresas), Pixel/CAPI tracking (não há campanha
- * Meta rodando pra conversão), email-guard (códigos já filtram bots),
- * planParam/billing/redirect/ref (não tem mais funil pago).
+ * Cadastro livre por email/senha ou Google. O gate de código de convite
+ * foi removido: qualquer pessoa pode criar conta.
  */
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, Mail, User, Key } from "lucide-react";
+import { Loader2, Eye, EyeOff, Mail, User } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Logo } from "@/components/Logo";
@@ -24,7 +19,6 @@ const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { t, language } = useLanguage();
@@ -32,9 +26,29 @@ const Signup = () => {
   const tr = (pt: string, en: string, es?: string, zh?: string) =>
     language === "pt" ? pt : language === "es" ? (es || en) : language === "zh" ? (zh || en) : en;
 
+  const handleGoogleSignup = async () => {
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin + "/dashboard/hub",
+        extraParams: { prompt: "select_account" },
+      });
+      if (result.error) {
+        toast.error(result.error.message);
+        setLoading(false);
+        return;
+      }
+      if (result.redirected) return;
+      navigate("/dashboard/hub");
+    } catch (e) {
+      toast.error(String(e).slice(0, 100));
+      setLoading(false);
+    }
+  };
+
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password || !name.trim() || !code.trim()) return;
+    if (!email.trim() || !password || !name.trim()) return;
 
     if (password.length < 8) {
       toast.error(tr("Senha deve ter ao menos 8 caracteres.", "Password must be at least 8 characters.", "La contraseña debe tener al menos 8 caracteres.", "密码至少需要8个字符。"));
@@ -43,65 +57,30 @@ const Signup = () => {
 
     setLoading(true);
 
-    // Edge function valida código + cria conta atomicamente.
-    // Usa fetch direto em vez de supabase.functions.invoke porque o invoke
-    // do supabase-js, quando a função retorna 4xx/5xx, joga o body em
-    // error.context (Response object) e zera o data — o que fazia o frontend
-    // perder o errCode específico ('invalid_code', 'email_taken' etc) e cair
-    // no fallback genérico. Com fetch direto, parseamos o body manualmente
-    // pra todos os status.
-    let result: { ok?: boolean; error?: string; message?: string } | null = null;
-    let httpStatus = 0;
-    try {
-      const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
-      const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-      const r = await fetch(`${SUPA_URL}/functions/v1/claim-invite-code`, {
-        method: "POST",
-        headers: {
-          "apikey": ANON_KEY,
-          "Authorization": `Bearer ${ANON_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          password,
-          name: name.trim(),
-          code: code.trim().toUpperCase(),
-        }),
-      });
-      httpStatus = r.status;
-      const text = await r.text();
-      try { result = JSON.parse(text); } catch { /* not json — server crashed */ }
-    } catch (netErr) {
-      console.error("[signup] network error:", netErr);
-    }
+    const { error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard/hub`,
+        data: { full_name: name.trim() },
+      },
+    });
 
-    if (!result?.ok) {
-      const errCode = result?.error || (httpStatus === 0 ? "network" : "unknown");
-      let msg: string;
-      if (errCode === "invalid_code") {
-        msg = tr("Código de convite inválido ou já utilizado.", "Invalid or already-used invite code.", "Código de invitación inválido o ya utilizado.", "邀请码无效或已被使用。");
-      } else if (errCode === "email_taken") {
-        msg = tr("Este email já está cadastrado.", "This email is already registered.", "Este email ya está registrado.", "此邮箱已注册。");
-      } else if (errCode === "weak_password") {
-        msg = tr("Senha deve ter ao menos 8 caracteres.", "Password must be at least 8 characters.", "La contraseña debe tener al menos 8 caracteres.", "密码至少需要8个字符。");
-      } else if (errCode === "network") {
-        msg = tr("Falha de conexão. Verifica sua internet e tenta de novo.", "Connection failed. Check your internet and try again.", "Error de conexión. Verifica tu internet e intenta de nuevo.", "连接失败。请检查您的网络后重试。");
-      } else {
-        msg = result?.message || tr("Falha ao criar conta. Tenta de novo.", "Failed to create account. Try again.", "Error al crear cuenta. Intenta de nuevo.", "创建账号失败，请重试。");
-      }
-      toast.error(msg);
+    if (error) {
+      const isDup = /already|registered|exists/i.test(error.message);
+      toast.error(
+        isDup
+          ? tr("Este email já está cadastrado.", "This email is already registered.", "Este email ya está registrado.", "此邮箱已注册。")
+          : error.message
+      );
       setLoading(false);
       return;
     }
 
-    // Conta criada. Faz login imediato com as credenciais.
-    const { error: signInErr } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-    if (signInErr) {
-      toast.success(tr("Conta criada. Faça login pra continuar.", "Account created. Sign in to continue.", "Cuenta creada. Inicia sesión para continuar.", "账号已创建，请登录继续。"));
+    // Se o projeto exigir confirmação de email, não haverá sessão ativa.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      toast.success(tr("Conta criada. Confirme seu email para continuar.", "Account created. Confirm your email to continue.", "Cuenta creada. Confirma tu email para continuar.", "账号已创建，请确认邮箱后继续。"));
       navigate("/login");
       return;
     }
@@ -109,6 +88,7 @@ const Signup = () => {
     toast.success(tr("Bem-vindo!", "Welcome!", "¡Bienvenido!", "欢迎！"));
     navigate("/dashboard/hub");
   };
+
 
   const passwordStrength = () => {
     if (!password) return { score: 0, label: "", color: "" };
