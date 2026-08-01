@@ -39,7 +39,19 @@
 //
 // Timeout: 130s. Vídeos 5s-720p levam ~60-90s no PiAPI.
 
-const FN_VERSION = "v12-kling30-audio-2026-08-01";
+const FN_VERSION = "v13-quota-msg-2026-08-01";
+
+// Traduz erros crus do PiAPI em mensagens acionáveis pro usuário.
+function friendlyPiapiError(raw: string): string {
+  const s = (raw || "").toLowerCase();
+  if (s.includes("credit not enough") || s.includes("quota not enough") || s.includes("freeze credit")) {
+    return "provider_no_credits: A conta do provedor de vídeo (PiAPI) está sem créditos. Recarregue o saldo em piapi.ai para voltar a gerar vídeos.";
+  }
+  if (s.includes("rate limit") || s.includes("too many requests")) {
+    return "provider_rate_limited: O provedor de vídeo está limitando as requisições. Tente novamente em alguns minutos.";
+  }
+  return raw;
+}
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getModel, type NormalizedInput, type PiapiCreateBody } from "./models.ts";
