@@ -338,34 +338,70 @@ export default function HubVideoGenerator() {
         }
       }
 
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/hub-video-gen`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-          "apikey": ANON_KEY,
-        },
-        body: JSON.stringify({
-          prompt: prompt.trim(),
-          image_url: providerImageUrl,
-          duration,
-          aspect_ratio: aspectRatio,
-          enable_audio: enableAudio,
-          mode,                // back-compat (server prefere model)
-          model: videoModel,   // kling-std | kling-pro | hailuo | luma
-          provider: "piapi",
-          brand_id: brandId === "none" ? null : brandId,
-          market: marketCode,
-          brand_hint: brandHint,
-        }),
-      });
-      const text = await r.text();
-      let payload: { ok?: boolean; video_url?: string; memory_id?: string; duration_s?: number; message?: string; error?: string };
-      try { payload = JSON.parse(text); } catch {
-        setError(`Resposta inválida: ${text.slice(0, 150)}`);
-        progressCtrl?.fail(`Resposta inválida: ${text.slice(0, 100)}`);
+      const basePayload = {
+        prompt: prompt.trim(),
+        image_url: providerImageUrl,
+        duration,
+        aspect_ratio: aspectRatio,
+        enable_audio: enableAudio,
+        mode,                // back-compat (server prefere model)
+        model: videoModel,   // kling-std | kling-pro | hailuo | luma
+        provider: "piapi",
+        brand_id: brandId === "none" ? null : brandId,
+        market: marketCode,
+        brand_hint: brandHint,
+      };
+
+      type VideoPayload = { ok?: boolean; status?: string; task_id?: string; video_url?: string; memory_id?: string; duration_s?: number; message?: string; error?: string };
+
+      const callFn = async (extra: Record<string, unknown>): Promise<VideoPayload | null> => {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/hub-video-gen`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "apikey": ANON_KEY,
+          },
+          body: JSON.stringify({ ...basePayload, ...extra }),
+        });
+        const raw = await res.text();
+        try { return JSON.parse(raw) as VideoPayload; } catch {
+          setError(`Resposta inválida: ${raw.slice(0, 150)}`);
+          progressCtrl?.fail(`Resposta inválida: ${raw.slice(0, 100)}`);
+          return null;
+        }
+      };
+
+      // 1) Cria a task (rápido — não estoura o timeout da edge function)
+      const created = await callFn({ action: "create" });
+      if (!created) return;
+      if (!created.ok || !created.task_id) {
+        const msg = created.message || created.error || "Falha na geração";
+        setError(msg);
+        progressCtrl?.fail(msg);
         return;
       }
+
+      // 2) Poll até completar (Kling leva 1-5 min)
+      let payload: VideoPayload = created;
+      const pollDeadline = Date.now() + 9 * 60_000;
+      while (Date.now() < pollDeadline) {
+        await new Promise(r => setTimeout(r, 6000));
+        const polled = await callFn({ action: "poll", task_id: created.task_id });
+        if (!polled) return;
+        if (polled.ok && polled.status === "pending") continue;
+        payload = polled;
+        break;
+      }
+      if (payload.status === "pending" || (!payload.video_url && payload.ok)) {
+        const msg = lang === "pt"
+          ? "O vídeo demorou demais para ficar pronto. Tenta de novo com duração menor."
+          : "The video took too long. Try again with a shorter duration.";
+        setError(msg);
+        progressCtrl?.fail(msg);
+        return;
+      }
+
       if (!payload.ok || !payload.video_url) {
         const msg = payload.message || payload.error || "Falha na geração";
         setError(msg);

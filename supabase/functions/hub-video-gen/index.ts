@@ -39,7 +39,7 @@
 //
 // Timeout: 130s. Vídeos 5s-720p levam ~60-90s no PiAPI.
 
-const FN_VERSION = "v9-multimodel-2026-05-12";
+const FN_VERSION = "v10-async-poll-2026-08-01";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getModel, type NormalizedInput, type PiapiCreateBody } from "./models.ts";
@@ -225,6 +225,75 @@ async function generateViaPiapi(body: PiapiCreateBody, resolution: string, apiKe
   };
 }
 
+// ── Async: create task (sem polling) ────────────────────────────────
+async function createPiapiTask(body: PiapiCreateBody, apiKey: string): Promise<{ ok: boolean; task_id?: string; error?: string }> {
+  console.log(`[hub-video] piapi create(async) model=${body.model} keys=${Object.keys(body.input).join(",")}`);
+  let res: Response;
+  try {
+    res = await fetch("https://api.piapi.ai/api/v1/task", {
+      method: "POST",
+      headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    return { ok: false, error: `network_error: ${String(e).slice(0, 200)}` };
+  }
+  const text = await res.text();
+  if (!res.ok) return { ok: false, error: `piapi_create_failed: ${text.slice(0, 300)}` };
+  let payload: { data?: { task_id?: string }; message?: string };
+  try { payload = JSON.parse(text); } catch { return { ok: false, error: `piapi_create_non_json: ${text.slice(0, 200)}` }; }
+  const task_id = payload?.data?.task_id;
+  if (!task_id) return { ok: false, error: `piapi_no_task_id: ${payload.message || text.slice(0, 200)}` };
+  return { ok: true, task_id };
+}
+
+// ── Async: poll uma única vez ───────────────────────────────────────
+async function pollPiapiOnce(taskId: string, apiKey: string, resolution: string): Promise<{ status: "pending" | "completed" | "failed"; result?: PiapiResult; error?: string }> {
+  let res: Response;
+  try {
+    res = await fetch(`https://api.piapi.ai/api/v1/task/${taskId}`, {
+      method: "GET",
+      headers: { "x-api-key": apiKey },
+    });
+  } catch (e) {
+    return { status: "pending", error: String(e).slice(0, 120) };
+  }
+  if (!res.ok) return { status: "pending", error: `poll_status=${res.status}` };
+  const text = await res.text();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let payload: any;
+  try { payload = JSON.parse(text); } catch { return { status: "pending" }; }
+
+  const status = payload?.data?.status;
+  if (status === "failed") {
+    const data = payload?.data || {};
+    const errMsg = data.error?.message || data.error?.detail || data.error?.raw_message
+      || data.error?.code || data.message || data.fail_reason || payload?.message
+      || "task failed (no detail provided by PiAPI)";
+    console.error(`[hub-video] PiAPI failed task ${taskId}:`, JSON.stringify(payload).slice(0, 1500));
+    return { status: "failed", error: `piapi_task_failed: ${errMsg}` };
+  }
+  if (status !== "completed") return { status: "pending" };
+
+  const out = payload?.data?.output;
+  const works = out?.works || [];
+  const firstWork = works[0]?.video;
+  const explicit = (typeof out?.video === "string" ? out.video : null)
+    || (typeof out?.video_url === "string" ? out.video_url : null)
+    || (typeof firstWork?.resource_without_watermark === "string" ? firstWork.resource_without_watermark : null)
+    || (typeof firstWork?.resource === "string" ? firstWork.resource : null);
+  const video_url = explicit || deepFindVideoUrl(out);
+  if (!video_url) {
+    console.error(`[hub-video] no_video_url. Full output:`, JSON.stringify(out));
+    return { status: "failed", error: `piapi_no_video_url_in_output: ${JSON.stringify(out).slice(0, 300)}` };
+  }
+  const duration_s = firstWork?.duration ? parseFloat(firstWork.duration) : undefined;
+  return {
+    status: "completed",
+    result: { ok: true, video_url, duration_s, resolution, task_id: taskId },
+  };
+}
+
 // ── Stub: fal.ai (Fase futura) ──────────────────────────────────────
 async function generateViaFalai(_apiKey: string, _deadline: number): Promise<PiapiResult> {
   return {
@@ -264,6 +333,8 @@ Deno.serve(async (req) => {
       brand_id = null,
       market = null,
       brand_hint = "",
+      action = "generate",      // "create" | "poll" | "generate" (legacy sync)
+      task_id: bodyTaskId = null,
     } = body as {
       prompt?: string;
       image_url?: string | null;
@@ -277,6 +348,8 @@ Deno.serve(async (req) => {
       brand_id?: string | null;
       market?: string | null;
       brand_hint?: string;
+      action?: "create" | "poll" | "generate";
+      task_id?: string | null;
     };
 
     // Resolve model: body.model > derivado do mode legacy (back-compat)
@@ -349,8 +422,48 @@ Deno.serve(async (req) => {
         aspectRatio: finalAspect,
         audio: finalAudio,
       };
-      const piapiBody = modelMeta.buildPiapiInput(input);
-      result = await generateViaPiapi(piapiBody, modelMeta.resolution, PIAPI_KEY, deadline);
+
+      // ── action=create → só cria a task e devolve task_id ───────────
+      // Kling costuma levar 2-5 min; a edge function morre em ~150s.
+      // Por isso o client cria e depois faz poll.
+      if (action === "create") {
+        const piapiBody = modelMeta.buildPiapiInput(input);
+        const created = await createPiapiTask(piapiBody, PIAPI_KEY);
+        if (!created.ok || !created.task_id) {
+          return jsonResponse({
+            _v: FN_VERSION, ok: false, error: "video_gen_failed",
+            message: created.error || "Falha ao criar task de vídeo.",
+            provider,
+          }, 502);
+        }
+        return jsonResponse({
+          _v: FN_VERSION, ok: true, status: "pending",
+          task_id: created.task_id, provider,
+          model: modelMeta.id, model_label: modelMeta.label,
+        }, 200);
+      }
+
+      // ── action=poll → checa uma vez ────────────────────────────────
+      if (action === "poll") {
+        if (!bodyTaskId) {
+          return jsonResponse({ _v: FN_VERSION, ok: false, error: "missing_task_id" }, 400);
+        }
+        const poll = await pollPiapiOnce(bodyTaskId, PIAPI_KEY, modelMeta.resolution);
+        if (poll.status === "pending") {
+          return jsonResponse({ _v: FN_VERSION, ok: true, status: "pending", task_id: bodyTaskId }, 200);
+        }
+        if (poll.status === "failed" || !poll.result?.video_url) {
+          return jsonResponse({
+            _v: FN_VERSION, ok: false, error: "video_gen_failed",
+            message: poll.error || "Falha na geração de vídeo.",
+            provider, task_id: bodyTaskId,
+          }, 502);
+        }
+        result = poll.result;
+      } else {
+        const piapiBody = modelMeta.buildPiapiInput(input);
+        result = await generateViaPiapi(piapiBody, modelMeta.resolution, PIAPI_KEY, deadline);
+      }
     } else if (provider === "falai") {
       const FAL_KEY = Deno.env.get("FAL_API_KEY");
       if (!FAL_KEY) {
@@ -375,6 +488,7 @@ Deno.serve(async (req) => {
         provider, task_id: result.task_id,
       }, 502);
     }
+
 
     // ── Download do vídeo + upload pro Supabase Storage ──────────────
     // PiAPI NÃO garante storage permanente em storage.theapi.app — URLs
