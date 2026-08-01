@@ -264,6 +264,8 @@ Deno.serve(async (req) => {
       brand_id = null,
       market = null,
       brand_hint = "",
+      action = "generate",      // "create" | "poll" | "generate" (legacy sync)
+      task_id: bodyTaskId = null,
     } = body as {
       prompt?: string;
       image_url?: string | null;
