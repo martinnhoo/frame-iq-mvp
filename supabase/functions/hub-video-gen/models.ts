@@ -49,24 +49,28 @@ export interface VideoModelMeta {
   buildPiapiInput: (input: NormalizedInput) => PiapiCreateBody;
 }
 
-// ── Kling 3.0 Standard (720p) — VERIFIED ─────────────────────────────
-// Shape testado em produção desde maio/2026. Cobre maior parte dos casos.
+// ── Kling Standard (720p) — VERIFIED ─────────────────────────────────
+// Sem áudio: version 2.6 (shape testado em produção).
+// Com áudio nativo: version 3.0 (única que aceita enable_audio no PiAPI).
 function buildKlingStd(input: NormalizedInput): PiapiCreateBody {
+  const wantsAudio = !!input.audio;
   return {
     model: "kling",
     task_type: "video_generation",
     input: {
       prompt: input.prompt,
-      version: "2.6",
+      version: wantsAudio ? "3.0" : "2.6",
       mode: "std",
       duration: input.duration,
       aspect_ratio: input.aspectRatio,
+      ...(wantsAudio ? { enable_audio: true, prefer_multi_shots: false } : {}),
       ...(input.imageUrl ? { image_url: input.imageUrl } : {}),
       ...(input.imageTailUrl ? { image_tail_url: input.imageTailUrl } : {}),
     },
     config: { service_mode: "public" },
   };
 }
+
 
 
 // ── Kling 3.0 Pro (1080p) — VERIFIED ─────────────────────────────────
@@ -135,7 +139,7 @@ export const VIDEO_MODELS: Record<VideoModelId, VideoModelMeta> = {
     cost5s: 0.10,
     supports: {
       imageToVideo: true,
-      audio: false,
+      audio: true,
       durations: [5, 10],
       aspectRatios: ["16:9", "9:16", "1:1"],
     },
@@ -150,7 +154,7 @@ export const VIDEO_MODELS: Record<VideoModelId, VideoModelMeta> = {
     cost5s: 0.30,
     supports: {
       imageToVideo: true,
-      audio: false,
+      audio: true,
       durations: [5, 10],
       aspectRatios: ["16:9", "9:16", "1:1"],
     },
