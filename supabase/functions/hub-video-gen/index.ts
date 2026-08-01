@@ -353,8 +353,48 @@ Deno.serve(async (req) => {
         aspectRatio: finalAspect,
         audio: finalAudio,
       };
-      const piapiBody = modelMeta.buildPiapiInput(input);
-      result = await generateViaPiapi(piapiBody, modelMeta.resolution, PIAPI_KEY, deadline);
+
+      // ── action=create → só cria a task e devolve task_id ───────────
+      // Kling costuma levar 2-5 min; a edge function morre em ~150s.
+      // Por isso o client cria e depois faz poll.
+      if (action === "create") {
+        const piapiBody = modelMeta.buildPiapiInput(input);
+        const created = await createPiapiTask(piapiBody, PIAPI_KEY);
+        if (!created.ok || !created.task_id) {
+          return jsonResponse({
+            _v: FN_VERSION, ok: false, error: "video_gen_failed",
+            message: created.error || "Falha ao criar task de vídeo.",
+            provider,
+          }, 502);
+        }
+        return jsonResponse({
+          _v: FN_VERSION, ok: true, status: "pending",
+          task_id: created.task_id, provider,
+          model: modelMeta.id, model_label: modelMeta.label,
+        }, 200);
+      }
+
+      // ── action=poll → checa uma vez ────────────────────────────────
+      if (action === "poll") {
+        if (!bodyTaskId) {
+          return jsonResponse({ _v: FN_VERSION, ok: false, error: "missing_task_id" }, 400);
+        }
+        const poll = await pollPiapiOnce(bodyTaskId, PIAPI_KEY, modelMeta.resolution);
+        if (poll.status === "pending") {
+          return jsonResponse({ _v: FN_VERSION, ok: true, status: "pending", task_id: bodyTaskId }, 200);
+        }
+        if (poll.status === "failed" || !poll.result?.video_url) {
+          return jsonResponse({
+            _v: FN_VERSION, ok: false, error: "video_gen_failed",
+            message: poll.error || "Falha na geração de vídeo.",
+            provider, task_id: bodyTaskId,
+          }, 502);
+        }
+        result = poll.result;
+      } else {
+        const piapiBody = modelMeta.buildPiapiInput(input);
+        result = await generateViaPiapi(piapiBody, modelMeta.resolution, PIAPI_KEY, deadline);
+      }
     } else if (provider === "falai") {
       const FAL_KEY = Deno.env.get("FAL_API_KEY");
       if (!FAL_KEY) {
@@ -379,6 +419,7 @@ Deno.serve(async (req) => {
         provider, task_id: result.task_id,
       }, 502);
     }
+
 
     // ── Download do vídeo + upload pro Supabase Storage ──────────────
     // PiAPI NÃO garante storage permanente em storage.theapi.app — URLs
