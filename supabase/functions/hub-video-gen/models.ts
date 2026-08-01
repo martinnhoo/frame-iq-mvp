@@ -57,18 +57,17 @@ function buildKlingStd(input: NormalizedInput): PiapiCreateBody {
     task_type: "video_generation",
     input: {
       prompt: input.prompt,
-      version: "3.0",
+      version: "2.6",
       mode: "std",
       duration: input.duration,
       aspect_ratio: input.aspectRatio,
-      enable_audio: input.audio,
-      prefer_multi_shots: false,
       ...(input.imageUrl ? { image_url: input.imageUrl } : {}),
       ...(input.imageTailUrl ? { image_tail_url: input.imageTailUrl } : {}),
     },
     config: { service_mode: "public" },
   };
 }
+
 
 // ── Kling 3.0 Pro (1080p) — VERIFIED ─────────────────────────────────
 // Mesmo shape, mode=pro pra 1080p.
@@ -136,7 +135,7 @@ export const VIDEO_MODELS: Record<VideoModelId, VideoModelMeta> = {
     cost5s: 0.10,
     supports: {
       imageToVideo: true,
-      audio: true,
+      audio: false,
       durations: [5, 10],
       aspectRatios: ["16:9", "9:16", "1:1"],
     },
@@ -151,7 +150,7 @@ export const VIDEO_MODELS: Record<VideoModelId, VideoModelMeta> = {
     cost5s: 0.30,
     supports: {
       imageToVideo: true,
-      audio: true,
+      audio: false,
       durations: [5, 10],
       aspectRatios: ["16:9", "9:16", "1:1"],
     },

@@ -39,7 +39,7 @@
 //
 // Timeout: 130s. Vídeos 5s-720p levam ~60-90s no PiAPI.
 
-const FN_VERSION = "v10-async-poll-2026-08-01";
+const FN_VERSION = "v11-kling26-2026-08-01";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getModel, type NormalizedInput, type PiapiCreateBody } from "./models.ts";
@@ -103,7 +103,7 @@ async function generateViaPiapi(body: PiapiCreateBody, resolution: string, apiKe
   if (!createRes.ok) {
     return {
       ok: false,
-      error: `piapi_create_failed: ${createText.slice(0, 300)}`,
+      error: `piapi_create_failed: ${createText.slice(0, 800)}`,
       provider_status: createRes.status,
     };
   }
@@ -239,7 +239,7 @@ async function createPiapiTask(body: PiapiCreateBody, apiKey: string): Promise<{
     return { ok: false, error: `network_error: ${String(e).slice(0, 200)}` };
   }
   const text = await res.text();
-  if (!res.ok) return { ok: false, error: `piapi_create_failed: ${text.slice(0, 300)}` };
+  if (!res.ok) return { ok: false, error: `piapi_create_failed: ${text.slice(0, 800)}` };
   let payload: { data?: { task_id?: string }; message?: string };
   try { payload = JSON.parse(text); } catch { return { ok: false, error: `piapi_create_non_json: ${text.slice(0, 200)}` }; }
   const task_id = payload?.data?.task_id;
