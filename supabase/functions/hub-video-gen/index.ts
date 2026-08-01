@@ -279,6 +279,8 @@ Deno.serve(async (req) => {
       brand_id?: string | null;
       market?: string | null;
       brand_hint?: string;
+      action?: "create" | "poll" | "generate";
+      task_id?: string | null;
     };
 
     // Resolve model: body.model > derivado do mode legacy (back-compat)
