@@ -31,6 +31,7 @@ import {
   type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
 import { useUserBrands } from "@/hooks/useUserBrands";
+import { useHubCredits } from "@/hooks/useHubCredits";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { addHubNotification } from "@/lib/hubNotifications";
@@ -228,6 +229,8 @@ interface VariantState {
 }
 
 export default function HubABVariations() {
+  // Plano gratuito recebe marca d'água nos criativos.
+  const { plan: hubPlan } = useHubCredits();
   // Marcas do usuário (substituem as antigas marcas fixas do Hub).
   const { brands: userBrands } = useUserBrands();
   const navigate = useNavigate();
@@ -367,6 +370,7 @@ export default function HubABVariations() {
                 licenseText: hasLicense && includeLicense ? licenseText.trim() : null,
                 logoUrl: effectiveLogoUrl && includeLogo ? effectiveLogoUrl : null,
                 logoPosition: "top-right",
+                watermark: hubPlan.watermark,
               });
             } catch (e) {
               console.warn("[ab-variants] compose failed:", e);

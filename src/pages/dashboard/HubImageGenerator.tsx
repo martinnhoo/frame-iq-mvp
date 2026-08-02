@@ -37,6 +37,7 @@ import {
   type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
 import { useUserBrands } from "@/hooks/useUserBrands";
+import { useHubCredits } from "@/hooks/useHubCredits";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { compositeElements, ASPECT_DIMS } from "@/lib/compositeElements";
@@ -323,6 +324,8 @@ function buildAutoFileName(opts: {
 const ELEMENT_MAX_BYTES = 5 * 1024 * 1024; // 5MB — Storage suporta, sem mais limite de quota
 
 export default function HubImageGenerator() {
+  // Plano gratuito recebe marca d'água nos criativos.
+  const { plan: hubPlan } = useHubCredits();
   // Marcas do usuário (substituem as antigas marcas fixas do Hub).
   const { brands: userBrands } = useUserBrands();
   const navigate = useNavigate();
@@ -726,6 +729,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
             licenseText: hasLicense && includeLicense ? licenseText.trim() : null,
             logoUrl: effectiveLogoUrl && includeLogo ? effectiveLogoUrl : null,
             logoPosition: "top-right",
+            watermark: hubPlan.watermark,
           });
           finalImageUrl = composedDataUrl;
         } catch (composeErr) {

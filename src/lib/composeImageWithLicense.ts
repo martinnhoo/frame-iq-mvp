@@ -60,6 +60,8 @@ interface ComposeOptions {
   logoUrl?: string | null;
   /** Posição do logo. Default: top-right. */
   logoPosition?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
+  /** Marca d'água do plano gratuito. */
+  watermark?: boolean;
 }
 
 export async function composeImage(
@@ -108,6 +110,36 @@ export async function composeImage(
     } catch (e) {
       console.warn("[compose] logo load failed:", e);
     }
+  }
+
+  // 2.5. Marca d'água do Free
+  // Diagonal repetida em opacidade baixa: legível o bastante pra desencorajar
+  // uso comercial, discreta o bastante pra não destruir a prévia — o objetivo
+  // é fazer o usuário querer o plano pago, não odiar o resultado.
+  if (options.watermark) {
+    const fontSize = Math.max(16, Math.round(W / 26));
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = `700 ${fontSize}px ui-sans-serif, system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(0,0,0,0.45)";
+    ctx.shadowBlur = Math.round(fontSize / 5);
+
+    const label = "AdBrief.pro";
+    const stepX = Math.round(fontSize * 9);
+    const stepY = Math.round(fontSize * 5);
+    const diag = Math.sqrt(W * W + H * H);
+
+    ctx.translate(W / 2, H / 2);
+    ctx.rotate(-Math.PI / 6);
+    for (let x = -diag / 2; x < diag / 2; x += stepX) {
+      for (let y = -diag / 2; y < diag / 2; y += stepY) {
+        ctx.fillText(label, x, y);
+      }
+    }
+    ctx.restore();
   }
 
   // 3. License disclaimer no rodapé

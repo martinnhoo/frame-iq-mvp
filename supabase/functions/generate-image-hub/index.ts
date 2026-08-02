@@ -173,7 +173,12 @@ Deno.serve(async (req) => {
     // Reserva antes de chamar a OpenAI. `low` custa 1 crédito e `high` 18 —
     // iterar layout em rascunho é 18x mais barato que finalizar.
     const plan = await getUserPlan(sb, authUser.id);
-    const creditAction = resolveImageAction(quality);
+
+    // Free gera só em rascunho. É o limite que separa o gratuito do pago e,
+    // por estar no servidor, não tem como ser contornado pelo cliente.
+    // Marca d'água sozinha seria contornável — isto não é.
+    const effectiveQuality = plan === "free" ? "low" : quality;
+    const creditAction = resolveImageAction(effectiveQuality);
     const reservation = await reserveCredits(sb, authUser.id, plan, creditAction);
     if (!reservation.ok) return insufficientCreditsResponse(reservation, cors);
     pendingReservationId = reservation.reservation_id ?? null;
@@ -240,7 +245,7 @@ Deno.serve(async (req) => {
 
         fd.append("prompt", finalPrompt);
         fd.append("size", size);
-        fd.append("quality", quality);
+        fd.append("quality", effectiveQuality);
         fd.append("n", "1");
         if (transparent) {
           fd.append("background", "transparent");
@@ -262,7 +267,7 @@ Deno.serve(async (req) => {
             model: "gpt-image-2",
             prompt: finalPrompt,
             size,
-            quality,
+            quality: effectiveQuality,
             n: 1,
             moderation: "low",
             ...(transparent ? { background: "transparent", output_format: "png" } : {}),
@@ -491,7 +496,11 @@ Deno.serve(async (req) => {
       prompt: userPrompt,
       revised_prompt: revisedPrompt,
       final_prompt: finalPrompt,
-      aspect_ratio, size, quality,
+      aspect_ratio, size,
+      quality: effectiveQuality,
+      quality_requested: quality,
+      downgraded: effectiveQuality !== quality,
+      watermark: plan === "free",
       model_used: "gpt-image-2",
       brand_id: brand_id || null,
       market: market || null,

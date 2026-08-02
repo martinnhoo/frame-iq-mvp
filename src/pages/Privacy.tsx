@@ -31,7 +31,8 @@ const Privacy = () => (
           <li><strong>Account data:</strong> Name, email address, password (hashed)</li>
           <li><strong>Profile data:</strong> Preferred language, market, onboarding preferences</li>
           <li><strong>Payment data:</strong> Processed by our payment provider (Stripe). We do not store card numbers</li>
-          <li><strong>Content:</strong> Videos, scripts, and creative assets you upload for analysis or processing</li>
+          <li><strong>Brand data:</strong> Brand name, written preferences and guidelines, logo, and reference images you upload</li>
+          <li><strong>Content:</strong> Prompts, scripts and creative assets you upload or generate</li>
         </ul>
 
         <h3 className="font-semibold text-foreground/80">2.2 Information Collected Automatically</h3>
@@ -46,26 +47,26 @@ const Privacy = () => (
           <li>Provide, maintain, and improve the Service</li>
           <li>Process transactions and manage subscriptions</li>
           <li>Send transactional emails (welcome, password reset, usage alerts)</li>
-          <li>Generate AI-powered analyses and creative outputs</li>
-          <li>Build your personalized AI profile to improve recommendations</li>
-          <li>Monitor usage for billing and rate limiting</li>
+          <li>Generate creative assets (images, videos, voiceovers, captions, scripts)</li>
+          <li>Apply your saved brand context to generations</li>
+          <li>Meter credit consumption for billing, usage limits and abuse prevention</li>
           <li>Detect and prevent fraud or abuse</li>
         </ul>
 
-        <h2 className="text-lg font-semibold text-foreground">4. AI Processing</h2>
-        <p>Content you upload is processed by AI models to provide analyses, translations, and creative outputs. We use Anthropic Claude for AI-powered chat and analysis. Uploaded content is processed in real-time and is not used to train third-party AI models. Anonymized, aggregated usage patterns may be used to improve our service.</p>
-
-        <h2 className="text-lg font-semibold text-foreground">5. Meta Ads & Meta Ads API Integration</h2>
-        <p>AdBrief integrates with the Meta Ads API and Meta Ads API to allow users to connect their ad accounts and view campaign performance data within the platform.</p>
-        <p><strong>When you connect your Meta Ads or Google Ads account:</strong></p>
+        <h2 className="text-lg font-semibold text-foreground">4. AI Processing and Sub-Processors</h2>
+        <p>To generate content, we transmit your prompts and — where relevant — your uploaded brand materials to third-party AI providers acting as our sub-processors:</p>
         <ul className="list-disc pl-6 space-y-1">
-          <li>We access campaign data, ad performance metrics, creatives, and time series data solely to display insights within your AdBrief dashboard</li>
-          <li>We use OAuth 2.0 for secure authentication — we never store your Google or Meta password</li>
-          <li>Ad platform data is used only to provide the AdBrief service and is never sold or shared with third parties</li>
-          <li>You can disconnect your ad accounts at any time from the Accounts page in your dashboard</li>
-          <li>OAuth tokens are stored securely and encrypted at rest</li>
+          <li><strong>OpenAI</strong> — image generation, transcription, captions</li>
+          <li><strong>PiAPI</strong> (Kling, and other video models) — video generation</li>
+          <li><strong>Fish Audio</strong> — voice generation</li>
+          <li><strong>Bria</strong> — background removal and image editing</li>
+          <li><strong>Anthropic</strong> — text generation (scripts, hooks, copy)</li>
         </ul>
-        <p>AdBrief's use of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google API Services User Data Policy</a>, including the Limited Use requirements. We do not use Google user data for serving advertisements, and we do not allow humans to read Google user data unless you have explicitly given us permission, it is necessary for security purposes, or we are required to do so by law.</p>
+        <p>Each provider processes your input under its own terms and privacy policy. We transmit only what is needed for the requested generation. We do not use your brand materials or generated assets to train any model, and we do not sell your data.</p>
+        <p>Generated assets are stored in our infrastructure so you can access them in your library. You can delete them at any time.</p>
+
+        <h2 className="text-lg font-semibold text-foreground">5. Ad Platform Connections</h2>
+        <p>AdBrief no longer requires or requests access to your advertising accounts. Any ad platform connection previously authorised is inactive and no campaign data is being collected. If you connected an account in the past, you may remove it from the Accounts page, and you can request deletion of any retained data using the contact details in Section 15.</p>
 
         <h2 className="text-lg font-semibold text-foreground">6. Data Sharing</h2>
         <p>We do not sell your personal data. We share data only with:</p>

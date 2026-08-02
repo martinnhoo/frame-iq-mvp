@@ -24,6 +24,7 @@ import {
   type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
 import { useUserBrands } from "@/hooks/useUserBrands";
+import { useHubCredits } from "@/hooks/useHubCredits";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
 import { startGenProgress, type GenProgressController } from "@/lib/genProgress";
@@ -100,6 +101,8 @@ interface SlideResult {
 }
 
 export default function HubCarousel() {
+  // Plano gratuito recebe marca d'água nos criativos.
+  const { plan: hubPlan } = useHubCredits();
   // Marcas do usuário (substituem as antigas marcas fixas do Hub).
   const { brands: userBrands } = useUserBrands();
   const navigate = useNavigate();
@@ -236,6 +239,7 @@ export default function HubCarousel() {
               logoUrl: effectiveLogoUrl && includeLogo ? effectiveLogoUrl : null,
               licenseText: hasLicense && includeLicense ? licenseText.trim() : null,
               logoPosition: "top-right",
+              watermark: hubPlan.watermark,
             });
             return { ...s, image_url: composed };
           } catch { return s; }
