@@ -9,7 +9,7 @@
 // license_text }. A função injeta brand_hint no início e instrução
 // pra reservar rodapé pro disclaimer no fim do prompt.
 
-const FN_VERSION = "v21-storage-output-2026-05-06";
+const FN_VERSION = "v22-2026-08-02-metering";
 
 // Timeout explícito na chamada OpenAI. Supabase Edge Functions matam
 // requests > 150s com a mensagem 'Request idle timeout limit (150s)
@@ -25,6 +25,9 @@ import {
 } from "../_shared/hub-credits.ts";
 
 const cors = {
+  // Versão do deploy em todas as respostas — torna possível
+  // verificar de fora o que realmente está no ar.
+  "x-fn-version": FN_VERSION,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",

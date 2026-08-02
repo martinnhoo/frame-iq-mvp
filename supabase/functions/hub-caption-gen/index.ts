@@ -13,12 +13,15 @@
 //
 // Idioma das legendas: deriva de market (BR=pt-BR, MX/CO/PE=es, US=en, IN=hinglish).
 
-const FN_VERSION = "v8-tiktok-faithful-not-descriptive-2026-05-08";
+const FN_VERSION = "v9-2026-08-02-metering";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadBrandContext, buildBrandPromptBlock } from "../_shared/brand-context.ts";
 
 const cors = {
+  // Versão do deploy em todas as respostas — torna possível
+  // verificar de fora o que realmente está no ar.
+  "x-fn-version": FN_VERSION,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",

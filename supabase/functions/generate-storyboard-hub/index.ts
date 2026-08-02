@@ -15,7 +15,7 @@
 // Output esperado: 3-8 imagens visualmente coerentes que o user
 // pode baixar e juntar num editor de vídeo externo pra gerar o ad.
 
-const FN_VERSION = "v2-storyboard-concurrency-2026-05-07";
+const FN_VERSION = "v3-2026-08-02-metering";
 
 // Cap de concorrência pro OpenAI gpt-image-2.
 // OpenAI Tier 2 (verificado): 50 req/min. Cap em 5 paralelos ainda
@@ -30,6 +30,9 @@ import {
 } from "../_shared/hub-credits.ts";
 
 const cors = {
+  // Versão do deploy em todas as respostas — torna possível
+  // verificar de fora o que realmente está no ar.
+  "x-fn-version": FN_VERSION,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",

@@ -30,9 +30,12 @@ import {
   insufficientCreditsResponse, getUserPlan,
 } from "../_shared/hub-credits.ts";
 
-const FN_VERSION = "v2-fish-audio-2026-08-02";
+const FN_VERSION = "v3-2026-08-02-metering";
 
 const cors = {
+  // Versão do deploy em todas as respostas — torna possível
+  // verificar de fora o que realmente está no ar.
+  "x-fn-version": FN_VERSION,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };

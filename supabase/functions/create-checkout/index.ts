@@ -2,7 +2,13 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 // create-checkout v3 — proteção anti-trial-abuse: disposable email, Stripe history, IP velocity
 
+// Versão do deploy — permite verificar de fora o que está no ar.
+const FN_VERSION = "v2-2026-08-02-metering";
+
 const corsHeaders = {
+  // Versão do deploy em todas as respostas — torna possível
+  // verificar de fora o que realmente está no ar.
+  "x-fn-version": FN_VERSION,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };

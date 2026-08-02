@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v14-angle-distribution-2026-05-08";
+const FN_VERSION = "v15-2026-08-02-metering";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -22,6 +22,9 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadBrandContext, buildBrandPromptBlock } from "../_shared/brand-context.ts";
 
 const cors = {
+  // Versão do deploy em todas as respostas — torna possível
+  // verificar de fora o que realmente está no ar.
+  "x-fn-version": FN_VERSION,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",

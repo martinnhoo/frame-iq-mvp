@@ -39,7 +39,7 @@
 //
 // Timeout: 130s. Vídeos 5s-720p levam ~60-90s no PiAPI.
 
-const FN_VERSION = "v13-quota-msg-2026-08-01";
+const FN_VERSION = "v14-2026-08-02-metering";
 
 // Traduz erros crus do PiAPI em mensagens acionáveis pro usuário.
 function friendlyPiapiError(raw: string): string {
@@ -81,6 +81,9 @@ async function refundTaskCredits(sb: any, taskId: string): Promise<void> {
 }
 
 const cors = {
+  // Versão do deploy em todas as respostas — torna possível
+  // verificar de fora o que realmente está no ar.
+  "x-fn-version": FN_VERSION,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
