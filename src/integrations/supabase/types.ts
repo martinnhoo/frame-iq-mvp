@@ -2393,6 +2393,168 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_campaign_redemptions: {
+        Row: {
+          code: string
+          currency: string
+          full_price_at: string | null
+          id: string
+          intro_months: number
+          plan: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          currency: string
+          full_price_at?: string | null
+          id?: string
+          intro_months: number
+          plan: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          currency?: string
+          full_price_at?: string | null
+          id?: string
+          intro_months?: number
+          plan?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_campaign_redemptions_code_fkey"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "hub_campaign_stats"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "hub_campaign_redemptions_code_fkey"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "hub_campaigns"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      hub_campaigns: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          ends_at: string | null
+          intro_months: number
+          intro_price_brl: number | null
+          intro_price_usd: number | null
+          label: string
+          max_redemptions: number | null
+          plan: string
+          redeemed: number
+          source: string | null
+          starts_at: string
+          stripe_promotion_code_brl: string | null
+          stripe_promotion_code_usd: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          ends_at?: string | null
+          intro_months?: number
+          intro_price_brl?: number | null
+          intro_price_usd?: number | null
+          label: string
+          max_redemptions?: number | null
+          plan?: string
+          redeemed?: number
+          source?: string | null
+          starts_at?: string
+          stripe_promotion_code_brl?: string | null
+          stripe_promotion_code_usd?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          ends_at?: string | null
+          intro_months?: number
+          intro_price_brl?: number | null
+          intro_price_usd?: number | null
+          label?: string
+          max_redemptions?: number | null
+          plan?: string
+          redeemed?: number
+          source?: string | null
+          starts_at?: string
+          stripe_promotion_code_brl?: string | null
+          stripe_promotion_code_usd?: string | null
+        }
+        Relationships: []
+      }
+      hub_credit_ledger: {
+        Row: {
+          action: string
+          created_at: string
+          credits: number
+          id: string
+          ref_id: string | null
+          settled_at: string | null
+          state: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          credits: number
+          id?: string
+          ref_id?: string | null
+          settled_at?: string | null
+          state?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          credits?: number
+          id?: string
+          ref_id?: string | null
+          settled_at?: string | null
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hub_credit_packs: {
+        Row: {
+          created_at: string
+          credits: number
+          expires_at: string
+          id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          expires_at?: string
+          id?: string
+          source?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          expires_at?: string
+          id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hub_elements: {
         Row: {
           byte_size: number | null
@@ -2456,6 +2618,42 @@ export type Database = {
           is_official?: boolean | null
           locale?: string | null
           score?: number | null
+        }
+        Relationships: []
+      }
+      hub_plan_config: {
+        Row: {
+          max_concurrent: number
+          max_videos_day: number | null
+          max_videos_month: number | null
+          monthly_credits: number
+          plan: string
+          price_brl: number | null
+          price_usd: number | null
+          renews: boolean
+          updated_at: string
+        }
+        Insert: {
+          max_concurrent?: number
+          max_videos_day?: number | null
+          max_videos_month?: number | null
+          monthly_credits: number
+          plan: string
+          price_brl?: number | null
+          price_usd?: number | null
+          renews?: boolean
+          updated_at?: string
+        }
+        Update: {
+          max_concurrent?: number
+          max_videos_day?: number | null
+          max_videos_month?: number | null
+          monthly_credits?: number
+          plan?: string
+          price_brl?: number | null
+          price_usd?: number | null
+          renews?: boolean
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3220,6 +3418,30 @@ export type Database = {
           },
         ]
       }
+      provider_balance_log: {
+        Row: {
+          balance_usd: number
+          created_at: string
+          id: number
+          level: string
+          provider: string
+        }
+        Insert: {
+          balance_usd: number
+          created_at?: string
+          id?: number
+          level: string
+          provider: string
+        }
+        Update: {
+          balance_usd?: number
+          created_at?: string
+          id?: number
+          level?: string
+          provider?: string
+        }
+        Relationships: []
+      }
       referral_claims: {
         Row: {
           bonus_granted: number | null
@@ -3701,6 +3923,8 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          logo_url: string | null
+          markets: string[] | null
           name: string
           notes: string | null
           updated_at: string | null
@@ -3709,6 +3933,8 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          logo_url?: string | null
+          markets?: string[] | null
           name: string
           notes?: string | null
           updated_at?: string | null
@@ -3717,6 +3943,8 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          logo_url?: string | null
+          markets?: string[] | null
           name?: string
           notes?: string | null
           updated_at?: string | null
@@ -3941,6 +4169,19 @@ export type Database = {
           },
         ]
       }
+      hub_campaign_stats: {
+        Row: {
+          ainda_no_desconto: number | null
+          code: string | null
+          ja_no_preco_cheio: number | null
+          label: string | null
+          max_redemptions: number | null
+          primeiro_resgate: string | null
+          redeemed: number | null
+          ultimo_resgate: string | null
+        }
+        Relationships: []
+      }
       pending_rollback_checks: {
         Row: {
           account_id: string | null
@@ -4057,6 +4298,36 @@ export type Database = {
       expire_stale_decisions: { Args: never; Returns: undefined }
       generate_referral_code: { Args: never; Returns: string }
       get_credit_balance: { Args: { p_user_id: string }; Returns: Json }
+      hub_credit_balance: {
+        Args: { p_user: string }
+        Returns: {
+          balance: number
+          pack_credits: number
+          plan_credits: number
+          used: number
+        }[]
+      }
+      hub_redeem_campaign: {
+        Args: { p_code: string; p_currency: string; p_user: string }
+        Returns: Json
+      }
+      hub_reserve_credits: {
+        Args: { p_action: string; p_credits: number; p_user: string }
+        Returns: Json
+      }
+      hub_sweep_stale_reservations: { Args: never; Returns: number }
+      hub_validate_campaign: {
+        Args: { p_code: string; p_user: string }
+        Returns: Json
+      }
+      hub_video_usage: {
+        Args: { p_user: string }
+        Returns: {
+          day_count: number
+          in_flight: number
+          month_count: number
+        }[]
+      }
       increment_chat_usage: {
         Args: {
           p_daily_cap: number
