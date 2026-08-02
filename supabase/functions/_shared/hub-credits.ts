@@ -279,7 +279,7 @@ export function insufficientCreditsResponse(
 export async function getUserPlan(sb: any, userId: string): Promise<string> {
   try {
     const { data } = await sb
-      .from("user_profiles").select("plan").eq("id", userId).maybeSingle();
+      .from("profiles").select("plan").eq("id", userId).maybeSingle();
     return normalizeHubPlan(data?.plan);
   } catch {
     return "free";

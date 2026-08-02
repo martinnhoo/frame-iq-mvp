@@ -43,8 +43,10 @@ export function UsageBar({ userId, plan }: Props) {
   const pt = language === "pt";
   const es = language === "es";
 
-  // ── Studio plan → premium badge ──────────────────────────────────────────
-  const isStudio = plan === "studio" || plan === "scale";
+  // Studio deixou de ser ilimitado em 02/08/2026 — agora tem pool como todos.
+  // O badge premium foi removido junto: mostrar "sem limites" para um plano
+  // que tem teto seria mentir para o cliente na tela.
+  const isStudio = false;
   if (isStudio) {
     return (
       <>
@@ -89,12 +91,26 @@ export function UsageBar({ userId, plan }: Props) {
   const fetchUsage = useCallback(async () => {
     if (!userId) return;
     try {
-      const { data } = await supabase.functions.invoke("check-usage", {
-        body: { user_id: userId },
-      });
-      if (data?.credits) setUsage(data.credits);
+      // Saldo autoritativo do Hub: pool do plano + pacotes − consumo do ciclo.
+      const { data, error } = await (supabase
+        .rpc("hub_credit_balance" as any, { p_user: userId }) as any);
+      if (!error && data) {
+        const row = Array.isArray(data) ? data[0] : data;
+        if (row) {
+          const pool = Number(row.plan_credits) || 0;
+          const packs = Number(row.pack_credits) || 0;
+          const used = Number(row.used) || 0;
+          setUsage({
+            total: pool + packs,
+            used,
+            bonus: packs,
+            remaining: Number(row.balance) || 0,
+            pool,
+          });
+        }
+      }
     } catch {
-      // silent
+      // silencioso: a barra é informativa, o servidor é quem decide de fato
     } finally {
       setLoading(false);
     }
@@ -135,7 +151,11 @@ export function UsageBar({ userId, plan }: Props) {
   useEffect(() => {
     const handler = () => fetchUsage();
     window.addEventListener("adbrief:credits-updated", handler);
-    return () => window.removeEventListener("adbrief:credits-updated", handler);
+    window.addEventListener("hub-credits-spent", handler);
+    return () => {
+      window.removeEventListener("adbrief:credits-updated", handler);
+      window.removeEventListener("hub-credits-spent", handler);
+    };
   }, [fetchUsage]);
 
   // Fallback: if API returned 0/0, use plan's pool
@@ -154,10 +174,16 @@ export function UsageBar({ userId, plan }: Props) {
   const labelColor = isEmpty ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.55)";
 
   const isFree = !plan || plan === "free" || plan === "trial";
-  const planLabel = plan === "maker" ? "Maker" : plan === "pro" ? "Pro" : "Free";
+  const planLabel =
+    plan === "studio" || plan === "scale" ? "Studio"
+    : plan === "pro" || plan === "starter" ? "Pro"
+    : plan === "creator" || plan === "maker" ? "Creator"
+    : "Free";
 
   const openUpgrade = () => {
-    window.dispatchEvent(new CustomEvent("adbrief:open-upgrade"));
+    // A página de planos mostra saldo, tabela de custos e campo de cupom —
+    // é mais útil que o modal antigo, que só listava preços.
+    window.location.href = "/dashboard/plans";
   };
 
   if (loading && !usage) {
@@ -191,7 +217,12 @@ export function UsageBar({ userId, plan }: Props) {
             fontSize: 11.5, fontWeight: 500,
             color: labelColor, fontFamily: F,
           }}>
-            {{ pt: "Uso mensal", es: "Uso mensual", en: "Monthly usage" }[language] || "Monthly usage"}
+            <strong style={{ color: "rgba(255,255,255,0.82)", fontWeight: 700 }}>
+              {remaining}
+            </strong>
+            {" "}
+            {{ pt: "créditos", es: "créditos", en: "credits" }[language] || "credits"}
+            <span style={{ opacity: 0.5 }}> · {planLabel}</span>
           </span>
           <span style={{
             fontSize: 12, fontWeight: 600,

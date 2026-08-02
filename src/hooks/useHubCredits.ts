@@ -42,7 +42,7 @@ export function useHubCredits(): HubCreditsState {
 
       const [{ data: bal }, { data: profile }] = await Promise.all([
         (supabase.rpc("hub_credit_balance" as any, { p_user: user.id }) as any),
-        (supabase.from("user_profiles" as any).select("plan").eq("id", user.id).maybeSingle() as any),
+        (supabase.from("profiles" as any).select("plan").eq("id", user.id).maybeSingle() as any),
       ]);
 
       const row = Array.isArray(bal) ? bal[0] : bal;
