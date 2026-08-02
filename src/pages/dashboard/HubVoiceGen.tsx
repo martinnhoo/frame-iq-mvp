@@ -96,7 +96,13 @@ export default function HubVoiceGen() {
     setError(null);
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("hub-voice-gen", {
-        body: { action: "voices", language, query: query.trim() },
+        body: {
+          action: "voices",
+          language,
+          query: query.trim(),
+          // A aba vira consulta por tag no Fish, não peneira local.
+          use_case: useCase === "todos" ? "" : useCase,
+        },
       });
       if (fnErr) throw fnErr;
       if (!data?.ok) throw new Error(data?.message || "Falha ao carregar vozes");
@@ -107,17 +113,17 @@ export default function HubVoiceGen() {
     } finally {
       setLoadingVoices(false);
     }
-  }, [language, query]);
+  }, [language, query, useCase]);
 
   useEffect(() => {
     const t = setTimeout(() => { void loadVoices(); }, query ? 400 : 0);
     return () => clearTimeout(t);
   }, [loadVoices, query]);
 
-  const filtered = useMemo(() => voices.filter(v =>
-    (useCase === "todos" || v.useCase === useCase) &&
-    (gender === "all" || v.gender === gender)
-  ), [voices, useCase, gender]);
+  // Só o gênero filtra local — o uso já foi consultado no servidor.
+  const filtered = useMemo(
+    () => voices.filter(v => gender === "all" || v.gender === gender),
+    [voices, gender]);
 
   const selected = useMemo(
     () => voices.find(v => v.id === selectedId) || null, [voices, selectedId]);

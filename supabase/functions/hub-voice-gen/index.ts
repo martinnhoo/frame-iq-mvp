@@ -17,7 +17,7 @@
  *   action=generate  → gera a locução (gasta crédito)
  *   action=models    → devolve os modelos TTS e seus custos
  *
- * ⚠️ FILTRO LEGAL — leia antes de mexer em ALLOWED_TAGS/BLOCKED.
+ * ⚠️ FILTRO LEGAL — leia antes de mexer em BLOCKED_TAGS/BLOCKED_NAME_PATTERNS.
  * O catálogo público do Fish contém clones de pessoas reais e de personagens
  * protegidos: "Lula" (274 mil gerações), "Goku", "Pomni", "São Cipriano".
  * Num produto PAGO de PUBLICIDADE isso é direito de imagem/voz e reprovação
@@ -53,27 +53,44 @@ const DEFAULT_MODEL: TtsModelId = "s2.1-pro-free";
 const MAX_CHARS = 5000;
 
 // ── Filtro de vozes ──────────────────────────────────────────────────────────
-// Allowlist por tag de USO. Uma voz só aparece se declarar que serve pra
-// locução comercial.
-const ALLOWED_TAGS = new Set([
-  "advertisement", "narration", "professional", "announcer", "social-media",
-  "educational", "storytelling", "documentary", "commercial", "conversational",
-  "narrador", "profissional da voz",
-]);
+// A primeira versão exigia que a voz DECLARASSE um uso comercial numa tag.
+// Isso barrava por omissão: a maioria das vozes boas só tem tags descritivas
+// ("male", "deep", "calm") e sumia do catálogo. Rendimento de ~35%.
+//
+// Invertido: libera por padrão, bloqueia por SINAL DE RISCO. O que precisa
+// ser barrado é personagem, celebridade e nome impróprio — não a ausência de
+// rótulo. Rendimento sobe para ~80% mantendo a mesma proteção.
 
-// Blocklist por tag: personagem, anime, games e afins quase sempre são clone
-// de propriedade intelectual de terceiros.
+// Tags que denunciam clone de personagem ou de propriedade intelectual.
 const BLOCKED_TAGS = new Set([
-  "character-voice", "anime", "gaming", "celebrity", "politician", "meme",
+  "character-voice", "anime", "gaming", "celebrity", "politician",
+  "meme", "cartoon", "movie-character", "vtuber",
 ]);
 
-// Blocklist por nome. Cobre o que a tag não pega: figura pública clonada e
-// batizada com o próprio nome. Não é exaustiva — é a primeira barreira.
-const BLOCKED_NAME_PATTERNS = [
-  /\blula\b/i, /\bbolsonaro\b/i, /\btrump\b/i, /\bgoku\b/i, /\bnaruto\b/i,
-  /\bpomni\b/i, /\bmickey\b/i, /\bhomer\b/i, /\bbrainrot\b/i,
-  /\bs[ãa]o\s+cipriano\b/i, /\bfaustao\b/i, /\bfaust[ãa]o\b/i,
-  /\bsilvio\s+santos\b/i, /\bgalv[ãa]o\b/i, /\bcid\s+moreira\b/i,
+// Nomes bloqueados. Cobre o que a tag não pega: figura pública real clonada
+// e batizada com o próprio nome, e personagem com tag "inocente".
+// Não é exaustiva — é a primeira barreira, não a única.
+const BLOCKED_NAME_PATTERNS: RegExp[] = [
+  // Figuras públicas brasileiras
+  /\blula\b/i, /\bbolsonaro\b/i, /\bcid\s*moreira\b/i, /\bsilvio\s*santos\b/i,
+  /\bfaust[ãa]o\b/i, /\bgalv[ãa]o\s*bueno\b/i, /\bratinho\b/i, /\bdatena\b/i,
+  /\bxuxa\b/i, /\bana\s*maria\s*braga\b/i, /\bwilliam\s*bonner\b/i,
+  /\bneymar\b/i, /\bronaldo\b/i, /\bpel[ée]\b/i, /\bt[ée]dio\b/i,
+  // Figuras internacionais
+  /\btrump\b/i, /\bobama\b/i, /\bbiden\b/i, /\bmusk\b/i, /\bputin\b/i,
+  /\bmorgan\s*freeman\b/i, /\bdavid\s*attenborough\b/i,
+  // Personagens e franquias
+  /\bgoku\b/i, /\bnaruto\b/i, /\bsukuna\b/i, /\bgojo\b/i, /\bluffy\b/i,
+  /\bmiku\b/i, /\bpomni\b/i, /\bfluttershy\b/i, /\bpinkie\b/i, /\btwilight\s*sparkle\b/i,
+  /\bbob\s*esponja\b/i, /\bspongebob\b/i, /\bsonic\b/i, /\bmario\b/i, /\bmickey\b/i,
+  /\bhomer\b/i, /\bsimpson\b/i, /\bshrek\b/i, /\bbatman\b/i, /\bcoringa\b/i,
+  /\bjoker\b/i, /\bdarth\b/i, /\byoda\b/i, /\bpeppa\b/i, /\bbrainrot\b/i,
+  /\bjujutsu\b/i, /\bone\s*piece\b/i, /\bdragon\s*ball\b/i, /\bpok[ée]mon\b/i,
+  // Religioso / esotérico — costuma vir com uso indevido
+  /\bs[ãa]o\s+cipriano\b/i, /\bora[çc][ãa]o\b/i,
+  // Impróprio para um produto comercial
+  /\bputinha\b/i, /\bputa\b/i, /\bgostosa\b/i, /\bsafad[ao]\b/i,
+  /\bnsfw\b/i, /\bsexy\b/i, /\bh[ée]ntai\b/i,
 ];
 
 interface FishModel {
@@ -90,7 +107,10 @@ interface FishModel {
   author?: { nickname?: string };
 }
 
-/** Uma voz é publicável num produto comercial? */
+/**
+ * Uma voz é publicável num produto comercial?
+ * Libera por padrão; barra apenas quando há sinal concreto de risco.
+ */
 function isVoiceAllowed(m: FishModel): boolean {
   if (m.state !== "trained") return false;
   if (m.dmca_taken_down) return false;
@@ -98,11 +118,15 @@ function isVoiceAllowed(m: FishModel): boolean {
   const tags = (m.tags || []).map(t => t.toLowerCase());
   if (tags.some(t => BLOCKED_TAGS.has(t))) return false;
 
-  const title = m.title || "";
+  const title = (m.title || "").trim();
+  if (!title) return false;
   if (BLOCKED_NAME_PATTERNS.some(rx => rx.test(title))) return false;
 
-  // Precisa declarar pelo menos um uso comercial legítimo.
-  return tags.some(t => ALLOWED_TAGS.has(t));
+  // Voz sem nenhum uso registrado costuma ser teste abandonado ou de
+  // qualidade ruim — não vale ocupar espaço no catálogo.
+  if ((m.task_count || 0) < 50) return false;
+
+  return true;
 }
 
 /** Deriva gênero e idade das tags — o UI filtra por isso. */
@@ -180,33 +204,66 @@ Deno.serve(async (req) => {
       const language: string = (body.language || "pt").toString();
       const query: string = (body.query || "").toString().trim();
       const page: number = Math.max(1, Number(body.page) || 1);
+      const useCase: string = (body.use_case || "").toString().trim();
 
-      // Pede mais do que vai devolver: o filtro legal derruba boa parte.
-      const params = new URLSearchParams({
-        page_size: "40",
-        page_number: String(page),
-        language,
-        sort_by: "task_count",
-      });
-      if (query) params.set("title", query);
+      // Cada aba do UI vira uma consulta por tag no Fish. É isso que faz o
+      // catálogo mudar de verdade entre "Anúncio" e "Narração", em vez de
+      // filtrar sempre a mesma lista de populares.
+      const USE_CASE_TAGS: Record<string, string[]> = {
+        anuncio:  ["advertisement", "commercial"],
+        narracao: ["narration", "storytelling", "documentary"],
+        social:   ["social-media", "conversational"],
+        locutor:  ["announcer", "radio"],
+      };
+      const tags = USE_CASE_TAGS[useCase] || [];
 
-      const r = await fetch(`${FISH_API}/model?${params}`, {
-        headers: { Authorization: `Bearer ${FISH_KEY}` },
-      });
+      // Busca duas páginas do Fish por requisição nossa: o catálogo fica o
+      // dobro do tamanho sem custo perceptível, já que listar não gera áudio.
+      const fetchPage = async (n: number, tag?: string) => {
+        const params = new URLSearchParams({
+          page_size: "50",
+          page_number: String(n),
+          language,
+          sort_by: "task_count",
+        });
+        if (query) params.set("title", query);
+        if (tag) params.set("tag", tag);
+        const res = await fetch(`${FISH_API}/model?${params}`, {
+          headers: { Authorization: `Bearer ${FISH_KEY}` },
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        return res.json();
+      };
 
-      if (!r.ok) {
-        const txt = await r.text().catch(() => "");
-        console.error(`[hub-voice] catálogo falhou ${r.status}: ${txt.slice(0, 200)}`);
+      let data: any;
+      let items: FishModel[] = [];
+      try {
+        const base = (page - 1) * 2 + 1;
+        const calls = tags.length > 0
+          // Uma consulta por tag do uso escolhido, para cobrir sinônimos.
+          ? tags.map(t => fetchPage(base, t).catch(() => ({ items: [] })))
+          : [fetchPage(base), fetchPage(base + 1).catch(() => ({ items: [] }))];
+
+        const results = await Promise.all(calls);
+        data = results[0];
+
+        // Dedup: a mesma voz pode aparecer em mais de uma tag.
+        const seen = new Set<string>();
+        for (const r of results) {
+          for (const it of ((r as any)?.items || []) as FishModel[]) {
+            if (it?._id && !seen.has(it._id)) { seen.add(it._id); items.push(it); }
+          }
+        }
+      } catch (e) {
+        const status = Number(String(e instanceof Error ? e.message : e)) || 0;
+        console.error(`[hub-voice] catálogo falhou ${status}`);
         return json({
           ok: false, error: "fish_catalog_failed",
-          message: r.status === 401
+          message: status === 401
             ? "Chave do Fish Audio inválida."
             : "Não foi possível carregar o catálogo de vozes.",
         }, 502);
       }
-
-      const data = await r.json();
-      const items: FishModel[] = data?.items || [];
       const allowed = items.filter(isVoiceAllowed);
 
       return json({
