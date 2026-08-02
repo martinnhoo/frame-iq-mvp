@@ -133,10 +133,10 @@ const STR: Record<string, Record<Lang, string>> = {
                     zh: "我们正在将换脸升级为高级质量（Higgsfield 级别）。即将推出。" },
 };
 
-// Flag temporária — desabilita geração até migrarmos pra Akool.
-// Manter o resto da UI funcional pro user explorar (upload, preview etc)
-// mas não chamar a edge function.
-const COMING_SOON = true;
+// Liberado em 02/08/2026. A edge function hub-faceswap está funcional
+// (PiAPI, image síncrono + video assíncrono com polling) e agora cobra
+// crédito. Não havia motivo para manter travado.
+const COMING_SOON = false;
 
 // ── Limites ───────────────────────────────────────────────────────
 const IMG_MAX_BYTES = 5 * 1024 * 1024;   // 5MB pra imagens
