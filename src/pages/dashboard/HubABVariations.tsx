@@ -27,9 +27,10 @@ import {
   GitBranch, Star, Trash2,
 } from "lucide-react";
 import {
-  HUB_BRANDS, HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
+  HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
   type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
+import { useUserBrands } from "@/hooks/useUserBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { addHubNotification } from "@/lib/hubNotifications";
@@ -227,6 +228,8 @@ interface VariantState {
 }
 
 export default function HubABVariations() {
+  // Marcas do usuário (substituem as antigas marcas fixas do Hub).
+  const { brands: userBrands } = useUserBrands();
   const navigate = useNavigate();
   const { language } = useLanguage();
   const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
@@ -861,7 +864,7 @@ export default function HubABVariations() {
         {/* Brand Modal */}
         {brandModalOpen && (
           <BrandModal
-            brands={HUB_BRANDS}
+            brands={userBrands}
             selected={brandId}
             search={brandSearch}
             onSearch={setBrandSearch}

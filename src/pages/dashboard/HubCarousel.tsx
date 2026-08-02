@@ -20,9 +20,10 @@ import {
   GalleryHorizontal, Download, ArrowLeft, Sparkles, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import {
-  HUB_BRANDS, HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
+  HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
   type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
+import { useUserBrands } from "@/hooks/useUserBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { addHubNotification } from "@/lib/hubNotifications";
 import { startGenProgress, type GenProgressController } from "@/lib/genProgress";
@@ -99,6 +100,8 @@ interface SlideResult {
 }
 
 export default function HubCarousel() {
+  // Marcas do usuário (substituem as antigas marcas fixas do Hub).
+  const { brands: userBrands } = useUserBrands();
   const navigate = useNavigate();
   const { language } = useLanguage();
   const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
@@ -343,7 +346,7 @@ export default function HubCarousel() {
         <div style={{ marginBottom: 14 }}>
           <p style={SECTION_LABEL}>{t("brand")}</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
-            {HUB_BRANDS.map(b => {
+            {userBrands.map(b => {
               const active = brandId === b.id;
               const isNone = b.id === "none";
               return (

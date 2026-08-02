@@ -24,6 +24,10 @@ const FN_VERSION = "v2-storyboard-concurrency-2026-05-07";
 const SCENE_CONCURRENCY = 5;
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  reserveCredits, confirmCredits, refundCredits,
+  insufficientCreditsResponse, getUserPlan,
+} from "../_shared/hub-credits.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -208,6 +212,12 @@ Deno.serve(async (req) => {
 
     console.log(`[hub-storyboard] start — user=${authUser.id} N=${N} size=${size}`);
 
+    // Storyboard gera N imagens. O custo escala com N — cobrar valor fixo
+    // deixaria um board de 8 cenas 4x mais caro pra nós que um de 2.
+    const sbPlan = await getUserPlan(sb, authUser.id);
+    const sbRes = await reserveCredits(sb, authUser.id, sbPlan, "storyboard_frame", N);
+    if (!sbRes.ok) return insufficientCreditsResponse(sbRes, cors);
+
     // ── 1. Splitter: roteiro → bible + N scene prompts ──────────────
     let split: SplitterResponse;
     try {
@@ -220,6 +230,7 @@ Deno.serve(async (req) => {
       });
     } catch (e) {
       console.error("[hub-storyboard] splitter error:", e);
+      await refundCredits(sb, sbRes.reservation_id!, "splitter_failed");
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: "splitter_failed",
         message: "Falha ao dividir o roteiro em cenas.",
@@ -310,6 +321,7 @@ Deno.serve(async (req) => {
 
     console.log(`[hub-storyboard] success — ${okCount}/${scenes.length} scenes generated`);
 
+    await confirmCredits(sb, sbRes.reservation_id!);
     return jsonResponse({
       _v: FN_VERSION,
       ok: true,

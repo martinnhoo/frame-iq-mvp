@@ -39,6 +39,7 @@ const NewBoard         = lazy(() => import("./pages/dashboard/NewBoard"));
 const BoardDetail      = lazy(() => import("./pages/dashboard/BoardDetail"));
 const TranslatePage    = lazy(() => import("./pages/dashboard/TranslatePage"));
 const SettingsPage     = lazy(() => import("./pages/dashboard/SettingsPage"));
+const PlansPage        = lazy(() => import("./pages/dashboard/PlansPage"));
 const TemplatesPage    = lazy(() => import("./pages/dashboard/TemplatesPage"));
 const PersonaPage      = lazy(() => import("./pages/dashboard/PersonaPage"));
 const AccountsPage     = lazy(() => import("./pages/dashboard/AccountsPage"));
@@ -163,6 +164,7 @@ const App = () => (
                 <Route path="boards/:id" element={<ToolGate><BoardDetail /></ToolGate>} />
                 <Route path="translate" element={<ToolGate><TranslatePage /></ToolGate>} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="plans" element={<PlansPage />} />
                 <Route path="templates" element={<ToolGate><TemplatesPage /></ToolGate>} />
                 <Route path="persona" element={<PersonaPage />} />
                 <Route path="accounts" element={<AccountsPage />} />

@@ -212,6 +212,8 @@ function BrandEditor({
   const [name, setName] = useState("");
   const [notes, setNotes] = useState("");
   const [assets, setAssets] = useState<BrandAsset[]>([]);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
   const [savedBrandId, setSavedBrandId] = useState<string | null>(isNew ? null : brandId);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -226,12 +228,13 @@ function BrandEditor({
       try {
         const { data: brand } = await supabase
           .from("user_brands")
-          .select("name, notes")
+          .select("name, notes, logo_url")
           .eq("id", brandId)
           .maybeSingle();
         if (brand) {
           setName((brand.name as string) || "");
           setNotes((brand.notes as string) || "");
+          setLogoUrl(((brand as any).logo_url as string) || null);
         }
         const { data: assetsData } = await supabase
           .from("brand_assets")
@@ -244,6 +247,51 @@ function BrandEditor({
       }
     })();
   }, [brandId, isNew]);
+
+  // Logo da marca. Fica separado das referências visuais: a referência
+  // ensina estilo à IA, o logo é compositado no criativo final.
+  const handleLogoUpload = async (file: File) => {
+    setLogoUploading(true);
+    setError(null);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setError("Sessão expirada"); return; }
+
+      let bid = savedBrandId;
+      if (!bid) { bid = await saveCore(); if (!bid) return; }
+
+      const ext = file.type === "image/png" ? "png"
+        : file.type === "image/webp" ? "webp" : "jpg";
+      const path = `${user.id}/brand-assets/${bid}/logo-${crypto.randomUUID()}.${ext}`;
+
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
+        contentType: file.type, cacheControl: "3600", upsert: false,
+      });
+      if (upErr) { setError(`Falha no upload do logo: ${upErr.message}`); return; }
+
+      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
+      const url = urlData?.publicUrl;
+      if (!url) { setError("Não foi possível obter a URL do logo."); return; }
+
+      const { error: updErr } = await (supabase
+        .from("user_brands" as any)
+        .update({ logo_url: url })
+        .eq("id", bid) as any);
+      if (updErr) { setError(`Falha ao salvar o logo: ${updErr.message}`); return; }
+
+      setLogoUrl(url);
+    } catch (e) {
+      setError(`Falha no logo: ${String(e).slice(0, 100)}`);
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    if (!savedBrandId) { setLogoUrl(null); return; }
+    await (supabase.from("user_brands" as any).update({ logo_url: null }).eq("id", savedBrandId) as any);
+    setLogoUrl(null);
+  };
 
   // Salva nome+notas. Pra novo, cria; pra existente, faz update.
   const saveCore = async (): Promise<string | null> => {
@@ -262,7 +310,7 @@ function BrandEditor({
         // Update
         const { error: upErr } = await supabase
           .from("user_brands")
-          .update({ name: cleanName, notes: notes.trim() })
+          .update({ name: cleanName, notes: notes.trim(), logo_url: logoUrl })
           .eq("id", savedBrandId);
         if (upErr) { setError(`Falha ao salvar: ${upErr.message}`); return null; }
         return savedBrandId;
@@ -270,7 +318,7 @@ function BrandEditor({
         // Insert
         const { data: inserted, error: insErr } = await supabase
           .from("user_brands")
-          .insert({ user_id: user.id, name: cleanName, notes: notes.trim() })
+          .insert({ user_id: user.id, name: cleanName, notes: notes.trim(), logo_url: logoUrl })
           .select("id")
           .single();
         if (insErr || !inserted) { setError(`Falha ao criar: ${insErr?.message || "?"}`); return null; }
@@ -414,22 +462,69 @@ function BrandEditor({
             <label style={fieldLabel}>Nome *</label>
             <input
               value={name} onChange={e => setName(e.target.value)}
-              placeholder="ex: BETBUS, ELUCK, Meu Cassino..."
+              placeholder="ex: Minha Loja, Studio X, Clínica Y..."
               style={inputStyle}
             />
           </div>
 
+          {/* Logo */}
+          <div style={field}>
+            <label style={fieldLabel}>Logo</label>
+            <div style={fieldHint}>
+              PNG com fundo transparente funciona melhor. Fica disponível como overlay em qualquer criativo desta marca.
+            </div>
+            {logoUrl ? (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 12, marginTop: 8,
+                padding: 10, borderRadius: 8,
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}>
+                <img
+                  src={logoUrl} alt="Logo da marca"
+                  style={{
+                    width: 56, height: 56, objectFit: "contain", borderRadius: 6,
+                    background: "rgba(0,0,0,0.35)", padding: 4,
+                  }}
+                />
+                <div style={{ flex: 1, fontSize: 11, color: "rgba(240,246,252,0.48)" }}>
+                  Logo salvo
+                </div>
+                <button onClick={handleLogoRemove} style={btnGhost} title="Remover logo">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ) : (
+              <label style={{ ...uploadAreaStyle, minHeight: 72, marginTop: 8 }}>
+                <input
+                  type="file" accept="image/png,image/jpeg,image/webp"
+                  style={{ display: "none" }}
+                  disabled={logoUploading}
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) void handleLogoUpload(f);
+                    e.currentTarget.value = "";
+                  }}
+                />
+                <Upload size={15} style={{ opacity: 0.5 }} />
+                <span style={{ fontSize: 11 }}>
+                  {logoUploading ? "Enviando logo…" : "Enviar logo (PNG, JPG ou WEBP)"}
+                </span>
+              </label>
+            )}
+          </div>
+
           {/* Notas */}
           <div style={field}>
-            <label style={fieldLabel}>Notas (tom, regras, paleta)</label>
+            <label style={fieldLabel}>Contexto e preferências da marca</label>
             <textarea
               value={notes} onChange={e => setNotes(e.target.value)}
               rows={5}
-              placeholder={"ex:\n• Tom direto e moderno\n• Cores: vermelho + dourado\n• Sempre incluir disclaimer 18+\n• Mercado: México (es-MX)\n• Evitar mariachi, sombreros, clichês"}
+              placeholder={"ex:\n• Tom direto e moderno, sem jargão\n• Cores: vermelho + dourado\n• Público: mulheres 25-40, Brasil\n• Nunca usar: promessa de resultado garantido\n• Sempre mostrar o produto em uso"}
               style={{ ...inputStyle, fontFamily: "inherit", resize: "vertical", minHeight: 100 }}
             />
             <div style={fieldHint}>
-              Quanto mais específico, melhor a IA respeita o estilo da marca.
+              Escrito uma vez, reaproveitado em toda geração desta marca — imagem, vídeo, legenda e roteiro.
             </div>
           </div>
 

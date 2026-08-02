@@ -6,9 +6,9 @@
  *
  * Fluxo:
  *   1. Selecionar marca → abre modal com search + grid de cards
- *      (BETBUS, ELUCK, COME.COM, FUNILIVE) + opção "Sem marca".
+ *      (carregadas de user_brands) + opção "Sem marca".
  *   2. Marca selecionada vira chip no painel; mercado e license aparecem
- *      como sub-controles inline quando aplicável (BETBUS-MX).
+ *      como sub-controles inline quando aplicável.
  *   3. Logo (opcional) — caixa de drag-drop pra logo customizado.
  *   4. Descreva o criativo (textarea com counter 0/600).
  *   5. Formato (Feed 1:1, Stories 9:16, Banner 16:9) — cards.
@@ -33,9 +33,10 @@ import {
   Pencil, ChevronRight, Layers, Trash2,
 } from "lucide-react";
 import {
-  HUB_BRANDS, HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
+  HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
   type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
+import { useUserBrands } from "@/hooks/useUserBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { composeImage } from "@/lib/composeImageWithLicense";
 import { compositeElements, ASPECT_DIMS } from "@/lib/compositeElements";
@@ -322,6 +323,8 @@ function buildAutoFileName(opts: {
 const ELEMENT_MAX_BYTES = 5 * 1024 * 1024; // 5MB — Storage suporta, sem mais limite de quota
 
 export default function HubImageGenerator() {
+  // Marcas do usuário (substituem as antigas marcas fixas do Hub).
+  const { brands: userBrands } = useUserBrands();
   const navigate = useNavigate();
   const { language } = useLanguage();
   const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
@@ -1527,7 +1530,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
       {/* ── Brand modal ──────────────────────────────────────── */}
       {brandModalOpen && (
         <BrandModal
-          brands={HUB_BRANDS}
+          brands={userBrands}
           selected={brandId}
           search={brandSearch}
           onSearch={setBrandSearch}

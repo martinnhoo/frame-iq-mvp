@@ -21,6 +21,10 @@
 const FN_VERSION = "v2.0-faceswap-2026-05-07-async-poll";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  reserveCredits, confirmCredits, refundCredits,
+  insufficientCreditsResponse, getUserPlan,
+} from "../_shared/hub-credits.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -374,6 +378,10 @@ Deno.serve(async (req) => {
         }, 200);
       }
       if (poll.status === "failed") {
+        // Cobrado na criação; a task morreu, devolve.
+        await sb.from("hub_credit_ledger")
+          .update({ state: "refunded", settled_at: new Date().toISOString() })
+          .eq("ref_id", existing_task_id).eq("state", "confirmed");
         return jsonResponse({
           _v: FN_VERSION, ok: false, status: "failed",
           error: poll.error || "task_failed",
@@ -409,6 +417,13 @@ Deno.serve(async (req) => {
 
     console.log(`[hub-faceswap] start — user=${authUser.id} mode=${mode}`);
 
+    // Reserva só aqui: `action=poll` não custa crédito, e as validações
+    // acima já rejeitaram os pedidos malformados. Cobrar antes disso faria
+    // o usuário pagar por erro de input.
+    const fsPlan = await getUserPlan(sb, authUser.id);
+    const fsRes = await reserveCredits(sb, authUser.id, fsPlan, "faceswap");
+    if (!fsRes.ok) return insufficientCreditsResponse(fsRes, cors);
+
     // IMAGEM: síncrono fim a fim (~10-30s, dentro do timeout)
     if (mode === "image") {
       const deadline = Date.now() + TOTAL_TIMEOUT_MS;
@@ -417,6 +432,7 @@ Deno.serve(async (req) => {
         PIAPI_KEY, deadline,
       );
       if (result.status !== "completed" || !result.output_url) {
+        await refundCredits(sb, fsRes.reservation_id!, result.error || "faceswap_failed");
         return jsonResponse({
           _v: FN_VERSION, ok: false,
           error: result.error || "unknown_error",
@@ -430,6 +446,7 @@ Deno.serve(async (req) => {
         target_url, swap_image_url,
         result.task_id || "", brand_id,
       );
+      await confirmCredits(sb, fsRes.reservation_id!, result.task_id);
       return jsonResponse({
         _v: FN_VERSION, ok: true, status: "completed",
         mode, output_url: finalUrl, memory_id: memoryId,
@@ -443,11 +460,14 @@ Deno.serve(async (req) => {
       PIAPI_KEY,
     );
     if (!create.ok || !create.task_id) {
+      await refundCredits(sb, fsRes.reservation_id!, create.error || "create_failed");
       return jsonResponse({
         _v: FN_VERSION, ok: false,
         error: create.error || "create_failed",
       }, 502);
     }
+    // ref_id = task_id pra que um poll com falha consiga estornar depois.
+    await confirmCredits(sb, fsRes.reservation_id!, create.task_id);
     return jsonResponse({
       _v: FN_VERSION, ok: true, status: "pending",
       mode, task_id: create.task_id,

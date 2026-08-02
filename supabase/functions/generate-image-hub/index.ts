@@ -19,6 +19,10 @@ const FN_VERSION = "v21-storage-output-2026-05-06";
 const OPENAI_TIMEOUT_MS = 130_000;
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  reserveCredits, confirmCredits, refundCredits,
+  insufficientCreditsResponse, resolveImageAction, getUserPlan,
+} from "../_shared/hub-credits.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -43,6 +47,10 @@ function jsonResponse(payload: unknown, status: number): Response {
 console.log(`[hub-image] boot ${FN_VERSION}`);
 
 Deno.serve(async (req) => {
+  // Escopo externo pro catch conseguir estornar: `reservation` e `sb` vivem
+  // dentro do try e não existem aqui fora.
+  let pendingReservationId: string | null = null;
+  let sbForRefund: any = null;
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
@@ -61,6 +69,7 @@ Deno.serve(async (req) => {
     }
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    sbForRefund = sb;
     const { data: userData } = await sb.auth.getUser(authHeader.slice(7));
     const authUser = userData?.user;
     if (!authUser) {
@@ -161,6 +170,14 @@ Deno.serve(async (req) => {
     //   - PNG converter: 1 imagem (background removal)
     //   - Image Studio com elementos: N imagens (referências visuais)
     //   - Múltiplos elementos + bg removal: combinado
+    // Reserva antes de chamar a OpenAI. `low` custa 1 crédito e `high` 18 —
+    // iterar layout em rascunho é 18x mais barato que finalizar.
+    const plan = await getUserPlan(sb, authUser.id);
+    const creditAction = resolveImageAction(quality);
+    const reservation = await reserveCredits(sb, authUser.id, plan, creditAction);
+    if (!reservation.ok) return insufficientCreditsResponse(reservation, cors);
+    pendingReservationId = reservation.reservation_id ?? null;
+
     let r: Response;
     const abortController = new AbortController();
     const timeoutId = setTimeout(() => abortController.abort(), OPENAI_TIMEOUT_MS);
@@ -257,6 +274,8 @@ Deno.serve(async (req) => {
       // AbortError quando estourou o nosso timeout interno (130s)
       if ((e as Error).name === "AbortError") {
         console.error("[hub-image] OpenAI timeout after", OPENAI_TIMEOUT_MS, "ms");
+        await refundCredits(sb, reservation.reservation_id!, "openai_timeout");
+      pendingReservationId = null;
         return jsonResponse({
           _v: FN_VERSION, ok: false, error: "openai_timeout",
           message: "OpenAI demorou demais pra responder. Tenta com qualidade 'Médio' ou 'Rascunho' — geração fica mais rápida.",
@@ -288,6 +307,8 @@ Deno.serve(async (req) => {
         || m.includes("does not have access");
 
       if (needsVerify) {
+        await refundCredits(sb, reservation.reservation_id!, "needs_org_verification");
+      pendingReservationId = null;
         return jsonResponse({
           _v: FN_VERSION, ok: false, error: "needs_org_verification",
           message: "Sua organização OpenAI precisa ser verificada pra usar gpt-image-2.",
@@ -312,6 +333,8 @@ Deno.serve(async (req) => {
         userMessage = "Modelo gpt-image-2 não encontrado na conta OpenAI.";
       }
 
+      await refundCredits(sb, reservation.reservation_id!, userError);
+      pendingReservationId = null;
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: userError, message: userMessage,
         openai_status: r.status, openai_message: errMsg, openai_code: errCode,
@@ -327,6 +350,8 @@ Deno.serve(async (req) => {
 
     if (!tempImageUrl && !b64) {
       console.error("[hub-image] no image in response");
+      await refundCredits(sb, reservation.reservation_id!, "no_image_returned");
+      pendingReservationId = null;
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: "no_image_returned",
         message: "gpt-image-2 não retornou imagem.",
@@ -356,6 +381,8 @@ Deno.serve(async (req) => {
     }
 
     if (!imageBytes) {
+      await refundCredits(sb, reservation.reservation_id!, "no_image_bytes");
+      pendingReservationId = null;
       return jsonResponse({
         _v: FN_VERSION, ok: false, error: "no_image_returned",
         message: "Nenhuma imagem disponível.",
@@ -451,10 +478,14 @@ Deno.serve(async (req) => {
 
     console.log(`[hub-image] success — model=gpt-image-2 memory_id=${memoryId} dbDebug=${JSON.stringify(dbDebug)}`);
 
+    await confirmCredits(sb, reservation.reservation_id!, memoryId || undefined);
+    pendingReservationId = null;
+
     return jsonResponse({
       _v: FN_VERSION,
       ok: true,
       image_url: finalImageUrl,
+      credits_charged: creditAction,
       memory_id: memoryId,
       db_debug: dbDebug,
       prompt: userPrompt,
@@ -469,6 +500,13 @@ Deno.serve(async (req) => {
 
   } catch (e) {
     console.error("[hub-image] unexpected error:", e);
+    // A varredura de reservas órfãs pega o que escapar daqui em 30 min,
+    // mas devolver na hora é melhor experiência.
+    try {
+      if (pendingReservationId && sbForRefund) {
+        await refundCredits(sbForRefund, pendingReservationId, "unexpected_error");
+      }
+    } catch { /* não mascarar o erro original */ }
     return jsonResponse({
       _v: FN_VERSION, ok: false, error: "internal_error",
       message: String(e).slice(0, 300),

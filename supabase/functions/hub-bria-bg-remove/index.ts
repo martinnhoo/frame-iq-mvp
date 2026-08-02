@@ -19,6 +19,10 @@
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  reserveCredits, confirmCredits, refundCredits,
+  insufficientCreditsResponse, getUserPlan,
+} from "../_shared/hub-credits.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +54,11 @@ Deno.serve(async (req) => {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
+
+    // Bria cobra por chamada. Reserva antes de gastar.
+    const briaPlan = await getUserPlan(supabase, user_id);
+    const creditRes = await reserveCredits(supabase, user_id, briaPlan, "bg_remove");
+    if (!creditRes.ok) return insufficientCreditsResponse(creditRes, cors);
 
     // ── Parse body — aceita JSON com base64 ou FormData ──
     const contentType = req.headers.get("content-type") || "";
@@ -207,6 +216,7 @@ Deno.serve(async (req) => {
       resultDataUrl = `data:image/png;base64,${base64}`;
     }
 
+    await confirmCredits(supabase, creditRes.reservation_id!);
     return new Response(
       JSON.stringify({
         ok: true,
@@ -215,6 +225,7 @@ Deno.serve(async (req) => {
       { headers: { ...cors, "Content-Type": "application/json" } },
     );
   } catch (error) {
+    try { await refundCredits(supabase, creditRes.reservation_id!, "unexpected_error"); } catch { /* ignora */ }
     console.error("[hub-bria-bg-remove] fatal error:", error);
     return new Response(
       JSON.stringify({ error: "internal_error", message: String(error).slice(0, 400) }),

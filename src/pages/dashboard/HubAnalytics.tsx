@@ -25,7 +25,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { HUB_BRANDS, HUB_MARKETS, getBrand, getBrandName, getMarketLabel, type MarketCode, type Lang } from "@/data/hubBrands";
+import { HUB_MARKETS, getBrand, getBrandName, getMarketLabel, type MarketCode, type Lang } from "@/data/hubBrands";
+import { useUserBrands } from "@/hooks/useUserBrands";
 
 const STR: Record<string, Record<Lang, string>> = {
   back:           { pt: "Voltar ao Hub",           en: "Back to Hub",            es: "Volver al Hub",            zh: "返回中心" },
@@ -123,6 +124,8 @@ interface AggregatedStats {
 }
 
 export default function HubAnalytics() {
+  // Marcas do usuário (substituem as antigas marcas fixas do Hub).
+  const { brands: userBrands } = useUserBrands();
   const navigate = useNavigate();
   const { language } = useLanguage();
   const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;

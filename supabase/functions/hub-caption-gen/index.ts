@@ -16,6 +16,7 @@
 const FN_VERSION = "v8-tiktok-faithful-not-descriptive-2026-05-08";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { loadBrandContext, buildBrandPromptBlock } from "../_shared/brand-context.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -395,13 +396,8 @@ No preamble. No explanation. No analysis output. Just the two sections.`;
   return { fb_caption: fb, tiktok_caption: tiktok };
 }
 
-// Brand context server-side (mirror de hubBrands.ts — minimal)
-const BRAND_HINTS: Record<string, string> = {
-  betbus:    "BETBUS — online casino & sports betting brand. Bold red/gold accents, premium gaming.",
-  eluck:     "ELUCK — online casino multi-mercado. Vibrant green/gold, modern energetic.",
-  come:      "COME.COM — online casino India. Saffron/red, modern tech-forward.",
-  funilive:  "FUNILIVE — Live casino. Purple/magenta, dynamic and youthful.",
-};
+// Contexto de marca vem de `user_brands` (ver _shared/brand-context.ts).
+// As marcas hardcoded (BETBUS/ELUCK/COME/FUNILIVE) foram removidas em 02/08/2026.
 
 // ── Main handler ──────────────────────────────────────────────────
 console.log(`[hub-caption-gen] boot ${FN_VERSION}`);
@@ -473,7 +469,8 @@ Deno.serve(async (req) => {
       (language && LANGUAGE_OVERRIDE[language])
       || (market && MARKET_LANG[market])
       || null;
-    const brandHint = (brand_id && BRAND_HINTS[brand_id]) || "";
+    const brandCtx = await loadBrandContext(sb, brand_id, authUser.id);
+    const brandHint = buildBrandPromptBlock(brandCtx);
 
     console.log(`[hub-caption-gen] start user=${authUser.id} count=${images.length} market=${market} brand=${brand_id} language=${language || "(auto)"} resolved=${marketCtx?.lang || "(detect-from-image)"}`);
 

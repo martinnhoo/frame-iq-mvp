@@ -19,6 +19,7 @@ const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
 const MAX_IMAGE_GEN_COUNT = 50;
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { loadBrandContext, buildBrandPromptBlock } from "../_shared/brand-context.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -645,45 +646,31 @@ const SERVER_HUB_MARKETS: Record<string, { promptContext: string }> = {
   },
 };
 
-const SERVER_HUB_BRANDS: Record<string, { promptHint: string; license?: Record<string, string> }> = {
-  betbus: {
-    promptHint: "BETBUS branding context: online casino & sports betting brand. Visual style: bold red and gold accents, high-energy gaming atmosphere, modern premium look with selective use of neon and gold sparkles when appropriate.",
-    license: {
-      MX: "Betbus es un sitio web de entretenimiento online autorizado mediante oficio numero DGJS/0175/2023 de la Dirección de Juegos y Sorteos de los Estados Unidos Mexicanos y operado por Energy C2, S.A.P.I. de C.V., autorizado por The Fabulous Vegas Games S.A. de C.V., empresa registrada en México con autorización para operar en línea por la Secretaría de Gobernación – Dirección General de Juegos y Sorteos de los Estados Unidos Mexicanos No. DGJS/DGAAD/DCRCA/SSCCARb/2852/2015. Los Juegos Con Apuesta Estan Prohibidos Para Menores De Edad. 18+ Aplican T&C, Permiso: P-08/2015-Ter.",
-    },
-  },
-  eluck: {
-    promptHint: "ELUCK branding context: online casino brand operating across multiple markets. Visual style: vibrant green and gold accents, modern energetic aesthetic, premium gaming atmosphere with celebratory mood.",
-  },
-  come: {
-    promptHint: "COME.COM branding context: online casino & gaming brand. Visual style: warm saffron and red accents, modern tech-forward look, premium feel with high contrast. Energetic but clean — not over-decorated.",
-  },
-  funilive: {
-    promptHint: "FUNILIVE branding context: Live casino & betting brand with international presence. Visual style: modern vibrant aesthetic with purple and magenta tones, live entertainment vibe, dynamic and youthful.",
-  },
-};
+// Marcas hardcoded (BETBUS/ELUCK/COME/FUNILIVE) removidas em 02/08/2026.
+// Contexto de marca agora vem de `user_brands` via _shared/brand-context.ts.
 
-function resolveBrandContext(brandId: string | null, market: string | null, includeLicense: boolean): {
-  brand_hint: string;
-  license_text: string;
-  has_license: boolean;
-} {
+async function resolveBrandContext(
+  sb: any,
+  userId: string,
+  brandId: string | null,
+  market: string | null,
+): Promise<{ brand_hint: string; license_text: string; has_license: boolean }> {
   const parts: string[] = [];
-  const brand = brandId ? SERVER_HUB_BRANDS[brandId] : null;
+  const brand = await loadBrandContext(sb, brandId, userId);
   const mkt = market ? SERVER_HUB_MARKETS[market] : null;
-  if (brand?.promptHint) parts.push(brand.promptHint);
+
+  const brandBlock = buildBrandPromptBlock(brand);
+  if (brandBlock) parts.push(brandBlock);
   if (mkt?.promptContext) parts.push(mkt.promptContext);
-  const brand_hint = parts.join("\n\n");
-  const license_text = includeLicense && brand?.license && market ? (brand.license[market] || "") : "";
-  return { brand_hint, license_text, has_license: !!license_text };
+
+  // Disclaimer regulatório saiu do código: era específico de uma marca de
+  // iGaming. Quem precisa escreve nas preferências da própria marca.
+  return { brand_hint: parts.join("\n\n"), license_text: "", has_license: false };
 }
 
-async function execBrand(node: GraphNode): Promise<Record<string, unknown>> {
-  // Resolve brand_id + market → brand_hint completo + license_text.
-  // Antes só passthrough: templates com `{ brand_id: "betbus", market: "MX",
-  // include_disclaimer: true }` rodavam SEM brand context, SEM market
-  // context (lang da copy errada — saía PT-BR pra mercado MX), SEM
-  // disclaimer regulatório. Agora resolvemos do registro embedded.
+async function execBrand(node: GraphNode, ctx: ExecCtx): Promise<Record<string, unknown>> {
+  // Resolve brand_id + market → brand_hint. A marca vem de `user_brands`
+  // (dono verificado por user_id), o mercado do registro local de mercados.
   const brand_id = (node.data.brand_id as string) || null;
   const market = (node.data.market as string) || null;
   const include_disclaimer = !!node.data.include_disclaimer;
@@ -693,8 +680,9 @@ async function execBrand(node: GraphNode): Promise<Record<string, unknown>> {
   const explicitHint = (node.data.brand_hint as string)?.trim();
   const explicitLicense = (node.data.license_text as string)?.trim();
 
+  const sb = createClient(ctx.supabaseUrl, ctx.serviceRoleKey);
   const resolved = (!explicitHint || !explicitLicense)
-    ? resolveBrandContext(brand_id, market, include_disclaimer)
+    ? await resolveBrandContext(sb, ctx.userId, brand_id, market)
     : { brand_hint: "", license_text: "", has_license: false };
 
   const brand_hint = explicitHint || resolved.brand_hint;
@@ -1131,7 +1119,7 @@ async function executeNode(
 ): Promise<unknown> {
   const inputs = collectNodeInputs(node, graph, outputs);
   switch (node.type) {
-    case "brand":           return await execBrand(node);
+    case "brand":           return await execBrand(node, ctx);
     case "prompt":          return await execPrompt(node);
     case "image-gen":       return await execImageGen(node, inputs, ctx);
     case "bg-remove":       return await execBgRemove(node, inputs, ctx);

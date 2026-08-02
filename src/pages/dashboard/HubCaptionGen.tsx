@@ -18,8 +18,9 @@ import {
   Loader, AlertTriangle, Copy, Check, Sparkles, Play, Mic, ChevronUp,
 } from "lucide-react";
 import {
-  HUB_BRANDS, HUB_MARKETS, getBrand, type HubBrand, type MarketCode, type Lang,
+  HUB_MARKETS, getBrand, type HubBrand, type MarketCode, type Lang,
 } from "@/data/hubBrands";
+import { useUserBrands } from "@/hooks/useUserBrands";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
@@ -115,6 +116,8 @@ interface PendingImage {
 }
 
 export default function HubCaptionGen() {
+  // Marcas do usuário (substituem as antigas marcas fixas do Hub).
+  const { brands: userBrands } = useUserBrands();
   const navigate = useNavigate();
   const { language } = useLanguage();
   const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
@@ -436,7 +439,7 @@ export default function HubCaptionGen() {
   };
 
   const filteredBrands = useMemo(() => {
-    const all = Object.values(HUB_BRANDS);
+    const all = userBrands;
     if (!brandSearch.trim()) return all;
     const s = brandSearch.toLowerCase();
     return all.filter(b => b.name.toLowerCase().includes(s) || b.id.toLowerCase().includes(s));

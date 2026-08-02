@@ -196,6 +196,17 @@ async function checkIpRateLimit(
   }
 }
 
+function couponMessage(reason?: string): string {
+  switch (reason) {
+    case "sold_out":     return "Todas as vagas desta oferta foram preenchidas.";
+    case "expired":      return "Esta oferta expirou.";
+    case "not_started":  return "Esta oferta ainda não começou.";
+    case "already_used": return "Você já usou este cupom.";
+    case "inactive":     return "Esta oferta não está mais disponível.";
+    default:             return "Cupom inválido.";
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -218,7 +229,7 @@ Deno.serve(async (req) => {
     if (!user?.email) return new Response(JSON.stringify({ error: "User not authenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     logStep("User authenticated", { email: user.email });
 
-    const { price_id, billing } = await req.json();
+    const { price_id, billing, coupon, currency } = await req.json();
     if (!price_id) throw new Error("Missing price_id");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -291,6 +302,36 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Campanha por cupom ───────────────────────────────────────────────────
+    // A oferta de entrada (ex.: R$ 49,90 por 3 meses) NÃO é pública: só quem
+    // tem o código recebe. Isso mantém o preço de tabela intacto para quem
+    // chega orgânico e permite medir cada campanha isoladamente.
+    //
+    // O desconto em si é do Stripe (coupon repeating). O que registramos aqui
+    // é a atribuição e a data em que o preço cheio começa — sem isso não dá
+    // para saber se a campanha trouxe cliente ou caçador de promoção.
+    let appliedPromotionCode: string | null = null;
+    const couponCode = typeof coupon === "string" ? coupon.trim() : "";
+    const cur = (currency === "usd" ? "usd" : "brl");
+
+    if (couponCode) {
+      const { data: check } = await supabase.rpc("hub_validate_campaign", {
+        p_code: couponCode, p_user: user.id,
+      });
+
+      if (!check?.valid) {
+        logStep("Cupom recusado", { couponCode, reason: check?.reason });
+        return new Response(JSON.stringify({
+          error: "invalid_coupon",
+          reason: check?.reason || "not_found",
+          message: couponMessage(check?.reason),
+        }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      appliedPromotionCode = cur === "usd" ? check.promo_usd : check.promo_brl;
+      logStep("Cupom validado", { couponCode, promo: appliedPromotionCode });
+    }
+
     const origin = req.headers.get("origin") || "https://adbrief.pro";
 
     // Create checkout session — with or without trial based on history
@@ -301,11 +342,18 @@ Deno.serve(async (req) => {
       mode: "subscription",
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/pricing?checkout=cancelled`,
-      allow_promotion_codes: true,
       subscription_data: {
-        metadata: { user_id: user.id },
+        metadata: { user_id: user.id, campaign: couponCode || "" },
       },
     };
+
+    if (appliedPromotionCode) {
+      // Pré-aplicado: o usuário já vê o preço com desconto na tela do Stripe.
+      // `discounts` e `allow_promotion_codes` são mutuamente exclusivos.
+      sessionParams.discounts = [{ promotion_code: appliedPromotionCode }];
+    } else {
+      sessionParams.allow_promotion_codes = true;
+    }
 
     if (!trialUsed) {
       // First timer — grant full 3-day trial
@@ -321,9 +369,19 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
     logStep("Checkout session created", { sessionId: session.id, trial: !trialUsed });
 
+    // Resgate só depois de a sessão existir. Se o Stripe falhar, o cupom não
+    // é queimado — revalida sob lock, então o último resgate não vaza.
+    if (couponCode) {
+      const { data: redeem } = await supabase.rpc("hub_redeem_campaign", {
+        p_code: couponCode, p_user: user.id, p_currency: cur,
+      });
+      logStep("Cupom resgatado", { couponCode, ok: redeem?.valid });
+    }
+
     return new Response(JSON.stringify({
       url: session.url,
       trial: !trialUsed,
+      coupon_applied: !!appliedPromotionCode,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

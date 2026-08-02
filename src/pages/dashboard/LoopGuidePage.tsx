@@ -13,7 +13,7 @@ const STEPS = [
     how: "Go to Import Data → upload the file → select the platform. The system auto-detects columns (impressions, clicks, CTR, spend, ROAS).",
     tip: "Your filenames must follow a naming convention so the AI can extract editor, market, platform and creative type. Set this up in Naming Rules first.",
     sim: [
-      "TF-MX-AL-260213-MT-ELUCK-9v16-04.mp4 → Editor: AL, Market: MX, Platform: TF, Brand: ELUCK",
+      "TF-MX-AL-260213-MT-MINHAMARCA-9v16-04.mp4 → Editor: AL, Market: MX, Platform: TF, Brand: MINHAMARCA",
       "FB-BR-DO-260301-JN-COME-16v9-02.mp4 → Editor: DO, Market: BR, Platform: FB, Brand: COME",
     ],
   },

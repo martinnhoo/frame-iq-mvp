@@ -1,8 +1,8 @@
 /**
  * CustomLogoUpload — file input pra user subir logo customizado.
  *
- * Caso de uso: além das marcas pré-cadastradas (BETBUS, ELUCK,
- * FUNILIVE), o user pode subir QUALQUER PNG/JPG e usar como overlay.
+ * Caso de uso: o usuário sobe QUALQUER PNG/JPG e usa como overlay,
+ * independente do logo salvo na marca.
  * Útil pra testes, marcas one-off, ou parceiros sem cadastro fixo.
  *
  * Strategy: FileReader → data URL → state local + persist em

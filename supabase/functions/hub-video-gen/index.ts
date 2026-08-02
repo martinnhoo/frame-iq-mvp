@@ -54,7 +54,31 @@ function friendlyPiapiError(raw: string): string {
 }
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  reserveCredits, confirmCredits, refundCredits,
+  insufficientCreditsResponse, resolveVideoAction, getUserPlan,
+} from "../_shared/hub-credits.ts";
+import { checkVideoCapacity } from "../_shared/provider-balance.ts";
+import { checkVideoLimits, videoLimitResponse } from "../_shared/video-limits.ts";
 import { getModel, type NormalizedInput, type PiapiCreateBody } from "./models.ts";
+
+/**
+ * Estorna a cobrança de uma task que falhou depois de criada.
+ * Idempotente: só afeta linhas ainda em 'confirmed'.
+ */
+async function refundTaskCredits(sb: any, taskId: string): Promise<void> {
+  try {
+    const { error } = await sb
+      .from("hub_credit_ledger")
+      .update({ state: "refunded", settled_at: new Date().toISOString() })
+      .eq("ref_id", taskId)
+      .eq("state", "confirmed");
+    if (error) console.error("[hub-video] estorno falhou:", error.message);
+    else console.log(`[hub-video] créditos estornados — task=${taskId}`);
+  } catch (e) {
+    console.error("[hub-video] estorno lançou:", e);
+  }
+}
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -439,15 +463,51 @@ Deno.serve(async (req) => {
       // Kling costuma levar 2-5 min; a edge function morre em ~150s.
       // Por isso o client cria e depois faz poll.
       if (action === "create") {
+        // Reserva ANTES de falar com a PiAPI. Se debitássemos só no sucesso do
+        // polling, o usuário dispararia N jobs em paralelo com saldo pra 1.
+        const plan = await getUserPlan(sb, authUser.id);
+
+        // Teto do plano ANTES da reserva: barrar depois de cobrar seria
+        // cobrar por algo que não vai acontecer.
+        const limitCheck = await checkVideoLimits(sb, authUser.id, plan);
+        if (!limitCheck.allowed) return videoLimitResponse(limitCheck, cors);
+
+        // Guarda de saldo: a PiAPI é pré-paga. Se estiver no fim, corta o
+        // Free antes que ele queime o que resta e derrube o pagante junto.
+        const capacity = await checkVideoCapacity(sb, PIAPI_KEY, plan);
+        if (!capacity.allowed) {
+          return jsonResponse({
+            _v: FN_VERSION, ok: false, error: "capacity_restricted",
+            message: capacity.message,
+            upgrade_url: "/dashboard/settings?tab=plan",
+          }, 402);
+        }
+
+        const creditAction = resolveVideoAction({
+          duration: finalDuration,
+          mode: modelMeta.resolution === "1080p" ? "pro" : "std",
+          audio: finalAudio,
+        });
+        const reservation = await reserveCredits(sb, authUser.id, plan, creditAction);
+        if (!reservation.ok) {
+          return insufficientCreditsResponse(reservation, cors);
+        }
+
         const piapiBody = modelMeta.buildPiapiInput(input);
         const created = await createPiapiTask(piapiBody, PIAPI_KEY);
+
         if (!created.ok || !created.task_id) {
+          await refundCredits(sb, reservation.reservation_id!, created.error || "piapi_create_failed");
           return jsonResponse({
             _v: FN_VERSION, ok: false, error: "video_gen_failed",
             message: created.error || "Falha ao criar task de vídeo.",
             provider,
           }, 502);
         }
+
+        // ref_id = task_id, pra que o poll consiga estornar se a task falhar.
+        await confirmCredits(sb, reservation.reservation_id!, created.task_id);
+
         return jsonResponse({
           _v: FN_VERSION, ok: true, status: "pending",
           task_id: created.task_id, provider,
@@ -465,6 +525,9 @@ Deno.serve(async (req) => {
           return jsonResponse({ _v: FN_VERSION, ok: true, status: "pending", task_id: bodyTaskId }, 200);
         }
         if (poll.status === "failed" || !poll.result?.video_url) {
+          // A cobrança foi confirmada na criação (pra impedir paralelismo
+          // abusivo). Se a task morreu, o crédito volta agora.
+          await refundTaskCredits(sb, bodyTaskId);
           return jsonResponse({
             _v: FN_VERSION, ok: false, error: "video_gen_failed",
             message: poll.error || "Falha na geração de vídeo.",

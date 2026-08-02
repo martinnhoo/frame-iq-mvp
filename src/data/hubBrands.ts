@@ -1,22 +1,24 @@
 /**
- * hubBrands — registro de marcas e mercados do Brilliant Hub.
+ * hubBrands — registro de mercados + tipos de marca do Hub.
  *
- * Marca pode operar em múltiplos mercados. Cada marca tem:
- *   - markets: lista de códigos de mercado (1+); primeiro = default
- *   - promptHint: base brand context; injetado em todo prompt
- *   - license: optional Record<market, text>; license só pra marcas
- *     reguladas em mercado específico (hoje só BETBUS-MX)
+ * ⚠️ MARCAS PRÉ-CADASTRADAS FORAM REMOVIDAS (02/08/2026).
  *
- * Mercados:
- *   - BR: Brasil
- *   - MX: México
- *   - CO: Colômbia
- *   - PE: Peru
- *   - US: EUA
- *   - IN: Índia (Hinglish — mistura Hindi + English em script latino)
+ * Antes existiam BETBUS, ELUCK, COME.COM e FUNILIVE hardcoded aqui, com
+ * promptHint e logo em /public/brand-logos. Isso não escala pra produto
+ * comercial: cada cliente novo exigia um deploy, e as marcas de terceiros
+ * ficavam visíveis pra todo mundo.
  *
- * Para adicionar marca nova: append em HUB_BRANDS. Para adicionar
- * mercado novo: append em HUB_MARKETS + label nos 4 idiomas.
+ * Agora TODA marca é do usuário, vinda de `user_brands` + `brand_assets`:
+ *   - nome
+ *   - preferências / contexto (campo `notes`) → vira o promptHint
+ *   - logo (`logo_url`) → composita no criativo
+ *   - assets de referência visual (screenshots, promos) → input do gpt-image-2
+ *
+ * Carregue com o hook `useUserBrands()` (src/hooks/useUserBrands.ts), que
+ * devolve exatamente o shape `HubBrand[]` que as páginas do Hub já consomem.
+ *
+ * Mercados continuam aqui — são genéricos (idioma + aparência das pessoas),
+ * não pertencem a nenhuma marca.
  */
 
 export type MarketCode = "BR" | "MX" | "CO" | "PE" | "US" | "IN";
@@ -119,97 +121,114 @@ export const HUB_MARKETS: Record<MarketCode, HubMarket> = {
 
 export interface HubBrand {
   id: string;
-  /** Nome — pode ter forma i18n quando faz sentido (ex: "Sem marca"). Marcas reais (BETBUS, ELUCK) usam o mesmo nome em todos os idiomas. */
+  /** Nome da marca. i18nName só é usado pela pseudo-marca "Sem marca". */
   name: string;
   i18nName?: Record<Lang, string>;
   markets: MarketCode[];
   gradient: string;
   logoInitials: string;
-  /** Path opcional pro PNG do logo (em /public). Quando presente, o
-   *  brand card mostra a imagem ao invés das iniciais, e o user pode
-   *  ativar a opção "Incluir logo" pra compositar no canto superior
-   *  direito do criativo gerado. FUNILIVE não tem (mascote integrado). */
+  /** URL do logo (Storage). Quando presente, o card mostra a imagem e o
+   *  usuário pode ativar "Incluir logo" pra compositar no criativo. */
   logoImage?: string;
+  /** Contexto/preferências da marca, escritos pelo usuário. Injetado no prompt. */
   promptHint: string;
+  /** Texto legal opcional por mercado (ex.: disclaimer regulatório). */
   license?: Partial<Record<MarketCode, string>>;
 }
 
-export const HUB_BRANDS: HubBrand[] = [
-  {
-    id: "none",
-    name: "Sem marca",
-    i18nName: { pt: "Sem marca", en: "No brand", es: "Sin marca", zh: "无品牌" },
-    markets: [],
-    gradient: "linear-gradient(135deg, #475569, #1E293B)",
-    logoInitials: "—",
-    promptHint: "",
-  },
-  {
-    id: "betbus",
-    name: "BETBUS",
-    markets: ["MX"],
-    gradient: "linear-gradient(135deg, #DC2626, #F59E0B)",
-    logoInitials: "BB",
-    logoImage: "/brand-logos/bet-bus-logo.png",
-    promptHint:
-      "BETBUS branding context: online casino & sports betting brand. " +
-      "Visual style: bold red and gold accents, high-energy gaming atmosphere, " +
-      "modern premium look with selective use of neon and gold sparkles when appropriate.",
-    license: {
-      MX:
-        "Betbus es un sitio web de entretenimiento online autorizado mediante oficio numero " +
-        "DGJS/0175/2023 de la Dirección de Juegos y Sorteos de los Estados Unidos Mexicanos y " +
-        "operado por Energy C2, S.A.P.I. de C.V., autorizado por The Fabulous Vegas Games S.A. " +
-        "de C.V., empresa registrada en México con autorización para operar en línea por la " +
-        "Secretaría de Gobernación – Dirección General de Juegos y Sorteos de los Estados Unidos " +
-        "Mexicanos No. DGJS/DGAAD/DCRCA/SSCCARb/2852/2015. Los Juegos Con Apuesta Estan Prohibidos " +
-        "Para Menores De Edad. 18+ Aplican T&C, Permiso: P-08/2015-Ter.",
-    },
-  },
-  {
-    id: "eluck",
-    name: "ELUCK",
-    markets: ["BR", "MX", "CO", "PE"],
-    gradient: "linear-gradient(135deg, #10B981, #FCD34D)",
-    logoInitials: "EL",
-    logoImage: "/brand-logos/eluck-logo.png",
-    promptHint:
-      "ELUCK branding context: online casino brand operating across multiple markets. " +
-      "Visual style: vibrant green and gold accents, modern energetic aesthetic, " +
-      "premium gaming atmosphere with celebratory mood.",
-  },
-  {
-    id: "come",
-    name: "COME.COM",
-    // COME.COM opera na Índia. Idioma do texto e aparência das pessoas
-    // já vão pelo market promptContext (sutil). Aqui só mantemos a
-    // identidade da brand: cores, tom visual, vibe gaming/casino moderno.
-    // Logo desativado por enquanto (asset estava dando 404).
-    markets: ["IN"],
-    gradient: "linear-gradient(135deg, #F59E0B, #DC2626)",
-    logoInitials: "CC",
-    promptHint:
-      "COME.COM branding context: online casino & gaming brand. " +
-      "Visual style: warm saffron and red accents, modern tech-forward look, " +
-      "premium feel with high contrast. Energetic but clean — not over-decorated.",
-  },
-  {
-    id: "funilive",
-    name: "FUNILIVE",
-    markets: ["BR", "MX", "US"],
-    gradient: "linear-gradient(135deg, #8B5CF6, #EC4899)",
-    logoInitials: "FL",
-    logoImage: "/brand-logos/funilive-logo.jpg",
-    promptHint:
-      "FUNILIVE branding context: Live casino & betting brand with international presence. " +
-      "Visual style: modern vibrant aesthetic with purple and magenta tones, " +
-      "live entertainment vibe, dynamic and youthful.",
-  },
-];
+/** Pseudo-marca sempre disponível. Gerar sem marca é um caso legítimo. */
+export const NO_BRAND: HubBrand = {
+  id: "none",
+  name: "Sem marca",
+  i18nName: { pt: "Sem marca", en: "No brand", es: "Sin marca", zh: "无品牌" },
+  markets: [],
+  gradient: "linear-gradient(135deg, #475569, #1E293B)",
+  logoInitials: "—",
+  promptHint: "",
+};
 
-export function getBrand(id: string | null | undefined): HubBrand | null {
+/**
+ * @deprecated Não existem mais marcas globais. Mantido só pra não quebrar
+ * imports antigos — contém apenas "Sem marca". Use `useUserBrands()`.
+ */
+export const HUB_BRANDS: HubBrand[] = [NO_BRAND];
+
+// ── Row do banco → HubBrand ──────────────────────────────────────────────────
+
+export interface UserBrandRow {
+  id: string;
+  name: string;
+  notes: string | null;
+  logo_url?: string | null;
+  markets?: string[] | null;
+}
+
+/** Gradiente estável derivado do id — mesma marca, mesma cor, sempre. */
+function gradientFor(id: string): string {
+  const palette = [
+    ["#0EA5E9", "#1E40AF"], ["#10B981", "#065F46"], ["#A78BFA", "#5B21B6"],
+    ["#F59E0B", "#B45309"], ["#F87171", "#991B1B"], ["#EC4899", "#9D174D"],
+    ["#22D3EE", "#0E7490"], ["#FBBF24", "#78350F"],
+  ];
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  const [a, b] = palette[h % palette.length];
+  return `linear-gradient(135deg, ${a}, ${b})`;
+}
+
+function initialsFor(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+const VALID_MARKETS = new Set<string>(["BR", "MX", "CO", "PE", "US", "IN"]);
+
+/** Converte uma linha de `user_brands` no shape que as páginas do Hub usam. */
+export function userBrandToHubBrand(row: UserBrandRow): HubBrand {
+  return {
+    id: row.id,
+    name: row.name,
+    markets: (row.markets ?? []).filter((m): m is MarketCode => VALID_MARKETS.has(m)),
+    gradient: gradientFor(row.id),
+    logoInitials: initialsFor(row.name),
+    logoImage: row.logo_url || undefined,
+    promptHint: (row.notes || "").trim(),
+  };
+}
+
+// ── Registro ativo de marcas ─────────────────────────────────────────────────
+// As marcas do usuário chegam de forma assíncrona (hook `useUserBrands`), mas
+// dezenas de call sites chamam `getBrand(id)` sem acesso a estado de React —
+// dentro de `useMemo`, de helpers, de renderizadores de lista. Em vez de
+// enfiar o pool por props em sete páginas de milhares de linhas, o hook
+// publica aqui e `getBrand` lê deste registro por padrão.
+//
+// Isso é seguro porque o hook faz `setState` junto com a publicação: quando o
+// pool muda, o React re-renderiza e a próxima leitura já vê a lista nova.
+let BRAND_POOL: HubBrand[] = [NO_BRAND];
+
+/** Chamado pelo `useUserBrands`. Não chame direto de componente. */
+export function setBrandPool(pool: HubBrand[]): void {
+  BRAND_POOL = pool.length > 0 ? pool : [NO_BRAND];
+}
+
+export function getBrandPool(): HubBrand[] {
+  return BRAND_POOL;
+}
+
+/**
+ * Resolve uma marca por id. Usa o registro publicado pelo `useUserBrands`,
+ * ou um pool explícito quando você tiver um em mãos.
+ */
+export function getBrand(
+  id: string | null | undefined,
+  pool: HubBrand[] = BRAND_POOL,
+): HubBrand | null {
   if (!id) return null;
-  return HUB_BRANDS.find(b => b.id === id) || null;
+  if (id === "none") return NO_BRAND;
+  return pool.find(b => b.id === id) || null;
 }
 
 export function getBrandName(brand: HubBrand, lang: Lang): string {

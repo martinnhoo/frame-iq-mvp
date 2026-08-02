@@ -56,7 +56,7 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
 interface ComposeOptions {
   /** Texto regulatório no rodapé. Se null, não desenha. */
   licenseText?: string | null;
-  /** URL ou path do PNG do logo (e.g. "/brand-logos/betbus.png"). Se null, não desenha. */
+  /** URL do logo da marca (Storage). Se null, não desenha. */
   logoUrl?: string | null;
   /** Posição do logo. Default: top-right. */
   logoPosition?: "top-right" | "top-left" | "bottom-right" | "bottom-left";

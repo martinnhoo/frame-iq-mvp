@@ -30,7 +30,8 @@ import {
   Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch, Mic, Video as VideoIcon,
   ChevronDown, X, Search, Menu, Check,
 } from "lucide-react";
-import { HUB_BRANDS, HUB_MARKETS, getBrand, type MarketCode, type Lang } from "@/data/hubBrands";
+import { HUB_MARKETS, getBrand, type MarketCode, type Lang } from "@/data/hubBrands";
+import { useUserBrands } from "@/hooks/useUserBrands";
 import { ANGLE_LIBRARY, anglesBySafety, pickAngles, type AngleSafety } from "@/data/angleLibrary";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -657,6 +658,8 @@ function countDownstream(graph: WfGraph, fromId: string): number {
 
 // ── Página ─────────────────────────────────────────────────────────
 export default function HubWorkflows() {
+  // Marcas do usuário (substituem as antigas marcas fixas do Hub).
+  const { brands: userBrands } = useUserBrands();
   return (
     <ReactFlowProvider>
       <HubWorkflowsInner />
@@ -1136,7 +1139,7 @@ function HubWorkflowsInner() {
   const addNodeOfType = (type: string) => {
     const id = `n_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const defaultData: Record<string, Record<string, unknown>> = {
-      brand: { brand_id: "betbus", market: "MX", include_disclaimer: true },
+      brand: { brand_id: "none", market: "MX", include_disclaimer: false },
       prompt: { text: "" },
       "image-gen": { aspect_ratio: "1:1", quality: "medium", count: 1 },
       "bg-remove": {},
@@ -1550,7 +1553,7 @@ function HubWorkflowsInner() {
               >
                 <div style={{ fontSize: 12, fontWeight: 700 }}>{t("noBrand")}</div>
               </button>
-              {Object.values(HUB_BRANDS)
+              {userBrands
                 .filter(b => b.id !== "none")
                 .filter(b => !brandSearch.trim() || b.name.toLowerCase().includes(brandSearch.toLowerCase()))
                 .map(b => (
@@ -1626,7 +1629,7 @@ function NodeConfigPanel({
             onChange={e => onUpdate({ brand_id: e.target.value })}
             style={selectStyle}
           >
-            {Object.values(HUB_BRANDS).map(b => (
+            {userBrands.map(b => (
               <option key={b.id} value={b.id} style={{ background: "#0d0d14" }}>{b.name}</option>
             ))}
           </select>
