@@ -97,11 +97,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Record event BEFORE processing (crash-safe: worst case we skip on retry)
-    await supabase.from("processed_webhook_events").insert({
-      event_id: event.id,
-      event_type: event.type,
-    });
+    // O registro do evento acontece DEPOIS do processamento, não antes.
+    //
+    // Antes: gravava primeiro, e o catch devolvia 400. Se qualquer coisa
+    // falhasse no meio (timeout do Stripe, update recusado), o retry do
+    // Stripe chegava e era descartado como duplicado. Resultado: pagamento
+    // confirmado, plano nunca aplicado, e nenhum alarme.
+    //
+    // Agora, se falhar, o evento não é marcado e o retry reprocessa.
 
     switch (event.type) {
       case "checkout.session.completed": {
@@ -177,12 +180,26 @@ Deno.serve(async (req) => {
         }
 
         // ── Subscription checkout (existing flow) ────────────────────────────
-        if (customerEmail) {
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("email", customerEmail)
-            .limit(1);
+        // O user_id vai em subscription_data.metadata no create-checkout.
+        // Buscar só por email exato (case-sensitive) fazia o cliente pagar e
+        // ficar no free sempre que o email do Stripe divergisse do cadastro.
+        const metaUserId = (session.metadata?.user_id
+          || (session as any).subscription_data?.metadata?.user_id) as string | undefined;
+
+        if (customerEmail || metaUserId) {
+          let profiles: Array<{ id: string }> | null = null;
+
+          if (metaUserId) {
+            const { data } = await supabase
+              .from("profiles").select("id").eq("id", metaUserId).limit(1);
+            if (data?.length) profiles = data;
+          }
+
+          if (!profiles && customerEmail) {
+            const { data } = await supabase
+              .from("profiles").select("id").ilike("email", customerEmail).limit(1);
+            profiles = data;
+          }
 
           if (profiles && profiles.length > 0) {
             const { data: profileRow } = await supabase
@@ -270,8 +287,9 @@ Deno.serve(async (req) => {
         const subId = invoice.subscription as string;
         if (subId) {
           const sub = await stripe.subscriptions.retrieve(subId);
-          const productId = sub.items.data[0]?.price?.product as string;
-          const plan = PRODUCT_TO_PLAN[productId] || "free";
+          // Usava o mapa legado direto: na renovação, produto novo virava
+          // "free" e o cliente era rebaixado justamente ao pagar.
+          const plan = await resolvePlanFromSubscription(stripe, sub);
 
           const { data: profiles } = await supabase
             .from("profiles")
@@ -313,14 +331,22 @@ Deno.serve(async (req) => {
         logStep("Unhandled event type", { type: event.type });
     }
 
+    // Processou sem erro — agora sim marca, para o retry não duplicar.
+    await supabase.from("processed_webhook_events").insert({
+      event_id: event.id,
+      event_type: event.type,
+    });
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: msg });
+    logStep("ERROR — evento NAO marcado, Stripe vai reenviar", { message: msg });
+    // 500 e não 400: 4xx sinaliza ao Stripe "não tente de novo", que é o
+    // oposto do que queremos quando a falha é nossa.
     return new Response(JSON.stringify({ error: msg }), {
-      status: 400,
+      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

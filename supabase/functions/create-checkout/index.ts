@@ -202,6 +202,51 @@ async function checkIpRateLimit(
   }
 }
 
+/**
+ * Encontra o price do Stripe a partir do plano e da moeda.
+ *
+ * Busca pela metadata `hub_plan` do produto em vez de manter um mapa de
+ * price IDs no código — mapa fixo foi exatamente o que quebrou o webhook
+ * quando os produtos novos foram criados.
+ */
+async function findPriceForPlan(
+  stripe: any, plan: string, currency: string, annual: boolean,
+): Promise<string | null> {
+  try {
+    const products = await stripe.products.search({
+      query: `active:'true' AND metadata['hub_plan']:'${plan}'`,
+      limit: 5,
+    });
+    if (!products.data?.length) return null;
+
+    for (const product of products.data) {
+      const prices = await stripe.prices.list({
+        product: product.id, active: true, limit: 20,
+      });
+      const wanted = prices.data.filter((p: any) => p.currency === currency);
+      if (!wanted.length) continue;
+
+      // Pacote avulso: preço sem recorrência.
+      if (plan.startsWith("pack")) {
+        const oneOff = wanted.find((p: any) => !p.recurring);
+        if (oneOff) return oneOff.id;
+        continue;
+      }
+
+      const interval = annual ? "year" : "month";
+      const match = wanted.find((p: any) => p.recurring?.interval === interval);
+      if (match) return match.id;
+
+      // Sem preço anual cadastrado ainda? cai no mensal em vez de falhar.
+      const monthly = wanted.find((p: any) => p.recurring?.interval === "month");
+      if (monthly) return monthly.id;
+    }
+  } catch (e) {
+    logStep("Falha ao buscar preço", { plan, currency, error: String(e) });
+  }
+  return null;
+}
+
 function couponMessage(reason?: string): string {
   switch (reason) {
     case "sold_out":     return "Todas as vagas desta oferta foram preenchidas.";
@@ -235,8 +280,27 @@ Deno.serve(async (req) => {
     if (!user?.email) return new Response(JSON.stringify({ error: "User not authenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     logStep("User authenticated", { email: user.email });
 
-    const { price_id, billing, coupon, currency } = await req.json();
-    if (!price_id) throw new Error("Missing price_id");
+    const { price_id, plan, billing, coupon, currency } = await req.json();
+
+    // A página de planos manda `plan` + `currency`; as telas antigas mandam
+    // `price_id`. Aceitar os dois evita o buraco em que o botão "Assinar"
+    // simplesmente não funcionava.
+    const cur = (currency === "usd" ? "usd" : "brl");
+    let resolvedPriceId: string | null = typeof price_id === "string" ? price_id : null;
+
+    if (!resolvedPriceId && typeof plan === "string" && plan) {
+      resolvedPriceId = await findPriceForPlan(stripe, plan, cur, billing === "annual");
+      if (!resolvedPriceId) {
+        logStep("Preço não encontrado", { plan, cur, billing });
+        return new Response(JSON.stringify({
+          error: "price_not_found",
+          message: "Este plano ainda não está disponível para compra. Fale com o suporte.",
+        }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      logStep("Preço resolvido pelo plano", { plan, cur, resolvedPriceId });
+    }
+
+    if (!resolvedPriceId) throw new Error("Missing price_id or plan");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
@@ -286,8 +350,10 @@ Deno.serve(async (req) => {
       "price_1T9sdfDr9So14XztPR3tI14Y": Deno.env.get("ANNUAL_PRICE_PRO")   || "price_1T9sdfDr9So14XztPR3tI14Y",
       "price_1TMzhCDr9So14Xzt1rUmfs7h": Deno.env.get("ANNUAL_PRICE_STUDIO") || "price_1TMzhCDr9So14XztE4jqWz9c",
     };
-    const effective_price_id = billing === "annual" ? (ANNUAL_PRICES[price_id] || price_id) : price_id;
-    logStep("Price ID resolved", { price_id, effective_price_id, billing });
+    const effective_price_id = billing === "annual"
+      ? (ANNUAL_PRICES[resolvedPriceId] || resolvedPriceId)
+      : resolvedPriceId;
+    logStep("Price ID resolved", { resolvedPriceId, effective_price_id, billing });
 
     let customerId: string | undefined;
     if (customersList.length > 0) {
@@ -318,7 +384,6 @@ Deno.serve(async (req) => {
     // para saber se a campanha trouxe cliente ou caçador de promoção.
     let appliedPromotionCode: string | null = null;
     const couponCode = typeof coupon === "string" ? coupon.trim() : "";
-    const cur = (currency === "usd" ? "usd" : "brl");
 
     if (couponCode) {
       const { data: check } = await supabase.rpc("hub_validate_campaign", {

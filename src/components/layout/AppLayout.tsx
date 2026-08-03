@@ -765,11 +765,13 @@ export function AppLayout() {
         </nav>
       </div>
 
-      {/* Footer — CreditBar + Logout. CreditBar (que mostra plano/Studio/etc)
-          escondido em rotas /dashboard/hub* — Hub é produto interno isolado. */}
+      {/* Footer — CreditBar + Logout.
+          O CreditBar ficava escondido em /dashboard/hub* de quando o Hub era
+          um produto interno isolado. Agora o Hub É o produto: o saldo precisa
+          aparecer justamente onde o crédito é gasto. */}
       <div style={{ flexShrink: 0 }}>
         <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '0 0 4px' }} />
-        {!location.pathname.startsWith('/dashboard/hub') && (
+        {true && (
           <CreditBar userId={user?.id} plan={plan} />
         )}
         {/* ReferralPopup escondido no pivô interno — operação Brilliant
