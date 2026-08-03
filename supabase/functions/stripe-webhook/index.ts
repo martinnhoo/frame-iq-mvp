@@ -11,11 +11,55 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
 };
 
+// Mapa legado dos produtos criados em abril/2026. Mantido para as
+// assinaturas que já existem — não remover enquanto houver cliente neles.
 const PRODUCT_TO_PLAN: Record<string, string> = {
   "prod_U88ul5IK0HHW19": "maker",
   "prod_U88v5WVcy2NZV7": "pro",
   "prod_U88wpX4Bphfifi": "studio",
 };
+
+const VALID_PLANS = new Set(["free", "creator", "maker", "pro", "starter", "studio", "scale"]);
+
+/**
+ * Descobre o plano a partir da assinatura.
+ *
+ * Ordem: metadata do produto → metadata do preço → mapa legado → free.
+ *
+ * O mapa de IDs fixos era uma armadilha: qualquer produto criado depois
+ * dele caía em "free", ou seja, o cliente pagava e continuava sem acesso —
+ * falhando em silêncio, que é o pior tipo de falha em cobrança.
+ * Agora basta o produto ter metadata hub_plan para funcionar.
+ */
+async function resolvePlanFromSubscription(stripe: any, sub: any): Promise<string> {
+  const item = sub?.items?.data?.[0];
+  const price = item?.price;
+  const productRef = price?.product;
+
+  // metadata do preço (já vem expandida na maioria dos eventos)
+  const fromPrice = price?.metadata?.hub_plan;
+  if (fromPrice && VALID_PLANS.has(fromPrice)) return fromPrice;
+
+  const productId = typeof productRef === "string" ? productRef : productRef?.id;
+  if (!productId) return "free";
+
+  // metadata do produto
+  try {
+    const product = typeof productRef === "object" && productRef?.metadata
+      ? productRef
+      : await stripe.products.retrieve(productId);
+    const fromProduct = product?.metadata?.hub_plan;
+    if (fromProduct && VALID_PLANS.has(fromProduct)) return fromProduct;
+  } catch (e) {
+    logStep("Falha ao ler metadata do produto", { productId, error: String(e) });
+  }
+
+  const legacy = PRODUCT_TO_PLAN[productId];
+  if (legacy) return legacy;
+
+  logStep("AVISO: produto sem hub_plan e fora do mapa legado — caindo para free", { productId });
+  return "free";
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -150,8 +194,7 @@ Deno.serve(async (req) => {
             const subscriptionId = session.subscription as string;
             if (subscriptionId) {
               const sub = await stripe.subscriptions.retrieve(subscriptionId);
-              const productId = sub.items.data[0]?.price?.product as string;
-              const dbPlan = PRODUCT_TO_PLAN[productId] || "free";
+              const dbPlan = await resolvePlanFromSubscription(stripe, sub);
               const plan = getEffectivePlan(dbPlan, profileRow?.email);
 
               await supabase.from("profiles").update({
@@ -169,8 +212,7 @@ Deno.serve(async (req) => {
       case "customer.subscription.updated": {
         const sub = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
-        const productId = sub.items.data[0]?.price?.product as string;
-        const plan = PRODUCT_TO_PLAN[productId] || "free";
+        const plan = await resolvePlanFromSubscription(stripe, sub);
         const isActive = sub.status === "active" || sub.status === "trialing";
         const isTrialing = sub.status === "trialing";
         const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null;
