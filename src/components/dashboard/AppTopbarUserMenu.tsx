@@ -223,7 +223,7 @@ export function AppTopbarUserMenu({ user, profile, plan, onOpenProfile }: Props)
             <MenuItem
               icon={<Settings size={14} />}
               label={language === "en" ? "Settings" : language === "es" ? "Configuración" : language === "zh" ? "设置" : "Configurações"}
-              onClick={() => { setOpen(false); navigate("/dashboard/settings"); }}
+              onClick={() => { setOpen(false); navigate("/dashboard/plans"); }}
             />
           )}
           <MenuItem

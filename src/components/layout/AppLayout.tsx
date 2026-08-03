@@ -140,56 +140,32 @@ type NavSection = {
 function getNavSections(lang: string): NavSection[] {
   const L = (pt: string, en: string, es: string, zh: string) =>
     lang === "en" ? en : lang === "es" ? es : lang === "zh" ? zh : pt;
+
+  // Reestruturado em 03/08/2026.
+  //
+  // O menu antigo tinha 16 itens em 6 grupos, organizados por CARDINALIDADE
+  // DE SAÍDA — "Criar" (1 asset) vs "Sequências" (N assets) vs "Inteligência".
+  // Isso é a arquitetura do código, não o trabalho de quem anuncia: ninguém
+  // acorda pensando "hoje preciso de uma sequência".
+  //
+  // Agora são 5 itens organizados pelo que a pessoa faz: cria, guarda a marca,
+  // acha o que já fez, automatiza, paga. As telas que saíram do menu continuam
+  // acessíveis por rota — nada foi deletado, porque callbacks de OAuth e o
+  // retorno do Stripe dependem delas.
   return [
     {
-      // Top — Painel
       items: [
-        { url: '/dashboard/hub', label: L('Painel', 'Dashboard', 'Panel', '仪表板'), icon: Command },
+        { url: '/dashboard/hub/image',   label: L('Criar criativo',  'Create',        'Crear',           '创建'),   icon: Sparkles },
+        { url: '/dashboard/hub/brands',      label: L('Minhas marcas',   'My brands',     'Mis marcas',      '品牌'),   icon: Building2 },
+        { url: '/dashboard/hub/library', label: L('Meus criativos',  'My creatives',  'Mis creativos',   '资源库'), icon: FolderOpen },
       ],
     },
     {
-      // Workflows isolado — é o FEATURE principal (pipelines reutilizáveis).
-      // Conceptualmente diferente dos geradores únicos.
-      title: L('Automação', 'Automation', 'Automatización', '自动化'),
+      title: L('Avançado', 'Advanced', 'Avanzado', '高级'),
       items: [
-        { url: '/dashboard/hub/studio',     label: L('Studio',    'Studio',    'Studio',    '工作室'), icon: Wand2 },
-        { url: '/dashboard/hub/brands',     label: L('Marcas',    'Brands',    'Marcas',    '品牌'),    icon: Building2 },
-        { url: '/dashboard/hub/workflows',  label: L('Workflows', 'Workflows', 'Workflows', '工作流'), icon: Sparkles },
-      ],
-    },
-    {
-      // Criar — geradores de UM asset único (imagem, PNG transparente, vídeo, áudio)
-      title: L('Criar', 'Create', 'Crear', '创建'),
-      items: [
-        { url: '/dashboard/hub/image', label: L('Imagem',        'Image',           'Imagen',           '图像'),     icon: ImageIcon },
-        { url: '/dashboard/hub/png',   label: L('PNG',           'PNG',             'PNG',              'PNG'),       icon: Layers },
-        { url: '/dashboard/hub/video',    label: L('Vídeo',         'Video',           'Video',            '视频'),     icon: Video },
-        { url: '/dashboard/hub/faceswap', label: L('Face Swap',     'Face Swap',       'Face Swap',        '换脸'),     icon: ScanFace },
-        { url: '/dashboard/hub/voice',    label: L('Voz',           'Voice',           'Voz',              '语音'),     icon: Mic },
-      ],
-    },
-    {
-      // Sequências — quando o output é MÚLTIPLO (storyboard, carrossel, AB)
-      title: L('Sequências', 'Sequences', 'Secuencias', '序列'),
-      items: [
-        { url: '/dashboard/hub/storyboard', label: L('Storyboard',    'Storyboard',    'Storyboard',    '故事板'),    icon: Clapperboard },
-        { url: '/dashboard/hub/carousel',   label: L('Carrossel',     'Carousel',      'Carrusel',      '轮播'),       icon: GalleryHorizontal },
-        { url: '/dashboard/hub/ab',         label: L('Variações AB',  'A/B Variants',  'Variantes A/B', 'A/B 变体'),  icon: GitBranch },
-      ],
-    },
-    {
-      // Inteligência — análise + utilitários de dados
-      title: L('Inteligência', 'Intelligence', 'Inteligencia', '智能'),
-      items: [
-        { url: '/dashboard/hub/captions',   label: L('Legendas',    'Captions',      'Captions',      '字幕'),     icon: Captions },
-        { url: '/dashboard/hub/transcribe', label: L('Transcrição', 'Transcription', 'Transcripción', '转录'),     icon: FileText },
-        { url: '/dashboard/hub/analytics',  label: L('Analytics',   'Analytics',     'Analítica',     '数据分析'), icon: BarChart3 },
-      ],
-    },
-    {
-      title: L('Biblioteca', 'Library', 'Biblioteca', '资源库'),
-      items: [
-        { url: '/dashboard/hub/library', label: L('Biblioteca', 'Library', 'Biblioteca', '资源库'), icon: FolderOpen },
+        { url: '/dashboard/hub/video',     label: L('Vídeo',       'Video',      'Video',       '视频'),   icon: Video },
+        { url: '/dashboard/hub/voice',     label: L('Locução',     'Voiceover',  'Locución',    '配音'),   icon: Mic },
+        { url: '/dashboard/hub/workflows', label: L('Automações',  'Automations','Automatizaciones', '自动化'), icon: Wand2 },
       ],
     },
     {
@@ -688,7 +664,7 @@ export function AppLayout() {
             {/* Not connected — nudge */}
             {!metaConnected && selectedPersona && (
               <button
-                onClick={() => { navigate('/dashboard/accounts'); setAccountsOpen(false); setMobileOpen(false); }}
+                onClick={() => { navigate('/dashboard/hub/brands'); setAccountsOpen(false); setMobileOpen(false); }}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                   padding: '7px 14px', background: 'rgba(239,68,68,0.06)', border: 'none',
@@ -707,7 +683,7 @@ export function AppLayout() {
 
             {/* Manage accounts link */}
             <button
-              onClick={() => { navigate('/dashboard/accounts'); setAccountsOpen(false); setMobileOpen(false); }}
+              onClick={() => { navigate('/dashboard/hub/brands'); setAccountsOpen(false); setMobileOpen(false); }}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                 padding: '6px 14px', background: 'transparent', border: 'none',

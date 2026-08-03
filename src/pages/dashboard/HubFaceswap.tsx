@@ -19,7 +19,7 @@
  * Salva em hub_assets kind='hub_faceswap' — Library mostra junto com o resto.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -174,6 +174,14 @@ export default function HubFaceswap() {
   const [swapImageError, setSwapImageError] = useState<string | null>(null);
 
   const [targetFile, setTargetFile] = useState<string | null>(null); // data URL (img) ou objectURL (video)
+
+  // Recebe o criativo vindo da tela anterior ("Tirar fundo", "Virar vídeo"…).
+  // Sem isso o usuário teria que reencontrar e reenviar a imagem que acabou
+  // de gerar — o motivo pelo qual essas telas pareciam desconexas.
+  const routeState = useLocation().state as { sourceImage?: string } | null;
+  useEffect(() => {
+    if (routeState?.sourceImage) setTargetFile(routeState.sourceImage);
+  }, [routeState]);
   const [targetFileName, setTargetFileName] = useState<string>("");
   const [targetFileError, setTargetFileError] = useState<string | null>(null);
   const [targetIsVideo, setTargetIsVideo] = useState(false); // pra preview correto

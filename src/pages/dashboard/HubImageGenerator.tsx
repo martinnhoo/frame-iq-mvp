@@ -31,6 +31,7 @@ import {
   Image as ImageIcon, Download, RefreshCw, ArrowLeft, Sparkles, AlertTriangle,
   Copy, RotateCcw, Check, ChevronDown, Search, Plus, Upload, X,
   Pencil, ChevronRight, Layers, Trash2,
+  ScanFace, Video, Captions,
 } from "lucide-react";
 import {
   HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
@@ -265,6 +266,58 @@ type GalleryItem = {
   created_at: string;
 };
 
+/**
+ * Pontos de partida por objetivo do anunciante.
+ *
+ * A tela começava em branco e pedia 11 decisões antes da primeira geração —
+ * formato, qualidade, marca, mercado, licença, logo, elementos, nome, prompt.
+ * Era onde a maior parte das pessoas desistia.
+ *
+ * Cada objetivo aqui preenche prompt, formato e qualidade de uma vez. Nada
+ * fica travado: é um ponto de partida, não um trilho.
+ */
+const CREATIVE_GOALS: Array<{
+  id: string; emoji: string; label: string; hint: string;
+  prompt: string; aspect: string; quality: "low" | "medium" | "high";
+}> = [
+  {
+    id: "produto", emoji: "📦", label: "Anúncio de produto",
+    hint: "O produto em destaque, fundo limpo",
+    aspect: "1:1", quality: "medium",
+    prompt: "Foto publicitária do produto em destaque, fundo limpo e iluminação de estúdio, cores da marca, composição centralizada com espaço para texto no topo.",
+  },
+  {
+    id: "oferta", emoji: "🔥", label: "Oferta / desconto",
+    hint: "Urgência e preço em evidência",
+    aspect: "1:1", quality: "medium",
+    prompt: "Criativo de oferta com senso de urgência, cores vibrantes da marca, área livre e contrastada na parte inferior para o preço e o botão.",
+  },
+  {
+    id: "prova", emoji: "💬", label: "Prova social",
+    hint: "Depoimento de cliente real",
+    aspect: "4:5", quality: "medium",
+    prompt: "Cena autêntica de cliente satisfeito usando o produto, luz natural, aparência real e não posada, espaço lateral para o depoimento em texto.",
+  },
+  {
+    id: "antes", emoji: "↔️", label: "Antes e depois",
+    hint: "Transformação lado a lado",
+    aspect: "1:1", quality: "high",
+    prompt: "Composição dividida ao meio mostrando a transformação antes e depois, mesma iluminação e enquadramento nos dois lados para a diferença ficar evidente.",
+  },
+  {
+    id: "stories", emoji: "📱", label: "Stories / Reels",
+    hint: "Vertical, para tela cheia",
+    aspect: "9:16", quality: "medium",
+    prompt: "Criativo vertical para Stories, elemento principal centralizado e afastado das bordas, fundo com profundidade, espaço no terço superior para a headline.",
+  },
+  {
+    id: "rascunho", emoji: "✏️", label: "Só testar uma ideia",
+    hint: "Rápido e barato, 1 crédito",
+    aspect: "1:1", quality: "low",
+    prompt: "",
+  },
+];
+
 const PROMPT_MAX = 600;
 const FILE_NAME_MAX = 60;
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;
@@ -335,6 +388,7 @@ export default function HubImageGenerator() {
 
   // ── Form state ────────────────────────────────────────────────
   const [prompt, setPrompt] = useState("");
+  const [activeGoal, setActiveGoal] = useState<string | null>(null);
   const [brandId, setBrandId] = useState<string>("none");
   const [marketCode, setMarketCode] = useState<MarketCode | null>(null);
   const [aspectRatio, setAspectRatio] = useState("1:1");
@@ -1108,6 +1162,56 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
               )}
             </Section>
 
+            {/* Objetivos — o atalho de 11 decisões para 1.
+                Cada cartão preenche prompt, formato e qualidade de uma vez.
+                O usuário ainda pode editar tudo depois; a diferença é que a
+                tela deixa de começar em branco, que era onde a maioria travava. */}
+            <Section
+              title="O que você precisa hoje?"
+              subtitle="Escolha um ponto de partida — você edita tudo depois"
+              style={{ marginTop: 4 }}
+            >
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(158px, 1fr))",
+                gap: 8,
+              }}>
+                {CREATIVE_GOALS.map(g => {
+                  const active = activeGoal === g.id;
+                  return (
+                    <button
+                      key={g.id}
+                      disabled={loading}
+                      onClick={() => {
+                        setActiveGoal(g.id);
+                        setPrompt(g.prompt);
+                        setAspectRatio(g.aspect);
+                        setQuality(g.quality);
+                      }}
+                      style={{
+                        textAlign: "left", padding: "11px 12px", borderRadius: 10,
+                        cursor: loading ? "not-allowed" : "pointer",
+                        background: active ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.025)",
+                        border: `1px solid ${active ? "rgba(14,165,233,0.42)" : "rgba(255,255,255,0.07)"}`,
+                        borderLeft: `2px solid ${active ? "#0ea5e9" : "transparent"}`,
+                        transition: "transform .12s, border-color .12s",
+                      }}
+                      onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = "translateY(-1px)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}
+                    >
+                      <div style={{ fontSize: 17, marginBottom: 4 }}>{g.emoji}</div>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: "#F1F5F9", marginBottom: 2 }}>
+                        {g.label}
+                      </div>
+                      <div style={{ fontSize: 10.5, color: "#94A3B8", lineHeight: 1.4 }}>
+                        {g.hint}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </Section>
+
             {/* Section 3 — Prompt */}
             <Section title={t("describe")} subtitle={t("describeHint")} style={{ marginTop: 22 }}>
               <div style={{ position: "relative" }}>
@@ -1376,6 +1480,38 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
                     </button>
                     <button onClick={generate} disabled={loading} style={ACTION_BTN}>
                       <RefreshCw size={13} /> {t("variation")}
+                    </button>
+                    {/* Continuações. Antes eram telas separadas no menu (PNG,
+                        Face Swap, Legendas, Locução) e o usuário tinha que
+                        adivinhar que uma servia à outra. Como ação sobre o
+                        criativo que ele acabou de ver, a relação é óbvia. */}
+                    <button
+                      onClick={() => navigate("/dashboard/hub/png", { state: { sourceImage: result.image_url } })}
+                      style={ACTION_BTN}
+                      title="Recortar o produto e deixar o fundo transparente"
+                    >
+                      <Layers size={13} /> Tirar fundo
+                    </button>
+                    <button
+                      onClick={() => navigate("/dashboard/hub/faceswap", { state: { sourceImage: result.image_url } })}
+                      style={ACTION_BTN}
+                      title="Trocar o rosto desta imagem"
+                    >
+                      <ScanFace size={13} /> Trocar rosto
+                    </button>
+                    <button
+                      onClick={() => navigate("/dashboard/hub/video", { state: { sourceImage: result.image_url } })}
+                      style={ACTION_BTN}
+                      title="Animar esta imagem"
+                    >
+                      <Video size={13} /> Virar vídeo
+                    </button>
+                    <button
+                      onClick={() => navigate("/dashboard/hub/captions", { state: { sourceImage: result.image_url } })}
+                      style={ACTION_BTN}
+                      title="Escrever a legenda deste criativo"
+                    >
+                      <Captions size={13} /> Escrever legenda
                     </button>
                   </div>
                   {result.revised_prompt && result.revised_prompt !== result.prompt && (

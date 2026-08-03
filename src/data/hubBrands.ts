@@ -161,6 +161,8 @@ export interface UserBrandRow {
   notes: string | null;
   logo_url?: string | null;
   markets?: string[] | null;
+  /** Texto legal por mercado: {"BR": "...", "MX": "..."} */
+  license?: Record<string, string> | null;
 }
 
 /** Gradiente estável derivado do id — mesma marca, mesma cor, sempre. */
@@ -195,6 +197,12 @@ export function userBrandToHubBrand(row: UserBrandRow): HubBrand {
     logoInitials: initialsFor(row.name),
     logoImage: row.logo_url || undefined,
     promptHint: (row.notes || "").trim(),
+    // Antes o license nunca era preenchido, então `hasLicense` era sempre
+    // falso e o disclaimer regulatório jamais aparecia — inclusive para
+    // quem precisava dele por lei.
+    license: (row.license && Object.keys(row.license).length > 0)
+      ? (row.license as Partial<Record<MarketCode, string>>)
+      : undefined,
   };
 }
 

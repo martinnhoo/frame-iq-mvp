@@ -129,7 +129,7 @@ const App = () => (
 
               {/* ── Dashboard (Brilliant Hub interno) ──────────────── */}
               <Route path="/dashboard" element={<AppLayout />}>
-                <Route index element={<Navigate to="/dashboard/hub" replace />} />
+                <Route index element={<Navigate to="/dashboard/hub/image" replace />} />
                 <Route path="hub" element={<BrilliantHub />} />
                 <Route path="hub/image" element={<HubImageGenerator />} />
                 <Route path="hub/png" element={<HubPngGenerator />} />

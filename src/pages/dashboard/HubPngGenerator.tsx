@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -184,6 +184,14 @@ export default function HubPngGenerator() {
   // regiões distantes do servidor (Ásia/EU). User pode aumentar manualmente.
   const [quality, setQuality] = useState<"low" | "medium" | "high">("medium");
   const [sourceImage, setSourceImage] = useState<string | null>(null); // data URL
+
+  // Recebe o criativo vindo da tela anterior ("Tirar fundo", "Virar vídeo"…).
+  // Sem isso o usuário teria que reencontrar e reenviar a imagem que acabou
+  // de gerar — o motivo pelo qual essas telas pareciam desconexas.
+  const routeState = useLocation().state as { sourceImage?: string } | null;
+  useEffect(() => {
+    if (routeState?.sourceImage) setSourceImage(routeState.sourceImage);
+  }, [routeState]);
   const [sourceFilename, setSourceFilename] = useState<string>("");
   const [imageError, setImageError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);

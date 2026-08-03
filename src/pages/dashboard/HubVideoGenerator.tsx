@@ -15,7 +15,7 @@
  * o resto.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -125,26 +125,26 @@ interface VideoModelMeta {
 
 const VIDEO_MODELS: Record<VideoModelId, VideoModelMeta> = {
   "kling-std": {
-    id: "kling-std", label: "Kling 3.0", emoji: "⚡",
-    bestFor: "Movimento natural, uso geral",
+    id: "kling-std", label: "Rápido", emoji: "⚡",
+    bestFor: "Pronto em ~1 min · ideal para testar ideia",
     badge: "verified", resolution: "720p", cost5s: 0.10,
     supports: { imageToVideo: true, audio: true, durations: [5, 10], aspectRatios: ["16:9", "9:16", "1:1"] },
   },
   "kling-pro": {
-    id: "kling-pro", label: "Kling 3.0 Pro", emoji: "🎬",
-    bestFor: "Cinematic 1080p, qualidade máxima",
+    id: "kling-pro", label: "Cinema", emoji: "🎬",
+    bestFor: "1080p com acabamento · para o anúncio final",
     badge: "verified", resolution: "1080p", cost5s: 0.30,
     supports: { imageToVideo: true, audio: true, durations: [5, 10], aspectRatios: ["16:9", "9:16", "1:1"] },
   },
   "hailuo": {
-    id: "hailuo", label: "Hailuo 02", emoji: "🎭",
-    bestFor: "Personagens consistentes, expressões",
+    id: "hailuo", label: "Pessoas", emoji: "🎭",
+    bestFor: "Rostos e expressões consistentes",
     badge: "beta", resolution: "720p", cost5s: 0.20,
     supports: { imageToVideo: true, audio: false, durations: [5, 6], aspectRatios: ["16:9", "9:16"] },
   },
   "luma": {
     id: "luma", label: "Luma Dream", emoji: "🌊",
-    bestFor: "Orgânico, humanos, lifestyle",
+    bestFor: "Movimento suave · lifestyle",
     badge: "beta", resolution: "720p", cost5s: 0.25,
     supports: { imageToVideo: true, audio: false, durations: [5], aspectRatios: ["16:9", "9:16"] },
   },
@@ -200,6 +200,14 @@ export default function HubVideoGenerator() {
   }, [videoModel]);
   const [prompt, setPrompt] = useState("");
   const [sourceImage, setSourceImage] = useState<string | null>(null); // data URL
+
+  // Recebe o criativo vindo da tela anterior ("Tirar fundo", "Virar vídeo"…).
+  // Sem isso o usuário teria que reencontrar e reenviar a imagem que acabou
+  // de gerar — o motivo pelo qual essas telas pareciam desconexas.
+  const routeState = useLocation().state as { sourceImage?: string } | null;
+  useEffect(() => {
+    if (routeState?.sourceImage) setSourceImage(routeState.sourceImage);
+  }, [routeState]);
   const [sourceFileName, setSourceFileName] = useState<string>("");
 
   // UI state

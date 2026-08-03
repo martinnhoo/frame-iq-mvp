@@ -137,11 +137,12 @@ export function CommandPalette({ open, onClose, decisions: passedDecisions, acco
 
     // Group 2 — nav
     const navItems: Array<[string, string, string, React.ReactNode]> = [
-      ["nav-comando",      "Comando",       "/dashboard/feed",     <Compass size={14} />],
-      ["nav-estrategista", "Estrategista (Chat IA)",  "/dashboard/ai",       <MessageSquare size={14} />],
-      ["nav-historico",    "Histórico",     "/dashboard/history",  <Library size={14} />],
-      ["nav-contas",       "Contas",        "/dashboard/accounts", <Building2 size={14} />],
-      ["nav-settings",     "Configurações", "/dashboard/settings", <Settings size={14} />],
+      // Rotas do media buyer saíram daqui em 03/08: continuam existindo
+      // (OAuth e Stripe dependem delas), mas não são mais navegação do produto.
+      ["nav-criar",     "Criar criativo",     "/dashboard/hub/image",   <Compass size={14} />],
+      ["nav-marcas",    "Minhas marcas",      "/dashboard/hub/brands",      <Building2 size={14} />],
+      ["nav-criativos", "Meus criativos",     "/dashboard/hub/library", <Library size={14} />],
+      ["nav-planos",    "Planos e créditos",  "/dashboard/plans",       <Settings size={14} />],
     ];
     navItems.forEach(([id, label, path, icon]) => {
       out.push({
@@ -165,7 +166,7 @@ export function CommandPalette({ open, onClose, decisions: passedDecisions, acco
       label: "Faturamento",
       hint: "Plano + cobranças",
       icon: <Receipt size={14} />,
-      onSelect: () => { onClose(); navigate("/dashboard/settings?tab=billing"); },
+      onSelect: () => { onClose(); navigate("/dashboard/plans"); },
       searchable: "faturamento plano cobranças billing",
     });
     out.push({
@@ -173,7 +174,7 @@ export function CommandPalette({ open, onClose, decisions: passedDecisions, acco
       label: "Créditos da sessão",
       hint: "Uso atual + limite",
       icon: <Zap size={14} />,
-      onSelect: () => { onClose(); navigate("/dashboard/settings?tab=billing"); },
+      onSelect: () => { onClose(); navigate("/dashboard/plans"); },
       searchable: "créditos energy uso limite chats",
     });
     out.push({

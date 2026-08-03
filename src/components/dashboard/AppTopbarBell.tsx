@@ -318,7 +318,7 @@ export function AppTopbarBell({ alerts }: Props) {
                 {accountItems.slice(0, 8).map(a => (
                   <button
                     key={a.id}
-                    onClick={() => { setOpen(false); navigate("/dashboard/feed"); }}
+                    onClick={() => { setOpen(false); navigate("/dashboard/hub/library"); }}
                     style={notifBtnStyle(false)}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)"}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.04)"}
@@ -342,7 +342,7 @@ export function AppTopbarBell({ alerts }: Props) {
           {/* Footer só pra account alerts */}
           {!isHubRoute && accountItems.length > 0 && (
             <button
-              onClick={() => { setOpen(false); navigate("/dashboard/feed"); }}
+              onClick={() => { setOpen(false); navigate("/dashboard/hub/library"); }}
               style={{
                 width: "100%", padding: "10px 14px",
                 background: "rgba(59,130,246,0.06)",

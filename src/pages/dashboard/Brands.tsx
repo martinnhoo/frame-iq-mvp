@@ -36,6 +36,17 @@ interface BrandAsset {
 
 const BUCKET = "hub-images";
 
+// Mesma lista de src/data/hubBrands.ts. Mercado saiu do formulário de geração
+// e virou propriedade da marca: ninguém troca de país entre um criativo e outro.
+const MARKET_OPTIONS = [
+  { code: "BR", flag: "🇧🇷", label: "Brasil" },
+  { code: "MX", flag: "🇲🇽", label: "México" },
+  { code: "CO", flag: "🇨🇴", label: "Colômbia" },
+  { code: "PE", flag: "🇵🇪", label: "Peru" },
+  { code: "US", flag: "🇺🇸", label: "EUA" },
+  { code: "IN", flag: "🇮🇳", label: "Índia" },
+];
+
 export default function Brands() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -213,6 +224,8 @@ function BrandEditor({
   const [notes, setNotes] = useState("");
   const [assets, setAssets] = useState<BrandAsset[]>([]);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [markets, setMarkets] = useState<string[]>(["BR"]);
+  const [license, setLicense] = useState<Record<string, string>>({});
   const [logoUploading, setLogoUploading] = useState(false);
   const [savedBrandId, setSavedBrandId] = useState<string | null>(isNew ? null : brandId);
   const [saving, setSaving] = useState(false);
@@ -228,13 +241,16 @@ function BrandEditor({
       try {
         const { data: brand } = await supabase
           .from("user_brands")
-          .select("name, notes, logo_url")
+          .select("name, notes, logo_url, markets, license")
           .eq("id", brandId)
           .maybeSingle();
         if (brand) {
           setName((brand.name as string) || "");
           setNotes((brand.notes as string) || "");
           setLogoUrl(((brand as any).logo_url as string) || null);
+          const mk = ((brand as any).markets as string[]) || [];
+          setMarkets(mk.length ? mk : ["BR"]);
+          setLicense(((brand as any).license as Record<string, string>) || {});
         }
         const { data: assetsData } = await supabase
           .from("brand_assets")
@@ -310,7 +326,7 @@ function BrandEditor({
         // Update
         const { error: upErr } = await supabase
           .from("user_brands")
-          .update({ name: cleanName, notes: notes.trim(), logo_url: logoUrl })
+          .update({ name: cleanName, notes: notes.trim(), logo_url: logoUrl, markets, license })
           .eq("id", savedBrandId);
         if (upErr) { setError(`Falha ao salvar: ${upErr.message}`); return null; }
         return savedBrandId;
@@ -318,7 +334,7 @@ function BrandEditor({
         // Insert
         const { data: inserted, error: insErr } = await supabase
           .from("user_brands")
-          .insert({ user_id: user.id, name: cleanName, notes: notes.trim(), logo_url: logoUrl })
+          .insert({ user_id: user.id, name: cleanName, notes: notes.trim(), logo_url: logoUrl, markets, license })
           .select("id")
           .single();
         if (insErr || !inserted) { setError(`Falha ao criar: ${insErr?.message || "?"}`); return null; }
@@ -526,6 +542,62 @@ function BrandEditor({
             <div style={fieldHint}>
               Escrito uma vez, reaproveitado em toda geração desta marca — imagem, vídeo, legenda e roteiro.
             </div>
+          </div>
+
+          {/* Mercados — escrito uma vez, some do formulário de geração */}
+          <div style={field}>
+            <label style={fieldLabel}>Onde esta marca anuncia</label>
+            <div style={fieldHint}>
+              O primeiro vira o padrão. Define o idioma do texto e a aparência das pessoas nos criativos.
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+              {MARKET_OPTIONS.map(m => {
+                const on = markets.includes(m.code);
+                return (
+                  <button
+                    key={m.code}
+                    onClick={() => setMarkets(prev =>
+                      on ? (prev.length > 1 ? prev.filter(x => x !== m.code) : prev)
+                         : [...prev, m.code])}
+                    style={{
+                      padding: "6px 11px", fontSize: 12, fontWeight: 600, borderRadius: 7,
+                      cursor: "pointer",
+                      background: on ? "rgba(14,165,233,0.14)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${on ? "rgba(14,165,233,0.4)" : "rgba(255,255,255,0.08)"}`,
+                      color: on ? "#7DD3FC" : "rgba(240,246,252,0.6)",
+                    }}
+                  >
+                    {m.flag} {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Licença — só para quem anuncia em setor regulado */}
+          <div style={field}>
+            <label style={fieldLabel}>Texto legal (opcional)</label>
+            <div style={fieldHint}>
+              Aparece no rodapé do criativo. Use se você anuncia em setor regulado —
+              saúde, apostas, financeiro. Um por mercado.
+            </div>
+            {markets.map(code => {
+              const m = MARKET_OPTIONS.find(x => x.code === code);
+              return (
+                <div key={code} style={{ marginTop: 8 }}>
+                  <div style={{ fontSize: 10.5, color: "rgba(240,246,252,0.45)", marginBottom: 4 }}>
+                    {m?.flag} {m?.label}
+                  </div>
+                  <textarea
+                    value={license[code] || ""}
+                    onChange={e => setLicense(prev => ({ ...prev, [code]: e.target.value }))}
+                    rows={2}
+                    placeholder="ex: Bebida alcoólica. Venda proibida para menores de 18 anos."
+                    style={{ ...inputStyle, fontFamily: "inherit", resize: "vertical", fontSize: 12 }}
+                  />
+                </div>
+              );
+            })}
           </div>
 
           {/* Upload area */}

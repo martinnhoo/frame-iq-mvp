@@ -45,7 +45,7 @@ export function useUserBrands(includeNoBrand = true): UseUserBrandsResult {
 
       const { data, error: qErr } = await (supabase
         .from("user_brands" as any)
-        .select("id, name, notes, logo_url, markets")
+        .select("id, name, notes, logo_url, markets, license")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }) as any);
 
