@@ -30,7 +30,7 @@ import {
   insufficientCreditsResponse, getUserPlan,
 } from "../_shared/hub-credits.ts";
 
-const FN_VERSION = "v4-2026-08-03-voz";
+const FN_VERSION = "v5-2026-08-03-audio";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
@@ -143,6 +143,16 @@ function voiceMeta(tags: string[]) {
     : t.includes("announcer") ? "locutor"
     : "narracao";
   return { gender, age, useCase };
+}
+
+/** Base64 em blocos: o spread de um array grande estoura a pilha. */
+function toBase64(bytes: Uint8Array): string {
+  const CHUNK = 8192;
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
 }
 
 function json(payload: unknown, status = 200): Response {
@@ -398,11 +408,17 @@ Deno.serve(async (req) => {
 
     let audioUrl: string;
     if (upErr) {
+      if (String(upErr.message || "").toLowerCase().includes("mime")) {
+        console.error("[hub-voice] bucket recusa audio/mpeg — rode a migration 20260803150000");
+      }
       // Storage falhou mas o áudio existe — devolve inline em vez de perder
       // a geração já paga.
       console.warn("[hub-voice] storage falhou, devolvendo inline:", upErr.message);
-      const b64 = btoa(String.fromCharCode(...new Uint8Array(audioBuf)));
-      audioUrl = `data:audio/mpeg;base64,${b64}`;
+      // String.fromCharCode(...array) espalha cada byte como argumento da
+      // função. Um MP3 de 30s tem ~480 mil bytes — isso estourava a pilha e
+      // derrubava a função inteira, que era o "erro na edge function" que o
+      // usuário via. Converte em blocos.
+      audioUrl = `data:audio/mpeg;base64,${toBase64(new Uint8Array(audioBuf))}`;
     } else {
       audioUrl = sb.storage.from("hub-images").getPublicUrl(path).data.publicUrl;
     }
