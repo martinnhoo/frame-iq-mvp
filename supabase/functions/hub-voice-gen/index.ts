@@ -30,7 +30,7 @@ import {
   insufficientCreditsResponse, getUserPlan,
 } from "../_shared/hub-credits.ts";
 
-const FN_VERSION = "v3-2026-08-02-metering";
+const FN_VERSION = "v4-2026-08-03-voz";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
@@ -258,13 +258,18 @@ Deno.serve(async (req) => {
           }
         }
       } catch (e) {
-        const status = Number(String(e instanceof Error ? e.message : e)) || 0;
-        console.error(`[hub-voice] catálogo falhou ${status}`);
+        const raw = e instanceof Error ? e.message : String(e);
+        const status = Number(raw) || 0;
+        console.error(`[hub-voice] catálogo falhou: ${raw}`);
         return json({
           ok: false, error: "fish_catalog_failed",
+          status,
+          detail: raw.slice(0, 300),
           message: status === 401
-            ? "Chave do Fish Audio inválida."
-            : "Não foi possível carregar o catálogo de vozes.",
+            ? "Chave do Fish Audio inválida ou sem permissão."
+            : status === 422
+            ? "O Fish recusou os filtros da busca de vozes."
+            : `Não foi possível carregar o catálogo de vozes (${raw.slice(0, 60)}).`,
         }, 502);
       }
       const allowed = items.filter(isVoiceAllowed);
@@ -322,27 +327,41 @@ Deno.serve(async (req) => {
       pendingReservation = res.reservation_id ?? null;
     }
 
-    const r = await fetch(`${FISH_API}/v1/tts`, {
+    const ttsBody = JSON.stringify({
+      text,
+      reference_id: voiceId,
+      format: "mp3",
+      mp3_bitrate: 128,
+      latency: "normal",
+      normalize: true,
+      prosody: { speed, volume: 0 },
+    });
+
+    const callFish = (m: string) => fetch(`${FISH_API}/v1/tts`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${FISH_KEY}`,
         "Content-Type": "application/json",
-        model,
+        model: m,
       },
-      body: JSON.stringify({
-        text,
-        reference_id: voiceId,
-        format: "mp3",
-        mp3_bitrate: 128,
-        latency: "normal",
-        normalize: true,
-        prosody: { speed, volume: 0 },
-      }),
+      body: ttsBody,
     });
+
+    let usedModel = model;
+    let r = await callFish(model);
+
+    // O enum documentado do /v1/tts lista só s1 e s2-pro, mas a página de
+    // modelos apresenta s2.1-pro-free como válido. Se o free for recusado,
+    // tenta o pago em vez de falhar para o usuário.
+    if (!r.ok && model === "s2.1-pro-free" && (r.status === 422 || r.status === 400)) {
+      console.warn(`[hub-voice] ${model} recusado (${r.status}) — tentando s2-pro`);
+      usedModel = "s2-pro";
+      r = await callFish("s2-pro");
+    }
 
     if (!r.ok) {
       const errText = await r.text().catch(() => "");
-      console.error(`[hub-voice] fish ${r.status}: ${errText.slice(0, 300)}`);
+      console.error(`[hub-voice] fish ${r.status} (modelo ${usedModel}): ${errText.slice(0, 300)}`);
       if (pendingReservation) {
         await refundCredits(sb, pendingReservation, `fish_${r.status}`);
         pendingReservation = null;
@@ -351,8 +370,14 @@ Deno.serve(async (req) => {
         r.status === 401 ? "Chave do Fish Audio inválida ou expirada."
         : r.status === 402 ? "Saldo do Fish Audio esgotado. Recarregue em fish.audio."
         : r.status === 429 ? "Muitas gerações simultâneas. Tente em alguns segundos."
+        : r.status === 422 ? "O Fish recusou os parâmetros da geração."
         : `Fish Audio retornou ${r.status}.`;
-      return json({ ok: false, error: "fish_tts_failed", message, status: r.status }, 502);
+      // Devolve o corpo do erro: sem isso, diagnosticar exigia acesso ao log.
+      return json({
+        ok: false, error: "fish_tts_failed", message, status: r.status,
+        model_tried: usedModel,
+        detail: errText.slice(0, 400),
+      }, 502);
     }
 
     const audioBuf = await r.arrayBuffer();
@@ -393,7 +418,7 @@ Deno.serve(async (req) => {
       characters: text.length,
       size_kb: Math.round(audioBuf.byteLength / 1024),
       voice_id: voiceId,
-      model,
+      model: usedModel,
       credits_charged: credits,
       free: credits === 0,
     });
