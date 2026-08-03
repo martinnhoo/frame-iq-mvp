@@ -2,7 +2,11 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getEffectivePlan } from "../_shared/credits.ts";
 
+// Versao do deploy — permite verificar de fora o que esta no ar.
+const FN_VERSION = "v3-2026-08-03-billing";
+
 const corsHeaders = {
+  "x-fn-version": FN_VERSION,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };

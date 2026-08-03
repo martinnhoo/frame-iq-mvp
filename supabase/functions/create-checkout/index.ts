@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 // create-checkout v3 — proteção anti-trial-abuse: disposable email, Stripe history, IP velocity
 
 // Versão do deploy — permite verificar de fora o que está no ar.
-const FN_VERSION = "v2-2026-08-02-metering";
+const FN_VERSION = "v3-2026-08-03-billing";
 
 const corsHeaders = {
   // Versão do deploy em todas as respostas — torna possível
