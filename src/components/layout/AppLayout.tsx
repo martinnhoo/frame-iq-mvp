@@ -528,9 +528,16 @@ export function AppLayout() {
         )}
       </div>
 
-      {/* ── Account selector — escondido nas rotas /dashboard/hub*.
-          Hub é produto interno isolado: não mostra conta/persona/plano. */}
-      <div style={{ flexShrink: 0, display: location.pathname.startsWith('/dashboard/hub') ? 'none' : 'block' }}>
+      {/* ── Account selector — escondido nas rotas do Hub e em Planos.
+          A sidebar tem que ser a mesma em todas as telas do produto:
+          antes, ao entrar em /dashboard/plans o seletor de conta aparecia
+          do nada e a barra "mudava". */}
+      <div style={{
+        flexShrink: 0,
+        display: (location.pathname.startsWith('/dashboard/hub') || location.pathname.startsWith('/dashboard/plans'))
+          ? 'none' : 'block',
+      }}>
+
         <button
           onClick={() => setAccountsOpen(o => !o)}
           style={{
