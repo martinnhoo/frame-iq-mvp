@@ -802,12 +802,12 @@ async function execImageGen(
   // Variation com axis="prompt" injeta _prompt_override em cada clone do
   // image-gen pra que cada variant gere uma copy diferente.
   const overridePrompt = (node.data._prompt_override as string | undefined)?.trim();
-  const promptInput = inputs.prompt as { text?: string } | string | undefined;
-  const inputPromptText = typeof promptInput === "string"
-    ? promptInput
-    : (promptInput?.text || "");
+  const inputPromptText = resolveText(inputs, node);
   const promptText = overridePrompt || inputPromptText;
-  if (!promptText || promptText.length < 5) throw new Error("missing_prompt");
+  if (!promptText || promptText.length < 5) {
+    throw new Error("missing_prompt: o nó de imagem não recebeu prompt. Escreva o prompt no nó ou conecte um nó de prompt/roteiro na entrada.");
+  }
+
   if (overridePrompt) {
     console.log(`[execImageGen] node=${node.id} using prompt OVERRIDE from variation: "${overridePrompt.slice(0, 80)}…"`);
   }
@@ -960,9 +960,11 @@ async function execBgRemove(
   ctx: ExecCtx,
 ): Promise<{ asset_id: string | null; image_url: string }> {
   // Recebe { image_url } do nó upstream (image-gen ou direto URL)
-  const imgInput = inputs.image as { image_url?: string } | string | undefined;
-  const image_url = typeof imgInput === "string" ? imgInput : imgInput?.image_url;
-  if (!image_url) throw new Error("missing_image_input");
+  const image_url = resolveImageUrl(inputs, _node);
+  if (!image_url) {
+    throw new Error("missing_image_input: o nó de recorte não recebeu imagem. Conecte um nó de imagem na entrada.");
+  }
+
 
   const r = await fetch(`${ctx.supabaseUrl}/functions/v1/hub-bria-bg-remove`, {
     method: "POST",
@@ -996,9 +998,11 @@ async function execStoryboard(
   ctx: ExecCtx,
 ): Promise<{ storyboard_id: string; scenes: Array<{ n: number; image_url: string | null; asset_id: string | null }> }> {
   // Recebe { text } do prompt + { brand } opcional
-  const promptInput = inputs.prompt as { text?: string } | string | undefined;
-  const script = typeof promptInput === "string" ? promptInput : (promptInput?.text || "");
-  if (!script || script.length < 10) throw new Error("missing_script");
+  const script = resolveText(inputs, node);
+  if (!script || script.length < 10) {
+    throw new Error("missing_script: o storyboard não recebeu roteiro. Conecte um nó de prompt/roteiro na entrada.");
+  }
+
 
   const brandInput = inputs.brand as Record<string, unknown> | undefined;
   const scene_count = Math.max(2, Math.min(8, Number(node.data.scene_count) || 4));
