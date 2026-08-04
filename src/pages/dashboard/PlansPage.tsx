@@ -14,6 +14,7 @@ import {
   type HubPlan, type PlanKey,
 } from "@/lib/hubPlans";
 import { useHubCredits } from "@/hooks/useHubCredits";
+import * as D from "@/lib/design";
 
 const T = {
   bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
@@ -283,7 +284,7 @@ export default function PlansPage() {
       </div>
 
       {/* Planos */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(215px, 1fr))", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, alignItems: "stretch" }}>
         {ORDER.map(key => {
           const p = HUB_PLANS[key];
           const isCurrent = currentPlan === key;
@@ -291,9 +292,11 @@ export default function PlansPage() {
           return (
             <div key={key} style={{
               background: featured ? T.bg2 : T.bg1,
-              border: `1px solid ${featured ? "rgba(14,165,233,0.35)" : T.border1}`,
-              borderLeft: `2px solid ${featured ? T.blue : "transparent"}`,
-              borderRadius: 11, padding: 17, display: "flex", flexDirection: "column",
+              border: `1px solid ${featured ? D.color.accentBorder : T.border1}`,
+              borderRadius: D.radius.md,
+              padding: featured ? 28 : 24,
+              display: "flex", flexDirection: "column",
+              boxShadow: featured ? D.shadow.raised : D.shadow.card,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
                 <span style={{ fontSize: 14, fontWeight: 800 }}>{p.label}</span>
@@ -310,7 +313,12 @@ export default function PlansPage() {
                 return (
                   <>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 3, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 25, fontWeight: 800, color: intro ? T.green : T.text1 }}>
+                      <span style={{
+                        fontSize: D.font.size.display, fontWeight: 800,
+                        letterSpacing: D.font.tracking.display,
+                        fontVariantNumeric: "tabular-nums",
+                        color: intro ? T.green : T.text1,
+                      }}>
                         {intro || price(p)}
                       </span>
                       {p.usd > 0 && <span style={{ fontSize: 11, color: T.text3 }}>/mês</span>}
@@ -337,7 +345,7 @@ export default function PlansPage() {
                 {capabilities(p).map((f, i) => (
                   <li key={i} style={{
                     display: "flex", alignItems: "flex-start", gap: 7,
-                    fontSize: 11.5, color: T.text2, marginBottom: 7, lineHeight: 1.45,
+                    fontSize: D.font.size.body, color: T.text2, marginBottom: 9, lineHeight: 1.5,
                   }}>
                     <Check size={12} color={featured ? T.blue : T.green} style={{ marginTop: 2, flexShrink: 0 }} />
                     <span>{f}</span>
@@ -349,8 +357,9 @@ export default function PlansPage() {
                 onClick={() => !isCurrent && p.usd > 0 && checkout(key)}
                 disabled={isCurrent || p.usd === 0 || busy === key}
                 style={{
-                  width: "100%", padding: "9px 12px", borderRadius: 7, border: "none",
-                  fontSize: 12.5, fontWeight: 700,
+                  width: "100%", height: D.size.controlLg, padding: `0 ${D.space[4]}px`,
+                  borderRadius: D.radius.sm, border: "none",
+                  fontSize: D.font.size.bodyLg, fontWeight: 800,
                   cursor: isCurrent || p.usd === 0 ? "default" : "pointer",
                   background: isCurrent ? T.bg3 : p.usd === 0 ? "transparent" : featured ? T.blue : T.bg3,
                   color: isCurrent ? T.text3 : p.usd === 0 ? T.text3 : featured ? "#fff" : T.text1,

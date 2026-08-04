@@ -13,6 +13,8 @@
  * divergir do que o checkout cobra.
  */
 import { useState } from "react";
+import * as D from "@/lib/design";
+import HeroDemo from "@/components/landing/HeroDemo";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
@@ -21,15 +23,18 @@ import {
 } from "lucide-react";
 import { HUB_PLANS, CREDIT_COSTS, type PlanKey } from "@/lib/hubPlans";
 
+// Tudo vem do design.ts. Antes a landing tinha o próprio tema — Inter contra
+// Plus Jakarta do app, #0ea5e9 contra #3B82F6, outro preto de fundo — e quem
+// clicava em "Começar grátis" trocava de marca no meio do caminho.
 const T = {
-  bg0: "#080B11", bg1: "#0D1117", bg2: "#161B22", bg3: "#1C2128",
-  b1: "rgba(240,246,252,0.07)", b2: "rgba(240,246,252,0.12)",
-  t1: "#F0F6FC", t2: "rgba(240,246,252,0.72)", t3: "rgba(240,246,252,0.48)",
-  blue: "#0ea5e9", green: "#4ADE80", purple: "#A78BFA", amber: "#FBBF24",
-  label: "rgba(240,246,252,0.40)",
+  bg0: D.color.canvas, bg1: D.color.surface, bg2: D.color.raised, bg3: D.color.raised,
+  b1: D.color.border, b2: D.color.borderHover,
+  t1: D.color.text, t2: D.color.text2, t3: D.color.text3,
+  blue: D.color.accent, green: D.color.success, purple: "#A78BFA", amber: D.color.warning,
+  label: D.color.text3,
 };
 
-const F = "'Inter','Plus Jakarta Sans',system-ui,sans-serif";
+const F = D.font.family;
 const ORDER: PlanKey[] = ["creator", "pro", "studio"];
 
 export default function Landing() {
@@ -37,6 +42,11 @@ export default function Landing() {
 
   return (
     <div style={{ background: T.bg0, color: T.t1, fontFamily: F, minHeight: "100vh" }}>
+      <style>{`
+        @media (max-width: 900px) {
+          .hero-split { grid-template-columns: 1fr !important; gap: 32px !important; }
+        }
+      `}</style>
       <Helmet>
         <title>AdBrief — criativo de anúncio pronto em minutos</title>
         <meta name="description" content="Descreva o anúncio em uma frase e receba imagem, vídeo, legenda e variações com a cara da sua marca. A partir de R$ 97/mês." />
@@ -61,35 +71,51 @@ export default function Landing() {
 
       {/* ── Herói ───────────────────────────────────────────────────────── */}
       <Section>
-        <Wrap style={{ padding: "72px 22px 56px", textAlign: "center", maxWidth: 820 }}>
-          <Badge>Feito para quem anuncia no Brasil</Badge>
-
-          <h1 style={{
-            fontSize: "clamp(32px, 5.4vw, 54px)", fontWeight: 800,
-            lineHeight: 1.08, letterSpacing: "-0.035em", margin: "20px 0 0",
+        <Wrap style={{ padding: "64px 22px 52px" }}>
+          {/* Duas colunas: promessa à esquerda, produto à direita. A versão
+              anterior era texto centralizado num maxWidth de 820 — estrutura
+              de landing de newsletter, sem nada pra ver. */}
+          <div className="hero-split" style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.05fr)",
+            gap: 44, alignItems: "center",
           }}>
-            Descreva o anúncio em uma frase.<br />
-            <span style={{ color: T.blue }}>Ele sai pronto pra subir.</span>
-          </h1>
+            <div>
+              <Badge>Feito para quem anuncia no Brasil</Badge>
 
-          <p style={{ fontSize: 17, color: T.t2, lineHeight: 1.6, margin: "20px auto 0", maxWidth: 620 }}>
-            Imagem, vídeo, legenda e variações para teste — com o logo, as cores
-            e o jeito de falar da sua marca. Sem briefing, sem designer parado,
-            sem esperar três dias.
-          </p>
+              <h1 style={{
+                fontSize: "clamp(30px, 4.4vw, 50px)", fontWeight: 800,
+                lineHeight: 1.08, letterSpacing: "-0.035em", margin: "18px 0 0",
+              }}>
+                Descreva o anúncio em uma frase.<br />
+                <span style={{ color: T.blue }}>Ele sai pronto pra subir.</span>
+              </h1>
 
-          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 30, flexWrap: "wrap" }}>
-            <Link to="/signup" style={{ ...btnPrimary, padding: "13px 26px", fontSize: 15 }}>
-              Criar meu primeiro criativo <ArrowRight size={16} />
-            </Link>
-            <a href="#como" style={{ ...btnGhost, padding: "13px 22px", fontSize: 15 }}>
-              Ver como funciona
-            </a>
+              <p style={{ fontSize: 16.5, color: T.t2, lineHeight: 1.6, margin: "18px 0 0", maxWidth: 520 }}>
+                Imagem, vídeo, legenda e variações para teste — com o logo, as cores
+                e o jeito de falar da sua marca. Sem briefing, sem designer parado,
+                sem esperar três dias.
+              </p>
+
+              {/* Um CTA. O "Ver como funciona" tinha o mesmo peso visual do
+                  botão de cadastro e só rolava a página — roubava clique do
+                  CTA real pra entregar menos. Virou link discreto. */}
+              <div style={{ display: "flex", gap: 14, alignItems: "center", marginTop: 28, flexWrap: "wrap" }}>
+                <Link to="/signup" style={{ ...btnPrimary, padding: "14px 28px", fontSize: 15.5 }}>
+                  Criar meu primeiro criativo <ArrowRight size={16} />
+                </Link>
+                <a href="#como" style={{ fontSize: 14, color: T.t3, textDecoration: "none", borderBottom: `1px solid ${T.b2}`, paddingBottom: 2 }}>
+                  ou veja como funciona
+                </a>
+              </div>
+
+              <p style={{ fontSize: 12.5, color: T.t3, marginTop: 16 }}>
+                Grátis para testar · sem cartão · locução ilimitada em todos os planos
+              </p>
+            </div>
+
+            <HeroDemo />
           </div>
-
-          <p style={{ fontSize: 12.5, color: T.t3, marginTop: 14 }}>
-            Grátis para testar · sem cartão · locução ilimitada em todos os planos
-          </p>
         </Wrap>
       </Section>
 
@@ -195,11 +221,19 @@ export default function Landing() {
               const videos = Math.floor(p.credits / CREDIT_COSTS.video_final_5s);
               const imgs = Math.floor(p.credits / CREDIT_COSTS.image_standard);
               return (
+                // O card em destaque se diferenciava por 1px de borda azul e
+                // 2px na esquerda. Num scan de 2 segundos os três eram o mesmo
+                // objeto — e o destaque existe justamente pra decidir por quem
+                // não quer decidir.
                 <div key={key} style={{
                   background: featured ? T.bg2 : T.bg1,
-                  border: `1px solid ${featured ? "rgba(14,165,233,0.36)" : T.b1}`,
-                  borderLeft: `2px solid ${featured ? T.blue : "transparent"}`,
-                  borderRadius: 13, padding: 22, position: "relative",
+                  border: `1px solid ${featured ? D.color.accentBorder : T.b1}`,
+                  borderRadius: D.radius.md,
+                  padding: featured ? 28 : 22,
+                  position: "relative",
+                  boxShadow: featured ? D.shadow.raised : D.shadow.card,
+                  transform: featured ? "scale(1.03)" : "none",
+                  zIndex: featured ? 1 : 0,
                 }}>
                   {featured && (
                     <span style={{
@@ -211,7 +245,13 @@ export default function Landing() {
                   )}
                   <div style={{ fontSize: 15, fontWeight: 800 }}>{p.label}</div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 5, margin: "8px 0 3px" }}>
-                    <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>
+                    {/* 32px não ancora nada. O preço é a informação que a
+                        pessoa veio buscar nesta seção. */}
+                    <span style={{
+                      fontSize: D.font.size.display, fontWeight: 800,
+                      letterSpacing: D.font.tracking.display,
+                      fontVariantNumeric: "tabular-nums",
+                    }}>
                       R$ {p.brl}
                     </span>
                     <span style={{ fontSize: 13, color: T.t3 }}>/mês</span>

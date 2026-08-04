@@ -31,7 +31,7 @@ import * as D from "@/lib/design";
 import GenerationStage, { type StageKey } from "@/components/hub/GenerationStage";
 import PlatformFrame from "@/components/hub/PlatformFrame";
 import {
-  Image as ImageIcon, Download, RefreshCw, ArrowLeft, Sparkles, AlertTriangle,
+  Image as ImageIcon, Download, RefreshCw, Sparkles, AlertTriangle,
   Copy, RotateCcw, Check, ChevronDown, Search, Plus, Upload, X,
   Pencil, ChevronRight, Layers, Trash2,
   ScanFace, Video, Captions,
@@ -963,20 +963,9 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
               {t("subtitle")}
             </p>
           </div>
-          <button onClick={() => navigate("/dashboard/hub")} style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "9px 14px", borderRadius: 10,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.10)",
-            color: "#D1D5DB", cursor: "pointer", fontSize: 12.5, fontWeight: 600,
-            fontFamily: "inherit", flexShrink: 0,
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(59,130,246,0.40)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"; }}
-          >
-            <ArrowLeft size={13} /> {t("back")}
-          </button>
+          {/* Havia um "Voltar ao Hub" aqui. Esta É a tela inicial, e o
+              destino nem aparece no menu — o botão convidava a sair de onde
+              a pessoa deveria estar. */}
         </div>
 
         {/* ── 2-col workspace ──────────────────────────────────── */}
@@ -1566,27 +1555,102 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
               )}
 
               {!result && !needsVerify && !error && !loading && (
+                /* O estado vazio ocupa o espaço mais nobre da tela e não
+                   vendia nada: um retângulo tracejado com um ícone genérico.
+                   Num produto que gera imagem, este é o único showroom que
+                   existe antes da primeira geração — e ele resolve, de quebra,
+                   o "não sei o que pedir", que é onde a maioria trava. */
                 <div style={{
-                  border: "1px dashed rgba(255,255,255,0.10)",
-                  borderRadius: 12, minHeight: 360,
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center",
-                  padding: 32, textAlign: "center", gap: 14,
-                  background: "rgba(0,0,0,0.20)",
+                  border: `1px solid ${D.color.border}`,
+                  borderRadius: D.radius.lg,
+                  minHeight: 360,
+                  padding: D.space[5],
+                  background: D.color.inset,
+                  display: "flex", flexDirection: "column", gap: D.space[4],
                 }}>
-                  <div style={{
-                    width: 52, height: 52, borderRadius: 13,
-                    background: "rgba(59,130,246,0.10)",
-                    border: "1px solid rgba(59,130,246,0.22)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <ImageIcon size={22} style={{ color: "#3B82F6" }} />
-                  </div>
                   <div>
-                    <p style={{ fontSize: 13.5, fontWeight: 700, color: "#fff", margin: 0 }}>{t("emptyTitle")}</p>
-                    <p style={{ fontSize: 12, color: "#D1D5DB", margin: "5px 0 0", lineHeight: 1.5, maxWidth: 320 }}>
-                      {t("emptyDesc")}
+                    <p style={{
+                      fontSize: D.font.size.title, fontWeight: D.font.weight.bold,
+                      color: D.color.text, margin: 0, letterSpacing: "-0.02em",
+                    }}>
+                      Comece por um objetivo
                     </p>
+                    <p style={{
+                      fontSize: D.font.size.body, color: D.color.text2,
+                      margin: "6px 0 0", lineHeight: D.font.leading.normal,
+                    }}>
+                      Cada um já preenche o texto, o formato e a qualidade.
+                      Você ajusta depois se quiser.
+                    </p>
+                  </div>
+
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                    gap: D.space[2],
+                  }}>
+                    {CREATIVE_GOALS.filter(g => g.prompt).map(g => (
+                      <button
+                        key={g.id}
+                        onClick={() => {
+                          setActiveGoal(g.id);
+                          setPrompt(g.prompt);
+                          setAspectRatio(g.aspect);
+                          setQuality(g.quality);
+                        }}
+                        style={{
+                          textAlign: "left",
+                          padding: D.space[3],
+                          borderRadius: D.radius.sm,
+                          background: D.color.surface,
+                          border: `1px solid ${D.color.border}`,
+                          color: D.color.text,
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                          display: "flex", flexDirection: "column", gap: 6,
+                          transition: `border-color ${D.motion.fast}, transform ${D.motion.fast}`,
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.borderColor = D.color.accentBorder;
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.borderColor = D.color.border;
+                          e.currentTarget.style.transform = "none";
+                        }}
+                      >
+                        {/* Proporção real do formato que o objetivo escolhe:
+                            a pessoa vê a forma do que vai sair antes de gerar. */}
+                        <span style={{
+                          width: "100%",
+                          aspectRatio: g.aspect.replace(":", " / "),
+                          maxHeight: 78,
+                          borderRadius: D.radius.xs,
+                          background: `linear-gradient(145deg, ${D.color.raised}, ${D.color.inset})`,
+                          border: `1px solid ${D.color.border}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <g.Icon size={15} color={D.color.text3} />
+                        </span>
+                        <span style={{
+                          fontSize: D.font.size.caption,
+                          fontWeight: D.font.weight.medium,
+                        }}>
+                          {g.label}
+                        </span>
+                        <span style={{
+                          fontSize: D.font.size.label,
+                          color: D.color.text3,
+                          fontVariantNumeric: "tabular-nums",
+                        }}>
+                          {g.aspect} · {hubCostOf(
+                            g.quality === "high" ? "image_high"
+                            : g.quality === "low" ? "image_draft"
+                            : "image_standard",
+                          )} créditos
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1668,40 +1732,10 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
           </div>
         </div>
 
-        {/* Bottom benefits strip */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 12, marginTop: 4,
-        }} className="hub-image-benefits">
-          {[
-            { icon: "⚡", titleKey: "bFastTitle",  descKey: "bFastDesc"  },
-            { icon: "▣",  titleKey: "bOrgTitle",   descKey: "bOrgDesc"   },
-            { icon: "✓",  titleKey: "bConsTitle",  descKey: "bConsDesc"  },
-            { icon: "↗",  titleKey: "bScaleTitle", descKey: "bScaleDesc" },
-          ].map((b, i) => (
-            <div key={i} style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "12px 14px", borderRadius: 11,
-              background: "rgba(17,24,39,0.50)",
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: "rgba(59,130,246,0.10)",
-                border: "1px solid rgba(59,130,246,0.22)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 14, color: "#3B82F6", fontWeight: 800, flexShrink: 0,
-              }}>
-                {b.icon}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <p style={{ fontSize: 12.5, fontWeight: 700, color: "#fff", margin: 0 }}>{t(b.titleKey as keyof typeof STR)}</p>
-                <p style={{ fontSize: 11, color: "#9CA3AF", margin: "1px 0 0" }}>{t(b.descKey as keyof typeof STR)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* A faixa "Rápido · Organizado · Consistente · Escalável" saiu:
+            era copy de landing page dentro de um app pago. Quem está logado já
+            comprou; aquilo ocupava 100px reafirmando uma decisão já tomada,
+            com quatro glifos unicode fazendo de ícone. */}
       </div>
 
       {/* ── Brand modal ──────────────────────────────────────── */}
