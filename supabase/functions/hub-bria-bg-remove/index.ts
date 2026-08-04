@@ -26,7 +26,7 @@ import {
 } from "../_shared/hub-credits.ts";
 
 // Versão do deploy — permite verificar de fora o que está no ar.
-const FN_VERSION = "v13-2026-08-04-checkup";
+const FN_VERSION = "v14-2026-08-04-b64fix";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
@@ -78,8 +78,14 @@ Deno.serve(async (req) => {
       // Aceita 2 formatos: input_image_base64 (data URL ou base64 cru) OU
       // image_url (URL pública pra fazer fetch — usado pelos Workflows).
       let bytes: Uint8Array;
-      const b64: string = body.input_image_base64 || "";
-      const url: string = body.image_url || "";
+      const rawImage: string = (body.input_image_base64 || "").trim();
+      // generate-image-hub agora pode devolver URL pública em vez de data
+      // URL. Se chegar http(s) em input_image_base64, atob explodia com
+      // "InvalidCharacterError: Failed to decode base64" — trata como URL.
+      const isHttp = /^https?:\/\//i.test(rawImage);
+      const b64: string = isHttp ? "" : rawImage;
+      const url: string = (body.image_url || (isHttp ? rawImage : "") || "").trim();
+
       if (!b64 && !url) {
         // Reserva foi feita antes de validar o corpo; validação que falha
         // precisa devolver o crédito, senão o cliente paga por um 400.
@@ -90,11 +96,29 @@ Deno.serve(async (req) => {
         );
       }
       if (b64) {
-        const cleanBase64 = b64.replace(/^data:[^;]+;base64,/, "");
-        const binary = atob(cleanBase64);
+        // Aceita data URL (com ou sem charset), base64url e base64 com
+        // espaços/quebras de linha — tudo isso quebrava o atob antes.
+        let cleanBase64 = b64.replace(/^data:[^,]*,/, "").replace(/\s/g, "");
+        cleanBase64 = cleanBase64.replace(/-/g, "+").replace(/_/g, "/");
+        const pad = cleanBase64.length % 4;
+        if (pad) cleanBase64 += "=".repeat(4 - pad);
+        let binary: string;
+        try {
+          binary = atob(cleanBase64);
+        } catch {
+          await refundCredits(supabase, creditRes.reservation_id!, "invalid_request");
+          return new Response(
+            JSON.stringify({
+              error: "invalid_base64",
+              message: "A imagem enviada não é um base64 válido. Reenvie o arquivo ou use image_url.",
+            }),
+            { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
+          );
+        }
         bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       } else {
+
         // Fetch URL → bytes.
         // safeFetch e não fetch: `url` vem crua do corpo do request, e sem
         // checagem isto alcançava 169.254.169.254 e qualquer host de rede
