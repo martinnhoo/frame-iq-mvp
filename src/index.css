@@ -1675,3 +1675,11 @@ html {
   color: rgba(255,255,255,0.30);
   font-weight: 400;
 }
+
+/* Entrada do criativo gerado. Depois de 30-45s de espera, o resultado
+   aparecendo de estalo lê como troca de tela; desfocar pra focar lê como
+   revelação — que é o que aquele momento é. */
+@keyframes hubReveal {
+  from { opacity: 0; filter: blur(12px); transform: scale(0.985); }
+  to   { opacity: 1; filter: blur(0);    transform: none; }
+}

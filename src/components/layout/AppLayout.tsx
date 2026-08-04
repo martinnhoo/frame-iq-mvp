@@ -19,6 +19,7 @@ import { AppTopbarBell } from '@/components/dashboard/AppTopbarBell';
 import { AppTopbarUserMenu } from '@/components/dashboard/AppTopbarUserMenu';
 import { CommandPalette } from '@/components/dashboard/CommandPalette';
 import { UserProfilePanel } from '@/components/dashboard/UserProfilePanel';
+import CreditChip from "./CreditChip";
 import {
   Command,
   Clock,
@@ -889,6 +890,9 @@ export function AppLayout() {
           }}>
             <AppTopbarBreadcrumb />
             <div style={{ flex: 1 }} />
+            {/* O produto é medido em créditos e o medidor não existia na
+                chrome. Das 52 telas, 7 liam o saldo e nenhuma era o shell. */}
+            <CreditChip />
             <AppTopbarBell alerts={accountAlerts.map(a => ({
               id: a.id,
               title: a.ad_name || a.campaign_name || a.type,

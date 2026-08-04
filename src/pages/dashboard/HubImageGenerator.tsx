@@ -27,11 +27,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
+import * as D from "@/lib/design";
+import GenerationStage, { type StageKey } from "@/components/hub/GenerationStage";
+import PlatformFrame from "@/components/hub/PlatformFrame";
 import {
   Image as ImageIcon, Download, RefreshCw, ArrowLeft, Sparkles, AlertTriangle,
   Copy, RotateCcw, Check, ChevronDown, Search, Plus, Upload, X,
   Pencil, ChevronRight, Layers, Trash2,
   ScanFace, Video, Captions,
+  Package, Flame, MessageSquare, ArrowLeftRight, Smartphone,
+  type LucideIcon,
 } from "lucide-react";
 import {
   HUB_MARKETS, getBrand, getBrandName, getMarketLabel,
@@ -277,41 +282,41 @@ type GalleryItem = {
  * fica travado: é um ponto de partida, não um trilho.
  */
 const CREATIVE_GOALS: Array<{
-  id: string; emoji: string; label: string; hint: string;
+  id: string; Icon: LucideIcon; label: string; hint: string;
   prompt: string; aspect: string; quality: "low" | "medium" | "high";
 }> = [
   {
-    id: "produto", emoji: "📦", label: "Anúncio de produto",
+    id: "produto", Icon: Package, label: "Anúncio de produto",
     hint: "O produto em destaque, fundo limpo",
     aspect: "1:1", quality: "medium",
     prompt: "Foto publicitária do produto em destaque, fundo limpo e iluminação de estúdio, cores da marca, composição centralizada com espaço para texto no topo.",
   },
   {
-    id: "oferta", emoji: "🔥", label: "Oferta / desconto",
+    id: "oferta", Icon: Flame, label: "Oferta / desconto",
     hint: "Urgência e preço em evidência",
     aspect: "1:1", quality: "medium",
     prompt: "Criativo de oferta com senso de urgência, cores vibrantes da marca, área livre e contrastada na parte inferior para o preço e o botão.",
   },
   {
-    id: "prova", emoji: "💬", label: "Prova social",
+    id: "prova", Icon: MessageSquare, label: "Prova social",
     hint: "Depoimento de cliente real",
     aspect: "4:5", quality: "medium",
     prompt: "Cena autêntica de cliente satisfeito usando o produto, luz natural, aparência real e não posada, espaço lateral para o depoimento em texto.",
   },
   {
-    id: "antes", emoji: "↔️", label: "Antes e depois",
+    id: "antes", Icon: ArrowLeftRight, label: "Antes e depois",
     hint: "Transformação lado a lado",
     aspect: "1:1", quality: "high",
     prompt: "Composição dividida ao meio mostrando a transformação antes e depois, mesma iluminação e enquadramento nos dois lados para a diferença ficar evidente.",
   },
   {
-    id: "stories", emoji: "📱", label: "Stories / Reels",
+    id: "stories", Icon: Smartphone, label: "Stories / Reels",
     hint: "Vertical, para tela cheia",
     aspect: "9:16", quality: "medium",
     prompt: "Criativo vertical para Stories, elemento principal centralizado e afastado das bordas, fundo com profundidade, espaço no terço superior para a headline.",
   },
   {
-    id: "rascunho", emoji: "✏️", label: "Só testar uma ideia",
+    id: "rascunho", Icon: Pencil, label: "Só testar uma ideia",
     hint: "Rápido e barato, 1 crédito",
     aspect: "1:1", quality: "low",
     prompt: "",
@@ -378,7 +383,20 @@ const ELEMENT_MAX_BYTES = 5 * 1024 * 1024; // 5MB — Storage suporta, sem mais 
 
 export default function HubImageGenerator() {
   // Plano gratuito recebe marca d'água nos criativos.
-  const { plan: hubPlan } = useHubCredits();
+  const { plan: hubPlan, balance: hubBalance, costOf: hubCostOf } = useHubCredits();
+
+  // Estágio da geração corrente. Os textos já existiam e já eram traduzidos —
+  // só iam pro sino da topbar em vez de irem pra tela.
+  const [genStage, setGenStage] = useState<StageKey>("prep");
+
+  // Os mesmos textos que o sino usa. Ficavam dentro de generate(), fora do
+  // alcance do render.
+  const stageLabels = (key: StageKey): string => ({
+    prep:    { pt: "Preparando",                     en: "Preparing",                   es: "Preparando",                  zh: "正在准备" },
+    ai:      { pt: "Gerando a imagem",               en: "Generating the image",        es: "Generando la imagen",         zh: "生成图像" },
+    compose: { pt: "Aplicando marca e texto legal",  en: "Applying brand + disclaimer", es: "Aplicando marca + aviso",     zh: "应用品牌 + 免责声明" },
+    save:    { pt: "Salvando na sua biblioteca",     en: "Saving to your library",      es: "Guardando en tu biblioteca",  zh: "保存到资源库" },
+  }[key][lang]);
   // Marcas do usuário (substituem as antigas marcas fixas do Hub).
   const { brands: userBrands } = useUserBrands();
   const navigate = useNavigate();
@@ -680,6 +698,7 @@ export default function HubImageGenerator() {
         estimateMs: 32_000, // gpt-image-2 leva 25-45s
         stage: stageByLang("prep"),
       });
+      setGenStage("prep");
 
       let brandHint = brand?.promptHint || "";
       if (marketCode && HUB_MARKETS[marketCode]?.promptContext) {
@@ -729,7 +748,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
           return;
         }
       }
-      progressCtrl?.setStage(stageByLang("ai"));
+      progressCtrl?.setStage(stageByLang("ai")); setGenStage("ai");
       const r = await fetch(`${SUPABASE_URL}/functions/v1/generate-image-hub`, {
         method: "POST",
         headers: {
@@ -777,7 +796,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
         (hasLicense && includeLicense && licenseText.trim()) ||
         (effectiveLogoUrl && includeLogo);
       if (willCompose) {
-        progressCtrl?.setStage(stageByLang("compose"));
+        progressCtrl?.setStage(stageByLang("compose")); setGenStage("compose");
         try {
           const composedDataUrl = await composeImage(payload.image_url!, {
             licenseText: hasLicense && includeLicense ? licenseText.trim() : null,
@@ -791,7 +810,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
         }
       }
 
-      progressCtrl?.setStage(stageByLang("save"));
+      progressCtrl?.setStage(stageByLang("save")); setGenStage("save");
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -889,6 +908,13 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
   const resetLicense = () => { if (defaultLicense) setLicenseText(defaultLicense); };
 
   const promptValid = prompt.trim().length >= 5;
+
+  // Custo da geração, com a qualidade escolhida. Aparece no botão e no aviso
+  // de saldo. A checagem aqui é otimista — quem decide é o servidor.
+  const creditCost = hubCostOf(
+    quality === "high" ? "image_high" : quality === "low" ? "image_draft" : "image_standard",
+  );
+  const notEnough = hubBalance < creditCost;
 
   // ── Render ────────────────────────────────────────────────────
   return (
@@ -1199,7 +1225,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
                       onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = "translateY(-1px)"; }}
                       onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}
                     >
-                      <div style={{ fontSize: 17, marginBottom: 4 }}>{g.emoji}</div>
+                      <g.Icon size={16} color={active ? D.color.accent : D.color.text3} style={{ marginBottom: 6 }} />
                       <div style={{ fontSize: 12.5, fontWeight: 700, color: "#F1F5F9", marginBottom: 2 }}>
                         {g.label}
                       </div>
@@ -1378,11 +1404,29 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
               {loading ? (
                 <><RefreshCw size={16} style={{ animation: "spin 1s linear infinite" }} />{t("generating")}</>
               ) : (
-                <><Sparkles size={16} />{t("generate")}</>
+                <>
+                  <Sparkles size={16} />{t("generate")}
+                  {/* O preço no botão. Sem ele a pessoa clica sem saber que
+                      "alta qualidade" custa 4,5x o padrão, e descobre no
+                      extrato. */}
+                  <span style={{
+                    fontWeight: D.font.weight.medium,
+                    opacity: 0.75,
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    · {creditCost} crédito{creditCost === 1 ? "" : "s"}
+                  </span>
+                </>
               )}
             </button>
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "10px 0 0", textAlign: "center" }}>
-              {t("autoSaved")}
+            <p style={{
+              fontSize: D.font.size.label,
+              color: notEnough ? D.color.warning : D.color.text3,
+              margin: "10px 0 0", textAlign: "center",
+            }}>
+              {notEnough
+                ? `Você tem ${hubBalance}. Faltam ${creditCost - hubBalance}.`
+                : t("autoSaved")}
             </p>
           </div>
 
@@ -1456,23 +1500,17 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
 
               {result && (
                 <div>
-                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-                    <a
-                      href={result.image_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: "block", cursor: "zoom-in" }}
-                      title={lang === "pt" ? "Abrir em tamanho real" : lang === "es" ? "Abrir tamaño real" : lang === "zh" ? "打开实际大小" : "Open full size"}
-                    >
-                      <img src={result.image_url} alt={result.prompt}
-                        style={{
-                          maxWidth: "100%", maxHeight: "62vh", borderRadius: 11, display: "block",
-                          transition: "opacity 0.15s",
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.opacity = "0.9"; }}
-                        onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-                      />
-                    </a>
+                  {/* O criativo dentro do lugar onde ele vai aparecer. Era
+                      uma <img> solta: um PNG. A landing promete "sai pronto
+                      pra subir" e a tela entregava um arquivo. */}
+                  <div style={{ marginBottom: 14, animation: "hubReveal 260ms cubic-bezier(0.16,1,0.3,1)" }}>
+                    <PlatformFrame
+                      src={result.image_url}
+                      aspectRatio={aspectRatio}
+                      brandName={brand && brand.id !== "none" ? brand.name : null}
+                      brandLogoUrl={effectiveLogoUrl || null}
+                      caption={result.prompt}
+                    />
                   </div>
                   <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
                     <button onClick={() => downloadImage(result.image_url, `${(fileName.trim() || `hub-${Date.now()}`).replace(/[^a-z0-9_-]/gi, "_")}.png`)} style={ACTION_BTN}>
@@ -1554,17 +1592,16 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
               )}
 
               {loading && (
-                <div style={{
-                  border: "1px solid rgba(59,130,246,0.20)",
-                  borderRadius: 12, minHeight: 360,
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center",
-                  padding: 32, gap: 12,
-                  background: "rgba(0,0,0,0.20)",
-                }}>
-                  <RefreshCw size={28} style={{ color: "#3B82F6", animation: "spin 1.2s linear infinite" }} />
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#D1D5DB", margin: 0 }}>{t("generating")}</p>
-                </div>
+                <GenerationStage
+                  stage={genStage}
+                  aspectRatio={aspectRatio}
+                  labels={{
+                    prep:    stageLabels("prep"),
+                    ai:      stageLabels("ai"),
+                    compose: stageLabels("compose"),
+                    save:    stageLabels("save"),
+                  }}
+                />
               )}
             </div>
 
