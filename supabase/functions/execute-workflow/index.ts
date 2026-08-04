@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v13-2026-08-04-checkup";
+const FN_VERSION = "v14-2026-08-04-voice-text";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -1031,9 +1031,39 @@ async function execVoice(
   inputs: Record<string, unknown>,
   ctx: ExecCtx,
 ): Promise<{ asset_id: string | null; audio_url: string; characters: number }> {
-  const textInput = inputs.text as { text?: string } | string | undefined;
-  const text = typeof textInput === "string" ? textInput : (textInput?.text || "");
-  if (!text || text.length < 3) throw new Error("missing_text");
+  // O texto pode chegar de várias formas: digitado no próprio nó, vindo de um
+  // nó de prompt/roteiro upstream (handle "text" ou "default"), como string,
+  // objeto ou array de objetos. Antes só lia inputs.text.text — qualquer outro
+  // formato virava missing_text e derrubava o workflow inteiro.
+  const pickText = (v: unknown, depth = 0): string => {
+    if (v == null || depth > 3) return "";
+    if (typeof v === "string") return v.trim();
+    if (Array.isArray(v)) {
+      return v.map((x) => pickText(x, depth + 1)).filter(Boolean).join("\n\n").trim();
+    }
+    if (typeof v === "object") {
+      const o = v as Record<string, unknown>;
+      for (const k of ["text", "script", "vo_script", "caption", "prompt", "content", "value", "output"]) {
+        const got = pickText(o[k], depth + 1);
+        if (got) return got;
+      }
+    }
+    return "";
+  };
+
+  const text =
+    pickText(inputs.text) ||
+    pickText(inputs.default) ||
+    pickText(node.data.text) ||
+    pickText(node.data.script) ||
+    pickText(node.data.prompt);
+
+  if (!text || text.length < 3) {
+    throw new Error(
+      "missing_text: o nó de voz não recebeu roteiro. Escreva o texto no nó ou conecte um nó de roteiro/prompt na entrada \"text\".",
+    );
+  }
+
 
   // A locução migrou do ElevenLabs para o Fish Audio, mas este nó continuou
   // mandando os parâmetros antigos — voice_id "21m00Tcm4TlvDq8ikWAM" (a voz
