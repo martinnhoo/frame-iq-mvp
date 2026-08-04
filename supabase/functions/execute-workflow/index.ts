@@ -1206,7 +1206,13 @@ async function execOutput(
   const collect = (v: unknown, depth = 0) => {
     if (!v || depth > 3) return;
     if (Array.isArray(v)) { for (const x of v) collect(x, depth + 1); return; }
-    if (typeof v === "object") candidates.push(v as AssetLike);
+    if (typeof v === "object") {
+      candidates.push(v as AssetLike);
+      // storyboard devolve { storyboard_id, scenes: [{ image_url }] } — sem
+      // isso o output do molde "roteiro em cenas" morre em missing_asset_input.
+      const scenes = (v as { scenes?: unknown }).scenes;
+      if (Array.isArray(scenes)) collect(scenes, depth + 1);
+    }
   };
   collect(inputs.asset);
   for (const [k, v] of Object.entries(inputs)) { if (k !== "asset") collect(v); }
