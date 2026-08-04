@@ -1200,8 +1200,21 @@ async function execOutput(
   //   image-gen / bg-remove → { image_url }
   //   voice → { audio_url }
   //   video → { video_url }
-  const asset = inputs.asset as { asset_id?: string; image_url?: string; audio_url?: string; video_url?: string; prompt_used?: string } | undefined;
-  if (!asset?.image_url && !asset?.audio_url && !asset?.video_url) throw new Error("missing_asset_input");
+  // Aceita o cabo em qualquer handle (asset, default, in, image…).
+  type AssetLike = { asset_id?: string; image_url?: string; audio_url?: string; video_url?: string; prompt_used?: string };
+  const candidates: AssetLike[] = [];
+  const collect = (v: unknown, depth = 0) => {
+    if (!v || depth > 3) return;
+    if (Array.isArray(v)) { for (const x of v) collect(x, depth + 1); return; }
+    if (typeof v === "object") candidates.push(v as AssetLike);
+  };
+  collect(inputs.asset);
+  for (const [k, v] of Object.entries(inputs)) { if (k !== "asset") collect(v); }
+  const asset = candidates.find((a) => a.image_url || a.audio_url || a.video_url);
+  if (!asset) {
+    throw new Error("missing_asset_input: o nó de saída não recebeu nenhum arquivo. Conecte um nó de imagem, voz ou vídeo na entrada.");
+  }
+
 
   const tpl = (node.data.name_template as string) || "{date}_{slug}";
   const { date, time } = formatDate();
