@@ -660,8 +660,6 @@ function countDownstream(graph: WfGraph, fromId: string): number {
 
 // ── Página ─────────────────────────────────────────────────────────
 export default function HubWorkflows() {
-  // Marcas do usuário (substituem as antigas marcas fixas do Hub).
-  const { brands: userBrands } = useUserBrands();
   return (
     <ReactFlowProvider>
       <HubWorkflowsInner />
@@ -670,6 +668,9 @@ export default function HubWorkflows() {
 }
 
 function HubWorkflowsInner() {
+  // Marcas do usuário (substituem as antigas marcas fixas do Hub).
+  const { brands: userBrands } = useUserBrands();
+
   const navigate = useNavigate();
   const { language } = useLanguage();
   const lang: Lang = (["pt", "en", "es", "zh"].includes(language as string) ? language : "pt") as Lang;
