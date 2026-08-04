@@ -358,7 +358,8 @@ export default function PlansPage() {
                 disabled={isCurrent || p.usd === 0 || busy === key}
                 style={{
                   width: "100%", height: D.size.controlLg, padding: `0 ${D.space[4]}px`,
-                  borderRadius: D.radius.sm, border: "none",
+                  borderRadius: D.radius.sm,
+
                   fontSize: D.font.size.bodyLg, fontWeight: 800,
                   cursor: isCurrent || p.usd === 0 ? "default" : "pointer",
                   background: isCurrent ? T.bg3 : p.usd === 0 ? "transparent" : featured ? T.blue : T.bg3,
