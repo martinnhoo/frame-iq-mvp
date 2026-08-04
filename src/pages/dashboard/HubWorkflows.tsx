@@ -14,6 +14,8 @@
  * Fase 1: 4 nós (brand, prompt, image-gen, output) + 1 template.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import RecipeStudio from "@/components/hub/RecipeStudio";
+import { useHubCredits } from "@/hooks/useHubCredits";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +28,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-  ArrowLeft, Play, Save, Plus, Loader, Copy, Trash2, Sparkles,
+  ArrowLeft, Play, Save, Plus, Loader, Copy, Trash2, Sparkles, SlidersHorizontal,
   Image as ImageIcon, Type, Tag, Download, Scissors, Clapperboard, GitBranch, Mic, Video as VideoIcon,
   ChevronDown, X, Search, Menu, Check,
 } from "lucide-react";
@@ -722,6 +724,12 @@ function HubWorkflowsInner() {
 
   // Active workflow
   const [activeWf, setActiveWf] = useState<Workflow | null>(null);
+
+  // Modo avançado = o canvas de nós. Fica desligado por padrão: abrir
+  // Automações num canvas vazio com dez tipos de nó é pedir que a pessoa
+  // aprenda a arquitetura do sistema antes de produzir a primeira coisa.
+  const [advanced, setAdvanced] = useState(false);
+  const { balance: creditBalance, reload: reloadCredits } = useHubCredits();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -839,6 +847,8 @@ function HubWorkflowsInner() {
       setNodes(rfNodes);
       setEdges(rfEdges);
       setName(toLoad.name);
+      // Abrir um workflow salvo é justamente querer ver os nós.
+      setAdvanced(true);
       setWorkflowBrandId(toLoad.brand_id || "none");
       setSelectedNodeId(null);
       setRunResult(null);
@@ -875,6 +885,7 @@ function HubWorkflowsInner() {
       });
       const mine = await listMyWorkflows();
       setMyWorkflows(mine);
+      setAdvanced(true);
       await openWorkflow(wf);
     } catch (e) {
       const msg = (e as Error).message || "erro";
@@ -1070,15 +1081,16 @@ function HubWorkflowsInner() {
     }
   };
 
-  const runActive = async () => {
-    if (!activeWf || running) return;
+  // Roda um grafo explícito. Extraído de runActive porque as receitas
+  // precisam rodar um grafo recém-compilado, sem depender de ele já ter
+  // chegado no estado do React Flow — o que criava uma corrida entre abrir o
+  // workflow e apertar o play.
+  const runGraph = async (wf: Workflow, graphPre: WfGraph, wfName: string) => {
+    if (running) return;
     setRunError(null);
     setRunResult(null);
     setRunProgress(null);
 
-    // Validação client antes de submeter — evita ir até server pra
-    // descobrir que o workflow tá quebrado. Mensagens claras e específicas.
-    const graphPre = rfToGraph(nodes, edges);
     const validationError = validateGraph(graphPre);
     if (validationError) {
       setRunError(validationError);
@@ -1089,6 +1101,8 @@ function HubWorkflowsInner() {
     setRunning(true);
     try {
       const graph = graphPre;
+      const activeWf = wf;
+      const name = wfName;
       await updateWorkflowGraph(activeWf.id, graph, name, workflowBrandId === "none" ? null : workflowBrandId);
 
       const totalEstimate = estimateNodeCountAfterExpansion(graph);
@@ -1133,6 +1147,53 @@ function HubWorkflowsInner() {
     } finally {
       setRunning(false);
     }
+  };
+
+  const runActive = async () => {
+    if (!activeWf || running) return;
+    await runGraph(activeWf, rfToGraph(nodes, edges), name);
+  };
+
+  // ── Receitas ──────────────────────────────────────────────────────
+  // Uma receita compila para o mesmo WfGraph do canvas. Aqui ela vira um
+  // workflow de verdade no banco — assim aparece na lista, dá pra reabrir,
+  // editar e rodar de novo. Não existe execução "efêmera" paralela.
+  const createFromRecipe = async (recipeName: string, graph: WfGraph): Promise<Workflow | null> => {
+    try {
+      const wf = await createWorkflow({ name: recipeName, graph });
+      const mine = await listMyWorkflows();
+      setMyWorkflows(mine);
+      return wf;
+    } catch (e) {
+      toast.error(`Não deu pra criar: ${(e as Error).message || "erro"}`);
+      return null;
+    }
+  };
+
+  const runRecipe = async (recipeName: string, graph: WfGraph) => {
+    const wf = await createFromRecipe(recipeName, graph);
+    if (!wf) return;
+    setActiveWf(wf);
+    setName(wf.name);
+    const rf = graphToRf(graph);
+    setNodes(rf.nodes);
+    setEdges(rf.edges);
+    // Mostra o canvas enquanto roda: a pessoa vê os nós acendendo, que é o
+    // que dá a sensação de que algo está acontecendo de verdade.
+    setAdvanced(true);
+    await runGraph(wf, graph, recipeName);
+    await reloadCredits();
+  };
+
+  const openRecipeInCanvas = async (recipeName: string, graph: WfGraph) => {
+    const wf = await createFromRecipe(recipeName, graph);
+    if (!wf) return;
+    setActiveWf(wf);
+    setName(wf.name);
+    const rf = graphToRf(graph);
+    setNodes(rf.nodes);
+    setEdges(rf.edges);
+    setAdvanced(true);
   };
 
   // Add node from palette
@@ -1193,8 +1254,28 @@ function HubWorkflowsInner() {
             <Menu size={14} />
           </button>
         )}
-        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em" }}>{t("workflows")}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: "-0.01em" }}>
+          {advanced ? "Modo avançado" : "Automações"}
+        </div>
         <div style={{ flex: 1 }} />
+
+        {/* Alternador. Fica antes dos botões de ação porque é decisão de
+            contexto, não de ação — quem está no modo simples não deveria
+            precisar procurar por ele. */}
+        <button
+          onClick={() => setAdvanced(v => !v)}
+          style={{
+            ...btnSecondary,
+            ...(advanced ? {} : { borderColor: "rgba(255,255,255,0.10)" }),
+          }}
+          title={advanced
+            ? "Voltar para as automações prontas"
+            : "Abrir o editor de nós"}
+        >
+          <SlidersHorizontal size={13} />
+          {!isMobile && (advanced ? "Automações" : "Modo avançado")}
+        </button>
+
         {activeWf && (
           <>
             {/* Em mobile o input de nome só aparece após estourar pra
@@ -1268,7 +1349,18 @@ function HubWorkflowsInner() {
         )}
       </div>
 
-      <div style={{ display: "flex", flex: 1, minHeight: 0, position: "relative" }}>
+      {/* Modo simples: a tela padrão. O canvas continua existindo — nada foi
+          removido — mas deixou de ser a primeira coisa que a pessoa encara. */}
+      {!advanced && (
+        <RecipeStudio
+          onRun={runRecipe}
+          onOpenAdvanced={openRecipeInCanvas}
+          running={running}
+          balance={creditBalance}
+        />
+      )}
+
+      <div style={{ display: advanced ? "flex" : "none", flex: 1, minHeight: 0, position: "relative" }}>
         {/* Backdrop pra fechar sidebar no mobile (clicando fora) */}
         {isMobile && mobileLeftOpen && (
           <div
