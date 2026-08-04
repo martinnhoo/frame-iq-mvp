@@ -109,7 +109,7 @@ function run(nodes: N[], edges: E[]) {
         }
         case "output": {
           const cands: any[] = [];
-          const c = (v: any, d = 0) => { if (!v || d > 3) return; if (Array.isArray(v)) { v.forEach(x => c(x, d + 1)); return; } if (typeof v === "object") cands.push(v); };
+          const c = (v: any, d = 0) => { if (!v || d > 3) return; if (Array.isArray(v)) { v.forEach(x => c(x, d + 1)); return; } if (typeof v === "object") { cands.push(v); if (Array.isArray((v as any).scenes)) c((v as any).scenes, d + 1); } };
           c(inp.asset); for (const [k, v] of Object.entries(inp)) if (k !== "asset") c(v);
           if (!cands.find(a => a.image_url || a.audio_url || a.video_url)) throw new Error("missing_asset_input");
           outputs[n.id] = { name: "ok" }; break;
