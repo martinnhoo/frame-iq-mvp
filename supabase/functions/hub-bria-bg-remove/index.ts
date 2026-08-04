@@ -119,7 +119,6 @@ Deno.serve(async (req) => {
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       } else {
 
-      } else {
         // Fetch URL → bytes.
         // safeFetch e não fetch: `url` vem crua do corpo do request, e sem
         // checagem isto alcançava 169.254.169.254 e qualquer host de rede
