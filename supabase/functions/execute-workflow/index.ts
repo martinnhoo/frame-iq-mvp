@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v14-2026-08-04-voice-text";
+const FN_VERSION = "v15-2026-08-04-input-resolver";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -702,11 +702,94 @@ async function execBrand(node: GraphNode, ctx: ExecCtx): Promise<Record<string, 
   };
 }
 
+// ── Resolução tolerante de inputs ───────────────────────────────────
+// Os nós upstream podem devolver string, objeto ou array de objetos, e o
+// usuário pode ligar o cabo em handles diferentes. Antes cada nó lia um
+// caminho único (ex: inputs.prompt.text) e qualquer outro formato virava
+// missing_prompt / missing_image_input e derrubava o workflow inteiro.
+const TEXT_KEYS = ["text", "script", "vo_script", "caption", "prompt", "content", "value", "output"];
+const IMAGE_KEYS = ["image_url", "url", "output_url", "src"];
+
+function pickText(v: unknown, depth = 0): string {
+  if (v == null || depth > 3) return "";
+  if (typeof v === "string") return v.trim();
+  if (Array.isArray(v)) {
+    return v.map((x) => pickText(x, depth + 1)).filter(Boolean).join("\n\n").trim();
+  }
+  if (typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    for (const k of TEXT_KEYS) {
+      const got = pickText(o[k], depth + 1);
+      if (got) return got;
+    }
+  }
+  return "";
+}
+
+function pickImageUrl(v: unknown, depth = 0): string {
+  if (v == null || depth > 3) return "";
+  if (typeof v === "string") return v.trim();
+  if (Array.isArray(v)) {
+    for (const x of v) {
+      const got = pickImageUrl(x, depth + 1);
+      if (got) return got;
+    }
+    return "";
+  }
+  if (typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    for (const k of IMAGE_KEYS) {
+      const got = pickImageUrl(o[k], depth + 1);
+      if (got) return got;
+    }
+    // storyboard → usa a primeira cena com imagem
+    const got = pickImageUrl(o.scenes, depth + 1);
+    if (got) return got;
+  }
+  return "";
+}
+
+// Procura texto em qualquer handle plausível antes de desistir.
+function resolveText(inputs: Record<string, unknown>, node?: GraphNode): string {
+  for (const h of ["prompt", "text", "script", "default", "in"]) {
+    const got = pickText(inputs[h]);
+    if (got) return got;
+  }
+  for (const v of Object.values(inputs)) {
+    const got = pickText(v);
+    if (got) return got;
+  }
+  if (node) {
+    for (const k of ["text", "script", "prompt"]) {
+      const got = pickText(node.data[k]);
+      if (got) return got;
+    }
+  }
+  return "";
+}
+
+function resolveImageUrl(inputs: Record<string, unknown>, node?: GraphNode): string {
+  for (const h of ["image", "asset", "reference", "default", "in"]) {
+    const got = pickImageUrl(inputs[h]);
+    if (got) return got;
+  }
+  for (const v of Object.values(inputs)) {
+    const got = pickImageUrl(v);
+    if (got) return got;
+  }
+  if (node) {
+    const got = pickImageUrl(node.data.image_url);
+    if (got) return got;
+  }
+  return "";
+}
+
 async function execPrompt(node: GraphNode): Promise<{ text: string }> {
   const text = String(node.data.text || "").trim();
   if (text.length < 5) throw new Error("prompt_too_short");
   return { text };
 }
+
 
 async function execImageGen(
   node: GraphNode,
@@ -719,12 +802,12 @@ async function execImageGen(
   // Variation com axis="prompt" injeta _prompt_override em cada clone do
   // image-gen pra que cada variant gere uma copy diferente.
   const overridePrompt = (node.data._prompt_override as string | undefined)?.trim();
-  const promptInput = inputs.prompt as { text?: string } | string | undefined;
-  const inputPromptText = typeof promptInput === "string"
-    ? promptInput
-    : (promptInput?.text || "");
+  const inputPromptText = resolveText(inputs, node);
   const promptText = overridePrompt || inputPromptText;
-  if (!promptText || promptText.length < 5) throw new Error("missing_prompt");
+  if (!promptText || promptText.length < 5) {
+    throw new Error("missing_prompt: o nó de imagem não recebeu prompt. Escreva o prompt no nó ou conecte um nó de prompt/roteiro na entrada.");
+  }
+
   if (overridePrompt) {
     console.log(`[execImageGen] node=${node.id} using prompt OVERRIDE from variation: "${overridePrompt.slice(0, 80)}…"`);
   }
@@ -877,9 +960,11 @@ async function execBgRemove(
   ctx: ExecCtx,
 ): Promise<{ asset_id: string | null; image_url: string }> {
   // Recebe { image_url } do nó upstream (image-gen ou direto URL)
-  const imgInput = inputs.image as { image_url?: string } | string | undefined;
-  const image_url = typeof imgInput === "string" ? imgInput : imgInput?.image_url;
-  if (!image_url) throw new Error("missing_image_input");
+  const image_url = resolveImageUrl(inputs, _node);
+  if (!image_url) {
+    throw new Error("missing_image_input: o nó de recorte não recebeu imagem. Conecte um nó de imagem na entrada.");
+  }
+
 
   const r = await fetch(`${ctx.supabaseUrl}/functions/v1/hub-bria-bg-remove`, {
     method: "POST",
@@ -913,9 +998,11 @@ async function execStoryboard(
   ctx: ExecCtx,
 ): Promise<{ storyboard_id: string; scenes: Array<{ n: number; image_url: string | null; asset_id: string | null }> }> {
   // Recebe { text } do prompt + { brand } opcional
-  const promptInput = inputs.prompt as { text?: string } | string | undefined;
-  const script = typeof promptInput === "string" ? promptInput : (promptInput?.text || "");
-  if (!script || script.length < 10) throw new Error("missing_script");
+  const script = resolveText(inputs, node);
+  if (!script || script.length < 10) {
+    throw new Error("missing_script: o storyboard não recebeu roteiro. Conecte um nó de prompt/roteiro na entrada.");
+  }
+
 
   const brandInput = inputs.brand as Record<string, unknown> | undefined;
   const scene_count = Math.max(2, Math.min(8, Number(node.data.scene_count) || 4));
@@ -976,13 +1063,14 @@ async function execVideo(
   //   prompt (string) — required, do nó prompt upstream
   //   brand (object)  — optional
   //   image (object)  — optional, output do image-gen → vira image-to-video
-  const promptInput = inputs.prompt as { text?: string } | string | undefined;
-  const promptText = typeof promptInput === "string" ? promptInput : (promptInput?.text || "");
-  if (!promptText || promptText.length < 5) throw new Error("missing_prompt");
+  const promptText = resolveText(inputs, node);
+  if (!promptText || promptText.length < 5) {
+    throw new Error("missing_prompt: o nó de vídeo não recebeu prompt. Escreva o prompt no nó ou conecte um nó de prompt/roteiro.");
+  }
 
   const brandInput = inputs.brand as Record<string, unknown> | undefined;
-  const imageInput = inputs.image as { image_url?: string } | string | undefined;
-  const image_url = typeof imageInput === "string" ? imageInput : imageInput?.image_url;
+  const image_url = resolveImageUrl(inputs, node) || undefined;
+
 
   const duration = Math.max(3, Math.min(15, Number(node.data.duration) || 5));
   const aspect_ratio = (node.data.aspect_ratio as string) || "16:9";
@@ -1032,31 +1120,10 @@ async function execVoice(
   ctx: ExecCtx,
 ): Promise<{ asset_id: string | null; audio_url: string; characters: number }> {
   // O texto pode chegar de várias formas: digitado no próprio nó, vindo de um
-  // nó de prompt/roteiro upstream (handle "text" ou "default"), como string,
-  // objeto ou array de objetos. Antes só lia inputs.text.text — qualquer outro
-  // formato virava missing_text e derrubava o workflow inteiro.
-  const pickText = (v: unknown, depth = 0): string => {
-    if (v == null || depth > 3) return "";
-    if (typeof v === "string") return v.trim();
-    if (Array.isArray(v)) {
-      return v.map((x) => pickText(x, depth + 1)).filter(Boolean).join("\n\n").trim();
-    }
-    if (typeof v === "object") {
-      const o = v as Record<string, unknown>;
-      for (const k of ["text", "script", "vo_script", "caption", "prompt", "content", "value", "output"]) {
-        const got = pickText(o[k], depth + 1);
-        if (got) return got;
-      }
-    }
-    return "";
-  };
+  // nó de prompt/roteiro upstream (qualquer handle), como string, objeto ou
+  // array. Usa o resolvedor compartilhado.
+  const text = resolveText(inputs, node);
 
-  const text =
-    pickText(inputs.text) ||
-    pickText(inputs.default) ||
-    pickText(node.data.text) ||
-    pickText(node.data.script) ||
-    pickText(node.data.prompt);
 
   if (!text || text.length < 3) {
     throw new Error(
@@ -1133,8 +1200,21 @@ async function execOutput(
   //   image-gen / bg-remove → { image_url }
   //   voice → { audio_url }
   //   video → { video_url }
-  const asset = inputs.asset as { asset_id?: string; image_url?: string; audio_url?: string; video_url?: string; prompt_used?: string } | undefined;
-  if (!asset?.image_url && !asset?.audio_url && !asset?.video_url) throw new Error("missing_asset_input");
+  // Aceita o cabo em qualquer handle (asset, default, in, image…).
+  type AssetLike = { asset_id?: string; image_url?: string; audio_url?: string; video_url?: string; prompt_used?: string };
+  const candidates: AssetLike[] = [];
+  const collect = (v: unknown, depth = 0) => {
+    if (!v || depth > 3) return;
+    if (Array.isArray(v)) { for (const x of v) collect(x, depth + 1); return; }
+    if (typeof v === "object") candidates.push(v as AssetLike);
+  };
+  collect(inputs.asset);
+  for (const [k, v] of Object.entries(inputs)) { if (k !== "asset") collect(v); }
+  const asset = candidates.find((a) => a.image_url || a.audio_url || a.video_url);
+  if (!asset) {
+    throw new Error("missing_asset_input: o nó de saída não recebeu nenhum arquivo. Conecte um nó de imagem, voz ou vídeo na entrada.");
+  }
+
 
   const tpl = (node.data.name_template as string) || "{date}_{slug}";
   const { date, time } = formatDate();
