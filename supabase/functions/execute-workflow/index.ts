@@ -1120,31 +1120,10 @@ async function execVoice(
   ctx: ExecCtx,
 ): Promise<{ asset_id: string | null; audio_url: string; characters: number }> {
   // O texto pode chegar de várias formas: digitado no próprio nó, vindo de um
-  // nó de prompt/roteiro upstream (handle "text" ou "default"), como string,
-  // objeto ou array de objetos. Antes só lia inputs.text.text — qualquer outro
-  // formato virava missing_text e derrubava o workflow inteiro.
-  const pickText = (v: unknown, depth = 0): string => {
-    if (v == null || depth > 3) return "";
-    if (typeof v === "string") return v.trim();
-    if (Array.isArray(v)) {
-      return v.map((x) => pickText(x, depth + 1)).filter(Boolean).join("\n\n").trim();
-    }
-    if (typeof v === "object") {
-      const o = v as Record<string, unknown>;
-      for (const k of ["text", "script", "vo_script", "caption", "prompt", "content", "value", "output"]) {
-        const got = pickText(o[k], depth + 1);
-        if (got) return got;
-      }
-    }
-    return "";
-  };
+  // nó de prompt/roteiro upstream (qualquer handle), como string, objeto ou
+  // array. Usa o resolvedor compartilhado.
+  const text = resolveText(inputs, node);
 
-  const text =
-    pickText(inputs.text) ||
-    pickText(inputs.default) ||
-    pickText(node.data.text) ||
-    pickText(node.data.script) ||
-    pickText(node.data.prompt);
 
   if (!text || text.length < 3) {
     throw new Error(
