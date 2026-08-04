@@ -26,7 +26,7 @@ import {
 } from "../_shared/hub-credits.ts";
 
 // Versão do deploy — permite verificar de fora o que está no ar.
-const FN_VERSION = "v13-2026-08-04-checkup";
+const FN_VERSION = "v14-2026-08-04-b64fix";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
