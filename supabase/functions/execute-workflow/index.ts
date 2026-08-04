@@ -1063,13 +1063,14 @@ async function execVideo(
   //   prompt (string) — required, do nó prompt upstream
   //   brand (object)  — optional
   //   image (object)  — optional, output do image-gen → vira image-to-video
-  const promptInput = inputs.prompt as { text?: string } | string | undefined;
-  const promptText = typeof promptInput === "string" ? promptInput : (promptInput?.text || "");
-  if (!promptText || promptText.length < 5) throw new Error("missing_prompt");
+  const promptText = resolveText(inputs, node);
+  if (!promptText || promptText.length < 5) {
+    throw new Error("missing_prompt: o nó de vídeo não recebeu prompt. Escreva o prompt no nó ou conecte um nó de prompt/roteiro.");
+  }
 
   const brandInput = inputs.brand as Record<string, unknown> | undefined;
-  const imageInput = inputs.image as { image_url?: string } | string | undefined;
-  const image_url = typeof imageInput === "string" ? imageInput : imageInput?.image_url;
+  const image_url = resolveImageUrl(inputs, node) || undefined;
+
 
   const duration = Math.max(3, Math.min(15, Number(node.data.duration) || 5));
   const aspect_ratio = (node.data.aspect_ratio as string) || "16:9";
