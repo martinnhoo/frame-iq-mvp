@@ -30,7 +30,7 @@ import {
   insufficientCreditsResponse, getUserPlan,
 } from "../_shared/hub-credits.ts";
 
-const FN_VERSION = "v5-2026-08-03-audio";
+const FN_VERSION = "v6-2026-08-04-voice-catalog-fallback";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
