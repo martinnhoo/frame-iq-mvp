@@ -215,7 +215,7 @@ export function DashboardSidebar({
       `}</style>
 
       <aside data-sidebar-build="v13-4-items" style={{
-        width: 216, height: "100%",
+        width: "var(--sidebar-w)", height: "100%",
         // Unified with AppLayout + --bg-main so the sidebar matches
         // the main content area — zero visible seam between them.
         background: "var(--bg-main)",

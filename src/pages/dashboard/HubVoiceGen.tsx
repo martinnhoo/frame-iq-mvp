@@ -202,7 +202,18 @@ export default function HubVoiceGen() {
         Ouça antes de escolher. Nenhum preview consome crédito.
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,420px)", gap: 20, alignItems: "start" }}>
+      <style>{`
+        /* Era o único Hub sem media query: a trilha fixa de 420px consumia
+           todo o espaço em 375px e a coluna das vozes colapsava para ~0. */
+        @media (max-width: 900px) {
+          .voice-workspace { grid-template-columns: 1fr !important; }
+          .voice-panel { position: static !important; }
+        }
+      `}</style>
+      <div
+        className="voice-workspace"
+        style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,420px)", gap: 20, alignItems: "start" }}
+      >
 
         {/* ── Coluna esquerda: catálogo ───────────────────────────────────── */}
         <div>
@@ -271,7 +282,7 @@ export default function HubVoiceGen() {
                         disabled={!v.sample_audio}
                         title={v.sample_audio ? "Ouvir amostra" : "Sem amostra"}
                         style={{
-                          width: 26, height: 26, flexShrink: 0, borderRadius: "50%",
+                          width: 40, height: 40, flexShrink: 0, borderRadius: "50%",
                           display: "grid", placeItems: "center",
                           background: previewId === v.id ? T.purple : "rgba(167,139,250,0.14)",
                           border: "none", cursor: v.sample_audio ? "pointer" : "not-allowed",
@@ -305,8 +316,10 @@ export default function HubVoiceGen() {
         </div>
 
         {/* ── Coluna direita: roteiro ─────────────────────────────────────── */}
-        <div style={{
-          position: "sticky", top: 16, background: T.bg1,
+        <div className="voice-panel" style={{
+          // 68 = altura do topbar sticky (52) + respiro. Com top:16 o painel
+          // ficava parcialmente coberto no desktop.
+          position: "sticky", top: 68, background: T.bg1,
           border: `1px solid ${T.border1}`, borderRadius: 11, padding: 15,
         }}>
           <div style={labelStyle}>Voz escolhida</div>
@@ -326,6 +339,9 @@ export default function HubVoiceGen() {
             rows={7}
             placeholder="Escreva o texto da locução…"
             style={{
+              // O botão Gerar fica logo abaixo; sem isso o teclado do iOS
+              // cobre exatamente ele quando o campo recebe foco.
+              scrollMarginBottom: 140,
               width: "100%", padding: 10, fontSize: 12.5, lineHeight: 1.55,
               background: T.bg2, border: `1px solid ${T.border1}`, borderRadius: 7,
               color: T.text1, outline: "none", resize: "vertical",
@@ -423,7 +439,7 @@ const selectStyle: React.CSSProperties = {
 
 function chipStyle(active: boolean): React.CSSProperties {
   return {
-    padding: "5px 10px", fontSize: 11, fontWeight: 600, borderRadius: 6,
+    padding: "9px 12px", fontSize: 11.5, fontWeight: 600, borderRadius: 7, minHeight: 36,
     background: active ? "rgba(167,139,250,0.15)" : T.bg1,
     border: `1px solid ${active ? "rgba(167,139,250,0.35)" : T.border1}`,
     color: active ? T.purple : T.text2, cursor: "pointer",

@@ -1035,10 +1035,18 @@ async function execVoice(
   const text = typeof textInput === "string" ? textInput : (textInput?.text || "");
   if (!text || text.length < 3) throw new Error("missing_text");
 
-  const voice_id = (node.data.voice_id as string) || "21m00Tcm4TlvDq8ikWAM"; // Rachel default
-  const model_id = (node.data.model_id as string) || "eleven_multilingual_v2";
-  const stability = Number(node.data.stability) || 0.5;
-  const similarity_boost = Number(node.data.similarity_boost) || 0.75;
+  // A locução migrou do ElevenLabs para o Fish Audio, mas este nó continuou
+  // mandando os parâmetros antigos — voice_id "21m00Tcm4TlvDq8ikWAM" (a voz
+  // Rachel, do ElevenLabs), model_id, stability, similarity_boost. Nenhum
+  // deles existe no Fish, e o voice_id não resolve para nenhuma voz de lá:
+  // toda automação com voz nascia quebrada.
+  //
+  // Sem voz configurada, deixa o Fish escolher uma padrão em português em
+  // vez de mandar um id inválido.
+  const rawVoice = (node.data.voice_id as string) || "";
+  const isFishVoice = /^[0-9a-f]{32}$/i.test(rawVoice.trim());
+  const voice_id = isFishVoice ? rawVoice.trim() : "";
+  const speed = Number(node.data.speed) || 1;
 
   const r = await fetch(`${ctx.supabaseUrl}/functions/v1/hub-voice-gen`, {
     method: "POST",
@@ -1046,7 +1054,13 @@ async function execVoice(
       "Authorization": `Bearer ${ctx.authToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ text, voice_id, model_id, stability, similarity_boost }),
+    body: JSON.stringify({
+      action: "generate",
+      text,
+      ...(voice_id ? { voice_id } : {}),
+      language: "pt",
+      speed,
+    }),
   });
   const respText = await r.text();
   let payload: { ok?: boolean; audio_url?: string; memory_id?: string; characters?: number; error?: string; message?: string };

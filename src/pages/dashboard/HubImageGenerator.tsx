@@ -1585,7 +1585,7 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
                     {t("seeAll")} →
                   </button>
                 </div>
-                <div style={{
+                <div className="hub-image-recent" style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(4, 1fr)",
                   gap: 10,
@@ -1725,6 +1725,9 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
         }
         @media (max-width: 700px) {
           .hub-image-benefits { grid-template-columns: repeat(2, 1fr) !important; }
+          /* 4 colunas em 375px dá ~80px por miniatura: a imagem some e o nome
+             da marca quebra letra a letra. */
+          .hub-image-recent { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
     </>

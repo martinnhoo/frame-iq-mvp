@@ -187,7 +187,12 @@ export function AppLayout() {
   const { language, setLanguage } = useLanguage();
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  // Antes: useState(false). O primeiro paint sempre desenhava a sidebar fixa
+  // de 220px, mesmo num celular de 375px, e só depois trocava pelo drawer —
+  // o usuário via a barra "pular". Agora já nasce com o valor certo.
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < MOBILE_BP,
+  );
   const [accountsOpen, setAccountsOpen] = useState(false);
   const [savedPersonas, setSavedPersonas] = useState<any[]>([]);
   // Topbar overlays — UserProfilePanel slide-out + Cmd+K palette.
@@ -206,21 +211,18 @@ export function AppLayout() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // Detect mobile — throttled pra não disparar setState a cada pixel
-  // de resize (drag de window estourava 60+ renders/s).
+  // matchMedia em vez de resize com debounce.
+  //
+  // O debounce de 150ms era a outra metade do problema: o CSS do index.css
+  // troca de layout instantaneamente no breakpoint, e o JS só 150ms depois.
+  // Durante esse intervalo — e em toda rotação de celular — os dois
+  // discordavam, e a barra oscilava. matchMedia dispara junto com o CSS.
   useEffect(() => {
-    let timer: number | undefined;
-    const check = () => setIsMobile(window.innerWidth < MOBILE_BP);
-    const onResize = () => {
-      if (timer) window.clearTimeout(timer);
-      timer = window.setTimeout(check, 150);
-    };
-    check();
-    window.addEventListener('resize', onResize);
-    return () => {
-      if (timer) window.clearTimeout(timer);
-      window.removeEventListener('resize', onResize);
-    };
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BP - 1}px)`);
+    const apply = () => setIsMobile(mql.matches);
+    apply();
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
   }, []);
 
   // Close sidebar on route change (mobile)
@@ -831,7 +833,11 @@ export function AppLayout() {
             the side bg still extends behind the unsafe regions —
             looks like one continuous panel rather than a clipped one. */}
       <aside style={{
-        width: 220,
+        // Fonte única: --sidebar-w. Antes eram quatro valores diferentes
+        // espalhados (220 aqui, 216 no CSS, 224/236/256 nas media queries),
+        // e a barra mudava de largura conforme o tamanho da janela sem que
+        // nada no produto justificasse isso.
+        width: isMobile ? "min(86vw, 300px)" : "var(--sidebar-w)",
         height: '100%',
         background: 'var(--bg-main)',
         borderRight: '1px solid rgba(148,163,184,0.06)',

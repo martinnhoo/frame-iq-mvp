@@ -1541,7 +1541,7 @@ function HubWorkflowsInner() {
                 />
               </div>
             </div>
-            <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 8 }}>
               <button
                 onClick={() => { setWorkflowBrandId("none"); setBrandModalOpen(false); }}
                 style={{
