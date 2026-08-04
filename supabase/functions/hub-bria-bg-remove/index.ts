@@ -78,8 +78,14 @@ Deno.serve(async (req) => {
       // Aceita 2 formatos: input_image_base64 (data URL ou base64 cru) OU
       // image_url (URL pública pra fazer fetch — usado pelos Workflows).
       let bytes: Uint8Array;
-      const b64: string = body.input_image_base64 || "";
-      const url: string = body.image_url || "";
+      const rawImage: string = (body.input_image_base64 || "").trim();
+      // generate-image-hub agora pode devolver URL pública em vez de data
+      // URL. Se chegar http(s) em input_image_base64, atob explodia com
+      // "InvalidCharacterError: Failed to decode base64" — trata como URL.
+      const isHttp = /^https?:\/\//i.test(rawImage);
+      const b64: string = isHttp ? "" : rawImage;
+      const url: string = (body.image_url || (isHttp ? rawImage : "") || "").trim();
+
       if (!b64 && !url) {
         // Reserva foi feita antes de validar o corpo; validação que falha
         // precisa devolver o crédito, senão o cliente paga por um 400.
