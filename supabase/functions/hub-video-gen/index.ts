@@ -39,7 +39,7 @@
 //
 // Timeout: 130s. Vídeos 5s-720p levam ~60-90s no PiAPI.
 
-const FN_VERSION = "v14-2026-08-02-metering";
+const FN_VERSION = "v13-2026-08-04-checkup";
 
 // Traduz erros crus do PiAPI em mensagens acionáveis pro usuário.
 function friendlyPiapiError(raw: string): string {
@@ -117,152 +117,12 @@ interface PiapiResult {
   provider_status?: number;
 }
 
-async function generateViaPiapi(body: PiapiCreateBody, resolution: string, apiKey: string, deadline: number): Promise<PiapiResult> {
-  // ── 1. Cria task ──────────────────────────────────────────────────
-  // Body já vem montado pelo MODEL_REGISTRY (Kling, Hailuo, Luma têm
-  // shapes diferentes). Esta função é model-agnostic — só faz a chamada
-  // e o polling do PiAPI envelope padrão.
-  console.log(`[hub-video] piapi create model=${body.model} task_type=${body.task_type} keys=${Object.keys(body.input).join(",")}`);
-
-  let createRes: Response;
-  try {
-    createRes = await fetch("https://api.piapi.ai/api/v1/task", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-  } catch (e) {
-    return { ok: false, error: `network_error: ${String(e).slice(0, 200)}` };
-  }
-
-  const createText = await createRes.text();
-  if (!createRes.ok) {
-    return {
-      ok: false,
-      error: friendlyPiapiError(`piapi_create_failed: ${createText.slice(0, 800)}`),
-      provider_status: createRes.status,
-    };
-  }
-
-  // PiAPI envelope: { code, message, data: { task_id, ... } }
-  let createPayload: { code?: number; message?: string; data?: { task_id?: string } };
-  try { createPayload = JSON.parse(createText); } catch {
-    return { ok: false, error: `piapi_create_non_json: ${createText.slice(0, 200)}` };
-  }
-  const task_id = createPayload?.data?.task_id;
-  if (!task_id) {
-    return {
-      ok: false,
-      error: `piapi_no_task_id: ${createPayload.message || createText.slice(0, 200)}`,
-    };
-  }
-
-  // ── 2. Poll task status ───────────────────────────────────────────
-  // Adaptive polling: 2s nos primeiros 30s, depois 5s. Vídeos 5-10s no
-  // Kling 3.0 std levam 60-90s, então maior parte fica no 5s. O 2s
-  // inicial só pega os raros casos de vídeo curto que termina cedo.
-  const pollStart = Date.now();
-  while (Date.now() < deadline) {
-    const elapsedSinceStart = Date.now() - pollStart;
-    const interval = elapsedSinceStart < POLL_FAST_WINDOW_MS
-      ? POLL_INTERVAL_FAST_MS
-      : POLL_INTERVAL_NORMAL_MS;
-    await new Promise(r => setTimeout(r, interval));
-
-    let pollRes: Response;
-    try {
-      pollRes = await fetch(`https://api.piapi.ai/api/v1/task/${task_id}`, {
-        method: "GET",
-        headers: { "x-api-key": apiKey },
-      });
-    } catch (e) {
-      console.warn("[hub-video] poll network error (continuing):", String(e).slice(0, 100));
-      continue;
-    }
-
-    if (!pollRes.ok) {
-      console.warn("[hub-video] poll non-ok status:", pollRes.status);
-      continue;
-    }
-
-    const pollText = await pollRes.text();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let pollPayload: any;
-    try { pollPayload = JSON.parse(pollText); } catch { continue; }
-
-    const status = pollPayload?.data?.status;
-    if (status === "failed") {
-      // PiAPI pode colocar a razão em vários lugares — tenta todos
-      const data = pollPayload?.data || {};
-      const errMsg = data.error?.message
-        || data.error?.detail
-        || data.error?.raw_message
-        || data.error?.code
-        || data.message
-        || data.fail_reason
-        || pollPayload?.message
-        || "task failed (no detail provided by PiAPI)";
-      // Loga payload completo no Supabase logs pra debugar moderation/etc
-      console.error(`[hub-video] PiAPI failed task ${task_id}:`, JSON.stringify(pollPayload).slice(0, 1500));
-      return {
-        ok: false,
-        error: friendlyPiapiError(`piapi_task_failed: ${errMsg}`),
-        task_id,
-      };
-    }
-    if (status === "completed") {
-      const out = pollPayload?.data?.output;
-      // PiAPI retorna o video URL em formatos diferentes dependendo da
-      // versão da API. Suporta TODOS os shapes conhecidos:
-      //   - data.output.video                              ← Kling 3.0 atual
-      //   - data.output.video_url                          ← formato antigo
-      //   - data.output.works[0].video.resource            ← multi-shot
-      //   - data.output.works[0].video.resource_without_watermark
-      // E faz fallback final com deepFindVideoUrl: percorre o objeto inteiro
-      // procurando QUALQUER string que pareça URL de vídeo. Isso protege
-      // contra mudanças futuras de shape do PiAPI sem quebrar o user.
-      const works = out?.works || [];
-      const firstWork = works[0]?.video;
-      const explicit = (typeof out?.video === "string" ? out.video : null)
-        || (typeof out?.video_url === "string" ? out.video_url : null)
-        || (typeof firstWork?.resource_without_watermark === "string" ? firstWork.resource_without_watermark : null)
-        || (typeof firstWork?.resource === "string" ? firstWork.resource : null);
-      const video_url = explicit || deepFindVideoUrl(out);
-      if (!video_url) {
-        // Loga payload completo nos logs do Supabase pra debug futuro,
-        // sem truncamento.
-        console.error(`[hub-video] no_video_url. Full output:`, JSON.stringify(out));
-        return {
-          ok: false,
-          error: `piapi_no_video_url_in_output: ${JSON.stringify(out).slice(0, 300)}`,
-          task_id,
-        };
-      }
-      console.log(`[hub-video] video_url found via ${explicit ? "explicit" : "deep_search"}: ${video_url.slice(0, 80)}…`);
-      // duration_s: priorizamos o que o PiAPI retorna (mais fiel), caímos no
-      // que pedimos no body (body.input.duration) só se PiAPI não devolver.
-      const requestedDuration = typeof body.input.duration === "number" ? body.input.duration : 5;
-      const duration_s = firstWork?.duration ? parseFloat(firstWork.duration) : requestedDuration;
-      return {
-        ok: true,
-        video_url,
-        duration_s,
-        resolution,
-        task_id,
-      };
-    }
-    // status: pending | processing | staged → continua polling
-  }
-
-  return {
-    ok: false,
-    error: `piapi_timeout: vídeo não completou em ${TOTAL_TIMEOUT_MS / 1000}s. Tenta duração mais curta.`,
-    task_id,
-  };
-}
+// generateViaPiapi foi removida. Ela criava a task na PiAPI e esperava, sem
+// passar por reserva de crédito, teto de plano ou guarda de saldo — e era o
+// que o caminho `action=generate` usava. Manter uma função assim no arquivo é
+// deixar a armadilha montada pro próximo que precisar gerar um vídeo.
+// Quem espera uma task agora é waitPiapiTask, e ela só é chamada depois da
+// reserva.
 
 // ── Async: create task (sem polling) ────────────────────────────────
 async function createPiapiTask(body: PiapiCreateBody, apiKey: string): Promise<{ ok: boolean; task_id?: string; error?: string }> {
@@ -287,6 +147,40 @@ async function createPiapiTask(body: PiapiCreateBody, apiKey: string): Promise<{
 }
 
 // ── Async: poll uma única vez ───────────────────────────────────────
+/**
+ * Espera uma task que JÁ foi criada, até o deadline da função.
+ *
+ * O caminho síncrono (`action=generate`) usava generateViaPiapi, que cria a
+ * task e espera. Como agora a task é criada antes, junto com a reserva de
+ * crédito, chamar generateViaPiapi de novo criaria uma SEGUNDA geração — e
+ * a PiAPI cobraria as duas.
+ */
+async function waitPiapiTask(
+  taskId: string,
+  apiKey: string,
+  resolution: string,
+  deadline: number,
+): Promise<{ ok: boolean; result?: PiapiResult; error?: string }> {
+  const start = Date.now();
+  while (Date.now() < deadline) {
+    const wait = Date.now() - start < POLL_FAST_WINDOW_MS
+      ? POLL_INTERVAL_FAST_MS
+      : POLL_INTERVAL_NORMAL_MS;
+    await new Promise(r => setTimeout(r, wait));
+
+    const once = await pollPiapiOnce(taskId, apiKey, resolution);
+    if (once.status === "completed" && once.result?.video_url) {
+      return { ok: true, result: once.result };
+    }
+    if (once.status === "failed") {
+      return { ok: false, error: once.error || "task failed" };
+    }
+  }
+  // Estourou o orçamento da função. Não é falha da task — ela continua
+  // rodando — mas quem chamou de forma síncrona não tem como esperar mais.
+  return { ok: false, error: "timeout: a geração passou do tempo da função" };
+}
+
 async function pollPiapiOnce(taskId: string, apiKey: string, resolution: string): Promise<{ status: "pending" | "completed" | "failed"; result?: PiapiResult; error?: string }> {
   let res: Response;
   try {
@@ -465,7 +359,11 @@ Deno.serve(async (req) => {
       // ── action=create → só cria a task e devolve task_id ───────────
       // Kling costuma levar 2-5 min; a edge function morre em ~150s.
       // Por isso o client cria e depois faz poll.
-      if (action === "create") {
+      // A cobrança vale para create E para o generate legado. Estava só
+      // dentro do create, e o `generate` — que é o default quando o corpo não
+      // manda `action`, como faz o nó de vídeo do workflow — passava direto
+      // pro provider sem reservar, sem teto e sem guarda de saldo.
+      if (action === "create" || action === "generate") {
         // Reserva ANTES de falar com a PiAPI. Se debitássemos só no sucesso do
         // polling, o usuário dispararia N jobs em paralelo com saldo pra 1.
         const plan = await getUserPlan(sb, authUser.id);
@@ -511,11 +409,28 @@ Deno.serve(async (req) => {
         // ref_id = task_id, pra que o poll consiga estornar se a task falhar.
         await confirmCredits(sb, reservation.reservation_id!, created.task_id);
 
-        return jsonResponse({
-          _v: FN_VERSION, ok: true, status: "pending",
-          task_id: created.task_id, provider,
-          model: modelMeta.id, model_label: modelMeta.label,
-        }, 200);
+        if (action === "create") {
+          return jsonResponse({
+            _v: FN_VERSION, ok: true, status: "pending",
+            task_id: created.task_id, provider,
+            model: modelMeta.id, model_label: modelMeta.label,
+          }, 200);
+        }
+
+        // action=generate: já cobrado e a task já existe. Espera aqui mesmo,
+        // dentro do orçamento da função, em vez de disparar uma segunda
+        // geração pelo generateViaPiapi — que era o que fazia o caminho
+        // legado gerar (e pagar ao provider) duas vezes.
+        const sync = await waitPiapiTask(created.task_id, PIAPI_KEY, modelMeta.resolution, deadline);
+        if (!sync.ok || !sync.result?.video_url) {
+          await refundTaskCredits(sb, created.task_id);
+          return jsonResponse({
+            _v: FN_VERSION, ok: false, error: "video_gen_failed",
+            message: sync.error || "Falha na geração de vídeo.",
+            provider, task_id: created.task_id,
+          }, 502);
+        }
+        result = sync.result;
       }
 
       // ── action=poll → checa uma vez ────────────────────────────────
@@ -538,9 +453,16 @@ Deno.serve(async (req) => {
           }, 502);
         }
         result = poll.result;
-      } else {
-        const piapiBody = modelMeta.buildPiapiInput(input);
-        result = await generateViaPiapi(piapiBody, modelMeta.resolution, PIAPI_KEY, deadline);
+      }
+
+      // Não existe mais caminho que fale com a PiAPI sem passar pela reserva.
+      // O generateViaPiapi ficava aqui, num else que era alcançado por
+      // qualquer `action` desconhecida — e gerava de graça.
+      if (!result) {
+        return jsonResponse({
+          _v: FN_VERSION, ok: false, error: "unknown_action",
+          message: `Ação "${action}" não existe. Use create, poll ou generate.`,
+        }, 400);
       }
     } else if (provider === "falai") {
       const FAL_KEY = Deno.env.get("FAL_API_KEY");

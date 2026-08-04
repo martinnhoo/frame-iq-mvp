@@ -35,6 +35,7 @@ import { trackEvent } from "@/lib/posthog";
 import { DecisionCard } from "@/components/feed/DecisionCard";
 import type { Decision, DecisionAction } from "@/types/v2-database";
 import { useActions } from "@/hooks/useActions";
+import { normalizePlan } from "@/lib/hubPlans";
 const F = T.font; // 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif
 const M = T.font; // Same as F
 const DEMO_STORAGE_KEY = "adbrief_demo_result";
@@ -1759,12 +1760,12 @@ function CreativeCheckCard({ block }: { block: Block }) {
   );
 }
 
-// ── Plan checkout wiring (shared across in-chat upgrade cards) ──
-const PRICE_IDS_CHAT: Record<string, string> = {
-  maker:  "price_1T9sd1Dr9So14XztT3Mqddch",
-  pro:    "price_1T9sdfDr9So14XztPR3tI14Y",
-  studio: "price_1TMzhCDr9So14Xzt1rUmfs7h",
-};
+// PRICE_IDS_CHAT foi removido. O create-checkout deixou de aceitar `price_id`
+// do corpo de propósito — aceitar deixava o cliente escolher qual preço pagar
+// por um produto marcado como studio. Com o campo ignorado, `plan` chegava
+// undefined e a função devolvia 500: os dois ramos deste botão estavam mortos,
+// o de checkout e o fallback pra /pricing, que também não existia.
+// Agora manda o plano e o servidor resolve o preço.
 
 // Labels rendered client-side so they localize with the user's language.
 const PLAN_LABELS: Record<string, Record<"pt"|"en"|"es", { name: string; credits: string; accounts: string }>> = {
@@ -1936,12 +1937,12 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
   // swallow with a silent redirect.
   const startChatCheckout = async (planKey: string) => {
     const l = (lang === "pt" || lang === "es") ? lang : "en";
-    const priceId = PRICE_IDS_CHAT[planKey];
-    if (!priceId) { onNavigate("/pricing"); return; }
+    const plan = normalizePlan(planKey);
+    if (plan === "free") { onNavigate("/dashboard/plans"); return; }
     setCheckoutLoading(planKey);
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { price_id: priceId, billing: "monthly" },
+        body: { plan, billing: "monthly", currency: l === "pt" ? "brl" : "usd" },
       });
       if (error) {
         // FunctionsHttpError carries .message and .context.body (where body
@@ -2088,7 +2089,7 @@ function BlockCard({block,lang,onNavigate,onSend,accountCtx,stream=false}: {bloc
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {/* Buy credits — routes to /pricing for credit pack selection */}
           {showCredits&&(
-            <div onClick={()=>onNavigate("/pricing")} style={{
+            <div onClick={()=>onNavigate("/dashboard/plans")} style={{
               padding:"14px 16px",borderRadius:10,cursor:"pointer",transition:"all 0.18s",
               background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",
               display:"flex",alignItems:"center",justifyContent:"space-between",

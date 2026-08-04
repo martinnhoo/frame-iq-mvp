@@ -389,6 +389,9 @@ export default function HubImageGenerator() {
   // só iam pro sino da topbar em vez de irem pra tela.
   const [genStage, setGenStage] = useState<StageKey>("prep");
 
+  /** Qualidade pedida quando o servidor entregou menos. */
+  const [downgraded, setDowngraded] = useState<string | null>(null);
+
   // Os mesmos textos que o sino usa. Ficavam dentro de generate(), fora do
   // alcance do render.
   const stageLabels = (key: StageKey): string => ({
@@ -775,6 +778,10 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
       let payload: {
         ok?: boolean; _v?: string; openai_message?: string; message?: string;
         error?: string; image_url?: string; revised_prompt?: string;
+        // O servidor rebaixa a qualidade do plano Free para rascunho e diz
+        // isso aqui. Estes três campos existiam na resposta desde sempre e
+        // não estavam nem declarados.
+        quality?: string; quality_requested?: string; downgraded?: boolean;
       } | null = null;
       try { payload = JSON.parse(text); } catch { /* not json */ }
 
@@ -791,10 +798,24 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
         return;
       }
 
+      // Avisa quando a entrega veio abaixo do pedido. Sem isso o ticket que
+      // chega é "a qualidade alta está péssima".
+      if (payload.downgraded) {
+        setDowngraded(payload.quality_requested || quality);
+      } else {
+        setDowngraded(null);
+      }
+
       let finalImageUrl = payload.image_url!;
+      // A marca d'água do plano Free vive dentro do composeImage, e o
+      // composeImage só rodava quando havia licença OU logo. Um Free
+      // recém-cadastrado não tem nem um nem outro — então baixava imagem
+      // limpa, apesar de HUB_PLANS.free.watermark ser true e de a função
+      // devolver watermark: true. Ninguém lia.
       const willCompose =
         (hasLicense && includeLicense && licenseText.trim()) ||
-        (effectiveLogoUrl && includeLogo);
+        (effectiveLogoUrl && includeLogo) ||
+        hubPlan.watermark;
       if (willCompose) {
         progressCtrl?.setStage(stageByLang("compose")); setGenStage("compose");
         try {
@@ -1489,6 +1510,26 @@ Every visual element in the final image MUST be FULLY visible within the canvas.
 
               {result && (
                 <div>
+                  {downgraded && (
+                    <div style={{
+                      display: "flex", alignItems: "flex-start", gap: D.space[2],
+                      padding: `${D.space[2]}px ${D.space[3]}px`,
+                      marginBottom: D.space[3],
+                      borderRadius: D.radius.sm,
+                      background: D.color.warningSoft,
+                      border: `1px solid ${D.color.warningBorder}`,
+                    }}>
+                      <AlertTriangle size={14} color={D.color.warning} style={{ flexShrink: 0, marginTop: 2 }} />
+                      <p style={{ fontSize: D.font.size.caption, color: D.color.text2, margin: 0, lineHeight: 1.5 }}>
+                        O plano Free gera sempre em rascunho, mesmo quando você
+                        escolhe qualidade {downgraded === "high" ? "alta" : "média"}.{" "}
+                        <a href="/dashboard/plans" style={{ color: D.color.accent, fontWeight: 600 }}>
+                          Ver planos
+                        </a>
+                      </p>
+                    </div>
+                  )}
+
                   {/* O criativo dentro do lugar onde ele vai aparecer. Era
                       uma <img> solta: um PNG. A landing promete "sai pronto
                       pra subir" e a tela entregava um arquivo. */}

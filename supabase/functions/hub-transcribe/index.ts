@@ -25,7 +25,10 @@
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { requireCredits } from "../_shared/deductCredits.ts";
+import {
+  reserveCredits, confirmCredits, refundCredits,
+  insufficientCreditsResponse, getUserPlan,
+} from "../_shared/hub-credits.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -71,16 +74,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Credit check ──────────────────────────────────────────
-    const creditCheck = await requireCredits(supabase, user_id, "translation");
-    if (!creditCheck.allowed) {
-      return new Response(JSON.stringify(creditCheck.error), {
-        status: 402,
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
-
     // ── Parse FormData ────────────────────────────────────────
+    // Antes da reserva: reservar antes de validar o corpo cobra pelo 400.
     const fd = await req.formData();
     const file = fd.get("audio_file") as File | null;
     const target_language = (fd.get("target_language") as string | null)?.trim() || "";
@@ -99,6 +94,17 @@ Deno.serve(async (req) => {
         { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
+
+    // ── Crédito ───────────────────────────────────────────────
+    // O Whisper cobra por minuto de áudio. Como só sabemos a duração exata
+    // depois da transcrição, estimamos por tamanho (~1 MB por minuto em MP3
+    // de 128 kbps) e ajustamos no confirm.
+    const estMinutes = Math.max(1, Math.ceil(file.size / (1024 * 1024)));
+    const plan = await getUserPlan(supabase, user_id);
+    const reservation = await reserveCredits(
+      supabase, user_id, plan, "transcribe_per_min", estMinutes,
+    );
+    if (!reservation.ok) return insufficientCreditsResponse(reservation, cors);
 
     // ── Step 1: Whisper ───────────────────────────────────────
     const whisperForm = new FormData();
@@ -122,6 +128,7 @@ Deno.serve(async (req) => {
         : whisperRes.status === 429
         ? "OpenAI rate-limited — tenta novamente em alguns segundos."
         : `OpenAI Whisper error ${whisperRes.status}.`;
+      await refundCredits(supabase, reservation.reservation_id!, "whisper_failed");
       return new Response(
         JSON.stringify({ error: "whisper_failed", message: friendly, raw: errText.slice(0, 200) }),
         { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
@@ -134,11 +141,16 @@ Deno.serve(async (req) => {
     const duration: number = Math.round(whisper.duration || 0);
 
     if (!transcript) {
+      // Sem fala detectada não é entrega. O crédito volta.
+      await refundCredits(supabase, reservation.reservation_id!, "empty_transcript");
       return new Response(
         JSON.stringify({ error: "empty_transcript", message: "Whisper retornou vazio — sem fala detectada?" }),
         { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
+
+    // Deu certo: confirma a reserva feita pela estimativa de tamanho.
+    await confirmCredits(supabase, reservation.reservation_id!);
 
     // ── Step 2 (opcional): Tradução via OpenAI gpt-4o-mini ────
     // Por que gpt-4o-mini? É a opção mais barata da OpenAI ($0.15/1M

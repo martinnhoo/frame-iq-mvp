@@ -193,6 +193,14 @@ export default function HubFaceswap() {
   // UI state
   const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [brandSearch, setBrandSearch] = useState("");
+  /** O polling do faceswap dura até 5 minutos. Sem esta flag ele continua
+   *  rodando depois que a pessoa sai da tela. */
+  const fsMountedRef = useRef(true);
+  useEffect(() => {
+    fsMountedRef.current = true;
+    return () => { fsMountedRef.current = false; };
+  }, []);
+
   const swapInputRef = useRef<HTMLInputElement>(null);
   const targetInputRef = useRef<HTMLInputElement>(null);
 
@@ -506,6 +514,9 @@ export default function HubFaceswap() {
         let attempts = 0;
         // eslint-disable-next-line no-constant-condition
         while (true) {
+          // Sair da página tem que parar o polling. Sem isto ele segue por
+          // até 5 minutos batendo na função e escrevendo em estado morto.
+          if (!fsMountedRef.current) return;
           attempts++;
           if (attempts > MAX_POLLS) {
             setError(lang === "pt"

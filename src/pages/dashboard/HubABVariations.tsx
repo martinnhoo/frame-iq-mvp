@@ -363,7 +363,9 @@ export default function HubABVariations() {
 
           // Compose with logo + license
           let finalImageUrl = payload.image_url!;
-          const willCompose = (hasLicense && includeLicense && licenseText.trim()) || (effectiveLogoUrl && includeLogo);
+          // Mesmo buraco do gerador de imagem: sem licença e sem logo, o
+          // composeImage não rodava e a marca d'água do Free não era aplicada.
+          const willCompose = (hasLicense && includeLicense && licenseText.trim()) || (effectiveLogoUrl && includeLogo) || hubPlan.watermark;
           if (willCompose) {
             try {
               finalImageUrl = await composeImage(payload.image_url!, {

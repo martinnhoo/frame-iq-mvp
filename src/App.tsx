@@ -131,6 +131,15 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
 
+              {/* Rotas que nunca existiram e para as quais dez lugares
+                  apontavam — o banner de upgrade do plano Free, o botão
+                  Upgrade das configurações, "Comprar créditos" no chat, os
+                  rodapés legais. Todos caíam no NotFound. A página de preços
+                  de verdade é /dashboard/plans; a landing tem a seção #precos. */}
+              <Route path="/pricing"     element={<Navigate to="/dashboard/plans" replace />} />
+              <Route path="/refund"      element={<Navigate to="/terms" replace />} />
+              <Route path="/metodologia" element={<Navigate to="/privacy" replace />} />
+
               {/* ── Dashboard (Brilliant Hub interno) ──────────────── */}
               <Route path="/dashboard" element={<AppLayout />}>
                 <Route index element={<Navigate to="/dashboard/hub/image" replace />} />

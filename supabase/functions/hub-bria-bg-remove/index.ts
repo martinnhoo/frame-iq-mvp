@@ -26,7 +26,7 @@ import {
 } from "../_shared/hub-credits.ts";
 
 // Versão do deploy — permite verificar de fora o que está no ar.
-const FN_VERSION = "v11-2026-08-04-seguranca";
+const FN_VERSION = "v13-2026-08-04-checkup";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
@@ -101,6 +101,11 @@ Deno.serve(async (req) => {
         // privada que o runtime enxergue.
         const fetchRes = await safeFetch(url);
         if (!fetchRes.ok) {
+          // A reserva de 5 créditos acontece antes de falar com a Bria.
+          // Todo return de erro daqui pra frente tem que devolver, senão o
+          // cliente paga por uma imagem que não existe — e o sweep só
+          // conserta 30 a 60 minutos depois, com o saldo errado na tela.
+          await refundCredits(supabase, creditRes.reservation_id!, "provider_failed");
           return new Response(
             JSON.stringify({ error: "input_image_fetch_failed", message: `Falha ao baixar imagem de ${url.slice(0, 80)}` }),
             { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
@@ -140,6 +145,11 @@ Deno.serve(async (req) => {
 
     const BRIA_API_TOKEN = Deno.env.get("BRIA_API_TOKEN");
     if (!BRIA_API_TOKEN) {
+      // A reserva de 5 créditos acontece antes de falar com a Bria.
+      // Todo return de erro daqui pra frente tem que devolver, senão o
+      // cliente paga por uma imagem que não existe — e o sweep só
+      // conserta 30 a 60 minutos depois, com o saldo errado na tela.
+      await refundCredits(supabase, creditRes.reservation_id!, "provider_failed");
       return new Response(
         JSON.stringify({
           error: "missing_bria_key",
@@ -174,6 +184,11 @@ Deno.serve(async (req) => {
       } else {
         friendly = `BRIA error ${briaRes.status}.`;
       }
+      // A reserva de 5 créditos acontece antes de falar com a Bria.
+      // Todo return de erro daqui pra frente tem que devolver, senão o
+      // cliente paga por uma imagem que não existe — e o sweep só
+      // conserta 30 a 60 minutos depois, com o saldo errado na tela.
+      await refundCredits(supabase, creditRes.reservation_id!, "provider_failed");
       return new Response(
         JSON.stringify({
           error: "bria_failed",
@@ -197,6 +212,11 @@ Deno.serve(async (req) => {
       const resultUrl = briaJson.result_url || briaJson.image_url || briaJson.url;
       if (!resultUrl) {
         console.error("[hub-bria-bg-remove] no result_url in JSON:", briaJson);
+        // A reserva de 5 créditos acontece antes de falar com a Bria.
+        // Todo return de erro daqui pra frente tem que devolver, senão o
+        // cliente paga por uma imagem que não existe — e o sweep só
+        // conserta 30 a 60 minutos depois, com o saldo errado na tela.
+        await refundCredits(supabase, creditRes.reservation_id!, "provider_failed");
         return new Response(
           JSON.stringify({ error: "bria_no_url", message: "BRIA não retornou URL da imagem.", raw: JSON.stringify(briaJson).slice(0, 300) }),
           { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
@@ -205,6 +225,11 @@ Deno.serve(async (req) => {
       // Faz fetch da result_url e converte pra data URL pra ficar self-contained
       const imgRes = await fetch(resultUrl);
       if (!imgRes.ok) {
+        // A reserva de 5 créditos acontece antes de falar com a Bria.
+        // Todo return de erro daqui pra frente tem que devolver, senão o
+        // cliente paga por uma imagem que não existe — e o sweep só
+        // conserta 30 a 60 minutos depois, com o saldo errado na tela.
+        await refundCredits(supabase, creditRes.reservation_id!, "provider_failed");
         return new Response(
           JSON.stringify({ error: "bria_fetch_result", message: "Falha ao buscar resultado do BRIA." }),
           { status: 502, headers: { ...cors, "Content-Type": "application/json" } },

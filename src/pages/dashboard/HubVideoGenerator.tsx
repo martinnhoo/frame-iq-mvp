@@ -217,9 +217,60 @@ export default function HubVideoGenerator() {
   const [sourceDragOver, setSourceDragOver] = useState(false);
   const sourceInputRef = useRef<HTMLInputElement>(null);
 
+  /** Busca o resultado de uma task que passou do tempo de espera. Usa
+   *  action=poll, que não reserva crédito — a cobrança já aconteceu na
+   *  criação. */
+  const fetchPendingResult = async () => {
+    if (!pendingTaskId) return;
+    setError(null);
+    try {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+      const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) { setError("Sessão expirada."); return; }
+
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/hub-video-gen`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "apikey": ANON_KEY,
+        },
+        body: JSON.stringify({ action: "poll", task_id: pendingTaskId }),
+      });
+      const payload = await res.json() as { ok?: boolean; status?: string; video_url?: string; message?: string };
+      if (payload.status === "pending") {
+        setError("Ainda está gerando. Tente de novo em um minuto.");
+        return;
+      }
+      if (!payload.ok || !payload.video_url) {
+        setError(payload.message || "A geração falhou. O crédito foi devolvido.");
+        setPendingTaskId(null);
+        return;
+      }
+      setResult({ video_url: payload.video_url } as typeof result);
+      setPendingTaskId(null);
+    } catch (e) {
+      setError(String(e).slice(0, 200));
+    }
+  };
+
   // Async state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /** Task que passou do tempo de espera do cliente. O vídeo continua sendo
+   *  gerado; isto permite buscar o resultado sem cobrar de novo. */
+  const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
+
+  /** O polling do vídeo dura até 9 minutos. Sem esta flag ele continua
+   *  rodando depois que a pessoa sai da tela. */
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
   const [result, setResult] = useState<VideoAsset | null>(null);
   const [recent, setRecent] = useState<VideoAsset[]>([]);
 
@@ -397,7 +448,11 @@ export default function HubVideoGenerator() {
       let payload: VideoPayload = created;
       const pollDeadline = Date.now() + 9 * 60_000;
       while (Date.now() < pollDeadline) {
+        // Sem isto, sair da página não para nada: o loop continua chamando a
+        // edge function por até 9 minutos e faz setState em componente morto.
+        if (!mountedRef.current) return;
         await new Promise(r => setTimeout(r, 6000));
+        if (!mountedRef.current) return;
         const polled = await callFn({ action: "poll", task_id: created.task_id });
         if (!polled) return;
         if (polled.ok && polled.status === "pending") continue;
@@ -405,9 +460,14 @@ export default function HubVideoGenerator() {
         break;
       }
       if (payload.status === "pending" || (!payload.video_url && payload.ok)) {
+        // O crédito foi confirmado na criação da task e o vídeo continua
+        // sendo gerado — e cobrado pelo provider. Guardar o task_id é o que
+        // permite a pessoa buscar o resultado depois em vez de pagar por
+        // algo que nunca vê.
+        setPendingTaskId(created.task_id || null);
         const msg = lang === "pt"
-          ? "O vídeo demorou demais para ficar pronto. Tenta de novo com duração menor."
-          : "The video took too long. Try again with a shorter duration.";
+          ? "O vídeo passou de 9 minutos. Ele continua sendo gerado — use \"Buscar resultado\" daqui a pouco, sem gastar crédito de novo."
+          : "The video passed 9 minutes. It is still being generated — use \"Fetch result\" shortly, at no extra credit cost.";
         setError(msg);
         progressCtrl?.fail(msg);
         return;
@@ -764,6 +824,23 @@ export default function HubVideoGenerator() {
                 <AlertTriangle size={11} style={{ display: "inline", marginRight: 6 }} />
                 {error}
               </div>
+            )}
+
+            {/* O crédito é confirmado na criação da task, e o vídeo continua
+                sendo gerado depois que o cliente desiste de esperar. Sem este
+                botão ele pagou 40 a 100 créditos por algo que nunca vê. */}
+            {pendingTaskId && !loading && (
+              <button
+                onClick={fetchPendingResult}
+                style={{
+                  marginTop: 10, width: "100%", height: 44,
+                  borderRadius: 8, border: "1px solid rgba(59,130,246,0.42)",
+                  background: "rgba(59,130,246,0.12)", color: "#93C5FD",
+                  fontSize: 13, fontWeight: 700, fontFamily: "inherit", cursor: "pointer",
+                }}
+              >
+                Buscar resultado · sem custo
+              </button>
             )}
           </div>
 
