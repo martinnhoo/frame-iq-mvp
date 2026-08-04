@@ -351,7 +351,13 @@ export default function HubPngGenerator() {
           "apikey": ANON_KEY,
         },
         body: JSON.stringify({
-          input_image_base64: imageWithBg,
+          // generate-image-hub pode devolver URL pública (Storage) em vez de
+          // data URL — nesse caso vai como image_url, senão a function tenta
+          // atob("https://...") e estoura InvalidCharacterError.
+          ...(/^https?:\/\//i.test(imageWithBg)
+            ? { image_url: imageWithBg }
+            : { input_image_base64: imageWithBg }),
+
         }),
       });
       const text = await r.text();
