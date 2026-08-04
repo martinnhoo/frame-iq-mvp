@@ -224,7 +224,19 @@ export const RECIPES: Recipe[] = [
             `Público: ${a.audience}\n` +
             `Composição vertical, rosto ou produto em destaque, espaço no topo para texto.`),
           { id: i, type: "image-gen", position: { x: 400, y: 60 }, data: { count: 1, aspect_ratio: "9:16", quality: "medium" } },
-          { id: v, type: "video",  position: { x: 760, y: 60 },  data: { duration: 5, aspect_ratio: "9:16" } },
+          // O nó de vídeo precisa do próprio prompt: ele só recebe a imagem
+          // pelo handle "image", e o output do image-gen não carrega texto
+          // que o resolvedor reconheça — sem isto dá missing_prompt.
+          {
+            id: v, type: "video", position: { x: 760, y: 60 },
+            data: {
+              duration: 5,
+              aspect_ratio: "9:16",
+              text:
+                `Anúncio em vídeo para: ${a.offer}. Público: ${a.audience}. ` +
+                `Movimento sutil de câmera, foco no produto ou no rosto, ritmo de Reels.`,
+            },
+          },
           { id: s, type: "voice",  position: { x: 760, y: 300 }, data: { text: script, speed: 1 } },
           { id: ov,  type: "output", position: { x: 1100, y: 60 },  data: { name_template: "{date}_video_{slug}" } },
           { id: os_, type: "output", position: { x: 1100, y: 300 }, data: { name_template: "{date}_locucao_{slug}" } },
