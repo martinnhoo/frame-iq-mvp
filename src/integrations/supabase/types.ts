@@ -4323,6 +4323,7 @@ export type Database = {
         Args: { p_code: string; p_user: string }
         Returns: Json
       }
+      hub_validate_my_campaign: { Args: { p_code: string }; Returns: Json }
       hub_video_usage: {
         Args: { p_user: string }
         Returns: {
