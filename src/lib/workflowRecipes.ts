@@ -273,14 +273,26 @@ export const RECIPES: Recipe[] = [
       // relação entre si. Agora: gera UMA arte base, e cada variação
       // recebe essa arte como reference image e a instrução explícita de
       // reproduzi-la pixel a pixel, mudando apenas o texto da chamada.
+      // Regra dura: cada geração é UM anúncio inteiro, ocupando o quadro
+      // todo. Sem isso o gpt-image-2 tende a devolver um mosaico com as
+      // várias chamadas lado a lado numa imagem só.
+      const singleAdRule =
+        `REGRA ABSOLUTA: gere UMA ÚNICA peça publicitária ocupando 100% do quadro. ` +
+        `Proibido colade/mosaico/grade: nada de dividir a imagem em 2, 3 ou 4 painéis, ` +
+        `nada de várias versões lado a lado, nada de miniaturas, molduras múltiplas ou ` +
+        `comparativo antes/depois. Uma cena, um layout, uma chamada só.`;
+
       const artBrief =
         `Anúncio para: ${a.offer}. Arte limpa, com área livre no topo para a chamada. ` +
-        `Sem texto nenhum na imagem — a chamada entra depois.`;
+        `Sem texto nenhum na imagem — a chamada entra depois.\n${singleAdRule}`;
 
       const values = heads.map((h) =>
         `Reproduza EXATAMENTE a imagem de referência: mesma composição, mesmo enquadramento, ` +
         `mesmas cores, mesma iluminação, mesmos elementos e mesmo estilo. Não invente uma cena nova.\n` +
         `A ÚNICA diferença é o texto da chamada, que deve aparecer na área livre: "${h}"\n` +
+        `Escreva essa frase e SOMENTE essa frase como chamada. Não inclua nenhuma outra ` +
+        `variação de texto na imagem.\n` +
+        `${singleAdRule}\n` +
         `Chamada em destaque, legível no celular, tipografia consistente com a marca.\n` +
         `Contexto da oferta (só para orientar o tom, não mude a arte): ${a.offer}`);
 
