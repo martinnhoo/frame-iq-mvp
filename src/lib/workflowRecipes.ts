@@ -27,7 +27,7 @@ import { CREDIT_COSTS } from "./hubPlans";
 
 // ── Tipos ───────────────────────────────────────────────────────────────────
 
-export type FieldKind = "text" | "textarea" | "select" | "number" | "brand";
+export type FieldKind = "text" | "textarea" | "select" | "number" | "brand" | "voice";
 
 export interface RecipeField {
   key: string;
@@ -377,9 +377,8 @@ export const RECIPES: Recipe[] = [
         help: "Separe cada um com três traços numa linha só: ---",
       },
       {
-        key: "voice_id", label: "Voz", kind: "text",
-        placeholder: "Deixe em branco para a voz padrão em português",
-        help: "Escolha uma voz na tela de Locução e cole o código dela aqui.",
+        key: "voice_id", label: "Voz", kind: "voice", required: true,
+        help: "A mesma voz Fish Audio será usada em todas as locuções do lote.",
       },
     ],
     build: (a) => {

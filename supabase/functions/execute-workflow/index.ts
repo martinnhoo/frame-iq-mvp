@@ -12,7 +12,7 @@
 // background com EdgeRuntime.waitUntil quando workflows ficarem maiores
 // que 90s.
 
-const FN_VERSION = "v16-2026-08-04-storyboard-output";
+const FN_VERSION = "v17-2026-08-04-fish-voice-selection";
 
 // Limites de segurança pra fan-out (count + variation expandidos)
 const MAX_TOTAL_NODES_AFTER_EXPANSION = 300; // hard cap
@@ -1132,17 +1132,13 @@ async function execVoice(
   }
 
 
-  // A locução migrou do ElevenLabs para o Fish Audio, mas este nó continuou
-  // mandando os parâmetros antigos — voice_id "21m00Tcm4TlvDq8ikWAM" (a voz
-  // Rachel, do ElevenLabs), model_id, stability, similarity_boost. Nenhum
-  // deles existe no Fish, e o voice_id não resolve para nenhuma voz de lá:
-  // toda automação com voz nascia quebrada.
-  //
-  // Sem voz configurada, deixa o Fish escolher uma padrão em português em
-  // vez de mandar um id inválido.
-  const rawVoice = (node.data.voice_id as string) || "";
-  const isFishVoice = /^[0-9a-f]{32}$/i.test(rawVoice.trim());
-  const voice_id = isFishVoice ? rawVoice.trim() : "";
+  // O ID vem diretamente do catálogo do Fish Audio. Não tente validar pelo
+  // tamanho: IDs reais do Fish não têm necessariamente 32 caracteres. A
+  // validação antiga apagava a voz escolhida e causava `Escolha uma voz`.
+  const voice_id = String(node.data.voice_id || "").trim();
+  if (!voice_id) {
+    throw new Error("missing_voice: escolha uma voz Fish Audio no nó de voz.");
+  }
   const speed = Number(node.data.speed) || 1;
 
   const r = await fetch(`${ctx.supabaseUrl}/functions/v1/hub-voice-gen`, {
@@ -1154,7 +1150,7 @@ async function execVoice(
     body: JSON.stringify({
       action: "generate",
       text,
-      ...(voice_id ? { voice_id } : {}),
+      voice_id,
       language: "pt",
       speed,
     }),

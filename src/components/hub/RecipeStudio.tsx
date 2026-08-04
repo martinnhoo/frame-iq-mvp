@@ -19,6 +19,7 @@ import { ArrowLeft, Play, Loader, SlidersHorizontal, Coins } from "lucide-react"
 import { RECIPES, missingField, type Recipe, type RecipeField } from "@/lib/workflowRecipes";
 import type { WfGraph } from "@/lib/hubWorkflows";
 import { useUserBrands } from "@/hooks/useUserBrands";
+import FishVoiceSelect from "@/components/hub/FishVoiceSelect";
 
 const T = {
   bg:     "#06070a",
@@ -305,6 +306,10 @@ function Field({ field, value, onChange, brands }: {
             <option key={b.id} value={b.id}>{b.name}</option>
           ))}
         </select>
+      )}
+
+      {field.kind === "voice" && (
+        <FishVoiceSelect value={value} onChange={id => onChange(id)} style={inputSt} />
       )}
 
       {field.kind === "select" && (

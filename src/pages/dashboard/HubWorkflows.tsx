@@ -48,6 +48,7 @@ import {
   type HookCategory, type HookRow,
 } from "@/lib/hookLibrary";
 import { uploadAssetToStorage } from "@/lib/uploadAssetToStorage";
+import FishVoiceSelect from "@/components/hub/FishVoiceSelect";
 
 // ── i18n strings ──────────────────────────────────────────────────
 const STR: Record<string, Record<Lang, string>> = {
@@ -116,9 +117,9 @@ const STR: Record<string, Record<Lang, string>> = {
                       es: "Sin configuración — recibe imagen upstream y devuelve PNG transparente < 2MB vía BRIA AI.",
                       zh: "无配置 — 接收上游图像并通过 BRIA AI 返回 < 2MB 的透明 PNG。" },
   fieldScenes:      { pt: "Número de cenas",      en: "Number of scenes",  es: "Número de escenas",  zh: "场景数" },
-  fieldVoiceId:     { pt: "Voice ID (ElevenLabs)",en: "Voice ID (ElevenLabs)", es: "Voice ID (ElevenLabs)", zh: "Voice ID (ElevenLabs)" },
+  fieldVoiceId:     { pt: "Voz Fish Audio",       en: "Fish Audio voice",    es: "Voz Fish Audio",     zh: "Fish Audio 语音" },
   fieldVoiceName:   { pt: "Nome (display)",       en: "Name (display)",    es: "Nombre (display)",   zh: "名称（显示）" },
-  voiceDesc:        { pt: "Recebe o texto upstream e gera áudio MP3 via ElevenLabs.", en: "Receives upstream text and generates MP3 audio via ElevenLabs.", es: "Recibe el texto upstream y genera audio MP3 vía ElevenLabs.", zh: "接收上游文本并通过 ElevenLabs 生成 MP3 音频。" },
+  voiceDesc:        { pt: "Recebe o texto upstream e gera áudio MP3 com a voz selecionada no Fish Audio.", en: "Receives upstream text and generates MP3 with the selected Fish Audio voice.", es: "Recibe el texto upstream y genera MP3 con la voz elegida en Fish Audio.", zh: "接收上游文本并使用所选 Fish Audio 语音生成 MP3。" },
   fieldVarAxis:     { pt: "Eixo de variação",     en: "Variation axis",    es: "Eje de variación",   zh: "变体轴" },
   fieldVarValues:   { pt: "Valores (1 por linha)",en: "Values (1 per line)", es: "Valores (1 por línea)", zh: "值（每行一个）" },
   variationDesc:    { pt: "Pra cada valor, o subgrafo downstream é clonado e executado em paralelo.",
@@ -410,8 +411,8 @@ function VoiceNode({ data, selected }: { data: { voice_id?: string; voice_name?:
         { id: "out", type: "source", position: Position.Right },
       ]}
     >
-      <div>{data.voice_name || "Rachel (default)"}</div>
-      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>ElevenLabs</div>
+      <div>{data.voice_name || "Escolha uma voz"}</div>
+      <div style={{ marginTop: 4, fontSize: 10.5, color: "rgba(255,255,255,0.40)" }}>Fish Audio</div>
     </NodeShell>
   );
 }
@@ -1208,7 +1209,7 @@ function HubWorkflowsInner() {
       "reference-image": { image_url: "", description: "" },
       storyboard: { scene_count: 4, aspect_ratio: "9:16", quality: "medium" },
       video: { duration: 5, aspect_ratio: "16:9", mode: "std", resolution: "720p", enable_audio: false, provider: "piapi" },
-      voice: { voice_id: "21m00Tcm4TlvDq8ikWAM", voice_name: "Rachel" },
+      voice: { voice_id: "", voice_name: "" },
       variation: { axis: "aspect_ratio", values: ["1:1", "9:16", "16:9"] },
       output: { name_template: "{date}_{slug}", save_to_library: true },
     };
@@ -1965,17 +1966,9 @@ function NodeConfigPanel({
       {node.type === "voice" && (
         <>
           <FieldLabel>{t("fieldVoiceId")}</FieldLabel>
-          <input
+          <FishVoiceSelect
             value={(data.voice_id as string) || ""}
-            onChange={e => onUpdate({ voice_id: e.target.value })}
-            placeholder="21m00Tcm4TlvDq8ikWAM (Rachel)"
-            style={selectStyle}
-          />
-          <FieldLabel>{t("fieldVoiceName")}</FieldLabel>
-          <input
-            value={(data.voice_name as string) || ""}
-            onChange={e => onUpdate({ voice_name: e.target.value })}
-            placeholder="Rachel"
+            onChange={(voice_id, voice_name) => onUpdate({ voice_id, voice_name })}
             style={selectStyle}
           />
           <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
