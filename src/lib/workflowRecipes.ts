@@ -263,14 +263,35 @@ export const RECIPES: Recipe[] = [
       },
     ],
     build: (a) => {
-      const b = nid("brand"), p = nid("prompt"), vr = nid("var"), i = nid("img"), o = nid("out");
-      const values = (a.headlines || "").split("\n").map(s => s.trim()).filter(Boolean);
+      const b = nid("brand"), pb = nid("prompt"), base = nid("img"),
+            vr = nid("var"), i = nid("img"), o = nid("out");
+      const heads = (a.headlines || "").split("\n").map(s => s.trim()).filter(Boolean);
+
+      // O teste de headline só é válido se a ARTE for a mesma. Antes cada
+      // variação era uma geração independente com o prompt trocado pela
+      // frase — o modelo perdia a oferta de vista e devolvia N imagens sem
+      // relação entre si. Agora: gera UMA arte base, e cada variação
+      // recebe essa arte como reference image e a instrução explícita de
+      // reproduzi-la pixel a pixel, mudando apenas o texto da chamada.
+      const artBrief =
+        `Anúncio para: ${a.offer}. Arte limpa, com área livre no topo para a chamada. ` +
+        `Sem texto nenhum na imagem — a chamada entra depois.`;
+
+      const values = heads.map((h) =>
+        `Reproduza EXATAMENTE a imagem de referência: mesma composição, mesmo enquadramento, ` +
+        `mesmas cores, mesma iluminação, mesmos elementos e mesmo estilo. Não invente uma cena nova.\n` +
+        `A ÚNICA diferença é o texto da chamada, que deve aparecer na área livre: "${h}"\n` +
+        `Chamada em destaque, legível no celular, tipografia consistente com a marca.\n` +
+        `Contexto da oferta (só para orientar o tom, não mude a arte): ${a.offer}`);
+
       return g(
         [
           brandNode(b, a.brand_id),
-          promptNode(p, `Anúncio para: ${a.offer}. Arte limpa, com área livre para a chamada.`),
+          promptNode(pb, artBrief),
+          // Arte base — gerada uma única vez e usada como referência.
+          { id: base, type: "image-gen", position: { x: 400, y: 60 }, data: { count: 1, aspect_ratio: a.aspect_ratio || "1:1", quality: "medium" } },
           {
-            id: vr, type: "variation", position: { x: 400, y: 220 },
+            id: vr, type: "variation", position: { x: 400, y: 320 },
             // axis "prompt" é o que faz o executor clonar o subgrafo abaixo
             // e injetar cada valor como _prompt_override.
             data: { axis: "prompt", values },
@@ -278,13 +299,23 @@ export const RECIPES: Recipe[] = [
           { id: i, type: "image-gen", position: { x: 760, y: 120 }, data: { count: 1, aspect_ratio: a.aspect_ratio || "1:1", quality: "medium" } },
           { id: o, type: "output", position: { x: 1100, y: 120 }, data: { name_template: "{date}_headline_{slug}" } },
         ],
-        [edge(b, i, "brand"), edge(p, vr, "in"), edge(vr, i, "prompt"), edge(i, o, "asset")],
+        [
+          edge(b, base, "brand"), edge(pb, base, "prompt"),
+          edge(b, i, "brand"),
+          // a arte base entra em cada clone pelo handle "reference" — o
+          // execImageGen manda isso como input image do gpt-image-2.
+          edge(base, i, "reference"),
+          edge(vr, i, "prompt"),
+          edge(i, o, "asset"),
+        ],
       );
     },
     estimate: (a) => {
       const n = (a.headlines || "").split("\n").filter(s => s.trim()).length || 1;
-      return n * CREDIT_COSTS.image_standard;
+      // +1 pela arte base que serve de referência para todas.
+      return (n + 1) * CREDIT_COSTS.image_standard;
     },
+
   },
 
   {
