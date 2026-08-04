@@ -1701,8 +1701,10 @@ function NodeConfigPanel({
   lang: Lang;
 }) {
   const data = node.data as Record<string, unknown>;
+  const { brands: userBrands } = useUserBrands();
   const [hookModalOpen, setHookModalOpen] = useState(false);
   const [angleModalOpen, setAngleModalOpen] = useState(false);
+
   return (
     <div style={{ fontSize: 12 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
