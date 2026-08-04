@@ -96,10 +96,29 @@ Deno.serve(async (req) => {
         );
       }
       if (b64) {
-        const cleanBase64 = b64.replace(/^data:[^;]+;base64,/, "");
-        const binary = atob(cleanBase64);
+        // Aceita data URL (com ou sem charset), base64url e base64 com
+        // espaços/quebras de linha — tudo isso quebrava o atob antes.
+        let cleanBase64 = b64.replace(/^data:[^,]*,/, "").replace(/\s/g, "");
+        cleanBase64 = cleanBase64.replace(/-/g, "+").replace(/_/g, "/");
+        const pad = cleanBase64.length % 4;
+        if (pad) cleanBase64 += "=".repeat(4 - pad);
+        let binary: string;
+        try {
+          binary = atob(cleanBase64);
+        } catch {
+          await refundCredits(supabase, creditRes.reservation_id!, "invalid_request");
+          return new Response(
+            JSON.stringify({
+              error: "invalid_base64",
+              message: "A imagem enviada não é um base64 válido. Reenvie o arquivo ou use image_url.",
+            }),
+            { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
+          );
+        }
         bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      } else {
+
       } else {
         // Fetch URL → bytes.
         // safeFetch e não fetch: `url` vem crua do corpo do request, e sem
