@@ -28,7 +28,7 @@ import {
 } from "../_shared/hub-credits.ts";
 
 // Versão do deploy — permite verificar de fora o que está no ar.
-const FN_VERSION = "v2-2026-08-02-metering";
+const FN_VERSION = "v11-2026-08-04-seguranca";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
@@ -85,12 +85,18 @@ Deno.serve(async (req) => {
     const numResults: number = Math.min(Math.max(parseInt(String(body.num_results || 1), 10) || 1, 1), 4);
 
     if (!elementBase64) {
+      // Reserva foi feita antes de validar o corpo; validação que falha
+      // precisa devolver o crédito, senão o cliente paga por um 400.
+      await refundCredits(supabase, creditRes.reservation_id!, "invalid_request");
       return new Response(
         JSON.stringify({ error: "missing_element", message: "element_image_base64 obrigatório (PNG do elemento, idealmente com fundo transparente)." }),
         { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
     if (!sceneDescription || sceneDescription.length < 5) {
+      // Reserva foi feita antes de validar o corpo; validação que falha
+      // precisa devolver o crédito, senão o cliente paga por um 400.
+      await refundCredits(supabase, creditRes.reservation_id!, "invalid_request");
       return new Response(
         JSON.stringify({ error: "missing_scene", message: "scene_description obrigatória (pelo menos 5 chars)." }),
         { status: 400, headers: { ...cors, "Content-Type": "application/json" } },

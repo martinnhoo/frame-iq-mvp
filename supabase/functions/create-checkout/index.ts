@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 // create-checkout v3 — proteção anti-trial-abuse: disposable email, Stripe history, IP velocity
 
 // Versão do deploy — permite verificar de fora o que está no ar.
-const FN_VERSION = "v3-2026-08-03-billing";
+const FN_VERSION = "v11-2026-08-04-seguranca";
 
 const corsHeaders = {
   // Versão do deploy em todas as respostas — torna possível
@@ -280,15 +280,22 @@ Deno.serve(async (req) => {
     if (!user?.email) return new Response(JSON.stringify({ error: "User not authenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     logStep("User authenticated", { email: user.email });
 
-    const { price_id, plan, billing, coupon, currency } = await req.json();
+    const { plan, billing, coupon, currency } = await req.json();
 
-    // A página de planos manda `plan` + `currency`; as telas antigas mandam
-    // `price_id`. Aceitar os dois evita o buraco em que o botão "Assinar"
-    // simplesmente não funcionava.
     const cur = (currency === "usd" ? "usd" : "brl");
-    let resolvedPriceId: string | null = typeof price_id === "string" ? price_id : null;
 
-    if (!resolvedPriceId && typeof plan === "string" && plan) {
+    // Precisa existir ANTES de findPriceForPlan. Estava declarado abaixo, e
+    // `const` em zona morta temporal não é undefined — é ReferenceError. O
+    // catch externo transformava isso em 500, então todo "Assinar" da página
+    // de planos falhava em silêncio.
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    // O preço é sempre resolvido no servidor, pelo plano. Aceitar `price_id`
+    // do corpo deixava o cliente escolher qual preço pagar por um produto
+    // marcado como studio — bastava enumerar os prices ativos da conta.
+    let resolvedPriceId: string | null = null;
+
+    if (typeof plan === "string" && plan) {
       resolvedPriceId = await findPriceForPlan(stripe, plan, cur, billing === "annual");
       if (!resolvedPriceId) {
         logStep("Preço não encontrado", { plan, cur, billing });
@@ -300,9 +307,7 @@ Deno.serve(async (req) => {
       logStep("Preço resolvido pelo plano", { plan, cur, resolvedPriceId });
     }
 
-    if (!resolvedPriceId) throw new Error("Missing price_id or plan");
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    if (!resolvedPriceId) throw new Error("Missing plan");
 
     // ── PROTEÇÃO 1: Email descartável ────────────────────────────────────────
     if (isDisposableEmail(user.email)) {
@@ -344,15 +349,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Annual price IDs
-    const ANNUAL_PRICES: Record<string, string> = {
-      "price_1T9sd1Dr9So14XztT3Mqddch": Deno.env.get("ANNUAL_PRICE_MAKER") || "price_1T9sd1Dr9So14XztT3Mqddch",
-      "price_1T9sdfDr9So14XztPR3tI14Y": Deno.env.get("ANNUAL_PRICE_PRO")   || "price_1T9sdfDr9So14XztPR3tI14Y",
-      "price_1TMzhCDr9So14Xzt1rUmfs7h": Deno.env.get("ANNUAL_PRICE_STUDIO") || "price_1TMzhCDr9So14XztE4jqWz9c",
-    };
-    const effective_price_id = billing === "annual"
-      ? (ANNUAL_PRICES[resolvedPriceId] || resolvedPriceId)
-      : resolvedPriceId;
+    // O anual já sai resolvido de findPriceForPlan(annual=true), que procura
+    // o preço com recurring.interval = "year" no mesmo produto. O mapa fixo de
+    // price IDs anuais que existia aqui indexava pelo price_id do corpo, que
+    // não existe mais — e quebrava toda vez que um preço era recriado.
+    const effective_price_id = resolvedPriceId;
     logStep("Price ID resolved", { resolvedPriceId, effective_price_id, billing });
 
     let customerId: string | undefined;

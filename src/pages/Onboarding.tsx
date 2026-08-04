@@ -7,6 +7,7 @@ import { ArrowRight, Check, Loader2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { trackEvent } from "@/lib/posthog";
+import { normalizePlan } from "@/lib/hubPlans";
 
 const F = "'Plus Jakarta Sans', sans-serif";
 const M = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -316,10 +317,12 @@ export default function Onboarding() {
       }
     } catch {}
     if (checkoutPlan) {
-      const PRICES: Record<string,string> = { maker:"price_1T9sd1Dr9So14XztT3Mqddch", pro:"price_1T9sdfDr9So14XztPR3tI14Y", studio:"price_1TMzhCDr9So14Xzt1rUmfs7h" };
-      const priceId = PRICES[checkoutPlan];
-      if (priceId) {
-        const { data } = await supabase.functions.invoke("create-checkout", { body: { price_id: priceId, billing: checkoutBilling || undefined } }).catch(() => ({ data: null }));
+      // Mandava price_id fixo no corpo. Além de quebrar toda vez que um preço
+      // era recriado no Stripe, deixava o preço ser escolhido pelo cliente —
+      // agora quem resolve é o servidor, pelo plano.
+      const plan = normalizePlan(checkoutPlan);
+      if (plan !== "free") {
+        const { data } = await supabase.functions.invoke("create-checkout", { body: { plan, billing: checkoutBilling || undefined } }).catch(() => ({ data: null }));
         if (data?.url) { window.location.href = data.url; return; }
       }
     }

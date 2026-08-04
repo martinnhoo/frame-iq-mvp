@@ -15,7 +15,7 @@
 // Output esperado: 3-8 imagens visualmente coerentes que o user
 // pode baixar e juntar num editor de vídeo externo pra gerar o ad.
 
-const FN_VERSION = "v3-2026-08-02-metering";
+const FN_VERSION = "v11-2026-08-04-seguranca";
 
 // Cap de concorrência pro OpenAI gpt-image-2.
 // OpenAI Tier 2 (verificado): 50 req/min. Cap em 5 paralelos ainda
@@ -274,6 +274,11 @@ Deno.serve(async (req) => {
 
     const okCount = results.filter(r => r.image_url).length;
     if (okCount === 0) {
+      // Nenhuma cena saiu — estorna. O caminho splitter_failed já estornava;
+      // este ficou de fora e cobrava N × 4 créditos por zero imagens, o que é
+      // pior do que falhar: o cliente paga e não recebe.
+      try { await refundCredits(sb, sbRes.reservation_id!, "all_scenes_failed"); } catch { /* ignora */ }
+
       // Detecta se foi acesso (gpt-image-2 não verificada na conta)
       const firstErr = results[0]?.error || "unknown";
       const needsVerify = /must be verified|organization|verify/i.test(firstErr);

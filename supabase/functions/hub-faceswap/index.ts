@@ -18,9 +18,10 @@
 //        2. POST `action=poll` a cada 5s → checa status, se completed,
 //           baixa+upload Storage+insert hub_assets
 
-const FN_VERSION = "v3-2026-08-02-metering";
+const FN_VERSION = "v11-2026-08-04-seguranca";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { safeFetch } from "../_shared/safe-fetch.ts";
 import {
   reserveCredits, confirmCredits, refundCredits,
   insufficientCreditsResponse, getUserPlan,
@@ -72,7 +73,10 @@ async function validateUrl(
   expectVideo: boolean,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    const head = await fetch(url, { method: "HEAD" });
+    // safeFetch: o status da resposta volta na mensagem de erro
+    // (`${name}_not_accessible: status=...`), o que transformava esta
+    // validação num scanner de host e porta da rede interna.
+    const head = await safeFetch(url, { method: "HEAD" });
     if (!head.ok) {
       return { ok: false, error: `${name}_not_accessible: status=${head.status}` };
     }

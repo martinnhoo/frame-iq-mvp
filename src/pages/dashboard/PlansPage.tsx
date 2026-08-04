@@ -78,8 +78,11 @@ export default function PlansPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setCouponError("Faça login para usar um cupom."); return; }
 
+      // Não manda mais o user_id: a RPC antiga aceitava o uuid do alvo, e
+      // passando o de outra pessoa dava para descobrir que cupons ela já usou.
+      // A versão _my resolve por auth.uid() dentro do banco.
       const { data, error: rpcErr } = await (supabase
-        .rpc("hub_validate_campaign" as any, { p_code: code, p_user: user.id }) as any);
+        .rpc("hub_validate_my_campaign" as any, { p_code: code }) as any);
       if (rpcErr) throw rpcErr;
 
       if (!data?.valid) {

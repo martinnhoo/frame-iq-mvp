@@ -19,13 +19,14 @@
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { safeFetch } from "../_shared/safe-fetch.ts";
 import {
   reserveCredits, confirmCredits, refundCredits,
   insufficientCreditsResponse, getUserPlan,
 } from "../_shared/hub-credits.ts";
 
 // Versão do deploy — permite verificar de fora o que está no ar.
-const FN_VERSION = "v2-2026-08-02-metering";
+const FN_VERSION = "v11-2026-08-04-seguranca";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
@@ -80,6 +81,9 @@ Deno.serve(async (req) => {
       const b64: string = body.input_image_base64 || "";
       const url: string = body.image_url || "";
       if (!b64 && !url) {
+        // Reserva foi feita antes de validar o corpo; validação que falha
+        // precisa devolver o crédito, senão o cliente paga por um 400.
+        await refundCredits(supabase, creditRes.reservation_id!, "invalid_request");
         return new Response(
           JSON.stringify({ error: "missing_image", message: "input_image_base64 ou image_url obrigatório." }),
           { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
@@ -91,8 +95,11 @@ Deno.serve(async (req) => {
         bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       } else {
-        // Fetch URL → bytes
-        const fetchRes = await fetch(url);
+        // Fetch URL → bytes.
+        // safeFetch e não fetch: `url` vem crua do corpo do request, e sem
+        // checagem isto alcançava 169.254.169.254 e qualquer host de rede
+        // privada que o runtime enxergue.
+        const fetchRes = await safeFetch(url);
         if (!fetchRes.ok) {
           return new Response(
             JSON.stringify({ error: "input_image_fetch_failed", message: `Falha ao baixar imagem de ${url.slice(0, 80)}` }),
@@ -119,6 +126,9 @@ Deno.serve(async (req) => {
       const fd = await req.formData();
       const file = fd.get("image") as File | null;
       if (!file) {
+        // Reserva foi feita antes de validar o corpo; validação que falha
+        // precisa devolver o crédito, senão o cliente paga por um 400.
+        await refundCredits(supabase, creditRes.reservation_id!, "invalid_request");
         return new Response(
           JSON.stringify({ error: "missing_image", message: "Campo 'image' obrigatório (FormData) ou 'input_image_base64' (JSON)." }),
           { status: 400, headers: { ...cors, "Content-Type": "application/json" } },

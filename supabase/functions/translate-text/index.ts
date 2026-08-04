@@ -23,6 +23,13 @@ Deno.serve(async (req) => {
       const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
       if (authUser) verified_user_id = authUser.id;
     }
+    // Sem token não passa. Antes seguia com user_id undefined, o que pulava a
+    // checagem de crédito abaixo e deixava a conta da Anthropic aberta.
+    if (!verified_user_id) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), {
+        status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
 
     const body = await req.json();
     const source_text: string = body.source_text || body.text || '';
@@ -43,10 +50,8 @@ Deno.serve(async (req) => {
     }
 
     // Check credits for translation
-    if (user_id) {
-      const creditCheck = await requireCredits(supabase, user_id, "translation");
-      if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...cors, 'Content-Type': 'application/json' } });
-    }
+    const creditCheck = await requireCredits(supabase, user_id!, "translation");
+    if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...cors, 'Content-Type': 'application/json' } });
 
     // Build translation targets
     const targets = multi_targets?.length

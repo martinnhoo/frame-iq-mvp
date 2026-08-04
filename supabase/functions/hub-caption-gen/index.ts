@@ -13,10 +13,15 @@
 //
 // Idioma das legendas: deriva de market (BR=pt-BR, MX/CO/PE=es, US=en, IN=hinglish).
 
-const FN_VERSION = "v9-2026-08-02-metering";
+const FN_VERSION = "v11-2026-08-04-seguranca";
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadBrandContext, buildBrandPromptBlock } from "../_shared/brand-context.ts";
+import { safeFetch } from "../_shared/safe-fetch.ts";
+import {
+  reserveCredits, confirmCredits, refundCredits,
+  insufficientCreditsResponse, getUserPlan,
+} from "../_shared/hub-credits.ts";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
@@ -26,6 +31,8 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 
 function jsonResponse(payload: unknown, status: number): Response {
   return new Response(JSON.stringify(payload), {
@@ -202,15 +209,23 @@ NOT:
 async function deleteVideoFromStorage(
   videoUrl: string,
   sb: ReturnType<typeof createClient>,
+  ownerId: string,
 ): Promise<void> {
   try {
-    const marker = "/hub-captions/";
-    const idx = videoUrl.indexOf(marker);
-    if (idx === -1) {
-      console.warn(`[cleanup] video URL doesn't match hub-captions pattern: ${videoUrl.slice(0, 80)}`);
+    // O `sb` aqui é service_role e a URL vem crua do corpo do request. Antes
+    // bastava a URL CONTER a substring "/hub-captions/" — o host nunca era
+    // conferido. Mandando
+    //   https://qualquer.coisa/hub-captions/<uuid-da-vitima>/caption-source/x.mp4
+    // dava para apagar o arquivo de outro cliente do Storage.
+    //
+    // Agora só aceita URL do nosso próprio Storage e dentro da pasta do
+    // usuário autenticado.
+    const prefix = `${SUPABASE_URL}/storage/v1/object/public/hub-captions/${ownerId}/`;
+    if (!videoUrl.startsWith(prefix)) {
+      console.warn(`[cleanup] URL fora da pasta do usuário, ignorada: ${videoUrl.slice(0, 80)}`);
       return;
     }
-    const path = videoUrl.slice(idx + marker.length).split("?")[0]; // remove query string se tiver
+    const path = videoUrl.slice(`${SUPABASE_URL}/storage/v1/object/public/hub-captions/`.length).split("?")[0];
     const { error } = await sb.storage.from("hub-captions").remove([path]);
     if (error) {
       console.warn(`[cleanup] delete failed for ${path}: ${error.message}`);
@@ -232,8 +247,11 @@ async function whisperTranscribe(
   apiKey: string,
 ): Promise<{ transcript: string | null; error?: string }> {
   try {
-    // Download do vídeo do Storage
-    const dl = await fetch(videoUrl);
+    // Download do vídeo do Storage.
+    // safeFetch: videoUrl vem do corpo do request e o que for baixado aqui
+    // passa pelo Whisper e VOLTA na resposta como transcript — sem checagem,
+    // isso era um canal de exfiltração para qualquer coisa em rede interna.
+    const dl = await safeFetch(videoUrl);
     if (!dl.ok) return { transcript: null, error: `dl_${dl.status}` };
     const blob = await dl.blob();
     const sizeMB = blob.size / 1024 / 1024;
@@ -408,8 +426,11 @@ console.log(`[hub-caption-gen] boot ${FN_VERSION}`);
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
+  // Fora do try: o catch precisa enxergar a reserva pra estornar.
+  let pendingReservationId: string | null = null;
+  let sbForRefund: ReturnType<typeof createClient> | null = null;
+
   try {
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
@@ -452,6 +473,21 @@ Deno.serve(async (req) => {
         message: "Máximo 10 imagens por chamada.",
       }, 400);
     }
+
+    // Esta era a única função do Hub que chamava provider pago sem cobrar
+    // crédito nenhum: até 10 imagens em GPT-4o-mini vision com detail alto,
+    // mais um Whisper por vídeo, por chamada. Em loop, custo ilimitado com
+    // saldo intocado. O cabeçalho já dizia "metering" desde a v9, mas o
+    // arquivo não importava hub-credits.ts em lugar nenhum.
+    //
+    // Reserva depois de validar o corpo — reservar antes cobra pelo 400.
+    const captionPlan = await getUserPlan(sb, authUser.id);
+    const creditRes = await reserveCredits(
+      sb, authUser.id, captionPlan, "caption", images.length,
+    );
+    if (!creditRes.ok) return insufficientCreditsResponse(creditRes, cors);
+    pendingReservationId = creditRes.reservation_id ?? null;
+    sbForRefund = sb;
 
     // Resolução de marketCtx:
     //   - language explícito (override do user) → usa esse
@@ -529,10 +565,10 @@ Deno.serve(async (req) => {
           // @ts-expect-error EdgeRuntime is Deno-specific
           if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
             // @ts-expect-error EdgeRuntime is Deno-specific
-            EdgeRuntime.waitUntil(deleteVideoFromStorage(img.video_url, sb));
+            EdgeRuntime.waitUntil(deleteVideoFromStorage(img.video_url, sb, authUser.id));
           } else {
             // Fallback: fire-and-forget Promise (não await)
-            deleteVideoFromStorage(img.video_url, sb);
+            deleteVideoFromStorage(img.video_url, sb, authUser.id);
           }
         }
 
@@ -557,6 +593,17 @@ Deno.serve(async (req) => {
 
     const okCount = results.filter(r => !r.error && r.fb_caption && r.tiktok_caption).length;
     console.log(`[hub-caption-gen] done — ${okCount}/${images.length} ok`);
+
+    // Nenhuma legenda saiu: estorna tudo. O crédito é por legenda entregue,
+    // não por tentativa.
+    if (pendingReservationId) {
+      if (okCount === 0) {
+        await refundCredits(sb, pendingReservationId, "no_captions_generated");
+      } else {
+        await confirmCredits(sb, pendingReservationId);
+      }
+      pendingReservationId = null;
+    }
 
     // Persiste cada resultado bem-sucedido em hub_assets
     const memoryIds: (string | null)[] = [];
@@ -603,6 +650,9 @@ Deno.serve(async (req) => {
 
   } catch (e) {
     console.error("[hub-caption-gen] unexpected:", e);
+    if (pendingReservationId && sbForRefund) {
+      try { await refundCredits(sbForRefund, pendingReservationId, "internal_error"); } catch { /* ignora */ }
+    }
     return jsonResponse({
       _v: FN_VERSION, ok: false, error: "internal_error",
       message: String(e).slice(0, 300),

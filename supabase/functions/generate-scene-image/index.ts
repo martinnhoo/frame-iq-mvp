@@ -1,3 +1,4 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -7,6 +8,25 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
+    // Porta de autenticação. Esta função chama provider pago; sem token
+    // verificado ela era um endpoint aberto na internet gastando a conta da
+    // Anthropic/OpenAI de quem passasse um curl em loop.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    let verified_user_id = "";
+    if (authHeader.startsWith("Bearer ")) {
+      const gate = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      );
+      const { data: { user: authUser } } = await gate.auth.getUser(authHeader.slice(7));
+      if (authUser) verified_user_id = authUser.id;
+    }
+    if (!verified_user_id) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {

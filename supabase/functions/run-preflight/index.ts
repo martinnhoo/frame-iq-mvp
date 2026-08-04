@@ -25,6 +25,14 @@ Deno.serve(async (req) => {
       const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
       if (authUser) verified_user_id = authUser.id;
     }
+    // Sem token não passa. O Whisper roda bem antes da checagem de crédito
+    // lá embaixo, então um endpoint aberto aqui significava transcrição paga
+    // de graça mesmo que a análise da Anthropic falhasse depois.
+    if (!verified_user_id) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: "AI API key not configured" }), {
@@ -347,10 +355,8 @@ Return ONLY valid JSON (no markdown, no backticks):
 }`;
 
     // ── Credit check ──
-    if (user_id) {
-      const creditCheck = await requireCredits(supabase, user_id, "preflight");
-      if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const creditCheck = await requireCredits(supabase, user_id, "preflight");
+    if (!creditCheck.allowed) return new Response(JSON.stringify(creditCheck.error), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     console.log("Calling AI for pre-flight analysis...");
     const aiRes = await fetch("https://api.anthropic.com/v1/messages", {

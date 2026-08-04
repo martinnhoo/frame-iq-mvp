@@ -21,9 +21,6 @@ verify_jwt = false
 [functions.check-usage]
 verify_jwt = false
 
-[functions.upgrade-plan]
-verify_jwt = false
-
 [functions.generate-scene-image]
 verify_jwt = false
 

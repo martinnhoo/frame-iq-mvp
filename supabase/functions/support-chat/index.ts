@@ -52,14 +52,30 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { messages, language, user_id, user_context } = await req.json();
+    const { messages, language, user_context } = await req.json();
+
+    // A identidade vem do token, nunca do corpo. Antes o `user_id` do corpo
+    // era aceito: omitir o campo dava chat ilimitado de graça, e preencher com
+    // o id de outro cliente queimava o crédito dele. `verify_jwt = true` não
+    // protege disso — a anon key é um JWT válido do projeto e está no bundle.
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    const authHeader = req.headers.get("Authorization") ?? "";
+    let user_id = "";
+    if (authHeader.startsWith("Bearer ")) {
+      const { data: { user: authUser } } = await supabase.auth.getUser(authHeader.slice(7));
+      if (authUser) user_id = authUser.id;
+    }
+    if (!user_id) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Rate limit check
-    if (user_id) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
+    {
       const creditCheck = await requireCredits(supabase, user_id, "chat");
       if (!creditCheck.allowed) {
         return new Response(
