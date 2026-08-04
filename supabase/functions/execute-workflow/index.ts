@@ -702,11 +702,94 @@ async function execBrand(node: GraphNode, ctx: ExecCtx): Promise<Record<string, 
   };
 }
 
+// ── Resolução tolerante de inputs ───────────────────────────────────
+// Os nós upstream podem devolver string, objeto ou array de objetos, e o
+// usuário pode ligar o cabo em handles diferentes. Antes cada nó lia um
+// caminho único (ex: inputs.prompt.text) e qualquer outro formato virava
+// missing_prompt / missing_image_input e derrubava o workflow inteiro.
+const TEXT_KEYS = ["text", "script", "vo_script", "caption", "prompt", "content", "value", "output"];
+const IMAGE_KEYS = ["image_url", "url", "output_url", "src"];
+
+function pickText(v: unknown, depth = 0): string {
+  if (v == null || depth > 3) return "";
+  if (typeof v === "string") return v.trim();
+  if (Array.isArray(v)) {
+    return v.map((x) => pickText(x, depth + 1)).filter(Boolean).join("\n\n").trim();
+  }
+  if (typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    for (const k of TEXT_KEYS) {
+      const got = pickText(o[k], depth + 1);
+      if (got) return got;
+    }
+  }
+  return "";
+}
+
+function pickImageUrl(v: unknown, depth = 0): string {
+  if (v == null || depth > 3) return "";
+  if (typeof v === "string") return v.trim();
+  if (Array.isArray(v)) {
+    for (const x of v) {
+      const got = pickImageUrl(x, depth + 1);
+      if (got) return got;
+    }
+    return "";
+  }
+  if (typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    for (const k of IMAGE_KEYS) {
+      const got = pickImageUrl(o[k], depth + 1);
+      if (got) return got;
+    }
+    // storyboard → usa a primeira cena com imagem
+    const got = pickImageUrl(o.scenes, depth + 1);
+    if (got) return got;
+  }
+  return "";
+}
+
+// Procura texto em qualquer handle plausível antes de desistir.
+function resolveText(inputs: Record<string, unknown>, node?: GraphNode): string {
+  for (const h of ["prompt", "text", "script", "default", "in"]) {
+    const got = pickText(inputs[h]);
+    if (got) return got;
+  }
+  for (const v of Object.values(inputs)) {
+    const got = pickText(v);
+    if (got) return got;
+  }
+  if (node) {
+    for (const k of ["text", "script", "prompt"]) {
+      const got = pickText(node.data[k]);
+      if (got) return got;
+    }
+  }
+  return "";
+}
+
+function resolveImageUrl(inputs: Record<string, unknown>, node?: GraphNode): string {
+  for (const h of ["image", "asset", "reference", "default", "in"]) {
+    const got = pickImageUrl(inputs[h]);
+    if (got) return got;
+  }
+  for (const v of Object.values(inputs)) {
+    const got = pickImageUrl(v);
+    if (got) return got;
+  }
+  if (node) {
+    const got = pickImageUrl(node.data.image_url);
+    if (got) return got;
+  }
+  return "";
+}
+
 async function execPrompt(node: GraphNode): Promise<{ text: string }> {
   const text = String(node.data.text || "").trim();
   if (text.length < 5) throw new Error("prompt_too_short");
   return { text };
 }
+
 
 async function execImageGen(
   node: GraphNode,
