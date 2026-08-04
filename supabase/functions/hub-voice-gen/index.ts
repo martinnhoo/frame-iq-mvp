@@ -30,7 +30,7 @@ import {
   insufficientCreditsResponse, getUserPlan,
 } from "../_shared/hub-credits.ts";
 
-const FN_VERSION = "v5-2026-08-03-audio";
+const FN_VERSION = "v6-2026-08-04-voice-catalog-fallback";
 
 const cors = {
   // Versão do deploy em todas as respostas — torna possível
@@ -282,7 +282,37 @@ Deno.serve(async (req) => {
             : `Não foi possível carregar o catálogo de vozes (${raw.slice(0, 60)}).`,
         }, 502);
       }
-      const allowed = items.filter(isVoiceAllowed);
+      let allowed = items.filter(isVoiceAllowed);
+
+      // Fallback progressivo: o combo (idioma + tag + popularidade >= 50)
+      // frequentemente devolvia zero voz, deixando o select em branco.
+      // Em vez de mostrar uma caixa vazia, afrouxa em degraus até ter opções.
+      if (allowed.length === 0) {
+        // 1) mesma busca, sem o piso de popularidade
+        allowed = items.filter(m => isVoiceAllowed({ ...m, task_count: 999 }));
+      }
+      if (allowed.length === 0) {
+        // 2) busca crua no idioma, sem tag de uso
+        try {
+          const raw = await fetchPage(1);
+          const rawItems = ((raw as any)?.items || []) as FishModel[];
+          allowed = rawItems.filter(m => isVoiceAllowed({ ...m, task_count: 999 }));
+        } catch { /* mantém vazio */ }
+      }
+      if (allowed.length === 0 && language !== "en") {
+        // 3) último degrau: catálogo global (multilíngue serve pra PT também)
+        try {
+          const params = new URLSearchParams({ page_size: "50", page_number: "1", sort_by: "task_count" });
+          const res = await fetch(`${FISH_API}/model?${params}`, {
+            headers: { Authorization: `Bearer ${FISH_KEY}` },
+          });
+          if (res.ok) {
+            const raw = await res.json();
+            allowed = (((raw as any)?.items || []) as FishModel[])
+              .filter(m => isVoiceAllowed({ ...m, task_count: 999 }));
+          }
+        } catch { /* mantém vazio */ }
+      }
 
       return json({
         ok: true,
