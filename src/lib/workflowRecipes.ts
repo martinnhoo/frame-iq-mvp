@@ -278,7 +278,7 @@ export const RECIPES: Recipe[] = [
       // várias chamadas lado a lado numa imagem só.
       const singleAdRule =
         `REGRA ABSOLUTA: gere UMA ÚNICA peça publicitária ocupando 100% do quadro. ` +
-        `Proibido colade/mosaico/grade: nada de dividir a imagem em 2, 3 ou 4 painéis, ` +
+        `Proibido colagem/mosaico/grade: nada de dividir a imagem em 2, 3 ou 4 painéis, ` +
         `nada de várias versões lado a lado, nada de miniaturas, molduras múltiplas ou ` +
         `comparativo antes/depois. Uma cena, um layout, uma chamada só.`;
 
