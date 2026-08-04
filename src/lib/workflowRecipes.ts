@@ -377,21 +377,25 @@ export const RECIPES: Recipe[] = [
         help: "Separe cada um com três traços numa linha só: ---",
       },
       {
-        key: "voice_id", label: "Voz", kind: "voice", required: true,
-        help: "A mesma voz Fish Audio será usada em todas as locuções do lote.",
+        key: "voice_id", label: "Vozes", kind: "voice", required: true,
+        help: "Escolha uma ou várias vozes Fish Audio. Com mais de uma, elas se alternam entre os roteiros.",
       },
     ],
     build: (a) => {
       const parts = (a.scripts || "").split(/^\s*---\s*$/m).map(s => s.trim()).filter(Boolean);
+      // Uma ou várias vozes (separadas por vírgula). Com várias, cada roteiro
+      // pega a próxima da lista, em rodízio — é o que dá variação ao lote.
+      const voiceIds = (a.voice_id || "").split(",").map(s => s.trim()).filter(Boolean);
       const nodes: WfNode[] = [];
       const edges: WfEdge[] = [];
       // Um output por locução, pelo mesmo motivo: várias arestas no handle
       // "asset" do mesmo output viram array e o execOutput não lê array.
       parts.forEach((text, k) => {
         const v = nid("voice"), o = nid("out");
+        const voiceId = voiceIds.length ? voiceIds[k % voiceIds.length] : "";
         nodes.push({
           id: v, type: "voice", position: { x: 120, y: 60 + k * 140 },
-          data: { text, speed: 1, ...(a.voice_id ? { voice_id: a.voice_id.trim() } : {}) },
+          data: { text, speed: 1, ...(voiceId ? { voice_id: voiceId } : {}) },
         });
         nodes.push({
           id: o, type: "output", position: { x: 560, y: 60 + k * 140 },
@@ -401,6 +405,7 @@ export const RECIPES: Recipe[] = [
       });
       return g(nodes, edges);
     },
+
     estimate: (a) => {
       const parts = (a.scripts || "").split(/^\s*---\s*$/m).map(s => s.trim()).filter(Boolean);
       const chars = parts.reduce((sum, p) => sum + p.length, 0);
