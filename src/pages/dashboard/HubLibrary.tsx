@@ -1330,26 +1330,51 @@ function PreviewModal({ asset, onClose, lang, t }: {
         if (!user) return;
         const groupField = asset.kind === "storyboard" ? "storyboard_id" : "carousel_id";
         const sceneField = asset.kind === "storyboard" ? "scene_n" : "slide_n";
+        const dbKind = asset.kind === "storyboard" ? "hub_storyboard" : "hub_carousel";
+
+        // Filtra o grupo NO SERVIDOR. Antes buscava só as 50 rows mais
+        // recentes desse kind e filtrava no client — storyboards antigos
+        // caíam fora da janela e o modal abria vazio.
+        let rows: Array<{ content?: Record<string, unknown> }> = [];
         const { data } = await supabase.from("hub_assets" as never)
           .select("content")
           .eq("user_id", user.id)
-          .eq("kind", asset.kind === "storyboard" ? "hub_storyboard" : "hub_carousel")
-          .order("created_at", { ascending: false })
-          .limit(50);
-        if (!mounted || !data) return;
-        const items = (data as Array<{ content?: Record<string, unknown> }>)
-          .filter(r => (r.content?.[groupField] as string) === asset.id)
+          .eq("kind", dbKind)
+          .eq(`content->>${groupField}` as never, asset.id as never)
+          .limit(100);
+        rows = (data || []) as Array<{ content?: Record<string, unknown> }>;
+
+        // Fallback: rows legadas sem *_id no content (grupo = id da row).
+        if (rows.length === 0) {
+          const { data: single } = await supabase.from("hub_assets" as never)
+            .select("content")
+            .eq("user_id", user.id)
+            .eq("id", asset.id)
+            .limit(1);
+          rows = (single || []) as Array<{ content?: Record<string, unknown> }>;
+        }
+
+        if (!mounted) return;
+        const items = rows
           .map(r => ({
             url: (r.content?.image_url as string) || "",
             n: (r.content?.[sceneField] as number) || 1,
           }))
           .filter(x => x.url)
           .sort((a, b) => a.n - b.n);
+
+        // Último fallback: usa o que já foi agrupado no grid.
+        if (items.length === 0) {
+          const thumbs = asset.scene_thumbs?.length ? asset.scene_thumbs : (asset.cover_url ? [asset.cover_url] : []);
+          setGroupItems(thumbs.map((url, i) => ({ url, n: i + 1 })));
+          return;
+        }
         setGroupItems(items);
       } catch { /* silent */ }
     })();
     return () => { mounted = false; };
-  }, [asset.id, asset.kind, isGroup]);
+  }, [asset.id, asset.kind, isGroup, asset.cover_url, asset.scene_thumbs]);
+
 
   const downloadOne = async (url: string, name: string) => {
     try {
