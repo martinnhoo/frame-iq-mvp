@@ -309,8 +309,9 @@ function Field({ field, value, onChange, brands }: {
       )}
 
       {field.kind === "voice" && (
-        <FishVoiceSelect value={value} onChange={id => onChange(id)} style={inputSt} />
+        <FishVoiceSelect value={value} onChange={id => onChange(id)} style={inputSt} multiple />
       )}
+
 
       {field.kind === "select" && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
