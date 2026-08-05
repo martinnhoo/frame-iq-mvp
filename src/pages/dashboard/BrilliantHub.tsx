@@ -13,7 +13,6 @@ import {
   CalendarDays,
   Check,
   ChevronRight,
-  Circle,
   FolderOpen,
   Image as ImageIcon,
   Languages,
@@ -22,7 +21,6 @@ import {
   Play,
   Rocket,
   Sparkles,
-  Store,
   Target,
   Video,
   Workflow,
@@ -32,6 +30,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
+import HomeBrandSelector from "@/components/hub/HomeBrandSelector";
 
 type Lang = "pt" | "en" | "es" | "zh";
 
@@ -85,21 +84,29 @@ interface Template {
   icon: LucideIcon;
 }
 
+interface WorkflowSeed {
+  brief: string;
+  objective: ObjectiveId;
+  channel: ChannelId;
+  outputLanguage: OutputLanguageId;
+  createdAt: string;
+}
+
 const COPY = {
   pt: {
     pageTitle: "Início — AdBrief",
     title: "O que vamos criar hoje",
     subtitle:
       "Comece pelo resultado. O AdBrief organiza as etapas e conecta as ferramentas necessárias.",
-    brandLabel: "Marca",
-    chooseBrand: "Escolher marca",
+
     library: "Biblioteca",
     assetEmpty: "Nenhum criativo",
     assetSingle: "1 criativo",
     assetPlural: "{n} criativos",
 
     composerEyebrow: "Comece pelo objetivo",
-    composerTitle: "Descreva o que você precisa criar",
+    composerTitle:
+      "Descreva o que você precisa criar",
     composerSubtitle:
       "Pode escrever como falaria com um estrategista. O workflow será montado automaticamente.",
     placeholder:
@@ -127,15 +134,19 @@ const COPY = {
     continueTitle: "Continuar trabalhando",
     continueSubtitle:
       "Acesse rapidamente as áreas mais importantes do seu processo.",
+
     workflowCardTitle: "Seus workflows",
     workflowCardDescription:
       "Continue uma automação ou crie um novo processo.",
+
     imageCardTitle: "Criar uma imagem",
     imageCardDescription:
       "Abra o gerador e produza um criativo individual.",
+
     libraryCardTitle: "Seus criativos",
     libraryCardDescription:
       "Organize e encontre tudo o que já foi produzido.",
+
     open: "Abrir",
 
     templatesTitle: "Workflows recomendados",
@@ -146,7 +157,8 @@ const COPY = {
     recentTitle: "Seus últimos criativos",
     recentSubtitle:
       "Tudo o que você produz fica centralizado na Biblioteca.",
-    recentEmptyTitle: "Sua Biblioteca ainda está vazia",
+    recentEmptyTitle:
+      "Sua Biblioteca ainda está vazia",
     recentEmptyDescription:
       "Crie o primeiro ativo e ele aparecerá automaticamente aqui.",
     createFirst: "Criar primeiro ativo",
@@ -238,15 +250,15 @@ const COPY = {
     title: "What are we creating today",
     subtitle:
       "Start with the outcome. AdBrief organizes the steps and connects the tools you need.",
-    brandLabel: "Brand",
-    chooseBrand: "Choose brand",
+
     library: "Library",
     assetEmpty: "No creatives",
     assetSingle: "1 creative",
     assetPlural: "{n} creatives",
 
     composerEyebrow: "Start with the goal",
-    composerTitle: "Describe what you need to create",
+    composerTitle:
+      "Describe what you need to create",
     composerSubtitle:
       "Write as if you were talking to a strategist. The workflow will be assembled automatically.",
     placeholder:
@@ -274,15 +286,19 @@ const COPY = {
     continueTitle: "Continue working",
     continueSubtitle:
       "Quickly access the most important parts of your process.",
+
     workflowCardTitle: "Your workflows",
     workflowCardDescription:
       "Continue an automation or create a new process.",
+
     imageCardTitle: "Create an image",
     imageCardDescription:
       "Open the generator and produce a single creative.",
+
     libraryCardTitle: "Your creatives",
     libraryCardDescription:
       "Organize and find everything you have produced.",
+
     open: "Open",
 
     templatesTitle: "Recommended workflows",
@@ -293,7 +309,8 @@ const COPY = {
     recentTitle: "Your latest creatives",
     recentSubtitle:
       "Everything you produce is centralized in the Library.",
-    recentEmptyTitle: "Your Library is still empty",
+    recentEmptyTitle:
+      "Your Library is still empty",
     recentEmptyDescription:
       "Create your first asset and it will automatically appear here.",
     createFirst: "Create first asset",
@@ -385,15 +402,15 @@ const COPY = {
     title: "¿Qué vamos a crear hoy",
     subtitle:
       "Empieza por el resultado. AdBrief organiza las etapas y conecta las herramientas necesarias.",
-    brandLabel: "Marca",
-    chooseBrand: "Elegir marca",
+
     library: "Biblioteca",
     assetEmpty: "Sin creativos",
     assetSingle: "1 creativo",
     assetPlural: "{n} creativos",
 
     composerEyebrow: "Empieza por el objetivo",
-    composerTitle: "Describe lo que necesitas crear",
+    composerTitle:
+      "Describe lo que necesitas crear",
     composerSubtitle:
       "Escribe como si hablaras con un estratega. El workflow se montará automáticamente.",
     placeholder:
@@ -421,15 +438,19 @@ const COPY = {
     continueTitle: "Continuar trabajando",
     continueSubtitle:
       "Accede rápidamente a las áreas más importantes de tu proceso.",
+
     workflowCardTitle: "Tus workflows",
     workflowCardDescription:
       "Continúa una automatización o crea un nuevo proceso.",
+
     imageCardTitle: "Crear una imagen",
     imageCardDescription:
       "Abre el generador y produce un creativo individual.",
+
     libraryCardTitle: "Tus creativos",
     libraryCardDescription:
       "Organiza y encuentra todo lo que ya has producido.",
+
     open: "Abrir",
 
     templatesTitle: "Workflows recomendados",
@@ -440,7 +461,8 @@ const COPY = {
     recentTitle: "Tus últimos creativos",
     recentSubtitle:
       "Todo lo que produces queda centralizado en la Biblioteca.",
-    recentEmptyTitle: "Tu Biblioteca todavía está vacía",
+    recentEmptyTitle:
+      "Tu Biblioteca todavía está vacía",
     recentEmptyDescription:
       "Crea el primer activo y aparecerá automáticamente aquí.",
     createFirst: "Crear primer activo",
@@ -532,8 +554,7 @@ const COPY = {
     title: "今天要创建什么",
     subtitle:
       "从结果开始。AdBrief 会组织步骤并连接所需工具。",
-    brandLabel: "品牌",
-    chooseBrand: "选择品牌",
+
     library: "资源库",
     assetEmpty: "暂无创意",
     assetSingle: "1 个创意",
@@ -568,15 +589,19 @@ const COPY = {
     continueTitle: "继续工作",
     continueSubtitle:
       "快速访问流程中最重要的区域。",
+
     workflowCardTitle: "您的工作流",
     workflowCardDescription:
       "继续自动化流程或创建新流程。",
+
     imageCardTitle: "创建图片",
     imageCardDescription:
       "打开生成器并创建单个创意。",
+
     libraryCardTitle: "您的创意",
     libraryCardDescription:
       "整理并找到您已经创建的所有内容。",
+
     open: "打开",
 
     templatesTitle: "推荐工作流",
@@ -587,7 +612,8 @@ const COPY = {
     recentTitle: "最近的创意",
     recentSubtitle:
       "您创建的所有内容都会集中在资源库中。",
-    recentEmptyTitle: "您的资源库还是空的",
+    recentEmptyTitle:
+      "您的资源库还是空的",
     recentEmptyDescription:
       "创建第一个资产后，它会自动出现在这里。",
     createFirst: "创建第一个资产",
@@ -688,6 +714,7 @@ const WORKFLOW_STEPS: Record<
     "images",
     "variations",
   ],
+
   video: [
     "brand",
     "offer",
@@ -698,6 +725,7 @@ const WORKFLOW_STEPS: Record<
     "video",
     "variations",
   ],
+
   campaign: [
     "brand",
     "offer",
@@ -708,6 +736,7 @@ const WORKFLOW_STEPS: Record<
     "variations",
     "channels",
   ],
+
   carousel: [
     "brand",
     "offer",
@@ -717,6 +746,7 @@ const WORKFLOW_STEPS: Record<
     "carousel",
     "variations",
   ],
+
   adapt: [
     "brand",
     "offer",
@@ -725,6 +755,7 @@ const WORKFLOW_STEPS: Record<
     "variations",
     "channels",
   ],
+
   social: [
     "brand",
     "persona",
@@ -741,121 +772,172 @@ export default function BrilliantHub() {
   const { language } = useLanguage();
 
   const lang: Lang = (
-    ["pt", "en", "es", "zh"].includes(language as string)
+    ["pt", "en", "es", "zh"].includes(
+      language as string,
+    )
       ? language
       : "pt"
   ) as Lang;
 
   const copy = COPY[lang];
 
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const workflowRef = useRef<HTMLDivElement | null>(null);
-  const composerRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef =
+    useRef<HTMLTextAreaElement | null>(null);
 
-  const [userName, setUserName] = useState("");
-  const [assetCount, setAssetCount] = useState<number | null>(
-    null,
-  );
+  const workflowRef =
+    useRef<HTMLDivElement | null>(null);
 
-  const [brief, setBrief] = useState("");
-  const [selectedObjective, setSelectedObjective] =
-    useState<ObjectiveId>("campaign");
+  const composerRef =
+    useRef<HTMLDivElement | null>(null);
+
+  const [userName, setUserName] =
+    useState("");
+
+  const [assetCount, setAssetCount] =
+    useState<number | null>(null);
+
+  const [brief, setBrief] =
+    useState("");
+
+  const [
+    selectedObjective,
+    setSelectedObjective,
+  ] = useState<ObjectiveId>("campaign");
+
   const [channel, setChannel] =
     useState<ChannelId>("meta");
-  const [outputLanguage, setOutputLanguage] =
+
+  const [
+    outputLanguage,
+    setOutputLanguage,
+  ] =
     useState<OutputLanguageId>("pt");
-  const [workflowReady, setWorkflowReady] =
-    useState(true);
 
-  const objectives = useMemo<Objective[]>(
-    () => [
-      {
-        id: "static",
-        label: copy.objectiveStatic,
-        description: copy.objectiveStaticDescription,
-        example: copy.objectiveStaticExample,
-        icon: ImageIcon,
-      },
-      {
-        id: "video",
-        label: copy.objectiveVideo,
-        description: copy.objectiveVideoDescription,
-        example: copy.objectiveVideoExample,
-        icon: Video,
-      },
-      {
-        id: "campaign",
-        label: copy.objectiveCampaign,
-        description: copy.objectiveCampaignDescription,
-        example: copy.objectiveCampaignExample,
-        icon: Rocket,
-      },
-      {
-        id: "carousel",
-        label: copy.objectiveCarousel,
-        description: copy.objectiveCarouselDescription,
-        example: copy.objectiveCarouselExample,
-        icon: Layers3,
-      },
-      {
-        id: "adapt",
-        label: copy.objectiveAdapt,
-        description: copy.objectiveAdaptDescription,
-        example: copy.objectiveAdaptExample,
-        icon: Zap,
-      },
-      {
-        id: "social",
-        label: copy.objectiveSocial,
-        description: copy.objectiveSocialDescription,
-        example: copy.objectiveSocialExample,
-        icon: CalendarDays,
-      },
-    ],
-    [copy],
-  );
+  const [
+    workflowReady,
+    setWorkflowReady,
+  ] = useState(true);
 
-  const templates = useMemo<Template[]>(
-    () => [
-      {
-        id: "launch",
-        title: copy.templateLaunchTitle,
-        description: copy.templateLaunchDescription,
-        objective: "campaign",
-        prompt: copy.templateLaunchPrompt,
-        icon: Rocket,
-      },
-      {
-        id: "meta",
-        title: copy.templateMetaTitle,
-        description: copy.templateMetaDescription,
-        objective: "campaign",
-        prompt: copy.templateMetaPrompt,
-        icon: Target,
-      },
-      {
-        id: "weekly",
-        title: copy.templateWeeklyTitle,
-        description: copy.templateWeeklyDescription,
-        objective: "social",
-        prompt: copy.templateWeeklyPrompt,
-        icon: CalendarDays,
-      },
-    ],
-    [copy],
-  );
+  const objectives =
+    useMemo<Objective[]>(
+      () => [
+        {
+          id: "static",
+          label: copy.objectiveStatic,
+          description:
+            copy.objectiveStaticDescription,
+          example:
+            copy.objectiveStaticExample,
+          icon: ImageIcon,
+        },
+        {
+          id: "video",
+          label: copy.objectiveVideo,
+          description:
+            copy.objectiveVideoDescription,
+          example:
+            copy.objectiveVideoExample,
+          icon: Video,
+        },
+        {
+          id: "campaign",
+          label:
+            copy.objectiveCampaign,
+          description:
+            copy.objectiveCampaignDescription,
+          example:
+            copy.objectiveCampaignExample,
+          icon: Rocket,
+        },
+        {
+          id: "carousel",
+          label:
+            copy.objectiveCarousel,
+          description:
+            copy.objectiveCarouselDescription,
+          example:
+            copy.objectiveCarouselExample,
+          icon: Layers3,
+        },
+        {
+          id: "adapt",
+          label: copy.objectiveAdapt,
+          description:
+            copy.objectiveAdaptDescription,
+          example:
+            copy.objectiveAdaptExample,
+          icon: Zap,
+        },
+        {
+          id: "social",
+          label: copy.objectiveSocial,
+          description:
+            copy.objectiveSocialDescription,
+          example:
+            copy.objectiveSocialExample,
+          icon: CalendarDays,
+        },
+      ],
+      [copy],
+    );
+
+  const templates =
+    useMemo<Template[]>(
+      () => [
+        {
+          id: "launch",
+          title:
+            copy.templateLaunchTitle,
+          description:
+            copy.templateLaunchDescription,
+          objective: "campaign",
+          prompt:
+            copy.templateLaunchPrompt,
+          icon: Rocket,
+        },
+        {
+          id: "meta",
+          title:
+            copy.templateMetaTitle,
+          description:
+            copy.templateMetaDescription,
+          objective: "campaign",
+          prompt:
+            copy.templateMetaPrompt,
+          icon: Target,
+        },
+        {
+          id: "weekly",
+          title:
+            copy.templateWeeklyTitle,
+          description:
+            copy.templateWeeklyDescription,
+          objective: "social",
+          prompt:
+            copy.templateWeeklyPrompt,
+          icon: CalendarDays,
+        },
+      ],
+      [copy],
+    );
 
   const selectedObjectiveData =
     objectives.find(
       (objective) =>
-        objective.id === selectedObjective,
+        objective.id ===
+        selectedObjective,
     ) ?? objectives[0];
 
   const selectedSteps =
-    WORKFLOW_STEPS[selectedObjective];
+    WORKFLOW_STEPS[
+      selectedObjective
+    ];
 
   const assetLabel = useMemo(() => {
-    if (assetCount === null || assetCount === 0) {
+    if (
+      assetCount === null ||
+      assetCount === 0
+    ) {
       return copy.assetEmpty;
     }
 
@@ -870,24 +952,40 @@ export default function BrilliantHub() {
   }, [assetCount, copy]);
 
   useEffect(() => {
-    const hash = window.location.hash;
+    const hash =
+      window.location.hash;
 
-    if (!hash || !hash.includes("error=")) {
+    if (
+      !hash ||
+      !hash.includes("error=")
+    ) {
       return;
     }
 
-    const params = new URLSearchParams(hash.slice(1));
-    const errorCode = params.get("error");
+    const params =
+      new URLSearchParams(
+        hash.slice(1),
+      );
+
+    const errorCode =
+      params.get("error");
+
     const errorDescription =
-      params.get("error_description") || "";
+      params.get(
+        "error_description",
+      ) || "";
 
     if (!errorCode) {
       return;
     }
 
     const friendlyMessage =
-      errorDescription.includes("vendor") ||
-      errorDescription.includes("server_error")
+      errorDescription.includes(
+        "vendor",
+      ) ||
+      errorDescription.includes(
+        "server_error",
+      )
         ? "Servidor de autenticação instável. Tente novamente em alguns segundos."
         : `Erro de login: ${errorDescription}`;
 
@@ -899,9 +997,10 @@ export default function BrilliantHub() {
       window.location.pathname,
     );
 
-    const timeout = window.setTimeout(() => {
-      navigate("/login");
-    }, 1500);
+    const timeout =
+      window.setTimeout(() => {
+        navigate("/login");
+      }, 1500);
 
     return () => {
       window.clearTimeout(timeout);
@@ -915,13 +1014,16 @@ export default function BrilliantHub() {
       try {
         const {
           data: { user },
-        } = await supabase.auth.getUser();
+        } =
+          await supabase.auth.getUser();
 
         if (!mounted || !user) {
           return;
         }
 
-        const metadata = (user.user_metadata || {}) as {
+        const metadata = (
+          user.user_metadata || {}
+        ) as {
           full_name?: string;
           name?: string;
         };
@@ -933,54 +1035,78 @@ export default function BrilliantHub() {
           "";
 
         setUserName(
-          capitalize(rawName.split(" ")[0]),
+          capitalize(
+            rawName.split(" ")[0],
+          ),
         );
 
-        const cacheKey = `hub_asset_count_${user.id}`;
+        const cacheKey =
+          `hub_asset_count_${user.id}`;
+
         const ttl = 60_000;
 
         try {
           const cachedValue =
-            sessionStorage.getItem(cacheKey);
+            sessionStorage.getItem(
+              cacheKey,
+            );
 
           if (cachedValue) {
-            const cached = JSON.parse(cachedValue) as {
-              count: number;
-              timestamp?: number;
-              ts?: number;
-            };
+            const cached =
+              JSON.parse(
+                cachedValue,
+              ) as {
+                count: number;
+                timestamp?: number;
+                ts?: number;
+              };
 
             const timestamp =
-              cached.timestamp ?? cached.ts ?? 0;
+              cached.timestamp ??
+              cached.ts ??
+              0;
 
             if (
-              typeof cached.count === "number" &&
-              Date.now() - timestamp < ttl
+              typeof cached.count ===
+                "number" &&
+              Date.now() -
+                timestamp <
+                ttl
             ) {
               if (mounted) {
-                setAssetCount(cached.count);
+                setAssetCount(
+                  cached.count,
+                );
               }
 
               return;
             }
           }
         } catch {
-          // Cache indisponível ou corrompido.
+          // Cache indisponível.
         }
 
-        const { count } = await supabase
-          .from("hub_assets" as never)
-          .select("id", {
-            count: "exact",
-            head: true,
-          })
-          .eq("user_id", user.id);
+        const { count } =
+          await supabase
+            .from(
+              "hub_assets" as never,
+            )
+            .select("id", {
+              count: "exact",
+              head: true,
+            })
+            .eq(
+              "user_id",
+              user.id,
+            );
 
         if (!mounted) {
           return;
         }
 
-        const finalCount = count || 0;
+        const finalCount =
+          count || 0;
+
         setAssetCount(finalCount);
 
         try {
@@ -992,10 +1118,10 @@ export default function BrilliantHub() {
             }),
           );
         } catch {
-          // Session storage desabilitado ou sem espaço.
+          // Session storage indisponível.
         }
       } catch {
-        // A home continua funcional mesmo sem os dados auxiliares.
+        // A Home continua funcionando.
       }
     };
 
@@ -1009,7 +1135,10 @@ export default function BrilliantHub() {
   const selectObjective = (
     objective: Objective,
   ) => {
-    setSelectedObjective(objective.id);
+    setSelectedObjective(
+      objective.id,
+    );
+
     setWorkflowReady(true);
 
     if (!brief.trim()) {
@@ -1019,19 +1148,27 @@ export default function BrilliantHub() {
 
   const buildWorkflow = () => {
     if (!brief.trim()) {
-      toast.error(copy.briefRequired);
+      toast.error(
+        copy.briefRequired,
+      );
+
       textareaRef.current?.focus();
+
       return;
     }
 
     setWorkflowReady(true);
 
-    window.requestAnimationFrame(() => {
-      workflowRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    });
+    window.requestAnimationFrame(
+      () => {
+        workflowRef.current?.scrollIntoView(
+          {
+            behavior: "smooth",
+            block: "center",
+          },
+        );
+      },
+    );
   };
 
   const handleComposerKeyDown = (
@@ -1039,7 +1176,8 @@ export default function BrilliantHub() {
   ) => {
     if (
       event.key === "Enter" &&
-      (event.ctrlKey || event.metaKey)
+      (event.ctrlKey ||
+        event.metaKey)
     ) {
       event.preventDefault();
       buildWorkflow();
@@ -1049,53 +1187,109 @@ export default function BrilliantHub() {
   const applyTemplate = (
     template: Template,
   ) => {
-    setSelectedObjective(template.objective);
+    setSelectedObjective(
+      template.objective,
+    );
+
     setBrief(template.prompt);
     setWorkflowReady(true);
 
-    composerRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
+    composerRef.current?.scrollIntoView(
+      {
+        behavior: "smooth",
+        block: "center",
+      },
+    );
 
     window.setTimeout(() => {
       textareaRef.current?.focus();
     }, 400);
   };
 
-  const executeWorkflow = () => {
-    if (!brief.trim()) {
-      toast.error(copy.briefRequired);
-
-      composerRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-
-      textareaRef.current?.focus();
-      return;
-    }
-
-    const seed = {
+  const createWorkflowSeed =
+    (): WorkflowSeed => ({
       brief: brief.trim(),
-      objective: selectedObjective,
+      objective:
+        selectedObjective,
       channel,
       outputLanguage,
-      createdAt: new Date().toISOString(),
-    };
+      createdAt:
+        new Date().toISOString(),
+    });
 
+  const saveWorkflowSeed = (
+    seed: WorkflowSeed,
+  ) => {
     try {
       sessionStorage.setItem(
         "adbrief_workflow_seed",
         JSON.stringify(seed),
       );
     } catch {
-      // O workflow ainda abre mesmo sem persistência local.
+      // A tela ainda abre mesmo sem storage.
+    }
+  };
+
+  const openWorkflowEditor = () => {
+    if (!brief.trim()) {
+      toast.error(
+        copy.briefRequired,
+      );
+
+      composerRef.current?.scrollIntoView(
+        {
+          behavior: "smooth",
+          block: "center",
+        },
+      );
+
+      textareaRef.current?.focus();
+
+      return;
     }
 
-    navigate("/dashboard/hub/workflows", {
-      state: seed,
-    });
+    const seed =
+      createWorkflowSeed();
+
+    saveWorkflowSeed(seed);
+
+    navigate(
+      "/dashboard/hub/workflows",
+      {
+        state: seed,
+      },
+    );
+  };
+
+  const executeWorkflow = () => {
+    if (!brief.trim()) {
+      toast.error(
+        copy.briefRequired,
+      );
+
+      composerRef.current?.scrollIntoView(
+        {
+          behavior: "smooth",
+          block: "center",
+        },
+      );
+
+      textareaRef.current?.focus();
+
+      return;
+    }
+
+    const seed =
+      createWorkflowSeed();
+
+    saveWorkflowSeed(seed);
+
+    navigate(
+      "/dashboard/hub/workflows",
+      {
+        state: seed,
+      },
+    );
   };
 
   const pageHeading = userName
@@ -1105,7 +1299,9 @@ export default function BrilliantHub() {
   return (
     <>
       <Helmet>
-        <title>{copy.pageTitle}</title>
+        <title>
+          {copy.pageTitle}
+        </title>
       </Helmet>
 
       <div className="home-shell">
@@ -1115,42 +1311,25 @@ export default function BrilliantHub() {
         <main className="home-container">
           <header className="home-header">
             <div className="home-heading">
-              <h1>{pageHeading}</h1>
+              <h1>
+                {pageHeading}
+              </h1>
 
-              <p>{copy.subtitle}</p>
+              <p>
+                {copy.subtitle}
+              </p>
             </div>
 
             <div className="home-header-actions">
-              <button
-                type="button"
-                className="home-context-button"
-                onClick={() =>
-                  navigate("/dashboard/hub/brands")
-                }
-              >
-                <span className="home-context-icon">
-                  <Store
-                    size={17}
-                    strokeWidth={1.8}
-                  />
-                </span>
-
-                <span className="home-context-copy">
-                  <small>{copy.brandLabel}</small>
-                  <strong>{copy.chooseBrand}</strong>
-                </span>
-
-                <ChevronRight
-                  size={16}
-                  strokeWidth={1.8}
-                />
-              </button>
+              <HomeBrandSelector />
 
               <button
                 type="button"
                 className="home-context-button home-library-button"
                 onClick={() =>
-                  navigate("/dashboard/hub/library")
+                  navigate(
+                    "/dashboard/hub/library",
+                  )
                 }
               >
                 <span className="home-context-icon">
@@ -1161,8 +1340,13 @@ export default function BrilliantHub() {
                 </span>
 
                 <span className="home-context-copy">
-                  <small>{copy.library}</small>
-                  <strong>{assetLabel}</strong>
+                  <small>
+                    {copy.library}
+                  </small>
+
+                  <strong>
+                    {assetLabel}
+                  </strong>
                 </span>
 
                 <ChevronRight
@@ -1185,12 +1369,22 @@ export default function BrilliantHub() {
                     strokeWidth={2}
                   />
 
-                  {copy.composerEyebrow}
+                  {
+                    copy.composerEyebrow
+                  }
                 </span>
 
-                <h2>{copy.composerTitle}</h2>
+                <h2>
+                  {
+                    copy.composerTitle
+                  }
+                </h2>
 
-                <p>{copy.composerSubtitle}</p>
+                <p>
+                  {
+                    copy.composerSubtitle
+                  }
+                </p>
               </div>
 
               <div className="home-composer-mark">
@@ -1205,13 +1399,24 @@ export default function BrilliantHub() {
               <textarea
                 ref={textareaRef}
                 value={brief}
-                onChange={(event) =>
-                  setBrief(event.target.value)
+                onChange={(
+                  event,
+                ) =>
+                  setBrief(
+                    event.target
+                      .value,
+                  )
                 }
-                onKeyDown={handleComposerKeyDown}
-                placeholder={copy.placeholder}
+                onKeyDown={
+                  handleComposerKeyDown
+                }
+                placeholder={
+                  copy.placeholder
+                }
                 rows={5}
-                aria-label={copy.composerTitle}
+                aria-label={
+                  copy.composerTitle
+                }
               />
 
               <span className="home-keyboard-hint">
@@ -1227,12 +1432,15 @@ export default function BrilliantHub() {
                       size={14}
                       strokeWidth={1.8}
                     />
+
                     {copy.channel}
                   </span>
 
                   <select
                     value={channel}
-                    onChange={(event) =>
+                    onChange={(
+                      event,
+                    ) =>
                       setChannel(
                         event.target
                           .value as ChannelId,
@@ -1240,16 +1448,27 @@ export default function BrilliantHub() {
                     }
                   >
                     <option value="meta">
-                      {copy.channelMeta}
+                      {
+                        copy.channelMeta
+                      }
                     </option>
+
                     <option value="instagram">
-                      {copy.channelInstagram}
+                      {
+                        copy.channelInstagram
+                      }
                     </option>
+
                     <option value="tiktok">
-                      {copy.channelTikTok}
+                      {
+                        copy.channelTikTok
+                      }
                     </option>
+
                     <option value="linkedin">
-                      {copy.channelLinkedIn}
+                      {
+                        copy.channelLinkedIn
+                      }
                     </option>
                   </select>
                 </label>
@@ -1260,12 +1479,17 @@ export default function BrilliantHub() {
                       size={14}
                       strokeWidth={1.8}
                     />
+
                     {copy.language}
                   </span>
 
                   <select
-                    value={outputLanguage}
-                    onChange={(event) =>
+                    value={
+                      outputLanguage
+                    }
+                    onChange={(
+                      event,
+                    ) =>
                       setOutputLanguage(
                         event.target
                           .value as OutputLanguageId,
@@ -1273,13 +1497,21 @@ export default function BrilliantHub() {
                     }
                   >
                     <option value="pt">
-                      {copy.languagePt}
+                      {
+                        copy.languagePt
+                      }
                     </option>
+
                     <option value="en">
-                      {copy.languageEn}
+                      {
+                        copy.languageEn
+                      }
                     </option>
+
                     <option value="es">
-                      {copy.languageEs}
+                      {
+                        copy.languageEs
+                      }
                     </option>
                   </select>
                 </label>
@@ -1288,14 +1520,18 @@ export default function BrilliantHub() {
               <button
                 type="button"
                 className="home-primary-button"
-                onClick={buildWorkflow}
+                onClick={
+                  buildWorkflow
+                }
               >
                 <Sparkles
                   size={17}
                   strokeWidth={2}
                 />
 
-                {copy.buildWorkflow}
+                {
+                  copy.buildWorkflow
+                }
 
                 <ArrowRight
                   size={17}
@@ -1310,45 +1546,61 @@ export default function BrilliantHub() {
               </span>
 
               <div className="home-objectives-grid">
-                {objectives.map((objective) => {
-                  const Icon = objective.icon;
-                  const active =
-                    objective.id ===
-                    selectedObjective;
+                {objectives.map(
+                  (objective) => {
+                    const Icon =
+                      objective.icon;
 
-                  return (
-                    <button
-                      type="button"
-                      key={objective.id}
-                      className={`home-objective ${
-                        active
-                          ? "home-objective-active"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        selectObjective(objective)
-                      }
-                      aria-pressed={active}
-                    >
-                      <span className="home-objective-icon">
-                        <Icon
-                          size={17}
-                          strokeWidth={1.8}
-                        />
-                      </span>
+                    const active =
+                      objective.id ===
+                      selectedObjective;
 
-                      <span>
-                        <strong>
-                          {objective.label}
-                        </strong>
+                    return (
+                      <button
+                        type="button"
+                        key={
+                          objective.id
+                        }
+                        className={`home-objective ${
+                          active
+                            ? "home-objective-active"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          selectObjective(
+                            objective,
+                          )
+                        }
+                        aria-pressed={
+                          active
+                        }
+                      >
+                        <span className="home-objective-icon">
+                          <Icon
+                            size={17}
+                            strokeWidth={
+                              1.8
+                            }
+                          />
+                        </span>
 
-                        <small>
-                          {objective.description}
-                        </small>
-                      </span>
-                    </button>
-                  );
-                })}
+                        <span>
+                          <strong>
+                            {
+                              objective.label
+                            }
+                          </strong>
+
+                          <small>
+                            {
+                              objective.description
+                            }
+                          </small>
+                        </span>
+                      </button>
+                    );
+                  },
+                )}
               </div>
             </div>
           </section>
@@ -1366,58 +1618,82 @@ export default function BrilliantHub() {
                       strokeWidth={2}
                     />
 
-                    {copy.workflowTitle}
+                    {
+                      copy.workflowTitle
+                    }
                   </span>
 
                   <h2>
-                    {selectedObjectiveData.label}
+                    {
+                      selectedObjectiveData.label
+                    }
                   </h2>
 
-                  <p>{copy.workflowSubtitle}</p>
+                  <p>
+                    {
+                      copy.workflowSubtitle
+                    }
+                  </p>
                 </div>
 
                 <div className="home-workflow-badges">
                   <span>
-                    {selectedSteps.length}{" "}
+                    {
+                      selectedSteps.length
+                    }{" "}
                     {copy.steps}
                   </span>
 
-                  <span>{copy.editable}</span>
+                  <span>
+                    {copy.editable}
+                  </span>
                 </div>
               </div>
 
               <div className="home-workflow-scroll">
                 <div className="home-workflow-flow">
                   {selectedSteps.map(
-                    (step, index) => (
+                    (
+                      step,
+                      index,
+                    ) => (
                       <div
                         className="home-flow-fragment"
                         key={`${step}-${index}`}
                       >
                         <article className="home-flow-step">
                           <div className="home-flow-step-number">
-                            {index === 0 ? (
+                            {index ===
+                            0 ? (
                               <Check
-                                size={14}
-                                strokeWidth={2.4}
+                                size={
+                                  14
+                                }
+                                strokeWidth={
+                                  2.4
+                                }
                               />
                             ) : (
-                              index + 1
+                              index +
+                              1
                             )}
                           </div>
 
                           <div>
                             <span>
-                              {index === 0
+                              {index ===
+                              0
                                 ? copy.automatic
                                 : `${copy.steps} ${
-                                    index + 1
+                                    index +
+                                    1
                                   }`}
                             </span>
 
                             <strong>
                               {
-                                copy.stepsMap[
+                                copy
+                                  .stepsMap[
                                   step
                                 ]
                               }
@@ -1430,9 +1706,14 @@ export default function BrilliantHub() {
                             1 && (
                           <div className="home-flow-connector">
                             <span />
+
                             <ChevronRight
-                              size={15}
-                              strokeWidth={2}
+                              size={
+                                15
+                              }
+                              strokeWidth={
+                                2
+                              }
                             />
                           </div>
                         )}
@@ -1449,11 +1730,15 @@ export default function BrilliantHub() {
                       size={15}
                       strokeWidth={1.9}
                     />
-                    {copy.briefLabel}
+
+                    {
+                      copy.briefLabel
+                    }
                   </span>
 
                   <p>
-                    {brief.trim() || copy.noBrief}
+                    {brief.trim() ||
+                      copy.noBrief}
                   </p>
                 </div>
 
@@ -1461,19 +1746,21 @@ export default function BrilliantHub() {
                   <button
                     type="button"
                     className="home-secondary-button"
-                    onClick={() =>
-                      navigate(
-                        "/dashboard/hub/workflows",
-                      )
+                    onClick={
+                      openWorkflowEditor
                     }
                   >
-                    {copy.openWorkflow}
+                    {
+                      copy.openWorkflow
+                    }
                   </button>
 
                   <button
                     type="button"
                     className="home-run-button"
-                    onClick={executeWorkflow}
+                    onClick={
+                      executeWorkflow
+                    }
                   >
                     <Play
                       size={16}
@@ -1481,7 +1768,9 @@ export default function BrilliantHub() {
                       fill="currentColor"
                     />
 
-                    {copy.executeWorkflow}
+                    {
+                      copy.executeWorkflow
+                    }
                   </button>
                 </div>
               </div>
@@ -1491,15 +1780,26 @@ export default function BrilliantHub() {
           <section className="home-section">
             <div className="home-section-heading">
               <div>
-                <h2>{copy.continueTitle}</h2>
-                <p>{copy.continueSubtitle}</p>
+                <h2>
+                  {
+                    copy.continueTitle
+                  }
+                </h2>
+
+                <p>
+                  {
+                    copy.continueSubtitle
+                  }
+                </p>
               </div>
             </div>
 
             <div className="home-action-grid">
               <ActionCard
                 icon={Workflow}
-                title={copy.workflowCardTitle}
+                title={
+                  copy.workflowCardTitle
+                }
                 description={
                   copy.workflowCardDescription
                 }
@@ -1513,24 +1813,33 @@ export default function BrilliantHub() {
 
               <ActionCard
                 icon={ImageIcon}
-                title={copy.imageCardTitle}
+                title={
+                  copy.imageCardTitle
+                }
                 description={
                   copy.imageCardDescription
                 }
                 action={copy.open}
                 onClick={() =>
-                  navigate("/dashboard/hub/image")
+                  navigate(
+                    "/dashboard/hub/image",
+                  )
                 }
               />
 
               <ActionCard
                 icon={FolderOpen}
-                title={copy.libraryCardTitle}
+                title={
+                  copy.libraryCardTitle
+                }
                 description={
-                  assetCount && assetCount > 0
+                  assetCount &&
+                  assetCount > 0
                     ? copy.storedAssets.replace(
                         "{n}",
-                        String(assetCount),
+                        String(
+                          assetCount,
+                        ),
                       )
                     : copy.libraryCardDescription
                 }
@@ -1547,58 +1856,95 @@ export default function BrilliantHub() {
           <section className="home-section">
             <div className="home-section-heading">
               <div>
-                <h2>{copy.templatesTitle}</h2>
-                <p>{copy.templatesSubtitle}</p>
+                <h2>
+                  {
+                    copy.templatesTitle
+                  }
+                </h2>
+
+                <p>
+                  {
+                    copy.templatesSubtitle
+                  }
+                </p>
               </div>
             </div>
 
             <div className="home-template-grid">
-              {templates.map((template) => {
-                const Icon = template.icon;
+              {templates.map(
+                (template) => {
+                  const Icon =
+                    template.icon;
 
-                return (
-                  <button
-                    type="button"
-                    className="home-template"
-                    key={template.id}
-                    onClick={() =>
-                      applyTemplate(template)
-                    }
-                  >
-                    <span className="home-template-icon">
-                      <Icon
-                        size={20}
-                        strokeWidth={1.8}
-                      />
-                    </span>
-
-                    <span className="home-template-content">
-                      <strong>{template.title}</strong>
-
-                      <small>
-                        {template.description}
-                      </small>
-
-                      <span className="home-template-action">
-                        {copy.useTemplate}
-
-                        <ArrowRight
-                          size={14}
-                          strokeWidth={2}
+                  return (
+                    <button
+                      type="button"
+                      className="home-template"
+                      key={
+                        template.id
+                      }
+                      onClick={() =>
+                        applyTemplate(
+                          template,
+                        )
+                      }
+                    >
+                      <span className="home-template-icon">
+                        <Icon
+                          size={20}
+                          strokeWidth={
+                            1.8
+                          }
                         />
                       </span>
-                    </span>
-                  </button>
-                );
-              })}
+
+                      <span className="home-template-content">
+                        <strong>
+                          {
+                            template.title
+                          }
+                        </strong>
+
+                        <small>
+                          {
+                            template.description
+                          }
+                        </small>
+
+                        <span className="home-template-action">
+                          {
+                            copy.useTemplate
+                          }
+
+                          <ArrowRight
+                            size={
+                              14
+                            }
+                            strokeWidth={
+                              2
+                            }
+                          />
+                        </span>
+                      </span>
+                    </button>
+                  );
+                },
+              )}
             </div>
           </section>
 
           <section className="home-section">
             <div className="home-section-heading">
               <div>
-                <h2>{copy.recentTitle}</h2>
-                <p>{copy.recentSubtitle}</p>
+                <h2>
+                  {copy.recentTitle}
+                </h2>
+
+                <p>
+                  {
+                    copy.recentSubtitle
+                  }
+                </p>
               </div>
 
               {assetCount !== null &&
@@ -1612,7 +1958,9 @@ export default function BrilliantHub() {
                       )
                     }
                   >
-                    {copy.openLibrary}
+                    {
+                      copy.openLibrary
+                    }
 
                     <ArrowRight
                       size={15}
@@ -1657,17 +2005,23 @@ export default function BrilliantHub() {
                 </div>
 
                 <div className="home-library-summary-copy">
-                  <span>{copy.library}</span>
+                  <span>
+                    {copy.library}
+                  </span>
 
                   <strong>
                     {copy.storedAssets.replace(
                       "{n}",
-                      String(assetCount),
+                      String(
+                        assetCount,
+                      ),
                     )}
                   </strong>
 
                   <small>
-                    {copy.openLibrary}
+                    {
+                      copy.openLibrary
+                    }
                   </small>
                 </div>
 
@@ -1689,11 +2043,15 @@ export default function BrilliantHub() {
 
                 <div>
                   <strong>
-                    {copy.recentEmptyTitle}
+                    {
+                      copy.recentEmptyTitle
+                    }
                   </strong>
 
                   <p>
-                    {copy.recentEmptyDescription}
+                    {
+                      copy.recentEmptyDescription
+                    }
                   </p>
                 </div>
 
@@ -1711,7 +2069,9 @@ export default function BrilliantHub() {
                     strokeWidth={2}
                   />
 
-                  {copy.createFirst}
+                  {
+                    copy.createFirst
+                  }
                 </button>
               </div>
             )}
@@ -1722,7 +2082,6 @@ export default function BrilliantHub() {
           .home-shell {
             --home-bg: #050a12;
             --home-panel: rgba(10, 20, 34, 0.88);
-            --home-panel-strong: rgba(12, 25, 43, 0.96);
             --home-border: rgba(148, 163, 184, 0.13);
             --home-border-hover: rgba(34, 211, 238, 0.32);
             --home-text: #f8fbff;
@@ -1832,9 +2191,10 @@ export default function BrilliantHub() {
 
           .home-context-button {
             display: flex;
+            width: 100%;
+            min-width: 185px;
             align-items: center;
             gap: 10px;
-            min-width: 185px;
             padding: 10px 12px;
             color: var(--home-text);
             text-align: left;
@@ -1988,7 +2348,6 @@ export default function BrilliantHub() {
             border: 1px solid rgba(148, 163, 184, 0.16);
             border-radius: 15px;
             background: rgba(3, 9, 17, 0.67);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
             font-size: 15px;
             line-height: 1.65;
             transition:
@@ -2003,8 +2362,7 @@ export default function BrilliantHub() {
           .home-textarea-wrap textarea:focus {
             border-color: rgba(34, 211, 238, 0.44);
             box-shadow:
-              0 0 0 3px rgba(34, 211, 238, 0.07),
-              inset 0 1px 0 rgba(255, 255, 255, 0.025);
+              0 0 0 3px rgba(34, 211, 238, 0.07);
           }
 
           .home-keyboard-hint {
@@ -2060,10 +2418,6 @@ export default function BrilliantHub() {
             background: #091321;
             font-size: 12px;
             font-weight: 600;
-          }
-
-          .home-select-field select:focus {
-            border-color: rgba(34, 211, 238, 0.38);
           }
 
           .home-primary-button,
@@ -2289,10 +2643,6 @@ export default function BrilliantHub() {
               );
           }
 
-          .home-flow-step:first-child {
-            border-color: rgba(34, 211, 238, 0.24);
-          }
-
           .home-flow-step-number {
             display: grid;
             flex: 0 0 auto;
@@ -2440,12 +2790,6 @@ export default function BrilliantHub() {
 
           .home-action-card:hover {
             border-color: var(--home-border-hover);
-            background:
-              linear-gradient(
-                145deg,
-                rgba(14, 31, 52, 0.95),
-                rgba(7, 17, 30, 0.88)
-              );
             transform: translateY(-2px);
           }
 
@@ -2511,7 +2855,6 @@ export default function BrilliantHub() {
 
           .home-template:hover {
             border-color: rgba(21, 156, 248, 0.3);
-            background: rgba(11, 25, 43, 0.9);
             transform: translateY(-2px);
           }
 
@@ -2557,10 +2900,6 @@ export default function BrilliantHub() {
             background: transparent;
             font-size: 10px;
             font-weight: 750;
-          }
-
-          .home-text-button:hover {
-            color: #ffffff;
           }
 
           .home-empty-state {
@@ -2629,12 +2968,6 @@ export default function BrilliantHub() {
 
           .home-library-summary:hover {
             border-color: rgba(34, 211, 238, 0.28);
-            background:
-              linear-gradient(
-                110deg,
-                rgba(15, 35, 58, 0.98),
-                rgba(8, 19, 33, 0.87)
-              );
             transform: translateY(-2px);
           }
 
@@ -2665,23 +2998,11 @@ export default function BrilliantHub() {
           .home-asset-preview-two {
             margin-left: -20px;
             transform: rotate(3deg);
-            background:
-              linear-gradient(
-                145deg,
-                rgba(34, 211, 238, 0.2),
-                rgba(6, 17, 31, 0.96)
-              );
           }
 
           .home-asset-preview-three {
             margin-left: -20px;
             transform: rotate(6deg);
-            background:
-              linear-gradient(
-                145deg,
-                rgba(64, 114, 255, 0.23),
-                rgba(6, 17, 31, 0.96)
-              );
           }
 
           .home-library-summary-copy {
@@ -2743,7 +3064,7 @@ export default function BrilliantHub() {
               width: 100%;
             }
 
-            .home-context-button {
+            .home-header-actions > * {
               flex: 1;
             }
 
@@ -2775,6 +3096,10 @@ export default function BrilliantHub() {
             .home-header-actions {
               align-items: stretch;
               flex-direction: column;
+            }
+
+            .home-header-actions > * {
+              width: 100%;
             }
 
             .home-context-button {
@@ -2878,7 +3203,10 @@ function ActionCard({
       onClick={onClick}
     >
       <span className="home-action-card-icon">
-        <Icon size={19} strokeWidth={1.8} />
+        <Icon
+          size={19}
+          strokeWidth={1.8}
+        />
       </span>
 
       <strong>{title}</strong>
@@ -2888,7 +3216,10 @@ function ActionCard({
       <span className="home-action-card-action">
         {action}
 
-        <ArrowRight size={14} strokeWidth={2} />
+        <ArrowRight
+          size={14}
+          strokeWidth={2}
+        />
       </span>
     </button>
   );
@@ -2900,7 +3231,9 @@ function capitalize(value: string) {
   }
 
   return (
-    value.charAt(0).toLocaleUpperCase() +
+    value
+      .charAt(0)
+      .toLocaleUpperCase() +
     value.slice(1)
   );
 }
