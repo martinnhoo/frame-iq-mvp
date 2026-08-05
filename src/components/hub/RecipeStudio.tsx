@@ -1,20 +1,18 @@
 /**
- * RecipeStudio — a tela que a pessoa vê ao abrir Automações.
+ * RecipeStudio — interface simples para Automações.
  *
- * Antes, abrir Automações mostrava um canvas vazio com uma paleta de dez tipos
- * de nó. Isso pede que o usuário conheça a arquitetura do sistema antes de
- * produzir a primeira coisa: descobrir que "prompt" alimenta "image-gen", que
- * "brand" entra por outra porta, que "variation" multiplica o que vem depois.
+ * Recebe o briefing criado na Home, escolhe a
+ * automação adequada e preenche os campos.
  *
- * Aqui ele escolhe um resultado, responde três perguntas e roda. O grafo sai
- * montado e vai pro MESMO executor — o canvas continua ali, em "Modo
- * avançado", pra quem quiser mexer nos nós.
- *
- * O preço aparece antes do botão. Rodar sem saber quanto custa é o tipo de
- * coisa que gera pedido de reembolso na primeira semana.
+ * A marca selecionada na Home também é aplicada
+ * automaticamente ao workflow.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   ArrowLeft,
   Play,
@@ -22,24 +20,33 @@ import {
   SlidersHorizontal,
   Coins,
 } from "lucide-react";
+
 import {
   RECIPES,
   missingField,
   type Recipe,
   type RecipeField,
 } from "@/lib/workflowRecipes";
-import type { WfGraph } from "@/lib/hubWorkflows";
-import { useUserBrands } from "@/hooks/useUserBrands";
+
+import type {
+  WfGraph,
+} from "@/lib/hubWorkflows";
+
+import {
+  useUserBrands,
+} from "@/hooks/useUserBrands";
+
 import FishVoiceSelect from "@/components/hub/FishVoiceSelect";
 
 const T = {
-  bg: "#06070a",
   panel: "#0a0b10",
   line: "rgba(255,255,255,0.08)",
-  lineHi: "rgba(255,255,255,0.16)",
+  lineHi:
+    "rgba(255,255,255,0.16)",
   text: "#fff",
   dim: "rgba(255,255,255,0.56)",
-  faint: "rgba(255,255,255,0.34)",
+  faint:
+    "rgba(255,255,255,0.34)",
   accent: "#EAB308",
 };
 
@@ -48,16 +55,20 @@ interface Props {
     name: string,
     graph: WfGraph,
   ) => Promise<void>;
+
   running: boolean;
+
   onOpenAdvanced: (
     name: string,
     graph: WfGraph,
   ) => Promise<void>;
+
   balance: number;
 }
 
 type WorkflowSeed = {
   brief?: string;
+
   objective?:
     | "static"
     | "video"
@@ -65,19 +76,29 @@ type WorkflowSeed = {
     | "carousel"
     | "adapt"
     | "social";
+
   channel?:
     | "meta"
     | "instagram"
     | "tiktok"
     | "linkedin";
-  outputLanguage?: "pt" | "en" | "es";
+
+  outputLanguage?:
+    | "pt"
+    | "en"
+    | "es";
 };
 
 const HOME_SEED_KEY =
   "adbrief_workflow_seed";
 
+const ACTIVE_BRAND_KEY =
+  "adbrief_active_brand_id";
+
 const RECIPE_BY_OBJECTIVE: Record<
-  NonNullable<WorkflowSeed["objective"]>,
+  NonNullable<
+    WorkflowSeed["objective"]
+  >,
   string
 > = {
   static: "criativos-teste",
@@ -89,7 +110,9 @@ const RECIPE_BY_OBJECTIVE: Record<
 };
 
 const CHANNEL_LABEL: Record<
-  NonNullable<WorkflowSeed["channel"]>,
+  NonNullable<
+    WorkflowSeed["channel"]
+  >,
   string
 > = {
   meta: "Meta Ads",
@@ -117,11 +140,14 @@ function defaultAnswers(
     string
   > = {};
 
-  for (const field of recipe.fields) {
-    if (field.default !== undefined) {
-      initial[field.key] = String(
-        field.default,
-      );
+  for (
+    const field of recipe.fields
+  ) {
+    if (
+      field.default !== undefined
+    ) {
+      initial[field.key] =
+        String(field.default);
     }
   }
 
@@ -129,7 +155,9 @@ function defaultAnswers(
 }
 
 function aspectRatioForChannel(
-  channel: WorkflowSeed["channel"],
+  channel:
+    | WorkflowSeed["channel"]
+    | undefined,
 ): string {
   if (channel === "linkedin") {
     return "1:1";
@@ -152,7 +180,9 @@ function briefFromSeed(
   if (seed.channel) {
     lines.push(
       `Canal principal: ${
-        CHANNEL_LABEL[seed.channel]
+        CHANNEL_LABEL[
+          seed.channel
+        ]
       }.`,
     );
   }
@@ -172,38 +202,52 @@ function briefFromSeed(
     .join("\n");
 }
 
+function readActiveBrandId(): string {
+  try {
+    return (
+      localStorage.getItem(
+        ACTIVE_BRAND_KEY,
+      ) || ""
+    );
+  } catch {
+    return "";
+  }
+}
+
 export default function RecipeStudio({
   onRun,
   running,
   onOpenAdvanced,
   balance,
 }: Props) {
-  const [picked, setPicked] =
+  const [
+    picked,
+    setPicked,
+  ] =
     useState<Recipe | null>(null);
 
-  const [answers, setAnswers] =
-    useState<Record<string, string>>({});
+  const [
+    answers,
+    setAnswers,
+  ] =
+    useState<
+      Record<string, string>
+    >({});
 
-  const [err, setErr] =
+  const [
+    err,
+    setErr,
+  ] =
     useState<string | null>(null);
 
-  const { brands } = useUserBrands();
+  const {
+    brands,
+  } = useUserBrands();
 
-  /**
-   * Recebe o objetivo criado na Home.
-   *
-   * A Home salva os dados no sessionStorage antes
-   * de redirecionar para /dashboard/hub/workflows.
-   *
-   * Ao abrir esta tela:
-   * - escolhe a receita adequada;
-   * - preenche o briefing;
-   * - preenche canal e idioma;
-   * - define o formato;
-   * - mantém tudo editável antes de cobrar créditos.
-   */
   useEffect(() => {
-    let rawSeed: string | null = null;
+    let rawSeed:
+      | string
+      | null = null;
 
     try {
       rawSeed =
@@ -251,41 +295,49 @@ export default function RecipeStudio({
       const initial =
         defaultAnswers(recipe);
 
-      /**
-       * O briefing original vira o campo principal
-       * da oferta, junto com canal e idioma.
-       */
-      initial.offer =
-        briefFromSeed(seed);
-
-      /**
-       * Para não adicionar uma nova etapa obrigatória,
-       * o workflow recebe instrução para inferir a
-       * audiência pelo briefing.
-       *
-       * O campo continua editável.
-       */
-      if (
+      const hasBrandField =
         recipe.fields.some(
           (field) =>
-            field.key === "audience",
-        )
-      ) {
+            field.key ===
+            "brand_id",
+        );
+
+      if (hasBrandField) {
+        initial.brand_id =
+          readActiveBrandId();
+      }
+
+      const hasOfferField =
+        recipe.fields.some(
+          (field) =>
+            field.key === "offer",
+        );
+
+      if (hasOfferField) {
+        initial.offer =
+          briefFromSeed(seed);
+      }
+
+      const hasAudienceField =
+        recipe.fields.some(
+          (field) =>
+            field.key ===
+            "audience",
+        );
+
+      if (hasAudienceField) {
         initial.audience =
           "Inferir o público mais provável a partir do briefing.";
       }
 
-      /**
-       * Escolhe automaticamente um formato inicial
-       * de acordo com o canal selecionado na Home.
-       */
-      if (
+      const hasFormatField =
         recipe.fields.some(
           (field) =>
             field.key ===
             "aspect_ratio",
-        )
-      ) {
+        );
+
+      if (hasFormatField) {
         initial.aspect_ratio =
           aspectRatioForChannel(
             seed.channel,
@@ -296,21 +348,15 @@ export default function RecipeStudio({
       setAnswers(initial);
       setErr(null);
     } catch {
-      /**
-       * Caso exista um seed antigo ou inválido,
-       * a tela continua funcionando normalmente.
-       */
+      // Seed inválido:
+      // mantém a escolha normal.
     } finally {
-      /**
-       * O briefing é usado apenas uma vez.
-       * Assim ele não reaparece ao atualizar a página.
-       */
       try {
         sessionStorage.removeItem(
           HOME_SEED_KEY,
         );
       } catch {
-        // Storage indisponível não bloqueia a tela.
+        // Storage indisponível.
       }
     }
   }, []);
@@ -321,25 +367,38 @@ export default function RecipeStudio({
     }
 
     try {
-      return picked.estimate(answers);
+      return picked.estimate(
+        answers,
+      );
     } catch {
       return 0;
     }
   }, [picked, answers]);
 
-  const enough = balance >= cost;
+  const enough =
+    balance >= cost;
 
-  function pick(recipe: Recipe) {
+  function pick(
+    recipe: Recipe,
+  ) {
     setPicked(recipe);
     setErr(null);
 
-    /**
-     * Pré-preenche os defaults declarados
-     * na receita selecionada.
-     */
-    setAnswers(
-      defaultAnswers(recipe),
-    );
+    const initial =
+      defaultAnswers(recipe);
+
+    if (
+      recipe.fields.some(
+        (field) =>
+          field.key ===
+          "brand_id",
+      )
+    ) {
+      initial.brand_id =
+        readActiveBrandId();
+    }
+
+    setAnswers(initial);
   }
 
   async function go(
@@ -368,7 +427,8 @@ export default function RecipeStudio({
     const graph =
       picked.build(answers);
 
-    const name = picked.name;
+    const name =
+      picked.name;
 
     if (advanced) {
       await onOpenAdvanced(
@@ -379,7 +439,10 @@ export default function RecipeStudio({
       return;
     }
 
-    await onRun(name, graph);
+    await onRun(
+      name,
+      graph,
+    );
   }
 
   if (!picked) {
@@ -388,7 +451,8 @@ export default function RecipeStudio({
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "28px 20px 60px",
+          padding:
+            "28px 20px 60px",
         }}
       >
         <style>{`
@@ -412,11 +476,12 @@ export default function RecipeStudio({
           <h1
             className="recipe-head"
             style={{
-              fontSize: 28,
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
               margin: 0,
               color: T.text,
+              fontSize: 28,
+              fontWeight: 800,
+              letterSpacing:
+                "-0.03em",
             }}
           >
             O que você quer produzir?
@@ -424,17 +489,19 @@ export default function RecipeStudio({
 
           <p
             style={{
-              fontSize: 14,
-              color: T.dim,
-              margin: "8px 0 26px",
-              lineHeight: 1.6,
               maxWidth: 620,
+              margin:
+                "8px 0 26px",
+              color: T.dim,
+              fontSize: 14,
+              lineHeight: 1.6,
             }}
           >
-            Escolha o resultado. Você
-            responde três perguntas e a
-            automação roda sozinha —
-            sem montar nada.
+            Escolha o resultado.
+            Você responde algumas
+            perguntas e a automação
+            roda sozinha, sem montar
+            nada.
           </p>
 
           <div
@@ -450,21 +517,25 @@ export default function RecipeStudio({
               (recipe) => (
                 <button
                   key={recipe.id}
+                  type="button"
                   onClick={() =>
                     pick(recipe)
                   }
                   style={{
-                    textAlign: "left",
-                    padding: 18,
-                    borderRadius: 12,
-                    background: T.panel,
-                    border: `1px solid ${T.line}`,
-                    color: T.text,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection:
+                      "column",
                     gap: 8,
+                    padding: 18,
+                    color: T.text,
+                    textAlign: "left",
+                    cursor: "pointer",
+                    border: `1px solid ${T.line}`,
+                    borderRadius: 12,
+                    background:
+                      T.panel,
+                    fontFamily:
+                      "inherit",
                     transition:
                       "border-color .15s, transform .15s",
                   }}
@@ -489,8 +560,9 @@ export default function RecipeStudio({
                 >
                   <span
                     style={{
+                      color:
+                        T.accent,
                       fontSize: 18,
-                      color: T.accent,
                       lineHeight: 1,
                     }}
                   >
@@ -510,23 +582,28 @@ export default function RecipeStudio({
 
                   <span
                     style={{
-                      fontSize: 13,
                       color: T.dim,
+                      fontSize: 13,
                       lineHeight: 1.55,
                     }}
                   >
-                    {recipe.outcome}
+                    {
+                      recipe.outcome
+                    }
                   </span>
 
                   <span
                     style={{
-                      fontSize: 12,
-                      color: T.faint,
-                      lineHeight: 1.5,
                       marginTop: 2,
+                      color:
+                        T.faint,
+                      fontSize: 12,
+                      lineHeight: 1.5,
                     }}
                   >
-                    {recipe.whenToUse}
+                    {
+                      recipe.whenToUse
+                    }
                   </span>
                 </button>
               ),
@@ -537,15 +614,15 @@ export default function RecipeStudio({
             style={{
               marginTop: 26,
               padding: 16,
-              borderRadius: 10,
-              border: `1px dashed ${T.line}`,
               color: T.faint,
+              border: `1px dashed ${T.line}`,
+              borderRadius: 10,
               fontSize: 12.5,
               lineHeight: 1.6,
             }}
           >
-            Precisa de algo que não está
-            aqui? O{" "}
+            Precisa de algo que
+            não está aqui? O{" "}
             <strong
               style={{
                 color: T.dim,
@@ -553,10 +630,9 @@ export default function RecipeStudio({
             >
               Modo avançado
             </strong>{" "}
-            abre o editor de nós, onde
-            dá pra montar qualquer
-            combinação. Toda receita
-            também abre lá, já montada.
+            abre o editor de nós,
+            onde dá para montar
+            qualquer combinação.
           </div>
         </div>
       </div>
@@ -568,7 +644,8 @@ export default function RecipeStudio({
       style={{
         flex: 1,
         overflowY: "auto",
-        padding: "22px 20px 80px",
+        padding:
+          "22px 20px 80px",
       }}
     >
       <style>{`
@@ -591,21 +668,25 @@ export default function RecipeStudio({
         }}
       >
         <button
+          type="button"
           onClick={() =>
             setPicked(null)
           }
           style={{
-            display: "inline-flex",
+            display:
+              "inline-flex",
             alignItems: "center",
             gap: 6,
             marginBottom: 16,
-            background: "transparent",
-            border: "none",
-            color: T.dim,
-            fontSize: 12.5,
-            cursor: "pointer",
-            fontFamily: "inherit",
             padding: 0,
+            color: T.dim,
+            cursor: "pointer",
+            border: "none",
+            background:
+              "transparent",
+            fontSize: 12.5,
+            fontFamily:
+              "inherit",
           }}
         >
           <ArrowLeft size={13} />
@@ -615,10 +696,12 @@ export default function RecipeStudio({
 
         <h2
           style={{
+            margin:
+              "0 0 6px",
             fontSize: 21,
             fontWeight: 800,
-            letterSpacing: "-0.02em",
-            margin: "0 0 6px",
+            letterSpacing:
+              "-0.02em",
           }}
         >
           {picked.name}
@@ -626,9 +709,10 @@ export default function RecipeStudio({
 
         <p
           style={{
-            fontSize: 13.5,
+            margin:
+              "0 0 22px",
             color: T.dim,
-            margin: "0 0 22px",
+            fontSize: 13.5,
             lineHeight: 1.6,
           }}
         >
@@ -638,13 +722,15 @@ export default function RecipeStudio({
         <div
           className="recipe-form"
           style={{
-            background: T.panel,
+            display: "flex",
+            flexDirection:
+              "column",
+            gap: 18,
+            padding: 20,
             border: `1px solid ${T.line}`,
             borderRadius: 12,
-            padding: 20,
-            display: "flex",
-            flexDirection: "column",
-            gap: 18,
+            background:
+              T.panel,
           }}
         >
           {picked.fields.map(
@@ -658,12 +744,14 @@ export default function RecipeStudio({
                   ] ?? ""
                 }
                 brands={brands}
-                onChange={(value) =>
+                onChange={(
+                  value,
+                ) =>
                   setAnswers(
                     (
-                      currentAnswers,
+                      current,
                     ) => ({
-                      ...currentAnswers,
+                      ...current,
                       [field.key]:
                         value,
                     }),
@@ -674,24 +762,25 @@ export default function RecipeStudio({
           )}
         </div>
 
-        {/* Custo antes do botão, não depois. */}
         <div
           style={{
+            display: "flex",
+            alignItems:
+              "center",
+            flexWrap: "wrap",
+            gap: 10,
             marginTop: 14,
-            padding: "12px 14px",
-            borderRadius: 10,
-            background: enough
-              ? "rgba(234,179,8,0.07)"
-              : "rgba(239,68,68,0.09)",
+            padding:
+              "12px 14px",
             border: `1px solid ${
               enough
                 ? "rgba(234,179,8,0.22)"
                 : "rgba(239,68,68,0.30)"
             }`,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "wrap",
+            borderRadius: 10,
+            background: enough
+              ? "rgba(234,179,8,0.07)"
+              : "rgba(239,68,68,0.09)",
           }}
         >
           <Coins
@@ -711,15 +800,17 @@ export default function RecipeStudio({
           >
             {cost > 0
               ? `Custa ${cost} crédito${
-                  cost === 1 ? "" : "s"
+                  cost === 1
+                    ? ""
+                    : "s"
                 }`
               : "Preencha para ver o custo"}
           </span>
 
           <span
             style={{
-              fontSize: 12.5,
               color: T.dim,
+              fontSize: 12.5,
             }}
           >
             · você tem {balance}
@@ -729,15 +820,18 @@ export default function RecipeStudio({
             cost > 0 && (
               <span
                 style={{
-                  fontSize: 12.5,
-                  color: "#F87171",
                   width: "100%",
+                  color:
+                    "#F87171",
+                  fontSize:
+                    12.5,
                 }}
               >
-                Saldo insuficiente. A
-                automação não roda pela
-                metade — ou sai inteira,
-                ou nada é cobrado.
+                Saldo insuficiente.
+                A automação não roda
+                pela metade — ou sai
+                inteira, ou nada é
+                cobrado.
               </span>
             )}
         </div>
@@ -746,8 +840,8 @@ export default function RecipeStudio({
           <div
             style={{
               marginTop: 10,
-              fontSize: 12.5,
               color: "#F87171",
+              fontSize: 12.5,
             }}
           >
             {err}
@@ -758,49 +852,58 @@ export default function RecipeStudio({
           className="recipe-actions"
           style={{
             display: "flex",
+            alignItems:
+              "center",
             gap: 10,
             marginTop: 16,
-            alignItems: "center",
           }}
         >
           <button
-            onClick={() => go(false)}
+            type="button"
+            onClick={() =>
+              go(false)
+            }
             disabled={
               running ||
               !enough ||
               cost === 0
             }
             style={{
+              display:
+                "inline-flex",
               flex: 1,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
+              minHeight: 46,
+              alignItems:
+                "center",
+              justifyContent:
+                "center",
               gap: 8,
-              padding: "13px 18px",
-              borderRadius: 10,
-              border: "none",
-              background:
-                running ||
-                !enough ||
-                cost === 0
-                  ? "rgba(255,255,255,0.10)"
-                  : T.accent,
+              padding:
+                "13px 18px",
               color:
                 running ||
                 !enough ||
                 cost === 0
                   ? T.faint
                   : "#111",
-              fontSize: 14,
-              fontWeight: 700,
-              fontFamily: "inherit",
               cursor:
                 running ||
                 !enough ||
                 cost === 0
                   ? "not-allowed"
                   : "pointer",
-              minHeight: 46,
+              border: "none",
+              borderRadius: 10,
+              background:
+                running ||
+                !enough ||
+                cost === 0
+                  ? "rgba(255,255,255,0.10)"
+                  : T.accent,
+              fontSize: 14,
+              fontWeight: 700,
+              fontFamily:
+                "inherit",
             }}
           >
             {running ? (
@@ -818,29 +921,41 @@ export default function RecipeStudio({
           </button>
 
           <button
-            onClick={() => go(true)}
+            type="button"
+            onClick={() =>
+              go(true)
+            }
             disabled={running}
+            title="Abre o editor de nós com esta automação já montada"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
+              display:
+                "inline-flex",
+              minHeight: 46,
+              alignItems:
+                "center",
+              justifyContent:
+                "center",
               gap: 7,
-              padding: "13px 16px",
-              borderRadius: 10,
-              background: "transparent",
-              border: `1px solid ${T.line}`,
+              padding:
+                "13px 16px",
               color: T.dim,
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: "inherit",
               cursor: running
                 ? "not-allowed"
                 : "pointer",
-              minHeight: 46,
-              whiteSpace: "nowrap",
-              opacity: running ? 0.6 : 1,
+              opacity: running
+                ? 0.6
+                : 1,
+              border: `1px solid ${T.line}`,
+              borderRadius: 10,
+              background:
+                "transparent",
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily:
+                "inherit",
+              whiteSpace:
+                "nowrap",
             }}
-            title="Abre o editor de nós com esta automação já montada"
           >
             <SlidersHorizontal
               size={14}
@@ -854,36 +969,39 @@ export default function RecipeStudio({
   );
 }
 
-const labelSt: React.CSSProperties = {
+const labelSt:
+  React.CSSProperties = {
   display: "block",
+  marginBottom: 6,
+  color: T.text,
   fontSize: 12,
   fontWeight: 700,
-  color: T.text,
-  marginBottom: 6,
   letterSpacing: "0.01em",
 };
 
-const helpSt: React.CSSProperties = {
+const helpSt:
+  React.CSSProperties = {
   display: "block",
-  fontSize: 11.5,
-  color: T.faint,
   marginTop: 6,
+  color: T.faint,
+  fontSize: 11.5,
   lineHeight: 1.5,
 };
 
-const inputSt: React.CSSProperties = {
+const inputSt:
+  React.CSSProperties = {
   width: "100%",
+  minHeight: 44,
+  boxSizing: "border-box",
   padding: "11px 12px",
+  color: T.text,
+  outline: "none",
+  border: `1px solid ${T.line}`,
   borderRadius: 8,
   background:
     "rgba(255,255,255,0.04)",
-  border: `1px solid ${T.line}`,
-  color: T.text,
   fontSize: 13.5,
   fontFamily: "inherit",
-  outline: "none",
-  boxSizing: "border-box",
-  minHeight: 44,
 };
 
 function Field({
@@ -893,8 +1011,12 @@ function Field({
   brands,
 }: {
   field: RecipeField;
+
   value: string;
-  onChange: (value: string) => void;
+
+  onChange:
+    (value: string) => void;
+
   brands: {
     id: string;
     name: string;
@@ -930,7 +1052,9 @@ function Field({
           placeholder={
             field.placeholder
           }
-          onChange={(event) =>
+          onChange={(
+            event,
+          ) =>
             onChange(
               event.target.value,
             )
@@ -939,18 +1063,22 @@ function Field({
             ...inputSt,
             resize: "vertical",
             lineHeight: 1.6,
-            scrollMarginBottom: 140,
+            scrollMarginBottom:
+              140,
           }}
         />
       )}
 
-      {field.kind === "text" && (
+      {field.kind ===
+        "text" && (
         <input
           value={value}
           placeholder={
             field.placeholder
           }
-          onChange={(event) =>
+          onChange={(
+            event,
+          ) =>
             onChange(
               event.target.value,
             )
@@ -959,13 +1087,16 @@ function Field({
         />
       )}
 
-      {field.kind === "number" && (
+      {field.kind ===
+        "number" && (
         <input
           type="number"
           value={value}
           min={field.min}
           max={field.max}
-          onChange={(event) =>
+          onChange={(
+            event,
+          ) =>
             onChange(
               event.target.value,
             )
@@ -977,10 +1108,13 @@ function Field({
         />
       )}
 
-      {field.kind === "brand" && (
+      {field.kind ===
+        "brand" && (
         <select
           value={value}
-          onChange={(event) =>
+          onChange={(
+            event,
+          ) =>
             onChange(
               event.target.value,
             )
@@ -998,20 +1132,30 @@ function Field({
             .filter(
               (brand) =>
                 brand.id &&
-                brand.id !== "none",
+                brand.id !==
+                  "none",
             )
-            .map((brand) => (
-              <option
-                key={brand.id}
-                value={brand.id}
-              >
-                {brand.name}
-              </option>
-            ))}
+            .map(
+              (brand) => (
+                <option
+                  key={
+                    brand.id
+                  }
+                  value={
+                    brand.id
+                  }
+                >
+                  {
+                    brand.name
+                  }
+                </option>
+              ),
+            )}
         </select>
       )}
 
-      {field.kind === "voice" && (
+      {field.kind ===
+        "voice" && (
         <FishVoiceSelect
           value={value}
           onChange={(id) =>
@@ -1022,22 +1166,27 @@ function Field({
         />
       )}
 
-      {field.kind === "select" && (
+      {field.kind ===
+        "select" && (
         <div
           style={{
             display: "flex",
-            gap: 8,
             flexWrap: "wrap",
+            gap: 8,
           }}
         >
-          {(field.options || []).map(
+          {(field.options ||
+            []).map(
             (option) => {
-              const isSelected =
-                value === option.value;
+              const selected =
+                value ===
+                option.value;
 
               return (
                 <button
-                  key={option.value}
+                  key={
+                    option.value
+                  }
                   type="button"
                   onClick={() =>
                     onChange(
@@ -1045,47 +1194,60 @@ function Field({
                     )
                   }
                   style={{
-                    padding: "9px 13px",
-                    borderRadius: 8,
+                    display:
+                      "flex",
                     minHeight: 40,
-                    background:
-                      isSelected
-                        ? "rgba(234,179,8,0.15)"
-                        : "rgba(255,255,255,0.03)",
-                    border: `1px solid ${
-                      isSelected
-                        ? T.accent
-                        : T.line
-                    }`,
-                    color: isSelected
-                      ? T.accent
-                      : T.dim,
-                    fontSize: 12.5,
-                    fontWeight: 600,
-                    fontFamily:
-                      "inherit",
-                    cursor: "pointer",
-                    display: "flex",
                     flexDirection:
                       "column",
                     alignItems:
                       "flex-start",
                     gap: 1,
+                    padding:
+                      "9px 13px",
+                    color:
+                      selected
+                        ? T.accent
+                        : T.dim,
+                    cursor:
+                      "pointer",
+                    border: `1px solid ${
+                      selected
+                        ? T.accent
+                        : T.line
+                    }`,
+                    borderRadius: 8,
+                    background:
+                      selected
+                        ? "rgba(234,179,8,0.15)"
+                        : "rgba(255,255,255,0.03)",
+                    fontSize:
+                      12.5,
+                    fontWeight:
+                      600,
+                    fontFamily:
+                      "inherit",
                   }}
                 >
                   <span>
-                    {option.label}
+                    {
+                      option.label
+                    }
                   </span>
 
                   {option.hint && (
                     <span
                       style={{
-                        fontSize: 10.5,
-                        opacity: 0.7,
-                        fontWeight: 500,
+                        opacity:
+                          0.7,
+                        fontSize:
+                          10.5,
+                        fontWeight:
+                          500,
                       }}
                     >
-                      {option.hint}
+                      {
+                        option.hint
+                      }
                     </span>
                   )}
                 </button>
