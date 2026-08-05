@@ -1,11 +1,9 @@
-// AppLayout — Simplified v2 Copilot sidebar, provides DashboardContext for child pages
-// Account selector at top (always visible), mobile hamburger menu
+// AppLayout — shell do produto: sidebar (src/components/sidebar) + topbar
+// + DashboardContext para as páginas filhas.
 import { useState, useEffect, useCallback } from 'react';
-import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Logo } from '@/components/Logo';
-import { CreditBar } from '@/components/dashboard/CreditBar';
-import { ReferralPopup } from '@/components/dashboard/ReferralPopup';
 import UpgradeWall from '@/components/UpgradeWall';
 import { supabase } from '@/integrations/supabase/client';
 import { queryClient } from '@/App';
@@ -20,167 +18,14 @@ import { AppTopbarUserMenu } from '@/components/dashboard/AppTopbarUserMenu';
 import { CommandPalette } from '@/components/dashboard/CommandPalette';
 import { UserProfilePanel } from '@/components/dashboard/UserProfilePanel';
 import CreditChip from "./CreditChip";
-import {
-  Command,
-  Clock,
-  MessageSquare,
-  LogOut,
-  Link2,
-  Menu,
-  X,
-  Building2,
-  ChevronDown,
-  Plus,
-  Image as ImageIcon,
-  Clapperboard,
-  Video,
-  FolderOpen,
-  Tag,
-  BarChart3,
-  Lightbulb,
-  Sparkles,
-  Layers,
-  Film,
-  Mic,
-  Captions,
-  FileText,
-  GitBranch,
-  GalleryHorizontal,
-  ScanFace,
-  Wand2,
-  CreditCard,
-} from 'lucide-react';
+import { AppSidebar } from "@/components/sidebar/AppSidebar";
+import { SIDEBAR_COLLAPSED_KEY } from "@/components/sidebar/sidebarConfig";
+
+import { Menu } from 'lucide-react';
 
 const F = "'Plus Jakarta Sans', sans-serif";
 const MOBILE_BP = 768;
 
-// Gradient palette for persona avatars — subtle, dark-first linear gradients
-const AVATAR_GRADIENTS = [
-  "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
-  "linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)",
-  "linear-gradient(135deg, #191924 0%, #2d1b4e 100%)",
-  "linear-gradient(135deg, #1a1a2e 0%, #1b3a4b 100%)",
-  "linear-gradient(135deg, #1c1c1c 0%, #2c1810 100%)",
-  "linear-gradient(135deg, #141e20 0%, #0d2818 100%)",
-  "linear-gradient(135deg, #1a1520 0%, #2a1a3a 100%)",
-];
-function avatarGradient(name: string) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
-  return AVATAR_GRADIENTS[Math.abs(h) % AVATAR_GRADIENTS.length];
-}
-
-// ── Nav item — paleta azul Adbrief, refinamento premium.
-//   - Mais respiro (gap 12, padding vertical 9)
-//   - Ícones com peso visual (16px strokeWidth 2 quando ativo)
-//   - Active state com inner glow sutil (box-shadow inset)
-//   - Hover suave + scale microscópico no press
-function NavItem({ url, label, icon: Icon, onClick, isActive, soon, soonLabel }: {
-  url: string; label: string; icon: React.ElementType;
-  onClick?: () => void; isActive: boolean;
-  soon?: boolean; soonLabel?: string;
-}) {
-  const [hov, setHov] = useState(false);
-  const handleClick = (e: React.MouseEvent) => {
-    if (soon) { e.preventDefault(); return; }
-    onClick?.();
-  };
-  return (
-    <NavLink
-      to={soon ? "#" : url}
-      onClick={handleClick}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 12, position: 'relative',
-        padding: '9px 12px 9px 14px', margin: '2px 10px', borderRadius: 9,
-        // Idle mais claro (#E5E7EB > #D1D5DB) pra contraste melhor
-        color: isActive ? '#FFFFFF' : hov && !soon ? '#FFFFFF' : soon ? '#9CA3AF' : '#E5E7EB',
-        background: isActive
-          ? 'rgba(59,130,246,0.18)'
-          : hov && !soon ? 'rgba(255,255,255,0.05)' : 'transparent',
-        border: isActive ? '1px solid rgba(59,130,246,0.45)' : '1px solid transparent',
-        fontSize: 13.5, fontWeight: isActive ? 700 : 500,
-        textDecoration: 'none',
-        transition: 'all 0.15s ease',
-        fontFamily: F, letterSpacing: '-0.005em',
-        cursor: soon ? 'not-allowed' : 'pointer',
-        opacity: soon ? 0.55 : 1,
-        boxShadow: isActive ? 'inset 0 0 0 1px rgba(59,130,246,0.25)' : 'none',
-      }}
-      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-      <Icon size={16} strokeWidth={isActive ? 2.2 : 1.7} style={{
-        color: isActive ? '#3B82F6' : soon ? '#6B7280' : hov ? '#D1D5DB' : '#9CA3AF',
-        flexShrink: 0, transition: 'color 0.15s',
-      }} />
-      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {label}
-      </span>
-      {soon && soonLabel && (
-        <span style={{
-          fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-          padding: '2px 5px', borderRadius: 4,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          color: '#9CA3AF',
-          flexShrink: 0,
-        }}>
-          {soonLabel}
-        </span>
-      )}
-    </NavLink>
-  );
-}
-
-// Sidebar Hub: Painel + 3 seções (Designer / Ferramentas / Biblioteca).
-// Cada seção tem subitens. "Em breve" = navega pra mesma rota mas
-// fica visualmente desabilitado (opacity + tag).
-type NavSection = {
-  title?: string; // null = top-level (sem header de seção)
-  items: Array<{ url: string; label: string; icon: React.ElementType; soon?: boolean }>;
-};
-
-function getNavSections(lang: string): NavSection[] {
-  const L = (pt: string, en: string, es: string, zh: string) =>
-    lang === "en" ? en : lang === "es" ? es : lang === "zh" ? zh : pt;
-
-  // Reestruturado em 03/08/2026.
-  //
-  // O menu antigo tinha 16 itens em 6 grupos, organizados por CARDINALIDADE
-  // DE SAÍDA — "Criar" (1 asset) vs "Sequências" (N assets) vs "Inteligência".
-  // Isso é a arquitetura do código, não o trabalho de quem anuncia: ninguém
-  // acorda pensando "hoje preciso de uma sequência".
-  //
-  // Agora são 5 itens organizados pelo que a pessoa faz: cria, guarda a marca,
-  // acha o que já fez, automatiza, paga. As telas que saíram do menu continuam
-  // acessíveis por rota — nada foi deletado, porque callbacks de OAuth e o
-  // retorno do Stripe dependem delas.
-  return [
-    {
-      items: [
-        { url: '/dashboard/hub/image',   label: L('Criar criativo',  'Create',        'Crear',           '创建'),   icon: Sparkles },
-        { url: '/dashboard/hub/brands',      label: L('Minhas marcas',   'My brands',     'Mis marcas',      '品牌'),   icon: Building2 },
-        { url: '/dashboard/hub/library', label: L('Meus criativos',  'My creatives',  'Mis creativos',   '资源库'), icon: FolderOpen },
-      ],
-    },
-    {
-      title: L('Avançado', 'Advanced', 'Avanzado', '高级'),
-      items: [
-        { url: '/dashboard/hub/video',     label: L('Vídeo',       'Video',      'Video',       '视频'),   icon: Video },
-        { url: '/dashboard/hub/voice',     label: L('Locução',     'Voiceover',  'Locución',    '配音'),   icon: Mic },
-        { url: '/dashboard/hub/workflows', label: L('Automações',  'Automations','Automatizaciones', '自动化'), icon: Wand2 },
-      ],
-    },
-    {
-      title: L('Conta', 'Account', 'Cuenta', '账户'),
-      items: [
-        { url: '/dashboard/plans', label: L('Planos e créditos', 'Plans & credits', 'Planes y créditos', '套餐与积分'), icon: CreditCard },
-      ],
-    },
-  ];
-}
-
-function comingSoonLabel(lang: string): string {
-  return lang === "en" ? "Coming soon" : lang === "es" ? "Próximamente" : lang === "zh" ? "即将推出" : "Em breve";
-}
 
 export function AppLayout() {
   const navigate = useNavigate();
@@ -188,13 +33,20 @@ export function AppLayout() {
   const { language, setLanguage } = useLanguage();
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Estado recolhido da sidebar — persiste entre recargas.
+  const [collapsed, setCollapsed] = useState<boolean>(
+    () => storage.get(SIDEBAR_COLLAPSED_KEY) === "true",
+  );
+  useEffect(() => {
+    try { storage.set(SIDEBAR_COLLAPSED_KEY, String(collapsed)); } catch { /* noop */ }
+  }, [collapsed]);
+
   // Antes: useState(false). O primeiro paint sempre desenhava a sidebar fixa
   // de 220px, mesmo num celular de 375px, e só depois trocava pelo drawer —
   // o usuário via a barra "pular". Agora já nasce com o valor certo.
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < MOBILE_BP,
   );
-  const [accountsOpen, setAccountsOpen] = useState(false);
   const [savedPersonas, setSavedPersonas] = useState<any[]>([]);
   // Topbar overlays — UserProfilePanel slide-out + Cmd+K palette.
   // Both live at the layout level so they sit above page content and
@@ -229,7 +81,6 @@ export function AppLayout() {
   // Close sidebar on route change (mobile)
   useEffect(() => {
     setMobileOpen(false);
-    setAccountsOpen(false);
   }, [location.pathname]);
 
   // ── Auth + profile state ──
@@ -265,7 +116,6 @@ export function AppLayout() {
     account: activeAccount,
     isConnected: metaConnected,
     isLoading: accountResolving,
-    switchAccount,
   } = useActiveAccount(user?.id, selectedPersona?.id ?? null);
 
   const fetchUsage = useCallback(async (userId: string) => {
@@ -506,282 +356,8 @@ export function AppLayout() {
     );
   }
 
-  // ── Sidebar content ──
-  const sidebarContent = (
-    <>
-      {/* Logo text — same as landing page header */}
-      <div style={{
-        height: 56, padding: '0 16px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexShrink: 0,
-      }}>
-        <button onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}
-          title="adbrief"
-          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'baseline' }}>
-          <Logo size="lg" />
-        </button>
-        {isMobile && (
-          <button onClick={() => setMobileOpen(false)}
-            style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer' }}>
-            <X size={20} color="#94A3B8" />
-          </button>
-        )}
-      </div>
+  // Sidebar agora vive em src/components/sidebar (config centralizada).
 
-      {/* ── Account selector — escondido nas rotas do Hub e em Planos.
-          A sidebar tem que ser a mesma em todas as telas do produto:
-          antes, ao entrar em /dashboard/plans o seletor de conta aparecia
-          do nada e a barra "mudava". */}
-      <div style={{
-        flexShrink: 0,
-        display: (location.pathname.startsWith('/dashboard/hub') || location.pathname.startsWith('/dashboard/plans'))
-          ? 'none' : 'block',
-      }}>
-
-        <button
-          onClick={() => setAccountsOpen(o => !o)}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 9,
-            padding: '8px 14px', background: 'transparent', border: 'none',
-            cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s',
-            fontFamily: F,
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.04)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-        >
-          {/* Avatar with connection dot */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 9, overflow: 'hidden',
-              background: selectedPersona
-                ? (selectedPersona.logo_url ? 'rgba(148,163,184,0.08)' : avatarGradient(selectedPersona.name || '?'))
-                : 'rgba(148,163,184,0.06)',
-              border: '1px solid rgba(148,163,184,0.10)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {selectedPersona?.logo_url
-                ? <img src={selectedPersona.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : selectedPersona
-                  ? <span style={{ fontSize: 13, fontWeight: 700, color: '#CBD5E1' }}>
-                      {(selectedPersona.name || '?').charAt(0).toUpperCase()}
-                    </span>
-                  : <Building2 size={13} color="#475569" />
-              }
-            </div>
-            {selectedPersona && !accountResolving && (
-              <span style={{
-                position: 'absolute', bottom: -1, right: -1,
-                width: 9, height: 9, borderRadius: '50%',
-                background: metaConnected ? '#22C55E' : '#475569',
-                border: '2px solid #060A14',
-                boxShadow: metaConnected ? '0 0 6px rgba(34,197,94,0.50)' : 'none',
-              }} />
-            )}
-          </div>
-
-          {/* Name + Meta connection badge */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <p style={{
-              margin: 0, fontSize: 13, fontWeight: 600,
-              color: selectedPersona ? '#F1F5F9' : '#475569',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              flex: 1, minWidth: 0,
-            }}>
-              {selectedPersona?.name || 'Selecionar conta'}
-            </p>
-            {/* Meta connection badge removed per founder request — the
-                sidebar account selector is cleaner without the platform
-                mark. Connection state still surfaces elsewhere (Feed
-                hero, Accounts page). */}
-          </div>
-
-          <ChevronDown size={12} color="#475569"
-            style={{ flexShrink: 0, transform: accountsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s cubic-bezier(0.4,0,0.2,1)' }} />
-        </button>
-
-        {/* Dropdown: personas + Meta ad accounts */}
-        {accountsOpen && (
-          <div style={{
-            borderTop: '1px solid rgba(148,163,184,0.06)',
-            paddingTop: 2, paddingBottom: 2,
-          }}>
-            {/* Persona switcher — always show */}
-            {savedPersonas.length > 0 && (
-              <>
-                <div style={{ padding: '6px 14px 3px', fontSize: 9.5, fontWeight: 600, color: '#475569', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: F }}>
-                  Marcas
-                </div>
-                {savedPersonas.map(p => {
-                  const isActive = p.id === selectedPersona?.id;
-                  return (
-                    <button key={p.id}
-                      onClick={() => {
-                        if (!isActive) {
-                          // Switch persona via React state + localStorage.
-                          // DO NOT dispatch 'persona-updated' here — that
-                          // event re-runs reloadPersonas, which captured a
-                          // stale closure of selectedPersona and would
-                          // overwrite our just-set value 1.5s later. The
-                          // persona-updated event is reserved for
-                          // AccountsPage create/edit/delete flows where the
-                          // persona LIST itself changed.
-                          setSelectedPersona(p, user?.id);
-                        }
-                        setAccountsOpen(false);
-                        setMobileOpen(false);
-                      }}
-                      style={{
-                        width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '6px 14px', background: isActive ? 'rgba(37,99,235,0.08)' : 'transparent',
-                        border: 'none', cursor: 'pointer', fontFamily: F,
-                        transition: 'all 0.15s cubic-bezier(0.4,0,0.2,1)', textAlign: 'left',
-                        borderRadius: 6, margin: '0 4px',
-                      }}
-                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.06)'; }}
-                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
-                      <div style={{
-                        width: 22, height: 22, borderRadius: 6, flexShrink: 0, overflow: 'hidden',
-                        background: p.logo_url ? 'rgba(148,163,184,0.08)' : avatarGradient(p.name || '?'),
-                        border: '1px solid rgba(148,163,184,0.08)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        {p.logo_url
-                          ? <img src={p.logo_url} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : <span style={{ fontSize: 9, fontWeight: 700, color: '#94A3B8' }}>
-                              {(p.name || '?').charAt(0).toUpperCase()}
-                            </span>
-                        }
-                      </div>
-                      <span style={{
-                        flex: 1, fontSize: 12, fontWeight: isActive ? 600 : 400,
-                        color: isActive ? '#F1F5F9' : '#94A3B8',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {p.name}
-                      </span>
-                      {isActive && (
-                        <span style={{ fontSize: 8, fontWeight: 700, color: '#60A5FA', letterSpacing: '0.06em' }}>ATIVO</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </>
-            )}
-
-            {/* Ad account switching removed from sidebar — use Accounts page instead */}
-
-            {/* Not connected — nudge */}
-            {!metaConnected && selectedPersona && (
-              <button
-                onClick={() => { navigate('/dashboard/hub/brands'); setAccountsOpen(false); setMobileOpen(false); }}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '7px 14px', background: 'rgba(239,68,68,0.06)', border: 'none',
-                  cursor: 'pointer', fontFamily: F, transition: 'background 0.1s',
-                  borderRadius: 4, margin: '2px 0',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.10)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.06)'; }}
-              >
-                <Link2 size={12} color="#ef4444" />
-                <span style={{ fontSize: 11.5, color: '#ef4444', fontWeight: 500 }}>
-                  Conectar Meta Ads
-                </span>
-              </button>
-            )}
-
-            {/* Manage accounts link */}
-            <button
-              onClick={() => { navigate('/dashboard/hub/brands'); setAccountsOpen(false); setMobileOpen(false); }}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                padding: '6px 14px', background: 'transparent', border: 'none',
-                cursor: 'pointer', fontFamily: F, transition: 'background 0.1s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.04)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-            >
-              <div style={{
-                width: 20, height: 20, borderRadius: 5,
-                background: 'rgba(148,163,184,0.06)', border: '1px dashed rgba(148,163,184,0.14)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Plus size={9} color="#475569" />
-              </div>
-              <span style={{ fontSize: 11.5, color: '#475569' }}>
-                Gerenciar contas
-              </span>
-            </button>
-          </div>
-        )}
-
-        <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '4px 0 0' }} />
-      </div>
-
-      {/* Nav — Painel + seções DESIGNER / FERRAMENTAS / BIBLIOTECA */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: 8 }}>
-        <nav style={{ paddingTop: 8 }}>
-          {getNavSections(language).map((section, sIdx) => (
-            <div key={section.title || `top-${sIdx}`} style={{ marginBottom: section.title ? 6 : 16 }}>
-              {section.title && (
-                <p style={{
-                  margin: '20px 18px 8px',
-                  // Mais claro que #9CA3AF — contraste melhor no fundo dark
-                  fontSize: 10.5, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase',
-                  color: '#D1D5DB',
-                }}>
-                  {section.title}
-                </p>
-              )}
-              {section.items.map(item => (
-                <NavItem
-                  key={item.url}
-                  url={item.url}
-                  label={item.label}
-                  icon={item.icon}
-                  isActive={isAt(item.url)}
-                  soon={item.soon}
-                  soonLabel={item.soon ? comingSoonLabel(language) : undefined}
-                  onClick={() => setMobileOpen(false)}
-                />
-              ))}
-            </div>
-          ))}
-        </nav>
-      </div>
-
-      {/* Footer — CreditBar + Logout.
-          O CreditBar ficava escondido em /dashboard/hub* de quando o Hub era
-          um produto interno isolado. Agora o Hub É o produto: o saldo precisa
-          aparecer justamente onde o crédito é gasto. */}
-      <div style={{ flexShrink: 0 }}>
-        <div style={{ height: 1, background: 'rgba(148,163,184,0.06)', margin: '0 0 4px' }} />
-        {true && (
-          <CreditBar userId={user?.id} plan={plan} />
-        )}
-        {/* ReferralPopup escondido no pivô interno — operação Brilliant
-            Gaming, sem programa de indicação. Mantém o componente
-            importado caso queira reativar no futuro. */}
-        <button
-          onClick={handleLogout}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 9,
-            padding: '8px 14px 12px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            width: '100%', transition: 'background 0.12s',
-            fontFamily: F,
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(148,163,184,0.04)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-          <LogOut size={14} strokeWidth={1.5} color="#475569" />
-          <span style={{ fontSize: 13, fontWeight: 400, color: '#64748B' }}>
-            {language === "en" ? "Sign out" : language === "es" ? "Cerrar sesión" : language === "zh" ? "退出登录" : "Sair"}
-          </span>
-        </button>
-      </div>
-    </>
-  );
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-main)' }}>
@@ -822,47 +398,18 @@ export function AppLayout() {
         </div>
       )}
 
-      {/* ── Mobile overlay backdrop ── */}
-      {isMobile && mobileOpen && (
-        <div
-          onClick={() => setMobileOpen(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 98,
-            background: 'rgba(0,0,0,0.60)',
-            transition: 'opacity 0.2s',
-          }}
-        />
-      )}
+      {/* ── Sidebar (drawer no mobile, fixa no desktop) ── */}
+      <AppSidebar
+        lang={language}
+        plan={profile?.plan}
+        isMobile={isMobile}
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapsed={() => setCollapsed(c => !c)}
+        onLogout={handleLogout}
+      />
 
-      {/* ── Sidebar ──
-            On mobile the drawer is fixed from edge to edge of the
-            viewport, so it must reserve space for the notch (top) and
-            the home indicator (bottom). Padding instead of margin so
-            the side bg still extends behind the unsafe regions —
-            looks like one continuous panel rather than a clipped one. */}
-      <aside style={{
-        // Fonte única: --sidebar-w. Antes eram quatro valores diferentes
-        // espalhados (220 aqui, 216 no CSS, 224/236/256 nas media queries),
-        // e a barra mudava de largura conforme o tamanho da janela sem que
-        // nada no produto justificasse isso.
-        width: isMobile ? "min(86vw, 300px)" : "var(--sidebar-w)",
-        height: '100%',
-        background: 'var(--bg-main)',
-        borderRight: '1px solid rgba(148,163,184,0.06)',
-        display: 'flex', flexDirection: 'column', flexShrink: 0,
-        fontFamily: F, overflow: 'hidden',
-        ...(isMobile ? {
-          position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 99,
-          paddingTop: 'env(safe-area-inset-top, 0px)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          paddingLeft: 'env(safe-area-inset-left, 0px)',
-          transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
-          boxShadow: mobileOpen ? '12px 0 40px rgba(0,0,0,0.6)' : 'none',
-        } : {}),
-      }}>
-        {sidebarContent}
-      </aside>
 
       {/* Main content
             Mobile: reserve room for the topbar (52) + the iOS notch.
