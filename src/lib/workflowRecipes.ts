@@ -154,8 +154,10 @@ const fCount = (dflt: number, max: number): RecipeField => ({
   default: dflt,
   min: 1,
   max,
-  help: "Versões diferentes da mesma ideia, para você testar qual performa.",
-  interface CreativeTestAngle {
+help: "Versões diferentes da mesma ideia, para você testar qual performa.",
+});
+
+interface CreativeTestAngle {
   id: string;
   label: string;
   instruction: string;
@@ -269,7 +271,6 @@ function getCreativeTestAngles(value: string | undefined): CreativeTestAngle[] {
 
   return CREATIVE_TEST_ANGLES.slice(0, safeCount);
 }
-});
 
 // ── As receitas ─────────────────────────────────────────────────────────────
 //
@@ -279,7 +280,6 @@ function getCreativeTestAngles(value: string | undefined): CreativeTestAngle[] {
 
 export const RECIPES: Recipe[] = [
   {
-      {
     id: "criativos-teste",
     name: "Criar um lote de criativos para testar",
     outcome:
@@ -363,7 +363,6 @@ export const RECIPES: Recipe[] = [
     estimate: (a) =>
       getCreativeTestAngles(a.count).length *
       CREDIT_COSTS.image_standard,
-  },
   },
 
   {
