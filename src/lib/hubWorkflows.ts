@@ -2,10 +2,10 @@
  * CRUD e runtime client-side dos Workflows.
  *
  * Regras:
- * - todo grafo é validado antes de salvar ou executar;
+ * - todo grafo Ã© validado antes de salvar ou executar;
  * - o frontend envia apenas os identificadores da marca;
  * - o backend carrega o contexto completo da marca;
- * - polling é cancelável e não acumula listeners.
+ * - polling Ã© cancelÃ¡vel e nÃ£o acumula listeners.
  */
 
 import {
@@ -34,7 +34,7 @@ export {
 
 /*
  * As tabelas de workflow ainda
- * não estão nos tipos gerados.
+ * nÃ£o estÃ£o nos tipos gerados.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const database =
@@ -131,7 +131,7 @@ function deriveBrandId(
 }
 
 /*
- * Não resolve cores, assets ou notas no cliente.
+ * NÃ£o resolve cores, assets ou notas no cliente.
  * Isso fica sob responsabilidade do backend.
  */
 function buildBrandInputs(
@@ -526,7 +526,7 @@ export async function cloneWorkflow(
   return createWorkflow({
     name:
       newName ||
-      `${source.name} (cópia)`,
+      `${source.name} (cÃ³pia)`,
 
     description:
       source.description ||
@@ -601,19 +601,17 @@ export async function runWorkflow(
       ok: false,
 
       message:
-        `Workflow inválido: ${graphError}`,
+        `Workflow invÃ¡lido: ${graphError}`,
     };
   }
 
-  const SUPABASE_URL =
-    import.meta.env
-      .VITE_SUPABASE_URL
-      as string;
+  const SUPABASE_URL = String(
+    import.meta.env.VITE_SUPABASE_URL || "",
+  );
 
-  const ANON_KEY =
-    import.meta.env
-      .VITE_SUPABASE_PUBLISHABLE_KEY
-      as string;
+  const ANON_KEY = String(
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
+  );
 
   if (
     !SUPABASE_URL ||
@@ -623,7 +621,7 @@ export async function runWorkflow(
       ok: false,
 
       message:
-        "Configuração do Supabase ausente",
+        "ConfiguraÃ§Ã£o do Supabase ausente",
     };
   }
 
@@ -645,7 +643,7 @@ export async function runWorkflow(
       ok: false,
 
       message:
-        "Sessão expirada. Entre novamente.",
+        "SessÃ£o expirada. Entre novamente.",
     };
   }
 
@@ -741,7 +739,7 @@ export async function runWorkflow(
 
         message:
           response.ok
-            ? "O servidor retornou uma resposta inválida"
+            ? "O servidor retornou uma resposta invÃ¡lida"
             : text.slice(
                 0,
                 240,
@@ -1191,7 +1189,7 @@ export async function pollWorkflowRun(
       ) {
         console.warn(
           `[pollWorkflowRun] run ${runId} ` +
-          `não encontrado após ` +
+          `nÃ£o encontrado apÃ³s ` +
           `${maxConsecutiveNulls} consultas`,
         );
 
@@ -1304,15 +1302,13 @@ export async function pollWorkflowRun(
 async function triggerStaleRescue(
   runId: string,
 ): Promise<void> {
-  const SUPABASE_URL =
-    import.meta.env
-      .VITE_SUPABASE_URL
-      as string;
+  const SUPABASE_URL = String(
+    import.meta.env.VITE_SUPABASE_URL || "",
+  );
 
-  const ANON_KEY =
-    import.meta.env
-      .VITE_SUPABASE_PUBLISHABLE_KEY
-      as string;
+  const ANON_KEY = String(
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
+  );
 
   const {
     data:
