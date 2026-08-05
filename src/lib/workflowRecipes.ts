@@ -24,6 +24,7 @@
 
 import type { WfGraph, WfNode, WfEdge } from "./hubWorkflows";
 import { CREDIT_COSTS } from "./hubPlans";
+import { buildCreativePrompt } from "./creativePromptRules";
 
 // ── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -154,6 +155,120 @@ const fCount = (dflt: number, max: number): RecipeField => ({
   min: 1,
   max,
   help: "Versões diferentes da mesma ideia, para você testar qual performa.",
+  interface CreativeTestAngle {
+  id: string;
+  label: string;
+  instruction: string;
+}
+
+const CREATIVE_TEST_ANGLES: CreativeTestAngle[] = [
+  {
+    id: "dor",
+    label: "Dor",
+    instruction:
+      "Mostre com clareza a situação frustrante anterior à solução. " +
+      "A tensão deve ser percebida imediatamente. Trabalhe somente o problema central " +
+      "e não tente mostrar o resultado final ao mesmo tempo.",
+  },
+  {
+    id: "resultado",
+    label: "Resultado",
+    instruction:
+      "Mostre o estado desejado depois de usar a oferta. " +
+      "Concentre a composição na transformação concreta e no benefício final. " +
+      "Não use a dificuldade anterior como mensagem principal.",
+  },
+  {
+    id: "prova",
+    label: "Prova",
+    instruction:
+      "Construa a peça em torno de uma evidência, demonstração, resultado informado, " +
+      "depoimento fornecido ou sinal visual legítimo de credibilidade. " +
+      "Não invente números, avaliações, depoimentos, certificados ou resultados.",
+  },
+  {
+    id: "objecao",
+    label: "Objeção",
+    instruction:
+      "Ataque somente a principal razão pela qual o público poderia não comprar. " +
+      "Torne essa objeção clara e apresente a oferta como resposta. " +
+      "Não tente responder várias objeções na mesma peça.",
+  },
+  {
+    id: "mecanismo",
+    label: "Mecanismo",
+    instruction:
+      "Destaque como ou por que a solução funciona. " +
+      "Transforme o mecanismo central em uma ideia visual simples e fácil de entender. " +
+      "Não invente processos técnicos que não estejam descritos na oferta.",
+  },
+  {
+    id: "urgencia",
+    label: "Urgência",
+    instruction:
+      "Mostre a consequência de continuar adiando a decisão ou a importância de agir agora. " +
+      "Não invente prazo, estoque limitado, contagem regressiva, desconto ou escassez.",
+  },
+  {
+    id: "comparacao",
+    label: "Comparação",
+    instruction:
+      "Contraste a alternativa comum com a proposta da oferta dentro de uma única composição. " +
+      "O contraste deve ser compreendido imediatamente, sem criar mosaico, grade, " +
+      "dois anúncios separados ou versões lado a lado.",
+  },
+  {
+    id: "identidade",
+    label: "Identidade",
+    instruction:
+      "Faça o público reconhecer imediatamente que a oferta foi criada para alguém como ele. " +
+      "Use situações, ambientes ou sinais visuais coerentes com o público informado, " +
+      "sem recorrer a estereótipos exagerados.",
+  },
+  {
+    id: "demonstracao",
+    label: "Demonstração",
+    instruction:
+      "Mostre o produto, serviço ou processo em uso. " +
+      "Priorize o entendimento visual de como a oferta entra na vida da pessoa. " +
+      "A demonstração deve ser o foco principal da peça.",
+  },
+  {
+    id: "facilidade",
+    label: "Facilidade",
+    instruction:
+      "Destaque simplicidade, rapidez, conveniência ou redução de esforço, " +
+      "somente quando isso estiver sustentado pelas informações da oferta. " +
+      "Não invente tempo de execução ou promessa de resultado fácil.",
+  },
+  {
+    id: "especificidade",
+    label: "Especificidade",
+    instruction:
+      "Use os detalhes concretos presentes na oferta para tornar a mensagem menos genérica. " +
+      "Destaque apenas informações realmente fornecidas, como duração, formato, método, " +
+      "público, quantidade ou característica específica. Não invente dados.",
+  },
+  {
+    id: "curiosidade",
+    label: "Curiosidade",
+    instruction:
+      "Crie uma lacuna de informação clara e relevante ligada diretamente à oferta. " +
+      "A pessoa deve querer entender o restante da mensagem sem depender de clickbait, " +
+      "promessa enganosa ou mistério desconectado do produto.",
+  },
+];
+
+function getCreativeTestAngles(value: string | undefined): CreativeTestAngle[] {
+  const requestedCount = Math.floor(num(value, 4));
+
+  const safeCount = Math.min(
+    Math.max(requestedCount, 1),
+    CREATIVE_TEST_ANGLES.length,
+  );
+
+  return CREATIVE_TEST_ANGLES.slice(0, safeCount);
+}
 });
 
 // ── As receitas ─────────────────────────────────────────────────────────────
@@ -164,33 +279,91 @@ const fCount = (dflt: number, max: number): RecipeField => ({
 
 export const RECIPES: Recipe[] = [
   {
+      {
     id: "criativos-teste",
     name: "Criar um lote de criativos para testar",
-    outcome: "Várias imagens da mesma oferta, com ângulos diferentes, prontas para subir.",
-    whenToUse: "Você tem uma oferta e ainda não sabe qual mensagem pega.",
+    outcome:
+      "Várias imagens da mesma oferta, com ângulos diferentes, prontas para subir.",
+    whenToUse:
+      "Você tem uma oferta e ainda não sabe qual mensagem pega.",
     icon: "▦",
     fields: [fBrand, fOffer, fAudience, fFormat, fCount(4, 12)],
+
     build: (a) => {
-      const b = nid("brand"), p = nid("prompt"), i = nid("img"), o = nid("out");
-      const n = num(a.count, 4);
-      return g(
-        [
-          brandNode(b, a.brand_id),
-          promptNode(p,
-            `Anúncio para: ${a.offer}\n` +
-            `Público: ${a.audience}\n` +
-            `Cada versão deve atacar um ângulo diferente — dor, resultado, prova, ` +
-            `objeção. Texto curto e legível no celular.`),
+      const brandId = nid("brand");
+      const selectedAngles = getCreativeTestAngles(a.count);
+      const aspectRatio = a.aspect_ratio || "9:16";
+
+      const nodes: WfNode[] = [
+        brandNode(brandId, a.brand_id, 40, 40),
+      ];
+
+      const edges: WfEdge[] = [];
+
+      selectedAngles.forEach((angle, index) => {
+        const promptId = nid(`prompt-${angle.id}`);
+        const imageId = nid(`img-${angle.id}`);
+        const outputId = nid(`out-${angle.id}`);
+
+        const rowY = 180 + index * 240;
+
+        const prompt = buildCreativePrompt({
+          offer: a.offer,
+          audience: a.audience,
+          angle: angle.label,
+          angleInstruction: angle.instruction,
+          headlineInstruction:
+            "Use no máximo uma headline principal baseada somente nas informações da oferta. " +
+            "Não invente uma promessa nova. Caso não exista uma headline segura e concreta, " +
+            "priorize a mensagem visual.",
+          extraContext:
+            `Esta peça faz parte de um lote de testes. ` +
+            `Ela deve explorar exclusivamente o ângulo "${angle.label}". ` +
+            `Não misture este ângulo com dor, resultado, prova, objeção ou qualquer outra estratégia.`,
+        });
+
+        nodes.push(
+          promptNode(promptId, prompt, 40, rowY),
           {
-            id: i, type: "image-gen", position: { x: 400, y: 120 },
-            data: { count: n, aspect_ratio: a.aspect_ratio || "9:16", quality: "medium" },
+            id: imageId,
+            type: "image-gen",
+            position: {
+              x: 440,
+              y: rowY,
+            },
+            data: {
+              count: 1,
+              aspect_ratio: aspectRatio,
+              quality: "medium",
+            },
           },
-          { id: o, type: "output", position: { x: 760, y: 120 }, data: { name_template: "{date}_teste_{slug}" } },
-        ],
-        [edge(b, i, "brand"), edge(p, i, "prompt"), edge(i, o, "asset")],
-      );
+          {
+            id: outputId,
+            type: "output",
+            position: {
+              x: 820,
+              y: rowY,
+            },
+            data: {
+              name_template: `{date}_teste_${angle.id}_{slug}`,
+            },
+          },
+        );
+
+        edges.push(
+          edge(brandId, imageId, "brand"),
+          edge(promptId, imageId, "prompt"),
+          edge(imageId, outputId, "asset"),
+        );
+      });
+
+      return g(nodes, edges);
     },
-    estimate: (a) => num(a.count, 4) * CREDIT_COSTS.image_standard,
+
+    estimate: (a) =>
+      getCreativeTestAngles(a.count).length *
+      CREDIT_COSTS.image_standard,
+  },
   },
 
   {
