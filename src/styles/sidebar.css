@@ -238,6 +238,22 @@
   transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 .sb-credits-cta:hover { background: rgba(21, 156, 248, 0.2); color: var(--sb-text-primary); }
+.sb-credits-note {
+  margin-top: 10px;
+  width: 100%;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(244, 247, 251, 0.45);
+  font-size: 11.5px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.sb-credits-note:hover { color: rgba(244, 247, 251, 0.72); }
+.sb-credits-note:focus-visible { outline: 2px solid rgba(34, 211, 238, 0.65); outline-offset: 2px; }
+
 .sb-credits-skeleton { height: 8px; border-radius: 4px; background: rgba(148,163,184,0.12); animation: sbPulse 1.4s ease-in-out infinite; }
 @keyframes sbPulse { 0%,100% { opacity: .5 } 50% { opacity: .9 } }
 
