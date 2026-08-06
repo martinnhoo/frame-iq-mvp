@@ -74,11 +74,13 @@ que volta à fila e estoura de novo, em laço.
 | `SUPABASE_URL` | — | obrigatória |
 | `SUPABASE_SERVICE_ROLE_KEY` | — | obrigatória; ignora RLS, nunca sai do worker |
 | `CI_WORKER_ID` | `worker-<pid>` | aparece em `locked_by`, para saber quem pegou o job |
-| `CI_WORKER_CONCURRENCY` | `2` | jobs simultâneos |
-| `CI_LEASE_SECONDS` | `900` | precisa ser maior que o job mais longo |
+| `CI_WORKER_CONCURRENCY` | `1` | jobs simultâneos. Não suba sem medir memória real primeiro |
+| `CI_LEASE_SECONDS` | `900` | renovado por heartbeat a cada 1/3 enquanto o job roda |
 | `CI_TMP_MAX_MB` | `4096` | acima disto o worker recusa job novo em vez de encher o disco |
 | `CI_MAX_MEDIA_MB` | `500` | teto por arquivo |
 | `CI_STORAGE_BACKEND` | `supabase` | ou `s3` para R2/B2 |
+| `CI_REQUIRE_HTTPS` | `true` | trava de SSRF; só desligue em teste local |
+| `CI_ALLOW_PRIVATE_URLS` | `false` | trava de SSRF; só desligue em teste local |
 | `GEMINI_API_KEY` | — | sem ela, a análise semântica fica em modo degradado |
 
 Lista completa no `.env.example` da raiz do repositório.
@@ -160,11 +162,17 @@ escritas são upsert com constraint, e não insert cego.
 python ci-worker/tests/test_download.py
 ```
 
-26 verificações contra um servidor HTTP e um MP4 reais (gerado com ffmpeg na
-hora). Supabase e bucket são dublês — o objetivo é o comportamento do worker.
+45 verificações contra um servidor HTTP e um MP4 reais (gerado com ffmpeg na
+hora). Supabase e bucket são dublês.
 
 Cobre: SHA-256 durante o streaming, callback de progresso, recusa de corpo
-vazio e de arquivo acima do teto, layout das chaves do bucket, criação do
-asset, deduplicação completa (não sobe de novo, não analisa de novo, liga aos
-dois anúncios), falha permanente vs. retry, e limpeza do temporário inclusive
-quando o job falha.
+vazio e de arquivo acima do teto, 13 vetores de SSRF, layout das chaves do
+bucket, criação do asset, deduplicação exata (não sobe de novo, não analisa de
+novo, liga aos dois anúncios), falha permanente vs. retry, heartbeat de lease
+com perda de posse, e limpeza do temporário inclusive quando o job falha.
+
+**O que estes testes NÃO provam.** Supabase e bucket são dublês, então eles
+comprovam o domínio do worker, não a integração. Antes de qualquer volume, é
+obrigatório rodar contra Postgres e Storage reais: 1 vídeo real ponta a ponta,
+depois 3 vídeos com 1 duplicata exata e 1 falha recuperável, com reinício do
+worker no meio. Só então 20 anúncios.
