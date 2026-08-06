@@ -40,6 +40,7 @@ const dict = {
     cta: "Criar criativo", plans: "Planos e créditos", settings: "Configurações", logout: "Sair",
     collapse: "Recolher menu", expand: "Expandir menu",
     upgrade: "Fazer upgrade", credits: "créditos", used: "usado",
+    maxPlan: "Plano máximo ativo",
     lockedPlan: "Disponível em planos superiores",
   },
   en: {
@@ -51,6 +52,7 @@ const dict = {
     cta: "Create creative", plans: "Plans & credits", settings: "Settings", logout: "Sign out",
     collapse: "Collapse menu", expand: "Expand menu",
     upgrade: "Upgrade", credits: "credits", used: "used",
+    maxPlan: "Top plan active",
     lockedPlan: "Available on higher plans",
   },
   es: {
@@ -62,6 +64,7 @@ const dict = {
     cta: "Crear creativo", plans: "Planes y créditos", settings: "Configuración", logout: "Cerrar sesión",
     collapse: "Contraer menú", expand: "Expandir menú",
     upgrade: "Mejorar plan", credits: "créditos", used: "usado",
+    maxPlan: "Plan máximo activo",
     lockedPlan: "Disponible en planes superiores",
   },
 } as const;
