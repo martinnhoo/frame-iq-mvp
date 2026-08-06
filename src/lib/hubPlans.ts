@@ -138,3 +138,28 @@ export function formatPrice(plan: HubPlan, currency: "usd" | "brl"): string {
     ? `R$ ${plan.brl}`
     : `$${plan.usd}`;
 }
+
+/* ── Hierarquia de planos ───────────────────────────────────────────────────
+   Upgrade é função do NÍVEL do plano, nunca do saldo de créditos. Quem está
+   no topo não vê "fazer upgrade" — vê que já está no topo. */
+export const PLAN_ORDER: PlanKey[] = ["free", "creator", "pro", "studio"];
+
+export function planRank(plan: string | null | undefined): number {
+  return PLAN_ORDER.indexOf(normalizePlan(plan));
+}
+
+/** Existe plano superior disponível? */
+export function hasUpgradeAvailable(plan: string | null | undefined): boolean {
+  return planRank(plan) < PLAN_ORDER.length - 1;
+}
+
+/** Está no maior plano? */
+export function isTopPlan(plan: string | null | undefined): boolean {
+  return !hasUpgradeAvailable(plan);
+}
+
+/** Próximo plano acima, ou null se já está no topo. */
+export function nextPlan(plan: string | null | undefined): HubPlan | null {
+  const i = planRank(plan);
+  return i < PLAN_ORDER.length - 1 ? HUB_PLANS[PLAN_ORDER[i + 1]] : null;
+}
