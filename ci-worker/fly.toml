@@ -1,0 +1,42 @@
+# Worker do Creative Intelligence no Fly.io.
+#
+# gru (São Paulo) e não iad: o banco é o Supabase e o gargalo é o download do
+# CDN da Meta, não a latência até o Postgres. Manter perto de você facilita
+# depurar, e o custo é o mesmo.
+
+app = "adbrief-ci-worker"
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  CI_WORKER_ID = "fly-ci-worker"
+  CI_WORKER_CONCURRENCY = "2"
+  CI_TMP_DIR = "/data/tmp"
+  CI_TMP_MAX_MB = "4096"
+  CI_STORAGE_BACKEND = "supabase"
+  CI_STORAGE_BUCKET = "ci-media"
+
+# Sem [http_service] de propósito: o worker não atende requisição. Ele só
+# consome a fila do Postgres. Não expor porta significa que nada da internet
+# fala com o processo que segura a SUPABASE_SERVICE_ROLE_KEY.
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "2gb"
+  # 1 GB não sobrevive ao ffmpeg + whisper num vídeo de 60s. 2 GB é o menor
+  # tamanho em que o pipeline de análise roda sem OOM.
+
+[[mounts]]
+  source = "ci_worker_data"
+  destination = "/data"
+  # Volume só para temporários. Nada persistente mora aqui: o estado vive no
+  # Postgres e as mídias no bucket. Se o volume sumir, os jobs em andamento
+  # voltam à fila pelo reaper e nada se perde.
+
+[deploy]
+  strategy = "immediate"
+  # Não há health check HTTP para esperar — o worker não tem porta. O SIGTERM
+  # é tratado: ele para de pegar job novo e termina o que está em execução
+  # antes de sair.
