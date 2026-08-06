@@ -50,6 +50,23 @@ class InvalidMedia(RuntimeError):
     """O que veio não é mídia utilizável. NÃO vale retentar."""
 
 
+class ExpiredMediaUrl(RuntimeError):
+    """
+    O CDN respondeu 401/403. Nas URLs da biblioteca da Meta isso quase sempre
+    significa token de assinatura vencido, não que o arquivo sumiu.
+
+    É uma categoria própria de propósito: tratar como falha permanente
+    produziria uma enxurrada de erro falso numa importação de milhares de
+    anúncios, porque o job pode esperar horas na fila antes de rodar e a
+    assinatura vence antes disso. E tratar como retentável comum faria o worker
+    bater cinco vezes na mesma URL morta.
+
+    O caminho certo é terceiro: bloquear o job, marcar a mídia como precisando
+    de URL nova, e desbloquear quando a reimportação trouxer o endereço
+    atualizado.
+    """
+
+
 @dataclass
 class DownloadResult:
     path: Path
@@ -169,6 +186,12 @@ def stream_download(
         dest.unlink(missing_ok=True)
         raise
     except urllib.error.HTTPError as exc:
+        dest.unlink(missing_ok=True)
+        if exc.code in (401, 403):
+            raise ExpiredMediaUrl(
+                f"HTTP {exc.code} — assinatura da URL provavelmente venceu") from exc
+        if exc.code == 404:
+            raise InvalidMedia("HTTP 404 — a mídia não existe mais na origem") from exc
         raise StorageError(f"HTTP {exc.code} ao baixar a mídia") from exc
     except urllib.error.URLError as exc:
         raise StorageError(f"Falha de rede ao baixar: {exc.reason}") from exc
@@ -407,6 +430,48 @@ def tmp_usage_mb(tmp_dir: Path) -> float:
             except OSError:
                 pass
     return total / (1024 * 1024)
+
+
+def cleanup_orphan_tmp(tmp_root: Path, max_age_min: int) -> dict[str, int]:
+    """
+    Apaga temporários mais velhos que `max_age_min`.
+
+    Nenhum job legítimo dura duas horas, então o que sobrou é de um processo
+    que morreu. Rodar no boot resolve o caso mais comum: o container reiniciou
+    no meio de um download de 300 MB.
+
+    Devolve quantos e quantos bytes, para o número aparecer no log em vez de a
+    limpeza acontecer em silêncio.
+    """
+    removed = 0
+    freed = 0
+    cutoff = time.time() - max_age_min * 60
+    try:
+        entries = list(tmp_root.iterdir())
+    except OSError:
+        return {"removed": 0, "bytes": 0}
+
+    for entry in entries:
+        try:
+            if entry.stat().st_mtime > cutoff:
+                continue
+            size = 0
+            if entry.is_dir():
+                for root, _dirs, files in os.walk(entry):
+                    for name in files:
+                        try:
+                            size += (Path(root) / name).stat().st_size
+                        except OSError:
+                            pass
+                shutil.rmtree(entry, ignore_errors=True)
+            else:
+                size = entry.stat().st_size
+                entry.unlink(missing_ok=True)
+            removed += 1
+            freed += size
+        except OSError:
+            continue
+    return {"removed": removed, "bytes": freed}
 
 
 def cleanup_tmp(path: Path, tmp_root: Path) -> None:

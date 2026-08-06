@@ -55,6 +55,8 @@ class Settings:
 
     tmp_dir: Path
     tmp_max_mb: int
+    tmp_max_age_min: int
+    max_job_attempts: int
     download_timeout_s: int
     max_media_mb: int
     # Segurança do downloader. O padrão é o seguro: se alguém esquecer de
@@ -132,6 +134,10 @@ def load_settings() -> Settings:
         # O disco da máquina do Fly é pequeno. Acima disto o worker RECUSA
         # novos jobs em vez de encher o volume e travar tudo.
         tmp_max_mb=_int("CI_TMP_MAX_MB", 4096),
+        # Temporário mais velho que isto é órfão de um job que morreu: nenhum
+        # job legítimo dura tanto. Limpo no boot e periodicamente.
+        tmp_max_age_min=_int("CI_TMP_MAX_AGE_MIN", 120),
+        max_job_attempts=max(1, _int("CI_MAX_JOB_ATTEMPTS", 5)),
         download_timeout_s=_int("CI_DOWNLOAD_TIMEOUT_S", 180),
         max_media_mb=_int("CI_MAX_MEDIA_MB", 500),
         allow_private_urls=_bool("CI_ALLOW_PRIVATE_URLS", False),

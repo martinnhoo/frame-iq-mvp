@@ -26,9 +26,11 @@ import traceback
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
+from .analyze import AnalysisPermanentFailure, run_analysis_job
 from .config import Settings, load_settings
-from .download import PermanentFailure, run_download_job
-from .storage import make_storage, tmp_usage_mb
+from .download import NeedsUrlRefresh, PermanentFailure, run_download_job
+from .logs import JobLogger
+from .storage import cleanup_orphan_tmp, make_storage, tmp_usage_mb
 from .supa import Supa, SupabaseError
 
 _stop = False
@@ -54,10 +56,37 @@ def _backoff_at(attempts: int, base: int, cap: int) -> str:
 
 
 def _fail_job(supa: Supa, table: str, job: dict[str, Any], exc: BaseException,
-              *, permanent: bool) -> None:
+              *, permanent: bool, settings: Settings | None = None) -> None:
+    """
+    Três desfechos distintos, e a distinção importa:
+
+      retrying  — falha transitória, volta com backoff exponencial
+      failed    — dead-letter: esgotou as tentativas OU é permanente. NUNCA
+                  volta sozinho. Fica com o erro, a etapa e o histórico para
+                  retry manual pela UI.
+      blocked   — URL vencida. Também não volta sozinho, mas o desbloqueio é
+                  automático quando a reimportação trouxer endereço novo.
+
+    Sem os três, ou o job entra em laço infinito, ou uma URL vencida some como
+    se fosse defeito permanente.
+    """
     attempts = int(job.get("attempts") or 1)
-    max_attempts = int(job.get("max_attempts") or 3)
-    exhausted = permanent or attempts >= max_attempts
+    ceiling = int(job.get("max_attempts") or (settings.max_job_attempts if settings else 5))
+    exhausted = permanent or attempts >= ceiling
+
+    if isinstance(exc, NeedsUrlRefresh):
+        supa.update(table, {
+            "status": "blocked", "stage": "url_expired",
+            "error": str(exc)[:2000], "error_code": "url_expired",
+            "locked_by": None, "lease_expires_at": None, "next_retry_at": None,
+        }, match={"id": f"eq.{job['id']}"})
+        supa.log(
+            user_id=job["user_id"], brand_id=job.get("brand_id"),
+            job_kind="download", job_id=job["id"], level="warn", stage="url_expired",
+            message="Job bloqueado: URL da mídia venceu. Reimportar o anúncio libera.",
+            payload={"attempts": attempts},
+        )
+        return
 
     patch: dict[str, Any] = {
         "status": "failed" if exhausted else "retrying",
@@ -77,8 +106,9 @@ def _fail_job(supa: Supa, table: str, job: dict[str, Any], exc: BaseException,
         user_id=job["user_id"], brand_id=job.get("brand_id"),
         job_kind="download" if table == "ci_download_jobs" else "analysis",
         job_id=job["id"], level="error", stage="failed",
-        message=f"{'Falha definitiva' if exhausted else 'Falha, vai retentar'}: {exc}",
-        payload={"attempts": attempts, "permanent": permanent},
+        message=f"{'Dead-letter: sem retry automático' if exhausted else 'Falha, vai retentar'}: {exc}",
+        payload={"attempts": attempts, "ceiling": ceiling, "permanent": permanent,
+                 "stage": job.get("stage"), "dead_letter": exhausted},
     )
 
 
@@ -164,34 +194,43 @@ def tick(supa: Supa, storage: Any, settings: Settings) -> bool:
         print(f"[worker] temporário em {usage:.0f} MB (teto {settings.tmp_max_mb}) — pausando", flush=True)
         return False
 
-    job = supa.claim_job("download", settings.worker_id, settings.lease_seconds)
-    if not job:
-        return False
+    # Download antes de análise: análise sem asset baixado não tem o que fazer,
+    # e manter a fila de download curta é o que faz o progresso aparecer na UI.
+    for kind, table, runner in (
+        ("download", "ci_download_jobs", run_download_job),
+        ("analysis", "ci_analysis_jobs", run_analysis_job),
+    ):
+        job = supa.claim_job(kind, settings.worker_id, settings.lease_seconds)
+        if not job:
+            continue
 
-    started = time.monotonic()
-    print(f"[worker] download {job['id']} (tentativa {job.get('attempts')})", flush=True)
-    try:
-        result = run_with_heartbeat(
-            supa, "ci_download_jobs", job, settings,
-            lambda: run_download_job(job, supa, storage, settings),
-        )
-        print(
-            f"[worker] ok {job['id']} em {time.monotonic() - started:.1f}s "
-            f"asset={result['asset_id']} duplicado={result['was_duplicate']}",
-            flush=True,
-        )
-    except LeaseLost as exc:
-        # Não marcamos nada: a linha agora pertence a outro worker, e escrever
-        # aqui sobrescreveria o resultado dele.
-        print(f"[worker] {exc}", flush=True)
-    except PermanentFailure as exc:
-        print(f"[worker] falha definitiva {job['id']}: {exc}", flush=True)
-        _fail_job(supa, "ci_download_jobs", job, exc, permanent=True)
-    except Exception as exc:  # noqa: BLE001
-        print(f"[worker] falha {job['id']}: {exc}", flush=True)
-        traceback.print_exc()
-        _fail_job(supa, "ci_download_jobs", job, exc, permanent=False)
-    return True
+        log = JobLogger(job_kind=kind, job_id=job["id"], worker_id=settings.worker_id,
+                        attempt=job.get("attempts"), brand_id=job.get("brand_id"))
+        log.emit("claimed")
+        try:
+            result = run_with_heartbeat(
+                supa, table, job, settings,
+                lambda j=job, r=runner: r(j, supa, storage, settings),
+            )
+            log.emit("completed", **{k: v for k, v in (result or {}).items()
+                                     if not isinstance(v, (list, dict))})
+        except LeaseLost as exc:
+            # Não marcamos nada: a linha agora pertence a outro worker, e
+            # escrever aqui sobrescreveria o resultado dele.
+            log.error(str(exc), error_code="lease_lost", retryable=False)
+        except NeedsUrlRefresh as exc:
+            log.error(str(exc), error_code="url_expired", retryable=True)
+            _fail_job(supa, table, job, exc, permanent=False, settings=settings)
+        except (PermanentFailure, AnalysisPermanentFailure) as exc:
+            log.error(str(exc), error_code="permanent", retryable=False)
+            _fail_job(supa, table, job, exc, permanent=True, settings=settings)
+        except Exception as exc:  # noqa: BLE001
+            log.error(str(exc), error_code=type(exc).__name__.lower(), retryable=True)
+            traceback.print_exc()
+            _fail_job(supa, table, job, exc, permanent=False, settings=settings)
+        return True
+
+    return False
 
 
 def main() -> int:
@@ -204,11 +243,16 @@ def main() -> int:
     supa = Supa(settings.supabase_url, settings.service_role_key)
     storage = make_storage(settings)
 
-    print(
-        f"[worker] {settings.worker_id} de pé · storage={settings.storage_backend} "
-        f"bucket={settings.storage_bucket} lease={settings.lease_seconds}s",
-        flush=True,
-    )
+    boot = JobLogger(worker_id=settings.worker_id, job_kind="system")
+    boot.emit("worker_up", storage=settings.storage_backend,
+              bucket=settings.storage_bucket, lease_s=settings.lease_seconds,
+              concurrency=settings.concurrency, max_attempts=settings.max_job_attempts)
+
+    # Órfãos do boot: temporários de jobs que morreram junto com o processo
+    # anterior. Sem isto, cada crash deixa lixo no volume até ele encher e
+    # TODOS os jobs passarem a falhar por um motivo que não é deles.
+    freed = cleanup_orphan_tmp(settings.tmp_dir, settings.tmp_max_age_min)
+    boot.emit("orphans_cleaned", removed=freed["removed"], bytes=freed["bytes"])
 
     idle_since = time.monotonic()
     last_reap = 0.0
@@ -223,7 +267,9 @@ def main() -> int:
             try:
                 supa.rpc("ci_reap_stale_jobs")
             except SupabaseError as exc:
-                print(f"[worker] reaper falhou: {exc}", flush=True)
+                boot.error(f"reaper falhou: {exc}", error_code="reaper", retryable=True)
+            # Varredura periódica: um job pode morrer sem derrubar o processo.
+            cleanup_orphan_tmp(settings.tmp_dir, settings.tmp_max_age_min)
 
         try:
             worked = tick(supa, storage, settings)

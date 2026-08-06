@@ -29,6 +29,7 @@ from typing import Any
 
 from .config import Settings
 from .storage import (
+    ExpiredMediaUrl,
     InvalidMedia,
     MediaTooLarge,
     StorageBackend,
@@ -48,6 +49,13 @@ def _now() -> str:
 
 class PermanentFailure(RuntimeError):
     """Não adianta retentar: vai falhar igual. Vai direto para 'failed'."""
+
+
+class NeedsUrlRefresh(RuntimeError):
+    """
+    A URL venceu. O job vai para 'blocked', não 'failed': ele volta sozinho
+    assim que a reimportação do anúncio trouxer um endereço novo.
+    """
 
 
 def run_download_job(
@@ -120,6 +128,19 @@ def run_download_job(
                 payload={"media_source_id": media_source_id},
             )
             raise PermanentFailure(f"URL bloqueada: {exc}") from exc
+        except ExpiredMediaUrl as exc:
+            # Não é falha permanente nem retry comum. A mídia continua
+            # existindo; só o endereço venceu.
+            supa.update("ci_ad_media_sources",
+                        {"status": "pending", "error": f"URL vencida: {exc}"[:500]},
+                        match={"id": f"eq.{media_source_id}"})
+            supa.log(
+                user_id=user_id, brand_id=brand_id, job_kind="download", job_id=job_id,
+                level="warn", stage="url_expired",
+                message="URL da mídia venceu; aguardando reimportação do anúncio.",
+                payload={"ad_id": ad_id, "media_source_id": media_source_id},
+            )
+            raise NeedsUrlRefresh(str(exc)) from exc
         except (MediaTooLarge, InvalidMedia) as exc:
             # Erro do conteúdo, não do transporte: retentar não muda nada.
             supa.update("ci_ad_media_sources",
